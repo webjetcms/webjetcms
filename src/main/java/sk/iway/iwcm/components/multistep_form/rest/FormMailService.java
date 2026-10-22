@@ -229,7 +229,7 @@ public class FormMailService {
 				}
 			} else {
 				//vygeneruj mail a posli ho
-				Properties props = System.getProperties();
+				Properties props = new Properties();
 
 				try {
 					if (host != null && host.length() > 2)
@@ -282,7 +282,7 @@ public class FormMailService {
 						msg.setRecipients(Message.RecipientType.BCC, bccAddrs);
 					}
 
-					msg.setFrom(new InternetAddress(effectiveSenderEmail, effectiveSenderName));
+					msg.setFrom(new InternetAddress(effectiveSenderEmail, effectiveSenderName, SetCharacterEncodingFilter.getEncoding()));
 
 					msg.setSubject(MimeUtility.encodeText(subject, emailEncoding, null));
 					msg.setSentDate(new java.util.Date());

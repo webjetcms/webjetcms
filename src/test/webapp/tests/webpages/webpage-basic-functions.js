@@ -120,7 +120,7 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
      I.wait(0.5);
      I.dontSeeCheckboxIsChecked('#DTE_Field_available_0');
-     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+     I.checkOption('#DTE_Field_searchable_1');
      I.wait(0.5);
      I.dontSeeCheckboxIsChecked('#DTE_Field_searchable_0');
 

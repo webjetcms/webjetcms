@@ -7,6 +7,8 @@ You can set the welcome panel background and environment label via **Settings �
 | Variable | Default value | Meaning |
 | --- | --- | --- |
 | `dashboardHeroBackgroundImage` | `linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)` | Welcome bar background: CSS gradient or image path. Empty or invalid value will use the default blue gradient. |
+| `dashboardSocialRefreshHours` | `8` | Number of hours the saved external news list is valid. A value of `0` or a negative value disables its loading and display of saved items. Expanding the panel with the function enabled always verifies the current list. |
+| `overviewJsonUrl` | `https://docs.webjetcms.sk/json/` | The base URL for the `wjnews.sk.json`, `wjnews.cs.json` and `wjnews.en.json` files. You can set your own HTTP(S) server or a local path to the folder with these files. |
 | `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Label text. Supports macros and custom text. Displays up to 8 characters in uppercase; the full name remains in the tooltip. An empty value will also hide the label from the tab title. |
 | `dashboardEnvironmentIcon` | `car` | Icon by environment or name of the Tabler icon, e.g. `rocket` or `ti-database`. A value of `none` or an empty value hides the icon. If the name does not exist, the icon will not be displayed. |
 | `dashboardEnvironmentColor` | `car` | Color from the palette according to the environment and style. Custom color `#RGB` or `#RRGGBB` automatically gets black or white text and icon with a contrast of at least 4.5:1. |
@@ -25,6 +27,22 @@ You can change the background directly with the value `dashboardHeroBackgroundIm
 - `https://cdn.example.com/header.jpg` – image from full HTTP(S) address.
 
 The image will replace the gradient and cover the entire panel, maintaining the aspect ratio (`cover`), aligned to the center and bottom edge. Enter the path directly, without the `url(...)` wrapper. The HTTP(S) address must not contain login information. Addresses starting with `//`, addresses with backslashes or control characters, and other protocols are not allowed. The maximum length of the address is 1024 characters.
+
+## News from social networks
+
+The **What's New** panel combines the news of the installed version with posts from YouTube and Facebook of WebJET CMS. The browser reads the common JSON from the server configured in `overviewJsonUrl` ; the customer server does not contact the social networks. Data generation on the docs server is described in [Central News List](../../../developer/install/social-media-feed.md).
+
+JSON must be publicly accessible without login, even with a custom local path: the request does not send login cookies or the `Referer` header.
+
+The relative path of the image in the field `image` is filled in according to the JSON folder. For example, with `overviewJsonUrl=https://docs.webjetcms.sk/json/new/`, `social-media/images/obrazok.jpg` is loaded from `https://docs.webjetcms.sk/json/new/social-media/images/obrazok.jpg`. Therefore, when moving the list, also transfer the subfolder with images. Absolute HTTPS addresses of images from older lists remain supported.
+
+When opening the home screen, the list stored in `localStorage` is used. If it is missing or has reached the expiration date set in `dashboardSocialRefreshHours` (default 8 hours), it is refreshed in the background. The list is also verified before this period expires each time it is expanded. The cache is stored under the key `webjet.externalNews.v1` and also contains the URL of the loaded list. When the URL or language is changed, the corresponding list is loaded and this item is overwritten; the Czech administration uses the file `wjnews.cs.json`. In the collapsed rotation, only the preview of the currently displayed news item is loaded; other images are not loaded in advance. Card images start loading after the panel is expanded. The preview in the rotation does not change the reading status.
+
+The **New** label remains displayed until the user expands the unread content. Expanding confirms both local news and the social items currently being viewed. A successful save to account settings includes a read date of `readAt` ; for social posts, their ID fingerprints are also stored under the key `dashboard.externalNews.<odtlačok základnej URL>`. Switching languages ​​or editing the translation of the same post will not create a new notification. The new ID will create one regardless of the publication date. Data received after collapse or in a hidden browser tab will not be marked as read; if the panel is still expanded, it will be marked when returning to the tab.
+
+In the event of a loading error, external tabs, rotation items, and their notification will be hidden even if the browser has older data stored. The panel will not display a loading or error message; local version news and social media links will remain. The stored cache will not be cleared by the error.
+
+The value `dashboardSocialRefreshHours=0` disables JSON and image requests, external tabs, their rotation, and unread item notifications. This also applies to data that the browser has already saved. News from the installed version and links to both social channels will remain available. Refresh the administration page after changing the configuration.
 
 ## Automatic environment labeling
 
@@ -55,47 +73,29 @@ For a short label and a longer description, set `dashboardEnvironmentName=TEST` 
 
 ## Detection of new devices
 
-The function notifies the administrator of a successful login from a browser that has not used their account within the set period. The first time they log in after enabling the function, they will also receive an email notification. The user procedure is described in [System notifications](../../../redactor/admin/welcome.md#system-notifications).
+**You can disable detection by setting `adminNewDeviceDetectionEnabled=false`** in **Settings → Configuration**. This disables the detection of new browsers, notifications on the overview, emails about new devices, and checking for already blocked devices. The default value is `true`. Location detection has a [separate setting](#orientational-location-logins).
 
-The cookie `wjdevice` contains a random identifier; the table `user_login_devices` stores its hash and the time of the last login for the user. The record has an automatically generated `device_id` ; the browser searches for `user_id` and the cookie hash. A separate `domain_id` is not used because each user has their own `user_id`. The cookie has a path `/`, attributes `HttpOnly`, `SameSite=Lax` and, for HTTPS, also `Secure`. Each completed login will renew the cookie and remember the account for another `adminNewDeviceMaxAgeDays` days. Normal requests during an open session or unsuccessful logins do not extend the period. Logout will preserve the cookie. Invalid or negative configuration will use 90 days; the upper limit of cookie validity is 24,855 days.
+When detection is enabled, WebJET CMS notifies the administrator of a successful login from an unknown browser. The notification will also be received the first time the feature is enabled. The procedure for confirming or blocking the device is described in [System notifications](../../../redactor/admin/welcome.md#system-notifications). Detection does not apply to regular visitors, API tokens, or HTTP Basic.
 
-The email is added to the existing queue via `SendMail.sendLater`. The sender's name and address are determined in the same way as for a forgotten password: first `passwordResetDefaultSenderName` and `passwordResetDefaultSenderEmail`, then `defaultSenderName` and `defaultSenderEmail`, finally the user's replacement data. The email contains the browser, system, geographical location, IP address, last login time, server name and a label from `dashboardEnvironmentName`. A sending error is logged without canceling the login or warning in the overview.
+The browser is recognized using the `wjdevice` cookie. The `adminNewDeviceMaxAgeDays` variable determines the retention period from the last successful login, by default **90 days**. Set it the same for all domains. After this period, unused, unblocked devices, even with notifications, are automatically deleted; cleaning continues even when detection is disabled. Blocked devices are not deleted.
 
-The device also stores the last notification: time `create_date`, browser, system and confirmation or login status. The notification expires after confirmation or after 7 days from `create_date`. Each successful login updates `last_seen`, IP address and approximate location. If a new location is not available, `NULL` is stored. When logging in after expiration, the notification in the same unblocked record is restored; a separate event history is not stored. The link **It wasn't me** in the email uses `device_id` and displays the current device detail. The link **It was me** also contains a random 256-bit token valid for 24 hours; confirmation is performed by the logged-in administration via POST with CSRF protection. Opening the GET address itself does not change the status. The `sk.iway.iwcm.users.devices.DeviceCleanup` task, added by the database update, will remove unblocked devices not used for `adminNewDeviceMaxAgeDays` days every day at 03:41 along with their notifications. After that, the email detail is no longer available. Set the `adminNewDeviceMaxAgeDays` value the same for all domains; cleaning continues even when detection is disabled.
+**Verify email delivery and correctness of administrator email addresses.** The sender is set the same as for password recovery: `passwordResetDefaultSenderName` and `passwordResetDefaultSenderEmail`, or general `defaultSenderName` and `defaultSenderEmail`. Unblocking the browser requires a code delivered to the email account, even if the user uses 2FA. If you have problems with access, use the `/admin/logon/` form in the given browser and complete email verification.
 
-The device and notification records are managed by `DeviceService` via the `DeviceEntity` entity and the Spring Data repository `DeviceRepository`. The service returns the entity directly; the `@JsonIgnore` annotation hides the internal data when sending it to the frontend. Times are sent in milliseconds and `expiresAt` is calculated from `createDate`, without any additional database column. This layer is not tied to the administrator. `AdminDeviceService` provides integration with administrator login, cookies, and email notifications; `AdminDeviceRestController` provides actions available to the logged in administrator.
-
-Both the notification and active login list confirmation require a six-digit code delivered to the email account. It is valid for 10 minutes and allows 5 attempts; resending is limited to one code per minute per device. The database stores only SHA-256 fingerprints of the code and token, separated by account, device, and purpose. Authentication data is not sent in public JSON. Confirmation, reporting, and resetting the notification will invalidate both authentication data. Resending the code will not reset the number of attempts until the previous validity period expires. After successful two-factor authentication in WebJET CMS, an unblocked device is automatically confirmed. For a new device, an informational email with the option to log in is sent.
-
-Clicking **Block Device** sets the existing field to `reported_at`, invalidates the authentication data, and logs out known sessions for that device through the normal logout mechanism. Blocked records are not removed during cleanup. The **It wasn't me** link in the email opens the detail after logging in; opening the link itself does not lock the device.
-
-The next interactive login of the blocked browser will first verify the login details and any 2FA. Then the `/admin/logon/device/` page will request a six-digit code from the email. The pending identity is in a separate session attribute `adminUser_waitingForDevice`, outside of the `USER_KEY` and Spring Security context. The challenge is valid for 15 minutes, the code for 10 minutes, a limit of 5 attempts and a one-minute sending interval apply. The code is also bound to this challenge and cookie. The correct code will unlock and confirm the device. The old confirmation link cannot unblock it. If the code is not delivered, access remains closed.
-
-The check applies to admin logins via form, access key, OAuth2, and NTLM, including admin logins via the user zone. It does not apply to API tokens, HTTP Basic, or regular visitors. Setting `adminNewDeviceDetectionEnabled=false` also disables blocking checking. Test browser exceptions do not bypass the existing block.
-
-Specific logins via `doFilterLogon=true`, `doFilterLogon=redir` or the `wjlogontoken` header check for existing blocking before creating a logged-in session. A blocked browser will receive an HTTP 403 without an email prompt; if there is an error retrieving the state, it will receive an HTTP 503. To unblock, you must log in using the regular `/admin/logon/` form in the same browser and complete email verification. These specific logins do not register new devices or refresh their cookies. Therefore, a missing, empty or invalid cookie does not trigger this check. The `wjlogontoken` header creates a logged-in session that is valid for subsequent requests and is different from the `x-auth-token` authentication API.
-
-Blocking is tied to the `wjdevice` cookie, not the physical device. After it is deleted or expires, the browser behaves as new; blocking therefore does not replace changing a compromised password or 2FA.
-
-### Exceptions for automated tests
-
-E2E tests often start with a new browser profile without cookies `wjdevice`. Each such login therefore creates a new device. Exceptions for test browsers are stored directly in `AdminDeviceService` in immutable sets `IGNORED_DEVICE_DOMAINS` and `IGNORED_DEVICE_USER_AGENTS`. They cannot be changed through configuration or at runtime, modification requires code change and redeployment.
+After deleting or expiring cookies, the browser is considered new and its previous blocking will not apply. Therefore, if you suspect account misuse, you should change your password and enable 2FA.
 
 ### Approximate login location
 
-The variable `adminLoginLocationApiKey` specifies location detection using [IPWHOIS](https://ipwhois.io/documentation):
+Location detection works independently of device detection. **To disable external calls, set `adminLoginLocationApiKey=DISABLED`** ; already saved locations will be retained.
 
-- Empty value (default): free API, currently 1,000 requests per day; when calling from a browser, the limit is shared per domain.
-- `DISABLED`: disables external calls and receiving new results. Surrounding spaces and case are ignored. Historical data is retained.
-- API key: paid API. **The key is available to visitors to the login page** because the request is sent by their browser.
+The variable `adminLoginLocationApiKey` has the following options:
 
-The request is triggered when the login page is displayed, with a timeout of 3 seconds. Login does not wait for it. The temporary result in the HTTP session is valid for 10 minutes and is saved to the session and device when the login is completed. If missing, the first administration page makes one replacement attempt. The email will use the data available at the time of sending or the text **Unknown** ; it is not sent again after being supplemented.
+- Empty value (default): free API service [IPWHOIS](https://ipwhois.io/documentation).
+- `DISABLED`: location detection disabled.
+- API key: paid API. **The key is visible to visitors to the login page** because the service is called by their browser.
 
-The `user_login_devices` table stores only the city and country text in the `location` column, for example `Bratislava, SK`. Failed detection or disabling it does not prevent login. Location is a browser-generated data that can be changed; it is not used for authentication, confirmation, or device blocking.
+The location is indicative and may correspond to a company headquarters or VPN gateway. It is not used for authentication or blocking devices. Its unavailability does not prevent login.
 
-The browser calls the API directly so that the service can see the public IP of its connection even when accessing the CMS via LAN. The city may belong to the corporate headquarters, a proxy or a VPN gateway. The IP displayed under the city still comes from the request received by the CMS and may be internal.
-
-The call uses HTTPS, `referrerPolicy: "no-referrer"` and `credentials: "omit"`. It does not send login credentials, user or session identifiers, or internal IP. However, the provider sees the public IP, [header `Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Origin) with the CMS domain and port, and normal browser headers. Its [privacy policy](https://ipwhois.io/privacy) allows for traffic logging, Cloudflare usage, and processing in different countries; it does not specify the exact retention period for API logs or guarantee processing only in the EU. If your organization's policies do not allow this, set `DISABLED`. For a restricted CSP, only allow the endpoint `https://ipwho.is` or `https://ipwhois.pro` in `connect-src`.
+The service provider sees the public IP address and domain of the CMS. If your organization's policies do not allow such external calls, disable discovery; the provider's [privacy policy](https://ipwhois.io/privacy) lists the terms of data processing. For restricted CSP, enable the endpoint `https://ipwho.is` or `https://ipwhois.pro` used in `connect-src`.
 
 ### Release news
 
@@ -108,4 +108,6 @@ Write the text `admin.overview.changelog` as a Markdown title with a version and
 - **Testovanie prístupnosti** – Kontroly sú súčasťou automatizovaných testov.
 ```
 
-The number in the **What's New** link is derived from the list. Older text in paragraphs remains readable. A record `user_settings_admin` is kept for each user and language in `dashboard.news.<jazyk>` with a text fingerprint and the date of first view (`firstSeen`). Changing the text will reset the **New** label for 30 days. Saving or resetting the dashboard layout does not change this record.
+The number in the **What's New** link is derived from the list. Older text in paragraphs remains readable. In `user_settings_admin`, a record `dashboard.news.<jazyk>` is kept for each user and language with a fingerprint of the text read (`fingerprint`) and the date read (`readAt`). It is saved when the visible panel is expanded. Changing the text will restore the **New** label to the same version; the notification does not expire after a timeout. The Help menu reads the same local news status, but opening it does not change it. Saving or resetting the dashboard layout does not change this record.
+
+The older entry with `firstSeen` only indicated the first view and did not have read information. Therefore, after the update, local news items will appear as unread until the user expands them once. Existing stored read social post IDs remain valid.

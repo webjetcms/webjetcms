@@ -1,0 +1,111 @@
+name: WebJET skills
+
+on:
+  pull_request:
+    paths:
+      - '.agents/skills/**'
+      - '.github/agents/**'
+      - '.github/scripts/*skills*'
+      - '.github/skills-distribution/**'
+      - '.github/workflows/skills.yml'
+      - 'LICENSE.md'
+  push:
+    branches: [main]
+    paths:
+      - '.agents/skills/**'
+      - '.github/agents/**'
+      - '.github/scripts/*skills*'
+      - '.github/skills-distribution/**'
+      - '.github/workflows/skills.yml'
+      - 'LICENSE.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test export and project setup
+        run: node --test .github/scripts/skills.test.mjs
+      - name: Export tracked skills
+        run: node .github/scripts/export-skills.mjs --output "${{ runner.temp }}/webjet-skills-export"
+      - name: Verify installer integration
+        env:
+          DISABLE_TELEMETRY: '1'
+        run: |
+          npm install --prefix "${{ runner.temp }}/webjet-skills-tools" --ignore-scripts --no-package-lock --no-audit --no-fund skills@1.7.2
+          node .github/scripts/test-skills-install.mjs "${{ runner.temp }}/webjet-skills-export" "${{ runner.temp }}/webjet-skills-tools/node_modules/skills/bin/cli.mjs"
+      - name: Archive export with file permissions
+        if: runner.os == 'Linux'
+        run: tar -czf "${{ runner.temp }}/webjet-skills.tar.gz" -C "${{ runner.temp }}/webjet-skills-export" .
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: webjet-skills
+          path: ${{ runner.temp }}/webjet-skills.tar.gz
+
+  publish:
+    needs: validate
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: webjet-skills-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: webjet-skills
+          path: artifact
+      - name: Extract validated export
+        run: |
+          mkdir export
+          tar -xzf artifact/webjet-skills.tar.gz -C export
+      - name: Require distribution credentials
+        env:
+          DISTRIBUTION_TOKEN: ${{ secrets.WEBJET_SKILLS_TOKEN }}
+        run: |
+          if [ -z "$DISTRIBUTION_TOKEN" ]; then
+            echo "Set WEBJET_SKILLS_TOKEN with contents:write access to webjetcms/skills."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          repository: webjetcms/skills
+          ref: main
+          token: ${{ secrets.WEBJET_SKILLS_TOKEN }}
+          path: distribution
+      - name: Publish changed content
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f distribution/source.json ] && node -e 'const fs = require("node:fs"); const previous = JSON.parse(fs.readFileSync("distribution/source.json")); const next = JSON.parse(fs.readFileSync("export/source.json")); process.exit(previous.contentHash === next.contentHash ? 0 : 1)'; then
+            echo "Distribution content is unchanged."
+            exit 0
+          fi
+          if [ -f distribution/source.json ]; then
+            previous=$(node -e 'const fs = require("node:fs"); const sha = JSON.parse(fs.readFileSync("distribution/source.json")).sourceCommit; if (!/^[a-f0-9]{40}$/.test(sha)) process.exit(1); process.stdout.write(sha)')
+            # A slower or retried older run must not replace a newer published export.
+            comparison_status=$(gh api "repos/${GITHUB_REPOSITORY}/compare/${GITHUB_SHA}...${previous}" --jq .status)
+            case "$comparison_status" in
+              ahead) echo "A newer source revision is already published."; exit 0 ;;
+              behind|identical) ;;
+              *) echo "Source histories diverged; review the distribution before publishing."; exit 1 ;;
+            esac
+          fi
+          rsync -a --delete --exclude='.git/' export/ distribution/
+          cd distribution
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Update WebJET skills from ${GITHUB_SHA}"
+          git push origin HEAD:main

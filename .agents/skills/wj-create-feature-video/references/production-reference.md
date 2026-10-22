@@ -282,15 +282,15 @@ Treat it as a secret: never put it in the repository, a scenario, a helper
 argument, or a command-line argument. Export it to the process environment as
 `ELEVENLABS_API_KEY`. The repository does not automatically load `.env` files.
 
-The default model is Eleven v3
-(`eleven_v3`), and the default voice is Luki Zajo
+The default model is Eleven v4
+(`eleven_v4`), and the default voice is Luki Zajo
 (`Zai7B4Aol2bJtneyq0L1`). Override either value for a run with
 `ELEVENLABS_MODEL_ID` or `ELEVENLABS_VOICE_ID`, or for one narration with the
 optional `{ modelId, voiceId }` argument to `I.generateAudio`. Precedence is:
 explicit helper argument, non-empty environment variable, repository default.
 The API key is accepted only from the environment. The request uses
-`mp3_44100_128`. By default it omits `voice_settings` and `language_code`, leaving
-ElevenLabs to apply the voice's stored or default settings and detect language.
+`mp3_44100_128`. The defaults enforce Slovak with `language_code: "sk"` and send
+`voice_settings: { stability: 0.3, similarity_boost: 0.5 }`.
 
 For per-narration settings, use:
 
@@ -306,10 +306,11 @@ I.generateAudio(videoPlan, {
 `voiceSettings` accepts optional `stability` and `similarityBoost` values from
 0 to 1 (30% and 50% in this example). The client maps them to the API's
 `voice_settings.stability` and `voice_settings.similarity_boost`. Unspecified
-fields remain omitted. `languageCode` is an optional two-letter ISO 639-1 code
+fields retain the defaults. `languageCode` is a two-letter ISO 639-1 code
 sent as `language_code`; it is separate from `language`, which selects the
 plan's `text-<language>`. It does not translate the narration. Multilingual v2
-does not support language enforcement. Invalid settings fail in preflight;
+does not support language enforcement; use `languageCode: null` for it.
+Use `voiceSettings: null` to omit voice settings. Invalid settings fail in preflight;
 the resolved settings are logged before generation. These options do not change
 repository defaults. See the [API reference](https://elevenlabs.io/docs/api-reference/text-to-speech/convert).
 
@@ -627,7 +628,8 @@ outputs. For an audio-only override, use:
 Scenario("ElevenLabs", ({ I }) => {
     I.generateAudio(videoPlan, {
         language: "en",
-        modelId: "eleven_v3",
+        languageCode: "en",
+        modelId: "eleven_v4",
         voiceId: "<voice-id>"
     });
 }).tag("@audio");

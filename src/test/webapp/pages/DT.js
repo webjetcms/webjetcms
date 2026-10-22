@@ -37,8 +37,14 @@ module.exports = {
         I.wait(0.2);
     },
 
-    //skontroluje prava na datatabulke - zobrazi, odoberie pravo a overi zobrazenie chyby prav
-    checkPerms(perms, url, datatableId=null) {
+    /**
+     * Verifies REST and page permissions after removing a permission from the current session.
+     * @param {string} perms - Permission to remove.
+     * @param {string} url - Page containing the table.
+     * @param {string|null} [datatableId=null] - Table whose refresh button should be used.
+     * @param {Function|null} [reloadTable=null] - Queues a reload when the table has no refresh button.
+     */
+    checkPerms(perms, url, datatableId=null, reloadTable=null) {
         let warningText = "Prístup k tejto stránke je zamietnutý";
         I.say("Testing permissions, perms=" + perms + " url=" + url + " warningText=" + warningText);
         I.amOnPage(url);
@@ -55,7 +61,8 @@ module.exports = {
         I.amOnPage(url + paramTokenizer + "removePerm=" + perms);
         I.closeCurrentTab();
 
-        if (typeof datatableId != "undefined" && datatableId != null) I.click({ css: "#"+datatableId+"_wrapper button.buttons-refresh"});
+        if (reloadTable != null) reloadTable();
+        else if (typeof datatableId != "undefined" && datatableId != null) I.click({ css: "#"+datatableId+"_wrapper button.buttons-refresh"});
         else I.click({css: "button.buttons-refresh"});
 
         I.say("Obnovujem datatabulku, overujem prava na REST sluzbu");

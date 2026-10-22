@@ -41,19 +41,59 @@ Vystřižení textu je možné označením textu a kliknutím na ikonku ![](cut.
 
 ## Práce se styly a formátování textu
 
-Ve WebJETu máte k dispozici jistý počet předdefinovaných stylů pro nadpisy a pro písma, která se používají pro stylování stránky do přijatelné formy. Správné definování nadpisů má zároveň značný význam pro optimalizaci pro vyhledávače (```SEO```) a vnitřní strukturu dokumentu.
+Nabídka **Styly** obsahuje předvolby připravené pro design vaší stránky, například barvy textu, odsazení, pozadí nebo orámování. Dostupné styly a jejich názvy závisí na šabloně. Ovládání je stejné ve Standardním editoru i v Page Builderu.
 
-Předdefinované nadpisy se aplikují vždy na celý odstavec. Nadpis vytvoříte kliknutím do požadovaného odstavce, ze kterého chcete udělat nadpis az rozbalovací nabídky vyberete požadovanou úroveň nadpisu.
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/IomtyBHpx64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
-![](roletka.png)
+Tlačítko v panelu nástrojů zobrazuje aktuální element, například **Odstavec** nebo **Nadpis 2**. Pokud má nastavené styly, uvede zkrácenou HTML značku a jejich názvy, například **H2 + Spodní odsazení xs**. Dlouhý seznam se ořízne podle šířky tlačítka; celý text zobrazíte podržením kurzoru nad ním. Při výběru více typů elementů se zobrazí **Výběr**.
 
-Na každé webové stránce by měl být vždy pouze jeden hlavní Nadpis 1, kterým by se měl text začínat. Jelikož je tento nadpis na standardní stránce automaticky vygenerován z názvu stránky (pokud to tak šablona definuje), není třeba jej vkládat do těla stránky. Sekce v rámci stránky se oddělují Nadpisem 2, jejich pod-sekce Nadpisem 3, atp.
+Klepněte do textu nebo označte jeho část a otevřete **Styly** v panelu nástrojů. Vybraný styl se použije ihned a okno zůstane otevřené, takže můžete nastavit více vlastností za sebou. Na web se změny přenesou až uložením stránky.
 
-V této nabídce jsou i další předdefinované styly, jejich použití však vychází z jejich pojmenování, například styly obsahující text "tabulka" se používají pouze pro tabulky a podobně. Klepnutím do libovolného textu stránky v editoru se vám do pole Styl automaticky nastaví styl použitý na dané pozici kurzoru. Aktuálně použitý styl je zvýrazněn podbarvením jeho názvu. Opakovaným zvolením již nastaveného stylu se tento styl odstraní. Více informací je v [manuálu pro Web Designéra](../../../frontend/examples/template-bare/README.md#seznam-stylů-pre-editor).
+![Nabídka Styly s výběrem elementu, aktivními styly a náhledy](roletka.png)
 
-Pokud chcete změnit styl takového textu v rámci odstavce, nesmíte text označovat. Stačí kliknout do daného textu ve stránce, styl barvy se automaticky přednastaví v rozbalovací nabídce **Styl** a následně jej můžete změnit na jiný styl.
+Pro správnou funkčnost je třeba mít správně nastaveny [CSS selektory](../../../frontend/page-builder/blocks.md#selektory-struktury) a vytvořeny [doplňkové komentáře](../../../frontend/examples/template-bare/README.md# web stránky.
 
-Pomocí předdefinovaných stylů můžete text na stránce také zvýrazňovat. Ve výběru naleznete např. různé typy nadpisů, barevná zvýraznění. Používání stylů zajistí jednotný vzhled stránek.
+### Výběr upravované části stránky
+
+V horní části okna je cesta k aktuálnímu elementu, například **Sekce › Kontejner › Sloupec › Odstavec › Text**. Zvýrazněná položka určuje, co právě upravujete. Klepnutím na jinou položku můžete nastavit například pozadí celé sekce namísto barvy odstavce. Barevné čtverečky označují stejné části stránky jako v Page Builderu. Podržením kurzoru nad položkou zobrazíte podrobnosti o elementu.
+
+- **Celý odstavec:** umístěte do něj kurzor. Styly odstavce se použijí na celý odstavec.
+- **Část textu:** nejprve označte slova, která chcete upravit. Nabídka zpřístupní také styly pro vybraný text, například jeho barvu.
+- **Už upravený úsek textu:** klikněte dovnitř úseku. Pokud je samostatně označen jako **Text**, nabídka upravuje tento úsek. Pro nastavení celého odstavce přepněte v horní cestě na **Odstavec**.
+
+### Vyhledávání, náhledy a kombinování stylů
+
+Styly jsou rozděleny do kategorií, které můžete jednotlivě rozbalit nebo sbalit. Odkaz **Rozbalit vše / Sbalit vše** ovládá všechny zobrazené kategorie. Pole pro vyhledávání hledá v názvech, CSS třídách, kategoriích i skupinách bez rozlišování velkých písmen a diakritiky.
+
+Vpravo u každé položky vidíte náhled jejího vzhledu: barvu textu, pozadí, rámeček nebo podobu písma. Velké písmo se přizpůsobí prostoru náhledu; údaj v pixelech ukazuje skutečnou velikost. Při odsazení náhled znázorňuje mezeru a její hodnotu. Výsledek vždy vidíte také přímo v obsahu stránky.
+
+Vlastnosti můžete kombinovat, například barvu textu s odsazením. Volby s kroužkem ve stejné skupině se nahrazují: výběr jiné barvy odebere předchozí barvu z této skupiny. Samostatné styly se čtvercovým políčkem lze zapínat nezávisle. **Odstranit** při názvu skupiny zruší volbu dané skupiny. Opakovaným kliknutím na aktivní styl jej odeberete; stejně funguje **×** při jeho názvu v horní části okna.
+
+Nabídka zobrazuje styly použitelné pro aktuální výběr. Po zapnutí **Všechny styly** uvidíte i ostatní položky, ale ty, které na vybraný element nelze použít, zůstanou neaktivní.
+
+Pokud okno překrývá upravovaný obsah, přesuňte jej za tečkovanou rukojeť vedle názvu **Styly**. Po zavření a opětovném otevření se vrátí k tlačítku v panelu nástrojů a seznam se posune na začátek. Zavřete jej křížkem, klávesou **Escape** nebo kliknutím mimo okno. Změnu stylu můžete vrátit příkazem **Zpět**.
+
+### Obnovení základního vzhledu
+
+Odkaz **Obnovit základní vzhled** odebere z aktuálně vybraného elementu všechny odstranitelné CSS třídy známé nabídce stylů. Zachová jeho základní konstrukční třídy i ostatní třídy, které nabídka nezná. Zobrazí se u elementu, pro který šablona definuje základní třídy.
+
+Máte-li vybrán **Kontejner**, obnoví vzhled kontejneru; vnořené odstavce ani textové úseky neupravuje. Jejich zobrazení však může ovlivnit například barva zděděná z kontejneru. Obsah i typ elementu zůstanou zachovány. Reset zahrnuje také styly skryté vyhledáváním nebo sbalenou kategorií a lze jej vrátit jedním krokem **Zpět**.
+
+### Formát odstavce a nadpisy
+
+Na začátku nabídky je kategorie **Formát odstavce** s volbami **Odstavec** a **Nadpis 1–6**. Klepněte do odstavce a vyberte požadovanou úroveň nadpisu. Tato volba mění typ celého odstavce a jeho význam ve struktuře dokumentu. Samotný CSS styl, který zvětší písmo, z odstavce nadpis nevytvoří.
+
+![Formát odstavce s výběrem odstavce a úrovní nadpisů](format-odseku.png)
+
+Úrovně nadpisů volte podle členění obsahu: hlavní nadpis, názvy sekcí, poté jejich podsekce. Pokud šablona již zobrazuje hlavní nadpis z názvu stránky, nemusíte jej v obsahu přidávat znovu. Výběrem **Odstavec** změníte nadpis zpět na běžný odstavec; samostatně nastavené CSS styly zůstanou zachovány.
+
+Když upravujete **Text** nebo celý kontejner, pro změnu formátu nejprve vyberte příslušný odstavec. V některých blocích Page Buildera určuje typ elementu samotná šablona; tehdy je změna formátu nedostupná a nabídka zobrazí vysvětlení.
+
+Definování dostupných stylů popisuje [manuál pro web designéra](../../../frontend/examples/template-bare/README.md#seznam-stylů-pre-editor).
+
+### Další nástroje formátování
 
 Další způsob formátování textu je pomocí následujících standardních nástrojů (aplikují se označením textu, který chcete upravit):
 
@@ -68,7 +108,7 @@ Formátování textu pomocí nástroje pro změnu barvy textu ![](bcg_color.png 
 
 ## Odstraňování formátování
 
-Chcete-li zrušit styl nadpisu, klikněte do textu nadpisu a zvolte z rozbalovací nabídky první položku **Odstavec**. Následně by se měl styl nadpisu z textu odstranit (platí pro všechny styly z rozbalovací nabídky).
+Chcete-li změnit nadpis na běžný odstavec, klepněte do něj av nabídce **Styly → Formát odstavce** vyberte **Odstavec**. CSS styly odebírejte samostatně kliknutím na aktivní položku nebo na **×** při jejím názvu.
 
 Pokud chcete odstranit z textu běžné formátování například tučný text nebo kurzívu, můžete to udělat dvěma způsoby. Buď po označení daného textu znovu kliknete na daný formátovací nástroj, dokud se formátování nezruší, nebo použijete univerzální nástroj pro odstraňování formátování ![](remove_format.png ":no-zoom")
 
@@ -231,6 +271,7 @@ Výběrem [režimu bodu zájmu](../../../frontend/thumb-servlet/interest-point.m
 | `3` | Zachovává šířku i výšku + doplnění pozadí barvou |
 | `4` | Zachovává šířku i výšku + doplnění pozadí barvou |
 | `5` | Zachovává šířku i výšku bez doplnění pozadí |
+| `6` | Zachovává celý bod zájmu rozšířením výřezu na požadovaný poměr stran |
 
 **Dynamické zobrazení polí**
 
@@ -238,12 +279,14 @@ Pole na kartě Miniatura se dynamicky zobrazují/skrývají podle vybraného re�
 
 - Režimy `1` a `2`: Zobrazí se pouze jedno rozměrné pole (šířka nebo výška).
 - Režimy `3` a `4`: Zobrazí se obě rozměrná pole + pole pro barvu pozadí. Barvu zadejte ve formátu `#rrggbb`
-- Režim `5`: Zobrazí se obě rozměrná pole bez pole pro barvu.
-- Pole **Vypnout bod zájmu** se zobrazí pro všechny režimy kromě prázdné hodnoty. To nastavuje, zda se při generování aplikuje i nastavený bod zájmu, nebo se použije celý obrázek.
+- Režimy `5` a `6`: Zobrazí se obě rozměrná pole bez pole pro barvu.
+- Pole **Vypnout bod zájmu** se zobrazí pro všechny režimy kromě prázdné hodnoty a režimu `0`. To nastavuje, zda se při generování aplikuje i nastavený bod zájmu, nebo se použije celý obrázek.
 
-**Striktní režim**
+**Výběr povoleného rozměru**
 
-V režimu [přesně definovaných rozměrů](../../../frontend/thumb-servlet/README.md#omezení) je zobrazeno výběrové pole možností, ze kterých lze rozměr zvolit, nelze nastavit libovolnou hodnotu:
+Jsou-li nastaveny [povolené rozměry](../../../frontend/thumb-servlet/README.md#omezení), karta nabídne jejich výběr s názvem režimu a číslem `ip`, například **96 px – Fixní výška (ip2)**. Volba **Nepoužít miniaturu** použije původní obrázek.
+
+V režimu `strict` lze vybrat pouze povolenou kombinaci. Stávající nepovolený rozměr je třeba nahradit povoleným nebo použít původní obrázek. Režimy `learn`, `check` a `allow` nabízejí také **Zadat vlastní rozměr…**, což zobrazí pole popsaná výše; při prázdném seznamu se tato pole zobrazí přímo. V režimu `deny` je karta skrytá.
 
 ![](image_dialog-thumb-strict.png)
 

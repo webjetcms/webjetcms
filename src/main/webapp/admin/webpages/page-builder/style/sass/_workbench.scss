@@ -45,6 +45,7 @@
             outline-offset: 2px;
             box-shadow: 0 0 0 4px white;
         }
+        i.ti { flex: 0 0 18px; pointer-events: none; font-size: 18px; line-height: 1; }
         svg { flex: 0 0 18px; pointer-events: none; fill: none; width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; }
     }
 
@@ -83,9 +84,25 @@
             border-top: 0;
         }
     }
-    &.is-inserting > :not(.#{$prefix}-insert-hint),
+    &.is-inserting, &.is-moving {
+        flex-wrap: nowrap;
+        padding: 6px 10px;
+        gap: 6px;
+        > [data-pb-action=structure] {
+            flex-shrink: 0;
+            &:hover, &[aria-expanded=true] { background: rgba($primary, .08); color: $primary; }
+        }
+        > .#{$prefix}-mode-hint {
+            flex: 1;
+            min-width: 0;
+            padding: 0 0 0 10px;
+            border-left: 1px solid $nice-gray-200;
+            > [role=status] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        }
+    }
+    &.is-inserting > :not(.#{$prefix}-insert-hint):not([data-pb-action=structure]),
     &.is-resizing > :not(.#{$prefix}-resize-hint),
-    &.is-moving > :not(.#{$prefix}-move-hint) { display: none !important; }
+    &.is-moving > :not(.#{$prefix}-move-hint):not([data-pb-action=structure]) { display: none !important; }
     &-standalone { position: fixed; top: 0; z-index: 102000; }
     &-path {
         display: flex;
@@ -248,6 +265,7 @@ html.pb-insertion-open { overflow-anchor: none; }
 .#{$prefix}-insert-context { clear: both; padding: 8px 16px; font-size: 12px; line-height: 1.4; color: $dark-60; background: white; border-bottom: 1px solid $nice-gray-100; }
 .#{$prefix}-wrapper.#{$prefix}-is-inserting {
     .#{$prefix}-empty-placeholder, .#{$prefix}-empty-placeholder-wrapper { display: none !important; }
+    .#{$prefix}-plus-button { visibility: hidden !important; pointer-events: none; }
 }
 @media (pointer: coarse) {
     .#{$prefix}-insert-layer .#{$prefix}-insert-point button { min-width: 44px; height: 44px; border-radius: 24px; }
@@ -401,6 +419,11 @@ body.is-view-mode {
         padding: 6px;
         gap: 3px;
         .#{$prefix}-mode-hint { flex-basis: calc(100% + 12px); margin-inline: -6px; padding-inline: 6px; }
+        &.is-inserting, &.is-moving {
+            padding: 6px;
+            gap: 3px;
+            > .#{$prefix}-mode-hint { flex-basis: 0; margin: 0; padding: 0 0 0 6px; }
+        }
         > [data-pb-action=structure] span, [data-pb-action=style] span { display: none; }
         &-path {
             > button:not(:last-child):not([data-pb-action=ancestors]) { display: none; }

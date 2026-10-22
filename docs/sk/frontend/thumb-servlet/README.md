@@ -46,9 +46,19 @@ Generovanie obrázkov zaťažuje server, je teda chránené SPAM ochranou. Použ
   - `check` - povolí len zadané hodnoty, ak je prihlásený administrátor, automaticky pridá nový rozmer do zoznamu
   - `strict` - povolí vygenerovať obrázok len pre zadané hodnoty (kontroluje zoznam povolených hodnôt)
 
-V režime `strict` sa v karte **Miniatúra** vo vlastnostiach obrázka zobrazí jeden výber povolených rozmerov namiesto samostatných polí. Možnosti sa načítajú z konfiguračnej premennej `thumbServletAllowedSizes` (oddelené čiarkou alebo novým riadkom) a zoradia sa číselne podľa šírky a následne výšky. Napríklad `159x159ip1` sa zobrazí ako `159 x 159 (1 - Fixná šírka)`, hodnota bez `ip` ako maximálne rozmery. Pri zadaní farby, vypnutia bodu záujmu alebo kvality sa zobrazia aj tieto údaje.
+Karta **Miniatúra** vo vlastnostiach obrázka sa riadi nastavením `thumbServletAllowedSizeMode`:
 
-Pri potvrdení sa vybraná kombinácia uloží do URL obrázka aj CSS triedy `fixedSize`. Ak obsahuje kvalitu, trieda má navyše príponu `-q90` (napríklad `fixedSize-730-401-5-ff00ff-true-q90`). Pri opätovnom otvorení sa zvolí zodpovedajúca povolená možnosť. Prázdna voľba použije obrázok v pôvodnej veľkosti: odstráni prefix `/thumb/`, parametre miniatúry a triedu `fixedSize`, rovnako ako v ostatných režimoch. Ak pôvodný rozmer nie je povolený, možno vybrať povolený rozmer alebo ponechať prázdnu voľbu na použitie pôvodného obrázka. V ostatných režimoch zostávajú samostatné polia dostupné.
+| Režim | Zadané povolené rozmery | Prázdny zoznam |
+| --- | --- | --- |
+| `strict` | Výber povoleného rozmeru alebo **Nepoužiť miniatúru** | Len **Nepoužiť miniatúru** |
+| `learn`, `check`, `allow` | Výber rozmeru, **Nepoužiť miniatúru** alebo **Zadať vlastný rozmer…** | Pôvodné polia na zadanie rozmerov |
+| `deny` | Karta je skrytá | Karta je skrytá |
+
+Možnosti sa načítajú z `thumbServletAllowedSizes` (oddelené čiarkou alebo novým riadkom), odstránia sa duplicity a zoradia sa číselne podľa šírky a výšky. Napríklad `96x96ip2` sa zobrazí ako **96 px – Fixná výška (ip2)**. Názov režimu používa rovnaký preklad ako pole **Režim**. Hodnota bez `ip` sa zobrazí ako maximálne rozmery `(ip0)`. Farba pozadia sa zobrazí hexadecimálne; vypnutie bodu záujmu a kvalita sa doplnia do popisu.
+
+Vybraná kombinácia sa uloží do URL obrázka aj CSS triedy `fixedSize`. Kvalita sa zapisuje príponou `-q90`, napríklad `fixedSize-730-401-5-ff00ff-true-q90`. Pri opätovnom otvorení sa vyberie zodpovedajúca možnosť. Ak existujúci rozmer nie je v zozname, v režime `strict` sa zobrazí upozornenie a treba vybrať povolený rozmer alebo **Nepoužiť miniatúru**. V ostatných režimoch sa otvorí vlastné nastavenie s pôvodnými hodnotami. V režime `deny` potvrdenie dialógu zachová pôvodnú miniatúru.
+
+Voľba **Nepoužiť miniatúru** má prázdnu hodnotu a použije pôvodný obrázok: odstráni prefix `/thumb/`, parametre miniatúry a triedu `fixedSize`.
 
 Nastavte najskôr režim `learn` pre naučenie sa existujúcich hodnôt a následne nastavte režim `check` v ktorom sa hodnoty kontrolujú, ale ak je prihlásený administrátor automaticky sa pridá nová hodnota do zoznamu povolených hodnôt. WebJET automaticky pri aktualizácii nastaví režim `learn` a následne po minimálne mesiaci a ďalšom reštarte prepne na režim `check`.
 

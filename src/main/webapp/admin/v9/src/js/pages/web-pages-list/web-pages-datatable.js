@@ -8,6 +8,9 @@ export class WebPagesDatatable {
     options = null;
     webpagesDatatable = null;
     #webpagesDatatableEventsBinded = false;
+    #httpHeadersRequest = null;
+    #mediaTable = null;
+    #plannedRequest = null;
 
     constructor(options) {
         var defaultTitleKey = "editor.newDocumentName";
@@ -146,6 +149,7 @@ export class WebPagesDatatable {
             //console.log("DTE initialized, event=", event);
             if (event.detail.conf.id=="DTE_Field_editorFields.media") {
                 let mediaTable = event.detail.conf.datatable;
+                instance.#mediaTable = mediaTable;
                 event.detail.conf.datatable.EDITOR.on( 'open', function( e, mode, action ) {
                     //console.log("DTED inner table opened");
                     //pri prvom nacitani nastav on change listener na reload dat
@@ -210,6 +214,10 @@ export class WebPagesDatatable {
                     extend: "remove",
                     text: "<i class='ti ti-trash'></i>",
                     editor: historyTable.EDITOR,
+                    formMessage: function (editor, dt) {
+                        return $.fn.dataTable.ext.buttons.remove.formMessage(editor, dt)
+                            + "<p>" + WJ.translate("editor.history.delete.confirm.js") + "</p>";
+                    },
                     init: function ( dt, node, config ) {
                         var button = this;
                         dt.on('select.dt.DT deselect.dt.DT', function () {
@@ -217,8 +225,7 @@ export class WebPagesDatatable {
                             let count = 0;
                             dt.rows({selected: true}).every( function ( rowIdx, tableLoop, rowLoop ) {
                                 var data = this.data();
-                                if (data.publishStartStringExtra==null) show = false;
-                                if (data.publicable !== true) show = false;
+                                if (data.deleteAllowed !== true) show = false;
                                 count ++;
                             });
                             //console.log("show=", show, "count=", count);
@@ -355,6 +362,7 @@ export class WebPagesDatatable {
                 // this will set ALL input fields from JSON value
                 // it is different function as webpagesDatatable.EDITOR.field("data").setJson(json)
                 self.webpagesDatatable.EDITOR.setJson(json);
+                self.#updatePlannedMode(true);
 
                 // Clear the visible tooltip and pending hover/focus timers before hiding History.
                 const historyEditButton = $("#pills-dt-datatableInit-history .buttons-history-edit");
@@ -542,6 +550,55 @@ export class WebPagesDatatable {
         }
     }
 
+    /** Adds the header preview once and loads it only while the Basic tab is visible. */
+    #bindHttpHeaders() {
+        const modal = $("#" + this.webpagesDatatable.DATA.id + "_modal");
+        const basic = modal.find("div[id$='-basic'].tab-pane");
+        if (basic.find(".webpage-http-headers").length === 0) {
+            const section = $(`<div class="DTE_Field form-group row webpage-http-headers">
+                <div class="col-sm-4"></div>
+                <div class="col-sm-7"><h5 class="mb-3"></h5><pre class="mb-0" aria-live="polite"></pre></div>
+                <div class="col-sm-1 form-group-tooltip"><button type="button" class="btn btn-link" data-toggle="tooltip"><i class="ti ti-info-circle" aria-hidden="true"></i></button></div>
+            </div>`);
+            section.find("h5").text(WJ.translate("editor.http_headers.js"));
+            section.find("button").attr({ title: WJ.translate("editor.http_headers.tooltip.js"), "aria-label": WJ.translate("editor.http_headers.js") });
+            $(this.webpagesDatatable.EDITOR.field("cacheable").node()).after(section);
+            WJ.initTooltip(section.find("button"));
+        }
+        basic.find(".webpage-http-headers pre").text(WJ.translate("editor.http_headers.loading.js"));
+        modal.find("[id$='-basic-tab']").off("shown.bs.tab.httpHeaders").on("shown.bs.tab.httpHeaders", () => this.#updateHttpHeaders());
+        basic.off("change.httpHeaders").on("change.httpHeaders", "input, select", () => this.#updateHttpHeaders());
+        this.webpagesDatatable.EDITOR.off("close.httpHeaders").on("close.httpHeaders", () => this.#httpHeadersRequest?.abort());
+        this.#updateHttpHeaders();
+    }
+
+    /** Sends current editor values to the shared backend header calculation. */
+    #updateHttpHeaders() {
+        const output = $("#" + this.webpagesDatatable.DATA.id + "_modal .webpage-http-headers pre");
+        if (!output.is(":visible")) return;
+        this.#httpHeadersRequest?.abort();
+        output.attr("aria-busy", "true");
+        const editor = this.webpagesDatatable.EDITOR;
+        const values = editor.get(["title", "navbar", "tempId", "virtualPath", "editorVirtualPath", "generateUrlFromTitle", "urlInheritGroup", "searchable", "followLinks", "externalLink"]);
+        values.groupId = editor.get("editorFields.groupDetails").groupId;
+        values.docId = editor.currentJson?.docId ?? -1;
+        const json = JSON.stringify(values, (key, value) => {
+            if (Array.isArray(value) && value.length === 1 && [true, false, "true", "false"].includes(value[0])) return value[0] === true || value[0] === "true";
+            return value;
+        });
+        this.#httpHeadersRequest = $.ajax({
+            url: WJ.urlAddPath(this.webpagesDatatable.DATA.url, "/http-headers"), method: "POST", contentType: "application/json", data: json
+        }).done(headers => {
+            const names = ["X-Robots-Tag", "Referrer-Policy"];
+            if (headers.Location != null) names.push("Location");
+            output.text(names.map(name => name + ": " + (headers[name] ?? WJ.translate("editor.http_headers.not_sent.js"))).join("\n"));
+        }).fail((xhr, status) => {
+            if (status !== "abort") output.text(WJ.translate("editor.http_headers.error.js"));
+        }).always(() => {
+            output.removeAttr("aria-busy");
+        });
+    }
+
     #bindOpen() {
         var self = this;
         this.webpagesDatatable.EDITOR.on('opened', function (e, type, action) {
@@ -573,11 +630,13 @@ export class WebPagesDatatable {
                 $("#DTE_Field_urlInheritGroup_0").on("change", function() { self.#showHideUrlAddress("urlInheritGroup"); });
                 $("#DTE_Field_generateUrlFromTitle_0").on("change", function() { self.#showHideUrlAddress("generateUrlFromTitle"); });
 
-                $("#DTE_Field_editorFields-publishAfterStart_0").on("change", function() { self.#publishAfterStartChanged(); });
+                $("#DTE_Field_editorFields-publishAfterStart_0").on("change", function() { self.#publishAfterStartChanged(); self.#updatePlannedMode(true); });
             }
 
             self.#showHideUrlAddress();
             self.#publishAfterStartChanged();
+            self.#bindHttpHeaders();
+            self.#updatePlannedMode(true);
         });
         this.webpagesDatatable.EDITOR.on('open', function (e, mode, action) {
             //console.log("Open, e=", e, "mode=", mode, "action=", action);
@@ -604,6 +663,7 @@ export class WebPagesDatatable {
             self.#showHideUrlAddress();
         });
         this.webpagesDatatable.EDITOR.on( 'initSubmit', function (e, action) {
+            if (self.#plannedRequest !== null) return false;
             let isChecked = $("#webpagesSaveCheckbox").is(':checked');
             self.webpagesDatatable.EDITOR.field("editorFields.requestPublish").val(!isChecked);
             //console.log("initSubmit, checked=", isChecked, "editorFields.requestPublish=", webpagesDatatable.EDITOR.field("editorFields.requestPublish").val())
@@ -697,6 +757,124 @@ export class WebPagesDatatable {
             this.webpagesDatatable.EDITOR.field("virtualPath").show();
             this.webpagesDatatable.EDITOR.field("editorVirtualPath").hide();
             $("#DTE_Field_virtualPath").attr("disabled", "disabled");
+        }
+    }
+
+    #updatePlannedMode(initialize) {
+        const editor = this.webpagesDatatable.EDITOR;
+        const json = editor.currentJson;
+        const modal = $("#" + this.webpagesDatatable.DATA.id + "_modal");
+        modal.find(".planned-change-notice").remove();
+        if (!json?.editorFields?.plannedPublishingEnabled) return;
+        const selected = $("#DTE_Field_editorFields-publishAfterStart_0").is(":checked");
+        if (json.docId < 1) {
+            if (selected) {
+                editor.field("editorFields.publishAfterStart").val(false);
+                this.#publishAfterStartChanged();
+                WJ.confirm({
+                    title: WJ.translate("planned.saveFirst.js"),
+                    message: WJ.translate("planned.saveFirst.message.js"),
+                    btnOkText: WJ.translate("planned.saveFirst.button.js"),
+                    success: () => {
+                        if (editor.currentJson === json && editor.display()) this.#saveNewPageForPlanning();
+                    }
+                });
+            }
+            return;
+        }
+        const notice = $('<div class="alert alert-warning planned-change-notice mt-2 mb-0" role="status"></div>');
+        const perex = $(editor.node("editorFields.publishAfterStart"));
+        perex.find('[data-dte-e="input"]').append(notice);
+        notice.append($("<p class='mb-2'></p>").text(WJ.translate("planned.warning.js")));
+        const active = json.editorFields.plannedHistoryId;
+        if (active > 0 && Number(active) !== Number(json.historyId)) {
+            $("<button type='button' class='btn btn-outline-secondary btn-sm me-2'></button>")
+                .text(WJ.translate("planned.open.js")).appendTo(notice)
+                .on("click", () => this.#editFromHistory(json.docId, active));
+        }
+        $("<button type='button' class='btn btn-outline-danger btn-sm'></button>")
+            .text(WJ.translate("planned.cancel.js")).appendTo(notice).on("click", () => {
+                if (this.#plannedRequest !== null || json.docId < 1) return;
+                this.#plannedRequest = $.ajax({url: `/admin/rest/web-pages/planned/${json.docId}/cancel`, method: "POST"})
+                    .done(() => this.#editFromHistory(json.docId, -1))
+                    .fail(() => WJ.notifyError(WJ.translate("planned.error.js")))
+                    .always(() => { this.#plannedRequest = null; });
+            });
+        if (selected && initialize) {
+            if (this.#plannedRequest !== null) return;
+            this.#plannedRequest = $.ajax({url: `/admin/rest/web-pages/planned/${json.docId}/initialize`, method: "POST"})
+                .done(result => {
+                    if (result.historyId > 0 && Number(result.historyId) !== Number(json.historyId)) {
+                        json.editorFields.plannedHistoryId = result.historyId;
+                        editor.field("editorFields.publishAfterStart").val(false);
+                        WJ.notifyError(WJ.translate("planned.openExisting.js"));
+                        this.#updatePlannedMode(false);
+                        return;
+                    }
+                    this.#setPlannedMedia(true);
+                })
+                .fail(() => {
+                    editor.field("editorFields.publishAfterStart").val(false);
+                    WJ.notifyError(WJ.translate("planned.error.js"));
+                })
+                .always(() => { this.#plannedRequest = null; this.#publishAfterStartChanged(); });
+        } else {
+            this.#setPlannedMedia(selected);
+        }
+        if (!selected && !active) notice.hide();
+    }
+
+    /** Saves a new unpublished page, then reopens the editor with its persistent ID before initializing the plan. */
+    #saveNewPageForPlanning() {
+        const table = this.webpagesDatatable;
+        const editor = table.EDITOR;
+        if (!editor.currentJson?.editorFields?.plannedPublishingEnabled || editor.currentJson.docId > 0 || editor.mode() !== "create") return;
+
+        editor.submit(json => {
+            const saved = json.data[0];
+            const modal = $("#" + table.DATA.id + "_modal");
+            const reopen = () => {
+                // Reload first so the create response's table redraw cannot replace the row being edited.
+                table.ajax.reload(() => {
+                    saved.editorFields.publishAfterStart = true;
+                    let row = table.row("#" + saved.docId);
+                    if (row.any()) row.data(saved);
+                    else row = table.row.add(saved);
+                    modal.one("shown.bs.modal.plannedNewPage", () => {
+                        $("#pills-dt-" + table.DATA.id + "-perex-tab").trigger("click");
+                    });
+                    table.wjEdit(row.index());
+                }, false);
+            };
+            // The submit callback runs after closing has started; wait for both submission and the modal transition.
+            editor.one("submitComplete.plannedReopen", () => {
+                if (modal.attr("data-dte-close-state") === "closed") reopen();
+                else modal.one("hidden.bs.modal.plannedNewPage", reopen);
+            });
+        }, null, data => {
+            // Change only the submitted snapshot so validation failures leave the form intact.
+            for (const page of Object.values(data.data)) {
+                page.available = false;
+                page.editorFields.requestPublish = false;
+                page.editorFields.publishAfterStart = false;
+            }
+        });
+    }
+
+    #setPlannedMedia(planned) {
+        const editor = this.webpagesDatatable.EDITOR;
+        editor.field("editorFields.plannedMedia").val(planned);
+        $("#webpagesSaveCheckbox").prop("disabled", planned).prop("checked", false);
+        const tab = $("#pills-dt-" + this.webpagesDatatable.DATA.id + "-media-tab");
+        tab.text(WJ.translate(planned ? "planned.media.js" : "editor.tab.media"));
+        if (this.#mediaTable) {
+            const json = editor.currentJson;
+            const url = `/admin/rest/media?docId=${json.docId}&groupId=${json.groupId}&planned=${planned}`;
+            this.#mediaTable.rows().deselect();
+            this.#mediaTable.setAjaxUrl(url);
+            this.#mediaTable.DATA.url = url;
+            this.#mediaTable.EDITOR.ajax().url = WJ.urlAddPath(url, '/editor');
+            this.#mediaTable.ajax.reload();
         }
     }
 

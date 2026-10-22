@@ -34,7 +34,7 @@ Menu **Pomocník** je dostupné v hlavičke na všetkých stránkach administrá
 - **Pomoc k tejto stránke** – návod k otvorenej časti administrácie. Pod odkazom je názov aktuálnej stránky. Ak stránka nemá priradený návod, položka sa nezobrazí.
 - **Dokumentácia WebJET CMS** – úvodná stránka dokumentácie v jazyku prihláseného používateľa.
 - **Klávesové skratky** – [prehľad skratiek](keyboard-shortcuts.md) a miest, kde fungujú.
-- **Čo je nové vo verzii…** – konkrétna verzia v dokumentácii. Počet noviniek a označenie **Nové** zodpovedajú karte na úvodnej obrazovke. Označenie zostáva 30 dní od prvého zobrazenia daného obsahu v menu alebo na úvode; úprava obsahu začne nové obdobie.
+- **Čo je nové vo verzii…** – konkrétna verzia v dokumentácii. Počet aj označenie **Nové** sa týkajú noviniek nainštalovanej verzie, bez sociálnych príspevkov. Označenie zhasne po rozbalení noviniek na úvodnej obrazovke a vráti sa pri zmene ich textu. Samotné otvorenie menu obsah neoznačí za prečítaný.
 - **Zoznam všetkých zmien** – kompletný changelog.
 - **Poslať spätnú väzbu** – dialóg pre nápad, problém alebo pochvalu. Funguje aj mimo úvodnej obrazovky. Šípka späť vás vráti do menu; zatvorenie krížikom zachová rozpísanú správu počas otvorenia tejto stránky.
 - **Kontaktovať podporu** – stránka podpory nastavená pre jazyk používateľa.

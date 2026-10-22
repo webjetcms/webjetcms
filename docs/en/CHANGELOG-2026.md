@@ -26,6 +26,8 @@
 
 ![](redactor/admin/search/quick-search.png)
 
+- The [What's New] panel (redactor/admin/welcome.md#What-is-new) supplements the news of the installed version with videos and posts from YouTube and Facebook of WebJET CMS. The **New** label is hidden after expanding the panel and again notifies about new content (#358).
+
 ### Account login and protection
 
 - [User menu in the header](redactor/admin/README.md#user-menu) displays account information, number of active sessions, and two-factor authentication status. The **Active logins** item opens the custom logins management from any administration page. The documentation contains a current screenshot and description of all menu items (#351).
@@ -43,6 +45,12 @@
 Device tracking can be disabled by setting the configuration variable `adminNewDeviceDetectionEnabled` to false. When logging in, the [approximate location](admin/setup/configuration/dashboard.md#login-approximate-location) is also determined by the IP address, which can be disabled by setting `adminLoginLocationApiKey` to the value `DISABLED`.
 
 ### Websites
+
+- Page editor - new menu [Styles](redactor/webpages/working-in-editor/README.md#working-with-styles-and-text-formatting). It displays active styles with the option to remove them and allows you to select the edited paragraph, column or entire section. For proper functionality, it is necessary to have correctly set [CSS selectors](frontend/page-builder/blocks.md#structure-selectors) and created [additional comments](frontend/examples/template-bare/README.md#searching-and-style-groups) in the CSS file of the website. (#356).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/IomtyBHpx64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 - Website Trash - added [automatic deletion of old pages and folders](redactor/apps/gdpr/data-deleting.md) from the trash according to the set retention period. Added the ability to delete pages and folders in the trash and in the [Data deletion](sysadmin/data-deleting/README.md) section according to the selected date range. Unified logic for calculating the number and deleting, fixed permanent deletion of the trash folder and empty folders (#271).
 
@@ -63,6 +71,7 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 ![](frontend/templates/templates-edit-advanced.png)
 
 - Added **Thumbnail** tab in the image insertion dialog for setting parameters for [generating thumbnail images](redactor/webpages/working-in-editor/README.md#thumbnail-tab) `thumbnail`. Free size setting mode is supported, as well as [precisely defined size](frontend/thumb-servlet/README.md#constraints) mode by selecting from the options (#58317,#58758).
+- Size selection shows both the mode name and the `ip` number. `learn/check/allow` modes also offer a custom size, `strict` requires an allowed combination, and `deny` the card is hidden. An existing disallowed thumbnail is flagged in `strict` mode and requires a replacement (#353).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
@@ -88,6 +97,16 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 
 - Page Builder - improved detection of changes in the HTML code of the page so that the message "You probably have unsaved text in the editor" is not displayed even if you have not actually changed any text on the page (#317).
 - [Page Builder](redactor/webpages/pagebuilder.md) - after clicking on the + in the yellow line in the **Insert Block** window on the **Basic** tab, the **Image** and **Application** options have been added. They will open the corresponding editor dialog and allow you to insert content at the selected location (#339).
+- Page Builder - added [block copying between pages](redactor/webpages/pagebuilder.md#block-copying-between-pages). The **Copy** and **Paste** options transfer sections, containers, and columns with content and custom styles. The editor will only offer locations suitable for the block type. The clipboard is valid for 30 minutes from the time of copying (#353).
+- Templates - on the Advanced tab you can set [removing links from page URL](frontend/templates/templates.md#advanced-tab): according to `urlRemoveSpojky`, always remove or keep. This way, the blog can keep links even when removal is enabled for the rest of the site (#353).
+- Changing the folder URL with application to subfolders and subpages also updates non-displayed pages, scheduled versions, versions awaiting approval, and the last working version. It preserves their content, status, and publish date; scheduled publishing no longer reverts to the original URL (#353).
+- SEO - **Browse** settings offer separate options to enable (`index`) and disable (`noindex`). **HTTP Headers** section on the Basic tab shows the current preview `X-Robots-Tag`, `Referrer-Policy` and, if redirect is set, `Location` according to unsaved page settings and server configuration (#353).
+- History - users with the **Clean database** permission can [delete historical versions](redactor/webpages/history.md) directly in the page editor, also by mass selection. The currently published version and versions awaiting approval are protected. Without this permission, canceling future scheduled publishing remains available (#353).
+- Planned publishing - when enabled `plannedPublishingEnabled`, a future version of the page can be prepared with protected images, documents, and a separate set of media [procedure and conditions of deployment](redactor/webpages/planned-publishing.md) (#362).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Headless mode
 
@@ -136,6 +155,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - [Multistep forms](redactor/apps/multistep-form/README.md) - added the ability to enter a custom error message and trim spaces at the beginning and end of the text entered by the visitor (#osk573).
 - Easy form and multi-step forms - [custom HTML tooltip code](redactor/apps/formsimple/README.md#custom-html-tooltip-code) in the translation key `components.formsimple.tooltipCode` supports tags with field, item and step identifiers, including the unique `${tooltipId}`. The control can thus be unambiguously linked to the tooltip content using `aria-describedby` even when the form is repeatedly inserted into the page. After each step is displayed, the multi-step form publishes an [event `WJ.multistepForm.stepShown`](redactor/apps/multistep-form/README.md#javascript-event-after-display-step) on the `window` object with references to its HTML elements and form and step identifiers (#306).
 - Easy form and multi-step forms - the default tooltip is now available with both mouse and keyboard, provides a stable contextual title and description, remains displayed when the cursor is moved to its content, and can be closed with the `Escape` key (#306).
+- Multistep forms - added [copy fields between forms and steps](redactor/apps/multistep-form/README.md#copy-fields-between-forms). Paste opens the editor with saved field settings; display conditions and obligations are not carried over. Internal clipboard works across browser tabs and allows repeated pasting for 30 minutes (#58826).
+- Multi-step forms - added option [Show content without redirection](redactor/apps/form/README.md#tab---settings). The switch will use the web page from the **Redirect after completion** field and after successful submission will replace the default message with its content without changing the URL address. If the visitor does not have permission to view the web page, the default message about successful submission will be displayed (#58826).
 
 ### Semantic search
 
@@ -252,6 +273,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
 - Explorer - when updating a file, the selection is limited to one file and a message warns of the wrong type (#317).
 - Explorer - folder information no longer shows inaccurate recursive size (#317).
+- Proxy - [exceptions `proxyHostsException`](install/config/README.md#httphttps-proxy) supports wildcard patterns like `*.firma.sk` and `127.*`, comma and `|` separators, and case-insensitive comparison. The same normalized list is used for both HTTP/HTTPS and JVM settings `http.nonProxyHosts`. Changing the configuration requires a restart (#361).
 
 ### Bug fixes
 
@@ -287,8 +309,11 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+- SBOM - added [generate a common list of Java and npm dependencies](developer/install/sbom.md) in CycloneDX JSON format with the `ant -f ant/build.xml sbom` command, including transitive dependencies and report validation.
+- [Central News Generator](developer/install/social-media-feed.md) will remove unused previews with a 30-day grace period after successful publishing. It will preserve images of current posts as well as backup data for source failure (#358).
+- Page Editor - [Styles menu setting](frontend/examples/template-bare/README.md#search-and-style-groups) supports metadata in `editor.scss` / `editor.css` comments for categories and their icons, mutually exclusive groups, allowed elements, and base classes preserved across skins. The new menu is enabled by default; setting `ckeditor_styleComboEnabled=false` restores the original style selection (#OSK764).
+- AI agents - ready distribution of WebJET CMS skills via `npx skills`, including common conventions and project guidelines for Codex, GitHub Copilot and Claude Code. [Manual](custom-apps/skills/README.md) describes installation, update and use in older client projects. The instructions in `AGENTS.md` and the thematic references in `.github/agents/` have been verified against the current code; they describe the frameworks used, development and testing procedures, and differences between the CMS core and client projects (#357).
 - Dashboard - added widget registry, responsive grid and REST interface for transactional settings storage to `user_settings_admin`. Existing MySQL/MariaDB table is converted to InnoDB during update. Usage is described in [welcome screen documentation](redactor/admin/welcome.md), background and environment labeling of its [configuration](admin/setup/configuration/dashboard.md). Development rules, contract and reasons for decisions are maintained by project skill `wj-dashboard-widget` in `.agents/skills/wj-dashboard-widget/` (#58806).
-
 - Administration - removed dependency on [Vue.js](https://vuejs.org). Tree fields, start page, image area selection and server monitoring use native [web components](developer/frameworks/web-components.md). The global object `window.VueTools` and packages for Vue are no longer part of the administration. Custom extensions must replace them with web components or compile Vue themselves (#58722).
 - AI Assistants - Provider-independent client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection have been separated into a separate artifact `com.webjetcms:webjet-ai` and an external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS passes configuration through a typed adapter and continues to provide auditing, persistence, and UI integration. This is an incompatible change: the original CMS SPI for custom providers and its transport and streaming support classes have been removed. Custom providers must be migrated to the `AiProvider` library interface and the CMS adapter `LibrarySupportLogic` (#58670).
 - AI providers - your own implementation can be [added to the project](custom-apps/apps/ai/assistants/README.md) as a Spring bean `AiProvider` ; the CMS will automatically connect it to the built-in providers. The configuration and editor fields are concentrated in a single adapter `LibrarySupportLogic` /`AiAssitantsInterface`. Image generation options are loaded by provider, model and operation from the library `webjet-ai`, so only the supported number, size, quality and aspect ratio are dynamically displayed (#58694).

@@ -3,7 +3,7 @@
     let url = "/admin/rest/forms-list";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
     const formColumnsToKeep = ["id", "formName", "recipients", "count", "createDate", "formType", "savedb"];
-    const basicSettingColumns = ["forward", "forwardFail", "isPdf", "allowOnlyOneSubmit", "overwriteOldForms", "doubleOptIn", "messageAsAttach", "messageAsAttachFileName", "encryptKey", "encrypKeyInfo", "useFormDoc", "formmailSendUserInfoDoc", "useFormMailDoc"];
+    const basicSettingColumns = ["forward", "forwardAsContent", "forwardFail", "isPdf", "allowOnlyOneSubmit", "overwriteOldForms", "doubleOptIn", "messageAsAttach", "messageAsAttachFileName", "encryptKey", "encrypKeyInfo", "useFormDoc", "formmailSendUserInfoDoc", "useFormMailDoc"];
     const emailSettingColumns = ["ccEmails", "bccEmails", "replyTo", "subject", "forceTextPlain", "formMailEncoding", "addTechInfo", "emailTextBefore", "emailTextAfter", "fieldsEmailHeader"];
     const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "forwardType", "afterSendInterceptor", "formProcessor", "maxSizeInKilobytes", "maxCombinedSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
 

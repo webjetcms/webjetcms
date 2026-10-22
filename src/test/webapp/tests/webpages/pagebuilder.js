@@ -6,6 +6,35 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+Scenario('history version retains the Page Builder content and toolbar', async ({ I, DTE, DT, Document }) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('#wjInline-docdata.pb-wrapper', 10);
+    I.switchTo();
+
+    I.clickCss('#pills-dt-datatableInit-history-tab');
+    DT.waitForLoader('datatableFieldDTE_Field_editorFields-history');
+    const historyRow = locate('#datatableFieldDTE_Field_editorFields-history tbody tr').at(2);
+    I.waitForVisible(historyRow, 10);
+    const historyId = await I.grabAttributeFrom(historyRow, 'id');
+    I.click(historyRow.find('td').first());
+    I.clickCss('#pills-dt-datatableInit-history .buttons-history-edit');
+
+    // Wait for the history document, so the old iframe cannot satisfy the content assertions.
+    I.waitForFunction(([id]) => {
+        const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow;
+        return frame && new URLSearchParams(frame.location.search).get('historyid') === id && frame.document.readyState === 'complete';
+    }, [historyId], 15);
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('#wjInline-docdata.pb-wrapper', 10);
+    I.see('Suspendisse interdum dolor justo', '#wjInline-docdata');
+    I.seeElement('#inlineEditorToolbarTop .cke_inner');
+    I.switchTo();
+    DTE.cancel();
+});
+
 Scenario('overenie zobrazenia podla sablony', async ({I, DTE, Document}) => {
 
     //reset PB settings
@@ -368,13 +397,14 @@ function openDuplicableRowToolbar(I, rowIndex, action) {
 
 /** Keeps a move/duplicate destination below the sticky editor toolbar before a real pointer click. */
 async function clickDuplicableRowTarget(I, rowIndex, controllerSelector) {
-    await I.usePlaywrightTo("reveal and click the duplicable row destination", async ({page}) => {
-        const frame = await getPageBuilderFrame(page);
-        const target = frame.locator(getDuplicableRowController(rowIndex, controllerSelector).css);
-        await target.waitFor({state: 'visible'});
-        await target.evaluate(element => element.scrollIntoView({block: 'center', behavior: 'instant'}));
-        await target.click();
-    });
+    await I.executeScript((root, args) => {
+        const row = document.querySelector(args.selector).parentElement;
+        const point = window.pageBuilder.ui.insertPoints.find(point =>
+            args.after ? point.previous === row : point.next === row);
+        point.button.attr('data-autotest-row-destination', 'true');
+        point.button[0].focus();
+    }, {selector: getDuplicableRowController(rowIndex, controllerSelector).css, after: controllerSelector.includes('append')});
+    I.click('[data-autotest-row-destination]');
 }
 
 async function getPageBuilderFrame(page) {
@@ -447,19 +477,17 @@ Scenario('check toolbar elements', ({I, DTE, Document}) => {
     closeStyleModal(I);
 
     //
-    I.say("check styleCombo options");
-    I.forceClick({css: "span.cke_combo__styles a.cke_combo_button"});
-    I.waitForElement("iframe.cke_panel_frame", 5);
-    I.switchTo("iframe.cke_panel_frame");
-    I.see("Nadpis 1");
-    I.see("baretest1");
-    I.see("Bare TEST 02 bold");
-    I.see("Bare TEST 03");
-    I.see("Bare TEST 04");
-    I.switchTo();
-    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.say("Check styles and semantic formats in the Page Builder editor");
+    I.clickCss(".cke_button__wjstyles");
+    I.waitForVisible(".wj-styles[role=dialog]", 10);
+    I.see("Nadpis 1", ".wj-styles__formats");
+    I.checkOption(".wj-styles__filters input");
+    for (const style of ["baretest1", "Bare TEST 02 bold", "Bare TEST 03", "Bare TEST 04"]) {
+        I.fillField(".wj-styles__search", style);
+        I.waitForText(style, 10, ".wj-styles__list");
+    }
     I.pressKey(['Escape']);
-    I.dontSeeElement("iframe.cke_panel_frame");
+    I.waitForInvisible(".wj-styles", 10);
 
     I.switchTo();
 });
@@ -1101,7 +1129,7 @@ Scenario('workbench structure stays stable until reopened and follows selection 
 });
 
 /** Focuses a real insertion button, allowing its keyboard handler to reveal off-screen destinations. */
-async function chooseWorkbenchInsertion(I, type, parent, index) {
+async function chooseWorkbenchInsertion(I, type, parent, index, opensLibrary = true) {
     await I.executeScript((root, args) => {
         document.querySelectorAll('[data-autotest-insert]').forEach(button => button.removeAttribute('data-autotest-insert'));
         const point = window.pageBuilder.ui.insertPoints.filter(point => point.type === args.type && point.parent.matches(args.parent))[args.index];
@@ -1109,7 +1137,7 @@ async function chooseWorkbenchInsertion(I, type, parent, index) {
         point.button[0].focus();
     }, {type, parent, index});
     I.click('[data-autotest-insert]');
-    I.waitForVisible('.pb-library--'+type, 10);
+    if (opensLibrary) I.waitForVisible('.pb-library--'+type, 10);
 }
 
 Scenario('workbench CSS tooltips on toolbar and insertion buttons', async ({I, DTE, Document}) => {
@@ -1146,9 +1174,9 @@ Scenario('workbench CSS tooltips on toolbar and insertion buttons', async ({I, D
             });
             assert.ok(placement.top >= placement.toolbarBottom, 'Toolbar tooltips must appear below the bar, clear of CKEditor');
         }
-        await frame.locator('.cke_combo__styles:visible .cke_combo_button').click();
-        await frame.locator('.cke_panel:visible').waitFor({state: 'visible'});
-        const panelAboveToolbar = await frame.locator('.cke_panel:visible').evaluate(panel => {
+        await frame.locator('.cke_button__wjstyles:visible').click();
+        await frame.locator('.wj-styles[role=dialog]').waitFor({state: 'visible'});
+        const panelAboveToolbar = await frame.locator('.wj-styles[role=dialog]').evaluate(panel => {
             const panelRect = panel.getBoundingClientRect(), barRect = document.querySelector('.pb-workbench').getBoundingClientRect();
             const left = Math.max(panelRect.left, barRect.left), right = Math.min(panelRect.right, barRect.right);
             const top = Math.max(panelRect.top, barRect.top), bottom = Math.min(panelRect.bottom, barRect.bottom);
@@ -1156,8 +1184,8 @@ Scenario('workbench CSS tooltips on toolbar and insertion buttons', async ({I, D
         });
         assert.equal(panelAboveToolbar, true, 'CKEditor dropdowns must remain clickable above the workbench');
         await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-tooltip-ckeditor-panel.png'});
-        await frame.locator('.cke_combo__styles:visible .cke_combo_button').click();
-        await frame.locator('.cke_panel:visible').waitFor({state: 'hidden'});
+        await page.keyboard.press('Escape');
+        await frame.locator('.wj-styles[role=dialog]').waitFor({state: 'hidden'});
         await frame.locator('.pb-workbench [data-pb-action=insert]').click();
         await frame.waitForFunction(()=>window.pageBuilder.ui.insertAnimations.every(animation=>animation.playState==='finished'));
         await frame.evaluate(()=>{
@@ -1228,16 +1256,16 @@ Scenario('workbench insertion expands without scrolling away from the first sect
     DTE.cancel();
 });
 
-/** Checks that insertion replaces the normal toolbar controls with one hint row. */
+/** Checks that insertion keeps structure navigation beside its single hint row. */
 async function assertWorkbenchInsertionRow(frame, inserting) {
     const bar = frame.locator('.pb-workbench');
     await frame.waitForFunction(inserting => document.querySelector('.pb-workbench').classList.contains('is-inserting') === inserting, inserting);
     assert.equal(await bar.locator('.pb-insert-hint').isVisible(), inserting, 'The insertion hint must only appear while choosing a destination');
     assert.equal(await bar.locator('.pb-resize-hint').isVisible(), false, 'Insertion must not show a second resize hint');
     if (inserting) {
-        assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['end-insert'], 'The active insertion toolbar must expose only the Exit button');
+        assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['structure', 'end-insert'], 'Insertion must expose structure navigation and Exit');
         const children = await bar.evaluate(element => Array.from(element.children).filter(child => child.getBoundingClientRect().height > 0 && getComputedStyle(child).display !== 'none').map(child => child.classList.contains('pb-insert-hint')));
-        assert.deepStrictEqual(children, [true], 'The hint must replace every normal toolbar child without leaving a second row');
+        assert.deepStrictEqual(children, [false, true], 'Structure and the hint must share the toolbar without leaving a second row');
     } else {
         for (const selector of ['.pb-workbench-path', '.pb-workbench-actions', '[data-pb-action=structure]', '[data-pb-action=insert]', '[data-pb-action=guides]']) {
             assert.equal(await bar.locator(selector).isVisible(), true, 'Leaving insertion must restore the normal toolbar controls');
@@ -1935,7 +1963,102 @@ Scenario('workbench outline modes, offsets and remembered preference', async ({I
     DTE.cancel();
 });
 
-Scenario('workbench move and duplicate hints replace the toolbar and restore focus', async ({I, DTE, Document}) => {
+for (const action of ['duplicate', 'move', 'insert', 'paste']) {
+    Scenario('structure navigation preserves the '+action+' operation', async ({I, DTE, Document}) => {
+        await openWorkbenchFixture(I, DTE, Document);
+        const original = await I.executeScript(() => {
+            const destination = document.querySelector('#wjInline-docdata > section:last-of-type .pb-column');
+            destination.classList.add('pb-navigation-destination-autotest');
+            destination.parentElement.classList.add('pb-navigation-row-autotest');
+            destination.querySelector('h3').textContent = 'Destination autotest';
+            return {
+                html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data,
+                height: document.querySelector('.pb-workbench').getBoundingClientRect().height
+            };
+        });
+        const toolbar = '.pb-workbench';
+        if (action === 'paste') {
+            I.click(toolbar+' [data-pb-action=more]');
+            I.click(toolbar+' [data-pb-action=copy]');
+        }
+        if (action !== 'insert') I.click(toolbar+' [data-pb-action=more]');
+        I.click(toolbar+' [data-pb-action='+action+']');
+        const mode = action === 'insert' || action === 'paste' ? 'inserting' : 'moving';
+        I.waitForVisible(toolbar+'.is-'+mode, 10);
+        I.seeElement(toolbar+' [data-pb-action=structure]:enabled');
+        const state = await I.executeScript(() => ({
+            height: document.querySelector('.pb-workbench').getBoundingClientRect().height,
+            paste: window.pageBuilder.ui.pasting
+        }));
+        I.assertEqual(state.height, original.height, 'The mode toolbar must keep its original height');
+        I.click(toolbar+' [data-pb-action=structure]');
+        I.waitForVisible('.pb-structure [role=treeitem]', 10);
+        const branch = '.pb-structure > ul > li:first-child';
+        I.click(branch+' > div [data-pb-expand]');
+        I.seeElement(branch+'[aria-expanded=false]');
+        I.pressKey('ArrowRight');
+        I.seeElement(branch+'[aria-expanded=true]');
+        I.fillField('.pb-structure input[type=search]', 'Destination autotest');
+        const destination = locate('.pb-structure [role=treeitem][data-type=column] > div').withText('Destination autotest');
+        I.waitForVisible(destination, 10);
+        if (action === 'move' || action === 'paste') {
+            I.pressKey('Tab');
+            I.pressKey('End');
+            I.pressKey('Enter');
+        } else I.click(destination);
+        I.waitForInvisible('.pb-structure', 10);
+        I.seeElement(toolbar+'.is-'+mode);
+        const navigation = await I.executeScript(() => {
+            const pb = window.pageBuilder, target = document.querySelector('.pb-navigation-destination-autotest');
+            const top = document.querySelector('.pb-workbench').getBoundingClientRect().bottom;
+            return {
+                selectedSource: pb.ui.selected === document.querySelector('.pb-workbench-copy').closest('.pb-column'),
+                treeTarget: pb.ui.treeTarget === target,
+                offset: target.getBoundingClientRect().top - top,
+                visible: target.getBoundingClientRect().top < innerHeight,
+                atBottom: Math.abs(scrollY + innerHeight - document.scrollingElement.scrollHeight) < 2,
+                paste: pb.ui.pasting,
+                html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data,
+                focus: document.activeElement.dataset.pbAction
+            };
+        });
+        I.assertTrue(navigation.selectedSource, 'Tree navigation must preserve the source block');
+        I.assertTrue(navigation.treeTarget, 'Tree navigation must remember the destination independently');
+        I.assertTrue(navigation.visible && navigation.offset >= 19 && (navigation.offset <= 21 || navigation.atBottom), 'The destination must be revealed below the toolbar, allowing the document bottom to limit scrolling');
+        I.assertEqual(navigation.focus, 'structure', 'Closing the tree must restore keyboard focus without scrolling back');
+        I.assertDeepEqual(navigation.paste, state.paste, 'Navigation must preserve the active clipboard snapshot');
+        I.assertEqual(navigation.html, original.html, 'Navigation must not edit content or complete the operation');
+        I.click(toolbar+' [data-pb-action=structure]');
+        I.waitForVisible('.pb-structure', 10);
+        I.seeInField('.pb-structure input[type=search]', 'Destination autotest');
+        I.seeElement('.pb-structure [role=treeitem][data-type=column][aria-selected=true]');
+        I.saveScreenshot('pagebuilder-structure-'+action+'.png');
+        I.pressKey('Escape');
+        I.waitForInvisible('.pb-structure', 10);
+        I.seeElement(toolbar+'.is-'+mode);
+        I.pressKey('Escape');
+        I.waitForInvisible(toolbar+'.is-'+mode, 10);
+        I.assertEqual(await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data), original.html, 'A second Escape must cancel without changing content');
+
+        if (action === 'duplicate' || action === 'move') {
+            I.click(toolbar+' [data-pb-action=more]');
+            I.click(toolbar+' [data-pb-action='+action+']');
+            I.click(toolbar+' [data-pb-action=structure]');
+            I.waitForVisible(destination, 10);
+            I.click(destination);
+            I.waitForInvisible('.pb-structure', 10);
+            await chooseWorkbenchInsertion(I, 'column', '.pb-navigation-row-autotest', 1, false);
+            I.waitForElement('.pb-navigation-destination-autotest + .pb-column .pb-workbench-copy', 10);
+            I.assertEqual(await I.grabNumberOfVisibleElements('.pb-workbench-copy'), action === 'duplicate' ? 2 : 1, 'Completing the operation must use the original source at the navigated destination');
+        }
+        if (action === 'paste') I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.clipboard'));
+        I.switchTo();
+        I.amAcceptingPopups();
+        DTE.cancel();
+    });
+}
+
+Scenario('workbench move and duplicate hints share the toolbar with structure and restore focus', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     const before = await workbenchGeometry(I);
     await I.usePlaywrightTo('verify destination hints, cancellation and completed duplication', async ({page}) => {
@@ -1945,10 +2068,12 @@ Scenario('workbench move and duplicate hints replace the toolbar and restore foc
         for (const width of [1440, 1057, 720]) {
             await page.setViewportSize({width, height: 1052});
             for (const action of ['duplicate', 'move']) {
+                const normalHeight = await bar.evaluate(element => element.getBoundingClientRect().height);
                 await bar.locator('[data-pb-action=more]').click();
                 await bar.locator('[data-pb-action='+action+']').click();
                 await bar.locator('.pb-move-hint').waitFor({state: 'visible'});
-                assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['end-move'], 'The destination hint must replace the structure toolbar');
+                assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['structure', 'end-move'], 'The destination hint must retain structure navigation');
+                assert.equal(await bar.evaluate(element => element.getBoundingClientRect().height), normalHeight, 'Starting an operation must preserve the toolbar height');
                 assert.equal(await frame.locator('.pb-notify').isVisible(), false, 'Choosing a destination must not show the old notification popup');
                 assert.equal(await bar.locator('.pb-move-hint [role=status]').textContent(), action === 'duplicate' ? 'Vyberte miesto, kam chcete blok duplikovať.' : 'Vyberte miesto, kam chcete blok presunúť.', 'Each operation must explain which destination to choose');
                 assert.ok((await bar.locator('[data-pb-action=end-move]').textContent()).includes('Esc'), 'The Exit action must advertise the Escape shortcut');
@@ -1956,7 +2081,8 @@ Scenario('workbench move and duplicate hints replace the toolbar and restore foc
                 const layout = await bar.evaluate(element => {
                     const hint = element.querySelector('.pb-move-hint'), button = hint.querySelector('button');
                     const barRect = element.getBoundingClientRect(), hintRect = hint.getBoundingClientRect(), buttonRect = button.getBoundingClientRect();
-                    return {singleRow: Math.abs(barRect.height - hintRect.height) <= 2, fits: hint.scrollWidth <= hint.clientWidth, exitRight: buttonRect.right <= barRect.right && buttonRect.right >= barRect.right - 12};
+                    const structureRect = element.querySelector('[data-pb-action=structure]').getBoundingClientRect();
+                    return {singleRow: Math.abs(structureRect.top - hintRect.top) <= 1 && hintRect.left >= structureRect.right, fits: hint.scrollWidth <= hint.clientWidth, exitRight: buttonRect.right <= barRect.right && buttonRect.right >= barRect.right - 12};
                 });
                 assert.deepStrictEqual(layout, {singleRow: true, fits: true, exitRight: true}, 'The hint must fit one toolbar row with Exit aligned to the right');
                 if (width === 1057 && action === 'duplicate') await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-duplicate-hint.png'});
@@ -1971,16 +2097,109 @@ Scenario('workbench move and duplicate hints replace the toolbar and restore foc
         }
         await page.setViewportSize({width: 1440, height: 1000});
     });
-    assert.deepStrictEqual(await workbenchGeometry(I), before, 'Cancelling must restore the original canvas geometry');
+    // CKEditor can split text nodes on focus without changing their rendered geometry.
+    const bounds = items => items.map(({left, top, width, height}) => ({left, top, width, height}));
+    assert.deepStrictEqual(bounds(await workbenchGeometry(I)), bounds(before), 'Cancelling must restore the original canvas geometry');
     I.click(locate(workbenchFixture+' li.pb-duplicable-element').first());
     I.click('.pb-workbench [data-pb-action=more]');
     I.click('.pb-workbench [data-pb-action=duplicate]');
     I.waitForVisible('.pb-move-hint', 10);
-    I.forceClick(locate(workbenchFixture+' li.pb-duplicable-element').at(2).find('aside.pb-append'));
+    await chooseWorkbenchInsertion(I, 'item', workbenchFixture+' ul', 2, false);
     I.waitForElement(workbenchFixture+' li.pb-duplicable-element:nth-child(3)', 10);
     I.waitForInvisible('.pb-move-hint', 10);
     I.waitForVisible('.pb-workbench [data-pb-action=duplicate-adjacent]:enabled', 10);
     I.dontSeeElement('.pb-notify');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
+Scenario('workbench move and duplicate reuse typed insertion destinations', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    await I.executeScript(() => {
+        const pb = window.pageBuilder, section = document.createElement('section');
+        section.className = 'pb-destination-autotest';
+        section.innerHTML = '<h2>Destination autotest</h2><div class="'+pb.grid.container_default_class+'"><div class="'+pb.grid.row_default_class+'"></div></div>';
+        pb.$wrapper.append(section);
+        window.markPbElements('doc_data');
+        pb.create_empty_placeholder(section.querySelector('.pb-row'));
+    });
+    const html = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+    for (const type of ['column', 'container', 'section']) {
+        for (const action of ['duplicate', 'move']) {
+            I.click(workbenchFixture+' .pb-workbench-copy');
+            I.click(locate('.pb-workbench-path button[data-type='+type+']').last());
+            I.click('.pb-workbench [data-pb-action=more]');
+            I.click('.pb-workbench [data-pb-action='+action+']');
+            I.waitForVisible('.pb-move-hint', 10);
+            I.waitForVisible('.pb-insert-layer:not([hidden]) button', 10);
+            I.dontSeeElement('.pb-plus-button');
+            const state = await I.executeScript(() => {
+                const pb = window.pageBuilder, points = pb.ui.insertPoints;
+                const source = pb.$wrapper.find('.pb-is-moving')[0];
+                return {
+                    types: [...new Set(points.map(point => point.type))],
+                    insideSource: points.some(point => point.parent === source || source.contains(point.parent)),
+                    noOp: points.some(point => point.next === source || point.previous === source),
+                    unique: points.every((point, index) => !points.slice(0, index).some(other => other.parent === point.parent && other.next === point.next && other.previous === point.previous)),
+                    html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data
+                };
+            });
+            assert.deepStrictEqual(state.types, [type], 'Only destinations matching the source type must be offered');
+            assert.equal(state.insideSource, false, 'The source must never contain its own destination');
+            assert.equal(state.noOp, action === 'duplicate', 'Only duplication may target a boundary next to the source');
+            assert.equal(state.unique, true, 'Each sibling boundary must have one destination');
+            assert.equal(state.html, html, 'Choosing destinations must not change serialized content');
+            I.pressKey('Escape');
+            I.waitForInvisible('.pb-insert-layer', 10);
+            I.dontSeeElement('.pb-insert-space');
+        }
+    }
+    I.click(workbenchFixture+' .pb-workbench-copy');
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=duplicate]');
+    I.waitForVisible('.pb-insert-layer:not([hidden]) button', 10);
+    await assertWorkbenchColumnInsertion(I);
+    I.saveScreenshot('pagebuilder-duplicate-insertion.png');
+    I.switchTo();
+    I.executeScript(() => window.pbSetWindowSize('phone'));
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    // CodeceptJS waitForFunction does not support its FrameLocator context.
+    await I.usePlaywrightTo('wait for wrapped duplication destinations', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => {
+            const pb = window.pageBuilder, points = pb.ui.insertPoints.filter(point => point.parent.closest('.pb-workbench-autotest'));
+            return innerWidth < 768 && pb.ui.insertWidth === innerWidth && points.length === 3 && points.every(point => point.space);
+        });
+    });
+    I.switchTo();
+    I.executeScript(() => window.pbSetWindowSize('desktop'));
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    await I.usePlaywrightTo('wait for desktop duplication destinations', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => innerWidth >= 768 && window.pageBuilder.ui.insertWidth === innerWidth);
+    });
+    await assertWorkbenchColumnInsertion(I);
+    await chooseWorkbenchInsertion(I, 'column', workbenchFixture+' .row', 2, false);
+    I.waitForInvisible('.pb-insert-layer', 10);
+    I.waitForVisible('.pb-workbench [data-pb-action=more]:enabled', 10);
+    assert.equal(await I.grabNumberOfVisibleElements(workbenchFixture+' .pb-column'), 3, 'Duplication must add exactly one column');
+    I.dontSeeElement('.pb-library');
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=move]');
+    I.waitForVisible('.pb-insert-layer:not([hidden]) button', 10);
+    I.click('.pb-workbench [data-pb-action=structure]');
+    I.fillField('.pb-structure input[type=search]', 'Destination autotest');
+    I.click('.pb-structure [role=treeitem][data-type=section] > div');
+    I.waitForInvisible('.pb-structure', 10);
+    await chooseWorkbenchInsertion(I, 'column', '.pb-destination-autotest .pb-row', 0, false);
+    I.waitForInvisible('.pb-insert-layer', 10);
+    I.waitForElement('.pb-destination-autotest .pb-workbench-copy', 10);
+    assert.equal(await I.grabNumberOfVisibleElements(workbenchFixture+' .pb-column'), 2, 'Moving must remove the source from its previous row');
+    assert.equal(await I.grabNumberOfVisibleElements('.pb-destination-autotest .pb-column'), 1, 'An empty row must accept the moved column');
+    I.dontSeeElement('.pb-insert-space');
+    const saved = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+    assert.ok(!/pb-insert-(space|point)|pb-is-moving|pb-is-inserting/.test(saved), 'Completed operations must leave no insertion helpers in saved content');
     I.switchTo();
     I.amAcceptingPopups();
     DTE.cancel();
@@ -2341,6 +2560,11 @@ async function validateThumb(I, elementText, checkData, setData = null) {
     var ipLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_select").withText("Režim").find("select.cke_dialog_ui_input_select");
     var colorLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_text").withText("Farba pozadia").find("input.cke_dialog_ui_input_text");
     var noIpLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_checkbox").withText("Vypnúť bod záujmu").find("input.cke_dialog_ui_checkbox_input");
+    const sizeLocator = locate('.cke_dialog_container').withAttr({style: "display: flex; z-index: 10010;"}).find('.cke_dialog_ui_select').withText('Rozmer miniatúry').find('select');
+    if (await I.grabNumberOfVisibleElements(sizeLocator)) {
+        I.selectOption(sizeLocator, 'Zadať vlastný rozmer…');
+    }
+    I.waitForVisible(ipLocator, 10);
     if (checkData.width) I.seeInField(widthLocator, checkData.width);
     if (checkData.height) I.seeInField(heightLocator, checkData.height);
     if (checkData.ipMode) I.seeInField(ipLocator, checkData.ipMode);
@@ -3048,6 +3272,68 @@ Scenario('library direct leaf blocks remain searchable and insertable', async ({
     I.switchTo();
     DTE.cancel();
     I.wjSetDefaultWindowSize();
+});
+
+Scenario('library content initializes duplicable elements immediately', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const paragraph = workbenchFixture+' .pb-workbench-copy';
+    const editorName = await I.executeScript((root, selector) => {
+        const pb = window.pageBuilder;
+        const groups = pb.template.library.find(item => item.textKey === 'content').groups;
+        for (const type of ['leaf', 'grouped']) {
+            const block = {id: 'autotest-duplicable-'+type, textKey: 'autotest duplicable '+type,
+                content: '<ul class="autotest-duplicable-'+type+'"><li class="pb-duplicable">First inserted autotest item</li><li class="pb-duplicable">Second inserted autotest item</li></ul>'};
+            groups.push(type === 'leaf' ? block : {id: 'autotest-duplicable-group', textKey: 'autotest duplicable group', blocks: [block]});
+        }
+        pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
+        return document.querySelector(selector).closest('[data-ckeditor-instance]').dataset.ckeditorInstance;
+    }, paragraph);
+
+    for (const type of ['leaf', 'grouped']) {
+        I.click(paragraph);
+        await assertWorkbenchEditorFocused(I, paragraph);
+        I.executeScript((root, name) => {
+            const editor = CKEDITOR.instances[name];
+            const range = editor.createRange();
+            range.moveToElementEditEnd(new CKEDITOR.dom.element(editor.element.$.querySelector('.pb-workbench-copy')));
+            editor.getSelection().selectRanges([range]);
+        }, editorName);
+        I.clickCss('.cke_button__htmlbox');
+        I.waitForVisible('.pb-library--content', 10);
+        I.clickCss('.pb-library--content [data-library-type=library]');
+        I.fillField('.pb-library--content .library-template-block--content .library-filter-input', 'autotest duplicable '+type);
+        I.clickCss('.pb-library--content button[data-library-item-id=autotest-duplicable-'+type+']');
+        I.waitForInvisible('.pb-library', 10);
+        const list = workbenchFixture+' ul.autotest-duplicable-'+type;
+        I.waitForElement(list+' > li.pb-duplicable', 10);
+        I.seeNumberOfElements(list+' > li.pb-duplicable-element', 2);
+        const state = await I.executeScript((root, selector) => {
+            const list = document.querySelector(selector);
+            return {
+                editorName: list.closest('[data-ckeditor-instance]').dataset.ckeditorInstance,
+                followsCaret: list.previousElementSibling.matches('.pb-workbench-copy'),
+                oneToolbarPerItem: Array.from(list.closest('.pb-column__content').querySelectorAll('li.pb-duplicable'))
+                    .every(item => item.querySelectorAll(':scope > .pb-toolbar').length === 1)
+            };
+        }, list);
+        I.assertEqual(state.editorName, editorName, 'Insertion must retain the existing CKEditor instance');
+        I.assertTrue(state.followsCaret, 'The list must be inserted after the original caret');
+        I.assertTrue(state.oneToolbarPerItem, 'Repeated insertion must initialize new items without duplicating existing controls');
+        I.click(list+' > li:first-child');
+        I.waitForVisible('.pb-outline[data-type=item]:not([hidden])', 10);
+        I.click('.pb-workbench [data-pb-action=more]');
+        I.click('.pb-workbench [data-pb-action=duplicate]');
+        I.waitForVisible('.pb-move-hint', 10);
+        await chooseWorkbenchInsertion(I, 'item', list, 2, false);
+        I.waitForInvisible('.pb-move-hint', 10);
+        I.seeNumberOfElements(list+' > li.pb-duplicable-element', 3);
+    }
+    const saved = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+    I.assertNotContain(saved, 'pb-duplicable-element', 'Saving must remove runtime markers from newly inserted items');
+    I.assertNotContain(saved, 'pb-toolbar', 'Saving must remove inserted controls');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
 });
 
 Scenario('library content insertion preserves the CKEditor selection', async ({I, DTE, Document}) => {

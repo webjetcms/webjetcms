@@ -9,6 +9,8 @@ description: Skill for writing E2E (end-to-end) tests using CodeceptJS with Play
 
 WebJET CMS uses **CodeceptJS** with **Playwright** for automated E2E browser testing. Tests are written in JavaScript and located in `src/test/webapp/tests/` directory, organized by modules/applications.
 
+This layout and the commands below describe the core test harness. Before writing a customer project's tests, inspect its test package, CodeceptJS configuration and available `DT`/`DTE` helpers. Use `wj-project-context` when available, resolve paths from the target project, and match its existing test conventions and CMS version. If the harness or a required helper is absent, report the prerequisite rather than copying the entire core infrastructure or generating a test that cannot run. Installing this skill does not install CodeceptJS or Playwright.
+
 ## Project Structure
 
 ```

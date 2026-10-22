@@ -9,6 +9,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -31,6 +33,8 @@ import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
@@ -56,6 +60,18 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         this.docDetailsRepository = docDetailsRepository;
         this.editorFacade = editorFacade;
         this.docAtrDefRepository = docAtrDefRepository;
+    }
+
+    /** Previews headers for unsaved editor values without saving or publishing the page. */
+    @PostMapping("/http-headers")
+    public Map<String, String> httpHeaders(@RequestBody DocDetails doc, HttpServletRequest request, HttpServletResponse response) {
+        EditorForm form = new EditorForm(doc);
+        if (Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) form.setVirtualPath("");
+        else if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) form.setVirtualPath(doc.getEditorVirtualPath() == null ? "" : doc.getEditorVirtualPath());
+        EditorDB.setVirtualPath(form);
+        String path = form.getVirtualPath();
+        if (path == null || path.isEmpty()) path = "/showdoc.do?docid=" + doc.getDocId();
+        return PathFilter.previewPageHeaders(path, doc, request, response);
     }
 
     @Override

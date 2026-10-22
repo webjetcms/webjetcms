@@ -66,7 +66,7 @@ Scenario('Pristup a perex webstranky', async ({ I, DTE }) => {
      // Aktivovat - Zobrazenie web stranky a vyhladanie cez vyhladavace
      I.say('Aktivovanie zobrazenia web stranky a vyhladavanie cez vyhladavace');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
-     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+     I.checkOption('#DTE_Field_searchable_0');
 
      // ------------------------ ZALOZKA PRISTUP ------------------
      I.clickCss('#pills-dt-datatableInit-access-tab');
