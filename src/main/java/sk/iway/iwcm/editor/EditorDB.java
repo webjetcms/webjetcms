@@ -1929,13 +1929,13 @@ public class EditorDB
 	}
 
 	/**
-	 * Ak sa zmeni virtual path stranky aktualizuje vsetky doterajsie linky
-	 * @param request
-	 * @param docId
-	 * @param newVirtualPath
-	 * @return
+	 * Updates links and redirects after a URL change, before the document URL cache is refreshed.
+	 * @param request current request
+	 * @param docId changed document
+	 * @param newVirtualPath new URL
+	 * @return documents whose content links were updated
 	 */
-	private static List<DocDetails> fixRenamedVirtualPath(HttpServletRequest request, int docId, String newVirtualPath)
+	public static List<DocDetails> fixRenamedVirtualPath(HttpServletRequest request, int docId, String newVirtualPath)
 	{
 		List<DocDetails> updated = new ArrayList<>();
 
@@ -2708,6 +2708,7 @@ public class EditorDB
 				doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128));
 				doc.setVirtualPath(my_form.getVirtualPath());
 				doc.setGroupId(my_form.getGroupId());
+				doc.setTempId(my_form.getTempId());
 				String virtualPath = DocDB.getURL(doc, groupDiskPath);
 				String koncovka = virtualPath.endsWith("/") ? "/" : ".html";
 				String editorPageExtension = Constants.getString("editorPageExtension");

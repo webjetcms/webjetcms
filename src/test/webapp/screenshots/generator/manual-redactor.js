@@ -594,6 +594,11 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
     I.moveCursorTo('.pb-workbench-path');
     Document.screenshot('/redactor/webpages/pagebuilder.png');
 
+    //show menu
+    I.click('.pb-workbench [data-pb-action=more]');
+    Document.screenshot('/redactor/webpages/pagebuilder-more-actions.png');
+    I.click('.pb-workbench [data-pb-action=more]');
+
     // Show the difference between the selected column and a hover guide.
     I.click('.pb-workbench [data-pb-action=guides]');
     I.seeElement('.pb-workbench [data-pb-guides=selected]');

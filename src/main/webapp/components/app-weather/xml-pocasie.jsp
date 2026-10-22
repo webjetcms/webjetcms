@@ -51,7 +51,12 @@ import="sk.iway.iwcm.*"%>
 					out.print(cal.get(Calendar.DAY_OF_MONTH) + "." + (cal.get(Calendar.MONTH)+1) + ".");%>
 			</span>
 			<% } %>
-			<span class="pocStupne"><%=dayForecastBeans.get(i).getMinTemperature()%>/<%=dayForecastBeans.get(i).getMaxTemperature()%><span class="c">°C</span></span>
+			<span class="pocStupne"><%
+				Integer minTemperature = dayForecastBeans.get(i).getMinTemperature();
+				Integer maxTemperature = dayForecastBeans.get(i).getMaxTemperature();
+				if (minTemperature != null && minTemperature != Integer.MAX_VALUE
+						&& maxTemperature != null && maxTemperature != Integer.MIN_VALUE) {
+			%><%=minTemperature%>/<%=maxTemperature%><span class="c">°C</span><% } else { %>&ndash;<% } %></span>
 			<% if (i == 0) { %>
 			<span class="pocMesto" style="font-size: 12px;"><%=weatherForecast.getCity().getString1()%></span>
 			<% } %>

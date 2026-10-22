@@ -1,94 +1,72 @@
-# AGENTS: datatable subsystem (`sk.iway.iwcm.system.datatable`)
+# AGENTS: Administration DataTables
 
-<!-- Navigation (edit in AGENTS-NAV.md) -->
-<div align="right">[Root](AGENTS.md) | [System](AGENTS-system.md) | [Editor](AGENTS-editor.md) | [Doc](AGENTS-doc.md) | [Users](AGENTS-users.md) | [Components](AGENTS-components.md) | [Common](AGENTS-common.md) | [Utils](AGENTS-utils.md)</div>
+[Index](AGENTS.md) · [Working guide](CONTRIBUTING.md)
 
-Generic CRUD + filtering + validation + notification pipeline powering admin DataTables Editor screens.
+The administration uses jQuery DataTables and Editor through WebJET's `WJ.DataTable` wrapper. Paths and signatures below describe current core; verify them against the installed CMS in a customer project.
 
-## What Belongs Here / Not Here
+## Source map
 
-- Put here: abstractions & base controllers for tabular CRUD, editor annotations, thread-scoped notification/state objects.
-- Not here: entity-specific business logic (services in system/editor/components), generic utilities, feature-specific caching.
-- Move shared CRUD patterns here when duplicated across >1 feature controller.
+| Concern | Entry point |
+| --- | --- |
+| REST lifecycle, filtering, import and permissions | `src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java` |
+| Column/editor metadata | `src/main/java/sk/iway/iwcm/system/datatable/annotations/`, `DataTableColumnType.java`, `DataTableColumnsFactory.java` in the same parent package |
+| Transient editor state | `src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java` |
+| Domain-aware repository interface | `src/main/java/sk/iway/iwcm/system/datatable/spring/DomainIdRepository.java` |
+| Editor exception responses | `src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java` |
+| Frontend wrapper and field types | `src/main/webapp/admin/v9/npm_packages/webjetdatatables/` |
+| Integration documentation | `docs/sk/developer/datatables/README.md`, `restcontroller.md`, `domainid.md`, `export-import.md` in that directory |
 
-## Core Life Cycle
+## Starting a screen
 
-1. insertItem
-   - `processToEntity(CREATE)` -> `repo.save` -> `processFromEntity(CREATE)` to enrich DTO/editor fields.
-2. editItem
-   - Fetch original (`getOne`), preserve ThreadBean flags (notify list, forceReload, importing), merge non-null edits, `processToEntity(EDIT)`, save, `processFromEntity(EDIT)`.
-3. Regex Filtering
-   - Client prefixes value with `regex:` (see `REGEX_PREFIX`); backend interprets remainder as pattern.
+1. Find a nearby screen with the same persistence and permission needs. A JPA-backed screen typically has an entity, repository, REST controller and administration HTML page; some controllers instead adapt legacy services or non-database data.
+2. Annotate entity/editor fields with `@DataTableColumn`, optionally `@DataTableColumnEditor`, `@DataTableColumnEditorAttr` and `@DataTableColumnNested`. Keep UI-only values in transient editor fields and map them explicitly in the controller.
+3. Extend `DatatableRestControllerV2<Entity, Long>` and pass the repository. Add `@RestController`, `@Datatable`, `@RequestMapping` and an explicit `@PreAuthorize` permission expression. `@Datatable` selects the DataTable exception handler.
+4. Passing `Entity.class` as the second constructor argument enables a new instance for `GET /-1`; pair this with frontend `fetchOnCreate: true` when constructor defaults are needed.
+5. Configure `WJ.DataTable` with the URL, columns and paging mode. Check the actual HTML/module registration, translations and repository scanning in the target project.
 
-## Thread State (`ThreadLocal<ThreadBean>`)
+`src/main/java/sk/iway/iwcm/components/users/permgroups/PermissionGroupRestController.java` is an example of mapping `editorFields` in both directions. Use the installed `wj-datatable` skill for a full implementation workflow when available.
 
-- Holds notify messages, forceReload flag, importing flag.
-- Always restored after entity fetch to avoid losing queued notifications.
+## Lifecycle and extension points
 
-## Validation Strategy
+`POST /editor` accepts a `DatatableRequest` with an action and a map of rows. It coordinates create, edit, delete, duplicate and import operations; it delegates ordinary writes to `add`, `edit` and `delete`.
 
-- Standard Bean Validation; explicit `BeanPropertyBindingResult` lets controller merge constraint violations and custom domain errors into unified response.
+- Create: prepare generated ID, `beforeSave(entity)`, validation and item permission check, then `insertItem`. Its default implementation runs `processToEntity(CREATE)`, `repo.save` and `processFromEntity(CREATE)`. `afterSave(entity, saved)` follows the write.
+- Edit: align the submitted ID with the route ID, `beforeSave`, validation and item permission check, then `editItem`. The default fetches the existing row through `getOne`, merges permitted fields, runs `processToEntity(EDIT)`, saves and runs `processFromEntity(EDIT)`; `afterSave` follows.
+- Delete: item permission check, `beforeDelete(entity)`, deletion and `afterDelete(entity, id)`. The default `deleteItem` also invokes `beforeDelete` on a repository reference, so do not assume this hook runs exactly once or perform irreversible work there.
+- Save/delete/duplicate paths also publish `DatatableEvent` events. Overriding the low-level methods changes this behavior; inspect callers before bypassing the default path.
 
-## Domain Scoping
+Common override signatures are:
 
-- If cloud or external static files enabled and repository implements `DomainIdRepository`, queries add implicit `domainId` predicate to prevent cross-domain access.
+| Hook | Purpose |
+| --- | --- |
+| `processFromEntity(T, ProcessItemAction)` | Populate response/editor values; handle a missing row where applicable |
+| `processToEntity(T, ProcessItemAction)` | Copy editor values into the persisted model |
+| `beforeSave(T)`, `afterSave(T, T)` | Work before validation/save or after a successful write |
+| `beforeDelete(T)`, `afterDelete(T, long)` | Veto deletion or perform follow-up work |
+| `getOptions(DatatablePageImpl<T>)` | Supply select options |
+| `addSpecSearch(Map<String, String>, List<Predicate>, Root<T>, CriteriaBuilder)` | Extend specification search conditions |
+| `checkAccessAllowed(HttpServletRequest)`, `checkItemPerms(T, Long)` | Controller-wide and individual-row authorization |
+| `validateEditor(HttpServletRequest, DatatableRequest<Long, T>, Identity, Errors, Long, T)` | Validate each Editor request row |
 
-## Reflection Utilities
+There are additional import, duplication, action and row-reorder hooks; use their exact signatures from the base class rather than inventing `beforeSave(entity, action)` overloads.
 
-- `BeanWrapperImpl` for dynamic property access.
-- `NullAwareBeanUtils.copyProperties` merges only non-null values from client DTO to persistent entity.
+## Validation and merge behavior
 
-## Notifications
+- Entity constraints use Jakarta Bean Validation. `validateEditor` runs through the `/editor` binder; add field errors using paths such as `errorField.name`. Direct `/add` and `/edit/{id}` calls do not use this Editor-specific hook, so required business invariants must also hold in the underlying write path.
+- Use `throwError` for a translated Editor error and the existing `DatatableResponse`/`DatatableFieldError` contract. Many Editor validation failures use an HTTP 200 response containing `error`/`fieldErrors`; status alone does not prove success.
+- `copyEntityIntoOriginal` uses `system/spring/NullAwareBeanUtils`, but is not simply a non-null copy: it protects identifiers, skips hidden/disabled editor fields and can clear numeric/date fields or fields marked `alwaysCopyProperties`. Import handling preserves omitted columns. Verify these cases when changing annotations or overrides.
+- Generated IDs are cleared for create requests; edit IDs are checked against the requested target. Preserve these protections in custom write implementations.
+- Notifications, import flags, imported columns, redirects and reload requests are kept in the controller's `ThreadBean`. Use `addNotify`, `setForceReload`, `isImporting`, `isExporting` and related APIs; nested calls such as `getOne` can reset this state.
 
-- `NotifyBean` objects queued in thread data; serialized into response to inform frontend (toast/messages panel).
+## Permissions and domain scope
 
-## Extension Hooks (override in subclass)
+- The base `checkAccessAllowed` and `checkItemPerms` return `true`. A subclass must supply its required policy. `WebjetSecurityService.checkAccessAllowedOnController` handles the supported class-level WebJET permission expressions and invokes the controller hook.
+- Row checks do not filter the full list automatically. Apply visibility restrictions to list/search queries and enforce ownership again for direct row requests, actions, export/import and reorder operations.
+- Automatic DataTable domain reads/searches are enabled at controller construction only when the repository implements `DomainIdRepository` and the deployment is cloud or enables `enableStaticFilesExternalDir`. The effective ID comes from protected `getDomainId()`.
+- `/editor` also sets/checks submitted `domainId` for `DomainIdRepository` independently of that read-filter flag. This does not scope arbitrary repository calls, custom endpoint implementations or all direct write paths. Inspect each route before relying on the integration.
 
-- `beforeSave(entity, action)` / `afterSave(entity, action)` style template methods (search for protected methods in base).
-- Column customization via `@DataTableColumnEditor` & `@DataTableColumnEditorAttr` annotations.
+## Filtering and verification
 
-## JSON / (De)Serialization
-
-- Custom Jackson deserializers (e.g., `DocDetailsFullPathDeserializer`) translate full path strings to entities.
-
-## Error Handling
-
-- Domain/user errors: throw `EditorException` (mapped to friendly response).
-- System errors: logged via `Logger.error`; transformed into `DataTableError` structure.
-
-## Performance Considerations
-
-- Uses EclipseLink `ReadAllQuery` and `ExpressionBuilder` for dynamic conditions when Specifications are insufficient.
-- Minimize reflection per-row; cache metadata if extending heavily.
-
-## Conventions
-
-- Keep controller subclasses thin: delegate complex logic to services.
-- Preserve `REGEX_PREFIX` constant alignment with frontend; coordinate if changing.
-- Provide `entityClass` in constructor to allow default instance population (requires frontend `fetchOnCreate: true`).
-
-## Pitfalls
-
-- Missing `DomainIdRepository` implementation -> unintended cross-domain edits.
-- Not restoring ThreadBean flags -> lost notifications or incorrect forceReload behavior.
-- Forgetting to copy non-null fields before `processToEntity` leads to overwriting persisted values with nulls.
-
-## How To Add A New DataTable Entity
-
-1. Create JPA entity & repository (implement `DomainIdRepository` if domain-scoped).
-2. Subclass `DatatableRestControllerV2<Entity, Long>` passing repo and `Entity.class`.
-3. Annotate fields with editor annotations for UI customization.
-4. Override hooks for domain logic/audit as needed.
-5. Configure frontend WJ.DataTable (ajax source, `fetchOnCreate` when entityClass provided, regex search support if needed).
-
-## Testing Checklist
-
-- Create & edit: verify default values present when `entityClass` supplied.
-- Regex search: prefix input with `regex:` and confirm pattern filter applied.
-- Domain isolation: ensure records from another domain are excluded.
-- Notification propagation: trigger action that queues NotifyBean; assert appears in JSON response.
-
-## Update Process
-
-- New annotation: extend `DataTableColumnsFactory` & document here.
-- Changing regex mechanics: update `REGEX_PREFIX` both backend & frontend; add migration note.
+- `searchItem` uses Spring Data specifications when the repository implements `JpaSpecificationExecutor`; otherwise it uses query by example. `addSpecSearch` affects the specification search, not an ordinary `getAllItems` query; `getAllItemsIncludeSpecSearch` is available when a list must apply those conditions too.
+- Search parameters support exact/start/end markers (`^value$`, `^value`, `value$`) and range/date-range formats. `regex:` is handled in the example matcher, but is not a promise of arbitrary regular-expression support in every repository/database path. Keep frontend search conventions aligned with the implementation.
+- Verify the changed behavior with the existing test infrastructure: defaults, create/edit/delete, validation feedback, omitted/cleared values, list/search permissions, foreign IDs/domains and relevant import/export actions. Existing backend coverage starts at `src/test/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2Test.java`; use the matching browser tests for UI behavior.

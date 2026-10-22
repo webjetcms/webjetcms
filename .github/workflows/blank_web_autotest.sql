@@ -1585,6 +1585,7 @@ CREATE TABLE `documents` (
   `generate_url_from_title` tinyint(1) DEFAULT 0,
   `editor_virtual_path` varchar(255) DEFAULT NULL,
   `publish_after_start` tinyint(1) DEFAULT 0,
+  `planned_media_initialized` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`doc_id`),
   KEY `i_group_id` (`group_id`),
   KEY `IX_documents_cacheable` (`cacheable`),
@@ -4744,6 +4745,8 @@ ALTER TABLE `documents_history` ADD COLUMN `follow_links` TINYINT NOT NULL DEFAU
 UPDATE `documents` SET `follow_links` = 0 WHERE `follow_links` IS NULL;
 UPDATE `documents_history` SET `follow_links` = 0 WHERE `follow_links` IS NULL;
 ALTER TABLE templates_group ADD COLUMN seo_image VARCHAR(255) NULL;
+ALTER TABLE documents_history ADD COLUMN is_delete TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE templates ADD COLUMN url_remove_spojky_mode TINYINT NOT NULL DEFAULT 0;
 
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

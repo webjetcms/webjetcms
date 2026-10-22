@@ -144,6 +144,8 @@ public class DocDetails extends DocBasic {
 	@Transient
 	private boolean historyActual = false;
 	@Transient
+	private boolean historyAwaitingApprove = false;
+	@Transient
 	private String historyApproveDate;
 	@Transient
 	private String historyApprovedByName;
@@ -152,6 +154,7 @@ public class DocDetails extends DocBasic {
 	@Transient
 	private String historySaveDate;
 	@Transient
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
 	private int historyId;
 	@Transient
 	private int historyApprovedBy;
@@ -189,6 +192,14 @@ public class DocDetails extends DocBasic {
 
 	public void setHistoryActual(boolean historyActual) {
 		this.historyActual = historyActual;
+	}
+
+	public boolean isHistoryAwaitingApprove() {
+		return historyAwaitingApprove;
+	}
+
+	public void setHistoryAwaitingApprove(boolean historyAwaitingApprove) {
+		this.historyAwaitingApprove = historyAwaitingApprove;
 	}
 
 	public String getHistoryApproveDate() {

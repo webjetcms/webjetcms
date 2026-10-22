@@ -25,6 +25,8 @@ Ask for all missing information in one concise numbered message, then stop and w
 
 After the intake is complete, proceed without asking for another confirmation. Derive the application slug and paths from the class name, state any small assumptions, inspect the closest reference implementations, and create the requested application. If the selected data source needs credentials, schema details, or an endpoint contract that cannot be discovered in the repository, ask only for those additional details before implementation.
 
+Use the installed `wj-project-context` skill when available. Verify the target CMS version, application package, `javax`/`jakarta` namespace and annotation/API availability before applying these examples. Resolve project paths against the target checkout and bundled resources against this skill's directory. Existing customer project conventions take precedence over core examples; do not upgrade CMS or basecms as part of creating an application.
+
 The generated application must include:
 
 - a Java component with `@WebjetComponent`, `@WebjetAppStore`, and `WebjetComponentAbstract`;

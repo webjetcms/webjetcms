@@ -62,6 +62,69 @@ async function createPage(t, additionalFields = () => "") {
     return page;
 }
 
+for (const success of [true, false]) {
+    test(`submission displays the ${success ? "success" : "error"} page inline and focuses its content`, async t => {
+        const page = await createPage(t);
+        const html = "<h2>Submission result</h2><p>Managed page content.</p>";
+        await page.route("**/save-form?*", route => route.fulfill({
+            status: success ? 200 : 400,
+            json: success
+                ? { "form-name": "contact", "step-id": -1, thankYouHtml: html }
+                : { err_msg: "Email delivery failed.", end_try: false, errorHtml: html }
+        }));
+        await page.evaluate(async () => {
+            await firstForm.showGlobalErr({ err_msg: "Previous error." });
+            await firstForm.doValidationAndSave({
+                preventDefault() {},
+                currentTarget: document.querySelector("#multistep-form-wrapper-first form")
+            });
+        });
+
+        const wrapper = page.locator("#multistep-form-wrapper-first");
+        const content = wrapper.locator(success ? ".multistep-thankyou-container" : ".multistep-error-container");
+        assert.equal(page.url(), "https://multistep-form.test/");
+        assert.equal(await content.innerHTML(), html);
+        assert.equal(await content.evaluate(element => element === document.activeElement), true);
+        assert.equal(await wrapper.locator("form").count(), 0);
+        assert.equal(await wrapper.locator(".alert-danger").isVisible(), false);
+        assert.equal(await wrapper.locator(".alert-success").isVisible(), false);
+        assert.equal(await page.locator("#multistep-form-wrapper-second form").count(), 1);
+    });
+}
+
+test("failed submission still follows the error redirect when inline content is disabled", async t => {
+    const page = await createPage(t);
+    await page.route("**/error.html", route => route.fulfill({ contentType: "text/html", body: "Error page" }));
+    await page.route("**/save-form?*", route => route.fulfill({
+        status: 400, json: { err_msg: "Email delivery failed.", err_redirect: "/error.html" }
+    }));
+    await Promise.all([
+        page.waitForURL("**/error.html"),
+        page.evaluate(() => firstForm.doValidationAndSave({
+            preventDefault() {}, currentTarget: document.querySelector("#multistep-form-wrapper-first form")
+        }))
+    ]);
+    assert.equal(page.url(), "https://multistep-form.test/error.html");
+});
+
+for (const errorHtml of [undefined, "   "]) {
+    test(`failed submission with ${errorHtml === undefined ? "missing" : "blank"} inline content shows the error message`, async t => {
+        const page = await createPage(t);
+        await page.route("**/save-form?*", route => route.fulfill({
+            status: 400, json: { err_msg: "Email delivery failed.", end_try: true, errorHtml }
+        }));
+        await page.evaluate(() => firstForm.doValidationAndSave({
+            preventDefault() {}, currentTarget: document.querySelector("#multistep-form-wrapper-first form")
+        }));
+        const wrapper = page.locator("#multistep-form-wrapper-first");
+        assert.equal(page.url(), "https://multistep-form.test/");
+        assert.equal(await wrapper.locator(".alert-danger").isVisible(), true);
+        assert.equal(await wrapper.locator(".alert-danger li").textContent(), "Email delivery failed.");
+        assert.equal(await wrapper.locator(".alert-success").isVisible(), false);
+        assert.equal(await wrapper.locator("form").count(), 0);
+    });
+}
+
 test("blur errors have a live region, preserve help text and clear invalid state without moving focus", async t => {
     const page = await createPage(t);
     const error = page.locator(".cs-error-f1-email");

@@ -15,6 +15,10 @@ import java.util.Optional;
 @Repository
 public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, JpaSpecificationExecutor<DocHistory> {
 
+    List<DocHistory> findByDocIdAndPublicableTrueOrderByIdDesc(Integer docId);
+
+    List<DocHistory> findByPublicableTrue();
+
     List<DocHistory> findByDocIdAndPublishStartDateBetween(Integer docId, Date publishStartDateFrom, Date publishStartDateTo);
 
     //
@@ -31,6 +35,15 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
     @Modifying
     @Query(value = "DELETE FROM DocHistory WHERE id = :historyIds AND publicable = :publicable")
     public void deleteByIdPublicable(@Param("historyIds")Long historyId, @Param("publicable")boolean publicable);
+
+    /** Rechecks publication and approval state when deleting a version of the authorized page. */
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM DocHistory dh WHERE dh.id = :historyId AND dh.docId = :docId "
+        + "AND (dh.actual IS NULL OR dh.actual = false) AND (dh.awaitingApprove IS NULL OR dh.awaitingApprove = '') "
+        + "AND (:cleanup = true OR (dh.publicable = true AND dh.publishStartDate > :now))")
+    int deleteDeletableById(@Param("historyId") Long historyId, @Param("docId") int docId,
+        @Param("cleanup") boolean cleanup, @Param("now") Date now);
 
     //
     @Query(value = "SELECT history_id FROM documents_history WHERE doc_id = ?1 AND history_id < ?2", nativeQuery=true)
@@ -91,4 +104,16 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
 
     @Query(value = "SELECT dh FROM DocHistory dh WHERE dh.publicable = true AND ( dh.awaitingApprove IS NULL OR dh.awaitingApprove = '' ) AND dh.publishStartDate IS NOT NULL")
     public Optional<List<DocHistory>> getPublicableThatAreNotAwaitingToApprove();
+
+    /** Returns scheduled versions, approval requests and the latest unapproved draft, excluding deleted versions. */
+    @Query("SELECT dh FROM DocHistory dh WHERE dh.groupId = :groupId AND (dh.isDelete IS NULL OR dh.isDelete = false) "
+        + "AND (dh.publicable = true OR (dh.awaitingApprove IS NOT NULL AND dh.awaitingApprove <> '') "
+        + "OR (dh.actual = false AND dh.approvedBy = -1 AND (dh.disapprovedBy IS NULL OR dh.disapprovedBy <= 0) "
+        + "AND dh.id = (SELECT MAX(latest.id) FROM DocHistory latest WHERE latest.docId = dh.docId)))")
+    List<DocHistory> findPendingByGroupId(@Param("groupId") int groupId);
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE DocHistory SET virtualPath = :virtualPath, syncStatus = 1 WHERE id = :historyId")
+    void updateVirtualPath(@Param("historyId") Long historyId, @Param("virtualPath") String virtualPath);
 }

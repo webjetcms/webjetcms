@@ -19,6 +19,8 @@
     const urlFormName = urlParams.get('formName');
 
     const isArchived = false;
+    const formClipboardUserId = /*[[${layout.user.userId}]]*/ 0;
+    const formClipboardDomain = /*[[${layout.header.currentDomain}]]*/ '';
 
     WJ.breadcrumb({
         id: isArchived ? "form-details-archived" : "form-details",
@@ -92,6 +94,155 @@
         let urlWithParams = WJ.urlUpdateParam(itemUrl, "formName", urlFormName);
         urlWithParams = WJ.urlUpdateParam(urlWithParams, "stepId", stepId);
         return urlWithParams;
+    }
+
+    /** Shares saved field settings between form editors without copying ownership or conditions. */
+    function initFormItemClipboard(userId, domain) {
+        const table = formItemsDataTable;
+        const editor = table.EDITOR;
+        const storageKey = 'webjet.multistepform.clipboard.' + userId + '.' + encodeURIComponent(domain);
+        const lifetime = 30 * 60 * 1000;
+        const fields = {
+            fieldType: 'string', label: 'string', required: 'boolean', trimValue: 'boolean',
+            regexValidationArr: 'array', value: 'string', placeholder: 'string', tooltip: 'string',
+            customError: 'string', useValueAsEnumeration: 'boolean', valueAsOptions: 'string', valueAsEnumeration: 'string',
+            showStat: 'boolean', chartType: 'string', topCount: 'number', showOtherCount: 'boolean',
+            showUnanswered: 'boolean', compareInsensitive: 'boolean', useColorScheme: 'boolean', colorScheme: 'string'
+        };
+        let expiryTimer;
+        let copying = false;
+        let pendingPaste = null;
+        let pasted = false;
+
+        /** Validates and selects only editable settings from server data or an untrusted snapshot. */
+        function configuration(source) {
+            if (!source || typeof source.fieldType !== 'string' || !source.fieldType) return null;
+            const item = {};
+            for (const [name, type] of Object.entries(fields)) {
+                const value = source[name];
+                if (value === undefined) continue;
+                if (value !== null && (type === 'array'
+                    ? !Array.isArray(value) || !value.every(Number.isInteger)
+                    : typeof value !== type || (type === 'number' && !Number.isFinite(value)))) return null;
+                item[name] = value;
+            }
+            item.regexValidationArr = item.regexValidationArr || [];
+            return item;
+        }
+
+        function readClipboard() {
+            try {
+                const snapshot = JSON.parse(window.localStorage.getItem(storageKey));
+                if (!snapshot) return null;
+                const item = configuration(snapshot.item);
+                if (snapshot.version !== 1 || !Number.isFinite(snapshot.expiresAt) || snapshot.expiresAt <= Date.now() || !item) {
+                    window.localStorage.removeItem(storageKey);
+                    return null;
+                }
+                return { item, expiresAt: snapshot.expiresAt };
+            } catch (error) { /* Restricted storage or malformed JSON leaves paste disabled. */ }
+            return null;
+        }
+
+        function selectedStep() {
+            const steps = formStepsDataTable.rows({ selected: true }).data().toArray();
+            const loadedStep = new window.URL(table.getAjaxUrl(), window.location.origin).searchParams.get('stepId');
+            return steps.length === 1 && String(steps[0].id) === loadedStep ? steps[0].id : null;
+        }
+
+        function supported(item) {
+            return table.DATA.jsonOptions?.fieldType?.some(option => option.value === item.fieldType) === true;
+        }
+
+        function refreshClipboard() {
+            window.clearTimeout(expiryTimer);
+            const snapshot = readClipboard();
+            const busy = copying || pendingPaste !== null || editor.display();
+            table.button('copyField:name').enable(!busy && table.rows({ selected: true }).count() === 1);
+            table.button('pasteField:name').enable(!busy && selectedStep() !== null && snapshot !== null && supported(snapshot.item));
+            if (snapshot) expiryTimer = window.setTimeout(refreshClipboard, Math.min(lifetime, snapshot.expiresAt - Date.now()));
+        }
+
+        table.button().add(3, {
+            name: 'copyField',
+            text: '<i class="ti ti-clipboard" aria-hidden="true"></i>',
+            className: 'btn btn-outline-secondary buttons-copy-field',
+            attr: { title: WJ.translate('components.form_items.clipboard.copy.js'), 'aria-label': WJ.translate('components.form_items.clipboard.copy.js'), 'data-toggle': 'tooltip' },
+            enabled: false,
+            action: async function() {
+                const selected = table.rows({ selected: true }).data().toArray();
+                if (copying || selected.length !== 1) return;
+                copying = true;
+                refreshClipboard();
+                try {
+                    const response = await fetch(WJ.urlAddPath(table.getAjaxUrl(), '/' + selected[0].id), {
+                        headers: { 'Accept': 'application/json', 'X-CSRF-Token': window.csrfToken }
+                    });
+                    if (!response.ok) throw new Error('Cannot load form item');
+                    const item = configuration(await response.json());
+                    if (!item) throw new Error('Invalid form item');
+                    window.localStorage.setItem(storageKey, JSON.stringify({ version: 1, item, expiresAt: Date.now() + lifetime }));
+                    WJ.notifySuccess(WJ.translate('components.form_items.clipboard.copied.js'), '', 5000);
+                } catch (error) {
+                    WJ.notifyError(WJ.translate('components.form_items.clipboard.error.js'));
+                } finally {
+                    copying = false;
+                    refreshClipboard();
+                }
+            }
+        });
+        table.button().add(4, {
+            name: 'pasteField',
+            text: '<i class="ti ti-clipboard-plus" aria-hidden="true"></i>',
+            className: 'btn btn-outline-secondary buttons-paste-field',
+            attr: { title: WJ.translate('components.form_items.clipboard.paste.js'), 'aria-label': WJ.translate('components.form_items.clipboard.paste.js'), 'data-toggle': 'tooltip' },
+            enabled: false,
+            action: function() {
+                const snapshot = readClipboard();
+                const stepId = selectedStep();
+                if (pendingPaste || editor.display() || copying || stepId === null) return;
+                if (!snapshot || !supported(snapshot.item)) {
+                    WJ.notifyError(WJ.translate('components.form_items.clipboard.unavailable.js'));
+                    refreshClipboard();
+                    return;
+                }
+                pendingPaste = { item: snapshot.item, stepId };
+                refreshClipboard();
+                table.wjCreate();
+            }
+        });
+
+        // Apply the copied configuration after fetchOnCreate has loaded the destination defaults.
+        editor.on('preOpen', function(e, mode, action) {
+            if (action !== 'create' || !pendingPaste) return;
+            const paste = pendingPaste;
+            pendingPaste = null;
+            editor.setJson({
+                ...editor.currentJson, ...paste.item,
+                id: -1, itemFormId: '', formName: urlFormName, stepId: paste.stepId,
+                visibilityConditions: [], requirementConditions: [], allowSaveWhenCondition: false,
+                errorCount: 0
+            });
+            pasted = true;
+        });
+        editor.on('open', function() {
+            if (pasted) WJ.notifyInfo(WJ.translate('components.form_items.clipboard.paste.js'), WJ.translate('components.form_items.clipboard.conditions.js'), 10000);
+            refreshClipboard();
+        });
+        editor.on('close cancelOpen initEdit initRemove', function() {
+            pendingPaste = null;
+            pasted = false;
+            refreshClipboard();
+        });
+        table.on('select deselect draw', refreshClipboard);
+        formStepsDataTable.on('select deselect draw', refreshClipboard);
+        window.addEventListener('storage', function(event) {
+            if (event.key === storageKey || event.key === null) refreshClipboard();
+        });
+        window.addEventListener('focus', refreshClipboard);
+        window.addEventListener('pagehide', function() { window.clearTimeout(expiryTimer); });
+        window.addEventListener('pageshow', refreshClipboard);
+        refreshClipboard();
     }
 
     window.renderStepName = function(data, type, row, meta) {
@@ -223,9 +374,17 @@
                 loadingStepItems = false;
             }
         });
-        formItemsDataTable.hideButtons(["import", "export", "celledit"]);
+        formItemsDataTable.hideButtons(["import", "export", "celledit", "reload"]);
+
+        initFormItemClipboard(formClipboardUserId, formClipboardDomain);
 
         formItemsDataTable.on("draw", function() { loadStepPreview(); });
+
+        let regexRequestId = 0;
+        formItemsDataTable.EDITOR.on('initCreate initEdit initRemove close cancelOpen', function() {
+            // Responses belong to the editor session in which the field type changed.
+            regexRequestId++;
+        });
 
         formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
 
@@ -238,7 +397,8 @@
             if(itemsFirstLoad === true) {
                 itemsFirstLoad = false;
 
-                $("#DTE_Field_fieldType").on("change", function() {
+                $("#DTE_Field_fieldType").on("change", function(event, data) {
+                    const requestId = ++regexRequestId;
                     const selectedFieldType = $(this).val();
                     const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
                     const inputTypeByFieldType = formItemsDataTable.DATA.jsonOptions.inputType;
@@ -341,14 +501,15 @@
                         }
                     }, 500);
 
-                    if(selectedFieldType !== formItemsDataTable.EDITOR.currentJson["fieldType"]) {
-                        // Call only on real change
+                    if(data?.editor !== true && formItemsDataTable.EDITOR.display() && selectedFieldType !== formItemsDataTable.EDITOR.currentJson["fieldType"]) {
+                        // Editor resets and setJson changes must preserve saved or copied validators.
                         fetch(`/admin/rest/form-items/default-regex?fieldType=${selectedFieldType}`, {
                             method: "GET",
                             headers: { "X-CSRF-Token": window.csrfToken }
                         })
                         .then(res => res.json())
                         .then(regexIds => {
+                            if(requestId !== regexRequestId || formItemsDataTable.EDITOR.display() === false) return;
                             formItemsDataTable.EDITOR.field("regexValidationArr").val([]);
                             if(regexIds != null && Array.isArray(regexIds) && regexIds.length > 0) {
                                 // regexIds is now an array of Long values

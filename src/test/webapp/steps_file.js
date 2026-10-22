@@ -639,20 +639,24 @@ module.exports = function () {
       this.fillField('#DTE_Field_navbar', auto_webPage);
 
       if (disabled === true) {
-        // vypni zobrazenie web stranky a vyhladanie cez vyhladavace
+        // Disable page availability and search indexing.
         this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
-        this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+        this.checkOption('#DTE_Field_searchable_1');
       }
 
       // Pridanie textu do obsahu
       this.clickCss('#pills-dt-datatableInit-content-tab');
-      this.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-      this.waitForElement("span.cke_toolbox");
-      this.wait(2);
-      this.waitForElement('#trEditor', 10);
-      this.clickCss('#trEditor');
-
+      this.waitForFunction(() => {
+        const editor = window.ckEditorInstance;
+        return editor?.status === 'ready' && editor.mode === 'wysiwyg'
+          && editor.editable()?.$?.isConnected;
+      }, [], 20);
+      // Focus the editable body, not its outer container, before typing the fixture text.
+      this.switchTo('.cke_wysiwyg_frame.cke_reset');
+      this.clickCss('#WebJETEditorBody');
       this.type(content);
+      this.waitForText(content, 10, '#WebJETEditorBody');
+      this.switchTo();
 
       if (perexDates) {
         // Nastav datumy v perex tabe
@@ -681,6 +685,12 @@ module.exports = function () {
       this.click(edit_webpage);
       this.dtWaitForEditor();
       this.waitForText('Obsah', 10);
+      this.clickCss('#pills-dt-datatableInit-content-tab');
+      this.waitForFunction(() => {
+        const editor = window.ckEditorInstance;
+        return editor?.status === 'ready' && editor.mode === 'wysiwyg'
+          && editor.editable()?.$?.isConnected;
+      }, [], 20);
       this.switchTo('.cke_wysiwyg_frame.cke_reset');
       this.waitForText('is an autotest', 10); //bez this, pretoze to sa potom zmeni na Toto
       this.switchTo();

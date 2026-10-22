@@ -4,6 +4,48 @@ Pokud ještě nemáte, nainstalujte si [VS Code s doporučenými závislostmi a 
 
 V projektu používáme [lombok](https://projectlombok.org), nainstalujte si rozšíření do vašeho vývojového prostředí - na web stránce klikněte na menu položku ```Install``` av sekci IDEs postupuje podle návodu.
 
+## Nastavení AI asistenta Codex
+
+Při vývoji s Codexem si nainstalujte [kolekci skillů Matt Pocock](https://github.com/mattpocock/skills). Obsahuje postupy pro přípravu zadání, diagnostiku chyb, kontrolu kódu a práci s GitHub Issues. Používejte ji spolu s projektovými skilly `wj-*` ; stávající pravidla WebJET CMS v `AGENTS.md` mají přednost včetně zákazu vytváření commitů agentem.
+
+### Instalace skillů
+
+Potřebujete Node.js a npm, které poskytuje příkaz `npx`. V terminálu spusťte:
+
+```shell
+npx skills@latest add mattpocock/skills
+```
+
+V instalátoru vyberte:
+
+1. Požadované skilly včetně `setup-matt-pocock-skills`. Pro níže uvedené nastavení štítků zahrňte i `triage`.
+2. Cílového agenta **Codex**.
+3. **Installation scope: Global** — skilly budou dostupné ve všech vašich projektech bez přidávání jejich kopií do repozitáře.
+4. **Installation method: Symlink** — vybraní agenti budou používat odkazy na společnou instalaci skillů.
+
+Pokud při pokusu o instalaci přes `codex plugin marketplace add` dostanete chybu `zsh: command not found: codex`, použijte uvedený příkaz `npx`. K tomuto způsobu instalace nepotřebujete příkaz `codex` v terminálu.
+
+### Nastavení repozitáře
+
+Globální instalace zpřístupní skilly uživateli. Jejich nastavení pro konkrétní repozitář se provádí jednou a sdílí se přes soubory v Gite. V tomto repozitáři je již uloženo v `AGENTS.md` a `docs/agents/` ; po jeho získání není třeba setup opakovat na každém počítači.
+
+Při prvotním nastavení nebo změně konfigurace otevřete projekt v Codexu a do **chatu, nikoli do terminálu**, zadejte:
+
+```text
+Použi skill setup-matt-pocock-skills pre tento repozitár.
+Zachovaj existujúce WebJET pravidlá a zákaz vytvárania commitov.
+```
+
+Pro WebJET CMS jsme při nastavení zvolili:
+
+1. **GitHub Issues — `webjetcms/webjetcms`** jako místo pro evidenci úloh.
+2. Výchozí triage štítky: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human` a `wontfix`.
+3. Jeden společný slovník pojmů `GLOSSARY.md` v kořeni projektu a architektonické rozhodnutí v `docs/adr/`. Tyto dokumenty se vytvářejí až při konkrétní potřebě.
+
+Setup nejprve předloží návrh na odsouhlasení. Po potvrzení doplní sekci do existujícího `AGENTS.md` (nebo `CLAUDE.md`, pokud jej projekt používá), vytvoří konfiguraci `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md` a `docs/agents/domain.md` a doplní chybějící GitHub štítky. K práci s GitHubem potřebuje přihlášený nástroj `gh` a oprávnění upravovat štítky repozitáře. Změny souborů ponechá bez commitu ke kontrole vývojáři.
+
+Po nastavení pokračujte návodem [Použití AI skills](../guidelines/ai-skills.md), který popisuje postup od požadavku nebo GitHub issue po implementaci a kontrolu.
+
 ## rspack build JS, CSS a PUG souborů
 
 Soubory pro administraci jsou sestavovány přes rspack ze zdrojových ```js/scss/pug``` souborů. Pro prvotní instalaci spusťte v novém terminálu:

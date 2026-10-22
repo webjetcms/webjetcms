@@ -428,13 +428,13 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
     //prehladavat
     I.see("Newsletter", container);
     I.see("Testovaci newsletter", container);
-    //prepni prehladavat na ano
-    DT.filterSelect("searchable", "Áno");
+    // Show pages that allow indexing.
+    DT.filterSelect("searchable", "Povoliť vyhľadávanie cez vyhľadávače (index)");
     DT.waitForLoader();
     I.see("Newsletter", container);
     I.dontSee("Testovaci newsletter", container);
-    //prepni na nie
-    DT.filterSelect("searchable", "Nie");
+    // Show pages that disallow indexing.
+    DT.filterSelect("searchable", "Zakázať vyhľadávanie (noindex)");
     DT.waitForLoader();
     I.dontSee("Produktová stránka - B verzia", container);
     I.see("Testovaci newsletter", container);
@@ -921,28 +921,27 @@ Scenario('Ukladanie cez CTRL+S', ({ I, DTE }) => {
     testSavePB(I, DTE);
 });
 
-Scenario('Nacitanie CSS do listy', ({ I, DTE, Browser }) => {
+Scenario('Nacitanie CSS do listy', ({ I, DTE }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=265");
     DTE.waitForEditor();
 
-    I.wait(4);
-    if (Browser.isFirefox()) I.wait(3);
+    DTE.waitForCkeditor();
 
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
     I.clickCss("#WebJETEditorBody");
     I.switchTo();
 
-    I.clickCss(".cke_combo__styles .cke_combo_button");
-
-    I.switchTo(".cke_panel_frame");
-    I.see("baretest1");
-    I.see("Bare TEST 02 bold");
-    I.see("Bare TEST 03");
-    I.see("Bare TEST 04");
-    I.see("more-info1");
-
-    I.switchTo();
+    I.clickCss(".cke_button__wjstyles");
+    I.waitForVisible(".wj-styles[role=dialog]", 10);
+    I.checkOption(".wj-styles__filters input");
+    // Search also expands categories, independently of the user's previous picker state.
+    for (const style of ["baretest1", "Bare TEST 02 bold", "Bare TEST 03", "Bare TEST 04", "more-info1"]) {
+        I.fillField(".wj-styles__search", style);
+        I.waitForText(style, 10, ".wj-styles__list");
+    }
+    I.pressKey('Escape');
+    I.waitForInvisible(".wj-styles", 10);
 });
 
 Scenario('BUG - editacia viacerych zaznamov naraz @singlethread', async ({ I, DT, DTE }) => {

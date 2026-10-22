@@ -72,6 +72,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             //in ImageEditor we don't get ID, but we get imagePath and imageName, so load entity by these values
             String imagePath = getRequest().getParameter("dir");
             String imageName = getRequest().getParameter("name");
+            checkImageAccess(imagePath);
 
             GalleryEntity entity = new GalleryEntity();
             if(Tools.isNotEmpty(imagePath) && Tools.isNotEmpty(imageName)) {
@@ -326,6 +327,20 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         setLastModified(entity.getImagePath()+"/"+entity.getImageName(), now);
         setLastModified(entity.getImagePath()+"/o_"+entity.getImageName(), now);
         setLastModified(entity.getImagePath()+"/s_"+entity.getImageName(), now);
+    }
+
+    private void checkImageAccess(String path) {
+        if (!getUser().isFolderWritable(path)) throw new IllegalArgumentException("Access is denied");
+    }
+
+    @Override
+    public boolean checkItemPerms(GalleryEntity entity, Long id) {
+        if (id != null && id > 0) {
+            GalleryEntity stored = repository.findById(id).orElse(null);
+            if (stored != null) checkImageAccess(stored.getImagePath());
+        }
+        if (entity != null) checkImageAccess(entity.getImagePath());
+        return super.checkItemPerms(entity, id);
     }
 
     private boolean isImageEditor() {

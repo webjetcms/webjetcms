@@ -9,6 +9,8 @@ Prepare a customer-focused product story and repeatable browser footage. Keep
 shot metadata, localized narration, preparation and browser steps in one
 JavaScript object; derive the narration, shot plan and walkthrough from it.
 
+Before creating executable scenarios, inspect the target project's video npm scripts, `recordVideoPlan` helper, test configuration and outro asset. The workflow below describes the core recording harness, which may be absent from a customer project. Also verify availability of ElevenLabs access and the Tesseract video tools before the steps that require them. If a prerequisite is absent, report it and keep the deliverable to the feasible story/shot plan; do not silently install plugins, copy the core harness or change CMS dependencies. Resolve project paths from the target checkout and references from this skill's own directory.
+
 Read [references/production-reference.md](references/production-reference.md)
 before implementing or changing a video scenario. It contains the exact schema,
 scenario template, recording defaults and validation commands. Use
@@ -98,7 +100,7 @@ when it is available; `durationSeconds` remains an editing estimate until adjust
   it, including its inline callbacks. Do not maintain a separate narration block,
   hard-coded timeline, ordered callback list or title strings.
 - Use `text-cs` for Czech and `text-en` for English. Select the default with
-  `videoPlan.language`; `I.generateAudio(videoPlan, { language: "en" })` can
+  `videoPlan.language`; `I.generateAudio(videoPlan, { language: "en", languageCode: "en" })` can
   override audio language for one run. Missing translations fail explicitly;
   use `""` only for a deliberately silent shot. Translating narration alone does
   not translate UI selectors, fixture content or the browser login language.
@@ -276,18 +278,20 @@ cursor in the editor. Keep code comments and shot titles in English.
 
 ## 5. Generate Audio and Validate
 
-The default ElevenLabs model is `eleven_v3`, voice Luki Zajo
-(`Zai7B4Aol2bJtneyq0L1`). Omit `voice_settings` and `language_code` by default. Model/voice precedence is
+The default ElevenLabs model is `eleven_v4`, voice Luki Zajo
+(`Zai7B4Aol2bJtneyq0L1`), `languageCode: "sk"` and
+`voiceSettings: { stability: 0.3, similarityBoost: 0.5 }`. Model/voice precedence is
 explicit `{ modelId, voiceId }`, non-empty `ELEVENLABS_MODEL_ID` /
 `ELEVENLABS_VOICE_ID`, repository default. The API key comes only from
 `ELEVENLABS_API_KEY`; never store it in code or command arguments.
 
-For an explicitly configured narration, `I.generateAudio` also accepts
-`languageCode: "sk"` to enforce Slovak pronunciation and
-`voiceSettings: { stability: 0.3, similarityBoost: 0.5 }` for 30% stability and
-50% similarity. Values use the 0–1 range. `language` selects the plan's localized
-text; `languageCode` is a separate optional ElevenLabs API setting. Use
-`modelId: "eleven_v4"` when requested, without changing the repository default.
+`I.generateAudio` accepts overrides for `languageCode` and individual
+`voiceSettings` fields; unspecified voice fields retain the defaults.
+Values use the 0–1 range. `language` selects the plan's localized text;
+`languageCode` controls ElevenLabs pronunciation separately. When generating
+another language, explicitly set its language code as well.
+Use `languageCode: null` for a model without language enforcement (such as
+Multilingual v2), or `voiceSettings: null` to use the voice's stored settings.
 
 `I.generateAudio(videoPlan)` packs the selected `text-<language>` fields,
 including manual and head shots, into numbered MP3 parts in array order. It
@@ -393,6 +397,10 @@ skill and read [references/tesseract-editing.md](references/tesseract-editing.md
 Keep the approved narration as the timing anchor, preserve continuous topic
 flows, and use purposeful zooms on the controls being explained. Omit numbered
 chapter-title overlays unless explicitly requested.
+
+Include the opening AI disclosure in every finished video, following the
+wording, placement, timing and readability checks in the reference's
+[AI Disclosure](references/tesseract-editing.md#ai-disclosure) section.
 
 Always finish the complete WebJET feature video with the supplied animation in
 `src/test/webapp/video/assets/outro.mp4`, unless the user requests a different

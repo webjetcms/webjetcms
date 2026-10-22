@@ -41,14 +41,20 @@ Scenario('Pixabay - test custom filename and image source after adding', async (
     DTE.waitForEditor();
     I.waitForElement(".cke_wysiwyg_frame.cke_reset");
     I.clickCss('.cke_button__image');
+    // ElFinder's initial folder selection focuses its iframe even after switching to Pixabay.
+    I.waitForFunction(() => {
+        const frame = document.querySelector('#wjImageIframeElement')?.contentWindow;
+        return frame?.elFinderInstance?.cwd()?.virtualPath === '/images/test-stavov/testimportpixabay' && frame.jQuery.active === 0;
+    }, [], 20);
     I.click(locate("a.cke_dialog_tab").withText("Fotobanka"));
     I.switchTo('#wjImagePixabayIframeElement');
     I.waitForElement('#search', 10);
     waitForPixabaySearch(I);
     I.fillField('#search', "***");
     I.fillField('#search', searchTerm);
+    I.seeInField('#search', searchTerm);
     I.click('button[type="submit"]');
-    waitForPixabaySearch(I);
+    waitForPixabaySearch(I, searchTerm);
     I.waitForElement(resultSelector, 40);
 
     var imageSource = await I.grabAttributeFrom(resultSelector, 'href');
@@ -209,10 +215,14 @@ Scenario('Image editor - remaster, test of functionality', async ({ I, DTE, Docu
     I.switchTo();
 });
 
-function waitForPixabaySearch(I) {
+function waitForPixabaySearch(I, expectedSearch = null) {
     // CodeceptJS 3.6 cannot waitForFunction on its iframe FrameLocator.
     I.switchTo();
-    I.waitForFunction(() => document.querySelector('#wjImagePixabayIframeElement').contentWindow.jQuery?.active === 0, 40);
+    I.waitForFunction(([search]) => {
+        const frame = document.querySelector('#wjImagePixabayIframeElement').contentWindow;
+        const plugin = frame.jQuery?.('.results').data('plugin_pixabay');
+        return plugin && frame.jQuery.active === 0 && (search === null || plugin.settings.search === search);
+    }, [expectedSearch], 40);
     I.switchTo('#wjImagePixabayIframeElement');
 }
 

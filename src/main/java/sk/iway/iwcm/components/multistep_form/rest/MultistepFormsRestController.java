@@ -71,8 +71,7 @@ public class MultistepFormsRestController {
             response.put("err_msg", sfe.getLocalizedMessage());
             response.put("end_try", sfe.isEndUserTry());
 
-            if(Tools.isNotEmpty(sfe.getErrorRedirect()))
-                response.put("err_redirect", sfe.getErrorRedirect());
+            multistepFormsService.addErrorForward(formName, sfe.getErrorRedirect(), request, response);
 
             Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Error while saving form (or form step):" + formName + ". Error: " + sfe.getLocalizedMessage(), multistepFormsService.getFormId(formName), FormStatService.AUDIT_SUBID_ERROR_STEP_SAVE);
 

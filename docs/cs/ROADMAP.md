@@ -67,6 +67,7 @@ filtr bere pouze první hodnotu. Dodělat tedy možnost `IN` pro možnost zadán
 - [ ] +Webové stránky - přidat možnost přidat více stránkám najednou perex skupinu, čili ke stávajícím perex skupinám se přidá zvolená.
 - [ ] +Webové stránky - při smazání složky, která má i zrcadlenou verzi zobrazit notifikaci, že byly smazány i zrcadlené složky XXX,YYY.
 - [ ] +Přidat podporu obrázků typu AVIF.
+- [ ] +Možnost změnit pořadí polí v datatables editoru, kartu ve které se pole nachází, případně i vytvořit novou kartu do které se pole vloží. Tedy konfiguračně upravit hodnoty co se dnes nastavují cea anotace.
 
 ## 2025
 
