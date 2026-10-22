@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.customfields.rest;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -23,15 +24,30 @@ import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
+import sk.iway.iwcm.components.fields_settings.rest.FieldsSettingsService;
 
 /**
- * Tests runtime custom-field lookup domain selection.
+ * Tests runtime custom-field lookup domain selection and shared class suggestions.
  */
 class CustomFieldsServiceTest {
 
     private static final int CURRENT_DOMAIN_ID = 9;
     private static final int COMMON_DOMAIN_ID = 17;
     private static final long ENTITY_ID = 42L;
+
+    /** Verifies that custom-field autocomplete uses the shared discovery service. */
+    @Test
+    void usesSharedClassOptions() {
+        FieldsSettingsService fieldsSettings = mock(FieldsSettingsService.class);
+        CustomFieldsService service = new CustomFieldsService(
+            mock(CustomFieldsRepository.class), mock(EnumerationTypeRepository.class), fieldsSettings);
+        List<String> options = List.of(EnumerationDataBean.class.getName());
+        when(fieldsSettings.getCustomFieldClassOptions("Enumeration")).thenReturn(options);
+
+        assertSame(options, service.getClassOptions("Enumeration"));
+        verify(fieldsSettings).getCustomFieldClassOptions("Enumeration");
+    }
 
     /**
      * Verifies that runtime lookups use the entity's resolved domain scope.

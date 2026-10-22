@@ -215,6 +215,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
 
+### Editor
+
+- Sekcia **Nastavenia → Editor** združuje [Nastavenia polí](frontend/editor/fields-settings.md), [Nastavenia kariet](frontend/editor/tabs-settings.md) a [Voliteľné polia](frontend/editor/custom-fields-settings.md). Pre jednotlivé entity a domény môžete meniť názvy, poradie a zobrazenie polí či zakázať ich úpravy. Môžete tiež upravovať karty editora a vytvárať vlastné karty s voliteľnými poľami (#58830).
+
 ### Voliteľné polia
 
 - Kompletne implementovaná funkčnosť [nastavenia voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálne nastaviť vlastnosti polí bez editácie prekladových kľúčov. Podporované sú všetky typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázok, odkaz, JSON a ďalšie) s typovo špecifickými nastaveniami ako maximálna dĺžka textu, možnosti výberu, prepojenie na číselníky alebo závislosť na iných poliach. Používateľské rozhranie ponúka aj jednoduchý spôsob nastavenia možných hodnôt pre výberové/autocomplete polia (#58529).
@@ -312,6 +316,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- Datatabuľky - pridaný typ poľa [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pre výber jednej možnosti zo skupiny tlačidiel. Používa štýly administrácie a podporuje aj voľbu **Bez zmeny** pri trojstavových nastaveniach (#58830).
 - SBOM - pridané [generovanie spoločného zoznamu Java a npm závislostí](developer/install/sbom.md) vo formáte CycloneDX JSON príkazom `ant -f ant/build.xml sbom`, vrátane tranzitívnych závislostí a validácie reportu.
 - [Centrálny generátor noviniek](developer/install/social-media-feed.md) po úspešnom publikovaní odstráni nepoužívané náhľady s 30-dňovou ochrannou lehotou. Zachová obrázky aktuálnych príspevkov aj záložných údajov pre výpadok zdroja (#358).
 - Editor stránok - [nastavenie ponuky Štýly](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) podporuje metadáta v komentároch `editor.scss` / `editor.css` pre kategórie a ich ikony, vzájomne sa nahrádzajúce skupiny, povolené elementy a základné triedy zachované pri obnovení vzhľadu. Nová ponuka je predvolene zapnutá; nastavením `ckeditor_styleComboEnabled=false` sa obnoví pôvodný výber štýlov (#OSK764).

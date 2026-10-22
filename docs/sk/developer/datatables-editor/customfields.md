@@ -142,7 +142,7 @@ Transformáciu medzi editor poľami a internou hodnotou zabezpečujú metódy `C
 
 ## JSON Editor
 
-Typ `jsoneditor` umožňuje priamo zadávať JSON hodnoty. V [nastaveniach voliteľných polí](../../frontend/webpages/customfields/custom-fields-settings.md) vyberte typ **Editor JSON**, alebo použite prekladové kľúče:
+Typ `jsoneditor` umožňuje priamo zadávať JSON hodnoty. V [nastaveniach voliteľných polí](../../frontend/editor/custom-fields-settings.md) vyberte typ **Editor JSON**, alebo použite prekladové kľúče:
 
 ```properties
 editor.field_a=JSON data

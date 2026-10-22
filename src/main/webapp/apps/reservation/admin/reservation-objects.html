@@ -9,12 +9,7 @@
 
         let url = "/admin/rest/reservation/reservation-object";
 
-        var tabs = [
-            { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true },
-            { id: 'advanced', title: '[[#{datatable.tab.advanced}]]', selected: false },
-            { id: 'chooseDays', title: '[[#{components.reservation.admin_addObject.chooseDays}]]', selected: false },
-            { id: 'specialPrice', title: '[[#{components.reservation.reservation_object_reservation_price.extra_price}]]', selected: false }
-        ];
+        var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.reservation.jpa.ReservationObjectEntity')})];
 
         reservationObjectDataTable = WJ.DataTable({
             url: url,

@@ -1,25 +1,18 @@
 package sk.iway.iwcm.components.customfields.rest;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 
-import jakarta.persistence.Entity;
-import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
@@ -29,18 +22,18 @@ import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
 import sk.iway.iwcm.components.enumerations.rest.EnumerationService;
+import sk.iway.iwcm.components.fields_settings.rest.FieldsSettingsService;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
-import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.adminlog.AuditEntityListener;
-import sk.iway.iwcm.system.datatable.BaseEditorFields;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.multidomain.DomainIdScopeResolver;
 
+/**
+ * Resolves and validates custom field configurations, using shared class discovery for autocomplete.
+ */
 @Service
 public class CustomFieldsService {
 
@@ -50,18 +43,19 @@ public class CustomFieldsService {
         "autocomplete", "image", "link", "json_group", "json_doc", "dir", "docsIn", "uuid", "color"
     );
 
-    private static final String CLASS_FIELD_MAP_KEY = "CustomFieldsService_classFieldsMap";
     public static final Map<String, String> BONUS_PARAMS = Map.of(
         "sk.iway.iwcm.doc.DocDetails", "tempId"
     );
 
     private final CustomFieldsRepository customFieldsRepository;
     private final EnumerationTypeRepository enumerationTypeRepository;
+    private final FieldsSettingsService fieldsSettingsService;
 
     @Autowired
-    public CustomFieldsService(CustomFieldsRepository customFieldsRepository, EnumerationTypeRepository enumerationTypeRepository) {
+    public CustomFieldsService(CustomFieldsRepository customFieldsRepository, EnumerationTypeRepository enumerationTypeRepository, FieldsSettingsService fieldsSettingsService) {
         this.customFieldsRepository = customFieldsRepository;
         this.enumerationTypeRepository = enumerationTypeRepository;
+        this.fieldsSettingsService = fieldsSettingsService;
     }
 
     /* PUBLIC STATIC METHODS */
@@ -541,30 +535,13 @@ public class CustomFieldsService {
     }
 
     /**
-     * Returns class name suggestions that contain the given search term.
+     * Returns eligible custom-field classes from the shared field-settings discovery cache.
      *
-     * @param term search text
-     * @return case-insensitively sorted list of matching class names
+     * @param term substring to match, without wildcard expansion
+     * @return case-insensitively sorted matching class names, or an empty list for blank input
      */
     public List<String> getClassOptions(String term) {
-        List<String> ac = new ArrayList<>();
-        if(Tools.isEmpty(term)) return ac;
-
-        String normalizedTerm = term.trim().toLowerCase(Locale.ROOT);
-        if(Tools.isEmpty(normalizedTerm)) return ac;
-
-        for(String className : getClassSet()) {
-            if(Tools.isEmpty(className)) {
-                continue;
-            }
-
-            if(className.toLowerCase(Locale.ROOT).contains(normalizedTerm))
-                ac.add(className);
-        }
-
-        ac.sort(String.CASE_INSENSITIVE_ORDER);
-
-        return ac;
+        return fieldsSettingsService.getCustomFieldClassOptions(term);
     }
 
     /* PRIVATE METHODS */
@@ -613,88 +590,4 @@ public class CustomFieldsService {
         }
     }
 
-    /**
-     * Returns a cached set of eligible class names, scanning the classpath when cache is empty.
-     *
-     * @return set of class names that can provide custom fields
-     */
-    private Set<String> getClassSet() {
-        Cache c = Cache.getInstance();
-        Object mapObject = c.getObject(CLASS_FIELD_MAP_KEY);
-
-        if(mapObject instanceof Set<?> cachedSet) {
-            Set<String> classSet = new HashSet<>();
-            for(Object cachedItem : cachedSet) {
-                if(cachedItem instanceof String cachedClassName && Tools.isEmpty(cachedClassName) == false) {
-                    classSet.add(cachedClassName);
-                }
-            }
-            return classSet;
-        }
-
-        Set<String> classSet = findClassesWithAnnotation();
-        c.setObject(CLASS_FIELD_MAP_KEY, classSet, 60);
-        return classSet;
-    }
-
-    /**
-     * Scans configured application packages for entities containing nested datatable fields.
-     *
-     * @return set of fully qualified class names matching the required annotation pattern
-     */
-    private Set<String> findClassesWithAnnotation() {
-
-        Set<String> foundClasses = new HashSet<>();
-
-        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
-        provider.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
-
-        for (String packageName : AppManager.getPackageNames()) {
-			for (BeanDefinition beanDef : provider.findCandidateComponents(packageName)) {
-                try {
-
-                    String fqdn = beanDef.getBeanClassName();
-				    if (fqdn == null) { continue; }
-
-                    if(hasDataTableColumnNested(fqdn) == true)
-                        foundClasses.add( fqdn );
-
-                } catch (Exception e) {
-					Logger.error(CustomFieldsService.class, "Error while scanning class for custom fields: " + e.getMessage(), e);
-				}
-            }
-        }
-
-        //add sk.iway.iwcm.doc.TemplateDetails if not present, because it is not entity
-        if(foundClasses.contains("sk.iway.iwcm.doc.TemplateDetails") == false) {
-            foundClasses.add("sk.iway.iwcm.doc.TemplateDetails");
-        }
-
-        return foundClasses;
-    }
-
-    /**
-     * Checks whether a class contains a field annotated with {@link DataTableColumnNested}
-     * and assignable to {@link BaseEditorFields}.
-     *
-     * @param className fully qualified class name
-     * @return {@code true} if the class is considered eligible for custom fields lookup
-     * @throws ClassNotFoundException when the class cannot be loaded
-     */
-    private boolean hasDataTableColumnNested(String className) throws ClassNotFoundException {
-        for (Field field : AuditEntityListener.getDeclaredFieldsTwoLevels( Class.forName(className)) ) {
-            DataTableColumnNested annotation = field.getAnnotation(DataTableColumnNested.class);
-
-            if (annotation == null) {
-                continue;
-            }
-
-            Class<?> fieldType = field.getType();
-            if (fieldType != null && BaseEditorFields.class.isAssignableFrom(fieldType)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 }

@@ -13,10 +13,7 @@
 
     window.domReady.add(function () {
 
-        var tabs = [
-            { id: 'main', title: '[[#{components.forum.post}]]', selected: true},
-            { id: 'advanced', title: '[[#{apps.forum.show_administration}]]' },
-        ];
+        var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.forum.jpa.DocForumEntity')})];
 
         forumDataTable = WJ.DataTable({
             url: url,

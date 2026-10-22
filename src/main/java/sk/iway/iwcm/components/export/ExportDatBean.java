@@ -23,6 +23,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 /**
  * ExportDatBean.java
@@ -41,6 +43,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Table(name = "export_dat")
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_EXPORT)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "filter", title = "editor.tab.filter"),
+    @DataTableTab(id = "sort", title = "editor.tab.sort")
+})
 public class ExportDatBean extends ActiveRecordRepository implements Serializable
 {
 	private static final long serialVersionUID = -1L;

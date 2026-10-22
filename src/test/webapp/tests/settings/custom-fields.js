@@ -1,7 +1,10 @@
 Feature('settings.custom-fields');
 
+let screenshotsPath;
+
 Before(({ I, login }) =>{
     login('admin');
+    screenshotsPath = I.getConfLng() === 'sk' ? '/frontend/editor/' : '/frontend/webpages/customfields/';
 });
 
 const docId_1 = "163799";
@@ -58,6 +61,10 @@ const allTypesDefinitions = [
     { alphabet: "S", type: "color", label: "autotest-custom-type-color" },
     { alphabet: "T", type: "checkbox", label: "autotest-custom-type-checkbox", settings: { optionsSource: "enumeration", enumeration: allTypesEnumeration } }
 ];
+
+Scenario('Custom fields require Editor configuration permission', ({ DT }) => {
+    DT.checkPerms('dataTablesConfig', '/admin/v9/settings/custom-fields/', 'customFieldsDataTable');
+});
 
 Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, Document }) =>{
     I.say("Do some basic checks");
@@ -117,7 +124,7 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
     addCustomFieldSetting(I, DTE, docClass, "f", null, true, null, templateClass, templateId, Document);
     addCustomFieldSetting(I, DTE, docClass, requiredOverrideAlphabet.toLowerCase(), null, true, null, templateClass, templateId);
 
-    Document.screenshot("/frontend/webpages/customfields/custom-fields-settings-datatable.png");
+    Document.screenshot(screenshotsPath + "custom-fields-settings-datatable.png");
 
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("customFieldsDataTable");
@@ -129,7 +136,7 @@ Scenario('Custom fields required logic test @screenshot', async ({ I, DT, DTE, D
     I.fillField("input.options-value-2", "macos");
     I.click("button.options-add-btn");
 
-    Document.screenshotElement("div.DTE_Action_Create", "/frontend/webpages/customfields/custom-fields-settings-editor.png");
+    Document.screenshotElement("div.DTE_Action_Create", screenshotsPath + "custom-fields-settings-editor.png");
 
     DTE.cancel();
 
@@ -818,7 +825,7 @@ function addCustomFieldSetting(I, DTE, className, alphabet, entityId, isRequired
         I.fillField("#DTE_Field_bonusClassName", bonusClassName);
         I.fillField("#DTE_Field_bonusEntityId", bonusEntityId);
 
-        if (Document != null) Document.screenshot("/frontend/webpages/customfields/custom-fields-settings-editor-bonus.png");
+        if (Document != null) Document.screenshot(screenshotsPath + "custom-fields-settings-editor-bonus.png");
 
         I.clickCss("#pills-dt-customFieldsDataTable-basic-tab");
     }

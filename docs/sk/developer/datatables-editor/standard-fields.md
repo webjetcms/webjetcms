@@ -424,6 +424,31 @@ Môžete využiť aj možnosť nastavenia atribútu ```data-dt-field-headline```
     private Boolean sexMale;
 ```
 
+## BUTTON_GROUP
+
+Pole umožňuje vybrať jednu možnosť zo skupiny tlačidiel Bootstrap. Je vhodné pre krátke zoznamy, napríklad **Áno / Nie / Bez zmeny**. Všetky možnosti sú viditeľné vedľa seba a vybraná možnosť má modré pozadie.
+
+Možnosti definujte rovnako ako pri `RADIO`, cez `editor.options` alebo metódu `getOptions()` REST kontroléra. V datatabuľke sa zobrazuje text vybranej možnosti.
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.BUTTON_GROUP,
+        title = "settings.fields-settings.visible",
+        defaultValue = "null",
+        alwaysCopyProperties = true,
+        editor = @DataTableColumnEditor(options = {
+            @DataTableColumnEditorAttr(key = "button.yes", value = "true"),
+            @DataTableColumnEditorAttr(key = "button.no", value = "false"),
+            @DataTableColumnEditorAttr(key = "settings.fields-settings.unchanged", value = "null")
+        })
+    )
+    private Boolean visible;
+```
+
+V príklade má tretia možnosť hodnotu `"null"`. Vyberie sa aj pri načítaní hodnoty `null`. Atribút `alwaysCopyProperties` umožňuje uložiť zmenu z `true` alebo `false` späť na `null`.
+
+Pole môžete ovládať aj klávesnicou: klávesom Tab prejdete do skupiny a šípkami zmeníte vybranú možnosť. JavaScriptový typ editora je `buttonGroup` a podporuje štandardné metódy `val()`, `update()`, `enable()` a `disable()`.
+
 ## BOOLEAN
 
 Reprezentuje zjednodušený zápis poľa typu ```CHECKBOX``` pre binárnu voľbu áno/nie.

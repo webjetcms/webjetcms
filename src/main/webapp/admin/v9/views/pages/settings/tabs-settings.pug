@@ -1,0 +1,21 @@
+extends ../../partials/layout
+
+block content
+
+    script.
+        var tabsSettingsDataTable;
+
+        window.domReady.add(function () {
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.tabs_settings.jpa.TabsSettingsEntity')})];
+
+            tabsSettingsDataTable = WJ.DataTable({
+                url: "/admin/rest/settings/tabs-settings",
+                columns: columns,
+                serverSide: true,
+                id: "tabsSettingsDataTable",
+                fetchOnCreate: true,
+                fetchOnEdit: true
+            });
+        });
+
+    <table id="tabsSettingsDataTable" class="datatableInit table"></table>

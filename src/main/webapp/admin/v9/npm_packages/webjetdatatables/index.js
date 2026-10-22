@@ -49,6 +49,7 @@ import * as fieldTypeBase64 from './field-type-base64';
 import * as fieldTypeStaticText from './field-type-static-text';
 import * as fieldTypeWjupload from './field-type-wjupload';
 import * as fieldTypeImageRadio from './field-type-imageradio';
+import * as fieldTypeButtonGroup from './field-type-button-group';
 import * as fieldTypeIcon from './field-type-icon';
 import * as fieldTypeOptions from './field-type-options';
 import * as fieldTypeOptionsSimple from './field-type-options-simple';
@@ -927,7 +928,7 @@ export const dataTableInit = options => {
                     //console.log("checkbox: ", col.editor.options);
                 }
 
-                if ("select" === col.editor.type || "radio" === col.editor.type) {
+                if ("select" === col.editor.type || "radio" === col.editor.type || "buttonGroup" === col.editor.type) {
                     //ak mame true/false select box, aj tomu musime zmenit value na true/false namiesto String hodnot
                     if (col.editor.options) {
                         fixOptionsValueType(col.editor.options);
@@ -1350,6 +1351,7 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.staticText = fieldTypeStaticText.typeStaticText();
         $.fn.dataTable.Editor.fieldTypes.wjupload = fieldTypeWjupload.typeWjupload();
         $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
+        $.fn.dataTable.Editor.fieldTypes.buttonGroup = fieldTypeButtonGroup.typeButtonGroup();
         $.fn.dataTable.Editor.fieldTypes.icon = fieldTypeIcon.typeIcon();
         $.fn.dataTable.Editor.fieldTypes.options = fieldTypeOptions.typeOptions();
         $.fn.dataTable.Editor.fieldTypes.optionsSimple = fieldTypeOptionsSimple.typeOptionsSimple();
@@ -1765,28 +1767,28 @@ export const dataTableInit = options => {
                     //console.log("tabsFolders 1", DATA.tabsFolders);
                     editorHasTabs = true;
 
+                    const visibleTabs = DATA.tabsFolders.filter(tab => {
+                        if (typeof tab.perms != "undefined" && true === nopermsJavascript[tab.perms]) return false;
+                        if (true === tab.hideOnCreate && "create" == action) return false;
+                        if (true === tab.hideOnEdit && "edit" == action) return false;
+                        return true;
+                    });
+                    // Fall back when the configured default is hidden for this user or action.
+                    // Keep tab.selected unchanged so the configured default is restored when available.
+                    const selectedTab = visibleTabs.find(tab => tab.selected) || visibleTabs[0];
+
                     //taby
                     let tabsHtml = "";
                     tabsHtml += '<div class="md-tabs">';
                     tabsHtml += '<ul class="nav" id="pills-dt-editor-' + DATA.id + '" role="tablist">';
-                    for (let i = 0; i < DATA.tabsFolders.length; i++) {
-                        var tab = DATA.tabsFolders[i];
-
-                        if (typeof tab.perms != "undefined") {
-                            //skontroluj prava
-                            let tabPerm = nopermsJavascript[tab.perms];
-                            //console.log("tab.perms=", tab.perms, "noperms=", tabPerm);
-                            if (true === tabPerm) continue;
-                        }
-
-                        if (true === tab.hideOnCreate && "create"==action) continue;
-                        if (true === tab.hideOnEdit && "edit"==action) continue;
-
+                    for (let i = 0; i < visibleTabs.length; i++) {
+                        const tab = visibleTabs[i];
+                        const selected = tab === selectedTab;
                         var hasContent = tab.hasOwnProperty("content");
                         var classNameAppend = "";
                         if (typeof tab.className != "undefined") classNameAppend = " "+tab.className;
                         tabsHtml += '<li class="nav-item' + classNameAppend + '" role="presentation">';
-                        tabsHtml += '<a class="nav-link' + (tab.selected ? ' active' : '') + '" data-has-content="' + hasContent + '" data-tab-id="' + DATA.id + '-' + tab.id + '" id="pills-dt-' + DATA.id + '-' + tab.id + '-tab" href="#pills-dt-' + DATA.id + '-' + tab.id + '" aria-selected="' + tab.selected + '" aria-controls="pills-dt-' + DATA.id + '-' + tab.id + '" data-toogle="pill" role="tab">' + tab.title + '</a>';
+                        tabsHtml += '<a class="nav-link' + (selected ? ' active' : '') + '" data-has-content="' + hasContent + '" data-tab-id="' + DATA.id + '-' + tab.id + '" id="pills-dt-' + DATA.id + '-' + tab.id + '-tab" href="#pills-dt-' + DATA.id + '-' + tab.id + '" aria-selected="' + selected + '" aria-controls="pills-dt-' + DATA.id + '-' + tab.id + '" data-toogle="pill" role="tab">' + tab.title + '</a>';
                         tabsHtml += '</li>';
                     }
                     tabsHtml += '</ul>';
@@ -1817,18 +1819,17 @@ export const dataTableInit = options => {
                             });
 
                             window.dispatchEvent(event);
-                        })
+                        });
+                        // Initialize the effective default tab after its panes and handlers are ready.
+                        if (selectedTab) {
+                            $("#pills-dt-" + DATA.id + "-" + selectedTab.id + "-tab").trigger("click");
+                        }
                     }, 100);
 
-                    //ak je content na prvom tabe musime aj setnut dialogu has-content
-                    if (DATA.tabsFolders[0].hasOwnProperty("content")) $("#" + DATA.id + "_modal div.DTE_Body.modal-body").addClass("has-content");
-                    //pri reopene zobraz prvy tab
+                    if (selectedTab && selectedTab.hasOwnProperty("content")) $("#" + DATA.id + "_modal div.DTE_Body.modal-body").addClass("has-content");
                     if (editorWasOpened) {
-                        //console.log("#pills-dt-"+DATA.id+"-"+DATA.tabsFolders[0].id+"-tab");
-                        setTimeout(function () {
-                            //znova klikni na prvy tab
-                            $("#pills-dt-" + DATA.id + "-" + DATA.tabsFolders[0].id + "-tab").trigger("click");
-                        }, 100);
+                        // Clear persistent panes even when no tabs are available.
+                        $('#' + DATA.id + '_modal div.dte-tab-pane').removeClass("active show");
                     }
 
                     //prve otvorenie editora
@@ -1846,7 +1847,7 @@ export const dataTableInit = options => {
                             if (tab.hasOwnProperty("content")) {
                                 content = tab.content;
                             }
-                            tabsHtml = '<div id="pills-dt-' + DATA.id + '-' + tab.id + '" class="dte-tab-pane tab-pane fade' + (tab.selected ? ' show active' : '') + '" role="tabpanel" aria-labelledby="pills-dt-' + DATA.id + '-' + tab.id + '-tab">';
+                            tabsHtml = '<div id="pills-dt-' + DATA.id + '-' + tab.id + '" class="dte-tab-pane tab-pane fade' + (tab === selectedTab ? ' show active' : '') + '" role="tabpanel" aria-labelledby="pills-dt-' + DATA.id + '-' + tab.id + '-tab">';
                             tabsHtml += '<div class="panel-body" id="panel-body-dt-' + DATA.id + '-' + tab.id + '">' + content + '</div>';
                             tabsHtml += '</div>';
 

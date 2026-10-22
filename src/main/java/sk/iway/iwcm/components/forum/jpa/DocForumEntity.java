@@ -29,6 +29,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UserBasicDto;
 import sk.iway.iwcm.users.UserDetails;
@@ -41,6 +43,10 @@ import sk.iway.iwcm.users.jpa.UserBasicDtoConverter;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORUM_SAVE)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "main", title = "components.forum.post", selected = true),
+    @DataTableTab(id = "advanced", title = "apps.forum.show_administration")
+})
 public class DocForumEntity implements Serializable {
 
     @Id

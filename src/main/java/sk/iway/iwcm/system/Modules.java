@@ -850,18 +850,21 @@ public class Modules
 		sub.setMenuIcon("disc");
 		loadModule(sub);
 
-		// Custom fields
+		// DataTable editor configuration
 		sub = new ModuleInfo().setMenuOrder(7120);
-		sub.setLeftMenuNameKey("settings.custom-fields.title");
-		sub.setNameKey("settings.custom-fields.title");
-		sub.setPath("/admin/v9/settings/custom-fields/");
+		sub.setLeftMenuNameKey("admin.editor.title");
+		sub.setNameKey("admin.editor.title");
+		sub.setPath("/admin/v9/settings/fields-settings/");
 		sub.setWjVersions("BPECDIM");
 		sub.setUserItem(true);
-		sub.setItemKey("customFields");
+		sub.setItemKey("dataTablesConfig");
 		sub.setDefaultDisabled(true);
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("table-options");
+		sub.addSubmenu("settings.fields-settings.title", "/admin/v9/settings/fields-settings/");
+		sub.addSubmenu("settings.tabs-settings.title", "/admin/v9/settings/tabs-settings/");
+		sub.addSubmenu("settings.custom-fields.title", "/admin/v9/settings/custom-fields/");
 		loadModule(sub);
 
 		// Restartovat

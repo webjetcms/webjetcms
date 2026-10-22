@@ -9,10 +9,18 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "index", title = "elfinder.folder_prop.index.tab"),
+    @DataTableTab(id = "usage", title = "elfinder.folder_prop.usage.tab"),
+    @DataTableTab(id = "history", title = "elfinder.file_prop.history.tab")
+})
 public class FilePropertiesDTO {
 
     @DataTableColumn(
