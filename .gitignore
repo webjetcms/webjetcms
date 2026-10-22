@@ -33,6 +33,10 @@ scratchpad*.jsp
 .vscode\settings.json
 src/main/resources/poolman-local*.xml
 src/main/webapp/WEB-INF/update/
+# Runtime output of the docs-server social feed generator
+/src/main/webapp/json/wjnews.*.json
+/src/main/webapp/json/social-media/
+/src/main/webapp/WEB-INF/social-media/
 src/main/resources/certificates/https-keystore.p12
 docs/examples/headless-astro/.cert/
 docs/examples/headless-astro/.astro/dev.json

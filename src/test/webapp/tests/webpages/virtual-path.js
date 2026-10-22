@@ -1,4 +1,4 @@
-Feature('webpages.virtual-path');
+Feature('webpages.virtual-path').tag('@singlethread');
 
 Before(({ I, login }) => {
      login('admin');
@@ -30,13 +30,9 @@ function testVirtualPathChange(I, DTE, urlDirName) {
     //najskor resetni URL
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=25861");
     DTE.waitForEditor();
-    I.wait(5); //ckeditor
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
-    I.fillField("#DTE_Field_title", "Podľa title");
-    I.wait(1);
-    I.fillField("#DTE_Field_navbar", "Podľa title");
-    I.wait(1);
-    I.fillField("#DTE_Field_navbar", "Podľa title"); //este raz, lebo blur na title to sem doplni a schaosi vyplnanie
+    fillTitle(I, "Podľa title");
     DTE.save();
 
     I.click("Podľa title", "#datatableInit_wrapper");
@@ -50,11 +46,7 @@ function testVirtualPathChange(I, DTE, urlDirName) {
     I.dontSeeElement("div.DTE_Field_Name_urlInheritGroup .form-switch .form-check-input:checked");
 
     //zmen title stranky
-    I.fillField("#DTE_Field_title", "Podľa zmena title");
-    I.wait(1);
-    I.fillField("#DTE_Field_navbar", "Podľa zmena title");
-    I.wait(1);
-    I.fillField("#DTE_Field_navbar", "Podľa zmena title");
+    fillTitle(I, "Podľa zmena title");
     DTE.save();
     I.click("Podľa zmena title", "#datatableInit_wrapper");
 
@@ -77,6 +69,15 @@ function testVirtualPathChange(I, DTE, urlDirName) {
     I.seeElement("div.DTE_Field_Name_urlInheritGroup .form-switch .form-check-input:checked");
     DTE.cancel();
 
+}
+
+/** Blurs the title before filling navbar so its change handler cannot overwrite typed text. */
+function fillTitle(I, title) {
+    I.fillField("#DTE_Field_title", title);
+    I.clickCss("#DTE_Field_navbar");
+    I.fillField("#DTE_Field_navbar", title);
+    I.seeInField("#DTE_Field_title", title);
+    I.seeInField("#DTE_Field_navbar", title);
 }
 
 Scenario('prepinanie poli a zmena URL adries', ({ I, DTE }) => {

@@ -383,6 +383,8 @@ war {
     exclude('templates/firma/**')
 
     rootSpec.exclude('**/poolman-*.xml')
+    // Generated docs-server feeds, thumbnails and private cache are runtime data.
+    rootSpec.exclude('json/wjnews.*.json', 'json/social-media/**', 'WEB-INF/social-media/**')
 }
 
 // Only the Ant finalwar target uses the development runtime, including local AI.

@@ -19,6 +19,8 @@ Paths below are relative to the WebJET core repository. Customer projects usuall
 | `src/main/java/sk/iway/iwcm/doc/TemplatesGroupBean.java`, `src/main/java/sk/iway/iwcm/doc/TemplatesGroupDB.java` | Template groups, shared presentation settings and their persistence. These are separate from website folders. |
 
 `DocDB.getInstance().getDoc(docId)` loads full content. `getBasicDocDetails(docId, false)` reads cached metadata and can return `null`; it still returns `DocDetails`. Do not save a metadata-only object as complete page content. See `src/main/java/sk/iway/iwcm/doc/DocDB.java` and the unloaded-content guard in `src/main/java/sk/iway/iwcm/editor/service/EditorService.java`.
+- `PlannedChangesService` / `PlannedAccess`: Optional private scheduled assets and media (`plannedPublishingEnabled`). Support MyISAM through retryable writes: preserve planned media until every live copy is saved, then clear `documents.planned_media_initialized` before cleanup and history completion. The flag is operational, outside history. Publication has an in-process per-page guard, without database locks or cross-node coordination; see `docs/sk/redactor/webpages/planned-publishing.md` for deployment and failure behavior.
+- `GroupsDB`: In-memory/cache accessor for group structure & domain-specific filtering.
 
 ## Content lifecycle
 

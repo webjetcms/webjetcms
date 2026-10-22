@@ -26,6 +26,8 @@
 
 ![](redactor/admin/search/quick-search.png)
 
+- Panel [Co je nového](redactor/admin/welcome.md#Co-je-nové) doplňuje novinky nainstalované verze o videa a příspěvky z YouTube a Facebooku WebJET CMS. Štítek **Nové** se po rozbalení panelu skryje a znovu upozorní na nový obsah (#358).
+
 ### Přihlašování a ochrana účtu
 
 - [Uživatelské menu v hlavičce](redactor/admin/README.md#uživatelské-menu) zobrazuje údaje účtu, počet aktivních relací a stav dvoustupňového ověřování. Položka **Aktivní přihlášení** otevře správu vlastních přihlášení z kterékoliv stránky administrace. Dokumentace obsahuje aktuální screenshot a popis všech položek menu (#351).
@@ -100,6 +102,11 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 - Změna URL složky s aplikováním na podsložky a podstránky aktualizuje i nezobrazované stránky, naplánované verze, verze čekající na schválení a poslední pracovní verzi. Zachovává jejich obsah, stav a termín publikování; naplánované publikování již nevrátí původní URL (#353).
 - SEO - nastavení **Procházet** nabízí samostatné volby povolit (`index`) a zakázat (`noindex`). Sekce **HTTP hlavičky** na kartě Základní zobrazuje aktuální náhled `X-Robots-Tag`, `Referrer-Policy` a při nastaveném přesměrování i `Location` podle neuložených nastavení stránky a konfigurace serveru (#353).
 - Historie - uživatelé s oprávněním **Čištění databáze** mohou [mazat historické verze](redactor/webpages/history.md) přímo v editoru stránky, i hromadným výběrem. Aktuálně publikovaná verze a verze čekající na schválení jsou chráněny. Bez tohoto oprávnění zůstává dostupné rušení budoucího naplánovaného publikování (#353).
+- Plánované publikování - při zapnutí `plannedPublishingEnabled` lze připravit budoucí verzi stránky s chráněnými obrázky, dokumenty a samostatnou sadou médií [postup a podmínky nasazení](redactor/webpages/planned-publishing.md) (#362).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Headless režim
 
@@ -202,6 +209,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Manažer dokumentů - v [aplikaci na webové stránce](redactor/files/file-archive/file-archive-app.md#karta---rozšířené) přidáno řazení podle začátku a konce platnosti, kódu produktu, produktu, kategorie, jména souboru a velikosti dokumentu (#359, #osk791).
+
 ### Galerie
 
 - Přidána možnost nastavit samostatný způsob [změny velikosti pro velký obrázek](redactor/apps/gallery/structure.md#karta-rozměry) nezávisle na malém obrázku. Ve výchozím nastavení se použije způsob změny velikosti stejně jako je nastaveno pro malý obrázek. Nastavení lze volitelně překopírovat i do podsložek (#58633).
@@ -266,9 +275,13 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Vícekrokové formuláře - doplněné přesunutí (`scroll`) na začátek formuláře po přechodu na další krok (#osk573).
 - Průzkumník - při aktualizaci souboru je výběr omezen na jeden soubor a hlášení upozorní na nesprávný typ (#317).
 - Průzkumník - v informacích o složce se již nezobrazuje nepřesná rekurzivní velikost (#317).
+- Proxy - [výjimky `proxyHostsException`](install/config/README.md#httphttps-proxy) podporují zástupné vzory jako `*.firma.sk` a `127.*`, oddělovače čárka i `|` a porovnávání bez rozlišování velikosti písmen. Stejný normalizovaný seznam se používá pro HTTP/HTTPS i JVM nastavení `http.nonProxyHosts`. Změna konfigurace vyžaduje restart (#361).
 
 ### Oprava chyb
 
+- Email - opraveno ovlivňování SMTP nastavení mezi aplikacemi na společném aplikačním serveru. Každé odeslání používá vlastní properties a mailovou session, takže se nepřenáší SSL port, autentifikace ani nastavení Amazon SES z jiné aplikace (#367).
+- Page Builder - opraveno hromadění prázdných řádků v HTML vnořených bloků. Při ukládání a přepnutí do HTML editoru se odstraní i staré nadbytečné řádky mezi elementy. Obsah `pre`, `textarea` a mezery zachovávané přes CSS `white-space` zůstávají nezměněny (#367).
+- Webové stránky - opravené zasekávání a skákání při [srovnávání verzí](redactor/webpages/history.md), pokud šablona stránky používá plynulé posouvání (`scroll-behavior: smooth`) (#367).
 - Webové stránky - editor JSON přijímá také pole a jednoduché hodnoty s komentáři. Opraveno rozdělení sloupců a posouvání v Page Builderu a zavírání tooltipu při úpravě z historie (#346).
 - Vícekrokové formuláře - opravena validace polí s řetězenými podmínkami viditelnosti (#58794).
 - Formuláře - opraveno archivování formulářů (#305).
@@ -301,6 +314,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Pro programátora
 
+- SBOM - přidáno [generování společného seznamu Java a npm závislostí](developer/install/sbom.md) ve formátu CycloneDX JSON příkazem `ant -f ant/build.xml sbom`, včetně tranzitivních závislostí a validace reportu.
+- [Centrální generátor novinek](developer/install/social-media-feed.md) po úspěšném publikování odstraní nepoužívané náhledy s 30denní ochrannou lhůtou. Zachová obrázky aktuálních příspěvků i záložních údajů pro výpadek zdroje (#358).
 - Editor stránek - [nastavení nabídky Styly](frontend/examples/template-bare/README.md#vyhledávání-a-skupiny-stylů) podporuje metadata v komentářích `editor.scss` / `editor.css` pro kategorie a jejich ikony, vzájemně se nahrazující skupiny, povolené elementy a základní třídy zachovány. Nová nabídka je ve výchozím nastavení zapnuta; nastavením `ckeditor_styleComboEnabled=false` se obnoví původní výběr stylů (#OSK764).
 - AI agenti - připravená distribuce WebJET CMS skills přes `npx skills`, včetně společných konvencí a nastavení projektových pokynů pro Codex, GitHub Copilot a Claude Code. [Návod](custom-apps/skills/README.md) popisuje instalaci, aktualizaci a použití ve starších klientských projektech. Pokyny v `AGENTS.md` a tematické reference v `.github/agents/` byly ověřeny podle aktuálního kódu; popisují používané frameworky, postupy vývoje a testování i rozdíly mezi jádrem CMS a klientskými projekty (#357).
 - Dashboard - přidán registr widgetů, responzivní grid a REST rozhraní pro transakční ukládání nastavení do `user_settings_admin`. Stávající tabulka MySQL/MariaDB se při aktualizaci konvertuje na InnoDB. Používání popisuje [dokumentace úvodní obrazovky](redactor/admin/welcome.md), pozadí a označení prostředí její [konfigurace](admin/setup/configuration/dashboard.md). Pravidla vývoje, kontrakt a důvody rozhodnutí udržuje projektový skill `wj-dashboard-widget` v `.agents/skills/wj-dashboard-widget/` (#58806).

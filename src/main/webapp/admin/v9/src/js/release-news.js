@@ -1,5 +1,4 @@
-const NEWS_LIFETIME = 30 * 24 * 60 * 60 * 1000;
-const pendingNewsSaves = new Map();
+const pendingNewsSaves = new WeakMap();
 let cachedAnnouncement;
 let cachedReleaseNews;
 
@@ -55,47 +54,58 @@ export function newsFingerprint(content) {
 }
 
 /**
- * Resolves the signed-in account's thirty-day window for this localized text.
- * Separate language records prevent language switching from repeatedly resetting the badge.
+ * Checks whether the signed-in account has acknowledged this exact localized text.
+ * Legacy firstSeen records describe exposure, not reading, and require one explicit acknowledgement.
  * @param {string} html - Current announcement HTML.
  * @param {number} [now=Date.now()] - Current time in milliseconds.
- * @returns {{key: string, value: string, changed: boolean, isNew: boolean}} State to persist only when the text changed.
+ * @returns {{key: string, value: string, changed: boolean, isNew: boolean}} State to persist only after displaying the full text.
  */
 export function newsSeenState(html, now = Date.now()) {
     const key = `dashboard.news.${window.userLng || 'sk'}`;
     const fingerprint = newsFingerprint(html);
     let saved;
     try { saved = JSON.parse(window.currentUser?.adminSettings?.[key] || 'null'); }
-    catch (error) { /* Invalid preferences start a new reading window. */ }
-    const changed = saved?.fingerprint !== fingerprint || !Number.isFinite(saved?.firstSeen) || saved.firstSeen <= 0;
-    const firstSeen = changed ? now : saved.firstSeen;
-    return { key, value: JSON.stringify({ fingerprint, firstSeen }), changed, isNew: now < firstSeen + NEWS_LIFETIME };
+    catch (error) { /* Invalid preferences cannot acknowledge the current text. */ }
+    const changed = saved?.fingerprint !== fingerprint || !Number.isFinite(saved?.readAt) || saved.readAt <= 0;
+    return { key, value: JSON.stringify({ fingerprint, readAt: now }), changed, isNew: changed };
 }
 
 /**
- * Persists the shared reading record once per language and content, independently of either view's lifecycle.
- * Failed writes leave account settings unchanged and can be retried when either view is opened again.
+ * Persists an explicit acknowledgement once per account, language and content, independently of the widget's lifecycle.
+ * Writes for changed text are serialized so a delayed response cannot restore an older fingerprint.
+ * Failed writes leave account settings unchanged and can be retried on the next expansion.
  * @param {{key: string, value: string, changed: boolean}} state - Reading state from newsSeenState.
  * @returns {Promise<boolean>} Whether the record is already saved or was saved successfully.
  */
 export function saveNewsSeen(state) {
     if (!state.changed) return Promise.resolve(true);
+    const user = window.currentUser;
+    if (!user?.adminSettings) return Promise.resolve(false);
     const fingerprint = JSON.parse(state.value).fingerprint;
-    let saved;
-    try { saved = JSON.parse(window.currentUser?.adminSettings?.[state.key] || 'null'); }
-    catch (error) { /* Invalid preferences are replaced by the valid reading state. */ }
-    if (saved?.fingerprint === fingerprint && Number.isFinite(saved.firstSeen) && saved.firstSeen > 0) return Promise.resolve(true);
-    const requestKey = `${state.key}:${fingerprint}`;
-    if (!pendingNewsSaves.has(requestKey)) {
-        const request = persistNewsSeen(state).finally(() => pendingNewsSaves.delete(requestKey));
-        pendingNewsSaves.set(requestKey, request);
+    let pending = pendingNewsSaves.get(user);
+    if (!pending) {
+        pending = new Map();
+        pendingNewsSaves.set(user, pending);
     }
-    return pendingNewsSaves.get(requestKey);
+    const previous = pending.get(state.key);
+    if (previous?.fingerprint === fingerprint) return previous.promise;
+    const persist = () => {
+        if (window.currentUser !== user) return Promise.resolve(false);
+        let saved;
+        try { saved = JSON.parse(user.adminSettings[state.key] || 'null'); }
+        catch (error) { /* Invalid preferences are replaced by the valid reading state. */ }
+        if (saved?.fingerprint === fingerprint && Number.isFinite(saved.readAt) && saved.readAt > 0) return Promise.resolve(true);
+        return persistNewsSeen(state, user);
+    };
+    const request = (previous ? previous.promise.then(persist) : persist()).finally(() => {
+        if (pending.get(state.key)?.promise === request) pending.delete(state.key);
+    });
+    pending.set(state.key, { fingerprint, promise: request });
+    return request;
 }
 
 /** Saves one reading record and reports a shared failure only once. */
-async function persistNewsSeen(state) {
-    const user = window.currentUser;
+async function persistNewsSeen(state, user) {
     try {
         const response = await fetch('/admin/rest/admin-settings/', {
             method: 'POST', credentials: 'same-origin',

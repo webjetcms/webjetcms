@@ -25,7 +25,8 @@ class AdminUploadValidatorTest {
     void setUp() {
         user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
-        when(user.isFolderWritable(anyString())).thenReturn(true);
+        when(user.getWritableFolders()).thenReturn("*");
+        when(user.isFolderWritable(anyString())).thenCallRealMethod();
         when(user.isEnabledItem("editor_unlimited_upload")).thenReturn(true);
 
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
@@ -56,7 +57,7 @@ class AdminUploadValidatorTest {
 
     @Test
     void rejectsFolderWithoutWritePermission() {
-        when(user.isFolderWritable("/images/gallery/")).thenReturn(false);
+        when(user.getWritableFolders()).thenReturn("/images/other/");
 
         assertEquals(AdminUploadValidator.ERROR_INVALID_FOLDER,
             validate("/images/gallery/", "photo.jpg"));
@@ -64,7 +65,7 @@ class AdminUploadValidatorTest {
 
     @Test
     void protectedFolderExceptionAppliesOnlyToChunkUpload() {
-        when(user.isFolderWritable("/files/protected/upload/")).thenReturn(false);
+        when(user.getWritableFolders()).thenReturn("/images/other/");
 
         assertNull(AdminUploadValidator.validateChunk(
             "/files/protected/upload/", "photo.jpg", "file", 0, false, user, request));
@@ -74,6 +75,19 @@ class AdminUploadValidatorTest {
         assertEquals(AdminUploadValidator.ERROR_INVALID_FOLDER,
             AdminUploadValidator.validateConflict(
                 "/files/protected/upload/", "photo.jpg", "file", 0, user, request));
+    }
+
+    /** Planned uploads share ordinary folder and file checks without page edit permissions. */
+    @Test
+    void validatesPlannedUploadsThroughCommonChecks() {
+        String folder = "/files/protected/planned-changes/42/images/gallery/";
+        when(user.getWritableFolders()).thenReturn("/images/gallery/");
+        when(user.isEnabledItem("pageSave")).thenReturn(false);
+        assertNull(validate(folder, "photo.jpg"));
+        assertNull(validate(folder.substring(0, folder.length() - 1), "photo.jpg"));
+        assertEquals(AdminUploadValidator.ERROR_INVALID_FILE, validate(folder, "shell.php7"));
+        when(user.getWritableFolders()).thenReturn("/images/other/");
+        assertEquals(AdminUploadValidator.ERROR_INVALID_FOLDER, validate(folder, "photo.jpg"));
     }
 
     @Test

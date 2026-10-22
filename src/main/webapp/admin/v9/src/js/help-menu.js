@@ -1,5 +1,5 @@
 import { getDocumentationUrl } from './documentation-links';
-import { getReleaseNews, newsSeenState, saveNewsSeen } from './release-news';
+import { getReleaseNews, newsSeenState } from './release-news';
 
 const text = (key, ...params) => WJ.translate(`admin.help.${key}.js`, ...params);
 
@@ -76,7 +76,6 @@ export function initHelpMenu() {
             panel.querySelector('.md-help-menu__release-count').textContent = text('releaseCount', news.items.length);
             const state = newsSeenState(news.html);
             panel.querySelector('.md-help-menu__new').hidden = !state.isNew;
-            saveNewsSeen(state);
         }
     });
     feedback.addEventListener('click', () => {

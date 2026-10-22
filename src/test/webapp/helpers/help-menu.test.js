@@ -174,25 +174,27 @@ test('Release metadata links to its documentation section and reuses the account
     assert.equal(panel.querySelector('.md-help-menu__new').hidden, false);
     dropdown.show();
     await tick();
+    assert.equal(requests.length, 0, 'Opening Help must not acknowledge release news.');
+    await scope.saveNewsSeen(scope.newsSeenState(scope.getReleaseNews().html));
     assert.equal(requests.length, 1);
     assert.equal(requests[0].url, '/admin/rest/admin-settings/');
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'help-autotest-csrf');
     const saved = JSON.parse(window.currentUser.adminSettings['dashboard.news.sk']);
     assert.equal(saved.fingerprint, scope.newsFingerprint(scope.getReleaseNews().html));
-    saved.firstSeen = Date.now() - 31 * 86400000;
+    saved.readAt = Date.now() - 365 * 86400000;
     window.currentUser.adminSettings['dashboard.news.sk'] = JSON.stringify(saved);
     dropdown.show();
     assert.equal(panel.querySelector('.md-help-menu__new').hidden, true);
-    assert.equal(requests.length, 1, 'Reopening expired news must not restart its thirty-day badge.');
+    assert.equal(requests.length, 1, 'Acknowledged news must remain read regardless of age.');
     window.adminHelpContext.announcement += '\\n- **Third update** – Changed content.';
     dropdown.show();
     await tick();
     assert.equal(panel.querySelector('.md-help-menu__new').hidden, false);
     assert.equal(panel.querySelector('.md-help-menu__release-count').textContent, 'admin.help.releaseCount.js 3');
-    assert.equal(requests.length, 2);
+    assert.equal(requests.length, 1, 'Help can report changed content without acknowledging it.');
 });
 
-test('Empty and unversioned announcements hide release details without saving a reading window', t => {
+test('Empty and unversioned announcements hide release details without saving an acknowledgement', t => {
     const { window, panel, dropdown, requests } = fixture(t, { release: '' });
     for (const value of ['', '- **Update** – A description without a release version.']) {
         window.adminHelpContext.announcement = value;
