@@ -18,6 +18,8 @@ function fixture(t, editExisting = false) {
     const writes = [];
     const errors = [];
     const requests = [];
+    const confirmations = [];
+    const notifications = [];
     let nextMode;
     let editor;
     class RichTextEditor {
@@ -42,10 +44,19 @@ function fixture(t, editExisting = false) {
     window.CKEDITOR = {};
     window.currentUser = { login: 'autotest' };
     window.createDatatablesCkEditor = async () => ({ DatatablesCkEditor: RichTextEditor });
+    window.WJ = {
+        translate: key => key, initTooltip() {}, setAdminSetting() {},
+        confirm: options => confirmations.push(options),
+        notifyError: message => notifications.push(message)
+    };
+    $.fn.selectpicker = function(action, value) {
+        if (action === 'val') this.val(value);
+        return this;
+    };
     const context = vm.createContext({
         window, document: window.document, $, console: { ...console, error: (...args) => errors.push(args) },
         setTimeout: window.setTimeout.bind(window),
-        WJ: { translate: key => key, initTooltip() {} }
+        WJ: window.WJ
     });
     const filename = path.resolve(__dirname, '../../../main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-wysiwyg.js');
     vm.runInContext(fs.readFileSync(filename, 'utf8').replace(/^export /gm, ''), context, { filename });
@@ -78,7 +89,7 @@ function fixture(t, editExisting = false) {
     const conf = field.s.opts;
     t.after(() => window.close());
     return {
-        editor, field, conf, writes, errors, requests, window, $,
+        editor, field, conf, writes, errors, requests, confirmations, notifications, window, $,
         usePreview() {
             const source = path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/pages/web-pages-list/preview.js');
             const Preview = vm.runInContext(fs.readFileSync(source, 'utf8')
@@ -95,14 +106,27 @@ function fixture(t, editExisting = false) {
             const Editor = vm.runInContext(fs.readFileSync(source, 'utf8')
                 .replace('import WJ from "./webjet";', '')
                 .replace('export class DatatablesCkEditor', 'class DatatablesCkEditor') + '\nDatatablesCkEditor;', context);
+            let hiddenHtml = '<p>Stale hidden content</p>';
             conf.wjeditor = Object.assign(Object.create(Editor.prototype), {
                 editingMode: 'pageBuilder', options: { fieldid: conf._id },
-                ckEditorInstance: { getData: () => '<p>Stale hidden content</p>' }
+                setJson: RichTextEditor.prototype.setJson,
+                resizeEditor() {},
+                ckEditorInstance: {
+                    mode: 'source',
+                    getData: () => hiddenHtml,
+                    setData(value, done) { hiddenHtml = value; if (done) done(); },
+                    setMode(mode, done) { this.mode = mode; if (done) done(); }
+                }
             });
             const frame = window.document.getElementById(conf._id + '-pageBuilderIframe');
             frame.contentWindow.pageBuilderReady = true;
             frame.contentWindow.getSaveData = () => ({ editable: [{ wjAppField: 'doc_data', data: '<p>Visible Page Builder content</p>' }] });
             return frame;
+        },
+        switchMode(mode) {
+            const select = window.document.getElementById(conf._id + '-editorTypeSelect-select');
+            select.value = mode;
+            return window.switchEditorType(select);
         },
         open(value) {
             editor.one(editExisting ? 'initEdit' : 'initCreate', () => {
@@ -247,6 +271,143 @@ test('A ready Page Builder submits its visible content', async t => {
     f.editor.submit();
     assert.equal(f.requests.length, 1);
     assert.equal(f.requests[0].data[0].data, '<p>Visible Page Builder content</p>');
+});
+
+for (const failure of ['initialization', 'serialization']) {
+    test(`HTML recovery after Page Builder ${failure} failure requires confirmation and preserves the latest available content`, async t => {
+        const f = fixture(t);
+        await f.open('<p>Original</p>');
+        const frame = f.usePageBuilder();
+        let expected = '<p>Original</p>';
+        if (failure === 'initialization') {
+            frame.contentWindow.pageBuilderReady = false;
+        } else {
+            expected = f.field.get();
+            frame.contentWindow.getSaveData = () => { throw new Error('Autotest serialization failed'); };
+        }
+        await f.switchMode('html');
+        assert.equal(f.confirmations.length, 1);
+        assert.equal(f.conf.wjeditor.editingMode, 'pageBuilder');
+        assert.equal(f.conf.wjeditor.ckEditorInstance.getData(), '<p>Stale hidden content</p>');
+        f.editor.submit();
+        assert.equal(f.requests.length, 0, 'Saving must stay blocked before recovery is confirmed');
+
+        await f.confirmations[0].success();
+        assert.equal(f.conf.wjeditor.editingMode, 'html');
+        assert.equal(f.window.editorTypeForced, 'html');
+        assert.equal(f.field.get(), expected);
+        f.editor.submit();
+        assert.equal(f.requests.length, 1);
+        assert.equal(f.requests[0].data[0].data, expected);
+    });
+}
+
+test('Dismissing HTML recovery preserves Page Builder and resets the mode selector', async t => {
+    const f = fixture(t);
+    await f.open('<p>Original</p>');
+    f.usePageBuilder().contentWindow.pageBuilderReady = false;
+    f.window.editorTypeForced = 'pageBuilder';
+    await f.switchMode('html');
+    assert.equal(f.confirmations.length, 1);
+    // Dismissing WJ.confirm does not invoke its success callback.
+    assert.equal(f.conf.wjeditor.editingMode, 'pageBuilder');
+    assert.equal(f.window.document.getElementById(f.conf._id + '-editorTypeSelect-select').value, 'pageBuilder');
+    assert.equal(f.window.editorTypeForced, 'pageBuilder');
+    assert.equal(f.conf._input.val(), '<p>Original</p>');
+    f.editor.submit();
+    assert.equal(f.requests.length, 0);
+});
+
+for (const when of ['before prompting', 'before confirmation']) {
+    test(`HTML recovery rejects an invalid preserved value ${when}`, async t => {
+        const f = fixture(t);
+        await f.open('<p>Original</p>');
+        f.usePageBuilder().contentWindow.pageBuilderReady = false;
+        if (when === 'before prompting') f.conf._input.val('undefined');
+        await f.switchMode('html');
+        if (when === 'before confirmation') {
+            assert.equal(f.confirmations.length, 1);
+            f.conf._input.val('undefined');
+            await f.confirmations[0].success();
+        } else {
+            assert.equal(f.confirmations.length, 0);
+        }
+        assert.equal(f.conf.wjeditor.editingMode, 'pageBuilder');
+        assert.equal(f.notifications.length, 1);
+        assert.equal(f.conf.wjeditor.ckEditorInstance.getData(), '<p>Stale hidden content</p>');
+    });
+}
+
+test('HTML recovery accepts intentionally empty content', async t => {
+    const f = fixture(t);
+    await f.open('');
+    f.usePageBuilder().contentWindow.pageBuilderReady = false;
+    await f.switchMode('html');
+    await f.confirmations[0].success();
+    assert.equal(f.field.get(), '');
+});
+
+for (const change of ['close', 'reopen', 'history', 'new request']) {
+    test(`HTML recovery ignores a stale confirmation after ${change}`, async t => {
+        const f = fixture(t);
+        await f.open('<p>Original</p>');
+        f.usePageBuilder().contentWindow.pageBuilderReady = false;
+        await f.switchMode('html');
+        const confirmation = f.confirmations[0];
+        if (change === 'close' || change === 'reopen') f.editor.close();
+        if (change === 'reopen') await f.open('<p>Another page</p>');
+        if (change === 'history') {
+            f.field.setJson({ data: '<p>History</p>', editorFields: {} });
+            f.field.val('<p>History</p>');
+            await f.conf.wjeditorReadyPromise;
+        }
+        if (change === 'new request') await f.switchMode('html');
+        const html = f.conf.wjeditor.ckEditorInstance.getData();
+        await confirmation.success();
+        assert.equal(f.conf.wjeditor.editingMode, 'pageBuilder');
+        assert.equal(f.conf.wjeditor.ckEditorInstance.getData(), html);
+        assert.equal(f.window.editorTypeForced, undefined);
+    });
+}
+
+test('A page opened during HTML recovery waits for the old content write to finish', async t => {
+    const f = fixture(t);
+    await f.open('<p>Original</p>');
+    f.usePageBuilder().contentWindow.pageBuilderReady = false;
+    await f.switchMode('html');
+    const recovery = f.confirmations[0].success();
+    f.editor.close();
+    const reopened = f.open('<p>Another page</p>');
+    await Promise.all([recovery, reopened]);
+    assert.equal(f.conf.wjeditor.ckEditorInstance.getData(), '<p>Another page</p>');
+    assert.equal(f.conf._input.val(), '<p>Another page</p>');
+    assert.equal(f.window.editorTypeForced, undefined);
+});
+
+test('A ready Page Builder switches to HTML with its live content without prompting', async t => {
+    const f = fixture(t);
+    await f.open('<p>Original</p>');
+    f.usePageBuilder();
+    await f.switchMode('html');
+    assert.equal(f.confirmations.length, 0);
+    assert.equal(f.conf.wjeditor.editingMode, 'html');
+    assert.equal(f.field.get(), '<p>Visible Page Builder content</p>');
+});
+
+test('A user mode switch waits for the initial content to finish loading', async t => {
+    const f = fixture(t);
+    const release = f.holdNextMode();
+    const opened = f.open('<p>Original</p>');
+    await new Promise(setImmediate);
+    const calls = [];
+    f.conf.wjeditor.switchEditingMode = mode => { calls.push(mode); };
+    const switched = f.switchMode('html');
+    await new Promise(setImmediate);
+    assert.deepEqual(calls, []);
+    release();
+    await Promise.all([opened, switched]);
+    assert.deepEqual(calls, ['html']);
+    assert.equal(f.field.get(), '<p>Original</p>');
 });
 
 for (const value of [undefined, 'undefined', ' \nundefined\t', null]) {

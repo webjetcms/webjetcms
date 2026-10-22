@@ -7,6 +7,12 @@ export function typeWysiwyg() {
         return conf.EDITOR.field(conf.data);
     }
 
+    /**
+     * Rejects failed reads, including the literal "undefined" previously written as page content.
+     * An empty string is valid because users may intentionally clear the page.
+     * @param {unknown} html Value returned by the editor, a callback or a multi-value field.
+     * @returns {boolean} True when the value cannot be used as page HTML.
+     */
     function isInvalidHtml(html) {
         return typeof html !== 'string' || html.trim() === 'undefined';
     }
@@ -44,7 +50,13 @@ export function typeWysiwyg() {
         return result + html.slice(offset);
     }
 
-    /** Cancels submission before any later handler can send a save or preview request. */
+    /**
+     * Shows a read error and stops later handlers from sending a save or preview request.
+     * Returning false cancels DataTables submission; stopping propagation also blocks preview handlers.
+     * @param {Object} conf DataTables Editor field configuration.
+     * @param {jQuery.Event} event The initSubmit or preSubmit event being cancelled.
+     * @returns {boolean} Always false to cancel submission.
+     */
     function cancelInvalidSubmit(conf, event) {
         const message = WJ.translate('editor.content.read_error.js');
         getThisField(conf).error(message);
@@ -53,7 +65,13 @@ export function typeWysiwyg() {
         return false;
     }
 
-    /** Captures normalized HTML only for the current, fully initialized editor session. */
+    /**
+     * Captures the initial HTML for dirty tracking once the current editor is ready.
+     * Ignores obsolete reset requests and the previous iframe document, which can remain accessible
+     * during navigation. A failed read leaves the baseline undefined so it can be retried.
+     * @param {Object} conf DataTables Editor field configuration.
+     * @param {Object} request Identity of the resetDirty request that scheduled this capture.
+     */
     function captureDirtySnapshot(conf, request) {
         if (!conf.editorOpen || conf.dirtyResetRequest !== request || conf.dirtyDataOriginal !== undefined) return;
         if (conf.wjeditor == null) return;
@@ -69,6 +87,8 @@ export function typeWysiwyg() {
 
     /**
      * Serializes CKEditor operations and skips queued work from a closed editor session.
+     * wjeditorReadyPromise tracks all queued writes; wjeditorModeReadyPromise tracks template setup.
+     * Content writes require successful template setup, but a new setup may recover after a failure.
      *
      * @param {Object} conf DataTables Editor field configuration.
      * @param {Function} operation Starts the next asynchronous CKEditor operation.
@@ -276,12 +296,104 @@ export function typeWysiwyg() {
             });
 
             if (typeof window.switchEditorType == "undefined") {
-                window.switchEditorType = function(select, e) {
-                    //console.log("Switch editor type to:", select.value, "conf=", conf, "e=", e);
-                    let editorType = select.value;
-                    conf.wjeditor.switchEditingMode(editorType, true);
-                    window.editorTypeForced = editorType;
-                    if ("html"!=editorType) window.WJ.setAdminSetting("editorTypeForced", editorType);
+                /**
+                 * Switches modes after pending editor writes finish, preserving the live content.
+                 * If Page Builder cannot provide its HTML, a Page Builder-to-HTML switch may restore
+                 * the preserved field value after confirmation. Save-time validation remains unchanged.
+                 * Other failures show an error without attempting recovery.
+                 *
+                 * @param {HTMLSelectElement} select Mode selector in the parent page or Page Builder iframe.
+                 * @returns {Promise<void>} Completes after the initial attempt or displaying the recovery
+                 * dialog. Confirmed recovery runs separately through the dialog's success callback.
+                 */
+                window.switchEditorType = async function(select) {
+                    const editorType = select.value;
+                    const session = conf.editorSession;
+                    const json = EDITOR.currentJson;
+                    const request = {};
+                    let ready = conf.wjeditorReadyPromise;
+                    conf.editorModeSwitchRequest = request;
+                    /**
+                     * Rejects work that became obsolete while waiting for initialization or confirmation.
+                     * Closing/reopening, changing rows, another mode request or a queued content write
+                     * (for example, loading history) must invalidate the old recovery request.
+                     * @returns {boolean} True while this request still belongs to the current editor state.
+                     */
+                    const isCurrent = () => conf.editorOpen && conf.editorSession === session &&
+                        EDITOR.currentJson === json && conf.editorModeSwitchRequest === request &&
+                        conf.wjeditorReadyPromise === ready;
+                    /**
+                     * Restores the actual mode in the initiating selector and the parent Bootstrap picker.
+                     * The browser has already selected the requested mode, even if switching failed.
+                     */
+                    const resetSelector = () => {
+                        const mode = conf.wjeditor?.editingMode || '';
+                        $(select).val(mode);
+                        $("#"+id+"-editorTypeSelect-select").selectpicker('val', mode);
+                    };
+                    /**
+                     * Logs the failure and updates the UI only if the user is still in the same context.
+                     * @param {unknown} error Failure from a mode switch or preserved-content validation.
+                     */
+                    const reportError = error => {
+                        console.error('Error switching WYSIWYG mode:', error);
+                        if (!isCurrent()) return;
+                        resetSelector();
+                        WJ.notifyError(WJ.translate('editor.content.mode_error.js'));
+                    };
+                    /**
+                     * Applies a normal switch or an explicitly confirmed recovery and tracks its writes.
+                     * Recovery bypasses the failed live read and revalidates conf._input at confirmation.
+                     * That value comes from set() or a successful live read in get(); it is not a backup
+                     * of every Page Builder edit and may omit recent changes. The hidden CKEditor is not
+                     * used as a fallback source because its content may be stale.
+                     * The shared readiness promise makes later page loads wait for this write to finish.
+                     * Mode preferences are updated only if this request is still current after completion.
+                     *
+                     * @param {boolean} [restore=false] Use preserved HTML instead of reading the live editor.
+                     * @returns {Promise<void>} Completes the switch or skips an obsolete request; rejects
+                     * on invalid preserved HTML or a mode-switch failure.
+                     */
+                    const switchMode = async (restore = false) => {
+                        if (!isCurrent()) return;
+                        let savedHtml = null;
+                        if (restore) {
+                            savedHtml = conf._input.val();
+                            if (isInvalidHtml(savedHtml)) throw new Error('Invalid preserved WYSIWYG content.');
+                        }
+                        const operation = conf.wjeditor.switchEditingMode(editorType, !restore, savedHtml);
+                        // Subsequent page loads must wait for this mode's asynchronous content write.
+                        ready = Promise.resolve(operation);
+                        conf.wjeditorReadyPromise = ready;
+                        await ready;
+                        if (!isCurrent()) return;
+                        window.editorTypeForced = editorType;
+                        if ("html" !== editorType) WJ.setAdminSetting("editorTypeForced", editorType);
+                    };
+                    let oldMode;
+                    try {
+                        await ready;
+                        if (!isCurrent()) return;
+                        oldMode = conf.wjeditor.editingMode;
+                        await switchMode();
+                    } catch (error) {
+                        if (!isCurrent()) return;
+                        resetSelector();
+                        if (oldMode !== 'pageBuilder' || editorType !== 'html' ||
+                            conf.wjeditor.editingMode !== 'pageBuilder' || isInvalidHtml(conf._input.val())) {
+                            reportError(error);
+                            return;
+                        }
+                        WJ.confirm({
+                            title: WJ.translate('editor.content.recover_html.title.js'),
+                            message: WJ.translate('editor.content.recover_html.message.js'),
+                            btnOkText: WJ.translate('editor.content.recover_html.button.js'),
+                            success: () => {
+                                if (!isCurrent() || conf.wjeditor.editingMode !== 'pageBuilder') return;
+                                return switchMode(true).catch(reportError);
+                            }
+                        });
+                    }
                 }
             }
 
@@ -315,6 +427,13 @@ export function typeWysiwyg() {
             return htmlCodeElement;
         },
 
+        /**
+         * Reads live HTML while open and retains it in conf._input for later reads or confirmed recovery.
+         * A failed read returns undefined and marks invalidHtml so submission is cancelled; it must not
+         * silently save the preserved value, which may be older than the visible Page Builder content.
+         * @param {Object} conf DataTables Editor field configuration.
+         * @returns {string|undefined} Validated HTML without editor attributes, or undefined on failure.
+         */
         get: function ( conf ) {
             conf.invalidHtml = false;
             try {
