@@ -7,6 +7,52 @@ export function typeWysiwyg() {
         return conf.EDITOR.field(conf.data);
     }
 
+    function isInvalidHtml(html) {
+        return typeof html !== 'string' || html.trim() === 'undefined';
+    }
+
+    /**
+     * Removes editor attributes without a DOM round trip that would rewrite source HTML.
+     * Comments, other attribute values and raw-text elements must remain unchanged.
+     * @param {string} html Source HTML.
+     * @returns {string} HTML without contenteditable attributes.
+     */
+    function removeContentEditable(html) {
+        if (typeof html !== 'string' || html.toLowerCase().indexOf('contenteditable') === -1) return html;
+
+        const tags = /<!--[\s\S]*?(?:-->|$)|<!\[CDATA\[[\s\S]*?(?:\]\]>|$)|<![^>]*>|<\/?([a-z][a-z0-9:-]*)(?=[\s/>])(?:"[^"]*"|'[^']*'|[^'">])*>/gi;
+        const attributes = /\s+([^\s=/>]+)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?/g;
+        let result = '';
+        let offset = 0;
+        let match;
+        while ((match = tags.exec(html)) !== null) {
+            const tag = match[0];
+            if (!match[1] || tag.startsWith('</')) continue;
+            const cleaned = tag.replace(attributes, (attribute, name) => name.toLowerCase() === 'contenteditable' ? '' : attribute);
+            if (cleaned !== tag) {
+                result += html.slice(offset, match.index) + cleaned;
+                offset = tags.lastIndex;
+            }
+            // HTML-looking strings inside scripts, styles and text-only elements are not markup.
+            if (/^(script|style|textarea|title|xmp|iframe|noembed|noframes|noscript)$/i.test(match[1])) {
+                const closingTag = new RegExp('</' + match[1] + '\\s*>', 'gi');
+                closingTag.lastIndex = tags.lastIndex;
+                const closing = closingTag.exec(html);
+                tags.lastIndex = closing ? closingTag.lastIndex : html.length;
+            }
+        }
+        return result + html.slice(offset);
+    }
+
+    /** Cancels submission before any later handler can send a save or preview request. */
+    function cancelInvalidSubmit(conf, event) {
+        const message = WJ.translate('editor.content.read_error.js');
+        getThisField(conf).error(message);
+        conf.EDITOR.error(message);
+        event.stopImmediatePropagation();
+        return false;
+    }
+
     /** Captures normalized HTML only for the current, fully initialized editor session. */
     function captureDirtySnapshot(conf, request) {
         if (!conf.editorOpen || conf.dirtyResetRequest !== request || conf.dirtyDataOriginal !== undefined) return;
@@ -119,6 +165,17 @@ export function typeWysiwyg() {
             let resolveInitialEditorReady;
             conf.wjeditorReadyPromise = new Promise(resolve => {
                 resolveInitialEditorReady = resolve;
+            });
+            EDITOR.on('initSubmit', function(event, action) {
+                if (action === 'remove' || !getThisField(conf).submittable()) return;
+                // Validate before Editor compares values or falls back to the original row data.
+                if (isInvalidHtml(getThisField(conf).get())) return cancelInvalidSubmit(conf, event);
+            });
+            EDITOR.on('preSubmit', function(event, data, action) {
+                // Reading the field again while building the payload can also fail.
+                if (action !== 'remove' && getThisField(conf).submittable() && conf.invalidHtml) {
+                    return cancelInvalidSubmit(conf, event);
+                }
             });
             EDITOR.on( 'open', function ( e, type ) {
                 //console.log("DT WYSIWYG Editor OPEN, e=", e, "type=", type);
@@ -250,32 +307,35 @@ export function typeWysiwyg() {
         },
 
         get: function ( conf ) {
-            //console.log("WYSIWYG get, conf=", conf, "wjeditor=", conf.wjeditor);
-            if (conf.editorOpen && conf.wjeditor != null) {
-                var htmlCode = conf.wjeditor.getData();
-                //console.log("WYSIWYG get, htmlCode=", htmlCode);
-                //set htmlCode to input element, because it can be PageBuilder instance
-                conf._input.val(htmlCode);
-            }
+            conf.invalidHtml = false;
             try {
-                //fix for acunetix long texts which loads too long/ha too many JS errors, and acunetix will timeout scanning
-                if (window.currentUser.login.indexOf("tester")==0) {
-                    let val = conf._input.val();
-                    if (val != null && val.length > 32000) {
-                        if (val.indexOf("<ScRiPt")!==-1 || val.indexOf("<zzz")!==-1|| val.indexOf("DBMS_PIPE")!==-1) {
-                            val = val.substring(0, 16000);
-                            console.log("shrinking val to length=", val.length);
-                            conf._input.val(val);
+                //console.log("WYSIWYG get, conf=", conf, "wjeditor=", conf.wjeditor);
+                if (conf.editorOpen) {
+                    var htmlCode = conf.wjeditor.getData();
+                    if (isInvalidHtml(htmlCode)) throw new Error('Invalid WYSIWYG content.');
+                    //console.log("WYSIWYG get, htmlCode=", htmlCode);
+                    //set htmlCode to input element, because it can be PageBuilder instance
+                    conf._input.val(htmlCode);
+                }
+                try {
+                    //fix for acunetix long texts which loads too long/ha too many JS errors, and acunetix will timeout scanning
+                    if (window.currentUser.login.indexOf("tester")==0) {
+                        let val = conf._input.val();
+                        if (val != null && val.length > 32000) {
+                            if (val.indexOf("<ScRiPt")!==-1 || val.indexOf("<zzz")!==-1|| val.indexOf("DBMS_PIPE")!==-1) {
+                                val = val.substring(0, 16000);
+                                console.log("shrinking val to length=", val.length);
+                                conf._input.val(val);
+                            }
                         }
                     }
+                } catch (e) {
+                    console.error(e);
                 }
-            } catch (e) {
-                console.error(e);
-            }
-            var html = conf._input.val();
-            //console.log("WYSIWYG get, conf=", conf, "returning=", html);
+                var html = conf._input.val();
+                if (isInvalidHtml(html)) throw new Error('Invalid WYSIWYG content.');
+                //console.log("WYSIWYG get, conf=", conf, "returning=", html);
 
-            try {
                 if (typeof window.wysiwygGetCallback === "function") {
                     html = window.wysiwygGetCallback(html, conf);
                 } else {
@@ -284,11 +344,14 @@ export function typeWysiwyg() {
                         html = pageBuilderIframe[0].contentWindow.wysiwygGetCallback(html, conf);
                     }
                 }
-            } catch (e) {
-                console.error("Error in wysiwygGetCallback:", e);
+                if (isInvalidHtml(html)) throw new Error('Invalid WYSIWYG callback content.');
+                return removeContentEditable(html);
+            } catch (error) {
+                conf.invalidHtml = true;
+                console.error('Error reading WYSIWYG content:', error);
+                // Keep the visible editor and stored input intact; initSubmit/preSubmit will show the error.
+                return undefined;
             }
-
-            return html;
         },
 
         /**
@@ -297,6 +360,7 @@ export function typeWysiwyg() {
          * @param {*} val
          */
         set: function ( conf, val ) {
+            val = removeContentEditable(val);
             //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
             if (conf.editorOpen) {
                 queueEditorOperation(conf, () => conf.wjeditor.setData(val));
