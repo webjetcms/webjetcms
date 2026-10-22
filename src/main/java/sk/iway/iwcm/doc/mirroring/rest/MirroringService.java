@@ -968,7 +968,10 @@ public class MirroringService {
             Set<Integer> nestedLevels = new HashSet<>();
             if(paths != null) {
                 paths.forEach((lng, path) -> {
-                    item.setField(lngFieldCombination.get(lng), path);
+                    Character field = lngFieldCombination.get(lng);
+                    if (field != null) {
+                        item.setField(field, path);
+                    }
                     //There shoul not be 2 folders from same language that are synced
                     if(path.contains(JOINING))
                         item.setMultipleErr(Boolean.TRUE);

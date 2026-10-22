@@ -11,6 +11,7 @@ import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.jstree.JsTreeItemState;
 import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
 import sk.iway.iwcm.doc.mirroring.dto.MirroringDTO;
 import sk.iway.iwcm.doc.mirroring.rest.MirroringService;
 import sk.iway.iwcm.editor.EditorDB;
@@ -253,13 +254,8 @@ public class GroupsTreeService {
                 links.put(syncId, new ArrayList<>());
             }
             List<GroupDetails> groups = filterByPerms(filterTrash(filterByDomain(candidates, null)), user);
-            TemplatesDB templates = TemplatesDB.getInstance();
             for (GroupDetails group : groups) {
-                String language = group.getLng();
-                if (Tools.isEmpty(language)) {
-                    TemplateDetails template = templates.getTemplate(group.getTempId());
-                    if (template != null) language = template.getLng();
-                }
+                String language = GroupMirroringServiceV9.getLanguage(group);
                 if (Tools.isEmpty(language)) continue;
                 language = language.toLowerCase(Locale.ROOT).replace('_', '-');
                 if ("cz".equals(language)) language = "cs";

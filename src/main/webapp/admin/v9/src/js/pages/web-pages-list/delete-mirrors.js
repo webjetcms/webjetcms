@@ -46,6 +46,7 @@ export function bindDeleteMirrors(datatable, url, itemType) {
 
         request = $.ajax({
             url: url,
+            method: "POST",
             data: { ids: editor.ids().join(",") },
             dataType: "json",
             cache: false,
