@@ -188,6 +188,10 @@
     }
 
     window.domReady.add(function () {
+        // Keep fixed-width options consistent with the archive tree's minimum width.
+        $("#jstree-settings-treeWidth").find('option[value="120"], option[value="150"]').remove();
+        $("#jstree-settings-treeWidth").selectpicker("refresh");
+
         // Create folder button handler
         var createFolderModal = null;
         $("button#btn-create-folder").on("click", function() {
@@ -911,7 +915,7 @@
 </div>
 
 <div class="row">
-    <div class="col-md-4 tree-col">
+    <div id="file-archive-tree" class="col-md-4 tree-col">
         <div data-th-include="apps/file-archive/admin/folder-tree-archive.html" data-th-remove="tag"></div>
     </div>
 
@@ -937,6 +941,17 @@
 
 
 <style>
+
+    #file-archive-tree {
+        min-width: 200px;
+    }
+
+    @media (min-width: 768px) {
+        #file-archive-tree + .datatable-col {
+            flex: 1;
+            min-width: 0;
+        }
+    }
 
     #file-archive-link {
         border-top: 1px solid #DDDFE6 !important;
