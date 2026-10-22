@@ -1,12 +1,12 @@
 package sk.iway.iwcm.components.ai.rest;
 
 import java.lang.reflect.Field;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import jakarta.persistence.Entity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -16,10 +16,17 @@ import org.springframework.stereotype.Service;
 
 import com.webjetcms.ai.AiPromptTemplate;
 
+import it.sauronsoftware.cron4j.InvalidPatternException;
+import it.sauronsoftware.cron4j.SchedulingPattern;
+import jakarta.persistence.Entity;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -27,12 +34,16 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.cron.CronDB;
+import sk.iway.iwcm.system.cron.CronTask;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 /**
  * Service for AI Assistants management / datatables, editor
@@ -49,6 +60,59 @@ public class AiAssistantsService {
     @Autowired
     public AiAssistantsService(List<AiAssitantsInterface> aiAssitantsInterfaces) {
         this.aiAssitantsInterfaces = aiAssitantsInterfaces;
+    }
+
+    /**
+     * Finds the earliest scheduled token reset among enabled cron jobs in the database.
+     *
+     * @return next reset as an epoch timestamp in milliseconds, or null when none is scheduled
+     */
+    public Long getNextTokenReset() {
+        String taskClass = AiTokenUsageReset.class.getName();
+        ZonedDateTime now = ZonedDateTime.now();
+        Long nextReset = null;
+        for (CronTask task : CronDB.getCronTasks(taskClass)) {
+            if (!task.isEnableTask() || !taskClass.equals(task.getTask())) continue;
+            try {
+                Long nextRun = getNextTokenReset(task, now);
+                if (nextRun != null && (nextReset == null || nextRun < nextReset)) nextReset = nextRun;
+            } catch (InvalidPatternException e) {
+                Logger.error(AiAssistantsService.class, "Invalid token reset cron schedule " + task.getId() + ": " + e.getMessage());
+            }
+        }
+        return nextReset;
+    }
+
+    /**
+     * Finds the next run using the scheduler's seven-field matching rules and server time zone.
+     * Skips nonmatching days, hours and minutes to avoid scanning every second.
+     * The bundled cron parser supports explicit years up to 2100.
+     *
+     * @param task enabled token reset job
+     * @param now time after which to search
+     * @return next execution timestamp, or null if no supported future date matches
+     */
+    private Long getNextTokenReset(CronTask task, ZonedDateTime now) {
+        SchedulingPattern pattern = new SchedulingPattern(task.receiveCronPattern());
+        SchedulingPattern dates = new SchedulingPattern("* * * " + task.getDaysOfMonth() + " " + task.getMonths() + " " + task.getDaysOfWeek() + " " + task.getYears());
+        SchedulingPattern hours = new SchedulingPattern("* * " + task.getHours() + " * * * *");
+        SchedulingPattern minutes = new SchedulingPattern("* " + task.getMinutes() + " * * * * *");
+        ZonedDateTime candidate = now.truncatedTo(ChronoUnit.SECONDS).plusSeconds(1);
+        while (candidate.getYear() <= 2100) {
+            long timestamp = candidate.toInstant().toEpochMilli();
+            if (!dates.match(timestamp)) {
+                candidate = candidate.toLocalDate().plusDays(1).atStartOfDay(candidate.getZone());
+            } else if (!hours.match(timestamp)) {
+                candidate = candidate.plusSeconds(3600 - candidate.getMinute() * 60 - candidate.getSecond());
+            } else if (!minutes.match(timestamp)) {
+                candidate = candidate.plusSeconds(60 - candidate.getSecond());
+            } else if (pattern.match(timestamp)) {
+                return timestamp;
+            } else {
+                candidate = candidate.plusSeconds(1);
+            }
+        }
+        return null;
     }
 
     /**
@@ -228,6 +292,52 @@ public class AiAssistantsService {
         }
 
         return false;
+    }
+
+    /**
+     * Returns the status column's filter options with their matching row icons.
+     *
+     * @param prop translations for the current user
+     * @return localized status options
+     */
+    public List<LabelValue> getStatusIconOptions(Prop prop) {
+        return List.of(
+            new LabelValue("<i class=\"ti ti-ban text-danger\" aria-hidden=\"true\"></i> " + prop.getText("components.ai_assistants.status.not_active.label"), "not-active"),
+            new LabelValue("<i class=\"ti ti-alert-triangle text-warning\" aria-hidden=\"true\"></i> " + prop.getText("components.ai_assistants.status.not_init.label"), "not-init"),
+            new LabelValue("<i class=\"ti ti-gauge-off text-warning\" aria-hidden=\"true\"></i> " + prop.getText("components.ai_assistants.status.out_of_tokens.label"), "out-of-tokens")
+        );
+    }
+
+    /**
+     * Filters assistants before pagination, using the same status precedence as their row icons.
+     *
+     * @param status selected row status
+     * @param predicates search conditions to extend
+     * @param root assistant entity in the query
+     * @param builder criteria builder
+     */
+    public void addStatusFilter(String status, List<Predicate> predicates, Root<AssistantDefinitionEntity> root, CriteriaBuilder builder) {
+        if ("not-active".equals(status)) {
+            predicates.add(builder.isFalse(root.get("active")));
+            return;
+        }
+        if (!"not-init".equals(status) && !"out-of-tokens".equals(status)) return;
+
+        predicates.add(builder.or(builder.isNull(root.get("active")), builder.isTrue(root.get("active"))));
+        List<String> initializedProviders = aiAssitantsInterfaces.stream()
+            .filter(AiAssitantsInterface::isInit)
+            .map(AiAssitantsInterface::getProviderId)
+            .toList();
+        Predicate initialized = initializedProviders.isEmpty() ? builder.disjunction()
+            : builder.and(builder.isNotNull(root.get("provider")), root.get("provider").in(initializedProviders));
+
+        if ("not-init".equals(status)) {
+            predicates.add(builder.not(initialized));
+        } else {
+            predicates.add(initialized);
+            predicates.add(builder.greaterThan(root.<Long>get("tokenLimit"), 0L));
+            predicates.add(builder.greaterThanOrEqualTo(root.<Long>get("usedTokens"), root.<Long>get("tokenLimit")));
+        }
     }
 
     /* PRIVATE SUPPORT METHODS */
@@ -413,5 +523,45 @@ public class AiAssistantsService {
             }
         }
         return null;
+    }
+
+        /**
+     * Locks the assistant to prevent concurrent notifications for the same threshold.
+     * Usage must already be committed so a notification failure cannot roll back token accounting.
+     *
+     * @param assistantId assistant whose usage changed
+     * @param domainId domain owning the assistant
+     * @param prop translations for the request language
+     */
+    public static void notifyUsage(Long assistantId, Integer domainId, Prop prop) {
+        AssistantDefinitionRepository assistants = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
+        AssistantDefinitionEntity assistant = assistants.findForTokenNotification(assistantId, domainId).orElse(null);
+        if (assistant == null || Tools.isEmpty(assistant.getNotifEmail())) return;
+
+        long limit = assistant.getTokenLimit() == null ? 0 : assistant.getTokenLimit();
+        long used = assistant.getUsedTokens() == null ? 0 : assistant.getUsedTokens();
+        if (limit <= 0) return;
+
+        // ceil(limit * 0.75), without floating-point rounding or multiplication overflow.
+        int level = used >= limit ? 100 : used >= limit - limit / 4 ? 75 : 0;
+        int previousLevel = assistant.getNotifLevel() == null ? 0 : assistant.getNotifLevel();
+        if (level <= previousLevel) return;
+
+        String domain = GroupsDB.getInstance().getDomain(domainId);
+        String key = "components.ai_assistants.token_notification." + level;
+        String senderName = SendMail.getDefaultSenderName("ai", "WebJET CMS");
+        String senderEmail = SendMail.getDefaultSenderEmail("ai", Tools.isEmpty(domain) ? null : "no-reply@" + domain);
+        String body = prop.getText(key + ".body", Tools.escapeHtml(assistant.getName()),
+            Tools.escapeHtml(domain), Long.toString(used), Long.toString(limit));
+
+        String subject = prop.getText(key + ".subject");
+        // Handle fallback explicitly so only a confirmed send or queue advances the marker.
+        boolean sentOrQueued = SendMail.sendCapturingException(senderName, senderEmail, assistant.getNotifEmail(),
+            null, null, null, subject, body, null, null, false).getFirst();
+        if (sentOrQueued == false) {
+            sentOrQueued = SendMail.sendLater(senderName, senderEmail, assistant.getNotifEmail(),
+                null, null, null, subject, body, null, null, null);
+        }
+        if (sentOrQueued) assistants.updateNotificationLevel(assistantId, domainId, level);
     }
 }

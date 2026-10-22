@@ -19,9 +19,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /** Adapts CMS assistant and domain context to the framework-neutral embedding action. */
@@ -31,15 +33,18 @@ public class EmbeddingService {
     private final AiClient aiClient;
     private final WebjetAiConfigurationService configurationService;
     private final List<AiInterface> providers;
+    private final AssistantDefinitionRepository assistantRepository;
 
     public EmbeddingService(
         AiClient aiClient,
         WebjetAiConfigurationService configurationService,
-        List<AiInterface> providers
+        List<AiInterface> providers,
+        AssistantDefinitionRepository assistantRepository
     ) {
         this.aiClient = aiClient;
         this.configurationService = configurationService;
         this.providers = providers;
+        this.assistantRepository = assistantRepository;
     }
 
     /**
@@ -51,7 +56,7 @@ public class EmbeddingService {
      * @param assistant assistant that selects the embedding provider and model
      * @param request request used to resolve provider configuration
      * @return generated embeddings and token usage, or an empty result when no texts are supplied
-     * @throws ProviderCallException if the assistant or provider configuration is invalid, or the provider response
+     * @throws ProviderCallException if the token limit is reached, the assistant or provider configuration is invalid, or the provider response
      *         cannot be used
      */
     public EmbeddingBatchResult embedWithUsage(
@@ -70,7 +75,7 @@ public class EmbeddingService {
      * @param request request used to resolve provider configuration
      * @param inputType embedding input type
      * @return generated embeddings and token usage, or an empty result when no texts are supplied
-     * @throws ProviderCallException if the assistant or provider configuration is invalid, or the provider response
+     * @throws ProviderCallException if the token limit is reached, the assistant or provider configuration is invalid, or the provider response
      *         cannot be used
      */
     public EmbeddingBatchResult embedWithUsage(
@@ -89,7 +94,7 @@ public class EmbeddingService {
      * @param assistant assistant that selects the embedding provider and model
      * @param domainName domain whose provider configuration should be used
      * @return generated embeddings and token usage, or an empty result when no texts are supplied
-     * @throws ProviderCallException if the assistant or provider configuration is invalid, or the provider response
+     * @throws ProviderCallException if the token limit is reached, the assistant or provider configuration is invalid, or the provider response
      *         cannot be used
      */
     public EmbeddingBatchResult embedWithUsage(
@@ -108,7 +113,7 @@ public class EmbeddingService {
      * @param domainName domain whose provider configuration should be used
      * @param inputType embedding input type
      * @return generated embeddings and token usage, or an empty result when no texts are supplied
-     * @throws ProviderCallException if the assistant or provider configuration is invalid, or the provider response
+     * @throws ProviderCallException if the token limit is reached, the assistant or provider configuration is invalid, or the provider response
      *         cannot be used
      */
     public EmbeddingBatchResult embedWithUsage(
@@ -133,7 +138,7 @@ public class EmbeddingService {
      * @param domainName optional domain used when no request is supplied
      * @param inputType embedding input type
      * @return generated embeddings and token usage, or an empty result when no texts are supplied
-     * @throws ProviderCallException if configuration is invalid or the provider response is unusable
+     * @throws ProviderCallException if the token limit is reached, configuration is invalid, or the provider response is unusable
      */
     private EmbeddingBatchResult embedWithUsage(
         List<String> texts,
@@ -156,6 +161,9 @@ public class EmbeddingService {
         int dimensions = getDimensions();
         if (dimensions < 1) {
             throw new ProviderCallException("RAG embedding dimensions must be greater than zero");
+        }
+        if (assistantRepository.countWithReachedTokenLimit(assistant.getId(), assistant.getDomainId()) > 0) {
+            throw new ProviderCallException(Prop.getInstance(servletRequest).getText("components.ai_assistants.token_limit.reached"));
         }
 
         EmbeddingRequest request = EmbeddingRequest.builder()

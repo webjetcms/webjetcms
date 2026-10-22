@@ -74,6 +74,7 @@ export class BarChartForm {
             chartDivId: config.chartDivId,
             chartData: config.chartData,
             horizontal: config.horizontal == null ? true : config.horizontal,
+            colorByValue: config.colorByValue === true,
             colorScheme: config.colorScheme
         });
     }
@@ -88,6 +89,7 @@ The individual class parameters serve to:
 - `chartDivId` is a text value representing the ID of the element `div` in which the chart will be drawn.
 - `chartData` is an array of objects representing the chart data. Each object must contain both a category variable (`yAxeName`) and a category value variable (`xAxeName`).
 - `horizontal` is a logical value that determines whether the graph will be horizontal or vertical.
+- `colorByValue` (default `false`) assigns colors by value when enabled, interpolating from the first to the last palette color. With `colorScheme: "set_red"`, the smallest nonzero value is light red and the largest is dark red. The scale is recalculated from the current data on every update. Zero values remain on the axis but do not affect the color range; equal values receive the same color.
 - `colorScheme` is a text value specifying the color scheme of the chart (allowed values ​​are described in the [Color schemes](#color-schemes) section).
 
 !>**Note:** Required parameters are `yAxeName`, `xAxeName`, `chartDivId` and `chartData`.

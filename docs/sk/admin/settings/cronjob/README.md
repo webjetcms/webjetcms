@@ -115,3 +115,9 @@ SQL príkazy, oddelené znakom `|`.
 **Parametre:**
 
 - Nemá.
+
+[sk.iway.iwcm.components.ai.rest.AiTokenUsageReset](../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiTokenUsageReset.java) - Vynuluje počítadlo použitých tokenov všetkých AI asistentov vo všetkých doménach. Nastavené limity a historické štatistiky zachová. Príklad denného a mesačného časovania nájdete v [nastavení limitov AI asistentov](../../../redactor/ai/settings/README.md#automatické-vynulovanie-tokenov).
+
+**Parametre:**
+
+- Nemá.
