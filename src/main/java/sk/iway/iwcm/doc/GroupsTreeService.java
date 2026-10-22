@@ -199,7 +199,22 @@ public class GroupsTreeService {
         return items;
     }
 
-    /** Adds language destinations without exposing folders outside the user's tree permissions. */
+    /**
+     * Adds permitted language counterparts to folders returned by the main webpage tree.
+     *
+     * <p>Branches without mirrored folders skip the lookup. Otherwise, the complete cached
+     * {@link GroupsDB} folder list is indexed once per request. Only requested sync IDs
+     * undergo domain, trash and permission filtering and language resolution.
+     *
+     * <p>The index and resolved links, including empty results, are reused only within the
+     * current request. Later requests rebuild them and reevaluate permissions for both
+     * source and destination folders.
+     *
+     * @param items tree rows whose folder items receive counterpart links in place
+     * @param user current user whose webpage, mirroring and folder permissions are checked
+     * @param click tree mode used to exclude selectors, system trees and trash trees
+     * @param request request providing the main-tree opt-in and storing both lookup caches
+     */
     void setMirroringLinks(List<JsTreeItem> items, Identity user, String click, HttpServletRequest request) {
         if (items.isEmpty() || user.isDisabledItem("menuWebpages") || user.isDisabledItem("cmp_mirroring")) return;
         if (Arrays.asList("dt-tree-group-filter-system-trash", "dt-tree-filter-system-trash", "dt-tree-group", "dt-tree").contains(click) == false) return;
@@ -207,15 +222,39 @@ public class GroupsTreeService {
         if ("true".equals(request.getParameter("showMirrorLinks")) == false
                 && (uri == null || uri.contains("/admin/v9/webpages/web-pages-list") == false)) return;
 
+        Set<Integer> syncIds = items.stream().filter(GroupsJsTreeItem.class::isInstance)
+            .map(GroupsJsTreeItem.class::cast).map(item -> item.getGroup().getSyncId())
+            .filter(syncId -> syncId > 0).collect(Collectors.toSet());
+        if (syncIds.isEmpty()) return;
+
         String cacheKey = GroupsTreeService.class.getName() + ".mirrorLinks";
         @SuppressWarnings("unchecked")
         Map<Integer, List<GroupsJsTreeItem.MirrorLink>> links = (Map<Integer, List<GroupsJsTreeItem.MirrorLink>>) request.getAttribute(cacheKey);
         if (links == null) {
             links = new HashMap<>();
-            List<GroupDetails> groups = filterTrash(filterByPerms(filterByDomain(GroupsDB.getInstance().getGroupsAll(), null), user));
+            request.setAttribute(cacheKey, links);
+        }
+        syncIds.removeAll(links.keySet());
+        if (syncIds.isEmpty() == false) {
+            String groupsCacheKey = GroupsTreeService.class.getName() + ".mirrorGroups";
+            @SuppressWarnings("unchecked")
+            Map<Integer, List<GroupDetails>> groupsBySyncId = (Map<Integer, List<GroupDetails>>) request.getAttribute(groupsCacheKey);
+            if (groupsBySyncId == null) {
+                // Index cached folders once per request; permission checks only run for the requested mirror groups.
+                groupsBySyncId = new HashMap<>();
+                for (GroupDetails group : GroupsDB.getInstance().getGroupsAll()) {
+                    if (group.getSyncId() > 0) groupsBySyncId.computeIfAbsent(group.getSyncId(), key -> new ArrayList<>()).add(group);
+                }
+                request.setAttribute(groupsCacheKey, groupsBySyncId);
+            }
+            List<GroupDetails> candidates = new ArrayList<>();
+            for (Integer syncId : syncIds) {
+                candidates.addAll(groupsBySyncId.getOrDefault(syncId, Collections.emptyList()));
+                links.put(syncId, new ArrayList<>());
+            }
+            List<GroupDetails> groups = filterByPerms(filterTrash(filterByDomain(candidates, null)), user);
             TemplatesDB templates = TemplatesDB.getInstance();
             for (GroupDetails group : groups) {
-                if (group.getSyncId() < 1) continue;
                 String language = group.getLng();
                 if (Tools.isEmpty(language)) {
                     TemplateDetails template = templates.getTemplate(group.getTempId());
@@ -224,14 +263,14 @@ public class GroupsTreeService {
                 if (Tools.isEmpty(language)) continue;
                 language = language.toLowerCase(Locale.ROOT).replace('_', '-');
                 if ("cz".equals(language)) language = "cs";
-                links.computeIfAbsent(group.getSyncId(), key -> new ArrayList<>())
+                links.get(group.getSyncId())
                     .add(new GroupsJsTreeItem.MirrorLink(group.getGroupId(), language, group.getFullPath()));
             }
-            for (List<GroupsJsTreeItem.MirrorLink> mirrors : links.values()) {
+            for (Integer syncId : syncIds) {
+                List<GroupsJsTreeItem.MirrorLink> mirrors = links.get(syncId);
                 mirrors.sort(Comparator.comparing(GroupsJsTreeItem.MirrorLink::language)
                     .thenComparingInt(GroupsJsTreeItem.MirrorLink::groupId));
             }
-            request.setAttribute(cacheKey, links);
         }
         for (JsTreeItem item : items) {
             if (item instanceof GroupsJsTreeItem groupItem) {
