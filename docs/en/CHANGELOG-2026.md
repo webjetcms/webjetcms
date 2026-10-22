@@ -209,6 +209,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Document Manager - in [website application](redactor/files/file-archive/file-archive-app.md#tab---advanced) added sorting by validity start and end, product code, product, category, file name and document size (#359, #osk791).
+
 ### Gallery
 
 - Added the ability to set a separate [resizing method for a large image](redactor/apps/gallery/structure.md#tab-dimensions) independent of the small image. By default, the same resizing method is used as set for the small image. The setting can optionally be copied to subfolders (#58633).
@@ -277,6 +279,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Email - fixed SMTP settings being affected between applications on a shared application server. Each send uses its own properties and mail session, so SSL port, authentication, or Amazon SES settings from another application are not transferred (#367).
+- Page Builder - fixed accumulation of empty lines in HTML of nested blocks. When saving and switching to HTML editor, old extra lines between elements are also removed. Content of `pre`, `textarea` and spaces preserved via CSS `white-space` remain unchanged (#367).
+- Webpages - fixed stuttering and jumping when [compare versions](redactor/webpages/history.md) if the page template uses smooth scrolling (`scroll-behavior: smooth`) (#367).
 - Web pages - JSON editor now accepts fields and simple values ​​with comments. Fixed column splitting and scrolling in Page Builder and closing tooltip when editing from history (#346).
 - Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
