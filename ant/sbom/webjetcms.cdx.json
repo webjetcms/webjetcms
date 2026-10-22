@@ -1,10 +1,10 @@
 {
     "bomFormat": "CycloneDX",
     "specVersion": "1.6",
-    "serialNumber": "urn:uuid:0057f638-1e32-47d1-b79c-47bab8302264",
+    "serialNumber": "urn:uuid:bd281da0-c86a-4591-aed4-02610d517ad3",
     "version": 1,
     "metadata": {
-        "timestamp": "2026-10-20T10:23:06.535421Z",
+        "timestamp": "2026-10-22T06:45:41.393603532Z",
         "tools": {
             "components": [
                 {
@@ -110,6 +110,10 @@
             "purl": "pkg:maven/com.webjetcms/webjetcms@2026.0-jakarta-SNAPSHOT?project_path=%3A",
             "modified": false,
             "externalReferences": [
+                {
+                    "type": "build-system",
+                    "url": "https://gitlab.in.iway.sk/webjet/webjetcms-github-deploy/-/jobs/108339"
+                },
                 {
                     "type": "vcs",
                     "url": "https://github.com/webjetcms/webjetcms.git"
