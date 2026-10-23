@@ -193,8 +193,6 @@ Podobne existuje dialógové okno pre tlačidlá (element `button`) aj s podporo
 
 ## Vkladanie obrázkov
 
-Do stránky môžete vložiť aj obrázok **AVIF**. Vyberá sa rovnako ako JPG, PNG alebo WebP a automaticky sa načítajú jeho rozmery. Na zmenšenie, orezanie a vytváranie miniatúr musí mať server [podporu spracovania AVIF](../../../frontend/thumb-servlet/README.md#obrázky-avif).
-
 Ak chcete vložiť na stránku obrázok, umiestnite kurzor na riadok alebo do bunky tabuľky, kde sa obrázok má nachádzať, a kliknite na ikonku pre vloženie obrázku ![](image.png ":no-zoom").
 
 Ak chcete zmeniť existujúci obrázok je potrebné najprv raz kliknúť na obrázok, ktorý si želáte zmeniť. Následne je treba kliknúť na rovnakú ikonku vložiť/zmeniť obrázok alebo cez kontextové menu na položku **Vlastnosti obrázku**. Ďalší postup je v oboch prípadoch zhodný.

@@ -8,8 +8,6 @@ Aplikácia galéria umožňuje jednoduchým spôsobom vytvárať galériu fotogr
 
 Rozmery náhľadového obrázka a obrázka v bežnom rozlíšení je možné nastavovať vo vlastnostiach priečinka a prípadne kedykoľvek zmeniť (obrázky sa automaticky vygenerujú z originálnej fotky).
 
-Pri AVIF zostávajú menšie verzie vo formáte AVIF a zachovávajú priehľadnosť. Pri zmenšení alebo orezaní animovaného obrázka sa použije prvý snímok. Ak je obrázok menší než požadované rozmery a zvolený režim ho iba skopíruje, animácia sa zachová pri `galleryStripExif=false`. Pri zapnutom odstraňovaní metadát sa aj táto kópia prekóduje na statický obrázok. Originálna kópia zostáva nezmenená. Ak server AVIF nedokáže spracovať, nahranie originálu zostane zachované a administrácia oznámi chybu pri vytváraní menších verzií.
-
 ## Práca s aplikáciou galéria
 
 Administrácia galérie je podobne ako web stránky rozdelená na dva stĺpce. V prvom je štruktúra priečinkov a v druhom sa zobrazujú samotné fotografie. Ikony na pridanie, editáciu, mazanie atď sa vzťahujú k príslušnému stĺpcu.
@@ -103,7 +101,7 @@ Ak zadaný priečinok ešte neexistuje, automaticky sa vytvorí. Podľa najbliž
 - `galleryWatermarkGravity` - Pozícia vodotlače vo výslednom obrázku. Možnosti podľa svetových strán v angličtine: `NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast` (predvolená hodnota: `Center`).
 - `galleryEnableWatermarking` - Vypne / zapne vodotlač pre obrázky. Vodotlač môže výrazne spomaľovať veľké importy obrázkov kvôli rekurzívnemu hľadaniu nastavenia vodotlače. (predvolená hodnota: `true`).
 - `galleryEnableExifDate` - Pri nahratí fotky sa získa ako jej dátum dátum vytvorenia z `exif` informácie, pre vypnutie je potrebné nastaviť túto premennú na false (predvolená hodnota: `true`).
-- `galleryStripExif` - Ak je nastavené na `true` tak sa z fotky odstraňujú `exif` informácie, primárne sa jedná o jej otočenie pre korektné zobrazenie zmenšenín (predvolená hodnota: `true`). Platí aj pre AVIF; odstraňovanie metadát obrázok prekóduje a z animácie použije prvý snímok aj bez zmeny rozmerov.
+- `galleryStripExif` - Ak je nastavené na `true` tak sa z fotky odstraňujú `exif` informácie, primárne sa jedná o jej otočenie pre korektné zobrazenie zmenšenín (predvolená hodnota: `true`).
 - `galleryImageQuality` - Parameter kvality obrázkov pre konverziu cez `ImageMagick`, zapisuje sa vo formáte `šírka_px:kvalita;šírka_px:kvalita`, teda napr. `0:30;100:50;400:70`, použije sa najlepší alebo koncový interval (predvolená hodnota:).
 - `galleryVideoMode` - Nastavenie režimu konverzie videa pre foto galériu, možné hodnoty: `all`=vygeneruje sa malé aj veľké video, `big`=vygeneruje sa len veľké video, `small`=vygeneruje sa len malé video (predvolená hodnota: `big`).
 - `thumbServletCacheDir` - Cesta k adresáru pre cache `/thumb` obrázkov, pre server s vysokým množstvom obrázkov odporúčame presunúť na iné miesto ako /WEB-INF/ kvôli rýchlosti štartu aplikačného servera (predvolená hodnota: `/WEB-INF/imgcache/`).
