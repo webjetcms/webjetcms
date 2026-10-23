@@ -51,6 +51,7 @@ public class AdminSettingsService {
 
         if (WEBPAGES_TREE_SETTINGS_KEY.equals(key)) {
             try {
+                //return default settings for webpages tree
                 return new JSONObject(Constants.getString("webpagesTreeDefaultSettings")).toString();
             } catch (JSONException e) {
                 Logger.error(AdminSettingsService.class, "Invalid JSON object in webpagesTreeDefaultSettings", e);

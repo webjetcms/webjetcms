@@ -27,7 +27,16 @@ public class ConstantsV9 {
 			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*,components.search.rag_answer",
 			  Constants.MOD_PROPERTIES, "Zoznam prekladovych klucov dostupnych cez administracne REST API, oddelenych novym riadkom alebo ciarkou; znak * na konci znamena prefix.");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2, Constants.mods(Constants.MOD_EDITOR, Constants.MOD_WEBPAGES), "Maximalny pocet korenovych priecinkov, pri ktorom sa strom webovych stranok automaticky otvori.");
-		Constants.setString("webpagesTreeDefaultSettings", "{\"showId\":false,\"showPriority\":false,\"showPages\":false,\"showFoldersDt\":false,\"treeWidth\":4,\"treeSortType\":\"priority\",\"treeSortOrderAsc\":true,\"showRealName\":false}", Constants.MOD_WEBPAGES,
+		Constants.setString("webpagesTreeDefaultSettings", "{\n"
+				+ "\t\"showId\": false,\n"
+				+ "\t\"showPriority\": false,\n"
+				+ "\t\"showPages\": false,\n"
+				+ "\t\"showFoldersDt\": false,\n"
+				+ "\t\"treeWidth\": 4,\n"
+				+ "\t\"treeSortType\": \"priority\",\n"
+				+ "\t\"treeSortOrderAsc\": true,\n"
+				+ "\t\"showRealName\": false\n"
+				+ "}", Constants.MOD_WEBPAGES,
 				"Predvolené nastavenie zobrazenia stromu webových stránok vo formáte JSON. Použije sa iba ak používateľ nemá uložené vlastné nastavenie jstreeSettings_web-pages-list.");
 		Constants.setString("deepl_auth_key", "", Constants.MOD_TRANSLATIONS, "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
 		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", Constants.MOD_TRANSLATIONS, "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");

@@ -43,6 +43,8 @@ public class UserDto {
             if (s.getSkey().startsWith("overview.")) continue;
             adminSettings.put(s.getSkey(), s.getValue());
         }
+
+        //set default webpages tree settings if not present
         if (adminSettings.containsKey(AdminSettingsService.WEBPAGES_TREE_SETTINGS_KEY) == false) {
             AdminSettingsService settingsService = new AdminSettingsService(user);
             adminSettings.put(AdminSettingsService.WEBPAGES_TREE_SETTINGS_KEY,
