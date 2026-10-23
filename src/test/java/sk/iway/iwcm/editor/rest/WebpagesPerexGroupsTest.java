@@ -3,15 +3,24 @@ package sk.iway.iwcm.editor.rest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.LongStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.doc.DocDB;
@@ -43,6 +52,26 @@ class WebpagesPerexGroupsTest {
         group.setPerexGroupId(30);
         when(documents.getPerexGroups()).thenReturn(List.of(group));
         when(documents.getPerexGroups(10)).thenReturn(List.of(group));
+    }
+
+    /** Large selections bind from JSON without placing page IDs in the request URL. */
+    @ParameterizedTest
+    @CsvSource({"500,false", "500,true", "1000,false", "1000,true"})
+    void acceptsLargeSelectionsInJsonBody(int count, boolean remove) throws Exception {
+        Long[] ids = LongStream.range(100000, 100000 + count).boxed().toArray(Long[]::new);
+        doReturn(List.of()).when(controller).perexGroupOptions(any(Long[].class), anyBoolean());
+
+        MockMvcBuilders.standaloneSetup(controller).build()
+            .perform(post("/admin/rest/web-pages/perex-groups")
+                .queryParam("remove", String.valueOf(remove))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(Arrays.toString(ids)))
+            .andExpect(status().isOk())
+            .andExpect(content().string("[]"));
+
+        ArgumentCaptor<Long[]> receivedIds = ArgumentCaptor.forClass(Long[].class);
+        verify(controller).perexGroupOptions(receivedIds.capture(), eq(remove));
+        assertArrayEquals(ids, receivedIds.getValue());
     }
 
     /** Different starting groups survive add/remove, and repeating either action does not save again. */

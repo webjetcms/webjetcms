@@ -27,7 +27,13 @@ export class PerexGroupActions {
         if (this.loading || document.getElementById(fieldId)) return;
         this.loading = true;
 
-        $.getJSON(WJ.urlAddPath(this.table.DATA.url, '/perex-groups'), { ids, remove }).done(options => {
+        $.ajax({
+            url: WJ.urlAddParam(WJ.urlAddPath(this.table.DATA.url, '/perex-groups'), 'remove', remove),
+            method: 'POST',
+            contentType: 'application/json',
+            dataType: 'json',
+            data: JSON.stringify(ids)
+        }).done(options => {
             if (options.error) {
                 WJ.notifyError(options.error);
                 return;

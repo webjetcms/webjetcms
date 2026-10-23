@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,8 +51,8 @@ public class WebpagesRestController extends WebpagesDatatable {
     }
 
     /** Returns groups available on every selected page, or assigned to at least one page for removal. */
-    @GetMapping("/perex-groups")
-    public List<OptionDto> perexGroupOptions(@RequestParam("ids[]") Long[] ids, @RequestParam boolean remove) {
+    @PostMapping(value = "/perex-groups", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public List<OptionDto> perexGroupOptions(@RequestBody Long[] ids, @RequestParam boolean remove) {
         if (ids.length == 0) return List.of();
         DocDB docDB = DocDB.getInstance();
         List<PerexGroupBean> groups = new ArrayList<>(docDB.getPerexGroups());
