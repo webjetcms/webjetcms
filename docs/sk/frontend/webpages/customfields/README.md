@@ -21,6 +21,7 @@ Názvy Pole A - Pole X je možné zmeniť v konfigurácii v časti editácia tex
 - `components.media.field_x` - pre aplikáciu Média
 - `components.perex.field_x` - pre aplikáciu Značky
 - `components.invoice.field_x` - pre aplikáciu Elektronický obchod
+- `components.form_settings.field_x` - pre nastavenia Formulárov
 
 Technické informácie sa nachádzajú v [dokumentácii pre programátora](../../../developer/datatables-editor/customfields.md).
 

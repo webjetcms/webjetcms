@@ -50,6 +50,29 @@ Rozhranie [`FormProcessorInterface`](../../../../../src/main/java/sk/iway/iwcm/c
 - `runStepInterceptor` - metóda sa vyvolá po validácií kroku, ale pred uložením. V tejto metóde je možné spustiť akýkoľvek interceptor, ktorý je potrebný pre daný krok. Napríklad sa môže jednať odoslanie emailu/SMS s kódom, ktorý je potrebné zadať v ďalšom kroku.
 - `handleFormSave` - metóda sa vyvolá celkovom ukladaní formuláru. V tejto metóde je možné vlastné uloženie formuláru, napríklad odoslaním do `CRM` systému. Metóda vracia `boolean` hodnotu, ktorá určuje, či sa má vyvolať aj klasické `WebJET` uloženie formuláru.
 
+Všetky tri metódy dostanú za `formName` parameter `FormSettingsEntity formSettings`. Ide o nastavenia už načítané pre spracovávaný formulár a aktuálnu doménu; vo validátore ich nemusíte znova vyhľadávať podľa mena.
+
+```java
+@Override
+public void validateStep(String formName, FormSettingsEntity formSettings,
+        FormStepEntity stepEntity, JSONObject stepData,
+        HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    String expectedValue = formSettings.getFieldA();
+    if (Tools.isNotEmpty(expectedValue) && !expectedValue.equals(stepData.optString("reference"))) {
+        errors.put("reference", "Zadaná referencia nezodpovedá nastaveniu formulára.");
+    }
+}
+
+@Override
+public void runStepInterceptor(String formName, FormSettingsEntity formSettings,
+        FormStepEntity stepEntity, JSONObject stepData,
+        HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    // Use the provided settings when processing the submitted step.
+}
+```
+
+**Prelomová zmena:** vlastné implementácie `validateStep` a `runStepInterceptor` musia doplniť druhý parameter `FormSettingsEntity formSettings` a znova sa skompilovať. Staré podpisy nie sú podporované. Podpis `handleFormSave` sa nemení.
+
 Bližšie informácie o fungovaní jednotlivých metód a ich parametrov je popísané priamo v súbore.
 
 !>**Upozornenie:** O načítanie a vyvolanie jednotlivých metód spracovateľa formulárov (ak je zadefinovaný) sa stará trieda [MultistepFormsService](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/rest/MultistepFormsService.java).
