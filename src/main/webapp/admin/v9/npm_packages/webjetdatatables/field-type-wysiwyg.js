@@ -7,7 +7,71 @@ export function typeWysiwyg() {
         return conf.EDITOR.field(conf.data);
     }
 
-    /** Captures normalized HTML only for the current, fully initialized editor session. */
+    /**
+     * Rejects failed reads, including the literal "undefined" previously written as page content.
+     * An empty string is valid because users may intentionally clear the page.
+     * @param {unknown} html Value returned by the editor, a callback or a multi-value field.
+     * @returns {boolean} True when the value cannot be used as page HTML.
+     */
+    function isInvalidHtml(html) {
+        return typeof html !== 'string' || html.trim() === 'undefined';
+    }
+
+    /**
+     * Removes editor attributes without a DOM round trip that would rewrite source HTML.
+     * Comments, other attribute values and raw-text elements must remain unchanged.
+     * @param {string} html Source HTML.
+     * @returns {string} HTML without contenteditable attributes.
+     */
+    function removeContentEditable(html) {
+        if (typeof html !== 'string' || html.toLowerCase().indexOf('contenteditable') === -1) return html;
+
+        const tags = /<!--[\s\S]*?(?:-->|$)|<!\[CDATA\[[\s\S]*?(?:\]\]>|$)|<![^>]*>|<\/?([a-z][a-z0-9:-]*)(?=[\s/>])(?:"[^"]*"|'[^']*'|[^'">])*>/gi;
+        const attributes = /\s+([^\s=/>]+)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?/g;
+        let result = '';
+        let offset = 0;
+        let match;
+        while ((match = tags.exec(html)) !== null) {
+            const tag = match[0];
+            if (!match[1] || tag.startsWith('</')) continue;
+            const cleaned = tag.replace(attributes, (attribute, name) => name.toLowerCase() === 'contenteditable' ? '' : attribute);
+            if (cleaned !== tag) {
+                result += html.slice(offset, match.index) + cleaned;
+                offset = tags.lastIndex;
+            }
+            // HTML-looking strings inside scripts, styles and text-only elements are not markup.
+            if (/^(script|style|textarea|title|xmp|iframe|noembed|noframes|noscript)$/i.test(match[1])) {
+                const closingTag = new RegExp('</' + match[1] + '\\s*>', 'gi');
+                closingTag.lastIndex = tags.lastIndex;
+                const closing = closingTag.exec(html);
+                tags.lastIndex = closing ? closingTag.lastIndex : html.length;
+            }
+        }
+        return result + html.slice(offset);
+    }
+
+    /**
+     * Shows a read error and stops later handlers from sending a save or preview request.
+     * Returning false cancels DataTables submission; stopping propagation also blocks preview handlers.
+     * @param {Object} conf DataTables Editor field configuration.
+     * @param {jQuery.Event} event The initSubmit or preSubmit event being cancelled.
+     * @returns {boolean} Always false to cancel submission.
+     */
+    function cancelInvalidSubmit(conf, event) {
+        const message = WJ.translate('editor.content.read_error.js');
+        getThisField(conf).error(message);
+        conf.EDITOR.error(message);
+        event.stopImmediatePropagation();
+        return false;
+    }
+
+    /**
+     * Captures the initial HTML for dirty tracking once the current editor is ready.
+     * Ignores obsolete reset requests and the previous iframe document, which can remain accessible
+     * during navigation. A failed read leaves the baseline undefined so it can be retried.
+     * @param {Object} conf DataTables Editor field configuration.
+     * @param {Object} request Identity of the resetDirty request that scheduled this capture.
+     */
     function captureDirtySnapshot(conf, request) {
         if (!conf.editorOpen || conf.dirtyResetRequest !== request || conf.dirtyDataOriginal !== undefined) return;
         if (conf.wjeditor == null) return;
@@ -23,6 +87,8 @@ export function typeWysiwyg() {
 
     /**
      * Serializes CKEditor operations and skips queued work from a closed editor session.
+     * wjeditorReadyPromise tracks all queued writes; wjeditorModeReadyPromise tracks template setup.
+     * Content writes require successful template setup, but a new setup may recover after a failure.
      *
      * @param {Object} conf DataTables Editor field configuration.
      * @param {Function} operation Starts the next asynchronous CKEditor operation.
@@ -120,6 +186,37 @@ export function typeWysiwyg() {
             conf.wjeditorReadyPromise = new Promise(resolve => {
                 resolveInitialEditorReady = resolve;
             });
+            EDITOR.on('initSubmit', function(event, action) {
+                // Start fresh for every save or preview; never reuse HTML from an earlier attempt.
+                conf.submitSnapshot = undefined;
+                const field = getThisField(conf);
+                if (action === 'remove' || !field.submittable()) return;
+                // Multi-value reads bypass the WYSIWYG getter, so clear any previous read failure here.
+                conf.invalidHtml = false;
+                let values;
+                if (field.isMultiValue()) {
+                    // Distinct row values stay in Editor's multi-value storage; there is no shared HTML to snapshot.
+                    values = Object.values(field.multiGet());
+                } else {
+                    // An empty snapshot asks the next get() to capture one successful, normalized HTML read.
+                    // The type getter stores it before Editor applies getFormatter, avoiding double formatting.
+                    conf.submitSnapshot = {};
+                    values = [field.get()];
+                }
+                // Validate before Editor compares values or falls back to the original row data.
+                if (values.some(isInvalidHtml)) return cancelInvalidSubmit(conf, event);
+            });
+            EDITOR.on('preSubmit', function(event, data, action) {
+                // Editor has finished building the payload; discard the snapshot so later reads see live edits.
+                conf.submitSnapshot = undefined;
+                if (action !== 'remove' && getThisField(conf).submittable() && conf.invalidHtml) {
+                    return cancelInvalidSubmit(conf, event);
+                }
+            });
+            EDITOR.on('processing', function(event, processing) {
+                // A cancelled or unchanged submission can skip preSubmit; release its snapshot here too.
+                if (processing === false) conf.submitSnapshot = undefined;
+            });
             EDITOR.on( 'open', function ( e, type ) {
                 //console.log("DT WYSIWYG Editor OPEN, e=", e, "type=", type);
 
@@ -200,6 +297,8 @@ export function typeWysiwyg() {
 
             EDITOR.on( 'close', function ( e, type ) {
                 //console.log("EDITOR.onClose");
+                // Closing during an asynchronous submit must not leave this page's HTML cached for the next page.
+                conf.submitSnapshot = undefined;
                 conf.editorOpen = false;
                 conf.editorSession = null;
                 conf.dirtyResetRequest = null;
@@ -210,12 +309,104 @@ export function typeWysiwyg() {
             });
 
             if (typeof window.switchEditorType == "undefined") {
-                window.switchEditorType = function(select, e) {
-                    //console.log("Switch editor type to:", select.value, "conf=", conf, "e=", e);
-                    let editorType = select.value;
-                    conf.wjeditor.switchEditingMode(editorType, true);
-                    window.editorTypeForced = editorType;
-                    if ("html"!=editorType) window.WJ.setAdminSetting("editorTypeForced", editorType);
+                /**
+                 * Switches modes after pending editor writes finish, preserving the live content.
+                 * If Page Builder cannot provide its HTML, a Page Builder-to-HTML switch may restore
+                 * the preserved field value after confirmation. Save-time validation remains unchanged.
+                 * Other failures show an error without attempting recovery.
+                 *
+                 * @param {HTMLSelectElement} select Mode selector in the parent page or Page Builder iframe.
+                 * @returns {Promise<void>} Completes after the initial attempt or displaying the recovery
+                 * dialog. Confirmed recovery runs separately through the dialog's success callback.
+                 */
+                window.switchEditorType = async function(select) {
+                    const editorType = select.value;
+                    const session = conf.editorSession;
+                    const json = EDITOR.currentJson;
+                    const request = {};
+                    let ready = conf.wjeditorReadyPromise;
+                    conf.editorModeSwitchRequest = request;
+                    /**
+                     * Rejects work that became obsolete while waiting for initialization or confirmation.
+                     * Closing/reopening, changing rows, another mode request or a queued content write
+                     * (for example, loading history) must invalidate the old recovery request.
+                     * @returns {boolean} True while this request still belongs to the current editor state.
+                     */
+                    const isCurrent = () => conf.editorOpen && conf.editorSession === session &&
+                        EDITOR.currentJson === json && conf.editorModeSwitchRequest === request &&
+                        conf.wjeditorReadyPromise === ready;
+                    /**
+                     * Restores the actual mode in the initiating selector and the parent Bootstrap picker.
+                     * The browser has already selected the requested mode, even if switching failed.
+                     */
+                    const resetSelector = () => {
+                        const mode = conf.wjeditor?.editingMode || '';
+                        $(select).val(mode);
+                        $("#"+id+"-editorTypeSelect-select").selectpicker('val', mode);
+                    };
+                    /**
+                     * Logs the failure and updates the UI only if the user is still in the same context.
+                     * @param {unknown} error Failure from a mode switch or preserved-content validation.
+                     */
+                    const reportError = error => {
+                        console.error('Error switching WYSIWYG mode:', error);
+                        if (!isCurrent()) return;
+                        resetSelector();
+                        WJ.notifyError(WJ.translate('editor.content.mode_error.js'));
+                    };
+                    /**
+                     * Applies a normal switch or an explicitly confirmed recovery and tracks its writes.
+                     * Recovery bypasses the failed live read and revalidates conf._input at confirmation.
+                     * That value comes from set() or a successful live read in get(); it is not a backup
+                     * of every Page Builder edit and may omit recent changes. The hidden CKEditor is not
+                     * used as a fallback source because its content may be stale.
+                     * The shared readiness promise makes later page loads wait for this write to finish.
+                     * Mode preferences are updated only if this request is still current after completion.
+                     *
+                     * @param {boolean} [restore=false] Use preserved HTML instead of reading the live editor.
+                     * @returns {Promise<void>} Completes the switch or skips an obsolete request; rejects
+                     * on invalid preserved HTML or a mode-switch failure.
+                     */
+                    const switchMode = async (restore = false) => {
+                        if (!isCurrent()) return;
+                        let savedHtml = null;
+                        if (restore) {
+                            savedHtml = conf._input.val();
+                            if (isInvalidHtml(savedHtml)) throw new Error('Invalid preserved WYSIWYG content.');
+                        }
+                        const operation = conf.wjeditor.switchEditingMode(editorType, !restore, savedHtml);
+                        // Subsequent page loads must wait for this mode's asynchronous content write.
+                        ready = Promise.resolve(operation);
+                        conf.wjeditorReadyPromise = ready;
+                        await ready;
+                        if (!isCurrent()) return;
+                        window.editorTypeForced = editorType;
+                        if ("html" !== editorType) WJ.setAdminSetting("editorTypeForced", editorType);
+                    };
+                    let oldMode;
+                    try {
+                        await ready;
+                        if (!isCurrent()) return;
+                        oldMode = conf.wjeditor.editingMode;
+                        await switchMode();
+                    } catch (error) {
+                        if (!isCurrent()) return;
+                        resetSelector();
+                        if (oldMode !== 'pageBuilder' || editorType !== 'html' ||
+                            conf.wjeditor.editingMode !== 'pageBuilder' || isInvalidHtml(conf._input.val())) {
+                            reportError(error);
+                            return;
+                        }
+                        WJ.confirm({
+                            title: WJ.translate('editor.content.recover_html.title.js'),
+                            message: WJ.translate('editor.content.recover_html.message.js'),
+                            btnOkText: WJ.translate('editor.content.recover_html.button.js'),
+                            success: () => {
+                                if (!isCurrent() || conf.wjeditor.editingMode !== 'pageBuilder') return;
+                                return switchMode(true).catch(reportError);
+                            }
+                        });
+                    }
                 }
             }
 
@@ -249,33 +440,48 @@ export function typeWysiwyg() {
             return htmlCodeElement;
         },
 
+        /**
+         * Reads live HTML while open and retains it in conf._input for later reads or confirmed recovery.
+         * Payload collection reuses the HTML already validated by initSubmit.
+         * A failed read returns undefined and marks invalidHtml so submission is cancelled; it must not
+         * silently save the preserved value, which may be older than the visible Page Builder content.
+         * @param {Object} conf DataTables Editor field configuration.
+         * @returns {string|undefined} Validated HTML without editor attributes, or undefined on failure.
+         */
         get: function ( conf ) {
-            //console.log("WYSIWYG get, conf=", conf, "wjeditor=", conf.wjeditor);
-            if (conf.editorOpen && conf.wjeditor != null) {
-                var htmlCode = conf.wjeditor.getData();
-                //console.log("WYSIWYG get, htmlCode=", htmlCode);
-                //set htmlCode to input element, because it can be PageBuilder instance
-                conf._input.val(htmlCode);
-            }
+            // Editor may call get() once per row. Reuse the validated HTML so later read failures cannot
+            // make it fall back to original row data or treat a changed page as unchanged.
+            // An empty string is valid HTML, so check for undefined rather than truthiness.
+            if (conf.submitSnapshot?.html !== undefined) return conf.submitSnapshot.html;
+            conf.invalidHtml = false;
             try {
-                //fix for acunetix long texts which loads too long/ha too many JS errors, and acunetix will timeout scanning
-                if (window.currentUser.login.indexOf("tester")==0) {
-                    let val = conf._input.val();
-                    if (val != null && val.length > 32000) {
-                        if (val.indexOf("<ScRiPt")!==-1 || val.indexOf("<zzz")!==-1|| val.indexOf("DBMS_PIPE")!==-1) {
-                            val = val.substring(0, 16000);
-                            console.log("shrinking val to length=", val.length);
-                            conf._input.val(val);
+                //console.log("WYSIWYG get, conf=", conf, "wjeditor=", conf.wjeditor);
+                if (conf.editorOpen) {
+                    var htmlCode = conf.wjeditor.getData();
+                    if (isInvalidHtml(htmlCode)) throw new Error('Invalid WYSIWYG content.');
+                    //console.log("WYSIWYG get, htmlCode=", htmlCode);
+                    //set htmlCode to input element, because it can be PageBuilder instance
+                    conf._input.val(htmlCode);
+                }
+                try {
+                    //fix for acunetix long texts which loads too long/ha too many JS errors, and acunetix will timeout scanning
+                    if (window.currentUser.login.indexOf("tester")==0) {
+                        let val = conf._input.val();
+                        if (val != null && val.length > 32000) {
+                            if (val.indexOf("<ScRiPt")!==-1 || val.indexOf("<zzz")!==-1|| val.indexOf("DBMS_PIPE")!==-1) {
+                                val = val.substring(0, 16000);
+                                console.log("shrinking val to length=", val.length);
+                                conf._input.val(val);
+                            }
                         }
                     }
+                } catch (e) {
+                    console.error(e);
                 }
-            } catch (e) {
-                console.error(e);
-            }
-            var html = conf._input.val();
-            //console.log("WYSIWYG get, conf=", conf, "returning=", html);
+                var html = conf._input.val();
+                if (isInvalidHtml(html)) throw new Error('Invalid WYSIWYG content.');
+                //console.log("WYSIWYG get, conf=", conf, "returning=", html);
 
-            try {
                 if (typeof window.wysiwygGetCallback === "function") {
                     html = window.wysiwygGetCallback(html, conf);
                 } else {
@@ -284,11 +490,18 @@ export function typeWysiwyg() {
                         html = pageBuilderIframe[0].contentWindow.wysiwygGetCallback(html, conf);
                     }
                 }
-            } catch (e) {
-                console.error("Error in wysiwygGetCallback:", e);
+                if (isInvalidHtml(html)) throw new Error('Invalid WYSIWYG callback content.');
+                html = removeContentEditable(html);
+                // Capture only after the read, callback and cleanup succeed. The snapshot exists only when
+                // initSubmit requested it; ordinary get() calls must not start caching HTML.
+                if (conf.submitSnapshot) conf.submitSnapshot.html = html;
+                return html;
+            } catch (error) {
+                conf.invalidHtml = true;
+                console.error('Error reading WYSIWYG content:', error);
+                // Keep the visible editor and stored input intact; initSubmit/preSubmit will show the error.
+                return undefined;
             }
-
-            return html;
         },
 
         /**
@@ -297,6 +510,7 @@ export function typeWysiwyg() {
          * @param {*} val
          */
         set: function ( conf, val ) {
+            val = removeContentEditable(val);
             //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
             if (conf.editorOpen) {
                 queueEditorOperation(conf, () => conf.wjeditor.setData(val));

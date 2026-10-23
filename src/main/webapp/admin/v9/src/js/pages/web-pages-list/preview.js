@@ -26,6 +26,15 @@ export class EditorPreview {
             self.webpagesDatatable.EDITOR.submit();
         }
 
+        self.webpagesDatatable.EDITOR.on('processing', function(e, processing) {
+            // Validation can cancel submission before the preview handler runs.
+            if (processing === false) self.isPreviewClicked = false;
+        });
+
+        self.webpagesDatatable.EDITOR.on('close', function() {
+            self.isPreviewClicked = false;
+        });
+
         self.webpagesDatatable.EDITOR.on( 'preSubmit', function ( e, data, action ) {
             if (self.isPreviewClicked) {
                 self.isPreviewClicked = false;

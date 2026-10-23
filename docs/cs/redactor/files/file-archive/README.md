@@ -16,6 +16,8 @@ Nad stromem se nacházejí tlačítka:
 -<i class="ti ti-refresh"></i> - **Obnovit** - obnoví stromovou strukturu složek
 -<i class="ti ti-adjustments-horizontal"></i> - **Nastavení** - umožňuje nastavit šířku stromové struktury vůči tabulce
 
+Šířku stromu můžete zvolit poměrem vůči tabulce nebo v pixelech. Strom má minimální šířku `200 px`, aby se do něj vešlo vyhledávací pole is tlačítky. Menší poměr tuto hranici nesníží.
+
 ![](datatable.png)
 
 Při vytváření složky zadejte její název a potvrďte formulář. Název se při vytvoření upraví do bezpečného tvaru pro URL adresu a souborový systém.
@@ -72,6 +74,8 @@ Karta obsahuje základní informace pro vložení dokumentu.
   - nemůže to být vzor
 - **Poznámka** - poznámka se zobrazí na stránce při odkazu na dokument
 - **Uložit dokument i když již existuje** - povolí uložení souboru se stejným obsahem, jaký již má jiný dokument v manažeru. Podrobnosti naleznete v části [Kontrola duplicitních dokumentů](#kontrola-duplicitních-dokumentů).
+
+Při ukládání a přejmenování polí **Produkt** a **Kategorie** se tvrdé a ostatní Unicode mezery, tabulátory a zalomení řádků převedou na obyčejnou mezeru. Opakované mezery se sloučí a mezery na začátku a konci názvu se odstraní. Odstraní se i zbývající řídicí znaky a neviditelné znaky BOM, měkký spojovník a word joiner; zero-width space se převede na mezeru. Úprava platí i při hromadném nahrávání dokumentů, takže kopírování názvů z ​​jiných dokumentů nevytváří odlišné kategorie pouze kvůli těmto znakům.
 
 !>**Upozornění:** pole **Produkt** / **Kategorie** / **Kód produktu** Vám později poslouží při filtrování zobrazení souborů na stránce
 

@@ -1469,6 +1469,10 @@ const WJ = (() => {
             }
 
             $el.off('.wjTooltipA11y')
+                .on('show.bs.tooltip.wjTooltipA11y', function(event) {
+                    // A delayed hover can finish after the modal starts closing.
+                    if ($el.parents('.modal:not(.show)').length > 0) event.preventDefault();
+                })
                 .on('keydown.wjTooltipA11y', function(event) {
                     if (event.key === 'Escape') {
                         event.preventDefault();

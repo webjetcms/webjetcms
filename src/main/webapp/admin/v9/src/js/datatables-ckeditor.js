@@ -33,7 +33,11 @@ export class DatatablesCkEditor {
 
 		//console.log("ckEditorElementId=", ckEditorElementId);
 
-		this.initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, ckEditorConfig, this.options)
+		this.initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, ckEditorConfig, this.options);
+		if (this.ckEditorInstance == null) {
+			console.error("CKEditor initialization failed for element:", ckEditorElementId);
+			throw new Error("CKEditor initialization failed.");
+		}
 		this.editorHeightLatest = 0;
 
 		let that = this;
@@ -2488,24 +2492,29 @@ export class DatatablesCkEditor {
 
 	getData() {
 		//console.log("getData, this=", this);
-		let htmlCode = this.ckEditorInstance.getData();
+		let htmlCode;
 		if ("pageBuilder"===this.editingMode) {
 			//ziskaj HTML kod z iframe elementu
 			let fieldId = this.options.fieldid;
 			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
-			try {
-				let saveData = pageBuilderIframe[0].contentWindow.getSaveData();
-				//console.log("saveData=", saveData);
-				//ziskaj data pre element doc_data
-				for (let i=0; i<saveData.editable.length; i++) {
-					let inlineData = saveData.editable[i];
-					if ("doc_data"===inlineData.wjAppField) {
-						htmlCode = inlineData.data;
-					}
-				}
-			} catch (error) {
-				//console.error("Error getting data from pageBuilderIframe:", error);
+			if (pageBuilderIframe[0]?.contentWindow?.pageBuilderReady !== true ||
+				pageBuilderIframe[0].contentDocument === pageBuilderIframe.data('pageBuilderPreviousDocument')) {
+				throw new Error('Page Builder is not ready to save.');
 			}
+			let saveData = pageBuilderIframe[0].contentWindow.getSaveData();
+			//console.log("saveData=", saveData);
+			//ziskaj data pre element doc_data
+			for (let i=0; i<saveData.editable.length; i++) {
+				let inlineData = saveData.editable[i];
+				if ("doc_data"===inlineData.wjAppField) {
+					htmlCode = inlineData.data;
+				}
+			}
+			if (typeof htmlCode !== 'string' || htmlCode.trim() === 'undefined') {
+				throw new Error('Invalid Page Builder content.');
+			}
+		} else {
+			htmlCode = this.ckEditorInstance.getData();
 		}
 		//console.log("getData, htmlCode=", htmlCode);
 		return htmlCode;
@@ -2728,7 +2737,8 @@ export class DatatablesCkEditor {
 					try {
 						if (iframe.length > 0 && iframe[0].contentWindow && iframe[0].contentWindow.$) {
 							var iframeModeSelector = iframe[0].contentWindow.$("div.exit-inline-editor select");
-							if (iframeModeSelector.length > 0) {
+							// Failed or unfinished initialization can leave the iframe selector present but unusable.
+							if (iframeModeSelector.length > 0 && iframe[0].contentWindow.pageBuilderReady === true && iframe[0].contentDocument.body?.inert !== true) {
 								found = true;
 							}
 						}
