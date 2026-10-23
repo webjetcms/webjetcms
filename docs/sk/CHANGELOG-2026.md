@@ -109,6 +109,9 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 </div>
 
 - Webové stránky - nové menu [Ďalšie akcie](redactor/webpages/README.md#ďalšie-akcie-a-hromadná-zmena-skupín) v pravej časti nástrojovej lišty obsahuje hromadné pridanie a odobratie značky aj skupiny používateľov bez prepísania ostatných skupín. Skupiny práv a e-mailové skupiny sa vyberajú spoločne. Presunuli sme doň aj kontrolu odkazov, štatistiku stránky, uloženie ako AB test a Import/Export (#368).
+
+![Ponuka Ďalšie akcie v zozname webových stránok](redactor/webpages/more-actions.png)
+
 - Webové stránky - [predvolené nastavenie stromu](redactor/webpages/README.md#predvolené-nastavenie-pre-používateľov) pre nového používateľa je možné nastaviť cez konfiguračnú premennú `webpagesTreeDefaultSettings` (#368).
 
 ### Headless režim

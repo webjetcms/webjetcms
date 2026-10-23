@@ -60,10 +60,32 @@ The website list also offers a special icon ![](recover-button.png ":no-zoom") t
 The data table in the page list contains the following special icons:
 
 -<i class="ti ti-eye fa-btn" role="presentation"></i> - View page - after selecting one or more lines and clicking the icon, the selected web page will open in a new window/tab.
--<i class="ti ti-a-b fa-btn" role="presentation"></i> - Save as AB test - creates a B version of the page for [AB testing](../apps/abtesting/README.md).
--<i class="ti ti-chart-line fa-btn" role="presentation"></i> - Page statistics - displays [visitors](../apps/stat/README.md) of the selected web page.
--<i class="ti ti-link-off fa-btn" role="presentation"></i> - Check links and empty pages - checks [link validity](linkcheck.md) in pages in the current folder and subfolders, displays pages that do not have any text entered.
 - ![](icon-recursive.png ":no-zoom") - Show pages from subdirectories as well - by switching the switch to the on position, you will also see web pages from subdirectories in the table
+
+### Other actions and bulk group changes
+
+Button<i class="ti ti-dots" role="presentation"></i> **More actions** can be found in the right part of the toolbar when refreshing data and table settings.
+
+![More Actions menu in website list](more-actions.png)
+
+The **Active** tab contains:
+
+- **Add Tag** – adds the selected tag to the tagged pages. It will keep their other tags; it will not add the assigned tag a second time.
+- **Remove Tag** – removes the selected tag from the marked pages. Keeps other tags and leaves pages without the selected tag unchanged.
+- **Add User Group** – adds the selected group to the selected pages without changing other assigned user groups.
+- **Remove User Group** – removes the selected group from the selected pages. Pages without this group will not be changed.
+- **Save as AB Test** – creates a B version of the marked page for [AB testing](../apps/abtesting/README.md).
+- **Page Statistics** – displays [traffic](../apps/stat/README.md) of marked pages. Also available in history and scheduled publishing reports.
+- **Link and Blank Page Check** – checks [link validity](linkcheck.md) in the current folder and subfolders and looks for blank pages. Does not require page marking.
+- **Import/Export** – opens [website import and export](import-export.md) for the selected folder. Does not require tagging of pages.
+
+To change the tag in bulk, select the pages in the first column of the table, open **More actions** and choose to add or remove. In the dialog, select one tag and click **Confirm**. When adding, tags available for all marked pages are offered. When removing, tags assigned to at least one of them are offered.
+
+You can add or remove a user group using the same procedure. The selection includes both rights groups and email groups managed in **Users → User Groups**. When removing, only groups assigned to at least one selected page are displayed. The change will be reflected in the **Access** tab in the page editor.
+
+For pages linked via **Copy of web page in**, available and assigned groups are evaluated according to the main page, just like when editing it.
+
+The change requires page editing permission and uses normal saving, including history and possible approval. After saving, the list is refreshed.
 
 ### Icons and colors in the tree structure and page list
 
@@ -97,6 +119,27 @@ If necessary, you can click the icon in the tree structure<i class="ti ti-adjust
 - **Sort tree direction** - Toggles the direction of the folder tree. Selecting the option will use the **Ascending** direction, and not selecting the option will use the **Descending** direction.
 
 ![](jstree-settings.png)
+
+### Default setting for users
+
+If the user has not yet saved their own display settings, the tree is sorted by **Sort order ascending**, i.e. from the lowest value. The ID and order are not displayed for the names.
+
+The administrator can modify the default view in the **Settings → Configuration** section using the variable `webpagesTreeDefaultSettings`. Its default value is:
+
+```json
+{
+  "showId": false,
+  "showPriority": false,
+  "showPages": false,
+  "showFoldersDt": false,
+  "treeWidth": 4,
+  "treeSortType": "priority",
+  "treeSortOrderAsc": true,
+  "showRealName": false
+}
+```
+
+For default ID and order display, set `showId` and `showPriority` to `true`. The value of `treeSortType` can be `priority` (sort order), `title` (name), or `createDate` (creation date). The value of `treeSortOrderAsc: true` means ascending order, `false` descending. `treeWidth` specifies the number of columns out of twelve or a fixed width in pixels, according to the options in the dialog box.
 
 ## Searching in the tree structure
 

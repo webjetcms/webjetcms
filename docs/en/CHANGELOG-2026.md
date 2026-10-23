@@ -108,6 +108,12 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
     <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+- Websites - new menu [More actions](redactor/webpages/README.md#more-actions-and-bulk-change-of-groups) in the right part of the toolbar includes bulk addition and removal of tags and user groups without overwriting other groups. Rights groups and email groups are selected together. We have also moved link checking, page statistics, saving as AB test and Import/Export (#368).
+
+![More Actions menu in the website list](redactor/webpages/more-actions.png)
+
+- Web pages - [default tree settings](redactor/webpages/README.md#default-settings-for-users) for a new user can be set via the configuration variable `webpagesTreeDefaultSettings` (#368).
+
 ### Headless mode
 
 Added [headless mode support](frontend/headless/README.md), in which WebJET CMS serves purely as a `backend` CMS. Content, navigation, search and forms are accessible via REST API. Frontend application (e.g. Astro, Next.js, Vue, React or any HTTP client) will download the data and display it according to its own templates (#258).
@@ -277,6 +283,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Email - fixed SMTP settings being affected between applications on a shared application server. Each send uses its own properties and mail session, so SSL port, authentication, or Amazon SES settings from another application are not transferred (#367).
+- Page Builder - fixed accumulation of empty lines in HTML of nested blocks. When saving and switching to HTML editor, old extra lines between elements are also removed. Content of `pre`, `textarea` and spaces preserved via CSS `white-space` remain unchanged (#367).
+- Webpages - fixed stuttering and jumping when [compare versions](redactor/webpages/history.md) if the page template uses smooth scrolling (`scroll-behavior: smooth`) (#367).
 - Web pages - JSON editor now accepts fields and simple values ​​with comments. Fixed column splitting and scrolling in Page Builder and closing tooltip when editing from history (#346).
 - Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).

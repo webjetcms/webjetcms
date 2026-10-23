@@ -64,7 +64,11 @@ Data tabuľka v zozname stránok obsahuje nasledovné špeciálne ikony:
 
 ### Ďalšie akcie a hromadná zmena skupín
 
-Tlačidlo <i class="ti ti-dots" role="presentation"></i> **Ďalšie akcie** nájdete v pravej časti nástrojovej lišty pri obnovení údajov a nastaveniach tabuľky. Na karte **Aktívne** obsahuje:
+Tlačidlo <i class="ti ti-dots" role="presentation"></i> **Ďalšie akcie** nájdete v pravej časti nástrojovej lišty pri obnovení údajov a nastaveniach tabuľky.
+
+![Ponuka Ďalšie akcie v zozname webových stránok](more-actions.png)
+
+Na karte **Aktívne** obsahuje:
 
 - **Pridať značku** – pridá zvolenú značku k označeným stránkam. Zachová ich ostatné značky; už priradenú značku nepridá druhýkrát.
 - **Odobrať značku** – odstráni zvolenú značku z označených stránok. Zachová ostatné značky a stránky bez zvolenej značky nezmení.
