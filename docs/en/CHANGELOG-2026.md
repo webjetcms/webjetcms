@@ -13,6 +13,7 @@
 - Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
 - Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
 - Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
+- Multi-step forms - methods `validateStep` and `runStepInterceptor` of the [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) interface receive a new parameter `FormSettingsEntity formSettings` instead of `formName`. If you use your own Java class for processing forms, you need to modify it and recompile it. Settings no longer need to be loaded by form name, but you will get it directly (#364).
 
 ### Home screen
 
@@ -124,6 +125,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Form Settings - added **Optional Fields** tab with fields A–F. Fields are also available in the Form Simple editor and via `FormSettingsEntity`. In the HTML of the translation keys, you can use [`${settings.*}`](redactor/apps/formsimple/README.md#fields-from-form-settings) tags for A–F, email settings, redirects, file limits, and appearance. They are also supported by the preview and email appearance of multi-step forms. A–F and the text before and after the email are enabled by HTML (#364).
 - Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.mustistep.form.back_button` (#osk782).
 - Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
 - Forms - validation of uploaded files distinguishes between an illegal character in the name and an illegal extension. A name error will indicate the specific illegal character or string. File names in error messages are displayed as text to prevent any HTML tags in the name from being executed (#58794).

@@ -4164,7 +4164,7 @@
 
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
-                <void property="author"><string>codex</string></void>
+                <void property="author"><string>lbalat</string></void>
                 <void property="date"><string>19.10.2026</string></void>
                 <void property="desc"><string>form_settings - add custom fields A-F</string></void>
                 <void property="mysql">

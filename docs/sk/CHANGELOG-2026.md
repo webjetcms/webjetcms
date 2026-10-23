@@ -13,7 +13,7 @@
 - Export obsahu pre Flash - odstránená bola historická funkcia generovania XML súborov `/flash_xml/{docId}.xml` pri publikovaní stránky. Konfiguračná premenná `exportFlash` už nie je podporovaná a jej definovanie v `SpringConfig` funkciu neobnoví (#293).
 - Microsoft SQL Server - ukončená bola podpora verzií starších ako 2012 a odstránená konfiguračná premenná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 alebo novší, starý spôsob stránkovania pomocou `TOP` už nie je podporovaný (#293).
 - Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
-- Viackrokové formuláre - metódy `validateStep` a `runStepInterceptor` rozhrania [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) dostávajú za `formName` nový parameter `FormSettingsEntity formSettings`. Ak používate vlastnú Java triedu na spracovanie formulárov je potrebné ju upraviť a znova skompilovať. Nastavenia už nemusia načítavať podľa mena formulára, ale dostanete ho priamo (#58834).
+- Viackrokové formuláre - metódy `validateStep` a `runStepInterceptor` rozhrania [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) dostávajú za `formName` nový parameter `FormSettingsEntity formSettings`. Ak používate vlastnú Java triedu na spracovanie formulárov je potrebné ju upraviť a znova skompilovať. Nastavenia už nemusia načítavať podľa mena formulára, ale dostanete ho priamo (#364).
 
 ### Úvodná obrazovka
 
@@ -125,7 +125,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
-- Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#58834).
+- Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#364).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.mustistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
 - Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).

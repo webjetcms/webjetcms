@@ -50,6 +50,29 @@ Rozhraní [`FormProcessorInterface`](../../../../../src/main/java/sk/iway/iwcm/c
 - `runStepInterceptor` - ​​metoda se vyvolá po validaci kroku, ale před uložením. V této metodě lze spustit jakýkoli interceptor, který je potřebný pro daný krok. Například se může jednat odeslání emailu/SMS s kódem, který je třeba zadat v dalším kroku.
 - `handleFormSave` - ​​metoda se vyvolá celkovém ukládání formuláře. V této metodě je možné vlastní uložení formuláře, například odesláním do `CRM` systému. Metoda vrací `boolean` hodnotu, která určuje, zda se má vyvolat i klasické `WebJET` uložení formuláře.
 
+Všechny tři metody obdrží za `formName` parametr `FormSettingsEntity formSettings`. Jedná se o nastavení již načtená pro zpracovávaný formulář a aktuální doménu; ve validátoru je nemusíte znovu vyhledávat podle jména.
+
+```java
+@Override
+public void validateStep(String formName, FormSettingsEntity formSettings,
+        FormStepEntity stepEntity, JSONObject stepData,
+        HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    String expectedValue = formSettings.getFieldA();
+    if (Tools.isNotEmpty(expectedValue) && !expectedValue.equals(stepData.optString("reference"))) {
+        errors.put("reference", "Zadaná referencia nezodpovedá nastaveniu formulára.");
+    }
+}
+
+@Override
+public void runStepInterceptor(String formName, FormSettingsEntity formSettings,
+        FormStepEntity stepEntity, JSONObject stepData,
+        HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    // Use the provided settings when processing the submitted step.
+}
+```
+
+**Přelomová změna:** vlastní implementace `validateStep` a `runStepInterceptor` musí doplnit druhý parametr `FormSettingsEntity formSettings` a znovu se zkompilovat. Staré podpisy nejsou podporovány. Podpis `handleFormSave` se nemění.
+
 Bližší informace o fungování jednotlivých metod a jejich parametrů je popsáno přímo v souboru.
 
 !>**Upozornění:** O načtení a vyvolání jednotlivých metod zpracovatele formulářů (je-li definován) se stará třída [MultistepFormsService](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/rest/Mult
