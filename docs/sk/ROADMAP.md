@@ -65,7 +65,7 @@ filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadan
 - [x] +AI - upraviť vytváranie `chunk` tak, aby podľa možnosti začínali a končili na hraniciach viet alebo slov (#58778).
 - [ ] +Webové stránky - upraviť predvolené zobrazenie pre nového používateľa - zobrazovať ID, poradie a usporiadať vzostupne.
 - [ ] +Webové stránky - pridať možnosť pridať viacerým stránkam naraz perex skupinu, čiže k existujúcim perex skupinám sa pridá zvolená.
-- [ ] +Webové stránky - pri zmazaní priečinka, ktorý má aj zrkadlenú verziu zobraziť notifikáciu, že boli zmazané aj zrkadlené priečinky XXX,YYY.
+- [x] +Webové stránky - pred zmazaním stránky alebo priečinka zobraziť upozornenie so zoznamom zrkadlených položiek, ktoré sa zmažú spolu s výberom (#58846).
 - [ ] +Pridať podporu obrázkov typu AVIF.
 - [ ] +Možnosť zmeniť poradie polí v datatables editore, kartu v ktorej sa pole nachádza, prípadne aj vytvoriť novú kartu do ktorej sa polia vložia. Teda konfiguračne upraviť hodnoty čo sa dnes nastavujú cea anotácie.
 

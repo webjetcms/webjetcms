@@ -32,6 +32,14 @@ Nakoľko previazané by mali byť iba priečinky s rovnakým obsahom len v inej 
 
 Nakoľko previazané by mali byť rovnaké štruktúry, rozdielne hĺbky previazaných priečinkov indikujú chybu medzi štruktúrami. Oproti **zlému mapovaniu** nemusí ísť hneď o chybu, takéto previazania sú označené pre lepšie hľadanie prípadných chýb.
 
+### Upozornenia v stromovej štruktúre
+
+Rovnaké kontroly môžete zobraziť priamo v sekcii **Web stránky**. V [nastavení stromovej štruktúry](../README.md#nastavenie-zobrazenia-stromovej-štruktúry) zapnite voľbu **Zobraziť chybné zrkadlenia**. Pri priečinkoch s problémom sa namiesto bežnej ikony priečinka zobrazí červená ikona pre **Zlé mapovanie** alebo žltá ikona pre **Nerovnomerné vnorenie**. Ak má prepojenie oba problémy, zobrazí sa červená ikona. Opis problému nájdete po podržaní kurzora nad názvom priečinka.
+
+![Červené upozornenie na zlé mapovanie a žlté upozornenie na nerovnomerné vnorenie](tree-problems.png)
+
+Voľba je dostupná používateľom s právom na **Zrkadlenie štruktúry**. Ikona priečinka bez prístupu <i class="ti ti-folder-x" role="presentation"></i> sa zachová. Upozornenie pomáha nájsť problém; samotné prepojenie upravíte v tejto sekcii na karte **Priečinky**.
+
 ## Vymazanie/zrušenie previazania
 
 Pri vymazaní/zrušení celého previazania zaniká existujúci synchronizačný parameter `syncId`, nakoľko už nemá čo previazať. Pre každý priečinok, ktorý bol previazaný sa vykoná akcia **rozviazania priečinka**.

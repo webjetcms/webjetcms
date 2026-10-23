@@ -30,7 +30,7 @@ Pri existencii prepojenia sa overuje, či nastala zmena rodičovského adresára
 
 Overenie priority usporiadania je jednoduché - overujú sa prepojené adresáre a zhoda hodnoty priority usporiadania. Ak nie je rovnaká, nastaví sa.
 
-Pri udalosti ```WebjetEventType.AFTER_DELETE``` sa volaním ```GroupsDB.deleteGroup``` vymažú aj zrkadlené adresáre. Tie sa typicky presunú do koša. Zostane im síce nastavené ```syncId```, ale keďže sa nachádzajú mimo zrkadlenej štruktúry, tak ich následné zmeny už nie sú zrkadlené.
+Pri udalosti ```WebjetEventType.ON_DELETE``` sa volaním ```GroupsDB.deleteGroup``` vymažú aj zrkadlené adresáre. Udalosť sa spracuje pred presunom zdrojového adresára do koša. Zrkadlenie sa vykoná len vtedy, ak pre zdrojový adresár platí `MirroringService.isEnabled(groupId)`. Samotná zachovaná hodnota `syncId` v koši preto nestačí; výnimkou môže byť napríklad koreňový adresár, ktorého ID zostalo v konfigurácii zrkadlenia.
 
 ## Prepojenie web stránok
 
@@ -42,7 +42,35 @@ Pri udalosti ```WebjetEventType.AFTER_SAVE``` sa získajú prepojené stránky. 
 
 Ak už aktuálne ukladaná stránka má prepojené stránky podobne ako pre adresár sa overuje správnosť rodičovského adresára a priority usporiadania.
 
-Mazanie stránky sa deteguje v ```SaveListener.handleDocSave(final WebjetEvent<DocDetails> event)```. Pri udalosti ```WebjetEventType.AFTER_DELETE``` sa získa zoznam zrkadlených stránok a vyvolá sa ```DeleteServlet.deleteDoc```.
+Mazanie stránky sa deteguje v ```SaveListener.handleDocSave(final WebjetEvent<DocDetails> event)```. Pri udalosti ```WebjetEventType.ON_DELETE``` sa získa zoznam zrkadlených stránok a pre každú sa zavolá `EditorService.deleteWebpage(syncedDoc, false)`. Zrkadlenie musí byť aktívne pre priečinok zdrojovej stránky.
+
+## Náhľad zrkadlených položiek pred zmazaním
+
+Služba `sk.iway.iwcm.editor.service.DeleteMirrorsService` poskytuje údaje pre potvrdzovacie okno mazania. Údaje iba načíta, samotné mazanie naďalej vykonáva existujúci postup cez udalosti `ON_DELETE`.
+
+| Požiadavka | Výsledok |
+| --- | --- |
+| `POST /admin/rest/web-pages/delete-mirrors` | Priamo zrkadlené verzie vybraných web stránok. |
+| `POST /admin/rest/groups/delete-mirrors` | Priamo zrkadlené priečinky bez rozpisu ich stránok a podpriečinkov. |
+
+Obe požiadavky prijímajú formulárový parameter `ids`, teda kladné ID oddelené čiarkou. Vyžadujú prihlásenie, právo `menuWebpages` a prístup k vybraným položkám. Pri stránkach sa overuje `EditorService.isPageEditable(user, doc, true)`, pri priečinkoch práva `editDir`, `deleteDir` a `GroupsDB.isGroupEditable`. V MultiWeb režime sa kontroluje aj doména nájomcu.
+
+Odpoveď `DeleteMirrorsResult` obsahuje:
+
+- `items` – zoznam položiek s poľami `id`, `fullPath` a `domainName`. Vybrané položky a duplicity sú vylúčené.
+- `hiddenMirrors` – hodnota `true`, ak existuje aj zrkadlená položka, ktorej cestu používateľ nesmie vidieť. Klient zobrazí všeobecné upozornenie bez jej identifikácie.
+
+Náhľad vychádza z `syncId > 1` a z `MirroringService.isEnabled(...)` pre zdrojovú položku, rovnako ako mazanie. Neplatné ID sa odmietne stavom `400`, neexistujúca položka stavom `404` a neprístupná zdrojová položka stavom `403`.
+
+Funkcia `bindDeleteMirrors` v `admin/v9/src/js/pages/web-pages-list/delete-mirrors.js` počas načítania blokuje potvrdenie mazania. Pri chybe požiadavky alebo neplatnom formáte odpovede ho ponechá zablokované. Po zatvorení alebo opätovnom otvorení okna sa stará požiadavka zruší a jej oneskorená odpoveď sa ignoruje.
+
+## Zrkadlenie v stromovej štruktúre administrácie
+
+`GroupsTreeService` dopĺňa do uzlov `GroupsJsTreeItem` zoznam `mirrors`. Každý odkaz obsahuje `groupId`, `language` a `path`. Údaje sa pridávajú len do hlavného stromu web stránok, pri prvom vykreslení alebo pri požiadavke s `showMirrorLinks=true`, a len používateľom s právami `menuWebpages` a `cmp_mirroring`. Systémový strom, kôš a výberové polia priečinkov tieto odkazy nedostávajú.
+
+Prepojenia sa vyhľadávajú podľa `syncId`; cieľové priečinky sa filtrujú podľa domény, koša a oprávnení. Jazyk sa určí cez `GroupMirroringServiceV9.getLanguage`, normalizuje sa na malé písmená so spojovníkom a kód `cz` sa zmení na `cs`. Odkazy sú zoradené podľa jazyka a ID. Index priečinkov aj výsledky vyhľadávania sa zdieľajú iba v rámci jednej HTTP požiadavky, takže ďalšia požiadavka znova vyhodnotí aktuálne oprávnenia a údaje.
+
+Zobrazenie diagnostických ikon riadi používateľské nastavenie `showBadMirrorings` v `jstreeSettings_web-pages-list`; pri načítaní stromu sa prenáša parametrom `showBadMirrorings`. Metóda `sk.iway.iwcm.doc.mirroring.rest.MirroringService.getGroupProblems(request)` používa rovnaké kontroly ako tabuľka zrkadlenia a pre každé volanie vlastnú inštanciu služby. Viacnásobné mapovanie má prednosť pred nerovnomerným vnorením. Ikona `ti ti-folder-x`, ktorá označuje obmedzený prístup, sa neprepisuje.
 
 ## Vynútenie obnovenia stromovej štruktúry
 

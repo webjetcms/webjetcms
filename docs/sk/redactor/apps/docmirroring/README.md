@@ -39,6 +39,8 @@ Pri ďalšej práci sa zrkadlia nasledovné operácie:
 
 Zvyšné vlastnosti adresárov/stránok ostávajú zachované a nemajú vplyv na svoj ekvivalent v druhej jazykovej mutácii.
 
+Pred zmazaním sa v potvrdzovacom okne zobrazí [zoznam zrkadlených stránok alebo priečinkov](../../webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa zmažú spolu s vybranou položkou. V stromovej štruktúre môžete pomocou [jazykových odkazov](../../webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) prejsť do prepojeného priečinka a zapnúť si [upozornenia na chybné previazania](../../webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre).
+
 ## Vytvorenie odkazu na jazykové mutácie v hlavičke stránky
 
 Aplikácia umožňuje do hlavičky stránky vložiť odkazy na všetky jazykové mutácie, ktoré smerujú na ekvivalent aktuálne zobrazenej stránky v ostatných jazykových mutáciách. V prípade, že stránka v jazykovej mutácii **je nastavená na nezobrazovať**, odkaz smeruje **na úvodnú stránku jazykovej mutácie**.

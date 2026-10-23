@@ -46,6 +46,10 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Zrkadlenie štruktúry - pred zmazaním stránky alebo priečinka sa zobrazí [zoznam zrkadlených položiek](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa zmažú spolu s výberom. Strom priečinkov obsahuje [jazykové odkazy s návratom do pôvodného priečinka](redactor/webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) a voliteľné [upozornenia na chybné zrkadlenia](redactor/webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre) (#58846).
+
+![Upozornenie pred zmazaním zrkadleného priečinka](redactor/webpages/mirroring/delete-groups.png)
+
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">
