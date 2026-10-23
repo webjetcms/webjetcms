@@ -55,6 +55,20 @@ import sk.iway.iwcm.io.IwcmOutputStream;
  */
 public class ImageTools
 {
+	/** Image formats recognized by WebJET and their processing capabilities. */
+	private record ImageFormat(String extension, boolean transparency, boolean resizable) {}
+
+	private static final List<ImageFormat> IMAGE_FORMATS = List.of(
+		new ImageFormat("jpg", false, true),
+		new ImageFormat("jpeg", false, true),
+		new ImageFormat("gif", true, true),
+		new ImageFormat("png", true, true),
+		new ImageFormat("svg", false, false),
+		new ImageFormat("webp", true, true),
+		new ImageFormat("bmp", false, true),
+		new ImageFormat("avif", true, true)
+	);
+
 	private ImageTools() {
 
 	}
@@ -76,14 +90,14 @@ public class ImageTools
 	}
 
 	/**
-	 * Returns true if the image format supports transparency (eg. PNG, WEBP, GIF).
+	 * Returns true if WebJET preserves transparency when processing this image format.
 	 * @param fileName - file name with extension
 	 * @return true if file format supports transparency
 	 */
 	public static boolean supportsTransparency(String fileName)
 	{
-		String ext = FileTools.getFileExtension(fileName);
-		return "png".equals(ext) || "webp".equals(ext) || "gif".equals(ext) || "avif".equalsIgnoreCase(ext);
+		ImageFormat format = getImageFormat(fileName);
+		return format != null && format.transparency();
 	}
 
 	/**
@@ -180,24 +194,43 @@ public class ImageTools
 	}
 
 	/**
-	 * Returns true if fileName is image file (ends with .jpg, png...)
-	 * @param fileName
-	 * @return
+	 * Returns the extensions recognized by {@link #isImage(String)}, including non-resizable formats.
+	 * @return an unmodifiable list of lowercase extensions without the leading dot
 	 */
-	public static boolean isImage(String fileName)
+	public static List<String> getSupportedImageExtensions()
 	{
-		String ext = FileTools.getFileExtension(fileName);
-		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("gif") || ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("svg") || ext.equalsIgnoreCase("webp") || ext.equalsIgnoreCase("bmp") || ext.equalsIgnoreCase("avif");
+		return IMAGE_FORMATS.stream().map(ImageFormat::extension).toList();
+	}
+
+	private static ImageFormat getImageFormat(String fileName)
+	{
+		String extension = FileTools.getFileExtension(fileName);
+		for (ImageFormat format : IMAGE_FORMATS)
+		{
+			if (format.extension().equalsIgnoreCase(extension)) return format;
+		}
+		return null;
 	}
 
 	/**
-	 * Returns true if fileName is image file and can be resized (ends with .jpg, png... but not .svg)
-	 * @param fileName
-	 * @return
+	 * Checks whether the file has a supported image extension.
+	 * @param fileName file name or path
+	 * @return true if the extension is recognized, regardless of letter case
+	 */
+	public static boolean isImage(String fileName)
+	{
+		return getImageFormat(fileName) != null;
+	}
+
+	/**
+	 * Checks whether WebJET supports resizing the image format.
+	 * @param fileName file name or path
+	 * @return true for supported resizable formats; false for SVG and unknown extensions
 	 */
 	public static boolean isResizableImage(String fileName)
 	{
-		return isImage(fileName) && fileName.toLowerCase().endsWith(".svg") == false;
+		ImageFormat format = getImageFormat(fileName);
+		return format != null && format.resizable();
 	}
 
 	public static int resizeImage(IwcmFile imageFile, int width, int height)

@@ -109,7 +109,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
     <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-- Obrázky - pridaná podpora obrázkov vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif) vo vkladaní obrázkov, perexoch, správcovi súborov, galérii a editore obrázkov. Spracovanie vyžaduje ImageMagick s funkčným čítaním a zápisom AVIF. Pri úprave animovaného obrázka sa použije prvý snímok (#371).
+- Obrázky - pridaná podpora obrázkov vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif) vo vkladaní obrázkov, perexoch, správcovi súborov, galérii a editore obrázkov. Spracovanie vyžaduje ImageMagick s funkčným čítaním a zápisom AVIF. Pri úprave animovaného obrázka sa použije prvý snímok. Predvolené povolené prípony pre XHR upload sa preberajú zo spoločného zoznamu obrázkových formátov, vrátane GIF a SVG; vlastné nastavenie `xhrFileUploadAllowedExtensions` má naďalej prednosť (#371).
 
 ### Headless režim
 

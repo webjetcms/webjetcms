@@ -11,6 +11,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -40,7 +41,9 @@ import java.util.Optional;
 @Service
 public class XhrFileUploadService {
 
-    private static final String ALLOWED_EXTENSIONS = "doc docx xls xlsx xml ppt pptx pdf jpeg jpg bmp tiff psd zip rar png mp4 webp avif";
+    // TIFF and PSD remain uploadable attachments without being supported by ImageTools.
+    private static final String ALLOWED_EXTENSIONS = "doc docx xls xlsx xml ppt pptx pdf tiff psd zip rar mp4 "
+        + String.join(" ", ImageTools.getSupportedImageExtensions());
     private static final String BASE_DIR = "WEB-INF/tmp/";
     private static final String FINAL_PREFIX = "final_";
     private static final String SEPARATOR = "__upload__";

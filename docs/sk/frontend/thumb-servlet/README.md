@@ -18,6 +18,14 @@ a potrebujeme, aby sme ho mali v max rozmere `200x200` bodov. Pred URL obrázku 
 
 Obrázok reálne môže byť menší ako požadovaných `200x200` bodov, záleží od jeho pomeru strán. V tomto prípade sa vygeneroval ako `200x134` bodov, vždy sa ale zmestí do požadovaného rozmeru.
 
+## Podporované formáty
+
+Trieda `ImageTools` definuje podporované prípony obrázkov spolu s nastavením priehľadnosti pri rastrovom spracovaní a možnosťou meniť rozmery. Metóda `getSupportedImageExtensions()` vracia tento zoznam prípon bez bodky. SVG je rozpoznané ako obrázok, ale metóda `isResizableImage()` preň vracia `false`.
+
+Služba `XhrFileUploadService` preberá podporované obrázkové prípony z `ImageTools` do predvoleného zoznamu povolených súborov. Nový formát teda netreba samostatne pridávať do zoznamu pre upload; predvolene sú povolené aj GIF a SVG. TIFF a PSD zostávajú povolené ako prílohy, hoci ich `ImageTools` nepodporuje.
+
+Konfiguračná premenná `xhrFileUploadAllowedExtensions` nahrádza celý predvolený zoznam príponami oddelenými medzerou. Napríklad hodnota `pdf jpg png` nepovolí upload AVIF. Všeobecné kontroly povolených súborov platia aj naďalej.
+
 ## Obrázky AVIF
 
 Nahraný obrázok AVIF môžete vložiť do stránky, vybrať ako perexový obrázok a používať v obrázkových poliach, správcovi súborov aj galérii. WebJET načíta jeho rozmery bez dekódovania obrázka. Existujúce JPG, PNG ani WebP sa automaticky nekonvertujú.
