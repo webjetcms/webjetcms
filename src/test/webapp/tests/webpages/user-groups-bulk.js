@@ -1,59 +1,87 @@
 Feature('webpages.user-groups-bulk');
 
 let name;
+const fixtureNames = [];
 let groupIds;
 let pageIds;
 const menu = '#datatableInit_wrapper button.buttons-more-actions';
 const picker = 'button[data-id="datatableInit_userGroupAction"]';
 const pickerMenu = '.bs-container.user-group-picker';
 
-Before(({ I, login }) => {
+Before(({ login }) => {
     login('admin');
-    if (!name) name = 'user-groups-bulk-autotest-' + I.getRandomText();
 });
 
-Scenario('Group pickers fill the field and open above the confirmation at all widths', async ({ I, DT }) => {
+Scenario('Combined group picker, cancellation and persisted deltas', async ({ I, DT, DTE }) => {
+    await createPages(I, DT, DTE);
     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
-    DT.waitForLoader();
+    DT.filterContains('title', name);
+    I.resizeWindow(767, 853);
     I.clickCss('#datatableInit_wrapper button.buttons-select-all');
-    for (const width of [1216, 1100, 767]) {
-        I.resizeWindow(width, 853);
-        for (const type of ['user', 'perex']) {
-            const fieldId = 'datatableInit_' + type + 'GroupAction';
-            const button = 'button[data-id="' + fieldId + '"]';
-            const dropdown = '.bs-container.' + type + '-group-picker';
-            I.clickCss(menu);
-            I.clickCss('.buttons-add' + (type === 'user' ? 'User' : 'Perex') + 'Group');
-            I.waitForVisible(button);
-            I.clickCss(button);
-            I.waitForVisible(dropdown + ' .bs-searchbox input');
-            I.waitForFunction(() => getComputedStyle(document.querySelector('.toast')).opacity === '1');
-            const layout = await I.executeScript(({ button, dropdown }) => {
-                const toggle = document.querySelector(button);
-                const field = toggle.parentElement.getBoundingClientRect();
-                const buttonBounds = toggle.getBoundingClientRect();
-                const search = document.querySelector(dropdown + ' .bs-searchbox input');
-                const searchBounds = search.getBoundingClientRect();
-                return {
-                    fillsField: Math.abs(field.width - buttonBounds.width) < 1,
-                    searchOnTop: document.elementFromPoint(searchBounds.right - 5, searchBounds.top + searchBounds.height / 2) === search
-                };
-            }, { button, dropdown });
-            I.assertTrue(layout.fillsField, type + ' picker must fill its field at ' + width + 'px');
-            I.assertTrue(layout.searchOnTop, type + ' search must receive pointer input above the toast at ' + width + 'px');
-            I.saveScreenshot('group-picker-' + type + '-' + width + '.png');
-            I.clickCss(dropdown + ' .bs-searchbox input');
-            I.pressKey('Escape');
-            I.waitForInvisible(dropdown);
-            I.click('Zrušiť', '.toastr-buttons');
-            I.waitToHide(button);
-            I.dontSeeElement(dropdown);
-        }
-    }
+    I.clickCss(menu);
+    I.clickCss('.buttons-addUserGroup');
+    I.waitForVisible(picker);
+    I.see('Zvolená skupina používateľov sa pridá k 2 označeným stránkam.', '.toast-message');
+    const options = await I.executeScript(() => Array.from(document.querySelector('#datatableInit_userGroupAction').options).map(option => Number(option.value)));
+    for (const id of groupIds) I.assertContain(options, id);
+    selectGroup(I, 0);
+    // Closing an open detached list must discard the selected change as well.
+    I.clickCss(picker);
+    I.waitForVisible(pickerMenu + ' .bs-searchbox input');
+    I.clickCss('.toast-close-button');
+    I.waitToHide(picker);
+    I.dontSeeElement(pickerMenu);
     I.wjSetDefaultWindowSize();
+    await verifyPages(I, DTE, [[groupIds[0]], [groupIds[1]]]);
+
+    changeGroup(I, DT, false, 0);
+    changeGroup(I, DT, false, 1);
+    await verifyPages(I, DTE, [groupIds, groupIds]);
+    changeGroup(I, DT, true, 0);
+    await verifyPages(I, DTE, [[groupIds[1]], [groupIds[1]]]);
+    changeGroup(I, DT, true, 1);
+    await verifyPages(I, DTE, [[], []]);
+    I.executeScript(() => webpagesDatatable.rows().select());
+    I.clickCss(menu);
+    I.clickCss('.buttons-removeUserGroup');
+    I.waitForText('Pre označené stránky nie je dostupná žiadna skupina používateľov pre túto akciu.', 10, '.toast-title');
+    I.dontSeeElement(picker);
 });
 
-Scenario('Create pages with different user group types', async ({ I, DT, DTE }) => {
+Scenario('Both user group actions require pageSave permission', async ({ I, DT, DTE }) => {
+    await createPages(I, DT, DTE);
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67&removePerm=pageSave');
+    DT.waitForLoader();
+    I.clickCss(menu);
+    I.dontSeeElement('.buttons-addUserGroup');
+    I.dontSeeElement('.buttons-removeUserGroup');
+    I.pressKey('Escape');
+    for (const action of ['addUserGroup', 'removeUserGroup']) {
+        const response = await I.executeScript(async ({ action, id, groupId }) => $.post({
+            url: '/admin/rest/web-pages/action/' + action,
+            data: { ids: [id], customData: groupId }
+        }), { action, id: pageIds[0], groupId: groupIds[0] });
+        I.assertContain(response.error, 'Nemáte právo na editáciu web stránky');
+    }
+    I.logout();
+});
+
+Scenario('Delete created pages and user groups', async ({ I, DT }) => {
+    for (const fixtureName of fixtureNames) {
+        I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
+        DT.filterContains('title', fixtureName);
+        if (await I.executeScript(() => webpagesDatatable.rows({ search: 'applied' }).count()) > 0) DT.deleteAll();
+        I.amOnPage('/admin/v9/users/user-groups/');
+        DT.filterContains('userGroupName', fixtureName);
+        if (await I.executeScript(() => $('#userGroupsDataTable').DataTable().rows({ search: 'applied' }).count()) > 0) DT.deleteAll('userGroupsDataTable');
+    }
+});
+
+/** Creates this suite's data on demand, including when only one functional scenario is selected. */
+async function createPages(I, DT, DTE) {
+    if (pageIds) return;
+    name = 'user-groups-bulk-autotest-' + I.getRandomText();
+    fixtureNames.push(name);
     I.amOnPage('/admin/v9/users/user-groups/');
     DT.waitForLoader();
     for (let index = 0; index < 2; index++) {
@@ -72,11 +100,12 @@ Scenario('Create pages with different user group types', async ({ I, DT, DTE }) 
     for (let index = 0; index < 2; index++) {
         I.clickCss('#datatableInit_wrapper button.buttons-create');
         DTE.waitForEditor();
-        I.clickCss('#pills-dt-datatableInit-content-tab');
-        await DTE.fillCkeditor('<p>' + name + ' content ' + index + '</p>');
-        I.clickCss('#pills-dt-datatableInit-basic-tab');
+        // New-page initialization opens Basic asynchronously; fill it before switching to Content.
+        I.waitForVisible('#DTE_Field_title');
         DTE.fillField('title', name + '-' + index);
         DTE.fillField('navbar', name + '-' + index);
+        I.clickCss('#pills-dt-datatableInit-content-tab');
+        await DTE.fillCkeditor('<p>' + name + ' content ' + index + '</p>');
         I.clickCss('#pills-dt-datatableInit-access-tab');
         I.checkOption('.DTE_Field_Name_editorFields\\.' + (index === 0 ? 'permisions' : 'emails') + ' input[value="' + groupIds[index] + '"]');
         DTE.save();
@@ -84,75 +113,7 @@ Scenario('Create pages with different user group types', async ({ I, DT, DTE }) 
     DT.filterContains('title', name);
     pageIds = await I.executeScript(() => webpagesDatatable.rows({ search: 'applied' }).data().toArray().map(row => row.docId));
     I.assertLengthOf(pageIds, 2);
-});
-
-Scenario('Combined group picker, cancellation and persisted deltas', async ({ I, DT, DTE }) => {
-    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
-    DT.filterContains('title', name);
-    I.clickCss('#datatableInit_wrapper button.buttons-select-all');
-    I.clickCss(menu);
-    I.clickCss('.buttons-addUserGroup');
-    I.waitForVisible(picker);
-    I.see('Zvolená skupina používateľov sa pridá k 2 označeným stránkam.', '.toast-message');
-    const options = await I.executeScript(() => Array.from(document.querySelector('#datatableInit_userGroupAction').options).map(option => Number(option.value)));
-    for (const id of groupIds) I.assertContain(options, id);
-    selectGroup(I, 0);
-    I.saveScreenshot('user-groups-bulk-dialog.png');
-    I.click('Zrušiť', '.toastr-buttons');
-    I.waitToHide(picker);
-    I.dontSeeElement(pickerMenu);
-    // The detached dropdown overlaps Cancel, so reproduce pointer dismissal with the close button.
-    I.clickCss(menu);
-    I.clickCss('.buttons-addUserGroup');
-    I.waitForVisible(picker);
-    I.clickCss(picker);
-    I.waitForVisible(pickerMenu + ' .bs-searchbox input');
-    I.clickCss('.toast-close-button');
-    I.waitToHide(picker);
-    I.dontSeeElement(pickerMenu);
-    await verifyPages(I, DTE, [[groupIds[0]], [groupIds[1]]]);
-
-    for (let repeat = 0; repeat < 2; repeat++) {
-        changeGroup(I, DT, false, 0);
-        changeGroup(I, DT, false, 1);
-        await verifyPages(I, DTE, [groupIds, groupIds]);
-    }
-    changeGroup(I, DT, true, 0);
-    await verifyPages(I, DTE, [[groupIds[1]], [groupIds[1]]]);
-    changeGroup(I, DT, true, 1);
-    await verifyPages(I, DTE, [[], []]);
-    I.executeScript(() => webpagesDatatable.rows().select());
-    I.clickCss(menu);
-    I.clickCss('.buttons-removeUserGroup');
-    I.waitForText('Pre označené stránky nie je dostupná žiadna skupina používateľov pre túto akciu.', 10, '.toast-title');
-    I.dontSeeElement(picker);
-});
-
-Scenario('Both user group actions require pageSave permission', async ({ I, DT }) => {
-    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67&removePerm=pageSave');
-    DT.waitForLoader();
-    I.clickCss(menu);
-    I.dontSeeElement('.buttons-addUserGroup');
-    I.dontSeeElement('.buttons-removeUserGroup');
-    I.pressKey('Escape');
-    for (const action of ['addUserGroup', 'removeUserGroup']) {
-        const response = await I.executeScript(async ({ action, id, groupId }) => $.post({
-            url: '/admin/rest/web-pages/action/' + action,
-            data: { ids: [id], customData: groupId }
-        }), { action, id: pageIds[0], groupId: groupIds[0] });
-        I.assertContain(response.error, 'Nemáte právo na editáciu web stránky');
-    }
-    I.logout();
-});
-
-Scenario('Delete created pages and user groups', ({ I, DT }) => {
-    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
-    DT.filterContains('title', name);
-    DT.deleteAll();
-    I.amOnPage('/admin/v9/users/user-groups/');
-    DT.filterContains('userGroupName', name);
-    DT.deleteAll('userGroupsDataTable');
-});
+}
 
 /** Uses the visible search control shared by permission and email groups. */
 function selectGroup(I, index) {

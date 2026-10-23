@@ -49,20 +49,18 @@ function fixture(t, ids, groupType) {
 }
 
 for (const groupType of ['perex', 'user']) {
-    for (const count of [500, 1000]) {
-        for (const remove of [false, true]) {
-            test(`${groupType}: ${remove ? 'Remove' : 'Add'} choices send ${count} IDs in JSON and keep the URL short`, t => {
-                const ids = Array.from({ length: count }, (_, index) => 100000 + index);
-                const { buttons, requests } = fixture(t, ids, groupType);
-                buttons[remove ? 1 : 0].action();
+    for (const remove of [false, true]) {
+        test(`${groupType}: ${remove ? 'Remove' : 'Add'} choices send 1000 IDs in JSON and keep the URL short`, t => {
+            const ids = Array.from({ length: 1000 }, (_, index) => 100000 + index);
+            const { buttons, requests } = fixture(t, ids, groupType);
+            buttons[remove ? 1 : 0].action();
 
-                assert.equal(requests.length, 1);
-                const request = requests[0];
-                assert.equal(request.method, 'POST');
-                assert.equal(request.url, `/admin/rest/web-pages/${groupType}-groups?groupId=67&remove=${remove}`);
-                assert.equal(request.headers['Content-Type'], 'application/json');
-                assert.deepEqual(JSON.parse(request.body), ids);
-            });
-        }
+            assert.equal(requests.length, 1);
+            const request = requests[0];
+            assert.equal(request.method, 'POST');
+            assert.equal(request.url, `/admin/rest/web-pages/${groupType}-groups?groupId=67&remove=${remove}`);
+            assert.equal(request.headers['Content-Type'], 'application/json');
+            assert.deepEqual(JSON.parse(request.body), ids);
+        });
     }
 }

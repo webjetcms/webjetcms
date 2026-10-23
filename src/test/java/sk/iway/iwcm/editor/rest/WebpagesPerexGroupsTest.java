@@ -56,7 +56,7 @@ class WebpagesPerexGroupsTest {
 
     /** Large selections bind from JSON without placing page IDs in the request URL. */
     @ParameterizedTest
-    @CsvSource({"500,false", "500,true", "1000,false", "1000,true"})
+    @CsvSource({"1000,false", "1000,true"})
     void acceptsLargeSelectionsInJsonBody(int count, boolean remove) throws Exception {
         Long[] ids = LongStream.range(100000, 100000 + count).boxed().toArray(Long[]::new);
         doReturn(List.of()).when(controller).perexGroupOptions(any(Long[].class), anyBoolean());

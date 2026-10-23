@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const jquery = require('jquery');
+const { parse } = require('acorn');
 
 const admin = path.resolve(__dirname, '../../../main/webapp/admin/v9');
 
@@ -46,8 +47,11 @@ async function fixture(t, groupType) {
         urlAddParam: (url, name, value) => `${url}?${name}=${value}`
     };
     const webjet = fs.readFileSync(path.join(admin, 'src/js/webjet.js'), 'utf8');
-    const start = webjet.indexOf('    function confirm(options) {');
-    window.eval(webjet.slice(start, webjet.indexOf('\n    /**', start + 1)) + '\nWJ.confirm = confirm;');
+    const module = parse(webjet, { ecmaVersion: 'latest', sourceType: 'module' });
+    const wj = module.body.find(node => node.type === 'VariableDeclaration' && node.declarations[0].id.name === 'WJ');
+    const confirm = wj.declarations[0].init.callee.body.body.find(node => node.type === 'FunctionDeclaration' && node.id.name === 'confirm');
+    assert.ok(confirm, 'The WJ module must provide the confirmation dialog');
+    window.eval(webjet.slice(confirm.start, confirm.end) + '\nWJ.confirm = confirm;');
     window.eval(fs.readFileSync(path.join(admin, 'src/js/select-picker.js'), 'utf8').replace(/^export /gm, '') + '\nWJ.initSelectPicker = initSelectPicker;');
     $.ajaxTransport('+*', () => ({
         send(headers, complete) {
