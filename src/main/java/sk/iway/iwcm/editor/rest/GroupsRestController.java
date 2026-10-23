@@ -13,7 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,6 +43,7 @@ import sk.iway.iwcm.doc.GroupPublisher;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.DeleteMirrorsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -72,13 +75,20 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     private TranslationKeyRepository translationKeyRepository;
     private EditorFacade editorFacade;
     private final ApproveService approveService;
+    private final DeleteMirrorsService deleteMirrorsService;
 
-    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService) {
+    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService, DeleteMirrorsService deleteMirrorsService) {
         super(null);
         this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;
         this.translationKeyRepository = translationKeyRepository;
         this.editorFacade = editorFacade;
         this.approveService = approveService;
+        this.deleteMirrorsService = deleteMirrorsService;
+    }
+
+    @PostMapping("/delete-mirrors")
+    public DeleteMirrorsResult getDeleteMirrors(@RequestParam("ids") List<Integer> ids) {
+        return deleteMirrorsService.getGroupMirrors(ids, getUser());
     }
 
     @Override

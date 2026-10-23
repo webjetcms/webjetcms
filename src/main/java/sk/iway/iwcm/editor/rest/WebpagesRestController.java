@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +22,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.DeleteMirrorsService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 
@@ -29,9 +32,17 @@ import sk.iway.iwcm.system.datatable.DatatableRequest;
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
 public class WebpagesRestController extends WebpagesDatatable {
 
+    private final DeleteMirrorsService deleteMirrorsService;
+
     @Autowired
-    public WebpagesRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
+    public WebpagesRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository, DeleteMirrorsService deleteMirrorsService) {
         super(docDetailsRepository, editorFacade, docAtrDefRepository);
+        this.deleteMirrorsService = deleteMirrorsService;
+    }
+
+    @PostMapping("/delete-mirrors")
+    public DeleteMirrorsResult getDeleteMirrors(@RequestParam("ids") List<Integer> ids) {
+        return deleteMirrorsService.getPageMirrors(ids, getUser());
     }
 
     /**
