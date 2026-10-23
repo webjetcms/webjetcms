@@ -14,7 +14,7 @@ var docDataENupdate2 = ["dog", "cat", "coconut"];
 
 Before(({ I, DT }) => {
     if (typeof randomText=="undefined") {
-        randomText = I.getRandomTextShort();
+        randomText = 'autotest-' + I.getRandomTextShort();
     }
 
     DT.addContext('configuration', '#configurationDatatable_wrapper');
@@ -49,7 +49,7 @@ async function testTranslation(I, DT, DTE, Document, useAutotranslator) {
         await setConfValues(I, DT, DTE, "autotranslator");
 
         docTitleSK = "Dobré ráno - A - " + randomText;
-        docTitleEN = "Good Morning - A - " + randomText;
+        docTitleEN = docTitleSK;
 
         I.amOnPage("/admin/v9/webpages/web-pages-list/");
         DT.waitForLoader();
@@ -60,7 +60,7 @@ async function testTranslation(I, DT, DTE, Document, useAutotranslator) {
         await setConfValues(I, DT, DTE, "");
 
         docTitleSK = "Dobré ráno - B - " + randomText;
-        docTitleEN = "Good Morning - B - " + randomText;
+        docTitleEN = docTitleSK;
 
         I.amOnPage("/admin/v9/webpages/web-pages-list/");
         DT.waitForLoader();
@@ -108,6 +108,16 @@ async function testTranslation(I, DT, DTE, Document, useAutotranslator) {
         I.relogin("admin");
         I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=56846");
         I.see("Auto Translator", "#datatableInit");
+    }
+
+    if (useAutotranslator) {
+        I.say("Saving an SK draft must preserve the published EN translation");
+        openDoc(I, DT, DTE, docTitleSK, "SK");
+        await DTE.fillCkeditor(docDataSKupdate2);
+        I.checkOption("#webpagesSaveCheckbox");
+        DTE.save();
+        DTE.cancel();
+        checkBodyEN(I, DT, DTE, docTitleEN, docDataENupdate);
     }
 
     // UPDATE SK VERSION

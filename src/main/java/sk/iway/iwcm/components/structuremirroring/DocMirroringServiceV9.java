@@ -198,6 +198,9 @@ public class DocMirroringServiceV9 {
 
                //Set same, but translated data text to syncedDoc's
                for (DocDetails syncedDoc : syncedDocs) {
+                  // Drafts may update hidden mirrors, but must not replace published content.
+                  if (syncedDoc.isAvailable() && doc.getEditorFields() != null && !doc.getEditorFields().isRequestPublish()) continue;
+
                   //Indicate if we will translate body (data) of doc
                   boolean doTranslate = false;
 

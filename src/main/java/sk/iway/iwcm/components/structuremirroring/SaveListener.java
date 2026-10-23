@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.system.ConfDetails;
@@ -41,6 +42,10 @@ public class SaveListener {
           Logger.debug(SaveListener.class, "================================================= handleEditorSave type=" + event.getEventType() + ", source=" + event.getSource().getClass()+" thread="+Thread.currentThread().getName());
           DocMirroringServiceV9 service = new DocMirroringServiceV9();
           DocDetails doc = event.getSource().toDocDetails();
+          DocEditorFields editorFields = new DocEditorFields();
+          editorFields.setRequestPublish("1".equals(event.getSource().getPublish()));
+          doc.setEditorFields(editorFields);
+          if (!editorFields.isRequestPublish()) doc.setAvailable(false);
           service.handleDocSave(doc, event.getEventType());
           event.getSource().setSyncId(doc.getSyncId());
        } catch (Exception ex) {

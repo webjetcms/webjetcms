@@ -1908,6 +1908,7 @@ public class EditorDB
 		}
 
 		//publishEvent(EditorAfterSaveEvent.class, my_form);
+		my_form.setPublish(requestPublish ? "1" : "0");
 		(new WebjetEvent<>(my_form, WebjetEventType.AFTER_SAVE)).publishEvent();
 
 		return(history_id);
