@@ -93,7 +93,12 @@ export function bindMirrorLinks() {
     function navigate(id) {
         pendingId = String(id);
         // A server-side tree filter can hide the destination and its ancestors.
-        if ($("#tree-folder-search-input").val()) $("#tree-folder-search-clear-button").trigger("click");
+        if ($("#tree-folder-search-input").val()) {
+            // Finish restoring the tree before its events can advance the folder opener.
+            $(treeElement).one("refresh.jstree", () => navigate(id));
+            $("#tree-folder-search-clear-button").trigger("click");
+            return;
+        }
         $("#tree-folder-id").val(id).trigger($.Event("keyup", { key: "Enter", keyCode: 13 }));
     }
 
