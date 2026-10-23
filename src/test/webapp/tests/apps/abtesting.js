@@ -31,6 +31,7 @@ Scenario('vytvorenie stranok @singlethread', async ({I, DT, DTE}) => {
     DTE.save();
 
     //vytvor B verziu
+    I.clickCss("#datatableInit_wrapper button.buttons-more-actions");
     I.clickCss("button.buttons-abtest");
 
     I.click("Potvrdiť", "div.toastr-buttons");

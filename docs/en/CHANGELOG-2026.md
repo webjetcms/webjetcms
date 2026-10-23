@@ -109,6 +109,12 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
     <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+- Websites - new menu [More actions](redactor/webpages/README.md#more-actions-and-bulk-change-of-groups) in the right part of the toolbar includes bulk addition and removal of tags and user groups without overwriting other groups. Rights groups and email groups are selected together. We have also moved link checking, page statistics, saving as AB test and Import/Export (#368).
+
+![More Actions menu in the website list](redactor/webpages/more-actions.png)
+
+- Web pages - [default tree settings](redactor/webpages/README.md#default-settings-for-users) for a new user can be set via the configuration variable `webpagesTreeDefaultSettings` (#368).
+
 ### Headless mode
 
 Added [headless mode support](frontend/headless/README.md), in which WebJET CMS serves purely as a `backend` CMS. Content, navigation, search and forms are accessible via REST API. Frontend application (e.g. Astro, Next.js, Vue, React or any HTTP client) will download the data and display it according to its own templates (#258).

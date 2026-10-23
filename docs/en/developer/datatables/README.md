@@ -385,6 +385,27 @@ The following calls can be used in the `init` function:
 - `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - ​​button is active only if no row is selected
 - `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - ​​button is active only if exactly one row is selected
 
+## Menu Other events
+
+You can add less common actions to the **More actions** menu using `table.addMoreAction(config)` or the `moreActions` field in the `WJ.DataTable` settings. The menu is created only when the first action is added and appears on the right in settings and data refresh. The implementation is separated in `npm_packages/webjetdatatables/more-actions.js`.
+
+The configuration uses the standard DataTables button properties. Enter the icon in `text`, the translated name that will appear next to the icon in `attr.title`. `action`, `init` and activation by row selection are preserved:
+
+```javascript
+table.addMoreAction({
+    text: '<i class="ti ti-tag-plus" aria-hidden="true"></i>',
+    attr: { title: WJ.translate('my.action.js'), 'data-dtbtn': 'myAction' },
+    init: function(dt) {
+        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+    },
+    action: function() {
+        table.executeAction('myAction');
+    }
+});
+```
+
+Use `table.hideButton('myAction')` and `table.showButton('myAction')` to hide and show items. They also work for a closed menu whose items are not attached to the DOM. The menu will hide when it has no displayed item. Verify permissions before adding an item and again on the server when performing the action.
+
 ## Button for performing a server action
 
 The data table offers the option to add a button to perform a server action (e.g. rotate an image, delete all records).
