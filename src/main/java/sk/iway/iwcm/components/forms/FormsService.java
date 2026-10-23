@@ -39,6 +39,7 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
@@ -827,6 +828,48 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
+     * Creates the explicitly supported settings placeholders for HTML templates.
+     * Custom fields and email introduction/conclusion allow HTML; other settings are escaped
+     * for HTML text and quoted attributes. Entity HTML escaping is normalized once.
+     *
+     * @param formSettings settings for the current form and domain, or {@code null}
+     * @return mutable map with all supported settings keys, using empty strings for missing values
+     */
+    public static Map<String, String> getSettingsReplacementMap(FormSettingsEntity formSettings) {
+        FormSettingsEntity settings = formSettings == null ? new FormSettingsEntity() : formSettings;
+        Map<String, String> fields = new HashMap<>();
+        putSetting(fields, "fieldA", settings.getFieldA(), true);
+        putSetting(fields, "fieldB", settings.getFieldB(), true);
+        putSetting(fields, "fieldC", settings.getFieldC(), true);
+        putSetting(fields, "fieldD", settings.getFieldD(), true);
+        putSetting(fields, "fieldE", settings.getFieldE(), true);
+        putSetting(fields, "fieldF", settings.getFieldF(), true);
+        putSetting(fields, "emailTextBefore", settings.getEmailTextBefore(), true);
+        putSetting(fields, "emailTextAfter", settings.getEmailTextAfter(), true);
+        putSetting(fields, "formName", settings.getFormName(), false);
+        putSetting(fields, "recipients", settings.getRecipients(), false);
+        putSetting(fields, "ccEmails", settings.getCcEmails(), false);
+        putSetting(fields, "bccEmails", settings.getBccEmails(), false);
+        putSetting(fields, "replyTo", settings.getReplyTo(), false);
+        putSetting(fields, "subject", settings.getSubject(), false);
+        putSetting(fields, "forward", settings.getForward(), false);
+        putSetting(fields, "forwardFail", settings.getForwardFail(), false);
+        putSetting(fields, "maxSizeInKilobytes", settings.getMaxSizeInKilobytes(), false);
+        putSetting(fields, "maxCombinedSizeInKilobytes", settings.getMaxCombinedSizeInKilobytes(), false);
+        putSetting(fields, "allowedExtensions", settings.getAllowedExtensions(), false);
+        putSetting(fields, "pictureHeight", settings.getPictureHeight(), false);
+        putSetting(fields, "pictureWidth", settings.getPictureWidth(), false);
+        putSetting(fields, "formAddClasses", settings.getFormAddClasses(), false);
+        putSetting(fields, "rowView", settings.getRowView(), false);
+        return fields;
+    }
+
+    private static void putSetting(Map<String, String> fields, String name, Object value, boolean allowHtml) {
+        String text = value == null ? "" : StringEscapeUtils.unescapeHtml4(value.toString());
+        fields.put("settings." + name, allowHtml ? text : ResponseUtils.filter(text));
+    }
+
+    /**
      * Replaces form placeholders in one pass without interpreting placeholders contained in replacement values.
      *
      * @param html template containing placeholders in the {@code ${name}} format
@@ -861,9 +904,33 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      */
     public static final String replaceFields(String html, String formName, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop, HttpServletRequest request)
     {
-        html = Tools.replace(Tools.getStringValue(html, ""), "${formname}", Tools.getStringValue(formName, ""));
-        html = Tools.replace(html, "${savedb}", Tools.getStringValue(formName, ""));
-        html = Tools.replace(html, "${recipients}", Tools.getStringValue(recipients, ""));
+        return replaceFields(html, formName, null, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop, request);
+    }
+
+    /**
+     * Renders a field or form wrapper with the settings already loaded by the caller.
+     *
+     * @param html source HTML template
+     * @param formName form identifier used by the legacy placeholders
+     * @param formSettings current domain's form settings, or {@code null}
+     * @param recipients legacy recipient placeholder value
+     * @param item item metadata, or {@code null} for wrappers
+     * @param requiredLabelAdd required-field label suffix
+     * @param isEmailRender whether to omit interactive tooltips
+     * @param rowView whether to wrap the item in a column
+     * @param firstTimeHeadingSet headings already rendered in this form
+     * @param prop localization provider
+     * @param request current request used for user expressions
+     * @return rendered HTML without recursively expanding replacement values
+     */
+    public static String replaceFields(String html, String formName, FormSettingsEntity formSettings, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop, HttpServletRequest request)
+    {
+        html = Tools.getStringValue(html, "");
+        Map<String, String> formFields = getSettingsReplacementMap(formSettings);
+        formFields.put("formname", Tools.getStringValue(formName, ""));
+        formFields.put("savedb", Tools.getStringValue(formName, ""));
+        formFields.put("recipients", Tools.getStringValue(recipients, ""));
+        requiredLabelAdd = replaceFields(requiredLabelAdd, formFields);
 
         if (item != null) {
             try {
@@ -922,6 +989,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
                 String tooltip = "";
                 Map<String, String> replacementFields = getFieldReplacementMap(item, id, label, labelSanitized, value, placeholder, classes, tooltip);
+                replacementFields.putAll(formFields);
                 if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel)) {
                     Map<String, String> tooltipFields = new HashMap<>(replacementFields);
                     tooltipFields.put("label", tooltipLabel);
@@ -958,18 +1026,18 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                                 token = token.substring(separator + 1);
                             }
 
-                            code = Tools.replace(code, "${value}", token);
-                            code = Tools.replace(code, "${value-label}", valueLabel);
-                            code = Tools.replace(code, "${counter}", String.valueOf(counter));
+                            Map<String, String> iterableFields = new HashMap<>(replacementFields);
+                            iterableFields.put("value", token);
+                            iterableFields.put("value-label", valueLabel);
+                            iterableFields.put("counter", String.valueOf(counter));
+                            code = replaceFields(code, iterableFields);
 
                             iterable.append(code).append("\n");
                             counter++;
                         }
                     }
-                    html = Tools.replace(html, "${iterable}", iterable.toString());
+                    replacementFields.put("iterable", iterable.toString());
                 }
-
-                html = replaceFields(html, replacementFields);
 
                 StringBuilder csError = new StringBuilder();
                 csError.append("<div class=\"help-block cs-error cs-error-").append(id);
@@ -979,10 +1047,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     }
                 }
                 csError.append("\"></div>");
-                html = Tools.replace(html, "${cs-error}", csError.toString());
+                replacementFields.put("cs-error", csError.toString());
+                html = replaceFields(html, replacementFields);
             } catch (Exception ex) {
                 sk.iway.iwcm.Logger.error(ex);
             }
+       } else {
+           html = replaceFields(html, formFields);
        }
 
        if (rowView && html.startsWith("</div") == false) {
