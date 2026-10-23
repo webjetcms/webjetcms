@@ -1543,6 +1543,7 @@ public class EditorService {
 		//If id is -1, try get id from request, if id is still -1 return eeror message
 		if(delDocId == -1) delDocId = Tools.getIntValue(request.getParameter("docid"), -1);
 		if(delDocId == -1) return "There's no provided docId to by used for delete.";
+		if (DeleteRequestContext.isDeleted(DocDetails.class, delDocId)) return "success";
 
 		//Try get DocDetails object by id, if not present return error message
 		Optional<DocDetails> docDetailsOpt = docRepo.findById(Long.valueOf(delDocId));
@@ -1687,6 +1688,7 @@ public class EditorService {
                 //Admin log stranka bola presunuta do kosa
                 Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID: " + delDocId + "): Stranka bola presunuta do kosa ", delDocId, 0);
             }
+            DeleteRequestContext.markDeleted(DocDetails.class, delDocId);
             DocDB.getInstance().updateInternalCaches(delDocId);
 
 			if (publishEvents) (new WebjetEvent<DocDetails>(docDetails, WebjetEventType.AFTER_DELETE)).publishEvent();

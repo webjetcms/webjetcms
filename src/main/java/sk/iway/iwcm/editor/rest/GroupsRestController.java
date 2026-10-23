@@ -44,6 +44,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.service.DeleteMirrorsService;
+import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -769,6 +770,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean deleteItem(GroupDetails entity, long id) {
+        if (DeleteRequestContext.isDeleted(GroupDetails.class, (int) id)) return true;
+
         List<String> errors = new ArrayList<>();
         if (!this.canModifyThisGroup(entity, getUser(), "editDir", errors)) {
             throwError(errors);
@@ -951,6 +954,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean checkItemPerms(GroupDetails entity, Long id) {
+        if (id != null && DeleteRequestContext.isDeleted(GroupDetails.class, id.intValue())) return true;
         if (InitServlet.isTypeCloud() && entity.getGroupId()>0) {
             GroupDetails old = GroupsDB.getInstance().getGroup(entity.getGroupId());
             if (old != null && GroupsDB.isGroupEditable(getUser(), old.getGroupId())==false) return false;

@@ -206,7 +206,7 @@ Scenario('Show warning icons beside the affected folders and navigate overflow l
     I.seeElement(node(folders.sk) + ' .jstree-mirror-link');
 });
 
-Scenario('Move the previewed pages and folders to Trash', ({ I, DT, DTE }) => {
+Scenario('Move the previewed pages and both selected mirrored folders to Trash', async ({ I, DT, DTE }) => {
     const mirrored = [folders.sk, folders.en, folders.cz, folders['duplicate-sk']];
     openPageDelete(I, DT, DTE, folders.sk);
     for (const folder of mirrored.slice(1)) I.waitForText(folder.path, 20, pageModal + ' .delete-mirrors-info');
@@ -217,9 +217,17 @@ Scenario('Move the previewed pages and folders to Trash', ({ I, DT, DTE }) => {
     I.seeNumberOfElements('#datatableInit tbody tr td.dt-row-edit', mirrored.length);
 
     openFolder(I, DT, folders.sk);
+    if (await I.grabNumberOfVisibleElements(node(roots.en) + '.jstree-closed')) {
+        I.click(node(roots.en) + ' > .jstree-ocl');
+        I.jstreeWaitForLoader();
+    }
+    I.click(node(folders.en) + ' > a', null, { modifiers: ['Meta'] });
+    DT.waitForLoader();
+    I.seeElement(node(folders.sk) + ' > a.jstree-clicked');
+    I.seeElement(node(folders.en) + ' > a.jstree-clicked');
     I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor('groups-datatable');
-    for (const folder of mirrored.slice(1)) I.waitForText(folder.path, 20, groupModal + ' .delete-mirrors-info');
+    for (const folder of mirrored.slice(2)) I.waitForText(folder.path, 20, groupModal + ' .delete-mirrors-info');
     confirmDelete(I, DTE, groupModal);
     for (const folder of mirrored) {
         openFolder(I, DT, folder);
