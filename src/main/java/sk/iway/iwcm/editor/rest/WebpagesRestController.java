@@ -56,7 +56,8 @@ public class WebpagesRestController extends WebpagesDatatable {
         List<PerexGroupBean> groups = new ArrayList<>(docDB.getPerexGroups());
         Set<Integer> assigned = new LinkedHashSet<>();
         for (Long id : ids) {
-            DocDetails doc = docDB.getDoc(id.intValue());
+            // Resolve linked copies/slave docs in the same way as the editor data used by processAction.
+            DocDetails doc = editorService.prepareDocForEditor(id.intValue(), -1);
             editorService.checkPermissions(getUser(), doc, false);
             if (remove) {
                 if (doc.getPerexGroups() != null) assigned.addAll(Arrays.asList(doc.getPerexGroups()));

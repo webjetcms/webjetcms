@@ -46,7 +46,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
-- Webové stránky - nové menu [Ďalšie akcie](redactor/webpages/README.md#ďalšie-akcie-a-hromadná-zmena-perex-skupín) v pravej časti nástrojovej lišty obsahuje hromadné pridanie a odobratie perex skupiny bez prepísania ostatných skupín. Presunuli sme doň aj kontrolu odkazov, štatistiku stránky a uloženie ako AB test. Menu je dostupné aj pre ďalšie datatabuľky cez `addMoreAction`.
+- Webové stránky - nové menu [Ďalšie akcie](redactor/webpages/README.md#ďalšie-akcie-a-hromadná-zmena-perex-skupín) v pravej časti nástrojovej lišty obsahuje hromadné pridanie a odobratie perex skupiny bez prepísania ostatných skupín. Presunuli sme doň aj kontrolu odkazov, štatistiku stránky a uloženie ako AB test. Menu je dostupné aj pre ďalšie datatabuľky cez `addMoreAction` (#368).
 
 - Webové stránky - [predvolené nastavenie stromu](redactor/webpages/README.md#predvolené-nastavenie-pre-používateľov) pre nového používateľa je možné nastaviť cez konfiguračnú premennú `webpagesTreeDefaultSettings`.
 

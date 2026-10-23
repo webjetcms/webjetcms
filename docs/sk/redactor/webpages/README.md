@@ -74,6 +74,8 @@ Tlačidlo <i class="ti ti-dots" role="presentation"></i> **Ďalšie akcie** náj
 
 Ak chcete hromadne zmeniť perex skupinu, označte stránky v prvom stĺpci tabuľky, otvorte **Ďalšie akcie** a vyberte pridanie alebo odobratie. V dialógu zvoľte jednu skupinu a kliknite na **Potvrdiť**. Pri pridávaní sa ponúkajú skupiny dostupné pre všetky označené stránky. Pri odoberaní sa ponúkajú skupiny priradené aspoň jednej z nich.
 
+Pri stránkach prepojených cez **Kópia web stránky v** sa dostupné aj priradené perex skupiny vyhodnocujú podľa hlavnej stránky, rovnako ako pri jej editácii.
+
 Zmena vyžaduje právo na editáciu stránok a používa bežné ukladanie vrátane histórie a prípadného schvaľovania. Po uložení sa zoznam obnoví.
 
 ### Ikony a farby v stromovej štruktúre a zozname stránok

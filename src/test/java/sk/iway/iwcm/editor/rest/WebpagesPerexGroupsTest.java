@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -115,8 +117,8 @@ class WebpagesPerexGroupsTest {
         DocDetails first = page(1, 31);
         DocDetails second = page(2, 32);
         second.setGroupId(20);
-        when(documents.getDoc(1)).thenReturn(first);
-        when(documents.getDoc(2)).thenReturn(second);
+        when(editor.prepareDocForEditor(1, -1)).thenReturn(first);
+        when(editor.prepareDocForEditor(2, -1)).thenReturn(second);
         when(documents.getPerexGroups()).thenReturn(List.of(common, firstOnly, secondOnly));
         when(documents.getPerexGroups(10)).thenReturn(List.of(common, firstOnly));
         when(documents.getPerexGroups(20)).thenReturn(List.of(common, secondOnly));
@@ -130,6 +132,58 @@ class WebpagesPerexGroupsTest {
             assertEquals(List.of("31", "32"), controller.perexGroupOptions(new Long[] {1L, 2L}, true).stream().map(OptionDto::getValue).toList());
             verify(editor, times(2)).checkPermissions(any(), eq(first), eq(false));
             verify(editor, times(2)).checkPermissions(any(), eq(second), eq(false));
+        }
+    }
+
+    /** Linked copies offer the master's available or assigned groups, which the action can then apply. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void usesEditorDataForLinkedCopyOptionsAndActions(boolean remove) {
+        PerexGroupBean masterGroup = group(30);
+        PerexGroupBean copyGroup = group(31);
+        DocDetails copy = page(2, 31);
+        copy.setGroupId(20);
+        // Editor data retains the copy's ID but uses the master's folder and content.
+        DocDetails editorDoc = page(2, 11);
+        if (remove) editorDoc.setPerexGroups(new Integer[] {11, 30});
+        when(documents.getDoc(2)).thenReturn(copy);
+        when(editor.prepareDocForEditor(2, -1)).thenReturn(editorDoc);
+        when(documents.getPerexGroups()).thenReturn(List.of(masterGroup, copyGroup));
+        when(documents.getPerexGroups(10)).thenReturn(List.of(masterGroup));
+        when(documents.getPerexGroups(20)).thenReturn(List.of(copyGroup));
+
+        try (var database = mockStatic(DocDB.class)) {
+            database.when(DocDB::getInstance).thenReturn(documents);
+            database.when(() -> DocDB.fixPerexNameDuplicityForOptions(anyList())).thenAnswer(call -> {
+                List<PerexGroupBean> groups = call.getArgument(0);
+                return groups.stream().map(group -> new OptionDto("", String.valueOf(group.getPerexGroupId()), null)).toList();
+            });
+            List<OptionDto> options = controller.perexGroupOptions(new Long[] {2L}, remove);
+            assertEquals(List.of("30"), options.stream().map(OptionDto::getValue).toList());
+
+            request.setParameter("customData", options.get(0).getValue());
+            assertTrue(controller.processAction(editorDoc, remove ? "removePerexGroup" : "addPerexGroup"));
+            Integer[] expectedGroups = remove ? new Integer[] {11} : new Integer[] {11, 30};
+            assertArrayEquals(expectedGroups, editorDoc.getPerexGroups());
+            verify(controller).editItem(editorDoc, 2);
+        }
+    }
+
+    /** Option loading must authorize the same resolved page that the action will modify. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void rejectsOptionsWhenResolvedPageIsNotEditable(boolean remove) {
+        DocDetails copy = page(2, 30);
+        copy.setGroupId(20);
+        DocDetails editorDoc = page(2, 30);
+        when(documents.getDoc(2)).thenReturn(copy);
+        when(editor.prepareDocForEditor(2, -1)).thenReturn(editorDoc);
+        doThrow(new SecurityException("denied")).when(editor).checkPermissions(any(), eq(editorDoc), eq(false));
+
+        try (var database = mockStatic(DocDB.class)) {
+            database.when(DocDB::getInstance).thenReturn(documents);
+            assertThrows(SecurityException.class, () -> controller.perexGroupOptions(new Long[] {2L}, remove));
+            verify(controller, never()).editItem(any(), anyLong());
         }
     }
 

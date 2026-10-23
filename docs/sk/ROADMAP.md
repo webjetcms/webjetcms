@@ -64,7 +64,7 @@ Vysvetlenie použitých piktogramov:
 filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
 - [x] +AI - upraviť vytváranie `chunk` tak, aby podľa možnosti začínali a končili na hraniciach viet alebo slov (#58778).
 - [x] +Webové stránky - konfigurovateľné predvolené zobrazenie pre používateľa bez vlastného nastavenia (`webpagesTreeDefaultSettings`), predvolene usporiadať vzostupne podľa poradia; zobrazenie ID a poradia možno zapnúť v konfigurácii.
-- [x] +Webové stránky - hromadné pridanie a odobratie perex skupiny pri zachovaní ostatných skupín cez menu Ďalšie akcie.
+- [x] +Webové stránky - hromadné pridanie a odobratie perex skupiny pri zachovaní ostatných skupín cez menu Ďalšie akcie (#368).
 - [ ] +Webové stránky - pri zmazaní priečinka, ktorý má aj zrkadlenú verziu zobraziť notifikáciu, že boli zmazané aj zrkadlené priečinky XXX,YYY.
 - [ ] +Pridať podporu obrázkov typu AVIF.
 - [ ] +Možnosť zmeniť poradie polí v datatables editore, kartu v ktorej sa pole nachádza, prípadne aj vytvoriť novú kartu do ktorej sa polia vložia. Teda konfiguračne upraviť hodnoty čo sa dnes nastavujú cea anotácie.
