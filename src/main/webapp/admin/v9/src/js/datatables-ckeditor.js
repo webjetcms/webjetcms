@@ -2737,7 +2737,8 @@ export class DatatablesCkEditor {
 					try {
 						if (iframe.length > 0 && iframe[0].contentWindow && iframe[0].contentWindow.$) {
 							var iframeModeSelector = iframe[0].contentWindow.$("div.exit-inline-editor select");
-							if (iframeModeSelector.length > 0) {
+							// Failed or unfinished initialization can leave the iframe selector present but unusable.
+							if (iframeModeSelector.length > 0 && iframe[0].contentWindow.pageBuilderReady === true && iframe[0].contentDocument.body?.inert !== true) {
 								found = true;
 							}
 						}
