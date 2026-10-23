@@ -114,20 +114,6 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
                  }
               }
 
-              String tooltip = "";
-              String renderedLabel = isEmailRender && label.trim().endsWith(":") == false ? label+":" : label;
-              Map<String, String> replacementFields = FormsService.getFieldReplacementMap(item, id, renderedLabel, labelSanitized, value, placeholder, classes, tooltip);
-              replacementFields.putAll(formFields);
-              if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel))
-              {
-                 Map<String, String> tooltipFields = new HashMap<String, String>(replacementFields);
-                 tooltipFields.put("label", tooltipLabel);
-                 tooltip = " " + FormsService.replaceFields(prop.getText("components.formsimple.tooltipCode"), tooltipFields);
-                 replacementFields.put("tooltip", tooltip);
-              }
-
-              //System.out.println("html="+html+" label="+label+" placeholder="+placeholder+" id="+id);
-
               //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
               String firstTimeHeadingKey = "components.formsimple.firstTimeHeading."+fieldType;
               String firstTimeHeading = prop.getText(firstTimeHeadingKey, false);
@@ -138,57 +124,64 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
                   html = firstTimeHeading+html;
               }
 
-              //iterable - pre skupinu poli
-              int iterableSize = 0;
-              if (html.contains("${iterable}") && Tools.isNotEmpty(value))
-              {
-                 StringBuilder iterable = new StringBuilder();
-                 String iterableKey = "components.formsimple.iterable."+fieldType;
-                 String iterableCode = prop.getText(iterableKey);
-                 if (Tools.isNotEmpty(iterableCode) && iterableCode.equals(iterableKey)==false)
-                 {
-                    String delimiter = " ";
-                    if (value.contains("|")) delimiter = "|";
-                    else if (value.contains(",")) delimiter = ",";
-
-                    String[] values = Tools.getTokens(value, delimiter, true);
-                    int counter = 0;
-                    iterableSize = values.length;
-                    for (String token : values)
-                    {
-                       String valueLabel = token;
-                       String code = iterableCode;
-
-                       int separator = token.indexOf(":");
-                       if (code.contains("${value-label}") && separator>0) {
-                           valueLabel = token.substring(0, separator);
-                           token = token.substring(separator+1);
-                       }
-
-                       Map<String, String> iterableFields = new HashMap<String, String>(replacementFields);
-                       iterableFields.put("value", token);
-                       iterableFields.put("value-label", valueLabel);
-                       iterableFields.put("counter", String.valueOf(counter));
-                       code = FormsService.replaceFields(code, iterableFields);
-
-                       iterable.append(code).append("\n");
-                       counter++;
-                    }
-                 }
-                 replacementFields.put("iterable", iterable.toString());
+              // Prepare nested templates before expanding any replacement values.
+              String iterableCode = null;
+              String[] values = null;
+              if (html.contains("${iterable}") && Tools.isNotEmpty(value)) {
+                  String iterableKey = "components.formsimple.iterable." + fieldType;
+                  iterableCode = prop.getText(iterableKey);
+                  values = new String[0];
+                  if (Tools.isNotEmpty(iterableCode) && !iterableCode.equals(iterableKey)) {
+                      String delimiter = " ";
+                      if (value.contains("|")) delimiter = "|";
+                      else if (value.contains(",")) delimiter = ",";
+                      values = Tools.getTokens(value, delimiter, true);
+                  }
               }
 
               StringBuilder csError = new StringBuilder();
               csError.append("<div class=\"help-block cs-error cs-error-").append(id);
-              if (iterableSize > 0)
-              {
-                 for (int counter = 0; counter < iterableSize; counter++)
-                 {
-                    csError.append(" cs-error-").append(id).append("-").append(counter);
-                 }
+              if (values != null) {
+                  for (int counter = 0; counter < values.length; counter++) {
+                      csError.append(" cs-error-").append(id).append("-").append(counter);
+                  }
               }
               csError.append("\"></div>");
+
+              String tooltip = "";
+              String renderedLabel = isEmailRender && label.trim().endsWith(":") == false ? label+":" : label;
+              Map<String, String> replacementFields = FormsService.getFieldReplacementMap(item, id, renderedLabel, labelSanitized, value, placeholder, classes, tooltip);
+              replacementFields.putAll(formFields);
               replacementFields.put("cs-error", csError.toString());
+              if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel))
+              {
+                 Map<String, String> tooltipFields = new HashMap<String, String>(replacementFields);
+                 tooltipFields.put("label", tooltipLabel);
+                 tooltip = " " + FormsService.replaceFields(prop.getText("components.formsimple.tooltipCode"), tooltipFields);
+                 replacementFields.put("tooltip", tooltip);
+              }
+
+              //System.out.println("html="+html+" label="+label+" placeholder="+placeholder+" id="+id);
+
+              if (values != null) {
+                  StringBuilder iterable = new StringBuilder();
+                  int counter = 0;
+                  for (String token : values) {
+                      String valueLabel = token;
+                      int separator = token.indexOf(":");
+                      if (iterableCode.contains("${value-label}") && separator > 0) {
+                          valueLabel = token.substring(0, separator);
+                          token = token.substring(separator + 1);
+                      }
+                      Map<String, String> iterableFields = new HashMap<>(replacementFields);
+                      iterableFields.put("value", token);
+                      iterableFields.put("value-label", valueLabel);
+                      iterableFields.put("counter", String.valueOf(counter));
+                      iterable.append(FormsService.replaceFields(iterableCode, iterableFields)).append("\n");
+                      counter++;
+                  }
+                  replacementFields.put("iterable", iterable.toString());
+              }
               html = FormsService.replaceFields(html, replacementFields);
 
               //zamena za hodnoty z ciselnika vo forme {enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}

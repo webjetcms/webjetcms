@@ -64,7 +64,10 @@ Scenario('Create isolated settings and translation fixtures', async ({ I }) => {
         for (const step of [firstStep, secondStep]) {
             const itemQuery = query + '&stepId=' + step.id;
             const item = await api(I, '/admin/rest/form-items/-1' + itemQuery);
-            Object.assign(item, { fieldType, label: marker, required: false, trimValue: false, compareInsensitive: false, showUnanswered: false });
+            Object.assign(item, {
+                fieldType, label: marker, value: '', placeholder: '', tooltip: '',
+                required: false, trimValue: false, compareInsensitive: false, showUnanswered: false
+            });
             await api(I, '/admin/rest/form-items/editor' + itemQuery, { action: 'create', data: { '-1': item } });
         }
     }
@@ -83,7 +86,7 @@ Scenario('Persist HTML settings and render the administration preview', async ({
         DTE.save('formsDataTable');
     }
     I.amOnPage('/apps/form/admin/form-steps/?formName=' + forms[1].formName);
-    I.waitForElement('.stepPreviewWrapper .settings-probe');
+    I.waitForElement('.stepPreviewWrapper .settings-probe', 15);
     checkProbe(I, '.stepPreviewWrapper', forms[1].formName);
 });
 
@@ -97,25 +100,22 @@ Scenario('Render JSP and multistep settings and navigate between steps', async (
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
     I.fillField('#DTE_Field_title', marker);
+    I.clickCss('#pills-dt-datatableInit-content-tab');
     await DTE.fillCkeditor(content);
     DTE.save();
     DT.filterEquals('title', marker);
-    I.clickCss('#datatableInit tbody td.dt-select-td');
-    I.click(DT.btn.edit_button);
-    DTE.waitForEditor();
-    pageId = await I.grabValueFrom('#DTE_Field_docId');
-    DTE.cancel();
+    pageId = await I.grabTextFrom('#datatableInit > tbody tr:first-child > td:first-child > div');
 
     I.amOnPage('/showdoc.do?docid=' + pageId);
-    I.waitForElement('.autotest-simple .settings-probe');
-    I.waitForElement('.multistep-form-app .settings-probe');
+    I.waitForElement('.autotest-simple .settings-probe', 15);
+    I.waitForElement('.multistep-form-app .settings-probe', 15);
     checkProbe(I, '.autotest-simple', forms[0].formName);
     checkProbe(I, '.multistep-form-app', forms[1].formName);
     I.click('.multistep-form-app button[name="saveForm"]');
-    I.waitForElement('.multistep-form-app [data-multistep-back-step]');
+    I.waitForElement('.multistep-form-app [data-multistep-back-step]', 15);
     checkProbe(I, '.multistep-form-app', forms[1].formName);
     I.click('.multistep-form-app [data-multistep-back-step]');
-    I.waitForInvisible('.multistep-form-app [data-multistep-back-step]');
+    I.waitForInvisible('.multistep-form-app [data-multistep-back-step]', 15);
     checkProbe(I, '.multistep-form-app', forms[1].formName);
 });
 
@@ -133,7 +133,7 @@ Scenario('Cleanup isolated settings fixtures', async ({ I, DT, DTE }) => {
     for (const form of storedForms.filter(form => [marker + '-simple', marker + '-multistep'].includes(form.formName))) {
         await api(I, '/admin/rest/forms-list/editor', { action: 'remove', data: { [form.id]: form } });
     }
-    const storedKeys = (await api(I, '/admin/v9/settings/translation-keys/search/findByColumns?sort=key,asc&key=' + encodeURIComponent(marker))).content;
+    const storedKeys = (await api(I, '/admin/v9/settings/translation-keys/search/findByColumns?sort=key,asc&searchKey=' + encodeURIComponent(marker))).content;
     for (const translation of storedKeys.filter(key => ['components.formsimple.label.' + marker, 'components.formsimple.input.' + marker].includes(key.key))) {
         await api(I, '/admin/v9/settings/translation-keys/editor', { action: 'remove', data: { [translation.id]: translation } });
     }

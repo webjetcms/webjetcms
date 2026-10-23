@@ -207,10 +207,10 @@ class FormsServiceTest {
         settings.setFieldA("<b>${id}|${settings.subject}|${cs-error}|${counter}</b>");
         settings.setSubject("A & B");
         Prop prop = mock(Prop.class);
-        when(prop.getText("components.formsimple.tooltipCode")).thenReturn("<aside>${settings.fieldA} ${label}</aside>");
+        when(prop.getText("components.formsimple.tooltipCode")).thenReturn("<aside>${settings.fieldA} ${label}${cs-error}</aside>");
         when(prop.getText("components.formsimple.firstTimeHeading.select", false)).thenReturn("<h2>${settings.subject}</h2>");
         when(prop.getText("components.formsimple.iterable.select")).thenReturn(
-            "<option value=\"${value}\" data-counter=\"${counter}\" data-title=\"${settings.subject}\">${value-label} ${settings.fieldA}</option>");
+            "<option value=\"${value}\" data-counter=\"${counter}\" data-title=\"${settings.subject}\">${value-label} ${settings.fieldA}</option>${cs-error}");
         JSONObject item = new JSONObject().put("fieldType", "select").put("label", "Choice")
             .put("labelOriginal", "Choice").put("itemFormId", "f1-choice").put("id", 1)
             .put("value", "One:${settings.subject}|Two:2").put("tooltip", "Literal ${settings.subject}");
@@ -230,6 +230,8 @@ class FormsServiceTest {
         assertEquals("A & B", document.selectFirst("option").attr("data-title"));
         assertEquals("0", document.selectFirst("option").attr("data-counter"));
         assertNotNull(document.selectFirst(".cs-error-f1-choice-1"));
+        assertEquals(4, result.split(java.util.regex.Pattern.quote(
+            "<div class=\"help-block cs-error cs-error-f1-choice cs-error-f1-choice-0 cs-error-f1-choice-1\"></div>"), -1).length - 1);
 
         String email = FormsService.replaceFields("${tooltip}${settings.emailTextBefore}${settings.fieldA}",
             "form", settings, "", item, "", true, false, new HashSet<>(), prop, null);
