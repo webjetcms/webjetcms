@@ -343,6 +343,7 @@ public class ThumbServlet extends HttpServlet
 			}
 
 			String imgPath = null;
+			boolean processingFailed = false;
 
 			if (smallImageFile.exists() && imageFile.lastModified() < smallImageFile.lastModified())
 			{
@@ -611,7 +612,10 @@ public class ThumbServlet extends HttpServlet
 					}
 					else
 					{
+						Logger.error(ThumbServlet.class, "Thumbnail generation failed for " + imagePath
+							+ ": result=" + ret + ", error=" + ImageTools.getErrorKey(ret));
 						imgPath = Tools.getRealPath("/components/_common/mime/big_unknown.gif");
+						processingFailed = true;
 					}
 				}
 			}
@@ -624,15 +628,16 @@ public class ThumbServlet extends HttpServlet
          }
          if (inFile != null && inFile.exists())
          {
-            //response.setHeader("Pragma", "No-Cache");
-            //response.setDateHeader("Expires", 0);
-            //response.setHeader("Cache-Control", "no-Cache");
-
-            String mimeType = Constants.getServletContext().getMimeType(imagePath.toLowerCase());
+            String mimeType = Constants.getServletContext().getMimeType(inFile.getName().toLowerCase());
             if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
             response.setContentType(mimeType);
 
-            PathFilter.setStaticContentHeaders(imagePath, UsersDB.getCurrentUser(request), request, response);
+            if (processingFailed) {
+                // Do not cache the placeholder under the requested thumbnail URL.
+                PathFilter.setNoCacheHeaders(response);
+            } else {
+                PathFilter.setStaticContentHeaders(imagePath, UsersDB.getCurrentUser(request), request, response);
+            }
 
             ServletOutputStream out = response.getOutputStream();
             byte[] buff = new byte[64000];
@@ -678,11 +683,18 @@ public class ThumbServlet extends HttpServlet
 				conn.setDoOutput(false);
 				conn.connect();
 
-				String mimeType = Constants.getServletContext().getMimeType("/"+imagePath.toLowerCase());
+				String mimeType = conn.getContentType();
+            if (Tools.isEmpty(mimeType)) mimeType = Constants.getServletContext().getMimeType("/"+imagePath.toLowerCase());
             if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
             response.setContentType(mimeType);
 
-            PathFilter.setStaticContentHeaders("/"+imagePath, null, request, response);
+            // Preserve a generation failure's placeholder MIME type and no-store policy across cluster nodes.
+            String cacheControl = conn.getHeaderField("Cache-Control");
+            if (Tools.isNotEmpty(cacheControl) && cacheControl.contains("no-store")) {
+                response.setHeader("Cache-Control", cacheControl);
+            } else {
+                PathFilter.setStaticContentHeaders("/"+imagePath, null, request, response);
+            }
 
 				BufferedInputStream is = new BufferedInputStream(conn.getInputStream());
 				ServletOutputStream os = response.getOutputStream();

@@ -33,6 +33,12 @@ public class UploadService {
     private Set<String> removedUrls;
     //zoznam pridanych URL adries suborov (napr. pri fotogalerii a generovani s_ obrazka)
     private Set<String> addedUrls;
+    private String errorKey;
+
+    /** Returns an optional processing error; the uploaded original remains available. */
+    public String getErrorKey() {
+        return errorKey;
+    }
 
 
     public UploadService(String virtualPath, HttpServletRequest request) {
@@ -170,7 +176,11 @@ public class UploadService {
 
             //zmaz o_ obrazok ak existuje
 
-            GalleryDB.resizePicture(Tools.getRealPath(virtualPath), dir);
+            int result = GalleryDB.resizePicture(Tools.getRealPath(virtualPath), dir);
+            if (result != 0) {
+                errorKey = ImageTools.getErrorKey(result);
+                return;
+            }
 
             addedUrls.add(imageSmall);
             addedUrls.add(imageOriginal);

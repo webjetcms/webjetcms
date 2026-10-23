@@ -1,25 +1,19 @@
 package sk.iway.iwcm.admin.upload;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
-import javax.imageio.stream.ImageOutputStream;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -36,6 +30,8 @@ import org.json.JSONObject;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.common.ImageTools;
+import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
@@ -202,10 +198,11 @@ public class AdminUploadServlet extends HttpServlet
                 // mam posledny, spojim ich do jedneho
 
                 IwcmOutputStream fos = null;
-                FileInputStream fis;
-                byte[] fileBytes;
                 String random = RandomStringUtils.secure().next(15, true, true);
                 boolean destinationFileExists = false;
+                IwcmFile imageDestination = null;
+                IwcmFile imageStaging = null;
+                int imageResult = 0;
                 try
                 {
                     IwcmFile outputFile = null;
@@ -240,6 +237,12 @@ public class AdminUploadServlet extends HttpServlet
 
                         //ak subor neexistuje mozeme ho rovno zapisat
                         if (destinationFileExists==false || "overwrite".equals(overwriteMode)) {
+                            if (isBase64) {
+                                // Publish the editor's image only after validation and any required encoding have succeeded.
+                                imageDestination = outputFile;
+                                imageStaging = new IwcmFile(File.createTempFile(random, "." + extension, tempFolder));
+                                outputFile = imageStaging;
+                            }
                             fos = new IwcmOutputStream(outputFile);
                             destinationFileExists = false;
                         } else {
@@ -251,21 +254,25 @@ public class AdminUploadServlet extends HttpServlet
                         outputFile = new IwcmFile(File.createTempFile(random, "."+extension, tempFolder));
                         fos = new IwcmOutputStream(outputFile);
                     }
-                    for (String chunkPath : holder.getPartPaths())
-                    {
-                        File inputFile = new File(chunkPath);
-                        fis = new FileInputStream(inputFile);
-                        fileBytes = new byte[(int) inputFile.length()];
-                        fis.read(fileBytes, 0,(int)  inputFile.length());
-                        fos.write(fileBytes);
-                        fos.flush();
-                        fis.close();
-                        inputFile.delete();
+                    try (IwcmOutputStream assembled = fos) {
+                        for (String chunkPath : holder.getPartPaths()) {
+                            File inputFile = new File(chunkPath);
+                            try (FileInputStream input = new FileInputStream(inputFile)) {
+                                input.transferTo(assembled);
+                            }
+                            inputFile.delete();
+                        }
                     }
-                    fos.close();
 
                     if (isBase64) {
-                        decodeBase64File(outputFile);
+                        imageResult = decodeBase64File(outputFile);
+                        if (imageResult != 0) throw new IOException("Image decoding failed, result=" + imageResult);
+                    }
+                    if (imageDestination != null) {
+                        if (!FileTools.copyFile(outputFile, imageDestination)) {
+                            throw new IOException("Could not save processed image to " + imageDestination.getVirtualPath());
+                        }
+                        outputFile = imageDestination;
                     }
 
                     //output = "{\"name\":\""+name+"\",\"key\":\""+random+"\"}";
@@ -275,6 +282,10 @@ public class AdminUploadServlet extends HttpServlet
                         {
                             UploadService uploadService = new UploadService(destinationVirtualPath, request);
                             uploadService.process();
+                            if (uploadService.getErrorKey() != null) {
+                                output.put("success", false);
+                                output.put("error", Prop.getInstance(request).getText(uploadService.getErrorKey()));
+                            }
                             Logger.debug(AdminUploadServlet.class, "upload processed, removed="+uploadService.getRemovedUrls()+" added="+uploadService.getAddedUrls());
 
                             Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "File upload (xhr), path=" + destinationVirtualPath, -1, -1);
@@ -308,6 +319,12 @@ public class AdminUploadServlet extends HttpServlet
                 catch (IOException ioe)
                 {
                     Logger.error(AdminUploadServlet.class, ioe);
+                    output.put("success", false);
+                    output.put("error", Prop.getInstance(request).getText(imageResult != 0
+                        ? ImageTools.getErrorKey(imageResult) : "multiple_files_upload.upload_error"));
+                }
+                finally {
+                    if (imageStaging != null) imageStaging.delete();
                 }
             }
             else
@@ -398,76 +415,50 @@ public class AdminUploadServlet extends HttpServlet
 
     /**
      * Decodes Base64 upload content and restores the requested image format when necessary.
+     * Valid PNG input saved as PNG retains its original bytes without re-encoding.
      *
-     * @param f temporary file containing Base64-encoded data
+     * @param file temporary file containing Base64-encoded data
+     * @return 0 on success, otherwise an ImageTools result code
      */
-    private void decodeBase64File(IwcmFile f) {
+    private int decodeBase64File(IwcmFile file) {
         try {
-            if (f.exists() && f.canRead()) {
-                InputStream is = new IwcmInputStream(f);
-                InputStreamReader isr = new InputStreamReader(is, StandardCharsets.ISO_8859_1);
-                char buff[] = new char[64000];
-                int len;
-                StringBuilder buffer = new StringBuilder();
-                while ((len = isr.read(buff))!=-1) {
-                    //Logger.debug(FileTools.class, "Reading: "+len+" total: "+contextFile.length());
-                    buffer.append(buff, 0, len);
-                }
-                isr.close();
-                is.close();
-
-                //zdekoduj data
-                byte[] decodedImg = Base64.getDecoder().decode(buffer.toString().getBytes(StandardCharsets.ISO_8859_1));
-                IwcmOutputStream fos = new IwcmOutputStream(f);
-                fos.write(decodedImg);
-                fos.close();
-
-                //skonvertuj PNG na JPG/format povodneho obrazku
-                String extension = FileTools.getFileExtension(f.getName());
-                if ("png".equals(extension)==false) {
-                    IwcmInputStream iwStream =  new IwcmInputStream(f);
-					BufferedImage pngImage = ImageIO.read(iwStream);
-                    iwStream.close();
-                    BufferedImage resultImage = new BufferedImage(
-                        pngImage.getWidth(),
-                        pngImage.getHeight(),
-                        BufferedImage.TYPE_INT_RGB
-                    );
-
-                    resultImage.createGraphics().drawImage(pngImage, 0, 0, Color.WHITE, null);
-
-                    ImageWriteParam iwparam = null;
-                    ImageWriter writer = null;
-
-                    if ("jpg".equals(extension)) {
-                        iwparam = new JPEGImageWriteParam(null);
-                        iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                        iwparam.setCompressionQuality(0.9F);
-                    }
-
-                    Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(extension);
-                    if (iter.hasNext()) {
-                        writer = iter.next();
-                    }
-                    if (writer != null) {
-                        // Prepare output file
-                        IwcmOutputStream out = new IwcmOutputStream(f);
-                        ImageOutputStream ios = ImageIO.createImageOutputStream(out);
-                        writer.setOutput(ios);
-                        // Write the image
-                        writer.write(null, new IIOImage(resultImage, null, null), iwparam);
-                        // Cleanup
-                        ios.flush();
-                        writer.dispose();
-                        ios.close();
-                        out.close();
-                    }
-                }
+            byte[] decoded;
+            try (InputStream input = new IwcmInputStream(file)) {
+                decoded = Base64.getDecoder().decode(input.readAllBytes());
             }
-        }
-		catch (Exception ex) {
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(decoded));
+            if (image == null) return 4;
+
+            if ("png".equals(FileTools.getFileExtension(file.getName()))
+                && new ImageInfo(new ByteArrayInputStream(decoded)).getFormat() == ImageInfo.FORMAT_PNG) {
+                // Keep the validated PNG's original compression and metadata; the caller publishes the staged file.
+                try (IwcmOutputStream output = new IwcmOutputStream(file)) {
+                    output.write(decoded);
+                }
+                return 0;
+            }
+
+            if (!ImageTools.supportsTransparency(file.getName())) {
+                BufferedImage opaque = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+                Graphics2D graphics = opaque.createGraphics();
+                try {
+                    graphics.drawImage(image, 0, 0, Color.WHITE, null);
+                } finally {
+                    graphics.dispose();
+                }
+                image = opaque;
+            }
+            return ImageTools.writeImage(image, file.getName(), 90, file);
+        } catch (IllegalArgumentException ex) {
             Logger.error(AdminUploadServlet.class, ex);
-		}
+            return 4;
+        } catch (IOException ex) {
+            Logger.error(AdminUploadServlet.class, ex);
+            return 2;
+        } catch (Exception ex) {
+            Logger.error(AdminUploadServlet.class, ex);
+            return 3;
+        }
     }
 
     /**

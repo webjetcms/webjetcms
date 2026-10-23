@@ -60,6 +60,22 @@ public class ImageTools
 	}
 
 	/**
+	 * Maps image-processing results to shared translation keys, regardless of the image format.
+	 * @param result 0 for success, 1 for an image already smaller than requested, 2 for a save
+	 *               failure, 3 for a processing failure, 4 (or legacy -4) for unreadable/unsupported input
+	 * @return translation key, or null for success; unknown codes use the processing-failure message
+	 */
+	public static String getErrorKey(int result) {
+		return switch (result) {
+			case 0 -> null;
+			case 1 -> "gallery.resizing.error_1";
+			case 2 -> "gallery.resizing.error_2";
+			case 4, -4 -> "gallery.resizing.error_4";
+			default -> "gallery.resizing.error_3";
+		};
+	}
+
+	/**
 	 * Returns true if the image format supports transparency (eg. PNG, WEBP, GIF).
 	 * @param fileName - file name with extension
 	 * @return true if file format supports transparency
@@ -67,7 +83,7 @@ public class ImageTools
 	public static boolean supportsTransparency(String fileName)
 	{
 		String ext = FileTools.getFileExtension(fileName);
-		return "png".equals(ext) || "webp".equals(ext) || "gif".equals(ext);
+		return "png".equals(ext) || "webp".equals(ext) || "gif".equals(ext) || "avif".equalsIgnoreCase(ext);
 	}
 
 	/**
@@ -84,14 +100,17 @@ public class ImageTools
 	/**
 	 * Writes BufferedImage to file in correct format based on file extension.
 	 * For transparent images preserves transparency.
-	 * For JPG uses JPEG compression with 0.85 quality.
+	 * For JPG/JPEG and WebP uses the requested compression quality.
 	 * @param image - BufferedImage to write
 	 * @param fileName - original file name to detect format (e.g. "photo.png")
+	 * @param imageQuality - compression quality from 0 to 100; other values use gallery settings
 	 * @param outputFile - output IwcmFile to write to
-	 * @return 0 on success, 2 on error
+	 * @return 0 on success, 2 on a write failure, 4 when no encoder supports the requested format
 	 */
 	public static int writeImage(BufferedImage image, String fileName, int imageQuality, IwcmFile outputFile)
 	{
+		// No AVIF ImageIO writer is bundled, so these pixels must be encoded through ImageMagick.
+		if (AvifTools.isAvif(fileName)) return AvifTools.write(image, outputFile);
 		String ext = FileTools.getFileExtension(fileName);
 		if (imageQuality < 0 || imageQuality > 100) {
 			imageQuality = GalleryDB.getImageQuality(null, image.getWidth());
@@ -102,15 +121,7 @@ public class ImageTools
 
 		String format = ext;
 		ImageWriteParam iwparam = null;
-		if ("png".equals(ext) || "gif".equals(ext))
-		{
-			format = ext;
-		}
-		else if ("webp".equals(ext))
-		{
-			format = ext;
-		}
-		else
+		if ("jpg".equals(ext) || "jpeg".equals(ext))
 		{
 			format = "jpg";
 			iwparam = new JPEGImageWriteParam(null);
@@ -132,7 +143,7 @@ public class ImageTools
 		if (writer == null)
 		{
 			Logger.error(ImageTools.class, "No suitable ImageWriter found for format: " + format);
-			return 2;
+			return 4;
 		}
 
 		//for WebP set compression quality using writer's default param (WebPWriteParam)
@@ -176,7 +187,7 @@ public class ImageTools
 	public static boolean isImage(String fileName)
 	{
 		String ext = FileTools.getFileExtension(fileName);
-		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("gif") || ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("svg") || ext.equalsIgnoreCase("webp") || ext.equalsIgnoreCase("bmp");
+		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("gif") || ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("svg") || ext.equalsIgnoreCase("webp") || ext.equalsIgnoreCase("bmp") || ext.equalsIgnoreCase("avif");
 	}
 
 	/**
@@ -299,7 +310,7 @@ public class ImageTools
 		{
 			String srcUrlLC = imageFile.getName().toLowerCase();
 
-			if (imageFile.isFile() && (srcUrlLC.endsWith(".jpg") || srcUrlLC.endsWith(".jpeg") || srcUrlLC.endsWith(".gif") || srcUrlLC.endsWith(".png")))
+			if (imageFile.isFile() && isResizableImage(srcUrlLC))
 			{
 				if (existsImageMagickConvertCommand()){
 					return cropImageImageMagick(imageFile, width, height, startX, startY);
@@ -381,12 +392,11 @@ public class ImageTools
 
 	public static int rotateImage(IwcmFile imageFile, double angle)
 	{
-
 		try
 		{
-			String srcUrlLC = imageFile.toString().toLowerCase();
+			String srcUrlLC = imageFile.getName().toLowerCase();
 
-			if (imageFile.isFile() && (srcUrlLC.endsWith(".jpg") || srcUrlLC.endsWith(".jpeg") || srcUrlLC.endsWith(".gif") || srcUrlLC.endsWith(".png")))
+			if (imageFile.isFile() && isResizableImage(srcUrlLC))
 			{
 				if (existsImageMagickConvertCommand()){
 					return rotateImageImageMagick(imageFile, angle);
@@ -416,6 +426,11 @@ public class ImageTools
 
 		List<String> args = new ArrayList<String>();
 		args.add("from");
+		if (supportsTransparency(imageFile.getName()))
+		{
+			args.add("-background");
+			args.add("none");
+		}
 		args.add("-rotate");
 		args.add(Double.toString(angle));
 		args.add("to");
@@ -441,6 +456,8 @@ public class ImageTools
 	 * @return
 	 */
 	public static int executeImageMagick(IwcmFile from, IwcmFile to, List<String> args) {
+		// AVIF derivatives require a static first frame and SDR output, validated before replacing the target.
+		if (AvifTools.isAvif(to.getName())) return AvifTools.transform(from, to, args);
 		//args can contains placeholders for from and to file paths because of IwcmFSDB storage, so we need to find out where they are
 		int fromIndex = args.indexOf("from");
 		int toIndex = args.indexOf("to");
@@ -486,9 +503,10 @@ public class ImageTools
 			int result = executeImageMagickCommand(args);
 			if (result == 0)
 			{
-				FileTools.copyFile(toTemp, to);
+				if (!FileTools.copyFile(toTemp, to)) return 2;
 				return toTemp.delete() ? 0 : -1;
 			}
+			return result;
 		}
 		return -1;
 	}
@@ -545,10 +563,8 @@ public class ImageTools
 			br.close();
 
 			int ret = process.waitFor();
-			//convert vrati 1 namiesto 0 lebo pri -debug hlasi, ze destination subor neexistuje/nepozna .new priponu
-			if (ret==1) ret = 0;
-
-			return ret;
+			// Native exit codes are not WebJET image result codes (1 is a failure here).
+			return ret == 0 ? 0 : 3;
 		}
 		catch (Exception e)
 		{
@@ -573,6 +589,11 @@ public class ImageTools
 	 */
 	static void addImageMagickCustomParams(List<String> args)
 	{
+		addImageMagickCustomParams(args, null);
+	}
+
+	static void addImageMagickCustomParams(List<String> args, String outputFormat)
+	{
 		String operation = null;
 		for (String arg : args) {
 			if (arg.startsWith("-resize") || arg.startsWith("-crop") || arg.startsWith("-rotate")) {
@@ -581,6 +602,7 @@ public class ImageTools
 			}
 		}
 
+		if (operation == null && outputFormat != null) operation = "resize";
 		if (operation == null) {
 			return;
 		}
@@ -599,6 +621,7 @@ public class ImageTools
 		if ("jpeg".equalsIgnoreCase(ext)) {
 			ext = "jpg";
 		}
+		if (outputFormat != null) ext = outputFormat;
 
 		//check custom params by Constants key imageMagickCustomParams_[mode]_[ext], for example imageMagickCustomParams_resize_jpg, then imageMagickCustomParams_resize, then imageMagickCustomParams_jpg then imageMagickCustomParams
 		String customParamsKey = "imageMagickCustomParams_" + operation + "_" + ext;
@@ -750,6 +773,10 @@ public class ImageTools
 	private static String getImageMagicDir()
 	{
 		return Constants.getString("imageMagickDir");
+	}
+
+	static String getImageMagickCommand() {
+		return getImageMagicDir() + File.separatorChar + getRuntimeFile();
 	}
 
 	/**

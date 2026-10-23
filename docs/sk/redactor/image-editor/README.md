@@ -2,6 +2,8 @@
 
 Editor obrázkov umožňuje priamo v prehliadači vykonať pokročilé úpravy obrázkov na serveri. Použitý je v galérii, je ale možné ho vyvolať pri editácii web stránky kliknutím na obrázok a následným kliknutím na ikonu editácie obrázka, alebo z prieskumníka pravým kliknutím na obrázok a zvolením možnosti Upraviť.
 
+Pri ukladaní sa upravený obrázok najprv vytvorí v dočasnom súbore vo formáte pôvodného obrázka. Pôvodný súbor sa nahradí až po úspešnom spracovaní. Ak zlyhá dekódovanie alebo kódovanie obrázka, editor zobrazí chybu a pôvodný súbor zostane zachovaný. Tento postup platí pre všetky podporované formáty. PNG dáta odoslané editorom sa dekódujú z Base64 a po overení zapíšu bez opätovného kódovania obrázka. PNG, WebP, GIF a AVIF zachovávajú priehľadnosť v rozsahu možností formátu; pri JPG/JPEG sa priehľadné plochy nahradia bielou. Spracovanie AVIF vyžaduje [pripravený server s podporou AVIF](../../frontend/thumb-servlet/README.md#obrázky-avif).
+
 ![](editor-preview.png)
 
 Dostupné sú nasledovné nástroje:

@@ -18,6 +18,39 @@ a potrebujeme, aby sme ho mali v max rozmere `200x200` bodov. Pred URL obrázku 
 
 Obrázok reálne môže byť menší ako požadovaných `200x200` bodov, záleží od jeho pomeru strán. V tomto prípade sa vygeneroval ako `200x134` bodov, vždy sa ale zmestí do požadovaného rozmeru.
 
+## Obrázky AVIF
+
+Nahraný obrázok AVIF môžete vložiť do stránky, vybrať ako perexový obrázok a používať v obrázkových poliach, správcovi súborov aj galérii. WebJET načíta jeho rozmery bez dekódovania obrázka. Existujúce JPG, PNG ani WebP sa automaticky nekonvertujú.
+
+Generovanie miniatúr a úpravy AVIF vyžadujú na serveri **ImageMagick s podporou čítania aj zápisu AVIF vrátane priehľadnosti** (s príslušným `libheif` a AV1 kodekom). V konfigurácii `imageMagickDir` nastavte priečinok s príkazom `magick`, prípadne `convert`. Podporu musí zabezpečiť správca servera; WebJET pri spracovaní predpokladá funkčný kodek.
+
+Pred nasadením overte pod účtom, pod ktorým beží WebJET:
+
+- príkaz `magick -list format` (pri ImageMagick 6 `convert -list format`) uvádza pri AVIF čítanie aj zápis,
+- prevod priehľadného PNG do AVIF a späť funguje a zachová priehľadnosť,
+- proces má právo spustiť ImageMagick a zapisovať do dočasného priečinka Javy aj cieľového priečinka obrázkov.
+
+Napríklad v dočasnom pracovnom priečinku spustite:
+
+```sh
+magick -size 8x8 xc:none -fill red -draw "point 4,4" avif-check.avif
+magick avif-check.avif avif-check.png
+```
+
+Výsledné PNG musí mať priehľadné pozadie a červený bod. Pri ImageMagick 6 nahraďte `magick` príkazom `convert`.
+
+Napríklad miniatúra `/thumb/images/fotografia.avif?w=300&h=200&ip=5` zostane vo formáte AVIF s MIME typom `image/avif`. Zmenšenie, orezanie, otočenie aj uloženie v editore obrázkov zachovávajú priehľadnosť. Predvolené stratové kódovanie môže mierne zmeniť farby a hodnoty polopriehľadných pixelov.
+
+Pri zmenšovaní, orezaní alebo otočení animovaného AVIF vznikne statický obrázok z prvého snímku. Ak sa pri generovaní miniatúry alebo verzie v galérii použije iba kópia menšieho originálu bez zmeny rozmerov, celý súbor vrátane animácie sa zachová pri vypnutom odstraňovaní metadát (`galleryStripExif=false`). Pri zapnutom odstraňovaní metadát sa aj táto kópia prekóduje na statický obrázok. Nahraný originál sa pri generovaní miniatúr nemení; v galérii sa uchová v súbore s prefixom `o_`. Pri úpravách sa používa bežný SDR výstup, bez záruky zachovania HDR a pôvodnej 10/12-bitovej hĺbky. Výslovné uloženie úpravy obrázka nahradí upravovaný súbor statickou verziou. Automatická vodotlač pri nahrávaní (`galleryWatermarkApplyOnUpload`) sa na AVIF originál neaplikuje.
+
+Metóda `GalleryDB.stripExif(filePath)` rešpektuje `galleryStripExif` aj pre AVIF a pri zapnutí odstráni metadáta priamo zo zadaného súboru. Platí to aj pri volaní z vlastného kódu; ak jej odovzdáte originál, prekóduje originál.
+
+Kvalitu a rýchlosť kódovania nastavíte existujúcim mechanizmom [vlastných parametrov ImageMagick](../../redactor/apps/gallery/README.md#vlastné-parametre-imagemagick). Predvolená hodnota `imageMagickCustomParams_avif` je `-quality 80 -define heic:speed=6`. Platia aj špecifickejšie nastavenia pre operáciu, napríklad `imageMagickCustomParams_resize_avif`.
+
+Pri zlyhaní úpravy sa zobrazí spoločná chyba podľa výsledku spracovania, rovnako ako pri ostatných formátoch. Pôvodný AVIF sa nahradí až po úspešnom vytvorení upravenej verzie. Pri neúspešnom generovaní miniatúry sa vráti náhradný obrázok `big_unknown.gif` s HTTP `200`, MIME typom `image/gif` a hlavičkou `Cache-Control: no-store`. Toto správanie platí pre všetky formáty. Chyba sa zapíše do logu; náhradná odpoveď sa necachuje, aby ďalšia požiadavka po odstránení príčiny mohla vygenerovať miniatúru. Už vygenerované platné miniatúry zostávajú dostupné.
+
+AVIF je doplnený do predvolených zoznamov prípon. **Vlastné uložené obmedzenia nahrávania sa nemenia.** Ak používate vlastný zoznam, správca musí doplniť `avif` do príslušných nastavení `FCKConfig.UploadFileTypes[Basic][image]`, `FCKConfig.UploadFileTypes[Default][image]` alebo `xhrFileUploadAllowedExtensions`, prípadne do obmedzení konkrétneho nahrávacieho poľa. Toto rozšírenie nemení formáty prijímané externými AI službami.
+
 ## Predvolený obrázok
 
 Predvolene sa pre neexistujúci obrázok pri použití `/thumb` adresy vráti štandardná chyba 404. Ak ale potrebujete pre taký prípad zobraziť predvolený obrázok, je možné použiť konfiguračnú premennú `thumbServletMissingImg`. Do nej je možné do riadkov doplniť meno priečinku a meno súboru, ktorý sa pre tento prípad má použiť. Príklad nastavenia:

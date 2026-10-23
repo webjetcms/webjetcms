@@ -6,6 +6,7 @@
 
 ### Prelomové zmeny
 
+- Galéria - metóda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vracia namiesto `void` výsledok spracovania typu `int`: `0` pri úspechu, inak kód chyby. Existujúce volania, ktoré výsledok nepoužívajú, netreba meniť v zdrojovom kóde. Po aktualizácii je potrebné prekompilovať závislý Java kód aj JSP súbory, ktoré metódu volajú; staré skompilované triedy môžu skončiť chybou `NoSuchMethodError`. Pri JSP zabezpečte novú kompiláciu, napríklad vyčistením pracovného priečinka konkrétnej aplikácie v Tomcate pri zastavenom serveri.
 - Databázy - minimálna podporovaná verzia je MariaDB 10.11 LTS alebo MySQL 8.4 LTS. Pred aktualizáciou WebJET CMS na staršom serveri aktualizujte databázu podľa postupu jej výrobcu. Podrobnosti a požiadavky aktualizovaného JDBC ovládača sú v [návode na inštaláciu](install/setup/README.md#základné-požiadavky-na-server) (#349).
 - Štatistika - prehliadače sa po aktualizácii ukladajú bez čísla verzie, ktoré sa v dnešnej dobe veľmi často menia. Po nasadení tejto verzie je potrebné spustiť migráciu historických štatistík na URL `/admin/v9/settings/stat-browser-migration/`, bez jej dokončenia zostanú historické údaje rozdelené podľa čísla verzie prehliadačov (#303).
 - Z administrácie bola odstránená závislosť na knižnici [Vue.js](https://vuejs.org). Pred aktualizáciou odporúčame overiť kompatibilitu vlastných aplikácií. Veľkosť JavaScript súborov sa zmenšila o cca 170kB, čo má dopad aj na rýchlosť inicializácie administrácie. Viac v [sekcii pre programátora](#pre-programátora).
@@ -46,6 +47,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Obrázky - pridaná [podpora AVIF](frontend/thumb-servlet/README.md#obrázky-avif) vo vkladaní obrázkov, perexoch, správcovi súborov, galérii a editore obrázkov. Miniatúry a úpravy zachovávajú formát AVIF aj priehľadnosť; spracovanie vyžaduje ImageMagick s funkčným čítaním a zápisom AVIF. Pri úprave animovaného obrázka sa použije prvý snímok. Ak sa menší obrázok iba skopíruje bez zmeny rozmerov, animácia sa zachová pri `galleryStripExif=false`. Zapnuté odstraňovanie metadát platí aj pre AVIF a prekóduje aj túto kópiu na statický obrázok.
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">
