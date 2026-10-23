@@ -10,6 +10,9 @@ div.dt-buttons  {
             float: right;
             margin-right: 8px;
         }
+        &:has(> button.buttons-more-actions) {
+            margin-right: 4px;
+        }
         &:has(> button.buttons-settings) > div.dt-button-collection {
             right: 0px !important;
             left: auto !important;

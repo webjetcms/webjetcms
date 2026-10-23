@@ -1,5 +1,5 @@
 import { EditorPreview } from './preview'
-import { PerexGroupActions } from './perex-group-actions'
+import { GroupActions } from './group-actions'
 
 /**
  * Implements various functions for web pages Datatable Editor - bindings, buttons, listeners etc.
@@ -480,7 +480,8 @@ export class WebPagesDatatable {
         }
 
         if (this.options.url.split('?')[0] === '/admin/rest/web-pages' && WJ.hasPermission('pageSave')) {
-            new PerexGroupActions(this.webpagesDatatable).addButtons();
+            new GroupActions(this.webpagesDatatable, 'perex').addButtons();
+            new GroupActions(this.webpagesDatatable, 'user').addButtons();
         }
 
         if (typeof window.recursive !== "undefined") {
@@ -515,8 +516,8 @@ export class WebPagesDatatable {
         this.webpagesDatatable.hideButton("export");
         if (typeof window.lastGroup != "undefined") {
             //povodny import/export stranok
-            this.webpagesDatatable.button().add(null, {
-                text: '<i class="ti ti-download"></i>',
+            this.webpagesDatatable.addMoreAction({
+                text: '<i class="ti ti-download" aria-hidden="true"></i>',
                 action: function (e, dt, node) {
                     let groupId = 0;
                     if (typeof window.lastGroup != "undefined" && window.lastGroup != null && typeof window.lastGroup.groupId != "undefined") {
@@ -546,7 +547,7 @@ export class WebPagesDatatable {
                         else button.disable();
                     }, 500);
                 },
-                className: 'btn btn-outline-secondary buttons-divider buttons-import-export buttons-right',
+                className: 'btn btn-outline-secondary buttons-import-export',
                 attr: {
                     'title': window.WJ.translate('components.import_web_pages.menu'),
                     'data-toggle': 'tooltip',

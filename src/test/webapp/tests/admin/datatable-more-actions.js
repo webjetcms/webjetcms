@@ -12,6 +12,39 @@ Before(({ I, login, DT }) => {
     DT.waitForLoader();
 });
 
+Scenario('Import/Export opens the current folder from More actions', async ({ I, DT }) => {
+    for (const width of [1247, 1100, 767]) {
+        I.resizeWindow(width, 958);
+        I.dontSeeElement(`${wrapper} button.buttons-import-export`);
+        I.clickCss(moreActions);
+        I.waitForEnabled(`${moreMenu} button.buttons-import-export`);
+        I.see('Import/Export', moreMenu);
+        if (width === 1247) {
+            I.clickCss(`${moreMenu} button.buttons-import-export`);
+        } else {
+            I.pressKey('ArrowDown');
+            I.pressKey('End');
+            I.pressKey('Enter');
+        }
+        I.switchToNextTab();
+        I.seeInCurrentUrl('/components/import_web_pages/import_pages.jsp?groupId=67');
+        I.waitForVisible('form.importExportTable');
+        I.closeCurrentTab();
+        I.dontSeeElement(moreMenu);
+    }
+    I.wjSetDefaultWindowSize();
+    I.clickCss('#pills-waiting-tab');
+    DT.waitForLoader();
+    I.clickCss(moreActions);
+    I.dontSeeElement(`${moreMenu} button.buttons-import-export`);
+    I.pressKey('Escape');
+    I.clickCss('#pills-folders-tab');
+    DT.waitForLoader();
+    I.clickCss(moreActions);
+    I.seeElement(`${moreMenu} button.buttons-import-export`);
+    I.pressKey('Escape');
+});
+
 Scenario('Switch between Settings and More actions without clicking outside', async ({ I }) => {
     for (let attempt = 0; attempt < 3; attempt++) {
         // Inspect in the same event loop, before the test runner's click delay can hide a stale overlay.

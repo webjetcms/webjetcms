@@ -9,12 +9,14 @@ $f-toast-info: #003289; //blue-80
 $f-toast-warning: #6A4E00;
 $f-toast-error: #790011;
 
-// The perex picker uses the standard body container; keep its menu above the toast (999999).
-.bs-container.perex-group-picker {
+// Group pickers use the standard body container; keep their menus above the toast (999999).
+.bs-container.perex-group-picker,
+.bs-container.user-group-picker {
     z-index: 1000000;
 }
 
-.toast .bootstrap-select.perex-group-picker {
+.toast .bootstrap-select.perex-group-picker,
+.toast .bootstrap-select.user-group-picker {
     background-image: none;
     > button.dropdown-toggle {
         width: 100%;

@@ -34,6 +34,7 @@ Scenario('Create pages with different perex groups', async ({ I, DT, DTE }) => {
     for (let index = 0; index < groupIds.length; index++) {
         I.clickCss('#datatableInit_wrapper button.buttons-create');
         DTE.waitForEditor();
+        I.clickCss('#pills-dt-datatableInit-content-tab');
         await DTE.fillCkeditor('<p>' + name + ' content ' + index + '</p>');
         I.clickCss('#pills-dt-datatableInit-basic-tab');
         DTE.fillField('title', name + '-' + index);
@@ -56,6 +57,8 @@ Scenario('Menu selection state, cancellation and perex group deltas', async ({ I
     I.see('Štatistika stránky', '.dt-more-actions-menu');
     I.seeElement('.dt-more-actions-menu .buttons-addPerexGroup.disabled');
     I.seeElement('.dt-more-actions-menu .buttons-removePerexGroup.disabled');
+    I.seeElement('.dt-more-actions-menu .buttons-addUserGroup.disabled');
+    I.seeElement('.dt-more-actions-menu .buttons-removeUserGroup.disabled');
     I.assertTrue(await I.executeScript(() => document.activeElement.matches('button.buttons-more-actions')),
         'Opening with a pointer keeps focus on the opener');
     I.pressKey('Escape');
@@ -65,8 +68,8 @@ Scenario('Menu selection state, cancellation and perex group deltas', async ({ I
     I.clickCss(menu);
     I.clickCss('.buttons-addPerexGroup');
     I.waitForVisible(picker);
-    I.see('Zvolená perex skupina sa pridá k 2 označeným stránkam.', '.toast-message');
-    I.see('Perex skupina', '.toast-message label');
+    I.see('Zvolená značka sa pridá k 2 označeným stránkam.', '.toast-message');
+    I.see('Značka', '.toast-message label');
     selectGroup(I, name + '-group-2');
     I.clickCss(picker);
     I.waitForVisible(pickerMenu + ' .bs-searchbox input');
@@ -74,6 +77,15 @@ Scenario('Menu selection state, cancellation and perex group deltas', async ({ I
     I.waitForInvisible(pickerMenu);
     I.seeElement(picker);
     I.click('Zrušiť', '.toastr-buttons');
+    I.waitToHide(picker);
+    I.dontSeeElement(pickerMenu);
+    // The detached dropdown overlaps Cancel, so reproduce pointer dismissal with the close button.
+    I.clickCss(menu);
+    I.clickCss('.buttons-addPerexGroup');
+    I.waitForVisible(picker);
+    I.clickCss(picker);
+    I.waitForVisible(pickerMenu + ' .bs-searchbox input');
+    I.clickCss('.toast-close-button');
     I.waitToHide(picker);
     I.dontSeeElement(pickerMenu);
     await verifyPages(I, DTE, false);
@@ -108,7 +120,7 @@ Scenario('Menu keyboard navigation, pointer handoff and page statistics', async 
     I.saveScreenshot('perex-bulk-more-actions-hover.png');
     I.pressKey('ArrowDown');
     I.pressKey('End');
-    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.buttons-removePerexGroup')));
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.buttons-import-export')));
     I.pressKey('Home');
     I.saveScreenshot('perex-bulk-more-actions-keyboard.png');
     I.pressKey(['Shift', 'Tab']);
@@ -139,6 +151,8 @@ Scenario('Actions respect pageSave permission and tab visibility', async ({ I, D
     I.clickCss(menu);
     I.dontSeeElement('.buttons-addPerexGroup');
     I.dontSeeElement('.buttons-removePerexGroup');
+    I.dontSeeElement('.buttons-addUserGroup');
+    I.dontSeeElement('.buttons-removeUserGroup');
     I.pressKey('Escape');
     const response = await I.executeScript(async ({id, groupId}) => $.post({
         url: '/admin/rest/web-pages/action/addPerexGroup',
@@ -152,6 +166,8 @@ Scenario('Actions respect pageSave permission and tab visibility', async ({ I, D
     I.dontSeeElement('.dt-more-actions-menu .buttons-abtest');
     I.dontSeeElement('.dt-more-actions-menu .buttons-linkcheck');
     I.dontSeeElement('.dt-more-actions-menu .buttons-addPerexGroup');
+    I.dontSeeElement('.dt-more-actions-menu .buttons-addUserGroup');
+    I.dontSeeElement('.dt-more-actions-menu .buttons-removeUserGroup');
     I.pressKey('Escape');
     I.executeScript(() => webpagesDatatable.hideButton('stat'));
     I.dontSeeElement(menu);

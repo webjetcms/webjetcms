@@ -62,19 +62,24 @@ Data tabuľka v zozname stránok obsahuje nasledovné špeciálne ikony:
 - <i class="ti ti-eye fa-btn" role="presentation"></i> - Zobraz stránku - po označení jedného alebo viacerých riadkov a kliknutí na ikonu sa otvorí v novom okne/karte zvolená web stránka.
 - ![](icon-recursive.png ":no-zoom") - Zobraziť stránky aj z podadresárov - prepnutím prepínača do zapnutej polohy zobrazíte v tabuľke aj web stránky z podadresárov
 
-### Ďalšie akcie a hromadná zmena perex skupín
+### Ďalšie akcie a hromadná zmena skupín
 
 Tlačidlo <i class="ti ti-dots" role="presentation"></i> **Ďalšie akcie** nájdete v pravej časti nástrojovej lišty pri obnovení údajov a nastaveniach tabuľky. Na karte **Aktívne** obsahuje:
 
-- **Pridať perex skupinu** – pridá zvolenú skupinu k označeným stránkam. Zachová ich ostatné skupiny; už priradenú skupinu nepridá druhýkrát.
-- **Odobrať perex skupinu** – odstráni zvolenú skupinu z označených stránok. Zachová ostatné skupiny a stránky bez zvolenej skupiny nezmení.
+- **Pridať značku** – pridá zvolenú značku k označeným stránkam. Zachová ich ostatné značky; už priradenú značku nepridá druhýkrát.
+- **Odobrať značku** – odstráni zvolenú značku z označených stránok. Zachová ostatné značky a stránky bez zvolenej značky nezmení.
+- **Pridať skupinu používateľov** – pridá zvolenú skupinu k označeným stránkam bez zmeny ostatných priradených skupín používateľov.
+- **Odobrať skupinu používateľov** – odstráni zvolenú skupinu z označených stránok. Stránky bez tejto skupiny nezmení.
 - **Uložiť ako AB test** – vytvorí B verziu označenej stránky pre [AB testovanie](../apps/abtesting/README.md).
 - **Štatistika stránky** – zobrazí [návštevnosť](../apps/stat/README.md) označených stránok. Je dostupná aj v prehľadoch histórie a plánovaného publikovania.
 - **Kontrola odkazov a prázdnych stránok** – skontroluje [platnosť odkazov](linkcheck.md) v aktuálnom priečinku a podpriečinkoch a vyhľadá prázdne stránky. Nevyžaduje označenie stránok.
+- **Import/Export** – otvorí [import a export web stránok](import-export.md) pre vybraný priečinok. Nevyžaduje označenie stránok.
 
-Ak chcete hromadne zmeniť perex skupinu, označte stránky v prvom stĺpci tabuľky, otvorte **Ďalšie akcie** a vyberte pridanie alebo odobratie. V dialógu zvoľte jednu skupinu a kliknite na **Potvrdiť**. Pri pridávaní sa ponúkajú skupiny dostupné pre všetky označené stránky. Pri odoberaní sa ponúkajú skupiny priradené aspoň jednej z nich.
+Ak chcete hromadne zmeniť značku, označte stránky v prvom stĺpci tabuľky, otvorte **Ďalšie akcie** a vyberte pridanie alebo odobratie. V dialógu zvoľte jednu značku a kliknite na **Potvrdiť**. Pri pridávaní sa ponúkajú značky dostupné pre všetky označené stránky. Pri odoberaní sa ponúkajú značky priradené aspoň jednej z nich.
 
-Pri stránkach prepojených cez **Kópia web stránky v** sa dostupné aj priradené perex skupiny vyhodnocujú podľa hlavnej stránky, rovnako ako pri jej editácii.
+Rovnakým postupom pridáte alebo odoberiete skupinu používateľov. Výber obsahuje spoločne skupiny práv aj e-mailové skupiny spravované v časti **Používatelia → Skupiny používateľov**. Pri odoberaní sa zobrazujú iba skupiny priradené aspoň jednej označenej stránke. Zmena sa prejaví na karte **Prístup** v editore stránky.
+
+Pri stránkach prepojených cez **Kópia web stránky v** sa dostupné aj priradené skupiny vyhodnocujú podľa hlavnej stránky, rovnako ako pri jej editácii.
 
 Zmena vyžaduje právo na editáciu stránok a používa bežné ukladanie vrátane histórie a prípadného schvaľovania. Po uložení sa zoznam obnoví.
 
