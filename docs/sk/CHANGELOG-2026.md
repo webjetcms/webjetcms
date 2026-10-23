@@ -13,6 +13,7 @@
 - Export obsahu pre Flash - odstránená bola historická funkcia generovania XML súborov `/flash_xml/{docId}.xml` pri publikovaní stránky. Konfiguračná premenná `exportFlash` už nie je podporovaná a jej definovanie v `SpringConfig` funkciu neobnoví (#293).
 - Microsoft SQL Server - ukončená bola podpora verzií starších ako 2012 a odstránená konfiguračná premenná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 alebo novší, starý spôsob stránkovania pomocou `TOP` už nie je podporovaný (#293).
 - Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
+- Viackrokové formuláre - metódy `validateStep` a `runStepInterceptor` rozhrania [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) dostávajú za `formName` nový parameter `FormSettingsEntity formSettings`. Ak používate vlastnú Java triedu na spracovanie formulárov je potrebné ju upraviť a znova skompilovať. Nastavenia už nemusia načítavať podľa mena formulára, ale dostanete ho priamo (#364).
 
 ### Úvodná obrazovka
 
@@ -130,6 +131,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#364).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.mustistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
 - Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).
@@ -215,6 +217,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Manažér dokumentov - strom priečinkov má minimálnu šírku 200 px, aby vyhľadávacie pole s tlačidlami nepresahovalo do tabuľky ani pri nastavení menšieho pomeru. Nastavenia šírky v pixeloch preto ponúkajú hodnoty od 200 px (#360).
+- Manažér dokumentov - polia **Produkt** a **Kategória** pri uložení, premenovaní a hromadnom nahrávaní normalizujú tvrdé medzery, tabulátory a zalomenia riadkov, zlúčia opakované medzery a odstránia okrajové medzery aj rušivé neviditeľné znaky z kopírovaného textu. **Upozornenie:** pri opätovnom uložení existujúceho dokumentu sa odstránia tvrdé medzery v názve, produktoch a podobne. Filtre v aplikácii vo webových stránkach sa automaticky neaktualizujú. Ak používajú pôvodný názov s tvrdými alebo opakovanými medzerami či neviditeľnými znakmi, dokument sa po uložení nemusí vo filtrovanom zozname zobraziť. Opravte názvy vo všetkých dotknutých dokumentoch a v aplikáciách nastavte filtre podľa nových hodnôt. Uloženie jedného dokumentu neopraví ostatné dokumenty s rovnakým názvom produktu alebo kategórie (#360).
+- Manažér dokumentov - v [aplikácii na webovej stránke](redactor/files/file-archive/file-archive-app.md#karta---rozšírené) pridané radenie podľa začiatku a konca platnosti, kódu produktu, produktu, kategórie, mena súboru a veľkosti dokumentu (#359, #osk791).
+
 ### Galéria
 
 - Pridaná možnosť nastaviť samostatný spôsob [zmeny veľkosti pre veľký obrázok](redactor/apps/gallery/structure.md#karta-rozmery) nezávisle od malého obrázka. Predvolene sa použije spôsob zmeny veľkosti rovnako ako je nastavené pre malý obrázok. Nastavenie je možné voliteľne prekopírovať aj do podpriečinkov (#58633).
@@ -283,6 +289,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Editor stránok - pri zlyhaní získania obsahu alebo hodnote `undefined` sa zobrazí chyba a uloženie sa zastaví, aby sa neprepísal pôvodný obsah. Atribúty `contenteditable` sa odstraňujú pri načítaní aj ukladaní HTML vrátane kódu vloženého v HTML režime (#369).
+- Page Builder - pri zlyhaní načítania obsahu možno prepnúť do HTML režimu obnovením posledného dostupného HTML. Obnova vyžaduje potvrdenie, pretože nemusí obsahovať najnovšie zmeny (#369).
+- Page Builder - opravené zamrznutie editora pri otvorení HTML so zvyšným atribútom `contenteditable="true"`. CKEditor sa na rovnakom bloku už neinicializuje dvakrát.
 - Email - opravené ovplyvňovanie SMTP nastavení medzi aplikáciami na spoločnom aplikačnom serveri. Každé odoslanie používa vlastné properties a mailovú session, takže sa neprenáša SSL port, autentifikácia ani nastavenia Amazon SES z inej aplikácie (#367).
 - Page Builder - opravené hromadenie prázdnych riadkov v HTML vnorených blokov. Pri ukladaní a prepnutí do HTML editora sa odstránia aj staré nadbytočné riadky medzi elementmi. Obsah `pre`, `textarea` a medzery zachovávané cez CSS `white-space` zostávajú nezmenené (#367).
 - Webové stránky - opravené zasekávanie a skákanie pri [porovnávaní verzií](redactor/webpages/history.md), ak šablóna stránky používa plynulé posúvanie (`scroll-behavior: smooth`) (#367).
@@ -296,6 +305,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Page Builder - opravené zbytočné posúvanie stránky hore/dole ak ste upravovali aplikáciu v stránke (#343).
 - Page Builder - opravené zobrazenie nástrojovej lišty ak stránka neobsahuje žiadnu sekciu (#343).
 - Page Builder - pridaná možnosť nastaviť [šírku okna štruktúra](frontend/page-builder/settings.md) (#343)
+- Administrácia - opravené zobrazenie ikony zaškrtnutia pri vybranej položke v ponuke automatického dopĺňania (#osk800).
 
 ### Výkon
 

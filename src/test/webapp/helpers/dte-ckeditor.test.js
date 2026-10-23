@@ -7,6 +7,7 @@ const vm = require('node:vm');
 function fixture(editor, frame = null) {
     let readiness;
     const I = {
+        waitForElement() {},
         waitForVisible() {},
         waitForFunction(predicate) { readiness = predicate; },
         clickCss() {},

@@ -2,10 +2,13 @@ package sk.iway.iwcm.components.file_archiv;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,11 +28,13 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
@@ -45,9 +50,66 @@ import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 @Setter
 public class FileArchiveApp extends WebjetComponentAbstract {
 
-    private static final String PRIORITY  = "priority";
-    private static final String DATE_INSERT = "dateInsert";
-    private static final String VIRTUAL_FILE_NAME = "virtualFileName";
+    /** Defines the saved parameter, editor label and comparison for each supported order. */
+    private enum SortColumn {
+        PRIORITY("priority", "components.news.ORDER_PRIORITY", comparing(FileArchivatorBean::getPriority)),
+        DATE_INSERT("time", "components.file_archiv.time_order", comparing(FileArchivatorBean::getDateInsert)),
+        VALID_FROM("validFrom", "inquiry.valid_since", comparing(FileArchivatorBean::getValidFrom)),
+        VALID_TO("validTo", "inquiry.valid_till", comparing(FileArchivatorBean::getValidTo)),
+        VIRTUAL_FILE_NAME("virtual_file_name", "components.file_archiv.order.virtual_file_name", comparingText(FileArchivatorBean::getVirtualFileName)),
+        FILE_NAME("fileName", "components.gallery.fileName", comparingText(FileArchivatorBean::getFileName)),
+        PRODUCT_CODE("productCode", "components.file_archiv.kod_produktu", comparingText(FileArchivatorBean::getProductCode)),
+        PRODUCT("product", "components.file_archiv.product", comparingText(FileArchivatorBean::getProduct)),
+        CATEGORY("category", "components.bazar.category", comparingText(FileArchivatorBean::getCategory)),
+        FILE_SIZE("fileSize", "components.file_archiv.file_size", comparing(FileArchivatorBean::getFileSize));
+
+        private final String value;
+        private final String label;
+        private final Comparator<FileArchivatorBean> comparator;
+
+        SortColumn(String value, String label, Comparator<FileArchivatorBean> comparator) {
+            this.value = value;
+            this.label = label;
+            this.comparator = comparator;
+        }
+
+        private static SortColumn fromValue(String value) {
+            return Arrays.stream(values())
+                .filter(column -> column.value.equalsIgnoreCase(value))
+                .findFirst()
+                .orElse(DATE_INSERT);
+        }
+    }
+
+    private static <T extends Comparable<? super T>> Comparator<FileArchivatorBean> comparing(Function<FileArchivatorBean, T> getter) {
+        return Comparator.comparing(getter, Comparator.nullsFirst(Comparator.naturalOrder()));
+    }
+
+    private static Comparator<FileArchivatorBean> comparingText(Function<FileArchivatorBean, String> getter) {
+        return Comparator.comparing(getter, Comparator.nullsFirst(Tools.slovakCollator));
+    }
+
+    /** Sorts a copy so cached history and repository results are never reordered in place. */
+    private List<FileArchivatorBean> sortFiles(List<FileArchivatorBean> files, String value, Boolean ascending) {
+        Comparator<FileArchivatorBean> comparator = SortColumn.fromValue(value).comparator;
+        if (Tools.isTrue(ascending) == false) comparator = comparator.reversed();
+        return files.stream()
+            .sorted(comparator.thenComparing(SortColumn.VIRTUAL_FILE_NAME.comparator).thenComparing(FileArchivatorBean::getId))
+            .toList();
+    }
+
+    @Override
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        Prop prop = Prop.getInstance(request);
+        List<OptionDto> options = Arrays.stream(SortColumn.values())
+            .map(column -> new OptionDto(prop.getText(column.label), column.value, null))
+            .toList();
+        Map<String, List<OptionDto>> appOptions = new HashMap<>();
+        appOptions.put("orderMain", options);
+        appOptions.put("order", options);
+        appOptions.put("orderPatterns", options);
+        return appOptions;
+    }
 
     @Getter
     private class FileArchivatorDTO extends FileArchivatorBean {
@@ -105,19 +167,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
                 .filter(f -> ( Integer.valueOf(-1).equals(f.getUploaded()) && f.getShowFile() ) )
                 .toList();
 
-            return historyFiles
-                .stream()
-                .sorted((f1, f2) -> {
-                    String sortColumn = getSortColumn(order);
-                    if (PRIORITY.equals(sortColumn)) {
-                        return Tools.isTrue(asc) ? Integer.compare(f1.getPriority(), f2.getPriority()) : Integer.compare(f2.getPriority(), f1.getPriority());
-                    } else if (DATE_INSERT.equals(sortColumn)) {
-                        return Tools.isTrue(asc) ? f1.getDateInsert().compareTo(f2.getDateInsert()) : f2.getDateInsert().compareTo(f1.getDateInsert());
-                    } else if (VIRTUAL_FILE_NAME.equals(sortColumn)) {
-                        return Tools.isTrue(asc) ? f1.getVirtualFileName().compareToIgnoreCase(f2.getVirtualFileName()) : f2.getVirtualFileName().compareToIgnoreCase(f1.getVirtualFileName());
-                    }
-                    return 0;
-                }).toList();
+            return sortFiles(historyFiles, order, asc);
         }
 
         private List<FileArchivatorBean> getMainPatterns(String virtualPath) {
@@ -125,10 +175,10 @@ public class FileArchiveApp extends WebjetComponentAbstract {
                 final List<Predicate> predicates = new ArrayList<>();
                 //Pattern of file
                 predicates.add(builder.equal(root.get("referenceToMain"), virtualPath));
-                addDefaultPredicates(predicates, root, query, builder, ascPatterns, orderPatterns);
+                addDefaultPredicates(predicates, root, builder);
                 return builder.and(predicates.toArray(new Predicate[predicates.size()]));
             };
-            return repository.findAll(spec);
+            return sortFiles(repository.findAll(spec), orderPatterns, ascPatterns);
         }
     }
 
@@ -197,17 +247,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
     private String globalIds;
 
 
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title="components.file_archiv.sort_main_files_by",
-        editor = {
-            @DataTableColumnEditor(
-                    options = {
-                        @DataTableColumnEditorAttr(key = "components.news.ORDER_PRIORITY", value = PRIORITY),
-                        @DataTableColumnEditorAttr(key = "components.file_archiv.time_order", value = "time"),
-                        @DataTableColumnEditorAttr(key = "components.file_archiv.order.virtual_file_name", value = "virtual_file_name")
-                    }
-            )
-        }
-    )
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title="components.file_archiv.sort_main_files_by")
 	private String orderMain;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.file_archiv.ascending_sort_main_file")
@@ -221,17 +261,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
     )
     private Boolean archiv;
 
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title="components.file_archiv.show_entry_by",
-        editor = {
-            @DataTableColumnEditor(
-                    options = {
-                        @DataTableColumnEditorAttr(key = "components.news.ORDER_PRIORITY", value = PRIORITY),
-                        @DataTableColumnEditorAttr(key = "components.file_archiv.time_order", value = "time"),
-                        @DataTableColumnEditorAttr(key = "components.file_archiv.order.virtual_file_name", value = "virtual_file_name")
-                    }
-            )
-        }
-    )
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title="components.file_archiv.show_entry_by")
     private String order;
 
     @DataTableColumn( inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.file_archiv.ascending_sort_archiv_files")
@@ -242,17 +272,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
     )
     private Boolean showPatterns;
 
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title="components.file_archiv.sort_pattern_files_by",
-        editor = {
-            @DataTableColumnEditor(
-                    options = {
-                        @DataTableColumnEditorAttr(key = "components.news.ORDER_PRIORITY", value = PRIORITY),
-                        @DataTableColumnEditorAttr(key = "components.file_archiv.time_order", value = "time"),
-                        @DataTableColumnEditorAttr(key = "components.file_archiv.order.virtual_file_name", value = "virtual_file_name")
-                    }
-            )
-        }
-    )
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title="components.file_archiv.sort_pattern_files_by")
     private String orderPatterns;
 
     @DataTableColumn( inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.file_archiv.ascending_sort_pattern_files")
@@ -278,7 +298,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
         Logger.debug(FileArchiveApp.class, "Init of FileArchiveApp app");
     }
 
-    private void addDefaultPredicates(List<Predicate> predicates, Root<FileArchivatorBean> root, CriteriaQuery<?> query, CriteriaBuilder builder, boolean asc, String type) {
+    private void addDefaultPredicates(List<Predicate> predicates, Root<FileArchivatorBean> root, CriteriaBuilder builder) {
         //Only files that are allowed to be showed
         predicates.add(builder.isTrue(root.get("showFile")));
         //Only main files
@@ -287,9 +307,6 @@ public class FileArchiveApp extends WebjetComponentAbstract {
         predicates.add(builder.equal(root.get("uploaded"), -1));
         //Domain id
         predicates.add(builder.equal(root.get("domainId"), CloudToolsForCore.getDomainId()));
-        //Order
-        if(Tools.isTrue(asc)) query.orderBy(builder.asc(root.get( getSortColumn(type) )));
-        else query.orderBy(builder.desc(root.get( getSortColumn(type) )));
     }
 
     private List<FileArchivatorBean> getMainFilesData() {
@@ -307,22 +324,12 @@ public class FileArchiveApp extends WebjetComponentAbstract {
             if(Tools.isNotEmpty(product)) predicates.add(builder.equal(root.get("product"), product));
             if(Tools.isNotEmpty(category)) predicates.add(builder.equal(root.get("category"), category));
 
-            addDefaultPredicates(predicates, root, query, builder, ascMain, orderMain);
+            addDefaultPredicates(predicates, root, builder);
 
             return builder.and(predicates.toArray(new Predicate[predicates.size()]));
         };
 
         return repository.findAll(spec);
-    }
-
-    private String getSortColumn(String value) {
-        if(Tools.isEmpty(value)) return DATE_INSERT;
-
-        if(PRIORITY.equalsIgnoreCase(value)) return PRIORITY;
-        if("time".equalsIgnoreCase(value)) return DATE_INSERT;
-        if("virtual_file_name".equalsIgnoreCase(value)) return VIRTUAL_FILE_NAME;
-
-        return DATE_INSERT;
     }
 
     @DefaultHandler
@@ -352,7 +359,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
         Prop prop = Prop.getInstance(request);
 
         List<FileArchivatorDTO> mainFiles = new ArrayList<>();
-        for(FileArchivatorBean file : datas) {
+        for(FileArchivatorBean file : sortFiles(datas, orderMain, ascMain)) {
             //Skip pattern files
             if(Tools.isNotEmpty(file.getReferenceToMain())) continue;
             //Skip files that should not be displayed

@@ -13,6 +13,7 @@
 - Export obsahu pro Flash - odstraněna byla historická funkce generování XML souborů `/flash_xml/{docId}.xml` při publikování stránky. Konfigurační proměnná `exportFlash` již není podporována a její definování v `SpringConfig` funkci neobnoví (#293).
 - Microsoft SQL Server - ukončena byla podpora verzí starších než 2012 a odstraněna konfigurační proměnná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 nebo novější, starý způsob stránkování pomocí `TOP` již není podporován (#293).
 - Formulář snadno a vícekrokové formuláře - upravené zobrazení `tooltip` z původního `i` elementu na standardní `button`. Je tak splněn požadavek na přístupnost - tooltip je dostupný myší i klávesnicí (#306).
+- Vícekrokové formuláře - metody `validateStep` a `runStepInterceptor` rozhraní [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhraní-formprocessorinterface) dostávají za `formName` nový parametr `FormSettingsEntity formSettings`. Pokud používáte vlastní Java třídu pro zpracování formulářů je třeba ji upravit a znovu zkompilovat. Nastavení již nemusí načítat podle jména formuláře, ale dostanete jej přímo (#364).
 
 ### Úvodní obrazovka
 
@@ -130,6 +131,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
+- Nastavení formulářů - přidaná karta **Volitelná pole** s poli A–F. Pole jsou dostupná také v editoru aplikace Formulář snadno a přes `FormSettingsEntity`. V HTML překladových klíčů lze použít [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláře) pro A–F, emailová nastavení, přesměrování, limity souborů a vzhled. Podporuje je i náhled a emailová podoba vícekrokových formulářů. A–F i text před a za emailem umožňují HTML (#364).
 - Vícekrokové formuláře - přidána možnost upravit [HTML tlačítka na předchozí krok](redactor/apps/formsimple/README.md#html-kód-tlačítek) přes překladový klíč `components.mustistep.form.back_button` (#osk782).
 - Vícekrokové formuláře - po neúspěšném přechodu na další krok nebo odeslání se stránka posune na první viditelné chybové hlášení i při opakovaném pokusu (#58794).
 - Formuláře - validace nahraných souborů rozlišuje nepovolený znak v názvu a nepovolenou příponu. Chyba názvu uvede konkrétní zakázaný znak nebo řetězec. Názvy souborů v chybových hlášeních se zobrazují jako text, aby se případné HTML značky v názvu neprovedly (#58794).
@@ -215,6 +217,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Manažer dokumentů - strom složek má minimální šířku 200 px, aby vyhledávací pole s tlačítky nepřesahovalo do tabulky ani při nastavení menšího poměru. Nastavení šířky v pixelech proto nabízejí hodnoty od 200 px (#360).
+- Manažer dokumentů - pole **Produkt** a **Kategorie** při uložení, přejmenování a hromadném nahrávání normalizují tvrdé mezery, tabulátory a zalomení řádků, sloučí opakované mezery a odstraní okrajové mezery i rušivé neviditelné znaky z kopírovaného textu. **Upozornění:** při opětovném uložení existujícího dokumentu se odstraní tvrdé mezery v názvu, produktech a podobně. Filtry v aplikaci ve webových stránkách se automaticky neaktualizují. Pokud používají původní název s tvrdými nebo opakovanými mezerami či neviditelnými znaky, dokument se po uložení nemusí ve filtrovaném seznamu zobrazit. Opravte názvy ve všech dotčených dokumentech a v aplikacích nastavte filtry podle nových hodnot. Uložení jednoho dokumentu neopraví ostatní dokumenty se stejným názvem produktu nebo kategorie (#360).
+- Manažer dokumentů - v [aplikaci na webové stránce](redactor/files/file-archive/file-archive-app.md#karta---rozšířené) přidáno řazení podle začátku a konce platnosti, kódu produktu, produktu, kategorie, jména souboru a velikosti dokumentu (#359, #osk791).
+
 ### Galerie
 
 - Přidána možnost nastavit samostatný způsob [změny velikosti pro velký obrázek](redactor/apps/gallery/structure.md#karta-rozměry) nezávisle na malém obrázku. Ve výchozím nastavení se použije způsob změny velikosti stejně jako je nastaveno pro malý obrázek. Nastavení lze volitelně překopírovat i do podsložek (#58633).
@@ -283,6 +289,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Editor stránek - při selhání získání obsahu nebo hodnotě `undefined` se zobrazí chyba a uložení se zastaví, aby se nepřepsal původní obsah. Atributy `contenteditable` se odstraňují při načítání i ukládání HTML včetně kódu vloženého v HTML režimu (#369).
+- Page Builder - při selhání načítání obsahu lze přepnout do HTML režimu obnovením posledního dostupného HTML. Obnova vyžaduje potvrzení, protože nemusí obsahovat nejnovější změny (#369).
+- Page Builder - opraveno zamrznutí editoru při otevření HTML se zbývajícím atributem `contenteditable="true"`. CKEditor se na stejném bloku již neinicializuje dvakrát.
 - Email - opraveno ovlivňování SMTP nastavení mezi aplikacemi na společném aplikačním serveru. Každé odeslání používá vlastní properties a mailovou session, takže se nepřenáší SSL port, autentifikace ani nastavení Amazon SES z jiné aplikace (#367).
 - Page Builder - opraveno hromadění prázdných řádků v HTML vnořených bloků. Při ukládání a přepnutí do HTML editoru se odstraní i staré nadbytečné řádky mezi elementy. Obsah `pre`, `textarea` a mezery zachovávané přes CSS `white-space` zůstávají nezměněny (#367).
 - Webové stránky - opravené zasekávání a skákání při [srovnávání verzí](redactor/webpages/history.md), pokud šablona stránky používá plynulé posouvání (`scroll-behavior: smooth`) (#367).
@@ -296,6 +305,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Page Builder - opraveno zbytečné posouvání stránky nahoru/dolů pokud jste upravovali aplikaci ve stránce (#343).
 - Page Builder - opraveno zobrazení nástrojové lišty pokud stránka neobsahuje žádnou sekci (#343).
 - Page Builder - přidána možnost nastavit [šířku okna struktura](frontend/page-builder/settings.md) (#343)
+- Administrace - opraveno zobrazení ikony zaškrtnutí u vybrané položky v nabídce automatického doplňování (#osk800).
 
 ### Výkon
 

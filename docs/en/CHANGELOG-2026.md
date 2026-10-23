@@ -13,6 +13,7 @@
 - Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
 - Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
 - Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
+- Multi-step forms - methods `validateStep` and `runStepInterceptor` of the [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) interface receive a new parameter `FormSettingsEntity formSettings` instead of `formName`. If you use your own Java class for processing forms, you need to modify it and recompile it. Settings no longer need to be loaded by form name, but you will get it directly (#364).
 
 ### Home screen
 
@@ -130,6 +131,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Form Settings - added **Optional Fields** tab with fields A–F. Fields are also available in the Form Simple editor and via `FormSettingsEntity`. In the HTML of the translation keys, you can use [`${settings.*}`](redactor/apps/formsimple/README.md#fields-from-form-settings) tags for A–F, email settings, redirects, file limits, and appearance. They are also supported by the preview and email appearance of multi-step forms. A–F and the text before and after the email are enabled by HTML (#364).
 - Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.mustistep.form.back_button` (#osk782).
 - Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
 - Forms - validation of uploaded files distinguishes between an illegal character in the name and an illegal extension. A name error will indicate the specific illegal character or string. File names in error messages are displayed as text to prevent any HTML tags in the name from being executed (#58794).
@@ -215,6 +217,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Document Manager - the folder tree has a minimum width of 200 px so that the search field with buttons does not extend into the table even when setting a smaller ratio. Therefore, the width settings in pixels offer values ​​starting from 200 px (#360).
+- Document Manager - **Product** and **Category** fields normalize hard spaces, tabs, and line breaks, merge repeating spaces, and remove trailing spaces and distracting invisible characters from copied text when saving, renaming, and bulk uploading. **Warning:** When resaving an existing document, hard spaces in the title, products, and so on are removed. Filters in the application in websites are not automatically updated. If they use the original name with hard or repeating spaces or invisible characters, the document may not appear in the filtered list after saving. Correct the names in all affected documents and set the filters in the applications to the new values. Saving one document will not correct other documents with the same product or category name (#360).
+- Document Manager - in [website application](redactor/files/file-archive/file-archive-app.md#tab---advanced) added sorting by validity start and end, product code, product, category, file name and document size (#359, #osk791).
+
 ### Gallery
 
 - Added the ability to set a separate [resizing method for a large image](redactor/apps/gallery/structure.md#tab-dimensions) independent of the small image. By default, the same resizing method is used as set for the small image. The setting can optionally be copied to subfolders (#58633).
@@ -283,6 +289,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
+- Page Builder - when content loading fails, you can switch to HTML mode by restoring the last available HTML. The restore requires confirmation as it may not contain the latest changes (#369).
+- Page Builder - fixed editor freeze when opening HTML with remaining `contenteditable="true"` attribute. CKEditor no longer initializes twice on the same block.
 - Email - fixed SMTP settings being affected between applications on a shared application server. Each send uses its own properties and mail session, so SSL port, authentication, or Amazon SES settings from another application are not transferred (#367).
 - Page Builder - fixed accumulation of empty lines in HTML of nested blocks. When saving and switching to HTML editor, old extra lines between elements are also removed. Content of `pre`, `textarea` and spaces preserved via CSS `white-space` remain unchanged (#367).
 - Webpages - fixed stuttering and jumping when [compare versions](redactor/webpages/history.md) if the page template uses smooth scrolling (`scroll-behavior: smooth`) (#367).
@@ -296,6 +305,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Builder - fixed unnecessary scrolling up/down the page if you were editing an application on a page (#343).
 - Page Builder - fixed displaying the toolbar if the page does not contain any sections (#343).
 - Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
+- Administration - fixed display of check mark icon when an item is selected in the autocomplete menu (#osk800).
 
 ### Performance
 

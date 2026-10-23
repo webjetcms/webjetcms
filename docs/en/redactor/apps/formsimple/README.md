@@ -148,6 +148,48 @@ The following tags can be used in the code, which will be replaced when the form
 - ```${value-label}``` - ​​text value (label) for a repeating record, if it contains a different value for ```value``` and for ```label``` (e.g. in the ```option``` tag). The user enters possible values ​​as ```label:value```, i.e. as ```Pomaranč:orange,Jablko:apple``` to display the listed options.
 - ```{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}``` - ​​connection to get a list of ```option``` values ​​from the codebook application. The codebook ID, column name for the value, and column name for the text are specified.
 
+### Fields from form settings
+
+You can also use saved form settings in the HTML translation keys via `${settings.NAZOV_POLA}` tags. They are easily accessible in the Form, including multi-step forms, in the item preview in the administration, and in the form's email form.
+
+| Brand | Value |
+| --- | --- |
+| `${settings.fieldA}` to `${settings.fieldF}` | Optional fields A–F from the form settings. |
+| `${settings.formName}` | The stored form name; unlike `${formname}`, it is not converted to an HTML identifier when replaced. |
+| `${settings.recipients}` | Recipients' email addresses. |
+| `${settings.ccEmails}` | Email addresses of copy recipients. |
+| `${settings.bccEmails}` | Email addresses of hidden recipients. |
+| `${settings.replyTo}` | Email addresses for response. |
+| `${settings.subject}` | Email subject set. |
+| `${settings.forward}` | Redirect URL after successful submission. |
+| `${settings.forwardFail}` | Redirect URL after an error. |
+| `${settings.maxSizeInKilobytes}` | Maximum size of a single file in KB. |
+| `${settings.maxCombinedSizeInKilobytes}` | Maximum total file size in KB. |
+| `${settings.allowedExtensions}` | Set list of allowed extensions. |
+| `${settings.pictureHeight}` | Maximum image height in pixels. |
+| `${settings.pictureWidth}` | Maximum image width in pixels. |
+| `${settings.formAddClasses}` | Additional CSS classes for the form. |
+| `${settings.rowView}` | Saved display setting in line as `true` or `false`. |
+| `${settings.emailTextBefore}` | The text before the email content may contain HTML. |
+| `${settings.emailTextAfter}` | The text behind the email body may contain HTML. |
+
+The fields **A–F**, **Text before email**, and **Text after email** are inserted as HTML without escaping. Both email texts support HTML even when inserted normally before and after the email content. The other settings are escaped for HTML text and quoted attributes. The tags are not intended for direct insertion into JavaScript or CSS. Use HTML-enabled fields in places intended for HTML content, not as attribute values.
+
+Example of a custom information field if optional field A contains `<strong>Pokyny k vyplneniu</strong>`:
+
+```properties
+components.formsimple.label.pokyny=Pokyny
+components.formsimple.input.pokyny=<div class="form-instructions">${settings.fieldA}</div><p>Povolené prípony: ${settings.allowedExtensions}; maximálna veľkosť súboru: ${settings.maxSizeInKilobytes} kB.</p>
+```
+
+You can also add tags to the existing form start code, for example as the `data-form-name="${settings.formName}"` attribute, or insert `<div class="form-intro">${settings.fieldB}</div>` after the opening `<form>`. Keep the original template attributes and scripts. For an Easy Form, this is the key `components.formsimple.form.start`, for a multi-step form, it is `components.mustistep.form.start`.
+
+The same tags work in the form footer, tooltip templates, first field titles, repeated items `${iterable}`, and technical information `components.formsimple.techinfo`. In a multi-step form, they are also available in the HTML wrappers of steps and rows, the step title, the Back button, and the loading indicator.
+
+Stored values ​​are used. Empty or missing settings are replaced with an empty string; for example, the default email subject or fallback redirect on error are not calculated. Unknown tags are left unchanged. The replacement is not recursive: if the value of field A contains `${settings.fieldB}` or `${id}`, this expression is left literal.
+
+By using the tag, you insert a value into the resulting HTML available to the visitor. This also applies to email addresses, including `${settings.bccEmails}` ; this allows the hidden email recipient to be published on the page. Only the specified settings are available, not the encryption key or internal entity data.
+
 ### Custom HTML tooltip code
 
 You can edit the HTML code of the tooltip in the project with the translation key `components.formsimple.tooltipCode`. Its value includes the tags `${tooltipId}`, `${id}`, `${itemId}`, `${stepId}`, `${label}`, `${labelSanitized}`, `${value}`, `${valueSanitized}`, `${placeholder}` and `${classes}`. The tag `${label}` in this key contains the text from the **Tooltip** field, not the name of the form field.
