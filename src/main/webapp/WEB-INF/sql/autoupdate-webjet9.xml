@@ -4190,5 +4190,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>24.10.2026</string></void>
+                <void property="desc"><string>ai - replace retired OpenAI gpt-image-1 with gpt-image-2</string></void>
+                <void property="mysql"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+                <void property="mssql"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+                <void property="oracle"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+                <void property="pgsql"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

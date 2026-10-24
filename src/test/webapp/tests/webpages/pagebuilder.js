@@ -54,12 +54,12 @@ Scenario('failed Page Builder initialization allows HTML recovery through the pa
             return frame?.contentWindow.pageBuilderReady === false && frame.contentDocument.body.inert === true &&
                 frame.contentDocument.querySelector('div.exit-inline-editor select') !== null;
         }, 20);
-        I.waitForVisible('#DTE_Field_data-editorTypeSelector button', 15);
+        I.waitForVisible('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle', 15);
         const preservedHtml = await I.executeScript(() => webpagesDatatable.EDITOR.field('data').s.opts._input.val());
         assert.ok(preservedHtml.includes('Suspendisse interdum dolor justo'), 'The preserved HTML must contain the original page');
 
         // Use the visible control: calling switchEditorType directly would miss an inaccessible selector.
-        I.clickCss('#DTE_Field_data-editorTypeSelector button');
+        I.clickCss('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle');
         I.click(locate('.dropdown-item').withText('HTML editor'));
         I.waitForText('Obnoviť HTML?', 10, '.toast-title');
         I.clickCss('button[id^="confirmationNo"]');
@@ -67,7 +67,7 @@ Scenario('failed Page Builder initialization allows HTML recovery through the pa
         I.assertEqual(await I.grabValueFrom('#DTE_Field_data-editorTypeSelector select'), 'pageBuilder');
         I.seeElement('#DTE_Field_data-pageBuilderIframe');
 
-        I.clickCss('#DTE_Field_data-editorTypeSelector button');
+        I.clickCss('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle');
         I.click(locate('.dropdown-item').withText('HTML editor'));
         I.waitForText('Obnoviť HTML?', 10, '.toast-title');
         I.click('Obnoviť HTML', 'button[id^="confirmationYes"]');

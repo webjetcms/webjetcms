@@ -14,11 +14,21 @@ const source = `<section><div class="container"><div class="pb-grid"><div class=
 
 Before(({ login }) => login('admin'));
 
-Scenario('export removes nested controls before formatting and preserves authored whitespace', async ({ I, DTE, Document }) => {
+/** Opens the fixture with its custom list grid, independently of the site's configured grid selectors. */
+function openPageBuilder(I, DTE, Document) {
     Document.resetPageBuilderMode();
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=' + pageId);
     DTE.waitForEditor();
     I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow?.pageBuilderReady === true, [], 20);
+    I.executeScript(() => {
+        const pb = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow.pageBuilder;
+        pb.grid.row += ', .pb-grid';
+        pb.grid.column += ', .pb-col';
+    });
+}
+
+Scenario('export removes nested controls before formatting and preserves authored whitespace', async ({ I, DTE, Document }) => {
+    openPageBuilder(I, DTE, Document);
 
     let html = source;
     const results = [];
@@ -69,10 +79,7 @@ Scenario('export removes nested controls before formatting and preserves authore
 });
 
 Scenario('switching to HTML cleans existing blank lines and preserves significant whitespace', async ({ I, DTE, Document }) => {
-    Document.resetPageBuilderMode();
-    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=' + pageId);
-    DTE.waitForEditor();
-    I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow?.pageBuilderReady === true, [], 20);
+    openPageBuilder(I, DTE, Document);
 
     const blankLines = '\t' + '\n\t'.repeat(12);
     const legacySource = source.replace('</section>', `<div class="pb-custom-container autotest-legacy">
