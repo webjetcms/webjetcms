@@ -1,7 +1,5 @@
 package sk.iway.iwcm.gallery;
 
-import sk.iway.iwcm.common.AvifTools;
-
 import static sk.iway.iwcm.Tools.isEmpty;
 
 import java.awt.Dimension;
@@ -4377,8 +4375,6 @@ public class GalleryDB
 	public static void applyWatermarkOnUpload(IwcmFile obrazok)
 	{
 		if(obrazok == null || obrazok.exists() == false) return;
-		// AVIF originals, including animations, are retained byte for byte on upload.
-		if (AvifTools.isAvif(obrazok.getName())) return;
 		boolean shouldPerformWatermarking = existImageMagickCompositeCommand()
 				&& Constants.getBoolean("galleryWatermarkApplyOnUpload")
 				&& ImageTools.isResizableImage(obrazok.getName());

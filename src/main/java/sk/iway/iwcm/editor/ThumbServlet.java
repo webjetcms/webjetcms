@@ -684,17 +684,17 @@ public class ThumbServlet extends HttpServlet
 				conn.connect();
 
 				String mimeType = conn.getContentType();
-            if (Tools.isEmpty(mimeType)) mimeType = Constants.getServletContext().getMimeType("/"+imagePath.toLowerCase());
-            if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
-            response.setContentType(mimeType);
+				if (Tools.isEmpty(mimeType)) mimeType = Constants.getServletContext().getMimeType("/"+imagePath.toLowerCase());
+				if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
+				response.setContentType(mimeType);
 
-            // Preserve a generation failure's placeholder MIME type and no-store policy across cluster nodes.
-            String cacheControl = conn.getHeaderField("Cache-Control");
-            if (Tools.isNotEmpty(cacheControl) && cacheControl.contains("no-store")) {
-                response.setHeader("Cache-Control", cacheControl);
-            } else {
-                PathFilter.setStaticContentHeaders("/"+imagePath, null, request, response);
-            }
+				// Preserve a generation failure's placeholder MIME type and no-store policy across cluster nodes.
+				String cacheControl = conn.getHeaderField("Cache-Control");
+				if (Tools.isNotEmpty(cacheControl) && cacheControl.contains("no-store")) {
+					response.setHeader("Cache-Control", cacheControl);
+				} else {
+					PathFilter.setStaticContentHeaders("/"+imagePath, null, request, response);
+				}
 
 				BufferedInputStream is = new BufferedInputStream(conn.getInputStream());
 				ServletOutputStream os = response.getOutputStream();

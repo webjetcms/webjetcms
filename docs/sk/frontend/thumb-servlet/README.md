@@ -18,17 +18,7 @@ a potrebujeme, aby sme ho mali v max rozmere `200x200` bodov. Pred URL obrázku 
 
 Obrázok reálne môže byť menší ako požadovaných `200x200` bodov, záleží od jeho pomeru strán. V tomto prípade sa vygeneroval ako `200x134` bodov, vždy sa ale zmestí do požadovaného rozmeru.
 
-## Podporované formáty
-
-Trieda `ImageTools` definuje podporované prípony obrázkov spolu s nastavením priehľadnosti pri rastrovom spracovaní a možnosťou meniť rozmery. Metóda `getSupportedImageExtensions()` vracia tento zoznam prípon bez bodky. SVG je rozpoznané ako obrázok, ale metóda `isResizableImage()` preň vracia `false`.
-
-Služba `XhrFileUploadService` preberá podporované obrázkové prípony z `ImageTools` do predvoleného zoznamu povolených súborov. Nový formát teda netreba samostatne pridávať do zoznamu pre upload; predvolene sú povolené aj GIF a SVG. TIFF a PSD zostávajú povolené ako prílohy, hoci ich `ImageTools` nepodporuje.
-
-Konfiguračná premenná `xhrFileUploadAllowedExtensions` nahrádza celý predvolený zoznam príponami oddelenými medzerou. Napríklad hodnota `pdf jpg png` nepovolí upload AVIF. Všeobecné kontroly povolených súborov platia aj naďalej.
-
 ## Obrázky AVIF
-
-Nahraný obrázok AVIF môžete vložiť do stránky, vybrať ako perexový obrázok a používať v obrázkových poliach, správcovi súborov aj galérii. WebJET načíta jeho rozmery bez dekódovania obrázka. Existujúce JPG, PNG ani WebP sa automaticky nekonvertujú.
 
 Generovanie miniatúr a úpravy AVIF vyžadujú na serveri **ImageMagick s podporou čítania aj zápisu AVIF vrátane priehľadnosti** (s príslušným `libheif` a AV1 kodekom). V konfigurácii `imageMagickDir` nastavte priečinok s príkazom `magick`, prípadne `convert`. Podporu musí zabezpečiť správca servera. WebJET pri spracovaní predpokladá funkčný kodek.
 
@@ -38,9 +28,7 @@ Pred nasadením overte pod účtom, pod ktorým beží WebJET:
 - prevod priehľadného PNG do AVIF a späť funguje a zachová priehľadnosť,
 - proces má právo spustiť ImageMagick a zapisovať do dočasného priečinka Javy aj cieľového priečinka obrázkov.
 
-Pri zmenšovaní, orezaní alebo otočení animovaného AVIF vznikne statický obrázok z prvého snímku. Pri úpravách sa používa bežný SDR výstup, bez záruky zachovania HDR a pôvodnej 10/12-bitovej hĺbky. Automatická vodotlač pri nahrávaní (`galleryWatermarkApplyOnUpload`) sa na AVIF originál neaplikuje.
-
-Metóda `GalleryDB.stripExif(filePath)` rešpektuje `galleryStripExif` aj pre AVIF a pri zapnutí odstráni metadáta priamo zo zadaného súboru. Platí to aj pri volaní z vlastného kódu; ak jej odovzdáte originál, prekóduje originál.
+Pri zmenšovaní, orezaní alebo otočení animovaného AVIF vznikne statický obrázok z prvého snímku. Pri úpravách sa používa bežný SDR výstup, bez záruky zachovania HDR a pôvodnej 10/12-bitovej hĺbky. Automatická vodotlač pri nahrávaní (`galleryWatermarkApplyOnUpload`) sa aplikuje aj na originál AVIF; pri jej vložení sa nezaručuje zachovanie animácie.
 
 Kvalitu a rýchlosť kódovania nastavíte existujúcim mechanizmom [vlastných parametrov ImageMagick](../../redactor/apps/gallery/README.md#vlastné-parametre-imagemagick). Predvolená hodnota `imageMagickCustomParams_avif` je `-quality 80 -define heic:speed=6`. Platia aj špecifickejšie nastavenia pre operáciu, napríklad `imageMagickCustomParams_resize_avif`.
 

@@ -6,22 +6,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
+import jakarta.servlet.ServletContext;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.mock.web.MockServletContext;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.io.IwcmFile;
@@ -46,6 +53,65 @@ class ImageToolsAvifTest extends BaseWebjetTest {
             assertArrayEquals(original, Files.readAllBytes(target));
         } finally {
             Constants.setString("imageMagickDir", previous);
+        }
+    }
+
+    /** Upload watermarking changes AVIF pixels while respecting the global switch and path exceptions. */
+    @ParameterizedTest
+    @CsvSource({"true,false", "false,false", "true,true"})
+    void appliesUploadWatermarkToAvif(boolean enabled, boolean excluded) throws Exception {
+        directory = directory.toRealPath();
+        ServletContext previousContext = Constants.getServletContext();
+        RequestBean previousRequest = SetCharacterEncodingFilter.getCurrentRequestBean();
+        Map<String, String> settings = Map.of(
+            "imageMagickDir", System.getenv().getOrDefault("AVIF_TEST_IMAGEMAGICK_DIR", "/usr/bin"),
+            "galleryWatermarkApplyOnUpload", Boolean.toString(enabled),
+            "galleryWatermarkApplyOnUploadExceptions", excluded ? "upload-skip" : "",
+            "galleryWatermarkApplyOnUploadDir", "/watermarks/",
+            "galleryWatermarkGravity", "Center",
+            "galleryWatermarkSaturation", "100",
+            "galleryWatermarkSvgSizePercent", "5",
+            "galleryWatermarkSvgMinHeight", "30");
+        Map<String, String> previousSettings = new HashMap<>();
+        settings.keySet().forEach(key -> previousSettings.put(key, Constants.getString(key)));
+        try {
+            settings.forEach(Constants::setString);
+            requireCodec();
+            String composite = System.getProperty("os.name").toLowerCase().contains("win") ? "magick.exe" : "composite";
+            assertTrue(Files.exists(Path.of(Constants.getString("imageMagickDir"), composite)), "Requires ImageMagick composite");
+            Constants.setServletContext(new MockServletContext() {
+                @Override
+                public String getRealPath(String path) {
+                    return directory.resolve(path.replaceFirst("^/", "")).toString() + ("/".equals(path) ? "/" : "");
+                }
+            });
+            RequestBean request = new RequestBean();
+            request.setDomain("watermark.example");
+            SetCharacterEncodingFilter.setCurrentRequestBean(request);
+            Files.createDirectories(directory.resolve("watermarks"));
+            Files.writeString(directory.resolve("watermarks/default.svg"),
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"30\"><rect width=\"30\" height=\"30\" fill=\"blue\"/></svg>");
+            Path target = directory.resolve("upload-skip.avif");
+            byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"));
+            Files.write(target, original);
+
+            GalleryDB.applyWatermarkOnUpload(new IwcmFile(target.toFile()));
+
+            if (enabled && !excluded) {
+                assertDimensions(target, 120, 80);
+                BufferedImage pixels = readPixels(target);
+                assertTrue(pixels.getColorModel().hasAlpha());
+                assertTrue((pixels.getRGB(0, 0) >>> 24) < 16, "Watermarking must preserve the transparent corner");
+                Color center = new Color(pixels.getRGB(60, 40));
+                assertTrue(center.getBlue() > 200 && center.getRed() < 60,
+                    "The blue watermark must replace the red center of the uploaded AVIF");
+            } else {
+                assertArrayEquals(original, Files.readAllBytes(target));
+            }
+        } finally {
+            Constants.setServletContext(previousContext);
+            SetCharacterEncodingFilter.setCurrentRequestBean(previousRequest);
+            previousSettings.forEach(Constants::setString);
         }
     }
 
@@ -269,6 +335,12 @@ class ImageToolsAvifTest extends BaseWebjetTest {
     }
 
     private void assertTransparent(Path image) throws Exception {
+        BufferedImage pixels = readPixels(image);
+        assertTrue(pixels.getColorModel().hasAlpha());
+        assertTrue((pixels.getRGB(0, 0) >>> 24) < 16, "The corner must remain transparent after lossy encoding");
+    }
+
+    private BufferedImage readPixels(Path image) throws Exception {
         Path decoded = directory.resolve("decoded.png");
         Process process = new ProcessBuilder(ImageTools.getImageMagickCommand(), image.toString(), decoded.toString())
             .redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
@@ -278,8 +350,6 @@ class ImageToolsAvifTest extends BaseWebjetTest {
         } finally {
             process.destroyForcibly();
         }
-        BufferedImage pixels = ImageIO.read(decoded.toFile());
-        assertTrue(pixels.getColorModel().hasAlpha());
-        assertTrue((pixels.getRGB(0, 0) >>> 24) < 16, "The corner must remain transparent after lossy encoding");
+        return ImageIO.read(decoded.toFile());
     }
 }

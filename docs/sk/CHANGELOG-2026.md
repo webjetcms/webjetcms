@@ -115,7 +115,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 ![Ponuka Ďalšie akcie v zozname webových stránok](redactor/webpages/more-actions.png)
 
 - Webové stránky - [predvolené nastavenie stromu](redactor/webpages/README.md#predvolené-nastavenie-pre-používateľov) pre nového používateľa je možné nastaviť cez konfiguračnú premennú `webpagesTreeDefaultSettings` (#368).
-- Obrázky - pridaná podpora obrázkov vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif) vo vkladaní obrázkov, perexoch, správcovi súborov, galérii a editore obrázkov. Spracovanie vyžaduje ImageMagick s funkčným čítaním a zápisom AVIF. Pri úprave animovaného obrázka sa použije prvý snímok (#371).
+- Obrázky - pridaná podpora obrázkov vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif) vo vkladaní obrázkov, perexoch, správcovi súborov, galérii a editore obrázkov vrátane automatickej vodotlače pri nahrávaní. Spracovanie vyžaduje ImageMagick s funkčným čítaním a zápisom AVIF. Pri úprave animovaného obrázka sa použije prvý snímok (#371).
 
 ### Headless režim
 
