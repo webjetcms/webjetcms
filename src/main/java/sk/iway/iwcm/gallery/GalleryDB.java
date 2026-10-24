@@ -2250,15 +2250,16 @@ public class GalleryDB
 	}
 
 	/**
-	 * Zo zadaneho obrazku na serveri pripravi nahladovy a normalny obrazok
+	 * Generates gallery variants and reports processing failure to upload callers.
 	 *
-	 *@param realPath cesta k obrazku na serveri
-	 *@param dir cesta k adresaru s nastavenim velkosti obrazkov galerie
+	 * @param realPath source image path
+	 * @param dir virtual gallery directory used to resolve resize settings
+	 * @return 0 when both variants are available, otherwise an ImageTools processing result code
 	 */
-	public static void resizePicture(String realPath, String dir)
+	public static int resizePicture(String realPath, String dir)
 	{
 		GalleryResizeSettings settings = getGalleryResizeSettings(dir, true, true);
-		resizePictureImpl(settings.dimensions, realPath, null, null, settings.resizeMode, settings.resizeModeNormal);
+		return resizePictureImplWithResult(settings.dimensions, realPath, null, null, settings.resizeMode, settings.resizeModeNormal);
 	}
 
 	/**
@@ -2302,7 +2303,12 @@ public class GalleryDB
 	 */
 	public static boolean resizePictureImpl(Dimension[] dims, String realPath, PrintWriter out, Prop prop, String resizeMode, String resizeModeNormal)
 	{
-		boolean ret = true;
+		return resizePictureImplWithResult(dims, realPath, out, prop, resizeMode, resizeModeNormal) == 0;
+	}
+
+	private static int resizePictureImplWithResult(Dimension[] dims, String realPath, PrintWriter out, Prop prop, String resizeMode, String resizeModeNormal)
+	{
+		int ret = 0;
 		File img = new File(realPath);
 
 		//uprava pre fotky zacinajuce na o_ alebo s_
@@ -2325,9 +2331,9 @@ public class GalleryDB
 		String imgNameLC = img.getName().toLowerCase();
 
 		if (!imgNameLC.endsWith(".jpg") && !imgNameLC.endsWith(".gif") && !imgNameLC.endsWith(".png")
-					&& !imgNameLC.endsWith(".jpeg"))
+					&& !imgNameLC.endsWith(".jpeg") && !imgNameLC.endsWith(".webp") && !imgNameLC.endsWith(".avif"))
 		{
-			return (false);
+			return 4;
 		}
 		String realPathSmall = Tools.replace(realPath, img.getName(), "s_" + img.getName());
 		String realPathOrig = Tools.replace(realPath, img.getName(), "o_" + img.getName());
@@ -2351,7 +2357,7 @@ public class GalleryDB
 			if ((original.exists() == false || original.length()<1) && miniatures)
 			{
 				// skopiruj ho
-				copyFile(realPath, realPathOrig);
+				if (!copyFile(realPath, realPathOrig)) return 2;
 			}
 			if (out != null && prop != null && miniatures)
 			{
@@ -2359,12 +2365,12 @@ public class GalleryDB
 			}
 			// resizni
 			int status = resizePicture(realPathOrig, realPath, dimNormal.getWidth(), dimNormal.getHeight(), effectiveResizeModeNormal);
-			if (status > 0)
+			if (status != 0 && status != 1)
 			{
-				ret = false;
+				if (ret == 0) ret = status;
 				if (out != null && prop != null)
 				{
-					println(out, normal.getName() + ": <span class='error'>" + prop.getText("gallery.resizing.error_" + status)
+					println(out, normal.getName() + ": <span class='error'>" + prop.getText(ImageTools.getErrorKey(status))
 								+ "</span>");
 				}
 			}
@@ -2376,13 +2382,13 @@ public class GalleryDB
 			if (original.exists() == true && original.length()>0)
 			{
 				// skopiruj original na normal
-				copyFile(realPathOrig, realPath);
+				if (!copyFile(realPathOrig, realPath)) return 2;
 				resizeFrom = realPath;
 			}
 			else
 			{
 				// vytvorim ho ako kopia normal do original
-				copyFile(realPath, realPathOrig);
+				if (!copyFile(realPath, realPathOrig)) return 2;
 			}
 			if (out != null && prop != null && miniatures)
 			{
@@ -2394,12 +2400,12 @@ public class GalleryDB
 			println(out, prop.getText("gallery.resizing.preview") + ": s_" + normal.getName());
 		}
 		int status = resizePicture(resizeFrom, realPathSmall, dim.getWidth(), dim.getHeight(), resizeMode);
-		if (status > 0)
+		if (status != 0 && status != 1)
 		{
-			ret = false;
+			if (ret == 0) ret = status;
 			if (out != null && prop != null)
 			{
-				println(out, normal.getName() + ": <span class='error'>" + prop.getText("gallery.resizing.error_" + status)
+				println(out, normal.getName() + ": <span class='error'>" + prop.getText(ImageTools.getErrorKey(status))
 							+ "</span>");
 			}
 		}
@@ -2407,11 +2413,9 @@ public class GalleryDB
 		if(resizeMode!=null && resizeMode.equals("N"))
 		{
 			IwcmFile small = new IwcmFile(realPathSmall);
-			if(small.exists())
-				ret = small.delete() && ret;
+			if (small.exists() && !small.delete() && ret == 0) ret = 2;
 			IwcmFile original = new IwcmFile(realPathOrig);
-			if(original.exists())
-				ret = original.delete() && ret;
+			if (original.exists() && !original.delete() && ret == 0) ret = 2;
 		}
 
 		return (ret);
@@ -2765,7 +2769,7 @@ public class GalleryDB
 				originalImage.setInput(input);
 				originalImage.check();
 				if (originalImage.getWidth() < 1 || originalImage.getHeight() < 1)
-					return (-4);
+					return 4;
 				// BufferedImage originalImage = ImageIO.read(fOrigImg);
 				IwcmFile fDestDir = (new IwcmFile(realPathSmall)).getParentFile();
 				if (fDestDir.exists() == false)
@@ -2832,7 +2836,7 @@ public class GalleryDB
 					}
 					else
 					{
-						copyFile(realPath, realPathSmall);
+						if (!copyFile(realPath, realPathSmall)) return 2;
 						//convertCmykToRgb(realPathSmall);
 						stripExif(realPathSmall);
 
@@ -2863,7 +2867,7 @@ public class GalleryDB
 
 						// skopiruj original na novy (ak bola nejaka operacia v
 						// ImageTools)
-						copyFile(realPath, realPathSmall);
+						if (!copyFile(realPath, realPathSmall)) return 2;
 						// skonvertuj do RGB ak treba a je nastavene
 						//convertCmykToRgb(realPathSmall);
 
@@ -2915,7 +2919,7 @@ public class GalleryDB
 					performWatermarking(realPathSmall);
 					return (0);
 				} else {
-					return (3);
+					return exitValue;
 				}
 			}
 		}

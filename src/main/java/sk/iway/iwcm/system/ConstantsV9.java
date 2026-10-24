@@ -225,7 +225,7 @@ public class ConstantsV9 {
 		Constants.setInt("ai_providerResponseTimeoutSeconds", 0, Constants.MOD_AI_ASSISTANTS, "AI provider response timeout in seconds, 0 disables the timeout");
 
 		Constants.setString("basketAdminGroupIds", "", Constants.MOD_BASKET, "Zoznam ID adresárov, ktore obsahju produkty pre elektronicky obchod. Možné zadať v tvare 17,23*,72, kde * znamená vrátane podpriečinkov. Ak je prázdne, tak sa automaticky vyhľadá podľa vloženej aplikácie zoznam produktov.");
-		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4 webp", Constants.mods(Constants.MOD_FORMMAIL, Constants.MOD_SECURITY, Constants.MOD_UPLOAD), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
+		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4 webp avif", Constants.mods(Constants.MOD_FORMMAIL, Constants.MOD_SECURITY, Constants.MOD_UPLOAD), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
 
 		Constants.setString("clientAbortMessages", "response already,connection reset by peer,broken pipe,socket write error", Constants.MOD_AUDIT, "Zoznam textu výnimiek spôsobujúcich prerušenie HTTP spojenia klientom (oddelené čiarkou, malými písmenami). Takéto chyby sa nezaznamenávajú do logov.");
 
@@ -295,6 +295,7 @@ public class ConstantsV9 {
 		Constants.setString("imageMagickCustomParams_jpg", "---\n-define jpeg:optimize-coding=true", Constants.MOD_THUMB, "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 		Constants.setString("imageMagickCustomParams_png", "---\n-define png:compression-level=9 -define png:compression-strategy=1", Constants.MOD_THUMB, "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 		Constants.setString("imageMagickCustomParams_webp", "---\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", Constants.MOD_THUMB, "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_avif", "---\n-quality 80 -define heic:speed=6", Constants.MOD_THUMB, "Custom parameters for ImageMagick AVIF output, including compression quality and encoding speed.");
 
 		Constants.setString("appWrapperClasses", "apps.wrapper.container:container,apps.wrapper.container-fluid:container-fluid,apps.wrapper.mt-1:mt-1,apps.wrapper.mt-2:mt-2,apps.wrapper.mt-3:mt-3,apps.wrapper.mt-4:mt-4,apps.wrapper.mb-1:mb-1,apps.wrapper.mb-2:mb-2,apps.wrapper.mb-3:mb-3,apps.wrapper.mb-4:mb-4,apps.wrapper.w-100:w-100,apps.wrapper.w-75:w-75,apps.wrapper.w-50:w-50,apps.wrapper.mx-auto:mx-auto", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie výstupu aplikácie do wrapper kontajnera. Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Ak je uvedený prekladový kľúč, zobrazí sa preložený názov.");
 

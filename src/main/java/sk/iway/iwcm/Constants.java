@@ -489,7 +489,7 @@ public class Constants {
 
 		setInt("cacheStaticContentSeconds", 300, MOD_PERFORMANCE,
 				"nastavenie casu v sekundach (standardne nastavene na 0), na kory server nastavi exspiraciu statickych suborov nastavenych konfiguracnou premennou cacheStaticContentSuffixes (standardne .gif,.jpg,.png,.swf,.css,.js). Ak je prihlaseny administrator, alebo sa jedna o pristup z IP adries pre ktore sa neeviduje statistika (premenna statNoLogIP) tak sa cache hlavicka nenastavi.");
-		setString("cacheStaticContentSuffixes", ".gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2,.webp", MOD_PERFORMANCE,
+		setString("cacheStaticContentSuffixes", ".gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2,.webp,.avif", MOD_PERFORMANCE,
 				"pripony suborov, na ktore bude aplikovana cache hlavicka");
 
 		setString("basketCurrencyField", "fieldJ", MOD_BASKET,
@@ -630,8 +630,8 @@ public class Constants {
 				"limity pre upload suborov cez editor v kB pre subory a skratene menu");
 		setString("FCKConfig.UploadFileTypes[Default][image]", "", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity typov suborov pre upload cez editor pre obrazky a standardne menu"); // jpg,jpeg,png,gif,swf,mpg,mov,wmv,flv,avi,mp3,vma,wav
-		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,svg,webp,mp3,mp4", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
-				"limity typov suborov pre upload cez editor pre obrazky a skratene menu, prednastavene na jpg,jpeg,png,gif,svg,webp,mp3,mp4");
+		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,svg,webp,avif,mp3,mp4", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
+				"limity typov suborov pre upload cez editor pre obrazky a skratene menu, prednastavene na jpg,jpeg,png,gif,svg,webp,avif,mp3,mp4");
 		setString("FCKConfig.UploadFileTypes[Default][file]", "", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity typov suborov pre upload cez editor pre subory a standardne menu");
 		setString("FCKConfig.UploadFileTypes[Basic][file]", "doc,docx,xls,xlsx,pdf,zip,rtf",
