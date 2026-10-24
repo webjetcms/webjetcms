@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
@@ -84,16 +83,26 @@ class AdminUploadImageTest extends BaseWebjetTest {
         previousSettings.forEach(Constants::setString);
     }
 
-    /** Malformed Base64 must not truncate any existing destination, regardless of its image format. */
-    @ParameterizedTest
-    @ValueSource(strings = {"png", "jpg", "jpeg", "gif", "webp", "bmp", "avif"})
-    void invalidBase64KeepsExistingBytes(String extension) throws Exception {
-        Path target = target(extension);
+    /** Malformed Base64 fails before format-specific processing and must not truncate the destination. */
+    @Test
+    void invalidBase64KeepsExistingBytes() throws Exception {
+        Path target = target("png");
         byte[] original = {1, 2, 3, 4};
         Files.write(target, original);
-        JSONObject response = upload(extension, "invalid!base64".getBytes(StandardCharsets.US_ASCII), 0, 1);
+        JSONObject response = upload("png", "invalid!base64".getBytes(StandardCharsets.US_ASCII), 0, 1);
         assertFailure(response);
         assertArrayEquals(original, Files.readAllBytes(target));
+        assertNoStagingFiles();
+    }
+
+    /** The editor's PNG transport must not replace an AVIF when the encoder is unavailable. */
+    @Test
+    void failedAvifEditorSaveKeepsOriginalAndReportsFailure() throws Exception {
+        Constants.setString("imageMagickDir", root.resolve("missing").toString());
+        byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"));
+        Files.write(target("avif"), original);
+        assertFailure(upload("avif", pngPayload(), 0, 1));
+        assertArrayEquals(original, Files.readAllBytes(target("avif")));
         assertNoStagingFiles();
     }
 

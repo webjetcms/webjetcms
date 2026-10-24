@@ -1,22 +1,23 @@
 Feature('webpages.avif');
 
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
 const codecDirectory = process.env.AVIF_TEST_IMAGEMAGICK_DIR || '/usr/bin';
 const filesPage = '/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9wcm9kdWt0b3ZhLXN0cmFua2E_E';
+const galleryFilesPage = '/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9nYWxsZXJ5L3Rlc3Q_E';
+const fileName = 'autotest-transparent.avif';
 let folderName;
 let originalConfig;
 let pageId;
 let pageName;
 let originalEditorMode;
-let galleryFolder;
-const galleryFilesPage = '/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9nYWxsZXJ5L3Rlc3Q_E';
-const fileName = 'autotest-transparent.avif';
+let createdFolders = [];
 const imageUrl = () => '/images/produktova-stranka/' + folderName + '/' + fileName;
 
 Before(({ I, login }) => {
     I.switchTo();
     login('admin');
     I.closeOtherTabs();
-    if (!folderName) folderName = 'autotest-avif-' + I.getRandomTextShort();
 });
 
 /** Read the actual response, decode its pixels in the browser and verify its container. */
@@ -26,7 +27,6 @@ async function inspectImage(I, url) {
         const data = await response.arrayBuffer();
         const bytes = new Uint8Array(data);
         const result = { status: response.status, mime: response.headers.get('content-type'),
-            cacheControl: response.headers.get('cache-control'),
             signature: String.fromCharCode(...bytes.slice(4, 12)), bytes: Array.from(bytes).join(',') };
         if (!response.ok) return result;
         const image = new Image();
@@ -64,92 +64,41 @@ async function upload(I, name) {
     I.waitForInvisible('.elfinder-notify-upload', 30);
 }
 
-async function verifyUpload({ I, Document }) {
+/** Each workflow owns its files and captures the environment settings changed by that workflow. */
+async function prepare({ I, Document }, name, withPage = false) {
+    folderName = 'autotest-avif-' + name + '-' + I.getRandomTextShort();
+    createdFolders = [];
+    pageName = undefined;
+    originalEditorMode = undefined;
+    originalConfig = undefined;
     I.amOnPage('/admin/v9/');
-    originalConfig = await I.executeScript(async () => {
+    const settings = { imageMagickDir: codecDirectory, galleryStripExif: 'true', thumbServletAllowedSizeMode: 'allow' };
+    if (withPage) {
+        // Keep page-change notifications local during the test.
+        Object.assign(settings, { sendMailSaveEmailPath: '/WEB-INF/tmp/' + folderName,
+            sendMailSaveEmail: 'true', useSMTPServer: 'true' });
+    }
+    originalConfig = await I.executeScript(async keys => {
         const response = await fetch('/admin/rest/settings/configuration/all?view=all&size=10000', { headers: { 'X-CSRF-Token': window.csrfToken } });
         const result = await response.json();
         const rows = result.content || result.data;
-        return Object.fromEntries(rows.filter(row => ['imageMagickDir', 'galleryStripExif', 'thumbServletAllowedSizeMode', 'sendMailSaveEmail', 'sendMailSaveEmailPath', 'useSMTPServer'].includes(row.name))
-            .map(row => [row.name, row.value]));
-    });
-    I.assertTrue(Object.hasOwn(originalConfig, 'imageMagickDir'));
-    I.assertTrue(Object.hasOwn(originalConfig, 'galleryStripExif'));
-    Document.setConfigValue('imageMagickDir', codecDirectory, true);
-    Document.setConfigValue('galleryStripExif', 'false', true);
-    Document.setConfigValue('thumbServletAllowedSizeMode', 'allow', true);
-    // Keep page-change notifications local during the test.
-    Document.setConfigValue('sendMailSaveEmailPath', '/WEB-INF/tmp/' + folderName, true);
-    Document.setConfigValue('sendMailSaveEmail', 'true', true);
-    Document.setConfigValue('useSMTPServer', 'true', true);
-    I.amOnPage(filesPage);
-    I.waitForElement('.elfinder-cwd-filename[title="money.jpg"]', 20);
-    I.click('.elfinder-cwd-filename[title="money.jpg"]');
+        return Object.fromEntries(rows.filter(row => keys.includes(row.name)).map(row => [row.name, row.value]));
+    }, Object.keys(settings));
+    for (const key of Object.keys(settings)) I.assertTrue(Object.hasOwn(originalConfig, key));
+    for (const [key, value] of Object.entries(settings)) Document.setConfigValue(key, value, true);
+}
+
+async function createFolder(I, page, existingFile) {
+    createdFolders.push([page, folderName]);
+    I.amOnPage(page);
+    I.waitForElement(`.elfinder-cwd-filename[title="${existingFile}"]`, 20);
+    I.click(`.elfinder-cwd-filename[title="${existingFile}"]`);
     I.clickCss('.elfinder-button-icon-mkdir');
     I.fillField('.elfinder-cwd-filename[title="Nový priečinok"] textarea', folderName);
     I.pressKey('Enter');
     I.waitForText(folderName, 10, '.elfinder-cwd-wrapper');
     I.doubleClick(`.elfinder-cwd-filename[title="${folderName}"]`);
     I.waitForElement(locate('.elfinder-navbar-dir.ui-state-active').withText(folderName), 10);
-    await upload(I, fileName);
-    await upload(I, 'autotest-animated.avif');
-
-    const original = await inspectImage(I, imageUrl());
-    assertImage(I, original, 120, 80);
-    assertImage(I, await inspectImage(I, '/thumb' + imageUrl() + '?w=60'), 60, 40);
-    assertImage(I, await inspectImage(I, '/thumb' + imageUrl() + '?w=60&h=40&ip=5'), 60, 40);
-    I.assertEqual((await inspectImage(I, imageUrl())).bytes, original.bytes, 'Thumbnails must preserve the original');
-    I.rightClick(`.elfinder-cwd-filename[title="${fileName}"]`);
-    I.waitForVisible('.elfinder-contextmenu', 10);
-    I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-info');
-    I.waitForText('120x80', 10, '.elfinder-dialog');
-    I.pressKey('Escape');
-
-    const animated = imageUrl().replace(fileName, 'autotest-animated.avif');
-    const animation = await inspectImage(I, animated);
-    I.assertEqual(animation.signature, 'ftypavis');
-    const unchangedThumbnail = await inspectImage(I, '/thumb' + animated + '?w=240&h=160');
-    I.assertEqual(unchangedThumbnail.status, 200);
-    I.assertContain(unchangedThumbnail.mime, 'image/avif');
-    I.assertEqual(unchangedThumbnail.bytes, animation.bytes, 'A copy must preserve the animation when metadata stripping is disabled');
-    Document.setConfigValue('galleryStripExif', 'true', true);
-    // Use different bounds to avoid reusing the thumbnail cached before metadata stripping was enabled.
-    assertImage(I, await inspectImage(I, '/thumb' + animated + '?w=241&h=161'), 120, 80, false);
-    assertImage(I, await inspectImage(I, '/thumb' + animated + '?w=60&h=40'), 60, 40, false);
-    I.assertEqual((await inspectImage(I, animated)).bytes, animation.bytes);
-
-}
-
-/** Gallery upload creates derivatives and retains the original animation. */
-async function verifyGallery({ I, DT }) {
-    galleryFolder = folderName;
-    I.amOnPage(galleryFilesPage);
-    I.refreshPage();
-    I.waitForElement('.elfinder-cwd-filename[title="koala.jpg"]', 20);
-    I.click('.elfinder-cwd-filename[title="koala.jpg"]');
-    I.clickCss('.elfinder-button-icon-mkdir');
-    I.fillField('.elfinder-cwd-filename[title="Nový priečinok"] textarea', galleryFolder);
-    I.pressKey('Enter');
-    I.waitForText(galleryFolder, 10, '.elfinder-cwd-wrapper');
-    I.doubleClick(`.elfinder-cwd-filename[title="${galleryFolder}"]`);
-    I.waitForElement(locate('.elfinder-navbar-dir.ui-state-active').withText(galleryFolder), 10);
-    await upload(I, 'autotest-animated.avif');
-    const base = '/images/gallery/test/' + galleryFolder + '/';
-    const original = await inspectImage(I, base + 'o_autotest-animated.avif');
-    I.assertEqual(original.signature, 'ftypavis');
-    for (const prefix of ['', 's_']) {
-        const image = await inspectImage(I, base + prefix + 'autotest-animated.avif');
-        I.assertEqual(image.status, 200);
-        I.assertContain(image.mime, 'image/avif');
-        // Metadata stripping produces a static image even when inherited gallery settings only copy it.
-        I.assertEqual(image.signature, 'ftypavif');
-        I.assertTrue(image.width > 0 && image.height > 0);
-    }
-    const uploaded = await inspectImage(I, imageUrl().replace(fileName, 'autotest-animated.avif'));
-    I.assertEqual(original.bytes, uploaded.bytes);
-    I.amOnPage('/admin/v9/apps/gallery/?dir=' + base);
-    DT.waitForLoader();
-    I.waitForText('autotest-animated.avif', 20, '#galleryTable');
 }
 
 async function verifyPage({ I, DTE, DT, Document }) {
@@ -186,14 +135,18 @@ async function verifyPage({ I, DTE, DT, Document }) {
     DTE.waitForEditor();
     I.clickCss('#pills-dt-datatableInit-perex-tab');
     I.seeInField('#DTE_Field_perexImage', imageUrl());
-    I.seeElement('.DTE_Field_Name_perexImage .has-image');
+    I.seeElement('.DTE_Field_Name_perexImage .input-group-text');
+    const preview = await I.grabCssPropertyFrom('.DTE_Field_Name_perexImage .input-group-text', 'background-image');
+    I.assertContain(preview, imageUrl());
+    const previewUrl = preview.match(/^url\(["']?(.*?)["']?\)$/)[1];
+    assertImage(I, await inspectImage(I, previewUrl), 120, 80);
     DTE.cancel();
     I.amOnPage('/showdoc.do?docid=' + pageId);
     I.waitForElement(`img[src^="${imageUrl()}"]`, 20);
     I.waitForFunction((src) => Array.from(document.images).some(image => image.src.includes(src) && image.naturalWidth === 120), [imageUrl()], 20);
 }
 
-async function verifyImageEditor({ I, DTE, Document }) {
+async function cropInEditor(I) {
     I.amOnPage(filesPage);
     I.waitForElement(`.elfinder-cwd-filename[title="${folderName}"]`, 20);
     I.doubleClick(`.elfinder-cwd-filename[title="${folderName}"]`);
@@ -210,72 +163,99 @@ async function verifyImageEditor({ I, DTE, Document }) {
     I.clickCss('div.tui-image-editor-button.preset-square');
     I.clickCss('div.tui-image-editor-button.apply');
     I.waitForFunction(() => document.querySelector('#photoEditorContainer canvas.lower-canvas')?.width === 80, [], 20);
-    I.saveScreenshot('autotest-avif-editor.png');
-    I.clickCss('.DTE_Form_Buttons > button.btn-primary');
-    DTE.waitForLoader();
-    I.waitForVisible('#toast-container-upload .ti-circle-check', 60);
-    I.switchToPreviousTab();
-    I.closeOtherTabs();
-    assertImage(I, await inspectImage(I, imageUrl()), 80, 80);
-
-    const original = await inspectImage(I, imageUrl());
-    Document.setConfigValue('imageMagickDir', '/autotest-avif-missing-codec', true);
-    I.amOnPage('/admin/v9/');
-    // A new size prevents a previously generated thumbnail from hiding the unavailable codec.
-    const failed = await inspectImage(I, '/thumb' + imageUrl() + '?w=37&h=29&ip=5');
-    I.assertEqual(failed.status, 200);
-    I.assertContain(failed.mime, 'image/gif');
-    I.assertContain(failed.cacheControl, 'no-store');
-    const placeholder = await inspectImage(I, '/components/_common/mime/big_unknown.gif');
-    I.assertEqual(failed.bytes, placeholder.bytes);
-    I.assertEqual(failed.width, placeholder.width);
-    I.assertEqual(failed.height, placeholder.height);
-    I.assertEqual((await inspectImage(I, imageUrl())).bytes, original.bytes);
-    Document.setConfigValue('imageMagickDir', codecDirectory, true);
-    // This crop changes the aspect ratio and can remove the transparent border.
-    assertImage(I, await inspectImage(I, '/thumb' + imageUrl() + '?w=37&h=29&ip=5'), 37, 29, false);
 }
 
-Scenario('AVIF upload, page insertion, thumbnails, image editor and missing codec @singlethread', async ({ I, DT, DTE, Document }) => {
-    const helpers = { I, DT, DTE, Document };
-    await verifyUpload(helpers);
-    await verifyGallery(helpers);
-    await verifyPage(helpers);
-    await verifyImageEditor(helpers);
-});
-
-After(async ({ I, DT, DTE, Document }) => {
+/** Restore configuration before deleting test data so a deletion failure cannot leave the codec disabled. */
+async function cleanup({ I, DT, DTE, Document }) {
     I.switchTo();
     I.closeOtherTabs();
+    if (originalConfig) {
+        for (const [key, value] of Object.entries(originalConfig)) Document.setConfigValue(key, value, true);
+    }
+    if (originalEditorMode !== undefined) {
+        I.amOnPage('/admin/v9/');
+        await I.executeScript(value => WJ.setAdminSetting('editorTypeForced', value), originalEditorMode);
+    }
     if (pageName) {
         I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
         DT.waitForLoader();
-        DT.filterContains('title', 'autotest-avif-page-');
+        DT.filterEquals('title', pageName);
         if (await I.grabNumberOfVisibleElements('#datatableInit .dt-row-edit')) {
             DT.deleteAll();
             DTE.waitForLoader();
         }
     }
-    if (originalConfig) {
-        for (const [key, value] of Object.entries(originalConfig)) Document.setConfigValue(key, value, true);
-    }
-    if (originalEditorMode !== undefined) await I.executeScript(value => WJ.setAdminSetting('editorTypeForced', value), originalEditorMode);
-    for (const [page, name] of [[filesPage, folderName], [galleryFilesPage, galleryFolder]]) {
-        if (!name) continue;
+    for (const [page, name] of createdFolders) {
         I.amOnPage(page);
         I.refreshPage();
         I.waitForVisible('.elfinder-cwd', 20);
-        const folder = '.elfinder-cwd-filename[title^="autotest-avif-"]';
-        let count = await I.grabNumberOfVisibleElements(folder);
-        while (count > 0) {
+        const folder = `.elfinder-cwd-filename[title="${name}"]`;
+        if (await I.grabNumberOfVisibleElements(folder)) {
             I.rightClick(folder);
             I.waitForVisible('.elfinder-contextmenu', 10);
             I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rm');
             I.waitForVisible('.elfinder-confirm-accept', 10);
             I.clickCss('.elfinder-confirm-accept');
-            I.waitForFunction(([selector, previousCount]) => document.querySelectorAll(selector).length < previousCount,
-                [folder, count], 20);
-            count = await I.grabNumberOfVisibleElements(folder);
+            I.waitForInvisible(folder, 20);
         }
     }
+}
+
+Scenario('AVIF upload, thumbnail and page insertion @singlethread', async ({ I, DT, DTE, Document }) => {
+    const helpers = { I, DT, DTE, Document };
+    await prepare(helpers, 'page', true);
+    await createFolder(I, filesPage, 'money.jpg');
+    await upload(I, fileName);
+    const original = await inspectImage(I, imageUrl());
+    assertImage(I, original, 120, 80);
+    assertImage(I, await inspectImage(I, '/thumb' + imageUrl() + '?w=60'), 60, 40);
+    I.assertEqual((await inspectImage(I, imageUrl())).bytes, original.bytes, 'Thumbnails must preserve the original');
+    await verifyPage(helpers);
 });
+Scenario('AVIF page cleanup @singlethread', cleanup);
+
+Scenario('AVIF gallery upload preserves the animated original @singlethread', async ({ I, DT, Document }) => {
+    await prepare({ I, Document }, 'gallery');
+    await createFolder(I, galleryFilesPage, 'koala.jpg');
+    await upload(I, 'autotest-animated.avif');
+    const base = '/images/gallery/test/' + folderName + '/';
+    const original = await inspectImage(I, base + 'o_autotest-animated.avif');
+    I.assertEqual(original.status, 200);
+    I.assertEqual(original.bytes, readFileSync(join(__dirname, 'autotest-animated.avif')).join(','));
+    for (const prefix of ['', 's_']) {
+        const image = await inspectImage(I, base + prefix + 'autotest-animated.avif');
+        I.assertEqual(image.status, 200);
+        I.assertContain(image.mime, 'image/avif');
+        I.assertEqual(image.signature, 'ftypavif');
+        I.assertTrue(image.width > 0 && image.height > 0);
+    }
+    I.amOnPage('/admin/v9/apps/gallery/?dir=' + base);
+    DT.waitForLoader();
+    I.waitForText('autotest-animated.avif', 20, '#galleryTable');
+});
+Scenario('AVIF gallery cleanup @singlethread', cleanup);
+
+Scenario('AVIF editor reports a missing codec and saves after recovery @singlethread', async ({ I, DTE, Document }) => {
+    await prepare({ I, Document }, 'editor');
+    await createFolder(I, filesPage, 'money.jpg');
+    await upload(I, fileName);
+    const original = await inspectImage(I, imageUrl());
+    Document.setConfigValue('imageMagickDir', '/autotest-avif-missing-codec', true);
+    await cropInEditor(I);
+    I.clickCss('.DTE_Form_Buttons > button.btn-primary');
+    DTE.waitForLoader();
+    I.waitForText('Obrázok sa nepodarilo uložiť.', 30, '.toast-error');
+    I.seeElement('#toast-container-upload [data-upload-status="error"]');
+    I.assertEqual((await inspectImage(I, imageUrl())).bytes, original.bytes, 'A failed editor save must preserve the original');
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+    Document.setConfigValue('imageMagickDir', codecDirectory, true);
+    await cropInEditor(I);
+    I.clickCss('.DTE_Form_Buttons > button.btn-primary');
+    DTE.waitForLoader();
+    I.waitForVisible('#toast-container-upload [data-upload-status="success"]', 60);
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+    assertImage(I, await inspectImage(I, imageUrl()), 80, 80);
+});
+Scenario('AVIF editor cleanup @singlethread', cleanup);

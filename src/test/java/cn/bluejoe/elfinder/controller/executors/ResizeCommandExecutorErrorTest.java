@@ -26,15 +26,15 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
-/** Verifies that failed image operations return errors for every format instead of a changed-file response. */
+/** Verifies that failed image operations return errors instead of a changed-file response. */
 class ResizeCommandExecutorErrorTest extends BaseWebjetTest {
     @TempDir
     Path root;
 
     /** Real processing failures must preserve the input and reach the shared result-code translation. */
     @ParameterizedTest
-    @CsvSource({"png,3", "jpg,3", "avif,3"})
-    void failedResizeReportsErrorRegardlessOfFormat(String extension, int expectedResult) throws Exception {
+    @CsvSource({"png,resize", "png,crop", "png,rotate", "avif,resize"})
+    void failedImageOperationReportsError(String extension, String mode) throws Exception {
         root = root.toRealPath();
         ServletContext previousContext = Constants.getServletContext();
         String previousCommand = Constants.getString("imageMagickDir");
@@ -60,14 +60,15 @@ class ResizeCommandExecutorErrorTest extends BaseWebjetTest {
             Constants.setString("imageMagickDir", root.resolve("missing").toString());
             MockHttpServletRequest request = new MockHttpServletRequest();
             request.addParameter("target", "image");
-            request.addParameter("mode", "resize");
+            request.addParameter("mode", mode);
             request.addParameter("width", "30");
             request.addParameter("height", "20");
+            request.addParameter("degree", "90");
             JSONObject response = new JSONObject();
 
             new ResizeCommandExecutor().execute(service, request, Constants.getServletContext(), response);
 
-            assertEquals(Prop.getInstance(request).getText("gallery.resizing.error_" + expectedResult), response.getString("error"));
+            assertEquals(Prop.getInstance(request).getText("gallery.resizing.error_3"), response.getString("error"));
             assertFalse(response.has("changed"));
             assertArrayEquals(invalid, Files.readAllBytes(image));
         } finally {

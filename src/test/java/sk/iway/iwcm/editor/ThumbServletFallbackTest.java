@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -81,10 +82,10 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
         previousSettings.forEach(Constants::setString);
     }
 
-    /** A failed conversion serves a real GIF without caching it under any requested image extension. */
+    /** A failed conversion serves a real GIF with the configured static-content cache policy. */
     @ParameterizedTest
     @ValueSource(strings = {"png", "jpg", "avif"})
-    void corruptImageReturnsUncachedPlaceholder(String extension) throws Exception {
+    void corruptImageReturnsCacheablePlaceholder(String extension) throws Exception {
         byte[] original = {0, 1, 2, 3};
         Files.write(source(extension), original);
         assertPlaceholder(requestImage(extension));
@@ -92,7 +93,7 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
         assertFalse(Files.exists(cachedImage(extension)));
     }
 
-    /** Missing AVIF processing support falls back to the same GIF as other processing failures. */
+    /** Missing AVIF processing support returns a cacheable GIF without creating a thumbnail on disk. */
     @Test
     void unavailableAvifCodecReturnsPlaceholder() throws Exception {
         Files.copy(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"), source("avif"));
@@ -100,7 +101,7 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
         assertFalse(Files.exists(cachedImage("avif")));
     }
 
-    /** A subsequent request can generate the real thumbnail once the source has been repaired. */
+    /** A request reaching the server after source repair generates the thumbnail at the same URL. */
     @Test
     void repairedSourceGeneratesThumbnailAtSameUrl() throws Exception {
         Files.write(source("png"), new byte[] {0, 1, 2, 3});
@@ -131,17 +132,17 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
         assertArrayEquals(image, response.getContentAsByteArray());
     }
 
-    /** Cluster forwarding preserves the rendering node's GIF/no-store response and regular AVIF caching. */
+    /** Cluster responses cache both GIF placeholders and AVIF images while honoring explicit no-store. */
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void forwardsRenderingNodeResponse(boolean failed) throws Exception {
+    @CsvSource({"true,false", "false,false", "true,true"})
+    void forwardsRenderingNodeResponse(boolean failed, boolean noStore) throws Exception {
         byte[] image = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"));
         Files.write(source("avif"), image);
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/thumb/", exchange -> {
             byte[] body = failed ? placeholder : image;
             exchange.getResponseHeaders().set("Content-Type", failed ? "image/gif" : "image/avif");
-            exchange.getResponseHeaders().set("Cache-Control", failed ? "no-store" : "public, max-age=3600");
+            exchange.getResponseHeaders().set("Cache-Control", noStore ? "no-store" : "public, max-age=3600");
             exchange.sendResponseHeaders(200, body.length);
             try (var output = exchange.getResponseBody()) {
                 output.write(body);
@@ -154,7 +155,7 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
             setConfig("clusterMyNodeName", "autotest-reader");
             MockHttpServletResponse response = requestImage("avif");
             if (failed) {
-                assertPlaceholder(response);
+                assertPlaceholder(response, noStore ? "no-store" : "public, max-age=3600");
             } else {
                 assertEquals(200, response.getStatus());
                 assertEquals("image/avif", response.getContentType());
@@ -190,10 +191,13 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
     }
 
     private void assertPlaceholder(MockHttpServletResponse response) throws Exception {
+        assertPlaceholder(response, "public, max-age=3600");
+    }
+
+    private void assertPlaceholder(MockHttpServletResponse response, String cacheControl) throws Exception {
         assertEquals(200, response.getStatus());
         assertEquals("image/gif", response.getContentType());
-        assertNotNull(response.getHeader("Cache-Control"));
-        assertTrue(response.getHeader("Cache-Control").contains("no-store"));
+        assertEquals(cacheControl, response.getHeader("Cache-Control"));
         assertArrayEquals(placeholder, response.getContentAsByteArray());
         assertNotNull(ImageIO.read(new ByteArrayInputStream(response.getContentAsByteArray())));
     }

@@ -343,7 +343,6 @@ public class ThumbServlet extends HttpServlet
 			}
 
 			String imgPath = null;
-			boolean processingFailed = false;
 
 			if (smallImageFile.exists() && imageFile.lastModified() < smallImageFile.lastModified())
 			{
@@ -615,7 +614,6 @@ public class ThumbServlet extends HttpServlet
 						Logger.error(ThumbServlet.class, "Thumbnail generation failed for " + imagePath
 							+ ": result=" + ret + ", error=" + ImageTools.getErrorKey(ret));
 						imgPath = Tools.getRealPath("/components/_common/mime/big_unknown.gif");
-						processingFailed = true;
 					}
 				}
 			}
@@ -632,12 +630,8 @@ public class ThumbServlet extends HttpServlet
             if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
             response.setContentType(mimeType);
 
-            if (processingFailed) {
-                // Do not cache the placeholder under the requested thumbnail URL.
-                PathFilter.setNoCacheHeaders(response);
-            } else {
-                PathFilter.setStaticContentHeaders(imagePath, UsersDB.getCurrentUser(request), request, response);
-            }
+            // Cache placeholders by the same policy to avoid repeated conversion attempts on reload.
+            PathFilter.setStaticContentHeaders(imagePath, UsersDB.getCurrentUser(request), request, response);
 
             ServletOutputStream out = response.getOutputStream();
             byte[] buff = new byte[64000];
@@ -688,7 +682,7 @@ public class ThumbServlet extends HttpServlet
 				if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
 				response.setContentType(mimeType);
 
-				// Preserve a generation failure's placeholder MIME type and no-store policy across cluster nodes.
+				// Honor an explicit no-store policy from the rendering node.
 				String cacheControl = conn.getHeaderField("Cache-Control");
 				if (Tools.isNotEmpty(cacheControl) && cacheControl.contains("no-store")) {
 					response.setHeader("Cache-Control", cacheControl);

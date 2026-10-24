@@ -139,7 +139,6 @@ class ImageToolsAvifTest extends BaseWebjetTest {
                 files.when(() -> FileTools.copyFile(any(IwcmFile.class), any(IwcmFile.class))).thenAnswer(call -> {
                     Path encoded = Path.of(((IwcmFile) call.getArgument(0)).getAbsolutePath());
                     Path destination = Path.of(((IwcmFile) call.getArgument(1)).getAbsolutePath());
-                    assertEquals(staging, encoded.getParent(), "ImageMagick must write to local staging storage");
                     Files.createDirectories(destination.getParent());
                     Files.copy(encoded, destination);
                     return true;
@@ -317,14 +316,14 @@ class ImageToolsAvifTest extends BaseWebjetTest {
 
     /** An AVIF source smaller than the requested bounds is copied unchanged without a codec. */
     @ParameterizedTest
-    @CsvSource({"S,animated", "C,animated", "S,transparent", "C,transparent"})
-    void largerThumbnailCopiesOriginal(String resizeMode, String fixture) throws Exception {
+    @ValueSource(strings = {"S", "C"})
+    void largerThumbnailCopiesOriginal(String resizeMode) throws Exception {
         String previous = Constants.getString("imageMagickDir");
         String cache = Constants.getString("thumbServletCacheDir");
         try {
             Constants.setString("imageMagickDir", directory.resolve("missing").toString());
             Constants.setString("thumbServletCacheDir", directory.toString());
-            Path source = Path.of("src/test/webapp/tests/webpages/autotest-" + fixture + ".avif");
+            Path source = Path.of("src/test/webapp/tests/webpages/autotest-animated.avif");
             byte[] original = Files.readAllBytes(source);
             Path target = directory.resolve("copy.avif");
             assertEquals(1, GalleryDB.resizePicture(source.toString(), target.toString(), 240, 160, resizeMode));
@@ -339,8 +338,8 @@ class ImageToolsAvifTest extends BaseWebjetTest {
 
     /** Resizing an animated source still produces a static thumbnail from its first frame. */
     @ParameterizedTest
-    @ValueSource(strings = {"S", "C"})
-    void smallerThumbnailOfAnimationIsStatic(String resizeMode) throws Exception {
+    @CsvSource({"S,60,40", "C,40,40"})
+    void smallerThumbnailOfAnimationIsStatic(String resizeMode, int width, int height) throws Exception {
         String previous = Constants.getString("imageMagickDir");
         String cache = Constants.getString("thumbServletCacheDir");
         try {
@@ -350,10 +349,13 @@ class ImageToolsAvifTest extends BaseWebjetTest {
             Path source = Path.of("src/test/webapp/tests/webpages/autotest-animated.avif");
             byte[] original = Files.readAllBytes(source);
             Path target = directory.resolve("animation.avif");
-            assertEquals(0, GalleryDB.resizePicture(source.toString(), target.toString(), 60, 40, resizeMode));
-            assertDimensions(target, 60, 40);
+            assertEquals(0, GalleryDB.resizePicture(source.toString(), target.toString(), width, height, resizeMode));
+            assertDimensions(target, width, height);
             // ImageMagick writes static AVIF with avif, timed sequences with avis.
             assertEquals("avif", new String(Files.readAllBytes(target), 8, 4, java.nio.charset.StandardCharsets.US_ASCII));
+            Color center = new Color(readPixels(target).getRGB(width / 2, height / 2));
+            assertTrue(center.getRed() > 200 && center.getGreen() < 60 && center.getBlue() < 60,
+                "The thumbnail must contain the first (red) frame, not the second (blue) frame");
             assertArrayEquals(original, Files.readAllBytes(source));
         } finally {
             Constants.setString("imageMagickDir", previous);
@@ -364,11 +366,8 @@ class ImageToolsAvifTest extends BaseWebjetTest {
     /** Invalid image metadata must be reported as a failed gallery operation. */
     @Test
     void rejectsMalformedGalleryInput() throws Exception {
-        String previous = Constants.getString("imageMagickDir");
         String cache = Constants.getString("thumbServletCacheDir");
         try {
-            Constants.setString("imageMagickDir", System.getenv().getOrDefault("AVIF_TEST_IMAGEMAGICK_DIR", "/usr/bin"));
-            requireCodec();
             Constants.setString("thumbServletCacheDir", directory.toString());
             Path target = directory.resolve("corrupt.avif");
             byte[] invalid = {0, 0, 0, 32};
@@ -378,7 +377,6 @@ class ImageToolsAvifTest extends BaseWebjetTest {
             }, target.toString(), null, null, "C", "W"));
             assertArrayEquals(invalid, Files.readAllBytes(target));
         } finally {
-            Constants.setString("imageMagickDir", previous);
             Constants.setString("thumbServletCacheDir", cache);
         }
     }

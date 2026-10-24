@@ -17,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockPart;
@@ -51,9 +50,9 @@ class XhrFileUploadServiceTest extends BaseWebjetTest {
         else Constants.deleteConstant(EXTENSIONS_SETTING);
     }
 
-    /** Every registered image format can be uploaded, including uppercase extensions. */
+    /** Supported image formats remain uploadable by default, including uppercase extensions. */
     @ParameterizedTest
-    @MethodSource("sk.iway.iwcm.common.ImageTools#getSupportedImageExtensions")
+    @ValueSource(strings = {"jpg", "jpeg", "gif", "png", "svg", "webp", "bmp", "avif"})
     void uploadsSupportedImagesByDefault(String extension) throws Exception {
         assertTrue(upload("photo." + extension).isSuccess());
         assertTrue(upload("photo." + extension.toUpperCase(Locale.ROOT)).isSuccess());

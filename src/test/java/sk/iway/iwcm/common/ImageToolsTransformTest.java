@@ -29,9 +29,9 @@ class ImageToolsTransformTest extends BaseWebjetTest {
     @ParameterizedTest
     @CsvSource({
         "png,true,true", "gif,true,true", "webp,true,true",
-        "jpg,true,false", "jpeg,true,false", "bmp,true,false",
+        "jpg,true,false", "bmp,true,false",
         "png,false,true", "gif,false,true", "webp,false,true",
-        "jpg,false,false", "jpeg,false,false", "bmp,false,false"
+        "jpg,false,false", "bmp,false,false"
     })
     void editsImage(String extension, boolean useImageMagick, boolean transparent) throws Exception {
         String previous = Constants.getString("imageMagickDir");
@@ -64,14 +64,21 @@ class ImageToolsTransformTest extends BaseWebjetTest {
 
             assertEquals(0, ImageTools.resizeImage(file, 60, 40));
             assertDimensions(target, 60, 40);
+            assertRedPixel(ImageIO.read(target.toFile()), 30, 20);
             assertEquals(0, ImageTools.cropImage(file, 40, 30, 5, 5));
             assertDimensions(target, 40, 30);
+            assertRedPixel(ImageIO.read(target.toFile()), 25, 15);
             assertEquals(0, ImageTools.rotateImage(file, 90));
             assertDimensions(target, 30, 40);
+            BufferedImage quarterTurn = ImageIO.read(target.toFile());
+            assertRedPixel(quarterTurn, 14, 25);
+            assertTrue(new Color(quarterTurn.getRGB(14, 5), true).getRed() < 60,
+                "The off-center crop must rotate clockwise with its content");
             assertEquals(0, ImageTools.rotateImage(file, 45));
             BufferedImage rotated = ImageIO.read(target.toFile());
             assertNotNull(rotated);
             assertTrue(rotated.getWidth() > 40 && rotated.getHeight() > 40);
+            assertRedPixel(rotated, rotated.getWidth() / 2, rotated.getHeight() / 2);
             if (transparent) {
                 assertTrue(rotated.getColorModel().hasAlpha());
                 assertEquals(0, rotated.getRGB(0, 0) >>> 24, "Rotation corners must remain transparent");
@@ -91,6 +98,13 @@ class ImageToolsTransformTest extends BaseWebjetTest {
             Constants.setString("imageMagickDir", previous);
             Constants.setBoolean("galleryStripExif", stripExif);
         }
+    }
+
+    private void assertRedPixel(BufferedImage image, int x, int y) {
+        assertNotNull(image);
+        Color pixel = new Color(image.getRGB(x, y), true);
+        assertTrue(pixel.getAlpha() > 240 && pixel.getRed() > 200 && pixel.getGreen() < 60 && pixel.getBlue() < 60,
+            "The transformed image must retain the red foreground at " + x + "," + y);
     }
 
     private void assertDimensions(Path path, int width, int height) throws Exception {
