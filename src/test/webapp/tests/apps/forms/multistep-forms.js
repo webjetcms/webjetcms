@@ -35,7 +35,7 @@ Scenario('Check editor tabs', async ({ I, DT, DTE, TempMail }) => {
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-edit");
     DTE.waitForEditor("formsDataTable");
-    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced"]);
+    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced", "fields"]);
 });
 
 Scenario('Base multistep form', ({ I, DT, DTE, TempMail }) => {
@@ -521,6 +521,11 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
     I.checkOption("#DTE_Field_formSettings-forceTextPlain_0");
     I.fillField("#DTE_Field_formSettings-emailTextBefore", "START form text");
     I.fillField("#DTE_Field_formSettings-emailTextAfter", "END form text");
+
+    I.clickCss("#pills-dt-formsDataTable-fields-tab");
+    for (const letter of ["A", "B", "C", "D", "E", "F"]) {
+        I.fillField(`#DTE_Field_formSettings-field${letter}`, `${newMultistepFormName}-${letter}`);
+    }
     DTE.save();
 
     I.say("Fill the form again to test changed email settings");
@@ -640,6 +645,11 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-edit");
     DTE.waitForEditor("formsDataTable");
+
+    I.clickCss("#pills-dt-formsDataTable-fields-tab");
+    for (const letter of ["A", "B", "C", "D", "E", "F"]) {
+        I.seeInField(`#DTE_Field_formSettings-field${letter}`, `${newMultistepFormName}-${letter}`);
+    }
 
     I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
     I.uncheckOption("#DTE_Field_formSettings-messageAsAttach_0");

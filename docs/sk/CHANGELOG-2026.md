@@ -14,6 +14,7 @@
 - Microsoft SQL Server - ukončená bola podpora verzií starších ako 2012 a odstránená konfiguračná premenná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 alebo novší, starý spôsob stránkovania pomocou `TOP` už nie je podporovaný (#293).
 - Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
 - Galéria - metóda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vracia namiesto `void` výsledok spracovania typu `int`: `0` pri úspechu, inak kód chyby. Existujúce volania, ktoré výsledok nepoužívajú, netreba meniť v zdrojovom kóde. Po aktualizácii je potrebné prekompilovať závislý Java kód aj JSP súbory. Pri JSP zabezpečte novú kompiláciu, napríklad vyčistením pracovného priečinka konkrétnej aplikácie v Tomcat.
+- Viackrokové formuláre - metódy `validateStep` a `runStepInterceptor` rozhrania [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) dostávajú za `formName` nový parameter `FormSettingsEntity formSettings`. Ak používate vlastnú Java triedu na spracovanie formulárov je potrebné ju upraviť a znova skompilovať. Nastavenia už nemusia načítavať podľa mena formulára, ale dostanete ho priamo (#364).
 
 ### Úvodná obrazovka
 
@@ -109,7 +110,12 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
     <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-- Obrázky - pridaná podpora obrázkov vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif) vo vkladaní obrázkov, perexoch, správcovi súborov, galérii a editore obrázkov. Spracovanie vyžaduje ImageMagick s funkčným čítaním a zápisom AVIF. Pri úprave animovaného obrázka sa použije prvý snímok. Predvolené povolené prípony pre XHR upload sa preberajú zo spoločného zoznamu obrázkových formátov, vrátane GIF a SVG; vlastné nastavenie `xhrFileUploadAllowedExtensions` má naďalej prednosť (#371).
+- Webové stránky - nové menu [Ďalšie akcie](redactor/webpages/README.md#ďalšie-akcie-a-hromadná-zmena-skupín) v pravej časti nástrojovej lišty obsahuje hromadné pridanie a odobratie značky aj skupiny používateľov bez prepísania ostatných skupín. Skupiny práv a e-mailové skupiny sa vyberajú spoločne. Presunuli sme doň aj kontrolu odkazov, štatistiku stránky, uloženie ako AB test a Import/Export (#368).
+
+![Ponuka Ďalšie akcie v zozname webových stránok](redactor/webpages/more-actions.png)
+
+- Webové stránky - [predvolené nastavenie stromu](redactor/webpages/README.md#predvolené-nastavenie-pre-používateľov) pre nového používateľa je možné nastaviť cez konfiguračnú premennú `webpagesTreeDefaultSettings` (#368).
+- Obrázky - pridaná podpora obrázkov vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif) vo vkladaní obrázkov, perexoch, správcovi súborov, galérii a editore obrázkov. Spracovanie vyžaduje ImageMagick s funkčným čítaním a zápisom AVIF. Pri úprave animovaného obrázka sa použije prvý snímok (#371).
 
 ### Headless režim
 
@@ -127,6 +133,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#364).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.mustistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
 - Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).

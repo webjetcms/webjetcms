@@ -63,8 +63,8 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
 filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
 - [x] +AI - upraviť vytváranie `chunk` tak, aby podľa možnosti začínali a končili na hraniciach viet alebo slov (#58778).
-- [ ] +Webové stránky - upraviť predvolené zobrazenie pre nového používateľa - zobrazovať ID, poradie a usporiadať vzostupne.
-- [ ] +Webové stránky - pridať možnosť pridať viacerým stránkam naraz perex skupinu, čiže k existujúcim perex skupinám sa pridá zvolená.
+- [x] +Webové stránky - konfigurovateľné predvolené zobrazenie pre používateľa bez vlastného nastavenia (`webpagesTreeDefaultSettings`), predvolene usporiadať vzostupne podľa poradia; zobrazenie ID a poradia možno zapnúť v konfigurácii (#368).
+- [x] +Webové stránky - hromadné pridanie a odobratie značky aj skupiny používateľov pri zachovaní ostatných skupín cez menu Ďalšie akcie, do ktorého bol presunutý aj Import/Export (#368).
 - [ ] +Webové stránky - pri zmazaní priečinka, ktorý má aj zrkadlenú verziu zobraziť notifikáciu, že boli zmazané aj zrkadlené priečinky XXX,YYY.
 - [x] +Pridať podporu obrázkov typu AVIF (#371).
 - [ ] +Možnosť zmeniť poradie polí v datatables editore, kartu v ktorej sa pole nachádza, prípadne aj vytvoriť novú kartu do ktorej sa polia vložia. Teda konfiguračne upraviť hodnoty čo sa dnes nastavujú cea anotácie.

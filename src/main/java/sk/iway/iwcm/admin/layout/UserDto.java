@@ -5,6 +5,7 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.users.SettingsAdminBean;
 import sk.iway.iwcm.users.UserDetails;
 
@@ -41,6 +42,13 @@ public class UserDto {
             // Dashboard preferences are supplied separately by DashboardListener in overviewData.settings.
             if (s.getSkey().startsWith("overview.")) continue;
             adminSettings.put(s.getSkey(), s.getValue());
+        }
+
+        //set default webpages tree settings if not present
+        if (adminSettings.containsKey(AdminSettingsService.WEBPAGES_TREE_SETTINGS_KEY) == false) {
+            AdminSettingsService settingsService = new AdminSettingsService(user);
+            adminSettings.put(AdminSettingsService.WEBPAGES_TREE_SETTINGS_KEY,
+                settingsService.getValue(AdminSettingsService.WEBPAGES_TREE_SETTINGS_KEY));
         }
     }
 }

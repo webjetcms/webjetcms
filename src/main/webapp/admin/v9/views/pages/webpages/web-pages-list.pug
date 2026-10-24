@@ -1021,11 +1021,19 @@ block content
                     }
 
                     if("pills-folders-tab" == currentTab) {
-                        $("button.buttons-linkcheck").show();
-                        $("button.buttons-abtest").show();
+                        webpagesDatatable.showButton("linkcheck");
+                        webpagesDatatable.showButton("abtest");
+                        webpagesDatatable.showButton("addPerexGroup");
+                        webpagesDatatable.showButton("removePerexGroup");
+                        webpagesDatatable.showButton("addUserGroup");
+                        webpagesDatatable.showButton("removeUserGroup");
                     } else {
-                        $("button.buttons-linkcheck").hide();
-                        $("button.buttons-abtest").hide();
+                        webpagesDatatable.hideButton("linkcheck");
+                        webpagesDatatable.hideButton("abtest");
+                        webpagesDatatable.hideButton("addPerexGroup");
+                        webpagesDatatable.hideButton("removePerexGroup");
+                        webpagesDatatable.hideButton("addUserGroup");
+                        webpagesDatatable.hideButton("removeUserGroup");
                     }
 
                     //if ("pills-trash-tab"==currentTab)
