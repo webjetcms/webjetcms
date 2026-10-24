@@ -3,8 +3,15 @@ package sk.iway.iwcm.common;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.RETURNS_SELF;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -15,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.imageio.ImageIO;
 import jakarta.servlet.ServletContext;
@@ -51,6 +59,86 @@ class ImageToolsAvifTest extends BaseWebjetTest {
             assertNotEquals(0, ImageTools.writeImage(new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB),
                 "image.avif", 80, new IwcmFile(target.toFile())));
             assertArrayEquals(original, Files.readAllBytes(target));
+        } finally {
+            Constants.setString("imageMagickDir", previous);
+        }
+    }
+
+    /** Native success alone must not replace the original with a non-AVIF output. */
+    @Test
+    void rejectsWrongOutputFormatAfterSuccessfulProcess() throws Exception {
+        Path target = directory.resolve("image.avif");
+        byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"));
+        Files.write(target, original);
+        Process process = mock(Process.class);
+        when(process.waitFor(60, TimeUnit.SECONDS)).thenReturn(true);
+        when(process.exitValue()).thenReturn(0);
+        AtomicReference<Path> stagedOutput = new AtomicReference<>();
+
+        try (var builders = mockConstruction(ProcessBuilder.class, withSettings().defaultAnswer(RETURNS_SELF), (builder, context) -> {
+            List<?> command = (List<?>) context.arguments().get(0);
+            when(builder.start()).thenAnswer(call -> {
+                String outputArgument = (String) command.get(command.size() - 1);
+                Path output = Path.of(outputArgument.substring("avif:".length()));
+                stagedOutput.set(output);
+                ImageIO.write(new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB), "png", output.toFile());
+                Files.writeString(output.resolveSibling("imagemagick.log"), "");
+                return process;
+            });
+        })) {
+            assertEquals(2, ImageTools.executeImageMagick(new IwcmFile(target.toFile()),
+                List.of("from", "-resize", "20x20", "to")));
+            assertEquals(1, builders.constructed().size());
+        }
+
+        assertArrayEquals(original, Files.readAllBytes(target));
+        assertFalse(Files.exists(stagedOutput.get().getParent()), "Failed output and process logs must be cleaned up");
+        verify(process).destroyForcibly();
+    }
+
+    /** The shared flow uses AVIF output settings for both AVIF input and the PNG encoding intermediate. */
+    @ParameterizedTest
+    @ValueSource(strings = {"png", "avif"})
+    void createsAvifInNewDirectoryWithOutputSettings(String extension) throws Exception {
+        String previous = Constants.getString("imageMagickDir");
+        String pngParameters = Constants.getString("imageMagickCustomParams_resize_png");
+        try {
+            Constants.setString("imageMagickDir", System.getenv().getOrDefault("AVIF_TEST_IMAGEMAGICK_DIR", "/usr/bin"));
+            requireCodec();
+            Constants.setString("imageMagickCustomParams_resize_png", "-invalid-image-test-option");
+            Path source = directory.resolve("source." + extension);
+            if ("avif".equals(extension)) {
+                Files.copy(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"), source);
+            } else {
+                ImageIO.write(new BufferedImage(120, 80, BufferedImage.TYPE_INT_ARGB), "png", source.toFile());
+            }
+            byte[] original = Files.readAllBytes(source);
+            Path target = directory.resolve("new folder/thumbnail.AVIF");
+
+            assertEquals(0, ImageTools.executeImageMagick(new IwcmFile(source.toFile()), new IwcmFile(target.toFile()),
+                List.of("from", "-resize", "60x40", "to")));
+
+            assertDimensions(target, 60, 40);
+            assertTransparent(target);
+            assertArrayEquals(original, Files.readAllBytes(source));
+        } finally {
+            Constants.setString("imageMagickDir", previous);
+            Constants.setString("imageMagickCustomParams_resize_png", pngParameters);
+        }
+    }
+
+    /** Pixel encoding uses the requested AVIF format even if the destination has a temporary suffix. */
+    @Test
+    void writesAvifPixelsToTemporaryFileName() throws Exception {
+        String previous = Constants.getString("imageMagickDir");
+        try {
+            Constants.setString("imageMagickDir", System.getenv().getOrDefault("AVIF_TEST_IMAGEMAGICK_DIR", "/usr/bin"));
+            requireCodec();
+            Path target = directory.resolve("encoded.tmp");
+            assertEquals(0, ImageTools.writeImage(new BufferedImage(20, 16, BufferedImage.TYPE_INT_ARGB),
+                "photo.avif", 80, new IwcmFile(target.toFile())));
+            assertDimensions(target, 20, 16);
+            assertTransparent(target);
         } finally {
             Constants.setString("imageMagickDir", previous);
         }
