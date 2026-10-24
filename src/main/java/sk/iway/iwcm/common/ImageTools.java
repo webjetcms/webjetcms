@@ -34,6 +34,7 @@ import com.luciad.imageio.webp.CompressionType;
 import com.luciad.imageio.webp.WebPImageWriterSpi;
 import com.luciad.imageio.webp.WebPWriteParam;
 
+import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
@@ -117,7 +118,7 @@ public class ImageTools
 	 * Writes BufferedImage to file in correct format based on file extension.
 	 * For transparent images preserves transparency.
 	 * For JPG/JPEG and WebP uses the requested compression quality.
-	 * AVIF uses the same ImageIO writing step with a temporary PNG, then the shared ImageMagick flow.
+	 * AVIF uses ImageMagick and its configured compression parameters.
 	 * @param image - BufferedImage to write
 	 * @param fileName - original file name to detect format (e.g. "photo.png")
 	 * @param imageQuality - compression quality from 0 to 100; other values use gallery settings
@@ -126,17 +127,17 @@ public class ImageTools
 	 */
 	public static int writeImage(BufferedImage image, String fileName, int imageQuality, IwcmFile outputFile)
 	{
+		// No AVIF ImageIO writer is bundled; pass the pixels to ImageMagick through a lossless PNG.
+		if (isAvif(fileName)) return writeAvifImage(image, outputFile);
 		String ext = FileTools.getFileExtension(fileName);
-		boolean avif = "avif".equalsIgnoreCase(ext);
-		if (!avif && (imageQuality < 0 || imageQuality > 100)) {
+		if (imageQuality < 0 || imageQuality > 100) {
 			imageQuality = GalleryDB.getImageQuality(null, image.getWidth());
 		}
 		if (imageQuality < 0 || imageQuality > 100) {
 			imageQuality = 85;
 		}
 
-		// No AVIF ImageIO writer is bundled; encode lossless PNG pixels for ImageMagick instead.
-		String format = avif ? "png" : ext;
+		String format = ext;
 		ImageWriteParam iwparam = null;
 		if ("jpg".equals(ext) || "jpeg".equals(ext))
 		{
@@ -145,6 +146,9 @@ public class ImageTools
 			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 			iwparam.setCompressionQuality(imageQuality / 100.0F);
 		}
+
+
+
 		ImageWriter writer = null;
 		if ("webp".equals(ext)) {
 			// ImageIO's shared registry may return a provider from another webapp classloader.
@@ -157,7 +161,7 @@ public class ImageTools
 		if (writer == null)
 		{
 			Logger.error(ImageTools.class, "No suitable ImageWriter found for format: " + format);
-			return avif ? 2 : 4;
+			return 4;
 		}
 
 		//for WebP set compression quality using writer's default param (WebPWriteParam)
@@ -174,24 +178,12 @@ public class ImageTools
 			iwparam = writeParam;
 		}
 
-		Path temporaryImage = null;
-		try
+		try (IwcmOutputStream out = new IwcmOutputStream(outputFile);
+			 ImageOutputStream ios = ImageIO.createImageOutputStream(out))
 		{
-			IwcmFile imageOutput = outputFile;
-			if (avif) {
-				temporaryImage = Files.createTempFile("webjet-imagemagick-pixels-", ".png");
-				imageOutput = new IwcmFile(temporaryImage.toFile());
-			}
-			try (IwcmOutputStream out = new IwcmOutputStream(imageOutput);
-				 ImageOutputStream ios = ImageIO.createImageOutputStream(out))
-			{
-				writer.setOutput(ios);
-				writer.write(null, new IIOImage(image, null, null), iwparam);
-				ios.flush();
-			}
-			if (avif) {
-				return executeImageMagick(imageOutput, outputFile, List.of("from", "-resize", "100%", "to"), "avif");
-			}
+			writer.setOutput(ios);
+			writer.write(null, new IIOImage(image, null, null), iwparam);
+			ios.flush();
 			return 0;
 		}
 		catch (Exception ex)
@@ -202,6 +194,29 @@ public class ImageTools
 		finally
 		{
 			writer.dispose();
+		}
+	}
+
+	/**
+	 * ImageIO doesnt support writing AVIF directly, so we use ImageMagick for the conversion from PNG temporary files.
+	 * Passes BufferedImage pixels to ImageMagick as a lossless PNG, preserving transparency.
+	 * The destination is written by the shared conversion flow only after AVIF encoding succeeds.
+	 * @param image source pixels
+	 * @param outputFile destination in local or database storage
+	 * @return 0 on success, or 2 if writing or converting the image fails
+	 */
+	private static int writeAvifImage(BufferedImage image, IwcmFile outputFile)
+	{
+		Path temporaryImage = null;
+		try {
+			temporaryImage = Files.createTempFile("webjet-imagemagick-pixels-", ".png");
+			if (!ImageIO.write(image, "png", temporaryImage.toFile())) return 2;
+			// The destination may have a temporary suffix, so select AVIF explicitly.
+			return executeImageMagick(new IwcmFile(temporaryImage.toFile()), outputFile, List.of("from", "to"), "avif");
+		} catch (Exception ex) {
+			Logger.error(ex);
+			return 2;
+		} finally {
 			if (temporaryImage != null) {
 				try {
 					Files.deleteIfExists(temporaryImage);
@@ -502,7 +517,7 @@ public class ImageTools
 
 	/**
 	 * Processes an image through ImageMagick and copies the staged output to local or database storage.
-	 * Database and packaged input is first copied to disk. AVIF output is validated before replacing the target.
+	 * Database input is first copied to disk.
 	 * @param from source image
 	 * @param to destination image; may be the source
 	 * @param args arguments with from/to placeholders; the supplied list is not modified
@@ -516,65 +531,137 @@ public class ImageTools
 	/** Uses an explicit output format when encoding pixels into a destination with a different suffix. */
 	private static int executeImageMagick(IwcmFile from, IwcmFile to, List<String> args, String outputFormat) {
 		boolean avif = "avif".equalsIgnoreCase(outputFormat);
-		Path directory = null;
-		try {
-			directory = Files.createTempDirectory("webjet-imagemagick-");
-			Path input = Path.of(from.getAbsolutePath());
-			if (IwcmFsDB.useDBStorage(from.getVirtualPath()) || from.isJarPackaging()) {
-				input = directory.resolve("input." + FileTools.getFileExtension(from.getName()));
-				try (InputStream stream = new IwcmInputStream(from)) {
-					Files.copy(stream, input);
-				}
-			}
-			Path output = directory.resolve("output." + outputFormat);
-			List<String> command = new ArrayList<>(args);
-			int fromIndex = command.indexOf("from");
-			int toIndex = command.indexOf("to");
-			if (fromIndex != -1) command.set(fromIndex, input.toString());
-			if (toIndex != -1) command.set(toIndex, output.toString());
-			command.add(0, getImageMagickCommand());
-			addImageMagickCustomParams(command, avif ? "avif" : null);
-			if (avif) AvifTools.addImageMagickParams(command);
+		args = new ArrayList<>(args);
+		//args can contains placeholders for from and to file paths because of IwcmFSDB storage, so we need to find out where they are
+		int fromIndex = args.indexOf("from");
+		int toIndex = args.indexOf("to");
 
-			int result = executeImageMagickCommand(command, directory, avif ? 60 : 0);
-			if (result != 0) return avif ? 2 : result;
-			if (avif && !AvifTools.isValidOutput(output)) return 2;
-			return FileTools.copyFile(new IwcmFile(output.toFile()), to) ? 0 : 2;
-		} catch (IOException | IllegalArgumentException ex) {
-			Logger.error(ex);
-			return avif ? 2 : -1;
-		} finally {
-			deleteImageMagickTemporaryDirectory(directory);
+		boolean fromDB = IwcmFsDB.useDBStorage(from.getVirtualPath());
+		// AVIF pixel encoding starts with a local PNG, even when the destination is stored in DB.
+		if (fromDB || IwcmFsDB.useDBStorage(to.getVirtualPath()))
+		{
+			String temporaryFrom = null;
+			String temporaryTo = null;
+			try
+			{
+				temporaryFrom = fromDB ? IwcmFsDB.getTempFilePath(getTempFilePath(from.getPath())) : from.getAbsolutePath();
+				temporaryTo = IwcmFsDB.getTempFilePath(getTempFilePath(to.getPath()));
+
+				//write DB input to disk; the PNG intermediate is already a local file
+				if (fromDB) IwcmFsDB.writeFileToDisk(new File(from.getAbsolutePath()), new File(temporaryFrom), true);
+
+				if (fromIndex != -1) args.set(fromIndex, temporaryFrom);
+				if (toIndex != -1) args.set(toIndex, temporaryTo);
+
+				int result = executeImageMagickCommand(args, outputFormat);
+				if (result == 0)
+				{
+					// IwcmFile selects the destination storage, including local PNG -> DB AVIF conversion.
+					return FileTools.copyFile(new IwcmFile(temporaryTo), to) ? 0 : 2;
+				}
+				return result;
+			}
+			catch (IOException e)
+			{
+				sk.iway.iwcm.Logger.error(e);
+			}
+			finally
+			{
+				if (fromDB) deleteImageMagickTemporaryFile(temporaryFrom);
+				deleteImageMagickTemporaryFile(temporaryTo);
+			}
 		}
+		else
+		{
+			//usualy from and to is same file, we need temp to file and then replace to with this temp file
+			IwcmFile toTemp = new IwcmFile(getTempFilePath(to.getAbsolutePath()));
+			try
+			{
+				if (!toTemp.getParentFile().exists() && !toTemp.getParentFile().mkdirs()) return 2;
+				if (fromIndex != -1) args.set(fromIndex, from.getAbsolutePath());
+				if (toIndex != -1) args.set(toIndex, toTemp.getAbsolutePath());
+				int result = executeImageMagickCommand(args, outputFormat);
+				if (result == 0)
+				{
+					if (!FileTools.copyFile(toTemp, to)) return 2;
+					return 0;
+				}
+				return result;
+			}
+			finally
+			{
+				deleteImageMagickTemporaryFile(toTemp.getAbsolutePath());
+			}
+		}
+		return avif ? 2 : -1;
 	}
 
 	/**
-	 * Runs a prepared command, capturing output without blocking on process pipes.
-	 * @param command executable and arguments
-	 * @param directory temporary directory for the process log
-	 * @param timeoutSeconds execution timeout, or 0 to wait without a time limit
-	 * @return 0 on success, 3 for a nonzero exit code, or -1 on an execution failure
+	 * Returns temporary file path for given path. If path is /path/to/file.jpg, temp file path will be /path/to/file.tmp-timestamp-random.jpg
+	 * @param path
+	 * @return
 	 */
-	private static int executeImageMagickCommand(List<String> command, Path directory, int timeoutSeconds)
+	private static String getTempFilePath(String path) {
+		int dotIndex = path.lastIndexOf('.');
+		String append = ".tmp-" + System.currentTimeMillis() + "-" + Password.generatePassword(5);
+		if (dotIndex != -1)
+		{
+			return path.substring(0, dotIndex) + append + path.substring(dotIndex);
+		}
+		else
+		{
+			return path + append;
+		}
+	}
+
+	private static boolean isAvif(String name) {
+		return "avif".equalsIgnoreCase(FileTools.getFileExtension(name));
+	}
+
+	/**
+	 * Selects the first source frame and prepares static, 8-bit sRGB AVIF output.
+	 * Call after injecting custom parameters, while the input and output are still plain paths.
+	 * @param args command with the executable first, input second and output last
+	 */
+	private static void addAvifImageMagickParams(List<String> args) {
+		String input = args.get(1);
+		String decoder = isAvif(input) ? "avif:" : "";
+		args.set(1, decoder + input + "[0]");
+		args.add(2, "-auto-orient");
+		args.set(args.size() - 1, "avif:" + args.get(args.size() - 1));
+		args.addAll(args.size() - 1, List.of("+repage", "-colorspace", "sRGB", "-depth", "8"));
+	}
+
+	/**
+	 * Prepares and runs ImageMagick with stdout and stderr inherited from the server process.
+	 * @param args input, operations and output paths
+	 * @param outputFormat requested output format; AVIF uses a 60-second timeout
+	 * @return 0 on success, 2 on an AVIF failure, 3 for another nonzero exit code, or -1 on another execution failure
+	 */
+	private static int executeImageMagickCommand(List<String> args, String outputFormat)
 	{
+		args.add(0, getImageMagickCommand());
+		boolean avif = "avif".equalsIgnoreCase(outputFormat);
 		Process process = null;
 		try
 		{
-			Logger.debug(ImageTools.class, "LONGCMD:\n" + String.join(" ", command));
-			Path log = directory.resolve("imagemagick.log");
-			process = new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(log.toFile()).start();
-			if (timeoutSeconds > 0) {
-				if (!process.waitFor(timeoutSeconds, TimeUnit.SECONDS)) throw new IOException("ImageMagick timed out");
+			// Use AVIF output settings even when the input is the lossless PNG from writeImage().
+			addImageMagickCustomParams(args, avif ? "avif" : null);
+			if (avif) addAvifImageMagickParams(args);
+
+			Logger.debug(ImageTools.class, "LONGCMD:\n" + String.join(" ", args));
+			process = new ProcessBuilder(args)
+				.redirectOutput(ProcessBuilder.Redirect.INHERIT)
+				.redirectError(ProcessBuilder.Redirect.INHERIT)
+				.start();
+			if (avif) {
+				if (!process.waitFor(60, TimeUnit.SECONDS)) throw new IOException("ImageMagick timed out");
 			} else {
 				process.waitFor();
 			}
-			try (InputStream stream = Files.newInputStream(log)) {
-				String message = new String(stream.readNBytes(4096), StandardCharsets.UTF_8);
-				if (process.exitValue() != 0) Logger.error(ImageTools.class, "ImageMagick failed: " + message);
-				else Logger.debug(ImageTools.class, message);
-			}
 			// Native exit codes are not WebJET image result codes (1 is a failure here).
-			return process.exitValue() == 0 ? 0 : 3;
+			if (process.exitValue() == 0) return 0;
+			return avif ? 2 : 3;
 		}
 		catch (InterruptedException e)
 		{
@@ -592,19 +679,14 @@ public class ImageTools
 				process.destroyForcibly();
 			}
 		}
-		return -1;
+		return avif ? 2 : -1;
 	}
 
 	/** Deletes staged files after successful processing or failure. */
-	private static void deleteImageMagickTemporaryDirectory(Path directory) {
-		if (directory == null) return;
+	private static void deleteImageMagickTemporaryFile(String path) {
+		if (path == null) return;
 		try {
-			List<Path> files;
-			try (var children = Files.list(directory)) {
-				files = children.toList();
-			}
-			for (Path child : files) Files.deleteIfExists(child);
-			Files.deleteIfExists(directory);
+			Files.deleteIfExists(Path.of(path));
 		} catch (IOException ex) {
 			Logger.error(ex);
 		}

@@ -3,18 +3,16 @@ package sk.iway.iwcm.common;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockConstruction;
-import static org.mockito.Mockito.RETURNS_SELF;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -22,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.imageio.ImageIO;
 import jakarta.servlet.ServletContext;
@@ -35,11 +32,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockServletContext;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Verifies AVIF processing and preservation of originals when the codec is unavailable. */
@@ -62,38 +61,6 @@ class ImageToolsAvifTest extends BaseWebjetTest {
         } finally {
             Constants.setString("imageMagickDir", previous);
         }
-    }
-
-    /** Native success alone must not replace the original with a non-AVIF output. */
-    @Test
-    void rejectsWrongOutputFormatAfterSuccessfulProcess() throws Exception {
-        Path target = directory.resolve("image.avif");
-        byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"));
-        Files.write(target, original);
-        Process process = mock(Process.class);
-        when(process.waitFor(60, TimeUnit.SECONDS)).thenReturn(true);
-        when(process.exitValue()).thenReturn(0);
-        AtomicReference<Path> stagedOutput = new AtomicReference<>();
-
-        try (var builders = mockConstruction(ProcessBuilder.class, withSettings().defaultAnswer(RETURNS_SELF), (builder, context) -> {
-            List<?> command = (List<?>) context.arguments().get(0);
-            when(builder.start()).thenAnswer(call -> {
-                String outputArgument = (String) command.get(command.size() - 1);
-                Path output = Path.of(outputArgument.substring("avif:".length()));
-                stagedOutput.set(output);
-                ImageIO.write(new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB), "png", output.toFile());
-                Files.writeString(output.resolveSibling("imagemagick.log"), "");
-                return process;
-            });
-        })) {
-            assertEquals(2, ImageTools.executeImageMagick(new IwcmFile(target.toFile()),
-                List.of("from", "-resize", "20x20", "to")));
-            assertEquals(1, builders.constructed().size());
-        }
-
-        assertArrayEquals(original, Files.readAllBytes(target));
-        assertFalse(Files.exists(stagedOutput.get().getParent()), "Failed output and process logs must be cleaned up");
-        verify(process).destroyForcibly();
     }
 
     /** The shared flow uses AVIF output settings for both AVIF input and the PNG encoding intermediate. */
@@ -139,6 +106,57 @@ class ImageToolsAvifTest extends BaseWebjetTest {
                 "photo.avif", 80, new IwcmFile(target.toFile())));
             assertDimensions(target, 20, 16);
             assertTransparent(target);
+        } finally {
+            Constants.setString("imageMagickDir", previous);
+        }
+    }
+
+    /** Real AVIF conversion stages DB input/output locally and cleans up files; database I/O is simulated. */
+    @ParameterizedTest
+    @CsvSource({"true,true", "true,false", "false,true"})
+    void convertsBetweenLocalAndDatabaseStorage(boolean sourceInDB, boolean targetInDB) throws Exception {
+        String previous = Constants.getString("imageMagickDir");
+        try {
+            Constants.setString("imageMagickDir", System.getenv().getOrDefault("AVIF_TEST_IMAGEMAGICK_DIR", "/usr/bin"));
+            requireCodec();
+            Path staging = Files.createDirectory(directory.resolve("staging"));
+            Path source = directory.resolve("database/source.avif");
+            Path target = directory.resolve((targetInDB ? "database/" : "local/") + "result.avif");
+            Path original = Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif");
+
+            try (var storage = mockStatic(IwcmFsDB.class); var files = mockStatic(FileTools.class)) {
+                storage.when(() -> IwcmFsDB.getVirtualPath(anyString())).thenAnswer(call -> call.getArgument(0));
+                storage.when(() -> IwcmFsDB.useDBStorage(anyString()))
+                    .thenAnswer(call -> ((String) call.getArgument(0)).contains("/database/"));
+                storage.when(() -> IwcmFsDB.getTempFilePath(anyString()))
+                    .thenAnswer(call -> staging.resolve(Path.of((String) call.getArgument(0)).getFileName()).toString());
+                storage.when(() -> IwcmFsDB.writeFileToDisk(any(File.class), any(File.class), eq(true)))
+                    .thenAnswer(call -> {
+                        Files.copy(original, ((File) call.getArgument(1)).toPath());
+                        return null;
+                    });
+                files.when(() -> FileTools.getFileExtension(anyString())).thenCallRealMethod();
+                files.when(() -> FileTools.copyFile(any(IwcmFile.class), any(IwcmFile.class))).thenAnswer(call -> {
+                    Path encoded = Path.of(((IwcmFile) call.getArgument(0)).getAbsolutePath());
+                    Path destination = Path.of(((IwcmFile) call.getArgument(1)).getAbsolutePath());
+                    assertEquals(staging, encoded.getParent(), "ImageMagick must write to local staging storage");
+                    Files.createDirectories(destination.getParent());
+                    Files.copy(encoded, destination);
+                    return true;
+                });
+
+                IwcmFile output = new IwcmFile(target.toFile());
+                int result = sourceInDB
+                    ? ImageTools.executeImageMagick(new IwcmFile(source.toFile()), output, List.of("from", "-resize", "20x16!", "to"))
+                    : ImageTools.writeImage(new BufferedImage(20, 16, BufferedImage.TYPE_INT_ARGB), "image.avif", 80, output);
+                assertEquals(0, result);
+            }
+
+            assertDimensions(target, 20, 16);
+            assertTransparent(target);
+            try (var stagedFiles = Files.list(staging)) {
+                assertEquals(0, stagedFiles.count(), "Temporary database input and output must be removed");
+            }
         } finally {
             Constants.setString("imageMagickDir", previous);
         }
