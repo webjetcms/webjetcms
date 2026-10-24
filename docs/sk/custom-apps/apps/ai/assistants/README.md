@@ -308,3 +308,17 @@ Dôležité metódy:
 - `getAiImageResponse` – vráti obrázkovú odpoveď
 - `getAiStreamResponse` – streamuje textovú odpoveď cez `BufferedWriter`
 - `getBonusHtml` – vráti doplnkové polia podporované vybraným obrázkovým modelom
+
+### Prenos priebežnej odpovede do administrácie
+
+Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičkou `Accept: application/x-ndjson`. Server posiela samostatné JSON správy oddelené novým riadkom:
+
+```json
+{"type":"delta","text":"Prvá časť odpovede.\n"}
+{"type":"delta","text":"Pokračovanie odpovede."}
+{"type":"result","result":{"response":"Prvá časť odpovede.\nPokračovanie odpovede.","totalTokens":42,"error":null,"tempFiles":[],"generatedFileName":null}}
+```
+
+Správy `delta` obsahujú iba generovaný text. Záverečná správa `result` obsahuje `AssistantResponseDTO` vrátane spotreby tokenov a prípadnej chyby. Klient skladá neúplné riadky medzi sieťovými blokmi a spracuje aj viac správ v jednom bloku. Odpoveď považuje za úspešnú až po prijatí záverečnej správy bez chyby a ukončení prenosu.
+
+Bez explicitnej požiadavky na `application/x-ndjson` zostáva pre starších klientov pôvodný formát `text/plain`. CMS adaptéry naďalej zapisujú obyčajný text do `BufferedWriter`; oddelenie správ zabezpečuje `AssistantController`, bez zmeny rozhrania knižnice `webjet-ai`.
