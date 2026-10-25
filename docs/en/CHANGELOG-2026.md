@@ -114,7 +114,7 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 ![More Actions menu in the website list](redactor/webpages/more-actions.png)
 
 - Web pages - [default tree settings](redactor/webpages/README.md#default-settings-for-users) for a new user can be set via the configuration variable `webpagesTreeDefaultSettings` (#368).
-- Page Editor - in a narrow window, the tool groups are moved to the [More Tools] panel (redactor/webpages/working-in-editor/README.md#tool-panel-in-a-narrow-window). The bar does not wrap into another strip and does not overlap the editor and size switcher. The button with three dots is directly behind the last group of icons and has a bubble tooltip. The same control works in the Standard Editor and in the Page Builder (#372).
+- Page Editor - in a narrow window, the tool groups are moved to the [More Tools](redactor/webpages/working-in-editor/README.md#toolbar-in-a-narrow-window) panel. The bar does not wrap into another strip and does not overlap the editor and size switcher. The button with three dots is directly behind the last group of icons and has a bubble tooltip. The same control works in the Standard Editor and in the Page Builder (#372).
 
 ![More Tools Panel in the Page Builder Mobile Preview](redactor/webpages/working-in-editor/toolbar-overflow.png)
 

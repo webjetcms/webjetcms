@@ -215,6 +215,15 @@ export class CkEditorToolbarOverflow {
                     next = group.element.nextElementSibling;
                 });
             }
+            // The Styles picker is created in its button's dialog and reused after toolbar moves.
+            const picker = this.editor.wjstylescombo;
+            if (picker?.panel) {
+                const host = this.body.contains(picker.button()) ? this.palette : this.palette.parentElement;
+                if (picker.panel.parentElement !== host) {
+                    picker.close(false);
+                    host.append(picker.panel);
+                }
+            }
             if (focused && this.body.contains(focused)) this.button.focus();
         }
         if (this.button.hidden) this.close();

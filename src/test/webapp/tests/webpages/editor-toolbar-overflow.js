@@ -97,6 +97,32 @@ for (const mode of ['classic', 'inline']) {
         I.assertDeepEqual(await I.executeScript(() => autotestErrors), []);
     });
 
+    Scenario(`${mode}: style picker remains usable after moving between overflow and ribbon`, async ({ I }) => {
+        openFixture(I, mode, '&wjstyles=true');
+        const original = await I.executeScript(() => autotestEditor.getData());
+
+        for (const [width, format] of [[320, 'h2'], [1200, 'h3'], [320, 'p']]) {
+            resizeToolbar(I, width);
+            I.executeScript(() => autotestSelect());
+            if (width === 320) I.click('.wj-cke-toolbar__more');
+            I.click('.cke_button__wjstyles:visible');
+            I.waitForVisible('.wj-styles', 5);
+            I.click(`.wj-styles__format[data-format="${format}"]`);
+            I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getName()), format);
+            I.pressKey('Escape');
+            I.dontSeeElement('.wj-styles');
+            I.assertTrue(await I.executeScript(() => document.activeElement === autotestEditor.wjstylescombo.button()), 'Closing Styles must return focus to its visible toolbar button');
+            if (width === 320) {
+                I.seeElement('.wj-cke-overflow');
+                I.pressKey('Escape');
+                I.dontSeeElement('.wj-cke-overflow');
+            }
+        }
+
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original, 'Restoring paragraph format must preserve the original page content');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), []);
+    });
+
     Scenario(`${mode}: style picker, dialogs and editor destruction clean up the palette`, async ({ I }) => {
         openFixture(I, mode, '&wjstyles=true');
         resizeToolbar(I, 320);
