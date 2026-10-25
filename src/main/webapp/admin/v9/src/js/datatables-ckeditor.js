@@ -1,4 +1,5 @@
 import WJ from "./webjet";
+import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";
 
 export class DatatablesCkEditor {
 
@@ -2207,6 +2208,10 @@ export class DatatablesCkEditor {
 				// maximize the editor on startup
 				'instanceReady' : function( evt )
 				{
+					evt.editor.wjToolbarOverflow = new CkEditorToolbarOverflow(evt.editor, that.ckEditorObject, {
+						more: WJ.translate("editor.toolbar.more_tools.js"),
+						close: WJ.translate("button.close")
+					});
 					//console.log("instanceReady");
 					//FCKeditor_OnComplete();
 

@@ -1,3 +1,120 @@
+.cke_top.wj-cke-toolbar-top {
+    overflow: visible !important;
+
+    span.cke_toolbox.wj-cke-toolbar {
+        display: flex;
+        box-sizing: border-box;
+        width: 100% !important;
+        max-height: none;
+        padding-right: var(--wj-cke-toolbar-end, 8px) !important;
+        align-items: flex-start;
+
+        > .cke_toolbar_break, > .cke_toolbox_main {
+            display: none;
+        }
+    }
+}
+
+.wj-cke-toolbar__groups {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.wj-cke-toolbar__groups, .wj-cke-overflow__groups {
+    > span.cke_toolbar {
+        float: none;
+        flex: 0 0 auto;
+        width: max-content;
+        margin-right: 4px !important;
+    }
+}
+
+button.wj-cke-toolbar__more, button.wj-cke-overflow__close {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid $nice-gray-300;
+    border-radius: 6px;
+    background: $white;
+    color: $secondary;
+    font: 20px/1 "Asap", sans-serif;
+    cursor: pointer;
+
+    &:hover, &[aria-expanded="true"] {
+        color: $white;
+        background: $secondary;
+        border-color: $secondary;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 2px $white;
+    }
+}
+
+button.wj-cke-toolbar__more {
+    flex: 0 0 32px;
+    margin: 8px 0 0 6px;
+
+    &[hidden] { display: none !important; }
+}
+
+.wj-cke-overflow.cke_reset {
+    position: fixed;
+    display: block;
+    visibility: visible;
+    box-sizing: border-box;
+    background: $white;
+    color: $secondary;
+    border: 1px solid $nice-gray-100;
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba($secondary, .16);
+    font: 14px/1.5 "Asap", sans-serif;
+
+    &[hidden] { display: none !important; }
+    &.wj-cke-overflow--measure {
+        display: block !important;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .wj-cke-overflow__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 10px 6px 12px;
+        border-bottom: 1px solid $nice-gray-100;
+        font: inherit;
+
+        > span { font: inherit; }
+    }
+
+    .wj-cke-overflow__close {
+        border-color: transparent;
+    }
+
+    .wj-cke-overflow__groups {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 14px 8px;
+        padding: 12px;
+        overflow: auto;
+        box-sizing: border-box;
+
+        > span.cke_toolbar {
+            background: $white;
+        }
+    }
+}
+
 .cke_dialog_contents {
     .cke_dialog_footer {
         padding: 8px 12px;
