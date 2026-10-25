@@ -13,6 +13,7 @@
 - Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
 - Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
 - Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
+- Gallery - method `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` returns processing result of type `int` instead of `void`: `0` on success, otherwise error code. After the update, it is necessary to recompile dependent Java code and JSP files, for example by cleaning the working folder of a specific application in Tomcat (#371).
 - Multi-step forms - methods `validateStep` and `runStepInterceptor` of the [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) interface receive a new parameter `FormSettingsEntity formSettings` instead of `formName`. If you use your own Java class for processing forms, you need to modify it and recompile it. Settings no longer need to be loaded by form name, but you will get it directly (#364).
 
 ### Home screen
@@ -119,6 +120,7 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 ![More Tools Panel in the Page Builder Mobile Preview](redactor/webpages/working-in-editor/toolbar-overflow.png)
 
 - Page Builder - dialogs that do not fit within the preview width will automatically expand to the size of the browser window. After confirmation or closing, the original preview width and page offset will be restored. Page Builder controls use the administration language (#372).
+- Images - added support for images and animations in [AVIF format](frontend/thumb-servlet/README.md#images-avif). Server-side editing, watermarking, and thumbnails via `/thumb` preserve frames, transparency, and animation timing. Processing requires `ImageMagick` 7.1.2-34 or later with `libheif` 1.22.0 or later. Image editor saves a static image (#371).
 
 ### Headless mode
 
