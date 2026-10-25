@@ -9,6 +9,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static sk.iway.iwcm.test.AvifAssertions.assertAnimation;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -18,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import jakarta.servlet.ServletContext;
@@ -37,6 +45,8 @@ import org.springframework.mock.web.MockServletContext;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.SpamProtection;
+import sk.iway.iwcm.common.ImageTools;
+import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Covers placeholder responses, cache recovery and forwarding through a thumbnail rendering node. */
@@ -101,6 +111,28 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
         assertFalse(Files.exists(cachedImage("avif")));
     }
 
+    /** A timed-out conversion serves the placeholder without caching a partial AVIF. */
+    @Test
+    void animatedAvifTimeoutReturnsPlaceholder() throws Exception {
+        String executable = System.getProperty("os.name").toLowerCase().contains("win") ? "magick.exe" : "magick";
+        Files.createFile(root.resolve(executable));
+        setConfig("imageMagickDir", root.toString());
+        byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-animated-alpha.avif"));
+        Files.write(source("avif"), original);
+        Process process = mock(Process.class);
+        try (var builders = mockConstruction(ProcessBuilder.class, (builder, context) -> {
+            when(builder.redirectOutput(any(ProcessBuilder.Redirect.class))).thenReturn(builder);
+            when(builder.redirectError(any(ProcessBuilder.Redirect.class))).thenReturn(builder);
+            when(builder.start()).thenReturn(process);
+        })) {
+            assertPlaceholder(requestImage("avif"));
+            verify(process).waitFor(60, TimeUnit.SECONDS);
+            verify(process).destroyForcibly();
+        }
+        assertFalse(Files.exists(cachedImage("avif")));
+        assertArrayEquals(original, Files.readAllBytes(source("avif")));
+    }
+
     /** A request reaching the server after source repair generates the thumbnail at the same URL. */
     @Test
     void repairedSourceGeneratesThumbnailAtSameUrl() throws Exception {
@@ -118,9 +150,10 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
     }
 
     /** An existing valid thumbnail remains available and cacheable even when the codec is unavailable. */
-    @Test
-    void cachedAvifKeepsItsMimeTypeAndCaching() throws Exception {
-        byte[] image = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"));
+    @ParameterizedTest
+    @ValueSource(strings = {"autotest-transparent.avif", "autotest-animated-alpha.avif"})
+    void cachedAvifKeepsItsMimeTypeAndCaching(String fixture) throws Exception {
+        byte[] image = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/" + fixture));
         Files.write(source("avif"), image);
         Files.setLastModifiedTime(source("avif"), FileTime.fromMillis(1000));
         Files.createDirectories(cachedImage("avif").getParent());
@@ -132,11 +165,40 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
         assertArrayEquals(image, response.getContentAsByteArray());
     }
 
+    /** Every thumbnail mode preserves animation, and cached responses no longer require the codec. */
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 1, 2, 3, 4, 5, 6})
+    void generatesAndCachesAnimatedAvif(int ip) throws Exception {
+        setConfig("imageMagickDir", System.getenv().getOrDefault("AVIF_TEST_IMAGEMAGICK_DIR", "/usr/bin"));
+        if (System.getenv("AVIF_TEST_IMAGEMAGICK_DIR") != null) assertTrue(ImageTools.existsImageMagickConvertCommand());
+        else assumeTrue(ImageTools.existsImageMagickConvertCommand());
+        byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-animated-alpha.avif"));
+        Files.write(source("avif"), original);
+        Files.setLastModifiedTime(source("avif"), FileTime.fromMillis(1000));
+        // The source is outside the gallery; only its optional database crop selection is simulated.
+        try (var gallery = mockStatic(GalleryDB.class, CALLS_REAL_METHODS)) {
+            gallery.when(() -> GalleryDB.getGalleryBean(anyString(), any())).thenReturn(null);
+            MockHttpServletResponse response = requestImage("avif", ip);
+            assertEquals(200, response.getStatus());
+            assertEquals("image/avif", response.getContentType());
+            Path output = root.resolve("response.avif");
+            Files.write(output, response.getContentAsByteArray());
+            assertAnimation(output, 30, 20, 70, 230);
+            setConfig("imageMagickDir", root.resolve("missing-imagemagick").toString());
+            MockHttpServletResponse cached = requestImage("avif", ip);
+            assertEquals("image/avif", cached.getContentType());
+            assertEquals("public, max-age=3600", cached.getHeader("Cache-Control"));
+            assertArrayEquals(response.getContentAsByteArray(), cached.getContentAsByteArray());
+            assertArrayEquals(original, Files.readAllBytes(source("avif")));
+        }
+    }
+
     /** Cluster responses cache both GIF placeholders and AVIF images while honoring explicit no-store. */
     @ParameterizedTest
-    @CsvSource({"true,false", "false,false", "true,true"})
-    void forwardsRenderingNodeResponse(boolean failed, boolean noStore) throws Exception {
-        byte[] image = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"));
+    @CsvSource({"true,false,false", "false,false,false", "true,true,false", "false,false,true"})
+    void forwardsRenderingNodeResponse(boolean failed, boolean noStore, boolean animated) throws Exception {
+        byte[] image = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/"
+            + (animated ? "autotest-animated-alpha.avif" : "autotest-transparent.avif")));
         Files.write(source("avif"), image);
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/thumb/", exchange -> {
@@ -168,11 +230,19 @@ class ThumbServletFallbackTest extends BaseWebjetTest {
     }
 
     private MockHttpServletResponse requestImage(String extension) throws Exception {
+        return requestImage(extension, -1);
+    }
+
+    private MockHttpServletResponse requestImage(String extension, int ip) throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/thumb/images/autotest/image." + extension);
         request.setAttribute("path_filter_orig_path", request.getRequestURI());
         request.setParameter("w", "30");
         request.setParameter("h", "20");
         request.setQueryString("w=30&h=20");
+        if (ip > 0) {
+            request.setParameter("ip", Integer.toString(ip));
+            request.setQueryString(request.getQueryString() + "&ip=" + ip);
+        }
         MockHttpServletResponse response = new MockHttpServletResponse();
         // Isolate access checks and the existing static-header policy; image processing and response streaming are real.
         try (var paths = mockStatic(PathFilter.class); var spam = mockStatic(SpamProtection.class)) {

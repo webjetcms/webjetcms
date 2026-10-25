@@ -9,7 +9,18 @@ magick -size 120x80 xc:red -size 120x80 xc:blue -delay 10 autotest-animated.avif
 
 The transparent image contains an opaque red rectangle and transparent margins. The animation contains two frames, red followed by blue. Java metadata tests require no native codec. Processing tests use `AVIF_TEST_IMAGEMAGICK_DIR` when set; with an explicit path, missing AVIF support is a test failure. Without it, native processing tests skip when the server's ImageMagick is unavailable.
 
-The Gradle GitHub workflow uses Ubuntu 26.04 packages (ImageMagick 7, libheif 1.21+ and the AOM encoder/decoder plugins) and sets `AVIF_TEST_IMAGEMAGICK_DIR=/usr/bin`, so native processing tests run in CI. The animated fixture requires sequence decoding support; the older packages in Ubuntu 24.04 are insufficient.
+The Gradle GitHub workflow uses the pinned ImageMagick 7.1.2-34 AppImage with its bundled codecs, verifies the download checksum and requires libheif 1.22.0 or newer. `AVIF_TEST_IMAGEMAGICK_DIR` points to the extracted bundle, so native processing tests run in CI. ImageMagick's `rw+` alone does not establish correct animation support: tests also check timing and transparency.
+
+`autotest-animated-alpha.avif` was created with ImageMagick 7.1.2-34 and libheif 1.23.6. It contains a red rectangle on the left for 70 ms, then a blue rectangle on the right for 230 ms, with transparent margins and no residue from the previous frame. Unlike the older sequence fixture, it also contains a primary still item for Firefox compatibility. Generate it with:
+
+```sh
+magick -dispose Background \
+  \( -delay 7 -size 120x80 xc:none -fill red -draw 'rectangle 20,10 49,69' \) \
+  \( -delay 23 -size 120x80 xc:none -fill blue -draw 'rectangle 70,10 99,69' \) \
+  -quality 100 -define heic:speed=6 autotest-animated-alpha.avif
+```
+
+JUnit checks the picture track's `stts` table independently of ImageMagick. This catches the libheif 1.21.2 timing regression, which reads 70/230 ms as 70/70 ms. The browser gallery scenario checks actual rendered frames in Chromium and Firefox for gallery variants and all `/thumb` modes.
 
 The browser suite has independent page, gallery and image-editor workflows, each followed by a cleanup scenario. Run the complete `avif.js` file against a local WebJET instance; when filtering scenarios, include the matching cleanup. Configuration is restored before deleting the workflow's own test data.
 

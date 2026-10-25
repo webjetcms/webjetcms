@@ -25,7 +25,7 @@ jobs:
         !contains(github.event.pull_request.title, 'WIP:')
       )
 
-    # AVIF sequence fixtures require libheif 1.21+ and ImageMagick 7 from the distribution packages.
+    # Use the pinned ImageMagick bundle below for AVIF timing and browser compatibility.
     runs-on: ubuntu-26.04
     permissions:
       contents: read
@@ -57,10 +57,28 @@ jobs:
     #    echo "@datatables.net:registry=https://npm.datatables.net/" >> src/main/webapp/admin/v9/.npmrc
     #    echo "//npm.datatables.net/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" >> src/main/webapp/admin/v9/.npmrc
 
-    - name: Install MariaDB client and image codecs
+    - name: Install MariaDB client
       run: |
         sudo apt-get update
-        sudo apt-get install -y --no-install-recommends mariadb-client imagemagick libheif-plugin-aomdec libheif-plugin-aomenc
+        sudo apt-get install -y --no-install-recommends mariadb-client
+
+    - name: Install ImageMagick 7.1.2-34 with bundled AVIF codecs
+      run: |
+        mkdir -p "$RUNNER_TEMP/imagemagick"
+        cd "$RUNNER_TEMP/imagemagick"
+        curl --fail --location --retry 3 -o ImageMagick.AppImage https://github.com/ImageMagick/ImageMagick/releases/download/7.1.2-34/ImageMagick-7.1.2-34-gcc-x86_64.AppImage
+        echo '6e9edfd35d5f30b57c27533afe003d6085faaf8607b207426f398d11751acf93  ImageMagick.AppImage' | sha256sum --check
+        chmod +x ImageMagick.AppImage
+        ./ImageMagick.AppImage --appimage-extract > /dev/null
+        ln -s squashfs-root/AppRun magick
+        for command in identify composite convert; do
+          printf '#!/bin/sh\nexec "%s/magick" %s "$@"\n' "$PWD" "$command" > "$command"
+          chmod +x "$command"
+        done
+        ./magick -version
+        ./magick -list format | awk '$1 == "AVIF" { print; found = 1 } END { exit !found }'
+        heif_version=$(./magick -list format | awk '$1 == "AVIF" { gsub(/[()]/, "", $NF); print $NF }')
+        dpkg --compare-versions "$heif_version" ge 1.22.0
 
     - name: Import SQL file
       run: |
@@ -74,7 +92,7 @@ jobs:
     - name: Build with Gradle Wrapper
       env:
         # Require native image tests instead of silently skipping them when the codec is missing.
-        AVIF_TEST_IMAGEMAGICK_DIR: /usr/bin
+        AVIF_TEST_IMAGEMAGICK_DIR: ${{ runner.temp }}/imagemagick
         CODECEPT_DEFAULT_PASSWORD: ${{ secrets.CODECEPT_DEFAULT_PASSWORD }}
         CODECEPT_DEFAULT_AUTH_TOKEN: ${{ secrets.CODECEPT_DEFAULT_AUTH_TOKEN }}
         CODECEPT_DEFAULT_DOMAIN_NAME: ${{ vars.CODECEPT_DEFAULT_DOMAIN_NAME }}

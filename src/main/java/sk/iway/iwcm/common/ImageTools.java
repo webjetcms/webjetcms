@@ -619,17 +619,21 @@ public class ImageTools
 	}
 
 	/**
-	 * Selects the first source frame and prepares static, 8-bit sRGB AVIF output.
+	 * Preserves AVIF sequences and prepares 8-bit sRGB AVIF output.
 	 * Call after injecting custom parameters, while the input and output are still plain paths.
 	 * @param args command with the executable first, input second and output last
 	 */
 	private static void addAvifImageMagickParams(List<String> args) {
 		String input = args.get(1);
-		String decoder = isAvif(input) ? "avif:" : "";
-		args.set(1, decoder + input + "[0]");
-		args.add(2, "-auto-orient");
+		boolean avifInput = isAvif(input);
+		args.set(1, avifInput ? "avif:" + input : input + "[0]");
+		if (avifInput) {
+			args.addAll(2, List.of("-coalesce", "-auto-orient"));
+		} else {
+			args.add(2, "-auto-orient");
+		}
 		args.set(args.size() - 1, "avif:" + args.get(args.size() - 1));
-		args.addAll(args.size() - 1, List.of("+repage", "-colorspace", "sRGB", "-depth", "8"));
+		args.addAll(args.size() - 1, List.of("+repage", "-colorspace", "sRGB", "-depth", "8", "-adjoin"));
 	}
 
 	/**

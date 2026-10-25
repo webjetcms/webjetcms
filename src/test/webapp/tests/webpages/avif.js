@@ -2,6 +2,7 @@ Feature('webpages.avif');
 
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
+const { PNG } = require('pngjs');
 const codecDirectory = process.env.AVIF_TEST_IMAGEMAGICK_DIR || '/usr/bin';
 const filesPage = '/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9wcm9kdWt0b3ZhLXN0cmFua2E_E';
 const galleryFilesPage = '/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9nYWxsZXJ5L3Rlc3Q_E';
@@ -54,6 +55,34 @@ function assertImage(I, image, width, height, transparent = true) {
     I.assertEqual(image.width, width);
     I.assertEqual(image.height, height);
     if (transparent) I.assertTrue(image.alpha < 16, 'The transparent corner must survive AVIF processing');
+}
+
+/** Check rendered frames: canvas drawImage() only exposes the default frame of an animated image. */
+async function assertAnimationPlayback(I, url) {
+    await I.executeScript(async source => {
+        const image = new Image();
+        image.id = 'autotest-avif-playback';
+        image.style.cssText = 'position:fixed;top:0;left:0;width:120px;height:80px;object-fit:contain;background:white;z-index:2147483647';
+        document.body.appendChild(image);
+        image.src = source;
+        await image.decode();
+    }, url);
+    // Element screenshots are needed to inspect actual animation playback in Chromium and Firefox.
+    const frames = await I.usePlaywrightTo('verify AVIF playback', async ({ page }) => {
+        const image = page.locator('#autotest-avif-playback');
+        const seen = { red: false, blue: false };
+        const deadline = Date.now() + 5000;
+        while (Date.now() < deadline && !(seen.red && seen.blue)) {
+            const pixels = PNG.sync.read(await image.screenshot({ animations: 'allow' })).data;
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i] > 200 && pixels[i + 1] < 60 && pixels[i + 2] < 60) seen.red = true;
+                if (pixels[i + 2] > 200 && pixels[i] < 60 && pixels[i + 1] < 60) seen.blue = true;
+            }
+        }
+        return seen;
+    });
+    await I.executeScript(() => document.getElementById('autotest-avif-playback').remove());
+    I.assertTrue(frames.red && frames.blue, 'Both red and blue AVIF frames must play: ' + url);
 }
 
 async function upload(I, name) {
@@ -217,21 +246,27 @@ Scenario('AVIF page cleanup @singlethread', cleanup);
 Scenario('AVIF gallery upload preserves the animated original @singlethread', async ({ I, DT, Document }) => {
     await prepare({ I, Document }, 'gallery');
     await createFolder(I, galleryFilesPage, 'koala.jpg');
-    await upload(I, 'autotest-animated.avif');
+    const animatedFileName = 'autotest-animated-alpha.avif';
+    await upload(I, animatedFileName);
     const base = '/images/gallery/test/' + folderName + '/';
-    const original = await inspectImage(I, base + 'o_autotest-animated.avif');
+    const original = await inspectImage(I, base + 'o_' + animatedFileName);
     I.assertEqual(original.status, 200);
-    I.assertEqual(original.bytes, readFileSync(join(__dirname, 'autotest-animated.avif')).join(','));
+    I.assertEqual(original.bytes, readFileSync(join(__dirname, animatedFileName)).join(','));
     for (const prefix of ['', 's_']) {
-        const image = await inspectImage(I, base + prefix + 'autotest-animated.avif');
+        const image = await inspectImage(I, base + prefix + animatedFileName);
         I.assertEqual(image.status, 200);
         I.assertContain(image.mime, 'image/avif');
-        I.assertEqual(image.signature, 'ftypavif');
+        I.assertTrue(['ftypavif', 'ftypavis'].includes(image.signature));
         I.assertTrue(image.width > 0 && image.height > 0);
+        await assertAnimationPlayback(I, base + prefix + animatedFileName);
+    }
+    for (const ip of [-1, 1, 2, 3, 4, 5, 6]) {
+        const url = '/thumb' + base + animatedFileName + '?w=60&h=40' + (ip > 0 ? '&ip=' + ip : '');
+        await assertAnimationPlayback(I, url);
     }
     I.amOnPage('/admin/v9/apps/gallery/?dir=' + base);
     DT.waitForLoader();
-    I.waitForText('autotest-animated.avif', 20, '#galleryTable');
+    I.waitForText(animatedFileName, 20, '#galleryTable');
 });
 Scenario('AVIF gallery cleanup @singlethread', cleanup);
 

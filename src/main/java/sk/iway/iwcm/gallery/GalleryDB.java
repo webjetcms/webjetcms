@@ -2569,8 +2569,23 @@ public class GalleryDB
 	 */
 	private static void performWatermarking(String realPath)
 	{
-		//o_ stands for original image
-		boolean shouldPerformWatermarking = (!realPath.contains("/o_") && existImageMagickCompositeCommand()) && Constants.getBoolean("galleryEnableWatermarking");
+		// Keep the o_ source unchanged here so gallery variants can be regenerated from it.
+		if (realPath.contains("/o_")) return;
+
+		// Respect the global gallery watermark switch before looking up the gallery and its watermark.
+		if (!Constants.getBoolean("galleryEnableWatermarking")) return;
+
+		boolean shouldPerformWatermarking;
+		if ("avif".equalsIgnoreCase(FileTools.getFileExtension(realPath)))
+		{
+			// AVIF uses magick to apply the watermark to every frame and preserve the animation.
+			shouldPerformWatermarking = ImageTools.existsImageMagickConvertCommand();
+		}
+		else
+		{
+			// Other formats keep using the existing composite command.
+			shouldPerformWatermarking = existImageMagickCompositeCommand();
+		}
 		if (shouldPerformWatermarking)
 		{
 			String galleryPath = new IwcmFile(realPath).getVirtualParent();
@@ -2654,6 +2669,17 @@ public class GalleryDB
 			Logger.debug(GalleryDB.class, "testing S_watermark: "+watermarkPath);
 		}
 
+		if ("avif".equalsIgnoreCase(FileTools.getFileExtension(realPath)))
+		{
+			addAvifWatermarkSignature(imageFile, watermarkPath, watermark);
+			if (imageFile.getName().startsWith("s_"))
+			{
+				String originalPath = imageFile.getParent()+File.separatorChar+imageFile.getName().replace("s_", "");
+				addWatermarkSignature(originalPath, watermark);
+			}
+			return;
+		}
+
 		args.add(command);
 		if (filename.contains("magick.exe"))
 			args.add("composite");
@@ -2697,6 +2723,43 @@ public class GalleryDB
 		{
 			String originalPath = imageFile.getParent()+File.separatorChar+imageFile.getName().replace("s_", "");
 			addWatermarkSignature(originalPath, watermark);
+		}
+	}
+
+	/** Applies the watermark to every AVIF frame through the staged ImageMagick conversion. */
+	private static void addAvifWatermarkSignature(IwcmFile imageFile, String watermarkPath, GalleryDimension watermark)
+	{
+		File temporaryWatermark = null;
+		try
+		{
+			boolean svg = watermarkPath.toLowerCase().endsWith(".svg");
+			IwcmFile watermarkFile = new IwcmFile(watermarkPath);
+			if (IwcmFsDB.useDBStorage(watermarkFile.getVirtualPath()))
+			{
+				temporaryWatermark = File.createTempFile("webjet-avif-watermark-", "."+FileTools.getFileExtension(watermarkPath));
+				IwcmFsDB.writeFileToDisk(new File(watermarkFile.getAbsolutePath()), temporaryWatermark, true);
+				watermarkPath = temporaryWatermark.getAbsolutePath();
+			}
+
+			List<String> args = new ArrayList<>(List.of("from", "null:", "(", "-background", "none", watermarkPath));
+			if (svg)
+			{
+				int originalHeight = new ImageInfo(imageFile).getHeight();
+				int svgHeight = (int)Math.round(originalHeight * (Constants.getInt("galleryWatermarkSvgSizePercent")/100d));
+				if (svgHeight < Constants.getInt("galleryWatermarkSvgMinHeight")) svgHeight = Constants.getInt("galleryWatermarkSvgMinHeight");
+				MetadataCleaner.waitForGfs();
+				args.addAll(List.of("-resize", "x"+svgHeight));
+			}
+			args.addAll(List.of(")", "-gravity", watermark.getWatermarkPlacement(), "-compose", "Dissolve", "-define",
+				"compose:args="+watermark.getWatermarkSaturation()+",100", "-layers", "composite", "to"));
+			int result = ImageTools.executeImageMagick(imageFile, args);
+			if (result != 0) Logger.error(GalleryDB.class, "AVIF watermark failed: "+imageFile.getVirtualPath()+", result="+result);
+		}
+		catch (Exception e){sk.iway.iwcm.Logger.error(e);}
+		finally
+		{
+			if (temporaryWatermark != null && !temporaryWatermark.delete())
+				Logger.error(GalleryDB.class, "Cannot delete temporary watermark: "+temporaryWatermark);
 		}
 	}
 
@@ -4375,7 +4438,8 @@ public class GalleryDB
 	public static void applyWatermarkOnUpload(IwcmFile obrazok)
 	{
 		if(obrazok == null || obrazok.exists() == false) return;
-		boolean shouldPerformWatermarking = existImageMagickCompositeCommand()
+		boolean shouldPerformWatermarking = ("avif".equalsIgnoreCase(FileTools.getFileExtension(obrazok.getName()))
+				? ImageTools.existsImageMagickConvertCommand() : existImageMagickCompositeCommand())
 				&& Constants.getBoolean("galleryWatermarkApplyOnUpload")
 				&& ImageTools.isResizableImage(obrazok.getName());
 

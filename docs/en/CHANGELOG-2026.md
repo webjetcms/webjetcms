@@ -115,7 +115,7 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 ![More Actions menu in the website list](redactor/webpages/more-actions.png)
 
 - Web pages - [default tree settings](redactor/webpages/README.md#default-settings-for-users) for a new user can be set via the configuration variable `webpagesTreeDefaultSettings` (#368).
-- Images - added support for images in [AVIF format](frontend/thumb-servlet/README.md#avif-images). Processing requires ImageMagick with AVIF read and write functionality. When editing an animated image, the first frame is used (#371).
+- Images - added support for images and animations in [AVIF format](frontend/thumb-servlet/README.md#images-avif). Server-side editing, watermarking, and thumbnails via `/thumb` preserve frames, transparency, and animation timing. Processing requires `ImageMagick` 7.1.2-34 or later with `libheif` 1.22.0 or later. Image editor saves a static image (#371).
 
 ### Headless mode
 

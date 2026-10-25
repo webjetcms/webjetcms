@@ -115,7 +115,7 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 ![Nabídka Další akce v seznamu webových stránek](redactor/webpages/more-actions.png)
 
 - Webové stránky - [výchozí nastavení stromu](redactor/webpages/README.md#výchozí-nastavení-pro-uživatele) pro nového uživatele lze nastavit přes konfigurační proměnnou `webpagesTreeDefaultSettings` (#368).
-- Obrázky - přidána podpora obrázků ve [formátu AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Zpracování vyžaduje ImageMagick s funkčním čtením a zápisem AVIF. Při úpravě animovaného obrázku se použije první snímek (#371).
+- Obrázky - přidána podpora obrázků a animací ve [formátu AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Serverové úpravy, vodotisk a miniatury přes `/thumb` zachovávají snímky, průhlednost a časování animace. Zpracování vyžaduje `ImageMagick` 7.1.2-34 nebo novější s `libheif` 1.22.0 nebo novějším. Editor obrázků ukládá statický obrázek (#371).
 
 ### Headless režim
 

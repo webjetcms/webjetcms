@@ -9,12 +9,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static sk.iway.iwcm.test.AvifAssertions.assertAnimation;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -113,8 +120,8 @@ class ImageToolsAvifTest extends BaseWebjetTest {
 
     /** Real AVIF conversion stages DB input/output locally and cleans up files; database I/O is simulated. */
     @ParameterizedTest
-    @CsvSource({"true,true", "true,false", "false,true"})
-    void convertsBetweenLocalAndDatabaseStorage(boolean sourceInDB, boolean targetInDB) throws Exception {
+    @CsvSource({"true,true,false", "true,false,false", "false,true,false", "true,true,true", "true,false,true"})
+    void convertsBetweenLocalAndDatabaseStorage(boolean sourceInDB, boolean targetInDB, boolean animated) throws Exception {
         String previous = Constants.getString("imageMagickDir");
         try {
             Constants.setString("imageMagickDir", System.getenv().getOrDefault("AVIF_TEST_IMAGEMAGICK_DIR", "/usr/bin"));
@@ -122,7 +129,8 @@ class ImageToolsAvifTest extends BaseWebjetTest {
             Path staging = Files.createDirectory(directory.resolve("staging"));
             Path source = directory.resolve("database/source.avif");
             Path target = directory.resolve((targetInDB ? "database/" : "local/") + "result.avif");
-            Path original = Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif");
+            Path original = Path.of("src/test/webapp/tests/webpages/"
+                + (animated ? "autotest-animated-alpha.avif" : "autotest-transparent.avif"));
 
             try (var storage = mockStatic(IwcmFsDB.class); var files = mockStatic(FileTools.class)) {
                 storage.when(() -> IwcmFsDB.getVirtualPath(anyString())).thenAnswer(call -> call.getArgument(0));
@@ -153,6 +161,7 @@ class ImageToolsAvifTest extends BaseWebjetTest {
 
             assertDimensions(target, 20, 16);
             assertTransparent(target);
+            if (animated) assertAnimation(target, 20, 16, 70, 230);
             try (var stagedFiles = Files.list(staging)) {
                 assertEquals(0, stagedFiles.count(), "Temporary database input and output must be removed");
             }
@@ -163,8 +172,9 @@ class ImageToolsAvifTest extends BaseWebjetTest {
 
     /** Upload watermarking changes AVIF pixels while respecting the global switch and path exceptions. */
     @ParameterizedTest
-    @CsvSource({"true,false", "false,false", "true,true"})
-    void appliesUploadWatermarkToAvif(boolean enabled, boolean excluded) throws Exception {
+    @CsvSource({"true,false,false,false", "false,false,false,false", "true,true,false,false",
+        "true,false,true,false", "false,false,true,false", "true,true,true,false", "true,false,true,true"})
+    void appliesUploadWatermarkToAvif(boolean enabled, boolean excluded, boolean animated, boolean databaseWatermark) throws Exception {
         directory = directory.toRealPath();
         ServletContext previousContext = Constants.getServletContext();
         RequestBean previousRequest = SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -182,8 +192,6 @@ class ImageToolsAvifTest extends BaseWebjetTest {
         try {
             settings.forEach(Constants::setString);
             requireCodec();
-            String composite = System.getProperty("os.name").toLowerCase().contains("win") ? "magick.exe" : "composite";
-            assertTrue(Files.exists(Path.of(Constants.getString("imageMagickDir"), composite)), "Requires ImageMagick composite");
             Constants.setServletContext(new MockServletContext() {
                 @Override
                 public String getRealPath(String path) {
@@ -197,10 +205,30 @@ class ImageToolsAvifTest extends BaseWebjetTest {
             Files.writeString(directory.resolve("watermarks/default.svg"),
                 "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"30\"><rect width=\"30\" height=\"30\" fill=\"blue\"/></svg>");
             Path target = directory.resolve("upload-skip.avif");
-            byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"));
+            byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/"
+                + (animated ? "autotest-animated-alpha.avif" : "autotest-transparent.avif")));
             Files.write(target, original);
 
-            GalleryDB.applyWatermarkOnUpload(new IwcmFile(target.toFile()));
+            if (databaseWatermark) {
+                List<Path> staged = new ArrayList<>();
+                try (var storage = mockStatic(IwcmFsDB.class, CALLS_REAL_METHODS)) {
+                    storage.when(() -> IwcmFsDB.useDBStorage(anyString()))
+                        .thenAnswer(call -> "/watermarks/default.svg".equals(call.getArgument(0)));
+                    storage.when(IwcmFsDB::getFatIdTable).thenReturn(Map.of("/watermarks/default.svg", 1));
+                    storage.when(() -> IwcmFsDB.writeFileToDisk(any(File.class), any(File.class), eq(true)))
+                        .thenAnswer(call -> {
+                            Path temporary = ((File) call.getArgument(1)).toPath();
+                            staged.add(temporary);
+                            Files.copy(directory.resolve("watermarks/default.svg"), temporary, StandardCopyOption.REPLACE_EXISTING);
+                            return null;
+                        });
+                    GalleryDB.applyWatermarkOnUpload(new IwcmFile(target.toFile()));
+                }
+                assertEquals(1, staged.size(), "The database watermark is staged once");
+                assertTrue(staged.stream().noneMatch(Files::exists), "Temporary watermarks must be removed");
+            } else {
+                GalleryDB.applyWatermarkOnUpload(new IwcmFile(target.toFile()));
+            }
 
             if (enabled && !excluded) {
                 assertDimensions(target, 120, 80);
@@ -210,6 +238,13 @@ class ImageToolsAvifTest extends BaseWebjetTest {
                 Color center = new Color(pixels.getRGB(60, 40));
                 assertTrue(center.getBlue() > 200 && center.getRed() < 60,
                     "The blue watermark must replace the red center of the uploaded AVIF");
+                if (animated) {
+                    assertAnimation(target, 120, 80, 70, 230);
+                    BufferedImage second = readPixels(target, 1);
+                    assertTrue((second.getRGB(0, 0) >>> 24) < 16);
+                    assertTrue(new Color(second.getRGB(60, 40)).getBlue() > 200, "Watermark on the second frame");
+                    assertTrue((second.getRGB(30, 40) >>> 24) < 16, "No previous-frame residue");
+                }
             } else {
                 assertArrayEquals(original, Files.readAllBytes(target));
             }
@@ -291,8 +326,9 @@ class ImageToolsAvifTest extends BaseWebjetTest {
     }
 
     /** Gallery creates AVIF small/large variants and retains the original bytes. */
-    @Test
-    void generatesGalleryVariantsAndKeepsOriginal() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"autotest-transparent.avif", "autotest-animated-alpha.avif"})
+    void generatesGalleryVariantsAndKeepsOriginal(String fixture) throws Exception {
         String previous = Constants.getString("imageMagickDir");
         String cache = Constants.getString("thumbServletCacheDir");
         try {
@@ -300,7 +336,7 @@ class ImageToolsAvifTest extends BaseWebjetTest {
             requireCodec();
             Constants.setString("thumbServletCacheDir", directory.toString());
             Path target = directory.resolve("gallery.avif");
-            byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-transparent.avif"));
+            byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/" + fixture));
             Files.write(target, original);
             assertTrue(GalleryDB.resizePictureImpl(new java.awt.Dimension[] {
                 new java.awt.Dimension(30, 20), new java.awt.Dimension(60, 40)
@@ -308,6 +344,10 @@ class ImageToolsAvifTest extends BaseWebjetTest {
             assertDimensions(directory.resolve("s_gallery.avif"), 30, 20);
             assertDimensions(target, 60, 40);
             assertArrayEquals(original, Files.readAllBytes(directory.resolve("o_gallery.avif")));
+            if (fixture.contains("animated")) {
+                assertAnimation(directory.resolve("s_gallery.avif"), 30, 20, 70, 230);
+                assertAnimation(target, 60, 40, 70, 230);
+            }
         } finally {
             Constants.setString("imageMagickDir", previous);
             Constants.setString("thumbServletCacheDir", cache);
@@ -336,26 +376,27 @@ class ImageToolsAvifTest extends BaseWebjetTest {
         }
     }
 
-    /** Resizing an animated source still produces a static thumbnail from its first frame. */
+    /** Resizing and cropping preserve both frames, their timing and independent transparency. */
     @ParameterizedTest
     @CsvSource({"S,60,40", "C,40,40"})
-    void smallerThumbnailOfAnimationIsStatic(String resizeMode, int width, int height) throws Exception {
+    void smallerThumbnailPreservesAnimation(String resizeMode, int width, int height) throws Exception {
         String previous = Constants.getString("imageMagickDir");
         String cache = Constants.getString("thumbServletCacheDir");
         try {
             Constants.setString("imageMagickDir", System.getenv().getOrDefault("AVIF_TEST_IMAGEMAGICK_DIR", "/usr/bin"));
             requireCodec();
             Constants.setString("thumbServletCacheDir", directory.toString());
-            Path source = Path.of("src/test/webapp/tests/webpages/autotest-animated.avif");
+            Path source = Path.of("src/test/webapp/tests/webpages/autotest-animated-alpha.avif");
             byte[] original = Files.readAllBytes(source);
             Path target = directory.resolve("animation.avif");
             assertEquals(0, GalleryDB.resizePicture(source.toString(), target.toString(), width, height, resizeMode));
-            assertDimensions(target, width, height);
-            // ImageMagick writes static AVIF with avif, timed sequences with avis.
-            assertEquals("avif", new String(Files.readAllBytes(target), 8, 4, java.nio.charset.StandardCharsets.US_ASCII));
-            Color center = new Color(readPixels(target).getRGB(width / 2, height / 2));
-            assertTrue(center.getRed() > 200 && center.getGreen() < 60 && center.getBlue() < 60,
-                "The thumbnail must contain the first (red) frame, not the second (blue) frame");
+            assertAnimation(target, width, height, 70, 230);
+            BufferedImage first = readPixels(target, 0);
+            BufferedImage second = readPixels(target, 1);
+            assertTrue(new Color(first.getRGB(width / 4, height / 2)).getRed() > 200);
+            assertTrue(new Color(second.getRGB(3 * width / 4, height / 2)).getBlue() > 200);
+            assertTrue((first.getRGB(3 * width / 4, height / 2) >>> 24) < 16);
+            assertTrue((second.getRGB(width / 4, height / 2) >>> 24) < 16, "No previous-frame residue");
             assertArrayEquals(original, Files.readAllBytes(source));
         } finally {
             Constants.setString("imageMagickDir", previous);
@@ -386,6 +427,55 @@ class ImageToolsAvifTest extends BaseWebjetTest {
             assertTrue(ImageTools.existsImageMagickConvertCommand(), "The explicitly configured ImageMagick must exist");
         } else {
             assumeTrue(ImageTools.existsImageMagickConvertCommand(), "Requires ImageMagick; configure AVIF_TEST_IMAGEMAGICK_DIR with AVIF support");
+        }
+    }
+
+    /** Server-side edits and metadata stripping preserve the complete AVIF sequence. */
+    @Test
+    void editsAnimatedAvif() throws Exception {
+        String previous = Constants.getString("imageMagickDir");
+        String stripExif = Constants.getString("galleryStripExif");
+        try {
+            Constants.setString("imageMagickDir", System.getenv().getOrDefault("AVIF_TEST_IMAGEMAGICK_DIR", "/usr/bin"));
+            Constants.setString("galleryStripExif", "true");
+            requireCodec();
+            Path target = directory.resolve("animated.avif");
+            Files.copy(Path.of("src/test/webapp/tests/webpages/autotest-animated-alpha.avif"), target);
+            IwcmFile image = new IwcmFile(target.toFile());
+            assertEquals(0, ImageTools.resizeImage(image, 60, 40));
+            assertAnimation(target, 60, 40, 70, 230);
+            assertEquals(0, ImageTools.cropImage(image, 50, 30, 0, 0));
+            assertAnimation(target, 50, 30, 70, 230);
+            assertEquals(0, ImageTools.rotateImage(image, 90));
+            assertAnimation(target, 30, 50, 70, 230);
+            GalleryDB.stripExif(target.toString());
+            assertAnimation(target, 30, 50, 70, 230);
+            assertTransparent(target);
+        } finally {
+            Constants.setString("imageMagickDir", previous);
+            Constants.setString("galleryStripExif", stripExif);
+        }
+    }
+
+    /** A native timeout kills the process and leaves both the original and staging directory intact. */
+    @Test
+    void timeoutPreservesAnimatedOriginal() throws Exception {
+        Path target = directory.resolve("timeout.avif");
+        byte[] original = Files.readAllBytes(Path.of("src/test/webapp/tests/webpages/autotest-animated-alpha.avif"));
+        Files.write(target, original);
+        Process process = mock(Process.class);
+        try (var builders = mockConstruction(ProcessBuilder.class, (builder, context) -> {
+            when(builder.redirectOutput(any(ProcessBuilder.Redirect.class))).thenReturn(builder);
+            when(builder.redirectError(any(ProcessBuilder.Redirect.class))).thenReturn(builder);
+            when(builder.start()).thenReturn(process);
+        })) {
+            assertEquals(2, ImageTools.executeImageMagick(new IwcmFile(target.toFile()), List.of("from", "-resize", "60x40", "to")));
+            verify(process).waitFor(60, TimeUnit.SECONDS);
+            verify(process).destroyForcibly();
+        }
+        assertArrayEquals(original, Files.readAllBytes(target));
+        try (var files = Files.list(directory)) {
+            assertEquals(1, files.count(), "No staged output remains after a timeout");
         }
     }
 
@@ -445,8 +535,12 @@ class ImageToolsAvifTest extends BaseWebjetTest {
     }
 
     private BufferedImage readPixels(Path image) throws Exception {
+        return readPixels(image, 0);
+    }
+
+    private BufferedImage readPixels(Path image, int frame) throws Exception {
         Path decoded = directory.resolve("decoded.png");
-        Process process = new ProcessBuilder(ImageTools.getImageMagickCommand(), image.toString(), decoded.toString())
+        Process process = new ProcessBuilder(ImageTools.getImageMagickCommand(), image + "[" + frame + "]", decoded.toString())
             .redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
         try {
             assertTrue(process.waitFor(30, TimeUnit.SECONDS));
