@@ -18,6 +18,20 @@ and we need it to have a max size of `200x200` points. Just add the prefix `/thu
 
 The image may actually be smaller than the requested `200x200` pixels, depending on its aspect ratio. In this case, it was generated as `200x134` pixels, but it will always fit within the requested dimensions.
 
+## AVIF images
+
+Thumbnail generation and AVIF editing require **ImageMagick with AVIF read and write support, including transparency** (with the appropriate `libheif` and AV1 codec) on the server. In the `imageMagickDir` configuration, set the folder with the `magick` or `convert` command. Support must be provided by the server administrator. WebJET assumes a working codec for processing.
+
+Before deployment, verify under the account that WebJET is running under:
+
+- the command `magick -list format` (in ImageMagick 6 `convert -list format`) indicates both reading and writing for AVIF,
+- converting transparent PNG to AVIF and back works and preserves transparency,
+- the process has the right to run ImageMagick and write to both the Java temporary folder and the target image folder.
+
+When scaling, cropping or rotating an animated AVIF, a static image is created from the first frame. The editing uses regular SDR output, with no guarantee of preserving HDR and the original 10/12-bit depth. Automatic watermarking during upload (`galleryWatermarkApplyOnUpload`) is also applied to the original AVIF; when inserted, the animation is not guaranteed to be preserved.
+
+You can set the encoding quality and speed using the existing [ImageMagick custom parameters] mechanism. The default value for `imageMagickCustomParams_avif` is `-quality 80 -define heic:speed=6`. More specific settings for the operation, such as `imageMagickCustomParams_resize_avif`, also apply.
+
 ## Default image
 
 By default, a standard 404 error is returned for a non-existent image when using the `/thumb` address. However, if you need to display a default image for such a case, you can use the `thumbServletMissingImg` configuration variable. It can be used to add the folder name and file name to the lines that should be used for this case. Example of the setting:

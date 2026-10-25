@@ -18,6 +18,20 @@ a potřebujeme, abychom ho měli v max. rozměru `200x200` bodů. Před URL obr�
 
 Obrázek reálně může být menší než požadovaných `200x200` bodů, záleží na jeho poměru stran. V tomto případě se vygeneroval jako `200x134` bodů, vždy se ale vejde do požadovaného rozměru.
 
+## Obrázky AVIF
+
+Generování miniatur a úpravy AVIF vyžadují na serveru **ImageMagick s podporou čtení i zápisu AVIF včetně průhlednosti** (s příslušným `libheif` a AV1 kodekem). V konfiguraci `imageMagickDir` nastavte složku s příkazem `magick`, případně `convert`. Podporu musí zajistit správce serveru. WebJET při zpracování předpokládá funkční kodek.
+
+Před nasazením ověřte pod účtem, pod kterým běží WebJET:
+
+- příkaz `magick -list format` (u ImageMagick 6 `convert -list format`) uvádí u AVIF čtení i zápis,
+- převod průhledného PNG do AVIF a zpět funguje a zachová průhlednost,
+- proces má právo spustit ImageMagick a zapisovat do dočasné složky Javy i cílové složky obrázků.
+
+Při zmenšování, oříznutí nebo otočení animovaného AVIF vznikne statický obrázek z prvního snímku. Při úpravách se používá běžný SDR výstup, bez záruky zachování HDR a původní 10/12bitové hloubky. Automatický vodoznak při nahrávání (`galleryWatermarkApplyOnUpload`) se aplikuje i na originál AVIF; při jejím vložení se nezaručuje zachování animace.
+
+Kvalitu a rychlost kódování nastavíte stávajícím mechanismem [vlastních parametrů ImageMagick](../../redactor/apps/gallery/README.md#vlastní-parametry-imagemagick). Výchozí hodnota `imageMagickCustomParams_avif` je `-quality 80 -define heic:speed=6`. Platí také specifičtější nastavení pro operaci, například `imageMagickCustomParams_resize_avif`.
+
 ## Výchozí obrázek
 
 Ve výchozím nastavení se pro neexistující obrázek při použití `/thumb` adresy vrátí standardní chyba 404. Pokud ale potřebujete pro takový případ zobrazit výchozí obrázek, je možné použít konfigurační proměnnou `thumbServletMissingImg`. Do ní lze do řádků doplnit jméno složky a jméno souboru, který se pro tento případ má použít. Příklad nastavení:
