@@ -1,4 +1,5 @@
 import WJ from "./webjet";
+import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";
 
 export class DatatablesCkEditor {
 
@@ -299,14 +300,16 @@ export class DatatablesCkEditor {
 							try {
 								if (dialogWindow !== dialogWindow.top && dialogWindow.frameElement) {
 									var $pageBuilderIframe = $(dialogWindow.frameElement);
-									//store original iframe styles for restoration
+									var iframeStyle = dialogWindow.frameElement.style;
+									// Preserve inline values so restoration does not freeze responsive dimensions in pixels.
 									dialog._.originalIframeStyles = {
-										position: $pageBuilderIframe.css("position"),
-										top: $pageBuilderIframe.css("top"),
-										left: $pageBuilderIframe.css("left"),
-										width: $pageBuilderIframe.css("width"),
-										height: $pageBuilderIframe.css("height"),
-										zIndex: $pageBuilderIframe.css("z-index")
+										position: iframeStyle.position,
+										top: iframeStyle.top,
+										left: iframeStyle.left,
+										width: iframeStyle.width,
+										maxWidth: iframeStyle.maxWidth,
+										height: iframeStyle.height,
+										zIndex: iframeStyle.zIndex
 									};
 									//expand iframe to full screen
 									$pageBuilderIframe.css({
@@ -314,6 +317,7 @@ export class DatatablesCkEditor {
 										"top": "0",
 										"left": "0",
 										"width": "100vw",
+										"max-width": "none",
 										"height": "100vh",
 										"z-index": "99999"
 									});
@@ -333,7 +337,7 @@ export class DatatablesCkEditor {
 							$dialogBody.addClass("cke_dialog_maximized");
 
 							//resize iframes inside the dialog after dialog resize is complete
-							setTimeout(function() {
+							dialog._.maximizeResizeTimer = setTimeout(function() {
 								var contentBody = $dialogElement.find(".cke_dialog_contents_body");
 								if (contentBody.length > 0) {
 									var newWidth = contentBody.innerWidth() - 5;
@@ -357,6 +361,7 @@ export class DatatablesCkEditor {
 						minimizeButton.on("click", function(e) {
 							e.preventDefault();
 							e.stopPropagation();
+							clearTimeout(dialog._.maximizeResizeTimer);
 
 							var dialogElement = dialog.getElement().$;
 							var $dialogElement = $(dialogElement);
@@ -419,9 +424,23 @@ export class DatatablesCkEditor {
 					}
 				});
 
+				// Run after dialog-specific show handlers have set their final dimensions.
+				dialogDefinition.dialog.on('show', function() {
+					var dialogWindow = this.getElement().getDocument().getWindow().$;
+					var dialogWidth = Math.max(this.getSize().width, this._.contentSize.width);
+					if (!$(dialogWindow.frameElement).hasClass("md-pageBuilder") || dialogWidth <= dialogWindow.innerWidth) return;
+
+					this._.previewScrollPosition = {x: dialogWindow.scrollX, y: dialogWindow.scrollY};
+					var $dialogElement = $(this.getElement().$);
+					$dialogElement.find(".cke_dialog_maximize_button").trigger("click");
+					// Closing restores the preview; minimizing would clip the dialog again.
+					$dialogElement.find(".cke_dialog_minimize_button").hide();
+				}, null, null, 100);
+
 				//reset all settings when dialog is closed
 				dialogDefinition.dialog.on( 'hide', function() {
 					var dialog = this;
+					clearTimeout(dialog._.maximizeResizeTimer);
 					var dialogDoc = dialog.getElement().getDocument().$;
 					var $dialogDoc = $(dialogDoc);
 					var dialogElement = dialog.getElement().$;
@@ -481,6 +500,15 @@ export class DatatablesCkEditor {
 						delete dialog._.originalHeight;
 						dialog._.moved = false;
 						delete dialog._.position;
+					}
+
+					if (dialog._.previewScrollPosition) {
+						var scrollPosition = dialog._.previewScrollPosition;
+						delete dialog._.previewScrollPosition;
+						// CKEditor restores the selection after hide listeners finish.
+						setTimeout(function() {
+							dialogWindow.scrollTo(scrollPosition.x, scrollPosition.y);
+						}, 0);
 					}
 
 					//remove maximize/minimize buttons so they get recreated fresh on next show
@@ -2207,6 +2235,10 @@ export class DatatablesCkEditor {
 				// maximize the editor on startup
 				'instanceReady' : function( evt )
 				{
+					evt.editor.wjToolbarOverflow = new CkEditorToolbarOverflow(evt.editor, that.ckEditorObject, {
+						more: WJ.translate("editor.toolbar.more_tools.js"),
+						close: WJ.translate("button.close")
+					});
 					//console.log("instanceReady");
 					//FCKeditor_OnComplete();
 

@@ -115,6 +115,11 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 ![Nabídka Další akce v seznamu webových stránek](redactor/webpages/more-actions.png)
 
 - Webové stránky - [výchozí nastavení stromu](redactor/webpages/README.md#výchozí-nastavení-pro-uživatele) pro nového uživatele lze nastavit přes konfigurační proměnnou `webpagesTreeDefaultSettings` (#368).
+- Editor stránek - v úzkém okně se skupiny nástrojů přesunou do [panelu Další nástroje](redactor/webpages/working-in-editor/README.md#panel-nástrojů-v-úzkém-okně). Lišta se nezalamuje do dalšího pásu a nepřekrývá přepínač editoru a rozměrů. Tlačítko se třemi tečkami je přímo za poslední skupinou ikon a má bublinovou nápovědu. Stejné ovládání funguje ve Standardním editoru i v Page Builderu (#372).
+
+![Panel Další nástroje v mobilním náhledu Page Buildera](redactor/webpages/working-in-editor/toolbar-overflow.png)
+
+- Page Builder - dialogy, které se nevejdou do šířky náhledu, se automaticky rozšíří na velikost okna prohlížeče. Po potvrzení nebo zavření se obnoví původní šířka náhledu a posun stránky. Ovládací prvky Page Buildera používají jazyk administrace (#372).
 - Obrázky - přidána podpora obrázků a animací ve [formátu AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Serverové úpravy, vodotisk a miniatury přes `/thumb` zachovávají snímky, průhlednost a časování animace. Zpracování vyžaduje `ImageMagick` 7.1.2-34 nebo novější s `libheif` 1.22.0 nebo novějším. Editor obrázků ukládá statický obrázek (#371).
 
 ### Headless režim
@@ -292,6 +297,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Webové stránky - přesměrování stránky se přihlášenému administrátorovi neukládá do cache prohlížeče, aby se jeho změna nebo zrušení projevily při dalším otevření stránek (#372).
+- Editor stránek - při automatické maximalizaci v nízkém nebo úzkém okně zůstává celý panel nástrojů nad obsahem stránky. Obsah již neprosvítá pod ikonami a názvy skupin (#372).
 - Editor stránek - při selhání získání obsahu nebo hodnotě `undefined` se zobrazí chyba a uložení se zastaví, aby se nepřepsal původní obsah. Atributy `contenteditable` se odstraňují při načítání i ukládání HTML včetně kódu vloženého v HTML režimu (#369).
 - Page Builder - při selhání načítání obsahu lze přepnout do HTML režimu obnovením posledního dostupného HTML. Obnova vyžaduje potvrzení, protože nemusí obsahovat nejnovější změny (#369).
 - Page Builder - opraveno zamrznutí editoru při otevření HTML se zbývajícím atributem `contenteditable="true"`. CKEditor se na stejném bloku již neinicializuje dvakrát.

@@ -115,6 +115,11 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 ![More Actions menu in the website list](redactor/webpages/more-actions.png)
 
 - Web pages - [default tree settings](redactor/webpages/README.md#default-settings-for-users) for a new user can be set via the configuration variable `webpagesTreeDefaultSettings` (#368).
+- Page Editor - in a narrow window, the tool groups are moved to the [More Tools panel](redactor/webpages/working-in-editor/README.md#tool-panel-in-a-narrow-window). The bar does not wrap into another strip and does not overlap the editor and size switcher. The button with three dots is directly behind the last group of icons and has a bubble tip. The same control works in the Standard Editor and in the Page Builder (#372).
+
+![More Tools Panel in the Page Builder Mobile Preview](redactor/webpages/working-in-editor/toolbar-overflow.png)
+
+- Page Builder - dialogs that do not fit within the preview width will automatically expand to the size of the browser window. After confirmation or closing, the original preview width and page offset will be restored. Page Builder controls use the administration language (#372).
 - Images - added support for images and animations in [AVIF format](frontend/thumb-servlet/README.md#images-avif). Server-side editing, watermarking, and thumbnails via `/thumb` preserve frames, transparency, and animation timing. Processing requires `ImageMagick` 7.1.2-34 or later with `libheif` 1.22.0 or later. Image editor saves a static image (#371).
 
 ### Headless mode
@@ -292,6 +297,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the pages are opened (#372).
+- Page Editor - when auto-maximizing in a low or narrow window, the entire toolbar remains above the page content. Content no longer shines through under icons and group names (#372).
 - Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
 - Page Builder - when content loading fails, you can switch to HTML mode by restoring the last available HTML. The restore requires confirmation as it may not contain the latest changes (#369).
 - Page Builder - fixed editor freeze when opening HTML with remaining `contenteditable="true"` attribute. CKEditor no longer initializes twice on the same block.
