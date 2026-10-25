@@ -28,7 +28,9 @@ Pred nasadením overte pod účtom, pod ktorým beží WebJET:
 - prevod priehľadného PNG do AVIF a späť funguje a zachová priehľadnosť,
 - proces má právo spustiť ImageMagick a zapisovať do dočasného priečinka Javy aj cieľového priečinka obrázkov.
 
-Pri zmenšovaní, orezaní alebo otočení animovaného AVIF vznikne statický obrázok z prvého snímku. Pri úpravách sa používa bežný SDR výstup, bez záruky zachovania HDR a pôvodnej 10/12-bitovej hĺbky. Automatická vodotlač pri nahrávaní (`galleryWatermarkApplyOnUpload`) sa aplikuje aj na originál AVIF; pri jej vložení sa nezaručuje zachovanie animácie.
+Pri zmenšovaní, orezaní alebo otočení animovaného AVIF vznikne statický obrázok z prvého snímku. To platí aj pri odstraňovaní metadát počas nahrávania do galérie, preto zachovanie animácie nie je garantované ani v súbore `o_…`. Samotné kopírovanie bez spracovania animáciu nemení.
+
+Pri úpravách sa používa bežný SDR výstup, bez záruky zachovania HDR a pôvodnej 10/12-bitovej hĺbky. Automatická vodotlač pri nahrávaní (`galleryWatermarkApplyOnUpload`) sa aplikuje aj na originál AVIF; pri jej vložení sa nezaručuje zachovanie animácie.
 
 Kvalitu a rýchlosť kódovania nastavíte existujúcim mechanizmom [vlastných parametrov ImageMagick](../../redactor/apps/gallery/README.md#vlastné-parametre-imagemagick). Predvolená hodnota `imageMagickCustomParams_avif` je `-quality 80 -define heic:speed=6`. Platia aj špecifickejšie nastavenia pre operáciu, napríklad `imageMagickCustomParams_resize_avif`.
 
