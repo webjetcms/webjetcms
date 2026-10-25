@@ -115,7 +115,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 ![Ponuka Ďalšie akcie v zozname webových stránok](redactor/webpages/more-actions.png)
 
 - Webové stránky - [predvolené nastavenie stromu](redactor/webpages/README.md#predvolené-nastavenie-pre-používateľov) pre nového používateľa je možné nastaviť cez konfiguračnú premennú `webpagesTreeDefaultSettings` (#368).
-- Editor stránok - v úzkom okne sa skupiny nástrojov presunú do panela [Ďalšie nástroje](redactor/webpages/working-in-editor/README.md#panel-nástrojov-v-úzkom-okne). Lišta sa nezalamuje do ďalšieho pásu a neprekrýva prepínač editora a rozmerov. Tlačidlo s tromi bodkami je priamo za poslednou skupinou ikon a má bublinovú nápovedu. Rovnaké ovládanie funguje v Štandardnom editore aj v Page Builderi (#372).
+- Editor stránok - v úzkom okne sa skupiny nástrojov presunú do [panela Ďalšie nástroje](redactor/webpages/working-in-editor/README.md#panel-nástrojov-v-úzkom-okne). Lišta sa nezalamuje do ďalšieho pásu a neprekrýva prepínač editora a rozmerov. Tlačidlo s tromi bodkami je priamo za poslednou skupinou ikon a má bublinovú nápovedu. Rovnaké ovládanie funguje v Štandardnom editore aj v Page Builderi (#372).
 
 ![Panel Ďalšie nástroje v mobilnom náhľade Page Buildera](redactor/webpages/working-in-editor/toolbar-overflow.png)
 
