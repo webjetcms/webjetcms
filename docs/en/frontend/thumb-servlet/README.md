@@ -22,20 +22,25 @@ The image may actually be smaller than the requested `200x200` pixels, depending
 
 Thumbnail generation and AVIF editing require **ImageMagick with AVIF read and write support, including transparency and animations** on the server. Use ImageMagick **7.1.2-34 or later**, `libheif` **1.22.0 or later**, and the AV1 codec. In the `imageMagickDir` configuration, set the folder with the `magick` command. Support must be provided by the server administrator. WebJET assumes a working codec for processing.
 
-Before deployment, verify under the account that WebJET is running under:
+Verify the versions in a terminal under the account that WebJET is running under. Enter the same folder in the `image_magick_dir` variable as in the `imageMagickDir` configuration (in the example `/usr/local/bin`):
 
-- the `magick -list format` command specifies both reading and writing for AVIF, `rw+` alone is not enough to verify animations,
-- converting transparent PNG to AVIF and back works and preserves transparency,
-- shrinking animated AVIF will preserve the number and order of frames as well as different frame times, for example 70 and 230 ms; the result plays in both Chromium and Firefox,
-- the process has the right to run ImageMagick and write to both the Java temporary folder and the target image folder.
+```sh
+magick -version
+magick -list format | awk '$1 == "AVIF" { print }'
+```
 
-Server-side scaling, cropping, rotating, and metadata removal preserve animation, transparency, and frame timing. This also applies to thumbnails via `/thumb`, gallery variants, and the `o_…` file during upload processing. The output loops indefinitely; the original finite number of plays is not preserved. The extension remains `.avif` and the MIME type `image/avif`. The `avis` tag inside the file indicates an animated AVIF sequence, not the `.avis` extension.
+Example of a valid output (abbreviated):
+
+```text
+Version: ImageMagick 7.1.2-34 Q16-HDRI ...
+     AVIF  HEIC      rw+   AV1 Image File Format (1.23.6)
+```
+
+- The version after `ImageMagick` must be **7.1.2-34 or later**.
+- The number in parentheses on the line `AVIF` is the version of the `libheif` library used by ImageMagick. It must be **1.22.0 or later**.
+- The `AVIF` line must contain `rw`, meaning both read and write support. If the line is missing, this build does not have AVIF support. The `HEIC` column may not be displayed depending on the build.
 
 The editing uses regular SDR output, with no guarantee of preserving HDR and the original 10/12-bit depth. An automatic watermark on upload (`galleryWatermarkApplyOnUpload`) is also applied to the original AVIF and embedded in each frame. Transcoding may change the bytes of the file. The TUI drawing editor sends a single PNG image from the canvas, so saving it will create a static AVIF.
-
-AVIF processing has a time limit of 60 seconds. If an error occurs or the time limit is exceeded, the existing target file will not be replaced. `/thumb` returns an existing GIF placeholder image on failed generation and does not cache the failed AVIF.
-
-After deploying animation support, delete the old AVIF thumbnails from `thumbServletCacheDir` on the appropriate nodes. Regenerate the static gallery variants from the animated original. If the `o_…` file has also been converted to a static image, the original animated file must be uploaded again.
 
 You can set the encoding quality and speed using the existing [ImageMagick custom parameters] mechanism. The default value for `imageMagickCustomParams_avif` is `-quality 80 -define heic:speed=6`. More specific settings for the operation, such as `imageMagickCustomParams_resize_avif`, also apply.
 

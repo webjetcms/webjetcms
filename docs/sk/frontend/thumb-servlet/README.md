@@ -22,20 +22,25 @@ Obrázok reálne môže byť menší ako požadovaných `200x200` bodov, zálež
 
 Generovanie miniatúr a úpravy AVIF vyžadujú na serveri **ImageMagick s podporou čítania aj zápisu AVIF vrátane priehľadnosti a animácií**. Používajte ImageMagick **7.1.2-34 alebo novší**, `libheif` **1.22.0 alebo novší** a AV1 kodek. V konfigurácii `imageMagickDir` nastavte priečinok s príkazom `magick`. Podporu musí zabezpečiť správca servera. WebJET pri spracovaní predpokladá funkčný kodek.
 
-Pred nasadením overte pod účtom, pod ktorým beží WebJET:
+Verzie overte v termináli pod účtom, pod ktorým beží WebJET. Do premennej `image_magick_dir` zadajte rovnaký priečinok ako v konfigurácii `imageMagickDir` (v príklade `/usr/local/bin`):
 
-- príkaz `magick -list format` uvádza pri AVIF čítanie aj zápis, samotné `rw+` nestačí na overenie animácií,
-- prevod priehľadného PNG do AVIF a späť funguje a zachová priehľadnosť,
-- zmenšenie animovaného AVIF zachová počet a poradie snímok aj rozdielne časy ich zobrazenia, napríklad 70 a 230 ms; výsledok sa prehráva v Chromium aj Firefox,
-- proces má právo spustiť ImageMagick a zapisovať do dočasného priečinka Javy aj cieľového priečinka obrázkov.
+```sh
+magick -version
+magick -list format | awk '$1 == "AVIF" { print }'
+```
 
-Serverové zmenšovanie, orezanie, otočenie a odstraňovanie metadát zachovávajú animáciu, priehľadnosť a časovanie snímok. Platí to aj pre miniatúry cez `/thumb`, varianty galérie a súbor `o_…` pri spracovaní počas nahratia. Výstup sa opakuje donekonečna; pôvodný konečný počet prehratí sa nezachováva. Prípona zostáva `.avif` a MIME typ `image/avif`. Značka `avis` vnútri súboru označuje animovanú AVIF sekvenciu, nie príponu `.avis`.
+Príklad vyhovujúceho výstupu (skrátený):
+
+```text
+Version: ImageMagick 7.1.2-34 Q16-HDRI ...
+     AVIF  HEIC      rw+   AV1 Image File Format (1.23.6)
+```
+
+- Verzia za `ImageMagick` musí byť **7.1.2-34 alebo novšia**.
+- Číslo v zátvorke na riadku `AVIF` je verzia knižnice `libheif` používanej ImageMagickom. Musí byť **1.22.0 alebo novšia**.
+- Riadok `AVIF` musí obsahovať `rw`, teda podporu čítania aj zápisu. Ak riadok chýba, toto zostavenie nemá podporu AVIF. Stĺpec `HEIC` sa podľa zostavenia nemusí zobrazovať.
 
 Pri úpravách sa používa bežný SDR výstup, bez záruky zachovania HDR a pôvodnej 10/12-bitovej hĺbky. Automatická vodotlač pri nahrávaní (`galleryWatermarkApplyOnUpload`) sa aplikuje aj na originál AVIF a vloží sa do každého snímku. Prekódovanie môže zmeniť bajty súboru. Kresliaci editor TUI odosiela jediný PNG obrázok z plátna, preto jeho uložením vznikne statický AVIF.
-
-Spracovanie AVIF má limit 60 sekúnd. Pri chybe alebo prekročení limitu sa existujúci cieľový súbor nenahradí. `/thumb` pri neúspešnom generovaní vráti existujúci GIF zástupný obrázok a neuloží chybný AVIF do cache.
-
-Po nasadení podpory animácií vymažte staré AVIF miniatúry z `thumbServletCacheDir` na príslušných uzloch. Statické varianty galérie regenerujte z animovaného originálu. Ak už bol aj súbor `o_…` prevedený na statický obrázok, treba pôvodný animovaný súbor nahrať znova.
 
 Kvalitu a rýchlosť kódovania nastavíte existujúcim mechanizmom [vlastných parametrov ImageMagick](../../redactor/apps/gallery/README.md#vlastné-parametre-imagemagick). Predvolená hodnota `imageMagickCustomParams_avif` je `-quality 80 -define heic:speed=6`. Platia aj špecifickejšie nastavenia pre operáciu, napríklad `imageMagickCustomParams_resize_avif`.
 

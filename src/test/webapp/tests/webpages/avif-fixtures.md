@@ -9,7 +9,7 @@ magick -size 120x80 xc:red -size 120x80 xc:blue -delay 10 autotest-animated.avif
 
 The transparent image contains an opaque red rectangle and transparent margins. The animation contains two frames, red followed by blue. Java metadata tests require no native codec. Processing tests use `AVIF_TEST_IMAGEMAGICK_DIR` when set; with an explicit path, missing AVIF support is a test failure. Without it, native processing tests skip when the server's ImageMagick is unavailable.
 
-The Gradle GitHub workflow uses the pinned ImageMagick 7.1.2-34 AppImage with its bundled codecs, verifies the download checksum and requires libheif 1.22.0 or newer. `AVIF_TEST_IMAGEMAGICK_DIR` points to the extracted bundle, so native processing tests run in CI. ImageMagick's `rw+` alone does not establish correct animation support: tests also check timing and transparency.
+The Gradle GitHub workflow builds pinned ImageMagick 7.1.2-34 and libheif 1.23.6 from source, verifies both download checksums and enables the libaom AV1 encoder and decoder without runtime codec plugins. It checks AVIF read/write support and requires libheif 1.22.0 or newer. `AVIF_TEST_IMAGEMAGICK_DIR` points to the installation's `bin` directory, so native processing tests run in CI. ImageMagick's `rw+` alone does not establish correct animation support: tests also check timing and transparency.
 
 `autotest-animated-alpha.avif` was created with ImageMagick 7.1.2-34 and libheif 1.23.6. It contains a red rectangle on the left for 70 ms, then a blue rectangle on the right for 230 ms, with transparent margins and no residue from the previous frame. Unlike the older sequence fixture, it also contains a primary still item for Firefox compatibility. Generate it with:
 
