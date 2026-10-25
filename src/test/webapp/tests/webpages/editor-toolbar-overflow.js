@@ -138,17 +138,45 @@ Scenario('PageBuilder integration: mobile overflow preserves the mode selector a
         const top = box.closest('.cke_top');
         const host = document.querySelector('#wjInlineCkEditorToolbarOffsetElement');
         return more.getBoundingClientRect().right <= document.querySelector('.exit-inline-editor').getBoundingClientRect().left &&
-            Math.abs(host.offsetHeight - top.offsetHeight) < 2 && more.title === 'Ďalšie nástroje';
+            Math.abs(host.offsetHeight - top.offsetHeight) < 2 && more.getAttribute('aria-label') === 'Ďalšie nástroje';
     }), 'PB must reserve the selector, translate the trigger and avoid a stale empty toolbar band');
+    I.moveCursorTo('.wj-cke-toolbar__more:visible');
+    I.waitForVisible('.wj-cke-toolbar-tooltip.show', 5);
+    I.see('Ďalšie nástroje', '.wj-cke-toolbar-tooltip');
+    I.assertTrue(await I.executeScript(() => {
+        const more = document.querySelector('.wj-cke-toolbar__more:not([hidden])');
+        const tooltip = document.getElementById(more.getAttribute('aria-describedby'));
+        const lastGroup = more.previousElementSibling.lastElementChild;
+        const gap = more.getBoundingClientRect().left - lastGroup.getBoundingClientRect().right;
+        return !more.hasAttribute('title') && tooltip.ownerDocument === more.ownerDocument &&
+            tooltip.getBoundingClientRect().top >= more.getBoundingClientRect().bottom && gap >= 0 && gap <= 8;
+    }), 'The WJ tooltip must appear below the trigger in the PB frame, next to the last group');
+    I.saveScreenshot('wj-pb-toolbar-tooltip.png');
+    const tooltipId = await I.grabAttributeFrom('.wj-cke-toolbar__more:visible', 'aria-describedby');
+    I.moveCursorTo(`#${tooltipId}`);
+    I.seeElement(`#${tooltipId}.show`);
+    I.moveCursorTo('.exit-inline-editor');
+    I.waitForInvisible('.wj-cke-toolbar-tooltip.show', 5);
     I.saveScreenshot('wj-pb-toolbar-after-closed.png');
+    I.executeScript(() => document.querySelector('.wj-cke-toolbar__more:not([hidden])').focus());
+    I.waitForVisible('.wj-cke-toolbar-tooltip.show', 5);
     I.click('.wj-cke-toolbar__more:visible');
     I.waitForVisible('.wj-cke-overflow');
+    I.dontSeeElement('.wj-cke-toolbar-tooltip.show');
     I.assertTrue(await I.executeScript(() => {
         const palette = [...document.querySelectorAll('.wj-cke-overflow')].find(node => !node.hidden);
         const rect = palette.getBoundingClientRect();
         return rect.left >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight;
     }), 'The palette must stay inside the mobile preview');
     I.saveScreenshot('wj-pb-toolbar-after-open.png');
+    I.pressKey('Escape');
+    I.dontSeeElement('.wj-cke-overflow');
+    I.dontSeeElement('.wj-cke-toolbar-tooltip.show');
+    I.pressKey('Tab');
+    I.pressKey('Shift+Tab');
+    I.waitForVisible('.wj-cke-toolbar-tooltip.show', 5);
+    I.pressKey('Enter');
+    I.waitForVisible('.wj-cke-overflow');
     I.executeScript(() => {
         const previous = CKEDITOR.currentInstance;
         Object.values(CKEDITOR.instances).find(editor => editor !== previous).focus();
@@ -182,6 +210,8 @@ Scenario('Classic integration: administration resizing keeps all commands reacha
     I.seeElement('.wj-cke-overflow .cke_button__wjstyles_label');
     I.pressKey('Escape');
     I.dontSeeElement('.wj-cke-overflow');
+    I.dontSeeElement('.wj-cke-toolbar-tooltip.show');
+    I.assertTrue(await I.executeScript(() => document.activeElement === CKEDITOR.instances.data.wjToolbarOverflow.button), 'Closing the palette must restore focus without opening a tooltip');
     I.resizeWindow(1280, 958);
     I.waitForInvisible('.wj-cke-toolbar__more', 10);
     I.assertEqual(await I.executeScript(() => CKEDITOR.instances.data.getData()), original, 'Resizing and opening the palette must leave page HTML unchanged');

@@ -17,7 +17,7 @@
 
 .wj-cke-toolbar__groups {
     display: flex;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
 }
 
@@ -60,9 +60,59 @@ button.wj-cke-toolbar__more, button.wj-cke-overflow__close {
 
 button.wj-cke-toolbar__more {
     flex: 0 0 32px;
-    margin: 8px 0 0 6px;
+    align-self: center;
+    margin: 0 0 10px;
+    border-color: transparent;
+    border-radius: 4px;
+    background: transparent;
+
+    &::before {
+        content: "";
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: -6px 0 currentColor, 6px 0 currentColor;
+    }
+
+    &:hover {
+        color: $secondary;
+        background: $nice-gray-100;
+        border-color: transparent;
+    }
+
+    &[aria-expanded="true"] {
+        color: $primary;
+        background: rgba($primary, .1);
+        border-color: transparent;
+    }
 
     &[hidden] { display: none !important; }
+}
+
+// The PageBuilder iframe does not load the administration's Bootstrap tooltip styles.
+.tooltip.wj-cke-toolbar-tooltip {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font: 14px/1.5 "Asap", sans-serif;
+    opacity: 0;
+    pointer-events: auto;
+
+    &.show { opacity: 1; }
+
+    .tooltip-inner {
+        max-width: 240px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: $secondary;
+        color: $white;
+        font: inherit;
+        text-align: center;
+    }
+
+    .tooltip-arrow { display: none; }
 }
 
 .wj-cke-overflow.cke_reset {

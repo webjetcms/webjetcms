@@ -37,12 +37,25 @@ export class CkEditorToolbarOverflow {
         this.button = this.doc.createElement('button');
         this.button.type = 'button';
         this.button.className = 'wj-cke-toolbar__more';
-        this.button.textContent = '…';
         this.button.title = labels.more;
+        this.button.setAttribute('data-bs-placement', 'bottom');
         this.button.setAttribute('aria-label', labels.more);
         this.button.setAttribute('aria-haspopup', 'dialog');
         this.button.setAttribute('aria-expanded', 'false');
         this.toolbox.append(this.button);
+        if (window.WJ?.initTooltip && window.jQuery) {
+            const $button = window.jQuery(this.button);
+            window.WJ.initTooltip($button, 'wj-cke-toolbar-tooltip');
+            this.tooltip = window.bootstrap.Tooltip.getInstance(this.button);
+            this.listen(this.button, 'inserted.bs.tooltip', () => {
+                const tooltip = this.doc.getElementById(this.button.getAttribute('aria-describedby'));
+                if (tooltip) tooltip.style.zIndex = this.layer();
+            });
+            this.cleanups.push(() => {
+                this.tooltip.dispose();
+                $button.off('.wjTooltipA11y .wjFocusWithoutTooltip');
+            });
+        }
 
         this.palette = this.doc.createElement('div');
         this.palette.id = editor.id + '-more-tools';
@@ -160,6 +173,7 @@ export class CkEditorToolbarOverflow {
 
     /** Measure actual groups and the mode selector, including custom toolbar configurations. */
     layout() {
+        this.tooltip?.hide();
         if (!this.toolbox.getClientRects().length) { this.close(); return; }
         const rect = this.toolbox.getBoundingClientRect();
         let end = 8;
@@ -184,7 +198,7 @@ export class CkEditorToolbarOverflow {
             const order = this.groups.slice().reverse();
             const removal = order.filter(group => !group.priority).concat(order.filter(group => group.priority));
             for (const group of removal) {
-                if (width <= available - 38) break;
+                if (width <= available - 32) break;
                 hidden.add(group);
                 width -= group.width;
             }
@@ -237,6 +251,8 @@ export class CkEditorToolbarOverflow {
     }
 
     open() {
+        this.tooltip?.disable();
+        this.tooltip?.hide();
         const previous = openToolbars.get(this.doc);
         if (previous && previous !== this) previous.close();
         this.palette.hidden = false;
@@ -248,14 +264,19 @@ export class CkEditorToolbarOverflow {
     }
 
     close(focus = false) {
+        this.tooltip?.hide();
         if (this.palette.hidden) return;
         for (const panel of [...this.panels.keys()]) panel.hide(false);
         const picker = this.editor.wjstylescombo;
         if (picker?.panel && this.palette.contains(picker.panel)) picker.close(false);
         this.palette.hidden = true;
         this.button.setAttribute('aria-expanded', 'false');
+        this.tooltip?.enable();
         if (openToolbars.get(this.doc) === this) openToolbars.delete(this.doc);
-        if (focus) this.button.focus();
+        if (focus) {
+            if (this.tooltip) window.WJ.focusWithoutTooltip(this.button);
+            else this.button.focus();
+        }
     }
 
     focusGroup(group) {
