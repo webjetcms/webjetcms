@@ -188,3 +188,40 @@ Scenario('Classic integration: administration resizing keeps all commands reacha
     DTE.cancel();
     I.dontSeeElement('.wj-cke-overflow');
 });
+
+for (const restore of ['close', 'minimize']) {
+    Scenario(`PageBuilder preview: desktop width recovers after dialog ${restore}`, async ({ I }) => {
+        I.resizeWindow(1303, 958);
+        I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 20);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.waitForVisible('.wj-cke-toolbar', 20);
+        I.click("a[href*=\"pbSetWindowSize('phone')\"]");
+        I.switchTo();
+        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === 576, [], 5);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.click(locate('[contenteditable="true"] h3').first());
+        I.waitForVisible('.wj-cke-toolbar__more:visible', 5);
+        I.click('.wj-cke-toolbar__more:visible');
+        I.click('.wj-cke-overflow .cke_button__link');
+        I.waitForVisible('.cke_dialog');
+        I.click('.cke_dialog_maximize_button');
+        I.switchTo();
+        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === window.innerWidth, [], 5);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        if (restore === 'minimize') I.click('.cke_dialog_minimize_button');
+        I.click('.cke_dialog_ui_button_cancel');
+        I.waitForInvisible('.cke_dialog');
+        I.switchTo();
+        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === 576, [], 5);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.click("a[href*=\"pbSetWindowSize('tablet')\"]");
+        I.switchTo();
+        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === 991, [], 5);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.click("a[href*=\"pbSetWindowSize('desktop')\"]");
+        I.switchTo();
+        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth > 1000, [], 5);
+        I.saveScreenshot(`wj-pb-width-after-dialog-${restore}.png`);
+    });
+}

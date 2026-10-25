@@ -300,14 +300,16 @@ export class DatatablesCkEditor {
 							try {
 								if (dialogWindow !== dialogWindow.top && dialogWindow.frameElement) {
 									var $pageBuilderIframe = $(dialogWindow.frameElement);
-									//store original iframe styles for restoration
+									var iframeStyle = dialogWindow.frameElement.style;
+									// Preserve inline values so restoration does not freeze responsive dimensions in pixels.
 									dialog._.originalIframeStyles = {
-										position: $pageBuilderIframe.css("position"),
-										top: $pageBuilderIframe.css("top"),
-										left: $pageBuilderIframe.css("left"),
-										width: $pageBuilderIframe.css("width"),
-										height: $pageBuilderIframe.css("height"),
-										zIndex: $pageBuilderIframe.css("z-index")
+										position: iframeStyle.position,
+										top: iframeStyle.top,
+										left: iframeStyle.left,
+										width: iframeStyle.width,
+										maxWidth: iframeStyle.maxWidth,
+										height: iframeStyle.height,
+										zIndex: iframeStyle.zIndex
 									};
 									//expand iframe to full screen
 									$pageBuilderIframe.css({
@@ -315,6 +317,7 @@ export class DatatablesCkEditor {
 										"top": "0",
 										"left": "0",
 										"width": "100vw",
+										"max-width": "none",
 										"height": "100vh",
 										"z-index": "99999"
 									});

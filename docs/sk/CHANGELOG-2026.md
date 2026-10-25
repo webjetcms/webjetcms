@@ -48,6 +48,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 ### Webové stránky
 
 - Editor stránok - v úzkom okne sa skupiny nástrojov presunú do panela [Ďalšie nástroje](redactor/webpages/working-in-editor/README.md#panel-nástrojov-v-úzkom-okne). Lišta sa nezalamuje do ďalšieho pásu a neprekrýva prepínač editora a rozmerov. Rovnaké ovládanie funguje v Štandardnom editore aj v Page Builderi.
+- Page Builder - opravené prepínanie rozmerov náhľadu po zmenšení alebo zatvorení maximalizovaného dialógu editora. Náhľad už nezostáva zaseknutý na mobilnej šírke a maximalizovaný dialóg využije celú šírku okna.
 
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
