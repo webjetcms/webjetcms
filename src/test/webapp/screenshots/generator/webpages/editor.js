@@ -56,6 +56,27 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
 
     Document.setConfigValue("ckeditor_svgIcon_path", "");
     Document.setConfigValue('editorFontAwesomeCssPath', "");
+
+    // Show the overflow tools in the mobile Page Builder preview.
+    Document.resetPageBuilderMode();
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForVisible(".wj-cke-toolbar", 20);
+    I.waitForText("Editor:", 10, ".exit-inline-editor");
+    I.click("a[href*=\"pbSetWindowSize('phone')\"]");
+    I.waitForVisible(".wj-cke-toolbar__more:visible", 10);
+    I.click(".wj-cke-toolbar__more:visible");
+    I.waitForVisible(".wj-cke-overflow", 10);
+    I.moveCursorTo(".exit-inline-editor");
+    I.switchTo();
+    Document.screenshotElement("#DTE_Field_data-pageBuilderIframe", "/redactor/webpages/working-in-editor/toolbar-overflow.png");
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.pressKey("Escape");
+    I.click("a[href*=\"pbSetWindowSize('desktop')\"]");
+    I.switchTo();
+    DTE.cancel();
+
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=100605");
     DTE.waitForEditor();
 

@@ -124,7 +124,8 @@ for (const mode of ['classic', 'inline']) {
     });
 }
 
-Scenario('PageBuilder integration: mobile overflow preserves the mode selector and closes on block change', async ({ I }) => {
+Scenario('PageBuilder integration: mobile overflow preserves the mode selector and closes on block change', async ({ I, Document }) => {
+    Document.resetPageBuilderMode();
     I.resizeWindow(1216, 958);
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57&userlngr=true');
     I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 20);
@@ -185,6 +186,34 @@ Scenario('PageBuilder integration: mobile overflow preserves the mode selector a
     I.click('a[href*="pbSetWindowSize(\'desktop\')"]');
     I.waitForInvisible('.wj-cke-toolbar__more', 10);
     I.switchTo();
+});
+
+Scenario('Classic integration: maximized editor keeps content below the toolbar', async ({ I, DTE }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=100605');
+    DTE.waitForEditor();
+    I.waitForVisible('.wj-cke-toolbar', 10);
+    const original = await I.executeScript(() => CKEDITOR.instances.data.getData());
+
+    for (const [width, height] of [[1303, 752], [1303, 600], [1100, 958], [760, 958], [600, 600], [400, 600], [1280, 958]]) {
+        I.resizeWindow(width, height);
+        I.waitForFunction(() => !CKEDITOR.instances.data.wjToolbarOverflow.frame, [], 5);
+        const layout = await I.executeScript(() => {
+            const controller = CKEDITOR.instances.data.wjToolbarOverflow;
+            const controls = [...controller.row.children, controller.selector, controller.button]
+                .filter(element => element.getClientRects().length);
+            return {
+                contentTop: document.querySelector('#cke_data .cke_wysiwyg_frame').getBoundingClientRect().top,
+                toolbarBottom: controller.top.getBoundingClientRect().bottom,
+                controlsBottom: Math.max(...controls.map(element => element.getBoundingClientRect().bottom))
+            };
+        });
+        I.assertTrue(layout.toolbarBottom >= layout.controlsBottom, `Toolbar background must contain its controls at ${width}x${height}`);
+        I.assertTrue(layout.contentTop >= layout.toolbarBottom, `Page content must start below the toolbar at ${width}x${height}`);
+        if (width === 1303 && height === 752) I.saveScreenshot('editor-toolbar-overlap-after.png');
+    }
+
+    I.assertEqual(await I.executeScript(() => CKEDITOR.instances.data.getData()), original, 'Responsive layout must leave page HTML unchanged');
+    DTE.cancel();
 });
 
 Scenario('Classic integration: administration resizing keeps all commands reachable', async ({ I, DTE }) => {

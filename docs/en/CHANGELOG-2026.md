@@ -114,6 +114,11 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 ![More Actions menu in the website list](redactor/webpages/more-actions.png)
 
 - Web pages - [default tree settings](redactor/webpages/README.md#default-settings-for-users) for a new user can be set via the configuration variable `webpagesTreeDefaultSettings` (#368).
+- Page Editor - in a narrow window, the tool groups are moved to the [More Tools] panel (redactor/webpages/working-in-editor/README.md#tool-panel-in-a-narrow-window). The bar does not wrap into another strip and does not overlap the editor and size switcher. The button with three dots is directly behind the last group of icons and has a bubble tooltip. The same control works in the Standard Editor and in the Page Builder (#372).
+
+![More Tools Panel in the Page Builder Mobile Preview](redactor/webpages/working-in-editor/toolbar-overflow.png)
+
+- Page Builder - dialogs that do not fit within the preview width will automatically expand to the size of the browser window. After confirmation or closing, the original preview width and page offset will be restored. Page Builder controls use the administration language (#372).
 
 ### Headless mode
 
@@ -184,6 +189,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- AI assistants - fixed handling of continuous text responses including Gemini. Token counts and error messages are now handled correctly even when splitting or merging network blocks; technical data is not inserted into the generated text. An interrupted response is no longer marked as successfully completed.
 - Enumerations - type selection and management moved to the tree in the left panel with search. More in [Enumerations documentation](redactor/apps/enumeration/README.md) (#58786).
 - Blog - selecting and adding sections are available in the tree in the left panel with search. More in [Blog documentation](redactor/apps/blog/README.md) (#58786).
 - News - folder selection has been moved to the tree in the left search panel, also available in the application editor. Automatic folder search skips blogger roots and their subfolders. More in [News documentation](redactor/apps/news/README.md) (#58786).
@@ -289,6 +295,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the pages are opened (#372).
+- Page Editor - when auto-maximizing in a low or narrow window, the entire toolbar remains above the page content. Content no longer shines through under icons and group names (#372).
 - Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
 - Page Builder - when content loading fails, you can switch to HTML mode by restoring the last available HTML. The restore requires confirmation as it may not contain the latest changes (#369).
 - Page Builder - fixed editor freeze when opening HTML with remaining `contenteditable="true"` attribute. CKEditor no longer initializes twice on the same block.

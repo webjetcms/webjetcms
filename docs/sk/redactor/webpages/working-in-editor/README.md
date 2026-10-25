@@ -10,6 +10,8 @@ Prehľad skratiek pre textový editor aj ďalšie časti administrácie nájdete
 
 Ak sa všetky nástroje nezmestia vedľa seba, časť skupín nájdete pod tlačidlom **… Ďalšie nástroje**. Lišta sa tak nezalomí do ďalšieho pásu a prepínač editora aj rozmerov zostane dostupný. Funguje to v Štandardnom editore aj v Page Builderi, napríklad pri mobilnom zobrazení. Po rozšírení okna sa skupiny vrátia na pôvodné miesta.
 
+![Panel Ďalšie nástroje v mobilnom náhľade Page Buildera](toolbar-overflow.png)
+
 Panel zostáva otvorený pri formátovaní textu, takže môžete použiť viac nástrojov za sebou. Zatvoríte ho kliknutím mimo panela, opätovným kliknutím na **…**, krížikom alebo klávesom **Escape**. Zatvorí sa aj pri prechode do iného bloku či otvorení dialógu. Dlhší obsah panela môžete posúvať.
 
 Ak sa dialóg, napríklad Obrázok, Odkaz alebo Aplikácie, nezmestí do šírky náhľadu v Page Builderi, automaticky sa otvorí vo veľkosti okna prehliadača. Po potvrdení alebo zatvorení dialógu sa obnoví pôvodná šírka náhľadu a posun stránky. Počas automatického rozšírenia sa tlačidlo **Zmenšiť** nezobrazuje.
