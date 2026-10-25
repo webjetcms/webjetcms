@@ -294,6 +294,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránky.
 - Editor stránok - pri zlyhaní získania obsahu alebo hodnote `undefined` sa zobrazí chyba a uloženie sa zastaví, aby sa neprepísal pôvodný obsah. Atribúty `contenteditable` sa odstraňujú pri načítaní aj ukladaní HTML vrátane kódu vloženého v HTML režime (#369).
 - Page Builder - pri zlyhaní načítania obsahu možno prepnúť do HTML režimu obnovením posledného dostupného HTML. Obnova vyžaduje potvrdenie, pretože nemusí obsahovať najnovšie zmeny (#369).
 - Page Builder - opravené zamrznutie editora pri otvorení HTML so zvyšným atribútom `contenteditable="true"`. CKEditor sa na rovnakom bloku už neinicializuje dvakrát.
