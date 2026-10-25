@@ -13,6 +13,7 @@
 - Export obsahu pro Flash - odstraněna byla historická funkce generování XML souborů `/flash_xml/{docId}.xml` při publikování stránky. Konfigurační proměnná `exportFlash` již není podporována a její definování v `SpringConfig` funkci neobnoví (#293).
 - Microsoft SQL Server - ukončena byla podpora verzí starších než 2012 a odstraněna konfigurační proměnná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 nebo novější, starý způsob stránkování pomocí `TOP` již není podporován (#293).
 - Formulář snadno a vícekrokové formuláře - upravené zobrazení `tooltip` z původního `i` elementu na standardní `button`. Je tak splněn požadavek na přístupnost - tooltip je dostupný myší i klávesnicí (#306).
+- Galerie - metoda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vrací místo `void` výsledek zpracování typu `int`: `0` při úspěchu, jinak kód chyby. Po aktualizaci je třeba překompilovat závislý Java kód i JSP soubory, například vyčištěním pracovní složky konkrétní aplikace v Tomcat (#371).
 - Vícekrokové formuláře - metody `validateStep` a `runStepInterceptor` rozhraní [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhraní-formprocessorinterface) dostávají za `formName` nový parametr `FormSettingsEntity formSettings`. Pokud používáte vlastní Java třídu pro zpracování formulářů je třeba ji upravit a znovu zkompilovat. Nastavení již nemusí načítat podle jména formuláře, ale dostanete jej přímo (#364).
 
 ### Úvodní obrazovka
@@ -114,6 +115,7 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 ![Nabídka Další akce v seznamu webových stránek](redactor/webpages/more-actions.png)
 
 - Webové stránky - [výchozí nastavení stromu](redactor/webpages/README.md#výchozí-nastavení-pro-uživatele) pro nového uživatele lze nastavit přes konfigurační proměnnou `webpagesTreeDefaultSettings` (#368).
+- Obrázky - přidána podpora obrázků a animací ve [formátu AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Serverové úpravy, vodotisk a miniatury přes `/thumb` zachovávají snímky, průhlednost a časování animace. Zpracování vyžaduje `ImageMagick` 7.1.2-34 nebo novější s `libheif` 1.22.0 nebo novějším. Editor obrázků ukládá statický obrázek (#371).
 
 ### Headless režim
 
@@ -184,6 +186,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Aplikace
 
+- AI asistenti - opraveno zpracování průběžných textových odpovědí včetně Gemini. Počet tokenů a chybové zprávy se správně zpracují i ​​při rozdělení nebo spojení síťových bloků; technické údaje se nevkládají do generovaného textu. Přerušená odpověď se již neoznačí jako úspěšně dokončená.
 - Číselníky - výběr a správa typů se přesunuly do stromu v levém panelu s vyhledáváním. Více v [dokumentaci Číselníků](redactor/apps/enumeration/README.md) (#58786).
 - Blog - výběr a přidávání sekcí jsou dostupné ve stromu v levém panelu s vyhledáváním. Více v [dokumentaci Blogu](redactor/apps/blog/README.md) (#58786).
 - Novinky - výběr složky se přesunul do stromu v levém panelu s vyhledáváním, dostupného iv editoru aplikace. Automatické hledání složek vynechává kořeny blogerů i jejich podsložky. Více v [dokumentaci Novinek](redactor/apps/news/README.md) (#58786).

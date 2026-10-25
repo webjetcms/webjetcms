@@ -13,6 +13,7 @@
 - Export obsahu pre Flash - odstránená bola historická funkcia generovania XML súborov `/flash_xml/{docId}.xml` pri publikovaní stránky. Konfiguračná premenná `exportFlash` už nie je podporovaná a jej definovanie v `SpringConfig` funkciu neobnoví (#293).
 - Microsoft SQL Server - ukončená bola podpora verzií starších ako 2012 a odstránená konfiguračná premenná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 alebo novší, starý spôsob stránkovania pomocou `TOP` už nie je podporovaný (#293).
 - Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
+- Galéria - metóda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vracia namiesto `void` výsledok spracovania typu `int`: `0` pri úspechu, inak kód chyby. Po aktualizácii je potrebné prekompilovať závislý Java kód aj JSP súbory, napríklad vyčistením pracovného priečinka konkrétnej aplikácie v Tomcat (#371).
 - Viackrokové formuláre - metódy `validateStep` a `runStepInterceptor` rozhrania [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) dostávajú za `formName` nový parameter `FormSettingsEntity formSettings`. Ak používate vlastnú Java triedu na spracovanie formulárov je potrebné ju upraviť a znova skompilovať. Nastavenia už nemusia načítavať podľa mena formulára, ale dostanete ho priamo (#364).
 
 ### Úvodná obrazovka
@@ -114,6 +115,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 ![Ponuka Ďalšie akcie v zozname webových stránok](redactor/webpages/more-actions.png)
 
 - Webové stránky - [predvolené nastavenie stromu](redactor/webpages/README.md#predvolené-nastavenie-pre-používateľov) pre nového používateľa je možné nastaviť cez konfiguračnú premennú `webpagesTreeDefaultSettings` (#368).
+- Obrázky - pridaná podpora obrázkov a animácií vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Serverové úpravy, vodotlač a miniatúry cez `/thumb` zachovávajú snímky, priehľadnosť a časovanie animácie. Spracovanie vyžaduje `ImageMagick` 7.1.2-34 alebo novší s `libheif` 1.22.0 alebo novším. Editor obrázkov ukladá statický obrázok (#371).
 
 ### Headless režim
 

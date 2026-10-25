@@ -25,7 +25,8 @@ jobs:
         !contains(github.event.pull_request.title, 'WIP:')
       )
 
-    runs-on: ubuntu-latest
+    # Build the pinned ImageMagick and libheif versions below for AVIF animation support.
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
 
@@ -56,8 +57,48 @@ jobs:
     #    echo "@datatables.net:registry=https://npm.datatables.net/" >> src/main/webapp/admin/v9/.npmrc
     #    echo "//npm.datatables.net/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" >> src/main/webapp/admin/v9/.npmrc
 
-    - name: Install MariaDB Client
-      run: sudo apt-get update && sudo apt-get install -y mariadb-client
+    - name: Install MariaDB client and image build dependencies
+      run: |
+        sudo apt-get update
+        # AOM's CMake package also imports its tools and YUV/WebM link dependencies.
+        sudo apt-get install -y --no-install-recommends \
+          mariadb-client build-essential cmake pkg-config curl ca-certificates xz-utils \
+          libaom-dev aom-tools libyuv-dev libwebm-dev \
+          libjpeg-dev libpng-dev libwebp-dev libtiff-dev libxml2-dev liblcms2-dev librsvg2-dev
+
+    - name: Build ImageMagick 7.1.2-34 with libheif 1.23.6
+      run: |
+        image_prefix="$RUNNER_TEMP/imagemagick"
+        mkdir -p "$RUNNER_TEMP/imagemagick-source"
+        cd "$RUNNER_TEMP/imagemagick-source"
+        curl --fail --location --retry 3 -o libheif.tar.gz https://github.com/strukturag/libheif/releases/download/v1.23.6/libheif-1.23.6.tar.gz
+        curl --fail --location --retry 3 -o ImageMagick.tar.xz https://github.com/ImageMagick/ImageMagick/releases/download/7.1.2-34/ImageMagick-7.1.2-34.tar.xz
+        echo '4484346dc5995319dbc11e3a1c35d0a2ec46511ce370900869337fd2c7033125  libheif.tar.gz' | sha256sum --check
+        echo '55fe0ec246245b46c429f9e6bc65294ad4a78a66b88abd9817971ca157856323  ImageMagick.tar.xz' | sha256sum --check
+        tar -xzf libheif.tar.gz
+        tar -xJf ImageMagick.tar.xz
+
+        # Link the AV1 encoder and decoder into libheif instead of relying on runtime codec plugins.
+        cmake -S libheif-1.23.6 -B libheif-build \
+          -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$image_prefix" -DCMAKE_INSTALL_LIBDIR=lib \
+          -DENABLE_PLUGIN_LOADING=OFF -DWITH_AOM_DECODER=ON -DWITH_AOM_ENCODER=ON \
+          -DWITH_EXAMPLES=OFF -DWITH_GDK_PIXBUF=OFF -DBUILD_TESTING=OFF -DBUILD_DOCUMENTATION=OFF
+        cmake --build libheif-build --parallel "$(nproc)"
+        cmake --install libheif-build
+
+        # Select the pinned libheif during configuration and keep it selected at runtime.
+        export PKG_CONFIG_PATH="$image_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+        export LDFLAGS="-Wl,-rpath,$image_prefix/lib"
+        cd ImageMagick-7.1.2-34
+        ./configure --prefix="$image_prefix" --disable-static --disable-docs --without-perl --without-x \
+          --with-heic=yes --with-jpeg=yes --with-png=yes --with-webp=yes --with-rsvg=yes
+        make -j"$(nproc)"
+        make install
+
+        "$image_prefix/bin/magick" -version
+        "$image_prefix/bin/magick" -list format | awk '$1 == "AVIF" { print; found = ($2 ~ /^rw/ || $3 ~ /^rw/) } END { exit !found }'
+        heif_version=$("$image_prefix/bin/magick" -list format | awk '$1 == "AVIF" { gsub(/[()]/, "", $NF); print $NF }')
+        dpkg --compare-versions "$heif_version" ge 1.22.0
 
     - name: Import SQL file
       run: |
@@ -70,6 +111,8 @@ jobs:
 
     - name: Build with Gradle Wrapper
       env:
+        # Require native image tests instead of silently skipping them when the codec is missing.
+        AVIF_TEST_IMAGEMAGICK_DIR: ${{ runner.temp }}/imagemagick/bin
         CODECEPT_DEFAULT_PASSWORD: ${{ secrets.CODECEPT_DEFAULT_PASSWORD }}
         CODECEPT_DEFAULT_AUTH_TOKEN: ${{ secrets.CODECEPT_DEFAULT_AUTH_TOKEN }}
         CODECEPT_DEFAULT_DOMAIN_NAME: ${{ vars.CODECEPT_DEFAULT_DOMAIN_NAME }}
