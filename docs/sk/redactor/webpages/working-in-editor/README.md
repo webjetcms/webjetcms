@@ -12,6 +12,8 @@ Ak sa všetky nástroje nezmestia vedľa seba, časť skupín nájdete pod tlač
 
 Panel zostáva otvorený pri formátovaní textu, takže môžete použiť viac nástrojov za sebou. Zatvoríte ho kliknutím mimo panela, opätovným kliknutím na **…**, krížikom alebo klávesom **Escape**. Zatvorí sa aj pri prechode do iného bloku či otvorení dialógu. Dlhší obsah panela môžete posúvať.
 
+Ak sa dialóg, napríklad Obrázok, Odkaz alebo Aplikácie, nezmestí do šírky náhľadu v Page Builderi, automaticky sa otvorí vo veľkosti okna prehliadača. Po potvrdení alebo zatvorení dialógu sa obnoví pôvodná šírka náhľadu a posun stránky. Počas automatického rozšírenia sa tlačidlo **Zmenšiť** nezobrazuje.
+
 Klávesom **Alt+F10** prejdete na lištu. **Tab** prepína medzi dostupnými skupinami a tlačidlom **…**, šípky medzi nástrojmi v skupine. Tlačidlo **…** otvoríte klávesom **Enter**, medzerníkom alebo šípkou dole. Ak otvoríte vnorenú ponuku, napríklad farby či Štýly, prvý **Escape** zatvorí túto ponuku a ďalší panel nástrojov.
 
 ## Práca s textom (písanie / vkladanie / kopírovanie)

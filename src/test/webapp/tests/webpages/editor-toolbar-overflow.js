@@ -226,15 +226,14 @@ for (const restore of ['close', 'minimize']) {
         I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 20);
         I.switchTo('#DTE_Field_data-pageBuilderIframe');
         I.waitForVisible('.wj-cke-toolbar', 20);
-        I.click("a[href*=\"pbSetWindowSize('phone')\"]");
+        I.click("a[href*=\"pbSetWindowSize('tablet')\"]");
         I.switchTo();
-        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === 576, [], 5);
+        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === 991, [], 5);
         I.switchTo('#DTE_Field_data-pageBuilderIframe');
         I.click(locate('[contenteditable="true"] h3').first());
-        I.waitForVisible('.wj-cke-toolbar__more:visible', 5);
-        I.click('.wj-cke-toolbar__more:visible');
-        I.click('.wj-cke-overflow .cke_button__link');
+        I.click('.cke_button__link:visible');
         I.waitForVisible('.cke_dialog');
+        I.dontSeeElement('.cke_dialog_maximized');
         I.click('.cke_dialog_maximize_button');
         I.switchTo();
         I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === window.innerWidth, [], 5);
@@ -243,15 +242,86 @@ for (const restore of ['close', 'minimize']) {
         I.click('.cke_dialog_ui_button_cancel');
         I.waitForInvisible('.cke_dialog');
         I.switchTo();
-        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === 576, [], 5);
-        I.switchTo('#DTE_Field_data-pageBuilderIframe');
-        I.click("a[href*=\"pbSetWindowSize('tablet')\"]");
-        I.switchTo();
         I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === 991, [], 5);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.click("a[href*=\"pbSetWindowSize('phone')\"]");
+        I.switchTo();
+        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth === 576, [], 5);
         I.switchTo('#DTE_Field_data-pageBuilderIframe');
         I.click("a[href*=\"pbSetWindowSize('desktop')\"]");
         I.switchTo();
         I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth > 1000, [], 5);
         I.saveScreenshot(`wj-pb-width-after-dialog-${restore}.png`);
+    });
+}
+
+for (const [command, close] of [['image', 'cancel'], ['link', 'close'], ['components', 'Escape'], ['link', 'ok']]) {
+    Scenario(`PageBuilder preview: oversized ${command} dialog restores mobile preview after ${close}`, async ({ I, DTE }) => {
+        I.resizeWindow(1303, 958);
+        I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 20);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.waitForVisible('.wj-cke-toolbar', 20);
+        I.click("a[href*=\"pbSetWindowSize('phone')\"]");
+        I.click(locate('[contenteditable="true"] h3').withText('intranetové riešenie'));
+        const original = await I.executeScript(() => {
+            const editor = CKEDITOR.currentInstance;
+            const range = editor.createRange();
+            range.selectNodeContents(editor.editable().findOne('h3'));
+            editor.getSelection().selectRanges([range]);
+            window.scrollTo({top: 200, behavior: 'instant'});
+            return {html: editor.getData(), text: editor.getSelection().getSelectedText(), scroll: window.scrollY};
+        });
+        for (let attempt = 0; attempt < 2; attempt++) {
+            I.click('.wj-cke-toolbar__more:visible');
+            I.click(`.wj-cke-overflow .cke_button__${command}`);
+            I.waitForVisible('.cke_dialog_maximized', 10);
+            if (command === 'image') I.waitForVisible('.cke_dialog_tabs a[title="Informácie o obrázku"]', 5);
+            I.dontSeeElement('.cke_dialog_minimize_button');
+            I.dontSeeElement('.wj-cke-overflow');
+            I.assertTrue(await I.executeScript(() => {
+                const dialog = document.querySelector('.cke_dialog_maximized').getBoundingClientRect();
+                return window.frameElement.clientWidth === window.top.innerWidth && dialog.left >= 0 &&
+                    dialog.right <= innerWidth && dialog.top >= 0 && dialog.bottom <= innerHeight;
+            }), 'The complete dialog, including its actions, must fit the expanded preview');
+            if (attempt === 0) I.saveScreenshot(`wj-pb-dialog-auto-${command}-${close}.png`);
+            if (close === 'ok') {
+                I.switchTo('#wjLinkIframe');
+                I.waitForVisible('#txtUrl', 10);
+                I.fillField('#txtUrl', '/autotest-dialog-width');
+                I.switchTo();
+                I.switchTo('#DTE_Field_data-pageBuilderIframe');
+                I.click('.cke_dialog_ui_button_ok');
+            } else if (close === 'Escape') {
+                I.pressKey('Escape');
+            } else {
+                I.click(close === 'cancel' ? '.cke_dialog_ui_button_cancel' : '.cke_dialog_close_button');
+            }
+            I.waitForInvisible('.cke_dialog', 10);
+            I.switchTo();
+            I.waitForFunction(scroll => {
+                const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe');
+                return frame.clientWidth === 576 && Math.abs(frame.contentWindow.scrollY - scroll) <= 1;
+            }, [original.scroll], 5);
+            I.switchTo('#DTE_Field_data-pageBuilderIframe');
+            if (close === 'ok') {
+                I.assertEqual(await I.executeScript(() => CKEDITOR.currentInstance.editable().findOne('a[href="/autotest-dialog-width"]').getText()), original.text, 'The link must wrap the original selection');
+                I.executeScript(() => CKEDITOR.currentInstance.execCommand('undo'));
+            }
+            I.assertEqual(await I.executeScript(() => CKEDITOR.currentInstance.getData()), original.html, 'Opening and closing a dialog must preserve page content');
+        }
+        I.click("a[href*=\"pbSetWindowSize('desktop')\"]");
+        I.switchTo();
+        I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').clientWidth > 1000, [], 5);
+        if (command === 'image') {
+            I.switchTo('#DTE_Field_data-pageBuilderIframe');
+            I.click('.cke_button__image:visible');
+            I.waitForVisible('.cke_dialog');
+            I.dontSeeElement('.cke_dialog_maximized');
+            I.saveScreenshot('wj-pb-dialog-desktop-image.png');
+            I.click('.cke_dialog_ui_button_cancel');
+            I.switchTo();
+        }
+        DTE.cancel();
     });
 }
