@@ -8,6 +8,7 @@ const pageModal = '#datatableInit_modal';
 const folders = {};
 const roots = {};
 let suffix, pageTitle, originalConfig, originalTitleSync, originalWarnings;
+let cancelSyncUser;
 
 Before(async ({ I, login, Document }) => {
     login('admin');
@@ -66,6 +67,23 @@ function confirmDelete(I, DTE, modal) {
     I.waitForEnabled(modal + ' button.btn-primary', 20);
     DTE.save();
     I.waitForInvisible(modal, 30);
+}
+
+function cancelSync(I, rootGroupId) {
+    return I.executeScript(async id => (await fetch('/apps/clone_structure/admin/cancel_sync?rootGroupId=' + id, {
+        method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }
+    })).status, rootGroupId);
+}
+
+function syncMembers(I, syncIds) {
+    return I.executeScript(async ids => {
+        const members = [];
+        for (const [type, id] of Object.entries(ids)) {
+            const row = await fetch(`/admin/rest/webpages/mirroring/${id}?type=${type}`, { headers: { 'X-CSRF-Token': window.csrfToken } }).then(response => response.json());
+            members.push(Object.entries(row).filter(([key, value]) => /^selector[A-H]$/.test(key) && value?.id > 0).map(([, value]) => value.id).sort((a, b) => a - b));
+        }
+        return members;
+    }, syncIds);
 }
 
 Scenario('Create own language folders and preserve settings', async ({ I, DT, DTE, Document }) => {
@@ -261,8 +279,79 @@ Scenario('Move the previewed pages and both selected mirrored folders to Trash',
     I.see(roots.plain.name, '#datatableInit tbody');
 });
 
+Scenario('Cancel mirroring only in an editable subtree of the current domain', async ({ I, DT, DTE, Document }) => {
+    openFolder(I, DT, roots.sk);
+    I.click(DT.btn.tree_add_button);
+    DTE.waitForEditor('groups-datatable');
+    I.fillField('#DTE_Field_groupName', pageTitle + '-unlink');
+    DTE.save();
+    I.jstreeClick(pageTitle + '-unlink');
+    DT.waitForLoader();
+    const source = await I.executeScript(async title => {
+        const group = $('#SomStromcek').jstree(true).get_selected(true)[0].original.groupDetails;
+        const pages = await fetch('/admin/rest/webpages/mirroring/search/findByColumns?type=docs&searchFieldA=' + encodeURIComponent(title), { headers: { 'X-CSRF-Token': window.csrfToken } }).then(response => response.json());
+        return { ids: [group.groupId, group.defaultDocId], pageMatches: pages.content.length, syncIds: { groups: group.syncId, docs: pages.content[0]?.id } };
+    }, pageTitle + '-unlink');
+    I.assertEqual(source.pageMatches, 1);
+    for (const id of Object.values(source.syncIds)) I.assertAbove(id, 0);
+    const before = await syncMembers(I, source.syncIds);
+    I.assertDeepEqual(before.map(members => members.length), [4, 4]);
+    before.forEach((members, i) => I.assertContain(members, source.ids[i]));
+    for (const id of [-1, 2147483647]) I.assertEqual(await cancelSync(I, id), 400);
+
+    I.amOnPage('/admin/v9/users/user-list/');
+    DT.filterEquals('login', 'tester2');
+    I.click('#datatableInit tbody td.dt-row-edit a');
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
+    cancelSyncUser = await I.executeScript(() => {
+        const user = usersDatatable.EDITOR.currentJson;
+        return { id: user.id, enabledItems: user.editorFields.enabledItems, editableGroups: user.editorFields.editableGroups };
+    });
+    I.executeScript(({ user, groupId }) => {
+        usersDatatable.EDITOR.field('editorFields.enabledItems').val([...user.enabledItems, 'perms_cmp_clone_structure']);
+        $('#DTE_Field_editorFields-enabledItems').jstree(true).select_node('perms_cmp_clone_structure');
+        usersDatatable.EDITOR.field('editorFields.editableGroups').val([...user.editableGroups, { groupId: Number(groupId) }]);
+    }, { user: cancelSyncUser, groupId: roots.plain.id });
+    DTE.save();
+    I.relogin('tester2');
+    I.amOnPage(pageUrl);
+    Document.switchDomain(domain);
+    I.assertTrue(await I.executeScript(() => WJ.hasPermission('cmp_clone_structure')));
+    I.assertEqual(await cancelSync(I, roots.sk.id), 403);
+
+    I.relogin('admin');
+    I.amOnPage(pageUrl);
+    I.assertNotEqual((await I.grabTextFrom('div.js-domain-toggler div.bootstrap-select button')).trim(), domain);
+    I.assertEqual(await cancelSync(I, roots.sk.id), 403);
+    Document.switchDomain(domain);
+    I.assertEqual(await cancelSync(I, 0), 400);
+    I.assertDeepEqual(await syncMembers(I, source.syncIds), before);
+    I.assertEqual(await cancelSync(I, roots.sk.id), 200);
+    I.assertDeepEqual(await syncMembers(I, source.syncIds), before.map((members, i) => members.filter(id => id !== source.ids[i])));
+});
+
 Scenario('Restore settings and remove own fixtures through the UI', async ({ I, DT, DTE, Document }) => {
     I.relogin('admin');
+    if (cancelSyncUser) {
+        I.amOnPage('/admin/v9/users/user-list/?id=' + cancelSyncUser.id);
+        DTE.waitForEditor();
+        I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
+        I.executeScript(user => {
+            usersDatatable.EDITOR.field('editorFields.enabledItems').val(user.enabledItems);
+            const tree = $('#DTE_Field_editorFields-enabledItems').jstree(true);
+            tree.deselect_all();
+            tree.select_node(user.enabledItems);
+            usersDatatable.EDITOR.field('editorFields.editableGroups').val(user.editableGroups);
+        }, cancelSyncUser);
+        DTE.save();
+        const restored = await I.executeScript(async id => {
+            const user = await fetch('/admin/rest/users/' + id, { headers: { 'X-CSRF-Token': window.csrfToken } }).then(response => response.json());
+            return { enabledItems: user.editorFields.enabledItems, groupIds: user.editorFields.editableGroups.map(group => group.groupId) };
+        }, cancelSyncUser.id);
+        I.assertDeepEqual(restored.enabledItems, cancelSyncUser.enabledItems);
+        I.assertDeepEqual(restored.groupIds, cancelSyncUser.editableGroups.map(group => group.groupId));
+    }
     I.amOnPage(pageUrl);
     Document.switchDomain(domain);
     if (originalConfig !== undefined) Document.setConfigValue(configName, originalConfig, true);
