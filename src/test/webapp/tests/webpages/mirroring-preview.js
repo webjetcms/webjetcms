@@ -178,6 +178,28 @@ Scenario('Hide mirror links without the mirroring permission', ({ I }) => {
     I.relogin('admin');
 });
 
+Scenario('Reject folder deletion without deleteDir while editing remains allowed', async ({ I, DT }) => {
+    I.amOnPage(pageUrl + '?groupid=' + folders.sk.id + '&removePerm=deleteDir');
+    I.waitForElement(node(folders.sk) + ' > a.jstree-clicked', 30);
+    DT.waitForLoader();
+    I.assertDeepEqual(await I.executeScript(() => [WJ.hasPermission('editDir'), WJ.hasPermission('deleteDir')]), [true, false]);
+    const response = await I.executeScript(async id => {
+        const folder = $('#SomStromcek').jstree(true).get_node(id).original.groupDetails;
+        return fetch('/admin/rest/groups/editor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken },
+            body: JSON.stringify({ action: 'remove', data: { [id]: folder } })
+        }).then(result => result.json());
+    }, folders.sk.id);
+    I.assertContain(response.error || '', 'nemáte právo na zmazanie adresáru');
+    for (const folder of Object.values(folders)) {
+        openFolder(I, DT, folder);
+        I.dontSeeElement('#pills-trash-tab.active');
+        I.see(folder.name, node(folder) + ' > a');
+    }
+    I.relogin('admin');
+});
+
 Scenario('Show warning icons beside the affected folders and navigate overflow links', ({ I, DT, DTE }) => {
     openFolder(I, DT, folders.sk);
     showWarnings(I, true);

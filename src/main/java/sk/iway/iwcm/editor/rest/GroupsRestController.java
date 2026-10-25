@@ -770,6 +770,10 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean deleteItem(GroupDetails entity, long id) {
+        if (getUser().isDisabledItem("deleteDir")) {
+            throwError("admin.delete.deleteDirDisabled.error");
+            return false;
+        }
         if (DeleteRequestContext.isDeleted(GroupDetails.class, (int) id)) return true;
 
         List<String> errors = new ArrayList<>();
