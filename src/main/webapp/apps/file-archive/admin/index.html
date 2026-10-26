@@ -595,6 +595,15 @@
         //Initialize tree
         var somStromcek = $('#SomStromcek');
 
+        somStromcek.on("changed.jstree ready.jstree refresh.jstree", function() {
+            var tree = somStromcek.jstree(true);
+            var selected = tree ? tree.get_selected(true) : [];
+            var node = selected[0];
+            var canCreateFolder = node != null && typeof node.icon === "string"
+                && node.icon.indexOf("ti-folder-x") === -1;
+            $("#btn-create-folder").toggleClass("disabled", !canCreateFolder).prop("disabled", !canCreateFolder);
+        });
+
         somStromcek.on("settings_changed.jstree", function() {
             somStromcek.jstree(true).refresh();
         });

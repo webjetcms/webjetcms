@@ -283,6 +283,10 @@ export class WebjetDteJsTreeElement extends HTMLElement {
         if (attrs["data-dt-field-hideRootParents"]) params.set("hideRootParents", attrs["data-dt-field-hideRootParents"]);
         if (attrs["data-dt-field-root"]) params.set("rootFolder", attrs["data-dt-field-root"]);
         if (attrs["data-dt-field-writableOnly"]) params.set("writableOnly", attrs["data-dt-field-writableOnly"]);
+        if (mode.includes("dt-tree-dir-simple")) {
+            const selectedFolder = this.querySelector(".input-group input")?.value;
+            if (selectedFolder) params.set("selectedFolder", selectedFolder);
+        }
         treeElement.dataset.restUrl = `${endpoint}?${params.toString()}`;
         treeElement.addEventListener("webjet-jstree-select", this._treeSelectHandler);
 
