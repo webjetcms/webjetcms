@@ -126,7 +126,8 @@ public class GroupMirroringServiceV9 {
                   }
 
                   GroupDetails mirror = groupsDB.getNewGroupDetails(translatedGroupName, mappedGroup.getGroupId());
-                  if (Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);
+                  // Clones preserve source menu visibility without changing the setting for ordinary mirrors.
+                  if (!MirroringService.isCloneAction() && Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);
                   else {
                      mirror.setMenuType(group.getMenuType());
                      mirror.setLoggedMenuType(group.getLoggedMenuType());

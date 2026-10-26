@@ -27,8 +27,6 @@ import sk.iway.iwcm.users.UsersDB;
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_clone_structure')")
 public class CloneStructureController {
 
-    private static final String SYNC_TITLE_KEY = "syncGroupAndWebpageTitle";
-
     private final DocDetailsRepository docDetailsRepository;
 
     public CloneStructureController(DocDetailsRepository docDetailsRepository) {
@@ -37,12 +35,7 @@ public class CloneStructureController {
 
     @PostMapping("/apps/clone_structure/admin/clone/")
     public String cloneStructure(@RequestParam int srcGroupId, @RequestParam int destGroupId, @RequestParam(required = false) Boolean keepMirroring, @RequestParam(required = false) Boolean keepVirtualPath, HttpServletRequest request, HttpServletResponse response) {
-        //do not sync group and webpage title during sync, keep original titles
-        boolean originalValue = Constants.getBoolean(SYNC_TITLE_KEY);
-
         try {
-            Constants.setBoolean(SYNC_TITLE_KEY, false);
-
             if (keepMirroring == null) keepMirroring = false;
             if (keepVirtualPath == null) keepVirtualPath = false;
             String returnValue =  CloneStructureService.cloneStructure(srcGroupId, destGroupId, keepMirroring, keepVirtualPath, request, response);
@@ -50,9 +43,6 @@ public class CloneStructureController {
             return returnValue;
         } catch(Exception e) {
             sk.iway.iwcm.Logger.error(e);
-        }
-        finally {
-            Constants.setBoolean(SYNC_TITLE_KEY, originalValue);
         }
 
         return null;

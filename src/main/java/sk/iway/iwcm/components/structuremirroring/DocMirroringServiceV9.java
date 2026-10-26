@@ -112,7 +112,8 @@ public class DocMirroringServiceV9 {
                   DocDetails mirror = new DocDetails();
                   NullAwareBeanUtils.copyProperties(doc, mirror);
                   mirror.setDocId(-1);
-                  if (Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setAvailable(false);
+                  // Clones preserve source visibility without changing the setting for ordinary mirrors.
+                  if (!MirroringService.isCloneAction() && Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setAvailable(false);
                   mirror.setGroupId(mappedGroup.getGroupId());
                   mirror.setSyncId(doc.getSyncId());
 
