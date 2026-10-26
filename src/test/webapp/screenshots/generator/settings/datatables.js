@@ -1,4 +1,4 @@
-Feature('settings.editor @singlethread');
+Feature('settings.datatables @singlethread');
 
 const docClass = 'sk.iway.iwcm.doc.DocDetails';
 const fieldsTable = 'fieldsSettingsDataTable';
@@ -11,16 +11,16 @@ Before(({ I, login }) => {
     if (!tabId) tabId = 'autotest-details-' + I.getRandomText();
 });
 
-Scenario('Create Editor screenshot settings', ({ I, DT, DTE }) => {
+Scenario('Create Editor screenshot settings', ({ I, DT, DTE, i18n }) => {
     I.amOnPage('/admin/v9/settings/tabs-settings/');
     DT.waitForLoader(tabsTable);
     I.clickCss('#' + tabsTable + '_wrapper button.buttons-create');
     DTE.waitForEditor(tabsTable);
     DTE.fillField('className', docClass);
     DTE.fillField('tabId', tabId);
-    DTE.fillField('title', 'Doplňujúce údaje');
+    DTE.fillField('title', i18n.get('Additional data'));
     DTE.fillField('sortAfter', 'basic');
-    DTE.fillField('content', '<p>Doplňujúce informácie k webovej stránke.</p>');
+    DTE.fillField('content', '<p>' + i18n.get('Additional information about the web page.') + '</p>');
     DTE.save(tabsTable, true);
 
     I.amOnPage('/admin/v9/settings/fields-settings/');
@@ -34,17 +34,17 @@ Scenario('Create Editor screenshot settings', ({ I, DT, DTE }) => {
     DTE.fillField('className', docClass);
     DTE.fillField('fieldName', 'fieldT');
     DTE.fillField('tab', tabId);
-    DTE.fillField('title', 'Doplňujúce informácie');
+    DTE.fillField('title', i18n.get('Additional information'));
     I.clickCss('#' + fieldsTable + '_modal .DTE_Header');
     I.clickCss('.DTE_Field_Name_disabled input[value="true"] + label');
     DTE.save(fieldsTable, true);
 });
 
-Scenario('Field settings screenshots', ({ I, DT, DTE, Document }) => {
+Scenario('Field settings screenshots', ({ I, DT, DTE, Document, i18n }) => {
     I.amOnPage('/admin/v9/settings/fields-settings/');
     DT.waitForLoader(fieldsTable);
     DT.filterEquals('tab', tabId);
-    I.see('Doplňujúce informácie', '#' + fieldsTable + ' tbody');
+    I.see(i18n.get('Additional information'), '#' + fieldsTable + ' tbody');
     Document.screenshot(screenshots + 'fields-settings-datatable.png', 1600, 650);
 
     I.clickCss('#' + fieldsTable + ' tbody td.dt-row-edit a');
@@ -57,11 +57,11 @@ Scenario('Field settings screenshots', ({ I, DT, DTE, Document }) => {
     DTE.cancel(fieldsTable);
 });
 
-Scenario('Tab settings screenshots', ({ I, DT, DTE, Document }) => {
+Scenario('Tab settings screenshots', ({ I, DT, DTE, Document, i18n }) => {
     I.amOnPage('/admin/v9/settings/tabs-settings/');
     DT.waitForLoader(tabsTable);
     DT.filterEquals('tabId', tabId);
-    I.see('Doplňujúce údaje', '#' + tabsTable + ' tbody');
+    I.see(i18n.get('Additional data'), '#' + tabsTable + ' tbody');
     Document.screenshot(screenshots + 'tabs-settings-datatable.png', 1600, 650);
 
     I.clickCss('#' + tabsTable + ' tbody td.dt-row-edit a');
@@ -73,7 +73,7 @@ Scenario('Tab settings screenshots', ({ I, DT, DTE, Document }) => {
     DTE.cancel(tabsTable);
 });
 
-Scenario('Custom fields screenshots', ({ I, DT, DTE, Document }) => {
+Scenario('Custom fields screenshots', ({ I, DT, DTE, Document, i18n }) => {
     I.amOnPage('/admin/v9/settings/custom-fields/');
     DT.waitForLoader('customFieldsDataTable');
     Document.screenshot(screenshots + 'custom-fields-settings-datatable.png', 1600, 650);
@@ -82,8 +82,8 @@ Scenario('Custom fields screenshots', ({ I, DT, DTE, Document }) => {
     DTE.waitForEditor('customFieldsDataTable');
     DTE.fillField('className', docClass);
     DTE.selectOption('alphabet', 'C');
-    DTE.selectOption('type', 'Výberové pole');
-    DTE.fillField('label', 'Operačný systém');
+    DTE.selectOption('type', i18n.get('Select box'));
+    DTE.fillField('label', i18n.get('Operating system'));
     I.checkOption('#DTE_Field_required_0');
     I.waitForVisible('input.options-value-1');
     I.fillField('input.options-value-1', 'macOS');
