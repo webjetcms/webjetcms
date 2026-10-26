@@ -38,6 +38,8 @@ The radio buttons have three values: **Yes**, **No**, and **No Change**. The val
 
 The display of columns can also be affected by the saved custom table settings. If the change does not take effect, reset the table settings.
 
+When editing an existing record, the values ​​of hidden and edit-disabled fields are preserved. In web pages, they are taken from the edited version of the page, even when opened from history. Do not hide required fields, such as the page name (`title`): their obligation remains in effect, and a missing value will block saving.
+
 ## Example of editing a page title
 
 To rename the page name field and adjust its location:

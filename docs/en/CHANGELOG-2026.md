@@ -237,9 +237,13 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
 
-### Editor
+### Data tables
 
-- The **Settings → Data Tables** section combines [Field Settings](frontend/datatables/fields-settings.md), [Tab Settings](frontend/datatables/tabs-settings.md) and [Optional Fields](frontend/datatables/custom-fields-settings.md). For individual entities and domains, you can change the names, order, display of fields, or disable their editing. You can also edit editor tabs and create your own tabs with optional fields (#58830).
+- The **Settings → Data Tables** section combines [Field Settings](frontend/datatables/fields-settings.md), [Tab Settings](frontend/datatables/tabs-settings.md) and [Optional Fields](frontend/datatables/custom-fields-settings.md). You can change the names, order, and display of fields for individual entities and domains, or disable their editing. You can also edit editor tabs and create your own tabs with optional fields. **Warning:** The original **Optional Fields** permission (`customFields`) has been removed. After the update, the relevant users or permission groups must be assigned the new **Data Tables** permission (`dataTablesConfig`). The original permissions will not be automatically transferred (#366).
+
+![](frontend/datatables/tabs-settings-editor.png)
+
+- Web pages - when saving, the values ​​of fields hidden in the editor and fields with editing disabled will be preserved according to the same rules as in other data tables. When editing from history, the values ​​from the selected version of the page will be used (#366).
 
 ### Optional fields
 
