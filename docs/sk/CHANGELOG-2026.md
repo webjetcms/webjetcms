@@ -237,9 +237,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
 
-### Editor
+### Dátové tabuľky
 
-- Sekcia **Nastavenia → Dátové tabuľky** združuje [Nastavenia polí](frontend/datatables/fields-settings.md), [Nastavenia kariet](frontend/datatables/tabs-settings.md) a [Voliteľné polia](frontend/datatables/custom-fields-settings.md). Pre jednotlivé entity a domény môžete meniť názvy, poradie a zobrazenie polí či zakázať ich úpravy. Môžete tiež upravovať karty editora a vytvárať vlastné karty s voliteľnými poľami (#58830).
+- Sekcia **Nastavenia → Dátové tabuľky** združuje [Nastavenia polí](frontend/datatables/fields-settings.md), [Nastavenia kariet](frontend/datatables/tabs-settings.md) a [Voliteľné polia](frontend/datatables/custom-fields-settings.md). Pre jednotlivé entity a domény môžete meniť názvy, poradie a zobrazenie polí či zakázať ich úpravy. Môžete tiež upravovať karty editora a vytvárať vlastné karty s voliteľnými poľami (#366).
+- Webové stránky - pri ukladaní sa zachovajú hodnoty polí skrytých v editore a polí so zakázanými úpravami podľa rovnakých pravidiel ako v ostatných dátových tabuľkách. Pri úprave z histórie sa použijú hodnoty z vybranej verzie stránky (#366).
 
 ### Voliteľné polia
 

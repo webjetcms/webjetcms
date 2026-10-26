@@ -38,6 +38,8 @@ Prepínače majú tri hodnoty: **Áno**, **Nie** a **Bez zmeny**. Hodnota **Bez 
 
 Zobrazenie stĺpcov môže ovplyvniť aj uložené používateľské nastavenie tabuľky. Ak sa zmena neprejaví, obnovte nastavenie tabuľky.
 
+Pri úprave existujúceho záznamu sa hodnoty skrytých polí a polí so zakázanými úpravami zachovajú. Vo webových stránkach sa preberajú z upravovanej verzie stránky, aj pri otvorení z histórie. Povinné polia, napríklad názov stránky (`title`), neskrývajte: ich povinnosť zostáva v platnosti a chýbajúca hodnota zablokuje uloženie.
+
 ## Príklad úpravy názvu stránky
 
 Ak chcete premenovať pole s názvom stránky a upraviť jeho umiestnenie:

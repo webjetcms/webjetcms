@@ -2387,24 +2387,15 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	}
 
 	/**
-	 * Merges submitted values into the stored entity using current-domain field settings.
-	 * A saved disabled value of {@code false} permits copying fields disabled by editor attributes;
-	 * {@code true} preserves their stored values. Missing or null settings retain the legacy copy rules.
-	 * Identifiers and fields hidden by the effective hidden-editor setting remain excluded.
-	 * Null values follow the annotation and import-column rules for the affected field.
+	 * Returns fields protected by the effective hidden-editor or disabled setting in the current domain.
+	 * Custom save workflows can use the same rules as {@link #copyEntityIntoOriginal(Object, Object)}
+	 * without changing how they apply editable values.
 	 *
-	 * @param entity submitted entity containing the new field values
-	 * @param one stored entity to update in place
+	 * @param entity entity whose editor annotations and saved settings are evaluated
+	 * @return property names whose stored values must be preserved
 	 */
-	protected void copyEntityIntoOriginal(T entity, T one) {
-		List<String> alwaysCopyProperties = new ArrayList<>();
+	protected List<String> getNonEditableProperties(T entity) {
 		List<String> ignoreProperties = new ArrayList<>();
-		List<String> identifierProperties = new ArrayList<>();
-		boolean importing = isImporting();
-		Set<String> importedColumns = getImportedColumns();
-		for (Field field : getIdentifierFields(entity.getClass())) {
-			identifierProperties.add(field.getName());
-		}
 
 		// Match DataTableColumnsFactory's current domain, even when the controller uses a shared repository domain.
 		Map<String, Boolean> hiddenEditorOverrides = new HashMap<>();
@@ -2457,9 +2448,37 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					//we allow updateDate, for others you can set alwaysCopyProperties=true in annotation
 					if (isDisabled && field.getName().equals("lastUpdate")==false) {
 						ignoreProperties.add(field.getName());
-						continue;
 					}
 				}
+			}
+		}
+		return ignoreProperties;
+	}
+
+	/**
+	 * Merges submitted values into the stored entity using current-domain field settings.
+	 * A saved disabled value of {@code false} permits copying fields disabled by editor attributes;
+	 * {@code true} preserves their stored values. Missing or null settings retain the legacy copy rules.
+	 * Identifiers and fields hidden by the effective hidden-editor setting remain excluded.
+	 * Null values follow the annotation and import-column rules for the affected field.
+	 *
+	 * @param entity submitted entity containing the new field values
+	 * @param one stored entity to update in place
+	 */
+	protected void copyEntityIntoOriginal(T entity, T one) {
+		List<String> alwaysCopyProperties = new ArrayList<>();
+		List<String> ignoreProperties = getNonEditableProperties(entity);
+		List<String> identifierProperties = new ArrayList<>();
+		boolean importing = isImporting();
+		Set<String> importedColumns = getImportedColumns();
+		for (Field field : getIdentifierFields(entity.getClass())) {
+			identifierProperties.add(field.getName());
+		}
+
+		for (Field field : AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass())) {
+			if (ignoreProperties.contains(field.getName())) continue;
+			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
+				sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
 
 				boolean alwaysCopy = false;
 				if (annotation.alwaysCopyProperties().length>0) {
