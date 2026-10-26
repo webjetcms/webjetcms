@@ -225,10 +225,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
-- Manažér dokumentov - priečinky bez práva zápisu sa v stromovej štruktúre zobrazujú s 3pecialnou ikonou (#osk802).
-- Manažér dokumentov - tlačidlo na pridanie priečinka sa aktivuje podľa práva zápisu do zvoleného priečinka (#osk802).
-- Výber priečinka - pri otvorení stromu v poli vyžadujúcom právo zápisu sa zobrazí upozornenie, ak používateľ nemôže zapisovať do priečinka aktuálne zadaného v poli (#osk802).
-- Výber priečinka - strom pri otvorení rozbalí cestu a označí povolený priečinok podľa aktuálnej hodnoty poľa (#osk802).
+- Manažér dokumentov - vylepšená kontrola práv na súborový systém. Ikona pre pridanie priečinka sa zobrazuje len ak používateľ má právo zápisu, pri výbere priečinka sa kontrolujú práva, ak používateľ nemá právo zápisu súborov do `/files/archiv` zobrazí sa chybová správa (#osk802).
+- Výber priečinka - zakázané priečinky v stromovej štruktúre sa zobrazujú ikonou priečinka s krížikom (#osk802).
 - Manažér dokumentov - strom priečinkov má minimálnu šírku 200 px, aby vyhľadávacie pole s tlačidlami nepresahovalo do tabuľky ani pri nastavení menšieho pomeru. Nastavenia šírky v pixeloch preto ponúkajú hodnoty od 200 px (#360).
 - Manažér dokumentov - polia **Produkt** a **Kategória** pri uložení, premenovaní a hromadnom nahrávaní normalizujú tvrdé medzery, tabulátory a zalomenia riadkov, zlúčia opakované medzery a odstránia okrajové medzery aj rušivé neviditeľné znaky z kopírovaného textu. **Upozornenie:** pri opätovnom uložení existujúceho dokumentu sa odstránia tvrdé medzery v názve, produktoch a podobne. Filtre v aplikácii vo webových stránkach sa automaticky neaktualizujú. Ak používajú pôvodný názov s tvrdými alebo opakovanými medzerami či neviditeľnými znakmi, dokument sa po uložení nemusí vo filtrovanom zozname zobraziť. Opravte názvy vo všetkých dotknutých dokumentoch a v aplikáciách nastavte filtre podľa nových hodnôt. Uloženie jedného dokumentu neopraví ostatné dokumenty s rovnakým názvom produktu alebo kategórie (#360).
 - Manažér dokumentov - v [aplikácii na webovej stránke](redactor/files/file-archive/file-archive-app.md#karta---rozšírené) pridané radenie podľa začiatku a konca platnosti, kódu produktu, produktu, kategórie, mena súboru a veľkosti dokumentu (#359, #osk791).

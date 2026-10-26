@@ -93,6 +93,10 @@ Note the use of the ```data-dt-json-addbutton``` attribute to set the text of th
 
 Nastavením `@DataTableColumnEditorAttr(key = "data-dt-field-writableOnly", value = "true")` sa priečinky, do ktorých používateľ nemôže zapisovať, zobrazia neaktívne a nebude ich možné zvoliť. Ich viditeľnosť zároveň ovplyvňuje konfiguračná premenná `fbrowserShowOnlyWritableFolders`. Pri hodnote `false` sa z pohľadu práv zobrazia všetky priečinky. Pri hodnote `true` sa zobrazia len vetvy vedúce k zapisovateľným priečinkom, zadaný koreňový priečinok a výnimky z konfiguračnej premennej `fbrowserAlwaysShowFolders`. Nezapisovateľní rodičia zostanú neaktívni.
 
+Pri otvorení výberu `dt-tree-dir-simple` sa rozbalí cesta k priečinku aktuálne zadanému v poli a povolený priečinok sa označí. Samotné označenie nemení hodnotu poľa ani nezatvára výber. Priečinok potvrdíte kliknutím.
+
+Ak má pole nastavené `data-dt-field-writableOnly="true"` a používateľ nemá právo zápisu do priečinka aktuálne zadaného v poli, zobrazí sa upozornenie s jeho cestou a výzvou na výber priečinka s právom zápisu. Kontroluje sa hodnota poľa vrátane ručne upravenej cesty, nie koreň stromu nastavený cez `data-dt-field-root`. Pri rozbaľovaní podpriečinkov sa upozornenie neopakuje.
+
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 
 ```dt-tree-dir-array``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber zoznamu adresárov v súborovom systéme**
