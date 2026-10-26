@@ -71,9 +71,13 @@ Pri zmazaní stránky alebo priečinka s aktívnym [zrkadlením štruktúry](../
 
 Rovnaké upozornenie sa zobrazuje pri mazaní priečinkov zo stromu aj z karty **Priečinky**. Pri hromadnom mazaní sa každá zrkadlená položka zobrazí iba raz a položky, ktoré ste už sami označili na zmazanie, sa v doplnkovom zozname neopakujú.
 
+Ak označíte naraz viac navzájom zrkadlených stránok alebo priečinkov, každá položka sa zmaže iba raz. Položka, ktorá sa už v rámci tejto operácie presunula do koša, sa pri spracovaní ďalšieho vybraného riadku znova nemaže.
+
 ![Potvrdenie zmazania priečinka so zoznamom zrkadlených priečinkov](mirroring/delete-groups.png)
 
 Zoznam obsahuje priamo prepojené stránky alebo priečinky. Pri priečinkoch nerozpisuje všetky ich podpriečinky a stránky. Ak sa mazanie týka aj zrkadlených položiek, ku ktorým nemáte prístup, zobrazí sa všeobecné upozornenie bez ich názvov a ciest.
+
+Pri mazaní web stránky sa pred vykonaním operácie overia práva ku všetkým jej zrkadleným verziám. Ak k niektorej z nich nemáte potrebné práva, zobrazí sa chyba a zdrojová stránka ani jej zrkadlené verzie sa nezmažú. Všeobecné upozornenie v náhľade teda neznamená, že máte právo tieto stránky zmazať. Na zmazanie priečinka potrebujete právo na mazanie priečinkov; samotné právo na ich úpravu nestačí.
 
 Tlačidlo **Zmazať** je dostupné až po načítaní zoznamu. Ak sa zoznam nepodarí načítať, mazanie zostane zablokované; zatvorte okno a skúste ho otvoriť znova. Pri položkách bez zrkadlených verzií sa po načítaní žiadne dodatočné upozornenie nezobrazuje.
 
