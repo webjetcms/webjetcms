@@ -327,6 +327,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Node.js - verzia pre vývoj a zostavenie projektu v `.nvmrc` a devcontaineri aktualizovaná na `22.23.4`, ktorá opravuje zraniteľnosť Brotli dekodéra CVE-2026-111497. Lokálne aj v build prostrediach aktualizujte Node.js podľa [návodu na inštaláciu](developer/install/README.md#rspack-build-js-css-a-pug-súborov).
 - Web stránky - pri ukladaní sa overujú práva k pôvodnej stránke aj k cieľovému priečinku pri presune. Zmenou ID a priečinka v požiadavke nemožno prevziať cudziu stránku.
 - Web stránky - názov stránky a názov v menu sa čistia od nebezpečného HTML pri ukladaní aj načítaní. Ochrana zahŕňa staršie záznamy a históriu; bezpečné formátovanie zostáva zachované.
 - HTML sanitizácia - pridaný zdieľaný `AllowSafeHtmlAttributeConverterWithSave` na čistenie HTML pri ukladaní aj načítaní. Používa sa na cestu z názvov priečinkov v stránkach a histórii; ošetrené sú aj staršie JDBC zápisy.
