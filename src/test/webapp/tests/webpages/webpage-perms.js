@@ -11,6 +11,14 @@ Before(({ I }) => {
      }
 });
 
+/** Verifies that a denied mirror preview shows an error and disables deletion, then cancels the dialog. */
+function checkDeniedDeletePreview(I, DTE, tableId = "datatableInit") {
+    const modal = "#" + tableId + "_modal";
+    I.waitForText("Zrkadlené položky sa nepodarilo načítať. Zatvorte dialóg a skúste mazanie znova.", 30, modal + " .delete-mirrors-info.alert-danger");
+    I.seeElement(modal + " .DTE_Form_Buttons button.btn-primary:disabled");
+    DTE.cancel(tableId);
+}
+
 
 Scenario('uvodne overenie prav', ({ I, DT }) => {
     I.relogin("admin");
@@ -72,8 +80,13 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, DT, DTE }) => {
     I.click(DT.btn.delete_button);
     DTE.waitForEditor();
     I.see("Naozaj chcete zmazať položku?");
-    DTE.save();
-    I.see("nemáte právo na zmazanie web stránky");
+    checkDeniedDeletePreview(I, DTE);
+
+    // Reload the page to verify that the rejected preview left the existing content intact.
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?removePerm=addPage,pageSave,deletePage,pageSaveAs,forceShowButton&groupid=67");
+    I.jstreeNavigate(["Test stavov", "Nedá sa zmazať"]);
+    DT.filterContains("title", "Nedá sa zmazať");
+    I.see("Nedá sa zmazať", "#datatableInit_wrapper");
 });
 
 
@@ -128,9 +141,13 @@ Scenario('adresare-overenie prav na tlacidla', ({ I, DT, DTE }) => {
     I.jstreeNavigate(["Test stavov", "Nedá sa zmazať"]);
     I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
-    I.see("Naozaj chcete zmazať položku?")
-    DTE.save();
-    I.see("K tomuto adresáru nemáte prístupové práva");
+    I.see("Naozaj chcete zmazať položku?");
+    checkDeniedDeletePreview(I, DTE, "groups-datatable");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?removePerm=editDir,addSubdir,deleteDir,forceShowButton&groupid=67");
+    I.jstreeNavigate(["Test stavov", "Nedá sa zmazať"]);
+    I.seeElement(locate("#SomStromcek .jstree-clicked").withText("Nedá sa zmazať"));
+    I.see("Nedá sa zmazať", "#datatableInit_wrapper");
 });
 
 Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
@@ -221,12 +238,11 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     I.click('.tree-col .dt-header-row .buttons-remove');
     DTE.waitForEditor("groups-datatable");
     I.seeElement("#groups-datatable_modal");
-    DTE.save(); //zmazat
-    I.wait(3);
+    checkDeniedDeletePreview(I, DTE, "groups-datatable");
 
-    I.say("zmazanie sa nepodarilo, dialog zostal otvoreny");
-    I.seeElement("#groups-datatable_modal");
-    DTE.cancel();
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
+    I.jstreeNavigate(["Jet portal 4", "Úvodná stránka"]);
+    I.seeElement(locate("#SomStromcek .jstree-clicked").withText("Úvodná stránka"));
 
     I.say("over vytvorenie noveho adresara");
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka", "Test podadresar", "Nesmie sa dať presunúť"]);

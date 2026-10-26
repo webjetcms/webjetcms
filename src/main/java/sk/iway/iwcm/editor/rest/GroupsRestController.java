@@ -13,7 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,6 +43,8 @@ import sk.iway.iwcm.doc.GroupPublisher;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.DeleteMirrorsService;
+import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -72,13 +76,20 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     private TranslationKeyRepository translationKeyRepository;
     private EditorFacade editorFacade;
     private final ApproveService approveService;
+    private final DeleteMirrorsService deleteMirrorsService;
 
-    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService) {
+    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService, DeleteMirrorsService deleteMirrorsService) {
         super(null);
         this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;
         this.translationKeyRepository = translationKeyRepository;
         this.editorFacade = editorFacade;
         this.approveService = approveService;
+        this.deleteMirrorsService = deleteMirrorsService;
+    }
+
+    @PostMapping("/delete-mirrors")
+    public DeleteMirrorsResult getDeleteMirrors(@RequestParam("ids") List<Integer> ids) {
+        return deleteMirrorsService.getGroupMirrors(ids, getUser());
     }
 
     @Override
@@ -759,6 +770,12 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean deleteItem(GroupDetails entity, long id) {
+        if (getUser().isDisabledItem("deleteDir")) {
+            throwError("admin.delete.deleteDirDisabled.error");
+            return false;
+        }
+        if (DeleteRequestContext.isDeleted(GroupDetails.class, (int) id)) return true;
+
         List<String> errors = new ArrayList<>();
         if (!this.canModifyThisGroup(entity, getUser(), "editDir", errors)) {
             throwError(errors);
@@ -941,6 +958,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean checkItemPerms(GroupDetails entity, Long id) {
+        if (id != null && DeleteRequestContext.isDeleted(GroupDetails.class, id.intValue())) return true;
         if (InitServlet.isTypeCloud() && entity.getGroupId()>0) {
             GroupDetails old = GroupsDB.getInstance().getGroup(entity.getGroupId());
             if (old != null && GroupsDB.isGroupEditable(getUser(), old.getGroupId())==false) return false;

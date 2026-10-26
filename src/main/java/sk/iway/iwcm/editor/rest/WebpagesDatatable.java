@@ -36,6 +36,7 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -313,6 +314,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public boolean checkItemPerms(DocDetails entity, Long id) {
+        if (id != null && DeleteRequestContext.isDeleted(DocDetails.class, id.intValue())) return true;
         if (InitServlet.isTypeCloud() && entity.getDocId()>0) {
             DocDetails old = DocDB.getInstance().getBasicDocDetails(entity.getDocId(), false);
             if (old != null) {

@@ -48,7 +48,7 @@ include ../pug/mixins
     </div>
 </div>
 
-<div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/groups/tree?click=dt-tree-group-filter-system-trash" data-rest-param-name="id">
+<div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/groups/tree?click=dt-tree-group-filter-system-trash" data-rest-param-name="id" data-th-data-mirrors-label="\#{webpages.mirrors.label.js}" data-th-data-mirrors-open="\#{webpages.mirrors.open.js}" data-th-data-mirrors-more="\#{webpages.mirrors.more.js}" data-th-data-mirrors-back="\#{webpages.mirrors.back.js}">
 
 </div>
 
@@ -92,6 +92,16 @@ include ../pug/mixins
             label.form-check-label(for='jstree-settings-showfolders-dt') [[\#{webpages.jstree.showfolders-dt}]]
     .col-sm-1.form-group-tooltip
       button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.showfolders-dt.tooltip}')
+        i.ti.ti-info-circle
+  .form-group.row.DTE_Field_Type_checkbox.noperms-cmp_mirroring
+    label.col-sm-4.col-form-label
+    .col-sm-7
+      .DTE_Field_InputControl
+        .custom-control.form-switch
+            input#jstree-settings-showbadmirrorings.form-check-input(type='checkbox' name='jstree-settings-showbadmirrorings' value='true')
+            label.form-check-label(for='jstree-settings-showbadmirrorings') [[\#{webpages.jstree.showbadmirrorings}]]
+    .col-sm-1.form-group-tooltip
+      button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.showbadmirrorings.tooltip}')
         i.ti.ti-info-circle
   .form-group.row.row-hr
     .col-sm-7.offset-sm-4

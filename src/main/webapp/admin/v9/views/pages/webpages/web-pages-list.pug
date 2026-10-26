@@ -249,6 +249,7 @@ block content
                         }
                     });
                     webpagesDatatable = wpdInstance.createDatatable();
+                    window.bindDeleteMirrors(webpagesDatatable, "/admin/rest/web-pages/delete-mirrors", "pages");
 
                     var buttonCounter = 4;
                     webpagesDatatable.button().add(buttonCounter++, {
@@ -338,6 +339,8 @@ block content
                             remove: 'deleteDir'
                         }
                     });
+
+                    window.bindDeleteMirrors(groupsDatatable, "/admin/rest/groups/delete-mirrors", "groups");
 
                     groupsDatatable.hideButton("import");
                     groupsDatatable.hideButton("export");

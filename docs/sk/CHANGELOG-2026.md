@@ -48,6 +48,10 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Zrkadlenie štruktúry - pred zmazaním stránky alebo priečinka sa zobrazí [zoznam zrkadlených položiek](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa zmažú spolu s výberom. Strom priečinkov obsahuje [jazykové odkazy s návratom do pôvodného priečinka](redactor/webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) a voliteľné [upozornenia na chybné zrkadlenia](redactor/webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre) (#58846).
+
+![Upozornenie pred zmazaním zrkadleného priečinka](redactor/webpages/mirroring/delete-groups.png)
+
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">
@@ -299,6 +303,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Zrkadlenie štruktúry - uloženie [pracovnej verzie stránky](redactor/apps/docmirroring/README.md#úprava-existujúcej-web-stránky) už neprepisuje obsah zverejnených jazykových verzií, ani keď je ich autorom automatický prekladač (#58846).
+- Zrkadlenie štruktúry - pri [hromadnom mazaní](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov) viacerých prepojených stránok alebo priečinkov sa každá položka spracuje iba raz. Už presunutá položka sa pri spracovaní ďalšieho riadku znova nezmaže z koša (#58846).
+- Zrkadlenie štruktúry - pri presune stránky alebo priečinka sa zachovajú existujúce jazykové verzie bez vytvorenia duplicitných kópií. Po presune zrkadleného priečinka sa aktualizujú aj automaticky generované alebo zdedené URL adresy stránok v ňom aj v jeho podpriečinkoch (#58846).
+- Klonovanie a zrkadlenie štruktúry - dočasné nastavenia klonovania už neovplyvňujú súbežné úpravy stránok. Súbežné klonovania si pri ukladaní konfigurácie v jednej JVM neprepisujú pridané mapovania a administračné tabuľky zrkadlenia nezdieľajú doménu, jazykové mapovanie ani validačné chyby medzi požiadavkami (#58846).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránk (#372).
 - Editor stránok - pri automatickej maximalizácii v nízkom alebo úzkom okne zostáva celý panel nástrojov nad obsahom stránky. Obsah už nepresvitá pod ikonami a názvami skupín (#372).
 - Editor stránok - pri zlyhaní získania obsahu alebo hodnote `undefined` sa zobrazí chyba a uloženie sa zastaví, aby sa neprepísal pôvodný obsah. Atribúty `contenteditable` sa odstraňujú pri načítaní aj ukladaní HTML vrátane kódu vloženého v HTML režime (#369).
@@ -326,6 +334,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Webové stránky - pred zmazaním stránky sa overia práva ku všetkým jej zrkadleným verziám. Pri nedostatočných právach sa mazanie tejto skupiny stránok nezačne. Mazanie priečinkov vyžaduje právo `deleteDir` aj pri priamom volaní REST API (#58846).
+- Klonovanie štruktúry - [zrušenie zrkadlenia](redactor/apps/clone-structure/README.md#zrušenie-zrkadlenia) overuje práva na celý vybraný podstrom, pri zapnutom oddelení domén aj aktuálnu doménu a pri zapnutej kontrole používateľských skupín aj prístup k jeho stránkam (#58846).
 - Dependency Check - aktualizované knižnice `Jackson 2.22.3/3.2.3`, `jsoup 1.23.2`, `logback-core/classic 1.6.5`, `slf4j-api 2.0.19`, `mariadb-java-client 3.5.10`, `postgresql 42.7.14`, `Swagger UI 5.32.15` (s `DOMPurify 3.4.13`), `moment 2.31.0` vrátane statickej kópie, `@tootallnate/once 2.0.1`, `@xmldom/xmldom 0.9.12`, `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` a `undici 6.28.1`. Zostavenie vyžaduje Node.js 20 alebo 22 a novší (#349).
 - Dependency Check - pridané výnimky pre `kotlin-stdlib 2.4.0`, `webjet-ai/webjet-ai-local 2.0.4`, `spring-security-crypto 7.1.1`, `http-cache-semantics 4.2.0`, `fabric 5.2.4/5.5.2` a `jQuery 3.3.1` v testovacej šablóne eshopu. Výnimky pre `ai.djl:api 0.36.0` a `tar 6.2.1` predstavujú schválené prijatie zvyškového rizika. Podrobnosti sú v `dependency-check-suppressions-project.xml` (#349).
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
@@ -340,6 +350,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- Klonovanie štruktúry - [stav klonovania](developer/apps/docmirroring.md#klonovanie-a-zrušenie-zrkadlenia) je uložený v aktuálnej požiadavke. Odstránené boli konfiguračné premenné `mirroringMode`, `cloneActionSrcId` a `cloneActionDestId`; rozšírenia majú použiť `MirroringService.isCloneAction()` a parametre `srcGroupId` a `destGroupId` v `RequestBean` (#58846).
 - SBOM - pridané [generovanie spoločného zoznamu Java a npm závislostí](developer/install/sbom.md) vo formáte CycloneDX JSON príkazom `ant -f ant/build.xml sbom`, vrátane tranzitívnych závislostí a validácie reportu.
 - [Centrálny generátor noviniek](developer/install/social-media-feed.md) po úspešnom publikovaní odstráni nepoužívané náhľady s 30-dňovou ochrannou lehotou. Zachová obrázky aktuálnych príspevkov aj záložných údajov pre výpadok zdroja (#358).
 - Editor stránok - [nastavenie ponuky Štýly](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) podporuje metadáta v komentároch `editor.scss` / `editor.css` pre kategórie a ich ikony, vzájomne sa nahrádzajúce skupiny, povolené elementy a základné triedy zachované pri obnovení vzhľadu. Nová ponuka je predvolene zapnutá; nastavením `ckeditor_styleComboEnabled=false` sa obnoví pôvodný výber štýlov (#OSK764).

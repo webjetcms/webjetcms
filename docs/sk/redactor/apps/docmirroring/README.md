@@ -37,7 +37,11 @@ Pri ďalšej práci sa zrkadlia nasledovné operácie:
 - Zmena poradia adresára/stránky v štruktúre (okrem koreňových priečinkov)
 - Presunutie adresára/stránky do iného adresára
 
+Pri presune do iného zrkadleného priečinka sa presunú existujúce jazykové verzie so zachovaním ich ID. Nevytvárajú sa ďalšie kópie namiesto presunutých položiek. Po presune priečinka sa v jeho zrkadlených verziách aktualizujú aj automaticky generované alebo zdedené URL adresy stránok v presunutom priečinku aj v jeho podpriečinkoch podľa nového umiestnenia.
+
 Zvyšné vlastnosti adresárov/stránok ostávajú zachované a nemajú vplyv na svoj ekvivalent v druhej jazykovej mutácii.
+
+Pred zmazaním sa v potvrdzovacom okne zobrazí [zoznam zrkadlených stránok alebo priečinkov](../../webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa zmažú spolu s vybranou položkou. V stromovej štruktúre môžete pomocou [jazykových odkazov](../../webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) prejsť do prepojeného priečinka a zapnúť si [upozornenia na chybné previazania](../../webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre).
 
 ## Vytvorenie odkazu na jazykové mutácie v hlavičke stránky
 
@@ -108,6 +112,8 @@ WebJET potrebuje vedieť, či preložená stránka bola už upravená skutočný
 
 V používateľoch teda vytvorte nového (virtuálneho) používateľa s právami na editáciu potrebných web stránok a jeho prihlasovacie meno zadajte do konf. premennej `structureMirroringAutoTranslatorLogin`. S takýmto používateľom by ste sa nemali nikdy prihlasovať a používať ho na redaktorskú činnosť, je to len technický/virtuálny používateľ. Predvolené prihlasovacie meno je `autotranslator`, ak použijete toto prihlasovacie meno nemusíte nastavovať uvedenú konf. premennú.
 
+Pri uložení **pracovnej verzie** sa obsah už zverejnených jazykových verzií neprepisuje, ani keď je ich autorom používateľ nastavený v `structureMirroringAutoTranslatorLogin`. Nezverejnené jazykové verzie sa môžu aktualizovať podľa podmienok uvedených nižšie. Pri publikovaní zdrojovej stránky sa tieto podmienky vyhodnotia aj pre zverejnené jazykové verzie.
+
 Automatický preklad už existujúcej stránky sa vykoná za nasledovných podmienok:
 
 - Ak konfiguračná premenná `structureMirroringAutoTranslatorLogin` je nastavená a daný používateľ existuje v databáze.
@@ -116,7 +122,7 @@ Automatický preklad už existujúcej stránky sa vykoná za nasledovných podmi
 
 Pri nastavenej hodnote `structureMirroringAutoTranslatorLogin` je teda detekcia spoľahlivejšia, pretože aj ešte nezverejnenú verziu web stránky mohol už iný používateľ opraviť/korigovať, ale ešte ju nezverejnil. Pri vašej zmene by nastalo prepísanie textu, čo je neželaný stav. Odporúčame vytvoriť (virtuálneho) používateľa a jeho prihlasovacie meno nastaviť do `structureMirroringAutoTranslatorLogin` pre spoľahlivejšiu detekciu zmien.
 
-Pri ukladaní stránky sa zmeny aplikujú na všetky kópie. Ak teda z SK verzie vytvorím EN a DE verziu (ktoré ešte nie sú publikované, alebo neboli zmenené reálnym redaktorom), tak pri zmene EN verzie sa text preloží do DE verzie. SK verzia sa neovplyvní, pretože je už typicky publikovaná, respektíve je vytvorená reálnym (nie `structureMirroringAutoTranslatorLogin`) používateľom.
+Zmeny obsahu sa prenášajú do všetkých kópií, ktoré spĺňajú uvedené podmienky. Napríklad pri úprave EN verzie sa môže text preložiť do DE verzie, ak ju ešte nekorigoval redaktor. Pri uložení pracovnej verzie EN sa pritom už zverejnená DE verzia nezmení.
 
 Ak je nastavená konf. premenná `syncGroupAndWebpageTitle` na hodnotu `true` (čo je štandardná hodnota) automaticky sa synchronizuje názov priečinka s názvom hlavnej stránky v priečinku. Pri zmene názvu hlavnej stránky sa premenuje aj priečinok a to aj v preložených verziách.
 

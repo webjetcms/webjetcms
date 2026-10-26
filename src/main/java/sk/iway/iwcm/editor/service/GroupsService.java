@@ -15,6 +15,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.structuremirroring.MirroringService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -252,7 +253,8 @@ public class GroupsService extends NotifyService {
 	 */
 	public static boolean canSyncTitle(Integer docId, Integer groupId) {
 
-		if(Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
+		// Preserve distinct source folder and page titles during cloning without disabling title sync globally.
+		if(MirroringService.isCloneAction() || Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
 
 		if(docId == null || docId.intValue() < 1) return true;
 
@@ -275,7 +277,8 @@ public class GroupsService extends NotifyService {
 	 */
 	public static boolean canSyncTitle(GroupDetails toSaveGroup) {
 
-		if(Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
+		// Preserve distinct source folder and page titles during cloning without disabling title sync globally.
+		if(MirroringService.isCloneAction() || Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
 
 		if(toSaveGroup == null) return false;
 

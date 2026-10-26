@@ -2,6 +2,56 @@
     border-right: 1px solid $nice-gray-100;
 }
 
+#SomStromcek {
+  .jstree-has-mirrors > .jstree-anchor {
+    max-width: calc(100% - 125px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .jstree-mirrors {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-height: 30px;
+    margin-left: 4px;
+    vertical-align: top;
+    > .ti { color: $gray-text; font-size: 14px; }
+    [hidden] { display: none; }
+  }
+  .jstree-mirror-link, .jstree-mirror-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    min-height: 24px;
+    padding: 0 4px;
+    border: 1px solid mix($primary, $white, 25%);
+    border-radius: 4px;
+    background: $white;
+    color: $primary;
+    font-size: 12px;
+    line-height: 1.5;
+    text-decoration: none;
+    &:hover { background: mix($primary, $white, 5%); text-decoration: underline; }
+    &:focus-visible { outline: 2px solid $secondary; outline-offset: 2px; }
+  }
+  .jstree-mirror-peer > .jstree-anchor:not(.jstree-clicked) {
+    background: mix($primary, $white, 5%);
+    border-radius: $border-radius;
+  }
+  .jstree-mirror-menu {
+    max-width: min(420px, calc(100vw - 30px));
+    .jstree-mirror-link {
+      display: block;
+      padding: 6px 12px;
+      border: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      font-size: 14px;
+    }
+  }
+}
+
 @media (min-width: $bp-mobile) {
     .tree-col.col-md-auto {
         width: var(--wj-tree-width);
