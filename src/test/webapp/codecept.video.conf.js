@@ -17,6 +17,9 @@ exports.config = {
     Playwright: {
       ...baseConfig.helpers.Playwright,
       require: "./helpers/video_playwright_helper.js",
+      // The full Chromium binary honors profile zoom even when CODECEPT_SHOW=false.
+      // Playwright's default headless shell ignores the profile zoom preference.
+      channel: "chromium",
       windowSize: `${videoSettings.width}x${videoSettings.height}`,
       video: true,
       keepVideoForPassedTests: true,

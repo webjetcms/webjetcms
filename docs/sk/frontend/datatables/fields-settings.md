@@ -2,11 +2,15 @@
 
 Na karte **Nastavenia → Dátové tabuľky → Nastavenia polí** prispôsobíte názvy, poradie a zobrazenie polí v editore aj stĺpcov v tabuľke. Nastavenie sa vzťahuje na všetky záznamy vybranej entity v aktuálne zvolenej doméne. Na prístup potrebujete oprávnenie **Dátové tabuľky** (`dataTablesConfig`).
 
-![](fields-settings-datatable.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ## Výber poľa
 
 Pri vytváraní nastavenia najprv v poli **Použiť pre entitu** vyberte triedu entity, napríklad `sk.iway.iwcm.doc.DocDetails` pre webové stránky. Potom v poli **Použiť pre pole** vyberte vlastnosť, ktorú chcete upraviť, napríklad `title` pre názov stránky.
+
+![](fields-settings-datatable.png)
 
 Obe polia podporujú automatické dopĺňanie po zadaní aspoň jedného znaku. V návrhoch polí a kariet sa zobrazuje názov aj technický identifikátor; uloží sa identifikátor. Zadaním `*` alebo `%` zobrazíte všetky dostupné možnosti. Ponuka polí a kariet závisí od vybranej entity.
 

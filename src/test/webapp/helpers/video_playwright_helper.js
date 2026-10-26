@@ -192,6 +192,31 @@ async function finalizeVideoArtifact(video, targetPath, options = {}) {
 
 class VideoPlaywrightHelper extends Playwright {
 
+  async _setPage(page) {
+    await super._setPage(page);
+    await this._syncVideoViewport();
+  }
+
+  async resizeWindow(width, height) {
+    await super.resizeWindow(width, height);
+    await this._syncVideoViewport();
+  }
+
+  /** Keeps Chromium's screencast surface aligned with the emulated viewport. */
+  async _syncVideoViewport() {
+    if (!this.page || this.options.browser !== "chromium") return;
+    const viewport = this.page.viewportSize();
+    if (viewport == null) return;
+    const session = await this.browserContext.newCDPSession(this.page);
+    try {
+      // Full headless Chromium can reserve window chrome outside the emulated
+      // viewport, clipping the bottom of recordings despite correct DOM dimensions.
+      await session.send("Emulation.setVisibleSize", viewport);
+    } finally {
+      await session.detach();
+    }
+  }
+
   async _before(test) {
     this.videoShotSlate = null;
     if (this.options.recordVideo != null) {

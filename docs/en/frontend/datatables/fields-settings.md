@@ -2,11 +2,15 @@
 
 On the **Settings → Data Tables → Field Settings** tab, you can customize the names, order, and display of fields in the editor and columns in the table. The setting applies to all records of the selected entity in the currently selected domain. You need the **Data Tables** permission (`dataTablesConfig`) to access it.
 
-![](fields-settings-datatable.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ## Field selection
 
 When creating a setting, first select the entity class in the **Apply to entity** field, such as `sk.iway.iwcm.doc.DocDetails` for web pages. Then, in the **Apply to field** field, select the property you want to modify, such as `title` for page name.
+
+![](fields-settings-datatable.png)
 
 Both fields support auto-completion after entering at least one character. Both the name and technical identifier are displayed in the field and card designs; the identifier is saved. Enter `*` or `%` to see all available options. The field and card offerings depend on the entity selected.
 

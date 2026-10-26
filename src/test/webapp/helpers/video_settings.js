@@ -1,6 +1,6 @@
 const DEFAULT_VIDEO_WIDTH = 1920;
 const DEFAULT_VIDEO_HEIGHT = 1080;
-const DEFAULT_VIDEO_ZOOM = 1;
+const DEFAULT_VIDEO_ZOOM = 1.411764705882353;
 
 function getDimension(value, fallback) {
   const dimension = Number.parseInt(value || String(fallback), 10);

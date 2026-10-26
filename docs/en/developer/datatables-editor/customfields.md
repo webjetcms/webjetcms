@@ -138,7 +138,7 @@ Formats used:
 - `enumeration_2_string1_string2` or `enumeration_2_string1_string2_null`
 - `json_group` /`json_doc` with optional suffix `_null`
 
-The transformation between the field editor and the internal value is provided by the `toEntity` and `fromEntity` methods of [CustomFieldsService](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/rest/CustomFieldsService.java) in the `sk.iway.iwcm.system.datatable.settings.customfields.rest` package.
+The transformation between the field editor and the internal value is provided by the `toEntity` and `fromEntity` methods of the [CustomFieldsService](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/rest/CustomFieldsService.java) class in the `sk.iway.iwcm.system.datatable.settings.customfields.rest` package.
 
 ## JSON Editor
 
