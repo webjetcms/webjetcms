@@ -5,7 +5,11 @@ import jakarta.persistence.Converter;
 
 import sk.iway.iwcm.Tools;
 
-/** Keeps page and history titles safe on both database writes and reads. */
+/**
+ * Keeps page and history titles safe on both database writes and reads.
+ * USES ALSO Tools.convertToHtmlTags(value) to convert legacy *|...|* to HTML
+ * PageTitleAttributeConverter
+ */
 @Converter(autoApply = false)
 public class PageTitleAttributeConverter implements AttributeConverter<String, String> {
 
