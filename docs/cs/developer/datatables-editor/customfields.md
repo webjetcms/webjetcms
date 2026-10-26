@@ -112,7 +112,7 @@ Pro funkčnost je třeba aby daný bean obsahoval atributy s názvem ```fieldX``
 Konfigurace volitelných polí se skládá ze dvou zdrojů:
 
 1. překladové klíče (`editor.field_x`, `editor.field_x.type`, ...),
-2. záznamy z tabulky `custom_fields`.
+2. záznamy z tabulky `dt_customfields`.
 
 Při generování `fieldsDefinition` v `BaseEditorFields.getFields` se aplikuje priorita:
 
@@ -123,9 +123,9 @@ Při generování `fieldsDefinition` v `BaseEditorFields.getFields` se aplikuje 
 
 Vyšší úroveň vždy přepíše nižší pro stejné písmeno pole (`alphabet`).
 
-## Serializace nastavení v `custom_fields.value`
+## Serializace nastavení v `dt_customfields.value`
 
-Nastavení specifická pro typ pole se ukládají do sloupce `custom_fields.value`.
+Nastavení specifická pro typ pole se ukládají do sloupce `dt_customfields.value`.
 
 Používané formáty:
 
@@ -202,7 +202,7 @@ Příklad podporovaného rozšířeného zápisu:
 
 Rozšířený zápis se kromě kanonizace znaků `<` a `>` ukládá v původní podobě včetně apostrofů a komentářů. Není automaticky převeden na striktní JSON pro `JSON.parse` ; aplikace, která hodnotu zpracovává, musí podporovat použitou syntaxi.
 
-Pro vlastní REST služby odvozené od `DatatableRestControllerV2` se překladové klíče pro validaci odvodí z `@DataTableColumn.title` na atributech `fieldA` až `fieldZ`. Kontext konfigurace v tabulce `custom_fields`, například vazbu na rodičovskou entitu, určuje existující hook `getCustomFieldsSearchDto(T entity)`. Hook vychází ze serverových dat a vyhodnocuje se pro konkrétní ukládaný záznam.
+Pro vlastní REST služby odvozené od `DatatableRestControllerV2` se překladové klíče pro validaci odvodí z `@DataTableColumn.title` na atributech `fieldA` až `fieldZ`. Kontext konfigurace v tabulce `dt_customfields`, například vazbu na rodičovskou entitu, určuje existující hook `getCustomFieldsSearchDto(T entity)`. Hook vychází ze serverových dat a vyhodnocuje se pro konkrétní ukládaný záznam.
 
 ### Kapacita databáze
 
@@ -243,7 +243,7 @@ EDITOR.on('preSubmit', function (e, data, action) {
 });
 ```
 
-U typu `autocomplete` se odesílá request na `/admin/FCKeditor/_editor_autocomplete.jsp` is parametry `className` a `objectId`. Endpoint proto umí upřednostnit konfiguraci z `custom_fields` před generickým překladovým klíčem.
+U typu `autocomplete` se odesílá request na `/admin/FCKeditor/_editor_autocomplete.jsp` is parametry `className` a `objectId`. Endpoint proto umí upřednostnit konfiguraci z `dt_customfields` před generickým překladovým klíčem.
 
 U typů `select` a `multiselect` je podporován formát `label:value`. Pokud hodnota neobsahuje přesně jednu dvojtečku, použije se stejný text pro `label` i `value`.
 

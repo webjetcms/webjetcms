@@ -24,7 +24,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
-@Table(name = "custom_fields")
+@Table(name = "dt_customfields")
 @Getter
 @Setter
 @DataTableTabs(tabs = {
@@ -35,7 +35,7 @@ public class CustomFieldsEntity {
 
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_custom_fields")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_dt_customfields")
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 

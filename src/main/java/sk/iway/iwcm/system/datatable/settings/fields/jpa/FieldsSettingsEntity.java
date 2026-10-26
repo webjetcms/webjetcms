@@ -22,7 +22,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
  * Null Boolean values and empty text settings preserve the corresponding annotation values.
  */
 @Entity
-@Table(name = "fields_settings")
+@Table(name = "dt_fields")
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
@@ -31,7 +31,7 @@ public class FieldsSettingsEntity {
 
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_fields_settings")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_dt_fields")
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 

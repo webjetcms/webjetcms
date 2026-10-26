@@ -7,13 +7,15 @@ Knižnica [datatables.net](http://datatables.net) je pokročilá tabuľka s napo
 
 Java triedy pre nastavenia datatabuliek sú v balíku `sk.iway.iwcm.system.datatable.settings`:
 
-| Podbalík | Účel |
-| --- | --- |
-| [`customfields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/) | Konfigurácia a validácia voliteľných polí. |
-| [`fields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/fields/) | Nastavenia vlastností polí a stĺpcov. |
-| [`tabs`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/tabs/) | Nastavenia kariet editora. |
+| Podbalík | Databázová tabuľka | Účel |
+| --- | --- | --- |
+| [`customfields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/) | `dt_customfields` | Konfigurácia a validácia voliteľných polí. |
+| [`fields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/fields/) | `dt_fields` | Nastavenia vlastností polí a stĺpcov. |
+| [`tabs`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/tabs/) | `dt_tabs` | Nastavenia kariet editora. |
 
 Každý podbalík obsahuje `jpa` pre entity a repozitáre a `rest` pre služby a REST controllery. Pri použití týchto tried vo vlastnom kóde alebo šablónach aktualizujte importy a úplné názvy tried na uvedené balíky.
+
+Pôvodná tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje na `dt_customfields` so zachovaním údajov. Vlastné SQL dotazy musia používať nový názov tabuľky.
 
 ## Základná inicializácia v spolupráca s Spring REST
 

@@ -348,6 +348,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- Datatabuľky - tabuľky nastavení majú spoločný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Existujúca tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje so zachovaním údajov; vlastné SQL dotazy treba upraviť na `dt_customfields` (#58830).
 - Datatabuľky - triedy pre [systémové nastavenia](developer/datatables/README.md#systémové-nastavenia) voliteľných polí, polí a kariet boli presunuté pod `sk.iway.iwcm.system.datatable.settings` do podbalíkov `customfields`, `fields` a `tabs`. Vlastný kód a šablóny používajúce tieto triedy vyžadujú aktualizáciu importov a úplných názvov tried (#58830).
 - Datatabuľky - pridaný typ poľa [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pre výber jednej možnosti zo skupiny tlačidiel. Používa štýly administrácie a podporuje aj voľbu **Bez zmeny** pri trojstavových nastaveniach (#58830).
 - SBOM - pridané [generovanie spoločného zoznamu Java a npm závislostí](developer/install/sbom.md) vo formáte CycloneDX JSON príkazom `ant -f ant/build.xml sbom`, vrátane tranzitívnych závislostí a validácie reportu.

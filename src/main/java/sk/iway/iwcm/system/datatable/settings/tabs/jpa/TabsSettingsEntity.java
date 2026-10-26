@@ -25,7 +25,7 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
  * Nullable Boolean settings distinguish an explicit value from an unchanged setting.
  */
 @Entity
-@Table(name = "tabs_settings")
+@Table(name = "dt_tabs")
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
@@ -34,7 +34,7 @@ public class TabsSettingsEntity {
 
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_tabs_settings")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_dt_tabs")
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
