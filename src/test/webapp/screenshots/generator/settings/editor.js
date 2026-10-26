@@ -3,7 +3,7 @@ Feature('settings.editor @singlethread');
 const docClass = 'sk.iway.iwcm.doc.DocDetails';
 const fieldsTable = 'fieldsSettingsDataTable';
 const tabsTable = 'tabsSettingsDataTable';
-const screenshots = '/frontend/editor/';
+const screenshots = '/frontend/datatables/';
 let tabId;
 
 Before(({ I, login }) => {

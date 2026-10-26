@@ -67,7 +67,7 @@ filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadan
 - [x] +Webové stránky - hromadné pridanie a odobratie značky aj skupiny používateľov pri zachovaní ostatných skupín cez menu Ďalšie akcie, do ktorého bol presunutý aj Import/Export (#368).
 - [ ] +Webové stránky - pri zmazaní priečinka, ktorý má aj zrkadlenú verziu zobraziť notifikáciu, že boli zmazané aj zrkadlené priečinky XXX,YYY.
 - [x] +Pridať podporu obrázkov a animácií typu AVIF (#371).
-- [ ] +Možnosť zmeniť poradie polí v datatables editore, kartu v ktorej sa pole nachádza, prípadne aj vytvoriť novú kartu do ktorej sa polia vložia. Teda konfiguračne upraviť hodnoty čo sa dnes nastavujú cea anotácie.
+- [x] +Možnosť zmeniť poradie polí v datatables editore, kartu v ktorej sa pole nachádza, prípadne aj vytvoriť novú kartu do ktorej sa polia vložia. Teda konfiguračne upraviť hodnoty čo sa dnes nastavujú cea anotácie (#366).
 
 ## 2025
 

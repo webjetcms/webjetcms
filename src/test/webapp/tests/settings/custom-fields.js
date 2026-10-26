@@ -4,7 +4,7 @@ let screenshotsPath;
 
 Before(({ I, login }) =>{
     login('admin');
-    screenshotsPath = I.getConfLng() === 'sk' ? '/frontend/editor/' : '/frontend/webpages/customfields/';
+    screenshotsPath = I.getConfLng() === 'sk' ? '/frontend/datatables/' : '/frontend/webpages/customfields/';
 });
 
 const docId_1 = "163799";

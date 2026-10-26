@@ -1,6 +1,6 @@
 # Nastavenia kariet
 
-Na karte **Nastavenia → Editor → Nastavenia kariet** upravíte členenie editora: premenujete a zoradíte karty, nastavíte predvolenú kartu alebo pridáte vlastnú kartu. Nastavenie platí pre všetky záznamy vybranej entity v aktuálne zvolenej doméne. Na prístup potrebujete oprávnenie **Editor** (`dataTablesConfig`).
+Na karte **Nastavenia → Dátové tabuľky → Nastavenia kariet** upravíte členenie editora: premenujete a zoradíte karty, nastavíte predvolenú kartu alebo pridáte vlastnú kartu. Nastavenie platí pre všetky záznamy vybranej entity v aktuálne zvolenej doméne. Na prístup potrebujete oprávnenie **Dátové tabuľky** (`dataTablesConfig`).
 
 ![](tabs-settings-datatable.png)
 

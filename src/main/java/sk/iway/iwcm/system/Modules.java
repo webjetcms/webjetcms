@@ -852,8 +852,8 @@ public class Modules
 
 		// DataTable editor configuration
 		sub = new ModuleInfo().setMenuOrder(7120);
-		sub.setLeftMenuNameKey("admin.editor.title");
-		sub.setNameKey("admin.editor.title");
+		sub.setLeftMenuNameKey("settings.datatables.title");
+		sub.setNameKey("settings.datatables.title");
 		sub.setPath("/admin/v9/settings/fields-settings/");
 		sub.setWjVersions("BPECDIM");
 		sub.setUserItem(true);
@@ -862,6 +862,7 @@ public class Modules
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("table-options");
+		setAvailable(sub);
 		sub.addSubmenu("settings.fields-settings.title", "/admin/v9/settings/fields-settings/");
 		sub.addSubmenu("settings.tabs-settings.title", "/admin/v9/settings/tabs-settings/");
 		sub.addSubmenu("settings.custom-fields.title", "/admin/v9/settings/custom-fields/");

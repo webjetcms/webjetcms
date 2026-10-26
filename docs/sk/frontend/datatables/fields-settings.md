@@ -1,6 +1,6 @@
 # Nastavenia polí
 
-Na karte **Nastavenia → Editor → Nastavenia polí** prispôsobíte názvy, poradie a zobrazenie polí v editore aj stĺpcov v tabuľke. Nastavenie sa vzťahuje na všetky záznamy vybranej entity v aktuálne zvolenej doméne. Na prístup potrebujete oprávnenie **Editor** (`dataTablesConfig`).
+Na karte **Nastavenia → Dátové tabuľky → Nastavenia polí** prispôsobíte názvy, poradie a zobrazenie polí v editore aj stĺpcov v tabuľke. Nastavenie sa vzťahuje na všetky záznamy vybranej entity v aktuálne zvolenej doméne. Na prístup potrebujete oprávnenie **Dátové tabuľky** (`dataTablesConfig`).
 
 ![](fields-settings-datatable.png)
 

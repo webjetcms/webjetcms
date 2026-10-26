@@ -1,8 +1,8 @@
 # Voliteľné polia
 
-Tabuľka Voliteľné polia umožňuje centrálne nastaviť vlastnosti voliteľných polí pre rôzne entity v systéme. Nastavenia sa nachádzajú v menu **Nastavenia → Editor**, na karte **Voliteľné polia**. Pomocou tejto tabuľky je možné meniť typ poľa, popis, povinnosť, tooltip aj typovo špecifické parametre bez potreby editácie prekladových kľúčov.
+Tabuľka Voliteľné polia umožňuje centrálne nastaviť vlastnosti voliteľných polí pre rôzne entity v systéme. Nastavenia sa nachádzajú v menu **Nastavenia → Dátové tabuľky**, na karte **Voliteľné polia**. Pomocou tejto tabuľky je možné meniť typ poľa, popis, povinnosť, tooltip aj typovo špecifické parametre bez potreby editácie prekladových kľúčov.
 
-Typ, povinnosť a možnosti voliteľného poľa nastavíte na tejto karte. Na presun poľa do inej karty alebo zmenu jeho zobrazenia použite [Nastavenia polí](fields-settings.md). Vlastnú kartu vytvoríte cez [Nastavenia kariet](tabs-settings.md). Nastavenia sa ukladajú pre aktuálne zvolenú doménu; na prístup potrebujete právo **Editor** (`dataTablesConfig`).
+Typ, povinnosť a možnosti voliteľného poľa nastavíte na tejto karte. Na presun poľa do inej karty alebo zmenu jeho zobrazenia použite [Nastavenia polí](fields-settings.md). Vlastnú kartu vytvoríte cez [Nastavenia kariet](tabs-settings.md). Nastavenia sa ukladajú pre aktuálne zvolenú doménu; na prístup potrebujete právo **Dátové tabuľky** (`dataTablesConfig`).
 
 ![](custom-fields-settings-datatable.png)
 
