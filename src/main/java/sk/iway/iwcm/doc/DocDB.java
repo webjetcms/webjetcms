@@ -28,6 +28,7 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverterWithSave;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -4726,7 +4727,7 @@ public class DocDB extends DB
 			String fileName = null;
 			if (group != null && group.isInternal()==false)
 			{
-				fileName = groupsDB.getGroupNamePath(docDetails.getGroupId());
+				fileName = AllowSafeHtmlAttributeConverterWithSave.sanitize(groupsDB.getGroupNamePath(docDetails.getGroupId()));
 				//musim obmedzit na max 255 znakov
 				if(fileName.length() > 255)
 				{
@@ -5375,7 +5376,7 @@ public class DocDB extends DB
 
 				if (group != null && group.isInternal()==false)
 				{
-					fileName = groupsDB.getGroupNamePath(lvd.getInt2());
+					fileName = AllowSafeHtmlAttributeConverterWithSave.sanitize(groupsDB.getGroupNamePath(lvd.getInt2()));
 				}
 
 				ps.setString(1, DB.prepareString(fileName, 255));

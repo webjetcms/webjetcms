@@ -35,9 +35,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
-import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverterWithSave;
 import sk.iway.iwcm.system.jpa.CommaSeparatedIntegersConverter;
 import sk.iway.iwcm.system.jpa.PageTitleAttributeConverter;
+import sk.iway.iwcm.system.jpa.XssAttributeConverter;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -126,7 +127,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 			visible = false,
 			className = "DTE_Field_Has_Checkbox"
 	)
-	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = XssAttributeConverter.class)
 	private String virtualPath = "";
 
 	@Column(name = "editor_virtual_path ")
@@ -195,7 +196,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 					)
 			}
 	)
-	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = XssAttributeConverter.class)
 	private String externalLink = "";
 
 	@Column(name = "available")
@@ -726,7 +727,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 		},
 		renderFormat = "dt-format-image"
 	)
-	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = XssAttributeConverter.class)
 	private String perexImage = "";
 
 	@Transient
@@ -794,7 +795,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	//Must be change from Transient to Column, because we need save this method
 	// @Size(max = 255)
 	@Column(name = "file_name")
-	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverterWithSave.class)
 	private String fileName;
 
 	@Transient
@@ -2311,7 +2312,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 
 	public void setFileName(String fileName) {
 		if (isEmpty(fileName)) return;
-		this.fileName = fileName;
+		this.fileName = AllowSafeHtmlAttributeConverterWithSave.sanitize(fileName);
 	}
 
 	public void setAuthorEmail(String authorEmail) {

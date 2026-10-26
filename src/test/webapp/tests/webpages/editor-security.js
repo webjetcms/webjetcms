@@ -151,6 +151,57 @@ Scenario('Sanitize direct and legacy-encoded titles in the API, history and publ
     }
 });
 
+Scenario('Preserve URL parameters through repeated saves and history reads', async ({ I, DT }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=23');
+    DT.waitForLoader();
+    const urls = {
+        virtualPath: `/autotest-urls-${forbidden.id}.html?q=a&lang=sk#section`,
+        externalLink: 'https://example.invalid/?q=a%26b&token=a+b%2Fc==#results',
+        perexImage: '/images/autotest.jpg?width=320&height=200&crop=1#preview'
+    };
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const page = await readPage(I, forbidden.id);
+        Object.assign(page, urls);
+        page.generateUrlFromTitle = false;
+        page.urlInheritGroup = false;
+        page.available = false;
+        page.editorFields.requestPublish = true;
+        const response = await submit(I, 'edit', page);
+        I.assertFalse(Boolean(response.body.error), response.body.error || JSON.stringify(response.body.fieldErrors));
+        const saved = response.body.data[0];
+        const current = await readPage(I, saved.id);
+        const history = await readPage(I, saved.id, saved.historyId);
+        for (const [field, expected] of Object.entries(urls)) {
+            for (const doc of [saved, current, history]) I.assertEqual(doc[field], expected, field);
+        }
+    }
+
+    // Parse the real column renderer's output without executing the injected event handlers.
+    const renderedUrls = await I.executeScript(() => {
+        const settings = $('#datatableInit').DataTable().settings()[0];
+        const col = settings.aoColumns.findIndex(column => column.data === 'perexImage');
+        return [
+            '/images/autotest" onerror="window.wjUrlXss=true" data-test=".jpg',
+            '/images/autotest.jpg?q=" onclick="window.wjUrlXss=true&lang=sk',
+            '/images/autotest.jpg?q=&quot;&lang=sk'
+        ].map(url => {
+            const html = settings.aoColumns[col].mRender(url, 'display', { perexImage: url }, { settings, col, row: 0 });
+            const parsed = new DOMParser().parseFromString(html, 'text/html');
+            return {
+                url,
+                href: parsed.querySelector('a')?.getAttribute('href'),
+                src: parsed.querySelector('img')?.getAttribute('src'),
+                hasHandler: Boolean(parsed.querySelector('[onerror], [onclick]'))
+            };
+        });
+    });
+    for (const rendered of renderedUrls) {
+        I.assertFalse(rendered.hasHandler, 'URL quotes must not create HTML attributes');
+        I.assertEqual(rendered.href, rendered.url);
+        if (rendered.src != null) I.assertEqual(rendered.src, rendered.url);
+    }
+});
+
 Scenario('Cleanup disposable security pages', async ({ I, DT }) => {
     I.relogin('admin');
     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=23');

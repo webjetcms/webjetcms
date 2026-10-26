@@ -25,13 +25,13 @@ public class PageTitleAttributeConverter implements AttributeConverter<String, S
 
     /**
      * Retains safe title formatting after decoding the legacy WebJET HTML notation.
-     * Unlike the general JPA converter, page titles cannot opt into executable HTML.
+     * Page titles cannot opt into executable HTML through the {@code jpaentity} bypass.
      *
      * @param value title or navigation label, possibly loaded through JDBC
      * @return sanitized HTML, preserving {@code null}
      */
     public static String sanitizeTitle(String value) {
         if (value == null) return null;
-        return AllowSafeHtmlAttributeConverter.sanitize(Tools.convertToHtmlTags(value));
+        return AllowSafeHtmlAttributeConverterWithSave.sanitize(Tools.convertToHtmlTags(value));
     }
 }
