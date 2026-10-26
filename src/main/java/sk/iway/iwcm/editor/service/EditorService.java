@@ -188,6 +188,9 @@ public class EditorService {
     public int saveEditedDoc(DocDetails editedDoc) {
 		DebugTimer dt = new DebugTimer("EditorService.saveEditedDoc");
 
+		// Authorize the stored page before events or client-supplied changes can have side effects.
+		checkSavePermissions(currentUser, editedDoc);
+
 		//first update savedate and author, check permissions need this
 		editedDoc.setDateCreated(now);
 		editedDoc.setAuthorId(currentUser.getUserId());
@@ -1139,6 +1142,7 @@ public class EditorService {
 	 * @return
 	 */
 	public boolean isPageEditable(Identity user, DocDetails doc, boolean isDelete) {
+		if (user == null || doc == null) return false;
 		if (UsersDB.checkUserPerms(user, Constants.getString("webpagesFunctionsPerms")) == false) return false;
 
 		if (isDelete) {
@@ -1151,7 +1155,19 @@ public class EditorService {
 			return false;
 		}
 
-		if (doc == null) return true;
+		return hasPagePermission(user, doc);
+	}
+
+	/**
+	 * Checks folder, explicit-page, multigroup and access-group permissions for an editor record.
+	 * Operation permissions such as pageSave and deletePage are checked separately by the caller.
+	 *
+	 * @param user current administrator
+	 * @param doc page state whose permissions are being checked
+	 * @return whether the page belongs to the user's editable scope
+	 */
+	public static boolean hasPagePermission(Identity user, DocDetails doc) {
+		if (user == null || doc == null || !UsersDB.checkUserPerms(user, Constants.getString("webpagesFunctionsPerms"))) return false;
 
 		//otestuj, ci mame na tento dokument pristupove prava
 		boolean canAccess = GroupsDB.isGroupEditable(user, doc.getGroupId());
@@ -1192,6 +1208,29 @@ public class EditorService {
 		}
 
 		return canAccess;
+	}
+
+	/**
+	 * Checks the persisted page's permissions and, for creation or a move, the destination folder.
+	 * The uncached JDBC read must not reuse a JPA entity already modified by the caller.
+	 *
+	 * @param user current administrator
+	 * @param doc proposed page state after editor fields and master/slave IDs have been resolved
+	 */
+	public void checkSavePermissions(Identity user, DocDetails doc) {
+		checkPermissions(user, doc, false);
+		DocDetails original = null;
+		if (doc.getDocId() > 0) {
+			original = docDB.getDoc(doc.getDocId(), -1, false);
+			if (original == null) throw new RuntimeException(prop.getText("admin.editPage.error"));
+			checkPermissions(user, original, false);
+		}
+
+		int groupId = doc.getGroupId();
+		if (groupId < 1 || groupsDB.getGroup(groupId) == null ||
+				((original == null || original.getGroupId() != groupId) && !GroupsDB.isGroupEditable(user, groupId))) {
+			throw new RuntimeException(prop.getText("admin.editPage.error"));
+		}
 	}
 
 	/**

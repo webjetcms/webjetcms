@@ -20,6 +20,8 @@ Najdôležitejším parametrom každej web stránky je jej titulok (nadpis). Tit
 
 Hlavná stránka priečinka má štandardne synchronizovaný [názov web stránky s názvom priečinku](../group.md#synchronizácia-názvu-priečinka-a-web-stránky).
 
+V názve stránky a názve položky v menu zostáva zachované bezpečné HTML formátovanie. Skripty, obsluhy udalostí (napríklad `onclick`) a nebezpečné odkazy systém odstraňuje pri ukladaní aj načítaní starších názvov.
+
 ![](tab-basic.png)
 
 Každá stránka, ktorá má byť verejne zobraziteľná na web sídle musí mať zadané „Áno“ v časti  **Zobrazovať**. Pokiaľ nemá takéto nastavenie, je pre návštevníka nedostupná. Dostupná bude len pre prihláseného administrátora, aby počas tvorby web stránky videl ako bude skutočne vyzerať.
@@ -33,6 +35,8 @@ Prihlásenému administrátorovi sa presmerovanie neukladá do cache prehliadač
 Vypnutá možnosť **Zobrazovať** neuchováva zmazané presmerovanie. Takáto stránka je pre bežného návštevníka nedostupná; prihlásený administrátor ju môže otvoriť a overiť aj jej presmerovanie.
 
 ### Zaradenie v stromovej štruktúre
+
+Na presun stránky potrebujete právo upravovať pôvodnú stránku aj právo k cieľovému priečinku. Samostatné oprávnenie na úpravu konkrétnej stránky umožňuje jej editáciu, ale nepovoľuje presun do neprístupného priečinka.
 
 Web stránku môžete uložiť do **viacerých priečinkov**, ktorých zoznam je v sekcii Zaradenie v stromovej štruktúre. Hlavný priečinok je označený ako Nadradený priečinok, dodatočné sú v časti Kópia web stránky v. Technicky vzniknú kópie web stránky vo všetkých zvolených priečinkoch. Pri uložení ľubovoľnej stránky sa skopírujú všetky údaje do ostatných kópií web stránky okrem:
 

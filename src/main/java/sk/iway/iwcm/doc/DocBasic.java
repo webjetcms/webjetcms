@@ -37,6 +37,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.CommaSeparatedIntegersConverter;
+import sk.iway.iwcm.system.jpa.PageTitleAttributeConverter;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -97,7 +98,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 			}
 	)
 	@NotBlank
-	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = PageTitleAttributeConverter.class)
 	private String title;
 
 	@Column(name = "navbar")
@@ -114,7 +115,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 			}
 	)
 	@NotBlank
-	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = PageTitleAttributeConverter.class)
 	private String navbar;
 
 	@Column(name = "virtual_path")
@@ -1878,12 +1879,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 	// !!! Vygenerovane geetry/settery pretoze pomocou lomboku sa neprenesu na childa
 	public void setTitle(String title) {
 		if (isEmpty(title)) return;
-		this.title = title;
+		this.title = PageTitleAttributeConverter.sanitizeTitle(title);
 	}
 
 	public void setNavbar(String navbar) {
 		if (isEmpty(navbar)) return;
-		this.navbar = navbar;
+		this.navbar = PageTitleAttributeConverter.sanitizeTitle(navbar);
 	}
 
 	public String getVirtualPath() {
