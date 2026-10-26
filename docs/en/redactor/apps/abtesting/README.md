@@ -1,6 +1,6 @@
 # AB testing
 
-The AB testing application allows you to perform AB testing of a version of a page. It is possible to create a B version of the page by clicking the Save as AB test button. A copy of the page with a modified URL address will be created in which you can test the B version of the page. WebJET will then automatically ensure that the A and B versions of the page are displayed on the original URL address in a defined ratio. The visitor will still see the original URL, but instead of the A version, the B version of the page will automatically be displayed.
+The AB Testing application allows you to perform AB testing of a version of a page. You can create a B version of a page by selecting **More actions → Save as AB test** in the toolbar. A copy of the page with a modified URL will be created in which you can test the B version of the page. WebJET will then automatically ensure that the A and B versions of the page are displayed on the original URL in a defined ratio. The visitor will still see the original URL, but instead of the A version, the B version of the page will automatically be displayed.
 
 ## What is AB testing?
 
@@ -62,7 +62,7 @@ Prepare a hypothesis that should improve the condition
 
 ## Creating a test
 
-You create a version of the page by selecting the original version of the page and clicking the icon<i class="ti ti-a-b"></i> Save as AB test. This will create a copy of the page, which will display the icon in the Status column.<i class="ti ti-a-b"></i> In the VB version, you can edit the text of the page to test the impact of the changes.
+You can create a B version of a page by selecting the original version of the page and selecting **More actions → Save as AB test**. This will create a copy of the page, which will display the icon in the Status column.<i class="ti ti-a-b"></i> In the VB version, you can edit the text of the page to test the impact of the changes.
 
 ![](datatable.png)
 

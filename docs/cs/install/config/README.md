@@ -44,6 +44,8 @@ WebJET nepřidává automatické výjimky pro `localhost` ani loopback adresy. P
 
 ## Odesílání emailů
 
+SMTP se nastavuje konfiguračními proměnnými WebJET CMS. Při startu lze použít i parametry s prefixem `webjet.`, například `-Dwebjet.smtpServer=smtp.example.com`. Přímé JVM properties `mail.smtp.*` se nepřebírají. Každé odeslání používá vlastní nastavení a mailovou session, aby se aplikace na společném aplikačním serveru navzájem neovlivňovaly.
+
 Pro odesílání emailů je třeba nastavit korektně SMTP server:
 
 - `smtpServer` - ​​adresa SMTP serveru pro odesílání emailů.

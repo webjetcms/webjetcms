@@ -151,6 +151,12 @@ Scenario('File archive app - inserting an app', async ({ I, DTE, Apps, Document 
 
     I.uncheckOption("#DTE_Field_showOnlySelected_0");
     I.clickCss("#pills-dt-component-datatable-advanced-tab");
+    const sortOptions = ['priority', 'time', 'validFrom', 'validTo', 'virtual_file_name',
+        'fileName', 'productCode', 'product', 'category', 'fileSize'];
+    for (const field of ['orderMain', 'order', 'orderPatterns']) {
+        const options = await I.grabAttributeFromAll(`#DTE_Field_${field} option`, 'value');
+        I.assertDeepEqual(options, sortOptions, `Unexpected sorting options for ${field}`);
+    }
     DTE.selectOption("orderMain", "Názov dokumentu");
 
     I.switchTo();
@@ -382,13 +388,15 @@ function setValidationAndIndexation(I, DT, DTE, validFrom, validTo, indexation) 
     DTE.save();
 }
 
-Scenario('File archive app - only selected files', async ({ I, DT, Apps, Document }) => {
+Scenario('File archive app - only selected files', async ({ I, DT, DTE, Apps, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=62096");
 
     I.say("Open app in new page");
-    Apps.insertApp('Manažér dokumentov', '#components-file_archiv-name', null, false);
-    I.switchTo('.cke_dialog_ui_iframe');
-    I.switchTo('#editorComponent');
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-content-tab');
+    DTE.waitForCkeditor();
+    Apps.openAppForInsert('Manažér dokumentov', '#components-file_archiv-name');
 
     I.checkOption("#DTE_Field_showOnlySelected_0");
     I.fillField("#DTE_Field_globalIds", "1496,1423");
@@ -424,9 +432,14 @@ Scenario('File archive app - only selected files', async ({ I, DT, Apps, Documen
     I.clickCss("#pills-dt-component-datatable-basic-tab");
     I.seeInField("#DTE_Field_globalIds", "1423,1422");
 
+    I.clickCss("#pills-dt-component-datatable-advanced-tab");
+    DTE.selectOption("orderMain", "Meno súboru");
+    I.checkOption("#DTE_Field_ascMain_0");
+
     I.say("OK app and check page preview");
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');
+    await Apps.assertParams({orderMain: 'fileName', ascMain: 'true'});
 
     I.clickCss('button.btn.btn-warning.btn-preview');
     await Document.waitForTab();
@@ -434,6 +447,28 @@ Scenario('File archive app - only selected files', async ({ I, DT, Apps, Documen
 
     const shownFilesCount = await I.grabNumberOfVisibleElements("table.tabulkaStandard tr.collapsible");
     I.assertEqual(shownFilesCount, 2, "Number of shown files in preview is different than expected");
+
+    const links = 'table.tabulkaStandard tr.collapsible > td > a';
+    const ascendingLinks = await I.grabAttributeFromAll(links, 'href');
+    const fileNames = ascendingLinks.map(link => link.split('?')[0].split('/').pop().toLowerCase());
+    I.assertDeepEqual(fileNames, [...fileNames].sort(), 'Selected files must be sorted by file name');
+    I.assertNotEqual(fileNames[0], fileNames[1], 'Sorting needs two different file names');
+
+    I.switchToPreviousTab();
+    Apps.openAppEditor();
+    I.clickCss("#pills-dt-component-datatable-advanced-tab");
+    I.seeInField("#DTE_Field_orderMain", "fileName");
+    I.uncheckOption("#DTE_Field_ascMain_0");
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+    await Apps.assertParams({orderMain: 'fileName', ascMain: 'false'});
+    I.closeOtherTabs();
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+    I.waitForElement(links, 10);
+    const descendingLinks = await I.grabAttributeFromAll(links, 'href');
+    I.assertDeepEqual(descendingLinks, [...ascendingLinks].reverse(), 'Selected files must respect descending order');
 });
 
 async function checkSelectedFiles(I, selectedGlobalIds) {

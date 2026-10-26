@@ -75,6 +75,36 @@ class FileArchiveBulkUploadOptionsTest {
         assertEquals("Original category", entity.getCategory());
     }
 
+    /** Normalizes category/product names while preserving intentional multiline notes. */
+    @Test
+    void normalizesPastedNamesOnly() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter("category", "\u00A0Ročné\u202F správy\uFEFF");
+        request.addParameter("product", "\tProdukt\r\n2026\u2060");
+        request.addParameter("note", "First line\nSecond\tline\u00A0with spaces");
+        FileArchivatorBean entity = new FileArchivatorBean();
+
+        assertNull(FileArchiveBulkUploadOptions.fromRequest(request).bindTo(entity));
+        assertEquals("Ročné správy", entity.getCategory());
+        assertEquals("Produkt 2026", entity.getProduct());
+        assertEquals("First line\nSecond\tline\u00A0with spaces", entity.getNote());
+    }
+
+    /** Invisible-only bulk values are omitted just like ordinary blank fields. */
+    @Test
+    void ignoresNormalizedBlankNames() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter("category", "\u00A0\uFEFF\u200B");
+        request.addParameter("product", "\u202F\u2060\u00AD");
+        FileArchivatorBean entity = new FileArchivatorBean();
+        entity.setCategory("Original category");
+        entity.setProduct("Original product");
+
+        assertNull(FileArchiveBulkUploadOptions.fromRequest(request).bindTo(entity));
+        assertEquals("Original category", entity.getCategory());
+        assertEquals("Original product", entity.getProduct());
+    }
+
     /**
      * Untrusted requests cannot bind identity, ownership, paths, or upload-control properties.
      */
@@ -188,7 +218,7 @@ class FileArchiveBulkUploadOptionsTest {
     @Test
     void supportsLegacyParameterNames() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addParameter("fileArchiveCategory", "Legacy category");
+        request.addParameter("fileArchiveCategory", "\u00A0Legacy\u202Fcategory\uFEFF");
         request.addParameter("fileArchiveUploadRedundantFile", "true");
         FileArchivatorBean entity = new FileArchivatorBean();
 

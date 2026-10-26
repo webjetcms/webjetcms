@@ -8,13 +8,21 @@ V zobrazeném seznamu vidíme všechny dokumenty, které byly vloženy do manaž
 
 Na levé straně se nachází **stromová struktura složek** (JSTREE), která umožňuje procházet složky archivu a filtrovat dokumenty podle zvolené složky. Strom zobrazuje složky z kořenového adresáře archivu nastaveného konfigurační proměnnou `fileArchivDefaultDirPath` (standardně `files/archiv/`). Složka pro naplánované nahrávání z konfigurační proměnné `fileArchivInsertLaterDirPath` se ve stromu nezobrazuje.
 
+Složky, do kterých nemáte právo zápisu, jsou označeny ikonou<i class="ti ti-folder-x"></i> . Označení se vztahuje i na kořenovou složku archivu. Takové složky můžete rozbalit a přejít do podsložek, ke kterým máte oprávnění.
+
+Pokud při výběru cílového adresáře pro nahrání dokumentu nemáte právo zápisu do složky aktuálně zadané v poli, po otevření výběru se zobrazí upozornění s jeho cestou. Pokud je v poli povolena podsložka, upozornění se nezobrazí ani při zakázané kořenové složce archivu. Ve stromu vyberte složku, do které můžete zapisovat.
+
+Výběr složky po otevření rozbalí cestu ke složce zadané v poli a označí ji, pokud máte oprávnění k jejímu výběru. Platí to i pro vnořené podsložky a ručně upravenou cestu. Klepnutím na složku výběr potvrdíte.
+
 Po kliknutí na složku ve stromu se v tabulce zobrazí pouze dokumenty patřící do dané složky. Zvolená složka se zároveň použije jako cílový adresář pro [hromadné nahrávání souborů](#hromadné-nahrávání-souborů) a automaticky se předvyplní při vytváření nového dokumentu přes editor.
 
 Nad stromem se nacházejí tlačítka:
 
--<i class="ti ti-plus"></i> - **Přidat** - vytvoří novou podsložku v aktuálně označené složce. Tlačítko se zobrazuje uživatelům s právem `menuFileArchivManagerCategory` a vytvoření složky vyžaduje právo zápisu do zvolené složky.
+-<i class="ti ti-plus"></i> - **Přidat** - vytvoří novou podsložku v aktuálně označené složce. Tlačítko se zobrazuje uživatelům s právem `menuFileArchivManagerCategory` a je aktivní, když máte právo zápisu do zvolené složky. Můžete také vytvořit novou podsložku v povolené podsložce archivu, pokud do kořenové složky nemáte právo zápisu.
 -<i class="ti ti-refresh"></i> - **Obnovit** - obnoví stromovou strukturu složek
 -<i class="ti ti-adjustments-horizontal"></i> - **Nastavení** - umožňuje nastavit šířku stromové struktury vůči tabulce
+
+Šířku stromu můžete zvolit poměrem vůči tabulce nebo v pixelech. Strom má minimální šířku `200 px`, aby se do něj vešlo vyhledávací pole is tlačítky. Menší poměr tuto hranici nesníží.
 
 ![](datatable.png)
 
@@ -72,6 +80,8 @@ Karta obsahuje základní informace pro vložení dokumentu.
   - nemůže to být vzor
 - **Poznámka** - poznámka se zobrazí na stránce při odkazu na dokument
 - **Uložit dokument i když již existuje** - povolí uložení souboru se stejným obsahem, jaký již má jiný dokument v manažeru. Podrobnosti naleznete v části [Kontrola duplicitních dokumentů](#kontrola-duplicitních-dokumentů).
+
+Při ukládání a přejmenování polí **Produkt** a **Kategorie** se tvrdé a ostatní Unicode mezery, tabulátory a zalomení řádků převedou na obyčejnou mezeru. Opakované mezery se sloučí a mezery na začátku a konci názvu se odstraní. Odstraní se i zbývající řídicí znaky a neviditelné znaky BOM, měkký spojovník a word joiner; zero-width space se převede na mezeru. Úprava platí i při hromadném nahrávání dokumentů, takže kopírování názvů z ​​jiných dokumentů nevytváří odlišné kategorie pouze kvůli těmto znakům.
 
 !>**Upozornění:** pole **Produkt** / **Kategorie** / **Kód produktu** Vám později poslouží při filtrování zobrazení souborů na stránce
 

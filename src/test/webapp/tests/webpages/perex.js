@@ -322,7 +322,8 @@ Scenario('Web Page Import and Perex validation', async ({ I, DT, DTE }) => {
 
     I.amOnPage('/admin/v9/webpages/web-pages-list/');
     I.jstreeNavigate(['Test stavov', webPageName]);
-    I.forceClick(DT.btn.import_export_button)
+    I.clickCss('#datatableInit_wrapper button.buttons-more-actions');
+    I.click(DT.btn.import_export_button);
 
     I.switchToNextTab();
     I.waitForVisible('.wjDialogHeaderTable');

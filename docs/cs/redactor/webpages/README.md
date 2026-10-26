@@ -60,10 +60,32 @@ Seznam web stránek nabízí také speciální ikonu ![](recover-button.png ":no
 Data tabulka v seznamu stránek obsahuje následující speciální ikony:
 
 -<i class="ti ti-eye fa-btn" role="presentation"></i> - Zobraz stránku - po označení jednoho nebo více řádků a kliknutí na ikonu se otevře v novém okně/kartě zvolená web stránka.
--<i class="ti ti-a-b fa-btn" role="presentation"></i> - Uložit jako AB test - vytvoří B verzi stránky pro [AB testování](../apps/abtesting/README.md).
--<i class="ti ti-chart-line fa-btn" role="presentation"></i> - Statistika stránky - zobrazí [návštěvnost](../apps/stat/README.md) označené web stránky.
--<i class="ti ti-link-off fa-btn" role="presentation"></i> - Kontrola odkazů a prázdných stránek - zkontroluje [platnost odkazů](linkcheck.md) ve stránkách v aktuální složce a podsložkách, zobrazí stránky, které nemají zadaný žádný text.
 - ![](icon-recursive.png ":no-zoom") - Zobrazit stránky iz podadresářů - přepnutím přepínače do zapnuté polohy zobrazíte v tabulce i web stránky z podadresářů
+
+### Další akce a hromadná změna skupin
+
+Tlačítko<i class="ti ti-dots" role="presentation"></i> **Další akce** naleznete v pravé části nástrojové lišty při obnovení dat a nastaveních tabulky.
+
+![Nabídka Další akce v seznamu webových stránek](more-actions.png)
+
+Na kartě **Aktivní** obsahuje:
+
+- **Přidat značku** – přidá zvolenou značku k označeným stránkám. Zachová je ostatní značky; již přiřazenou značku nepřidá podruhé.
+- **Odebrat značku** – odstraní zvolenou značku z označených stránek. Zachová ostatní značky a stránky bez zvolené značky nezmění.
+- **Přidat skupinu uživatelů** – přidá zvolenou skupinu k označeným stránkám beze změny ostatních přiřazených skupin uživatelů.
+- **Odebrat skupinu uživatelů** – odstraní zvolenou skupinu z označených stránek. Stránky bez této skupiny nezmění.
+- **Uložit jako AB test** – vytvoří B verzi označené stránky pro [AB testování](../apps/abtesting/README.md).
+- **Statistika stránky** – zobrazí [návštěvnost](../apps/stat/README.md) označených stránek. Je dostupná iv přehledech historie a plánovaného publikování.
+- **Kontrola odkazů a prázdných stránek** – zkontroluje [platnost odkazů](linkcheck.md) v aktuální složce a podsložkách a vyhledá prázdné stránky. Nevyžaduje označení stránek.
+- **Import/Export** – otevře [import a export webových stránek](import-export.md) pro vybranou složku. Nevyžaduje označení stránek.
+
+Chcete-li hromadně změnit značku, označte stránky v prvním sloupci tabulky, otevřete **Další akce** a vyberte přidání nebo odebrání. V dialogu zvolte jednu značku a klikněte na **Potvrdit**. Při přidávání se nabízejí značky dostupné pro všechny označené stránky. Při odebírání se nabízejí značky přiřazené alespoň jedné z nich.
+
+Stejným postupem přidáte nebo odeberete skupinu uživatelů. Výběr obsahuje společně skupiny práv i e-mailové skupiny spravované v části **Uživatelé → Skupiny uživatelů**. Při odebírání se zobrazují pouze skupiny přiřazené alespoň jedné označené stránce. Změna se projeví na kartě **Přístup** v editoru stránky.
+
+U stránek propojených přes **Kopie web stránky v** se dostupné i přiřazené skupiny vyhodnocují podle hlavní stránky, stejně jako při její editaci.
+
+Změna vyžaduje právo na editaci stránek a používá běžné ukládání včetně historie a případného schvalování. Po uložení se seznam obnoví.
 
 ### Ikony a barvy ve stromové struktuře a seznamu stránek
 
@@ -97,6 +119,27 @@ V případě potřeby můžete ve stromové struktuře klepnutím na ikonu<i cla
 - **Seřadit strom směrem** - Přepínání mezi směrem uspořádání stromu složek. Výběrem možnosti se použije směr **Vzestupně** a nezvolením možnosti se použije směr **Sestupně**.
 
 ![](jstree-settings.png)
+
+### Výchozí nastavení pro uživatele
+
+Pokud uživatel ještě neuložil vlastní nastavení zobrazení, strom se seřadí podle **Pořadí uspořádání vzestupně**, tedy od nejnižší hodnoty. ID a pořadí se u názvů nezobrazují.
+
+Správce může výchozí zobrazení upravit v sekci **Nastavení → Konfigurace** proměnnou `webpagesTreeDefaultSettings`. Její výchozí hodnota je:
+
+```json
+{
+  "showId": false,
+  "showPriority": false,
+  "showPages": false,
+  "showFoldersDt": false,
+  "treeWidth": 4,
+  "treeSortType": "priority",
+  "treeSortOrderAsc": true,
+  "showRealName": false
+}
+```
+
+Pro výchozí zobrazení ID a pořadí nastavte `showId` a `showPriority` na `true`. Hodnota `treeSortType` může být `priority` (pořadí uspořádání), `title` (název) nebo `createDate` (datum vytvoření). Hodnota `treeSortOrderAsc: true` znamená vzestupné pořadí, `false` sestupné. `treeWidth` určuje počet sloupců z dvanácti nebo pevnou šířku v pixelech podle možností v dialogovém okně.
 
 ## Vyhledávání ve stromové struktuře
 

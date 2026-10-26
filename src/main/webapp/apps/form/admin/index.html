@@ -38,7 +38,7 @@
             if(basicSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-basic"; }
             else if(emailSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-email"; }
             else if(advancedSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-advanced"; }
-            else { column.editor.tab = "basic"; } // Just in case, put it into basic tab
+            else if(column.editor.tab !== "fields") { column.editor.tab = "basic"; } // Just in case, put it into basic tab
 
             filteredColumns.push(column);
         }

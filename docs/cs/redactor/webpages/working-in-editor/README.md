@@ -6,6 +6,18 @@ WebJET obsahuje inteligentní editor web stránek, který vám co nejvěrněji z
 
 Přehled zkratek pro textový editor i další části administrace naleznete na stránce [Klávesové zkratky](../../admin/keyboard-shortcuts.md). Na Macu se při kopírování, vystřihování, vkládání a úpravě odkazů používá **Command (⌘)** místo **Ctrl**.
 
+## Panel nástrojů v úzkém okně
+
+Pokud se všechny nástroje nevejdou vedle sebe, část skupin naleznete pod tlačítkem **… Další nástroje**. Lišta se tak nezalomí do dalšího pásu a přepínač editoru i rozměrů zůstane dostupný. Funguje to ve Standardním editoru i v Page Builderu, například při mobilním zobrazení. Po rozšíření okna se skupiny vrátí na původní místa.
+
+![Panel Další nástroje v mobilním náhledu Page Buildera](toolbar-overflow.png)
+
+Panel zůstává otevřen při formátování textu, takže můžete použít více nástrojů za sebou. Zavřete jej kliknutím mimo panel, opětovným kliknutím na **…**, křížkem nebo klávesou **Escape**. Zavře se i při přechodu do jiného bloku či otevření dialogu. Delší obsah panelu můžete posouvat.
+
+Pokud se dialog, například Obrázek, Odkaz nebo Aplikace, nevejde do šířky náhledu v Page Builderu, automaticky se otevře ve velikosti okna prohlížeče. Po potvrzení nebo zavření dialogu se obnoví původní šířka náhledu a posun stránky. Během automatického rozšíření se tlačítko **Zmenšit** nezobrazuje.
+
+Klávesou **Alt+F10** přejdete na lištu. **Tab** přepíná mezi dostupnými skupinami a tlačítkem **…**, šipky mezi nástroji ve skupině. Tlačítko **…** otevřete klávesou **Enter**, mezerníkem nebo šipkou dolů. Pokud otevřete vnořenou nabídku, například barvy či Styly, první **Escape** zavře tuto nabídku a další panel nástrojů.
+
 ## Práce s textem (psaní/vkládání/kopírování)
 
 Při práci s textem si musíte v první řadě uvědomit rozdíl mezi odstavcem a zalomeným textem, čili rozdělením věty do dalšího řádku. Jednotlivé odstavce vytvoříte běžným stisknutím ```ENTER```, zatímco zalomení textu pomocí klávesové kombinace ```SHIFT + ENTER```.

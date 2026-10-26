@@ -14,7 +14,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
     @DataTableTab(id = "settings-basic", title = "editor.form_setting.basic_tab"),
     @DataTableTab(id = "settings-email", title = "editor.form_setting.email_tab"),
-    @DataTableTab(id = "settings-advanced", title = "datatable.tab.advanced")
+    @DataTableTab(id = "settings-advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "fields", title = "editor.tab.fields")
 })
 public class FormsEntity extends FormsEntityBasic {
 

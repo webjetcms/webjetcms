@@ -18,6 +18,32 @@ a potřebujeme, abychom ho měli v max. rozměru `200x200` bodů. Před URL obr�
 
 Obrázek reálně může být menší než požadovaných `200x200` bodů, záleží na jeho poměru stran. V tomto případě se vygeneroval jako `200x134` bodů, vždy se ale vejde do požadovaného rozměru.
 
+## Obrázky AVIF
+
+Generování miniatur a úpravy AVIF vyžadují na serveru **ImageMagick s podporou čtení i zápisu AVIF včetně průhlednosti a animací**. Používejte ImageMagick **7.1.2-34 nebo novější**, `libheif` **1.22.0 nebo novější** a AV1 kodek. V konfiguraci `imageMagickDir` nastavte složku s příkazem `magick`. Podporu musí zajistit správce serveru. WebJET při zpracování předpokládá funkční kodek.
+
+Verze ověřte v terminálu pod účtem, pod kterým běží WebJET. Do proměnné `image_magick_dir` zadejte stejnou složku jako v konfiguraci `imageMagickDir` (v příkladu `/usr/local/bin`):
+
+```sh
+magick -version
+magick -list format | awk '$1 == "AVIF" { print }'
+```
+
+Příklad vyhovujícího výstupu (zkrácený):
+
+```text
+Version: ImageMagick 7.1.2-34 Q16-HDRI ...
+     AVIF  HEIC      rw+   AV1 Image File Format (1.23.6)
+```
+
+- Verze za `ImageMagick` musí být **7.1.2-34 nebo novější**.
+- Číslo v závorce na řádku `AVIF` je verze knihovny `libheif` používané ImageMagickém. Musí být **1.22.0 nebo novější**.
+- Řádek `AVIF` musí obsahovat `rw`, tedy podporu čtení i zápisu. Pokud řádek chybí, toto sestavení nemá podporu AVIF. Sloupec `HEIC` se podle sestavení nemusí zobrazovat.
+
+Při úpravách se používá běžný SDR výstup, bez záruky zachování HDR a původní 10/12bitové hloubky. Automatický vodoznak při nahrávání (`galleryWatermarkApplyOnUpload`) se aplikuje i na originál AVIF a vloží se do každého snímku. Překódování může změnit bajty souboru. Kreslící editor TUI odesílá jediný PNG obrázek z plátna, proto jeho uložením vznikne statický AVIF.
+
+Kvalitu a rychlost kódování nastavíte stávajícím mechanismem [vlastních parametrů ImageMagick](../../redactor/apps/gallery/README.md#vlastní-parametry-imagemagick). Výchozí hodnota `imageMagickCustomParams_avif` je `-quality 80 -define heic:speed=6`. Platí také specifičtější nastavení pro operaci, například `imageMagickCustomParams_resize_avif`.
+
 ## Výchozí obrázek
 
 Ve výchozím nastavení se pro neexistující obrázek při použití `/thumb` adresy vrátí standardní chyba 404. Pokud ale potřebujete pro takový případ zobrazit výchozí obrázek, je možné použít konfigurační proměnnou `thumbServletMissingImg`. Do ní lze do řádků doplnit jméno složky a jméno souboru, který se pro tento případ má použít. Příklad nastavení:

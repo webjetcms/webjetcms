@@ -44,6 +44,8 @@ WebJET does not add automatic exceptions for `localhost` or loopback addresses. 
 
 ## Sending emails
 
+SMTP is set by WebJET CMS configuration variables. At startup, it is also possible to use parameters with the prefix `webjet.`, for example `-Dwebjet.smtpServer=smtp.example.com`. Direct JVM properties `mail.smtp.*` are not downloaded. Each sending uses its own settings and mail session so that applications on a common application server do not affect each other.
+
 To send emails, you need to set up the SMTP server correctly:
 
 - `smtpServer` - ​​SMTP server address for sending emails.

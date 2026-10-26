@@ -13,6 +13,8 @@
 - Export obsahu pre Flash - odstránená bola historická funkcia generovania XML súborov `/flash_xml/{docId}.xml` pri publikovaní stránky. Konfiguračná premenná `exportFlash` už nie je podporovaná a jej definovanie v `SpringConfig` funkciu neobnoví (#293).
 - Microsoft SQL Server - ukončená bola podpora verzií starších ako 2012 a odstránená konfiguračná premenná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 alebo novší, starý spôsob stránkovania pomocou `TOP` už nie je podporovaný (#293).
 - Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
+- Galéria - metóda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vracia namiesto `void` výsledok spracovania typu `int`: `0` pri úspechu, inak kód chyby. Po aktualizácii je potrebné prekompilovať závislý Java kód aj JSP súbory, napríklad vyčistením pracovného priečinka konkrétnej aplikácie v Tomcat (#371).
+- Viackrokové formuláre - metódy `validateStep` a `runStepInterceptor` rozhrania [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) dostávajú za `formName` nový parameter `FormSettingsEntity formSettings`. Ak používate vlastnú Java triedu na spracovanie formulárov je potrebné ju upraviť a znova skompilovať. Nastavenia už nemusia načítavať podľa mena formulára, ale dostanete ho priamo (#364).
 
 ### Úvodná obrazovka
 
@@ -108,6 +110,18 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
     <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+- Webové stránky - nové menu [Ďalšie akcie](redactor/webpages/README.md#ďalšie-akcie-a-hromadná-zmena-skupín) v pravej časti nástrojovej lišty obsahuje hromadné pridanie a odobratie značky aj skupiny používateľov bez prepísania ostatných skupín. Skupiny práv a e-mailové skupiny sa vyberajú spoločne. Presunuli sme doň aj kontrolu odkazov, štatistiku stránky, uloženie ako AB test a Import/Export (#368).
+
+![Ponuka Ďalšie akcie v zozname webových stránok](redactor/webpages/more-actions.png)
+
+- Webové stránky - [predvolené nastavenie stromu](redactor/webpages/README.md#predvolené-nastavenie-pre-používateľov) pre nového používateľa je možné nastaviť cez konfiguračnú premennú `webpagesTreeDefaultSettings` (#368).
+- Editor stránok - v úzkom okne sa skupiny nástrojov presunú do [panela Ďalšie nástroje](redactor/webpages/working-in-editor/README.md#panel-nástrojov-v-úzkom-okne). Lišta sa nezalamuje do ďalšieho pásu a neprekrýva prepínač editora a rozmerov. Tlačidlo s tromi bodkami je priamo za poslednou skupinou ikon a má bublinovú nápovedu. Rovnaké ovládanie funguje v Štandardnom editore aj v Page Builderi (#372).
+
+![Panel Ďalšie nástroje v mobilnom náhľade Page Buildera](redactor/webpages/working-in-editor/toolbar-overflow.png)
+
+- Page Builder - dialógy, ktoré sa nezmestia do šírky náhľadu, sa automaticky rozšíria na veľkosť okna prehliadača. Po potvrdení alebo zatvorení sa obnoví pôvodná šírka náhľadu a posun stránky. Ovládacie prvky Page Buildera používajú jazyk administrácie (#372).
+- Obrázky - pridaná podpora obrázkov a animácií vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Serverové úpravy, vodotlač a miniatúry cez `/thumb` zachovávajú snímky, priehľadnosť a časovanie animácie. Spracovanie vyžaduje `ImageMagick` 7.1.2-34 alebo novší s `libheif` 1.22.0 alebo novším. Editor obrázkov ukladá statický obrázok (#371).
+
 ### Headless režim
 
 Pridaná [podpora headless režimu](frontend/headless/README.md), v ktorom WebJET CMS slúži čisto ako `backend` CMS. Obsah, navigácia, vyhľadávanie a formuláre sú dostupné cez REST API. Frontend aplikácia (napr. Astro, Next.js, Vue, React alebo akýkoľvek HTTP klient) si dáta stiahne a zobrazuje ich podľa vlastných šablón (#258).
@@ -124,6 +138,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#364).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.mustistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
 - Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).
@@ -176,6 +191,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
+- AI asistenti - opravené spracovanie priebežných textových odpovedí vrátane Gemini. Počet tokenov a chybové správy sa správne spracujú aj pri rozdelení alebo spojení sieťových blokov; technické údaje sa nevkladajú do generovaného textu. Prerušená odpoveď sa už neoznačí ako úspešne dokončená.
 - Číselníky - výber a správa typov sa presunuli do stromu v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Číselníkov](redactor/apps/enumeration/README.md) (#58786).
 - Blog - výber a pridávanie sekcií sú dostupné v strome v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Blogu](redactor/apps/blog/README.md) (#58786).
 - Novinky - výber priečinka sa presunul do stromu v ľavom paneli s vyhľadávaním, dostupného aj v editore aplikácie. Automatické hľadanie priečinkov vynecháva korene blogerov aj ich podpriečinky. Viac v [dokumentácii Noviniek](redactor/apps/news/README.md) (#58786).
@@ -208,6 +224,12 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Manažér dokumentov - pri [hromadnom nahrávaní súborov](redactor/files/file-archive/README.md#hromadné-nahrávanie-súborov) je možné na kartách **Základné** a **Pokročilé** nastaviť spoločnú platnosť, naplánovať neskoršie nahratie s e-mailovou notifikáciou a zadať rozšírené metadáta dokumentov (#58754).
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
+
+- Manažér dokumentov - vylepšená kontrola práv na súborový systém. Ikona pre pridanie priečinka sa zobrazuje len ak používateľ má právo zápisu, pri výbere priečinka sa kontrolujú práva, ak používateľ nemá právo zápisu súborov do `/files/archiv` zobrazí sa chybová správa (#osk802).
+- Výber priečinka - zakázané priečinky v stromovej štruktúre sa zobrazujú ikonou priečinka s krížikom (#osk802).
+- Manažér dokumentov - strom priečinkov má minimálnu šírku 200 px, aby vyhľadávacie pole s tlačidlami nepresahovalo do tabuľky ani pri nastavení menšieho pomeru. Nastavenia šírky v pixeloch preto ponúkajú hodnoty od 200 px (#360).
+- Manažér dokumentov - polia **Produkt** a **Kategória** pri uložení, premenovaní a hromadnom nahrávaní normalizujú tvrdé medzery, tabulátory a zalomenia riadkov, zlúčia opakované medzery a odstránia okrajové medzery aj rušivé neviditeľné znaky z kopírovaného textu. **Upozornenie:** pri opätovnom uložení existujúceho dokumentu sa odstránia tvrdé medzery v názve, produktoch a podobne. Filtre v aplikácii vo webových stránkach sa automaticky neaktualizujú. Ak používajú pôvodný názov s tvrdými alebo opakovanými medzerami či neviditeľnými znakmi, dokument sa po uložení nemusí vo filtrovanom zozname zobraziť. Opravte názvy vo všetkých dotknutých dokumentoch a v aplikáciách nastavte filtre podľa nových hodnôt. Uloženie jedného dokumentu neopraví ostatné dokumenty s rovnakým názvom produktu alebo kategórie (#360).
+- Manažér dokumentov - v [aplikácii na webovej stránke](redactor/files/file-archive/file-archive-app.md#karta---rozšírené) pridané radenie podľa začiatku a konca platnosti, kódu produktu, produktu, kategórie, mena súboru a veľkosti dokumentu (#359, #osk791).
 
 ### Galéria
 
@@ -281,6 +303,11 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránk (#372).
+- Editor stránok - pri automatickej maximalizácii v nízkom alebo úzkom okne zostáva celý panel nástrojov nad obsahom stránky. Obsah už nepresvitá pod ikonami a názvami skupín (#372).
+- Editor stránok - pri zlyhaní získania obsahu alebo hodnote `undefined` sa zobrazí chyba a uloženie sa zastaví, aby sa neprepísal pôvodný obsah. Atribúty `contenteditable` sa odstraňujú pri načítaní aj ukladaní HTML vrátane kódu vloženého v HTML režime (#369).
+- Page Builder - pri zlyhaní načítania obsahu možno prepnúť do HTML režimu obnovením posledného dostupného HTML. Obnova vyžaduje potvrdenie, pretože nemusí obsahovať najnovšie zmeny (#369).
+- Page Builder - opravené zamrznutie editora pri otvorení HTML so zvyšným atribútom `contenteditable="true"`. CKEditor sa na rovnakom bloku už neinicializuje dvakrát.
 - Email - opravené ovplyvňovanie SMTP nastavení medzi aplikáciami na spoločnom aplikačnom serveri. Každé odoslanie používa vlastné properties a mailovú session, takže sa neprenáša SSL port, autentifikácia ani nastavenia Amazon SES z inej aplikácie (#367).
 - Page Builder - opravené hromadenie prázdnych riadkov v HTML vnorených blokov. Pri ukladaní a prepnutí do HTML editora sa odstránia aj staré nadbytočné riadky medzi elementmi. Obsah `pre`, `textarea` a medzery zachovávané cez CSS `white-space` zostávajú nezmenené (#367).
 - Webové stránky - opravené zasekávanie a skákanie pri [porovnávaní verzií](redactor/webpages/history.md), ak šablóna stránky používa plynulé posúvanie (`scroll-behavior: smooth`) (#367).
@@ -294,6 +321,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Page Builder - opravené zbytočné posúvanie stránky hore/dole ak ste upravovali aplikáciu v stránke (#343).
 - Page Builder - opravené zobrazenie nástrojovej lišty ak stránka neobsahuje žiadnu sekciu (#343).
 - Page Builder - pridaná možnosť nastaviť [šírku okna štruktúra](frontend/page-builder/settings.md) (#343)
+- Administrácia - opravené zobrazenie ikony zaškrtnutia pri vybranej položke v ponuke automatického dopĺňania (#osk800).
 
 ### Výkon
 

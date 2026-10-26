@@ -77,6 +77,25 @@ Karta slúži k nastaveniu štýlu zobrazenia a zoradenia dokumentov.
 - **Zobrazovať vzory podľa** - výber hodnoty, podľa ktorej sa majú vzory zoradiť
 - **Vzostupné poradie výpisu vzorov** - ak je možnosť zvolená, vzorové dokumenty sa budú radiť vzostupne, inak naopak
 
+Pre hlavné dokumenty, historické verzie aj vzory sú dostupné rovnaké možnosti zoradenia:
+
+| Možnosť | Použitie |
+| --- | --- |
+| Priorita | Vlastné poradie zadané v metadátach dokumentu. |
+| Dátum nahratia | Od najstaršieho alebo najnovšieho nahraného dokumentu. |
+| Platnosť od | Podľa dátumu a času začiatku platnosti. |
+| Platnosť do | Podľa dátumu a času konca platnosti. |
+| Názov dokumentu | Abecedne podľa názvu zobrazovaného návštevníkovi. |
+| Meno súboru | Podľa skutočného mena súboru, napríklad `cennik-2026-01.pdf`. |
+| Kód produktu | Podľa katalógového označenia produktu. |
+| Produkt | Dokumenty rovnakého produktu vedľa seba. |
+| Kategória | Dokumenty rovnakej kategórie vedľa seba. |
+| Veľkosť dokumentu | Podľa veľkosti v bajtoch, od najmenšieho alebo najväčšieho súboru. |
+
+Radenie hlavných dokumentov sa použije aj pri zapnutej možnosti **Zobraziť len vybrané dokumenty**. Poradie zadaných `globalId` neurčuje poradie výpisu.
+
+Textové hodnoty sa porovnávajú podľa slovenskej abecedy bez rozlišovania veľkých a malých písmen. Chýbajúce hodnoty (`null`) sú pri vzostupnom radení na začiatku a pri zostupnom na konci. Pri rovnakej hodnote sa dokumenty zoradia vzostupne podľa názvu dokumentu a potom podľa ID, aby bolo ich poradie stabilné. Pre hlavné dokumenty, historické verzie a vzory môžete nastaviť rozdielne kritériá aj smery radenia.
+
 ![](file-archiv-app-tab-advanced.png)
 
 ## Aplikácia

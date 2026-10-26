@@ -123,6 +123,12 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
         result.put("result", true);
         result.put("items", items);
         if (item.getRootFolder() != null) result.put("rootFolder", item.getRootFolder());
+        String selectedFolder = getRequest().getParameter("selectedFolder");
+        if (Tools.isNotEmpty(selectedFolder)) {
+            if (selectedFolder.startsWith("/") == false) selectedFolder = "/" + selectedFolder;
+            result.put("selectedFolder", selectedFolder);
+            result.put("selectedFolderWritable", user.isFolderWritable(selectedFolder));
+        }
     }
 
     /**
@@ -161,6 +167,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             newItem.setChildren(false);
             newItem.getState().setOpened(false);
             newItem.getState().setDisabled(true);
+            newItem.setIcon("ti ti-folder-x");
             newItem.setParent(nextParent.getVirtualParent());
 
             if(hideRootParents == true && treeRootPath.equals(nextParent.getVirtualPath())) {
@@ -184,6 +191,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
     private static void setFolderState(DirTreeItem item, Identity user, boolean showOnlyWritableFolders, boolean writableOnly, List<String> alwaysShownFolderRoots) {
         item.getState().setDisabled(isFolderSelectable(user, item.getVirtualPath(), showOnlyWritableFolders, writableOnly, alwaysShownFolderRoots) == false);
+        item.setIcon(item.getState().isDisabled() ? "ti ti-folder-x" : "ti ti-folder");
     }
 
     static boolean isFolderSelectable(Identity user, String path, boolean showOnlyWritableFolders, boolean writableOnly, List<String> alwaysShownFolderRoots) {

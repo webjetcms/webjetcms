@@ -1,4 +1,5 @@
 import { EditorPreview } from './preview'
+import { GroupActions } from './group-actions'
 
 /**
  * Implements various functions for web pages Datatable Editor - bindings, buttons, listeners etc.
@@ -394,8 +395,8 @@ export class WebPagesDatatable {
 
         if (WJ.hasPermission("cmp_abtesting")) {
             //ab test
-            this.webpagesDatatable.button().add(buttonCounter++, {
-                text: '<i class="ti ti-a-b"></i>',
+            this.webpagesDatatable.addMoreAction({
+                text: '<i class="ti ti-a-b" aria-hidden="true"></i>',
                 action: function (e, dt, node) {
                     self.webpagesDatatable.executeAction("saveAsAbTest", true, window.WJ.translate("editor.save_as_abtest.confirm.title"), window.WJ.translate("editor.save_as_abtest.confirm.text"));
                 },
@@ -413,8 +414,8 @@ export class WebPagesDatatable {
 
         if (WJ.hasPermission("cmp_stat")) {
             //show stat
-            this.webpagesDatatable.button().add(buttonCounter++, {
-                text: '<i class="ti ti-chart-line"></i>',
+            this.webpagesDatatable.addMoreAction({
+                text: '<i class="ti ti-chart-line" aria-hidden="true"></i>',
                 action: function (e, dt, node) {
                     let selectedRows = dt.rows({ selected: true }).data();
                     for (let i=0; i<selectedRows.length; i++) {
@@ -441,8 +442,8 @@ export class WebPagesDatatable {
 
         if (typeof window.webpagesDatatableGroupId !== "undefined") {
             //link check button
-            this.webpagesDatatable.button().add(buttonCounter++, {
-                text: '<i class="ti ti-external-link"></i>',
+            this.webpagesDatatable.addMoreAction({
+                text: '<i class="ti ti-external-link" aria-hidden="true"></i>',
                 action: function (e, dt, node) {
                     window.location.href="/admin/v9/webpages/linkcheck/?groupId="+webpagesDatatableGroupId;
                 },
@@ -460,9 +461,15 @@ export class WebPagesDatatable {
                 className: 'btn btn-outline-secondary buttons-linkcheck',
                 attr: {
                     'title': window.WJ.translate('web_pages_list.link_check_button'),
+                    'data-dtbtn': 'linkcheck',
                     'data-toggle': 'tooltip'
                 }
             });
+        }
+
+        if (this.options.url.split('?')[0] === '/admin/rest/web-pages' && WJ.hasPermission('pageSave')) {
+            new GroupActions(this.webpagesDatatable, 'perex').addButtons();
+            new GroupActions(this.webpagesDatatable, 'user').addButtons();
         }
 
         if (typeof window.recursive !== "undefined") {
@@ -497,8 +504,8 @@ export class WebPagesDatatable {
         this.webpagesDatatable.hideButton("export");
         if (typeof window.lastGroup != "undefined") {
             //povodny import/export stranok
-            this.webpagesDatatable.button().add(null, {
-                text: '<i class="ti ti-download"></i>',
+            this.webpagesDatatable.addMoreAction({
+                text: '<i class="ti ti-download" aria-hidden="true"></i>',
                 action: function (e, dt, node) {
                     let groupId = 0;
                     if (typeof window.lastGroup != "undefined" && window.lastGroup != null && typeof window.lastGroup.groupId != "undefined") {
@@ -528,7 +535,7 @@ export class WebPagesDatatable {
                         else button.disable();
                     }, 500);
                 },
-                className: 'btn btn-outline-secondary buttons-divider buttons-import-export buttons-right',
+                className: 'btn btn-outline-secondary buttons-import-export',
                 attr: {
                     'title': window.WJ.translate('components.import_web_pages.menu'),
                     'data-toggle': 'tooltip',

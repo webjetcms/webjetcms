@@ -1451,11 +1451,13 @@ const WJ = (() => {
             var tooltipText = $el.attr("title");
 
             var conf = {
-                placement: 'top',
+                placement: $el.attr('data-bs-placement') || 'top',
                 trigger: 'hover focus',
                 customClass: customClass == null ? 'wj-tooltip-hoverable' : customClass + ' wj-tooltip-hoverable',
                 delay: { "show": 300, "hide": 150 }
             };
+            // PageBuilder controls belong to an iframe, while WJ runs in the administration window.
+            if (el.ownerDocument !== document) conf.container = el.ownerDocument.body;
 
             if (typeof tooltipText != "undefined" && tooltipText.length > 0) {
                 //console.log("Tooltiptext=", tooltipText);
@@ -1469,6 +1471,10 @@ const WJ = (() => {
             }
 
             $el.off('.wjTooltipA11y')
+                .on('show.bs.tooltip.wjTooltipA11y', function(event) {
+                    // A delayed hover can finish after the modal starts closing.
+                    if ($el.parents('.modal:not(.show)').length > 0) event.preventDefault();
+                })
                 .on('keydown.wjTooltipA11y', function(event) {
                     if (event.key === 'Escape') {
                         event.preventDefault();
@@ -1478,7 +1484,7 @@ const WJ = (() => {
                 })
                 .on('inserted.bs.tooltip.wjTooltipA11y shown.bs.tooltip.wjTooltipA11y', function() {
                     var tooltipId = $el.attr('aria-describedby');
-                    var $tooltip = tooltipId ? $('#' + tooltipId) : $();
+                    var $tooltip = tooltipId ? $(el.ownerDocument.getElementById(tooltipId)) : $();
                     $tooltip.off('.wjTooltipA11y')
                         .on('mouseenter.wjTooltipA11y', function() {
                             $el.trigger('mouseenter');
