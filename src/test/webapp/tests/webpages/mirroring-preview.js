@@ -13,6 +13,8 @@ let suffix, pageTitle, originalConfig, originalTitleSync, originalWarnings;
 let cancelSyncUser;
 let deletePermissionGroups;
 const editableGroups = '#editorAppDTE_Field_editorFields-editableGroups';
+const enabledItems = '#DTE_Field_editorFields-enabledItems';
+const clonePermission = enabledItems + ' li[id="perms_cmp_clone_structure"] > a';
 
 Before(async ({ I, login, Document }) => {
     login('admin');
@@ -73,21 +75,46 @@ function confirmDelete(I, DTE, modal) {
     I.waitForInvisible(modal, 30);
 }
 
-function cancelSync(I, rootGroupId) {
-    return I.executeScript(async id => (await fetch('/apps/clone_structure/admin/cancel_sync?rootGroupId=' + id, {
-        method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }
-    })).status, rootGroupId);
+async function requestHeaders(I) {
+    const session = await I.grabCookie('JSESSIONID');
+    return {
+        'x-auth-token': '', Cookie: 'JSESSIONID=' + session.value,
+        'X-CSRF-Token': await I.grabValueFrom('form[name="adminLogoffForm"] input[name="__token"]'),
+        Referer: await I.grabCurrentUrl()
+    };
 }
 
-function syncMembers(I, syncIds) {
-    return I.executeScript(async ids => {
-        const members = [];
-        for (const [type, id] of Object.entries(ids)) {
-            const row = await fetch(`/admin/rest/webpages/mirroring/${id}?type=${type}`, { headers: { 'X-CSRF-Token': window.csrfToken } }).then(response => response.json());
-            members.push(Object.entries(row).filter(([key, value]) => /^selector[A-H]$/.test(key) && value?.id > 0).map(([, value]) => value.id).sort((a, b) => a - b));
-        }
-        return members;
-    }, syncIds);
+async function cancelSync(I, rootGroupId) {
+    // Invalid IDs and forbidden subtrees must be checked even when the UI cannot select them.
+    return (await I.sendPostRequest('/apps/clone_structure/admin/cancel_sync?rootGroupId=' + rootGroupId, {}, await requestHeaders(I))).status;
+}
+
+async function syncMembers(I, DT, DTE, lookup) {
+    I.amOnPage('/admin/v9/webpages/mirroring/');
+    const result = [];
+    for (const [index, type] of ['groups', 'docs'].entries()) {
+        const table = type + 'MirroringTable';
+        const wrapper = '#' + table + '_wrapper';
+        I.clickCss('#pills-' + type + '-tab');
+        DT.waitForLoader(table);
+        const showId = Array.isArray(lookup) && !await I.grabNumberOfVisibleElements(wrapper + ' input.dt-filter-id');
+        if (Array.isArray(lookup)) {
+            DT.filterContains('fieldA', '', wrapper);
+            if (showId) await DT.showColumn('Sync ID', table);
+            DT.filterId('id', String(lookup[index].syncId), wrapper);
+        } else DT.filterContains('fieldA', lookup, wrapper);
+        I.seeNumberOfElements('#' + table + ' tbody tr[id]', 1);
+        const syncId = Number(await I.grabAttributeFrom('#' + table + ' tbody tr[id]', 'id'));
+        I.assertAbove(syncId, 0);
+        I.clickCss('#' + table + ' tbody td.sorting_1');
+        I.clickCss('#' + table + '_wrapper button.buttons-edit');
+        DTE.waitForEditor(table);
+        const members = (await I.grabValueFromAll('#' + table + '_modal input[id^="DTE_Field_selector"]')).map(Number).filter(id => id > 0).sort((a, b) => a - b);
+        result.push({ syncId, members });
+        DTE.cancel(table);
+        if (showId) await DT.hideColumn('Sync ID', table);
+    }
+    return result;
 }
 
 Scenario('Create own language folders and preserve settings', async ({ I, DT, DTE, Document }) => {
@@ -287,20 +314,20 @@ Scenario('Keep original page and folder mirrors when moving to another mirrored 
     }
 });
 
-Scenario('Reject folder deletion without deleteDir while editing remains allowed', async ({ I, DT }) => {
+Scenario('Reject folder deletion without deleteDir while editing remains allowed', async ({ I, DT, DTE }) => {
     I.amOnPage(pageUrl + '?groupid=' + folders.sk.id + '&removePerm=deleteDir');
     I.waitForElement(node(folders.sk) + ' > a.jstree-clicked', 30);
     DT.waitForLoader();
-    I.assertDeepEqual(await I.executeScript(() => [WJ.hasPermission('editDir'), WJ.hasPermission('deleteDir')]), [true, false]);
-    const response = await I.executeScript(async id => {
-        const folder = $('#SomStromcek').jstree(true).get_node(id).original.groupDetails;
-        return fetch('/admin/rest/groups/editor', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken },
-            body: JSON.stringify({ action: 'remove', data: { [id]: folder } })
-        }).then(result => result.json());
-    }, folders.sk.id);
-    I.assertContain(response.error || '', 'nemáte právo na zmazanie adresáru');
+    I.seeElement(DT.btn.tree_edit_button);
+    I.dontSeeElement(DT.btn.tree_delete_button);
+    I.click(DT.btn.tree_edit_button);
+    DTE.waitForEditor('groups-datatable');
+    DTE.cancel('groups-datatable');
+    // The hidden delete button must not be the only protection against a forged remove request.
+    const headers = await requestHeaders(I);
+    const folder = (await I.sendGetRequest('/admin/rest/groups/' + folders.sk.id, headers)).data;
+    const response = await I.sendPostRequest('/admin/rest/groups/editor', { action: 'remove', data: { [folders.sk.id]: folder } }, headers);
+    I.assertContain(response.data.error || '', 'nemáte právo na zmazanie adresáru');
     for (const folder of Object.values(folders)) {
         openFolder(I, DT, folder);
         I.dontSeeElement('#pills-trash-tab.active');
@@ -449,37 +476,38 @@ Scenario('Cancel mirroring only in an editable subtree of the current domain', a
     DTE.save();
     I.jstreeClick(pageTitle + '-unlink');
     DT.waitForLoader();
-    const source = await I.executeScript(async title => {
-        const group = $('#SomStromcek').jstree(true).get_selected(true)[0].original.groupDetails;
-        const pages = await fetch('/admin/rest/webpages/mirroring/search/findByColumns?type=docs&searchFieldA=' + encodeURIComponent(title), { headers: { 'X-CSRF-Token': window.csrfToken } }).then(response => response.json());
-        return { ids: [group.groupId, group.defaultDocId], pageMatches: pages.content.length, syncIds: { groups: group.syncId, docs: pages.content[0]?.id } };
-    }, pageTitle + '-unlink');
-    I.assertEqual(source.pageMatches, 1);
-    for (const id of Object.values(source.syncIds)) I.assertAbove(id, 0);
-    const before = await syncMembers(I, source.syncIds);
-    I.assertDeepEqual(before.map(members => members.length), [4, 4]);
-    before.forEach((members, i) => I.assertContain(members, source.ids[i]));
+    const sourceIds = [Number(await I.grabValueFrom('#tree-folder-id')), Number(await I.grabAttributeFrom('#datatableInit tbody tr.is-default-page', 'id'))];
+    const before = await syncMembers(I, DT, DTE, pageTitle + '-unlink');
+    I.assertDeepEqual(before.map(row => row.members.length), [4, 4]);
+    before.forEach((row, i) => I.assertContain(row.members, sourceIds[i]));
     for (const id of [-1, 2147483647]) I.assertEqual(await cancelSync(I, id), 400);
 
     I.amOnPage('/admin/v9/users/user-list/');
     DT.filterEquals('login', 'tester2');
+    const userId = await I.grabAttributeFrom('#datatableInit tbody tr[id]', 'id');
     I.click('#datatableInit tbody td.dt-row-edit a');
     DTE.waitForEditor();
     I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
-    cancelSyncUser = await I.executeScript(() => {
-        const user = usersDatatable.EDITOR.currentJson;
-        return { id: user.id, enabledItems: user.editorFields.enabledItems, editableGroups: user.editorFields.editableGroups };
-    });
-    I.executeScript(({ user, groupId }) => {
-        usersDatatable.EDITOR.field('editorFields.enabledItems').val([...user.enabledItems, 'perms_cmp_clone_structure']);
-        $('#DTE_Field_editorFields-enabledItems').jstree(true).select_node('perms_cmp_clone_structure');
-        usersDatatable.EDITOR.field('editorFields.editableGroups').val([...user.editableGroups, { groupId: Number(groupId) }]);
-    }, { user: cancelSyncUser, groupId: roots.plain.id });
+    cancelSyncUser = {
+        id: userId,
+        enabledItems: (await I.grabAttributeFromAll(enabledItems + ' a.jstree-clicked', 'id')).sort(),
+        editableGroups: await I.grabValueFromAll(editableGroups + ' input.form-control')
+    };
+    if (!cancelSyncUser.enabledItems.includes('perms_cmp_clone_structure_anchor')) I.click(clonePermission);
+    I.click(editableGroups + ' button.btn-webjet-jstree-add');
+    I.waitForVisible(locate(WebjetDteJsTree.anchors).withText(domain));
+    I.click(locate(WebjetDteJsTree.anchors).withText(domain));
+    I.waitForVisible(WebjetDteJsTree.tree + ` li[id="${roots.plain.id}"] > a`);
+    I.click(WebjetDteJsTree.tree + ` li[id="${roots.plain.id}"] > a`);
+    I.waitForInvisible(WebjetDteJsTree.tree);
     DTE.save();
     I.relogin('tester2');
     I.amOnPage(pageUrl);
     Document.switchDomain(domain);
-    I.assertTrue(await I.executeScript(() => WJ.hasPermission('cmp_clone_structure')));
+    I.amOnPage('/components/clone_structure/clone_structure.jsp');
+    I.waitForVisible('#undoSyncGroupId');
+    I.seeElement('#btnUndoSync');
+    I.amOnPage(pageUrl);
     I.assertEqual(await cancelSync(I, roots.sk.id), 403);
 
     I.relogin('admin');
@@ -488,9 +516,12 @@ Scenario('Cancel mirroring only in an editable subtree of the current domain', a
     I.assertEqual(await cancelSync(I, roots.sk.id), 403);
     Document.switchDomain(domain);
     I.assertEqual(await cancelSync(I, 0), 400);
-    I.assertDeepEqual(await syncMembers(I, source.syncIds), before);
-    I.assertEqual(await cancelSync(I, roots.sk.id), 200);
-    I.assertDeepEqual(await syncMembers(I, source.syncIds), before.map((members, i) => members.filter(id => id !== source.ids[i])));
+    I.assertDeepEqual(await syncMembers(I, DT, DTE, before), before);
+    I.amOnPage('/components/clone_structure/clone_structure.jsp');
+    I.fillField('#undoSyncGroupId', roots.sk.id);
+    I.click('#btnUndoSync');
+    I.waitForVisible('#undo_succ', 30);
+    I.assertDeepEqual(await syncMembers(I, DT, DTE, before), before.map((row, i) => ({ ...row, members: row.members.filter(id => id !== sourceIds[i]) })));
 });
 
 Scenario('Restore settings and remove own fixtures through the UI', async ({ I, DT, DTE, Document }) => {
@@ -499,20 +530,18 @@ Scenario('Restore settings and remove own fixtures through the UI', async ({ I, 
         I.amOnPage('/admin/v9/users/user-list/?id=' + cancelSyncUser.id);
         DTE.waitForEditor();
         I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
-        I.executeScript(user => {
-            usersDatatable.EDITOR.field('editorFields.enabledItems').val(user.enabledItems);
-            const tree = $('#DTE_Field_editorFields-enabledItems').jstree(true);
-            tree.deselect_all();
-            tree.select_node(user.enabledItems);
-            usersDatatable.EDITOR.field('editorFields.editableGroups').val(user.editableGroups);
-        }, cancelSyncUser);
+        if (!cancelSyncUser.enabledItems.includes('perms_cmp_clone_structure_anchor') && await I.grabNumberOfVisibleElements(clonePermission + '.jstree-clicked')) I.click(clonePermission);
+        const paths = await I.grabValueFromAll(editableGroups + ' input.form-control');
+        for (let index = paths.length - 1; index >= 0; index--) {
+            if (paths[index].endsWith('/' + roots.plain.name)) I.click(locate(editableGroups + ' button.btn-webjet-jstree-item-remove').at(index + 1));
+        }
         DTE.save();
-        const restored = await I.executeScript(async id => {
-            const user = await fetch('/admin/rest/users/' + id, { headers: { 'X-CSRF-Token': window.csrfToken } }).then(response => response.json());
-            return { enabledItems: user.editorFields.enabledItems, groupIds: user.editorFields.editableGroups.map(group => group.groupId) };
-        }, cancelSyncUser.id);
-        I.assertDeepEqual(restored.enabledItems, cancelSyncUser.enabledItems);
-        I.assertDeepEqual(restored.groupIds, cancelSyncUser.editableGroups.map(group => group.groupId));
+        I.amOnPage('/admin/v9/users/user-list/?id=' + cancelSyncUser.id);
+        DTE.waitForEditor();
+        I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
+        I.assertDeepEqual((await I.grabAttributeFromAll(enabledItems + ' a.jstree-clicked', 'id')).sort(), cancelSyncUser.enabledItems);
+        I.assertDeepEqual(await I.grabValueFromAll(editableGroups + ' input.form-control'), cancelSyncUser.editableGroups);
+        DTE.cancel();
     }
     I.amOnPage(pageUrl);
     Document.switchDomain(domain);
