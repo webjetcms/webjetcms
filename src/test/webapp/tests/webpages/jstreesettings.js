@@ -161,7 +161,7 @@ Scenario('zobrazenie web stranok-rozbalenie @singlethread', ({ I }) => {
     I.say("cisty stav");
     setSettings(I);
     I.dontSeeElement("#docId-9768_anchor");
-    I.see("Podadresár A", "#SomStromcek");
+    I.waitForText("Podadresár A", 10, "#SomStromcek");
     I.see("Test rozbalenia podadresarov", "#datatableInit");
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit")
 
@@ -171,7 +171,7 @@ Scenario('zobrazenie web stranok-rozbalenie @singlethread', ({ I }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.waitForElement("#docId-9768_anchor");
-    I.see("Podadresár A", "#SomStromcek");
+    I.waitForText("Podadresár A", 10, "#SomStromcek");
     I.see("Test rozbalenia podadresarov", "#datatableInit");
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit")
 });

@@ -21,6 +21,7 @@ The names Field A - Field X can be changed in the configuration in the text edit
 - `components.media.field_x` - ​​for the Media application
 - `components.perex.field_x` - ​​for the Tags application
 - `components.invoice.field_x` - ​​for the E-commerce application
+- `components.form_settings.field_x` - ​​for Forms settings
 
 Technical information can be found in the [programmer documentation](../../../developer/datatables-editor/customfields.md).
 

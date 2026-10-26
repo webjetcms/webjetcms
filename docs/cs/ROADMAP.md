@@ -63,10 +63,10 @@ Vysvětlení použitých piktogramů:
 - [ ] +Filtr v aplikaci novinky neumožňuje zadat DOC ID více stránek kdyby chtěli podle filtru “DOC_ID rovná se” zvolit více stránek
 filtr bere pouze první hodnotu. Dodělat tedy možnost `IN` pro možnost zadání více hodnot (#JT-2139).
 - [x] +AI - upravit vytváření `chunk` tak, aby pokud možno začínali a končili na hranicích vět nebo slov (#58778).
-- [ ] +Webové stránky - upravit výchozí zobrazení pro nového uživatele - zobrazovat ID, pořadí a uspořádat vzestupně.
-- [ ] +Webové stránky - přidat možnost přidat více stránkám najednou perex skupinu, čili ke stávajícím perex skupinám se přidá zvolená.
+- [x] +Webové stránky - konfigurovatelné výchozí zobrazení pro uživatele bez vlastního nastavení (`webpagesTreeDefaultSettings`), ve výchozím nastavení uspořádat vzestupně podle pořadí; zobrazení ID a pořadí lze zapnout v konfiguraci (#368).
+- [x] +Webové stránky - hromadné přidání a odebrání značky i skupiny uživatelů při zachování ostatních skupin přes menu Další akce, do kterého byl přesunut i Import/Export (#368).
 - [ ] +Webové stránky - při smazání složky, která má i zrcadlenou verzi zobrazit notifikaci, že byly smazány i zrcadlené složky XXX,YYY.
-- [ ] +Přidat podporu obrázků typu AVIF.
+- [x] +Přidat podporu obrázků a animací typu AVIF (#371).
 - [ ] +Možnost změnit pořadí polí v datatables editoru, kartu ve které se pole nachází, případně i vytvořit novou kartu do které se pole vloží. Tedy konfiguračně upravit hodnoty co se dnes nastavují cea anotace.
 
 ## 2025

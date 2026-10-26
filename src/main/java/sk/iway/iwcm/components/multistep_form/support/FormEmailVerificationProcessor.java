@@ -50,6 +50,7 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
      * Intercepts form processing to trigger email verification after the first step.
      *
      * @param formName the unique form name
+     * @param formSettings settings already loaded for the current form and domain
      * @param stepEntity the current form step being processed
      * @param stepData JSON payload containing fields submitted in the current step
      * @param request current HTTP request
@@ -57,7 +58,7 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
      * @throws SaveFormException if email cannot be determined or email sending fails
      */
     @Override
-    public void runStepInterceptor(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    public void runStepInterceptor(String formName, FormSettingsEntity formSettings, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         if(stepEntity == null) throw new IllegalStateException("FormStepEntity was not provided");
 
         if(stepEntity.getCurrentPosition() == 1) {
@@ -75,6 +76,7 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
      * processing and redirect to an error page.</p>
      *
      * @param formName the unique form name
+     * @param formSettings settings already loaded for the current form and domain
      * @param stepEntity the current form step being validated
      * @param stepData JSON payload containing fields submitted in the current step
      * @param request current HTTP request
@@ -83,7 +85,7 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
      *         attempts is reached
      */
     @Override
-    public void validateStep(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    public void validateStep(String formName, FormSettingsEntity formSettings, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         if(stepEntity == null) throw new IllegalStateException("FormStepEntity was not provided");
 
         if(stepEntity.getCurrentPosition() == 2) {

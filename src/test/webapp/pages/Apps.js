@@ -115,6 +115,13 @@ module.exports = {
 
     openCurrentAppEditor(modalId = "component-datatable_modal", editIcon = false) {
         DTE.waitForCkeditor();
+        // Preview controls appear before bodyLoadedImpl binds their owning iframe.
+        // Wait in the parent document: CodeceptJS 3.6 cannot waitForFunction on a nested FrameLocator.
+        I.waitForFunction(() => {
+            const editor = document.querySelector('.cke_wysiwyg_frame.cke_reset');
+            const preview = editor?.contentDocument?.querySelector('iframe.wj_component');
+            return preview != null && preview.contentWindow.parentNode === preview;
+        }, [], 30);
         I.switchTo(".cke_wysiwyg_frame.cke_reset");
         I.waitForElement("iframe.wj_component", 10);
         I.wait(0.3);
@@ -126,7 +133,8 @@ module.exports = {
         else
             I.click(locate('.inlineComponentEdit').first());
         I.switchTo();
-        I.waitForInvisible('Čakajte prosím', 20);
+        // A previous, hidden CKEditor dialog can still contain both editor iframes.
+        I.waitForVisible('.cke_dialog_ui_iframe', 30);
         I.switchTo('.cke_dialog_ui_iframe');
         I.wait(0.5);
         I.switchTo('#editorComponent');

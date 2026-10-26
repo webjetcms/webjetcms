@@ -278,6 +278,7 @@ module.exports = {
             I.clickCss(".btn-close-editor")
 
             Document.switchDomain(switchDomainName);
+            I.waitForVisible("#" + options.id + "_wrapper .dt-scroll-headInner", 30);
             DT.filterContains(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
 
             const itsThereIfFoundByName = await I.grabNumberOfVisibleElements(locate('a').withText( `${testingData[0]}${CHANGE_TEXT}`));
@@ -296,6 +297,8 @@ module.exports = {
 
             I.say("Go back to previous domain");
             Document.switchDomain(previousSelectedDomain);
+            // The processing indicator can be absent while the new page is still initializing.
+            I.waitForVisible("#" + options.id + "_wrapper .dt-scroll-headInner", 30);
 
             I.assertNotContain(response, `${testingData[0]}${CHANGE_TEXT}`, 'Error I found value in REST API call from domain');
 

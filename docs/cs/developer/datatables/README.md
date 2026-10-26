@@ -385,6 +385,27 @@ V `init` funkci lze použít následující volání:
 - `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - ​​tlačítko je aktivní pouze pokud není označen žádný řádek
 - `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - ​​tlačítko je aktivní pouze pokud je označen přesně jeden řádek
 
+## Menu Další akce
+
+Méně časté akce můžete vložit do menu **Další akce** pomocí `table.addMoreAction(config)` nebo pole `moreActions` v nastavení `WJ.DataTable`. Menu se vytvoří až při první přidané akci a zobrazí se vpravo při nastavení a obnovení dat. Implementace je oddělena v `npm_packages/webjetdatatables/more-actions.js`.
+
+Konfigurace používá standardní vlastnosti tlačítka DataTables. Do `text` zadejte ikonu, do `attr.title` přeložený název, který se zobrazí vedle ikony. Zachovávají se `action`, `init` i aktivování podle výběru řádků:
+
+```javascript
+table.addMoreAction({
+    text: '<i class="ti ti-tag-plus" aria-hidden="true"></i>',
+    attr: { title: WJ.translate('my.action.js'), 'data-dtbtn': 'myAction' },
+    init: function(dt) {
+        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+    },
+    action: function() {
+        table.executeAction('myAction');
+    }
+});
+```
+
+Ke skrývání a zobrazování položek používejte `table.hideButton('myAction')` a `table.showButton('myAction')`. Fungují i ​​při zavřeném menu, jehož položky nejsou připojeny k DOM. Menu se skryje, když neobsahuje žádnou zobrazenou položku. Oprávnění ověřte před přidáním položky a znovu na serveru při provedení akce.
+
 ## Tlačítko pro provedení serverové akce
 
 Datatabulka nabízí možnost přidat tlačítko pro provedení serverové akce (např. rotace obrázku, smazání všech záznamů).

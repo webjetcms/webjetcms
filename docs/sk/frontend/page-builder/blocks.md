@@ -42,6 +42,8 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
     - contactus.html
 ```
 
+Do HTML blokov nevkladajte atribút `contenteditable`. Editovateľné oblasti spravuje Page Builder. Editor odstraňuje tento atribút bez ohľadu na hodnotu (`true`, `false`, `plaintext-only` aj prázdna hodnota) pri načítaní obsahu a pred uložením, aj keď ho používateľ doplní v HTML režime. Atribúty potrebné počas editovania zostávajú v živom editore, do databázy sa neukladajú.
+
 ## Názov a značky bloku
 
 Ak chcete mať pekný názov bloku v zozname blokov, môžete vytvoriť súbor `pagebuilder.properties` v kódovaní `utf-8` v príslušnom pod adresári skupiny blokov (napr. v `section/Contact/pagebuilder.properties`). V ňom môžete definovať názov skupiny blokov, ikonu a značky (tagy) pre vyhľadávanie:

@@ -11,7 +11,8 @@
         { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
         { id: 'settings-basic', title: /*[[#{editor.form_setting.basic_tab}]]*/ '', selected: false },
         { id: 'settings-email', title: /*[[#{editor.form_setting.email_tab}]]*/ '', selected: false },
-        { id: 'settings-advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false }
+        { id: 'settings-advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false },
+        { id: 'fields', title: /*[[#{editor.tab.fields}]]*/ '', selected: false }
     ];
 </script>
 
@@ -43,7 +44,7 @@
             if(basicSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-basic"; }
             else if(emailSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-email"; }
             else if(advancedSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-advanced"; }
-            else { column.editor.tab = "basic"; } // Just in case, put it into basic tab
+            else if(column.editor.tab !== "fields") { column.editor.tab = "basic"; } // Just in case, put it into basic tab
 
             filteredColumns.push(column);
         }

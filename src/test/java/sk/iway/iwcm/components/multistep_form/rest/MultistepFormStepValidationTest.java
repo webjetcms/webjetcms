@@ -4,6 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -20,6 +25,7 @@ import org.json.JSONObject;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
+import org.mockito.MockedConstruction;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 
@@ -39,6 +45,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.OperatorType;
 import sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp;
+import sk.iway.iwcm.components.multistep_form.support.FormEmailVerificationProcessor;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.form.FormDB;
 import sk.iway.iwcm.i18n.Prop;
@@ -51,19 +58,22 @@ class MultistepFormStepValidationTest {
     /**
      * Uses cleared current-step values for visibility and requirement conditions while retaining
      * submitted values and session-backed conditions from previous steps. Drafts retain hidden
-     * or invalid answers, while confirmed visible values are normalized.
+     * or invalid answers, while confirmed visible values are normalized. All processor hooks
+     * receive the same settings instance, including the final save hook.
      */
     @ParameterizedTest
     @CsvSource({
-        "VISIBILITY, true, false, true",
-        "REQUIREMENT, true, false, true",
-        "VISIBILITY, true, true, false",
-        "REQUIREMENT, true, true, false",
-        "VISIBILITY, false, false, false",
-        "REQUIREMENT, false, false, false"
+        "VISIBILITY, true, false, true, false",
+        "REQUIREMENT, true, false, true, false",
+        "VISIBILITY, true, true, false, false",
+        "REQUIREMENT, true, true, false, false",
+        "VISIBILITY, false, false, false, false",
+        "REQUIREMENT, false, false, false, false",
+        "VISIBILITY, true, false, true, true",
+        "REQUIREMENT, true, false, true, true"
     })
     void validatesResubmittedStep(ConditionType conditionType, boolean checkboxInCurrentStep,
-            boolean checkboxSubmitted, boolean shouldProceed) throws Exception {
+            boolean checkboxSubmitted, boolean shouldProceed, boolean lastStep) throws Exception {
         FormItemsRepository items = mock(FormItemsRepository.class);
         FormStepsRepository steps = mock(FormStepsRepository.class);
         FormSettingsRepository settings = mock(FormSettingsRepository.class);
@@ -72,12 +82,15 @@ class MultistepFormStepValidationTest {
         FormStepEntity currentStep = new FormStepEntity();
         currentStep.setId(2L);
         currentStep.setCurrentPosition(2);
-        currentStep.setMaxPosition(3);
+        currentStep.setMaxPosition(lastStep ? 2 : 3);
         FormStepEntity nextStep = new FormStepEntity();
         nextStep.setId(3L);
         when(steps.getValidStep("contact-form", 2L, 1)).thenReturn(Optional.of(currentStep));
         when(steps.getStepByPosition("contact-form", 3, 1)).thenReturn(Optional.of(nextStep));
-        when(settings.findByFormNameAndDomainId("contact-form", 1)).thenReturn(new FormSettingsEntity());
+        FormSettingsEntity formSettings = new FormSettingsEntity();
+        formSettings.setFieldA("processor-configuration");
+        formSettings.setAfterSendInterceptor(FormEmailVerificationProcessor.class.getName());
+        when(settings.findByFormNameAndDomainId("contact-form", 1)).thenReturn(formSettings);
 
         FormItemsConditionEntity condition = new FormItemsConditionEntity();
         condition.setItemFormId("invoice");
@@ -121,6 +134,7 @@ class MultistepFormStepValidationTest {
         if (shouldProceed && conditionType == ConditionType.VISIBILITY) payload.put("f1-company", "Hidden answer");
 
         try (
+            MockedConstruction<FormEmailVerificationProcessor> processors = mockConstruction(FormEmailVerificationProcessor.class);
             MockedStatic<Constants> constants = mockStatic(Constants.class);
             MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
             MockedStatic<Prop> props = mockStatic(Prop.class);
@@ -154,18 +168,29 @@ class MultistepFormStepValidationTest {
             request.setContent(payload.toString().getBytes(StandardCharsets.UTF_8));
             JSONObject response = new JSONObject();
             service.saveFormStep("contact-form", 2L, request, response);
+            FormEmailVerificationProcessor processor = processors.constructed().get(0);
+            verify(processor).validateStep(eq("contact-form"), same(formSettings), same(currentStep), any(JSONObject.class), same(request), any());
+            verify(processor, shouldProceed ? org.mockito.Mockito.times(1) : never())
+                .runStepInterceptor(eq("contact-form"), same(formSettings), same(currentStep), any(JSONObject.class), same(request), any());
+            verify(processor, lastStep ? org.mockito.Mockito.times(1) : never())
+                .handleFormSave(eq("contact-form"), same(formSettings), any(), same(request));
+            verify(settings).findByFormNameAndDomainId("contact-form", 1);
             draft = service.getDraftStepData("contact-form", 2L, request).first;
             if (checkboxInCurrentStep == false) verify(session, atLeastOnce()).getAttribute(sessionKey + "_invoice");
 
             if (shouldProceed) {
                 assertFalse(response.has("fieldErrors"));
-                assertEquals(3L, response.getLong("step-id"));
+                assertEquals(lastStep ? -1L : 3L, response.getLong("step-id"));
                 assertEquals("", request.getSession().getAttribute(sessionKey + "_invoice"));
                 assertEquals("", request.getSession().getAttribute(sessionKey + "_company"));
                 assertEquals("Updated note", request.getSession().getAttribute(sessionKey + "_note"));
-                assertEquals("Updated note", draft.getString("note"));
-                assertEquals(conditionType == ConditionType.VISIBILITY ? "Draft company" : "", draft.getString("company"));
-                assertTrue(draft.getJSONArray("invoice").isEmpty());
+                if (lastStep) {
+                    assertTrue(draft.isEmpty());
+                } else {
+                    assertEquals("Updated note", draft.getString("note"));
+                    assertEquals(conditionType == ConditionType.VISIBILITY ? "Draft company" : "", draft.getString("company"));
+                    assertTrue(draft.getJSONArray("invoice").isEmpty());
+                }
             } else {
                 assertTrue(response.getJSONObject("fieldErrors").has("company"));
                 assertFalse(response.has("step-id"));

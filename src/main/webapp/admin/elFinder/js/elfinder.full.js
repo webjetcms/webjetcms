@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.65 (2026-10-09)
+ * Version 2.1.65 (2026-10-24)
  * http://elfinder.org
  * 
  * Copyright 2009-2026, Studio 42
@@ -6034,6 +6034,7 @@ elFinder.prototype = {
 			'image/xbm'                     : 'XBITMAP',
 			'image/pxm'                     : 'PXM',
 			'image/webp'                    : 'WEBP',
+			'image/avif'                    : 'AVIF',
 			'audio/mpeg'                    : 'AudioMPEG',
 			'audio/midi'                    : 'AudioMIDI',
 			'audio/ogg'                     : 'AudioOGG',
@@ -29822,7 +29823,7 @@ elFinder.prototype.commands.quicklook.plugins = [
 	 * @param elFinder.commands.quicklook
 	 **/
 	function(ql) {
-				var mimes   = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-ms-bmp', 'image/webp'],
+				var mimes   = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-ms-bmp', 'image/webp', 'image/avif'],
 			getDimSize = ql.fm.returnBytes((ql.options.getDimThreshold || 0)),
 			preview = ql.preview,
 			WebP, flipMime;

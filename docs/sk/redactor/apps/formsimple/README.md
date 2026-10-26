@@ -148,6 +148,48 @@ V kóde je možné použiť nasledovné značky, ktoré sa pri zobrazení formul
 - ```${value-label}``` - textová hodnota (label) pre opakujúci záznam, ak obsahuje inú hodnotu pre ```value``` a pre ```label``` (napr v ```option``` tagu). Používateľ zadáva možné hodnoty ako ```label:value```, teda ako napr. ```Pomaranč:orange,Jablko:apple``` pre zobrazenie uvedených možností.
 - ```{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}``` - napojenie získania zoznamu ```option``` hodnôt z aplikácie číselník. Zadané je ID číselníka, názov stĺpca pre hodnotu a názov stĺpca pre text.
 
+### Polia z nastavení formuláru
+
+V HTML prekladových kľúčov môžete použiť aj uložené nastavenia formuláru cez značky `${settings.NAZOV_POLA}`. Sú dostupné vo Formulári ľahko aj vo viackrokových formulároch, v náhľade položiek v administrácii a v emailovej podobe formulára.
+
+| Značka | Hodnota |
+| --- | --- |
+| `${settings.fieldA}` až `${settings.fieldF}` | Voliteľné polia A–F z nastavení formuláru. |
+| `${settings.formName}` | Uložené meno formuláru; na rozdiel od `${formname}` sa pri náhrade neupravuje na HTML identifikátor. |
+| `${settings.recipients}` | Emailové adresy príjemcov. |
+| `${settings.ccEmails}` | Emailové adresy príjemcov kópie. |
+| `${settings.bccEmails}` | Emailové adresy skrytých príjemcov. |
+| `${settings.replyTo}` | Emailové adresy pre odpoveď. |
+| `${settings.subject}` | Nastavený predmet emailu. |
+| `${settings.forward}` | URL presmerovania po úspešnom odoslaní. |
+| `${settings.forwardFail}` | URL presmerovania po chybe. |
+| `${settings.maxSizeInKilobytes}` | Maximálna veľkosť jedného súboru v kB. |
+| `${settings.maxCombinedSizeInKilobytes}` | Maximálna celková veľkosť súborov v kB. |
+| `${settings.allowedExtensions}` | Nastavený zoznam povolených prípon. |
+| `${settings.pictureHeight}` | Maximálna výška obrázka v pixeloch. |
+| `${settings.pictureWidth}` | Maximálna šírka obrázka v pixeloch. |
+| `${settings.formAddClasses}` | Dodatočné CSS triedy formuláru. |
+| `${settings.rowView}` | Uložené nastavenie zobrazenia v riadku ako `true` alebo `false`. |
+| `${settings.emailTextBefore}` | Text pred obsahom emailu, môže obsahovať HTML. |
+| `${settings.emailTextAfter}` | Text za obsahom emailu, môže obsahovať HTML. |
+
+Polia **A–F**, **Text pred emailom** a **Text za emailom** sa vkladajú ako HTML bez escapovania. Oba emailové texty podporujú HTML aj pri ich bežnom vložení pred a za obsah emailu. Ostatné nastavenia sa escapujú pre HTML text a atribúty uzavreté v úvodzovkách. Značky nie sú určené na priame vkladanie do JavaScriptu alebo CSS. Polia umožňujúce HTML používajte na miestach určených pre HTML obsah, nie ako hodnoty atribútov.
+
+Príklad vlastného informačného poľa, ak voliteľné pole A obsahuje `<strong>Pokyny k vyplneniu</strong>`:
+
+```properties
+components.formsimple.label.pokyny=Pokyny
+components.formsimple.input.pokyny=<div class="form-instructions">${settings.fieldA}</div><p>Povolené prípony: ${settings.allowedExtensions}; maximálna veľkosť súboru: ${settings.maxSizeInKilobytes} kB.</p>
+```
+
+Značky môžete pridať aj do existujúceho kódu začiatku formulára, napríklad ako atribút `data-form-name="${settings.formName}"`, alebo za otvárací `<form>` vložiť `<div class="form-intro">${settings.fieldB}</div>`. Ponechajte pritom pôvodné atribúty a skripty šablóny. Pre Formulár ľahko ide o kľúč `components.formsimple.form.start`, pre viackrokový formulár o `components.mustistep.form.start`.
+
+Rovnaké značky fungujú v konci formulára, tooltipových šablónach, prvých nadpisoch polí, opakovaných položkách `${iterable}` a technických informáciách `components.formsimple.techinfo`. Vo viackrokovom formulári sú dostupné aj v HTML obaloch krokov a riadkov, nadpise kroku, tlačidle Späť a indikátore načítavania.
+
+Používajú sa uložené hodnoty. Prázdne alebo chýbajúce nastavenie sa nahradí prázdnym reťazcom; nedopočítava sa napríklad predvolený predmet emailu ani náhradné presmerovanie po chybe. Neznáma značka zostane nezmenená. Náhrada nie je rekurzívna: ak hodnota poľa A obsahuje `${settings.fieldB}` alebo `${id}`, tento výraz zostane doslovný.
+
+Použitím značky vložíte hodnotu do výsledného HTML dostupného návštevníkovi. Platí to aj pre emailové adresy vrátane `${settings.bccEmails}`; skrytý príjemca emailu sa tak môže zverejniť na stránke. Dostupné sú iba uvedené nastavenia, nie šifrovací kľúč ani interné údaje entity.
+
 ### Vlastný HTML kód tooltipu
 
 HTML kód tooltipu môžete v projekte upraviť prekladovým kľúčom `components.formsimple.tooltipCode`. V jeho hodnote sú dostupné značky `${tooltipId}`, `${id}`, `${itemId}`, `${stepId}`, `${label}`, `${labelSanitized}`, `${value}`, `${valueSanitized}`, `${placeholder}` a `${classes}`. Značka `${label}` v tomto kľúči obsahuje text z poľa **Tooltip**, nie názov formulárového poľa.

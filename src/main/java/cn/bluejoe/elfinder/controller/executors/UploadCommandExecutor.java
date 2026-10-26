@@ -545,7 +545,11 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 						}
 					}
 
-					List<String> galleryAdded = UploadFileTools.handleGallery(newFileIwcm, dateCreated);
+					List<String> galleryAdded = new ArrayList<>();
+					int result = UploadFileTools.handleGallery(newFileIwcm, dateCreated, galleryAdded);
+					if (result != 0) {
+						json.put("warning", Prop.getInstance(request).getText(ImageTools.getErrorKey(result)));
+					}
 					for (String s : galleryAdded) {
 						FsItemEx fsItem = new FsItemEx(dir, directory, s);
 						added.add(fsItem);

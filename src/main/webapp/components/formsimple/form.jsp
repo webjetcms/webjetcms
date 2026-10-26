@@ -22,6 +22,7 @@ page import="java.util.List" %><%@
 page import="java.util.Set" %><%@
 page import="java.util.HashSet" %><%@
 page import="java.util.HashMap" %><%@
+page import="sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity" %><%@
 page import="sk.iway.iwcm.components.form_settings.rest.FormSettingsService" %><%@
 page import="java.util.Map" %><%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
@@ -30,11 +31,13 @@ taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
 
-    private String replaceFields(String html, String formName, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop)
+    private String replaceFields(String html, String formName, FormSettingsEntity formSettings, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop)
     {
-       html = Tools.replace(html, "${formname}", formName);
-       html = Tools.replace(html, "${savedb}", formName);
-       html = Tools.replace(html, "${recipients}", recipients);
+       Map<String, String> formFields = FormsService.getSettingsReplacementMap(formSettings);
+       formFields.put("formname", formName);
+       formFields.put("savedb", formName);
+       formFields.put("recipients", recipients);
+       requiredLabelAdd = FormsService.replaceFields(requiredLabelAdd, formFields);
 
        if (item != null)
        {
@@ -111,19 +114,6 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
                  }
               }
 
-              String tooltip = "";
-              String renderedLabel = isEmailRender && label.trim().endsWith(":") == false ? label+":" : label;
-              Map<String, String> replacementFields = FormsService.getFieldReplacementMap(item, id, renderedLabel, labelSanitized, value, placeholder, classes, tooltip);
-              if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel))
-              {
-                 Map<String, String> tooltipFields = new HashMap<String, String>(replacementFields);
-                 tooltipFields.put("label", tooltipLabel);
-                 tooltip = " " + FormsService.replaceFields(prop.getText("components.formsimple.tooltipCode"), tooltipFields);
-                 replacementFields.put("tooltip", tooltip);
-              }
-
-              //System.out.println("html="+html+" label="+label+" placeholder="+placeholder+" id="+id);
-
               //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
               String firstTimeHeadingKey = "components.formsimple.firstTimeHeading."+fieldType;
               String firstTimeHeading = prop.getText(firstTimeHeadingKey, false);
@@ -134,57 +124,65 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
                   html = firstTimeHeading+html;
               }
 
-              //iterable - pre skupinu poli
-              int iterableSize = 0;
-              if (html.contains("${iterable}") && Tools.isNotEmpty(value))
-              {
-                 StringBuilder iterable = new StringBuilder();
-                 String iterableKey = "components.formsimple.iterable."+fieldType;
-                 String iterableCode = prop.getText(iterableKey);
-                 if (Tools.isNotEmpty(iterableCode) && iterableCode.equals(iterableKey)==false)
-                 {
-                    String delimiter = " ";
-                    if (value.contains("|")) delimiter = "|";
-                    else if (value.contains(",")) delimiter = ",";
-
-                    String[] values = Tools.getTokens(value, delimiter, true);
-                    int counter = 0;
-                    iterableSize = values.length;
-                    for (String token : values)
-                    {
-                       String valueLabel = token;
-                       String code = iterableCode;
-
-                       int separator = token.indexOf(":");
-                       if (code.contains("${value-label}") && separator>0) {
-                           valueLabel = token.substring(0, separator);
-                           token = token.substring(separator+1);
-                       }
-
-                       code = Tools.replace(code, "${value}", token);
-                       code = Tools.replace(code, "${value-label}", valueLabel);
-                       code = Tools.replace(code, "${counter}", String.valueOf(counter));
-
-                       iterable.append(code).append("\n");
-                       counter++;
-                    }
-                 }
-                 html = Tools.replace(html, "${iterable}", iterable.toString());
+              // Prepare nested templates before expanding any replacement values.
+              String iterableCode = null;
+              String[] values = null;
+              if (html.contains("${iterable}") && Tools.isNotEmpty(value)) {
+                  String iterableKey = "components.formsimple.iterable." + fieldType;
+                  iterableCode = prop.getText(iterableKey);
+                  values = new String[0];
+                  if (Tools.isNotEmpty(iterableCode) && !iterableCode.equals(iterableKey)) {
+                      String delimiter = " ";
+                      if (value.contains("|")) delimiter = "|";
+                      else if (value.contains(",")) delimiter = ",";
+                      values = Tools.getTokens(value, delimiter, true);
+                  }
               }
-
-              html = FormsService.replaceFields(html, replacementFields);
 
               StringBuilder csError = new StringBuilder();
               csError.append("<div class=\"help-block cs-error cs-error-").append(id);
-              if (iterableSize > 0)
-              {
-                 for (int counter = 0; counter < iterableSize; counter++)
-                 {
-                    csError.append(" cs-error-").append(id).append("-").append(counter);
-                 }
+              if (values != null) {
+                  for (int counter = 0; counter < values.length; counter++) {
+                      csError.append(" cs-error-").append(id).append("-").append(counter);
+                  }
               }
               csError.append("\"></div>");
-              html = Tools.replace(html, "${cs-error}", csError.toString());
+
+              String tooltip = "";
+              String renderedLabel = isEmailRender && label.trim().endsWith(":") == false ? label+":" : label;
+              Map<String, String> replacementFields = FormsService.getFieldReplacementMap(item, id, renderedLabel, labelSanitized, value, placeholder, classes, tooltip);
+              replacementFields.putAll(formFields);
+              replacementFields.put("cs-error", csError.toString());
+              if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel))
+              {
+                 Map<String, String> tooltipFields = new HashMap<String, String>(replacementFields);
+                 tooltipFields.put("label", tooltipLabel);
+                 tooltip = " " + FormsService.replaceFields(prop.getText("components.formsimple.tooltipCode"), tooltipFields);
+                 replacementFields.put("tooltip", tooltip);
+              }
+
+              //System.out.println("html="+html+" label="+label+" placeholder="+placeholder+" id="+id);
+
+              if (values != null) {
+                  StringBuilder iterable = new StringBuilder();
+                  int counter = 0;
+                  for (String token : values) {
+                      String valueLabel = token;
+                      int separator = token.indexOf(":");
+                      if (iterableCode.contains("${value-label}") && separator > 0) {
+                          valueLabel = token.substring(0, separator);
+                          token = token.substring(separator + 1);
+                      }
+                      Map<String, String> iterableFields = new HashMap<>(replacementFields);
+                      iterableFields.put("value", token);
+                      iterableFields.put("value-label", valueLabel);
+                      iterableFields.put("counter", String.valueOf(counter));
+                      iterable.append(FormsService.replaceFields(iterableCode, iterableFields)).append("\n");
+                      counter++;
+                  }
+                  replacementFields.put("iterable", iterable.toString());
+              }
+              html = FormsService.replaceFields(html, replacementFields);
 
               //zamena za hodnoty z ciselnika vo forme {enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}
               StringBuilder sb = null;
@@ -273,6 +271,8 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
           }
        }
 
+       if (item == null) html = FormsService.replaceFields(html, formFields);
+
        //System.out.println("html="+html);
        if (rowView && html.startsWith("</div")==false) {
           //ak to nie je ukoncovaci tag, obal to do div.col
@@ -309,10 +309,11 @@ String formCounterAttribute = "webjet_formsimple_form_counter";
 int formInstanceCounter = Tools.getIntValue(String.valueOf(request.getAttribute(formCounterAttribute)), 0) + 1;
 request.setAttribute(formCounterAttribute, formInstanceCounter);
 
-Map<String, String> attributes = FormSettingsService.load(DocTools.removeChars(formName, true));
+FormSettingsEntity formSettings = FormSettingsService.loadEntity(formName);
+Map<String, String> settingsFields = FormsService.getSettingsReplacementMap(formSettings);
 boolean rowView = pageParams.getBooleanValue("rowView", false);
-if (rowView == false && attributes.containsKey("rowView")) {
-   rowView = "true".equals(attributes.get("rowView"));
+if (rowView == false && formSettings != null) {
+   rowView = Tools.isTrue(formSettings.getRowView());
 }
 
 //out.println("formName="+formName+" recipients="+recipients+" ppFormName="+pageParams.getValue("formName", "Form Simple")+" includePP="+(String)request.getAttribute("includePageParams"));
@@ -324,7 +325,7 @@ boolean isEmailRender = request.getAttribute("renderingIncludes")!=null;
 
 
 String recipients = "";
-if (attributes!=null && Tools.isNotEmpty(attributes.get("recipients"))) recipients = attributes.get("recipients");
+if (formSettings != null) recipients = Tools.getStringValue(formSettings.getRecipients(), "");
 
 if (isEmailRender)
 {
@@ -333,7 +334,7 @@ if (isEmailRender)
         div.form-control, span.form-control { height: auto !important; word-break: break-all; }
     </style><%
     out.print("<!-- formmail crop form start -->");
-    if(attributes.get("emailTextBefore") != null) out.print(ResponseUtils.filter(attributes.get("emailTextBefore")).replaceAll("\\n", "<br/>")+"<br/>");
+    if(formSettings != null && formSettings.getEmailTextBefore() != null) out.print(settingsFields.get("settings.emailTextBefore").replaceAll("\\n", "<br/>")+"<br/>");
 } else {
    %><style type='text/css'>
       @media (max-width: 576px) {
@@ -348,7 +349,7 @@ if (isEmailRender)
 //tu evidujeme nadpisy nad pole, ktore sme uz raz zobrazili
 Set<String> firstTimeHeadingSet = new HashSet<String>();
 
-out.print(replaceFields(prop.getText("components.formsimple.form.start"), formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop));
+out.print(replaceFields(prop.getText("components.formsimple.form.start"), formName, formSettings, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop));
 if (rowView) out.println("<div class=\"row\">");
 
 
@@ -368,7 +369,7 @@ for(int i = 0; i < itemsList.length(); i++)
         item.put("label", label);
     }
 
-    String html = replaceFields(input, formName, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop);
+    String html = replaceFields(input, formName, formSettings, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop);
     if (html.contains("formsimple-wysiwyg")) containsWysiwyg = true;
     if (html.contains("!INCLUDE"))
     {
@@ -381,11 +382,11 @@ for(int i = 0; i < itemsList.length(); i++)
 }
 
 if (rowView) out.println("</div>");
-out.print(replaceFields(prop.getText("components.formsimple.form.end"), formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop));
+out.print(replaceFields(prop.getText("components.formsimple.form.end"), formName, formSettings, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop));
 
 if (isEmailRender)
 {
-    if(attributes.get("emailTextAfter") != null) out.print("<br/>"+ResponseUtils.filter(attributes.get("emailTextAfter")).replaceAll("\\n", "<br/>")+"<br/>");
+    if(formSettings != null && formSettings.getEmailTextAfter() != null) out.print("<br/>"+settingsFields.get("settings.emailTextAfter").replaceAll("\\n", "<br/>")+"<br/>");
     out.print("<!-- formmail crop form end -->");
 } else {
    if (containsWysiwyg) {

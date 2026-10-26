@@ -35,6 +35,52 @@ Scenario('history version retains the Page Builder content and toolbar', async (
     DTE.cancel();
 });
 
+Scenario('failed Page Builder initialization allows HTML recovery through the parent selector', async ({ I, DTE, Document }) => {
+    Document.resetPageBuilderMode();
+    const routePattern = '**/*inlineEditorAdmin=true*';
+    const failInitialization = async route => {
+        const response = await route.fetch();
+        const body = await response.text();
+        assert.ok(body.includes('initializePageBuilder();'), 'The response must contain the Page Builder startup');
+        // Fail during the real initialization, after it makes the iframe body inert.
+        await route.fulfill({response, body: body.replace('initializePageBuilder();', 'CKEDITOR.inline = () => null; initializePageBuilder();')});
+    };
+    await I.mockRoute(routePattern, failInitialization, {times: 1});
+    try {
+        I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        DTE.waitForEditor();
+        I.waitForFunction(() => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe');
+            return frame?.contentWindow.pageBuilderReady === false && frame.contentDocument.body.inert === true &&
+                frame.contentDocument.querySelector('div.exit-inline-editor select') !== null;
+        }, 20);
+        I.waitForVisible('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle', 15);
+        const preservedHtml = await I.executeScript(() => webpagesDatatable.EDITOR.field('data').s.opts._input.val());
+        assert.ok(preservedHtml.includes('Suspendisse interdum dolor justo'), 'The preserved HTML must contain the original page');
+
+        // Use the visible control: calling switchEditorType directly would miss an inaccessible selector.
+        I.clickCss('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle');
+        I.click(locate('.dropdown-item').withText('HTML editor'));
+        I.waitForText('Obnoviť HTML?', 10, '.toast-title');
+        I.clickCss('button[id^="confirmationNo"]');
+        I.waitForInvisible('.toast-title', 10);
+        I.assertEqual(await I.grabValueFrom('#DTE_Field_data-editorTypeSelector select'), 'pageBuilder');
+        I.seeElement('#DTE_Field_data-pageBuilderIframe');
+
+        I.clickCss('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle');
+        I.click(locate('.dropdown-item').withText('HTML editor'));
+        I.waitForText('Obnoviť HTML?', 10, '.toast-title');
+        I.click('Obnoviť HTML', 'button[id^="confirmationYes"]');
+        I.waitForVisible('.CodeMirror', 10);
+        I.waitForFunction(([html]) => document.querySelector('.CodeMirror')?.CodeMirror.getValue() === html, [preservedHtml], 10);
+        I.dontSeeElement('#DTE_Field_data-pageBuilderIframe');
+        DTE.cancel();
+        Document.resetPageBuilderMode();
+    } finally {
+        await I.stopMockingRoute(routePattern, failInitialization);
+    }
+});
+
 Scenario('overenie zobrazenia podla sablony', async ({I, DTE, Document}) => {
 
     //reset PB settings
@@ -102,26 +148,25 @@ Scenario('bug - prepnutie editora', async ({I, DTE, Apps, Document}) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
     DTE.waitForEditor();
-    I.wait(5);
+    I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow.pageBuilderReady === true, [], 20);
 
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('div.exit-inline-editor select', 10);
     I.selectOption({css: "div.exit-inline-editor select"}, "");
     I.switchTo();
-    I.wait(2);
-
-    I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
+    I.waitForVisible('.cke_wysiwyg_frame.cke_reset', 20);
     Apps.switchEditor('html');
     const html = await I.executeScript(() => document.querySelector('.CodeMirror').CodeMirror.getValue());
     assert.ok(html.includes('Suspendisse interdum dolor justo, ac venenatis massa'), 'The HTML editor must retain the complete page, including content outside its virtual viewport');
 
-    I.wait(1);
     I.switchTo();
     DTE.cancel();
 
     //otvor druhu stranku a over zobrazeny kod
     I.click("Produktová stránka - multi");
     DTE.waitForEditor();
-    I.wait(5);
+    DTE.waitForCkeditor();
+    I.waitForVisible('.cke_wysiwyg_frame.cke_reset', 20);
 
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
     I.dontSee("This is old page");

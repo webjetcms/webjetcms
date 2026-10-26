@@ -355,7 +355,7 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
     I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
     await checkImageOptions(I, {
         count: true,
-        size: ["auto", "1024x1024", "1024x1536", "1536x1024"],
+        size: ["auto", "1024x1024", "1024x1536", "1536x1024", "2048x2048", "2048x1152", "3840x2160", "2160x3840"],
         quality: ["auto", "low", "medium", "high"],
         ratio: false
     });

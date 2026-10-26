@@ -1,6 +1,6 @@
 # Gallery
 
-The gallery application allows you to easily create a photo gallery. Just upload images from your digital camera to the gallery. WebJET automatically reduces the photos to the desired format. The supported formats are `JPG`, `JPEG`, `GIF`, `PNG` and `WebP`. 3 copies are created for each photo:
+The gallery application allows you to easily create a photo gallery. Just upload images from your digital camera to the gallery. WebJET automatically reduces the photos to the desired format. The supported formats are `JPG`, `JPEG`, `GIF`, `PNG`, `WebP` and `AVIF`. Processing [AVIF images](../../../frontend/thumb-servlet/README.md#avif-images) requires ImageMagick with AVIF support. 3 copies are created from each photo:
 
 - Preview image - a photo in low resolution, approximately 160x120 pixels, used in the image list
 - Image in normal resolution – photo in resolution for a normal monitor, i.e. approx. 600x400 pixels – this photo will be displayed after clicking on the preview image

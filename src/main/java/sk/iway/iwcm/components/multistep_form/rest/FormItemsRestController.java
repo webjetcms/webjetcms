@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +34,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.FormsServiceImpl;
 import sk.iway.iwcm.components.forms.RegExpRepository;
@@ -429,7 +431,17 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             item.put("label", getProp().getText("components.formsimple.label." + fieldType));
         }
 
-        String itemHtml = FormsService.replaceFields(getProp().getText("components.formsimple.input." + fieldType), stepItem.getFormName(), "", item, getProp().getText("components.formsimple.requiredLabelAdd"), false, false, new HashSet<>(), getProp(), getRequest());
+        // Cache missing settings as well, but only within this request and domain.
+        String settingsKey = FormItemsRestController.class.getName() + ".settings." + CloudToolsForCore.getDomainId() + "." + stepItem.getFormName();
+        Object cachedSettings = getRequest().getAttribute(settingsKey);
+        FormSettingsEntity formSettings;
+        if (cachedSettings instanceof Optional<?> cached) {
+            formSettings = (FormSettingsEntity) cached.orElse(null);
+        } else {
+            formSettings = formSettingsRepository.findByFormNameAndDomainId(stepItem.getFormName(), CloudToolsForCore.getDomainId());
+            getRequest().setAttribute(settingsKey, Optional.ofNullable(formSettings));
+        }
+        String itemHtml = FormsService.replaceFields(getProp().getText("components.formsimple.input." + fieldType), stepItem.getFormName(), formSettings, "", item, getProp().getText("components.formsimple.requiredLabelAdd"), false, false, new HashSet<>(), getProp(), getRequest());
 
         if(itemHtml.contains("!INCLUDE")) {
             itemHtml = EditorToolsForCore.renderIncludes(itemHtml, false, getRequest());

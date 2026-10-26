@@ -182,10 +182,7 @@ module.exports = {
    * reset editorType force mode to pageBuilder (default)
    */
   resetPageBuilderMode() {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/");
-    I.executeScript(function () {
-        window.WJ.setAdminSetting("editorTypeForced", "pageBuilder");
-    });
+    this.setEditorMode("pageBuilder");
   },
 
   /**
@@ -197,6 +194,8 @@ module.exports = {
     I.executeScript(function (mode) {
         window.WJ.setAdminSetting("editorTypeForced", mode);
     }, mode);
+    // setAdminSetting starts an asynchronous POST but does not return its promise.
+    I.waitForFunction(() => window.jQuery.active === 0, [], 20);
   },
 
   /**

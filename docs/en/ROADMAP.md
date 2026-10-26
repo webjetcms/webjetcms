@@ -63,10 +63,10 @@ Explanation of the pictograms used:
 - [ ] +Filter in the news application does not allow entering DOC ID of multiple pages if they wanted to select multiple pages according to the filter “DOC_ID equals”
 The filter only takes the first value. So add the `IN` option to allow multiple values ​​(#JT-2139).
 - [x] +AI - adjust `chunk` generation so that they start and end at sentence or word boundaries where possible (#58778).
-- [ ] +Websites - edit default view for new user - show ID, rank and sort ascending.
-- [ ] +Websites - add the option to add a perex group to multiple pages at once, meaning the selected one will be added to the existing perex groups.
+- [x] +Websites - configurable default view for user without custom setting (`webpagesTreeDefaultSettings`), default to ascending order; ID and order display can be enabled in configuration (#368).
+- [x] +Websites - bulk addition and removal of tags and user groups while preserving other groups via the More Actions menu, to which Import/Export (#368) has also been moved.
 - [ ] +Websites - when deleting a folder that also has a mirrored version, display a notification that the mirrored folders XXX,YYY have also been deleted.
-- [ ] +Add support for AVIF images.
+- [x] +Add support for AVIF images and animations (#371).
 - [ ] + Possibility to change the order of fields in the datatables editor, the tab in which the field is located, or even create a new tab in which the fields are inserted. That is, to configure and adjust the values ​​that are currently set for annotations.
 
 ## 2025

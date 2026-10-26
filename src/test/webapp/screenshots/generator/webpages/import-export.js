@@ -13,6 +13,8 @@ Before(({ login, I }) => {
 
 Scenario('Screens', ({ I, DT, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59160");
+    DT.waitForLoader();
+    I.clickCss('#datatableInit_wrapper button.buttons-more-actions');
     Document.screenshotElement("button.buttons-import-export", "/redactor/webpages/import-export-button.png");
     let confLng = I.getConfLng();
 

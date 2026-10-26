@@ -155,13 +155,19 @@ public class FormSettingsService {
      * @return attributes with nullable string values, or an empty map when the repository or settings are unavailable
      */
     public static Map<String, String> load(String formName) {
+        return toAttributeMap(loadEntity(formName));
+    }
+
+    /**
+     * Loads form settings in the current domain without converting them to legacy attributes.
+     *
+     * @param formName logical form name
+     * @return settings, or {@code null} when the repository or settings are unavailable
+     */
+    public static FormSettingsEntity loadEntity(String formName) {
         FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
-        if(formSettingsRepository == null) return new HashMap<>();
-
-        FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
-        if(formSettings == null) return new HashMap<>();
-
-        return toAttributeMap(formSettings);
+        if(formSettingsRepository == null) return null;
+        return formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
     }
 
     /**
