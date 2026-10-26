@@ -6,6 +6,81 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+Scenario('history version retains the Page Builder content and toolbar', async ({ I, DTE, DT, Document }) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('#wjInline-docdata.pb-wrapper', 10);
+    I.switchTo();
+
+    I.clickCss('#pills-dt-datatableInit-history-tab');
+    DT.waitForLoader('datatableFieldDTE_Field_editorFields-history');
+    const historyRow = locate('#datatableFieldDTE_Field_editorFields-history tbody tr').at(2);
+    I.waitForVisible(historyRow, 10);
+    const historyId = await I.grabAttributeFrom(historyRow, 'id');
+    I.click(historyRow.find('td').first());
+    I.clickCss('#pills-dt-datatableInit-history .buttons-history-edit');
+
+    // Wait for the history document, so the old iframe cannot satisfy the content assertions.
+    I.waitForFunction(([id]) => {
+        const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow;
+        return frame && new URLSearchParams(frame.location.search).get('historyid') === id && frame.document.readyState === 'complete';
+    }, [historyId], 15);
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('#wjInline-docdata.pb-wrapper', 10);
+    I.see('Suspendisse interdum dolor justo', '#wjInline-docdata');
+    I.seeElement('#inlineEditorToolbarTop .cke_inner');
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('failed Page Builder initialization allows HTML recovery through the parent selector', async ({ I, DTE, Document }) => {
+    Document.resetPageBuilderMode();
+    const routePattern = '**/*inlineEditorAdmin=true*';
+    const failInitialization = async route => {
+        const response = await route.fetch();
+        const body = await response.text();
+        assert.ok(body.includes('initializePageBuilder();'), 'The response must contain the Page Builder startup');
+        // Fail during the real initialization, after it makes the iframe body inert.
+        await route.fulfill({response, body: body.replace('initializePageBuilder();', 'CKEDITOR.inline = () => null; initializePageBuilder();')});
+    };
+    await I.mockRoute(routePattern, failInitialization, {times: 1});
+    try {
+        I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        DTE.waitForEditor();
+        I.waitForFunction(() => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe');
+            return frame?.contentWindow.pageBuilderReady === false && frame.contentDocument.body.inert === true &&
+                frame.contentDocument.querySelector('div.exit-inline-editor select') !== null;
+        }, 20);
+        I.waitForVisible('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle', 15);
+        const preservedHtml = await I.executeScript(() => webpagesDatatable.EDITOR.field('data').s.opts._input.val());
+        assert.ok(preservedHtml.includes('Suspendisse interdum dolor justo'), 'The preserved HTML must contain the original page');
+
+        // Use the visible control: calling switchEditorType directly would miss an inaccessible selector.
+        I.clickCss('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle');
+        I.click(locate('.dropdown-item').withText('HTML editor'));
+        I.waitForText('Obnoviť HTML?', 10, '.toast-title');
+        I.clickCss('button[id^="confirmationNo"]');
+        I.waitForInvisible('.toast-title', 10);
+        I.assertEqual(await I.grabValueFrom('#DTE_Field_data-editorTypeSelector select'), 'pageBuilder');
+        I.seeElement('#DTE_Field_data-pageBuilderIframe');
+
+        I.clickCss('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle');
+        I.click(locate('.dropdown-item').withText('HTML editor'));
+        I.waitForText('Obnoviť HTML?', 10, '.toast-title');
+        I.click('Obnoviť HTML', 'button[id^="confirmationYes"]');
+        I.waitForVisible('.CodeMirror', 10);
+        I.waitForFunction(([html]) => document.querySelector('.CodeMirror')?.CodeMirror.getValue() === html, [preservedHtml], 10);
+        I.dontSeeElement('#DTE_Field_data-pageBuilderIframe');
+        DTE.cancel();
+        Document.resetPageBuilderMode();
+    } finally {
+        await I.stopMockingRoute(routePattern, failInitialization);
+    }
+});
+
 Scenario('overenie zobrazenia podla sablony', async ({I, DTE, Document}) => {
 
     //reset PB settings
@@ -448,19 +523,17 @@ Scenario('check toolbar elements', ({I, DTE, Document}) => {
     closeStyleModal(I);
 
     //
-    I.say("check styleCombo options");
-    I.forceClick({css: "span.cke_combo__styles a.cke_combo_button"});
-    I.waitForElement("iframe.cke_panel_frame", 5);
-    I.switchTo("iframe.cke_panel_frame");
-    I.see("Nadpis 1");
-    I.see("baretest1");
-    I.see("Bare TEST 02 bold");
-    I.see("Bare TEST 03");
-    I.see("Bare TEST 04");
-    I.switchTo();
-    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.say("Check styles and semantic formats in the Page Builder editor");
+    I.clickCss(".cke_button__wjstyles");
+    I.waitForVisible(".wj-styles[role=dialog]", 10);
+    I.see("Nadpis 1", ".wj-styles__formats");
+    I.checkOption(".wj-styles__filters input");
+    for (const style of ["baretest1", "Bare TEST 02 bold", "Bare TEST 03", "Bare TEST 04"]) {
+        I.fillField(".wj-styles__search", style);
+        I.waitForText(style, 10, ".wj-styles__list");
+    }
     I.pressKey(['Escape']);
-    I.dontSeeElement("iframe.cke_panel_frame");
+    I.waitForInvisible(".wj-styles", 10);
 
     I.switchTo();
 });
@@ -1147,9 +1220,9 @@ Scenario('workbench CSS tooltips on toolbar and insertion buttons', async ({I, D
             });
             assert.ok(placement.top >= placement.toolbarBottom, 'Toolbar tooltips must appear below the bar, clear of CKEditor');
         }
-        await frame.locator('.cke_combo__styles:visible .cke_combo_button').click();
-        await frame.locator('.cke_panel:visible').waitFor({state: 'visible'});
-        const panelAboveToolbar = await frame.locator('.cke_panel:visible').evaluate(panel => {
+        await frame.locator('.cke_button__wjstyles:visible').click();
+        await frame.locator('.wj-styles[role=dialog]').waitFor({state: 'visible'});
+        const panelAboveToolbar = await frame.locator('.wj-styles[role=dialog]').evaluate(panel => {
             const panelRect = panel.getBoundingClientRect(), barRect = document.querySelector('.pb-workbench').getBoundingClientRect();
             const left = Math.max(panelRect.left, barRect.left), right = Math.min(panelRect.right, barRect.right);
             const top = Math.max(panelRect.top, barRect.top), bottom = Math.min(panelRect.bottom, barRect.bottom);
@@ -1157,8 +1230,8 @@ Scenario('workbench CSS tooltips on toolbar and insertion buttons', async ({I, D
         });
         assert.equal(panelAboveToolbar, true, 'CKEditor dropdowns must remain clickable above the workbench');
         await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-tooltip-ckeditor-panel.png'});
-        await frame.locator('.cke_combo__styles:visible .cke_combo_button').click();
-        await frame.locator('.cke_panel:visible').waitFor({state: 'hidden'});
+        await page.keyboard.press('Escape');
+        await frame.locator('.wj-styles[role=dialog]').waitFor({state: 'hidden'});
         await frame.locator('.pb-workbench [data-pb-action=insert]').click();
         await frame.waitForFunction(()=>window.pageBuilder.ui.insertAnimations.every(animation=>animation.playState==='finished'));
         await frame.evaluate(()=>{

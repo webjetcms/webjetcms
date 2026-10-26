@@ -4146,5 +4146,61 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>16.10.2026</string></void>
+                <void property="desc"><string>documents - server managed planned media state</string></void>
+                <void property="mysql"><string>ALTER TABLE documents ADD COLUMN planned_media_initialized TINYINT(1) NOT NULL DEFAULT 0;
+                </string></void>
+                <void property="mssql"><string>ALTER TABLE documents ADD planned_media_initialized BIT NOT NULL DEFAULT 0;
+                </string></void>
+                <void property="oracle"><string>ALTER TABLE documents ADD (planned_media_initialized NUMBER(1) DEFAULT 0 NOT NULL);
+                </string></void>
+                <void property="pgsql"><string>ALTER TABLE documents ADD COLUMN planned_media_initialized BOOLEAN NOT NULL DEFAULT FALSE;
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>19.10.2026</string></void>
+                <void property="desc"><string>form_settings - add custom fields A-F</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE form_settings ADD field_a VARCHAR(255), ADD field_b VARCHAR(255), ADD field_c VARCHAR(255), ADD field_d VARCHAR(255), ADD field_e VARCHAR(255), ADD field_f VARCHAR(255);
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE form_settings ADD field_a NVARCHAR(255), field_b NVARCHAR(255), field_c NVARCHAR(255), field_d NVARCHAR(255), field_e NVARCHAR(255), field_f NVARCHAR(255);
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE form_settings ADD (field_a NVARCHAR2(255), field_b NVARCHAR2(255), field_c NVARCHAR2(255), field_d NVARCHAR2(255), field_e NVARCHAR2(255), field_f NVARCHAR2(255));
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        ALTER TABLE form_settings ADD COLUMN field_a VARCHAR(255), ADD COLUMN field_b VARCHAR(255), ADD COLUMN field_c VARCHAR(255), ADD COLUMN field_d VARCHAR(255), ADD COLUMN field_e VARCHAR(255), ADD COLUMN field_f VARCHAR(255);
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>24.10.2026</string></void>
+                <void property="desc"><string>ai - replace retired OpenAI gpt-image-1 with gpt-image-2</string></void>
+                <void property="mysql"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+                <void property="mssql"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+                <void property="oracle"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+                <void property="pgsql"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

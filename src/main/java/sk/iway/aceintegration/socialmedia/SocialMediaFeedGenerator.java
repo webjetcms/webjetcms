@@ -51,6 +51,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -155,8 +156,10 @@ public final class SocialMediaFeedGenerator {
                 refreshed = true;
             } catch (Exception exception) {
                 sources.put(source, oldPosts);
-                Logger.warn(SocialMediaFeedGenerator.class, "Unable to refresh " + source
-                    + "; retaining " + oldPosts.size() + " cached posts (" + SocialMediaFeedException.safeSummary(exception) + ")");
+                String message = "Unable to refresh " + source
+                    + "; retaining " + oldPosts.size() + " cached posts (" + SocialMediaFeedException.safeSummary(exception) + ")";
+                Logger.warn(SocialMediaFeedGenerator.class, message);
+                Adminlog.add(Adminlog.TYPE_CRON, "SocialMediaFeedGenerator: " + message, -1, -1);
             }
         }
         int youtubeLimit = sources.get("facebook").isEmpty() ? YOUTUBE_FALLBACK_ITEMS : ITEMS_PER_SOURCE;

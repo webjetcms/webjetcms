@@ -145,6 +145,10 @@ public class EditorFacade {
 		DocDetails savedCopy = editorService.getDoc(entity.getDocId(), historyId);
 		DocEditorFields def = new DocEditorFields();
 		def.fromDocDetails(savedCopy, true, true);
+        if (sk.iway.iwcm.doc.PlannedAccess.enabled()) {
+            def.setPlannedMedia(savedCopy.isPublicable());
+            def.setPlannedHistoryId(sk.iway.iwcm.doc.PlannedChangesService.getInstance().activeHistory(savedCopy.getDocId()));
+        }
 		savedCopy.setEditorFields(def);
 		savedCopy.setHistoryId(historyId);
 

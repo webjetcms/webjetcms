@@ -275,6 +275,36 @@ public class FormSettingsEntity {
     @Column(name = "domain_id")
     private Integer domainId;
 
+    @Column(name = "field_a")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_settings.field_a", visible = false, tab = "fields")
+    @Size(max = 255)
+    private String fieldA;
+
+    @Column(name = "field_b")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_settings.field_b", visible = false, tab = "fields")
+    @Size(max = 255)
+    private String fieldB;
+
+    @Column(name = "field_c")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_settings.field_c", visible = false, tab = "fields")
+    @Size(max = 255)
+    private String fieldC;
+
+    @Column(name = "field_d")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_settings.field_d", visible = false, tab = "fields")
+    @Size(max = 255)
+    private String fieldD;
+
+    @Column(name = "field_e")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_settings.field_e", visible = false, tab = "fields")
+    @Size(max = 255)
+    private String fieldE;
+
+    @Column(name = "field_f")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_settings.field_f", visible = false, tab = "fields")
+    @Size(max = 255)
+    private String fieldF;
+
     /**
      * Converts a snake_case name to camelCase, or lowercases the first character of an unsplit name.
      *

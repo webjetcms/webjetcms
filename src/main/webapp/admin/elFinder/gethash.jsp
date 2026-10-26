@@ -28,6 +28,11 @@
 
     if (url.indexOf("?")>0) url = url.substring(0, url.indexOf("?"));
     if (url.startsWith("/thumb/")) url = url.substring("/thumb".length());
+    boolean plannedAsset = sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(url);
+    if (plannedAsset && !user.isFolderWritable(url.substring(0, url.lastIndexOf('/') + 1))) {
+        response.setStatus(404);
+        return;
+    }
     String hashParent = null;
     String volume = "iwcm_1_";
 
@@ -60,7 +65,7 @@
     String hash = FsService.getHash(url);
     if (hashParent == null) hashParent =  FsService.getHash(url.substring(0, url.lastIndexOf("/")));
 
-    if ((url.startsWith(uploadSubDir) || url.startsWith(uploadSubDirGallery)) && uploadSubDir.length()>5)
+    if (plannedAsset || ((url.startsWith(uploadSubDir) || url.startsWith(uploadSubDirGallery)) && uploadSubDir.length()>5))
     {
        //je to podadresar Media aktualnej stranky
         volume = "iwcm_fs_ap_volume_";

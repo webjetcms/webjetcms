@@ -17,6 +17,7 @@
   - [Základná práca](/redactor/webpages/README.md)
   - [Editácia web stránky](/redactor/webpages/editor/README.md)
   - [Práca v editore](/redactor/webpages/working-in-editor/README.md)
+  - [Plánované publikovanie s chránenými súbormi](/redactor/webpages/planned-publishing.md)
   - [Priečinok web stránky](/redactor/webpages/group.md)
   - [História](/redactor/webpages/history.md)
   - [Obnovenie z koša](/redactor/webpages/recover.md)

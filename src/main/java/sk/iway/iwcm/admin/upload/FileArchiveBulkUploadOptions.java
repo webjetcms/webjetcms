@@ -68,6 +68,7 @@ public final class FileArchiveBulkUploadOptions implements Serializable {
                 String name = field.substring(field.lastIndexOf('.') + 1);
                 value = request.getParameter("fileArchive" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
             }
+            if ("product".equals(field) || "category".equals(field)) value = Tools.removeNbsp(value);
             if (value != null && value.isBlank() == false) values.put(field, value.trim());
         }
         if ("true".equals(values.get(PARAM_SAVE_LATER)) == false) {

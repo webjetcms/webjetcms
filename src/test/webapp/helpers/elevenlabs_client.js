@@ -1,7 +1,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { randomBytes } = require("node:crypto");
-const DEFAULT_MODEL_ID = "eleven_v3";
+const DEFAULT_MODEL_ID = "eleven_v4";
 const DEFAULT_VOICE_ID = "Zai7B4Aol2bJtneyq0L1";
 const OUTPUT_FORMAT = "mp3_44100_128";
 const REQUEST_TIMEOUT_MS = 600_000;
@@ -35,19 +35,24 @@ function getAudioSettings(options = {}) {
     modelId: getOptionalOverride(options.modelId, "modelId") ||
       getEnvironmentOverride("ELEVENLABS_MODEL_ID") || DEFAULT_MODEL_ID,
     voiceId: getOptionalOverride(options.voiceId, "voiceId") ||
-      getEnvironmentOverride("ELEVENLABS_VOICE_ID") || DEFAULT_VOICE_ID
+      getEnvironmentOverride("ELEVENLABS_VOICE_ID") || DEFAULT_VOICE_ID,
+    languageCode: "sk",
+    voiceSettings: { stability: 0.3, similarityBoost: 0.5 }
   };
-  if (options.languageCode != null) {
+  if (options.languageCode === null) {
+    delete settings.languageCode;
+  } else if (options.languageCode !== undefined) {
     settings.languageCode = getRequiredText(options.languageCode, "languageCode").toLowerCase();
     if (!/^[a-z]{2}$/.test(settings.languageCode)) {
       throw new Error("languageCode must be a two-letter ISO 639-1 code, such as sk.");
     }
   }
-  if (options.voiceSettings != null) {
+  if (options.voiceSettings === null) {
+    delete settings.voiceSettings;
+  } else if (options.voiceSettings !== undefined) {
     if (typeof options.voiceSettings !== "object" || Array.isArray(options.voiceSettings)) {
       throw new Error("voiceSettings must be an object.");
     }
-    settings.voiceSettings = {};
     for (const [name, value] of Object.entries(options.voiceSettings)) {
       if (!["stability", "similarityBoost"].includes(name)) {
         throw new Error(`Unsupported voiceSettings option: ${name}. Use stability or similarityBoost.`);
@@ -57,7 +62,6 @@ function getAudioSettings(options = {}) {
       }
       settings.voiceSettings[name] = value;
     }
-    if (Object.keys(settings.voiceSettings).length === 0) delete settings.voiceSettings;
   }
   return settings;
 }

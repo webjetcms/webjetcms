@@ -365,7 +365,9 @@ public class Constants {
 		setBoolean("currencyTagRound", false, MOD_BASKET,
 				"ak je nastavené na true tak sa pri výpise cien bude zaokrúhlovať na 50 halierov. Štandardne nastavené na false");
 
-		setBoolean("editorAutoFillPublishStart", false, MOD_EDITOR,
+		setBoolean("plannedPublishingEnabled", false, mods(MOD_EDITOR, MOD_WEBPAGES),
+                "Enable one private planned page revision with staged assets and media.");
+        setBoolean("editorAutoFillPublishStart", false, MOD_EDITOR,
 				"ak je nastavene na true tak sa pri vytvoreni stranky automaticky predvyplni datum zaciatku publikovania na aktualny");
 
 		// default log level
@@ -487,7 +489,7 @@ public class Constants {
 
 		setInt("cacheStaticContentSeconds", 300, MOD_PERFORMANCE,
 				"nastavenie casu v sekundach (standardne nastavene na 0), na kory server nastavi exspiraciu statickych suborov nastavenych konfiguracnou premennou cacheStaticContentSuffixes (standardne .gif,.jpg,.png,.swf,.css,.js). Ak je prihlaseny administrator, alebo sa jedna o pristup z IP adries pre ktore sa neeviduje statistika (premenna statNoLogIP) tak sa cache hlavicka nenastavi.");
-		setString("cacheStaticContentSuffixes", ".gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2", MOD_PERFORMANCE,
+		setString("cacheStaticContentSuffixes", ".gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2,.webp,.avif", MOD_PERFORMANCE,
 				"pripony suborov, na ktore bude aplikovana cache hlavicka");
 
 		setString("basketCurrencyField", "fieldJ", MOD_BASKET,
@@ -628,8 +630,8 @@ public class Constants {
 				"limity pre upload suborov cez editor v kB pre subory a skratene menu");
 		setString("FCKConfig.UploadFileTypes[Default][image]", "", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity typov suborov pre upload cez editor pre obrazky a standardne menu"); // jpg,jpeg,png,gif,swf,mpg,mov,wmv,flv,avi,mp3,vma,wav
-		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,svg,webp,mp3,mp4", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
-				"limity typov suborov pre upload cez editor pre obrazky a skratene menu, prednastavene na jpg,jpeg,png,gif,svg,webp,mp3,mp4");
+		setString("FCKConfig.UploadFileTypes[Basic][image]", "jpg,jpeg,png,gif,svg,webp,avif,mp3,mp4", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
+				"limity typov suborov pre upload cez editor pre obrazky a skratene menu, prednastavene na jpg,jpeg,png,gif,svg,webp,avif,mp3,mp4");
 		setString("FCKConfig.UploadFileTypes[Default][file]", "", mods(MOD_EDITOR, MOD_SECURITY, MOD_UPLOAD),
 				"limity typov suborov pre upload cez editor pre subory a standardne menu");
 		setString("FCKConfig.UploadFileTypes[Basic][file]", "doc,docx,xls,xlsx,pdf,zip,rtf",
@@ -1112,7 +1114,7 @@ public class Constants {
 
 		setString("newsComponentsDirs", "", mods(MOD_EDITOR, MOD_NEWS),
 				"Zoznam URL adries adresarov, v ktorych su custom news komponenty pre ich zobrazenie v dialogu pre vlozenie news komponenty. Automaticky sa hladaju v /components/INSTALL_NAME/news/ ak su aj v inych adresaroch nastavte do tejto premennej ich zoznam oddeleny ciarkou.");
-		setString("proxyHostsException", "", MOD_NETWORK, "Zoznam domen oddelenych ciarkou, pre ktore sa proxy nepouzije");
+		setString("proxyHostsException", "", MOD_NETWORK, "Zoznam hostov oddelenych ciarkou alebo |, pre ktore sa HTTP/HTTPS proxy nepouzije. Podporuje * na zaciatku a konci vzoru (napr. *.firma.sk,127.*), nerozlisuje velkost pismen. Vyzaduje restart.");
 
 		setBoolean("editorImageDialogCopyAltToTitle", false, MOD_EDITOR,
 				"Ak je nastavene na true bude hodnota ALT atributu kopirovana do TITLE atributu obrazku");

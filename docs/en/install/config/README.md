@@ -17,7 +17,34 @@ org.springframework=WARN
 
 If necessary, it is possible to set up/implement your own [Appender](https://logback.qos.ch/manual/appenders.html). This can send logs, for example, to an external system for log analysis. Directly `Logback` provides `Appender` among others for [Syslog](https://logback.qos.ch/manual/appenders.html#SyslogAppender) or [SMTP](https://logback.qos.ch/manual/appenders.html#SMTPAppender). If necessary, it is possible to create your own [Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender).
 
+## HTTP/HTTPS proxy
+
+If the server accesses the Internet through a proxy, set the configuration variables `proxyHost` and `proxyPort`, or `proxyUser` and `proxyPassword`. For a separate HTTPS proxy, use `proxyHostHttps` and `proxyPortHttps` ; without separate settings, the HTTP proxy will be used. Changes to these settings and exceptions require a restart of the application server.
+
+The variable `proxyHostsException` specifies the hosts to which WebJET connects directly. Exceptions apply equally to HTTP and HTTPS. Separate entries with a comma or `|`, or a combination of both. Spaces around entries are removed and empty entries are ignored. For example:
+
+```text
+localhost, *.firma.sk | 127.*
+```
+
+The entire host is matched in a case-insensitive manner; port, path, and URL parameters do not affect the match. The wildcard patterns correspond to [Java 17 `http.nonProxyHosts`](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/doc-files/net-properties.html#http.nonProxyHosts):
+
+| Pattern | Connecting directly |
+| --- | --- |
+| `api.company.sk` | Only host `api.firma.sk`, even when written `API.FIRMA.SK`. |
+| `*.company.sk` | Subdomains, e.g. `api.company.sk` ; not `company.sk` or `api.company.sk.evil.sk`. |
+| `127.*` | Hosts starting with `127.`, e.g. `127.0.0.1`. |
+| `*company*` | Hosts containing `company`. |
+| All valid hosts. | `[::1]` |
+| IPv6 loopback address; write IPv6 addresses in square brackets. | IPv6 loopback adresa; IPv6 adresy zapisujte v hranatých zátvorkách. |
+
+A wildcard is one asterisk at the beginning and one at the end of the pattern, or a single `*`. The asterisks inside are literal: `api*service.sk` does not match `api-service.sk`. These are not general regular expressions; the period, square brackets, `+`, `?` and other characters are evaluated literally.
+
+WebJET does not add automatic exceptions for `localhost` or loopback addresses. An empty list means that the WebJET selector also routes these requests through the configured proxy. A non-empty normalized list is also written to the JVM property `http.nonProxyHosts` with the separator `|` during initialization. An empty list does not overwrite an existing JVM value. Additionally, clients using the default Java selector can invoke its automatic loopback exceptions.
+
 ## Sending emails
+
+SMTP is set by WebJET CMS configuration variables. At startup, it is also possible to use parameters with the prefix `webjet.`, for example `-Dwebjet.smtpServer=smtp.example.com`. Direct JVM properties `mail.smtp.*` are not downloaded. Each sending uses its own settings and mail session so that applications on a common application server do not affect each other.
 
 To send emails, you need to set up the SMTP server correctly:
 

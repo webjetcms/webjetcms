@@ -271,6 +271,17 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 				rootDirs.append(dir);
 			}
 
+            if (sk.iway.iwcm.doc.PlannedAccess.enabled() && docId > 0) {
+                sk.iway.iwcm.doc.DocDetails page = sk.iway.iwcm.doc.DocDB.getInstance().getBasicDocDetails(sk.iway.iwcm.doc.PlannedAccess.masterId(docId), false);
+                if (page != null) for (String prefix : new String[] {"/images", "/files"}) {
+                    String target = UploadFileTools.getPageUploadSubDir(page.getDocId(), page.getGroupId(), page.getTitle(), prefix);
+                    String planned = sk.iway.iwcm.doc.PlannedAssetPaths.rewriteToProtectedFolder(page.getDocId(), target);
+                    if (getCurrentUser().isFolderWritable(planned)) {
+                        IwcmFile directory = new IwcmFile(Tools.getRealPath(planned));
+                        if (directory.exists() || directory.mkdirs()) rootDirs.append(",").append(planned);
+                    }
+                }
+            }
 			_volumes[counter] = new IwcmActualPageFsVolume(Prop.getTxt("elfinder.actualPage"), "/", rootDirs.toString());
 			_volumeIds.put(_volumes[counter], IwcmFsVolume.VOLUME_ID_ACTUAL_PAGE);
 			counter++;

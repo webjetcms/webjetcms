@@ -22,6 +22,8 @@ Nad stromom sa nachádzajú tlačidlá:
 - <i class="ti ti-refresh"></i> - **Obnoviť** - obnoví stromovú štruktúru priečinkov
 - <i class="ti ti-adjustments-horizontal"></i> - **Nastavenia** - umožňuje nastaviť šírku stromovej štruktúry voči tabuľke
 
+Šírku stromu môžete zvoliť pomerom voči tabuľke alebo v pixeloch. Strom má minimálnu šírku `200 px`, aby sa doň zmestilo vyhľadávacie pole aj s tlačidlami. Menší pomer túto hranicu nezníži.
+
 ![](datatable.png)
 
 Pri vytváraní priečinka zadajte jeho názov a potvrďte formulár. Názov sa pri vytvorení upraví do bezpečného tvaru pre URL adresu a súborový systém.
@@ -78,6 +80,8 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
   - nemôže to byť vzor
 - **Poznámka** - poznámka sa zobrazí na stránke pri odkaze na dokument
 - **Uložiť dokument aj keď už existuje** - povolí uloženie súboru s rovnakým obsahom, aký už má iný dokument v manažéri. Podrobnosti nájdete v časti [Kontrola duplicitných dokumentov](#kontrola-duplicitných-dokumentov).
+
+Pri ukladaní a premenovaní polí **Produkt** a **Kategória** sa tvrdé a ostatné Unicode medzery, tabulátory a zalomenia riadkov prevedú na obyčajnú medzeru. Opakované medzery sa zlúčia a medzery na začiatku a konci názvu sa odstránia. Odstránia sa aj zvyšné riadiace znaky a neviditeľné znaky BOM, mäkký spojovník a word joiner; zero-width space sa prevedie na medzeru. Úprava platí aj pri hromadnom nahrávaní dokumentov, takže kopírovanie názvov z iných dokumentov nevytvára odlišné kategórie iba kvôli týmto znakom.
 
 !>**Upozornenie:** polia **Produkt** / **Kategória**  / **Kód produktu** Vám neskôr poslúžia pri filtrovaní zobrazenia súborov na stránke
 

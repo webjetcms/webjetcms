@@ -8,6 +8,7 @@ Before(({ I, login }) => {
 
 const settingsRoute = '**/admin/rest/dashboard/settings';
 const formsRoute = '**/admin/rest/forms-list/all';
+const topPagesRoute = '**/admin/rest/stat/top/search/findByColumns?*';
 const editOverview = '.md-dashboard__toolbar-actions > button[aria-pressed]';
 const editShortcuts = '.md-dashboard__shortcut-edit';
 const modal = '.md-dashboard-modal';
@@ -91,7 +92,7 @@ async function audit(I, a11y, context = null) {
 }
 
 After(async ({ I }) => {
-    for (const route of [dashboardPageRoute, settingsRoute, formsRoute]) await I.stopMockingRoute(route);
+    for (const route of [dashboardPageRoute, settingsRoute, formsRoute, topPagesRoute]) await I.stopMockingRoute(route);
     I.wjSetDefaultWindowSize();
 });
 
@@ -122,6 +123,30 @@ for (const width of [1337, 320]) {
         await audit(I, a11y);
     });
 }
+
+Scenario('Page preview links retain contrast on hover and keyboard focus', async ({ I, a11y }) => {
+    await I.mockRoute(topPagesRoute, route => route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({ content: [{ docId: 57, title: 'Autotest page preview',
+            name: '/Autotest/page', perexImage: '', visits: 12 }] })
+    }));
+    const items = widgetItems.filter(item => item.type === 'top-pages');
+    await openAuditDashboard(I, items);
+    for (const item of items) {
+        const card = `[data-instance-id="${item.id}"]`;
+        const preview = `${card} .md-dashboard-widget__page-preview`;
+        await showWidget(I, item.id);
+        I.waitForVisible(preview, 10);
+        I.moveCursorTo(preview);
+        await audit(I, a11y, card);
+        I.moveCursorTo(`${card} .md-dashboard__widget-header`);
+        focusControl(I, preview);
+        I.pressKey('Tab');
+        I.pressKey(['Shift', 'Tab']);
+        I.waitForFunction(selector => document.querySelector(selector).matches(':focus-visible:not(:hover)'), [preview], 10);
+        await audit(I, a11y, card);
+    }
+});
 
 Scenario('System notice actions support keyboard dismissal and undo', async ({ I, a11y }) => {
     await openAuditDashboard(I, []);

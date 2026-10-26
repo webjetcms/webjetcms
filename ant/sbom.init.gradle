@@ -1,0 +1,156 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+import org.cyclonedx.Version
+import org.cyclonedx.gradle.CyclonedxPlugin
+import org.cyclonedx.parsers.JsonParser
+import org.gradle.api.file.RegularFile
+
+initscript {
+    repositories {
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'org.cyclonedx.bom:org.cyclonedx.bom.gradle.plugin:3.5.1'
+    }
+}
+
+// The Ant sbom target supplies artifact.version and loads this reporting plugin on demand.
+rootProject {
+    apply plugin: CyclonedxPlugin
+
+    def reportDirectory = layout.buildDirectory.dir('reports/sbom')
+    def releaseVersion = providers.gradleProperty('sbomVersion')
+
+    def readValidatedBom = { File report ->
+        def errors = new JsonParser().validate(report)
+        if (!errors.isEmpty()) {
+            throw new GradleException("Invalid CycloneDX report ${report.name}: ${errors}")
+        }
+        def bom = new JsonSlurper().parse(report)
+        if (bom.specVersion != '1.6') {
+            throw new GradleException("Expected CycloneDX 1.6 in ${report.name}.")
+        }
+        def refs = [bom.metadata.component.'bom-ref'] + bom.components.collect { it.'bom-ref' }
+        if (refs.any { !it } || refs.toSet().size() != refs.size()) {
+            throw new GradleException("Missing or duplicate component identifiers in ${report.name}.")
+        }
+        def knownRefs = refs.toSet()
+        def dependencyRefs = bom.dependencies.collectMany { [it.ref] + (it.dependsOn ?: []) }
+        if (!knownRefs.containsAll(dependencyRefs)) {
+            throw new GradleException("Unresolved component references in ${report.name}.")
+        }
+        return bom
+    }
+
+    def checkVersion = tasks.register('checkSbomVersion') {
+        doLast {
+            if (!releaseVersion.isPresent() || releaseVersion.get().trim().isEmpty()) {
+                throw new GradleException('Run ant -f ant/build.xml sbom to supply the WebJET artifact version.')
+            }
+        }
+    }
+
+    tasks.named('cyclonedxDirectBom') {
+        dependsOn checkVersion
+        includeConfigs = ['distributionRuntimeClasspath']
+        componentGroup = 'com.webjetcms'
+        componentName = 'webjetcms'
+        componentVersion = releaseVersion.orElse('unspecified')
+        schemaVersion = Version.VERSION_16
+        projectType = 'application'
+        componentDescription = 'WebJET CMS distribution Gradle dependencies, including container-provided APIs; excludes local AI, test and build-tool configurations.'
+        jsonOutput = reportDirectory.map { it.file('webjetcms-java.cdx.json') }
+        xmlOutput.convention((RegularFile) null)
+        // Regenerate the inventory and timestamp on each explicit invocation.
+        outputs.upToDateWhen { false }
+        doFirst {
+            // Do not issue a seemingly complete inventory after failed dependency resolution.
+            configurations.distributionRuntimeClasspath.resolve()
+        }
+    }
+
+    def npmBom = tasks.register('sbomNpm') {
+        dependsOn checkVersion
+        description = 'Generates the administration npm dependency inventory from package-lock.json.'
+        group = 'reporting'
+        doLast {
+            def adminDirectory = file('src/main/webapp/admin/v9')
+            def manifest = new JsonSlurper().parse(new File(adminDirectory, 'package.json'))
+            def lock = new JsonSlurper().parse(new File(adminDirectory, 'package-lock.json'))
+            def lockedRoot = lock.packages?.get('')
+            if (lockedRoot == null) {
+                throw new GradleException('SBOM requires package-lock.json with lockfileVersion 2 or 3.')
+            }
+            ['dependencies', 'devDependencies', 'optionalDependencies'].each { section ->
+                if ((manifest[section] ?: [:]) != (lockedRoot[section] ?: [:])) {
+                    throw new GradleException("package.json and package-lock.json differ in ${section}; update the lockfile before generating the SBOM.")
+                }
+            }
+
+            def output = new ByteArrayOutputStream()
+            exec {
+                workingDir adminDirectory
+                commandLine System.getProperty('os.name').toLowerCase().contains('windows') ? 'npm.cmd' : 'npm',
+                    'exec', '--yes', '--ignore-scripts', "--offline=${gradle.startParameter.offline}",
+                    '--package=@cyclonedx/cyclonedx-npm@6.0.1', '--',
+                    'cyclonedx-npm', '--package-lock-only', '--omit=dev', '--flatten-components',
+                    '--spec-version=1.6', '--output-format=JSON', '--mc-type=application'
+                // Keep local npm configuration from adding or removing dependency categories.
+                environment 'npm_config_include', ''
+                environment 'npm_config_omit', ''
+                standardOutput = output
+            }
+            def bom = new JsonSlurper().parseText(output.toString('UTF-8'))
+            if (bom.bomFormat != 'CycloneDX' || !bom.metadata?.component || !bom.components) {
+                throw new GradleException('The npm generator did not return a CycloneDX dependency inventory.')
+            }
+            bom.metadata.properties = (bom.metadata.properties ?: []) + [
+                [name: 'webjet:releaseVersion', value: releaseVersion.get()],
+                [name: 'webjet:sbom:scope', value: 'Administration package-lock.json, excluding devDependencies. Pre-build inventory; does not inspect bundles, postinstall changes or vendored libraries.']
+            ]
+            def target = reportDirectory.get().file('webjetcms-admin.cdx.json').asFile
+            target.parentFile.mkdirs()
+            target.setText(JsonOutput.prettyPrint(JsonOutput.toJson(bom)) + '\n', 'UTF-8')
+        }
+    }
+
+    tasks.register('sbom') {
+        dependsOn tasks.named('cyclonedxDirectBom'), npmBom
+        description = 'Generates a combined Java and administration npm CycloneDX SBOM for a WebJET release.'
+        group = 'reporting'
+        doLast {
+            def javaBom = readValidatedBom(reportDirectory.get().file('webjetcms-java.cdx.json').asFile)
+            def adminBom = readValidatedBom(reportDirectory.get().file('webjetcms-admin.cdx.json').asFile)
+            def rootRef = javaBom.metadata.component.'bom-ref'
+            def rootDependency = javaBom.dependencies.find { it.ref == rootRef }
+            if (rootDependency == null) {
+                throw new GradleException('The Java SBOM has no dependency entry for WebJET CMS.')
+            }
+
+            // Preserve both graphs and connect the administration package to the WebJET product.
+            javaBom.components += [adminBom.metadata.component] + adminBom.components
+            javaBom.dependencies += adminBom.dependencies
+            rootDependency.dependsOn = (rootDependency.dependsOn ?: []) + adminBom.metadata.component.'bom-ref'
+            javaBom.metadata.tools.components += adminBom.metadata.tools.components
+            javaBom.metadata.component.description = 'WebJET CMS Gradle distribution and administration npm dependency inventory. Includes container-provided APIs; excludes vendored code, postinstall changes, build tools and deployment infrastructure.'
+            javaBom.metadata.properties = [
+                [name: 'webjet:releaseVersion', value: releaseVersion.get()],
+                [name: 'webjet:sbom:scope', value: javaBom.metadata.component.description],
+                [name: 'webjet:sbom:java-configuration', value: 'distributionRuntimeClasspath'],
+                [name: 'webjet:sbom:npm-source', value: 'src/main/webapp/admin/v9/package-lock.json (omit dev)']
+            ]
+            javaBom.metadata.timestamp = java.time.Instant.now().toString()
+            javaBom.serialNumber = "urn:uuid:${UUID.randomUUID()}"
+            // A manifest inventory cannot claim completeness for the shipped WebJET product.
+            javaBom.compositions = [[aggregate: 'incomplete', assemblies: [rootRef]]]
+
+            def combined = new File(temporaryDir, 'webjetcms.cdx.json')
+            combined.setText(JsonOutput.prettyPrint(JsonOutput.toJson(javaBom)) + '\n', 'UTF-8')
+            readValidatedBom(combined)
+            def target = reportDirectory.get().file('webjetcms.cdx.json').asFile
+            java.nio.file.Files.move(combined.toPath(), target.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            logger.lifecycle("SBOM for WebJET ${releaseVersion.get()}: ${target}")
+            logger.lifecycle('Scope: Gradle distribution dependencies and npm lockfile. Review vendored libraries and postinstall changes before using this as a complete product SBOM.')
+        }
+    }
+}

@@ -18,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import jakarta.mail.Message;
+import jakarta.mail.Session;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
 import sk.iway.iwcm.helpers.MailHelper;
@@ -38,10 +39,10 @@ class SendMailSenderTest {
     @BeforeEach
     void setUp() {
         systemProperties = (Properties) System.getProperties().clone();
+        adminlog = mockStatic(Adminlog.class);
         constants = mockStatic(Constants.class);
         props = mockStatic(Prop.class);
         transport = mockStatic(Transport.class);
-        adminlog = mockStatic(Adminlog.class);
         constants.when(() -> Constants.getString(anyString())).thenReturn("");
         constants.when(() -> Constants.getString("smtpServer")).thenReturn("localhost");
         constants.when(() -> Constants.getString("emailEncoding")).thenReturn("UTF-8");
@@ -128,6 +129,33 @@ class SendMailSenderTest {
 
         assertSender(message, "visitor@external.com", "Original sender");
         assertReplyTo(message, null);
+    }
+
+    /** Ignores another application's JVM mail settings and leaves them unchanged when preparing a message. */
+    @Test
+    void isolatesMessageFromSystemMailProperties() throws Exception {
+        System.setProperty("mail.smtp.host", "other.example.com");
+        System.setProperty("mail.smtp.port", "465");
+        System.setProperty("mail.smtp.socketFactory.port", "465");
+        System.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        System.setProperty("mail.smtp.auth", "true");
+        System.setProperty("mail.aws.password", "test-other-secret");
+        System.setProperty("mail.mime.charset", "ISO-8859-1");
+        Properties before = (Properties) System.getProperties().clone();
+        constants.when(() -> Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_NAME_KEY)).thenReturn("Žofia Šťastná");
+
+        Message message = send("visitor@external.com", null, "recipient@example.com");
+
+        assertTrue(before.equals(System.getProperties()), "Preparing mail must not change JVM properties");
+        Session session = message.getSession();
+        assertEquals("localhost", session.getProperty("mail.smtp.host"));
+        assertEquals("25", session.getProperty("mail.smtp.port"));
+        assertNull(session.getProperty("mail.smtp.socketFactory.port"));
+        assertNull(session.getProperty("mail.smtp.socketFactory.class"));
+        assertNull(session.getProperty("mail.smtp.auth"));
+        assertNull(session.getProperty("mail.aws.password"));
+        assertSender(message, "noreply@example.com", "Žofia Šťastná");
+        assertTrue(message.getHeader("From")[0].toUpperCase(java.util.Locale.ROOT).contains("=?UTF-8?"));
     }
 
     private Message send(String senderEmail, String replyTo, String recipientEmail) {

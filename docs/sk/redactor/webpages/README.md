@@ -60,10 +60,32 @@ Zoznam web stránok ponúka taktiež špeciálnu ikonu ![](recover-button.png ":
 Data tabuľka v zozname stránok obsahuje nasledovné špeciálne ikony:
 
 - <i class="ti ti-eye fa-btn" role="presentation"></i> - Zobraz stránku - po označení jedného alebo viacerých riadkov a kliknutí na ikonu sa otvorí v novom okne/karte zvolená web stránka.
-- <i class="ti ti-a-b fa-btn" role="presentation"></i> - Uložiť ako AB test - vytvorí B verziu stránky pre [AB testovanie](../apps/abtesting/README.md).
-- <i class="ti ti-chart-line fa-btn" role="presentation"></i> - Štatistika stránky - zobrazí [návštevnosť](../apps/stat/README.md) označenej web stránky.
-- <i class="ti ti-link-off fa-btn" role="presentation"></i> - Kontrola odkazov a prázdnych stránok - skontroluje [platnosť odkazov](linkcheck.md) v stránkach v aktuálnom priečinku a podpriečinkoch, zobrazí stránky, ktoré nemajú zadaný žiaden text.
 - ![](icon-recursive.png ":no-zoom") - Zobraziť stránky aj z podadresárov - prepnutím prepínača do zapnutej polohy zobrazíte v tabuľke aj web stránky z podadresárov
+
+### Ďalšie akcie a hromadná zmena skupín
+
+Tlačidlo <i class="ti ti-dots" role="presentation"></i> **Ďalšie akcie** nájdete v pravej časti nástrojovej lišty pri obnovení údajov a nastaveniach tabuľky.
+
+![Ponuka Ďalšie akcie v zozname webových stránok](more-actions.png)
+
+Na karte **Aktívne** obsahuje:
+
+- **Pridať značku** – pridá zvolenú značku k označeným stránkam. Zachová ich ostatné značky; už priradenú značku nepridá druhýkrát.
+- **Odobrať značku** – odstráni zvolenú značku z označených stránok. Zachová ostatné značky a stránky bez zvolenej značky nezmení.
+- **Pridať skupinu používateľov** – pridá zvolenú skupinu k označeným stránkam bez zmeny ostatných priradených skupín používateľov.
+- **Odobrať skupinu používateľov** – odstráni zvolenú skupinu z označených stránok. Stránky bez tejto skupiny nezmení.
+- **Uložiť ako AB test** – vytvorí B verziu označenej stránky pre [AB testovanie](../apps/abtesting/README.md).
+- **Štatistika stránky** – zobrazí [návštevnosť](../apps/stat/README.md) označených stránok. Je dostupná aj v prehľadoch histórie a plánovaného publikovania.
+- **Kontrola odkazov a prázdnych stránok** – skontroluje [platnosť odkazov](linkcheck.md) v aktuálnom priečinku a podpriečinkoch a vyhľadá prázdne stránky. Nevyžaduje označenie stránok.
+- **Import/Export** – otvorí [import a export web stránok](import-export.md) pre vybraný priečinok. Nevyžaduje označenie stránok.
+
+Ak chcete hromadne zmeniť značku, označte stránky v prvom stĺpci tabuľky, otvorte **Ďalšie akcie** a vyberte pridanie alebo odobratie. V dialógu zvoľte jednu značku a kliknite na **Potvrdiť**. Pri pridávaní sa ponúkajú značky dostupné pre všetky označené stránky. Pri odoberaní sa ponúkajú značky priradené aspoň jednej z nich.
+
+Rovnakým postupom pridáte alebo odoberiete skupinu používateľov. Výber obsahuje spoločne skupiny práv aj e-mailové skupiny spravované v časti **Používatelia → Skupiny používateľov**. Pri odoberaní sa zobrazujú iba skupiny priradené aspoň jednej označenej stránke. Zmena sa prejaví na karte **Prístup** v editore stránky.
+
+Pri stránkach prepojených cez **Kópia web stránky v** sa dostupné aj priradené skupiny vyhodnocujú podľa hlavnej stránky, rovnako ako pri jej editácii.
+
+Zmena vyžaduje právo na editáciu stránok a používa bežné ukladanie vrátane histórie a prípadného schvaľovania. Po uložení sa zoznam obnoví.
 
 ### Ikony a farby v stromovej štruktúre a zozname stránok
 
@@ -97,6 +119,27 @@ V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class
 - **Zoradiť strom smerom** - Prepínanie medzi smerom usporiadania stromu priečinkov. Výberom možnosti sa použije smer **Vzostupne** a nezvolením možnosti sa použije smer **Zostupne**.
 
 ![](jstree-settings.png)
+
+### Predvolené nastavenie pre používateľov
+
+Ak používateľ ešte neuložil vlastné nastavenie zobrazenia, strom sa zoradí podľa **Poradia usporiadania vzostupne**, teda od najnižšej hodnoty. ID a poradie sa pri názvoch nezobrazujú.
+
+Správca môže predvolené zobrazenie upraviť v sekcii **Nastavenia → Konfigurácia** premennou `webpagesTreeDefaultSettings`. Jej predvolená hodnota je:
+
+```json
+{
+  "showId": false,
+  "showPriority": false,
+  "showPages": false,
+  "showFoldersDt": false,
+  "treeWidth": 4,
+  "treeSortType": "priority",
+  "treeSortOrderAsc": true,
+  "showRealName": false
+}
+```
+
+Pre predvolené zobrazenie ID a poradia nastavte `showId` a `showPriority` na `true`. Hodnota `treeSortType` môže byť `priority` (poradie usporiadania), `title` (názov) alebo `createDate` (dátum vytvorenia). Hodnota `treeSortOrderAsc: true` znamená vzostupné poradie, `false` zostupné. `treeWidth` určuje počet stĺpcov z dvanástich alebo pevnú šírku v pixeloch podľa možností v dialógovom okne.
 
 ## Vyhľadávanie v stromovej štruktúre
 

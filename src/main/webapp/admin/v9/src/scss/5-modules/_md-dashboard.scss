@@ -1214,7 +1214,7 @@ webjet-overview-dashboard a:focus-visible {
         min-width: 0;
         text-decoration: none;
         color: var(--wj-secondary);
-        &:hover { color: var(--wj-primary); }
+        &:hover, &:focus-visible { color: var(--wj-dashboard-link); }
     }
     &__page { padding: 12px 0; }
     &__page-image {

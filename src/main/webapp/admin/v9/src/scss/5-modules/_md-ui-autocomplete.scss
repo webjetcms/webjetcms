@@ -47,7 +47,7 @@ ul.ui-autocomplete.ui-menu {
             &.dt-autocomplete-selected > .ui-menu-item-wrapper {
                 background-color: $menu-selected-bg;
                 color: $menu-selected-color;
-                &::after { content: $ti-icon-check; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font: 16px tabler-icons; }
+                &::after { content: $ti-icon-check; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font: 16px 'tabler-icons-filled'; }
             }
         }
     }

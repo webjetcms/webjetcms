@@ -501,6 +501,8 @@ Pokud potřebujete ukládat některá nastavení uživatele můžete použít ``
 
 Pro použití je dostupné API pro JavaScript i pro serverové zpracování.
 
+Pro klíč `jstreeSettings_web-pages-list` poskytuje `AdminSettingsService` a objekt `window.currentUser.adminSettings` výchozí hodnotu z konfigurace `webpagesTreeDefaultSettings`, pokud uživatel nemá uložené vlastní nastavení. Výchozí hodnota se při čtení nezapisuje do databáze ani do nastavení v uživatelské relaci. Stávající JSON se s konfigurací neslučuje. Podrobnosti jsou v [nastavení zobrazení stromu](../../redactor/webpages/README.md#výchozí-nastavení-pro-uživatele).
+
 !>**Upozornění**: do nastavení neukládejte velké objekty, nastavení jsou vkládána do HTML kódu administrace a velké objekty by neúměrně zvětšovaly objem přenášených dat.
 
 ### Použití na frontendu
