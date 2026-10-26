@@ -23,6 +23,7 @@ import sk.iway.iwcm.system.datatable.SortDefinition;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
+import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
@@ -44,6 +45,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @Service
+// Keep domain, operation type, language mappings and validation errors isolated per request.
+@RequestScope
 public class MirroringService {
 
     public static final Character LAST_ALPHABET = 'H';
