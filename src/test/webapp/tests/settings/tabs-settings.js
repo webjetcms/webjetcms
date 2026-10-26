@@ -41,7 +41,9 @@ Scenario('Validate, create and edit a tab', ({ I, DT, DTE }) => {
     DTE.waitForEditor();
     I.seeElement('#pills-dt-editor-datatableInit li:first-child.autotest-tab a.active');
     I.see(marker, '#pills-dt-datatableInit-' + marker + '-tab');
-    I.see(marker + '-content', '#datatableInit_modal');
+    // Escaped markup also contains the text, so require an actual paragraph in the tab.
+    I.seeElement('#panel-body-dt-datatableInit-' + marker + ' > p');
+    I.see(marker + '-content', '#panel-body-dt-datatableInit-' + marker + ' > p');
     DTE.cancel();
     I.clickCss('#datatableInit_wrapper button.buttons-create');
     DTE.waitForEditor();
@@ -77,7 +79,8 @@ Scenario('Validate, create and edit a tab', ({ I, DT, DTE }) => {
     I.seeElement('#pills-dt-editor-datatableInit li:has(> #pills-dt-datatableInit-basic-tab) + li > #pills-dt-datatableInit-' + marker + '-tab');
     I.clickCss('#pills-dt-datatableInit-' + marker + '-tab');
     I.see(marker + '-edited', '#pills-dt-datatableInit-' + marker + '-tab');
-    I.see(marker + '-content', '#datatableInit_modal');
+    I.seeElement('#panel-body-dt-datatableInit-' + marker + ' > p');
+    I.see(marker + '-content', '#panel-body-dt-datatableInit-' + marker + ' > p');
     DTE.cancel();
 });
 

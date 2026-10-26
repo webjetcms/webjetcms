@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.tabs_settings.jpa;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
@@ -17,6 +18,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 /**
  * Stores editor tab settings for an entity class and domain.
@@ -99,6 +101,7 @@ public class TabsSettingsEntity {
 
     @Lob
     @Column(name = "content")
+    @Convert(converter = AllowHtmlAttributeConverter.class)
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "settings.tabs-settings.content", tab = "basic", className = "ai-off", visible = false, filter = false, orderable = false)
     private String content;
 
