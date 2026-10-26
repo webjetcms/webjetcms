@@ -11,6 +11,8 @@ const folders = {};
 const roots = {};
 let suffix, pageTitle, originalConfig, originalTitleSync, originalWarnings;
 let cancelSyncUser;
+let deletePermissionGroups;
+const editableGroups = '#editorAppDTE_Field_editorFields-editableGroups';
 
 Before(async ({ I, login, Document }) => {
     login('admin');
@@ -333,6 +335,77 @@ Scenario('Show warning icons beside the affected folders and navigate overflow l
     openFolder(I, DT, folders.sk);
     I.dontSeeElement(node(folders.sk) + ' > a .ti-alert-triangle.text-warning');
     I.seeElement(node(folders.sk) + ' .jstree-mirror-link');
+});
+
+Scenario('Reject mirrored page deletion if the last mirror is forbidden', async ({ I, DT, DTE, Document }) => {
+    const ids = {};
+    for (const [key, folder] of Object.entries(folders)) {
+        openFolder(I, DT, folder);
+        ids[key] = await I.grabAttributeFrom(locate('#datatableInit tbody tr').withText(pageTitle), 'id');
+    }
+    // Cascades use page ID order; language creation order can vary.
+    const forbidden = Object.keys(ids).filter(key => key !== 'sk').sort((a, b) => Number(ids[b]) - Number(ids[a]))[0];
+    const allowed = Object.keys(ids).filter(key => key !== forbidden);
+    for (const key of allowed) I.assertAbove(Number(ids[forbidden]), Number(ids[key]));
+
+    I.amOnPage('/admin/v9/users/user-list/');
+    DT.filterEquals('login', 'tester2');
+    I.click('#datatableInit tbody td.dt-row-edit a');
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
+    for (const permission of ['deletePage', 'pageSave']) {
+        I.seeNumberOfElements(`#DTE_Field_editorFields-enabledItems li[id="perms_${permission}"] > a.jstree-clicked`, 1);
+    }
+    deletePermissionGroups = await I.grabValueFromAll(editableGroups + ' input.form-control');
+    for (const root of allowed.map(key => key === 'cz' ? roots.container : roots[key])) {
+        I.click(editableGroups + ' button.btn-webjet-jstree-add');
+        I.waitForVisible(WebjetDteJsTree.tree);
+        I.waitForVisible(locate(WebjetDteJsTree.anchors).withText(domain));
+        I.click(locate(WebjetDteJsTree.anchors).withText(domain));
+        I.waitForVisible(WebjetDteJsTree.tree + ` li[id="${root.id}"] > a`);
+        I.click(WebjetDteJsTree.tree + ` li[id="${root.id}"] > a`);
+        I.waitForInvisible(WebjetDteJsTree.tree);
+    }
+    DTE.save();
+    I.relogin('tester2');
+    I.amOnPage(pageUrl);
+    Document.switchDomain(domain);
+    openPageDelete(I, DT, DTE, folders.sk);
+    I.waitForText('ku ktorým nemáte prístup', 20, pageModal + ' .delete-mirrors-info');
+    I.waitForEnabled(pageModal + ' button.btn-primary', 20);
+    DTE.save();
+    I.waitForText('nemáte právo na zmazanie web stránky', 20, pageModal + ' .DTE_Form_Error');
+    DTE.cancel();
+
+    I.relogin('admin');
+    I.amOnPage(pageUrl);
+    Document.switchDomain(domain);
+    for (const [key, folder] of Object.entries(folders)) {
+        openFolder(I, DT, folder);
+        I.dontSeeElement('#pills-trash-tab.active');
+        const row = locate('#datatableInit tbody tr').withText(pageTitle);
+        I.seeNumberOfElements(row, 1);
+        I.assertEqual(await I.grabAttributeFrom(row, 'id'), ids[key]);
+    }
+});
+
+Scenario('Restore editable roots after denied mirror deletion', async ({ I, DT, DTE }) => {
+    if (deletePermissionGroups === undefined) return;
+    I.relogin('admin');
+    I.amOnPage('/admin/v9/users/user-list/');
+    DT.filterEquals('login', 'tester2');
+    I.click('#datatableInit tbody td.dt-row-edit a');
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
+    const paths = await I.grabValueFromAll(editableGroups + ' input.form-control');
+    for (let index = paths.length - 1; index >= 0; index--) {
+        if ([roots.sk, roots.en, roots['duplicate-sk'], roots.container].some(root => paths[index].endsWith('/' + root.name))) {
+            I.click(locate(editableGroups + ' button.btn-webjet-jstree-item-remove').at(index + 1));
+        }
+    }
+    I.assertDeepEqual(await I.grabValueFromAll(editableGroups + ' input.form-control'), deletePermissionGroups);
+    DTE.save();
+    I.waitForInvisible(pageModal);
 });
 
 Scenario('Move the previewed pages and both selected mirrored folders to Trash', async ({ I, DT, DTE }) => {

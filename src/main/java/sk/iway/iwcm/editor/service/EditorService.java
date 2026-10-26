@@ -27,6 +27,8 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
+import sk.iway.iwcm.components.structuremirroring.MirroringService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocBasic;
@@ -1561,7 +1563,19 @@ public class EditorService {
 			//Doc, do not need approve OR
 			//current user IS self approver, can do delete action
 
-			if (publishEvents) (new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
+			if (publishEvents) {
+				// Check every mirror before ON_DELETE listeners can delete any member of the mirrored set.
+				if (MirroringService.isEnabled(docDetails.getGroupId())
+						&& !"Nový podadresár".equals(docDetails.getTitle()) && !prop.getText("editor.dir.new_dir").equals(docDetails.getTitle())) {
+					int syncId = DocMirroringServiceV9.getSyncId(delDocId);
+					if (syncId > 1) {
+						for (DocDetails mirror : DocMirroringServiceV9.getDocBySyncId(syncId, delDocId)) {
+							if (!DeleteRequestContext.isDeleted(DocDetails.class, mirror.getDocId())) checkPermissions(currentUser, mirror, true);
+						}
+					}
+				}
+				(new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
+			}
 
 			// zisti ci sme v adresari /System/Trash (kos), ak nie presun, inak vymaz
 			String navbarNoHref = DB.internationalToEnglish(groupsDB.getURLPath(docDetails.getGroupId())).toLowerCase();
