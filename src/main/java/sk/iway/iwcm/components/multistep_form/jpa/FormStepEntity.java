@@ -20,6 +20,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
@@ -35,6 +37,11 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_MULTISTEP_FORM)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "main", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "stepBonusHtml", title = "components.insert_script.body", content = "<div></div>")
+})
 public class FormStepEntity {
 
     @Id

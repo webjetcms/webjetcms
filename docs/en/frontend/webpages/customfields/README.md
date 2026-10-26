@@ -25,7 +25,7 @@ The names Field A - Field X can be changed in the configuration in the text edit
 
 Technical information can be found in the [programmer documentation](../../../developer/datatables-editor/customfields.md).
 
-!>Settings can also be made via the [Optional Fields] table (custom-fields-settings.md). If an entry for the same field exists in the table, it takes precedence over the configuration from the translation keys.
+!>We recommend making settings via the [Custom Fields](../../datatables/custom-fields-settings.md) user interface. If an entry for the same field exists in the table, it takes precedence over the configuration from translation keys.
 
 ## Field types
 
@@ -101,11 +101,11 @@ The values ​​are then stored in an array separated by the `|` character.
 
 ### Switch
 
-The field type `radio` displays a list of options as a radio button, the user can select exactly one value. The options are set in the [Optional fields] table (custom-fields-settings.md) in the same way as for a selection field - as a static list of values, or dynamically by linking to a number list.
+The field type `radio` displays a list of options as a radio button, the user can select exactly one value. The options are set in the [Optional fields] table (../../datatables/custom-fields-settings.md) in the same way as for a selection field - as a static list of values, or dynamically by linking to a number list.
 
 ### Checkbox
 
-The field type `checkbox` displays a list of options as checkboxes, the user can select multiple values. The options are set in the [Optional Fields] table (custom-fields-settings.md) in the same way as for a select field - as a static list of values, or dynamically by linking to a dial pad.
+The field type `checkbox` displays a list of options as checkboxes, the user can select multiple values. The options are set in the [Optional Fields](../../datatables/custom-fields-settings.md) table in the same way as for a select field - as a static list of values, or dynamically by linking to a number list.
 
 The selected values ​​are stored in an array separated by the `|` character.
 
@@ -235,7 +235,7 @@ The field type `color` allows you to select a color, including setting the trans
 
 ### JSON Editor
 
-The field type `jsoneditor` is used for direct input and editing of JSON values. Set the field type in [custom field settings](custom-fields-settings.md) to **JSON Editor**, or use the translation key:
+The field type `jsoneditor` is used for direct input and editing of JSON values. Set the field type in [custom field settings](../../datatables/custom-fields-settings.md) to **JSON Editor**, or use the translation key:
 
 ```properties
 editor.field_g.type=jsoneditor

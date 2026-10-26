@@ -40,12 +40,8 @@
         content += '<button class="btn btn-primary reset" style="margin: 5px;">[[#{reservation.reservations.reset}]]</button>';
         content += '</div>';
 
-        var tabs = [
-            { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true },
-            { id: 'personalInfo', title: '[[#{reservation.reservations.personal_info}]]', selected: false },
-            { id: 'acceptation', title: '[[#{reservation.reservations.actions}]]', selected: false, content: content },
-            { id: 'specialPrice', title: '[[#{components.reservation.reservation_object_reservation_price.extra_price}]]', selected: false }
-        ];
+        var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.reservation.jpa.ReservationEntity')})];
+        tabs.find(tab => tab.id === "acceptation").content = content;
 
         reservationDataTable = WJ.DataTable({
             url: url,

@@ -32,6 +32,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -42,6 +44,14 @@ import sk.iway.iwcm.users.UsersDB;
 @Table(name="file_archiv")
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+	@DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+	@DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+	@DataTableTab(id = "customFields", title = "editor.tab.fields"),
+	@DataTableTab(id = "listOfVersions", title = "components.file_archiv.list_of_version"),
+	@DataTableTab(id = "waitingFiles", title = "components.file_archiv.waiting_files"),
+	@DataTableTab(id = "listOfPattern", title = "components.file_archiv.listOfPattern")
+})
 public class FileArchivatorBean extends ActiveRecordRepository implements Serializable
 {
 

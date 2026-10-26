@@ -23,6 +23,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Entity
@@ -31,6 +33,13 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_AI)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "action", title = "editor.form.action"),
+    @DataTableTab(id = "provider", title = "components.ai_assistants.provider"),
+    @DataTableTab(id = "instructions", title = "components.ai_assistants.instruction_tab"),
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced")
+})
 public class AssistantDefinitionEntity implements Serializable {
 
     @Id

@@ -237,6 +237,16 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
 
+### Dátové tabuľky
+
+- Sekcia **Nastavenia → Dátové tabuľky** združuje [Nastavenia polí](frontend/datatables/fields-settings.md), [Nastavenia kariet](frontend/datatables/tabs-settings.md) a [Voliteľné polia](frontend/datatables/custom-fields-settings.md). Pre jednotlivé entity a domény môžete meniť názvy, poradie a zobrazenie polí či zakázať ich úpravy. Môžete tiež upravovať karty editora a vytvárať vlastné karty s voliteľnými poľami. **Upozornenie:** Pôvodné oprávnenie **Voliteľné polia** (`customFields`) bolo odstránené. Po aktualizácii je potrebné príslušným používateľom alebo skupinám práv prideliť nové oprávnenie **Dátové tabuľky** (`dataTablesConfig`). Pôvodné oprávnenia sa automaticky neprenesú (#366).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Webové stránky - pri ukladaní sa zachovajú hodnoty polí skrytých v editore a polí so zakázanými úpravami podľa rovnakých pravidiel ako v ostatných dátových tabuľkách. Pri úprave z histórie sa použijú hodnoty z vybranej verzie stránky (#366).
+
 ### Voliteľné polia
 
 - Kompletne implementovaná funkčnosť [nastavenia voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálne nastaviť vlastnosti polí bez editácie prekladových kľúčov. Podporované sú všetky typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázok, odkaz, JSON a ďalšie) s typovo špecifickými nastaveniami ako maximálna dĺžka textu, možnosti výberu, prepojenie na číselníky alebo závislosť na iných poliach. Používateľské rozhranie ponúka aj jednoduchý spôsob nastavenia možných hodnôt pre výberové/autocomplete polia (#58529).
@@ -299,7 +309,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
-- Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránk (#372).
+- Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránok (#372).
 - Editor stránok - pri automatickej maximalizácii v nízkom alebo úzkom okne zostáva celý panel nástrojov nad obsahom stránky. Obsah už nepresvitá pod ikonami a názvami skupín (#372).
 - Editor stránok - pri zlyhaní získania obsahu alebo hodnote `undefined` sa zobrazí chyba a uloženie sa zastaví, aby sa neprepísal pôvodný obsah. Atribúty `contenteditable` sa odstraňujú pri načítaní aj ukladaní HTML vrátane kódu vloženého v HTML režime (#369).
 - Page Builder - pri zlyhaní načítania obsahu možno prepnúť do HTML režimu obnovením posledného dostupného HTML. Obnova vyžaduje potvrdenie, pretože nemusí obsahovať najnovšie zmeny (#369).
@@ -340,6 +350,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- Datatabuľky - tabuľky nastavení majú spoločný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Existujúca tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje so zachovaním údajov; vlastné SQL dotazy treba upraviť na `dt_customfields` (#58830).
+- Datatabuľky - triedy pre [systémové nastavenia](developer/datatables/README.md#systémové-nastavenia) voliteľných polí, polí a kariet boli presunuté pod `sk.iway.iwcm.system.datatable.settings` do podbalíkov `customfields`, `fields` a `tabs`. Vlastný kód a šablóny používajúce tieto triedy vyžadujú aktualizáciu importov a úplných názvov tried (#58830).
+- Datatabuľky - pridaný typ poľa [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pre výber jednej možnosti zo skupiny tlačidiel. Používa štýly administrácie a podporuje aj voľbu **Bez zmeny** pri trojstavových nastaveniach (#58830).
 - SBOM - pridané [generovanie spoločného zoznamu Java a npm závislostí](developer/install/sbom.md) vo formáte CycloneDX JSON príkazom `ant -f ant/build.xml sbom`, vrátane tranzitívnych závislostí a validácie reportu.
 - [Centrálny generátor noviniek](developer/install/social-media-feed.md) po úspešnom publikovaní odstráni nepoužívané náhľady s 30-dňovou ochrannou lehotou. Zachová obrázky aktuálnych príspevkov aj záložných údajov pre výpadok zdroja (#358).
 - Editor stránok - [nastavenie ponuky Štýly](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) podporuje metadáta v komentároch `editor.scss` / `editor.css` pre kategórie a ich ikony, vzájomne sa nahrádzajúce skupiny, povolené elementy a základné triedy zachované pri obnovení vzhľadu. Nová ponuka je predvolene zapnutá; nastavením `ckeditor_styleComboEnabled=false` sa obnoví pôvodný výber štýlov (#OSK764).
