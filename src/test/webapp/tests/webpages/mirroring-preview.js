@@ -217,6 +217,16 @@ Scenario('Keep original page and folder mirrors when moving to another mirrored 
         I.click(locate(node(roots[key]) + ' > ul > li > a.jstree-anchor').withText(sourceName));
         DT.waitForLoader();
         const source = { id: await I.grabValueFrom('#tree-folder-id') };
+        I.click('#datatableInit tbody tr.is-default-page td.dt-row-edit a');
+        DTE.waitForEditor();
+        I.clickCss('#pills-dt-datatableInit-basic-tab');
+        I.checkOption('#DTE_Field_generateUrlFromTitle_0');
+        DTE.save();
+        I.click('#datatableInit tbody tr.is-default-page td.dt-row-edit a');
+        DTE.waitForEditor();
+        I.clickCss('#pills-dt-datatableInit-basic-tab');
+        source.oldUrl = await I.grabValueFrom('#DTE_Field_virtualPath');
+        DTE.cancel();
         if (key === 'sk') {
             I.click(DT.btn.add_button);
             DTE.waitForEditor();
@@ -256,6 +266,13 @@ Scenario('Keep original page and folder mirrors when moving to another mirrored 
     for (const [key, branch] of Object.entries(branches)) {
         openFolder(I, DT, branch.source);
         I.dontSeeElement(pageRow);
+        I.click('#datatableInit tbody tr.is-default-page td.dt-row-edit a');
+        DTE.waitForEditor();
+        I.clickCss('#pills-dt-datatableInit-basic-tab');
+        const movedUrl = await I.grabValueFrom('#DTE_Field_virtualPath');
+        I.assertNotEqual(movedUrl, branch.source.oldUrl);
+        I.assertContain(movedUrl, '/' + targetName + '/');
+        DTE.cancel();
         I.dontSeeElement(node(roots[key]) + ` > ul > li[id="${branch.source.id}"]`);
         openFolder(I, DT, branch.target);
         I.seeNumberOfElements(pageRow, 1);
