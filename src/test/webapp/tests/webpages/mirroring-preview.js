@@ -1,5 +1,7 @@
 Feature('webpages.mirroring-preview').tag('@singlethread');
 
+const WebjetDteJsTree = require('../../pages/WebjetDteJsTree');
+
 const pageUrl = '/admin/v9/webpages/web-pages-list/';
 const domain = 'mirroring.tau27.iway.sk';
 const configName = 'structureMirroringConfig';
@@ -194,6 +196,76 @@ Scenario('Hide mirror links without the mirroring permission', ({ I }) => {
     I.waitForElement(node(folders.sk) + ' > a.jstree-clicked', 30);
     I.dontSeeElement(node(folders.sk) + ' .jstree-mirror-link');
     I.relogin('admin');
+});
+
+Scenario('Keep original page and folder mirrors when moving to another mirrored folder', async ({ I, DT, DTE }) => {
+    const sourceName = pageTitle + '-move-source', targetName = pageTitle + '-move-target';
+    const title = pageTitle + '-move-page', translatedName = pageTitle + '-move-translated';
+    const pageRow = locate('#datatableInit tbody tr').withText(title);
+    const branches = {};
+    for (const name of [sourceName, targetName]) {
+        openFolder(I, DT, roots.sk);
+        I.click(DT.btn.tree_add_button);
+        DTE.waitForEditor('groups-datatable');
+        I.fillField('#DTE_Field_groupName', name);
+        DTE.save();
+    }
+    for (const key of ['sk', 'en', 'cz', 'duplicate-sk']) {
+        openFolder(I, DT, roots[key]);
+        if (await I.grabNumberOfVisibleElements(node(roots[key]) + '.jstree-closed')) I.click(node(roots[key]) + ' > .jstree-ocl');
+        I.jstreeWaitForLoader();
+        I.click(locate(node(roots[key]) + ' > ul > li > a.jstree-anchor').withText(sourceName));
+        DT.waitForLoader();
+        const source = { id: await I.grabValueFrom('#tree-folder-id') };
+        if (key === 'sk') {
+            I.click(DT.btn.add_button);
+            DTE.waitForEditor();
+            I.fillField('#DTE_Field_title', title);
+            DTE.save();
+        }
+        I.seeNumberOfElements(pageRow, 1);
+        const pageId = await I.grabAttributeFrom(pageRow, 'id');
+        I.click(locate(node(roots[key]) + ' > ul > li > a.jstree-anchor').withText(targetName));
+        DT.waitForLoader();
+        branches[key] = { source, target: { id: await I.grabValueFrom('#tree-folder-id') }, pageId };
+    }
+    for (const type of ['page', 'folder']) {
+        const isPage = type === 'page';
+        if (!isPage) {
+            // A translated name must not make the move create another folder.
+            openFolder(I, DT, branches.en.source);
+            I.click(DT.btn.tree_edit_button);
+            DTE.waitForEditor('groups-datatable');
+            I.fillField('#DTE_Field_groupName', translatedName);
+            DTE.save();
+        }
+        openFolder(I, DT, branches.sk.source);
+        if (isPage) I.click(title, '#datatableInit tbody');
+        else I.click(DT.btn.tree_edit_button);
+        DTE.waitForEditor(isPage ? 'datatableInit' : 'groups-datatable');
+        if (isPage) I.clickCss('#pills-dt-datatableInit-basic-tab');
+        I.clickCss('#editorAppDTE_Field_editorFields-' + (isPage ? 'groupDetails' : 'parentGroupDetails') + ' button.btn-webjet-jstree-item-edit');
+        I.waitForVisible(WebjetDteJsTree.tree);
+        const pickerRoot = WebjetDteJsTree.tree + ` li[id="${roots.sk.id}"]`;
+        if (await I.grabNumberOfVisibleElements(pickerRoot + '.jstree-closed')) I.click(pickerRoot + ' > .jstree-ocl');
+        I.waitForInvisible(WebjetDteJsTree.loading);
+        I.click(WebjetDteJsTree.tree + ` li[id="${branches.sk.target.id}"] > a.jstree-anchor`);
+        I.waitForInvisible(WebjetDteJsTree.tree);
+        DTE.save();
+    }
+    for (const [key, branch] of Object.entries(branches)) {
+        openFolder(I, DT, branch.source);
+        I.dontSeeElement(pageRow);
+        I.dontSeeElement(node(roots[key]) + ` > ul > li[id="${branch.source.id}"]`);
+        openFolder(I, DT, branch.target);
+        I.seeNumberOfElements(pageRow, 1);
+        I.assertEqual(await I.grabAttributeFrom(pageRow, 'id'), branch.pageId);
+        if (await I.grabNumberOfVisibleElements(node(branch.target) + '.jstree-closed')) I.click(node(branch.target) + ' > .jstree-ocl');
+        I.jstreeWaitForLoader();
+        I.seeNumberOfElements(node(branch.target) + ' > ul > li:not([id^="docId-"])', 1);
+        I.seeElement(node(branch.target) + ` > ul > li[id="${branch.source.id}"]`);
+        I.see(key === 'en' ? translatedName : sourceName, node(branch.source) + ' > a');
+    }
 });
 
 Scenario('Reject folder deletion without deleteDir while editing remains allowed', async ({ I, DT }) => {

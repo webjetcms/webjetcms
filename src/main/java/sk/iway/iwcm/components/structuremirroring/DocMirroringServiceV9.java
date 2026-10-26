@@ -62,6 +62,29 @@ public class DocMirroringServiceV9 {
          if (doc.getSyncId()>1) {
             //najdi k tomu mirror verziu
             List<DocDetails> syncedDocs = getDocBySyncId(doc.getSyncId(), doc.getDocId());
+            GroupDetails group = groupsDB.getGroup(doc.getGroupId());
+
+            // Move existing mirrors before deciding which destinations need a new copy.
+            if (syncedDocs.size()>0 && group != null) {
+               List<GroupDetails> syncedGroups = GroupMirroringServiceV9.getGroupsBySyncId(group.getSyncId(), group.getGroupId());
+               for (DocDetails syncedDoc : syncedDocs) {
+                  GroupDetails syncedGroup = groupsDB.getGroup(syncedDoc.getGroupId());
+                  GroupDetails syncedCorrectGroup = MirroringService.selectMappedGroup(syncedGroup, syncedGroups);
+                  if (syncedCorrectGroup != null) {
+                     if (syncedGroup.getGroupId()!=syncedCorrectGroup.getGroupId()) {
+                        Logger.debug(DocMirroringServiceV9.class, "NESEDI PARENT GROUP, syncedGroup="+syncedGroup.toString()+" syncedCorrectGroup="+syncedCorrectGroup.toString());
+                        DocDetails docToSave = docDB.getDoc(syncedDoc.getDocId());
+                        docToSave.setGroupId(syncedCorrectGroup.getGroupId());
+                        docToSave.setAuthorId(doc.getAuthorId());
+                        if (!DocDB.saveDoc(docToSave, false)) return;
+                        // Keep the detached list current without changing its author-based translation decisions.
+                        syncedDoc.setGroupId(docToSave.getGroupId());
+                        MirroringService.forceReloadTree();
+                     }
+                  }
+               }
+            }
+
             List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(doc.getGroupId());
             List<GroupDetails> mappedGroupsListNotExisting = new ArrayList<>();
 
@@ -85,7 +108,6 @@ public class DocMirroringServiceV9 {
 
                if (MirroringService.isEnabled(doc.getGroupId())==false) return;
 
-               GroupDetails group = groupsDB.getGroup(doc.getGroupId());
                //vytvor kopie adresara v ostatnych mapovanych adresaroch
 
                TranslationService translator = new TranslationService(GroupMirroringServiceV9.getLanguage(group), null);
@@ -160,31 +182,6 @@ public class DocMirroringServiceV9 {
             }
 
             if (syncedDocs.size()>0) {
-               //uz existuje, skontroluj ostatne kopie ci sa nepresunuli a podobne
-
-               //overenie zmeny parent adresara
-               GroupDetails group = groupsDB.getGroup(doc.getGroupId());
-               if (group != null) {
-                  List<GroupDetails> syncedGroups = GroupMirroringServiceV9.getGroupsBySyncId(group.getSyncId(), group.getGroupId());
-                  //ok mame zoznam parent adresarov, over ci su mapovane spravne
-                  for (DocDetails syncedDoc : syncedDocs) {
-                     GroupDetails syncedGroup = groupsDB.getGroup(syncedDoc.getGroupId());
-                     GroupDetails syncedCorrectGroup = MirroringService.selectMappedGroup(syncedGroup, syncedGroups);
-                     if (syncedCorrectGroup != null) {
-                        //porovnaj IDecko voci aktualnemu parentu
-                        if (syncedGroup.getGroupId()!=syncedCorrectGroup.getGroupId()) {
-                           Logger.debug(DocMirroringServiceV9.class, "NESEDI PARENT GROUP, syncedGroup="+syncedGroup.toString()+" syncedCorrectGroup="+syncedCorrectGroup.toString());
-                           //presun web stranku do spravneho adresara
-                           DocDetails docToSave = docDB.getDoc(syncedDoc.getDocId());
-                           docToSave.setGroupId(syncedCorrectGroup.getGroupId());
-                           docToSave.setAuthorId(doc.getAuthorId());
-                           DocDB.saveDoc(docToSave, false);
-                           MirroringService.forceReloadTree();
-                        }
-                     }
-                  }
-               }
-
                //overenie sort priority
                for (DocDetails syncedDoc : syncedDocs) {
                   if (syncedDoc.getSortPriority()!=doc.getSortPriority()) {

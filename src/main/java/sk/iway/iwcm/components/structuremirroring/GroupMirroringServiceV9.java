@@ -68,7 +68,10 @@ public class GroupMirroringServiceV9 {
                            Logger.debug(GroupMirroringServiceV9.class, "NESEDI PARENT GROUP, syncedGroup="+syncedGroup.toString()+" syncedCorrectParentGroup="+syncedCorrectParentGroup.toString());
                            GroupDetails groupToSave = groupsDB.getGroup(syncedGroup.getGroupId());
                            groupToSave.setParentGroupId(syncedCorrectParentGroup.getGroupId());
-                           groupsDB.setGroup(groupToSave, false);
+                           if (!groupsDB.setGroup(groupToSave, false)) return;
+                           // The SQL-loaded mirror is separate from the cached object; update it before checking for missing copies.
+                           syncedGroup.setParentGroupId(groupToSave.getParentGroupId());
+                           syncedGroup.setFullPath(groupToSave.getFullPath());
                            MirroringService.forceReloadTree();
                         }
                      }
