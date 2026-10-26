@@ -6,7 +6,7 @@ block content
         var tabsSettingsDataTable;
 
         window.domReady.add(function () {
-            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.tabs_settings.jpa.TabsSettingsEntity')})];
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.datatable.settings.tabs.jpa.TabsSettingsEntity')})];
 
             tabsSettingsDataTable = WJ.DataTable({
                 url: "/admin/rest/settings/tabs-settings",

@@ -6,7 +6,7 @@ block content
         var fieldsSettingsDataTable;
 
         window.domReady.add(function () {
-            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsEntity')})];
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.datatable.settings.fields.jpa.FieldsSettingsEntity')})];
 
             fieldsSettingsDataTable = WJ.DataTable({
                 url: "/admin/rest/settings/fields-settings",

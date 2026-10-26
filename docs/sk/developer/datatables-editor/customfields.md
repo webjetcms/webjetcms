@@ -138,7 +138,7 @@ Používané formáty:
 - `enumeration_2_string1_string2` alebo `enumeration_2_string1_string2_null`
 - `json_group`/`json_doc` s voliteľným suffixom `_null`
 
-Transformáciu medzi editor poľami a internou hodnotou zabezpečujú metódy `CustomFieldsService.toEntity` a `CustomFieldsService.fromEntity`.
+Transformáciu medzi editor poľami a internou hodnotou zabezpečujú metódy `toEntity` a `fromEntity` triedy [CustomFieldsService](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/rest/CustomFieldsService.java) v balíku `sk.iway.iwcm.system.datatable.settings.customfields.rest`.
 
 ## JSON Editor
 
