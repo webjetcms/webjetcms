@@ -74,10 +74,14 @@ async function assertAnimationPlayback(I, url) {
         const deadline = Date.now() + 5000;
         while (Date.now() < deadline && !(seen.red && seen.blue)) {
             const pixels = PNG.sync.read(await image.screenshot({ animations: 'allow' })).data;
+            let hasRed = false, hasBlue = false;
             for (let i = 0; i < pixels.length; i += 4) {
-                if (pixels[i] > 200 && pixels[i + 1] < 60 && pixels[i + 2] < 60) seen.red = true;
-                if (pixels[i + 2] > 200 && pixels[i] < 60 && pixels[i + 1] < 60) seen.blue = true;
+                if (pixels[i] > 200 && pixels[i + 1] < 60 && pixels[i + 2] < 60) hasRed = true;
+                if (pixels[i + 2] > 200 && pixels[i] < 60 && pixels[i + 1] < 60) hasBlue = true;
             }
+            // Require separate frames; a static error icon may contain both colors at once.
+            if (hasRed && !hasBlue) seen.red = true;
+            if (hasBlue && !hasRed) seen.blue = true;
         }
         return seen;
     });
@@ -123,7 +127,8 @@ async function createFolder(I, page, existingFile) {
     I.waitForElement(`.elfinder-cwd-filename[title="${existingFile}"]`, 20);
     I.click(`.elfinder-cwd-filename[title="${existingFile}"]`);
     I.clickCss('.elfinder-button-icon-mkdir');
-    I.fillField('.elfinder-cwd-filename[title="Nový priečinok"] textarea', folderName);
+    I.waitForVisible('.elfinder-cwd-filename textarea', 10);
+    I.fillField('.elfinder-cwd-filename textarea', folderName);
     I.pressKey('Enter');
     I.waitForText(folderName, 10, '.elfinder-cwd-wrapper');
     I.doubleClick(`.elfinder-cwd-filename[title="${folderName}"]`);
@@ -202,8 +207,7 @@ async function cleanup({ I, DT, DTE, Document }) {
         for (const [key, value] of Object.entries(originalConfig)) Document.setConfigValue(key, value, true);
     }
     if (originalEditorMode !== undefined) {
-        I.amOnPage('/admin/v9/');
-        await I.executeScript(value => WJ.setAdminSetting('editorTypeForced', value), originalEditorMode);
+        Document.setEditorMode(originalEditorMode);
     }
     if (pageName) {
         I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
@@ -262,6 +266,10 @@ Scenario('AVIF gallery upload preserves the animated original @singlethread', as
     }
     for (const ip of [-1, 1, 2, 3, 4, 5, 6]) {
         const url = '/thumb' + base + animatedFileName + '?w=60&h=40' + (ip > 0 ? '&ip=' + ip : '');
+        const thumbnail = await inspectImage(I, url);
+        I.assertEqual(thumbnail.status, 200);
+        I.assertContain(thumbnail.mime, 'image/avif');
+        I.assertTrue(['ftypavif', 'ftypavis'].includes(thumbnail.signature));
         await assertAnimationPlayback(I, url);
     }
     I.amOnPage('/admin/v9/apps/gallery/?dir=' + base);

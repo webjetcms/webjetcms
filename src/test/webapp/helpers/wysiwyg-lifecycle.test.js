@@ -102,9 +102,12 @@ function fixture(t, editExisting = false) {
             return { preview, requests: previewRequests };
         },
         usePageBuilder() {
+            const toolbar = path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/ckeditor-toolbar-overflow.js');
+            vm.runInContext(fs.readFileSync(toolbar, 'utf8').replace(/^export /gm, ''), context, { filename: toolbar });
             const source = path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/datatables-ckeditor.js');
             const Editor = vm.runInContext(fs.readFileSync(source, 'utf8')
                 .replace('import WJ from "./webjet";', '')
+                .replace('import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";', '')
                 .replace('export class DatatablesCkEditor', 'class DatatablesCkEditor') + '\nDatatablesCkEditor;', context);
             let hiddenHtml = '<p>Stale hidden content</p>';
             conf.wjeditor = Object.assign(Object.create(Editor.prototype), {

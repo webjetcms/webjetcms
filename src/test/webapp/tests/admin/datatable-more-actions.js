@@ -21,6 +21,9 @@ Scenario('Import/Export opens the current folder and actions follow the selected
     I.seeInCurrentUrl('/components/import_web_pages/import_pages.jsp?groupId=67');
     I.waitForVisible('form.importExportTable');
     I.closeCurrentTab();
+    // A delayed popup load handler in CodeceptJS can retain the closed page as its locator context.
+    I.switchTo();
+    I.waitForVisible(wrapper);
     I.dontSeeElement(moreMenu);
 
     I.clickCss('#pills-waiting-tab');
@@ -74,6 +77,7 @@ Scenario('Keyboard navigation opens page statistics and allows leaving the menu'
     I.seeInCurrentUrl('/apps/stat/admin/top-details/?docId=' + docId);
     I.waitForElement('div#topDetails-lineVariantA');
     I.closeCurrentTab();
+    I.switchTo();
 });
 
 Scenario('Menu stays accessible around the sidebar breakpoint and on narrow screens', async ({ I }) => {

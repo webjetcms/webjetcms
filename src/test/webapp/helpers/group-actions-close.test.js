@@ -17,7 +17,7 @@ async function fixture(t, groupType) {
     const { window } = dom;
     const $ = window.$ = window.jQuery = jquery(window);
     for (const script of ['bootstrap/dist/js/bootstrap.bundle.js', 'bootstrap-select/dist/js/bootstrap-select.js', 'toastr/toastr.js']) {
-        window.eval(fs.readFileSync(path.join(admin, 'node_modules', script), 'utf8'));
+        window.eval(fs.readFileSync(require.resolve(script), 'utf8'));
     }
     let resolveShown;
     let resolveHidden;

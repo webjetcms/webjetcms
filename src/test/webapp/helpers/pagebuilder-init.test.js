@@ -30,8 +30,11 @@ async function fixture(t, html) {
         this.data('plugin_ninjaPageBuilder', { prepare_application_blocks() {} });
         return this;
     };
+    window.eval(read('admin/v9/src/js/ckeditor-toolbar-overflow.js')
+        .replace('export class CkEditorToolbarOverflow', 'window.CkEditorToolbarOverflow = class CkEditorToolbarOverflow'));
     window.eval(read('admin/v9/src/js/datatables-ckeditor.js')
         .replace('import WJ from "./webjet";', '')
+        .replace('import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";', '')
         .replace('export class DatatablesCkEditor', 'window.DatatablesCkEditor = class DatatablesCkEditor'));
     window.datatablesCkEditorModule = { DatatablesCkEditor: window.DatatablesCkEditor };
 

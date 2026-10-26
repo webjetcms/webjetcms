@@ -386,19 +386,17 @@ Scenario('test docid/groupid in request bean', ({ I, DTE }) => {
     I.jstreeNavigate(["Aplikácie", "Bannerový systém"]);
     I.click("Parent_banner_test");
     DTE.waitForEditor();
-    I.wait(5);
-    I.waitForElement(".cke_wysiwyg_frame.cke_reset", 10);
+    DTE.waitForCkeditor();
+    I.waitForVisible(".cke_wysiwyg_frame.cke_reset", 20);
 
     //over zobrazenie v nahlade
     I.switchTo();
-    I.wait(2);
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
-    I.wait(2);
     I.waitForElement("iframe.wj_component", 10);
     I.switchTo("iframe.wj_component");
-    I.wait(2);
-    I.see("Toto je banner pre WebJET");
+    I.waitForText("Toto je banner pre WebJET", 20);
     I.switchTo();
+    DTE.cancel();
 
 });
 

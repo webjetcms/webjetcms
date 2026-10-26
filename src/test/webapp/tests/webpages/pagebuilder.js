@@ -148,26 +148,25 @@ Scenario('bug - prepnutie editora', async ({I, DTE, Apps, Document}) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
     DTE.waitForEditor();
-    I.wait(5);
+    I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow.pageBuilderReady === true, [], 20);
 
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('div.exit-inline-editor select', 10);
     I.selectOption({css: "div.exit-inline-editor select"}, "");
     I.switchTo();
-    I.wait(2);
-
-    I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
+    I.waitForVisible('.cke_wysiwyg_frame.cke_reset', 20);
     Apps.switchEditor('html');
     const html = await I.executeScript(() => document.querySelector('.CodeMirror').CodeMirror.getValue());
     assert.ok(html.includes('Suspendisse interdum dolor justo, ac venenatis massa'), 'The HTML editor must retain the complete page, including content outside its virtual viewport');
 
-    I.wait(1);
     I.switchTo();
     DTE.cancel();
 
     //otvor druhu stranku a over zobrazeny kod
     I.click("Produktová stránka - multi");
     DTE.waitForEditor();
-    I.wait(5);
+    DTE.waitForCkeditor();
+    I.waitForVisible('.cke_wysiwyg_frame.cke_reset', 20);
 
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
     I.dontSee("This is old page");

@@ -111,7 +111,8 @@ async function createPages(I, DT, DTE) {
         DTE.save();
     }
     DT.filterContains('title', name);
-    pageIds = await I.executeScript(() => webpagesDatatable.rows({ search: 'applied' }).data().toArray().map(row => row.docId));
+    pageIds = await I.executeScript(() => webpagesDatatable.rows({ search: 'applied' }).data().toArray()
+        .sort((a, b) => a.title.localeCompare(b.title)).map(row => row.docId));
     I.assertLengthOf(pageIds, 2);
 }
 
@@ -146,8 +147,17 @@ async function verifyPages(I, DTE, expectedGroups) {
         I.click(name + '-' + index, '#datatableInit');
         DTE.waitForEditor();
         I.clickCss('#pills-dt-datatableInit-content-tab');
-        const content = await I.executeScript(() => ckEditorInstance.getData());
-        I.assertContain(content, name + ' content ' + index);
+        // Modal focus can be ready before the asynchronous content write finishes.
+        // Check the server-loaded value separately so waiting cannot conceal corrupted page data.
+        const content = await I.executeScript(async () => {
+            const editor = webpagesDatatable.EDITOR;
+            await editor.field('data').s.opts.wjeditorReadyPromise;
+            return { id: editor.currentJson.docId, stored: editor.currentJson.data,
+                rendered: ckEditorInstance.getData() };
+        });
+        I.assertEqual(content.id, pageIds[index], 'The selected page must be loaded');
+        I.assertContain(content.stored, name + ' content ' + index, 'Bulk actions must preserve persisted page content');
+        I.assertContain(content.rendered, name + ' content ' + index, 'The editor must display the selected page content');
         I.clickCss('#pills-dt-datatableInit-access-tab');
         for (let type = 0; type < 2; type++) {
             const target = '.DTE_Field_Name_editorFields\\.' + (type === 0 ? 'permisions' : 'emails') + ' input[value="' + groupIds[type] + '"]';
