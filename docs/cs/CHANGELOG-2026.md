@@ -237,6 +237,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
 
+### Editor
+
+- Sekce **Nastavení → Datové tabulky** sdružuje [Nastavení polí](frontend/datatables/fields-settings.md), [Nastavení karet](frontend/datatables/tabs-settings.md) a [Volitelná pole](frontend/datatables/custom-fields-settings.md). Pro jednotlivé entity a domény můžete měnit názvy, pořadí a zobrazení polí či zakázat jejich úpravy. Můžete také upravovat karty editoru a vytvářet vlastní karty s volitelnými poli (#58830).
+
 ### Volitelná pole
 
 - Kompletně implementovaná funkčnost [nastavení volitelných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálně nastavit vlastnosti polí bez editace překladových klíčů. Podporovány jsou všechny typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázek, odkaz, JSON a další) s typově specifickými nastaveními jako maximální délka textu, možnosti výběru, propojení na číselníky nebo závislost na jiných polích. Uživatelské rozhraní nabízí také jednoduchý způsob nastavení možných hodnot pro výběrová/autocomplete pole (#58529).
@@ -340,6 +344,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Pro programátora
 
+- Datatabulky - přidaný typ pole [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pro výběr jedné možnosti ze skupiny tlačítek. Používá styly administrace a podporuje i volbu **Bez změny** při třístavových nastaveních (#58830).
 - SBOM - přidáno [generování společného seznamu Java a npm závislostí](developer/install/sbom.md) ve formátu CycloneDX JSON příkazem `ant -f ant/build.xml sbom`, včetně tranzitivních závislostí a validace reportu.
 - [Centrální generátor novinek](developer/install/social-media-feed.md) po úspěšném publikování odstraní nepoužívané náhledy s 30denní ochrannou lhůtou. Zachová obrázky aktuálních příspěvků i záložních údajů pro výpadek zdroje (#358).
 - Editor stránek - [nastavení nabídky Styly](frontend/examples/template-bare/README.md#vyhledávání-a-skupiny-stylů) podporuje metadata v komentářích `editor.scss` / `editor.css` pro kategorie a jejich ikony, vzájemně se nahrazující skupiny, povolené elementy a základní třídy zachovány. Nová nabídka je ve výchozím nastavení zapnuta; nastavením `ckeditor_styleComboEnabled=false` se obnoví původní výběr stylů (#OSK764).

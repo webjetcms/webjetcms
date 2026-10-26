@@ -142,7 +142,7 @@ The transformation between the field editor and the internal value is provided b
 
 ## JSON Editor
 
-The `jsoneditor` type allows you to directly enter JSON values. In the [custom field settings](../../frontend/webpages/customfields/custom-fields-settings.md) select the **JSON Editor** type, or use translation keys:
+The `jsoneditor` type allows you to directly enter JSON values. In the [custom field settings](../../frontend/datatables/custom-fields-settings.md) select the **JSON Editor** type, or use translation keys:
 
 ```properties
 editor.field_a=JSON data

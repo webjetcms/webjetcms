@@ -237,6 +237,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
 
+### Editor
+
+- The **Settings → Data Tables** section combines [Field Settings](frontend/datatables/fields-settings.md), [Tab Settings](frontend/datatables/tabs-settings.md) and [Optional Fields](frontend/datatables/custom-fields-settings.md). For individual entities and domains, you can change the names, order, display of fields, or disable their editing. You can also edit editor tabs and create your own tabs with optional fields (#58830).
+
 ### Optional fields
 
 - Fully implemented [custom field settings] functionality (frontend/webpages/customfields/custom-fields-settings.md). Allows you to centrally set field properties without editing translation keys. All field types are supported (text, textarea, select, multiselect, autocomplete, enumeration, image, link, JSON and more) with type-specific settings such as maximum text length, selection options, linking to code lists or dependency on other fields. The user interface also offers an easy way to set possible values ​​for select/autocomplete fields (#58529).
@@ -340,6 +344,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+- Datatables - added field type [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) for selecting a single option from a group of buttons. It uses administration styles and also supports the **No change** option for three-state settings (#58830).
 - SBOM - added [generate a common list of Java and npm dependencies](developer/install/sbom.md) in CycloneDX JSON format with the `ant -f ant/build.xml sbom` command, including transitive dependencies and report validation.
 - [Central News Generator](developer/install/social-media-feed.md) will remove unused previews with a 30-day grace period after successful publishing. It will preserve images of current posts as well as backup data for source failure (#358).
 - Page Editor - [Styles menu setting](frontend/examples/template-bare/README.md#search-and-style-groups) supports metadata in `editor.scss` / `editor.css` comments for categories and their icons, mutually exclusive groups, allowed elements, and base classes preserved across skins. The new menu is enabled by default; setting `ckeditor_styleComboEnabled=false` restores the original style selection (#OSK764).

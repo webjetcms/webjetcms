@@ -5,9 +5,11 @@
 - Nastavení
   - [Šablony](/frontend/setup/README.md)
   - [Obecná nastavení](/frontend/setup/config.md)
-  - Volitelná pole
-    - [Volitelná pole](/frontend/webpages/customfields/README.md)
-    - [Nastavení](/frontend/webpages/customfields/custom-fields-settings.md)
+  - Datové tabulky
+    - [Nastavení polí](/frontend/datatables/fields-settings.md)
+    - [Nastavení karet](/frontend/datatables/tabs-settings.md)
+    - [Volitelná pole](/frontend/datatables/custom-fields-settings.md)
+  - [Volitelná pole přes překladové klíče](/frontend/webpages/customfields/README.md)
   - [FontAwesome](/frontend/webpages/fontawesome/README.md)
   - [CKEditor](/frontend/setup/ckeditor.md)
 - Šablony
