@@ -21,15 +21,7 @@
         ]
     });
 
-    var tabs = [
-        { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true},
-        { id: 'personal_info', title: '[[#{reservation.reservations.personal_info}]]'},
-        { id: 'notify', title: '[[#{components.basket.tab.notify}]]'},
-        { id: 'payments', title: '[[#{components.basket.invoice.payments.tab}]]'},
-        { id: 'items', title: '[[#{components.basket.invoice_items}]]'},
-        { id: 'order_status', title: '[[#{components.basket.tab.order}]]', hideOnCreate: true, content: '<div class="previewContainer"><iframe id="dataDiv" src="about:blank" width="100%" height="600"></iframe><div>' },
-        { id: 'fields', title: '[[#{editor.tab.fields}]]'}
-    ];
+    var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity')})];
 
     var order = [];
     order.push([2, 'desc']);

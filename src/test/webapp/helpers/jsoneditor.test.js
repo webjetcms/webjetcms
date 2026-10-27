@@ -28,7 +28,7 @@ test("JSON editor rejects incomplete and concatenated objects", async () => {
 
 test("Browser and server share the supported JSON syntax and root values", async () => {
     const {validateJsonObject, formatJsonObject} = await utilities;
-    const fixtures = require("../../resources/sk/iway/iwcm/components/customfields/jsoneditor-syntax.json");
+    const fixtures = require("../../resources/sk/iway/iwcm/system/datatable/settings/customfields/jsoneditor-syntax.json");
     for (const text of fixtures.valid) {
         assert.equal(validateJsonObject(text).valid, true, text);
         const formatted = formatJsonObject(text);

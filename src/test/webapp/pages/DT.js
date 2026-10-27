@@ -1,4 +1,4 @@
-const { I } = inject();
+const { I, i18n } = inject();
 const buttons = require('./buttons.js')
 
 /**
@@ -333,7 +333,7 @@ module.exports = {
         I.clickCss(container + " div.dt-scroll-headInner button.buttons-select-all");
         I.clickCss(container + " div.dt-buttons button.buttons-remove");
         I.waitForVisible("#" + name + "_modal", 200);
-        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.click(i18n.get("Delete::2"), "div.DTE_Action_Remove");
         I.waitForInvisible("div.DTE_Processing_Indicator", 200);
     },
 

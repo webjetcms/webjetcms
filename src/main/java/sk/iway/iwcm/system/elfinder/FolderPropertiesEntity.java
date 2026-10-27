@@ -16,11 +16,19 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @Table(name = "dirprop")
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "index", title = "elfinder.folder_prop.index.tab"),
+    @DataTableTab(id = "usage", title = "elfinder.folder_prop.usage.tab"),
+    @DataTableTab(id = "unusedFiles", title = "elfinder.folder_prop.unused_files.tab")
+})
 public class FolderPropertiesEntity {
 
     @Id

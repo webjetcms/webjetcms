@@ -19,6 +19,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 
@@ -37,6 +39,11 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 @Table(name="insert_script")
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INSERT_SCRIPT)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "main", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "scriptPerms", title = "components.insert_script.perms"),
+    @DataTableTab(id = "scriptBody", title = "components.insert_script.body", content = "<div></div>")
+})
 public class InsertScriptBean extends ActiveRecordRepository implements Serializable
 {
     @JsonIgnore

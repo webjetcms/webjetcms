@@ -1,7 +1,7 @@
 <%@page import="java.util.Map"%><%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*, sk.iway.iwcm.doc.*, java.util.*, sk.iway.iwcm.i18n.*" %><%@
-taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" perms="menuWebpages"/><%@page import="sk.iway.iwcm.tags.AutoCompleteHelper"%><%@page import="org.json.JSONArray"%><%@page import="sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity"%><%@page import="sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto"%><%@page import="sk.iway.iwcm.components.customfields.rest.CustomFieldsService"%><%
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" perms="menuWebpages"/><%@page import="sk.iway.iwcm.tags.AutoCompleteHelper"%><%@page import="org.json.JSONArray"%><%@page import="sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsEntity"%><%@page import="sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsSearchDto"%><%@page import="sk.iway.iwcm.system.datatable.settings.customfields.rest.CustomFieldsService"%><%
 	int templateId = Tools.getIntValue(Tools.getRequestParameter(request, "template"), 0);
 	if (templateId > 0) {
 		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(templateId);
