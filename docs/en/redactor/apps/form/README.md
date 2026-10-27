@@ -98,6 +98,23 @@ It is possible to set additional optional parameters for the form that will affe
 - **Maximum height (for images)** - maximum height of the uploaded image in pixels.
 - **Maximum width (for images)** - maximum width of the uploaded image in pixels.
 
+## CSS styles for email and PDF
+
+When preparing an HTML email from a classic or multi-step form, WebJET loads the CSS styles of the page used for the email. Large CSS files on the website also make the sent message larger. The designer can prepare smaller files containing only the styles needed to display the completed form.
+
+For each CSS file, WebJET first looks for a file with the extension `-email.css` in the same folder. For example:
+
+| CSS template file | Preferred version for email |
+| --- | --- |
+| `/templates/orange/dist/css/main.css` | `/templates/orange/dist/css/main-email.css` |
+| `/templates/orange/dist/css/theme.css` | `/templates/orange/dist/css/theme-email.css` |
+
+If version `*-email.css` exists, it replaces the original file. If it does not, the original CSS is loaded. This rule is evaluated separately for main and secondary CSS templates, files from the `editorEditorCss` configuration variable, and additional CSS passed from form settings. Replacing one file does not disable other styles, so prepare smaller versions for any large CSS files that the form uses.
+
+The content of the selected files will be inserted into the email and PDF document via the `<style>` tag. The saved HTML form of the form references the same files via the `<link>` tags, so keep them available even after the form is submitted. Verify the email CSS edits when viewing the saved form and its PDF version. The form display on the website continues to use the original CSS.
+
+If the page does not have a template available, `/css/email.css` will be used; if this file does not exist either, the file from the configuration variable `editorPageCss` will be used. When sending as plain text, no CSS is added.
+
 ## Setting up email address confirmation
 
 The form can be set to **email address confirmation** ( ```double opt-in``` ). This will confirm the form submission by clicking on the link in the email and thus **verify** that the visitor who filled out the form entered a **actually valid email address**.
