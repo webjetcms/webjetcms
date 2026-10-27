@@ -4,6 +4,7 @@ import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TObjectIntHashMap;
 
 import org.json.JSONObject;
+import sk.iway.Html2Text;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -2890,8 +2891,8 @@ public class DocDB extends DB
 			String htmlFileName = doc.getVirtualPath();
 			if (Tools.isEmpty(htmlFileName))
 			{
-				htmlFileName = doc.getNavbar();
-				if (htmlFileName.contains("<") && htmlFileName.contains(">")) htmlFileName = Tools.html2text(htmlFileName);
+				// Decode entities even without HTML tags, keeping the stored navigation label unchanged.
+				htmlFileName = Html2Text.html2text(doc.getNavbar(), true);
 			}
 			StringBuilder fileName = new StringBuilder(groupDiskPath);
 			if (group == null)
