@@ -52,6 +52,7 @@ class EditorPrivateReferencesTest {
         ReflectionTestUtils.setField(editor, "groupsDB", folderCache);
         ReflectionTestUtils.setField(editor, "request", request);
         doNothing().when(editor).checkPermissions(any(), any(), anyBoolean());
+        doNothing().when(editor).checkSavePermissions(any(), any());
         doNothing().when(editor).setVirtualPath(any());
 
         DocDetails submitted = new DocDetails();

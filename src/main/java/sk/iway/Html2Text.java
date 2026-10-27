@@ -28,14 +28,25 @@ public class Html2Text
 	}
 
 	/**
-	 * Converts HTML to plain text
-	 * @param html
-	 * @return
+	 * Converts HTML to plain text, leaving input without angle brackets unchanged.
+	 * @param html HTML or plain text; may be null
+	 * @return extracted text, unchanged input without angle brackets, or an empty string for null
 	 */
 	public static String html2text(String html)
 	{
+		return html2text(html, false);
+	}
+
+	/**
+	 * Converts HTML to plain text, optionally parsing input without HTML tags.
+	 * @param html HTML or plain text; may be null
+	 * @param forceHtml true to always parse the input, decoding entities and normalizing whitespace
+	 * @return extracted text, unchanged input when parsing is skipped, or an empty string for null
+	 */
+	public static String html2text(String html, boolean forceHtml)
+	{
 		if (html == null) return("");
-		if (html.contains("<") && html.contains(">")) {
+		if (forceHtml || (html.contains("<") && html.contains(">"))) {
 			return new Html2Text(html).getText();
 		} else {
 			return html;
