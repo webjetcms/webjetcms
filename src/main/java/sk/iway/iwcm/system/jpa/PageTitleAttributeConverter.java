@@ -1,0 +1,39 @@
+package sk.iway.iwcm.system.jpa;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+
+import sk.iway.iwcm.Tools;
+
+/**
+ * Keeps page and history titles safe on both database writes and reads.
+ * USES ALSO Tools.convertToHtmlTags(value) to convert legacy *|...|* to HTML
+ * PageTitleAttributeConverter
+ */
+@Converter(autoApply = false)
+public class PageTitleAttributeConverter implements AttributeConverter<String, String> {
+
+    @Override
+    public String convertToDatabaseColumn(String value) {
+        return sanitizeTitle(value);
+    }
+
+    @Override
+    public String convertToEntityAttribute(String value) {
+        return sanitizeTitle(value);
+    }
+
+    /**
+     * Retains safe title formatting after decoding the legacy WebJET HTML notation.
+     * Page titles cannot opt into executable HTML through the {@code jpaentity} bypass.
+     *
+     * @param value title or navigation label, possibly loaded through JDBC
+     * @return sanitized HTML, preserving {@code null}
+     */
+    public static String sanitizeTitle(String value) {
+        if (value == null) return null;
+        String safeHtml = AllowSafeHtmlAttributeConverterWithSave.sanitize(Tools.convertToHtmlTags(value));
+        // Entity decoding can reveal legacy markers; keep them as text during later rendering.
+        return safeHtml.replace("*|", "&#42;|").replace("|*", "|&#42;");
+    }
+}

@@ -98,6 +98,23 @@ Formuláři lze nastavit další nepovinné parametry, které ovlivní jeho zpra
 - **Maximální výška (pro obrázky)** - maximální výška nahrávaného obrázku v pixelech.
 - **Maximální šířka (pro obrázky)** - maximální šířka nahrávaného obrázku v pixelech.
 
+## CSS styly pro email a PDF
+
+Při přípravě HTML emailu z klasického nebo vícekrokového formuláře WebJET načte CSS styly stránky použité pro email. Velké CSS soubory webu zvětšují i ​​odesílanou zprávu. Designér může připravit menší soubory obsahující pouze styly potřebné k zobrazení vyplněného formuláře.
+
+Pro každý CSS soubor WebJET nejprve hledá soubor s příponou `-email.css` ve stejné složce. Například:
+
+| CSS soubor šablony | Přednostně použitá verze pro email |
+| --- | --- |
+| `/templates/orange/dist/css/main.css` | `/templates/orange/dist/css/main-email.css` |
+| `/templates/orange/dist/css/theme.css` | `/templates/orange/dist/css/theme-email.css` |
+
+Pokud verze `*-email.css` existuje, nahradí původní soubor. Pokud neexistuje, načte se původní CSS. Toto pravidlo se vyhodnocuje samostatně pro hlavní a druhořadé CSS šablony, soubory z konfigurační proměnné `editorEditorCss` a dodatečné CSS předané z nastavení formuláře. Náhrada jednoho souboru nevypne ostatní styly, proto připravte menší verze pro všechny velké CSS soubory, které formulář používá.
+
+Obsah vybraných souborů se vloží do emailu a PDF podkladu přes značku `<style>`. Uložená HTML podoba formuláře odkazuje na stejné soubory značkami `<link>`, proto je ponechte dostupné i po odeslání formuláře. Úpravu emailových CSS ověřte i při zobrazení uloženého formuláře a jeho PDF verze. Zobrazení formuláře na webové stránce nadále používá původní CSS.
+
+Pokud stránka nemá dostupnou šablonu, použije se `/css/email.css` ; pokud ani tento soubor neexistuje, použije se soubor z konfigurační proměnné `editorPageCss`. Při odesílání jako čistý text se CSS nepřidává.
+
 ## Nastavení potvrzení emailové adresy
 
 Formuláři lze nastavit **potvrzení e-mailové adresy** ( ```double opt-in``` ). Dosáhnete tak potvrzení odeslání formuláře kliknutím na odkaz v e-mailu a tedy **ověříte**, že návštěvník, který formulář vyplnil, zadal **skutečně platnou e-mailovou adresu**.

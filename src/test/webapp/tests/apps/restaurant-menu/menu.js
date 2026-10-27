@@ -210,6 +210,8 @@ Scenario('testy domainId', ({I, DT, DTE, Document}) => {
 
     I.click(DT.btn.menu_add_button);
     DTE.waitForEditor("menuDataTable");
+    // The category change loads allowed meals asynchronously after opening the editor.
+    I.waitForFunction(() => window.jQuery.active === 0, [], 20);
     I.pressKey("Escape"); //close date dialog
     I.click({ css: "div.modal-dialog div.DTE_Field_Name_editorFields\\.selectedMealId button.dropdown-toggle" });
     I.waitForElement(locate('div.dropdown-menu.show .dropdown-menu.show'), 5);
@@ -230,6 +232,7 @@ Scenario('testy domainId', ({I, DT, DTE, Document}) => {
 
     I.click(DT.btn.menu_add_button);
     DTE.waitForEditor("menuDataTable");
+    I.waitForFunction(() => window.jQuery.active === 0, [], 20);
     I.pressKey("Escape"); //close date dialog
     I.click({ css: "div.modal-dialog div.DTE_Field_Name_editorFields\\.selectedMealId button.dropdown-toggle" });
     I.waitForElement(locate('div.dropdown-menu.show .dropdown-menu.show'), 5);

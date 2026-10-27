@@ -48,6 +48,13 @@ Once set up, continue with the [Using AI skills](../guidelines/ai-skills.md) gui
 
 ## rspack build JS, CSS and PUG files
 
+Use the Node.js version listed in `.nvmrc` in the root of your project. If you are using `nvm`, run from the root of your project before building:
+
+```shell
+nvm install
+nvm use
+```
+
 The administration files are compiled via rspack from the source ```js/scss/pug``` files. For the initial installation, run in a new terminal:
 
 ```shell

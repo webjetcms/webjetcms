@@ -138,6 +138,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Delayed email sending - increased column `emails.message` to `LONGTEXT` in MySQL/MariaDB so that saving a large HTML email does not fail. Added [instructions for smaller CSS for email and PDF](redactor/apps/form/README.md#css-styles-for-email-and-pdf) (#374).
 - Form Settings - added **Optional Fields** tab with fields A–F. Fields are also available in the Form Simple editor and via `FormSettingsEntity`. In the HTML of the translation keys, you can use [`${settings.*}`](redactor/apps/formsimple/README.md#fields-from-form-settings) tags for A–F, email settings, redirects, file limits, and appearance. They are also supported by the preview and email appearance of multi-step forms. A–F and the text before and after the email are enabled by HTML (#364).
 - Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.mustistep.form.back_button` (#osk782).
 - Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
@@ -309,6 +310,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- E-commerce - fixed adding a product category without a marked product in the table (#373).
+- Web pages - Page URLs, redirects, and image perex now preserve parameters even after loading via JPA, including history. The HTML sanitizer no longer rewrites the `&` and `=` characters in URLs to HTML entities (#373).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the pages are opened (#372).
 - Page Editor - when auto-maximizing in a low or narrow window, the entire toolbar remains above the page content. Content no longer shines through under icons and group names (#372).
 - Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
@@ -336,6 +339,11 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- Node.js - development and build version in `.nvmrc` and `devcontainer` updated to `22.23.4`, which fixes the Brotli decoder vulnerability CVE-2026-111497. Locally and in build environments, update Node.js according to [installation instructions](developer/install/README.md#rspack-build-js-css-a-pug-files) (#373).
+- Web pages - when saving, the rights to the original page and to the target folder when moving are verified. Changing the ID and folder in the request does not allow you to download another page (#373).
+- Web pages - page title and menu title are cleaned of dangerous HTML on both save and load (#373).
+- HTML sanitization - added shared `AllowSafeHtmlAttributeConverterWithSave` to sanitize HTML on both save and load. Used for path from folder names in pages and history; older JDBC writes are also handled.
+- Datatables - when rendering links and images, URLs in HTML attributes are escaped so that embedded quotes cannot create another attribute. The URL itself in the data remains unchanged (#373).
 - Dependency Check - updated libraries `Jackson 2.22.3/3.2.3`, `jsoup 1.23.2`, `logback-core/classic 1.6.5`, `slf4j-api 2.0.19`, `mariadb-java-client 3.5.10`, `postgresql 42.7.14`, `Swagger UI 5.32.15` (with `DOMPurify 3.4.13`), `moment 2.31.0` including static copy, `@tootallnate/once 2.0.1`, `@xmldom/xmldom 0.9.12`, `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` and `undici 6.28.1`. Build requires Node.js 20 or 22 and later (#349).
 - Dependency Check - added exceptions for `kotlin-stdlib 2.4.0`, `webjet-ai/webjet-ai-local 2.0.4`, `spring-security-crypto 7.1.1`, `http-cache-semantics 4.2.0`, `fabric 5.2.4/5.5.2` and `jQuery 3.3.1` in the e-shop test template. Exceptions for `ai.djl:api 0.36.0` and `tar 6.2.1` represent approved acceptance of residual risk. Details are in `dependency-check-suppressions-project.xml` (#349).
 - Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).

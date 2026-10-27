@@ -1056,12 +1056,17 @@ Scenario('BUG - prepinanie kariet a zobrazenie stranok', ({ I, DT }) => {
     I.seeElement(locate("#SomStromcek a.jstree-anchor").withText("files"));
 });
 
-Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa refreshnut', ({ I, DT }) => {
+Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa refreshnut', async ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
-    I.wait(1);
+    I.waitForText("11 stránka v Adresári", 20, "#datatableInit_wrapper");
+    DT.waitForLoader();
+    I.waitForFunction(() => window.jQuery.active === 0, [], 20);
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
-    //over, ze mame viac ako 10 riadkov
-    I.see("Záznamy 1 až 12 z", "#datatableInit_wrapper .dt-info");
+    I.waitForText("11 stránka v Adresári", 20, "#datatableInit_wrapper");
+    DT.waitForLoader();
+    // Other tests may add pages; the regression is truncation to ten rows, not an exact fixture count.
+    const visibleRows = await I.executeScript(() => webpagesDatatable.rows({ page: 'current' }).count());
+    I.assertAbove(visibleRows, 10, "The initial load must display more than ten pages without a refresh");
     I.see("11 stránka v Adresári", "#datatableInit_wrapper");
 });
 

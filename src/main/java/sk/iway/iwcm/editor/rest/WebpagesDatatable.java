@@ -31,12 +31,12 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
-import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -328,12 +328,15 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public boolean checkItemPerms(DocDetails entity, Long id) {
-        if (InitServlet.isTypeCloud() && entity.getDocId()>0) {
-            DocDetails old = DocDB.getInstance().getBasicDocDetails(entity.getDocId(), false);
-            if (old != null) {
-                GroupDetails group = GroupsDB.getInstance().getGroup(old.getGroupId());
-                if (group != null && GroupsDB.isGroupEditable(getUser(), group.getGroupId())==false) return false;
-            }
+        if (getUser() == null) return false;
+        // The action endpoint uses -1 for actions without a selected record.
+        if (entity == null) return Long.valueOf(-1L).equals(id);
+        if (entity.getDocId()>0) {
+            DocDetails original = DocDB.getInstance().getDoc(entity.getDocId(), -1, false);
+            if (original == null) return false;
+            if (InitServlet.isTypeCloud() && !GroupsDB.isGroupEditable(getUser(), original.getGroupId())) return false;
+            // Check object access without requiring pageSave merely to open an editor or delete a page.
+            return EditorService.hasPagePermission(getUser(), original);
         }
         return true;
     }
