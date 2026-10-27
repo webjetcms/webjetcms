@@ -376,6 +376,7 @@ public class ThumbServlet extends HttpServlet
 					boolean isSizeAllowd = isSizeAllowed(realPathSmall, user);
 					if (isSizeAllowd == false)
 					{
+						Logger.debug(ThumbServlet.class, "Image size not allowed: " + realPathSmall);
 						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 						return;
 					}
@@ -477,7 +478,7 @@ public class ThumbServlet extends HttpServlet
 							//vyrez moze byt 400x300 a my chceme 300x300, cize ho posunieme o 50 doprava a zmensime na 300x300
 							//http://iwcm.interway.sk:8080/thumb/images/gallery/19-24-mesiacov/DSC06443.JPG?w=200&h=200&ip=5
 
-							Logger.debug(ThumbServlet.class, "\n\nURCI OREZ\n width="+width+" height="+height+" cleft="+cleft+" ctop="+ctop+" cwidth="+cwidth+" cheight="+cheight);
+							Logger.debug(ThumbServlet.class, "URCI OREZ: width="+width+" height="+height+" cleft="+cleft+" ctop="+ctop+" cwidth="+cwidth+" cheight="+cheight);
 
 							//pomer stran urcim ako pomer sirok jednotlivych elementov
 							double pomer = (double)cwidth / (double) width;

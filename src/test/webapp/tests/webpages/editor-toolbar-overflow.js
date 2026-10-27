@@ -23,6 +23,52 @@ function resizeToolbar(I, width) {
 }
 
 for (const mode of ['classic', 'inline']) {
+    Scenario(`${mode}: layered client hidden rule must not make the overflow flicker`, async ({ I }) => {
+        openFixture(I, mode);
+        const original = await I.executeScript(() => autotestEditor.getData());
+        I.executeScript(() => {
+            const style = document.createElement('style');
+            // Important declarations in a client cascade layer outrank unlayered editor CSS.
+            style.textContent = '@layer client { [hidden] { display: none !important; } }';
+            document.head.append(style);
+        });
+
+        for (const width of [576, 320, 576]) {
+            I.executeScript(width => { document.getElementById('autotest-shell').style.width = `${width}px`; }, width);
+            const states = await I.usePlaywrightTo('sample toolbar placement across rendered frames', async ({ page }) => page.evaluate(async () => {
+                const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
+                // Allow the resize observer and its scheduled layout to run before sampling.
+                await frame();
+                await frame();
+                const states = [];
+                for (let index = 0; index < 30; index++) {
+                    await frame();
+                    const toolbar = autotestToolbar;
+                    states.push({
+                        groups: toolbar.groups.map(group => group.element.parentElement === toolbar.body),
+                        hidden: toolbar.palette.hidden,
+                        display: getComputedStyle(toolbar.palette).display,
+                        more: !toolbar.button.hidden
+                    });
+                }
+                return states;
+            }));
+            I.assertEqual(new Set(states.map(state => JSON.stringify(state.groups))).size, 1, 'Groups must stay in the same host at a fixed preview width');
+            I.assertTrue(states.every(state => state.hidden && state.display === 'none' && state.more), 'Measuring a closed palette must keep it hidden between frames');
+            I.click('.wj-cke-toolbar__more');
+            I.waitForVisible('.wj-cke-overflow');
+            I.assertTrue(await I.executeScript(() => autotestToolbar.groups.every(group => group.element.getBoundingClientRect().width > 0)), 'Opening the palette must expose every original toolbar group');
+            I.pressKey('Escape');
+            I.dontSeeElement('.wj-cke-overflow');
+        }
+
+        resizeToolbar(I, 1200);
+        I.dontSeeElement('.wj-cke-toolbar__more');
+        I.assertTrue(await I.executeScript(() => autotestOriginalGroups.every((node, index) => autotestToolbar.row.children[index] === node)), 'Widening must restore the original controls');
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original, 'Responsive layout must preserve the edited content');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), []);
+    });
+
     Scenario(`${mode}: groups fit one band, reserve the selector and restore their original nodes`, async ({ I }) => {
         openFixture(I, mode);
         const initial = await I.executeScript(() => ({ height: autotestToolbar.top.offsetHeight, data: autotestEditor.getData() }));
@@ -149,6 +195,70 @@ for (const mode of ['classic', 'inline']) {
         I.assertDeepEqual(await I.executeScript(() => autotestErrors), []);
     });
 }
+
+Scenario('PageBuilder integration: table and form submenus stay above the overflow palette', async ({ I, Document, DTE }) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 20);
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('.wj-cke-toolbar', 20);
+    I.click("a[href*=\"pbSetWindowSize('phone')\"]");
+
+    // Repeat to exercise CKEditor's cached panels as well as their first opening.
+    for (const command of ['table', 'wjforms', 'table', 'wjforms']) {
+        I.click('.wj-cke-toolbar__more:visible');
+        I.waitForVisible('.wj-cke-overflow');
+        I.executeScript(() => {
+            delete window.autotestPanelStyle;
+            CKEDITOR.currentInstance.once('panelShow', event => {
+                const element = event.data.element.$;
+                window.autotestPanelStyle = {
+                    element,
+                    value: element.style.getPropertyValue('z-index'),
+                    priority: element.style.getPropertyPriority('z-index')
+                };
+            }, null, null, 1);
+        });
+        I.click(`.wj-cke-overflow .cke_button__${command}`);
+        I.waitForVisible('.cke_panel:visible', 5);
+        await I.usePlaywrightTo('wait for the submenu panel lifecycle event', async ({ page }) => {
+            const frame = page.frames().find(frame => frame.url().includes('inlineEditorAdmin=true'));
+            await frame.waitForFunction(() => window.autotestPanelStyle != null);
+        });
+        const overlap = await I.executeScript(() => {
+            const palette = document.querySelector('.wj-cke-overflow:not([hidden])');
+            const panel = window.autotestPanelStyle.element;
+            const a = palette.getBoundingClientRect(), b = panel.getBoundingClientRect();
+            const left = Math.max(a.left, b.left), right = Math.min(a.right, b.right);
+            const top = Math.max(a.top, b.top), bottom = Math.min(a.bottom, b.bottom);
+            return {
+                intersects: right > left && bottom > top,
+                above: Number(getComputedStyle(panel).zIndex) > Number(getComputedStyle(palette).zIndex),
+                reachable: panel.contains(document.elementFromPoint((left + right) / 2, (top + bottom) / 2)),
+                panelLayer: getComputedStyle(panel).zIndex,
+                paletteLayer: getComputedStyle(palette).zIndex,
+                priority: panel.style.getPropertyPriority('z-index')
+            };
+        });
+        I.assertTrue(overlap.intersects, 'The scenario must exercise overlapping panels');
+        I.assertTrue(overlap.above && overlap.reachable, `${command} submenu must receive pointer input above the overflow palette: ${JSON.stringify(overlap)}`);
+        I.saveScreenshot(`wj-pb-${command}-submenu.png`);
+        I.switchTo('.cke_panel:visible iframe');
+        I.pressKey('Escape');
+        I.switchTo();
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.waitForInvisible('.cke_panel:visible', 5);
+        I.seeElement('.wj-cke-overflow');
+        I.assertTrue(await I.executeScript(() => {
+            const { element, value, priority } = window.autotestPanelStyle;
+            return element.style.getPropertyValue('z-index') === value && element.style.getPropertyPriority('z-index') === priority;
+        }), 'Closing a submenu must restore its original z-index value and priority');
+        I.pressKey('Escape');
+        I.dontSeeElement('.wj-cke-overflow');
+    }
+    I.switchTo();
+    DTE.cancel();
+});
 
 Scenario('PageBuilder integration: mobile overflow preserves the mode selector and closes on block change', async ({ I, Document }) => {
     Document.resetPageBuilderMode();

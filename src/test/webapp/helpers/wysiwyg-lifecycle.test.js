@@ -416,6 +416,57 @@ test('A user mode switch waits for the initial content to finish loading', async
     assert.equal(f.field.get(), '<p>Original</p>');
 });
 
+for (const nextMode of ['html', 'pageBuilder']) {
+    test(`A pending standard switch followed by ${nextMode} retains the last completed non-HTML preference`, async t => {
+        const f = fixture(t);
+        await f.open('<p>Original</p>');
+        let saved = 'pageBuilder';
+        f.window.WJ.setAdminSetting = (key, value) => { if (key === 'editorTypeForced') saved = value; };
+        f.window.editorTypeForced = saved;
+        f.conf.wjeditor.editingMode = saved;
+        let release;
+        f.conf.wjeditor.switchEditingMode = mode => {
+            f.conf.wjeditor.editingMode = mode;
+            if (mode === '') return new Promise(resolve => { release = resolve; });
+            return Promise.resolve();
+        };
+        const standard = f.switchMode('');
+        await new Promise(setImmediate);
+        assert.equal(f.conf.wjeditor.editingMode, '', 'The standard editor is already visible');
+        const next = f.switchMode(nextMode);
+        release();
+        await Promise.all([standard, next]);
+        assert.equal(f.conf.wjeditor.editingMode, nextMode);
+        assert.equal(f.window.editorTypeForced, nextMode);
+        assert.equal(saved, nextMode === 'html' ? '' : nextMode);
+    });
+}
+
+for (const action of ['close', 'reopen', 'history']) {
+    test(`A completed mode switch cannot persist its preference after ${action}`, async t => {
+        const f = fixture(t);
+        await f.open('<p>Original</p>');
+        const settings = [];
+        f.window.WJ.setAdminSetting = (key, value) => settings.push({ key, value });
+        let release;
+        f.conf.wjeditor.switchEditingMode = () => new Promise(resolve => { release = resolve; });
+        const standard = f.switchMode('');
+        await new Promise(setImmediate);
+        let next;
+        if (action === 'history') {
+            f.field.setJson({ data: '<p>History</p>', editorFields: {} });
+            f.field.val('<p>History</p>');
+            next = f.conf.wjeditorReadyPromise;
+        } else {
+            f.editor.close();
+            if (action === 'reopen') next = f.open('<p>Another page</p>');
+        }
+        release();
+        await Promise.all([standard, next]);
+        assert.deepEqual(settings, []);
+    });
+}
+
 for (const value of [undefined, 'undefined', ' \nundefined\t', null]) {
     test(`Invalid content (${JSON.stringify(value)}) blocks submission and preserves the open form`, async t => {
         const f = fixture(t);
