@@ -36,7 +36,7 @@ You can define the data structure for each codebook separately. You can combine 
 
 ### String Field Types tab
 
-After saving a codebook type for the first time, the **String Field Types** tab appears. It allows you to extend named fields from the **Strings** tab with settings known from [custom fields](../../../frontend/webpages/customfields/custom-fields-settings.md), such as a selection box, multiple selection, autocomplete, link to another codebook, or select an image, link, folder, or web page.
+After saving a codebook type for the first time, the **String Field Types** tab appears. It allows you to extend named fields from the **Strings** tab with settings known from [custom fields](../../../frontend/datatables/custom-fields-settings.md), such as a selection box, multiple selection, autocomplete, link to another codebook, or select an image, link, folder, or web page.
 
 ![](editor_stringFieldTypes.png)
 
@@ -52,7 +52,7 @@ For each field you can set:
 
 Without specific configuration, a named string field will appear as a regular text field with a maximum length of 1024 characters. Unnamed string fields will not appear in the codebook data or configuration options.
 
-!> **Warning:** The code lists are not yet divided by the selected domain, therefore the settings of optional fields (string field types) are always saved in the main domain. In the [Optional Fields](../../../frontend/webpages/customfields/custom-fields-settings.md) section, these settings will only be displayed in the main domain. We recommend that you always set and edit them on the **String Field Types** tab.
+!> **Warning:** The code lists are not yet divided by the selected domain, therefore the settings of optional fields (string field types) are always saved in the main domain. In the [Optional Fields](../../../frontend/datatables/custom-fields-settings.md) section, these settings are displayed only in the main domain. We recommend that you always set and edit them on the **String Field Types** tab.
 
 !> **Backward compatibility note:** String field data attributes have changed from `string1` to `string12` to `fieldA` to `fieldL`. In custom or legacy Excel templates to import codebook data, you must manually edit the code names in the header, for example `Mesto|string1` to `Mesto|fieldA`. Use the same names `fieldA` to `fieldL` in REST API integrations that process codebook data. Database columns `string1` to `string12` remain unchanged.
 

@@ -27,9 +27,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
-import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
-import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
-import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
+import sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.system.datatable.settings.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.i18n.Prop;
 
 /** Verifies JSON custom fields at the shared DataTable editor validation boundary. */

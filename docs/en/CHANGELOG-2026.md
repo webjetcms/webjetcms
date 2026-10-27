@@ -237,6 +237,16 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
 
+### Data tables
+
+- The **Settings → Data Tables** section combines [Field Settings](frontend/datatables/fields-settings.md), [Tab Settings](frontend/datatables/tabs-settings.md) and [Optional Fields](frontend/datatables/custom-fields-settings.md). You can change the names, order, and display of fields for individual entities and domains, or disable their editing. You can also edit editor tabs and create your own tabs with optional fields. **Warning:** The original **Optional Fields** permission (`customFields`) has been removed. After the update, the relevant users or permission groups must be assigned the new **Data Tables** permission (`dataTablesConfig`). The original permissions will not be automatically transferred (#366).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Web pages - when saving, the values ​​of fields hidden in the editor and fields with editing disabled will be preserved according to the same rules as in other data tables. When editing from history, the values ​​from the selected version of the page will be used (#366).
+
 ### Optional fields
 
 - Fully implemented [custom field settings] functionality (frontend/webpages/customfields/custom-fields-settings.md). Allows you to centrally set field properties without editing translation keys. All field types are supported (text, textarea, select, multiselect, autocomplete, enumeration, image, link, JSON and more) with type-specific settings such as maximum text length, selection options, linking to code lists or dependency on other fields. The user interface also offers an easy way to set possible values ​​for select/autocomplete fields (#58529).
@@ -340,6 +350,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+- Datatables - settings tables have a common prefix `dt_`: `dt_customfields`, `dt_fields` and `dt_tabs`. The existing table `custom_fields` is automatically renamed during the update, preserving the data; custom SQL queries must be modified to `dt_customfields` (#58830).
+- Datatables - Classes for [system settings](developer/datatables/README.md#system-settings) optional fields, fields, and cards have been moved under `sk.iway.iwcm.system.datatable.settings` to subpackages `customfields`, `fields`, and `tabs`. Custom code and templates using these classes require updating imports and full class names (#58830).
+- Datatables - added field type [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) for selecting a single option from a group of buttons. It uses administration styles and also supports the **No change** option for three-state settings (#58830).
 - SBOM - added [generate a common list of Java and npm dependencies](developer/install/sbom.md) in CycloneDX JSON format with the `ant -f ant/build.xml sbom` command, including transitive dependencies and report validation.
 - [Central News Generator](developer/install/social-media-feed.md) will remove unused previews with a 30-day grace period after successful publishing. It will preserve images of current posts as well as backup data for source failure (#358).
 - Page Editor - [Styles menu setting](frontend/examples/template-bare/README.md#search-and-style-groups) supports metadata in `editor.scss` / `editor.css` comments for categories and their icons, mutually exclusive groups, allowed elements, and base classes preserved across skins. The new menu is enabled by default; setting `ckeditor_styleComboEnabled=false` restores the original style selection (#OSK764).

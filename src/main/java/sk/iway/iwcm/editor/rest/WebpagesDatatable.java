@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -85,6 +86,20 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     public DocDetails editItem(DocDetails entity, long id) {
 
         DocDetails original = DocDB.getInstance().getDoc(entity.getDocId(), -1, false);
+        // EditorFacade saves the submitted entity without the default DataTable merge. Hidden editor fields
+        // are omitted from the request, so their defaults (e.g. fieldA = "") would overwrite stored content.
+        // Restore hidden/disabled fields using the shared DataTable rules and the version being edited,
+        // including history selection and multigroup mapping, rather than always using the published page.
+        List<String> nonEditableProperties = getNonEditableProperties(entity);
+        DocDetails one = editorFacade.getExistingDocForEditor((int) id, entity.getHistoryId());
+        if (one == null) throwError("datatables.error.recordIsNotEditable");
+        // DocBasic setters ignore empty strings, so restore protected fields directly, including empty values.
+        // Keep the other submitted fields intact: merging them into the stored bean would prevent clearing them.
+        DirectFieldAccessor submittedFields = new DirectFieldAccessor(entity);
+        DirectFieldAccessor storedFields = new DirectFieldAccessor(one);
+        for (String property : nonEditableProperties) {
+            submittedFields.setPropertyValue(property, storedFields.getPropertyValue(property));
+        }
         DocDetails saved = editorFacade.save(entity);
 
         List<UserDetails> approveByUsers = editorFacade.getApprovers();

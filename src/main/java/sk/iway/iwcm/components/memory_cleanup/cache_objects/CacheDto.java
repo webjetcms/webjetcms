@@ -4,10 +4,16 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 import jakarta.validation.constraints.Size;
 import java.util.Date;
 
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "descriptionTab", title = "components.memory_cleanup.cache_objects.description_tab", selected = true, content = "<div></div>"),
+    @DataTableTab(id = "basicTab", title = "components.memory_cleanup.cache_objects.basic_tab")
+})
 public class CacheDto {
 
     @DataTableColumn(inputType = DataTableColumnType.ID, filter = false)

@@ -9,11 +9,7 @@ block content
 
         window.domReady.add(function () {
 
-            var tabs = [
-                {id: "basicInfo", title: "[[\#{user.permgroups.tabs.basicInfo}]]", selected: true},
-                {id: "dirs", title: "[[\#{user.permgroups.tabs.dirs}]]", selected: false},
-                {id: "perms", title: "[[\#{user.permgroups.tabs.perms}]]", selected: false}
-            ];
+            var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.users.PermissionGroupBean')})];
 
             let url = "/admin/rest/users/permission-groups";
             let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.users.PermissionGroupBean")})];;

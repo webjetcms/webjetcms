@@ -17,6 +17,7 @@ import jakarta.validation.Validator;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockServletContext;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
@@ -69,6 +70,7 @@ class UserDetailsSelfControllerTest {
                 MockedStatic<WebjetEventPublisher> events = mockStatic(WebjetEventPublisher.class)) {
             initServlet.when(InitServlet::isTypeCloud).thenReturn(false);
             constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(false);
+            constants.when(Constants::getServletContext).thenReturn(new MockServletContext());
             passwordService.when(() -> UserDetailsService.savePassword(NEW_PASSWORD, (int)SELF_ID)).thenReturn(true);
 
             UserDetailsSelfController controller = createController(repository, service);

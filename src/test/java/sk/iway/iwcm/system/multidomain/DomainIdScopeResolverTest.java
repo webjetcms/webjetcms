@@ -10,7 +10,7 @@ import org.mockito.MockedStatic;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 
 /**

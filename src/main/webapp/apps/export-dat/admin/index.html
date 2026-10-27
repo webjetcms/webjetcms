@@ -8,11 +8,7 @@
         let url = "/admin/rest/export-dat";
         let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.export.ExportDatBean")})];
 
-        var tabs = [
-            { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true },
-            { id: 'filter', title: '[[#{editor.tab.filter}]]', selected: false },
-            { id: 'sort', title: '[[#{editor.tab.sort}]]', selected: false }
-        ];
+        var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.export.ExportDatBean')})];
 
         exportDatDataTable = WJ.DataTable({
             url: url,

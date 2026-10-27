@@ -20,6 +20,8 @@ public class DataTableTab {
     private String title;
     private boolean selected;
     private boolean hideOnCreate;
+    private String perms;
+    private String className;
     private String content;
 
     public DataTableTab(String id, String title, boolean selected) {
@@ -42,6 +44,10 @@ public class DataTableTab {
     public DataTableTab(sk.iway.iwcm.system.datatable.annotations.DataTableTab annotation) {
         this(annotation.id(), annotation.title(), annotation.selected());
         setHideOnCreate(annotation.hideOnCreate());
+        String perms = annotation.perms();
+        setPerms(perms.isEmpty() ? null : perms);
+        String className = annotation.className();
+        setClassName(className.isEmpty() ? null : className);
         String content = annotation.content();
         if ("null".equals(content)) content = null;
         setContent(content);

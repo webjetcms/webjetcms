@@ -3,6 +3,20 @@
 
 The [datatables.net](http://datatables.net) library is an advanced table with connections to REST services.
 
+## System settings
+
+Java classes for datatable settings are in the `sk.iway.iwcm.system.datatable.settings` package:
+
+| Subpackage | Database table | Purpose |
+| --- | --- | --- |
+| [`customfields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/) | `dt_customfields` | Configuration and validation of optional fields. |
+| [`fields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/fields/) | `dt_fields` | Field and column property settings. |
+| [`tabs`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/tabs/) | `dt_tabs` | Editor tab settings. |
+
+Each subpackage contains `jpa` for entities and repositories and `rest` for services and REST controllers. When using these classes in your own code or templates, update the imports and full class names to the packages listed.
+
+The original table `custom_fields` will be automatically renamed to `dt_customfields` during the update, preserving the data. Custom SQL queries must use the new table name.
+
 ## Basic initialization in collaboration with Spring REST
 
 The WebJET implementation of datatables is configured using the JSON object columns. This object contains the definition of columns for both the datatable and the datatables editor. The table is then initialized using the WJ.DataTable constructor.

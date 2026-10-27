@@ -5,12 +5,7 @@
 
         window.helpLink = "/redactor/apps/calendar/README";
 
-        var tabs = [
-            { id: 'basic', title: /*[[#{calendar_events.tab.basic}]]*/ 'basic', selected: true},
-            { id: 'description', title: /*[[#{calendar_events.tab.description}]]*/ 'desc', content: '' },
-            { id: 'advanced', title: /*[[#{calendar_events.tab.advanced}]]*/ 'adv' },
-            { id: 'notification', title: /*[[#{calendar_events.tab.notification}]]*/ 'notify' }
-        ];
+        var tabs = /*[(${layout.getDataTableTabs('sk.iway.iwcm.components.calendar.jpa.CalendarEventsEntity')})]*/ [];
 
         let url = "/admin/rest/calendar/events";
         let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.calendar.jpa.CalendarEventsEntity")})]*/ [];
