@@ -313,7 +313,9 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public boolean checkItemPerms(DocDetails entity, Long id) {
-        if (entity == null || getUser() == null) return false;
+        if (getUser() == null) return false;
+        // The action endpoint uses -1 for actions without a selected record.
+        if (entity == null) return Long.valueOf(-1L).equals(id);
         if (entity.getDocId()>0) {
             DocDetails original = DocDB.getInstance().getDoc(entity.getDocId(), -1, false);
             if (original == null) return false;

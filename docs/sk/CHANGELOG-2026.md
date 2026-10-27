@@ -299,6 +299,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Elektronický obchod - opravené pridanie kategórie produktov bez označeného produktu v tabuľke (#373).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránk (#372).
 - Webové stránky - URL stránky, presmerovania a perex obrázka zachovávajú parametre aj po načítaní cez JPA vrátane histórie. HTML sanitizér už neprepisuje znaky `&` a `=` v URL na HTML entity (#373).
 - Editor stránok - pri automatickej maximalizácii v nízkom alebo úzkom okne zostáva celý panel nástrojov nad obsahom stránky. Obsah už nepresvitá pod ikonami a názvami skupín (#372).
