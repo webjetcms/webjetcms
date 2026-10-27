@@ -138,6 +138,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Viackrokové formuláre - nová karta [Väzby](redactor/apps/multistep-form/README.md#väzby) v editore poľa zobrazuje samostatné zoznamy polí, ktoré jeho hodnotu používajú v podmienkach zobrazenia a povinnosti (#osk859).
 - Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#364).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.mustistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).

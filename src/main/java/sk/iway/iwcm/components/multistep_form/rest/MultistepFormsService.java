@@ -52,6 +52,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp;
+import sk.iway.iwcm.components.multistep_form.support.FormItemUsage;
 import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
@@ -839,6 +840,34 @@ public class MultistepFormsService {
         }
 
         return sortFields(fields, stepPositions, stepNames, prop);
+    }
+
+    /**
+     * Builds reverse-condition links using the first referenced item in form display order.
+     *
+     * @param fields referenced items scoped to the form and current domain
+     * @param formName form whose step positions and labels are used
+     * @param prop localization provider
+     * @return one link per logical field identifier, with the selected item's ID, step and label
+     */
+    public final List<FormItemUsage> prepareFieldUsage(List<FormItemEntity> fields, String formName, Prop prop) {
+        Map<Long, Integer> stepPositions = new HashMap<>();
+        for(FormStepEntity step : formStepsRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
+            stepPositions.put(step.getId(), step.getCurrentPosition());
+        }
+
+        Set<String> fieldIds = new HashSet<>();
+        return fields.stream()
+            .sorted(Comparator
+                .comparingInt((FormItemEntity field) -> stepPositions.getOrDefault(field.getStepId(), 0))
+                .thenComparingInt(field -> field.getSortPriority() != null ? field.getSortPriority() : 0))
+            .filter(field -> fieldIds.add(field.getItemFormId()))
+            .map(field -> new FormItemUsage(
+                field.getId(),
+                field.getStepId(),
+                "(" + prop.getText("components.form_items.step_title") + " " + stepPositions.get(field.getStepId()) + ") " + getFieldName(field, prop),
+                field.getItemFormId()))
+            .toList();
     }
 
     /**
