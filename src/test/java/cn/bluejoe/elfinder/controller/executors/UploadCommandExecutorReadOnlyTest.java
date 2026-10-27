@@ -223,7 +223,7 @@ class UploadCommandExecutorReadOnlyTest extends BaseWebjetTest {
     private MockedStatic<sk.iway.iwcm.system.elfinder.FsService> mockCurrentUser() {
         Identity user = new Identity();
         user.setWritableFolders("*");
-        MockedStatic<sk.iway.iwcm.system.elfinder.FsService> currentUser = mockStatic(sk.iway.iwcm.system.elfinder.FsService.class);
+        MockedStatic<sk.iway.iwcm.system.elfinder.FsService> currentUser = mockStatic(sk.iway.iwcm.system.elfinder.FsService.class, CALLS_REAL_METHODS);
         currentUser.when(sk.iway.iwcm.system.elfinder.FsService::getCurrentUser).thenReturn(user);
         return currentUser;
     }

@@ -17,7 +17,9 @@ import cn.bluejoe.elfinder.service.FsItemFilter;
 import cn.bluejoe.elfinder.service.FsSecurityChecker;
 import cn.bluejoe.elfinder.service.FsServiceConfig;
 import cn.bluejoe.elfinder.service.FsVolume;
+import cn.bluejoe.elfinder.util.MimeTypesUtils;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
@@ -46,6 +48,32 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 
 	public int getSelectedType() {
 		return selectedType;
+	}
+
+	/** Returns the MIME families accepted by a media picker, or an empty list for unrestricted modes. */
+	public static List<String> getAllowedMimeTypes(int selectedType) {
+		return switch (selectedType) {
+			case TYPE_IMAGES -> List.of("image/");
+			case TYPE_VIDEOS -> List.of("video/", "audio/");
+			case TYPE_MULTIMEDIA -> List.of("image/", "video/", "audio/");
+			default -> List.of();
+		};
+	}
+
+	/**
+	 * Checks the filename against the media types displayed by a file picker.
+	 * This is an additional restriction; upload permissions and size limits still apply.
+	 * @param selectedType the picker mode
+	 * @param fileName the file name or path, without a chunk suffix
+	 * @return whether the file type can be used in the picker
+	 */
+	public static boolean isFileTypeAllowed(int selectedType, String fileName) {
+		List<String> allowedTypes = getAllowedMimeTypes(selectedType);
+		if (allowedTypes.isEmpty()) return true;
+		String mimeType = MimeTypesUtils.getMimeType(FileTools.getFileExtension(fileName));
+		return (mimeType != null && allowedTypes.stream().anyMatch(mimeType::startsWith))
+			|| (allowedTypes.contains("image/") && FileTools.isImage(fileName))
+			|| (allowedTypes.contains("audio/") && FileTools.isAudioFile(fileName));
 	}
 
 	FsSecurityChecker _securityChecker = new FsSecurityCheckerChain(); //NOSONAR
