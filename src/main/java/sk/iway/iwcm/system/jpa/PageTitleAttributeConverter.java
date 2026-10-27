@@ -32,6 +32,8 @@ public class PageTitleAttributeConverter implements AttributeConverter<String, S
      */
     public static String sanitizeTitle(String value) {
         if (value == null) return null;
-        return AllowSafeHtmlAttributeConverterWithSave.sanitize(Tools.convertToHtmlTags(value));
+        String safeHtml = AllowSafeHtmlAttributeConverterWithSave.sanitize(Tools.convertToHtmlTags(value));
+        // Entity decoding can reveal legacy markers; keep them as text during later rendering.
+        return safeHtml.replace("*|", "&#42;|").replace("|*", "|&#42;");
     }
 }
