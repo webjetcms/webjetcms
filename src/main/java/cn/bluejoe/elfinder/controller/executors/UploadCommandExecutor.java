@@ -1,5 +1,7 @@
 package cn.bluejoe.elfinder.controller.executors;
 
+import static sk.iway.iwcm.system.elfinder.FsService.isFileTypeAllowed;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,9 +9,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,6 +22,7 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.fileupload2.core.FileItem;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
@@ -49,6 +55,54 @@ import sk.iway.iwcm.users.UsersDB;
 @SuppressWarnings("java:S116")
 public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 {
+	private static final Pattern CHUNK_NAME = Pattern.compile("(.*)\\.([0-9]+)_([0-9]+)\\.part");
+
+	/** Returns the final upload path, rather than the temporary chunk filename. */
+	private String getChunkFileName(HttpServletRequest request, Matcher chunk) {
+		String uploadPath = request.getParameter("upload_path[]");
+		return uploadPath != null && uploadPath.startsWith("/") ? uploadPath : chunk.group(1);
+	}
+
+	/**
+	 * Filters uploads by the filename extensions supported by the current picker mode.
+	 * Checks normalized filenames and, when replacing a file, the existing target's type.
+	 * Chunk uploads are checked using their final path, including {@code upload_path[]},
+	 * rather than the temporary {@code .part} name. Rejected temporary files and retained
+	 * chunks are deleted before conflict renames or destination writes can occur.
+	 * Permissions and size limits are checked separately by the upload flow.
+	 *
+	 * @param files parsed uploads keyed by their path or multipart field name
+	 * @param target destination folder or existing file; also determines the picker mode
+	 * @param request request containing chunk metadata and the final upload path
+	 * @param user user whose filename normalization rules apply
+	 * @param rejectedTypes receives rejected filenames for the error or warning response
+	 * @return a new map containing accepted uploads with their original keys and file items
+	 * @throws IOException if target access or deletion of a rejected temporary file fails
+	 */
+	private Map<String, FileItem<?>> filterUploadTypes(Map<String, FileItem<?>> files, FsItemEx target,
+			HttpServletRequest request, Identity user, Set<String> rejectedTypes) throws IOException {
+		Map<String, FileItem<?>> allowed = new LinkedHashMap<>();
+		int selectedType = target.getFsServiceSelectedType();
+		Matcher chunk = CHUNK_NAME.matcher(Tools.getStringValue(request.getParameter("chunk"), ""));
+		String chunkFileName = request.getParameter("cid") != null && chunk.matches() ? getChunkFileName(request, chunk) : null;
+		boolean targetAllowed = target.isFolder() || isFileTypeAllowed(selectedType, target.getPath());
+		for (Entry<String, FileItem<?>> entry : files.entrySet()) {
+			String name = chunkFileName == null ? entry.getKey() : chunkFileName;
+			String fileName = IwcmFsVolume.removeSpecialChars(fixFileNameDirPath(getFilename(name)), target, user);
+			if (targetAllowed && isFileTypeAllowed(selectedType, fileName)) {
+				allowed.put(entry.getKey(), entry.getValue());
+				continue;
+			}
+			rejectedTypes.add(name);
+			entry.getValue().delete();
+			if (chunkFileName != null) {
+				String key = String.format("chunk_%s_%s", request.getParameter("cid"), chunkFileName);
+				Parts parts = (Parts) request.getServletContext().getAttribute(key);
+				if (parts != null) parts.removeFromApplicationContext(request);
+			}
+		}
+		return allowed;
+	}
 
 	/**
 	 * Odstranenie adresara z cesty k suboru pri uploade na windows z IE (ie bug)
@@ -259,10 +313,10 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 			String key = String.format("chunk_%s_%s", _chunkId, _fileName);
 			request.getServletContext().removeAttribute(key);
 
-			for (long i = 0; i < _numberOfParts; i++)
+			for (Part part : _parts.values())
 			{
 				try {
-					_parts.get(i)._content.delete();
+					part._content.delete();
 				} catch (Exception e) {
 					// ignore
 				}
@@ -294,18 +348,24 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
 
 		final List<String> notUploaded = new ArrayList<>();
+		final Set<String> rejectedTypes = new LinkedHashSet<>();
 		@SuppressWarnings("unchecked")
 		List<String> notUploadedSession = (List<String>) request.getAttribute("MultipartWrapper.notUploaded");
 		if (notUploadedSession != null) notUploaded.addAll(notUploadedSession) ;
 
 		if (user != null && isWritable(dir) && UsersDB.isFolderWritable(user.getWritableFolders(), dir.getPath()) && filesMap != null)
 		{
+			filesMap = filterUploadTypes(filesMap, dir, request, user, rejectedTypes);
 
-			if (renames != null && renames.length > 0) {
+			if (renames != null && (rejectedTypes.isEmpty() || filesMap.isEmpty() == false)) {
 				String path = dir.getPath();
 				for (String rename : renames) {
 					if (FileBrowserTools.hasForbiddenSymbol(rename)) {
 						notUploaded.add(rename);
+						continue;
+					}
+					if (isFileTypeAllowed(dir.getFsServiceSelectedType(), rename) == false) {
+						rejectedTypes.add(rename);
 						continue;
 					}
 
@@ -578,6 +638,13 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 			String fileNames = notUploaded.toString();
 			json.put("error", prop.getText("admin.dragdropupload.forbidden", fileNames));
 		}
+		if (rejectedTypes.isEmpty() == false) {
+			JSONArray errors = new JSONArray();
+			rejectedTypes.forEach(name -> errors.put("errUploadFile").put(name).put("errUploadMime"));
+			if (json.has("error")) errors.put("$1").put(json.remove("error"));
+			if (json.has("warning")) errors.put("$1").put(json.remove("warning"));
+			json.put(added.isEmpty() ? "error" : "warning", errors);
+		}
 	}
 
 	private String processChunkUpload(HttpServletRequest request, Map<String,FileItem<?>> filesMap, FileWriter fw)
@@ -594,17 +661,11 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 
 			Logger.debug(UploadCommandExecutor.class, "chunk="+chunk+" range="+range+" cid="+cid);
 
-			Matcher m = Pattern.compile("(.*)\\.([0-9]+)\\_([0-9]+)\\.part") //NOSONAR
-					.matcher(chunk);
+			Matcher m = CHUNK_NAME.matcher(chunk);
 
-			if (m.find())
+			if (m.matches())
 			{
-				String fileName = m.group(1);
-				String uploadPath = request.getParameter("upload_path[]");
-				if (Tools.isNotEmpty(uploadPath) && uploadPath.startsWith("/"))
-				{
-					fileName = uploadPath;
-				}
+				String fileName = getChunkFileName(request, m);
 				long index = Long.parseLong(m.group(2));
 				long total = Long.parseLong(m.group(3));
 

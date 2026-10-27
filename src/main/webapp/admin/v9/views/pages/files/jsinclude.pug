@@ -25,6 +25,12 @@ link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/elfinder.full.
 script(type='text/javascript', src='/admin/elFinder/js/elfinder.full.js')
 
 script.
+    elFinder.prototype._options.handlers.dialogopen = function(event, finder) {
+        const allowedTypes = finder.option('uploadMime').allow;
+        const accept = Array.isArray(allowedTypes) ? allowedTypes.map(type => type + '*').join(',') : '';
+        event.data.dialog.find('input[type=file]:not([directory])').attr('accept', accept);
+    };
+
     //kompatibilita s novym jQuery, po aktualizacii elfindera sa moze zrusit
     var rxhtmlTag = '/<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:-]+)[^>]*)\/>/gi';
     jQuery.extend( {
