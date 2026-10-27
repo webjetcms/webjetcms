@@ -7,6 +7,7 @@
 
 import { htmlEditButton } from "./quill.htmlEditButton";
 import { SoftLineBreakBlot, shiftEnterHandler, lineBreakMatcher } from "./quill.br";
+import { createPopper } from "@popperjs/core";
 
 export function typeQuill() {
 
@@ -188,6 +189,40 @@ export function typeQuill() {
         });
     }
 
+    /** Positions open toolbar menus outside clipping modal containers and returns their cleanup callbacks. */
+    function positionToolbarPickers(quill) {
+        const toolbar = quill.getModule('toolbar');
+        if (!toolbar || !toolbar.container) return [];
+
+        return Array.from(toolbar.container.querySelectorAll('.ql-picker'), picker => {
+            const label = picker.querySelector('.ql-picker-label');
+            const options = picker.querySelector('.ql-picker-options');
+            let popper;
+
+            const observer = new MutationObserver(() => {
+                if (picker.classList.contains('ql-expanded')) {
+                    if (popper) return;
+                    popper = createPopper(label, options, {
+                        placement: 'bottom-start',
+                        strategy: 'fixed',
+                        modifiers: [
+                            { name: 'flip', options: { boundary: document.documentElement } },
+                            { name: 'preventOverflow', options: { boundary: document.documentElement, padding: 8 } }
+                        ]
+                    });
+                } else if (popper) {
+                    popper.destroy();
+                    popper = null;
+                }
+            });
+            observer.observe(picker, { attributes: true, attributeFilter: ['class'] });
+            return () => {
+                observer.disconnect();
+                popper?.destroy();
+            };
+        });
+    }
+
     /**
      * Test if the editor is one line (without P tags)
      * @param {*} conf - datatanle column config
@@ -291,6 +326,7 @@ export function typeQuill() {
 
             // Add accessibility attributes to toolbar picker elements
             addToolbarA11y(conf._quill);
+            conf._quillPickerCleanups = positionToolbarPickers(conf._quill);
 
             return input;
         },
@@ -341,6 +377,10 @@ export function typeQuill() {
 
         disable: function (conf) {
         }, // not supported by Quill
+
+        destroy: function (conf) {
+            conf._quillPickerCleanups?.forEach(cleanup => cleanup());
+        },
 
         // Get the Quill instance
         quill: function (conf) {

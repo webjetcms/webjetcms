@@ -4,6 +4,50 @@ Before(({ I, login }) => {
      login('admin');
 });
 
+/** Verifies that toolbar menus remain clickable beyond a short, scrollable modal body. */
+Scenario('type-quill-pickers-in-short-modal', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/form-steps/?formName=Multistepform_1');
+    DT.waitForLoader('formStepsDataTable');
+    I.waitForElement('#formStepsDataTable tbody tr.selected', 10);
+    DT.waitForLoader('formItemsDataTable');
+
+    const field = '#formItemsDataTable_modal #DTE_Field_label';
+    const heading = field + ' .ql-header';
+    for (const [width, height] of [[1440, 900], [1024, 768], [600, 650]]) {
+        I.resizeWindow(width, height);
+        I.clickCss('#formItemsDataTable_wrapper button.buttons-create');
+        DTE.waitForEditor('formItemsDataTable');
+        DTE.selectOption('fieldType', 'Popiska (info text)');
+        DTE.fillQuill('label', 'Quill picker autotest');
+        I.clickCss(heading + ' .ql-picker-label');
+
+        // Visibility alone does not detect clipping or a footer covering the options.
+        I.waitForFunction((selector) => {
+            const items = [...document.querySelectorAll(selector + ' .ql-picker-item')];
+            return items.length === 7 && items.every(item => {
+                const rect = item.getBoundingClientRect();
+                return item.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+            });
+        }, [heading], 10);
+        I.clickCss(heading + ' .ql-picker-item[data-value="6"]');
+        I.see('Quill picker autotest', field + ' .ql-editor h6');
+
+        I.clickCss(heading + ' .ql-picker-label');
+        I.pressKey('Escape');
+        I.dontSeeElement(heading + ' .ql-picker-options');
+        I.pressKey('Enter');
+        I.waitForVisible(heading + ' .ql-picker-options', 5);
+        I.clickCss(heading + ' .ql-picker-item:not([data-value])');
+        I.see('Quill picker autotest', field + ' .ql-editor p');
+
+        I.clickCss(field + ' .ql-color .ql-picker-label');
+        I.clickCss(field + ' .ql-color .ql-picker-item:last-child');
+        I.dontSeeElement(field + ' .ql-color .ql-picker-options');
+        DTE.cancel();
+    }
+    I.wjSetDefaultWindowSize();
+});
+
 
 /**
  * Verify that the HTML source preserves ordered and unordered lists,
