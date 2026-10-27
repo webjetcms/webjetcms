@@ -13,6 +13,7 @@
 
     let itemsColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
     let itemTabs = /*[(${layout.getDataTableTabs("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
+    itemTabs = itemTabs.filter(tab => tab.id !== "relations");
     let itemUrl = "/admin/rest/form-items";
 
     // Loop itemTabs set selected to true id id === "stat"

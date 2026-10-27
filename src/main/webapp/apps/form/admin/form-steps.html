@@ -45,6 +45,9 @@
     var loadingStepItems = false;
     var stepsFirstLoad = true;
     var itemsFirstLoad = true;
+    var formItemRelationsSnapshot = null;
+    var formItemRelationsSession = 0;
+    var openingRelatedField = false;
 
     async function loadPreviewCssTemplates() {
         const select = document.getElementById("previewCssTemplate");
@@ -94,6 +97,105 @@
         let urlWithParams = WJ.urlUpdateParam(itemUrl, "formName", urlFormName);
         urlWithParams = WJ.urlUpdateParam(urlWithParams, "stepId", stepId);
         return urlWithParams;
+    }
+
+    /** Refreshes the read-only reverse dependencies for the currently opened field. */
+    function renderFormItemRelations(item) {
+        const sections = [
+            { property: "visibilityUsage", id: "formItemVisibilityUsage" },
+            { property: "requirementUsage", id: "formItemRequirementUsage" }
+        ];
+        sections.forEach(section => {
+            const list = document.getElementById(section.id);
+            if(list == null) return;
+            list.replaceChildren();
+            const fields = item?.[section.property] || [];
+            fields.forEach(field => {
+                const entry = document.createElement("li");
+                // Labels from prepareFieldUsage start with a localized step in parentheses.
+                const parts = field.label.match(/^\(([^)]+)\)\s+([\s\S]*)$/);
+                const name = document.createElement("button");
+                name.type = "button";
+                name.className = "form-item-relations-name";
+                name.textContent = parts ? parts[2] : field.label;
+                name.addEventListener("click", () => openRelatedFormItem(field));
+                entry.appendChild(name);
+                if(parts) {
+                    const step = document.createElement("span");
+                    step.className = "form-item-relations-step";
+                    step.textContent = parts[1];
+                    entry.appendChild(step);
+                }
+                list.appendChild(entry);
+            });
+            document.getElementById(section.id + "Count").textContent = fields.length;
+            document.getElementById(section.id + "Empty").hidden = fields.length > 0;
+        });
+    }
+
+    /** Opens a referenced field after resolving its step and preserving the source editor until confirmed. */
+    function openRelatedFormItem(field) {
+        if(openingRelatedField) return;
+        const table = formItemsDataTable;
+        const editor = table.EDITOR;
+        const sourceSession = formItemRelationsSession;
+        const step = formStepsDataTable.row("#" + field.stepId);
+        if(!step.any()) {
+            WJ.notifyError("[[#{components.form_items.relations.unavailable}]]");
+            return;
+        }
+
+        openingRelatedField = true;
+        let navigating = false;
+        const navigate = () => {
+            if(sourceSession !== formItemRelationsSession || editor.display() === false) return;
+            navigating = true;
+            $("#formItemsDataTable_modal").one("hidden.bs.modal.formItemRelations", () => {
+                openingRelatedField = false;
+                const openTarget = () => {
+                    table.off("xhr.dt.formItemRelations draw.dt.formItemRelations");
+                    // A later step selection or editor opening takes precedence over this navigation.
+                    const selectedStep = formStepsDataTable.rows({ selected: true }).data().toArray();
+                    const loadedStep = new window.URL(table.getAjaxUrl(), window.location.origin).searchParams.get("stepId");
+                    if(editor.display() || selectedStep.length !== 1 || selectedStep[0].id !== field.stepId || loadedStep !== String(field.stepId)) return;
+                    const target = table.row("#" + field.id);
+                    if(!target.any()) {
+                        WJ.notifyError("[[#{components.form_items.relations.unavailable}]]");
+                        return;
+                    }
+                    table.rows({ selected: true }).deselect();
+                    target.select();
+                    table.wjEditFetch($(target.node()));
+                };
+
+                const loadedStep = new window.URL(table.getAjaxUrl(), window.location.origin).searchParams.get("stepId");
+                if(loadedStep === String(field.stepId)) {
+                    openTarget();
+                } else {
+                    table.one("draw.dt.formItemRelations", openTarget);
+                    table.one("xhr.dt.formItemRelations", (event, settings, json) => {
+                        if(json == null) table.off("draw.dt.formItemRelations");
+                    });
+                    formStepsDataTable.rows({ selected: true }).deselect();
+                    step.select();
+                }
+            });
+            editor.close();
+        };
+
+        if(formItemRelationsSnapshot !== null && formItemRelationsSnapshot !== JSON.stringify(editor.get())) {
+            WJ.confirm({
+                title: "[[#{components.form_items.relations.discard_title}]]",
+                message: "[[#{components.form_items.relations.discard_message}]]",
+                btnOkText: "[[#{components.form_items.relations.open_field}]]",
+                success: navigate,
+                onHidden: () => {
+                    if(!navigating && sourceSession === formItemRelationsSession) openingRelatedField = false;
+                }
+            });
+        } else {
+            navigate();
+        }
     }
 
     /** Shares saved field settings between form editors without copying ownership or conditions. */
@@ -357,6 +459,11 @@
         var order = [];
         order.push([1, 'desc']);
 
+        const relationsTab = itemTabs.find(tab => tab.id === "relations");
+        relationsTab.content = document.getElementById("formItemRelationsTemplate").innerHTML;
+        relationsTab.hideOnCreate = true;
+        relationsTab.className = "hide-on-duplicate";
+
         formItemsDataTable = WJ.DataTable({
             url: getActualPath(-1),
             serverSide: true,
@@ -372,6 +479,14 @@
             paging: false,
             onXhr: function() {
                 loadingStepItems = false;
+            },
+            onEdit: function(table, row, item) {
+                // A fetched relation must not replace a newer editor or a changed selection.
+                const selectedStep = formStepsDataTable.rows({ selected: true }).data().toArray();
+                const selectedFields = table.rows({ selected: true }).data().toArray();
+                if(table.EDITOR.display() || !item || selectedStep.length !== 1 || selectedStep[0].id !== item.stepId ||
+                    selectedFields.length !== 1 || selectedFields[0].id !== item.id) return;
+                table.wjEdit(row);
             }
         });
         formItemsDataTable.hideButtons(["import", "export", "celledit", "reload"]);
@@ -382,11 +497,17 @@
 
         let regexRequestId = 0;
         formItemsDataTable.EDITOR.on('initCreate initEdit initRemove close cancelOpen', function() {
-            // Responses belong to the editor session in which the field type changed.
+            // Responses and relation confirmations belong to the editor session that started them.
             regexRequestId++;
+            formItemRelationsSession++;
+            formItemRelationsSnapshot = null;
+            openingRelatedField = false;
         });
 
         formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+            formItemRelationsSnapshot = JSON.stringify(this.get());
+            openingRelatedField = false;
+            renderFormItemRelations(action === "edit" ? formItemsDataTable.EDITOR.currentJson : null);
 
             if("create" === action) {
                 ["visibilityConditions", "requirementConditions"].forEach(tabId => {
@@ -780,7 +901,113 @@
 
     #panel-body-dt-formStepsDataTable-stepBonusHtml div.DTE_Field_Name_stepBonusHtml label { display: none; }
     #panel-body-dt-formStepsDataTable-stepBonusHtml div.DTE_Field_Type_textarea .col-sm-7 { width: 99%; }
+
+    .form-item-relations-group {
+        border: 1px solid var(--wj-nice-gray-100);
+        border-radius: var(--wj-border-radius);
+        overflow: hidden;
+    }
+
+    .form-item-relations-heading {
+        background: var(--wj-nice-gray);
+        border-bottom: 1px solid var(--wj-nice-gray-100);
+        padding: 10px 15px;
+    }
+
+    .form-item-relations-heading .ti {
+        color: var(--wj-primary);
+        font-size: 20px;
+    }
+
+    .form-item-relations-count {
+        min-width: 24px;
+        padding: 2px 6px;
+        border-radius: var(--wj-border-radius);
+        background: white;
+        color: var(--wj-gray-text);
+        font-size: 13px;
+        text-align: center;
+    }
+
+    .form-item-relations-group li {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 15px;
+    }
+
+    .form-item-relations-group li + li {
+        border-top: 1px solid var(--wj-nice-gray-100);
+    }
+
+    .form-item-relations-name {
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--wj-primary);
+        font: inherit;
+        text-align: left;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        overflow-wrap: anywhere;
+    }
+
+    .form-item-relations-name:hover {
+        color: var(--wj-primary-hover);
+    }
+
+    .form-item-relations-name:focus-visible {
+        outline: 2px solid var(--wj-secondary);
+        outline-offset: 3px;
+        border-radius: 2px;
+    }
+
+    .form-item-relations-step {
+        flex-shrink: 0;
+        padding: 2px 7px;
+        border-radius: var(--wj-border-radius);
+        background: var(--wj-nice-gray);
+        color: var(--wj-gray-text);
+        font-size: 13px;
+    }
+
+    .form-item-relations-empty {
+        padding: 14px 15px;
+        color: var(--wj-gray-text);
+    }
 </style>
+
+<template id="formItemRelationsTemplate">
+    <div class="p-3">
+        <p class="mb-3">[[#{components.form_items.relations.used_by}]]</p>
+        <div class="row g-3">
+            <section class="col-12 col-md-6" aria-labelledby="formItemVisibilityUsageTitle">
+                <div class="form-item-relations-group h-100">
+                    <div class="form-item-relations-heading d-flex align-items-center gap-2">
+                        <i class="ti ti-eye" aria-hidden="true"></i>
+                        <h3 id="formItemVisibilityUsageTitle" class="h6 fw-bold mb-0">[[#{components.form_items_condition.visibility_tab}]]</h3>
+                        <span id="formItemVisibilityUsageCount" class="form-item-relations-count ms-auto">0</span>
+                    </div>
+                    <ul id="formItemVisibilityUsage" class="list-unstyled mb-0"></ul>
+                    <p id="formItemVisibilityUsageEmpty" class="form-item-relations-empty mb-0">[[#{components.form_items.relations.empty}]]</p>
+                </div>
+            </section>
+            <section class="col-12 col-md-6" aria-labelledby="formItemRequirementUsageTitle">
+                <div class="form-item-relations-group h-100">
+                    <div class="form-item-relations-heading d-flex align-items-center gap-2">
+                        <i class="ti ti-asterisk" aria-hidden="true"></i>
+                        <h3 id="formItemRequirementUsageTitle" class="h6 fw-bold mb-0">[[#{components.form_items_condition.requirement_tab}]]</h3>
+                        <span id="formItemRequirementUsageCount" class="form-item-relations-count ms-auto">0</span>
+                    </div>
+                    <ul id="formItemRequirementUsage" class="list-unstyled mb-0"></ul>
+                    <p id="formItemRequirementUsageEmpty" class="form-item-relations-empty mb-0">[[#{components.form_items.relations.empty}]]</p>
+                </div>
+            </section>
+        </div>
+    </div>
+</template>
 
 <div class="row">
     <div class="col-md-3" style="border-right: 1px solid #DDDFE6;">

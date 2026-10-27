@@ -19,4 +19,8 @@ public interface FormItemsConditionsRepository extends DomainIdRepository<FormIt
 
     @Query("SELECT fice.formItemId FROM FormItemsConditionEntity fice WHERE fice.formName = :formName AND fice.itemFormId = :itemFormId AND fice.domainId = :domainId")
     List<Long> getDependedItems(@Param("formName") String formName, @Param("itemFormId") String itemFormId, @Param("domainId") Integer domainId);
+
+    /** Finds distinct target items that use a logical field in the requested condition type. */
+    @Query("SELECT DISTINCT fice.formItemId FROM FormItemsConditionEntity fice WHERE fice.formName = :formName AND fice.itemFormId = :itemFormId AND fice.conditionType = :conditionType AND fice.domainId = :domainId")
+    List<Long> getDependedItems(@Param("formName") String formName, @Param("itemFormId") String itemFormId, @Param("conditionType") ConditionType conditionType, @Param("domainId") Integer domainId);
 }
