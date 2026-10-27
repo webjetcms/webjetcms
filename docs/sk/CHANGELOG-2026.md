@@ -309,6 +309,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Elektronický obchod - opravené pridanie kategórie produktov bez označeného produktu v tabuľke (#373).
+- Webové stránky - URL stránky, presmerovania a perex obrázka zachovávajú parametre aj po načítaní cez JPA vrátane histórie. HTML sanitizér už neprepisuje znaky `&` a `=` v URL na HTML entity (#373).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránok (#372).
 - Editor stránok - pri automatickej maximalizácii v nízkom alebo úzkom okne zostáva celý panel nástrojov nad obsahom stránky. Obsah už nepresvitá pod ikonami a názvami skupín (#372).
 - Editor stránok - pri zlyhaní získania obsahu alebo hodnote `undefined` sa zobrazí chyba a uloženie sa zastaví, aby sa neprepísal pôvodný obsah. Atribúty `contenteditable` sa odstraňujú pri načítaní aj ukladaní HTML vrátane kódu vloženého v HTML režime (#369).
@@ -336,6 +338,11 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Node.js - verzia pre vývoj a zostavenie projektu v `.nvmrc` a `devcontainer` aktualizovaná na `22.23.4`, ktorá opravuje zraniteľnosť Brotli dekodéra CVE-2026-111497. Lokálne aj v build prostrediach aktualizujte Node.js podľa [návodu na inštaláciu](developer/install/README.md#rspack-build-js-css-a-pug-súborov) (#373).
+- Web stránky - pri ukladaní sa overujú práva k pôvodnej stránke aj k cieľovému priečinku pri presune. Zmenou ID a priečinka v požiadavke nemožno prevziať cudziu stránku (#373).
+- Web stránky - názov stránky a názov v menu sa čistia od nebezpečného HTML pri ukladaní aj načítaní (#373).
+- HTML sanitizácia - pridaný zdieľaný `AllowSafeHtmlAttributeConverterWithSave` na čistenie HTML pri ukladaní aj načítaní. Používa sa na cestu z názvov priečinkov v stránkach a histórii; ošetrené sú aj staršie JDBC zápisy.
+- Datatabuľky - pri vykresľovaní odkazov a obrázkov sa escapujú URL v HTML atribútoch, aby vložené úvodzovky nemohli vytvoriť ďalší atribút. Samotná URL v dátach zostáva nezmenená (#373).
 - Dependency Check - aktualizované knižnice `Jackson 2.22.3/3.2.3`, `jsoup 1.23.2`, `logback-core/classic 1.6.5`, `slf4j-api 2.0.19`, `mariadb-java-client 3.5.10`, `postgresql 42.7.14`, `Swagger UI 5.32.15` (s `DOMPurify 3.4.13`), `moment 2.31.0` vrátane statickej kópie, `@tootallnate/once 2.0.1`, `@xmldom/xmldom 0.9.12`, `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` a `undici 6.28.1`. Zostavenie vyžaduje Node.js 20 alebo 22 a novší (#349).
 - Dependency Check - pridané výnimky pre `kotlin-stdlib 2.4.0`, `webjet-ai/webjet-ai-local 2.0.4`, `spring-security-crypto 7.1.1`, `http-cache-semantics 4.2.0`, `fabric 5.2.4/5.5.2` a `jQuery 3.3.1` v testovacej šablóne eshopu. Výnimky pre `ai.djl:api 0.36.0` a `tar 6.2.1` predstavujú schválené prijatie zvyškového rizika. Podrobnosti sú v `dependency-check-suppressions-project.xml` (#349).
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
