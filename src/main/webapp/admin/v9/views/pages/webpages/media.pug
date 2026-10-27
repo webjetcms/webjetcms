@@ -47,10 +47,7 @@ block content
 
             //console.log("COLUMNS: ", columns);
 
-            var mediaTabs = [
-                { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                { id: 'fields', title: '[[\#{editor.tab.fields}]]' }
-            ];
+            var mediaTabs = [(${layout.getDataTableTabs('sk.iway.spirit.model.Media')})];
 
             mediaTable = WJ.DataTable({
                 url: url,

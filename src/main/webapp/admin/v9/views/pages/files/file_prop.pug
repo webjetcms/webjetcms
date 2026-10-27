@@ -82,12 +82,7 @@ block content
                 var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.elfinder.FilePropertiesDTO')})];
                 let initIndexTab = false;
 
-                var tabs = [
-                    { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                    { id: 'index', title: '[[\#{elfinder.folder_prop.index.tab}]]' },
-                    { id: 'usage', title: '[[\#{elfinder.folder_prop.usage.tab}]]' },
-                    { id: 'history', title: '[[\#{elfinder.file_prop.history.tab}]]' }
-                ];
+                var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.system.elfinder.FilePropertiesDTO')})];
 
                 filePropertiesTable = WJ.DataTable({
                     url: WJ.urlAddParam(WJ.urlAddParam(url, "dirPath", urlDirPath), "fileName", urlFileName),

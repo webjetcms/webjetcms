@@ -6,12 +6,7 @@ block content
         window.helpLink = "/admin/users/user-groups";
         var userGroupsDataTable;
 
-        var tabs = [
-            { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-            { id: 'folders', title: '[[\#{user.groups.folders}]]', className: "hide-on-create" },
-            { id: 'sites', title: '[[\#{menu.root.websites}]]', className: "hide-on-create" },
-            { id: 'users', title: '[[\#{webpages.tab.users}]]', className: "hide-on-create" },
-        ];
+        var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.users.usergroups.UserGroupsEntity')})];
 
         window.domReady.add(function () {
 

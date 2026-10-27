@@ -50,6 +50,7 @@ docs/feature-video/
 
 #logs
 *.log
+/outputs/
 
 #idea
 .idea

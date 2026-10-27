@@ -382,6 +382,7 @@ async function testFileDiacritics(I, allowDiacritics) {
     const renamedFolderName = allowDiacritics ? 'ľščťú-žýáíéô' : 'lsctu-zyaieo';
 
     I.amOnPage(pageUrl);
+    I.waitForVisible('#nav-iwcm_2_L2ZpbGVz', 20);
 
     I.say('Uploading file with diacritics in name');
     I.click('.elfinder-navbar-wrapper span[id^="nav-iwcm_2_"][title*="files"] .elfinder-navbar-icon');
@@ -409,6 +410,7 @@ async function testFileDiacritics(I, allowDiacritics) {
 
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage(pageUrl);
+    I.waitForVisible('#nav-iwcm_2_L2ZpbGVz', 20);
     I.clickCss("#nav-iwcm_2_L2ZpbGVz"); //files
     createFolder(I, 'ľščťú žýáíéô');
     checkCorrectTitle(I, createdFolderName);
@@ -532,6 +534,7 @@ async function deleteTestFiles(I) {
     I.say('Deleting uploaded files');
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
+    I.waitForVisible('#nav-iwcm_2_L2ZpbGVz.ui-state-active', 20);
     let fileNames = ['lsctu-zyaieo.png', 'ľščťú-žýáíéô.png', 'ľščťú žýáíéô.png', 'lsctu zyaieo.png',
         'lsctu-zyaieo', 'ľščťú-žýáíéô', 'ľščťú žýáíéô', 'lsctu zyaieo'];
     for (const fileName of fileNames) {
@@ -541,6 +544,7 @@ async function deleteTestFiles(I) {
     //otherwise hash change will not work
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E");
+    I.waitForVisible('#nav-iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E.ui-state-active', 20);
     fileNames = ['outer', 'inner'];
     for (const fileName of fileNames) {
         await deleteFile(I, fileName);

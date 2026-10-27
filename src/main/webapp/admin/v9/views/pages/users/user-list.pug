@@ -58,14 +58,7 @@ block content
     script.
         window.helpLink = "/admin/users/README";
 
-        var tabs = [
-            {id: "personalInfo", title: "[[\#{useredit.personal_info}]]", selected: true},
-            {id: "contactTab", title: "[[\#{components.users.contact}]]", selected: false},
-            {id: "freeItems", title: "[[\#{components.users.free_items}]]", selected: false},
-            {id: "groupsTab", title: "[[\#{user.admin.userGroups}]]", selected: false},
-            {id: "rightsTab", title: "[[\#{useredit.permissions}]]", selected: false, perms: "users_edit_admins"},
-            {id: "approvingTab", title: "[[\#{components.users.approving}]]", selected: false, className: "hide-on-create", perms: "users_edit_admins"}
-        ];
+        var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.users.userdetail.UserDetailsEntity')})];
 
         window.jstreePerms = [(${jstreePerms})];
         var usersDatatable = null;

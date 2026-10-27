@@ -5,7 +5,7 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -34,7 +34,7 @@ public class EnumerationTypeEditorFields implements Serializable {
             @DataTableColumnEditor(
                 attr = {
                     @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/enumeration/string-fields?enumerationTypeId={id}"),
-                    @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsEntity"),
                     @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true"),
                     @DataTableColumnEditorAttr(key = "data-dt-field-dt-forceVisibleColumns", value = "alphabet,type,label,tooltip"),
                     @DataTableColumnEditorAttr(key = "data-dt-field-dt-toggleSelector", value = "td"),

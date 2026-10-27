@@ -2142,7 +2142,7 @@ public class Constants {
 						return (0);
 					}
 				}
-				if (constName.startsWith("domainId-")==false) Logger.debug(Constants.class, "Constants.getInt NOT FOUND (" + constName + ") = -1");
+				if (constName.startsWith("domainId-")==false && constName.startsWith("spamProtection")==false) Logger.debug(Constants.class, "Constants.getInt NOT FOUND (" + constName + ") = -1");
 			}
 		} catch (Exception ex) {
 			Logger.println(Constants.class, "Constants.getInt FAILED (" + constName + ") = -1");

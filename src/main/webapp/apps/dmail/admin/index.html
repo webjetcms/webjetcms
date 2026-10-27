@@ -8,14 +8,7 @@
         let url = "/admin/rest/dmail/campaings";
         columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.dmail.jpa.CampaingsEntity")})]*/ [];
 
-        var tabs = [
-                { id: 'main', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true},
-                { id: 'preview', title: /*[[#{editor.preview}]]*/ '', content: '<div class="previewContainer"><iframe id="emailPreviewIframe" src="about:blank" width="100%" height="500"></iframe><div>' },
-                { id: 'advanced', title: /*[[#{datatable.tab.advanced}]]*/ '' },
-                { id: 'receivers', title: /*[[#{components.dmail.campaings.tab.receivers}]]*/ '' },
-                { id: 'opens', title: /*[[#{components.dmail.campaings.tab.opens}]]*/ '', className: "hide-on-duplicate" },
-                { id: 'clicks', title: /*[[#{components.dmail.campaings.tab.clicks}]]*/ '', className: "hide-on-duplicate" }
-            ];
+        var tabs = /*[(${layout.getDataTableTabs("sk.iway.iwcm.dmail.jpa.CampaingsEntity")})]*/ [];
 
         var order = [];
         order.push([0, 'desc']);

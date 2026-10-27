@@ -2,7 +2,8 @@
 <script data-th-inline="javascript">
     window.helpLink = "/redactor/apps/form/README";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
-    window.FormDetail.init({ columns: columns, isArchived: true });
+    let tabs = /*[(${layout.getDataTableTabs("sk.iway.iwcm.components.forms.FormsEntityBasic")})]*/ [];
+    window.FormDetail.init({ columns: columns, tabs: tabs, isArchived: true });
 </script>
 
 <table id="formDetailDataTable" class="datatableInit table"></table>

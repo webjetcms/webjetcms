@@ -237,6 +237,16 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
 
+### Data tables
+
+- The **Settings → Data Tables** section combines [Field Settings](frontend/datatables/fields-settings.md), [Tab Settings](frontend/datatables/tabs-settings.md) and [Optional Fields](frontend/datatables/custom-fields-settings.md). You can change the names, order, and display of fields for individual entities and domains, or disable their editing. You can also edit editor tabs and create your own tabs with optional fields. **Warning:** The original **Optional Fields** permission (`customFields`) has been removed. After the update, the relevant users or permission groups must be assigned the new **Data Tables** permission (`dataTablesConfig`). The original permissions will not be automatically transferred (#366).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Web pages - when saving, the values ​​of fields hidden in the editor and fields with editing disabled will be preserved according to the same rules as in other data tables. When editing from history, the values ​​from the selected version of the page will be used (#366).
+
 ### Optional fields
 
 - Fully implemented [custom field settings] functionality (frontend/webpages/customfields/custom-fields-settings.md). Allows you to centrally set field properties without editing translation keys. All field types are supported (text, textarea, select, multiselect, autocomplete, enumeration, image, link, JSON and more) with type-specific settings such as maximum text length, selection options, linking to code lists or dependency on other fields. The user interface also offers an easy way to set possible values ​​for select/autocomplete fields (#58529).
@@ -299,6 +309,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- E-commerce - fixed adding a product category without a marked product in the table (#373).
+- Web pages - Page URLs, redirects, and image perex now preserve parameters even after loading via JPA, including history. The HTML sanitizer no longer rewrites the `&` and `=` characters in URLs to HTML entities (#373).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the pages are opened (#372).
 - Page Editor - when auto-maximizing in a low or narrow window, the entire toolbar remains above the page content. Content no longer shines through under icons and group names (#372).
 - Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
@@ -326,6 +338,11 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- Node.js - development and build version in `.nvmrc` and `devcontainer` updated to `22.23.4`, which fixes the Brotli decoder vulnerability CVE-2026-111497. Locally and in build environments, update Node.js according to [installation instructions](developer/install/README.md#rspack-build-js-css-a-pug-files) (#373).
+- Web pages - when saving, the rights to the original page and to the target folder when moving are verified. Changing the ID and folder in the request does not allow you to download another page (#373).
+- Web pages - page title and menu title are cleaned of dangerous HTML on both save and load (#373).
+- HTML sanitization - added shared `AllowSafeHtmlAttributeConverterWithSave` to sanitize HTML on both save and load. Used for path from folder names in pages and history; older JDBC writes are also handled.
+- Datatables - when rendering links and images, URLs in HTML attributes are escaped so that embedded quotes cannot create another attribute. The URL itself in the data remains unchanged (#373).
 - Dependency Check - updated libraries `Jackson 2.22.3/3.2.3`, `jsoup 1.23.2`, `logback-core/classic 1.6.5`, `slf4j-api 2.0.19`, `mariadb-java-client 3.5.10`, `postgresql 42.7.14`, `Swagger UI 5.32.15` (with `DOMPurify 3.4.13`), `moment 2.31.0` including static copy, `@tootallnate/once 2.0.1`, `@xmldom/xmldom 0.9.12`, `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` and `undici 6.28.1`. Build requires Node.js 20 or 22 and later (#349).
 - Dependency Check - added exceptions for `kotlin-stdlib 2.4.0`, `webjet-ai/webjet-ai-local 2.0.4`, `spring-security-crypto 7.1.1`, `http-cache-semantics 4.2.0`, `fabric 5.2.4/5.5.2` and `jQuery 3.3.1` in the e-shop test template. Exceptions for `ai.djl:api 0.36.0` and `tar 6.2.1` represent approved acceptance of residual risk. Details are in `dependency-check-suppressions-project.xml` (#349).
 - Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
@@ -340,6 +357,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+- Datatables - settings tables have a common prefix `dt_`: `dt_customfields`, `dt_fields` and `dt_tabs`. The existing table `custom_fields` is automatically renamed during the update, preserving the data; custom SQL queries must be modified to `dt_customfields` (#58830).
+- Datatables - Classes for [system settings](developer/datatables/README.md#system-settings) optional fields, fields, and cards have been moved under `sk.iway.iwcm.system.datatable.settings` to subpackages `customfields`, `fields`, and `tabs`. Custom code and templates using these classes require updating imports and full class names (#58830).
+- Datatables - added field type [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) for selecting a single option from a group of buttons. It uses administration styles and also supports the **No change** option for three-state settings (#58830).
 - SBOM - added [generate a common list of Java and npm dependencies](developer/install/sbom.md) in CycloneDX JSON format with the `ant -f ant/build.xml sbom` command, including transitive dependencies and report validation.
 - [Central News Generator](developer/install/social-media-feed.md) will remove unused previews with a 30-day grace period after successful publishing. It will preserve images of current posts as well as backup data for source failure (#358).
 - Page Editor - [Styles menu setting](frontend/examples/template-bare/README.md#search-and-style-groups) supports metadata in `editor.scss` / `editor.css` comments for categories and their icons, mutually exclusive groups, allowed elements, and base classes preserved across skins. The new menu is enabled by default; setting `ckeditor_styleComboEnabled=false` restores the original style selection (#OSK764).

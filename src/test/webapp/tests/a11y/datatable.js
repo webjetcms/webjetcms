@@ -997,23 +997,8 @@ Scenario("p51: grid edit accessibility", async ({ I, DT, a11y }) => {
     I.dontSeeElement(`${editableCell}[tabindex="0"]`);
 });
 
-Scenario("p52: color picker keyboard and focus", async ({ I, DTE, a11y }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=27030");
-    DTE.waitForEditor();
-    DTE.waitForCkeditor();
-
-    I.switchTo(".cke_wysiwyg_frame.cke_reset");
-    I.waitForElement("iframe.wj_component", 10);
-    I.switchTo(locate("iframe.wj_component").first());
-    I.waitForElement(".inlineComponentEdit", 30);
-    I.click(locate(".inlineComponentEdit").first());
-    I.switchTo();
-
-    I.waitForInvisible("Čakajte prosím", 20);
-    I.switchTo(".cke_dialog_ui_iframe");
-    I.waitForElement("#editorComponent", 10);
-    I.switchTo("#editorComponent");
-    DTE.waitForModal("component-datatable_modal");
+Scenario("p52: color picker keyboard and focus", async ({ I, Apps, a11y }) => {
+    Apps.openAppEditor(27030);
     I.click("Types");
 
     const preview = ".DTE_Field_Name_colorEmpty button.color-preview";

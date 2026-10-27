@@ -80,9 +80,11 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
-import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
-import sk.iway.iwcm.components.customfields.rest.JsonEditorValidator;
+import sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.system.datatable.settings.customfields.rest.CustomFieldsService;
+import sk.iway.iwcm.system.datatable.settings.customfields.rest.JsonEditorValidator;
+import sk.iway.iwcm.system.datatable.settings.fields.jpa.FieldsSettingsEntity;
+import sk.iway.iwcm.system.datatable.settings.fields.rest.FieldsSettingsService;
 import sk.iway.iwcm.database.ActiveRecordBase;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
@@ -2385,18 +2387,29 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	}
 
 	/**
-	 * Copy fields from provided entity into original entity
-	 * @param entity
-	 * @param one
+	 * Returns fields protected by the effective hidden-editor or disabled setting in the current domain.
+	 * Custom save workflows can use the same rules as {@link #copyEntityIntoOriginal(Object, Object)}
+	 * without changing how they apply editable values.
+	 *
+	 * @param entity entity whose editor annotations and saved settings are evaluated
+	 * @return property names whose stored values must be preserved
 	 */
-	protected void copyEntityIntoOriginal(T entity, T one) {
-		List<String> alwaysCopyProperties = new ArrayList<>();
+	protected List<String> getNonEditableProperties(T entity) {
 		List<String> ignoreProperties = new ArrayList<>();
-		List<String> identifierProperties = new ArrayList<>();
-		boolean importing = isImporting();
-		Set<String> importedColumns = getImportedColumns();
-		for (Field field : getIdentifierFields(entity.getClass())) {
-			identifierProperties.add(field.getName());
+
+		// Match DataTableColumnsFactory's current domain, even when the controller uses a shared repository domain.
+		Map<String, Boolean> hiddenEditorOverrides = new HashMap<>();
+		Map<String, Boolean> disabledOverrides = new HashMap<>();
+		FieldsSettingsService fieldsSettingsService = Tools.getSpringBean("fieldsSettingsService", FieldsSettingsService.class);
+		if (fieldsSettingsService != null) {
+			for (FieldsSettingsEntity setting : fieldsSettingsService.getFieldsSettings(ClassUtils.getUserClass(entity).getName(), CloudToolsForCore.getDomainId())) {
+				if (setting.getHiddenEditor() != null) {
+					hiddenEditorOverrides.put(setting.getFieldName(), setting.getHiddenEditor());
+				}
+				if (setting.getDisabled() != null) {
+					disabledOverrides.put(setting.getFieldName(), setting.getDisabled());
+				}
+			}
 		}
 
 		Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass());
@@ -2404,17 +2417,24 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
 				sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
 				boolean[] hiddenEditor = annotation.hiddenEditor();
-				if (hiddenEditor.length > 0) {
-					//ak je hiddenEditor preskoc
-					if (hiddenEditor[0]==true) {
-						ignoreProperties.add(field.getName());
-						continue;
-					}
+				// Settings can expose a field declared hiddenEditor=true, such as FileArchivatorBean.orderId.
+				// Checking only the annotation would show an editable field but silently discard its submitted value.
+				// Absent or null ("Unchanged") overrides preserve the annotation's original behavior.
+				boolean isHiddenEditor = hiddenEditorOverrides.getOrDefault(field.getName(), hiddenEditor.length > 0 && hiddenEditor[0]);
+				if (isHiddenEditor) {
+					ignoreProperties.add(field.getName());
+					continue;
 				}
 
-				//also skip if editor.attr.disabled=disabled
+				Boolean disabledOverride = disabledOverrides.get(field.getName());
+				if (Boolean.TRUE.equals(disabledOverride)) {
+					ignoreProperties.add(field.getName());
+					continue;
+				}
+
+				// An explicit saved false enables copying; unchanged settings retain the legacy rules.
 				DataTableColumnEditor[] editor = annotation.editor();
-				if (editor.length > 0) {
+				if (disabledOverride == null && editor.length > 0) {
 					boolean isDisabled = false;
 					DataTableColumnEditorAttr[] attrs = editor[0].attr();
 					if (attrs.length > 0) {
@@ -2428,9 +2448,37 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					//we allow updateDate, for others you can set alwaysCopyProperties=true in annotation
 					if (isDisabled && field.getName().equals("lastUpdate")==false) {
 						ignoreProperties.add(field.getName());
-						continue;
 					}
 				}
+			}
+		}
+		return ignoreProperties;
+	}
+
+	/**
+	 * Merges submitted values into the stored entity using current-domain field settings.
+	 * A saved disabled value of {@code false} permits copying fields disabled by editor attributes;
+	 * {@code true} preserves their stored values. Missing or null settings retain the legacy copy rules.
+	 * Identifiers and fields hidden by the effective hidden-editor setting remain excluded.
+	 * Null values follow the annotation and import-column rules for the affected field.
+	 *
+	 * @param entity submitted entity containing the new field values
+	 * @param one stored entity to update in place
+	 */
+	protected void copyEntityIntoOriginal(T entity, T one) {
+		List<String> alwaysCopyProperties = new ArrayList<>();
+		List<String> ignoreProperties = getNonEditableProperties(entity);
+		List<String> identifierProperties = new ArrayList<>();
+		boolean importing = isImporting();
+		Set<String> importedColumns = getImportedColumns();
+		for (Field field : getIdentifierFields(entity.getClass())) {
+			identifierProperties.add(field.getName());
+		}
+
+		for (Field field : AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass())) {
+			if (ignoreProperties.contains(field.getName())) continue;
+			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
+				sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
 
 				boolean alwaysCopy = false;
 				if (annotation.alwaysCopyProperties().length>0) {
