@@ -754,6 +754,10 @@ public class InitServlet extends HttpServlet
 			UpdateDatabase.update();
 			dt.diff("after update database, cp="+PathFilter.getCustomPath());
 
+			// Startup may load translations before migrations, for example via propInstallNames.
+			// Discard cached translations so renamed keys and updated DB overrides take effect immediately.
+			Prop.getInstance(true);
+
 			String logLevels = Constants.getString("logLevels", "");
 			if (Tools.isNotEmpty(logLevels)) {
 				Logger.setWJLogLevels(Logger.getLogLevelsMap(logLevels));
