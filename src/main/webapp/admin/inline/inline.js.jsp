@@ -650,6 +650,10 @@ function initPageBuilderEditors(pageDiv)
         //na tomto elemente je to uz inicializovane, preskocme
         if ($(this).hasClass("editableElement")) return;
 
+        // Ignore copied PB markers on elements that cannot host an inline editor.
+        var tagName = this.tagName.toLowerCase();
+        if (!CKEDITOR.dtd.$editable[tagName] && tagName !== "textarea") return;
+
         //console.log(this);
         this.form = document.editorForm;
         $(this).attr('contenteditable','true');

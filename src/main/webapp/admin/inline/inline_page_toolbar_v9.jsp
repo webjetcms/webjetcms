@@ -142,6 +142,10 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             //na tomto elemente je to uz inicializovane, preskocme
             if ($this.hasClass("editableElement")) return;
 
+            // Ignore copied PB markers on elements that cannot host an inline editor.
+            const tagName = this.tagName.toLowerCase();
+            if (!CKEDITOR.dtd.$editable[tagName] && tagName !== "textarea") return;
+
             this.form = document.editorForm;
 
             //console.log(this);

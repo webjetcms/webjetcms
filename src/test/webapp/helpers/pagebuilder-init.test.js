@@ -80,6 +80,39 @@ for (const persistedAttributes of ['', ' contenteditable="true" role="textbox" t
     });
 }
 
+test('Page Builder ignores unsupported inline hosts without losing their content', async t => {
+    const f = await fixture(t, '');
+    const page = f.$('#wjInline-docdata');
+    page.html('<div class="pb-editable"><h2>Mobile network</h2>' +
+        '<ul class="pb-editable unsupported"><li class="pb-editable unsupported">First item</li>' +
+        '<li class="pb-content unsupported">Second item</li></ul>' +
+        '<table class="pb-editable unsupported"><tbody><tr><td class="pb-editable unsupported">Cell</td></tr></tbody></table></div>' +
+        '<p class="pb-editable">Following paragraph</p>' +
+        '<span class="pb-editable">Supported span</span><a class="pb-editable" href="#">Supported link</a>');
+    const unsupported = page.find('.unsupported').toArray();
+    const originalHtml = unsupported.map(element => element.outerHTML);
+
+    assert.doesNotThrow(() => f.window.initPageBuilderEditors(page));
+    assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 4, 'Supported hosts after the invalid markup must still initialize');
+    assert.deepEqual(unsupported.map(element => element.outerHTML), originalHtml, 'Skipped hosts must retain their HTML without editor attributes');
+    assert.equal(page.find('[data-ckeditor-instance]').length, 4);
+    assert.ok(page.find('li').first().closest('[data-ckeditor-instance]').is('div'), 'List items remain inside their parent editor');
+
+    assert.doesNotThrow(() => f.window.initPageBuilderEditors(page));
+    assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 4, 'Repeated grid initialization must not create duplicate editors');
+});
+
+test('Page Builder resolves readiness when all marked hosts are unsupported', async t => {
+    const f = await fixture(t, '');
+    const page = f.$('#wjInline-docdata');
+    const html = '<ul><li class="pb-editable">Standalone item</li></ul>';
+    page.html(html);
+
+    await f.window.initPageBuilderEditors(page);
+    assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 0);
+    assert.equal(page.html(), html);
+});
+
 test('A failed CKEditor creation stops before scheduling instance callbacks', async t => {
     const f = await fixture(t, '');
     const element = f.window.document.createElement('div');
