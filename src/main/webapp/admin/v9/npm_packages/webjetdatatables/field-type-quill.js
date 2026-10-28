@@ -207,7 +207,7 @@ export function typeQuill() {
                         strategy: 'fixed',
                         modifiers: [
                             { name: 'flip', options: { boundary: document.documentElement } },
-                            { name: 'preventOverflow', options: { boundary: document.documentElement, padding: 8 } }
+                            { name: 'preventOverflow', options: { boundary: document.documentElement, padding: 8, altAxis: true } }
                         ]
                     });
                 } else if (popper) {

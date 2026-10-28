@@ -311,7 +311,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
-- Datatables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - the titles, alignment, and color menus are no longer clipped at the bottom edge of the dialog (#osk857).
+- Datatables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - the heading, alignment, and color menus are no longer clipped at the bottom edge of the dialog and remain accessible in short browser windows (#376).
 - E-commerce - fixed adding a product category without a marked product in the table (#373).
 - Web pages - Page URLs, redirects, and image perex now preserve parameters even after loading via JPA, including history. The HTML sanitizer no longer rewrites the `&` and `=` characters in URLs to HTML entities (#373).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the pages are opened (#372).

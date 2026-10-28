@@ -311,7 +311,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
-- Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - ponuky nadpisov, zarovnania a farieb sa už neorezávajú na spodnom okraji dialógového okna (#osk857).
+- Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - ponuky nadpisov, zarovnania a farieb sa už neorezávajú na spodnom okraji dialógového okna a zostávajú dostupné aj v nízkom okne prehliadača (#376).
 - Elektronický obchod - opravené pridanie kategórie produktov bez označeného produktu v tabuľke (#373).
 - Webové stránky - URL stránky, presmerovania a perex obrázka zachovávajú parametre aj po načítaní cez JPA vrátane histórie. HTML sanitizér už neprepisuje znaky `&` a `=` v URL na HTML entity (#373).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránok (#372).
