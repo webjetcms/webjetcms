@@ -24,9 +24,9 @@ ant update-version
 #ant fixSrc
 
 #ant deploy
-ant -Dcompress=true createUpdateZip
-ant -Dcompress=true createUpdateZipJar
-ant rsyncToLicenseServer
+#ant -Dcompress=true createUpdateZip
+#ant -Dcompress=true createUpdateZipJar
+#ant rsyncToLicenseServer
 ant -Dcompress=true deployGithub
 
 #MavenCentral: just run ant -Dcompress=true deployMavenCentral
@@ -36,19 +36,19 @@ cd ..
 
 gradlew war
 
-gradlew --rerun-tasks --info dependencyCheckAnalyze
+#gradlew --rerun-tasks --info dependencyCheckAnalyze
 
-open build/reports/dependency-check-report.html
+#open build/reports/dependency-check-report.html
 
 #license report
-gradlew --info generateLicenseReport
-open build/reports/dependency-license/index.html
-gradlew --info checkLicense
-open build/reports/dependency-license/dependencies-without-allowed-license.json
+#gradlew --info generateLicenseReport
+#open build/reports/dependency-license/index.html
+#gradlew --info checkLicense
+#open build/reports/dependency-license/dependencies-without-allowed-license.json
 
-echo "Reguired: npm install -g license-report"
-license-report --package=src/main/webapp/admin/v9/package.json --config licensereport-npm.json > build/reports/dependency-license/npm.html
-open build/reports/dependency-license/npm.html
+#echo "Reguired: npm install -g license-report"
+#license-report --package=src/main/webapp/admin/v9/package.json --config licensereport-npm.json > build/reports/dependency-license/npm.html
+#open build/reports/dependency-license/npm.html
 
 gradlew -q dependencies --configuration runtimeClasspath
 
