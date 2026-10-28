@@ -357,7 +357,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	public boolean isValidDates()
 	{
 		if (validFrom == null && validTo == null) return true;
-		if (referenceId != null && referenceId > 0 && Integer.valueOf(-1).equals(uploaded)
+		if (referenceId != null && referenceId > 0 && Integer.valueOf(-1).equals(getUploaded())
 				&& Constants.getBoolean("fileArchivCheckHistoryValid") == false) return true;
 
 		Date now = new Date(Tools.getNow());

@@ -75,6 +75,12 @@ public class FileArchivatorBeanTest {
             entity.setReferenceId(10);
             entity.setUploaded(0);
             assertFalse(entity.isValidDates());
+
+            entity.setUploaded(null);
+            assertTrue(entity.isValidDates());
+
+            constants.when(() -> Constants.getBoolean("fileArchivCheckHistoryValid")).thenReturn(true);
+            assertFalse(entity.isValidDates());
         }
     }
 }
