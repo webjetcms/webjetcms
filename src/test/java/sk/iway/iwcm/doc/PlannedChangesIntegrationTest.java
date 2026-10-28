@@ -620,6 +620,8 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
             factory.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
             factory.setManagedTypes(PersistenceManagedTypes.of(DocDetails.class.getName(), DocHistory.class.getName(), Media.class.getName(), MediaGroupBean.class.getName(),
                 "sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter", "sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter",
+                "sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverterWithSave", "sk.iway.iwcm.system.jpa.PageTitleAttributeConverter",
+                "sk.iway.iwcm.system.jpa.XssAttributeConverter",
                 "sk.iway.iwcm.system.jpa.CommaSeparatedIntegersConverter", "sk.iway.iwcm.users.jpa.UserBasicDtoConverter"));
             factory.setJpaPropertyMap(Map.of("eclipselink.session.customizer", "sk.iway.webjet.v9.JpaSessionCustomizer", "eclipselink.weaving", "false", "eclipselink.ddl-generation", "none", "eclipselink.logging.level", "WARNING"));
             return factory;

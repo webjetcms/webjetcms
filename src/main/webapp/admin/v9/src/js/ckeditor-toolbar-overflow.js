@@ -78,7 +78,10 @@ export class CkEditorToolbarOverflow {
         this.body = this.doc.createElement('div');
         this.body.className = 'wj-cke-overflow__groups';
         this.palette.append(header, this.body);
-        (this.toolbox.closest('.modal, [role="dialog"]') || this.doc.body).append(this.palette);
+        // Inline panel buttons render inside the editor's toolbar stacking context.
+        // Keep the palette there too, so their z-index can place them above it.
+        const inlineHost = editor.elementMode === CKEDITOR.ELEMENT_MODE_INLINE ? this.toolbox.closest('.cke') : null;
+        (inlineHost || this.toolbox.closest('.modal, [role="dialog"]') || this.doc.body).append(this.palette);
         this.focusElement = new CKEDITOR.dom.element(this.palette);
         editor.focusManager.add(this.focusElement, true);
 
@@ -135,12 +138,15 @@ export class CkEditorToolbarOverflow {
         this.on('panelShow', event => {
             if (this.palette.hidden) return;
             const panel = event.data;
-            if (!this.panels.has(panel)) this.panels.set(panel, panel.element.$.style.zIndex);
-            panel.element.setStyle('z-index', Math.max(parseInt(panel.element.$.style.zIndex, 10) || 0, this.layer() + 10));
+            const style = panel.element.$.style;
+            if (!this.panels.has(panel)) this.panels.set(panel, { value: style.getPropertyValue('z-index'), priority: style.getPropertyPriority('z-index') });
+            // Inline editing sets .cke_panel z-index with !important; nested tools must override it.
+            style.setProperty('z-index', Math.max(parseInt(style.zIndex, 10) || 0, this.layer() + 10), 'important');
         });
         this.on('panelHide', event => {
             if (!this.panels.has(event.data)) return;
-            event.data.element.$.style.zIndex = this.panels.get(event.data);
+            const { value, priority } = this.panels.get(event.data);
+            event.data.element.$.style.setProperty('z-index', value, priority);
             this.panels.delete(event.data);
         });
         const bindContent = () => editor.editable()?.attachListener(editor.document, 'mousedown', event => {
@@ -182,14 +188,18 @@ export class CkEditorToolbarOverflow {
             if (selector.left < rect.right && selector.right > rect.left && selector.top < rect.bottom && selector.bottom > rect.top) end = rect.right - selector.left + 8;
         }
         this.toolbox.style.setProperty('--wj-cke-toolbar-end', end + 'px');
-        // Hidden groups remain measurable without cloning controls or moving focused nodes.
-        this.palette.classList.toggle('wj-cke-overflow--measure', this.palette.hidden);
+        // Remove hidden while measuring: a client's layered [hidden] !important rule
+        // can outrank our display override. The measure class keeps controls invisible.
+        const paletteHidden = this.palette.hidden;
+        this.palette.classList.toggle('wj-cke-overflow--measure', paletteHidden);
+        this.palette.hidden = false;
         this.groups.forEach(group => {
             const style = this.win.getComputedStyle(group.element);
             group.width = group.element.getBoundingClientRect().width + parseFloat(style.marginLeft) + parseFloat(style.marginRight);
         });
         const height = Math.max(...this.groups.map(group => group.element.offsetHeight));
         this.row.style.minHeight = height + 'px';
+        this.palette.hidden = paletteHidden;
         this.palette.classList.remove('wj-cke-overflow--measure');
         const available = this.toolbox.clientWidth - 8 - end;
         let width = this.groups.reduce((sum, group) => sum + group.width, 0);

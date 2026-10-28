@@ -98,6 +98,23 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 - **Maximálna výška (pre obrázky)** - maximálna výška nahrávaného obrázku v pixeloch.
 - **Maximálna šírka (pre obrázky)** - maximálna šírka nahrávaného obrázku v pixeloch.
 
+## CSS štýly pre email a PDF
+
+Pri príprave HTML emailu z klasického alebo viackrokového formulára WebJET načíta CSS štýly stránky použitej pre email. Veľké CSS súbory webu zväčšujú aj odosielanú správu. Dizajnér môže pripraviť menšie súbory obsahujúce iba štýly potrebné na zobrazenie vyplneného formulára.
+
+Pre každý CSS súbor WebJET najprv hľadá súbor s príponou `-email.css` v rovnakom priečinku. Napríklad:
+
+| CSS súbor šablóny | Prednostne použitá verzia pre email |
+| --- | --- |
+| `/templates/orange/dist/css/main.css` | `/templates/orange/dist/css/main-email.css` |
+| `/templates/orange/dist/css/theme.css` | `/templates/orange/dist/css/theme-email.css` |
+
+Ak verzia `*-email.css` existuje, nahradí pôvodný súbor. Ak neexistuje, načíta sa pôvodné CSS. Toto pravidlo sa vyhodnocuje samostatne pre hlavné a druhoradé CSS šablóny, súbory z konfiguračnej premennej `editorEditorCss` a dodatočné CSS odovzdané z nastavení formulára. Náhrada jedného súboru nevypne ostatné štýly, preto pripravte menšie verzie pre všetky veľké CSS súbory, ktoré formulár používa.
+
+Obsah vybraných súborov sa vloží do emailu a PDF podkladu cez značku `<style>`. Uložená HTML podoba formulára odkazuje na rovnaké súbory značkami `<link>`, preto ich ponechajte dostupné aj po odoslaní formulára. Úpravu emailových CSS overte aj pri zobrazení uloženého formulára a jeho PDF verzie. Zobrazenie formulára na webovej stránke naďalej používa pôvodné CSS.
+
+Ak stránka nemá dostupnú šablónu, použije sa `/css/email.css`; ak ani tento súbor neexistuje, použije sa súbor z konfiguračnej premennej `editorPageCss`. Pri odosielaní ako čistý text sa CSS nepridáva.
+
 ## Nastavenie potvrdenia emailovej adresy
 
 Formuláru je možné nastaviť **potvrdenie e-mailovej adresy** ( ```double opt-in``` ). Dosiahnete tak potvrdenie odoslania formuláru kliknutím na odkaz v e-maile a teda **overíte**, že návštevník, ktorý formulár vyplnil, zadal **skutočne platnú e-mailovú adresu**.

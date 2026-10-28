@@ -361,7 +361,8 @@ export function typeWysiwyg() {
                      * of every Page Builder edit and may omit recent changes. The hidden CKEditor is not
                      * used as a fallback source because its content may be stale.
                      * The shared readiness promise makes later page loads wait for this write to finish.
-                     * Mode preferences are updated only if this request is still current after completion.
+                     * A completed non-HTML mode remains the saved preference when another mode request
+                     * is waiting for it. Closing the page or queuing new content still invalidates it.
                      *
                      * @param {boolean} [restore=false] Use preserved HTML instead of reading the live editor.
                      * @returns {Promise<void>} Completes the switch or skips an obsolete request; rejects
@@ -379,9 +380,14 @@ export function typeWysiwyg() {
                         ready = Promise.resolve(operation);
                         conf.wjeditorReadyPromise = ready;
                         await ready;
+                        // A following HTML request must not discard the standard mode it is leaving.
+                        // It waits on this same promise, but has already replaced editorModeSwitchRequest.
+                        if ("html" !== editorType && conf.editorOpen && conf.editorSession === session &&
+                            EDITOR.currentJson === json && conf.wjeditorReadyPromise === ready) {
+                            WJ.setAdminSetting("editorTypeForced", editorType);
+                        }
                         if (!isCurrent()) return;
                         window.editorTypeForced = editorType;
-                        if ("html" !== editorType) WJ.setAdminSetting("editorTypeForced", editorType);
                     };
                     let oldMode;
                     try {

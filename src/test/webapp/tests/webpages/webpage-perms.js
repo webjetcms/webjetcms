@@ -50,6 +50,7 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, DT, DTE }) => {
     DT.waitForLoader();
     //skus pridat
     I.click(DT.btn.add_button);
+    DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("Názov web stránky", auto_webPage);
     DTE.save();

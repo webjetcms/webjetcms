@@ -138,6 +138,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
+- Odložené odesílání emailů - zvětšený sloupec `emails.message` na `LONGTEXT` v MySQL/MariaDB, aby uložení velkého HTML emailu neselhalo. Doplněn [návod na menší CSS pro email a PDF](redactor/apps/form/README.md#css-styly-pro-email-a-pdf) (#374).
 - Nastavení formulářů - přidaná karta **Volitelná pole** s poli A–F. Pole jsou dostupná také v editoru aplikace Formulář snadno a přes `FormSettingsEntity`. V HTML překladových klíčů lze použít [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláře) pro A–F, emailová nastavení, přesměrování, limity souborů a vzhled. Podporuje je i náhled a emailová podoba vícekrokových formulářů. A–F i text před a za emailem umožňují HTML (#364).
 - Vícekrokové formuláře - přidána možnost upravit [HTML tlačítka na předchozí krok](redactor/apps/formsimple/README.md#html-kód-tlačítek) přes překladový klíč `components.mustistep.form.back_button` (#osk782).
 - Vícekrokové formuláře - po neúspěšném přechodu na další krok nebo odeslání se stránka posune na první viditelné chybové hlášení i při opakovaném pokusu (#58794).
@@ -309,6 +310,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Elektronický obchod - opraveno přidání kategorie produktů bez označeného produktu v tabulce (#373).
+- Webové stránky - URL stránky, přesměrování a perex obrázku zachovávají parametry i po načtení přes JPA včetně historie. HTML sanitizér již nepřepisuje znaky `&` a `=` v URL na HTML entity (#373).
 - Webové stránky - přesměrování stránky se přihlášenému administrátorovi neukládá do cache prohlížeče, aby se jeho změna nebo zrušení projevily při dalším otevření stránek (#372).
 - Editor stránek - při automatické maximalizaci v nízkém nebo úzkém okně zůstává celý panel nástrojů nad obsahem stránky. Obsah již neprosvítá pod ikonami a názvy skupin (#372).
 - Editor stránek - při selhání získání obsahu nebo hodnotě `undefined` se zobrazí chyba a uložení se zastaví, aby se nepřepsal původní obsah. Atributy `contenteditable` se odstraňují při načítání i ukládání HTML včetně kódu vloženého v HTML režimu (#369).
@@ -336,6 +339,11 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Bezpečnost
 
+- Node.js - verze pro vývoj a sestavení projektu v `.nvmrc` a `devcontainer` aktualizována na `22.23.4`, která opravuje zranitelnost Brotli dekodéru CVE-2026-111497. Lokálně iv build prostředích aktualizujte Node.js podle [návodu k instalaci](developer/install/README.md#rspack-build-js-css-a-pug-souborů) (#373).
+- Web stránky - při ukládání se ověřují práva k původní stránce ik cílové složce při přesunu. Změnou ID a složky v požadavku nelze převzít cizí stránku (#373).
+- Web stránky - název stránky a název v menu se čistí od nebezpečného HTML při ukládání i načítání (#373).
+- HTML sanitizace - přidán sdílený `AllowSafeHtmlAttributeConverterWithSave` k čištění HTML při ukládání i načítání. Používá se na cestu z názvů složek ve stránkách a historii; ošetřeny jsou i starší JDBC zápisy.
+- Datatabulky - při vykreslování odkazů a obrázků se escapují URL v HTML atributech, aby vložené uvozovky nemohly vytvořit další atribut. Samotná URL v datech zůstává nezměněna (#373).
 - Dependency Check - aktualizované knihovny `Jackson 2.22.3/3.2.3`, `jsoup 1.23.2`, `logback-core/classic 1.6.5`, `slf4j-api 2.0.19`, `mariadb-java-client 3.5.10`, `postgresql 42.7.14`, `Swagger UI 5.32.15` (s `DOMPurify 3.4.13`), `moment 2.31.0` včetně statické kopie, @@CODE `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` a `undici 6.28.1`. Sestavení vyžaduje Node.js 20 nebo 22 a novější (#349).
 - Dependency Check - přidány výjimky pro `kotlin-stdlib 2.4.0`, `webjet-ai/webjet-ai-local 2.0.4`, `spring-security-crypto 7.1.1`, `http-cache-semantics 4.2.0`, `fabric 5.2.4/5.5.2` a `jQuery 3.3.1` v testovací šabloně eshopu. Výjimky pro `ai.djl:api 0.36.0` a `tar 6.2.1` představují schválené přijetí zbytkového rizika. Podrobnosti jsou v `dependency-check-suppressions-project.xml` (#349).
 - Přidána podpora generování `nonce` pro [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
