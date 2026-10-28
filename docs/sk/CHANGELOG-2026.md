@@ -6,6 +6,7 @@
 
 ### Prelomové zmeny
 
+- Formuláre - šifrovací kľúč sa pri klasických formulároch a aplikácii Formulár ľahko načítava výhradne zo serverových nastavení formulára. Ak bol doteraz zadaný iba v HTML poli `encryptKey`, preneste ho do poľa **Šifrovací kľúč** v administrácii. Parameter odoslaný návštevníkom už šifrovanie neovplyvňuje. Viac v návode [Šifrovanie formulárov](redactor/apps/form/encryption.md#nastavenie-verejného-kľúča-pre-formulár) (#376).
 - Databázy - minimálna podporovaná verzia je MariaDB 10.11 LTS alebo MySQL 8.4 LTS. Pred aktualizáciou WebJET CMS na staršom serveri aktualizujte databázu podľa postupu jej výrobcu. Podrobnosti a požiadavky aktualizovaného JDBC ovládača sú v [návode na inštaláciu](install/setup/README.md#základné-požiadavky-na-server) (#349).
 - Štatistika - prehliadače sa po aktualizácii ukladajú bez čísla verzie, ktoré sa v dnešnej dobe veľmi často menia. Po nasadení tejto verzie je potrebné spustiť migráciu historických štatistík na URL `/admin/v9/settings/stat-browser-migration/`, bez jej dokončenia zostanú historické údaje rozdelené podľa čísla verzie prehliadačov (#303).
 - Z administrácie bola odstránená závislosť na knižnici [Vue.js](https://vuejs.org). Pred aktualizáciou odporúčame overiť kompatibilitu vlastných aplikácií. Veľkosť JavaScript súborov sa zmenšila o cca 170kB, čo má dopad aj na rýchlosť inicializácie administrácie. Viac v [sekcii pre programátora](#pre-programátora).
@@ -340,6 +341,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Formuláre - zamedzené prepísanie šifrovacieho kľúča parametrom `encryptKey` v požiadavke. Podvrhnutý, prázdny alebo poškodený parameter nezmení šifrovanie uložených hodnôt ani HTML podoby formulára (#376).
 - Node.js - verzia pre vývoj a zostavenie projektu v `.nvmrc` a `devcontainer` aktualizovaná na `22.23.4`, ktorá opravuje zraniteľnosť Brotli dekodéra CVE-2026-111497. Lokálne aj v build prostrediach aktualizujte Node.js podľa [návodu na inštaláciu](developer/install/README.md#rspack-build-js-css-a-pug-súborov) (#373).
 - Web stránky - pri ukladaní sa overujú práva k pôvodnej stránke aj k cieľovému priečinku pri presune. Zmenou ID a priečinka v požiadavke nemožno prevziať cudziu stránku (#373).
 - Web stránky - názov stránky a názov v menu sa čistia od nebezpečného HTML pri ukladaní aj načítaní (#373).
@@ -353,6 +355,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Dokumentácia
 
+- AI skills - doplnený [prehľad WebJET skillov](developer/guidelines/ai-skills.md#prehľad-webjet-skills) s účelom a príkladmi použitia. Rovnaká tabuľka sa automaticky prenáša do README distribúcie `webjetcms/skills`. Export kontroluje úplnosť zoznamu (#376).
+- Formuláre - doplnený návod [Šifrovanie formulárov](redactor/apps/form/encryption.md) s vytvorením a nastavením kľúčov, dešifrovaním záznamov, rozsahom ochrany a technickým opisom algoritmov (#376).
 - Datatabuľky - doplnené vysvetlenie [upozornení na neuložené zmeny](redactor/datatables/README.md#upozornenia-na-neuložené-zmeny) pri obnovení alebo opustení stránky a pri zatvorení editora tlačidlom Zrušiť (#339).
 - Vytvorená nová sekcia [Prehľad nových vlastností](sales/README.md) ktorá obsahuje opisy nových vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií (#58505).
 - Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.

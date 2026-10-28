@@ -82,6 +82,7 @@
   - Forms
     - [List of forms](/redactor/apps/form/README.md)
     - [Form Items](/redactor/apps/multistep-form/README.md)
+    - [Form Encryption](/redactor/apps/form/encryption.md)
     - [Form Statistics](/redactor/apps/multistep-form/stat.md)
     - [Regular expressions](/redactor/apps/form/regexps.md)
   - Forum/Discussion

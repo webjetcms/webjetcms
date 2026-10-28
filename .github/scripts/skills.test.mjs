@@ -7,6 +7,16 @@ import test from 'node:test';
 import { exportSkills } from './export-skills.mjs';
 import { setupProject, updateBlock } from '../../.agents/skills/wj-setup/scripts/setup-project.mjs';
 
+const catalogPath = 'docs/en/developer/guidelines/ai-skills.md';
+const fixtureSkills = ['wj-example', 'wj-project-context', 'wj-setup'];
+
+function catalogDocument(names = fixtureSkills) {
+    return '# Usage guide\nNot part of the catalog.\n\n<!-- webjet-skills-catalog:start -->\n'
+        + '| Skill | What is it for and when to use it? | Example of chat entry |\n| --- | --- | --- |\n'
+        + names.map((name) => `| [\`${name}\`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/${name}/SKILL.md) | Purpose of ${name}. | Use skill ${name} for [file]. |\n`).join('')
+        + '<!-- webjet-skills-catalog:end -->\n';
+}
+
 async function temporary(t) {
     const root = await mkdtemp(join(tmpdir(), 'webjet-skills-test-'));
     t.after(() => rm(root, { recursive: true, force: true }));
@@ -30,7 +40,8 @@ async function sourceFixture(t) {
         '.agents/skills/wj-example/assets/example.txt': 'Asset\n',
         '.github/agents/AGENTS.md': '[System](AGENTS-system.md)\n',
         '.github/agents/AGENTS-system.md': '# System\n',
-        '.github/skills-distribution/README.md': '# Distribution\n[License](LICENSE.md)\n',
+        '.github/skills-distribution/README.md': '# Distribution\n[License](LICENSE.md)\n\n<!-- webjet-skills-catalog:start -->\n<!-- Generated catalog -->\n<!-- webjet-skills-catalog:end -->\n',
+        [catalogPath]: catalogDocument(),
         '.github/skills-distribution/excluded-skills.txt': '# No excluded skills\n',
         'LICENSE.md': 'Original licensing and attribution\n',
         'src/example.java': 'class Example {}\n'
@@ -66,6 +77,7 @@ test('export is reproducible, content hashes ignore source-only revisions, and r
     const changed = await exportSkills({ root, output: join(root, 'changed'), revision: 'b'.repeat(40) });
     assert.notEqual(changed.contentHash, first.contentHash);
     execFileSync('git', ['-C', root, 'rm', '--cached', '-r', '.agents/skills/wj-example']);
+    await put(root, catalogPath, catalogDocument(['wj-project-context', 'wj-setup']));
     const removed = await exportSkills({ root, output: join(root, 'removed'), revision: 'b'.repeat(40) });
     assert.deepEqual(removed.skills, ['wj-project-context', 'wj-setup']);
     await assert.rejects(exportSkills({ root, output: join(root, 'removed'), revision: 'b'.repeat(40) }), { code: 'EEXIST' });
@@ -76,6 +88,7 @@ test('configured exclusions omit whole skills and manifest entries while preserv
     await put(root, '.agents/skills/wj-core-only/SKILL.md', '---\nname: wj-core-only\ndescription: Core workflow.\n---\n');
     await put(root, '.agents/skills/wj-example-extra/SKILL.md', '---\nname: wj-example-extra\ndescription: Related workflow.\n---\n[Core guide](../wj-example/references/guide.md)\n');
     execFileSync('git', ['-C', root, 'add', '.agents/skills']);
+    await put(root, catalogPath, catalogDocument([...fixtureSkills, 'wj-core-only', 'wj-example-extra']));
     const first = await exportSkills({ root, output: join(root, 'first'), revision: 'a'.repeat(40) });
     await put(root, '.github/skills-distribution/excluded-skills.txt', '# Core-only skills\r\n\r\n  wj-example  \r\nwj-core-only\r\n');
     const output = join(root, 'excluded');
@@ -84,12 +97,54 @@ test('configured exclusions omit whole skills and manifest entries while preserv
     assert.deepEqual((await readdir(join(output, 'skills'))).sort(), result.skills);
     assert.deepEqual(JSON.parse(await readFile(join(output, 'source.json'), 'utf8')), result);
     assert.notEqual(result.contentHash, first.contentHash);
+    const readme = await readFile(join(output, 'README.md'), 'utf8');
+    assert.ok(readme.includes('[`wj-example-extra`](skills/wj-example-extra/SKILL.md)'));
+    assert.ok(!readme.includes('`wj-example`') && !readme.includes('wj-core-only'));
     const skill = await readFile(join(output, 'skills/wj-example-extra/SKILL.md'), 'utf8');
     assert.ok(skill.includes(`https://github.com/webjetcms/webjetcms/blob/${'a'.repeat(40)}/.agents/skills/wj-example/references/guide.md`));
     assert.equal(await readFile(join(root, '.agents/skills/wj-example/assets/example.txt'), 'utf8'), 'Asset\n');
     await put(root, '.agents/skills/wj-example/assets/example.txt', 'Updated excluded asset\n');
     const changed = await exportSkills({ root, output: join(root, 'changed'), revision: 'b'.repeat(40) });
     assert.equal(changed.contentHash, result.contentHash);
+});
+
+test('catalog exports maintained descriptions and prompts, rewrites links, and affects the content hash', async (t) => {
+    const root = await sourceFixture(t);
+    await put(root, catalogPath, catalogDocument().replaceAll('\n', '\r\n'));
+    const first = await exportSkills({ root, output: join(root, 'first'), revision: 'a'.repeat(40) });
+    const readme = await readFile(join(root, 'first/README.md'), 'utf8');
+    assert.ok(readme.startsWith('# Distribution\n[License](LICENSE.md)\n'));
+    assert.ok(readme.includes('| [`wj-example`](skills/wj-example/SKILL.md) | Purpose of wj-example. | Use skill wj-example for [file]. |'));
+    assert.ok(!readme.includes('Not part of the catalog.') && !readme.includes('Generated catalog'));
+    await put(root, catalogPath, catalogDocument().replace('Purpose of wj-example.', 'Updated purpose.'));
+    const changed = await exportSkills({ root, output: join(root, 'changed'), revision: 'b'.repeat(40) });
+    assert.notEqual(changed.contentHash, first.contentHash);
+    assert.ok((await readFile(join(root, 'changed/README.md'), 'utf8')).includes('Updated purpose.'));
+    await put(root, catalogPath, catalogDocument().replace('Not part of the catalog.', 'Updated usage guide.').replace('Purpose of wj-example.', 'Updated purpose.'));
+    const outside = await exportSkills({ root, output: join(root, 'outside'), revision: 'c'.repeat(40) });
+    assert.equal(outside.contentHash, changed.contentHash);
+});
+
+test('incomplete, duplicate, unknown and malformed catalog entries fail before export', async (t) => {
+    const root = await sourceFixture(t);
+    const output = join(root, 'invalid');
+    for (const [document, error] of [
+        [catalogDocument(['wj-project-context', 'wj-setup']), /Missing skill catalog entry: wj-example/],
+        [catalogDocument([...fixtureSkills, 'wj-example']), /Duplicate, unknown or incorrectly linked/],
+        [catalogDocument([...fixtureSkills, 'wj-missing']), /Duplicate, unknown or incorrectly linked/],
+        [catalogDocument().replace('wj-example/SKILL.md', 'wj-setup/SKILL.md'), /Duplicate, unknown or incorrectly linked/],
+        [catalogDocument().replace('Purpose of wj-example.', ''), /Invalid skill catalog row/],
+        [catalogDocument().replace('<!-- webjet-skills-catalog:end -->', ''), /catalog markers/],
+        [catalogDocument() + '<!-- webjet-skills-catalog:start -->', /catalog markers/],
+        [catalogDocument().replace('| --- | --- | --- |', '| --- | --- |'), /catalog table header/]
+    ]) {
+        await put(root, catalogPath, document);
+        await assert.rejects(exportSkills({ root, output, revision: 'a'.repeat(40) }), error);
+        await assert.rejects(readdir(output), { code: 'ENOENT' });
+    }
+    await put(root, catalogPath, catalogDocument());
+    await put(root, '.github/skills-distribution/README.md', '# Missing insertion point\n');
+    await assert.rejects(exportSkills({ root, output, revision: 'a'.repeat(40) }), /catalog markers/);
 });
 
 test('invalid exclusions and exclusions of required skills fail before producing a distribution', async (t) => {
