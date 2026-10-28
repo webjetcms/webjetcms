@@ -10,15 +10,19 @@ Git worktree je samostatný pracovný priečinok pre jednu vetvu (branch). Workt
 - Príkazy spúšťajte v termináli s `Bash, Git, Node.js, npm` a dostupným príkazom `code` na otvorenie VS Code.
 - Vo VS Code si nainštalujte rozšírenie **Peacock**, aby boli okná jednotlivých worktrees farebne odlíšené.
 
+**Paletu príkazov** otvoríte cez **Cmd+Shift+P** na macOS alebo **Ctrl+Shift+P** vo Windows/Linux. Napíšte názov príkazu, napríklad `Git: Pull`, a potvrďte Enter. Nižšie používame anglické názvy príkazov VS Code.
+
 ## Otvorenie vetvy
 
-V termináli pôvodného priečinka **`webjetcms` na vetve `main`** aktualizujte kód:
+Vo VS Code otvorte pôvodný priečinok **`webjetcms`**. Vľavo dole overte vetvu **`main`**, otvorte paletu príkazov a zvoľte **Git: Pull**.
+
+Terminálová alternatíva, ktorá povolí iba aktualizáciu bez merge commitu:
 
 ```shell
 git pull --ff-only
 ```
 
-Ak vetva **už existuje** lokálne alebo na GitHube, otvorte ju príkazom:
+Potom cez **Terminal → New Terminal** otvorte terminál v koreni pôvodného `webjetcms`. Ak vetva **už existuje** lokálne alebo na GitHube, spustite:
 
 ```shell
 ./worktree-add.sh feature/123-fix-menu
@@ -38,7 +42,13 @@ Skript pripraví priečinok `../webjetcms-feature-123-fix-menu`, skopíruje nast
 
 ## Práca a aktualizácia z main
 
-Súbory upravujte, commitujte a pushujte v okne danej úlohy. Pri prvom odoslaní novej vetvy nastavte jej prepojenie na GitHub:
+Súbory upravujte a ukladajte v okne danej úlohy. Zmeny odošlete cez VS Code:
+
+1. Otvorte **Source Control**, skontrolujte zmeny a kliknutím na **+** pri požadovaných súboroch ich pripravte na commit (**Stage Changes**).
+2. Do poľa **Message** napíšte popis zmeny a v palete príkazov zvoľte **Git: Commit**.
+3. Pri prvom odoslaní novej vetvy zvoľte **Git: Publish Branch...** a prípadne vyberte **origin**. Pri ďalších odoslaniach použite **Git: Push**.
+
+Terminálová alternatíva prvého odoslania novej vetvy:
 
 ```shell
 git push -u origin feature/123-fix-menu
@@ -46,9 +56,12 @@ git push -u origin feature/123-fix-menu
 
 Keď potrebujete do svojej vetvy doplniť zmeny z `main`:
 
-1. Vo worktree commitnite rozpracované zmeny.
-2. V okne pôvodného `webjetcms` spustite `git pull --ff-only`.
-3. Vráťte sa do okna worktree a spustite `git merge main`. Prípadné konflikty vyriešte a dokončite merge commit.
+1. Vo worktree commitnite rozpracované zmeny podľa postupu vyššie.
+2. V okne pôvodného `webjetcms` na vetve `main` otvorte paletu príkazov a zvoľte **Git: Pull**.
+3. Vráťte sa do okna worktree, stlačte **Cmd+Shift+P** (Windows/Linux **Ctrl+Shift+P**), zvoľte **Git: Merge...** a zo zoznamu vyberte **main**.
+4. Ak vzniknú konflikty, vyriešte ich v **Source Control → Merge Changes**, upravené súbory označte cez **+** a dokončite merge cez **Git: Commit**.
+
+Terminálová alternatíva: v pôvodnom `webjetcms` spustite `git pull --ff-only`, potom vo worktree `git merge main`.
 
 Aktualizovaná vetva `main` je spoločná pre všetky worktrees, jej zmeny do svojej vetvy prenesiete až cez merge.
 
@@ -80,9 +93,9 @@ Worktrees so skopírovanou rovnakou databázovou konfiguráciou pracujú nad rov
 
 ## Odstránenie dokončeného worktree
 
-1. Vo worktree commitnite a pushnite všetky potrebné zmeny. Odložte si aj lokálne súbory, ktoré Git ignoruje a chcete ich zachovať.
+1. V okne worktree uložte zmeny cez **Git: Commit** a odošlite ich cez **Git: Push** (novú vetvu cez **Git: Publish Branch...**). Odložte si aj lokálne súbory, ktoré Git ignoruje a chcete ich zachovať.
 2. Zastavte jeho server, testy a prípadný `npm run watch`, potom zatvorte jeho okno VS Code.
-3. V termináli pôvodného **`webjetcms` na vetve `main`** spustite:
+3. V okne pôvodného **`webjetcms` na vetve `main`** otvorte **Terminal → New Terminal** a z koreňa projektu spustite:
 
    ```shell
    ./worktree-close.sh feature/123-fix-menu
