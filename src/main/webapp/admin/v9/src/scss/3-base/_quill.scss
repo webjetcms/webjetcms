@@ -77,6 +77,11 @@
     overflow-y: auto;
     // Keep vertically shifted options above the picker label (z-index: 2).
     z-index: 3;
+
+    &[data-popper-reference-hidden] {
+      visibility: hidden;
+      pointer-events: none;
+    }
   }
 }
 

@@ -58,6 +58,52 @@ Scenario('type-quill-pickers-in-short-modal', async ({ I, DT, DTE }) => {
     I.wjSetDefaultWindowSize();
 });
 
+/** Verifies that open picker menus hide while their toolbar is clipped by the modal body. */
+Scenario('type-quill-pickers-in-scrolled-modal', ({ I, DTE }) => {
+    I.resizeWindow(1024, 650);
+    I.amOnPage('/apps/banner/admin/?id=7053');
+    DTE.waitForEditor('bannerDataTable');
+    I.clickCss('#pills-dt-bannerDataTable-advanced-tab');
+
+    const field = '#bannerDataTable_modal #DTE_Field_descriptionText';
+    for (const pickerType of ['ql-header', 'ql-color']) {
+        const picker = field + ' .' + pickerType + '.ql-picker';
+        const options = picker + ' .ql-picker-options';
+        I.clickCss(picker + ' .ql-picker-label');
+        I.waitForVisible(options, 10);
+
+        // Scroll without clicking outside the picker, which would close it through Quill.
+        I.executeScript(selector => {
+            const label = document.querySelector(selector + ' .ql-picker-label');
+            const body = label.closest('.modal-body');
+            body.scrollTop += label.getBoundingClientRect().bottom - body.getBoundingClientRect().top + 10;
+        }, picker);
+        I.waitForFunction(selector => {
+            const label = document.querySelector(selector + ' .ql-picker-label');
+            return label.getBoundingClientRect().bottom <= label.closest('.modal-body').getBoundingClientRect().top;
+        }, [picker], 10);
+        I.waitForInvisible(options, 10);
+
+        // Returning to the toolbar restores the same open menu and its clickable options.
+        I.executeScript(selector => {
+            document.querySelector(selector).closest('.modal-body').scrollTop = 0;
+        }, picker);
+        I.waitForVisible(options, 10);
+        I.waitForFunction(selector => {
+            const items = [...document.querySelectorAll(selector + ' .ql-picker-item')];
+            return items.length > 0 && items.every(item => {
+                const rect = item.getBoundingClientRect();
+                return item.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+            });
+        }, [picker], 10);
+        I.pressKey('Escape');
+        I.dontSeeElement(options);
+    }
+
+    DTE.cancel('bannerDataTable');
+    I.wjSetDefaultWindowSize();
+});
+
 
 /**
  * Verify that the HTML source preserves ordered and unordered lists,
