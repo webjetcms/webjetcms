@@ -1,6 +1,13 @@
-Feature('apps.file-archive.file_archive_app');
+// Configuration changes and cleanup must run together without parallel archive tests.
+Feature('apps.file-archive.file_archive_app').tag('@singlethread');
 
 const SL = require("./SL.js");
+
+const HISTORY_VALIDITY_CONFIG = 'fileArchivCheckHistoryValid';
+const HISTORY_TABLE = 'datatableFieldDTE_Field_editorFields-listOfVersions';
+let historyName;
+let historyCurrentUrl;
+let historyUrls;
 
 let randomNumber;
 let NO_ARCHIVE_DOCUMENTS = "Žiadne archívne verzie alebo vzory pre tento dokument.";
@@ -263,7 +270,7 @@ Scenario('File archive app - structure and behaviour test', ({ I }) => {
     I.click(locate(".table tr td span").withText("autotest-app-main-history"));
 });
 
-Scenario('File archive app - open files test', async ({ I }) => {
+Scenario('File archive app - open files test', async ({ I, Document }) => {
     I.closeOtherTabs();
     I.amOnPage('/apps/manazer-dokumentov/archiv-suborov-test-behaviour.html');
     I.waitForElement(".table.tabulkaStandard", 10);
@@ -389,6 +396,7 @@ function setValidationAndIndexation(I, DT, DTE, validFrom, validTo, indexation) 
 }
 
 Scenario('File archive app - only selected files', async ({ I, DT, DTE, Apps, Document }) => {
+    I.closeOtherTabs();
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=62096");
 
     I.say("Open app in new page");
@@ -469,7 +477,97 @@ Scenario('File archive app - only selected files', async ({ I, DT, DTE, Apps, Do
     I.waitForElement(links, 10);
     const descendingLinks = await I.grabAttributeFromAll(links, 'href');
     I.assertDeepEqual(descendingLinks, [...ascendingLinks].reverse(), 'Selected files must respect descending order');
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
 });
+
+Scenario('Clean earlier history validity fixtures', async ({ Document }) => {
+    historyName = SL.randomName('history-valid');
+
+    Document.setConfigValue(HISTORY_VALIDITY_CONFIG, 'true', true);
+    await SL.deleteTestFiles('history-valid-', '/files/archiv/archive_file_test.pdf');
+}).tag('@history-validity');
+
+Scenario('Create expired, future and hidden historical versions', async ({ I, DT, DTE }) => {
+    SL.openFileArchive('/files/archiv/archive_file_test.pdf');
+    SL.uploadFile(historyName, 'archive_file_test.pdf');
+    DTE.fillField('validFrom', '01.01.2000 00:00:00');
+    I.pressKey('Enter');
+    DTE.fillField('validTo', '01.01.2001 00:00:00');
+    I.pressKey('Enter');
+    I.clickCss('#pills-dt-fileArchiveDataTable-advanced-tab');
+    I.checkOption('#DTE_Field_editorFields-uploadRedundantFile_0');
+    DTE.save('fileArchiveDataTable', true);
+
+    // Set metadata before archiving, so the test does not need history-edit permissions.
+    for (const version of [
+        { file: 'archive_file_test_second.pdf', from: '01.01.2099 00:00:00', to: '01.01.2100 00:00:00', visible: true },
+        { file: 'archive_file_test_third.pdf', from: '', to: '', visible: false },
+        { file: 'archive_file_test_fourth.pdf', from: '', to: '', visible: true }
+    ]) {
+        DT.filterEquals('virtualFileName', historyName);
+        await SL.selectAll();
+        SL.editFile(null, null, null, null, 'Nahrať novú verziu', version.file);
+        DTE.fillField('validFrom', version.from);
+        I.pressKey('Enter');
+        DTE.fillField('validTo', version.to);
+        I.pressKey('Enter');
+        I.clickCss('#pills-dt-fileArchiveDataTable-advanced-tab');
+        if (version.visible) I.checkOption('#DTE_Field_showFile_0');
+        else I.uncheckOption('#DTE_Field_showFile_0');
+        I.checkOption('#DTE_Field_editorFields-uploadRedundantFile_0');
+        DTE.save('fileArchiveDataTable', true);
+    }
+
+    I.click(locate('#fileArchiveDataTable .dt-row-edit a').withText(historyName));
+    DTE.waitForEditor('fileArchiveDataTable');
+    const fileName = await I.grabValueFrom('#DTE_Field_fileName');
+    const filePath = await I.grabValueFrom('#DTE_Field_filePath');
+    historyCurrentUrl = '/' + filePath + fileName;
+    I.clickCss('#pills-dt-fileArchiveDataTable-listOfVersions-tab');
+    DT.waitForLoader(HISTORY_TABLE);
+    I.waitForText(historyName, 10, '#' + HISTORY_TABLE);
+    const versions = await I.executeScript((tableId) => {
+        return $('#' + tableId).DataTable().rows().data().toArray().map(row => ({
+            filePath: row.filePath, fileName: row.fileName, showFile: row.showFile,
+            validFrom: row.validFrom, validTo: row.validTo
+        }));
+    }, HISTORY_TABLE);
+    I.assertEqual(versions.length, 3);
+    historyUrls = [1, 2, 3].map(number => {
+        const version = versions.find(row => row.fileName === SL.getVersionName(fileName, number));
+        return '/' + version.filePath + version.fileName;
+    });
+    I.assertTrue(versions.some(version => version.showFile === false));
+    I.assertEqual(versions.filter(version => version.validFrom && version.validTo).length, 2);
+    DTE.cancel('fileArchiveDataTable');
+    await checkDownload(I, historyCurrentUrl, 200);
+}).tag('@history-validity');
+
+Scenario('Apply history validity configuration immediately and preserve visibility', async ({ I, Document }) => {
+    const [expiredUrl, futureUrl, hiddenUrl] = historyUrls;
+    for (const checkHistory of [true, false, true]) {
+        Document.setConfigValue(HISTORY_VALIDITY_CONFIG, String(checkHistory), true);
+        await checkDownload(I, expiredUrl, checkHistory ? 404 : 200);
+        await checkDownload(I, futureUrl, checkHistory ? 404 : 200);
+        await checkDownload(I, hiddenUrl, 404);
+        await checkDownload(I, historyCurrentUrl, 200);
+    }
+}).tag('@history-validity');
+
+Scenario('Restore history validity configuration and remove test documents', async ({ I, Document }) => {
+    Document.setConfigValue(HISTORY_VALIDITY_CONFIG, 'true', true);
+    await SL.deleteTestFiles(historyName.substring('autotest-'.length), historyCurrentUrl);
+    await checkDownload(I, historyCurrentUrl, 404);
+    for (const url of historyUrls || []) await checkDownload(I, url, 404);
+}).tag('@history-validity');
+
+/** Checks the HTTP response so a rendered error page cannot pass as a downloaded document. */
+async function checkDownload(I, url, status) {
+    const response = await I.sendGetRequest(url);
+    I.assertEqual(response.status, status, 'Unexpected download status for ' + url);
+    if (status === 200) I.assertContain(response.headers['content-type'], 'application/pdf');
+}
 
 async function checkSelectedFiles(I, selectedGlobalIds) {
     for (const globalId of selectedGlobalIds) {

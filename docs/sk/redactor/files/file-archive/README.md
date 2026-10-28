@@ -63,6 +63,17 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
   - **Nahrať po** - výber dátumu a času, po ktorom sa má dokumentu nahrať
   - **Emaily oddelené čiarkou (notifikácia po nahraní)** - zadajte emaily oddelené čiarkou, na ktoré chcete zaslať notifikáciu o úspešnom/neúspešnom nahraní dokumentu
 
+#### Platnosť a sťahovanie historických verzií
+
+Konfiguračná premenná `fileArchivCheckHistoryValid` určuje, či možno historické verzie dokumentov sťahovať mimo ich platnosti:
+
+- `true` (predvolená hodnota) - pred **Platnosťou od** alebo po **Platnosti do** vráti odkaz na stiahnutie chybu 404. Nevyplnený dátum príslušnú hranicu neobmedzuje.
+- `false` - historické verzie možno stiahnuť aj pred **Platnosťou od** a po **Platnosti do**. Oba dátumy zostávajú uložené a zobrazené v archíve ako informácia o účinnosti dokumentu.
+
+Nastavenie platí aj pre historické verzie vzorov. Aktuálne dokumenty, aktuálne vzory a verzie čakajúce na nahratie naďalej rešpektujú oba dátumy. Výpis historických verzií sa nemení, takže pri hodnote `true` môže obsahovať aj verziu, ktorej odkaz už vracia 404.
+
+Pri oboch hodnotách sa kontrolujú prístupové oprávnenia a nastavenie **Zobraziť**. Dokument s vypnutým zobrazovaním sa nedá stiahnuť ani pri `fileArchivCheckHistoryValid=false`. Nastavenia indexovania dokumentov zostávajú zachované.
+
 ### Karta - Pokročilé
 
 ![](editor_advanced.png)

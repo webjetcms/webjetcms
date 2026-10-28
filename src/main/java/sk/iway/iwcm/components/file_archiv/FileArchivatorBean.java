@@ -349,11 +349,16 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	}
 
 	/**
-	 * Vrati true ak su platne datumy (alebo su null) pre aktualny cas
+	 * Checks the configured validity range against the current time, including both boundaries.
+	 * Uploaded historical versions ignore both dates when {@code fileArchivCheckHistoryValid} is disabled.
+	 *
+	 * @return {@code true} if the dates permit access; visibility and permissions are checked separately
 	 */
 	public boolean isValidDates()
 	{
 		if (validFrom == null && validTo == null) return true;
+		if (referenceId != null && referenceId > 0 && Integer.valueOf(-1).equals(uploaded)
+				&& Constants.getBoolean("fileArchivCheckHistoryValid") == false) return true;
 
 		Date now = new Date(Tools.getNow());
 		if (validFrom != null && validFrom.after(now)) return false;
