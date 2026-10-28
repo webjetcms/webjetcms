@@ -35,7 +35,7 @@ Scenario('history version retains the Page Builder content and toolbar', async (
     DTE.cancel();
 });
 
-Scenario('unsupported inline hosts preserve content through Page Builder mode switching', async ({ I, DTE, Document }) => {
+Scenario('nested and unsupported inline hosts preserve content through Page Builder mode switching', async ({ I, DTE, Document }) => {
     Document.resetPageBuilderMode();
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
     DTE.waitForEditor();
@@ -45,7 +45,8 @@ Scenario('unsupported inline hosts preserve content through Page Builder mode sw
     I.switchTo();
     I.waitForVisible('.CodeMirror', 10);
     const source = '<section><div class="container"><div class="row"><div class="col-12 pb-not-editable pb-always-mark">' +
-        '<div id="unsupported-hosts-autotest" class="pb-editable"><h2>Mobile network autotest</h2><ul>' +
+        '<div id="unsupported-hosts-autotest" class="pb-editable"><h2>Mobile network autotest</h2>' +
+        '<p id="nested-paragraph-autotest" class="pb-editable lead">Coverage autotest</p><ul>' +
         '<li id="unsupported-item-autotest" class="pb-editable">First item autotest</li>' +
         '<li class="pb-editable">Second item autotest</li></ul>' +
         '<table><tbody><tr><td class="pb-editable">Cell autotest</td></tr></tbody></table></div>' +
@@ -64,10 +65,13 @@ Scenario('unsupported inline hosts preserve content through Page Builder mode sw
         I.switchTo('#DTE_Field_data-pageBuilderIframe');
         const state = await I.executeScript(() => ({
             unsupportedEditors: document.querySelectorAll('#unsupported-hosts-autotest li[data-ckeditor-instance], #unsupported-hosts-autotest td[data-ckeditor-instance]').length,
+            nestedEditors: document.querySelectorAll('#unsupported-hosts-autotest [data-ckeditor-instance]').length,
+            nestedMarkers: document.querySelectorAll('#unsupported-hosts-autotest .pb-editable, #unsupported-hosts-autotest .pb-content').length,
             parentReady: CKEDITOR.instances[document.querySelector('#unsupported-hosts-autotest').dataset.ckeditorInstance]?.status === 'ready',
             followingReady: CKEDITOR.instances[document.querySelector('#following-host-autotest').dataset.ckeditorInstance]?.status === 'ready'
         }));
         I.assertEqual(state.unsupportedEditors, 0, 'Unsupported elements must not become independent editors');
+        I.assertEqual(state.nestedEditors + state.nestedMarkers, 0, 'The parent must own its content without nested editor markers');
         I.assertTrue(state.parentReady && state.followingReady, 'The containing editor and subsequent regions must be ready');
         I.see('Second item autotest', '#unsupported-hosts-autotest');
         I.see('Cell autotest', '#unsupported-hosts-autotest');
@@ -75,8 +79,15 @@ Scenario('unsupported inline hosts preserve content through Page Builder mode sw
             I.click('#unsupported-item-autotest');
             I.pressKey('End');
             I.type(' edited');
+            I.click('#nested-paragraph-autotest');
+            I.pressKey('End');
+            I.pressKey('Enter');
+            I.type('New list item autotest');
+            I.clickCss('#wjInlineCkEditorToolbarElement a.cke_button__bulletedlist');
         }
         I.see('First item autotest edited', '#unsupported-item-autotest');
+        I.see('New list item autotest', '#unsupported-hosts-autotest li.lead');
+        I.dontSeeElementInDOM('#unsupported-hosts-autotest .pb-editable');
         I.selectOption('.exit-inline-editor select', 'html');
         I.switchTo();
         I.waitForVisible('.CodeMirror', 10);
@@ -86,11 +97,15 @@ Scenario('unsupported inline hosts preserve content through Page Builder mode sw
             return {
                 text: doc.querySelector('#unsupported-item-autotest').textContent,
                 markedItems: doc.querySelectorAll('#unsupported-hosts-autotest li.pb-editable').length,
+                nestedParagraphClass: doc.querySelector('#nested-paragraph-autotest').className,
+                independentEditors: doc.querySelectorAll('#unsupported-hosts-autotest.pb-editable, #following-host-autotest.pb-editable').length,
                 hasEditorAttributes: /data-ckeditor-instance|contenteditable/.test(html)
             };
         });
         I.assertEqual(content.text, 'First item autotest edited', 'Edits through the parent editor must survive serialization');
-        I.assertEqual(content.markedItems, 2, 'Ignoring unsupported markers must preserve the original list markup');
+        I.assertEqual(content.markedItems, 0, 'List commands must not inherit redundant editor markers');
+        I.assertEqual(content.nestedParagraphClass, 'lead', 'Formatting classes must survive editor marker cleanup');
+        I.assertEqual(content.independentEditors, 2, 'Independent editable regions must retain their markers');
         I.assertFalse(content.hasEditorAttributes, 'Runtime editor attributes must not enter saved HTML');
     }
     DTE.cancel();
