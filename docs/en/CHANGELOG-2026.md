@@ -6,6 +6,7 @@
 
 ### Groundbreaking changes
 
+- Forms - for classic forms and the Form application, the encryption key is easily loaded exclusively from the form's server settings. If it was previously entered only in the HTML field `encryptKey`, transfer it to the **Encryption key** field in the administration. The parameter sent by the visitor no longer affects encryption. More in the [Form encryption] guide (redactor/apps/form/encryption.md#setting-up-the-public-key-for-a-form) (#376).
 - Databases - the minimum supported version is MariaDB 10.11 LTS or MySQL 8.4 LTS. Before updating WebJET CMS on an older server, update the database according to the manufacturer's instructions. Details and requirements for the updated JDBC driver are in the [installation guide](install/setup/README.md#basic-requirements-for-server) (#349).
 - Statistics - browsers are saved without version numbers after updating, which change very often these days. After deploying this version, it is necessary to start the migration of historical statistics to URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser version number (#303).
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
@@ -310,6 +311,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Datatables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - the titles, alignment, and color menus are no longer clipped at the bottom of the dialog box and remain available even in a low browser window (#376).
 - E-commerce - fixed adding a product category without a marked product in the table (#373).
 - Web pages - Page URLs, redirects, and image perex now preserve parameters even after loading via JPA, including history. The HTML sanitizer no longer rewrites the `&` and `=` characters in URLs to HTML entities (#373).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the pages are opened (#372).
@@ -339,6 +341,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- Forms - prevented overwriting of the encryption key by the `encryptKey` parameter in the request. A forged, empty or corrupted parameter will not change the encryption of the stored values ​​or the HTML form of the form (#376).
 - Node.js - development and build version in `.nvmrc` and `devcontainer` updated to `22.23.4`, which fixes the Brotli decoder vulnerability CVE-2026-111497. Locally and in build environments, update Node.js according to [installation instructions](developer/install/README.md#rspack-build-js-css-a-pug-files) (#373).
 - Web pages - when saving, the rights to the original page and to the target folder when moving are verified. Changing the ID and folder in the request does not allow you to download another page (#373).
 - Web pages - page title and menu title are cleaned of dangerous HTML on both save and load (#373).
@@ -352,6 +355,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Documentation
 
+- AI skills - added [WebJET skills overview](developer/guidelines/ai-skills.md#webjet-skills-overview) with purpose and usage examples. The same table is automatically transferred to the README of the `webjetcms/skills` distribution. Export checks the completeness of the list (#376).
+- Forms - supplemented guide [Form Encryption](redactor/apps/form/encryption.md) with creation and setting of keys, decryption of records, scope of protection and technical description of algorithms (#376).
 - Datatables - added explanation of [notifications about unsaved changes](redactor/datatables/README.md#notifications-about-unsaved-changes) when refreshing or leaving the page and when closing the editor with the Cancel button (#339).
 - A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
 - Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.

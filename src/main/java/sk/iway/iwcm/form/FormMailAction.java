@@ -11,6 +11,7 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.PdfTools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.multistep_form.rest.FormHtmlHandler;
@@ -738,7 +739,9 @@ public class FormMailAction extends HttpServlet
 		}
 
 		CryptoFactory cryptoFactory = new CryptoFactory();
-		String publicKey = request.getParameter("encryptKey");
+		// Only server-side settings may select the encryption key, including when encryption is disabled.
+		FormSettingsEntity formSettings = Tools.isNotEmpty(formName) ? FormSettingsService.loadEntity(DB.internationalToEnglish(formName)) : null;
+		String publicKey = formSettings == null ? null : formSettings.getEncryptKey();
 
 		StringBuilder db_data = null;
 		StringBuilder db_data_names = null;

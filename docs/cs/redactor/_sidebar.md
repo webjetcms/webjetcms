@@ -82,6 +82,7 @@
   - Formuláře
     - [Seznam formulářů](/redactor/apps/form/README.md)
     - [Položky formuláře](/redactor/apps/multistep-form/README.md)
+    - [Šifrování formulářů](/redactor/apps/form/encryption.md)
     - [Statistiky formuláře](/redactor/apps/multistep-form/stat.md)
     - [Regulární výrazy](/redactor/apps/form/regexps.md)
   - Fórum/Diskuse
