@@ -520,7 +520,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
                 entity.setValue( entity.getValueAsEnumeration() );
                 entity.setValueAsOptions("");
             } else {
-                entity.setValue( entity.getValueAsOptions() );
+                entity.setValue( FormsService.removeUnsupportedEmptyOption(entity.getValueAsOptions(), entity.getFieldType(), getProp()) );
                 entity.setValueAsEnumeration("");
             }
         } else {
