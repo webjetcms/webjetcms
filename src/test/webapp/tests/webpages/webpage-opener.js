@@ -203,19 +203,19 @@ Scenario('Zapamatanie priecinka web-zrusenie', ({ I, DT }) => {
     I.say("Over zapamatanie");
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
-    I.see("Zo sveta financií", "#datatableInit_wrapper");
+    I.waitForText("Zo sveta financií", 20, "#datatableInit_wrapper");
 
     //
     I.say("Nacitaj s groupid=0")
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     DT.waitForLoader();
-    I.see("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
+    I.waitForText("Jet portal 4 - testovacia stranka", 20, "#datatableInit_wrapper");
 
     //
     I.say("Nacitavam bez parametra, musi byt v roote, nie v Zo sveta financii");
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
-    I.see("Jet portal 4 - testovacia stranka", "#datatableInit_wrapper");
+    I.waitForText("Jet portal 4 - testovacia stranka", 20, "#datatableInit_wrapper");
     I.dontSee("Zo sveta financií", "#datatableInit_wrapper");
 });
 

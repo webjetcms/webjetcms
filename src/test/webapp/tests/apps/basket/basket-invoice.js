@@ -308,7 +308,8 @@ function payment(I, DTE, price, isEdit, minErr, maxErr) {
         I.see("Celková zaplatená suma nesmie byť väčšia ako suma objednávky");
         I.clickCss("#datatableFieldDTE_Field_editorFields-payments_modal > div > div > div.DTE_Header.modal-header > button");
     } else {
-        I.seeElement( locate("div.col-sum").withText("Zaplatená suma: " + price + ",00 eur zo sumy: 3 126,36 eur") );
+        // The totals use a separate request after the payment table finishes saving.
+        I.waitForText("Zaplatená suma: " + price + ",00 eur zo sumy: 3 126,36 eur", 10, paymentDataTable + " div.col-sum");
     }
 }
 

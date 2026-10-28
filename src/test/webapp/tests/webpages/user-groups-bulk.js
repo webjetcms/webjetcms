@@ -157,7 +157,8 @@ async function verifyPages(I, DTE, expectedGroups) {
         });
         I.assertEqual(content.id, pageIds[index], 'The selected page must be loaded');
         I.assertContain(content.stored, name + ' content ' + index, 'Bulk actions must preserve persisted page content');
-        I.assertContain(content.rendered, name + ' content ' + index, 'The editor must display the selected page content');
+        I.assertContain(content.rendered, name + ' content ' + index,
+            'The editor must display the selected page content: ' + JSON.stringify(content));
         I.clickCss('#pills-dt-datatableInit-access-tab');
         for (let type = 0; type < 2; type++) {
             const target = '.DTE_Field_Name_editorFields\\.' + (type === 0 ? 'permisions' : 'emails') + ' input[value="' + groupIds[type] + '"]';

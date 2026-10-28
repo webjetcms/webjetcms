@@ -30,6 +30,8 @@ module.exports = {
             name = "#" + name + "_processing";
         }
 
+        // CodeceptJS checks only the first match; ignore idle tables before waiting.
+        name += ":visible";
         I.waitForInvisible(name, 40);
         //ak by sa este nestihol zobrazit kym sa vykona prva podmienka, pre istotu pockame a potom skusime znova
         I.wait(0.3);

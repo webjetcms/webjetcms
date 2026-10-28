@@ -42,6 +42,9 @@ Scenario('mozne XSS v textarea replaceall', ({ I }) => {
     I.fillField("textarea[name=newText]", xss);
     I.click("input[name=replace]");
 
+    // The JSP flushes its loading screen before the replacement form is rendered again.
+    I.waitForValue("textarea[name=oldText]", xss, 30);
+    I.waitForValue("textarea[name=newText]", xss, 30);
     I.seeInField("textarea[name=oldText]", xss);
     I.seeInField("textarea[name=newText]", xss);
 });
