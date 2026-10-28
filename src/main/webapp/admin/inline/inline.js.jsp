@@ -642,7 +642,8 @@ function initPageBuilderEditors(pageDiv)
     pageDiv.data('plugin_ninjaPageBuilder').prepare_application_blocks(pageDiv);
     <%--var editableElements = pageDiv.find("* [class*='npb-column__content']");--%>
 	//console.log("initPageBuilderEditors, pageDiv=", pageDiv);
-    var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content']");
+    // Grid content remains discoverable after nested markers are removed and its column is moved.
+    var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content'], .<%=pbPrefix%>-column__content");
     editableElements.each(function()
     {
         //console.log("Has class editableElement: "+$(this).hasClass("editableElement"), this);

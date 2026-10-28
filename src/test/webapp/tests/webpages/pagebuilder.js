@@ -112,6 +112,81 @@ Scenario('nested and unsupported inline hosts preserve content through Page Buil
     Document.resetPageBuilderMode();
 });
 
+for (const action of ['move', 'duplicate']) {
+    Scenario(`nested column remains editable after ${action} outside its parent editor`, async ({ I, DTE, Document }) => {
+        Document.resetPageBuilderMode();
+        I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        DTE.waitForEditor();
+        DTE.waitForCkeditor();
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        await I.executeScript(async () => {
+            const pb = $('#wjInline-docdata').data('plugin_ninjaPageBuilder');
+            const section = $('<section class="nested-columns-autotest"><div class="container"><div class="row">' +
+                '<div id="outer-column-autotest" class="col-12"><p>Outer content autotest</p><div class="row">' +
+                '<div id="nested-column-autotest" class="col-6"><p>Nested content autotest</p></div></div></div>' +
+                '<div id="destination-column-autotest" class="col-12"><p>Destination autotest</p></div>' +
+                '</div></div></section>');
+            pb.$wrapper.append(section);
+            pb.mark_section(section[0]);
+            await initPageBuilderEditors(pb.$wrapper);
+        });
+        I.dontSeeElementInDOM('#nested-column-autotest .pb-content, #nested-column-autotest [data-ckeditor-instance]');
+
+        I.click('#nested-column-autotest p');
+        I.click(locate('.pb-workbench-path button[data-type=column]').last());
+        I.click('.pb-workbench [data-pb-action=more]');
+        I.waitForVisible(`.pb-workbench [data-pb-action=${action}]`, 10);
+        I.click(`.pb-workbench [data-pb-action=${action}]`);
+        I.switchTo();
+        I.waitForFunction(() => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow;
+            return frame.pageBuilder.ui.insertPoints.some(point =>
+                point.type === 'column' && point.previous?.id === 'destination-column-autotest');
+        }, [], 10);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        await I.executeScript(() => {
+            const point = window.pageBuilder.ui.insertPoints.find(point =>
+                point.type === 'column' && point.previous?.id === 'destination-column-autotest');
+            point.button.attr('data-autotest-column-destination', 'true');
+            point.button[0].focus();
+        });
+        I.click('[data-autotest-column-destination]');
+
+        const contentSelector = '#destination-column-autotest + .pb-column > .pb-column__content';
+        I.switchTo();
+        I.waitForFunction(([selector]) => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow;
+            const content = frame.document.querySelector(selector);
+            const editor = frame.CKEDITOR.instances[content?.dataset.ckeditorInstance];
+            return editor?.status === 'ready' && editor.element.$ === content && content.isContentEditable;
+        }, [contentSelector], 20);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.dontSeeElementInDOM('.nested-columns-autotest [data-ckeditor-instance] [data-ckeditor-instance]');
+        I.click(`${contentSelector} p`);
+        I.pressKey('End');
+        I.type(' edited');
+        I.see('Nested content autotest edited', contentSelector);
+
+        const saved = await I.executeScript(() => {
+            const html = window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data;
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const destination = doc.querySelector('#destination-column-autotest').nextElementSibling;
+            const source = doc.querySelector('#outer-column-autotest #nested-column-autotest');
+            return {
+                destinationText: destination.textContent.trim(),
+                sourceText: source?.textContent.trim() || null,
+                hasEditorAttributes: /data-ckeditor-instance|contenteditable/.test(doc.querySelector('.nested-columns-autotest').outerHTML)
+            };
+        });
+        I.assertEqual(saved.destinationText, 'Nested content autotest edited', 'The independent editor must serialize the edited content');
+        I.assertEqual(saved.sourceText, action === 'duplicate' ? 'Nested content autotest' : null, 'Duplicating must preserve the original content independently');
+        I.assertFalse(saved.hasEditorAttributes, 'Runtime editor attributes must not enter saved HTML');
+        I.switchTo();
+        DTE.cancel();
+        Document.resetPageBuilderMode();
+    });
+}
+
 Scenario('failed Page Builder initialization allows HTML recovery through the parent selector', async ({ I, DTE, Document }) => {
     Document.resetPageBuilderMode();
     const routePattern = '**/*inlineEditorAdmin=true*';

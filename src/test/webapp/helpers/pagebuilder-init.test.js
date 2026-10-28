@@ -132,6 +132,34 @@ test('Page Builder removes nested editor markers before the parent captures its 
     assert.equal(page.find('#parent p.lead').length, 2);
 });
 
+for (const duplicate of [false, true]) {
+    test(`Page Builder initializes a nested column after ${duplicate ? 'duplicating' : 'moving'} it outside its parent editor`, async t => {
+        const f = await fixture(t, '');
+        const page = f.$('#wjInline-docdata');
+        page.html('<div id="parent" class="column-content pb-column__content pb-content"><p>Outer content</p>' +
+            '<div class="row"><div id="nested-column" class="col-6">' +
+            '<div class="column-content pb-column__content pb-content"><p>Nested content</p></div></div></div></div>');
+        f.window.initPageBuilderEditors(page);
+        assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 1);
+        assert.equal(page.find('#parent .pb-content, #parent [data-ckeditor-instance]').length, 0);
+
+        const original = page.find('#nested-column');
+        const clone = original.clone().removeAttr('id').appendTo(page);
+        if (!duplicate) original.remove();
+        f.window.initPageBuilderEditors(page);
+
+        const content = clone.find('.column-content');
+        const editor = f.window.CKEDITOR.instances[content.attr('data-ckeditor-instance')];
+        assert.ok(editor, 'A column outside its previous editor must get its own editor');
+        assert.equal(editor.element.$, content[0]);
+        assert.match(editor.getData(), /Nested content/);
+        assert.equal(page.find('[data-ckeditor-instance] [data-ckeditor-instance]').length, 0);
+
+        f.window.initPageBuilderEditors(page);
+        assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 2, 'Repeated initialization must retain one editor per independent region');
+    });
+}
+
 test('Page Builder resolves readiness when all marked hosts are unsupported', async t => {
     const f = await fixture(t, '');
     const page = f.$('#wjInline-docdata');
