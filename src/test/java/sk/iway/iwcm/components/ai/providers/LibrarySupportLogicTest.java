@@ -30,6 +30,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import com.webjetcms.ai.AiClient;
+import com.webjetcms.ai.AiCapabilities;
+import com.webjetcms.ai.AiCapabilities.Continuation;
+import com.webjetcms.ai.AiCapabilities.Operation;
+import com.webjetcms.ai.AiCapabilities.Support;
 import com.webjetcms.ai.AiInputHandling;
 import com.webjetcms.ai.AiOperation;
 import com.webjetcms.ai.AiProvider;
@@ -45,6 +49,7 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
+import sk.iway.iwcm.components.ai.providers.browser.BrowserService;
 import sk.iway.iwcm.i18n.Prop;
 
 class LibrarySupportLogicTest {
@@ -256,6 +261,39 @@ class LibrarySupportLogicTest {
         assertTrue(request.inputText().contains("A mountain lake at sunrise"));
     }
 
+    /** Library metadata selects chat streaming without granting storage or rejecting unknown models. */
+    @Test
+    void streamingFollowsCapabilitiesAndAssistantPreferences() {
+        AiClient client = mock(AiClient.class);
+        TestLibrarySupportLogic logic = new TestLibrarySupportLogic(client, null);
+        AssistantDefinitionEntity assistant = assistant();
+        assistant.setAction(SupportedActions.LIVE_CHAT.getAction());
+        assistant.setUseTemporal(false);
+        assistant.setUseStreaming(true);
+        when(client.capabilities("test-provider", "test-model")).thenReturn(chatCapabilities(Support.UNKNOWN));
+
+        assertTrue(logic.isStreamingEnabled(assistant));
+        assistant.setUseTemporal(true);
+        assertFalse(logic.isStreamingEnabled(assistant));
+        assistant.setUseTemporal(null);
+        assertFalse(logic.isStreamingEnabled(assistant));
+        assistant.setUseTemporal(false);
+        assistant.setUseStreaming(false);
+        assertFalse(logic.isStreamingEnabled(assistant));
+        assistant.setUseStreaming(true);
+
+        when(client.capabilities("test-provider", "test-model")).thenReturn(chatCapabilities(Support.UNSUPPORTED));
+        assertFalse(logic.isStreamingEnabled(assistant));
+        assertTrue(assistant.getUseStreaming());
+        assertFalse(assistant.getUseTemporal());
+
+        when(client.capabilities("test-provider", "test-model")).thenReturn(AiCapabilities.unknown());
+        assertTrue(logic.isStreamingEnabled(assistant));
+        assistant.setModel(" ");
+        assertTrue(logic.isStreamingEnabled(assistant));
+        assertTrue(new BrowserService().isStreamingEnabled(assistant));
+    }
+
     /** A cancelled turn cannot create a continuation even if a provider finishes returning text. */
     @Test
     void cancelledChatResponseDoesNotSaveContinuationOrAuditFailure() throws Exception {
@@ -264,6 +302,7 @@ class LibrarySupportLogicTest {
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         AiProviderConfig providerConfig = AiProviderConfig.empty();
         when(configuration.resolve(any(AiInterface.class), eq(servletRequest))).thenReturn(providerConfig);
+        when(client.capabilities("test-provider", "test-model")).thenReturn(chatCapabilities(Support.UNKNOWN));
         TestLibrarySupportLogic logic = new TestLibrarySupportLogic(client, configuration);
         AssistantDefinitionEntity assistant = assistant();
         assistant.setAction(SupportedActions.LIVE_CHAT.getAction());
@@ -271,6 +310,7 @@ class LibrarySupportLogicTest {
         InputDataDTO input = textInput();
         when(client.execute(eq("test-provider"), any(AiRequest.class), eq(providerConfig),
             same(input.getCancellationToken()))).thenAnswer(invocation -> {
+                assertEquals(AiOperation.CHAT, invocation.getArgument(1, AiRequest.class).operation());
                 input.getCancellationToken().cancel();
                 return new AiResponse("late answer", List.of(), TokenUsage.EMPTY, "stop");
             });
@@ -293,6 +333,7 @@ class LibrarySupportLogicTest {
     @Test
     void cancelledStreamStopsWritingFurtherDeltas() throws Exception {
         AiClient client = mock(AiClient.class);
+        when(client.capabilities("test-provider", "test-model")).thenReturn(AiCapabilities.unknown());
         WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         AiProviderConfig providerConfig = AiProviderConfig.empty();
@@ -316,6 +357,13 @@ class LibrarySupportLogicTest {
             assertEquals("first", output.toString());
             adminlog.verifyNoInteractions();
         }
+    }
+
+    private AiCapabilities chatCapabilities(Support modelSupport) {
+        return new AiCapabilities(Map.of(
+            AiOperation.TEXT, new Operation(Support.SUPPORTED, Support.UNKNOWN, Support.UNSUPPORTED, Continuation.NONE),
+            AiOperation.CHAT, new Operation(Support.SUPPORTED, modelSupport, Support.SUPPORTED, Continuation.PROVIDER_STORAGE_REQUIRED)
+        ), Support.UNKNOWN, Support.UNKNOWN);
     }
 
     private InputDataDTO textInput() {
@@ -348,11 +396,6 @@ class LibrarySupportLogicTest {
         @Override
         public String getProviderId() {
             return "test-provider";
-        }
-
-        @Override
-        protected boolean supportsChat() {
-            return true;
         }
 
         @Override

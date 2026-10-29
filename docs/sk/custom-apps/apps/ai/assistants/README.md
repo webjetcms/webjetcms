@@ -309,6 +309,14 @@ Dôležité metódy:
 - `getAiStreamResponse` – streamuje textovú odpoveď cez `BufferedWriter`
 - `getBonusHtml` – vráti doplnkové polia podporované vybraným obrázkovým modelom
 
+### Podpora chatu a streamovania
+
+`LibrarySupportLogic` vyberá operáciu a overuje streamovanie podľa `AiClient.capabilities(providerId, model)`. Operáciu `CHAT` použije pre asistenta s akciou `LIVE_CHAT`, explicitným `useTemporal=false`, podporou chatu v adaptéri a modelom, ktorý chat výslovne neodmieta. V ostatných prípadoch zostáva operácia `TEXT`. Metadáta samy nepovoľujú ukladanie rozhovoru.
+
+Streamovanie musí byť zapnuté v asistentovi a metadáta nesmú označovať zvolenú operáciu alebo jej streamovanie ako nepodporované. Výsledok sa odovzdá v existujúcom `DataTableAi.useStreaming` a rovnaká kontrola sa použije pri volaní streamovacej REST služby. Uložená hodnota `useStreaming` sa nemení. Neznáma podpora modelu alebo streamovania (`UNKNOWN`) požiadavku neblokuje.
+
+Prehliadačový poskytovateľ zachováva pôvodné nastavenie. Lokálne adaptéry pri zisťovaní schopností nenačítavajú modely; naďalej platia ich obmedzenia nastavené pri ukladaní asistenta.
+
 ### Prenos priebežnej odpovede do administrácie
 
 Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičkou `Accept: application/x-ndjson`. Server posiela samostatné JSON správy oddelené novým riadkom:

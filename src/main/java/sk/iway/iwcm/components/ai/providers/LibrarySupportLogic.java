@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.webjetcms.ai.AiClient;
+import com.webjetcms.ai.AiCapabilities;
+import com.webjetcms.ai.AiCapabilities.Support;
 import com.webjetcms.ai.AiOperation;
 import com.webjetcms.ai.AiPromptTemplate;
 import com.webjetcms.ai.AiProviderConfig;
@@ -287,17 +289,32 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return responseDto;
     }
 
-    /** Allows a provider adapter to opt into provider-managed chat continuations. */
-    protected boolean supportsChat() {
-        return false;
+    /** Combines the assistant's preference with known support for its effective text operation. */
+    @Override
+    public boolean isStreamingEnabled(AssistantDefinitionEntity assistant) {
+        if (AiInterface.super.isStreamingEnabled(assistant) == false) return false;
+        AiCapabilities capabilities = capabilities(assistant);
+        AiCapabilities.Operation operation = capabilities.operation(textOperation(assistant, capabilities));
+        return operation.support() != Support.UNSUPPORTED && operation.adapterStreaming() != Support.UNSUPPORTED;
     }
 
     private AiOperation textOperation(AssistantDefinitionEntity assistant) {
-        if (supportsChat() && SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())
+        return textOperation(assistant, capabilities(assistant));
+    }
+
+    private AiOperation textOperation(AssistantDefinitionEntity assistant, AiCapabilities capabilities) {
+        AiCapabilities.Operation chat = capabilities.operation(AiOperation.CHAT);
+        if (chat.adapterSupport() == Support.SUPPORTED && chat.modelSupport() != Support.UNSUPPORTED
+            && SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())
             && Boolean.FALSE.equals(assistant.getUseTemporal())) {
             return AiOperation.CHAT;
         }
         return AiOperation.TEXT;
+    }
+
+    private AiCapabilities capabilities(AssistantDefinitionEntity assistant) {
+        if (Tools.isEmpty(assistant.getModel())) return AiCapabilities.unknown();
+        return aiClient.capabilities(getProviderId(), assistant.getModel());
     }
 
     private AiChatSession.Continuation resolveChat(
