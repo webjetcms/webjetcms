@@ -141,8 +141,11 @@ public class AssistantController {
 	public void execute(@RequestParam String fileName, HttpServletRequest request, HttpServletResponse response) {
         try {
             AiTempFileStorage.downloadFile(fileName, request, response);
+        } catch (IOException e) {
+            if (response.isCommitted() == false) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         } catch(Exception e) {
-           sk.iway.iwcm.Logger.error(e);
+            sk.iway.iwcm.Logger.error(e);
+            if (response.isCommitted() == false) response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 

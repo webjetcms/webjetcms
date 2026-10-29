@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
@@ -31,7 +33,6 @@ import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
-import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -93,22 +94,9 @@ public class AiTempFileStorage {
     }
 
     public static void downloadFile(String fileName, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Path tempFileFolder = getFileFolder();
-        Path tempFilePath = tempFileFolder.resolve(fileName);
-
         Prop prop = Prop.getInstance(request);
-
-        if (Files.notExists(tempFilePath)) {
-            throw new IOException(prop.getText(NOT_FOUND_ERR));
-        }
-
-        String filePath = tempFilePath.toAbsolutePath().toString();
-
-        ServletOutputStream out = response.getOutputStream();
-        //citaj subor a posielaj na vystup
-        byte[] buff = new byte[8000];
-        IwcmInputStream fis = new IwcmInputStream(filePath);
-        int len;
+        Path tempFilePath = resolveTempFile(getFileFolder(), fileName, prop);
+        String filePath = tempFilePath.toString();
 
         String mimeType = "application/octet-stream";
         try {
@@ -121,11 +109,11 @@ public class AiTempFileStorage {
 
         response.setContentType(mimeType);
 
-        while ((len = fis.read(buff)) != -1) out.write(buff, 0, len);
-
-        fis.close();
-        out.flush();
-        out.close();
+        try (InputStream input = Files.newInputStream(tempFilePath, LinkOption.NOFOLLOW_LINKS);
+            ServletOutputStream out = response.getOutputStream()) {
+            input.transferTo(out);
+            out.flush();
+        }
     }
 
     public static String saveTempFile(String tempFileName, String fileName, String destinationFolder, HttpServletRequest request) throws IOException, IllegalStateException {
@@ -151,29 +139,25 @@ public class AiTempFileStorage {
         }
 
         Path tempFileFolder = getFileFolder();
-        Path tempFilePath = tempFileFolder.resolve(tempFileName);
+        Path tempFilePath = resolveTempFile(tempFileFolder, tempFileName, prop);
 
         String tempFileExt = FileTools.getFileExtension(tempFileName);
         String fileNameExt = FileTools.getFileExtension(fileName);
         fileName = FileTools.getFileNameWithoutExtension(fileName);
         if (("jpg".equals(fileNameExt) || "jpeg".equals(fileNameExt)) && "png".equals(tempFileExt)) {
+            // Reject a link before conversion can write through it, including a dangling link.
+            Path convertedFile = tempFilePath.resolveSibling(FileTools.getFileNameWithoutExtension(tempFileName) + ".jpg");
+            if (Files.isSymbolicLink(convertedFile)) throw new IOException(prop.getText(NOT_FOUND_ERR));
             //convert tempFile from png to jpg
             String convertedImageName = ImageTools.convertImageFormat(new IwcmFile(tempFilePath.toFile()), fileNameExt);
             if (convertedImageName != null) {
                 tempFileName = convertedImageName;
                 tempFileExt = fileNameExt;
-                tempFilePath = tempFileFolder.resolve(tempFileName);
+                tempFilePath = resolveTempFile(tempFileFolder, tempFileName, prop);
             }
         }
 
-        if (Files.notExists(tempFilePath))
-            throw new IOException(prop.getText(NOT_FOUND_ERR));
-
-        if(Files.isDirectory(tempFilePath))
-            throw new IOException(prop.getText(NOT_FOUND_ERR));
-
         IwcmFile tempFile = new IwcmFile( tempFilePath.toFile() );
-        InputStream tempFileIS = new IwcmInputStream(tempFile);
 
         String path = destinationFolder;
         if(destinationFolder.endsWith("/") == false) path += "/";
@@ -181,7 +165,9 @@ public class AiTempFileStorage {
         String newFileUrl = path + fileName + "." + tempFileExt;
         IwcmFile newRealFile = new IwcmFile( Tools.getRealPath(newFileUrl) );
 
-        IwcmFsDB.writeFiletoDest(tempFileIS, new File(newRealFile.getAbsolutePath()), Tools.safeLongToInt(tempFile.getLength()));
+        try (InputStream input = Files.newInputStream(tempFilePath, LinkOption.NOFOLLOW_LINKS)) {
+            IwcmFsDB.writeFiletoDest(input, new File(newRealFile.getAbsolutePath()), Tools.safeLongToInt(tempFile.getLength()));
+        }
 
         try {
             removeSavedImageFiles(tempFileFolder, tempFileName);
@@ -193,6 +179,24 @@ public class AiTempFileStorage {
         UploadFileTools.handleGallery(newRealFile, new Date());
 
         return newFileUrl;
+    }
+
+    /** Resolves an existing regular temporary file from a basename without following symbolic links. */
+    static Path resolveTempFile(Path folder, String fileName, Prop prop) throws IOException {
+        try {
+            if (fileName == null || fileName.isBlank() || fileName.indexOf('/') >= 0
+                || fileName.indexOf('\\') >= 0 || fileName.indexOf(':') >= 0) {
+                throw new IOException();
+            }
+            Path realFolder = folder.toRealPath();
+            Path file = realFolder.resolve(fileName);
+            if (Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS) == false) throw new IOException();
+            Path realFile = file.toRealPath();
+            if (realFolder.equals(realFile.getParent()) == false) throw new IOException();
+            return realFile;
+        } catch (InvalidPathException | IOException exception) {
+            throw new IOException(prop.getText(NOT_FOUND_ERR), exception);
+        }
     }
 
     /** Removes one generation, or only the selected image's format variants for legacy filenames. */
