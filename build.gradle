@@ -188,7 +188,7 @@ dependencies {
     implementation("org.freemarker:freemarker:2.3.35")
     implementation("com.google.code.gson:gson:2.13.2") //generate.jsp for pagebuilder, refactor to jackson
 
-    implementation("org.hibernate.validator:hibernate-validator:9.0.0.Final")
+    implementation("org.hibernate.validator:hibernate-validator:9.0.2.Final")
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
@@ -336,6 +336,8 @@ dependencies {
     // The Jackson BOM above aligns this module with the security-patched databind release.
     implementation("tools.jackson.core:jackson-core")
 
+    // Declare directly so the fixed accessors-smart transitive dependency is included in the distributed Maven POM.
+    implementation('org.ow2.asm:asm:9.11.1')
 }
 
 war {

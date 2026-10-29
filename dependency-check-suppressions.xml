@@ -146,4 +146,40 @@
     <vulnerabilityName>CVE-2026-116804</vulnerabilityName>
   </suppress>
 
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-116803 / GHSA-mrv2-3pqr-j5jr requires IN_PLACE sanitization and a
+    hook that detaches a parent or sibling, leaving its event handlers unsanitized.
+    The reviewed Swagger UI 5.32.15 bundle embeds DOMPurify 3.4.13 in a scoped
+    instance. Its Markdown renderer sanitizes an HTML string without IN_PLACE.
+    Its beforeSanitizeElements hook only sets rel="noopener noreferrer" on links;
+    it does not detach DOM nodes. Both required conditions are absent.
+    This is non-applicability in this integration, not a patched DOMPurify library
+    or accepted residual risk. The hash restricts this rule to the exact reviewed
+    bundle. Reassess when the bundle, sanitizer options, input type or hooks change.
+    Verified on 2026-10-29. Reference:
+    https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr
+    ]]></notes>
+    <sha1>5bb50fb92183b6b895b1da822803bda27fdee69a</sha1>
+    <vulnerabilityName>CVE-2026-116803</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-104828 affects HTMLWriterFilter when serializing textarea/title text.
+    The reviewed CMS uses Neko through wjdaisydiff in DocTools.getHtmlDiff().
+    NekoHtmlParser creates a SAXParser and forwards events to the DaisyDiff content
+    handler; the result is serialized through HtmlSaxDiffOutput and SAX/XSL
+    transformers. Inspection of the resolved dependencies and local DaisyDiff JAR
+    confirms that this path does not instantiate or configure HTMLWriterFilter.
+    This is non-applicability in the reviewed integration, not a patched Neko
+    library or accepted residual risk. Reassess when Neko/DaisyDiff versions,
+    HTML output handling or custom integrations change, especially if
+    HTMLWriterFilter is introduced. Verified on 2026-10-29. Reference:
+    https://github.com/HtmlUnit/htmlunit-neko/security/advisories/GHSA-39xg-prhf-8785
+    ]]></notes>
+    <packageUrl>pkg:maven/org.htmlunit/neko-htmlunit@4.5.0</packageUrl>
+    <cve>CVE-2026-104828</cve>
+  </suppress>
+
 </suppressions>
