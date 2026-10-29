@@ -41,7 +41,6 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -390,7 +389,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             );
 
             checkCancellation(inputData);
-            long datePart = Tools.getNow();
+            String filePrefix = AiTempFileStorage.newImageBatchPrefix();
             for (GeneratedMedia image : response.media()) {
                 checkCancellation(inputData);
                 try {
@@ -400,7 +399,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
                     if (FileTools.isImage(format) == false) {
                         throw new IOException("Image format is not valid: " + format);
                     }
-                    String filePrefix = "tmp-ai-" + DocTools.removeChars(assistant.getName()) + "-" + datePart + "-";
                     responseDto.addTempFile(AiTempFileStorage.addImage(image.data(), filePrefix, format, tempFileFolder));
                 } catch (IOException exception) {
                     Logger.error(LibrarySupportLogic.class, "Error processing image " + exception.getMessage());

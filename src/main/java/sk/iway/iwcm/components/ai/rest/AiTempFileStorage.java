@@ -9,6 +9,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import jakarta.servlet.ServletOutputStream;
@@ -41,12 +44,18 @@ import sk.iway.iwcm.users.UsersDB;
 public class AiTempFileStorage {
 
     private static final String NOT_FOUND_ERR = "components.file_archiv.file_not_found";
+    private static final Pattern IMAGE_BATCH_FILE = Pattern.compile("^(tmp-ai-batch-[0-9a-f]{32}-[0-9]+-)[0-9]+\\.[a-zA-Z0-9]+$");
 
     private AiTempFileStorage() {
         // Intentionally left empty to prevent instantiation
     }
 
     public static final String AI_FILE_DIR = "/WEB-INF/tmp/ai_files";
+
+    /** Creates a unique prefix shared by one generation, retaining the timestamp used by expiry cleanup. */
+    public static String newImageBatchPrefix() {
+        return "tmp-ai-batch-" + UUID.randomUUID().toString().replace("-", "") + "-" + Tools.getNow() + "-";
+    }
 
     public static Path getFileFolder() throws IOException {
         String filePath = Tools.getRealPath(AI_FILE_DIR);
@@ -174,15 +183,8 @@ public class AiTempFileStorage {
 
         IwcmFsDB.writeFiletoDest(tempFileIS, new File(newRealFile.getAbsolutePath()), Tools.safeLongToInt(tempFile.getLength()));
 
-        String prefix = tempFileName.substring(0, tempFileName.lastIndexOf('_') + 1);
-
-        //After success remove all temp files with same prefix
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(tempFileFolder)) {
-            for (Path child : stream) {
-                if(child.getFileName().toString().startsWith(prefix)) {
-                    Files.delete(child);
-                }
-            }
+        try {
+            removeSavedImageFiles(tempFileFolder, tempFileName);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -191,6 +193,26 @@ public class AiTempFileStorage {
         UploadFileTools.handleGallery(newRealFile, new Date());
 
         return newFileUrl;
+    }
+
+    /** Removes one generation, or only the selected image's format variants for legacy filenames. */
+    static void removeSavedImageFiles(Path folder, String fileName) throws IOException {
+        Matcher batch = IMAGE_BATCH_FILE.matcher(fileName);
+        String batchPrefix = batch.matches() ? batch.group(1) : null;
+        String selectedBaseName = FileTools.getFileNameWithoutExtension(fileName);
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder)) {
+            for (Path child : stream) {
+                String childName = child.getFileName().toString();
+                Matcher childBatch = IMAGE_BATCH_FILE.matcher(childName);
+                boolean sameImage = batchPrefix == null
+                    ? selectedBaseName.equals(FileTools.getFileNameWithoutExtension(childName))
+                    : childBatch.matches() && batchPrefix.equals(childBatch.group(1));
+                if (sameImage && Files.isRegularFile(child)) {
+                    Files.deleteIfExists(child);
+                }
+            }
+        }
     }
 
     public static void removeOldTempFiles(int hours) throws IOException {

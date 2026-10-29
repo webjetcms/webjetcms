@@ -310,6 +310,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- AI asistenti - uloženie vygenerovaného obrázka odstráni iba dočasné súbory z rovnakého generovania. Obrázky z iných požiadaviek a od ostatných používateľov zostanú zachované.
+
 - Elektronický obchod - opravené pridanie kategórie produktov bez označeného produktu v tabuľke (#373).
 - Webové stránky - URL stránky, presmerovania a perex obrázka zachovávajú parametre aj po načítaní cez JPA vrátane histórie. HTML sanitizér už neprepisuje znaky `&` a `=` v URL na HTML entity (#373).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránok (#372).
