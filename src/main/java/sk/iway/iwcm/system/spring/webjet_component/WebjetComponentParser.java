@@ -434,8 +434,8 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
         Logger.debug(WebjetComponentParser.class,"INCLUDE ERROR: " + ex.getMessage());
 
         StringBuilder content = new StringBuilder();
-        Prop prop = Prop.getInstance();
-        content.append(WriteTag.getErrorMessage(prop, "writetag.error", getComponentClass(include)));
+        Prop prop = Prop.getInstance(request);
+        content.append(WriteTag.getSpringErrorMessage(prop, "writetag.error", getComponentClass(include)));
 
         UserDetails user = getUser(request);
         if (user != null && user.isAdmin() && request.getAttribute("writeTagDontShowError") == null)
