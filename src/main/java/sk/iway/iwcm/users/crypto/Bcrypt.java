@@ -1,5 +1,7 @@
 package sk.iway.iwcm.users.crypto;
 
+import java.nio.charset.StandardCharsets;
+
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import sk.iway.iwcm.Constants;
@@ -23,6 +25,9 @@ public class Bcrypt implements PasswordSecurityAlgorithm {
     }
 
     public boolean isPasswordCorrect (String password, String salt, String hash) {
+        // CVE-2025-22228: bcrypt only uses the first 72 UTF-8 bytes, not characters.
+        if (password != null && password.getBytes(StandardCharsets.UTF_8).length > 72) return false;
+
         //Check if hash does have prefix "bcrypt"
         if(hash.startsWith("bcrypt:"))
             return BCrypt.checkpw(password, hash.replaceFirst("^bcrypt:", ""));
