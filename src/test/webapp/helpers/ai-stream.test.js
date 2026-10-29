@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const sourceDirectory = path.resolve(__dirname, '../../../main/webapp/admin/v9/npm_packages/webjetdatatables/ai');
-const sources = ['ai-execution-result.js', 'ai-rest-executor.js'].map(filename =>
+const sources = ['../../../src/js/ai/ai-stream.js', 'ai-execution-result.js', 'ai-rest-executor.js'].map(filename =>
     fs.readFileSync(path.join(sourceDirectory, filename), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')
 ).join('\n');
 

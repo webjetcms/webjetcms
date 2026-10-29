@@ -249,7 +249,6 @@ export class EditorAi {
 
     undo() {
         if (this.isUndo()) {
-            this.aiRestExecutor.resetConversation();
             if (this.undoField.type === "range" && this.undoField.ckEditorSelectionInstance != null) {
                 this.undoField.ckEditorSelectionInstance.setData(this.undoField.value);
             } else if (this.undoField.type === "pageBuilder" && this.undoField.editors.length > 0) {

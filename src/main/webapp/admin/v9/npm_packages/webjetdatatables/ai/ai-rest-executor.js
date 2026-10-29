@@ -11,7 +11,6 @@ export class AiRestExecutor {
 
     curentAssistantId = null;
     curentTimestamp = null;
-    conversation = null;
 
     constructor(EDITOR, editorAiInstance) {
         this.EDITOR = EDITOR;
@@ -24,19 +23,6 @@ export class AiRestExecutor {
 
         inputData.assistantId = aiCol.assistantId;
         inputData.timestamp = Date.now();
-
-        let conversation = null;
-        if (aiCol.action === "live_chat") {
-            if (self.conversation == null || self.conversation.assistantId !== aiCol.assistantId
-                || self.conversation.to !== aiCol.to) {
-                self.conversation = { assistantId: aiCol.assistantId, to: aiCol.to, id: null };
-            }
-            conversation = self.conversation;
-        } else {
-            self.resetConversation();
-        }
-        if (conversation?.id) inputData.conversationId = conversation.id;
-        else delete inputData.conversationId;
 
         self.curentAssistantId = inputData.assistantId;
         self.curentTimestamp = inputData.timestamp;
@@ -72,7 +58,6 @@ export class AiRestExecutor {
                 if (result.error) {
                     executionResult.errorText = result.error;
                 } else {
-                    self._rememberConversation(conversation, result);
                     const explanatoryJson = self._handleExplanatoryResponse(wholeText);
                     if (setFunction != null) {
                         setFunction(explanatoryJson.html, true);
@@ -100,7 +85,6 @@ export class AiRestExecutor {
                     if (res.error) {
                         executionResult.errorText = res.error;
                     } else {
-                        self._rememberConversation(conversation, res);
                         executionResult.success = true;
 
                         //console.log("AI response received, response=", res);
@@ -127,22 +111,6 @@ export class AiRestExecutor {
         self.curentTimestamp = null;
 
         return executionResult;
-    }
-
-    resetConversation() {
-        this.conversation = null;
-    }
-
-    /**
-     * Saves the successful continuation without reviving a closed or replaced conversation.
-     * @param {object|null} conversation Conversation associated with the outgoing request.
-     * @param {object} response Completed assistant response containing the opaque continuation ID.
-     */
-    _rememberConversation(conversation, response) {
-        if (conversation != null && this.conversation === conversation) {
-            conversation.id = typeof response.conversationId === "string" && response.conversationId.length > 0
-                ? response.conversationId : null;
-        }
     }
 
     /**
@@ -257,7 +225,6 @@ export class AiRestExecutor {
 
     destroy() {
         let self = this;
-        self.resetConversation();
 
         //console.log("ai-rest-execution self", self);
 
