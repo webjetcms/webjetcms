@@ -1,6 +1,7 @@
 package sk.iway.iwcm.users;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockStatic;
 
@@ -40,15 +41,29 @@ class PasswordSecurityTest {
     @MethodSource("boundaryPasswords")
     void shouldRejectBothOriginalAndCollidingOverlongPasswords(String prefix) {
         String salt = BCrypt.gensalt(4);
-        // Hash creation is unchanged; the guard only rejects overlong input during verification.
-        String storedHash = new Bcrypt().calculateHash(prefix + "X", salt);
+        // Hashing the 72-byte prefix reproduces the legacy hash of prefix + "X".
+        // Current Spring Security rejects overlong input when creating a new hash.
+        String storedHash = new Bcrypt().calculateHash(prefix, salt);
         String oldHash = storedHash.substring("bcrypt:".length());
-        assertTrue(BCrypt.checkpw(prefix + "Y", oldHash), "The library alone still truncates passwords");
+        assertTrue(BCrypt.checkpw(prefix + "Y", oldHash),
+                "BCrypt.checkpw still accepts truncated passwords for legacy compatibility");
 
         assertFalse(PasswordSecurity.isPasswordCorrect(prefix + "X", "bcrypt:" + salt, storedHash));
         assertFalse(PasswordSecurity.isPasswordCorrect(prefix + "Y", "bcrypt:" + salt, storedHash));
         assertFalse(new Bcrypt().isPasswordCorrect(prefix + "Y", salt, oldHash),
                 "Direct wrapper calls must enforce the same limit");
+    }
+
+    @ParameterizedTest
+    @MethodSource("boundaryPasswords")
+    void shouldRejectHashingOverlongBcryptPasswords(String prefix) {
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class)) {
+            constants.when(() -> Constants.getString("passwordHashAlgorithm")).thenReturn("bcrypt");
+            String salt = "bcrypt:" + BCrypt.gensalt(4);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> PasswordSecurity.calculateHash(prefix + "X", salt));
+        }
     }
 
     @Test
@@ -79,11 +94,12 @@ class PasswordSecurityTest {
     void shouldVerifyStoredBcryptLimitIndependentlyOfCurrentConfiguration() {
         try (MockedStatic<Constants> constants = mockStatic(Constants.class)) {
             constants.when(() -> Constants.getString("passwordHashAlgorithm")).thenReturn("sha512");
-            String password = "Ab9!".repeat(18) + "X";
+            String prefix = "Ab9!".repeat(18);
             String salt = BCrypt.gensalt(4);
-            String hash = "bcrypt:" + BCrypt.hashpw(password, salt);
+            String hash = "bcrypt:" + BCrypt.hashpw(prefix, salt);
 
-            assertFalse(PasswordSecurity.isPasswordCorrect(password, "bcrypt:" + salt, hash));
+            assertTrue(PasswordSecurity.isPasswordCorrect(prefix, "bcrypt:" + salt, hash));
+            assertFalse(PasswordSecurity.isPasswordCorrect(prefix + "X", "bcrypt:" + salt, hash));
         }
     }
 }
