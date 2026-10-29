@@ -1,5 +1,6 @@
 import {AiExecutionResult} from './ai-execution-result';
 import { requestAiText } from '../../../src/js/ai/ai-rest-transport';
+import { parseAiResponse } from '../../../src/js/ai/ai-response-parser';
 
 /**
  * Class to wrap REST API for AI execution logic
@@ -29,7 +30,7 @@ export class AiRestExecutor {
 
         const streaming = aiCol.useStreaming === true;
         const setText = (text, final) => {
-            const parsed = self._handleExplanatoryResponse(text);
+            const parsed = parseAiResponse(text);
             if (setFunction != null) setFunction(parsed.html, final);
             else self.EDITOR.set(aiCol.to, parsed.html);
             return parsed;
@@ -59,65 +60,6 @@ export class AiRestExecutor {
         }
 
         return executionResult;
-    }
-
-    /**
-     * Sometimes AI returns response as markdown, which contains HTML code block and explanatory text below
-     *
-     * ```html
-     * HTML code
-     * ```
-     * Provided changes explanatory text
-     *
-     * we need to parse this and return it as JSON object with HTML part and explanatory part to handle it properly in UI
-     * @param {*} wholeText
-     */
-    _handleExplanatoryResponse(wholeText) {
-        const parsedJson = {
-            wholeText: wholeText,
-            html: null,
-            explanatoryText: null
-        }
-
-        if (wholeText == null || wholeText.trim().length == 0) return parsedJson;
-
-        let startBlock = wholeText.indexOf("```html");
-        if (startBlock!=-1) {
-            //if it starts with ```html markdown
-            let endBlock = wholeText.indexOf("```", startBlock + 7);
-            if (endBlock == -1) {
-                //we still don't have an end block
-                parsedJson.html = wholeText.substring(startBlock + 7).trim();
-            } else {
-                //we have an end block, extract HTML and explanatory block
-                parsedJson.html = wholeText.substring(startBlock + 7, endBlock).trim();
-                //if there is explanatory text use it
-                if (wholeText.length > endBlock + 10) parsedJson.explanatoryText = wholeText.substring(endBlock + 3).trim();
-            }
-        } else {
-            parsedJson.html = wholeText;
-        }
-
-        //if it has explanatory unwrap it from possible ```markdown container
-        if (parsedJson.explanatoryText != null) {
-            parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/```markdown/g, "").replace(/```$/g, "").trim();
-            //replace \" to "
-            parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/\\"/g, '"');
-            //replace escaped comments &amp;lt;!-- to <!-- and --&amp;gt; to -->
-            parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/&amp;lt;!--/g, "&lt!--").replace(/--&amp;gt;/g, "--&gt;");
-        }
-
-        //if html contains body tags, extract only body content
-        if (parsedJson.html != null) {
-            let bodyStart = parsedJson.html.indexOf("<body");
-            let bodyEnd = parsedJson.html.indexOf("</body>");
-            if (bodyStart != -1 && bodyEnd != -1) {
-                bodyStart = parsedJson.html.indexOf(">", bodyStart);
-                parsedJson.html = parsedJson.html.substring(bodyStart+1, bodyEnd).trim();
-            }
-        }
-
-        return parsedJson;
     }
 
     async executeImageAction(aiCol, inputData, button) {

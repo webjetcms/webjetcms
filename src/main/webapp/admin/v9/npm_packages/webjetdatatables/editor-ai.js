@@ -3,6 +3,7 @@ import { AiRestExecutor } from "./ai/ai-rest-executor";
 import { AiUserInterface } from "./ai/ai-ui";
 import { AiExecutionResult } from "./ai/ai-execution-result";
 import { AiChat } from "../../src/js/ai/ai-chat";
+import { parseAiResponse } from "../../src/js/ai/ai-response-parser";
 
 /**
  * Main class for AI integration in Datatables Editor - binds buttons, handles events, shows UI, executes actions
@@ -412,7 +413,7 @@ export class EditorAi {
                 conversation.chat.state.notice = WJ.translate("components.ai_assistants.chat.selectionStale.js");
                 return;
             }
-            const content = this.aiRestExecutor._handleExplanatoryResponse(message.text).html;
+            const content = parseAiResponse(message.text).html;
             if (typeof content !== "string" || !content.trim()) return;
             const wjeditor = fieldOptions?.wjeditor;
             const undo = { target, value: this.EDITOR.get(target), wjeditor: wjeditor?.editingMode === "pageBuilder" ? wjeditor : null };
