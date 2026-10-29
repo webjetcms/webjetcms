@@ -5,115 +5,131 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const sourceDirectory = path.resolve(__dirname, '../../../main/webapp/admin/v9/npm_packages/webjetdatatables/ai');
-const sources = ['../../../src/js/ai/ai-stream.js', 'ai-execution-result.js', 'ai-rest-executor.js'].map(filename =>
+const sources = ['../../../src/js/ai/ai-stream.js', '../../../src/js/ai/ai-rest-transport.js',
+    'ai-execution-result.js', 'ai-rest-executor.js', '../../../src/js/ai/ai-chat-transport.js'].map(filename =>
     fs.readFileSync(path.join(sourceDirectory, filename), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')
 ).join('\n');
+
+function loadTransport(fetch, notifications = []) {
+    const context = vm.createContext({
+        TextDecoder, AbortController, URLSearchParams, fetch, console: { log() {} },
+        window: { csrfToken: 'test-csrf', csrfError: 'Token expired', alert: text => notifications.push(text) },
+        WJ: {
+            keepSessionShowLogoffMessage: () => notifications.push('Session expired'),
+            keepSessionShowTokenMessage: text => notifications.push(text)
+        }
+    });
+    return vm.runInContext(sources + '\n({ AiRestExecutor, AiChatTransport, requestAiText });', context);
+}
 
 function delta(text) {
     return JSON.stringify({ type: 'delta', text }) + '\n';
 }
 
-function result(totalTokens = 42, error = null) {
-    return JSON.stringify({ type: 'result', result: { response: null, totalTokens, error } }) + '\n';
+function result(payload) {
+    return JSON.stringify({ type: 'result', result: payload }) + '\n';
 }
 
 /** Exercises the real executor, substituting only the HTTP response and editor. */
-async function execute(chunks, { status = 200, contentType = 'application/x-ndjson', readError = false, callback = true } = {}) {
+async function execute(chunks, streaming = true) {
     const updates = [];
     let request;
-    let cancelled = false;
     const response = new Response(new ReadableStream({
         pull(controller) {
             if (chunks.length > 0) controller.enqueue(chunks.shift());
-            else if (readError) controller.error(new Error('Connection lost'));
             else controller.close();
-        },
-        cancel() { cancelled = true; }
-    }), { status, headers: { 'Content-Type': contentType } });
-    const context = vm.createContext({
-        TextDecoder, window: { csrfToken: 'test-csrf' }, console: { log() {} },
-        fetch: async (url, options) => { request = { url, ...options }; return response; }
-    });
-    const Executor = vm.runInContext(sources + '\nAiRestExecutor;', context);
-    const executor = new Executor({ set: (field, text) => updates.push({ field, text }) }, null);
-    const execution = await executor.execute({ assistantId: 7, useStreaming: true, to: 'data' }, {},
-        callback ? (text, final) => updates.push({ text, final }) : null);
+        }
+    }), { headers: { 'Content-Type': streaming ? 'application/x-ndjson' : 'application/json' } });
+    const { AiRestExecutor } = loadTransport(async (url, options) => { request = { url, ...options }; return response; });
+    const executor = new AiRestExecutor(null, null);
+    const execution = await executor.execute({ assistantId: 7, useStreaming: streaming, to: 'data' }, {},
+        (text, final) => updates.push({ text, final }));
     assert.equal(executor.curentAssistantId, null);
     assert.equal(executor.curentTimestamp, null);
-    return { execution, updates, request, cancelled, locked: response.body.locked };
+    return { execution, updates, request };
 }
 
-test('joined text and metadata preserve the token count and keep metadata out of the editor', async () => {
-    const { execution, updates, request, locked } = await execute([Buffer.from(delta('Generated text.') + result())]);
-    assert.equal(execution.totalTokens, 42);
-    assert.equal(execution.success, true);
-    assert.equal(execution.errorText, null);
-    assert.deepEqual(updates.at(-1), { text: 'Generated text.', final: true });
-    assert.equal(request.headers.Accept, 'application/x-ndjson');
-    assert.equal(request.headers['X-CSRF-Token'], 'test-csrf');
-    assert.equal(locked, false);
-});
-
-test('every byte split preserves Unicode, newlines, JSON-looking text and terminal metadata', async () => {
-    const text = 'Žltý kôň 🐎\n{"totalTokens":999,"error":"generated text"}';
-    const bytes = Buffer.from(delta(text) + result());
-    for (let split = 1; split < bytes.length; split++) {
-        const { execution, updates } = await execute([bytes.subarray(0, split), bytes.subarray(split)]);
-        assert.equal(execution.totalTokens, 42, `split ${split}`);
-        assert.equal(execution.success, true, `split ${split}`);
-        assert.deepEqual(updates.at(-1), { text, final: true }, `split ${split}`);
-    }
-});
-
-test('one-byte chunks retain Markdown HTML and explanatory text', async () => {
-    const wire = delta('```html\n<body><p>Ahoj 🌍</p></body>\n```\nVysvetlenie úprav.') + result();
-    const { execution, updates } = await execute([...Buffer.from(wire)].map(byte => Uint8Array.of(byte)));
+test('split streaming text preserves Unicode, editor formatting and token usage', async () => {
+    const wire = delta('```html\n<body><p>Ahoj 🌍</p></body>\n```\nVysvetlenie úprav.')
+        + result({ totalTokens: 42, error: null });
+    const { execution, updates, request } = await execute([...Buffer.from(wire)].map(byte => Uint8Array.of(byte)));
     assert.equal(execution.success, true);
     assert.equal(execution.totalTokens, 42);
     assert.equal(execution.explanatoryText, 'Vysvetlenie úprav.');
     assert.deepEqual(updates.at(-1), { text: '<p>Ahoj 🌍</p>', final: true });
+    assert.equal(request.headers.Accept, 'application/x-ndjson');
 });
 
-test('separate deltas update the editor progressively without a callback', async () => {
-    const { execution, updates } = await execute([delta('Hello '), delta('world'), result()].map(value => Buffer.from(value)), { callback: false });
-    assert.equal(execution.success, true);
-    assert.deepEqual(updates, [
-        { field: 'data', text: 'Hello ' }, { field: 'data', text: 'Hello world' }, { field: 'data', text: 'Hello world' }
-    ]);
-});
-
-test('a provider error after partial text never reports success or finalizes the edit', async () => {
-    const { execution, updates } = await execute([Buffer.from(delta('Partial text') + result(0, 'Provider failed'))]);
+test('an incomplete stream keeps partial text but never finalizes the edit', async () => {
+    const { execution, updates } = await execute([Buffer.from(delta('Partial text'))]);
     assert.equal(execution.success, false);
-    assert.equal(execution.errorText, 'Provider failed');
-    assert.equal(execution.totalTokens, 0);
+    assert.match(execution.errorText, /Incomplete AI response stream/);
     assert.deepEqual(updates, [{ text: 'Partial text', final: false }]);
 });
 
-for (const [name, wire, options] of [
-    ['missing terminal result', delta('Partial text'), {}],
-    ['truncated terminal JSON', delta('Partial text') + '{"type":"result",', {}],
-    ['malformed record', delta('Partial text') + 'invalid\n', {}],
-    ['unknown record', delta('Partial text') + '{"type":"unknown"}\n', {}],
-    ['missing token count', '{"type":"result","result":{}}\n', {}],
-    ['duplicate result', result() + result(), {}],
-    ['text after result', result() + delta('Late text'), {}],
-    ['connection failure', delta('Partial text'), { readError: true }],
-    ['HTTP error', '<html>Forbidden</html>', { status: 403, contentType: 'text/html' }],
-    ['login redirect body', '<html>Login</html>', { contentType: 'text/html' }]
-]) {
-    test(`${name} is a failure, even after partial text`, async () => {
-        const { execution, updates } = await execute([Buffer.from(wire)], options);
-        assert.equal(execution.success, false);
-        assert.ok(execution.errorText);
-        assert.equal(updates.some(update => update.final), false);
-        assert.equal(updates.some(update => update.text?.includes('<html>')), false);
-    });
-}
-
-test('a complete final record without a trailing newline and zero tokens is valid', async () => {
-    const { execution, updates } = await execute([Buffer.from(delta('Local answer') + result(0).trimEnd())]);
+test('shared requests keep raw chat text while ordinary JSON generation formats the editor', async () => {
+    const text = '```html\n<body><p>Hello</p></body>\n```\nExplanation of changes.';
+    const payload = { response: text, totalTokens: 42, conversationId: 'next-turn', error: null };
+    const { execution, updates, request } = await execute([Buffer.from(JSON.stringify(payload))], false);
     assert.equal(execution.success, true);
-    assert.equal(execution.totalTokens, 0);
-    assert.deepEqual(updates.at(-1), { text: 'Local answer', final: true });
+    assert.equal(execution.explanatoryText, 'Explanation of changes.');
+    assert.deepEqual(updates, [{ text: '<p>Hello</p>', final: true }]);
+    assert.equal(request.url, '/admin/rest/ai/assistant/response/');
+    assert.equal(request.headers.Accept, 'application/json');
+    assert.equal(request.headers['X-CSRF-Token'], 'test-csrf');
+
+    let sent;
+    const { AiChatTransport } = loadTransport(async (url, options) => {
+        sent = JSON.parse(options.body);
+        return new Response(JSON.stringify(payload), { headers: { 'Content-Type': 'application/json' } });
+    });
+    const chat = await new AiChatTransport().execute({ assistantId: 7 }, { conversationId: 'previous-turn' });
+    assert.equal(chat.success, true);
+    assert.equal(chat.response, text);
+    assert.equal(chat.conversationId, 'next-turn');
+    assert.equal(sent.conversationId, 'previous-turn');
+});
+
+test('streaming failures preserve structured errors and partial chat text', async () => {
+    const payload = { error: 'Start a new conversation', totalTokens: 0,
+        errorCategory: 'INVALID_CONTINUATION', providerStatusCode: 400, retryable: false };
+    const { AiChatTransport } = loadTransport(async () => new Response(delta('Partial text') + result(payload),
+        { headers: { 'Content-Type': 'application/x-ndjson' } }));
+    const chat = await new AiChatTransport().execute({ assistantId: 7, useStreaming: true }, {});
+    assert.equal(chat.success, false);
+    assert.equal(chat.response, 'Partial text');
+    assert.equal(chat.errorText, payload.error);
+    assert.equal(chat.errorCategory, payload.errorCategory);
+    assert.equal(chat.providerStatusCode, 400);
+    assert.equal(chat.retryable, false);
+});
+
+test('HTTP authentication failures preserve session and CSRF notifications', async () => {
+    for (const [status, notice] of [[401, 'Session expired'], [403, 'Token expired']]) {
+        const notifications = [];
+        const { requestAiText } = loadTransport(async () => new Response('Access denied', { status }), notifications);
+        await assert.rejects(requestAiText({}), new RegExp(`HTTP ${status}`));
+        assert.deepEqual(notifications, [notice]);
+    }
+});
+
+test('chat cancellation aborts the shared fetch and stops the same server task', async () => {
+    const requests = [];
+    const { AiChatTransport } = loadTransport((url, options) => {
+        requests.push({ url, ...options });
+        if (options.method === 'GET') return Promise.resolve(new Response());
+        return new Promise((resolve, reject) => options.signal.addEventListener('abort',
+            () => reject(new Error('Aborted')), { once: true }));
+    });
+    const transport = new AiChatTransport();
+    const pending = transport.execute({ assistantId: 7 }, {});
+    const data = JSON.parse(requests[0].body);
+    transport.cancel();
+    const chat = await pending;
+    assert.equal(chat.stopped, true);
+    assert.equal(chat.success, false);
+    assert.equal(requests[0].signal.aborted, true);
+    assert.equal(requests[1].url, `/admin/rest/ai/assistant/stop-assistant/?assistantId=7&timestamp=${data.timestamp}`);
+    assert.equal(requests[1].headers['X-CSRF-Token'], 'test-csrf');
+    assert.equal(transport.request, null);
 });

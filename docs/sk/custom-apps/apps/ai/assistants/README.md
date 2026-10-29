@@ -319,6 +319,8 @@ Prehliadačový poskytovateľ zachováva pôvodné nastavenie. Lokálne adaptér
 
 ### Prenos priebežnej odpovede do administrácie
 
+Textové generovanie v editore aj chat používajú `requestAiText` zo súboru `ai-rest-transport.js`. Funkcia odosiela požiadavku s CSRF tokenom, kontroluje HTTP a JSON odpoveď a pri streamovaní používa `readAiStream`. Vracia text a metadáta CMS bez úpravy obsahu; formátovanie pre editor zostáva v `AiRestExecutor`, správa rozhovoru v `AiChat`. Pri HTTP chybách 401 a 403 zobrazí existujúce upozornenie na odhlásenie alebo chybu CSRF tokenu.
+
 Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičkou `Accept: application/x-ndjson`. Server posiela samostatné JSON správy oddelené novým riadkom:
 
 ```json

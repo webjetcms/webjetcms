@@ -1,5 +1,5 @@
 import { AiBrowserExecutor } from '../../../npm_packages/webjetdatatables/ai/ai-browser-executor';
-import { readAiStream } from './ai-stream';
+import { requestAiText } from './ai-rest-transport';
 
 /** Executes chat requests independently of their container and content-insertion behavior. */
 export class AiChatTransport {
@@ -66,35 +66,12 @@ export class AiChatTransport {
     async _executeRest(assistant, inputData, request, update) {
         const data = { ...inputData, assistantId: request.assistantId, timestamp: request.timestamp };
         if (typeof data.conversationId !== "string" || data.conversationId.length === 0) delete data.conversationId;
-        const streaming = assistant.useStreaming === true;
-        const response = await fetch(streaming
-            ? "/admin/rest/ai/assistant/response-stream/"
-            : "/admin/rest/ai/assistant/response/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-                "Accept": streaming ? "application/x-ndjson" : "application/json",
-                "X-CSRF-Token": window.csrfToken
-            },
-            body: JSON.stringify(data),
-            signal: request.controller.signal
+        const result = await requestAiText(data, {
+            streaming: assistant.useStreaming === true,
+            signal: request.controller.signal,
+            onDelta: text => update(request.text + text)
         });
-        let result;
-        if (streaming) {
-            result = await readAiStream(response, text => update(request.text + text));
-        } else {
-            if (!response.ok) {
-                await response.body?.cancel();
-                throw new Error(`HTTP ${response.status} ${response.statusText}`.trim());
-            }
-            const contentType = response.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase();
-            if (contentType !== "application/json") {
-                await response.body?.cancel();
-                throw new Error("Unexpected AI response content type.");
-            }
-            result = await response.json();
-        }
-        if (result != null && typeof result.error === "string" && result.error.length > 0) {
+        if (result.error) {
             return {
                 response: request.text,
                 errorText: result.error,
@@ -103,12 +80,6 @@ export class AiChatTransport {
                 retryable: typeof result.retryable === "boolean" ? result.retryable : null,
                 stopped: result.errorCategory === "CANCELLED"
             };
-        }
-        if (result == null || !Number.isInteger(result.totalTokens) || result.totalTokens < 0
-            || (result.error != null && typeof result.error !== "string")
-            || (result.response != null && typeof result.response !== "string")
-            || (!streaming && typeof result.response !== "string")) {
-            throw new Error("Invalid AI response.");
         }
         return {
             success: true,

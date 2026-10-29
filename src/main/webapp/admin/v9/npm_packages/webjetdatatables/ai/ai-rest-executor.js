@@ -1,5 +1,5 @@
 import {AiExecutionResult} from './ai-execution-result';
-import { readAiStream } from '../../../src/js/ai/ai-stream';
+import { requestAiText } from '../../../src/js/ai/ai-rest-transport';
 
 /**
  * Class to wrap REST API for AI execution logic
@@ -27,101 +27,38 @@ export class AiRestExecutor {
         self.curentAssistantId = inputData.assistantId;
         self.curentTimestamp = inputData.timestamp;
 
-        //debugger;
-
-        if (aiCol.useStreaming===true) {
-            //console.log("Using streaming for AI response:", aiCol.assistant);
-
-            try {
-                const response = await fetch("/admin/rest/ai/assistant/response-stream/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json; charset=utf-8",
-                        "Accept": "application/x-ndjson",
-                        'X-CSRF-Token': window.csrfToken
-                    },
-                    body: JSON.stringify(inputData)
-                });
-
-                let wholeText = "";
-                const result = await self._readStream(response, text => {
+        const streaming = aiCol.useStreaming === true;
+        const setText = (text, final) => {
+            const parsed = self._handleExplanatoryResponse(text);
+            if (setFunction != null) setFunction(parsed.html, final);
+            else self.EDITOR.set(aiCol.to, parsed.html);
+            return parsed;
+        };
+        try {
+            let wholeText = "";
+            const result = await requestAiText(inputData, {
+                streaming,
+                onDelta: text => {
                     wholeText += text;
-                    const explanatoryJson = self._handleExplanatoryResponse(wholeText);
-                    if (setFunction != null) {
-                        setFunction(explanatoryJson.html, false);
-                    } else {
-                        self.EDITOR.set(aiCol.to, explanatoryJson.html);
-                    }
-                });
-                executionResult.totalTokens = result.totalTokens;
-
-                if (result.error) {
-                    executionResult.errorText = result.error;
-                } else {
-                    const explanatoryJson = self._handleExplanatoryResponse(wholeText);
-                    if (setFunction != null) {
-                        setFunction(explanatoryJson.html, true);
-                    } else {
-                        self.EDITOR.set(aiCol.to, explanatoryJson.html);
-                    }
-                    executionResult.explanatoryText = explanatoryJson.explanatoryText;
-                    executionResult.success = true;
-                }
-            } catch (err) {
-                executionResult.errorText = err.message || String(err);
-                console.log("ERRR : ", err);
-            }
-        } else {
-            await $.ajax({
-                type: "POST",
-                url: "/admin/rest/ai/assistant/response/",
-                data: JSON.stringify(inputData),
-                contentType: "application/json; charset=utf-8",
-                success: function(res)
-                {
-                    //console.log("AI response=", res, "to=", aiCol.to);
-
-                    //handle res.error
-                    if (res.error) {
-                        executionResult.errorText = res.error;
-                    } else {
-                        executionResult.success = true;
-
-                        //console.log("AI response received, response=", res);
-                        let explanatoryJson = self._handleExplanatoryResponse(res.response);
-                        if (setFunction != null) {
-                            setFunction(explanatoryJson.html, true);
-                        } else {
-                            self.EDITOR.set(aiCol.to, explanatoryJson.html);
-                        }
-                        if (explanatoryJson.explanatoryText != null) {
-                            executionResult.explanatoryText = explanatoryJson.explanatoryText;
-                        }
-                        executionResult.totalTokens = res.totalTokens;
-                    }
-                },
-                error: function(xhr, ajaxOptions, thrownError) {
-                    executionResult.errorText = thrownError;
+                    setText(wholeText, false);
                 }
             });
+            executionResult.totalTokens = result.totalTokens ?? 0;
+            if (result.error) {
+                executionResult.errorText = result.error;
+            } else {
+                const parsed = setText(streaming ? wholeText : result.response, true);
+                executionResult.explanatoryText = parsed.explanatoryText;
+                executionResult.success = true;
+            }
+        } catch (error) {
+            executionResult.errorText = error.message || String(error);
+        } finally {
+            self.curentAssistantId = null;
+            self.curentTimestamp = null;
         }
 
-        //Remove old run info
-        self.curentAssistantId = null;
-        self.curentTimestamp = null;
-
         return executionResult;
-    }
-
-    /**
-     * Reads newline-delimited messages independently of HTTP chunk boundaries.
-     * A terminal result is required before a streamed edit can be considered complete.
-     * @param {Response} response HTTP response containing delta and result messages.
-     * @param {function(string): void} onDelta Receives generated text as it arrives.
-     * @returns {Promise<object>} Final assistant response, including tokens and any provider error.
-     */
-    async _readStream(response, onDelta) {
-        return readAiStream(response, onDelta);
     }
 
     /**
