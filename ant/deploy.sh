@@ -35,7 +35,7 @@ cd ..
 
 gradlew war
 
-gradlew --info dependencyCheckAnalyze
+gradlew --rerun-tasks --info dependencyCheckAnalyze
 
 open build/reports/dependency-check-report.html
 
