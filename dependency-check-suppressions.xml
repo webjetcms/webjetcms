@@ -136,9 +136,10 @@
     and its only DOMPurify hook adds rel="noopener noreferrer" to links.
     This is non-applicability for this exact bundle, not a patched DOMPurify version.
     Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
+    Verified on 2026-10-29 against this checkout, including its final newline.
     https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7
     ]]></notes>
-    <sha1>e8ec45d876a2164779f4d3747fa84451b09517ec</sha1>
+    <sha1>77eee8a70b9b8090dfa27e8aff4d36a106bd8f84</sha1>
     <vulnerabilityName>CVE-2026-116804</vulnerabilityName>
   </suppress>
 
@@ -150,9 +151,10 @@
     rel="noopener noreferrer" on links and does not detach nodes.
     This is non-applicability, not a patched DOMPurify version.
     Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
+    Verified on 2026-10-29 against this checkout, including its final newline.
     https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr
     ]]></notes>
-    <sha1>e8ec45d876a2164779f4d3747fa84451b09517ec</sha1>
+    <sha1>77eee8a70b9b8090dfa27e8aff4d36a106bd8f84</sha1>
     <vulnerabilityName>CVE-2026-116803</vulnerabilityName>
   </suppress>
 
@@ -166,10 +168,29 @@
     File: src/main/webapp/admin/swagger-ui/swagger-ui-bundle.js (matched by SHA-1).
     This is non-applicability for this exact bundle, not a patched DOMPurify version.
     Reassess if the bundle, parser mode, allowlists, hooks, or Swagger plugins change.
+    Verified on 2026-10-29 against this checkout, including its final newline.
     https://github.com/cure53/DOMPurify/security/advisories/GHSA-c6gr-qvv4-5v3f
     ]]></notes>
-    <sha1>e8ec45d876a2164779f4d3747fa84451b09517ec</sha1>
+    <sha1>77eee8a70b9b8090dfa27e8aff4d36a106bd8f84</sha1>
     <vulnerabilityName>CVE-2026-116802</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-104828 affects HTMLWriterFilter when serializing textarea/title text.
+    The reviewed CMS uses Neko through wjdaisydiff in DocTools.getHtmlDiff().
+    NekoHtmlParser creates a SAXParser and forwards events to the DaisyDiff content
+    handler; the result is serialized through HtmlSaxDiffOutput and SAX/XSL
+    transformers. Inspection of the resolved dependencies and local DaisyDiff JAR
+    confirms that this path does not instantiate or configure HTMLWriterFilter.
+    This is non-applicability in the reviewed integration, not a patched Neko
+    library or accepted residual risk. Reassess when Neko/DaisyDiff versions,
+    HTML output handling or custom integrations change, especially if
+    HTMLWriterFilter is introduced. Verified on 2026-10-29. Reference:
+    https://github.com/HtmlUnit/htmlunit-neko/security/advisories/GHSA-39xg-prhf-8785
+    ]]></notes>
+    <packageUrl>pkg:maven/org.htmlunit/neko-htmlunit@4.5.0</packageUrl>
+    <cve>CVE-2026-104828</cve>
   </suppress>
 
 </suppressions>
