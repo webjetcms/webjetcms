@@ -128,6 +128,52 @@
 
   <suppress>
     <notes><![CDATA[
+    CVE-2026-116804 (GHSA-cg2g-xh64-v4q7) requires SAFE_FOR_TEMPLATES together with
+    RETURN_DOM, RETURN_DOM_FRAGMENT, or IN_PLACE and DOM input carrying a shadow root.
+    File: src/main/webapp/admin/swagger-ui/swagger-ui-bundle.js (matched by SHA-1 below).
+    Swagger UI 5.34.0 uses DOMPurify 3.4.16 only to sanitize Markdown-rendered HTML
+    strings and returns strings. Its sanitizer does not enable any of these options,
+    and its only DOMPurify hook adds rel="noopener noreferrer" to links.
+    This is non-applicability for this exact bundle, not a patched DOMPurify version.
+    Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
+    https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7
+    ]]></notes>
+    <sha1>e8ec45d876a2164779f4d3747fa84451b09517ec</sha1>
+    <vulnerabilityName>CVE-2026-116804</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-116803 requires DOMPurify IN_PLACE mode and an application hook that
+    detaches a parent or sibling subtree. Swagger UI 5.34.0 with DOMPurify 3.4.16 sanitizes
+    Markdown-rendered HTML strings without IN_PLACE. Its only DOMPurify hook sets
+    rel="noopener noreferrer" on links and does not detach nodes.
+    This is non-applicability, not a patched DOMPurify version.
+    Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
+    https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr
+    ]]></notes>
+    <sha1>e8ec45d876a2164779f4d3747fa84451b09517ec</sha1>
+    <vulnerabilityName>CVE-2026-116803</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-116802 requires PARSER_MEDIA_TYPE="application/xhtml+xml" and an
+    allowlist enabling SVG animation elements and attributeName. Swagger UI 5.34.0
+    with DOMPurify 3.4.16 sanitizes Markdown-rendered HTML strings using the default
+    text/html parser. Its sanitizer only sets ADD_ATTR=["target"], FORBID_TAGS,
+    ALLOW_DATA_ATTR, and FORBID_ATTR; it does not enable XHTML or SVG animation.
+    File: src/main/webapp/admin/swagger-ui/swagger-ui-bundle.js (matched by SHA-1).
+    This is non-applicability for this exact bundle, not a patched DOMPurify version.
+    Reassess if the bundle, parser mode, allowlists, hooks, or Swagger plugins change.
+    https://github.com/cure53/DOMPurify/security/advisories/GHSA-c6gr-qvv4-5v3f
+    ]]></notes>
+    <sha1>e8ec45d876a2164779f4d3747fa84451b09517ec</sha1>
+    <vulnerabilityName>CVE-2026-116802</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
     CVE-2026-116804 / GHSA-cg2g-xh64-v4q7 requires SAFE_FOR_TEMPLATES together
     with a DOM-returning mode and input containing an attached shadow root.
     The reviewed Swagger UI 5.32.15 bundle embeds DOMPurify 3.4.13 in a scoped
