@@ -65,14 +65,22 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
 
 #### Platnosť a sťahovanie historických verzií
 
-Konfiguračná premenná `fileArchivCheckHistoryValid` určuje, či možno historické verzie dokumentov sťahovať mimo ich platnosti:
+Konfiguračná premenná `fileArchivCheckHistoryValid` mení iba správanie už nahraných historických verzií. Nevyplnený dátum príslušnú hranicu platnosti neobmedzuje.
 
-- `true` (predvolená hodnota) - pred **Platnosťou od** alebo po **Platnosti do** vráti odkaz na stiahnutie chybu 404. Nevyplnený dátum príslušnú hranicu neobmedzuje.
-- `false` - historické verzie možno stiahnuť aj pred **Platnosťou od** a po **Platnosti do**. Oba dátumy zostávajú uložené a zobrazené v archíve ako informácia o účinnosti dokumentu.
+Údaje o zobrazení v aplikácii uvedené v tabuľke predpokladajú, že dokument vyhovuje ostatným filtrom aplikácie. Archívne verzie sa vypisujú iba pri zapnutej možnosti **Zobraziť archívne verzie** a vzory pri zapnutej možnosti **Zobraziť vzory**.
 
-Nastavenie platí aj pre historické verzie vzorov. Aktuálne dokumenty, aktuálne vzory a verzie čakajúce na nahratie naďalej rešpektujú oba dátumy. Výpis historických verzií sa nemení, takže pri hodnote `true` môže obsahovať aj verziu, ktorej odkaz už vracia 404.
+| Typ a stav záznamu | `true` (predvolená hodnota) | `false` |
+| --- | --- | --- |
+| Historická verzia dokumentu, **Zobraziť** zapnuté, dátum platný | Stiahne sa a zobrazí sa v aplikácii | Stiahne sa a zobrazí sa v aplikácii |
+| Historická verzia dokumentu, **Zobraziť** zapnuté, pred **Platnosťou od** alebo po **Platnosti do** | Vráti chybu 404 a v aplikácii sa nezobrazí | Stiahne sa a zobrazí sa v aplikácii |
+| Historická verzia vzoru, **Zobraziť** zapnuté, dátum platný | Stiahne sa, v aplikácii sa nezobrazí | Stiahne sa, v aplikácii sa nezobrazí |
+| Historická verzia vzoru, **Zobraziť** zapnuté, pred **Platnosťou od** alebo po **Platnosti do** | Vráti chybu 404 a v aplikácii sa nezobrazí | Stiahne sa, v aplikácii sa nezobrazí |
+| Dokument alebo vzor, **Zobraziť** vypnuté | Vráti chybu 404 a v aplikácii sa nezobrazí | Vráti chybu 404 a v aplikácii sa nezobrazí |
+| Aktuálny dokument alebo aktuálny vzor, **Zobraziť** zapnuté, dátum platný | Stiahne sa a zobrazí sa v aplikácii | Stiahne sa a zobrazí sa v aplikácii |
+| Aktuálny dokument alebo aktuálny vzor, **Zobraziť** zapnuté, dátum neplatný | Vráti chybu 404 a v aplikácii sa nezobrazí | Vráti chybu 404 a v aplikácii sa nezobrazí |
+| Verzia čakajúca na nahratie | Čakajúca verzia sa nezobrazí, aktuálne publikovaná verzia zostáva zobrazená | Čakajúca verzia sa nezobrazí, aktuálne publikovaná verzia zostáva zobrazená |
 
-Pri oboch hodnotách sa kontrolujú prístupové oprávnenia a nastavenie **Zobraziť**. Dokument s vypnutým zobrazovaním sa nedá stiahnuť ani pri `fileArchivCheckHistoryValid=false`. Nastavenia indexovania dokumentov zostávajú zachované.
+Pri hodnote `false` zostávajú dátumy historických verzií uložené a zobrazené v archíve ako informácia o účinnosti dokumentu. Aplikácia medzi vzormi vypisuje iba ich aktuálne verzie. Pri oboch hodnotách sa naďalej kontrolujú prístupové oprávnenia. Nastavenia indexovania dokumentov zostávajú zachované.
 
 ### Karta - Pokročilé
 

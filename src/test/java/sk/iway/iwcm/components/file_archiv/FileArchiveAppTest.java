@@ -25,6 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.ui.ExtendedModelMap;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
@@ -146,6 +147,50 @@ class FileArchiveAppTest extends BaseWebjetTest {
         assertEquals(List.of(1L), ids(render()));
     }
 
+    /** Nested rows must only expose files that the download handler allows. */
+    @Test
+    void filtersUnavailableHistoryAndPatterns() {
+        FileArchivatorBean main = file(10, "autotest parent", 10);
+        FileArchivatorBean validHistory = historyFile(1, "autotest valid history", 1);
+        FileArchivatorBean expiredHistory = historyFile(2, "autotest expired history", 2);
+        expiredHistory.setValidTo(new Date(0));
+        FileArchivatorBean futureHistory = historyFile(3, "autotest future history", 3);
+        futureHistory.setValidFrom(new Date(Long.MAX_VALUE));
+        FileArchivatorBean hiddenHistory = historyFile(4, "autotest hidden history", 4);
+        hiddenHistory.setShowFile(false);
+        FileArchivatorBean waitingHistory = historyFile(7, "autotest waiting history", 7);
+        waitingHistory.setUploaded(0);
+
+        FileArchivatorBean validPattern = file(5, "autotest valid pattern", 5);
+        FileArchivatorBean expiredPattern = file(6, "autotest expired pattern", 6);
+        expiredPattern.setValidTo(new Date(0));
+
+        app.setShowOnlySelected(true);
+        app.setGlobalIds("10");
+        app.setArchiv(true);
+        app.setShowPatterns(true);
+        when(repository.findAllMainFilesUploadedNotPatternIdsIn(any(), anyInt(), any(Pageable.class))).thenReturn(List.of(main));
+        when(repository.findAll(any(Specification.class))).thenReturn(List.of(expiredPattern, validPattern));
+
+        boolean originalCheckHistoryValid = Constants.getBoolean("fileArchivCheckHistoryValid");
+        try (var history = mockStatic(FileArchivatorDB.class)) {
+            history.when(() -> FileArchivatorDB.getByReferenceId(10L))
+                .thenReturn(List.of(waitingHistory, hiddenHistory, futureHistory, expiredHistory, validHistory));
+
+            Constants.setBoolean("fileArchivCheckHistoryValid", true);
+            BeanWrapperImpl result = new BeanWrapperImpl(render().get(0));
+            assertEquals(List.of(1L), ids((List<?>) result.getPropertyValue("archivFiles")));
+            assertEquals(List.of(5L), ids((List<?>) result.getPropertyValue("patterns")));
+
+            Constants.setBoolean("fileArchivCheckHistoryValid", false);
+            result = new BeanWrapperImpl(render().get(0));
+            assertEquals(List.of(1L, 2L, 3L), ids((List<?>) result.getPropertyValue("archivFiles")));
+            assertEquals(List.of(5L), ids((List<?>) result.getPropertyValue("patterns")));
+        } finally {
+            Constants.setBoolean("fileArchivCheckHistoryValid", originalCheckHistoryValid);
+        }
+    }
+
     /** The editor offers the same saved values in all selectors and allows merging common options. */
     @Test
     void providesSharedEditorOptions() {
@@ -201,6 +246,12 @@ class FileArchiveAppTest extends BaseWebjetTest {
         file.setValidTo(new Date(4102444800000L + value * 1000L));
         file.setPriority(value);
         file.setFileSize((long) value);
+        return file;
+    }
+
+    private static FileArchivatorBean historyFile(long id, String name, int value) {
+        FileArchivatorBean file = file(id, name, value);
+        file.setReferenceId(10L);
         return file;
     }
 }
