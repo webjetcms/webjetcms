@@ -12,6 +12,25 @@ Integrácia nového serverového poskytovateľa do projektu má tri časti:
 
 Identifikátor poskytovateľa je verejná konfiguračná hodnota. Musí byť stabilný, neprázdny, jedinečný a vo všetkých troch častiach úplne zhodný. Odporúčame použiť malé písmená, napríklad `acme`. Duplicitný identifikátor vrátane kolízie so vstavaným poskytovateľom spôsobí chybu pri štarte aplikácie.
 
+## Rozdelenie zodpovedností
+
+Pri zjednodušovaní adaptérov zachovajte nasledujúce úlohy v CMS:
+
+| Úloha | Implementácia v CMS |
+| --- | --- |
+| Oprávnenia, výber asistenta a kontrola povolenej akcie | `AssistantController`, `AiService` |
+| Konfigurácia poskytovateľa a doménový kontext | `WebjetAiConfigurationService`; `AiTaskRegistry` prenáša kontext do pracovného vlákna |
+| Príprava CMS vstupov a makier, ochrana a obnovenie príkazov `INCLUDE` | `LibrarySupportLogic`, `IncludesHandler` |
+| Audit a evidencia spotreby tokenov podľa používateľa a domény | `LibrarySupportLogic`, `AiStatService` |
+| Ukladanie a odstránenie dočasných obrázkov, kontrola cieľového priečinka | `AiTempFileStorage`, `AiTempFileRemover` |
+| Väzba pokračovania chatu na session, používateľa, doménu a asistenta | `AiChatSession`; prehliadač dostáva nepriehľadný token namiesto ID odpovede poskytovateľa |
+| Evidencia a zastavenie úloh používateľa | `AiTaskRegistry`; knižnici odovzdáva `AiCancellationToken` |
+| Vloženie odpovede do editora, práca s výberom a vrátenie zmien | `EditorAi`; prepis, koncept a obnovu rozhovoru spravuje `AiChat` |
+
+Knižnica dostáva pripravené `AiRequest` a `AiProviderConfig`, vracia `AiResponse` a chyby oznamuje výnimkou `AiProviderException`. Zabezpečuje protokol poskytovateľa, jeho modely a metadáta schopností, prenos streamu a klasifikáciu chýb. CMS podľa týchto údajov rozhoduje o sprístupnení funkcií a zachováva nastavenia asistenta, napríklad súhlas s ukladaním rozhovoru cez `useTemporal=false`.
+
+Spoločné JavaScriptové funkcie `requestAiText` a `parseAiResponse` zostávajú súčasťou CMS. Prvá komunikuje s REST službami CMS, druhá pripravuje obsah pre editor. Oprávnenia, session a ukladanie zmien naďalej spravujú príslušné CMS triedy uvedené v tabuľke.
+
 ## 1. Implementácia `AiProvider`
 
 Implementáciu umiestnite do samostatnej knižnice nezávislej od WebJET CMS. Nasledujúci minimálny príklad je úplný a kompilovateľný; pevnú odpoveď nahraďte volaním API dodávateľa:
