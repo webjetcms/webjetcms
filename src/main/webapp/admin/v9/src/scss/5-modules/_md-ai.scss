@@ -184,7 +184,7 @@
         }
     }
 
-    .form-control {
+    .form-control:not(.ai-chat-input) {
         font-size: 14px;
         padding: 6px 2px 2px 11px;
     }
@@ -560,8 +560,58 @@
         display: none;
     }
     &.ai-action-live-chat {
-        .btn-ai-continue-chat {
-            display: inline-block;
+        pointer-events: auto;
+
+        .toast.toast-info {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            width: min(720px, calc(100vw - 32px));
+            max-width: min(720px, calc(100vw - 32px));
+            height: min(680px, calc(100vh - 40px));
+            height: min(680px, calc(100dvh - 40px));
+            overflow: hidden;
+
+            .toast-close-button {
+                position: absolute;
+                z-index: 1;
+            }
+
+            div.toast-title {
+                flex: 0 0 auto;
+                padding-right: 56px;
+            }
+
+            div.toast-message {
+                display: flex;
+                flex: 1 1 auto;
+                min-height: 0;
+                max-height: none;
+                padding: 0;
+                overflow: hidden;
+            }
+
+            .header-back-button .ai-title {
+                min-width: 0;
+                overflow-wrap: anywhere;
+            }
+        }
+
+        #toast-container-ai-content {
+            display: flex;
+            flex: 1 1 auto;
+            min-height: 0;
+            min-width: 0;
+        }
+
+        @media (max-width: $bp-mobile) {
+            .toast.toast-info {
+                width: calc(100vw - 16px);
+                max-width: calc(100vw - 16px);
+                height: calc(100vh - 16px);
+                height: calc(100dvh - 16px);
+                margin-bottom: 8px;
+            }
         }
     }
     &.ai-action-generate-image, &.ai-action-edit-image {

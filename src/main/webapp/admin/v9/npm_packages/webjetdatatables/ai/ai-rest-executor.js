@@ -1,4 +1,5 @@
 import {AiExecutionResult} from './ai-execution-result';
+import { readAiStream } from '../../../src/js/ai/ai-stream';
 
 /**
  * Class to wrap REST API for AI execution logic
@@ -10,6 +11,7 @@ export class AiRestExecutor {
 
     curentAssistantId = null;
     curentTimestamp = null;
+    conversation = null;
 
     constructor(EDITOR, editorAiInstance) {
         this.EDITOR = EDITOR;
@@ -22,6 +24,19 @@ export class AiRestExecutor {
 
         inputData.assistantId = aiCol.assistantId;
         inputData.timestamp = Date.now();
+
+        let conversation = null;
+        if (aiCol.action === "live_chat") {
+            if (self.conversation == null || self.conversation.assistantId !== aiCol.assistantId
+                || self.conversation.to !== aiCol.to) {
+                self.conversation = { assistantId: aiCol.assistantId, to: aiCol.to, id: null };
+            }
+            conversation = self.conversation;
+        } else {
+            self.resetConversation();
+        }
+        if (conversation?.id) inputData.conversationId = conversation.id;
+        else delete inputData.conversationId;
 
         self.curentAssistantId = inputData.assistantId;
         self.curentTimestamp = inputData.timestamp;
@@ -57,6 +72,7 @@ export class AiRestExecutor {
                 if (result.error) {
                     executionResult.errorText = result.error;
                 } else {
+                    self._rememberConversation(conversation, result);
                     const explanatoryJson = self._handleExplanatoryResponse(wholeText);
                     if (setFunction != null) {
                         setFunction(explanatoryJson.html, true);
@@ -84,6 +100,7 @@ export class AiRestExecutor {
                     if (res.error) {
                         executionResult.errorText = res.error;
                     } else {
+                        self._rememberConversation(conversation, res);
                         executionResult.success = true;
 
                         //console.log("AI response received, response=", res);
@@ -112,6 +129,22 @@ export class AiRestExecutor {
         return executionResult;
     }
 
+    resetConversation() {
+        this.conversation = null;
+    }
+
+    /**
+     * Saves the successful continuation without reviving a closed or replaced conversation.
+     * @param {object|null} conversation Conversation associated with the outgoing request.
+     * @param {object} response Completed assistant response containing the opaque continuation ID.
+     */
+    _rememberConversation(conversation, response) {
+        if (conversation != null && this.conversation === conversation) {
+            conversation.id = typeof response.conversationId === "string" && response.conversationId.length > 0
+                ? response.conversationId : null;
+        }
+    }
+
     /**
      * Reads newline-delimited messages independently of HTTP chunk boundaries.
      * A terminal result is required before a streamed edit can be considered complete.
@@ -120,55 +153,7 @@ export class AiRestExecutor {
      * @returns {Promise<object>} Final assistant response, including tokens and any provider error.
      */
     async _readStream(response, onDelta) {
-        if (!response.ok) {
-            await response.body?.cancel();
-            throw new Error(`HTTP ${response.status} ${response.statusText}`.trim());
-        }
-        if (response.headers.get("Content-Type")?.split(";")[0].trim() !== "application/x-ndjson") {
-            await response.body?.cancel();
-            throw new Error("Unexpected AI stream content type.");
-        }
-        if (!response.body) throw new Error("Missing AI response stream.");
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8", { fatal: true });
-        let buffer = "";
-        let result = null;
-        let finished = false;
-        const readMessage = line => {
-            if (line.trim() === "") return;
-            if (result !== null) throw new Error("Unexpected message after AI stream result.");
-            const message = JSON.parse(line);
-            if (message?.type === "delta" && typeof message.text === "string") {
-                onDelta(message.text);
-            } else if (message?.type === "result" && Number.isInteger(message.result?.totalTokens)
-                && message.result.totalTokens >= 0
-                && (message.result.error == null || typeof message.result.error === "string")) {
-                result = message.result;
-            } else {
-                throw new Error("Invalid AI stream message.");
-            }
-        };
-
-        try {
-            while (!finished) {
-                const { value, done } = await reader.read();
-                finished = done;
-                buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
-                let newline;
-                while ((newline = buffer.indexOf("\n")) !== -1) {
-                    const line = buffer.substring(0, newline);
-                    buffer = buffer.substring(newline + 1);
-                    readMessage(line);
-                }
-            }
-            readMessage(buffer);
-            if (result === null) throw new Error("Incomplete AI response stream.");
-            return result;
-        } finally {
-            if (!finished) await reader.cancel().catch(() => {});
-            reader.releaseLock();
-        }
+        return readAiStream(response, onDelta);
     }
 
     /**
@@ -272,6 +257,7 @@ export class AiRestExecutor {
 
     destroy() {
         let self = this;
+        self.resetConversation();
 
         //console.log("ai-rest-execution self", self);
 

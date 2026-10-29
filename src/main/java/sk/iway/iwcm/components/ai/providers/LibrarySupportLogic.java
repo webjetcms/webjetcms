@@ -154,10 +154,12 @@ public abstract class LibrarySupportLogic implements AiInterface {
         Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
 
         try {
-            IncludesHandler includesHandler = IncludesHandler.protectIncludes(inputData);
+            AiOperation operation = textOperation(assistant);
+            AiChatSession.Continuation continuation = resolveChat(operation, assistant, inputData, request);
+            IncludesHandler includesHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
             AiResponse response = aiClient.execute(
                 getProviderId(),
-                prepareProviderRequest(AiOperation.TEXT, assistant, inputData, includesHandler),
+                prepareProviderRequest(operation, assistant, inputData, includesHandler),
                 configurationService.resolve(this, request)
             );
 
@@ -173,6 +175,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 statRepo,
                 request
             );
+            rememberChat(operation, assistant, response, includesHandler, responseDto, request);
         } catch (AiProviderException exception) {
             errorAdminLog(assistant, inputPair, METHOD_TEXT_RESPONSE, exception, prop);
         } catch (Exception exception) {
@@ -211,11 +214,13 @@ public abstract class LibrarySupportLogic implements AiInterface {
         Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
 
         try {
-            IncludesHandler includeHandler = IncludesHandler.protectIncludes(inputData);
+            AiOperation operation = textOperation(assistant);
+            AiChatSession.Continuation continuation = resolveChat(operation, assistant, inputData, request);
+            IncludesHandler includeHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
 
             AiResponse response = aiClient.stream(
                 getProviderId(),
-                prepareProviderRequest(AiOperation.TEXT, assistant, inputData, includeHandler),
+                prepareProviderRequest(operation, assistant, inputData, includeHandler),
                 configurationService.resolve(this, request),
                 delta -> includeHandler.handleLine(delta, writer)
             );
@@ -232,6 +237,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 statRepo,
                 request
             );
+            rememberChat(operation, assistant, response, includeHandler, responseDto, request);
         } catch (AiProviderException exception) {
             errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE, exception, prop);
         } catch (Exception exception) {
@@ -243,6 +249,51 @@ public abstract class LibrarySupportLogic implements AiInterface {
             );
         }
         return responseDto;
+    }
+
+    /** Allows a provider adapter to opt into provider-managed chat continuations. */
+    protected boolean supportsChat() {
+        return false;
+    }
+
+    private AiOperation textOperation(AssistantDefinitionEntity assistant) {
+        if (supportsChat() && SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())
+            && Boolean.FALSE.equals(assistant.getUseTemporal())) {
+            return AiOperation.CHAT;
+        }
+        return AiOperation.TEXT;
+    }
+
+    private AiChatSession.Continuation resolveChat(
+        AiOperation operation, AssistantDefinitionEntity assistant, InputDataDTO inputData, HttpServletRequest request
+    ) {
+        inputData.setPreviousResponseId(null);
+        if (operation != AiOperation.CHAT) {
+            if (Tools.isNotEmpty(inputData.getConversationId())) {
+                throw new IllegalStateException("This assistant no longer supports this conversation. Start a new chat.");
+            }
+            return new AiChatSession.Continuation(null, Map.of());
+        }
+        if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType())) {
+            throw new IllegalStateException("Chat accepts text input only.");
+        }
+        AiChatSession.Continuation continuation = AiChatSession.resolve(inputData.getConversationId(), assistant, request);
+        inputData.setPreviousResponseId(continuation.responseId());
+        if (Tools.isEmpty(assistant.getFieldFrom())) {
+            inputData.setInputValue("");
+        }
+        return continuation;
+    }
+
+    private void rememberChat(
+        AiOperation operation, AssistantDefinitionEntity assistant, AiResponse response, IncludesHandler includesHandler,
+        AssistantResponseDTO responseDto, HttpServletRequest request
+    ) {
+        if (operation == AiOperation.CHAT && Thread.currentThread().isInterrupted() == false) {
+            responseDto.setConversationId(AiChatSession.remember(
+                assistant, request, response.responseId(), includesHandler.getIncludes()
+            ));
+        }
     }
 
     /**
@@ -652,10 +703,11 @@ public abstract class LibrarySupportLogic implements AiInterface {
 
         String inputText = inputData.getInputValue();
         String userPrompt = inputData.getUserPrompt();
-        if (inputData.isStructuredInput()) {
+        // Chat must store the current message even when instructions contain input macros.
+        if (operation != AiOperation.CHAT && inputData.isStructuredInput()) {
             if (expansion.consumedSources().contains(UntrustedSource.INPUT_TEXT)) inputText = "";
             if (expansion.consumedSources().contains(UntrustedSource.USER_PROMPT)) userPrompt = "";
-        } else if (expansion.consumedSources().isEmpty() == false) {
+        } else if (operation != AiOperation.CHAT && expansion.consumedSources().isEmpty() == false) {
             // Preserve legacy CMS behavior for editor/page-builder assistants.
             inputText = "";
             userPrompt = "";
@@ -737,6 +789,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             .instructions(instructions)
             .userPrompt(userPrompt)
             .store(Tools.isTrue(assistant.getUseTemporal()) == false)
+            .previousResponseId(operation == AiOperation.CHAT ? inputData.getPreviousResponseId() : null)
             .imageOptions(imageOptions);
 
         if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType())) {

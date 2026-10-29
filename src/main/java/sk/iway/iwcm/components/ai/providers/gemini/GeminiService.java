@@ -37,6 +37,11 @@ public class GeminiService extends LibrarySupportLogic implements AiAssitantsInt
     }
 
     @Override
+    protected boolean supportsChat() {
+        return true;
+    }
+
+    @Override
     public String getTitleKey() {
         return "components.ai_assistants.provider.gemini.title";
     }

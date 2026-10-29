@@ -53,6 +53,13 @@ public class InputDataDTO {
     Long assistantId;
     String userPrompt = null;
 
+    /** Session-owned continuation returned by the last successful chat turn. */
+    String conversationId;
+
+    /** Provider continuation resolved on the server, never accepted from JSON. */
+    @JsonIgnore
+    String previousResponseId;
+
     String inputValue = null;
     InputValueType inputValueType;
     InputValueType outputValueType;
@@ -103,6 +110,7 @@ public class InputDataDTO {
         this.outputValueType = InputValueType.from( data.get("outputValueType") );
         this.timestamp = Tools.getLongValue(data.get("timestamp"), -1L);
         this.userPrompt = data.get("userPrompt");
+        this.conversationId = data.get("conversationId");
     }
 
     public void prepareData(HttpServletRequest request) throws IllegalStateException {
