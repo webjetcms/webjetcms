@@ -343,6 +343,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Dependency Check - aktualizované knižnice `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizácia Jackson sprísňuje kontrolu typov pri polymorfnej deserializácii; vlastné integrácie používajúce názvy Java tried v JSON je potrebné overiť.
+- Dependency Check - doplnená výnimka pre `CVE-2026-116804` v `DOMPurify 3.4.13`, obmedzená na hash dodávaného Swagger UI bundle. Integrácia ošetruje HTML reťazce bez režimov `SAFE_FOR_TEMPLATES` a vracania DOM, ktoré zraniteľnosť vyžaduje. Knižnica DOMPurify zostáva nezmenená.
 - Formuláre - zamedzené prepísanie šifrovacieho kľúča parametrom `encryptKey` v požiadavke. Podvrhnutý, prázdny alebo poškodený parameter nezmení šifrovanie uložených hodnôt ani HTML podoby formulára (#376).
 - Node.js - verzia pre vývoj a zostavenie projektu v `.nvmrc` a `devcontainer` aktualizovaná na `22.23.4`, ktorá opravuje zraniteľnosť Brotli dekodéra CVE-2026-111497. Lokálne aj v build prostrediach aktualizujte Node.js podľa [návodu na inštaláciu](developer/install/README.md#rspack-build-js-css-a-pug-súborov) (#373).
 - Web stránky - pri ukladaní sa overujú práva k pôvodnej stránke aj k cieľovému priečinku pri presune. Zmenou ID a priečinka v požiadavke nemožno prevziať cudziu stránku (#373).
