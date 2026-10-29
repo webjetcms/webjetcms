@@ -136,9 +136,10 @@
     and its only DOMPurify hook adds rel="noopener noreferrer" to links.
     This is non-applicability for this exact bundle, not a patched DOMPurify version.
     Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
+    Verified on 2026-10-29 against this checkout, including its final newline.
     https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7
     ]]></notes>
-    <sha1>e8ec45d876a2164779f4d3747fa84451b09517ec</sha1>
+    <sha1>77eee8a70b9b8090dfa27e8aff4d36a106bd8f84</sha1>
     <vulnerabilityName>CVE-2026-116804</vulnerabilityName>
   </suppress>
 
@@ -150,9 +151,10 @@
     rel="noopener noreferrer" on links and does not detach nodes.
     This is non-applicability, not a patched DOMPurify version.
     Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
+    Verified on 2026-10-29 against this checkout, including its final newline.
     https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr
     ]]></notes>
-    <sha1>e8ec45d876a2164779f4d3747fa84451b09517ec</sha1>
+    <sha1>77eee8a70b9b8090dfa27e8aff4d36a106bd8f84</sha1>
     <vulnerabilityName>CVE-2026-116803</vulnerabilityName>
   </suppress>
 
@@ -166,48 +168,11 @@
     File: src/main/webapp/admin/swagger-ui/swagger-ui-bundle.js (matched by SHA-1).
     This is non-applicability for this exact bundle, not a patched DOMPurify version.
     Reassess if the bundle, parser mode, allowlists, hooks, or Swagger plugins change.
+    Verified on 2026-10-29 against this checkout, including its final newline.
     https://github.com/cure53/DOMPurify/security/advisories/GHSA-c6gr-qvv4-5v3f
     ]]></notes>
-    <sha1>e8ec45d876a2164779f4d3747fa84451b09517ec</sha1>
+    <sha1>77eee8a70b9b8090dfa27e8aff4d36a106bd8f84</sha1>
     <vulnerabilityName>CVE-2026-116802</vulnerabilityName>
-  </suppress>
-
-  <suppress>
-    <notes><![CDATA[
-    CVE-2026-116804 / GHSA-cg2g-xh64-v4q7 requires SAFE_FOR_TEMPLATES together
-    with a DOM-returning mode and input containing an attached shadow root.
-    The reviewed Swagger UI 5.32.15 bundle embeds DOMPurify 3.4.13 in a scoped
-    instance. Its Markdown renderer passes an HTML string to sanitize() with
-    ADD_ATTR, FORBID_TAGS, ALLOW_DATA_ATTR and FORBID_ATTR only; it does not enable
-    SAFE_FOR_TEMPLATES, RETURN_DOM, RETURN_DOM_FRAGMENT or IN_PLACE. The sanitized
-    string is rendered as HTML, not evaluated by a template engine.
-    This is non-applicability in this integration, not a patched DOMPurify library
-    or accepted residual risk. The hash restricts this rule to the exact reviewed
-    bundle and embedded version. Reassess when the bundle, sanitizer configuration,
-    input type or rendering integration changes. Verified on 2026-10-29.
-    Reference:
-    https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7
-    ]]></notes>
-    <sha1>5bb50fb92183b6b895b1da822803bda27fdee69a</sha1>
-    <vulnerabilityName>CVE-2026-116804</vulnerabilityName>
-  </suppress>
-
-  <suppress>
-    <notes><![CDATA[
-    CVE-2026-116803 / GHSA-mrv2-3pqr-j5jr requires IN_PLACE sanitization and a
-    hook that detaches a parent or sibling, leaving its event handlers unsanitized.
-    The reviewed Swagger UI 5.32.15 bundle embeds DOMPurify 3.4.13 in a scoped
-    instance. Its Markdown renderer sanitizes an HTML string without IN_PLACE.
-    Its beforeSanitizeElements hook only sets rel="noopener noreferrer" on links;
-    it does not detach DOM nodes. Both required conditions are absent.
-    This is non-applicability in this integration, not a patched DOMPurify library
-    or accepted residual risk. The hash restricts this rule to the exact reviewed
-    bundle. Reassess when the bundle, sanitizer options, input type or hooks change.
-    Verified on 2026-10-29. Reference:
-    https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr
-    ]]></notes>
-    <sha1>5bb50fb92183b6b895b1da822803bda27fdee69a</sha1>
-    <vulnerabilityName>CVE-2026-116803</vulnerabilityName>
   </suppress>
 
   <suppress>
