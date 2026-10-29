@@ -19,7 +19,7 @@ export class AiChat {
 
     _initialState() {
         return {
-            messages: [], draft: "", conversationId: null, pending: null,
+            messages: [], draft: "", conversationId: null, pending: null, needsNewChat: false,
             scrollTop: 0, followLatest: true, notice: null, confirmation: null, disposed: false
         };
     }
@@ -127,8 +127,8 @@ export class AiChat {
     /** Sends a new prompt, or retries the last failed/stopped answer with its original input. */
     async send(prompt, retryMessage = null) {
         const state = this.state;
-        if (state.disposed || state.pending != null || typeof prompt !== "string" || !prompt.trim()) return;
-        if (retryMessage != null && (state.messages.at(-1) !== retryMessage || !["error", "stopped"].includes(retryMessage.status))) return;
+        if (state.disposed || state.pending != null || state.needsNewChat || typeof prompt !== "string" || !prompt.trim()) return;
+        if (retryMessage != null && (state.messages.at(-1) !== retryMessage || !this._canRetry(retryMessage))) return;
 
         let inputData;
         try {
@@ -150,7 +150,10 @@ export class AiChat {
             message = { role: "assistant", userPrompt: prompt };
             state.messages.push(message);
         }
-        Object.assign(message, { text: "", status: "pending", totalTokens: null, error: null, inputData: { ...inputData } });
+        Object.assign(message, {
+            text: "", status: "pending", totalTokens: null, error: null,
+            errorCategory: null, providerStatusCode: null, retryable: null, inputData: { ...inputData }
+        });
         if (retryMessage == null) state.draft = "";
         state.notice = null;
         state.followLatest = true;
@@ -182,6 +185,9 @@ export class AiChat {
             });
             if (!current()) return;
             state.notice = null;
+            message.errorCategory = result.errorCategory;
+            message.providerStatusCode = result.providerStatusCode;
+            message.retryable = result.retryable;
             if (result.stopped) message.status = "stopped";
             else if (result.success) {
                 message.text = result.response ?? message.text;
@@ -191,6 +197,7 @@ export class AiChat {
             } else {
                 message.status = "error";
                 message.error = result.errorText || this._text("unavailable");
+                state.needsNewChat = result.errorCategory === "INVALID_CONTINUATION";
             }
         } catch (error) {
             if (current()) {
@@ -227,6 +234,19 @@ export class AiChat {
         this.stop();
         Object.assign(this.state, this._initialState());
         this.options.onReset?.(this);
+        this._changed();
+        if (this.mounted) this.$input[0].focus({ preventScroll: true });
+    }
+
+    /** Starts fresh after an invalid continuation, keeping the visible transcript and unsent prompt. */
+    _restartConversation(message) {
+        const state = this.state;
+        if (state.disposed || state.pending != null || !state.needsNewChat || state.messages.at(-1) !== message) return;
+        state.conversationId = null;
+        delete message.inputData.conversationId;
+        state.needsNewChat = false;
+        if (!state.draft.trim()) state.draft = message.userPrompt;
+        state.notice = this._text("restarted");
         this._changed();
         if (this.mounted) this.$input[0].focus({ preventScroll: true });
     }
@@ -291,7 +311,7 @@ export class AiChat {
     }
 
     _updateSendButton() {
-        this.$send.prop("disabled", this.state.pending != null || !this.state.draft.trim()).toggle(this.state.pending == null);
+        this.$send.prop("disabled", this.state.pending != null || this.state.needsNewChat || !this.state.draft.trim()).toggle(this.state.pending == null);
         this.$stop.toggle(this.state.pending != null);
     }
 
@@ -332,7 +352,12 @@ export class AiChat {
         let status = "";
         if (message.status === "pending") status = this._text("working");
         else if (message.status === "stopped") status = this._text("stopped");
-        else if (message.status === "error") status = message.error || this._text("unavailable");
+        else if (message.status === "error") {
+            const hint = message.errorCategory === "INVALID_CONTINUATION" ? "invalidContinuation"
+                : message.errorCategory === "UNSUPPORTED_OPERATION" ? "unsupportedOperation"
+                : message.retryable === false ? "changeRequest" : null;
+            status = hint ? this._text(hint) + " " + (message.error || "") : message.error || this._text("unavailable");
+        }
         view.$status.text(status).toggle(Boolean(status)).toggleClass("text-danger", message.status === "error");
         const hasUsage = message.status === "complete" && message.totalTokens != null;
         view.$usage.text(hasUsage ? this._text("tokens", message.totalTokens) : "").toggle(hasUsage);
@@ -343,11 +368,18 @@ export class AiChat {
                 ...(this.options.getAnswerActions?.(message) || []),
                 { id: "copy", label: this._text("copy"), icon: "copy", run: $button => this._copy(message.text, $button) }
             ];
-        } else if (isLast && this.state.pending == null && ["error", "stopped"].includes(message.status)) {
+        } else if (isLast && this.state.pending == null && this.state.needsNewChat) {
+            actions.push({ id: "restart", label: this._text("restart"), icon: "plus", run: () => this._restartConversation(message) });
+        } else if (isLast && this.state.pending == null && this._canRetry(message)) {
             actions.push({ id: "retry", label: this._text("retry"), icon: "refresh", run: () => this.send(message.userPrompt, message) });
         }
         this._renderActions(view.$actions, view, actions);
         view.$actions.toggle(actions.length > 0);
+    }
+
+    _canRetry(message) {
+        return message.status === "stopped" || (message.status === "error" && message.retryable !== false
+            && !["INVALID_CONTINUATION", "UNSUPPORTED_OPERATION"].includes(message.errorCategory));
     }
 
     _renderActions($container, view, actions) {

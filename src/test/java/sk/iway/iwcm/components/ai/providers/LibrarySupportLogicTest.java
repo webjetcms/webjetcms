@@ -35,9 +35,11 @@ import com.webjetcms.ai.AiCapabilities.Continuation;
 import com.webjetcms.ai.AiCapabilities.Operation;
 import com.webjetcms.ai.AiCapabilities.Support;
 import com.webjetcms.ai.AiInputHandling;
+import com.webjetcms.ai.AiErrorCategory;
 import com.webjetcms.ai.AiOperation;
 import com.webjetcms.ai.AiProvider;
 import com.webjetcms.ai.AiProviderConfig;
+import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiRequest;
 import com.webjetcms.ai.AiResponse;
 import com.webjetcms.ai.AiStreamListener;
@@ -46,6 +48,7 @@ import com.webjetcms.ai.security.PromptInjectionDefense.UntrustedSource;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
@@ -320,8 +323,13 @@ class LibrarySupportLogicTest {
             chatSession.when(() -> AiChatSession.resolve(null, assistant, servletRequest))
                 .thenReturn(new AiChatSession.Continuation(null, Map.of()));
 
-            assertThrows(CancellationException.class,
+            CancellationException exception = assertThrows(CancellationException.class,
                 () -> logic.getAiResponse(assistant, input, null, null, servletRequest));
+            AssistantResponseDTO failure = AssistantResponseDTO.fromError(exception);
+            assertEquals("CANCELLED", failure.getErrorCategory());
+            assertFalse(failure.getRetryable());
+            assertNull(failure.getProviderStatusCode());
+            assertFalse(failure.getError().isBlank());
 
             chatSession.verify(() -> AiChatSession.resolve(null, assistant, servletRequest));
             chatSession.verifyNoMoreInteractions();
@@ -356,6 +364,32 @@ class LibrarySupportLogicTest {
 
             assertEquals("first", output.toString());
             adminlog.verifyNoInteractions();
+        }
+    }
+
+    /** Provider metadata survives the adapter's audit and exception translation. */
+    @Test
+    void preservesStructuredProviderFailure() throws Exception {
+        AiClient client = mock(AiClient.class);
+        when(client.capabilities("test-provider", "test-model")).thenReturn(AiCapabilities.unknown());
+        WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
+        AiProviderConfig providerConfig = AiProviderConfig.empty();
+        when(configuration.resolve(any(AiInterface.class), eq(null))).thenReturn(providerConfig);
+        TestLibrarySupportLogic logic = new TestLibrarySupportLogic(client, configuration);
+        InputDataDTO input = textInput();
+        AiProviderException failure = new AiProviderException("test-provider", 400, "Invalid continuation",
+            "private raw response", false, null, AiErrorCategory.INVALID_CONTINUATION);
+        when(client.execute(eq("test-provider"), any(AiRequest.class), eq(providerConfig),
+            same(input.getCancellationToken()))).thenThrow(failure);
+
+        try (MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class)) {
+            ProviderCallException exception = assertThrows(ProviderCallException.class,
+                () -> logic.getAiResponse(assistant(), input, null, null, null));
+
+            assertEquals(AiErrorCategory.INVALID_CONTINUATION, exception.getErrorCategory());
+            assertEquals(400, exception.getProviderStatusCode());
+            assertFalse(exception.getRetryable());
+            assertEquals(failure, exception.getCause());
         }
     }
 

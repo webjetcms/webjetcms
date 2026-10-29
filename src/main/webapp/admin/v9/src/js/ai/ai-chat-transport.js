@@ -21,7 +21,8 @@ export class AiChatTransport {
      */
     async execute(assistant, inputData, callbacks = {}) {
         const executionResult = {
-            success: false, response: "", totalTokens: 0, conversationId: null, errorText: null, stopped: false
+            success: false, response: "", totalTokens: 0, conversationId: null, errorText: null, stopped: false,
+            errorCategory: null, providerStatusCode: null, retryable: null
         };
         if (this.disposed) return { ...executionResult, stopped: true };
         if (this.request != null) return { ...executionResult, errorText: "A chat request is already running." };
@@ -94,7 +95,14 @@ export class AiChatTransport {
             result = await response.json();
         }
         if (result != null && typeof result.error === "string" && result.error.length > 0) {
-            return { response: request.text, errorText: result.error };
+            return {
+                response: request.text,
+                errorText: result.error,
+                errorCategory: typeof result.errorCategory === "string" ? result.errorCategory : null,
+                providerStatusCode: Number.isInteger(result.providerStatusCode) && result.providerStatusCode > 0 ? result.providerStatusCode : null,
+                retryable: typeof result.retryable === "boolean" ? result.retryable : null,
+                stopped: result.errorCategory === "CANCELLED"
+            };
         }
         if (result == null || !Number.isInteger(result.totalTokens) || result.totalTokens < 0
             || (result.error != null && typeof result.error !== "string")

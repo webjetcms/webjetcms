@@ -1068,7 +1068,8 @@ public abstract class LibrarySupportLogic implements AiInterface {
             assistant,
             inputPair,
             methodName,
-            new Pair<>(providerErrorMessage(exception, prop), exception.rawResponse())
+            new Pair<>(providerErrorMessage(exception, prop), exception.rawResponse()),
+            exception
         );
     }
 
@@ -1077,6 +1078,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
         Pair<String, String> inputPair,
         String methodName,
         Pair<String, String> error
+    ) throws ProviderCallException {
+        errorAdminLog(assistant, inputPair, methodName, error, null);
+    }
+
+    private void errorAdminLog(
+        AssistantDefinitionEntity assistant,
+        Pair<String, String> inputPair,
+        String methodName,
+        Pair<String, String> error,
+        Throwable cause
     ) throws ProviderCallException {
         StringBuilder audit = new StringBuilder("ERROR: ");
         audit.append(assistant.getName()).append(" (").append(assistant.getProvider()).append(") ");
@@ -1089,7 +1100,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         }
         audit.append("\nFull response:\n").append(auditValue(error.getSecond()));
         Adminlog.add(Adminlog.TYPE_AI, audit.toString(), -1, -1);
-        throw new ProviderCallException(error.getFirst());
+        throw new ProviderCallException(error.getFirst(), cause);
     }
 
     private void appendAssistantInfo(AssistantDefinitionEntity assistant, StringBuilder audit) {

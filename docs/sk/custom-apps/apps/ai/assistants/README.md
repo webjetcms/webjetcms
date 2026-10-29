@@ -331,6 +331,19 @@ Správy `delta` obsahujú iba generovaný text. Záverečná správa `result` ob
 
 Bez explicitnej požiadavky na `application/x-ndjson` zostáva pre starších klientov pôvodný formát `text/plain`. CMS adaptéry naďalej zapisujú obyčajný text do `BufferedWriter`; oddelenie správ zabezpečuje `AssistantController`, bez zmeny rozhrania knižnice `webjet-ai`.
 
+### Chyby poskytovateľa
+
+Chybová odpoveď zachováva textové pole `error` a môže obsahovať aj `errorCategory`, `providerStatusCode` a `retryable`. Rovnaké polia sú v bežnej JSON odpovedi aj v záverečnej správe `result` streamu. `providerStatusCode` je kladný HTTP stav externej služby, nie CMS endpointu; pri neznámej hodnote sa neposiela. `retryable` je odporúčanie poskytovateľa (`true` alebo `false`), pri chýbajúcej informácii sa neposiela. Pri hodnote `false` chat neponúkne opakovanie rovnakej požiadavky; zastavenú odpoveď môže používateľ zopakovať. Úplná odpoveď poskytovateľa ani príčina výnimky sa do prehliadača neposielajú.
+
+| `errorCategory` | Správanie chatu |
+| --- | --- |
+| `CANCELLED` | Zobrazí zastavenú odpoveď a zachová posledné úspešné pokračovanie. |
+| `INVALID_CONTINUATION` | Ponúkne začatie nového rozhovoru. Až po voľbe používateľa zruší neplatné pokračovanie; prepis správ a rozpracovaný text zachová. |
+| `UNSUPPORTED_OPERATION` | Vysvetlí potrebu zmeniť asistenta alebo model namiesto opakovania rovnakej požiadavky. |
+| `UNKNOWN` | Použije bežné spracovanie chyby; rovnako spracuje neznámu budúcu kategóriu. |
+
+Chat požiadavky automaticky neopakuje ani nezačína nový rozhovor. Kategórie určuje knižnica podľa spoľahlivých údajov poskytovateľa, nie podľa textu chybovej správy. Vzdialené chyby pokračovania Gemini preto zatiaľ zostávajú `UNKNOWN`. Rovnako sa spracujú existujúce validačné chyby CMS, napríklad expirovaný alebo neplatný token rozhovoru v CMS session.
+
 ### Zastavenie požiadavky
 
 `AiTaskRegistry` vytvára pre každú úlohu samostatný `AiCancellationToken`. Tlačidlo **Zastaviť**, začatie nového chatu alebo zatvorenie editora zruší cez existujúcu službu `stop-assistant` token aj `Future` príslušnej úlohy. `LibrarySupportLogic` odovzdáva token knižnici pri textových, chatových a obrázkových požiadavkách vrátane následného generovania názvu obrázka. Ostatné súbežné požiadavky zostávajú aktívne.

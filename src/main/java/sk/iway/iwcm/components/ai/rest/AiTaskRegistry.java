@@ -85,7 +85,7 @@ public class AiTaskRegistry implements DisposableBean {
      * @param task assistant operation, including any sequential provider calls
      * @param inputData input receiving a fresh server-owned cancellation token
      * @param request authenticated request used to identify the task owner
-     * @return completed response, or {@code null} when the task is cancelled
+     * @return completed response, or a structured cancellation result when the task is cancelled
      * @throws ProviderCallException if the assistant operation fails
      */
     public final AssistantResponseDTO runAssistantTask(Callable<AssistantResponseDTO> task, InputDataDTO inputData, HttpServletRequest request) throws ProviderCallException {
@@ -124,12 +124,12 @@ public class AiTaskRegistry implements DisposableBean {
             // Return resposne
             return future.get();
         } catch (CancellationException e) {
-            // Task was cancelled - Its OK
-            return null;
+            return AssistantResponseDTO.fromError(e);
         } catch (ExecutionException e) {
             // unwrap cause
             Throwable cause = e.getCause();
-            if (cause instanceof CancellationException) return null;
+            if (cause instanceof CancellationException) return AssistantResponseDTO.fromError(cause);
+            if (cause instanceof ProviderCallException providerException) throw providerException;
             if (cause instanceof RuntimeException runtimeException) {
                 throw runtimeException;
             } else {
@@ -138,7 +138,7 @@ public class AiTaskRegistry implements DisposableBean {
         } catch (InterruptedException e) {
             future.cancel(true);
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Thread interrupted", e);
+            return AssistantResponseDTO.fromError(new CancellationException("AI request cancelled"));
         } catch (RuntimeException e) {
             future.cancel(true);
             throw e;
