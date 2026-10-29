@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.jsoup.Jsoup;
 
@@ -154,17 +156,21 @@ public abstract class LibrarySupportLogic implements AiInterface {
         Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
 
         try {
+            checkCancellation(inputData);
             AiOperation operation = textOperation(assistant);
             AiChatSession.Continuation continuation = resolveChat(operation, assistant, inputData, request);
             IncludesHandler includesHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
             AiResponse response = aiClient.execute(
                 getProviderId(),
                 prepareProviderRequest(operation, assistant, inputData, includesHandler),
-                configurationService.resolve(this, request)
+                configurationService.resolve(this, request),
+                inputData.getCancellationToken()
             );
 
+            checkCancellation(inputData);
             response = response.withText(includesHandler.restoreIncludes(response.text()));
             responseDto.setResponse(response.text());
+            checkCancellation(inputData);
             successAdminLog(
                 responseDto,
                 inputPair,
@@ -175,10 +181,14 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 statRepo,
                 request
             );
-            rememberChat(operation, assistant, response, includesHandler, responseDto, request);
+            rememberChat(operation, assistant, response, includesHandler, responseDto, inputData, request);
+        } catch (CancellationException exception) {
+            throw exception;
         } catch (AiProviderException exception) {
+            checkCancellation(inputData);
             errorAdminLog(assistant, inputPair, METHOD_TEXT_RESPONSE, exception, prop);
         } catch (Exception exception) {
+            checkCancellation(inputData);
             errorAdminLog(
                 assistant,
                 inputPair,
@@ -212,8 +222,10 @@ public abstract class LibrarySupportLogic implements AiInterface {
     ) throws ProviderCallException {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
+        AtomicReference<IOException> outputFailure = new AtomicReference<>();
 
         try {
+            checkCancellation(inputData);
             AiOperation operation = textOperation(assistant);
             AiChatSession.Continuation continuation = resolveChat(operation, assistant, inputData, request);
             IncludesHandler includeHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
@@ -222,11 +234,23 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 getProviderId(),
                 prepareProviderRequest(operation, assistant, inputData, includeHandler),
                 configurationService.resolve(this, request),
-                delta -> includeHandler.handleLine(delta, writer)
+                delta -> {
+                    checkCancellation(inputData);
+                    try {
+                        includeHandler.handleLine(delta, writer);
+                    } catch (IOException exception) {
+                        outputFailure.set(exception);
+                        inputData.getCancellationToken().cancel();
+                        throw exception;
+                    }
+                },
+                inputData.getCancellationToken()
             );
+            checkCancellation(inputData);
             includeHandler.finish(writer);
 
             responseDto.setResponse(includeHandler.getWholeResponse());
+            checkCancellation(inputData);
             successAdminLog(
                 responseDto,
                 inputPair,
@@ -237,10 +261,22 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 statRepo,
                 request
             );
-            rememberChat(operation, assistant, response, includeHandler, responseDto, request);
+            rememberChat(operation, assistant, response, includeHandler, responseDto, inputData, request);
+        } catch (CancellationException exception) {
+            throw exception;
         } catch (AiProviderException exception) {
+            if (outputFailure.get() != null) {
+                errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE,
+                    new Pair<>(safeMessage(outputFailure.get()), null));
+            }
+            checkCancellation(inputData);
             errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE, exception, prop);
         } catch (Exception exception) {
+            if (outputFailure.get() != null) {
+                errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE,
+                    new Pair<>(safeMessage(outputFailure.get()), null));
+            }
+            checkCancellation(inputData);
             errorAdminLog(
                 assistant,
                 inputPair,
@@ -287,12 +323,19 @@ public abstract class LibrarySupportLogic implements AiInterface {
 
     private void rememberChat(
         AiOperation operation, AssistantDefinitionEntity assistant, AiResponse response, IncludesHandler includesHandler,
-        AssistantResponseDTO responseDto, HttpServletRequest request
+        AssistantResponseDTO responseDto, InputDataDTO inputData, HttpServletRequest request
     ) {
+        checkCancellation(inputData);
         if (operation == AiOperation.CHAT && Thread.currentThread().isInterrupted() == false) {
             responseDto.setConversationId(AiChatSession.remember(
                 assistant, request, response.responseId(), includesHandler.getIncludes()
             ));
+        }
+    }
+
+    private static void checkCancellation(InputDataDTO inputData) {
+        if (inputData.getCancellationToken().isCancelled()) {
+            throw new CancellationException("AI request cancelled");
         }
     }
 
@@ -319,16 +362,20 @@ public abstract class LibrarySupportLogic implements AiInterface {
         Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
 
         try {
+            checkCancellation(inputData);
             Path tempFileFolder = AiTempFileStorage.getFileFolder();
             AiOperation operation = imageOperation(inputData);
             AiResponse response = aiClient.execute(
                 getProviderId(),
                 prepareProviderRequest(operation, assistant, inputData, null),
-                configurationService.resolve(this, request)
+                configurationService.resolve(this, request),
+                inputData.getCancellationToken()
             );
 
+            checkCancellation(inputData);
             long datePart = Tools.getNow();
             for (GeneratedMedia image : response.media()) {
+                checkCancellation(inputData);
                 try {
                     String format = image.suggestedFileExtension()
                         .map(extension -> "." + extension)
@@ -348,6 +395,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             }
 
             GeneratedImageName generatedFileName = getGeneratedImageName(assistant, inputData, request);
+            checkCancellation(inputData);
             responseDto.setGeneratedFileName(generatedFileName.fileName());
 
             successAdminLog(
@@ -360,9 +408,13 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 statRepo,
                 request
             );
+        } catch (CancellationException exception) {
+            throw exception;
         } catch (AiProviderException exception) {
+            checkCancellation(inputData);
             errorAdminLog(assistant, inputPair, METHOD_IMAGE_RESPONSE, exception, prop);
         } catch (Exception exception) {
+            checkCancellation(inputData);
             errorAdminLog(
                 assistant,
                 inputPair,
@@ -842,6 +894,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         InputDataDTO inputData,
         HttpServletRequest request
     ) {
+        checkCancellation(inputData);
         String defaultFileName = "ai_generated_image_" + System.currentTimeMillis();
         if (SupportedActions.GENERATE_IMAGE.getAction().equals(assistant.getAction()) == false) {
             return new GeneratedImageName(defaultFileName, TokenUsage.EMPTY);
@@ -862,11 +915,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiResponse response = aiClient.execute(
                 getProviderId(),
                 rawRequest,
-                configurationService.resolve(this, request)
+                configurationService.resolve(this, request),
+                inputData.getCancellationToken()
             );
+            checkCancellation(inputData);
             if (Tools.isEmpty(response.text())) return new GeneratedImageName(defaultFileName, TokenUsage.EMPTY);
             return new GeneratedImageName(response.text(), safeUsage(response.usage()));
+        } catch (CancellationException exception) {
+            throw exception;
         } catch (Exception exception) {
+            checkCancellation(inputData);
             Logger.error(LibrarySupportLogic.class, "Error processing image name " + exception.getMessage());
             return new GeneratedImageName(defaultFileName, TokenUsage.EMPTY);
         }

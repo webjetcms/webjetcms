@@ -322,3 +322,11 @@ Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičk
 Správy `delta` obsahujú iba generovaný text. Záverečná správa `result` obsahuje `AssistantResponseDTO` vrátane spotreby tokenov a prípadnej chyby. Klient skladá neúplné riadky medzi sieťovými blokmi a spracuje aj viac správ v jednom bloku. Odpoveď považuje za úspešnú až po prijatí záverečnej správy bez chyby a ukončení prenosu.
 
 Bez explicitnej požiadavky na `application/x-ndjson` zostáva pre starších klientov pôvodný formát `text/plain`. CMS adaptéry naďalej zapisujú obyčajný text do `BufferedWriter`; oddelenie správ zabezpečuje `AssistantController`, bez zmeny rozhrania knižnice `webjet-ai`.
+
+### Zastavenie požiadavky
+
+`AiTaskRegistry` vytvára pre každú úlohu samostatný `AiCancellationToken`. Tlačidlo **Zastaviť**, začatie nového chatu alebo zatvorenie editora zruší cez existujúcu službu `stop-assistant` token aj `Future` príslušnej úlohy. `LibrarySupportLogic` odovzdáva token knižnici pri textových, chatových a obrázkových požiadavkách vrátane následného generovania názvu obrázka. Ostatné súbežné požiadavky zostávajú aktívne.
+
+OpenAI, Gemini a OpenRouter prerušia HTTP požiadavku vrátane čakania na ďalšiu časť streamu. Zastavený chat si zachová posledné úspešné pokračovanie; čiastočná odpoveď ho nenahradí. Samotné zatvorenie okna chatu iba skryje jeho obsah a bežiacu požiadavku nezastaví.
+
+Vlastný poskytovateľ môže prekryť varianty `execute` a `stream` s parametrom `AiCancellationToken` a pripojiť k nemu zrušenie svojho transportu. Predvolené implementácie vrátane lokálnych modelov kontrolujú zrušenie pred a po vykonaní a pri odovzdávaní častí odpovede; nedokážu vynútiť prerušenie blokovaného natívneho výpočtu. Zrušenie HTTP spojenia nezaručuje zastavenie spracovania alebo účtovania na strane externej služby a nemaže už uložený kontext rozhovoru.

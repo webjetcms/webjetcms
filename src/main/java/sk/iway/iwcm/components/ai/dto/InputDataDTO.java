@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.webjetcms.ai.AiCancellationToken;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -59,6 +60,10 @@ public class InputDataDTO {
     /** Provider continuation resolved on the server, never accepted from JSON. */
     @JsonIgnore
     String previousResponseId;
+
+    /** Server-owned cancellation signal shared by provider calls belonging to this task. */
+    @JsonIgnore
+    private AiCancellationToken cancellationToken = new AiCancellationToken();
 
     String inputValue = null;
     InputValueType inputValueType;
