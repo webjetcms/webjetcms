@@ -101,7 +101,7 @@ V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:
 - **Krok formuláru** - krok, ku ktorému položka patrí, môžete tak ľahko položku presunúť do iného kroku.
 - **Poradie** - určuje poradie položky v rámci kroku.
 - **Predvyplnená hodnota** - hodnota, ktorá sa zobrazí vyplnená v poli, používateľ tak nemusí nastaviť hodnotu, ak je všeobecne známa. Toto pole sa zobrazuje iba ak nejde o položku typu výberové pole.
-- **Povolené možnosti** - pri položke typu výberové pole (select, checkbox skupina, radio skupina, automatické dopĺňanie a pod.) môžete manuálne definovať zoznam možností. Každá možnosť sa skladá z textu zobrazeného používateľovi a hodnoty odoslanej pri odoslaní formulára. Možnosti je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`. Prepínačom **Pridať prázdnu možnosť** môžete do výberového zoznamu alebo skupiny výberových polí vložiť na začiatok aj voľbu bez hodnoty. Pri novom poli je prepínač vypnutý. Pole sa zobrazuje iba ak nie je povolená možnosť **Použiť prepojenie na číselník**.
+- **Povolené možnosti** - pri položke typu výberové pole (select, checkbox skupina, radio skupina, automatické dopĺňanie a pod.) môžete manuálne definovať zoznam možností. Každá možnosť sa skladá z textu zobrazeného používateľovi a hodnoty odoslanej pri odoslaní formulára. Možnosti je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`. Prepínačom **Pridať prázdnu možnosť** - môžete do výberového zoznamu alebo skupiny výberových polí vložiť na začiatok aj voľbu bez hodnoty. Pri novom poli je prepínač vypnutý. Pole sa zobrazuje iba ak nie je povolená možnosť **Použiť prepojenie na číselník**.
 
 ![](form-item-editor-advanced.png)
 
@@ -122,17 +122,15 @@ Ak chcete definovať vlastné položky formulárov, alebo chcete zmeniť existuj
 
 ### Prázdna možnosť
 
-Vo výberovom zozname (select) prepínač **Pridať prázdnu možnosť** pridá prázdny riadok. V skupine výberových polí (rádio) pridá voľbu **Bez zvolenej možnosti**, ktorou návštevník môže zrušiť predchádzajúci výber. Odoslaná hodnota zostane prázdna; pri povinnom poli preto musí návštevník vybrať inú možnosť. Text rádia nastavíte prekladovým kľúčom `components.formsimple.emptyOptionLabel.radiogroup`.
+Prepínač **Pridať prázdnu možnosť** pridá do zoznamu (select) prázdny riadok a do skupiny rádií voľbu **Bez zvolenej možnosti** na zrušenie výberu. Hodnota je prázdna, takže povinné pole vyžaduje inú možnosť. Text rádia určuje kľúč `components.formsimple.emptyOptionLabel.radiogroup`. Pri checkboxoch a automatickom dopĺňaní je prepínač predvolene skrytý, pretože ich možno vyprázdniť bez neho.
 
-Pri skupine zaškrtávacích polí a automatickom dopĺňaní je prepínač predvolene skrytý. Checkboxy možno odškrtnúť všetky a text automatického dopĺňania vymazať.
-
-Dostupnosť prepínača riadi položka `emptyOption` v existujúcom kľúči `components.formsimple.hide.TYP_POLA`. Napríklad prepínač pre rádio skryjete pridaním položky do zoznamu:
+Prítomnosť `emptyOption` v kľúči `components.formsimple.hide.TYP_POLA` prepínač skryje; odstránením ho znova sprístupníte. Pre rádio:
 
 ```properties
 components.formsimple.hide.radiogroup=placeholder,trimValue,regexValidationArr,emptyOption
 ```
 
-Ostatné položky vášho zoznamu zachovajte. Odstránením `emptyOption` prepínač znovu sprístupníte. Zmenu nastavte vo všetkých používaných jazykoch. Zakázaná prázdna možnosť sa nezobrazuje ani v starších formulároch a pri uložení položky sa odstráni aj z jej konfigurácie. Nastavenie sa týka manuálnych možností, nie prepojenia na číselník.
+Ostatné položky zachovajte a zmenu nastavte vo všetkých používaných jazykoch. Pri skrytí sa prázdna možnosť nezobrazí ani v starších formulároch a pri uložení sa odstráni z konfigurácie. Nastavenie platí iba pre manuálne možnosti, nie pre prepojenie na číselník.
 
 ### Validácia pri opustení poľa
 
