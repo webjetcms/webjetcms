@@ -204,12 +204,20 @@
   <vulnerabilityName>CVE-2024-38828</vulnerabilityName>
  </suppress>
 
- <!-- NOTE: max password length in WebJET is 64 chars, this vulnerability is for 72 chars password with same letters, FIXED in PasswordSecurity which will not allow this kind of passwords -->
  <suppress>
    <notes><![CDATA[
-   file name: spring-security-crypto-5.8.16.jar
+   CVE-2025-22228 is mitigated in the application's bcrypt wrapper, not patched in the library.
+   PasswordSecurity delegates bcrypt hashes to sk.iway.iwcm.users.crypto.Bcrypt, which
+   returns false for passwords longer than 72 UTF-8 bytes before BCrypt.checkpw.
+   This applies to arbitrary prefixes, multibyte characters, and direct wrapper calls.
+   Authentication uses the existing generic invalid-password response. Hash creation
+   is unchanged and no migration is performed; overlong passwords, including newly
+   saved ones, fail verification when entered in full and require a password reset.
+   Regression tests cover the byte boundary, common-prefix collisions, and legacy SHA-512.
+   Reassess if authentication or hashing bypasses this wrapper or the dependency changes.
+   https://spring.io/security/cve-2025-22228/
    ]]></notes>
-   <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-crypto@.*$</packageUrl>
+   <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-crypto@5\.8\.16$</packageUrl>
    <vulnerabilityName>CVE-2025-22228</vulnerabilityName>
  </suppress>
 
@@ -471,6 +479,170 @@
     ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
     <cve>CVE-2026-59283</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-116804 (GHSA-cg2g-xh64-v4q7) requires SAFE_FOR_TEMPLATES together with
+    RETURN_DOM, RETURN_DOM_FRAGMENT, or IN_PLACE and DOM input carrying a shadow root.
+    File: src/main/webapp/admin/swagger-ui/swagger-ui-bundle.js (matched by SHA-1 below).
+    The bundled Swagger UI uses DOMPurify 3.4.11 only to sanitize Markdown-rendered HTML
+    strings and returns strings. Its sanitizer does not enable any of these options,
+    and its only DOMPurify hook adds rel="noopener noreferrer" to links.
+    This is non-applicability for this exact bundle, not a patched DOMPurify version.
+    Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
+    https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7
+    ]]></notes>
+    <sha1>6c080187daa25580893a731373f103632541a48a</sha1>
+    <vulnerabilityName>CVE-2026-116804</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-17495 requires server-side npm Moment and attacker-controlled non-string
+    input to moment.locale(). WebJET uses Moment in the browser; app-init.js passes
+    the language string window.userLng. There is no server-side locale input path.
+    Reassess if Moment is used in Node.js request processing or locale loading changes.
+    https://github.com/moment/moment/security/advisories/GHSA-4p3w-j4w9-5jqw
+    ]]></notes>
+    <packageUrl>pkg:npm/moment@2.30.1</packageUrl>
+    <vulnerabilityName>CVE-2026-17495</vulnerabilityName>
+    <vulnerabilityName>GHSA-4p3w-j4w9-5jqw</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    GHSA-g2v6-rqmx-r4w6 affects Vue server-side HTML rendering. The admin application
+    is a browser application mounted via VueTools.createApp; it does not invoke
+    createSSRApp, renderToString, or @vue/server-renderer. The renderer is transitive.
+    Reassess if server-side rendering is introduced or the package version changes.
+    https://github.com/vuejs/core/security/advisories/GHSA-g2v6-rqmx-r4w6
+    ]]></notes>
+    <packageUrl>pkg:npm/%40vue%2Fserver-renderer@3.5.13</packageUrl>
+    <vulnerabilityName>GHSA-g2v6-rqmx-r4w6</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-116803 requires DOMPurify IN_PLACE mode and an application hook that
+    detaches a parent or sibling subtree. This exact Swagger UI bundle sanitizes
+    Markdown-rendered HTML strings without IN_PLACE. Its only DOMPurify hook sets
+    rel="noopener noreferrer" on links and does not detach nodes.
+    This is non-applicability, not a patched DOMPurify version.
+    Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
+    https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr
+    ]]></notes>
+    <sha1>6c080187daa25580893a731373f103632541a48a</sha1>
+    <vulnerabilityName>CVE-2026-116803</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-75140 is incorrectly attributed to jsoup 1.17.2. The vulnerable XML
+    implementation copies the inherited namespace map for each nested element.
+    XmlTreeBuilder in the resolved 1.17.2 JAR and upstream 1.17.2 source has no
+    namespacesStack or inherited namespace-map copying. The affected implementation
+    was added later. This exception covers only this CVE and this exact version.
+    Reassess on a jsoup version change; other jsoup findings remain unsuppressed.
+    https://github.com/jhy/jsoup/blob/jsoup-1.17.2/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+    https://github.com/jhy/jsoup/commit/862ba2f1d48ee95609183dbcfc848c9fd7afc76a
+    ]]></notes>
+    <packageUrl>pkg:maven/org.jsoup/jsoup@1.17.2</packageUrl>
+    <vulnerabilityName>CVE-2026-75140</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-104828 affects HTMLWriterFilter serialization of TITLE and TEXTAREA.
+    WebJET DocTools uses DaisyDiff HtmlCleaner, whose NekoHtmlParser parses through
+    SAXParser into ContentHandler handlers and DomTreeBuilder, not HTMLWriterFilter.
+    The resolved wjdaisydiff bytecode and runtime JAR references were inspected;
+    no consumer of HTMLWriterFilter is present. The parser itself is not the
+    vulnerable serializer. Reassess if the diff pipeline or Neko usage changes,
+    especially if HTMLWriterFilter is introduced by application code or dependencies.
+    https://github.com/HtmlUnit/htmlunit-neko/security/advisories/GHSA-39xg-prhf-8785
+    ]]></notes>
+    <packageUrl>pkg:maven/org.htmlunit/neko-htmlunit@4.5.0</packageUrl>
+    <vulnerabilityName>CVE-2026-104828</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-41838 requires Spring WebSocket, CVE-2026-47888 requires RSocket,
+    and CVE-2026-47893 requires WebFlux WebSocket handling. The resolved WebJET
+    runtime has no spring-websocket, spring-messaging, spring-webflux, or RSocket
+    implementation. Springfox's documentation adapter is not Spring WebFlux.
+    These findings are repeated across unrelated Spring Framework modules.
+    Reassess if these runtime modules or corresponding features are introduced,
+    including by a customer installation. Scope is limited to inspected artifacts.
+    https://spring.io/security/cve-2026-41838/
+    https://spring.io/security/cve-2026-47888/
+    https://spring.io/security/cve-2026-47893/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
+    <vulnerabilityName>CVE-2026-41838</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47888</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47893</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-47838 requires X.509 authentication with SubjectDnX509PrincipalExtractor.
+    CVE-2026-40988 requires SAML2 authentication. SpringSecurityConf configures the
+    WebJET authentication provider and optional HTTP Basic, not X.509 or SAML2;
+    the resolved runtime also lacks spring-security-saml2-service-provider.
+    Reassess if a customer SpringConfig enables either authentication mechanism
+    or authentication dependencies/configuration change. This is non-applicability
+    for the inspected product configuration, not a Spring Security library patch.
+    https://spring.io/security/cve-2026-47838/
+    https://spring.io/security/cve-2026-40988/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-(config|core|crypto|web)@5\.8\.16$</packageUrl>
+    <vulnerabilityName>CVE-2026-47838</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-40988</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-41842 requires versioned filesystem resources served through Spring's
+    resource handling. BaseSpringConfig enables default servlet handling and does
+    not register a versioned resource chain or VersionResourceResolver. No other
+    product configuration registers this feature. WebJET's own cache-version URL
+    handling does not enable Spring resource versioning.
+    Reassess if a customer WebMvcConfigurer or other configuration adds versioned
+    Spring filesystem resources. Scope is the inspected 5.3.39 artifact set.
+    https://spring.io/security/cve-2026-41842/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
+    <vulnerabilityName>CVE-2026-41842</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-41848 requires an attacker-controlled pattern passed to AntPathMatcher,
+    not merely an attacker-controlled request path. Product routing/security
+    patterns are supplied by application code/configuration; BaseSpringConfig
+    uses fixed request matchers. No product endpoint supplies untrusted matcher
+    patterns. Reassess if custom controllers/configuration expose pattern input
+    to AntPathMatcher or if routing/security pattern construction changes.
+    https://spring.io/security/cve-2026-41848/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
+    <vulnerabilityName>CVE-2026-41848</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-41721 requires Spring Data Web Support together with @ProjectedPayload.
+    V9SpringConfig enables Spring Data Web Support, but the product has no
+    @ProjectedPayload request projections. Pageable and normal DTO binding alone
+    do not satisfy this advisory's prerequisites.
+    Reassess if product or customer controllers introduce @ProjectedPayload.
+    This exception does not cover the other Spring Data property-path findings.
+    https://spring.io/security/cve-2026-41721/
+    ]]></notes>
+    <packageUrl>pkg:maven/org.springframework.data/spring-data-commons@2.6.1</packageUrl>
+    <vulnerabilityName>CVE-2026-41721</vulnerabilityName>
   </suppress>
 
 </suppressions>
