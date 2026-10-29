@@ -140,6 +140,7 @@ export class AiBrowserExecutor {
     async _apiInitialize(apiName, config, inputData, skipIsActive = false) {
         let instance = this;
         let apiInstance = null;
+        this._assertActive();
 
         let text = inputData.inputValue;
         if (inputData.userPrompt != null) {
@@ -156,6 +157,7 @@ export class AiBrowserExecutor {
             if ("Translator" === apiName) {
                 if ("autodetect"===config.sourceLanguage) {
                     config.sourceLanguage = await this._detectLanguage(text);
+                    this._assertActive();
                 } else if ("userLng" === config.sourceLanguage) {
                     config.sourceLanguage = window.userLng;
                 }
@@ -167,74 +169,97 @@ export class AiBrowserExecutor {
             if ("Translator" === apiName && navigator.userActivation.isActive===false) {
                 //verify translation pair availability
                 let status = await Translator.availability(config);
+                this._assertActive();
                 if ("available" !== status) {
-                    //we need to wait for user to click to some button, create dialog and await for user click
-                    await new Promise((resolve) => {
-                        // Create a dialog or some UI element to prompt the user
-                        let dialog = document.createElement('div');
-                        dialog.innerText = WJ.translate("components.ai_assistants.userActivationPrompt.js", apiName);
+                    if (typeof this.editorAiInstance?.requestBrowserConfirmation === "function") {
+                        const confirmed = await this.editorAiInstance.requestBrowserConfirmation(
+                            WJ.translate("components.ai_assistants.userActivationPrompt.js", apiName),
+                            WJ.translate("components.ai_assistants.userActivationPrompt.button.js")
+                        );
+                        this._assertActive();
+                        if (confirmed !== true) {
+                            throw new Error("!" + WJ.translate("components.ai_assistants.browser.download_model.canceled.js"));
+                        }
+                    } else {
+                        //we need to wait for user to click to some button, create dialog and await for user click
+                        await new Promise((resolve) => {
+                            // Create a dialog or some UI element to prompt the user
+                            let dialog = document.createElement('div');
+                            dialog.innerText = WJ.translate("components.ai_assistants.userActivationPrompt.js", apiName);
 
-                        let button = document.createElement('button');
-                        button.innerText = WJ.translate("components.ai_assistants.userActivationPrompt.button.js");
-                        button.classList.add('btn');
-                        button.classList.add('btn-primary');
-                        dialog.appendChild(button);
+                            let button = document.createElement('button');
+                            button.innerText = WJ.translate("components.ai_assistants.userActivationPrompt.button.js");
+                            button.classList.add('btn');
+                            button.classList.add('btn-primary');
+                            dialog.appendChild(button);
 
-                        const container = document.getElementById('toast-container-ai-content');
-                        container.innerHTML = "";
-                        container.appendChild(dialog);
+                            const container = document.getElementById('toast-container-ai-content');
+                            container.innerHTML = "";
+                            container.appendChild(dialog);
 
-                        button.addEventListener('click', () => {
-                            instance.editorAiInstance.setCurrentStatus("components.ai_assistants.editor.loading.js");
-                            resolve();
+                            button.addEventListener('click', () => {
+                                instance.editorAiInstance.setCurrentStatus("components.ai_assistants.editor.loading.js");
+                                resolve();
+                            });
                         });
-                    });
+                    }
+                    this._assertActive();
                 }
             }
 
             //show download confirm dialog
             let availability = await self[apiName].availability(config);
+            this._assertActive();
             //console.log("API", apiName, "availability:", availability, "config=", config);
             if ("downloadable" === availability) {
-                let downloadConfirmed = await new Promise((resolve) => {
-                    let dialog = document.createElement('div');
-                    dialog.innerHTML = WJ.parseMarkdown(WJ.translate("components.ai_assistants.browser.download_model.confirm.js", apiName), {
-                        link: true
+                let downloadConfirmed;
+                if (typeof this.editorAiInstance?.requestBrowserConfirmation === "function") {
+                    downloadConfirmed = await this.editorAiInstance.requestBrowserConfirmation(
+                        WJ.translate("components.ai_assistants.browser.download_model.confirm.js", apiName),
+                        WJ.translate("components.ai_assistants.browser.download_model.download.js")
+                    );
+                } else {
+                    downloadConfirmed = await new Promise((resolve) => {
+                        let dialog = document.createElement('div');
+                        dialog.innerHTML = WJ.parseMarkdown(WJ.translate("components.ai_assistants.browser.download_model.confirm.js", apiName), {
+                            link: true
+                        });
+
+                        let buttonContainer = document.createElement('div');
+                        buttonContainer.classList.add('mt-2');
+                        buttonContainer.classList.add('text-end');
+
+                        //cancel button
+                        let buttonCancel = document.createElement('button');
+                        buttonCancel.innerText = WJ.translate("button.cancel");
+                        buttonCancel.classList.add('btn');
+                        buttonCancel.classList.add('btn-outline-secondary');
+                        buttonCancel.classList.add('me-2');
+                        buttonContainer.appendChild(buttonCancel);
+
+                        buttonCancel.addEventListener('click', () => {
+                            resolve(false);
+                        });
+
+                        //confirm button
+                        let button = document.createElement('button');
+                        button.innerText = WJ.translate("components.ai_assistants.browser.download_model.download.js");
+                        button.classList.add('btn');
+                        button.classList.add('btn-primary');
+                        buttonContainer.appendChild(button);
+
+                        const container = document.getElementById('toast-container-ai-content');
+                        container.innerHTML = "";
+                        container.appendChild(dialog);
+                        container.appendChild(buttonContainer);
+
+                        button.addEventListener('click', () => {
+                            instance.editorAiInstance.setDownloadStatus("");
+                            resolve(true);
+                        });
                     });
-
-                    let buttonContainer = document.createElement('div');
-                    buttonContainer.classList.add('mt-2');
-                    buttonContainer.classList.add('text-end');
-
-                    //cancel button
-                    let buttonCancel = document.createElement('button');
-                    buttonCancel.innerText = WJ.translate("button.cancel");
-                    buttonCancel.classList.add('btn');
-                    buttonCancel.classList.add('btn-outline-secondary');
-                    buttonCancel.classList.add('me-2');
-                    buttonContainer.appendChild(buttonCancel);
-
-                    buttonCancel.addEventListener('click', () => {
-                        resolve(false);
-                    });
-
-                    //confirm button
-                    let button = document.createElement('button');
-                    button.innerText = WJ.translate("components.ai_assistants.browser.download_model.download.js");
-                    button.classList.add('btn');
-                    button.classList.add('btn-primary');
-                    buttonContainer.appendChild(button);
-
-                    const container = document.getElementById('toast-container-ai-content');
-                    container.innerHTML = "";
-                    container.appendChild(dialog);
-                    container.appendChild(buttonContainer);
-
-                    button.addEventListener('click', () => {
-                        instance.editorAiInstance.setDownloadStatus("");
-                        resolve(true);
-                    });
-                });
+                }
+                this._assertActive();
 
                 if (downloadConfirmed !== true) {
                     throw new Error("!" + WJ.translate("components.ai_assistants.browser.download_model.canceled.js"));
@@ -243,6 +268,10 @@ export class AiBrowserExecutor {
 
             if (navigator.userActivation.isActive || skipIsActive === true) {
                 apiInstance = await self[apiName].create(config);
+                if (this.isDestroyed) {
+                    apiInstance.destroy();
+                    this._assertActive();
+                }
             } else {
                 throw new Error(WJ.translate("components.ai_assistants.browser.userInteractionError.js"));
             }
@@ -254,6 +283,7 @@ export class AiBrowserExecutor {
     async _apiExecute(apiName, apiInstance, config, fieldName, inputData, useStreaming, setFunction = null) {
 
         let executionResult = new AiExecutionResult();
+        this._assertActive();
 
         if (apiInstance) {
             let text = inputData.inputValue;
@@ -282,6 +312,7 @@ export class AiBrowserExecutor {
                 else if ("Summarizer" === apiName) content = await apiInstance.summarize(text, config);
                 else if ("LanguageModel" === apiName) content = await apiInstance.prompt(text, config);
 
+                this._assertActive();
                 if (content != null) {
                     if (setFunction != null) {
                         setFunction(content, true);
@@ -299,11 +330,13 @@ export class AiBrowserExecutor {
                     this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.translating.js", false);
 
                     let translateFromLanguage = await this._detectLanguage(content);
+                    this._assertActive();
                     let translateToLanguage = translateOutputLanguage;
 
                     if ("autodetect" === translateOutputLanguage || true === translateOutputLanguage || "true" === translateOutputLanguage) {
                         //detect source language
                         translateToLanguage = await this._detectLanguage(text);
+                        this._assertActive();
                     } else if ("userLng" === translateOutputLanguage) {
                         translateToLanguage = window.userLng;
                     }
@@ -318,8 +351,10 @@ export class AiBrowserExecutor {
                             targetLanguage: translateToLanguage
                         }
                         const translator = await this._apiInitialize("Translator", config, inputData, true);
+                        this._assertActive();
                         //console.log("Mam translator: ", translator);
                         let translatedContent = await translator.translate(content);
+                        this._assertActive();
                         //console.log("Translated content:", translatedContent, "content=", content);
                         if (setFunction != null) {
                             setFunction(translatedContent, true);
@@ -341,10 +376,17 @@ export class AiBrowserExecutor {
     }
 
     async _detectLanguage(text) {
+        this._assertActive();
         if (this.languageDetector == null) {
             this.languageDetector = await LanguageDetector.create({});
+            if (this.isDestroyed) {
+                this.languageDetector.destroy();
+                this.languageDetector = null;
+                this._assertActive();
+            }
         }
         const results = await this.languageDetector.detect(text);
+        this._assertActive();
         //preserve this for complaints
         console.info("Detected languages:", results);
         if (results.length > 0) {
@@ -358,6 +400,7 @@ export class AiBrowserExecutor {
         let content = "";
         //console.log("Setting field:", fieldName, "stream=", stream);
         for await (const chunk of stream) {
+            this._assertActive();
             if (firstItem) {
                 content = chunk;
             } else {
@@ -372,6 +415,7 @@ export class AiBrowserExecutor {
             }
             firstItem = false;
         }
+        this._assertActive();
         if (setFunction != null) {
             setFunction(content, true);
         }
@@ -379,6 +423,7 @@ export class AiBrowserExecutor {
     }
 
     _setDownloadStatus(progress) {
+        if (this.isDestroyed) return;
         //console.log("Progress: ", progress);
 
         let percent = Math.round(progress.loaded * 100);
@@ -390,5 +435,10 @@ export class AiBrowserExecutor {
         } else {
             console.log("Download progress:", percent+"%");
         }
+    }
+
+    /** Prevents an asynchronous browser API operation from updating a cancelled turn. */
+    _assertActive() {
+        if (this.isDestroyed) throw new Error("signal is aborted without reason");
     }
 }

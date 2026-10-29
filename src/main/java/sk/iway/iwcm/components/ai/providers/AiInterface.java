@@ -7,6 +7,7 @@ import com.webjetcms.ai.AiProviderConfig;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -30,6 +31,11 @@ public interface AiInterface {
     public String getProviderId();
     public String getTitleKey();
     public boolean isInit();
+
+    /** Preserves the streaming preference for CMS providers without library capability metadata. */
+    default boolean isStreamingEnabled(AssistantDefinitionEntity assistant) {
+        return Tools.isTrue(assistant.getUseStreaming());
+    }
 
     default String getApiKey() {
         return "";

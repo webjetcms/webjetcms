@@ -36,6 +36,7 @@ import 'jstree';
 //import * as dtConfig from '../js/datatables-config.js';
 import Ninja from '../js/global-functions.js'; //NOSONAR
 import AutoCompleter from '../js/autocompleter.js';
+import { AiChat } from './ai/ai-chat';
 
 import numeral from 'numeral';
 import numeralsk from 'numeral/locales/sk'; //NOSONAR
@@ -58,6 +59,7 @@ window.WJ = WJ;
 window.Quill = Quill;
 window.toastr = toastr;
 window.AutoCompleter = AutoCompleter;
+window.WjAiChat = AiChat;
 window.webjetTranslationService = new Translator();
 
 //import WjPasswordStrength from '../js/passwdstrength.js';

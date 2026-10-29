@@ -4,20 +4,25 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -25,20 +30,29 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import com.webjetcms.ai.AiClient;
+import com.webjetcms.ai.AiCapabilities;
+import com.webjetcms.ai.AiCapabilities.Continuation;
+import com.webjetcms.ai.AiCapabilities.Operation;
+import com.webjetcms.ai.AiCapabilities.Support;
 import com.webjetcms.ai.AiInputHandling;
+import com.webjetcms.ai.AiErrorCategory;
 import com.webjetcms.ai.AiOperation;
 import com.webjetcms.ai.AiProvider;
 import com.webjetcms.ai.AiProviderConfig;
+import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiRequest;
 import com.webjetcms.ai.AiResponse;
+import com.webjetcms.ai.AiStreamListener;
 import com.webjetcms.ai.TokenUsage;
 import com.webjetcms.ai.security.PromptInjectionDefense.UntrustedSource;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
+import sk.iway.iwcm.components.ai.providers.browser.BrowserService;
 import sk.iway.iwcm.i18n.Prop;
 
 class LibrarySupportLogicTest {
@@ -218,8 +232,6 @@ class LibrarySupportLogicTest {
         AiProviderConfig providerConfig = AiProviderConfig.builder("secret-key").build();
         when(provider.id()).thenReturn("test-provider");
         when(provider.inputHandling(AiOperation.TEXT)).thenReturn(AiInputHandling.PROTECTED_PROMPT);
-        when(provider.execute(any(AiRequest.class), eq(providerConfig)))
-            .thenReturn(new AiResponse("descriptive-name", List.of(), usage, "stop"));
         when(configuration.imageNamePrompt()).thenReturn("Create a short filename.");
         when(configuration.resolve(any(AiInterface.class), eq(servletRequest))).thenReturn(providerConfig);
 
@@ -229,6 +241,8 @@ class LibrarySupportLogicTest {
         assistant.setAction(SupportedActions.GENERATE_IMAGE.getAction());
         InputDataDTO input = new InputDataDTO();
         input.setUserPrompt("A mountain lake at sunrise");
+        when(provider.execute(any(AiRequest.class), eq(providerConfig), same(input.getCancellationToken())))
+            .thenReturn(new AiResponse("descriptive-name", List.of(), usage, "stop"));
 
         LibrarySupportLogic.GeneratedImageName result = logic.getGeneratedImageName(
             assistant,
@@ -237,7 +251,7 @@ class LibrarySupportLogicTest {
         );
 
         ArgumentCaptor<AiRequest> requestCaptor = ArgumentCaptor.forClass(AiRequest.class);
-        verify(provider).execute(requestCaptor.capture(), eq(providerConfig));
+        verify(provider).execute(requestCaptor.capture(), eq(providerConfig), same(input.getCancellationToken()));
         AiRequest request = requestCaptor.getValue();
         assertEquals("descriptive-name", result.fileName());
         assertEquals(usage, result.usage());
@@ -250,10 +264,155 @@ class LibrarySupportLogicTest {
         assertTrue(request.inputText().contains("A mountain lake at sunrise"));
     }
 
+    /** Library metadata selects chat streaming without granting storage or rejecting unknown models. */
+    @Test
+    void streamingFollowsCapabilitiesAndAssistantPreferences() {
+        AiClient client = mock(AiClient.class);
+        TestLibrarySupportLogic logic = new TestLibrarySupportLogic(client, null);
+        AssistantDefinitionEntity assistant = assistant();
+        assistant.setAction(SupportedActions.LIVE_CHAT.getAction());
+        assistant.setUseTemporal(false);
+        assistant.setUseStreaming(true);
+        when(client.capabilities("test-provider", "test-model")).thenReturn(chatCapabilities(Support.UNKNOWN));
+
+        assertTrue(logic.isStreamingEnabled(assistant));
+        assistant.setUseTemporal(true);
+        assertFalse(logic.isStreamingEnabled(assistant));
+        assistant.setUseTemporal(null);
+        assertFalse(logic.isStreamingEnabled(assistant));
+        assistant.setUseTemporal(false);
+        assistant.setUseStreaming(false);
+        assertFalse(logic.isStreamingEnabled(assistant));
+        assistant.setUseStreaming(true);
+
+        when(client.capabilities("test-provider", "test-model")).thenReturn(chatCapabilities(Support.UNSUPPORTED));
+        assertFalse(logic.isStreamingEnabled(assistant));
+        assertTrue(assistant.getUseStreaming());
+        assertFalse(assistant.getUseTemporal());
+
+        when(client.capabilities("test-provider", "test-model")).thenReturn(AiCapabilities.unknown());
+        assertTrue(logic.isStreamingEnabled(assistant));
+        assistant.setModel(" ");
+        assertTrue(logic.isStreamingEnabled(assistant));
+        assertTrue(new BrowserService().isStreamingEnabled(assistant));
+    }
+
+    /** A cancelled turn cannot create a continuation even if a provider finishes returning text. */
+    @Test
+    void cancelledChatResponseDoesNotSaveContinuationOrAuditFailure() throws Exception {
+        AiClient client = mock(AiClient.class);
+        WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
+        HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        AiProviderConfig providerConfig = AiProviderConfig.empty();
+        when(configuration.resolve(any(AiInterface.class), eq(servletRequest))).thenReturn(providerConfig);
+        when(client.capabilities("test-provider", "test-model")).thenReturn(chatCapabilities(Support.UNKNOWN));
+        TestLibrarySupportLogic logic = new TestLibrarySupportLogic(client, configuration);
+        AssistantDefinitionEntity assistant = assistant();
+        assistant.setAction(SupportedActions.LIVE_CHAT.getAction());
+        assistant.setUseTemporal(false);
+        InputDataDTO input = textInput();
+        when(client.execute(eq("test-provider"), any(AiRequest.class), eq(providerConfig),
+            same(input.getCancellationToken()))).thenAnswer(invocation -> {
+                assertEquals(AiOperation.CHAT, invocation.getArgument(1, AiRequest.class).operation());
+                input.getCancellationToken().cancel();
+                return new AiResponse("late answer", List.of(), TokenUsage.EMPTY, "stop");
+            });
+
+        try (MockedStatic<AiChatSession> chatSession = mockStatic(AiChatSession.class);
+            MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class)) {
+            chatSession.when(() -> AiChatSession.resolve(null, assistant, servletRequest))
+                .thenReturn(new AiChatSession.Continuation(null, Map.of()));
+
+            CancellationException exception = assertThrows(CancellationException.class,
+                () -> logic.getAiResponse(assistant, input, null, null, servletRequest));
+            AssistantResponseDTO failure = AssistantResponseDTO.fromError(exception);
+            assertEquals("CANCELLED", failure.getErrorCategory());
+            assertFalse(failure.getRetryable());
+            assertNull(failure.getProviderStatusCode());
+            assertFalse(failure.getError().isBlank());
+
+            chatSession.verify(() -> AiChatSession.resolve(null, assistant, servletRequest));
+            chatSession.verifyNoMoreInteractions();
+            adminlog.verifyNoInteractions();
+        }
+    }
+
+    /** Late provider callbacks are rejected once the task's token has been cancelled. */
+    @Test
+    void cancelledStreamStopsWritingFurtherDeltas() throws Exception {
+        AiClient client = mock(AiClient.class);
+        when(client.capabilities("test-provider", "test-model")).thenReturn(AiCapabilities.unknown());
+        WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
+        HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        AiProviderConfig providerConfig = AiProviderConfig.empty();
+        when(configuration.resolve(any(AiInterface.class), eq(servletRequest))).thenReturn(providerConfig);
+        TestLibrarySupportLogic logic = new TestLibrarySupportLogic(client, configuration);
+        InputDataDTO input = textInput();
+        StringWriter output = new StringWriter();
+        when(client.stream(eq("test-provider"), any(AiRequest.class), eq(providerConfig),
+            any(AiStreamListener.class), same(input.getCancellationToken()))).thenAnswer(invocation -> {
+                AiStreamListener listener = invocation.getArgument(3);
+                listener.onTextDelta("first");
+                input.getCancellationToken().cancel();
+                listener.onTextDelta("late");
+                return new AiResponse("firstlate", List.of(), TokenUsage.EMPTY, "stop");
+            });
+
+        try (MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class)) {
+            assertThrows(CancellationException.class, () -> logic.getAiStreamResponse(
+                assistant(), input, null, null, new BufferedWriter(output), servletRequest));
+
+            assertEquals("first", output.toString());
+            adminlog.verifyNoInteractions();
+        }
+    }
+
+    /** Provider metadata survives the adapter's audit and exception translation. */
+    @Test
+    void preservesStructuredProviderFailure() throws Exception {
+        AiClient client = mock(AiClient.class);
+        when(client.capabilities("test-provider", "test-model")).thenReturn(AiCapabilities.unknown());
+        WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
+        AiProviderConfig providerConfig = AiProviderConfig.empty();
+        when(configuration.resolve(any(AiInterface.class), eq(null))).thenReturn(providerConfig);
+        TestLibrarySupportLogic logic = new TestLibrarySupportLogic(client, configuration);
+        InputDataDTO input = textInput();
+        AiProviderException failure = new AiProviderException("test-provider", 400, "Invalid continuation",
+            "private raw response", false, null, AiErrorCategory.INVALID_CONTINUATION);
+        when(client.execute(eq("test-provider"), any(AiRequest.class), eq(providerConfig),
+            same(input.getCancellationToken()))).thenThrow(failure);
+
+        try (MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class)) {
+            ProviderCallException exception = assertThrows(ProviderCallException.class,
+                () -> logic.getAiResponse(assistant(), input, null, null, null));
+
+            assertEquals(AiErrorCategory.INVALID_CONTINUATION, exception.getErrorCategory());
+            assertEquals(400, exception.getProviderStatusCode());
+            assertFalse(exception.getRetryable());
+            assertEquals(failure, exception.getCause());
+        }
+    }
+
+    private AiCapabilities chatCapabilities(Support modelSupport) {
+        return new AiCapabilities(Map.of(
+            AiOperation.TEXT, new Operation(Support.SUPPORTED, Support.UNKNOWN, Support.UNSUPPORTED, Continuation.NONE),
+            AiOperation.CHAT, new Operation(Support.SUPPORTED, modelSupport, Support.SUPPORTED, Continuation.PROVIDER_STORAGE_REQUIRED)
+        ), Support.UNKNOWN, Support.UNKNOWN);
+    }
+
+    private InputDataDTO textInput() {
+        InputDataDTO input = new InputDataDTO();
+        input.setInputValueType(InputDataDTO.InputValueType.TEXT);
+        input.setInputValue("Text to process");
+        input.setUserPrompt("Make it shorter");
+        return input;
+    }
+
     private AssistantDefinitionEntity assistant() {
         AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
         assistant.setModel("test-model");
         assistant.setUseTemporal(true);
+        assistant.setInstructions("Help with the supplied content.");
         return assistant;
     }
 

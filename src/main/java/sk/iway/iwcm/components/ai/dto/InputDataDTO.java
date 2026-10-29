@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.webjetcms.ai.AiCancellationToken;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -52,6 +53,17 @@ public class InputDataDTO {
 
     Long assistantId;
     String userPrompt = null;
+
+    /** Session-owned continuation returned by the last successful chat turn. */
+    String conversationId;
+
+    /** Provider continuation resolved on the server, never accepted from JSON. */
+    @JsonIgnore
+    String previousResponseId;
+
+    /** Server-owned cancellation signal shared by provider calls belonging to this task. */
+    @JsonIgnore
+    private AiCancellationToken cancellationToken = new AiCancellationToken();
 
     String inputValue = null;
     InputValueType inputValueType;
@@ -103,6 +115,7 @@ public class InputDataDTO {
         this.outputValueType = InputValueType.from( data.get("outputValueType") );
         this.timestamp = Tools.getLongValue(data.get("timestamp"), -1L);
         this.userPrompt = data.get("userPrompt");
+        this.conversationId = data.get("conversationId");
     }
 
     public void prepareData(HttpServletRequest request) throws IllegalStateException {

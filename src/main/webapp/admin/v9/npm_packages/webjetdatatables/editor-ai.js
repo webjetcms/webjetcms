@@ -2,6 +2,8 @@ import { AiBrowserExecutor } from "./ai/ai-browser-executor";
 import { AiRestExecutor } from "./ai/ai-rest-executor";
 import { AiUserInterface } from "./ai/ai-ui";
 import { AiExecutionResult } from "./ai/ai-execution-result";
+import { AiChat } from "../../src/js/ai/ai-chat";
+import { parseAiResponse } from "../../src/js/ai/ai-response-parser";
 
 /**
  * Main class for AI integration in Datatables Editor - binds buttons, handles events, shows UI, executes actions
@@ -13,6 +15,8 @@ export class EditorAi {
     aiBrowserExecutor = null;
     aiRestExecutor = null;
     aiUserInterface = null;
+    chatConversations = new Map();
+    chatApplyingFields = new Map();
 
     //field to remember value for undo process
     undoField = null;
@@ -28,6 +32,21 @@ export class EditorAi {
         EDITOR.editorAi = this;
 
         this.aiUserInterface = new AiUserInterface(EDITOR, this);
+
+        this._chatPageHide = () => this.disposeChats();
+        window.addEventListener("pagehide", this._chatPageHide);
+        if (typeof EDITOR.on === "function") {
+            EDITOR.on("close.aiChat", () => this.disposeChats());
+            EDITOR.on("destroy.aiChat", () => {
+                this.disposeChats();
+                window.removeEventListener("pagehide", this._chatPageHide);
+                $(document).off("hidden.bs.modal.aiChat", this._chatModalHidden);
+            });
+            this._chatModalHidden = event => {
+                if (event.target.id === this.EDITOR.TABLE?.DATA?.id + "_modal") this.disposeChats();
+            };
+            $(document).on("hidden.bs.modal.aiChat", this._chatModalHidden);
+        }
 
         if (bindEvents) {
             this.bindEvents();
@@ -289,7 +308,204 @@ export class EditorAi {
         this.aiUserInterface._closeToast(timeOut);
     }
 
+    /** Returns a reusable chat with editor-specific insertion callbacks for this field. */
+    getChatConversation(button, column, aiCol) {
+        const key = JSON.stringify([aiCol.to || column.name, aiCol.assistantId]);
+        let conversation = this.chatConversations.get(key);
+        if (conversation == null) {
+            conversation = { key, button, column, aiCol, selection: null, undo: null, applying: false, revision: 0 };
+            conversation.chat = new AiChat({
+                assistant: aiCol,
+                getInputData: () => ({
+                    inputValue: this._isChatSelectionValid(conversation.selection)
+                        ? conversation.selection.inputValue : this.EDITOR.get(conversation.aiCol.from || conversation.aiCol.to),
+                    inputValueType: this._getColumnType(conversation.column, conversation.aiCol.from),
+                    outputValueType: "text"
+                }),
+                getAnswerActions: message => this._getChatAnswerActions(conversation, message),
+                getToolbarActions: () => conversation.undo == null ? [] : [{
+                    id: "undo", label: WJ.translate("components.ai_assistants.chat.undo.js"), icon: "arrow-back",
+                    disabled: conversation.applying, run: () => this.undoChatInsertion(conversation)
+                }],
+                onChange: () => this._updateChatLoader(conversation),
+                onReset: () => { conversation.revision++; conversation.undo = null; }
+            });
+            this.chatConversations.set(key, conversation);
+        }
+        conversation.button = button;
+        conversation.column = column;
+        conversation.aiCol = aiCol;
+        conversation.chat.assistant = aiCol;
+        conversation.selection = this._captureChatSelection(column, aiCol);
+        return conversation;
+    }
+
+    _getChatAnswerActions(conversation, message) {
+        if (!message.text?.trim()) return [];
+        return [{
+            id: "add", label: WJ.translate("components.ai_assistants.chat.add.js"), icon: "plus",
+            disabled: conversation.applying, run: () => this.insertChatAnswer(conversation, message, "append")
+        }, {
+            id: "replace", icon: "replace", disabled: conversation.applying,
+            label: WJ.translate(conversation.selection != null
+                ? "components.ai_assistants.chat.replaceSelection.js" : "components.ai_assistants.chat.replace.js"),
+            run: () => this.insertChatAnswer(conversation, message, "replace")
+        }];
+    }
+
+    /** Captures a rich-text selection without inserting bookmarks into the document. */
+    _captureChatSelection(column, aiCol) {
+        if (column.type !== "wysiwyg" || aiCol.to !== column.name) return null;
+        const wjeditor = this.EDITOR.field(aiCol.to)?.s?.opts?.wjeditor;
+        const editors = wjeditor?.editingMode === "pageBuilder" ? wjeditor.getWysiwygEditors() : [wjeditor?.ckEditorInstance];
+        for (const editor of editors) {
+            if (editor == null || editor.status !== "ready") continue;
+            const selection = editor.getSelection();
+            if (!selection?.getSelectedText()) continue;
+            const ranges = selection.getRanges();
+            if (ranges.length === 0) continue;
+            const container = document.createElement("div");
+            for (const range of ranges) container.appendChild(range.cloneContents().$);
+            return { editor, ranges: ranges.map(range => range.clone()), value: editor.getData(), inputValue: container.innerHTML };
+        }
+        return null;
+    }
+
+    _isChatSelectionValid(selection) {
+        if (selection == null || selection.editor.status !== "ready" || selection.editor.getData() !== selection.value) return false;
+        const root = selection.editor.editable()?.$;
+        return root?.isConnected && selection.ranges.every(range =>
+            root.contains(range.startContainer.$) && root.contains(range.endContainer.$));
+    }
+
+    _updateChatLoader(conversation) {
+        const working = [...this.chatConversations.values()].some(item =>
+            item.aiCol.to === conversation.aiCol.to && item.chat.state.pending != null);
+        if (working) this._showLoader(conversation.button);
+        else this._hideLoader(conversation.button);
+    }
+
+    /** Clears all chat state only after the enclosing editor has really closed. */
+    disposeChats() {
+        for (const conversation of this.chatConversations.values()) conversation.chat.destroy();
+        this.chatConversations.clear();
+        this.chatApplyingFields.clear();
+        if (this.aiUserInterface.isActive()) this._closeToast();
+        this.aiUserInterface.detachChat();
+    }
+
+    /** Applies a completed answer explicitly, capturing the current document for undo. */
+    async insertChatAnswer(conversation, message, mode) {
+        if (conversation.chat.state.disposed || message.status !== "complete" || !["append", "replace"].includes(mode)) return;
+        const target = conversation.aiCol.to;
+        if (this.chatApplyingFields.has(target)) return;
+        const revision = conversation.revision;
+        const operation = {};
+        this.chatApplyingFields.set(target, operation);
+        conversation.applying = true;
+        conversation.chat.refresh();
+        const selection = mode === "replace" ? conversation.selection : null;
+        try {
+            const fieldOptions = typeof this.EDITOR.field === "function" ? this.EDITOR.field(target)?.s?.opts : null;
+            await fieldOptions?.wjeditorReadyPromise;
+            if (conversation.chat.state.disposed || conversation.revision !== revision) return;
+            if (selection != null && !this._isChatSelectionValid(selection)) {
+                conversation.chat.state.notice = WJ.translate("components.ai_assistants.chat.selectionStale.js");
+                return;
+            }
+            const content = parseAiResponse(message.text).html;
+            if (typeof content !== "string" || !content.trim()) return;
+            const wjeditor = fieldOptions?.wjeditor;
+            const undo = { target, value: this.EDITOR.get(target), wjeditor: wjeditor?.editingMode === "pageBuilder" ? wjeditor : null };
+            if (wjeditor != null && typeof undo.value !== "string") throw new Error("Editor content is unavailable.");
+            if (selection != null) {
+                undo.selectionEditor = selection.editor;
+                undo.selectionValue = selection.editor.getData();
+                selection.editor.fire("saveSnapshot");
+                selection.editor.getSelection().selectRanges(selection.ranges);
+                selection.editor.insertHtml(content);
+                selection.editor.fire("saveSnapshot");
+                conversation.selection = null;
+            } else if (undo.wjeditor != null) {
+                undo.value = undo.wjeditor.getData();
+                undo.wjeditor.pbInsertContent(content, mode, true);
+            } else {
+                this.EDITOR.set(target, mode === "append" ? (undo.value ?? "") + content : content);
+                await fieldOptions?.wjeditorReadyPromise;
+            }
+            if (conversation.chat.state.disposed || conversation.revision !== revision) return;
+            undo.appliedValue = this.EDITOR.get(target);
+            // An older field snapshot must never overwrite a later insertion from another chat.
+            for (const other of this.chatConversations.values()) {
+                if (other.aiCol.to === target) other.undo = null;
+            }
+            conversation.undo = undo;
+            conversation.chat.state.notice = null;
+        } catch (error) {
+            conversation.chat.state.notice = WJ.translate("components.ai_assistants.chat.insertFailed.js");
+            console.error("Could not insert chat answer:", error);
+        } finally {
+            conversation.applying = false;
+            if (this.chatApplyingFields.get(target) === operation) this.chatApplyingFields.delete(target);
+            conversation.chat.refresh();
+        }
+    }
+
+    async undoChatInsertion(conversation) {
+        const undo = conversation.undo;
+        if (undo == null || conversation.chat.state.disposed || this.chatApplyingFields.has(undo.target)) return;
+        const revision = conversation.revision;
+        const operation = {};
+        this.chatApplyingFields.set(undo.target, operation);
+        conversation.applying = true;
+        conversation.chat.refresh();
+        try {
+            const fieldOptions = typeof this.EDITOR.field === "function" ? this.EDITOR.field(undo.target)?.s?.opts : null;
+            await fieldOptions?.wjeditorReadyPromise;
+            if (conversation.chat.state.disposed || conversation.revision !== revision) return;
+            if (this.EDITOR.get(undo.target) !== undo.appliedValue) {
+                conversation.undo = null;
+                conversation.chat.state.notice = WJ.translate("components.ai_assistants.chat.undoStale.js");
+                return;
+            }
+            if (undo.selectionEditor?.status === "ready") {
+                await new Promise((resolve, reject) => {
+                    const editor = undo.selectionEditor;
+                    const finish = () => {
+                        editor.removeListener("destroy", finish);
+                        resolve();
+                    };
+                    // Destroying CKEditor removes dataReady callbacks, so closure must also settle the write.
+                    editor.on("destroy", finish);
+                    try {
+                        editor.setData(undo.selectionValue, finish);
+                    } catch (error) {
+                        editor.removeListener("destroy", finish);
+                        reject(error);
+                    }
+                });
+            } else if (undo.wjeditor != null) undo.wjeditor.pbInsertContent(undo.value, "replace", true);
+            else {
+                this.EDITOR.set(undo.target, undo.value);
+                await fieldOptions?.wjeditorReadyPromise;
+            }
+            conversation.undo = null;
+            conversation.selection = null;
+            conversation.chat.state.notice = null;
+        } catch (error) {
+            conversation.chat.state.notice = WJ.translate("components.ai_assistants.chat.insertFailed.js");
+        } finally {
+            conversation.applying = false;
+            if (this.chatApplyingFields.get(undo.target) === operation) this.chatApplyingFields.delete(undo.target);
+            conversation.chat.refresh();
+        }
+    }
+
     async _executeAction(button, column, aiCol, inputValues = null) {
+        if (aiCol.action === "live_chat") {
+            this.aiUserInterface.openChat(this.getChatConversation(button, column, aiCol));
+            return;
+        }
         // Implement AI button click handling logic here
         //console.log("Executing action for AI column:", aiCol);
 

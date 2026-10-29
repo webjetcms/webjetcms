@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.webjetcms.ai.AiErrorCategory;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Adminlog;
@@ -54,25 +56,18 @@ public class AssistantController {
     @PostMapping(value = "/response/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
         AssistantResponseDTO responseDto = null;
-        String exceptionMessage = null;
 
         try {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
             responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
-        } catch (ProviderCallException e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
         } catch (Exception e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
-            Adminlog.add(Adminlog.TYPE_AI, "AI response error: " + exceptionMessage, 0L, -1L);
+            responseDto = errorResponse(e, "AI response error: ");
         }
 
         if (responseDto == null) {
-            responseDto = new AssistantResponseDTO();
-            responseDto.setError(getErrMsg(exceptionMessage, request));
+            responseDto = AssistantResponseDTO.fromError(null);
         }
 
         return responseDto;
@@ -81,25 +76,18 @@ public class AssistantController {
     @PostMapping(value = "/response-image/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiImageReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
         AssistantResponseDTO responseDto = null;
-        String exceptionMessage = null;
 
         try {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
             responseDto = aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request);
-        } catch (ProviderCallException e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
         } catch (Exception e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
-            Adminlog.add(Adminlog.TYPE_AI, "AI response image error: " + exceptionMessage, 0L, -1L);
+            responseDto = errorResponse(e, "AI response image error: ");
         }
 
         if (responseDto == null) {
-            responseDto = new AssistantResponseDTO();
-            responseDto.setError(getErrMsg(exceptionMessage, request));
+            responseDto = AssistantResponseDTO.fromError(null);
         }
 
         return responseDto;
@@ -125,25 +113,18 @@ public class AssistantController {
         writer.flush();
 
         AssistantResponseDTO responseDto = null;
-        String exceptionMessage = null;
 
         try {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
             responseDto = aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request);
-        } catch (ProviderCallException e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
         } catch(Exception e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
-            Adminlog.add(Adminlog.TYPE_AI, "AI streamed response error: " + exceptionMessage, 0L, -1L);
+            responseDto = errorResponse(e, "AI streamed response error: ");
         } finally {
 
             if (responseDto == null) {
-                responseDto = new AssistantResponseDTO();
-                responseDto.setError(getErrMsg(exceptionMessage, request));
+                responseDto = AssistantResponseDTO.fromError(null);
             }
 
             if (streamWriter != null) {
@@ -187,8 +168,15 @@ public class AssistantController {
         return UploadFileTools.getPageUploadSubDir(docId, groupId, title, "/images");
     }
 
-    private String getErrMsg(String errMsg, HttpServletRequest request) {
-        return errMsg;
+    private AssistantResponseDTO errorResponse(Exception exception, String auditMessage) {
+        AssistantResponseDTO response = AssistantResponseDTO.fromError(exception);
+        if (AiErrorCategory.CANCELLED.name().equals(response.getErrorCategory()) == false) {
+            exception.printStackTrace();
+            if (exception instanceof ProviderCallException == false) {
+                Adminlog.add(Adminlog.TYPE_AI, auditMessage + response.getError(), 0L, -1L);
+            }
+        }
+        return response;
     }
 
     @GetMapping("/check-name-location/")

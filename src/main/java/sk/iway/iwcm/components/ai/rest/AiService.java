@@ -191,7 +191,7 @@ public class AiService {
 
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
-        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false || Tools.isFalse(assistant.getUseStreaming())) {
+        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
 
@@ -201,6 +201,9 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
+                if (aiInterface.isStreamingEnabled(assistant) == false) {
+                    throw new IllegalStateException(getNotSupportedAction(prop));
+                }
                 // Prepare task
                 Callable<AssistantResponseDTO> task = () -> aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request);
                 // Run task
@@ -213,6 +216,13 @@ public class AiService {
 
     static boolean shouldRemoveHtml(AssistantDefinitionEntity assistant, InputDataDTO inputData) {
         return Tools.isFalse(assistant.getKeepHtml()) && inputData.isStructuredInput() == false;
+    }
+
+    private boolean isStreamingEnabled(AssistantDefinitionEntity assistant) {
+        for (AiInterface provider : aiInterfaces) {
+            if (provider.getProviderId().equals(assistant.getProvider())) return provider.isStreamingEnabled(assistant);
+        }
+        return false;
     }
 
     public String getBonusHtml(Long assistantId, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) {
@@ -377,6 +387,7 @@ public class AiService {
             );
 
             if(assistants != null && assistants.size() > 0) {
+                AiService aiService = Tools.getSpringBean("aiService", AiService.class);
 
                 for (AssistantDefinitionEntity ade : assistants) {
                     DataTableAi ai = new DataTableAi();
@@ -393,7 +404,7 @@ public class AiService {
                     if (providerTitleKey.equals(providerTitle)) providerTitle = ade.getProvider();
                     ai.setProviderTitle(providerTitle);
 
-                    ai.setUseStreaming(Tools.isTrue(ade.getUseStreaming()));
+                    ai.setUseStreaming(aiService == null ? Tools.isTrue(ade.getUseStreaming()) : aiService.isStreamingEnabled(ade));
                     ai.setAction(ade.getAction());
 
                     String groupName = ade.getGroupName();

@@ -12,6 +12,25 @@ Integrácia nového serverového poskytovateľa do projektu má tri časti:
 
 Identifikátor poskytovateľa je verejná konfiguračná hodnota. Musí byť stabilný, neprázdny, jedinečný a vo všetkých troch častiach úplne zhodný. Odporúčame použiť malé písmená, napríklad `acme`. Duplicitný identifikátor vrátane kolízie so vstavaným poskytovateľom spôsobí chybu pri štarte aplikácie.
 
+## Rozdelenie zodpovedností
+
+Pri zjednodušovaní adaptérov zachovajte nasledujúce úlohy v CMS:
+
+| Úloha | Implementácia v CMS |
+| --- | --- |
+| Oprávnenia, výber asistenta a kontrola povolenej akcie | `AssistantController`, `AiService` |
+| Konfigurácia poskytovateľa a doménový kontext | `WebjetAiConfigurationService`; `AiTaskRegistry` prenáša kontext do pracovného vlákna |
+| Príprava CMS vstupov a makier, ochrana a obnovenie príkazov `INCLUDE` | `LibrarySupportLogic`, `IncludesHandler` |
+| Audit a evidencia spotreby tokenov podľa používateľa a domény | `LibrarySupportLogic`, `AiStatService` |
+| Ukladanie a odstránenie dočasných obrázkov, kontrola cieľového priečinka | `AiTempFileStorage`, `AiTempFileRemover` |
+| Väzba pokračovania chatu na session, používateľa, doménu a asistenta | `AiChatSession`; prehliadač dostáva nepriehľadný token namiesto ID odpovede poskytovateľa |
+| Evidencia a zastavenie úloh používateľa | `AiTaskRegistry`; knižnici odovzdáva `AiCancellationToken` |
+| Vloženie odpovede do editora, práca s výberom a vrátenie zmien | `EditorAi`; prepis, koncept a obnovu rozhovoru spravuje `AiChat` |
+
+Knižnica dostáva pripravené `AiRequest` a `AiProviderConfig`, vracia `AiResponse` a chyby oznamuje výnimkou `AiProviderException`. Zabezpečuje protokol poskytovateľa, jeho modely a metadáta schopností, prenos streamu a klasifikáciu chýb. CMS podľa týchto údajov rozhoduje o sprístupnení funkcií a zachováva nastavenia asistenta, napríklad súhlas s ukladaním rozhovoru cez `useTemporal=false`.
+
+Spoločné JavaScriptové funkcie `requestAiText` a `parseAiResponse` zostávajú súčasťou CMS. Prvá komunikuje s REST službami CMS, druhá pripravuje obsah pre editor. Oprávnenia, session a ukladanie zmien naďalej spravujú príslušné CMS triedy uvedené v tabuľke.
+
 ## 1. Implementácia `AiProvider`
 
 Implementáciu umiestnite do samostatnej knižnice nezávislej od WebJET CMS. Nasledujúci minimálny príklad je úplný a kompilovateľný; pevnú odpoveď nahraďte volaním API dodávateľa:
@@ -309,7 +328,17 @@ Dôležité metódy:
 - `getAiStreamResponse` – streamuje textovú odpoveď cez `BufferedWriter`
 - `getBonusHtml` – vráti doplnkové polia podporované vybraným obrázkovým modelom
 
+### Podpora chatu a streamovania
+
+`LibrarySupportLogic` vyberá operáciu a overuje streamovanie podľa `AiClient.capabilities(providerId, model)`. Operáciu `CHAT` použije pre asistenta s akciou `LIVE_CHAT`, explicitným `useTemporal=false`, podporou chatu v adaptéri a modelom, ktorý chat výslovne neodmieta. V ostatných prípadoch zostáva operácia `TEXT`. Metadáta samy nepovoľujú ukladanie rozhovoru.
+
+Streamovanie musí byť zapnuté v asistentovi a metadáta nesmú označovať zvolenú operáciu alebo jej streamovanie ako nepodporované. Výsledok sa odovzdá v existujúcom `DataTableAi.useStreaming` a rovnaká kontrola sa použije pri volaní streamovacej REST služby. Uložená hodnota `useStreaming` sa nemení. Neznáma podpora modelu alebo streamovania (`UNKNOWN`) požiadavku neblokuje.
+
+Prehliadačový poskytovateľ zachováva pôvodné nastavenie. Lokálne adaptéry pri zisťovaní schopností nenačítavajú modely; naďalej platia ich obmedzenia nastavené pri ukladaní asistenta.
+
 ### Prenos priebežnej odpovede do administrácie
+
+Textové generovanie v editore aj chat používajú `requestAiText` zo súboru `ai-rest-transport.js`. Funkcia odosiela požiadavku s CSRF tokenom, kontroluje HTTP a JSON odpoveď a pri streamovaní používa `readAiStream`. Vracia text a metadáta CMS bez úpravy obsahu. Funkcia `parseAiResponse` zo súboru `ai-response-parser.js` oddeľuje HTML a vysvetlenie pre generovanie v editore aj vloženie odpovede z chatu. Správu rozhovoru zabezpečuje `AiChat`. Pri HTTP chybách 401 a 403 zobrazí prenosová funkcia existujúce upozornenie na odhlásenie alebo chybu CSRF tokenu.
 
 Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičkou `Accept: application/x-ndjson`. Server posiela samostatné JSON správy oddelené novým riadkom:
 
@@ -322,3 +351,24 @@ Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičk
 Správy `delta` obsahujú iba generovaný text. Záverečná správa `result` obsahuje `AssistantResponseDTO` vrátane spotreby tokenov a prípadnej chyby. Klient skladá neúplné riadky medzi sieťovými blokmi a spracuje aj viac správ v jednom bloku. Odpoveď považuje za úspešnú až po prijatí záverečnej správy bez chyby a ukončení prenosu.
 
 Bez explicitnej požiadavky na `application/x-ndjson` zostáva pre starších klientov pôvodný formát `text/plain`. CMS adaptéry naďalej zapisujú obyčajný text do `BufferedWriter`; oddelenie správ zabezpečuje `AssistantController`, bez zmeny rozhrania knižnice `webjet-ai`.
+
+### Chyby poskytovateľa
+
+Chybová odpoveď zachováva textové pole `error` a môže obsahovať aj `errorCategory`, `providerStatusCode` a `retryable`. Rovnaké polia sú v bežnej JSON odpovedi aj v záverečnej správe `result` streamu. `providerStatusCode` je kladný HTTP stav externej služby, nie CMS endpointu; pri neznámej hodnote sa neposiela. `retryable` je odporúčanie poskytovateľa (`true` alebo `false`), pri chýbajúcej informácii sa neposiela. Pri hodnote `false` chat neponúkne opakovanie rovnakej požiadavky; zastavenú odpoveď môže používateľ zopakovať. Úplná odpoveď poskytovateľa ani príčina výnimky sa do prehliadača neposielajú.
+
+| `errorCategory` | Správanie chatu |
+| --- | --- |
+| `CANCELLED` | Zobrazí zastavenú odpoveď a zachová posledné úspešné pokračovanie. |
+| `INVALID_CONTINUATION` | Ponúkne začatie nového rozhovoru. Až po voľbe používateľa zruší neplatné pokračovanie; prepis správ a rozpracovaný text zachová. |
+| `UNSUPPORTED_OPERATION` | Vysvetlí potrebu zmeniť asistenta alebo model namiesto opakovania rovnakej požiadavky. |
+| `UNKNOWN` | Použije bežné spracovanie chyby; rovnako spracuje neznámu budúcu kategóriu. |
+
+Chat požiadavky automaticky neopakuje ani nezačína nový rozhovor. Kategórie určuje knižnica podľa spoľahlivých údajov poskytovateľa, nie podľa textu chybovej správy. Vzdialené chyby pokračovania Gemini preto zatiaľ zostávajú `UNKNOWN`. Rovnako sa spracujú existujúce validačné chyby CMS, napríklad expirovaný alebo neplatný token rozhovoru v CMS session.
+
+### Zastavenie požiadavky
+
+`AiTaskRegistry` vytvára pre každú úlohu samostatný `AiCancellationToken`. Tlačidlo **Zastaviť**, začatie nového chatu alebo zatvorenie editora zruší cez existujúcu službu `stop-assistant` token aj `Future` príslušnej úlohy. `LibrarySupportLogic` odovzdáva token knižnici pri textových, chatových a obrázkových požiadavkách vrátane následného generovania názvu obrázka. Ostatné súbežné požiadavky zostávajú aktívne.
+
+OpenAI, Gemini a OpenRouter prerušia HTTP požiadavku vrátane čakania na ďalšiu časť streamu. Zastavený chat si zachová posledné úspešné pokračovanie; čiastočná odpoveď ho nenahradí. Samotné zatvorenie okna chatu iba skryje jeho obsah a bežiacu požiadavku nezastaví.
+
+Vlastný poskytovateľ môže prekryť varianty `execute` a `stream` s parametrom `AiCancellationToken` a pripojiť k nemu zrušenie svojho transportu. Predvolené implementácie vrátane lokálnych modelov kontrolujú zrušenie pred a po vykonaní a pri odovzdávaní častí odpovede; nedokážu vynútiť prerušenie blokovaného natívneho výpočtu. Zrušenie HTTP spojenia nezaručuje zastavenie spracovania alebo účtovania na strane externej služby a nemaže už uložený kontext rozhovoru.
