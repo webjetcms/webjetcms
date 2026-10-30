@@ -2,8 +2,8 @@ package sk.iway.iwcm.system.spring.webjet_component;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,22 +69,18 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
      * @return
      */
     public String parse(HttpServletRequest request, HttpServletResponse response, String html) {
-        Map<String, WebjetComponentInterface> components = new LinkedHashMap<>();
-
         if (Tools.isEmpty(html)) return html;
 
         if (html.contains("!INCLUDE")==false) return html;
 
         try {
-            // parsuje komponenty a ich page params z html kodu
-            parseComponentsAndPageParams(html, components);
+            Set<String> includes = getSpringIncludes(html);
 
             DebugTimer dt = new DebugTimer("WriteTag");
             // renderuje html kod z tried pre dane komponenty a nahradza v html kode include za html
-            html = renderComponents(request, response, html, components, dt);
+            html = renderComponents(request, response, html, includes, dt);
         }
         catch (Exception ex) {
-            html = getErrorMessage(request, ex, html);
             sk.iway.iwcm.Logger.error(ex);
         }
 
@@ -126,12 +122,9 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
         }
     }
 
-    /**
-     * Metóda parseComponentsAndPageParams slúži na parsovanie komponent tried a pageParams z !INCLUDE()!
-     * @param html
-     * @throws BeansException
-     */
-    private void parseComponentsAndPageParams(String html, Map<String, WebjetComponentInterface> components) throws BeansException {
+    /** Finds unique Spring includes in document order, leaving JSP includes for WriteTag. */
+    private Set<String> getSpringIncludes(String html) {
+        Set<String> includes = new LinkedHashSet<>();
         // pattern od !INCLUDE do )!
         Pattern pattern = Pattern.compile("!INCLUDE\\((.*?)\\)!");
         Matcher matcher = pattern.matcher(html);
@@ -144,18 +137,9 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
                 continue;
             }
 
-            // unescape pretoze html kod moze obsahovat &quote;
-            String unescapedGroup = StringEscapeUtils.unescapeHtml4(group);
-
-            if (components.containsKey(group)) {
-                continue;
-            }
-
-            WebjetComponentInterface component = parseComponentClass(unescapedGroup);
-            if (component != null) {
-                components.put(group, component);
-            }
+            includes.add(group);
         }
+        return includes;
     }
 
     /**
@@ -203,13 +187,11 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
     private String redirectComponent = null;
 
     /**
-     * Metóda renderComponents slúži na renderovanie komponent
-     * @param html
-     * @return
-     * @throws Exception
+     * Renders each Spring include independently, replacing a failed application with its error message.
+     * Keeps surrounding content and always releases multipart resources, including after redirects.
      */
-    private String renderComponents(HttpServletRequest request, HttpServletResponse response, String html, Map<String, WebjetComponentInterface> components, DebugTimer dt) throws Exception {
-        if (components.isEmpty()) {
+    private String renderComponents(HttpServletRequest request, HttpServletResponse response, String html, Set<String> includes, DebugTimer dt) {
+        if (includes.isEmpty()) {
             return html;
         }
 
@@ -217,87 +199,95 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
         // Check if we need to wrap the request for multipart handling
         HttpServletRequest processedRequest = processMultipartRequest(request);
 
-        for (Map.Entry<String, WebjetComponentInterface> entry : components.entrySet()) {
-            String key = entry.getKey();
-            WebjetComponentInterface v = entry.getValue();
+        try {
+            for (String key : includes) {
+                try {
+                    // Resolve the bean here so initialization failures affect only this include.
+                    WebjetComponentInterface component = parseComponentClass(StringEscapeUtils.unescapeHtml4(key));
+                    if (component == null) continue;
 
-            PageParams pageParams;
-            int i = key.indexOf(",");
-            if (i>0) pageParams = new PageParams(key.substring(i));
-            else pageParams = new PageParams("");
+                    PageParams pageParams;
+                    int i = key.indexOf(",");
+                    if (i>0) pageParams = new PageParams(key.substring(i));
+                    else pageParams = new PageParams("");
 
-            /** Check if this app can be rendered in current device type (onlz if we checking device) **/
-            boolean render = canRenderForDevice(pageParams, request);
+                    /** Check if this app can be rendered in current device type (onlz if we checking device) **/
+                    boolean render = canRenderForDevice(pageParams, request);
 
-            if(render) {
-                /*** CACHE logic ***/
-                String rendered = null;
+                    if(render) {
+                        /*** CACHE logic ***/
+                        String rendered = null;
 
-                Cache cache = Cache.getInstance();
-                //prepare cache key
-                String cacheKey = getCacheKey(key, request);
-                int cacheMinutes = 0;
-                boolean servedFromCache = false;
+                        Cache cache = Cache.getInstance();
+                        //prepare cache key
+                        String cacheKey = getCacheKey(key, request);
+                        int cacheMinutes = 0;
+                        boolean servedFromCache = false;
 
-                StopWatch executionTimeStopWatch = new StopWatch();
-                executionTimeStopWatch.start();
-                MemoryMeasurement memoryConsumed = new MemoryMeasurement();
+                        StopWatch executionTimeStopWatch = new StopWatch();
+                        executionTimeStopWatch.start();
+                        MemoryMeasurement memoryConsumed = new MemoryMeasurement();
 
-                //Is cache permitted ?
-                if (isCacheEnabled(request, key)) {
-                    //Get cache time param
-                    cacheMinutes = pageParams.getIntValue("cacheMinutes", -1);
+                        //Is cache permitted ?
+                        if (isCacheEnabled(request, key)) {
+                            //Get cache time param
+                            cacheMinutes = pageParams.getIntValue("cacheMinutes", -1);
 
-                    if(cacheMinutes > 0) {
-                        String cachedHtml = (String) cache.getObject(cacheKey);
+                            if(cacheMinutes > 0) {
+                                String cachedHtml = (String) cache.getObject(cacheKey);
 
-                        //If html code is in cache, use it
-                        if(Tools.isNotEmpty(cachedHtml)) {
-                            rendered = cachedHtml;
-                            servedFromCache = true;
+                                //If html code is in cache, use it
+                                if(Tools.isNotEmpty(cachedHtml)) {
+                                    rendered = cachedHtml;
+                                    servedFromCache = true;
+                                }
+                            }
                         }
+
+                        //If cache logic wasn't executed, render html code
+                        if(rendered == null) {
+                            // render html kodu z triedy
+                            rendered = componentResolver.render(processedRequest, response, component, pageParams);
+
+                            // ak navratova hodnota obsahuje redirect
+                            if (isRedirected(response)) {
+                                // nastavime nazov triedy pre vypis
+                                redirectComponent = component.getClass().getSimpleName();
+                                return "";
+                            }
+
+                            if (cacheMinutes > 0 && cacheKey != null) {
+                                //Save new rendered html code to cache
+                                cache.setObjectSeconds(cacheKey, rendered, cacheMinutes * 60, true);
+                            }
+                        }
+
+                        if (rendered != null && html.contains(key)) {
+                            if (writePerfStat && key.length()>1) {
+                                long diff = dt.getDiff();
+                                long lastDiff = dt.getLastDiff();
+                                String logText = "\nPerfStat: " + diff + " ms (+"+lastDiff+") " + key.substring(1) +"\n";
+                                rendered = rendered + logText;
+                                Logger.debug(WriteTag.class, logText);
+                            }
+                            executionTimeStopWatch.stop();
+                            if (servedFromCache) ExecutionTimeMonitor.recordComponentExecutionFromCache(cacheKey, executionTimeStopWatch.getTime());
+                            else ExecutionTimeMonitor.recordComponentExecution(cacheKey, executionTimeStopWatch.getTime(), memoryConsumed.diff());
+                            html = Tools.replace(html, key, rendered);
+                        }
+                    } else {
+                        //do not render component for current device type, remove it from html
+                        html = Tools.replace(html, key, "");
                     }
+                } catch (Exception ex) {
+                    // Keep the rest of the page and do not cache the error response.
+                    html = Tools.replace(html, key, getErrorMessage(request, ex, key));
+                    Logger.error(ex);
                 }
-
-                //If cache logic wasn't executed, render html code
-                if(rendered == null) {
-                    // render html kodu z triedy
-                    rendered = componentResolver.render(processedRequest, response, v, pageParams);
-
-                    // ak navratova hodnota obsahuje redirect
-                    if (isRedirected(response)) {
-                        // nastavime nazov triedy pre vypis
-                        redirectComponent = v.getClass().getSimpleName();
-                        return "";
-                    }
-
-                    if (cacheMinutes > 0 && cacheKey != null) {
-                        //Save new rendered html code to cache
-                        cache.setObjectSeconds(cacheKey, rendered, cacheMinutes * 60, true);
-                    }
-                }
-
-                if (rendered != null && html.contains(key)) {
-                    if (writePerfStat && key.length()>1) {
-                        long diff = dt.getDiff();
-                        long lastDiff = dt.getLastDiff();
-                        String logText = "\nPerfStat: " + diff + " ms (+"+lastDiff+") " + key.substring(1) +"\n";
-                        rendered = rendered + logText;
-                        Logger.debug(WriteTag.class, logText);
-                    }
-                    executionTimeStopWatch.stop();
-                    if (servedFromCache) ExecutionTimeMonitor.recordComponentExecutionFromCache(cacheKey, executionTimeStopWatch.getTime());
-					else ExecutionTimeMonitor.recordComponentExecution(cacheKey, executionTimeStopWatch.getTime(), memoryConsumed.diff());
-                    html = Tools.replace(html, key, rendered);
-                }
-            } else {
-                //do not render component for current device type, remove it from html
-                html = Tools.replace(html, key, "");
             }
+        } finally {
+            cleanupMultipartRequest(processedRequest);
         }
-
-        // Cleanup multipart request if needed
-        cleanupMultipartRequest(processedRequest);
 
         return html;
     }
