@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.forms;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,6 +21,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -36,6 +40,64 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.UserDetails;
 
 class FormsServiceTest {
+
+    /** Removing a hidden empty option preserves the remaining label and submitted value before and after saving. */
+    @ParameterizedTest
+    @CsvSource({"'I agree',yes", "'Sales, Europe',sales", "Consent,'yes please'", "Region,'Europe, West'"})
+    void preservesSingleOptionWhenRemovingEmptyOption(String label, String value) {
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.formsimple.hide.checkboxgroup")).thenReturn("placeholder,emptyOption");
+        when(prop.getText("components.formsimple.iterable.checkboxgroup")).thenReturn(
+            "<label><input type=\"checkbox\" value=\"${value}\">${value-label}</label>");
+        String configured = ":|" + label + ":" + value;
+        String filtered = FormsService.removeUnsupportedEmptyOption(configured, "checkboxgroup", prop);
+        assertArrayEquals(new String[] {label + ":" + value}, FormsService.parseIterableValues(filtered));
+
+        for (String options : new String[] {configured, filtered}) {
+            JSONObject item = new JSONObject().put("fieldType", "checkboxgroup").put("label", "Choice")
+                .put("labelOriginal", "Choice").put("itemFormId", "autotest-choice").put("value", options);
+            String html = FormsService.replaceFields("<div>${iterable}</div>", "autotest", "", item,
+                "", false, false, new HashSet<>(), prop, null);
+            Document document = Jsoup.parseBodyFragment(html);
+            assertEquals(1, document.select("input").size());
+            assertEquals(value, document.selectFirst("input").val());
+            assertEquals(label, document.selectFirst("label").text());
+        }
+    }
+
+    /** Hidden empty entries are ignored with legacy separators and with multiple or no remaining choices. */
+    @Test
+    void preservesLegacyAndMultipleOptionsWhenRemovingEmptyOption() {
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.formsimple.hide.checkboxgroup")).thenReturn("emptyOption");
+        for (String configured : new String[] {":,I agree:yes", ": Agree:yes"}) {
+            String filtered = FormsService.removeUnsupportedEmptyOption(configured, "checkboxgroup", prop);
+            assertArrayEquals(new String[] {configured.substring(2)}, FormsService.parseIterableValues(filtered));
+        }
+        String filtered = FormsService.removeUnsupportedEmptyOption(":|First:one| : |Second:two", "checkboxgroup", prop);
+        assertArrayEquals(new String[] {"First:one", "Second:two"}, FormsService.parseIterableValues(filtered));
+        assertArrayEquals(new String[0], FormsService.parseIterableValues(
+            FormsService.removeUnsupportedEmptyOption(":", "checkboxgroup", prop)));
+        assertEquals("First:one|Second:two", FormsService.removeUnsupportedEmptyOption("First:one|Second:two", "checkboxgroup", prop));
+    }
+
+    /** Field types that allow empty options retain the sentinel. */
+    @ParameterizedTest
+    @ValueSource(strings = {"radiogroup", "select"})
+    void preservesAllowedEmptyOption(String fieldType) {
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.formsimple.hide." + fieldType)).thenReturn("trimValue");
+        assertEquals(":|I agree:yes", FormsService.removeUnsupportedEmptyOption(":|I agree:yes", fieldType, prop));
+    }
+
+    /** Enumeration expressions are not rewritten as manual option lists. */
+    @ParameterizedTest
+    @ValueSource(strings = {"enumeration-options|1|string1|string2", "{enumeration-options|1|string1|string2}"})
+    void preservesEnumerationOptions(String value) {
+        Prop prop = mock(Prop.class);
+        assertEquals(value, FormsService.removeUnsupportedEmptyOption(value, "checkboxgroup", prop));
+        verifyNoInteractions(prop);
+    }
 
     @Test
     void replaceFieldsPreservesReplacementValuesAndUnknownExpressions() {

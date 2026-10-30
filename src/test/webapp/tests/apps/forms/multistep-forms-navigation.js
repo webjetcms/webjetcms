@@ -41,7 +41,8 @@ async function openForm(I, terminalError = false, threeSteps = false) {
             <input type="checkbox" id="f1-options-0" name="f1-options" value="Sales, Europe">
             <input type="checkbox" id="f1-options-1" name="f1-options" value="Support">
         </div>
-        <div class="form-group"><input type="radio" id="f1-radio-0" name="f1-radio" value="one"><input type="radio" id="f1-radio-1" name="f1-radio" value="two"></div>` : ''}
+        <div class="form-group"><input type="radio" id="f1-radio-0" name="f1-radio" value="one"><input type="radio" id="f1-radio-1" name="f1-radio" value="two">
+            <label><input type="radio" id="f1-radio-empty" name="f1-radio" value="">No option selected</label></div>` : ''}
         <button type="submit">${threeSteps ? 'Next' : 'Submit'}</button>
     </form>`;
     const thirdStep = `<form action="/rest/multistep-form/save-form?step-id=3">
@@ -285,6 +286,33 @@ Scenario('Allow another form to navigate while the first form is loading', async
     await I.executeScript(() => window.autotestRequests[3].resume());
     await I.waitForVisible(`${second} [data-multistep-back-step]`);
     await I.seeElement('#multistep-form-wrapper-autotest button[type="submit"]:disabled');
+});
+
+Scenario('Clear a saved radio answer with the empty option and preserve it across navigation', async ({ I }) => {
+    const submissions = await openForm(I, false, true);
+    I.checkOption('#f1-subscribe');
+    I.click('Next');
+    I.waitForVisible('#f1-radio-0');
+    I.checkOption('#f1-radio-0');
+    I.click('Next');
+    I.waitForVisible('#f1-email');
+    I.click('Back');
+    I.waitForVisible('#f1-radio-0');
+    I.seeCheckboxIsChecked('#f1-radio-0');
+    I.checkOption('#f1-radio-empty');
+    I.dontSeeCheckboxIsChecked('#f1-radio-0');
+    I.click('Back');
+    I.waitForVisible('#f1-subscribe');
+    I.click('Next');
+    I.waitForVisible('#f1-radio-empty');
+    I.seeCheckboxIsChecked('#f1-radio-empty');
+    I.click('Next');
+    await I.waitForVisible('#f1-email');
+    I.assertEqual(submissions.filter(submission => submission.stepId === '2').at(-1).values.radio, '');
+    I.click('Back');
+    I.waitForVisible('#f1-radio-0');
+    I.dontSeeCheckboxIsChecked('#f1-radio-0');
+    I.dontSeeCheckboxIsChecked('#f1-radio-1');
 });
 
 for (const changeSecondStep of [false, true]) {

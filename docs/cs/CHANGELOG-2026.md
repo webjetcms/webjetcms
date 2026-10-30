@@ -159,6 +159,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ![](redactor/apps/multistep-form/stat-section-advanced.png)
 
+- Vícekrokové formuláře - [prázdná možnost](redactor/apps/multistep-form/README.md#prázdná-možnost) ve skupině výběrových polí zobrazuje nastavitelný text **Bez zvolené možnosti** (#381).
 - Do vícekrokových formulářů přidána možnost jednoduše nastavovat výběrová pole a skupiny zaškrtávacích / výběrových polí (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
