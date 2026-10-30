@@ -5,6 +5,12 @@ V režimu [cluster](README.md#cluster) můžete pro veřejně dostupný uzel zv�
 - `clusterMyNodeType` - ​​nastavte na `public`, aby tento uzel běžel bez administrace a omezil některé zápisy do tabulek.
 - `monitoringEnableCountUsersOnAllNodes` - ​​nastavte na `false` aby nedocházelo k zápisu do tabulky s konfigurací. Více v [monitoringu serveru](../../sysadmin/monitoring/README.md).
 
+## Vícekrokové formuláře
+
+Na uzlu s nastavením `clusterMyNodeType=public` WebJET nezapisuje pomocná počítadla zobrazení a pokusů o odeslání do tabulky `form_settings` ani počítadla validačních chyb položek do tabulky `form_items`. Tím se u databázového uživatele s omezenými právy zachová zobrazení, validace a odeslání formuláře bez potřeby povolit zápis do těchto tabulek.
+
+Odpovědi se nadále ukládají do tabulky `forms`, proto musí mít databázový uživatel veřejného uzlu práva `INSERT` a `UPDATE`, jak uvádějí příklady níže. Návštěvy veřejného uzlu se nezapočítávají do [průběžných počítadel statistiky vícekrokového formuláře](../../redactor/apps/multistep-form/stat.md#souhrnné-statistiky).
+
 ## Práva na tabulky
 
 Příklad nastavení práv pro uživatele `WEB_WJ_APP` s právy pouze pro čtení pro Oracle databázi. Uživatel `WEB_WJ` je uživatel s plnými právy a vlastník schématu s daty.

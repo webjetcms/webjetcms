@@ -389,42 +389,70 @@ Scenario("domainId odhlasenie", ({ I }) => {
     I.logout();
 });
 
-Scenario("formsimple-encrypted", ({ I }) => {
+Scenario("formsimple-encrypted @screenshot", ({ I, DT, DTE, Document, i18n }) => {
+    if (Document.isScreenshotsEnabled()) {
+        // Generate a disposable pair to illustrate key management without changing the fixture's keys.
+        I.amOnPage("/components/crypto/admin/keymanagement");
+        I.clickCss("#tabLink2");
+        I.clickCss("#tabMenu2 input[type=submit]");
+        I.waitForVisible("#tabMenu2 textarea.generatedKey", 10);
+        Document.screenshot("/redactor/apps/form/encryption-keys.png", 1000, 800);
+
+        I.amOnPage("/apps/form/admin/");
+        DT.filterEquals("formName", "formular-lahko-encrypted");
+        I.clickCss("#formsDataTable td.dt-select-td");
+        I.clickCss("#formsDataTable_wrapper button.buttons-edit");
+        DTE.waitForEditor("formsDataTable");
+        I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
+        Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/encryption-settings.png");
+        DTE.cancel();
+    }
+
+    // The public fixture and its stored HTML remain Slovak regardless of the admin language.
     I.amOnPage("/apps/formular-lahko/formular-lahko-encrypted.html");
 
     fillFormSimple(I, null, randomNumber);
     I.see("Formulár bol úspešne odoslaný");
 
-    //over zobrazenie v admine
+    // Verify that stored values and the HTML preview need the private key.
     I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko-encrypted");
+    DT.waitForLoader("#formDetailDataTable_processing");
     I.see("encrypted-tink-tester_42");
+    I.dontSee("Form-autotest-"+randomNumber);
+    Document.screenshot("/redactor/apps/form/encryption-list.png", 1280, 550);
 
     I.click( locate("#formDetailDataTable tbody tr:nth-child(1) a").withChild("i.ti-eye") );
+    I.waitForElement("#modalIframeIframeElement", 10);
     I.switchTo("#modalIframeIframeElement");
-    I.see("encrypted-tink");
+    I.waitForText("encrypted-tink", 10);
     I.dontSee("Technické info");
     I.switchTo()
 
-    //
     I.say("Setting decrypt key");
     I.amOnPage("/components/crypto/admin/keymanagement");
     I.fillField(".privateKey", "decrypt_key-tink-tester_42:eyJwcmltYXJ5S2V5SWQiOjEzNzAyODYzNDUsImtleSI6W3sia2V5RGF0YSI6eyJ0eXBlVXJsIjoidHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuRWNpZXNBZWFkSGtkZlByaXZhdGVLZXkiLCJ2YWx1ZSI6IkVxTUJFbHdLQkFnQ0VBTVNVaEpRQ2poMGVYQmxMbWR2YjJkc1pXRndhWE11WTI5dEwyZHZiMmRzWlM1amNubHdkRzh1ZEdsdWF5NUJaWE5EZEhKSWJXRmpRV1ZoWkV0bGVSSVNDZ1lLQWdnUUVCQVNDQW9FQ0FNUUVCQWdHQUVZQVJvZ1RKMWJQYm83MW5ZTk56V1lVZmFITnJsZEJyUkp2ZXF3NHI1My9DMVhtTFFpSVFESU12TWtyUlhQdlNNN2hVaklHblcybWdob1BCd21HaDJKaEFhMEg0MlhWaG9nQ29oTno4bWR5NktBbWFmaCt2T2JUb2pTRkl6Q2VIWE50WS91SnFmNWx6RT0iLCJrZXlNYXRlcmlhbFR5cGUiOiJBU1lNTUVUUklDX1BSSVZBVEUifSwic3RhdHVzIjoiRU5BQkxFRCIsImtleUlkIjoxMzcwMjg2MzQ1LCJvdXRwdXRQcmVmaXhUeXBlIjoiVElOSyJ9XX0K");
-    I.click("Nastaviť");
+    Document.screenshot("/redactor/apps/form/encryption-decrypt-key.png", 1000, 560);
+    i18n.click("Setup");
+    i18n.waitForText("Decryption key set successfully", 10);
 
     I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko-encrypted");
+    DT.waitForLoader("#formDetailDataTable_processing");
     I.dontSee("encrypted-tink-tester_42");
     I.see("Form-autotest-"+randomNumber);
     I.see("autotest."+randomNumber+"@balat.sk")
     I.see("Test odoslania formularu random: "+randomNumber);
     I.see("true");
+    Document.screenshot("/redactor/apps/form/encryption-list-decrypted.png", 1280, 550);
 
     I.click( locate("#formDetailDataTable tbody tr:nth-child(1) a").withChild("i.ti-eye") );
+    I.waitForElement("#modalIframeIframeElement", 10);
     I.switchTo("#modalIframeIframeElement");
+    I.waitForText("Technické info", 10);
     I.dontSee("encrypted-tink");
     I.see("Technické info");
     I.see(randomNumber, "span.form-control.emailInput-text");
     I.switchTo();
-    I.see("Vytlačiť", "#modalIframe div.modal-footer button");
+    i18n.see("Print", "#modalIframe div.modal-footer button");
 });
 
 Scenario("form with note field", ({ I, DT }) => {

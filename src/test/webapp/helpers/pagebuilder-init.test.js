@@ -80,6 +80,97 @@ for (const persistedAttributes of ['', ' contenteditable="true" role="textbox" t
     });
 }
 
+test('Page Builder ignores unsupported inline hosts without losing their content', async t => {
+    const f = await fixture(t, '');
+    const page = f.$('#wjInline-docdata');
+    page.html('<div class="pb-editable"><h2>Mobile network</h2>' +
+        '<ul class="pb-editable unsupported"><li class="pb-editable unsupported">First item</li>' +
+        '<li class="pb-content unsupported">Second item</li></ul>' +
+        '<table class="pb-editable unsupported"><tbody><tr><td class="pb-editable unsupported">Cell</td></tr></tbody></table></div>' +
+        '<p class="pb-editable">Following paragraph</p>' +
+        '<span class="pb-editable">Supported span</span><a class="pb-editable" href="#">Supported link</a>');
+    const unsupported = page.find('.unsupported').toArray();
+    const originalText = unsupported.map(element => element.textContent);
+
+    assert.doesNotThrow(() => f.window.initPageBuilderEditors(page));
+    assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 4, 'Supported hosts after the invalid markup must still initialize');
+    assert.deepEqual(unsupported.map(element => element.textContent), originalText, 'Skipped hosts must retain their content');
+    for (const element of unsupported) {
+        assert.equal(element.className, 'unsupported', 'Only redundant editor marker classes may be removed');
+        assert.equal(element.hasAttribute('contenteditable'), false);
+        assert.equal(element.hasAttribute('data-ckeditor-instance'), false);
+    }
+    assert.equal(page.find('[data-ckeditor-instance]').length, 4);
+    assert.ok(page.find('li').first().closest('[data-ckeditor-instance]').is('div'), 'List items remain inside their parent editor');
+
+    assert.doesNotThrow(() => f.window.initPageBuilderEditors(page));
+    assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 4, 'Repeated grid initialization must not create duplicate editors');
+});
+
+test('Page Builder removes nested editor markers before the parent captures its HTML', async t => {
+    const f = await fixture(t, '');
+    const page = f.$('#wjInline-docdata');
+    page.html('<div id="parent" class="pb-editable"><h2>Mobile network</h2>' +
+        '<p id="nested" class="lead pb-editable">Coverage</p>' +
+        '<div class="pb-content"><p class="pb-editable">Nested content</p></div></div>' +
+        '<p id="standalone" class="pb-editable">Standalone paragraph</p>' +
+        '<ul class="pb-editable"><li><p id="inside-unsupported" class="pb-editable">Independent paragraph</p></li></ul>');
+
+    f.window.initPageBuilderEditors(page);
+    assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 3, 'Only independent supported regions may create editors');
+    assert.equal(page.find('[data-ckeditor-instance] [data-ckeditor-instance]').length, 0);
+    assert.equal(page.find('#parent .pb-editable, #parent .pb-content').length, 0, 'Inner content must not carry editor markers into Enter or list commands');
+    assert.equal(page.find('#nested').attr('class'), 'lead', 'Formatting classes must remain intact');
+    assert.equal(page.find('#standalone.pb-editable, #inside-unsupported.pb-editable').length, 2, 'Independent supported regions must remain editable');
+    const parent = f.window.CKEDITOR.instances[page.find('#parent').attr('data-ckeditor-instance')];
+    assert.doesNotMatch(parent.getData(), /pb-editable|pb-content/, 'The initial CKEditor data must already be free of nested markers');
+
+    page.find('#parent').append('<p class="pb-editable lead">Inserted content</p>');
+    f.window.initPageBuilderEditors(page);
+    assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 3, 'Grid updates must not create an editor inside an existing editor');
+    assert.equal(page.find('#parent .pb-editable').length, 0);
+    assert.equal(page.find('#parent p.lead').length, 2);
+});
+
+for (const duplicate of [false, true]) {
+    test(`Page Builder initializes a nested column after ${duplicate ? 'duplicating' : 'moving'} it outside its parent editor`, async t => {
+        const f = await fixture(t, '');
+        const page = f.$('#wjInline-docdata');
+        page.html('<div id="parent" class="column-content pb-column__content pb-content"><p>Outer content</p>' +
+            '<div class="row"><div id="nested-column" class="col-6">' +
+            '<div class="column-content pb-column__content pb-content"><p>Nested content</p></div></div></div></div>');
+        f.window.initPageBuilderEditors(page);
+        assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 1);
+        assert.equal(page.find('#parent .pb-content, #parent [data-ckeditor-instance]').length, 0);
+
+        const original = page.find('#nested-column');
+        const clone = original.clone().removeAttr('id').appendTo(page);
+        if (!duplicate) original.remove();
+        f.window.initPageBuilderEditors(page);
+
+        const content = clone.find('.column-content');
+        const editor = f.window.CKEDITOR.instances[content.attr('data-ckeditor-instance')];
+        assert.ok(editor, 'A column outside its previous editor must get its own editor');
+        assert.equal(editor.element.$, content[0]);
+        assert.match(editor.getData(), /Nested content/);
+        assert.equal(page.find('[data-ckeditor-instance] [data-ckeditor-instance]').length, 0);
+
+        f.window.initPageBuilderEditors(page);
+        assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 2, 'Repeated initialization must retain one editor per independent region');
+    });
+}
+
+test('Page Builder resolves readiness when all marked hosts are unsupported', async t => {
+    const f = await fixture(t, '');
+    const page = f.$('#wjInline-docdata');
+    const html = '<ul><li class="pb-editable">Standalone item</li></ul>';
+    page.html(html);
+
+    await f.window.initPageBuilderEditors(page);
+    assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 0);
+    assert.equal(page.html(), html);
+});
+
 test('A failed CKEditor creation stops before scheduling instance callbacks', async t => {
     const f = await fixture(t, '');
     const element = f.window.document.createElement('div');

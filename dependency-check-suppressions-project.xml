@@ -116,10 +116,10 @@
     This is a version/applicability mismatch, not a claim that upgrading migrates
     ciphertext written with a legacy encryptor. Reassess if legacy encryption
     APIs, custom integrations, or previously encrypted data are introduced.
-    Verified on 2026-10-11. Reference:
+    Reverified on 2026-10-29 for Spring Security Crypto 7.1.2. Reference:
     https://spring.io/security/cve-2026-47842
     ]]></notes>
-    <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@7.1.1</packageUrl>
+    <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@7.1.2</packageUrl>
     <cve>CVE-2026-47842</cve>
   </suppress>
 

@@ -561,9 +561,11 @@ export class EditorAi {
         //console.log("executionResult=", executionResult, "totalTokens=", totalTokens, "stopped=", self.stopped);
 
         if (executionResult == null) {
+            self._hideLoader(button);
             self.setError();
         } else {
             if (executionResult.errorText != null) {
+                self._hideLoader(button);
                 self.setError(executionResult.errorText);
             } else if (executionResult.statusKey != null) {
                 self.setCurrentStatus(executionResult.statusKey, false, ...(executionResult.statusKeyParams ?? []));

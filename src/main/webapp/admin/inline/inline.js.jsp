@@ -642,13 +642,27 @@ function initPageBuilderEditors(pageDiv)
     pageDiv.data('plugin_ninjaPageBuilder').prepare_application_blocks(pageDiv);
     <%--var editableElements = pageDiv.find("* [class*='npb-column__content']");--%>
 	//console.log("initPageBuilderEditors, pageDiv=", pageDiv);
-    var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content']");
+    // Grid content remains discoverable after nested markers are removed and its column is moved.
+    var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content'], .<%=pbPrefix%>-column__content");
     editableElements.each(function()
     {
         //console.log("Has class editableElement: "+$(this).hasClass("editableElement"), this);
 
+        // Content inside an existing editor must not create another inline editor.
+        if ($(this).parentsUntil(pageDiv, ".editableElement").length) {
+            $(this).removeClass("<%=pbPrefix%>-editable <%=pbPrefix%>-content");
+            return;
+        }
+
         //na tomto elemente je to uz inicializovane, preskocme
         if ($(this).hasClass("editableElement")) return;
+
+        // Ignore copied PB markers on elements that cannot host an inline editor.
+        var tagName = this.tagName.toLowerCase();
+        if (!CKEDITOR.dtd.$editable[tagName] && tagName !== "textarea") return;
+
+        // Clean descendants before CKEditor captures data and starts copying paragraph classes.
+        $(this).find(".<%=pbPrefix%>-editable, .<%=pbPrefix%>-content").removeClass("<%=pbPrefix%>-editable <%=pbPrefix%>-content");
 
         //console.log(this);
         this.form = document.editorForm;
