@@ -139,6 +139,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multi-step forms - fixed typo in translation keys from `components.mustistep.*` to `components.multistep.*` (#378).
 - Multi-step forms - auxiliary statistics entries on [public cluster node with limited database rights](install/config/ro-user.md#multi-step-forms) no longer block form display, validation, or submission. In case of an error, the visitor will see the application name instead of the Java class name (#384).
 - Delayed email sending - increased column `emails.message` to `LONGTEXT` in MySQL/MariaDB so that saving a large HTML email does not fail. Added [instructions for smaller CSS for email and PDF](redactor/apps/form/README.md#css-styles-for-email-and-pdf) (#374).
 - Form Settings - added **Optional Fields** tab with fields A–F. Fields are also available in the Form Simple editor and via `FormSettingsEntity`. In the HTML of the translation keys, you can use [`${settings.*}`](redactor/apps/formsimple/README.md#fields-from-form-settings) tags for A–F, email settings, redirects, file limits, and appearance. They are also supported by the preview and email appearance of multi-step forms. A–F and the text before and after the email are enabled by HTML (#364).
