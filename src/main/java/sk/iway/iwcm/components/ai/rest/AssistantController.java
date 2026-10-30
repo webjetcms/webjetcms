@@ -206,6 +206,12 @@ public class AssistantController {
         return column;
     }
 
+    /** Returns configured chat assistants for the current domain without binding them to an editor field. */
+    @GetMapping("/chat-assistants/")
+    public List<DataTableAi> getChatAssistants(HttpServletRequest request) {
+        return aiService.getChatAssistants(assistantRepo, sk.iway.iwcm.i18n.Prop.getInstance(request));
+    }
+
     @GetMapping(value = "/stop-assistant/")
     public boolean stopAssistant(@RequestParam("assistantId") Long assistantId, @RequestParam("timestamp") Long timestamp, HttpServletRequest request) {
         return aiTaskRegistry.cancel(assistantId, timestamp, request);

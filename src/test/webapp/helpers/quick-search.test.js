@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { JSDOM } = require('jsdom');
+const jquery = require('jquery');
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const readAdmin = file => fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js', file), 'utf8')
@@ -34,15 +35,27 @@ function fixture(t, denied = [], options = {}) {
     window.adminSearchContext = options.adminSearchContext;
     window.adminHelpContext = { documentationBaseUrl: options.documentationBaseUrl || 'https://docs.webjetcms.sk' };
     window.userLng = options.language;
-    window.jQuery = element => element;
+    window.jQuery = options.aiChat ? jquery(window) : element => element;
     window.csrfToken = 'private-admin-csrf-token';
     let now = 0, nextId = 0, clicks = 0;
-    const timers = new Map(), requests = [];
+    const timers = new Map(), requests = [], chatRequests = [];
     const setTimeout = (fn, delay) => { timers.set(++nextId, { fn, at: now + delay }); return nextId; };
     const clearTimeout = id => timers.delete(id);
     const context = vm.createContext({
         window, document: window.document, navigator: { platform: options.platform || 'Win32' }, URL, URLSearchParams, AbortController, setTimeout, clearTimeout,
-        WJ: { translate: (key, params = []) => [key, ...params].join(' '), initTooltip: () => {}, hasPermission: permission => !denied.includes(permission) },
+        $: window.jQuery,
+        AiChatTransport: class {
+            execute(assistant, inputData) {
+                return new Promise(resolve => {
+                    this.request = { assistant, inputData, resolve };
+                    chatRequests.push(this.request);
+                });
+            }
+            cancel() { this.request?.resolve({ stopped: true }); }
+            dispose() {}
+        },
+        WJ: { translate: (key, params = []) => [key, ...params].join(' '), initTooltip: () => {},
+            hasPermission: permission => (permission !== 'cmp_ai_button' || options.aiChat === true) && !denied.includes(permission) },
         bootstrap: { Modal: class {
             constructor(root) { this.root = root; }
             show() { this.root.classList.add('show'); this.root.dispatchEvent(new window.Event('shown.bs.modal')); }
@@ -61,13 +74,17 @@ function fixture(t, denied = [], options = {}) {
     vm.runInContext(`{ ${readAdmin('dashboard/widget-utils.js')}; Object.assign(this, { node, icon, localUrl, containNativeScroll, fetchJson }); }`, context);
     vm.runInContext(readAdmin('admin-menu.js'), context);
     vm.runInContext(`{ ${readAdmin('documentation-search.js')}; Object.assign(this, { documentationUrl, documentationMarkdown }); }`, context);
+    if (options.aiChat) {
+        vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
+        vm.runInContext(`{ ${readAdmin('ai/quick-search-chat.js')}; Object.assign(this, { QuickSearchChat }); }`, context);
+    }
     vm.runInContext(`${readAdmin('quick-search.js')}\nthis.QuickSearch = QuickSearch;`, context);
     const controller = new context.QuickSearch(window.document.querySelector('#trigger'));
     controller.root.addEventListener('click', event => {
         if (event.target.closest('a')) { clicks++; event.preventDefault(); }
     });
     controller.open();
-    t.after(() => { controller.cancel(); window.close(); });
+    t.after(() => { controller.cancel(); controller.chat?.destroy(); window.close(); });
     const type = value => {
         controller.input.value = value;
         controller.input.dispatchEvent(new window.Event('input', { bubbles: true }));
@@ -97,7 +114,7 @@ function fixture(t, denied = [], options = {}) {
     const autocomplete = () => requests.filter(request => request.url.pathname.endsWith('/_doc_autocomplete.jsp'));
     const rest = () => requests.filter(request => !request.url.pathname.endsWith('/_doc_autocomplete.jsp'));
     const activeRest = () => rest().filter(request => !request.settled && !request.signal.aborted);
-    return { controller, requests, type, enter, advance, respond, autocomplete, rest, activeRest, clicks: () => clicks };
+    return { controller, requests, chatRequests, type, enter, advance, respond, autocomplete, rest, activeRest, clicks: () => clicks };
 }
 
 for (const [platform, modifier] of [['Win32', 'ctrlKey'], ['MacIntel', 'metaKey']]) {
@@ -1083,4 +1100,110 @@ test('Documentation shortcuts remain inactive when documentation is disabled', a
             assert.equal(f.requests.length, 0);
         });
     }
+});
+
+const chatAssistants = [
+    { assistantId: 7, action: 'live_chat', provider: 'openai', providerTitle: 'First provider', description: 'First assistant' },
+    { assistantId: 8, action: 'live_chat', provider: 'gemini', providerTitle: 'Second provider', description: 'Second assistant' }
+];
+
+/** Opens the real chat host and supplies the authorized assistant catalogue. */
+async function openChat(f) {
+    f.controller.chips.get('aiChat').click();
+    const request = f.requests.find(request => request.url.pathname === '/admin/rest/ai/assistant/chat-assistants/');
+    assert.ok(request, 'The chat tab must load its page-independent assistant catalogue.');
+    await f.respond(request, chatAssistants);
+    return f.controller.chatPanel.querySelector('.ai-chat-input');
+}
+
+function typeChat(input, value) {
+    input.value = value;
+    input.dispatchEvent(new input.ownerDocument.defaultView.Event('input', { bubbles: true }));
+}
+
+function sendChat(input) {
+    input.dispatchEvent(new input.ownerDocument.defaultView.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+}
+
+test('AI Chat requires permission and ordinary searches never load or send a chat', t => {
+    const denied = fixture(t, [...deniedRestPermissions, 'cmp_ai_button'], { aiChat: true });
+    assert.equal(denied.controller.chips.has('aiChat'), false);
+    const allowed = fixture(t, deniedRestPermissions, { aiChat: true });
+    assert.ok(allowed.controller.chips.has('aiChat'));
+    allowed.type('a private search term');
+    allowed.enter();
+    allowed.advance(5000);
+    assert.equal(allowed.requests.length, 0);
+    assert.equal(allowed.chatRequests.length, 0);
+});
+
+test('AI Chat sends no webpage context and completed responses expose only Copy', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    f.type('a search term that must not become the chat prompt');
+    const input = await openChat(f);
+    assert.equal(input.value, '');
+    typeChat(input, 'Write a short announcement');
+    sendChat(input);
+    assert.equal(f.chatRequests.length, 1);
+    assert.deepEqual(JSON.parse(JSON.stringify(f.chatRequests[0].inputData)), {
+        inputValue: '', inputValueType: 'text', outputValueType: 'text', userPrompt: 'Write a short announcement'
+    });
+    const reply = '<p>Our announcement</p>';
+    f.chatRequests[0].resolve({ success: true, response: reply });
+    await tick();
+    const message = f.controller.chatPanel.querySelector('.ai-chat-assistant');
+    assert.equal(message.querySelector('.ai-chat-message-text').textContent, reply);
+    assert.equal(message.querySelector('.ai-chat-message-text p'), null, 'Replies must remain plain text.');
+    const actions = message.querySelectorAll('.ai-chat-message-actions button');
+    assert.equal(actions.length, 1);
+    assert.match(actions[0].textContent, /chat.copy.js/);
+});
+
+test('AI Chat preserves independent conversations and drafts through tabs and reopening', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    typeChat(input, 'First question');
+    sendChat(input);
+    f.chatRequests[0].resolve({ success: true, response: 'First reply', conversationId: 'first-conversation' });
+    await tick();
+    typeChat(input, 'First draft');
+    const selector = f.controller.chatPanel.querySelector('select');
+    selector.value = '8';
+    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    let current = f.controller.chatPanel.querySelector('.ai-chat-input');
+    assert.equal(current.value, '');
+    assert.doesNotMatch(f.controller.chatPanel.textContent, /First reply/);
+    typeChat(current, 'Second draft');
+    selector.value = '7';
+    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
+    assert.match(f.controller.chatPanel.textContent, /First reply/);
+    f.controller.chips.get('admin').click();
+    f.controller.chips.get('aiChat').click();
+    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
+    f.controller.modal.hide();
+    f.controller.open();
+    f.controller.chips.get('aiChat').click();
+    current = f.controller.chatPanel.querySelector('.ai-chat-input');
+    assert.equal(current.value, 'First draft');
+    sendChat(current);
+    assert.equal(f.chatRequests[1].inputData.conversationId, 'first-conversation');
+    assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');
+});
+
+test('Chat assistant loading errors can be retried and an empty catalogue stays usable', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    f.controller.chips.get('aiChat').click();
+    await f.respond(f.requests[0], {}, 503);
+    assert.match(f.controller.chatPanel.textContent, /chatUnavailable.js/);
+    const retry = [...f.controller.chatPanel.querySelectorAll('button')].find(button => /retry.js/.test(button.textContent));
+    assert.ok(retry);
+    retry.click();
+    assert.equal(f.requests.length, 2);
+    await f.respond(f.requests[1], []);
+    assert.match(f.controller.chatPanel.textContent, /chatEmpty.js/);
+    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input'), null);
+    f.controller.chips.get('all').click();
+    assert.equal(f.controller.results.hidden, false);
+    assert.equal(f.chatRequests.length, 0);
 });

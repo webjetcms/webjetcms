@@ -1,6 +1,7 @@
 import { menuEntries } from './admin-menu';
 import { node, icon, localUrl, containNativeScroll, fetchJson } from './dashboard/widget-utils';
 import { documentationUrl, documentationMarkdown } from './documentation-search';
+import { QuickSearchChat } from './ai/quick-search-chat';
 
 const text = (key, ...params) => WJ.translate(`admin.quickSearch.${key}.js`, ...params);
 const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
@@ -57,6 +58,7 @@ class QuickSearch {
         if (WJ.hasPermission('users_edit_admins') || WJ.hasPermission('users_edit_public_users')) this.scopes.push('users');
         if (WJ.hasPermission('edit_text')) this.scopes.push('translationKeys');
         if (window.adminSearchContext?.documentationSearchUrl?.trim()) this.scopes.push('documentation');
+        if (WJ.hasPermission('cmp_ai_button')) this.scopes.push('aiChat');
         this.documentationAlwaysSearch = window.adminSearchContext?.documentationAlwaysSearch === true;
         this.menu = menuEntries({ data: { dashboardMenu: window.adminSearchContext?.menu || [] } });
         const userId = window.currentUser?.userId;
@@ -86,13 +88,17 @@ class QuickSearch {
         close.setAttribute('aria-label', text('close'));
         close.setAttribute('aria-keyshortcuts', 'Escape');
         close.append(node('kbd', '', 'Esc'));
-        search.append(icon('ti-search'), this.input, this.clear, close);
+        this.searchIcon = icon('ti-search');
+        this.chatTitle = node('span', 'md-quick-search__chat-title', text('aiChat'));
+        this.chatTitle.hidden = true;
+        search.append(this.searchIcon, this.input, this.chatTitle, this.clear, close);
         this.scopeBar = node('div', 'md-quick-search__scopes');
         this.scopeBar.setAttribute('role', 'group');
         this.scopeBar.setAttribute('aria-label', text('title'));
         this.chips = new Map(this.scopes.map(scope => {
             const chip = button('', 'md-quick-search__scope', () => this.selectScope(scope));
             chip.dataset.scope = scope;
+            chip.setAttribute('aria-controls', scope === 'aiChat' ? 'admin-quick-search-chat' : 'admin-quick-search-results');
             this.scopeBar.append(chip);
             return [scope, chip];
         }));
@@ -100,12 +106,17 @@ class QuickSearch {
         this.results.id = 'admin-quick-search-results';
         this.results.setAttribute('role', 'region');
         this.results.setAttribute('aria-label', text('results'));
-        const hint = node('p', 'md-quick-search__hint', text('keyboardHint'));
-        hint.id = 'admin-quick-search-hint';
+        this.chatPanel = node('div', 'md-quick-search__chat');
+        this.chatPanel.id = 'admin-quick-search-chat';
+        this.chatPanel.hidden = true;
+        this.chatPanel.setAttribute('role', 'region');
+        this.chatPanel.setAttribute('aria-label', text('aiChat'));
+        this.hint = node('p', 'md-quick-search__hint', text('keyboardHint'));
+        this.hint.id = 'admin-quick-search-hint';
         this.status = node('div', 'visually-hidden');
         this.status.setAttribute('role', 'status');
         this.status.setAttribute('aria-live', 'polite');
-        content.append(search, this.scopeBar, this.results, hint, this.status);
+        content.append(search, this.scopeBar, this.results, this.chatPanel, this.hint, this.status);
         dialog.append(content);
         this.root.append(dialog);
         document.body.append(this.root);
@@ -121,8 +132,8 @@ class QuickSearch {
         this.input.addEventListener('input', () => this.changed());
         this.root.addEventListener('keydown', event => this.keydown(event), true);
         this.root.addEventListener('show.bs.modal', () => this.trigger.setAttribute('aria-expanded', 'true'));
-        this.root.addEventListener('shown.bs.modal', () => this.input.focus());
-        this.root.addEventListener('hide.bs.modal', () => this.cancel());
+        this.root.addEventListener('shown.bs.modal', () => this.focus());
+        this.root.addEventListener('hide.bs.modal', () => { this.cancel(); this.chat?.unmount(); });
         this.root.addEventListener('hidden.bs.modal', () => {
             this.trigger.setAttribute('aria-expanded', 'false');
             this.trigger.focus();
@@ -131,7 +142,7 @@ class QuickSearch {
 
     /** Starts each visit with the section's scope and an empty query. */
     open() {
-        if (this.root.classList.contains('show')) { this.input.focus(); return; }
+        if (this.root.classList.contains('show')) { this.focus(); return; }
         const path = window.location.pathname;
         let scope = 'all';
         if (path.startsWith('/admin/v9/webpages/')) scope = 'docs';
@@ -150,6 +161,11 @@ class QuickSearch {
         this.modal.show();
     }
 
+    focus() {
+        if (this.scope === 'aiChat') this.chat?.focus();
+        else this.input.focus();
+    }
+
     cancel() {
         clearTimeout(this.timer);
         clearTimeout(this.suggestionsTimer);
@@ -159,6 +175,7 @@ class QuickSearch {
     }
 
     changed() {
+        if (this.scope === 'aiChat') return;
         this.query = this.input.value.trim();
         if (this.query.length > 0) this.search();
         else {
@@ -170,13 +187,25 @@ class QuickSearch {
 
     selectScope(scope, searchDocumentation = true) {
         if (!this.scopes.includes(scope)) return;
+        const previousScope = this.scope;
         if (scope !== this.scope) {
+            if (previousScope === 'aiChat') this.chat?.unmount();
             this.scope = scope;
-            if (this.query.length > 0) this.prepareScopeSources();
+            if (scope === 'aiChat') {
+                this.cancel();
+                this.states = {};
+            } else if (this.query.length > 0) {
+                if (previousScope === 'aiChat') this.search();
+                else this.prepareScopeSources();
+            }
         }
         if (scope === 'documentation' && searchDocumentation && this.query.length > 0) this.loadRest(true);
         this.render();
-        this.input.focus();
+        if (scope === 'aiChat' && previousScope !== 'aiChat') {
+            this.chat ||= new QuickSearchChat();
+            this.chat.mount(this.chatPanel);
+        }
+        this.focus();
     }
 
     /** Debounces local searches and, when explicitly enabled, automatic documentation searches. */
@@ -213,6 +242,7 @@ class QuickSearch {
 
     /** Drains ready sources sequentially; Enter or the documentation timer releases the AI request. */
     async loadRest(includeDocumentation = false) {
+        if (this.scope === 'aiChat') return;
         clearTimeout(this.timer);
         if (includeDocumentation && this.states.documentation?.pending) {
             clearTimeout(this.documentationTimer);
@@ -297,7 +327,16 @@ class QuickSearch {
 
     render(focusResult) {
         const focusKey = this.results.contains(document.activeElement) ? document.activeElement.dataset.focusKey : null;
-        this.clear.hidden = !this.input.value;
+        const isChat = this.scope === 'aiChat';
+        this.root.classList.toggle('md-quick-search--chat', isChat);
+        this.input.hidden = isChat;
+        this.chatTitle.hidden = !isChat;
+        this.searchIcon.classList.toggle('ti-search', !isChat);
+        this.searchIcon.classList.toggle('ti-sparkles', isChat);
+        this.clear.hidden = isChat || !this.input.value;
+        this.results.hidden = isChat;
+        this.chatPanel.hidden = !isChat;
+        this.hint.textContent = text(isChat ? 'chatKeyboardHint' : 'keyboardHint');
         for (const [scope, chip] of this.chips) {
             const state = this.states[scope];
             const loading = scope === 'all' ? Object.values(this.states).some(result => result.loading)
@@ -325,11 +364,16 @@ class QuickSearch {
                 chip.setAttribute('aria-label', `${text(scope)}. ${status}`);
             }
         }
+        if (isChat) {
+            this.status.textContent = '';
+            this.results.setAttribute('aria-busy', 'false');
+            return;
+        }
         this.results.replaceChildren();
         if (!this.query) this.renderHistory();
         else if (this.query.length < 2 && (!this.states.documentation || !['all', 'documentation'].includes(this.scope))) this.results.append(node('p', 'md-quick-search__empty', text('minLength')));
         else {
-            const sources = this.query.length < 2 ? ['documentation'] : this.scope === 'all' ? ['suggestions', ...this.scopes.filter(scope => scope !== 'all')] : this.scope === 'docs' ? ['suggestions', 'docs'] : [this.scope];
+            const sources = this.query.length < 2 ? ['documentation'] : this.scope === 'all' ? ['suggestions', ...this.scopes.filter(scope => !['all', 'aiChat'].includes(scope))] : this.scope === 'docs' ? ['suggestions', 'docs'] : [this.scope];
             let hasResults = false;
             let unsettled = false;
             sources.forEach(source => {
@@ -595,15 +639,19 @@ class QuickSearch {
 
     keydown(event) {
         if (event.isComposing) return;
+        if (event.altKey && !event.ctrlKey && !event.metaKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)
+            && (event.target === this.input || event.target.closest('.md-quick-search__scope') || this.chatPanel.contains(event.target))) {
+            event.preventDefault();
+            const offset = event.key === 'ArrowRight' ? 1 : -1;
+            this.selectScope(this.scopes[(this.scopes.indexOf(this.scope) + offset + this.scopes.length) % this.scopes.length], false);
+            return;
+        }
+        if (this.scope === 'aiChat') return;
         if (event.key === 'Enter' && !event.altKey && !event.shiftKey && this.scopes.includes('documentation')
             && (this.isMac ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey)) {
             event.preventDefault();
             event.stopPropagation();
             if (!event.repeat && this.query.length > 0) this.selectScope('documentation');
-        } else if (event.target === this.input && event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-            event.preventDefault();
-            const offset = event.key === 'ArrowRight' ? 1 : -1;
-            this.selectScope(this.scopes[(this.scopes.indexOf(this.scope) + offset + this.scopes.length) % this.scopes.length], false);
         } else if (!event.altKey && !event.ctrlKey && !event.metaKey && ['ArrowDown', 'ArrowUp'].includes(event.key) && (event.target === this.input || event.target.matches('.md-quick-search__result'))) {
             const rows = [...this.results.querySelectorAll('.md-quick-search__result')];
             if (!rows.length) return;

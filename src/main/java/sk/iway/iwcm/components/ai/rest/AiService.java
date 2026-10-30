@@ -375,6 +375,53 @@ public class AiService {
         }
     }
 
+    /**
+     * Lists active chat assistants from the current domain whose providers are configured.
+     * Field bindings are deliberately omitted because the conversation has no page context.
+     *
+     * @param assistantRepo repository used by the domain-scoped assistant cache
+     * @param prop current administration language
+     * @return client metadata in the same group/name order as editor assistants
+     */
+    public List<DataTableAi> getChatAssistants(AssistantDefinitionRepository assistantRepo, Prop prop) {
+        return AiAssistantsService.getAssistantsFromDB(assistantRepo).stream()
+            .filter(assistant -> SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction()))
+            .filter(assistant -> Tools.isFalse(assistant.getActive()) == false)
+            .filter(assistant -> aiInterfaces.stream().anyMatch(provider ->
+                provider.getProviderId().equals(assistant.getProvider()) && provider.isInit()))
+            .sorted(Comparator.comparing(AssistantDefinitionEntity::getGroupName, Comparator.nullsFirst(String::compareTo))
+                .thenComparing(AssistantDefinitionEntity::getName))
+            .map(assistant -> toClientAssistant(assistant, prop, this))
+            .toList();
+    }
+
+    private static DataTableAi toClientAssistant(AssistantDefinitionEntity assistant, Prop prop, AiService aiService) {
+        DataTableAi ai = new DataTableAi();
+        ai.setAssistantId(assistant.getId());
+        if (Tools.isEmpty(assistant.getDescription())) ai.setDescription(assistant.getName());
+        else ai.setDescription(prop.getText(assistant.getDescription(), false));
+        ai.setProvider(assistant.getProvider());
+
+        String providerTitleKey = "components.ai_assistants.provider." + assistant.getProvider() + ".title";
+        String providerTitle = prop.getText(providerTitleKey);
+        if (providerTitleKey.equals(providerTitle)) providerTitle = assistant.getProvider();
+        ai.setProviderTitle(providerTitle);
+
+        ai.setUseStreaming(aiService == null ? Tools.isTrue(assistant.getUseStreaming()) : aiService.isStreamingEnabled(assistant));
+        ai.setAction(assistant.getAction());
+        ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + assistant.getGroupName()));
+        ai.setUserPromptEnabled(Tools.isTrue(assistant.getUserPromptEnabled()));
+        ai.setUserPromptLabel(prop.getText(assistant.getUserPromptLabel()));
+        ai.setIcon(assistant.getIcon());
+        if (Tools.isEmpty(ai.getIcon())) ai.setIcon("clipboard-text");
+
+        if ("browser".equals(ai.getProvider())) {
+            // Browser execution needs the configured instructions locally.
+            ai.setInstructions(assistant.getInstructions());
+        }
+        return ai;
+    }
+
     public static List<DataTableAi> getAiAssistantsForField(String toField, String javaClassName, DataTableColumn column, Prop prop) {
         List<DataTableAi> aiList = new ArrayList<>();
         try {
@@ -390,34 +437,10 @@ public class AiService {
                 AiService aiService = Tools.getSpringBean("aiService", AiService.class);
 
                 for (AssistantDefinitionEntity ade : assistants) {
-                    DataTableAi ai = new DataTableAi();
-                    ai.setAssistantId(ade.getId());
+                    DataTableAi ai = toClientAssistant(ade, prop, aiService);
                     ai.setFrom(ade.getFieldFrom());
                     ai.setTo(toField);
                     ai.setToDefinition(ade.getFieldTo());
-                    if (Tools.isEmpty(ade.getDescription())) ai.setDescription(ade.getName());
-                    else ai.setDescription(prop.getText(ade.getDescription(), false));
-                    ai.setProvider(ade.getProvider());
-
-                    String providerTitleKey = "components.ai_assistants.provider."+ade.getProvider()+".title";
-                    String providerTitle = prop.getText(providerTitleKey);
-                    if (providerTitleKey.equals(providerTitle)) providerTitle = ade.getProvider();
-                    ai.setProviderTitle(providerTitle);
-
-                    ai.setUseStreaming(aiService == null ? Tools.isTrue(ade.getUseStreaming()) : aiService.isStreamingEnabled(ade));
-                    ai.setAction(ade.getAction());
-
-                    String groupName = ade.getGroupName();
-                    ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + groupName));
-                    ai.setUserPromptEnabled(Tools.isTrue(ade.getUserPromptEnabled()));
-                    ai.setUserPromptLabel(prop.getText(ade.getUserPromptLabel()));
-                    ai.setIcon(ade.getIcon());
-                    if (Tools.isEmpty(ai.getIcon())) ai.setIcon("clipboard-text");
-
-                    if ("browser".equals(ai.getProvider())) {
-                        //we need instructions to execute local AI in browser
-                        ai.setInstructions(ade.getInstructions());
-                    }
                     if (ai.isEmpty()==false) {
                         aiList.add(ai);
                     }
