@@ -122,7 +122,7 @@ Ak chcete definovať vlastné položky formulárov, alebo chcete zmeniť existuj
 
 ### Prázdna možnosť
 
-Prepínač **Pridať prázdnu možnosť** pridá do zoznamu (select) prázdny riadok a do skupiny rádií voľbu **Bez zvolenej možnosti** na zrušenie výberu. Hodnota je prázdna, takže povinné pole vyžaduje inú možnosť. Text rádia určuje kľúč `components.formsimple.emptyOptionLabel.radiogroup`. Pri checkboxoch a automatickom dopĺňaní je prepínač predvolene skrytý, pretože ich možno vyprázdniť bez neho.
+Prepínač **Pridať prázdnu možnosť** pridá do zoznamu (select) prázdny riadok a do skupiny rádií voľbu **Bez zvolenej možnosti** na zrušenie výberu. Hodnota je prázdna, takže povinné pole vyžaduje inú možnosť. Text rádia určuje kľúč `components.formsimple.emptyOptionLabel.radiogroup`. Pri zaškrtávacom poli a automatickom dopĺňaní je prepínač predvolene skrytý, pretože ich možno vyprázdniť bez neho.
 
 Prítomnosť `emptyOption` v kľúči `components.formsimple.hide.TYP_POLA` prepínač skryje; odstránením ho znova sprístupníte. Pre rádio:
 

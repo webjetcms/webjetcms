@@ -159,6 +159,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/multistep-form/stat-section-advanced.png)
 
+- Multi-step forms - [empty option](redactor/apps/multistep-form/README.md#empty-option) in a group of selection fields displays the adjustable text **Without selected option** (#381).
 - Added the ability to easily set up checkboxes and groups of checkboxes/select fields in multi-step forms (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
