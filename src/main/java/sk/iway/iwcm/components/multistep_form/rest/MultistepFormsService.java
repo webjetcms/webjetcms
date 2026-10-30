@@ -1169,7 +1169,7 @@ public class MultistepFormsService {
             if(nextStep == null) {
                 String forwardOk = formSettings.getForward();
                 // Because we are going save form for real now, add count to attempts of form submission
-                formSettingsRepository.incrementResponseAttempts(formName, CloudToolsForCore.getDomainId());
+                FormSettingsService.tryIncrementResponseAttempts(formName, CloudToolsForCore.getDomainId(), formSettingsRepository);
 
                 // HERE we can run custom saving of form
                 boolean continueWithSaving = customFormSave(formProcessor, formName, request, formSettings, iLastDocId);
@@ -1207,7 +1207,19 @@ public class MultistepFormsService {
             response.put("fieldErrors", errors);
 
             // increment field error count
-            formItemsRepository.incrementErrorCountByItemFormIds(formName, CloudToolsForCore.getDomainId(), new ArrayList<>(errors.keySet()));
+            tryIncrementFieldErrorCount(formName, CloudToolsForCore.getDomainId(), new ArrayList<>(errors.keySet()));
+        }
+    }
+
+    private void tryIncrementFieldErrorCount(String formName, int domainId, List<String> itemFormIds) {
+        if (ClusterDB.isPublicNode()) return;
+
+        try {
+            formItemsRepository.incrementErrorCountByItemFormIds(formName, domainId, itemFormIds);
+        } catch (RuntimeException exception) {
+            Logger.warn(MultistepFormsService.class,
+                "Unable to increment form field error count for formName=" + formName + ", domainId=" + domainId,
+                exception);
         }
     }
 

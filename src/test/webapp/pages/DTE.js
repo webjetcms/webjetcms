@@ -51,7 +51,8 @@ module.exports = {
       * Waits for the loading indicator to disappear
       */
      waitForLoader() {
-          let name = "div.DTE_Processing_Indicator";
+          // A hidden editor can precede the currently saving editor in the DOM.
+          let name = "div.DTE_Processing_Indicator:visible";
           I.waitForInvisible(name, 200);
           I.wait(0.2);
      },

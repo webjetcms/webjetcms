@@ -1003,7 +1003,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     iterableCode = prop.getText(iterableKey);
                     values = new String[0];
                     if (Tools.isNotEmpty(iterableCode) && !iterableCode.equals(iterableKey)) {
-                        values = parseIterableValues(value);
+                        values = parseIterableValues(removeUnsupportedEmptyOption(value, fieldType, prop));
                     }
                 }
 
@@ -1033,7 +1033,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     for (String token : values) {
                         String valueLabel = token;
                         int separator = token.indexOf(":");
-                        if (iterableCode.contains("${value-label}") && separator >= 0) {
+                        if (":".equals(token) && isEnumerationOptions(value) == false) {
+                            token = "";
+                            valueLabel = "";
+                            if ("radiogroup".equals(fieldType)) {
+                                valueLabel = ResponseUtils.filter(prop.getText("components.formsimple.emptyOptionLabel.radiogroup"));
+                            }
+                        } else if (iterableCode.contains("${value-label}") && separator >= 0) {
                             valueLabel = token.substring(0, separator);
                             token = token.substring(separator + 1);
                         }
@@ -1060,6 +1066,37 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
        }
 
        return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
+    }
+
+    /**
+     * Removes the manual empty-option sentinel when the field type hides its editor control.
+     * Enumeration configurations and all other option tokens are preserved verbatim.
+     * Separators are retained so a single remaining option keeps its original parsing mode.
+     *
+     * @param value serialized options
+     * @param fieldType configured form field type
+     * @param prop localization provider containing the field visibility configuration
+     * @return options without unsupported empty entries
+     */
+    public static String removeUnsupportedEmptyOption(String value, String fieldType, Prop prop) {
+        if (Tools.isEmpty(value) || isEnumerationOptions(value)) return value;
+        String hiddenFields = prop.getText("components.formsimple.hide." + fieldType);
+        if (Arrays.asList(Tools.getTokens(hiddenFields, ",", true)).contains("emptyOption") == false) return value;
+
+        String delimiter = " ";
+        if (value.contains("|")) delimiter = "|";
+        else if (value.contains(",")) delimiter = ",";
+        return Arrays.stream(value.split(java.util.regex.Pattern.quote(delimiter), -1))
+            .map(token -> ":".equals(token.trim()) ? "" : token)
+            .collect(Collectors.joining(delimiter));
+    }
+
+    private static boolean isEnumerationOptions(String value) {
+        String normalized = Tools.getStringValue(value, "").trim();
+        if (normalized.startsWith("{") && normalized.endsWith("}")) {
+            normalized = normalized.substring(1, normalized.length() - 1).trim();
+        }
+        return normalized.startsWith("enumeration-options");
     }
 
     /**

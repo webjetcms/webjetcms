@@ -6,6 +6,7 @@ var randomNumber;
 var newMultistepFormName;
 var duplicatedMultistepFormName;
 var specialFormName;
+var emptyOptionFormName;
 Before(({ I, DT, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {
@@ -13,6 +14,7 @@ Before(({ I, DT, login }) => {
         newMultistepFormName = "multistepform_autotest_" + randomNumber;
         duplicatedMultistepFormName = "multistepform_duplicate_autotest_" + randomNumber;
         specialFormName = "multistep_new_logic_autotest_" + randomNumber;
+        emptyOptionFormName = "multistep_empty_option_autotest_" + randomNumber;
     }
 
     DT.addContext("formSteps", "#formStepsDataTable_wrapper");
@@ -1191,6 +1193,95 @@ Scenario("check special form options behavior", ({ I, DT, DTE }) => {
     I.seeElement("div.DTE_Field_Name_useValueAsEnumeration");
     I.dontSeeElement("div.DTE_Field_Name_valueAsOptions");
     I.seeElement("div.DTE_Field_Name_valueAsEnumeration");
+});
+
+Scenario('Empty option settings by field type', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/');
+    I.clickCss('#formsDataTable_wrapper button.buttons-create');
+    DTE.waitForEditor('formsDataTable');
+    DTE.fillField('formName', emptyOptionFormName);
+    DTE.save();
+    I.waitForVisible('#formStepsDataTable_wrapper');
+    I.waitForFunction(() => {
+        const step = document.querySelector('#formStepsDataTable tbody tr.selected');
+        return step && new URL(formItemsDataTable.getAjaxUrl(), location.origin).searchParams.get('stepId') === step.id;
+    }, [], 10);
+
+    const emptyOption = '#DTE_Field_valueAsOptions input.options-empty-option-btn';
+    const basicTab = '#pills-dt-formItemsDataTable-basic-tab';
+    const advancedTab = '#pills-dt-formItemsDataTable-advanced-tab';
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    selectFieldType(I, 'Výberový zoznam - select');
+    DTE.fillQuill('label', 'Radio empty option autotest');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    DTE.addFieldOptions('valueAsOptions', 'First autotest:one|Second autotest:two');
+    I.checkOption(emptyOption);
+    I.clickCss(basicTab);
+    selectFieldType(I, 'Skupina zaškrtávacích polí');
+    I.clickCss(advancedTab);
+    I.waitForInvisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    I.clickCss(basicTab);
+    selectFieldType(I, 'Skupina výberových polí');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    I.checkOption(emptyOption);
+    DTE.save();
+    I.waitForVisible('div.stepPreview input[type="radio"][value=""]');
+    I.see('Bez zvolenej možnosti', 'div.stepPreview');
+
+    I.click(locate('#formItemsDataTable tbody td').withText('Radio empty option autotest'));
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor('formItemsDataTable');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.seeCheckboxIsChecked(emptyOption);
+    DTE.cancel('formItemsDataTable');
+    I.clickCss('#formItemsDataTable_wrapper .buttons-copy-field');
+    I.waitForEnabled('#formItemsDataTable_wrapper .buttons-paste-field');
+    I.clickCss('#formItemsDataTable_wrapper .buttons-paste-field');
+    DTE.waitForEditor('formItemsDataTable');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.seeCheckboxIsChecked(emptyOption);
+    I.clickCss(basicTab);
+    selectFieldType(I, 'Skupina zaškrtávacích polí');
+    I.clickCss(advancedTab);
+    I.waitForInvisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    DTE.save();
+    I.waitForVisible('div.stepPreview input[type="checkbox"]');
+    I.seeNumberOfElements('div.stepPreview input[type="checkbox"]', 2);
+    I.dontSeeElement('div.stepPreview input[type="checkbox"][value=""]');
+
+    createAndFillFormItem(I, DT, DTE, 'Výberový zoznam - select', false, 'Select empty option autotest', 'First:one|Second:two', null, null, { emptyOption: true });
+    I.waitForElement('div.stepPreview select option[value=""]');
+    createAndFillFormItem(I, DT, DTE, 'Skupina výberových polí', false, 'Radio without empty option autotest', 'First:one|Second:two', null, null);
+    I.seeNumberOfElements('div.stepPreview input[type="radio"][value=""]', 1);
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    selectFieldType(I, 'Automatické dopĺňanie - autocomplete');
+    I.clickCss(advancedTab);
+    I.waitForVisible('#DTE_Field_valueAsOptions');
+    I.dontSeeElement(emptyOption);
+    DTE.cancel('formItemsDataTable');
+});
+
+Scenario('Cleanup empty option autotest form', ({ I, DT }) => {
+    I.amOnPage('/apps/form/admin/');
+    DT.filterEquals('formName', emptyOptionFormName);
+    DT.deleteAll('formsDataTable');
+    I.executeScript(() => {
+        const key = 'webjet.multistepform.clipboard.';
+        Object.keys(localStorage).filter(name => name.startsWith(key)).forEach(name => {
+            if (localStorage.getItem(name).includes('Radio empty option autotest')) localStorage.removeItem(name);
+        });
+    });
 });
 
 Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Apps, Document }) => {

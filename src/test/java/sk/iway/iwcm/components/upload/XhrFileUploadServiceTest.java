@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.upload;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
@@ -17,8 +18,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockPart;
 
 import sk.iway.iwcm.Constants;
@@ -26,8 +29,9 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEventPublisher;
 import sk.iway.iwcm.test.BaseWebjetTest;
+import sk.iway.iwcm.test.SerializingMockHttpSession;
 
-/** Verifies default and configured extension restrictions through the XHR upload service. */
+/** Verifies extension restrictions and chunk assembly through the XHR upload service. */
 class XhrFileUploadServiceTest extends BaseWebjetTest {
 
     private static final String EXTENSIONS_SETTING = "xhrFileUploadAllowedExtensions";
@@ -87,6 +91,36 @@ class XhrFileUploadServiceTest extends BaseWebjetTest {
         Constants.setString(EXTENSIONS_SETTING, "*");
         assertTrue(upload("attachment.custom").isSuccess());
         assertRejected("script.jsp");
+    }
+
+    /** Every intermediate chunk must survive session serialization for both supported parameter formats. */
+    @ParameterizedTest
+    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+    void assemblesChunksAcrossRequests(boolean serialized, boolean dropzone) throws Exception {
+        MockHttpSession session = serialized ? new SerializingMockHttpSession() : new MockHttpSession();
+        XhrFileUploadService service = new XhrFileUploadService();
+        try (var tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
+             var events = mockStatic(WebjetEventPublisher.class)) {
+            tools.when(() -> Tools.getRealPath(anyString()))
+                .thenAnswer(call -> directory.resolve(call.getArgument(0, String.class)).toString());
+            for (int chunk = 0; chunk < 3; chunk++) {
+                MockHttpServletRequest request = new MockHttpServletRequest();
+                request.setSession(session);
+                request.setParameter(dropzone ? "dzchunkindex" : "chunk", Integer.toString(chunk));
+                request.setParameter(dropzone ? "dztotalchunkcount" : "chunks", "3");
+                request.addPart(new MockPart("file", "document.pdf", new byte[] {(byte)(chunk * 2), (byte)(chunk * 2 + 1)}));
+
+                XhrFileUploadResponse response = service.processUpload(request);
+
+                assertTrue(response.isSuccess(), "Chunk " + chunk + ": " + response.getError());
+                assertEquals(chunk, response.getChunkUploaded());
+                if (chunk == 2) {
+                    assertArrayEquals(new byte[] {0, 1, 2, 3, 4, 5},
+                        Files.readAllBytes(Path.of(service.getTempFilePath(response.getKey().get(0)))));
+                    assertNull(session.getAttribute("partialUploadFile-document.pdf"));
+                }
+            }
+        }
     }
 
     private void assertRejected(String fileName) throws Exception {

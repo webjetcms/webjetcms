@@ -4,6 +4,106 @@ Before(({ I, login }) => {
      login('admin');
 });
 
+/** Verifies that toolbar menus remain clickable beyond a short modal body and in a short viewport. */
+Scenario('type-quill-pickers-in-short-modal', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/form-steps/?formName=Multistepform_1');
+    DT.waitForLoader('formStepsDataTable');
+    I.waitForElement('#formStepsDataTable tbody tr.selected', 10);
+    DT.waitForLoader('formItemsDataTable');
+
+    const field = '#formItemsDataTable_modal #DTE_Field_label';
+    const heading = field + ' .ql-header';
+    for (const [width, height, toolbarOffset] of [[1440, 900, 0], [1024, 768, 0], [600, 650, 0], [600, 400, 40], [600, 400, 80]]) {
+        I.resizeWindow(width, height);
+        I.clickCss('#formItemsDataTable_wrapper button.buttons-create');
+        DTE.waitForEditor('formItemsDataTable');
+        DTE.selectOption('fieldType', 'Popiska (info text)');
+        DTE.fillQuill('label', 'Quill picker autotest');
+
+        // Place the toolbar where neither side has room for the full menu in a short viewport.
+        I.executeScript(({ selector, offset }) => {
+            document.querySelector(selector).closest('.DTE_Field').style.marginTop = offset + 'px';
+        }, { selector: field, offset: toolbarOffset });
+
+        for (const level of [1, 2, 3, 4, 5, 6]) {
+            I.clickCss(heading + ' .ql-picker-label');
+            // Hit testing also catches the picker label covering a vertically shifted menu.
+            I.waitForFunction((selector) => {
+                const items = [...document.querySelectorAll(selector + ' .ql-picker-item')];
+                return items.length === 7 && items.every(item => {
+                    const rect = item.getBoundingClientRect();
+                    return item.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+                });
+            }, [heading], 10);
+            I.clickCss(heading + ' .ql-picker-item[data-value="' + level + '"]');
+            I.see('Quill picker autotest', field + ' .ql-editor h' + level);
+        }
+
+        I.clickCss(heading + ' .ql-picker-label');
+        I.pressKey('Escape');
+        I.dontSeeElement(heading + ' .ql-picker-options');
+        I.pressKey('Enter');
+        I.waitForVisible(heading + ' .ql-picker-options', 5);
+        I.clickCss(heading + ' .ql-picker-item:not([data-value])');
+        I.see('Quill picker autotest', field + ' .ql-editor p');
+
+        I.clickCss(field + ' .ql-color .ql-picker-label');
+        I.clickCss(field + ' .ql-color .ql-picker-item:last-child');
+        I.dontSeeElement(field + ' .ql-color .ql-picker-options');
+        I.executeScript(selector => {
+            document.querySelector(selector).closest('.DTE_Field').style.removeProperty('margin-top');
+        }, field);
+        DTE.cancel('formItemsDataTable');
+    }
+    I.wjSetDefaultWindowSize();
+});
+
+/** Verifies that open picker menus hide while their toolbar is clipped by the modal body. */
+Scenario('type-quill-pickers-in-scrolled-modal', ({ I, DTE }) => {
+    I.resizeWindow(1024, 650);
+    I.amOnPage('/apps/banner/admin/?id=7053');
+    DTE.waitForEditor('bannerDataTable');
+    I.clickCss('#pills-dt-bannerDataTable-advanced-tab');
+
+    const field = '#bannerDataTable_modal #DTE_Field_descriptionText';
+    for (const pickerType of ['ql-header', 'ql-color']) {
+        const picker = field + ' .' + pickerType + '.ql-picker';
+        const options = picker + ' .ql-picker-options';
+        I.clickCss(picker + ' .ql-picker-label');
+        I.waitForVisible(options, 10);
+
+        // Scroll without clicking outside the picker, which would close it through Quill.
+        I.executeScript(selector => {
+            const label = document.querySelector(selector + ' .ql-picker-label');
+            const body = label.closest('.modal-body');
+            body.scrollTop += label.getBoundingClientRect().bottom - body.getBoundingClientRect().top + 10;
+        }, picker);
+        I.waitForFunction(selector => {
+            const label = document.querySelector(selector + ' .ql-picker-label');
+            return label.getBoundingClientRect().bottom <= label.closest('.modal-body').getBoundingClientRect().top;
+        }, [picker], 10);
+        I.waitForInvisible(options, 10);
+
+        // Returning to the toolbar restores the same open menu and its clickable options.
+        I.executeScript(selector => {
+            document.querySelector(selector).closest('.modal-body').scrollTop = 0;
+        }, picker);
+        I.waitForVisible(options, 10);
+        I.waitForFunction(selector => {
+            const items = [...document.querySelectorAll(selector + ' .ql-picker-item')];
+            return items.length > 0 && items.every(item => {
+                const rect = item.getBoundingClientRect();
+                return item.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+            });
+        }, [picker], 10);
+        I.pressKey('Escape');
+        I.dontSeeElement(options);
+    }
+
+    DTE.cancel('bannerDataTable');
+    I.wjSetDefaultWindowSize();
+});
+
 
 /**
  * Verify that the HTML source preserves ordered and unordered lists,

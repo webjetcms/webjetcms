@@ -34,6 +34,43 @@ public class PageTitleAttributeConverter implements AttributeConverter<String, S
         if (value == null) return null;
         String safeHtml = AllowSafeHtmlAttributeConverterWithSave.sanitize(Tools.convertToHtmlTags(value));
         // Entity decoding can reveal legacy markers; keep them as text during later rendering.
-        return safeHtml.replace("*|", "&#42;|").replace("|*", "|&#42;");
+        return encodeTextSlashes(safeHtml).replace("*|", "&#42;|").replace("|*", "|&#42;");
+    }
+
+    /**
+     * Encodes path separators in title text, leaving sanitized HTML tags and attribute URLs intact.
+     * This scans only the sanitizer's serialized output, where literal text angle brackets are escaped.
+     *
+     * @param safeHtml sanitized title HTML
+     * @return HTML with text slashes encoded for the legacy full-path representation
+     */
+    private static String encodeTextSlashes(String safeHtml) {
+        if (safeHtml.indexOf('/') == -1) return safeHtml;
+        StringBuilder result = new StringBuilder(safeHtml.length());
+        boolean inTag = false;
+        char quote = 0;
+        for (int i = 0; i < safeHtml.length(); i++) {
+            char character = safeHtml.charAt(i);
+            if (character == '<' && !inTag) inTag = true;
+            if (inTag) {
+                if (quote != 0) {
+                    if (character == quote) quote = 0;
+                } else if (character == '"' || character == '\'') {
+                    quote = character;
+                } else if (character == '>') {
+                    inTag = false;
+                }
+            } else if (character == '/') {
+                // Do not produce &lt;&#47;: Tools.convertToHtmlTags treats it as legacy HTML markup.
+                if (i >= 4 && safeHtml.startsWith("&lt;", i - 4)) {
+                    result.setLength(result.length() - 4);
+                    result.append("&#60;");
+                }
+                result.append("&#47;");
+                continue;
+            }
+            result.append(character);
+        }
+        return result.toString();
     }
 }

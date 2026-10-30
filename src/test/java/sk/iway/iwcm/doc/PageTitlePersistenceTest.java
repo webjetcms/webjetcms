@@ -116,6 +116,9 @@ class PageTitlePersistenceTest extends BaseWebjetTest {
 
     private static Stream<Arguments> titles() {
         return Stream.of(
+            Arguments.of("autotest-title-storage Lomka/v nazve", "autotest-title-storage Lomka&#47;v nazve"),
+            Arguments.of("autotest-title-storage Lomka&#47;v nazve", "autotest-title-storage Lomka&#47;v nazve"),
+            Arguments.of("autotest-title-storage <strong>Lomka/v nazve</strong>", "autotest-title-storage <strong>Lomka&#47;v nazve</strong>"),
             Arguments.of("autotest-title-storage <img src=x onerror=alert('WJ14-TITLE')>", "autotest-title-storage <img src=\"x\" />"),
             Arguments.of("autotest-title-storage &#x2a;|script|&#x2a;alert(1)&#x2a;||script|&#x2a;", "autotest-title-storage &#42;|script|&#42;alert(1)&#42;||script|&#42;")
         );

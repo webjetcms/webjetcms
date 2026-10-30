@@ -136,8 +136,11 @@ CodeceptUI
 colour
 Column
 columns
+commitnite
 commitnuté
 Commitol
+commitujte
+commity
 Community
 components
 Conf
@@ -506,6 +509,7 @@ naštýlovať
 neaktivity
 neanotovanú
 neaplikovateľnosť
+necommitnuté
 nekonzistencii
 nekonzistentnosť
 nepoužívajúce
@@ -650,6 +654,8 @@ prototypovať
 PUG
 puppeteer
 push
+pushnite
+pushujte
 QR
 Random
 README
@@ -733,6 +739,7 @@ serializáciou
 serializáciu
 serializoval
 serializované
+serializovaného
 serializovanými
 serializovať
 serverovo
@@ -892,6 +899,7 @@ Widgety
 Within
 WJ
 worktree
+worktrees
 WSL
 WYSIWYG
 XLS

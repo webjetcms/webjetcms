@@ -101,7 +101,7 @@ V kartě **Pokročilé** můžete nastavit další volitelné parametry jako:
 - **Krok formuláře** - krok, ke kterému položka patří, můžete tak snadno položku přesunout do jiného kroku.
 - **Pořadí** - určuje pořadí položky v rámci kroku.
 - **Předvyplněná hodnota** - hodnota, která se zobrazí vyplněná v poli, uživatel tak nemusí nastavit hodnotu, pokud je všeobecně známá. Toto pole se zobrazuje pouze pokud se nejedná o položku typu výběrové pole.
-- **Povolené možnosti** - u položky typu výběrové pole (select, checkbox skupina, radio skupina, automatické doplňování apod.) můžete manuálně definovat seznam možností. Každá možnost se skládá z textu zobrazeného uživateli a hodnoty odeslané při odeslání formuláře. Možnosti lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`. Pro výběrový seznam můžete tlačítkem **Přidat prázdnou možnost** vložit na začátek i volbu bez hodnoty. Pole se zobrazuje pouze pokud není povolena možnost **Použít propojení na číselník**.
+- **Povolené možnosti** - u položky typu výběrové pole (select, checkbox skupina, radio skupina, automatické doplňování apod.) můžete manuálně definovat seznam možností. Každá možnost se skládá z textu zobrazeného uživateli a hodnoty odeslané při odeslání formuláře. Možnosti lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`. Přepínačem **Přidat prázdnou možnost** - můžete do výběrového seznamu nebo skupiny výběrových polí vložit na začátek i volbu bez hodnoty. U nového pole je přepínač vypnutý. Pole se zobrazuje pouze pokud není povolena možnost **Použít propojení na číselník**.
 
 ![](form-item-editor-advanced.png)
 
@@ -119,6 +119,18 @@ Chcete-li definovat vlastní položky formulářů, nebo chcete změnit existuj�
 !>**Upozornění:** ve vícekrokovém formuláři nefungují vlastní typy položek, které přímo vykreslí nativní element `<input type="file">`. Soubor lze nahrát pouze pomocí komponenty `Dropzone`.
 
 !>**Upozornění:** při úpravě položky formuláře nedoporučujeme měnit typ položky, ale raději nahradit původní položku novou.
+
+### Prázdná možnost
+
+Přepínač **Přidat prázdnou možnost** přidá do seznamu (select) prázdný řádek a do skupiny rádií volbu **Bez zvolené možnosti** pro zrušení výběru. Hodnota je prázdná, takže povinné pole vyžaduje jinou možnost. Text rádia určuje klíč `components.formsimple.emptyOptionLabel.radiogroup`. Při zaškrtávacím poli a automatickém doplňování je přepínač ve výchozím nastavení skryt, protože je lze vyprázdnit bez něj.
+
+Přítomnost `emptyOption` v klíči `components.formsimple.hide.TYP_POLA` přepínač skryje; odstraněním jej znovu zpřístupníte. Pro rádio:
+
+```properties
+components.formsimple.hide.radiogroup=placeholder,trimValue,regexValidationArr,emptyOption
+```
+
+Ostatní položky zachovejte a změnu nastavte ve všech používaných jazycích. Při skrytí se prázdná možnost nezobrazí ani ve starších formulářích a při uložení se odstraní z konfigurace. Nastavení platí pouze pro manuální možnosti, nikoli pro propojení na číselník.
 
 ### Validace při opuštění pole
 

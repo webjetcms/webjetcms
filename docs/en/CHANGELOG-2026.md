@@ -6,6 +6,7 @@
 
 ### Groundbreaking changes
 
+- Forms - for classic forms and the Form application, the encryption key is easily loaded exclusively from the form's server settings. If it was previously entered only in the HTML field `encryptKey`, transfer it to the **Encryption key** field in the administration. The parameter sent by the visitor no longer affects encryption. More in the [Form encryption] guide (redactor/apps/form/encryption.md#setting-up-the-public-key-for-a-form) (#376).
 - Databases - the minimum supported version is MariaDB 10.11 LTS or MySQL 8.4 LTS. Before updating WebJET CMS on an older server, update the database according to the manufacturer's instructions. Details and requirements for the updated JDBC driver are in the [installation guide](install/setup/README.md#basic-requirements-for-server) (#349).
 - Statistics - browsers are saved without version numbers after updating, which change very often these days. After deploying this version, it is necessary to start the migration of historical statistics to URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser version number (#303).
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
@@ -138,6 +139,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multi-step forms - auxiliary statistics entries on [public cluster node with limited database rights](install/config/ro-user.md#multi-step-forms) no longer block form display, validation, or submission. In case of an error, the visitor will see the application name instead of the Java class name (#384).
 - Delayed email sending - increased column `emails.message` to `LONGTEXT` in MySQL/MariaDB so that saving a large HTML email does not fail. Added [instructions for smaller CSS for email and PDF](redactor/apps/form/README.md#css-styles-for-email-and-pdf) (#374).
 - Form Settings - added **Optional Fields** tab with fields A–F. Fields are also available in the Form Simple editor and via `FormSettingsEntity`. In the HTML of the translation keys, you can use [`${settings.*}`](redactor/apps/formsimple/README.md#fields-from-form-settings) tags for A–F, email settings, redirects, file limits, and appearance. They are also supported by the preview and email appearance of multi-step forms. A–F and the text before and after the email are enabled by HTML (#364).
 - Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.multistep.form.back_button` (#osk782).
@@ -157,6 +159,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/multistep-form/stat-section-advanced.png)
 
+- Multi-step forms - [empty option](redactor/apps/multistep-form/README.md#empty-option) in a group of selection fields displays the adjustable text **Without selected option** (#381).
 - Added the ability to easily set up checkboxes and groups of checkboxes/select fields in multi-step forms (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -231,6 +234,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Document Manager - the folder tree has a minimum width of 200 px so that the search field with buttons does not extend into the table even when setting a smaller ratio. Therefore, the width settings in pixels offer values ​​starting from 200 px (#360).
 - Document Manager - **Product** and **Category** fields normalize hard spaces, tabs, and line breaks, merge repeating spaces, and remove trailing spaces and distracting invisible characters from copied text when saving, renaming, and bulk uploading. **Warning:** When resaving an existing document, hard spaces in the title, products, and so on are removed. Filters in the application in websites are not automatically updated. If they use the original name with hard or repeating spaces or invisible characters, the document may not appear in the filtered list after saving. Correct the names in all affected documents and set the filters in the applications to the new values. Saving one document will not correct other documents with the same product or category name (#360).
 - Document Manager - in [website application](redactor/files/file-archive/file-archive-app.md#tab---advanced) added sorting by validity start and end, product code, product, category, file name and document size (#359, #osk791).
+- Document Manager - the configuration variable `fileArchivCheckHistoryValid=false` can be used to enable downloading of historical versions even outside the validity period; historical versions of documents will then also be displayed in the application on the website. The dates remain displayed in the archive; the default value `true` maintains the validity check from and to. More in [documentation](redactor/files/file-archive/README.md#validity-and-downloading-historical-versions) (#380).
 
 ### Gallery
 
@@ -310,6 +314,14 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Spring applications - [error creating or executing application](custom-apps/spring-mvc/README.md#error-executing-application) will replace only its `INCLUDE` tag. Surrounding text, JSP applications, and other Spring applications will remain on the page, and the message will state the name of the application that failed (#384).
+- Redis session - fixed uploading files in parts, consuming one-time CSRF tokens, and updating logged-in user data after editing profile via registration form. Changed objects are written back to session.
+- Page editor - fixed a bug when opening a preview after restoring a session from a serialized storage, such as Redis. Missing editor data will be restored from the preview version of the page.
+- Templates - creation, modification and deletion audit uses uniform prefixes `CREATE:`, `UPDATE:` and `DELETE:` with the template ID and name.
+- Page Editor - when switching pages, it waits for CKEditor to complete the refresh so that the content of the previous page is not displayed and saved.
+- Websites - slashes in the page title, menu title, and header, footer, or navigation selection are displayed as `/` instead of `&#47;`.
+- AI assistants - when HTTP error occurs while generating an image, an error is displayed and the processing indicator is terminated. The request can be retried.
+- Datatables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - the titles, alignment, and color menus are no longer clipped at the bottom of the dialog box and remain available even in a low browser window (#376).
 - E-commerce - fixed adding a product category without a marked product in the table (#373).
 - Web pages - Page URLs, redirects, and image perex now preserve parameters even after loading via JPA, including history. The HTML sanitizer no longer rewrites the `&` and `=` characters in URLs to HTML entities (#373).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the pages are opened (#372).
@@ -317,6 +329,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
 - Page Builder - when content loading fails, you can switch to HTML mode by restoring the last available HTML. The restore requires confirmation as it may not contain the latest changes (#369).
 - Page Builder - fixed editor freeze when opening HTML with remaining `contenteditable="true"` attribute. CKEditor no longer initializes twice on the same block.
+- Page Builder - unsupported elements marked `pb-editable`, such as list items `li`, no longer block switching from the HTML editor. Their content remains intact and can be edited via the parent editable area (#382).
+- Page Builder - nested tags `pb-editable` and `pb-content` are removed before the editor is launched. Nested CKEditors are not created in one block and redundant markup is not copied when creating paragraphs or lists. Text and other CSS classes are preserved (#382).
 - Email - fixed SMTP settings being affected between applications on a shared application server. Each send uses its own properties and mail session, so SSL port, authentication, or Amazon SES settings from another application are not transferred (#367).
 - Page Builder - fixed accumulation of empty lines in HTML of nested blocks. When saving and switching to HTML editor, old extra lines between elements are also removed. Content of `pre`, `textarea` and spaces preserved via CSS `white-space` remain unchanged (#367).
 - Webpages - fixed stuttering and jumping when [compare versions](redactor/webpages/history.md) if the page template uses smooth scrolling (`scroll-behavior: smooth`) (#367).
@@ -339,6 +353,11 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- Dependency Check - updated libraries `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` with fix `CVE-2026-110879` and `undici 6.28.1 → 6.29.1` with fix `CVE-2026-109383`. Jackson update tightens type checking during polymorphic deserialization; custom integrations using Java class names in JSON need to be verified (#385).
+- Dependency Check - exceptions for `CVE-2026-116802`, `CVE-2026-116803` and `CVE-2026-116804` in `DOMPurify 3.4.16` have been verified and constrained to the exact hash of the supplied `Swagger UI 5.34.0` bundle. The integration handles HTML strings without XHTML mode, `IN_PLACE`, `SAFE_FOR_TEMPLATES` and DOM returns; its hook does not remove nodes. The exceptions confirm the non-use of the affected modes, not a fix for the DOMPurify library (#385).
+- Dependency Check - updated libraries `Hibernate Validator 9.0.0.Final → 9.0.2.Final` with fix `CVE-2026-93879`, transitive dependency `ASM 9.7.1 → 9.11.1` with Java bytecode processing fixes, and administration build dependency `ip-address 10.7.1 → 10.7.4` with fix `CVE-2026-111997`. The updates do not require a Java version change or application API modification (#385).
+- Dependency Check - added exception for `CVE-2026-104828` in `neko-htmlunit 4.5.0`, existing exception for `CVE-2026-47842` was re-verified for `spring-security-crypto 7.1.2`. Verified integrations do not use `HTMLWriterFilter` or the old AES API. Exceptions are limited to specific versions; they should be re-evaluated when changing integrations. This is not a fix for these libraries (#385).
+- Forms - prevented overwriting of the encryption key by the `encryptKey` parameter in the request. A forged, empty or corrupted parameter will not change the encryption of the stored values ​​or the HTML form of the form (#376).
 - Node.js - development and build version in `.nvmrc` and `devcontainer` updated to `22.23.4`, which fixes the Brotli decoder vulnerability CVE-2026-111497. Locally and in build environments, update Node.js according to [installation instructions](developer/install/README.md#rspack-build-js-css-a-pug-files) (#373).
 - Web pages - when saving, the rights to the original page and to the target folder when moving are verified. Changing the ID and folder in the request does not allow you to download another page (#373).
 - Web pages - page title and menu title are cleaned of dangerous HTML on both save and load (#373).
@@ -352,6 +371,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Documentation
 
+- AI skills - added [WebJET skills overview](developer/guidelines/ai-skills.md#webjet-skills-overview) with purpose and usage examples. The same table is automatically transferred to the README of the `webjetcms/skills` distribution. Export checks the completeness of the list (#376).
+- Forms - supplemented guide [Form Encryption](redactor/apps/form/encryption.md) with creation and setting of keys, decryption of records, scope of protection and technical description of algorithms (#376).
 - Datatables - added explanation of [notifications about unsaved changes](redactor/datatables/README.md#notifications-about-unsaved-changes) when refreshing or leaving the page and when closing the editor with the Cancel button (#339).
 - A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
 - Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.
@@ -687,6 +708,13 @@ Redesigned application properties settings in the editor from the old code in `J
 - Cluster - optimized writing of changes in the cluster when starting a new node (#337).
 - Redis - improved transfer of information about the uploaded file in the session (#342).
 - Security - updated library `FreeMarker` from version `2.3.34` to `2.3.35`.
+- Security - updated library `Hibernate Validator` from version `6.2.5.Final` to `6.2.6.Final` with fix `CVE-2026-93879`. Maintained compatibility with `javax.validation`.
+- Security - updated administration build dependencies `PostCSS` from version `8.5.12` to `8.5.23` and `source-map-js` from version `1.2.1` to `1.2.2` with fixes `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` and `CVE-2026-93749`.
+- Security - added Dependency Check exceptions for specific HIGH findings in unused functions `Moment, Vue SSR, DOMPurify, Neko, Spring` and for incorrect assignment of XML error to used version `jsoup`. Exceptions are limited to reviewed library versions or Swagger UI hashes; they need to be re-evaluated when enabling affected functions or custom configuration extensions. This is not a fix for these libraries.
+- Security - updated libraries `Jackson Databind, Core, JAX-RS, JAXB` module from version `2.22.1` to `2.22.4` with fix for [CVE-2026-110879](https://github.com/FasterXML/jackson-databind/security/advisories/GHSA-m8xf-2cr7-77ph). `Jackson Annotations` remains in version `2.22`.
+- Security - added exception for [CVE-2026-116804](https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7) in a specific Swagger UI file. The DOMPurify configuration used does not enable the modes needed to exploit this flaw.
+- Updated library `swagger-ui` to version 5.34.0.
+- Security - fixed application protection against [CVE-2025-22228](https://spring.io/security/cve-2025-22228/). Bcrypt passwords longer than 72 bytes in UTF-8 do not work during login and are reported as incorrect password. With diacritics and other multi-byte characters, it can be less than 72 characters. This applies to existing and new passwords, their storage is not changed and conversion is not performed. The user must use forgotten password recovery or reset by the administrator.
 - Security - updated administration libraries `Lodash` from version `4.17.21` to `4.18.1` and `PostCSS` from version `8.5.2` to `8.5.12`. As part of the PostCSS update, its dependency `Nano ID` was also updated from version `3.3.8` to `3.3.20`.
 - Security - disabled compilation of SpringEL expressions in Thymeleaf templates and by default in Spring as protection against [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Standard template syntax and allowed method calls remain supported, no template modification is required. Templates with a large number of repeatedly evaluated expressions may take longer to render.
 - Security - disabled saving protected files from `/files/protected/` to browser cache and proxy servers by setting HTTP headers before sending the file. Fixed setting response length when sending the entire file and its scope so that Spring Security writes security headers in time.

@@ -351,6 +351,8 @@ public class ConstantsV9 {
 		Constants.setString("searchType", "db", Constants.MOD_SEARCH, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vektorove vyhladavanie), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
 
 		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_GDPR, "Koľko dní staré priečinky a stránky, ktoré sú v koši, sa majú vymazať (POZOR, nie ako dlho sú v koši).");
+
+		Constants.setBoolean("fileArchivCheckHistoryValid", true, Constants.MOD_FILE_ARCHIV, "Ak je true, historické verzie dokumentov možno stiahnuť iba v rozsahu Platnosť od a Platnosť do. Pri false sa oba dátumy historických verzií ignorujú; viditeľnosť a prístupové oprávnenia sa naďalej kontrolujú.");
 	}
 
 	/**
