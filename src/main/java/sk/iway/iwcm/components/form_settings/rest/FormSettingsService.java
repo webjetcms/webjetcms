@@ -20,6 +20,7 @@ import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.form.FormFileRestriction;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /**
  * Prepares form settings for administration and bridges persisted settings with legacy attribute maps.
@@ -124,6 +125,46 @@ public class FormSettingsService {
         if(formSettings.getFormMailSendUserInfoDocId() != null) {
             DocDetails doc = DocDB.getInstance().getDoc( formSettings.getFormMailSendUserInfoDocId() );
             if(doc != null) formSettings.setFormmailSendUserInfoDoc( new DocDetailsDto(doc) );
+        }
+    }
+
+    /**
+     * Skips public nodes and otherwise attempts to increment the view counter without affecting form
+     * rendering when statistics persistence is unavailable.
+     *
+     * @param formName logical form name
+     * @param domainId current domain ID
+     * @param formSettingsRepository repository used to update the counter
+     */
+    public static void tryIncrementFormViewCount(String formName, int domainId, FormSettingsRepository formSettingsRepository) {
+        if (ClusterDB.isPublicNode()) return;
+
+        try {
+            formSettingsRepository.incrementFormViewCount(formName, domainId);
+        } catch (RuntimeException exception) {
+            Logger.warn(FormSettingsService.class,
+                "Unable to increment form view count for formName=" + formName + ", domainId=" + domainId,
+                exception);
+        }
+    }
+
+    /**
+     * Skips public nodes and otherwise attempts to increment the submission-attempt counter without
+     * affecting form submission when statistics persistence is unavailable.
+     *
+     * @param formName logical form name
+     * @param domainId current domain ID
+     * @param formSettingsRepository repository used to update the counter
+     */
+    public static void tryIncrementResponseAttempts(String formName, int domainId, FormSettingsRepository formSettingsRepository) {
+        if (ClusterDB.isPublicNode()) return;
+
+        try {
+            formSettingsRepository.incrementResponseAttempts(formName, domainId);
+        } catch (RuntimeException exception) {
+            Logger.warn(FormSettingsService.class,
+                "Unable to increment form response attempts for formName=" + formName + ", domainId=" + domainId,
+                exception);
         }
     }
 

@@ -677,7 +677,7 @@ public class TemplatesDB extends DB
 		StringBuilder log = new StringBuilder();
 		if (oldTemplate != null)
 		{
-			log.append("Zmenena sablona: ").append(t_form.getTempName());
+			log.append("UPDATE:\nid: ").append(t_form.getTempId()).append("\ntempName: ").append(t_form.getTempName());
 		   BeanDiff diff = new BeanDiff().setNew(t_form).setOriginal(oldTemplate).
 		   	blacklist("footerDocData", "pocetPouziti", "headerDocData", "menuDocData", "objectADocData", "objectBDocData", "objectCDocData", "objectDDocData");
 		   log.append('\n').append(new BeanDiffPrinter(diff));
@@ -686,7 +686,7 @@ public class TemplatesDB extends DB
 		}
 		else
 		{
-			log.append("Vytvorena sablona: ").append(t_form.getTempName());
+			log.append("CREATE:\nid: ").append(t_form.getTempId()).append("\ntempName: ").append(t_form.getTempName());
 			Adminlog.add(Adminlog.TYPE_TEMPLATE_INSERT, log.toString(), t_form.getTempId(), 0);
 		}
 	}
@@ -766,7 +766,7 @@ public class TemplatesDB extends DB
                ps.execute();
                ps.close();
 
-               Adminlog.add(Adminlog.TYPE_TEMPLATE_DELETE, "Delete template :" + " name= " + temp1.getTempName(), temp1.getTempId(), -1);
+               Adminlog.add(Adminlog.TYPE_TEMPLATE_DELETE, "DELETE:\nid: " + temp1.getTempId() + "\ntempName: " + temp1.getTempName(), temp1.getTempId(), -1);
                return true;
            }
        } catch (Exception ex) {

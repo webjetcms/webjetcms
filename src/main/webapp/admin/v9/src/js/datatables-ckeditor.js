@@ -2509,17 +2509,14 @@ export class DatatablesCkEditor {
 		}
 	}
 
-	setData(data) {
-		//console.log("Set data, instance=", this.ckEditorInstance, "useTimeout=", useTimeout, "data=", data);
-		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
-		return new Promise(resolve => {
-			try {
-				this.ckEditorInstance.setData(data, resolve);
-			} catch (error) {
-				console.error("Error setting data to CKEditor instance:", error);
-				resolve();
-			}
-		});
+	async setData(data) {
+		const editor = this.ckEditorInstance;
+		// Reattaching the modal recreates CKEditor's iframe and restores its previous content.
+		// Its dataReady event must finish before registering the next setData callback.
+		if (editor.status === 'recreating') {
+			await new Promise(resolve => editor.once('mode', resolve));
+		}
+		return new Promise(resolve => editor.setData(data, resolve));
 	}
 
 	getData() {

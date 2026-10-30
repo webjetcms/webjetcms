@@ -159,3 +159,34 @@ Scenario("Spring app language in editor", ({I, DTE}) => {
     checkSpringAppTextsInEditor(27032, "sk", I, DTE);
     checkSpringAppTextsInEditor(105607, "en", I, DTE);
 });
+
+function checkSpringAppErrorMessage(I, isError=false) {
+
+    var errorText = "Ospravedlňujeme sa, ale nastala chyba pri vykonávaní komponenty Demo komponenta. Prosím, skúste to neskôr.";
+    var successText = "Demo component view, params";
+    var url = "/apps/spring-app/spring-error-text.html";
+    if (isError) {
+        url += "?act=npe";
+    }
+
+    I.amOnPage(url);
+
+    I.waitForText("Toto je prvá appka:", 10);
+    I.see("Toto je druhá appka");
+    I.waitForElement("#amazingslider-1", 1);
+
+    if (isError) {
+        I.see(errorText);
+        I.dontSee(successText);
+    } else {
+        I.see(successText);
+        I.dontSee(errorText);
+    }
+}
+
+Scenario("Spring app nice error message", ({I, DTE}) => {
+    I.logout();
+
+    checkSpringAppErrorMessage(I, false);
+    checkSpringAppErrorMessage(I, true);
+});

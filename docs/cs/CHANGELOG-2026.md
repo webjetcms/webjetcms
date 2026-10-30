@@ -6,6 +6,7 @@
 
 ### Průlomové změny
 
+- Formuláře - šifrovací klíč se u klasických formulářů a aplikací Formulář snadno načítá výhradně ze serverových nastavení formuláře. Pokud byl dosud zadán pouze v HTML poli `encryptKey`, přeneste jej do pole **Šifrovací klíč** v administraci. Parametr odeslaný návštěvníkům již šifrování neovlivňuje. Více v návodu [Šifrování formulářů](redactor/apps/form/encryption.md#nastavení-veřejného-klíče-pro-formulář) (#376).
 - Databáze - minimální podporovaná verze je MariaDB 10.11 LTS nebo MySQL 8.4 LTS. Před aktualizací WebJET CMS na starším serveru aktualizujte databázi podle postupu jejího výrobce. Podrobnosti a požadavky aktualizovaného JDBC ovladače jsou v [návodu k instalaci](install/setup/README.md#základní-požadavky-na-server) (#349).
 - Statistika – prohlížeče se po aktualizaci ukládají bez čísla verze, která se v dnešní době velmi často mění. Po nasazení této verze je třeba spustit migraci historických statistik na URL `/admin/v9/settings/stat-browser-migration/`, bez jejího dokončení zůstanou historické údaje rozděleny podle čísla verze prohlížečů (#303).
 - Z administrace byla odstraněna závislost na knihovně [Vue.js](https://vuejs.org). Před aktualizací doporučujeme ověřit kompatibilitu vlastních aplikací. Velikost JavaScript souborů se zmenšila o cca 170kB, což má dopad také na rychlost inicializace administrace. Více v [sekci pro programátora](#pre-programátora).
@@ -138,6 +139,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
+- Vícekrokové formuláře - pomocné zápisy statistiky na [veřejném uzlu clusteru s omezenými databázovými právy](install/config/ro-user.md#víceleté-formuláře) již neblokují zobrazení, validaci ani odeslání formuláře. Při chybě se návštěvníkovi zobrazí název aplikace namísto názvu Java třídy (#384).
 - Odložené odesílání emailů - zvětšený sloupec `emails.message` na `LONGTEXT` v MySQL/MariaDB, aby uložení velkého HTML emailu neselhalo. Doplněn [návod na menší CSS pro email a PDF](redactor/apps/form/README.md#css-styly-pro-email-a-pdf) (#374).
 - Nastavení formulářů - přidaná karta **Volitelná pole** s poli A–F. Pole jsou dostupná také v editoru aplikace Formulář snadno a přes `FormSettingsEntity`. V HTML překladových klíčů lze použít [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláře) pro A–F, emailová nastavení, přesměrování, limity souborů a vzhled. Podporuje je i náhled a emailová podoba vícekrokových formulářů. A–F i text před a za emailem umožňují HTML (#364).
 - Vícekrokové formuláře - přidána možnost upravit [HTML tlačítka na předchozí krok](redactor/apps/formsimple/README.md#html-kód-tlačítek) přes překladový klíč `components.mustistep.form.back_button` (#osk782).
@@ -310,6 +312,14 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Spring aplikace - [chyba při vytvoření nebo provedení aplikace](custom-apps/spring-mvc/README.md#chyba-při-provádění-aplikace) nahradí pouze její značku `INCLUDE`. Okolní text, JSP aplikace i ostatní Spring aplikace zůstanou na stránce zachovány a hláška uvede název aplikace, která selhala (#384).
+- Redis session - opraveno nahrávání souborů po částech, spotřebování jednorázových CSRF tokenů a aktualizace údajů přihlášeného uživatele po úpravě profilu přes registrační formulář. Změněné objekty se zapíší zpět do session.
+- Editor stránek - opravena chyba při otevření náhledu po obnovení session ze serializovaného úložiště, například Redis. Chybějící data editoru se obnoví z náhledové verze stránky.
+- Šablony - audit vytvoření, úpravy a smazání používá jednotné prefixy `CREATE:`, `UPDATE:` a `DELETE:` s ID a názvem šablony.
+- Editor stránek - při přepínání stránek čeká na dokončení obnovy CKEditoru, aby se nezobrazil a neuložil obsah předchozí stránky.
+- Webové stránky - lomítka v názvu stránky, názvu v menu a ve výběru hlavičky, patičky či navigace se zobrazují jako `/` místo `&#47;`.
+- AI asistenti - při HTTP chybě generování obrázku se zobrazí chyba a ukončí indikátor zpracování. Požadavek lze zopakovat.
+- Datové tabulky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - nabídky nadpisů, zarovnání a barev se již neořezávají na spodním okraji dialogového okna a zůstávají dostupné iv nízkém okně prohlížeče (#376).
 - Elektronický obchod - opraveno přidání kategorie produktů bez označeného produktu v tabulce (#373).
 - Webové stránky - URL stránky, přesměrování a perex obrázku zachovávají parametry i po načtení přes JPA včetně historie. HTML sanitizér již nepřepisuje znaky `&` a `=` v URL na HTML entity (#373).
 - Webové stránky - přesměrování stránky se přihlášenému administrátorovi neukládá do cache prohlížeče, aby se jeho změna nebo zrušení projevily při dalším otevření stránek (#372).
@@ -317,6 +327,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Editor stránek - při selhání získání obsahu nebo hodnotě `undefined` se zobrazí chyba a uložení se zastaví, aby se nepřepsal původní obsah. Atributy `contenteditable` se odstraňují při načítání i ukládání HTML včetně kódu vloženého v HTML režimu (#369).
 - Page Builder - při selhání načítání obsahu lze přepnout do HTML režimu obnovením posledního dostupného HTML. Obnova vyžaduje potvrzení, protože nemusí obsahovat nejnovější změny (#369).
 - Page Builder - opraveno zamrznutí editoru při otevření HTML se zbývajícím atributem `contenteditable="true"`. CKEditor se na stejném bloku již neinicializuje dvakrát.
+- Page Builder - nepodporované elementy označené `pb-editable`, například položky seznamu `li`, již nezablokují přepnutí z HTML editoru. Jejich obsah zůstává zachován a lze jej upravovat přes nadřazenou editovatelnou oblast (#382).
+- Page Builder - vnořené značky `pb-editable` a `pb-content` se odstraní před spuštěním editoru. V jednom bloku nevznikají vnořené CKEditory a při vytváření odstavců či seznamů se nekopíruje nadbytečné označení. Text a ostatní CSS třídy zůstávají zachovány (#382).
 - Email - opraveno ovlivňování SMTP nastavení mezi aplikacemi na společném aplikačním serveru. Každé odeslání používá vlastní properties a mailovou session, takže se nepřenáší SSL port, autentifikace ani nastavení Amazon SES z jiné aplikace (#367).
 - Page Builder - opraveno hromadění prázdných řádků v HTML vnořených bloků. Při ukládání a přepnutí do HTML editoru se odstraní i staré nadbytečné řádky mezi elementy. Obsah `pre`, `textarea` a mezery zachovávané přes CSS `white-space` zůstávají nezměněny (#367).
 - Webové stránky - opravené zasekávání a skákání při [srovnávání verzí](redactor/webpages/history.md), pokud šablona stránky používá plynulé posouvání (`scroll-behavior: smooth`) (#367).
@@ -339,6 +351,11 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Bezpečnost
 
+- Dependency Check - aktualizované knihovny `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizace Jackson zpřísňuje kontrolu typů při polymorfní deserializaci; vlastní integrace používající názvy Java tříd v JSON je třeba ověřit (#385).
+- Dependency Check - výjimky pro `CVE-2026-116802`, `CVE-2026-116803` a `CVE-2026-116804` v `DOMPurify 3.4.16` byly ověřeny a omezeny na přesný hash dodávaného `Swagger UI 5.34.0` bundle. Integrace ošetřuje HTML řetězce bez XHTML režimu, `IN_PLACE`, `SAFE_FOR_TEMPLATES` a zvracení DOM; její hook neodstraňuje uzly. Výjimky potvrzují nepoužití dotčených režimů, nikoli opravu knihovny DOMPurify (#385).
+- Dependency Check - aktualizované knihovny `Hibernate Validator 9.0.0.Final → 9.0.2.Final` s opravou `CVE-2026-93879`, tranzitivní závislost `ASM 9.7.1 → 9.11.1` s opravami zpracování Java bytecode a závislost sestavení administrace `ip-address 10.7.1 → 10.7.4` s opravou `CVE-2026-111997`. Aktualizace nevyžadují změnu verze Java ani úpravu aplikačních API (#385).
+- Dependency Check - doplněná výjimka pro `CVE-2026-104828` v `neko-htmlunit 4.5.0`, existující výjimka pro `CVE-2026-47842` byla znovu ověřena pro `spring-security-crypto 7.1.2`. Ověřené integrace nepoužívají `HTMLWriterFilter` ani staré AES API. Výjimky jsou omezeny na konkrétní verze; při změně integrací je třeba je přehodnotit. Nejedná se o opravu těchto knihoven (#385).
+- Formuláře - zamezené přepsání šifrovacího klíče parametrem `encryptKey` v požadavku. Podvržený, prázdný nebo poškozený parametr nezmění šifrování uložených hodnot ani HTML podoby formuláře (#376).
 - Node.js - verze pro vývoj a sestavení projektu v `.nvmrc` a `devcontainer` aktualizována na `22.23.4`, která opravuje zranitelnost Brotli dekodéru CVE-2026-111497. Lokálně iv build prostředích aktualizujte Node.js podle [návodu k instalaci](developer/install/README.md#rspack-build-js-css-a-pug-souborů) (#373).
 - Web stránky - při ukládání se ověřují práva k původní stránce ik cílové složce při přesunu. Změnou ID a složky v požadavku nelze převzít cizí stránku (#373).
 - Web stránky - název stránky a název v menu se čistí od nebezpečného HTML při ukládání i načítání (#373).
@@ -352,6 +369,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Dokumentace
 
+- AI skills - doplněn [přehled WebJET skillů](developer/guidelines/ai-skills.md#přehled-webjet-skills) s účelem a příklady použití. Stejná tabulka se automaticky přenáší do README distribuce `webjetcms/skills`. Export kontroluje úplnost seznamu (#376).
+- Formuláře - doplněný návod [Šifrování formulářů](redactor/apps/form/encryption.md) s vytvořením a nastavením klíčů, dešifrováním záznamů, rozsahem ochrany a technickým popisem algoritmů (#376).
 - Datatabulky - doplněné vysvětlení [upozornění na neuložené změny](redactor/datatables/README.md#upozornění-na-neuložené-změny) při obnovení nebo opuštění stránky a při zavření editoru tlačítkem Zrušit (#339).
 - Vytvořena nová sekce [Přehled nových vlastností](sales/README.md) která obsahuje popisy nových vlastností a **funkcionalit WebJET CMS srozumitelným jazykem**, bez zbytečně technických formulací (#58505).
 - Vytvořená sekce [Řešení problémů](sysadmin/troubleshooting/README.md) v manuálu pro provoz.
@@ -687,6 +706,13 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Cluster - optimalizované zapisování změny v clusteru při startu nového uzlu (#337).
 - Redis - zlepšený přenos informace o nahrávaném souboru v session (#342).
 - Bezpečnost - aktualizovaná knihovna `FreeMarker` z verze `2.3.34` na `2.3.35`.
+- Bezpečnost - aktualizovaná knihovna `Hibernate Validator` z verze `6.2.5.Final` na `6.2.6.Final` s opravou `CVE-2026-93879`. Zachována kompatibilita s `javax.validation`.
+- Bezpečnost - aktualizované závislosti sestavení administrace `PostCSS` z verze `8.5.12` na `8.5.23` a `source-map-js` z verze `1.2.1` na `1.2.2` s opravami `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` a `CVE-2026-93749`.
+- Bezpečnost - doplněné výjimky Dependency Check pro konkrétní HIGH nálezy v nepoužívaných funkcích `Moment, Vue SSR, DOMPurify, Neko, Spring` a pro nesprávné přiřazení XML chyby k použité verzi `jsoup`. Výjimky jsou omezeny na posouzené verze knihoven nebo hash Swagger UI; při zapnutí dotčených funkcí či zákaznickém rozšíření konfigurace je třeba je přehodnotit. Nejedná se o opravu těchto knihoven.
+- Bezpečnost - aktualizované knihovny `Jackson Databind, Core, JAX-RS, JAXB` modul z verze `2.22.1` na `2.22.4` s opravou [CVE-2026-110879](https://github.com/FasterXML/jackson-databind/security/advisories/GHSA-m8x7-2 `Jackson Annotations` zůstává ve verzi `2.22`.
+- Bezpečnost - doplněna výjimka pro [CVE-2026-116804](https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7) v konkrétním souboru Swagger UI. Použitá konfigurace DOMPurify nezapíná režimy potřebné ke zneužití této chyby.
+- Aktualizovaná knihovna `swagger-ui` na verzi 5.34.0.
+- Bezpečnost - opravená aplikační ochrana před [CVE-2025-22228](https://spring.io/security/cve-2025-22228/). Bcrypt hesla delší než 72 bajtů v UTF-8 při přihlášení nefungují a hlásí se jako nesprávné heslo. Při diakritice a dalších více bajtových znacích může jít io méně než 72 znaků. Platí to pro stávající i nová hesla, jejich ukládání se nemění a konverze se neprovádí. Uživatel musí použít obnovu zapomenutého hesla nebo reset administrátorem.
 - Bezpečnost - aktualizované knihovny administrace `Lodash` z verze `4.17.21` na `4.18.1` a `PostCSS` z verze `8.5.2` na `8.5.12`. V rámci aktualizace PostCSS byla aktualizována i jeho závislost `Nano ID` z verze `3.3.8` na `3.3.20`.
 - Bezpečnost - vypnutá kompilace výrazů SpringEL v Thymeleaf šablonách a ve výchozím nastavení i ve Spring jako ochrana před [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Standardní syntax šablon a povolená volání metod zůstávají podporovány, úprava šablon není nutná. U šablon s velkým množstvím opakovaně vyhodnocovaných výrazů může vykreslování trvat déle.
 - Bezpečnost - vypnuté ukládání chráněných souborů z `/files/protected/` do cache prohlížeče a proxy serverů nastavením HTTP hlaviček před odesláním souboru. Opraveno nastavení délky odpovědi při odesílání celého souboru i jeho rozsahu, aby Spring Security zapsal bezpečnostní hlavičky včas.
