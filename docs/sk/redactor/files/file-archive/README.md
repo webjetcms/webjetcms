@@ -65,7 +65,7 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
 
 #### Platnosť a sťahovanie historických verzií
 
-Konfiguračná premenná `fileArchivCheckHistoryValid` mení iba správanie už nahraných historických verzií. Nevyplnený dátum príslušnú hranicu platnosti neobmedzuje.
+Konfiguračná premenná fileArchivCheckHistoryValid určuje, či sa pri už nahraných historických verziách kontrolujú dátumy **Platnosť od a Platnosť do**. Pri predvolenej hodnote true sa historická verzia dokumentu mimo rozsahu platnosti nezobrazí v zozname starších verzií v aplikácii na webovej stránke a nedá sa stiahnuť. Pri hodnote `false` sa dátumy ignorujú, takže verzia môže byť zobrazená a dostupná na stiahnutie aj mimo rozsahu platnosti. Ostatné podmienky zobrazenia a prístupové oprávnenia zostávajú zachované. Nevyplnený dátum príslušnú hranicu platnosti neobmedzuje.
 
 Údaje o zobrazení v aplikácii uvedené v tabuľke predpokladajú, že dokument vyhovuje ostatným filtrom aplikácie. Archívne verzie sa vypisujú iba pri zapnutej možnosti **Zobraziť archívne verzie** a vzory pri zapnutej možnosti **Zobraziť vzory**.
 

@@ -65,7 +65,7 @@ The card contains basic information for inserting a document.
 
 #### Validity and downloading of historical versions
 
-The configuration variable `fileArchivCheckHistoryValid` only changes the behavior of already uploaded historical versions. An empty date does not limit the respective validity limit.
+The fileArchivCheckHistoryValid configuration variable determines whether the **Valid from and Valid to** dates are checked for already uploaded historical versions. With the default value true, a historical version of a document outside the validity range will not be displayed in the list of older versions in the application on the website and cannot be downloaded. With the value `false`, the dates are ignored, so the version can be displayed and available for download even outside the validity range. Other display conditions and access permissions remain intact. An empty date does not limit the respective validity range.
 
 The in-app display data in the table assumes that the document meets the other application filters. Archive versions are listed only when the **Show archive versions** option is enabled, and templates are listed only when the **Show templates** option is enabled.
 
