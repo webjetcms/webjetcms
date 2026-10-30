@@ -16,6 +16,7 @@ import jakarta.servlet.jsp.tagext.BodyTagSupport;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.ApplicationContext;
+import org.springframework.util.ClassUtils;
 
 import net.sourceforge.stripes.exception.SourcePageNotFoundException;
 import sk.iway.iwcm.Adminlog;
@@ -44,6 +45,7 @@ import sk.iway.iwcm.editor.InlineEditor;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.BrowserDetector;
 import sk.iway.iwcm.system.WJResponseWrapper;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
@@ -979,6 +981,32 @@ public class WriteTag extends BodyTagSupport
 		fileNameUser = Tools.replace(fileNameUser, "-", " ");
 
 		return prop.getText(key, fullPath, fileName, fileNameUser);
+	}
+
+	public static String getSpringErrorMessage(Prop prop, String key, String className)
+	{
+		String componentName = getSpringComponentName(prop, className);
+		return prop.getText(key, componentName, componentName, componentName);
+	}
+
+	private static String getSpringComponentName(Prop prop, String className)
+	{
+		String safeClassName = Tools.getStringValue(className, "");
+		try
+		{
+			Class<?> componentClass = ClassUtils.resolveClassName(safeClassName, ClassUtils.getDefaultClassLoader());
+			WebjetAppStore appStore = componentClass.getAnnotation(WebjetAppStore.class);
+			if (appStore != null && Tools.isNotEmpty(appStore.nameKey())) return prop.getText(appStore.nameKey());
+		}
+		catch (Exception ignored)
+		{
+			// Fall back to a readable class name when the component cannot be loaded.
+		}
+
+		int nameStart = Math.max(safeClassName.lastIndexOf('.'), safeClassName.lastIndexOf('$')) + 1;
+		return safeClassName.substring(nameStart)
+			.replaceFirst("(App|Component)$", "")
+			.replaceAll("(?<=[a-z0-9])(?=[A-Z])", " ");
 	}
 
 	/**

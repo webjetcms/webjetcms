@@ -24,6 +24,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
@@ -150,7 +151,7 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         model.addAttribute("language", PageLng.getUserLng(request));
 
         // Increment form view count
-        formSettingsRepository.incrementFormViewCount(formName, CloudToolsForCore.getDomainId());
+        FormSettingsService.tryIncrementFormViewCount(formName, CloudToolsForCore.getDomainId(), formSettingsRepository);
 
         return VIEW_PATH;
     }
