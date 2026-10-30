@@ -53,12 +53,12 @@ class QuickSearch {
         this.trigger = trigger;
         this.isMac = /Mac|iPhone|iPad/.test(navigator.platform);
         this.scopes = ['all'];
+        if (WJ.hasPermission('cmp_ai_button')) this.scopes.push('aiChat');
         if (WJ.hasPermission('menuWebpages')) this.scopes.push('docs', 'files');
         this.scopes.push('admin');
         if (WJ.hasPermission('users_edit_admins') || WJ.hasPermission('users_edit_public_users')) this.scopes.push('users');
         if (WJ.hasPermission('edit_text')) this.scopes.push('translationKeys');
         if (window.adminSearchContext?.documentationSearchUrl?.trim()) this.scopes.push('documentation');
-        if (WJ.hasPermission('cmp_ai_button')) this.scopes.push('aiChat');
         this.documentationAlwaysSearch = window.adminSearchContext?.documentationAlwaysSearch === true;
         this.menu = menuEntries({ data: { dashboardMenu: window.adminSearchContext?.menu || [] } });
         const userId = window.currentUser?.userId;
@@ -69,7 +69,7 @@ class QuickSearch {
         this.root.id = 'admin-quick-search';
         this.root.tabIndex = -1;
         this.root.setAttribute('aria-labelledby', 'admin-quick-search-title');
-        const dialog = node('div', 'modal-dialog');
+        this.dialog = node('div', 'modal-dialog');
         const content = node('div', 'modal-content');
         content.append(node('h2', 'visually-hidden', text('title')));
         content.firstChild.id = 'admin-quick-search-title';
@@ -88,10 +88,21 @@ class QuickSearch {
         close.setAttribute('aria-label', text('close'));
         close.setAttribute('aria-keyshortcuts', 'Escape');
         close.append(node('kbd', '', 'Esc'));
+        const windowControls = node('div', 'md-quick-search__window-controls');
+        for (const [action, maximized] of [['minimize', false], ['maximize', true]]) {
+            const control = button('', 'md-quick-search__window-control', () => this.setMaximized(maximized));
+            control.title = WJ.translate(`datatables.modal.${action}.js`);
+            control.setAttribute('aria-label', control.title);
+            const symbol = node('span', 'md-quick-search__window-symbol');
+            symbol.append(icon(`ti-arrows-${action}`));
+            control.append(symbol);
+            windowControls.append(control);
+        }
+        windowControls.append(close);
         this.searchIcon = icon('ti-search');
         this.chatTitle = node('span', 'md-quick-search__chat-title', text('aiChat'));
         this.chatTitle.hidden = true;
-        search.append(this.searchIcon, this.input, this.chatTitle, this.clear, close);
+        search.append(this.searchIcon, this.input, this.chatTitle, this.clear, windowControls);
         this.scopeBar = node('div', 'md-quick-search__scopes');
         this.scopeBar.setAttribute('role', 'group');
         this.scopeBar.setAttribute('aria-label', text('title'));
@@ -117,8 +128,8 @@ class QuickSearch {
         this.status.setAttribute('role', 'status');
         this.status.setAttribute('aria-live', 'polite');
         content.append(search, this.scopeBar, this.results, this.chatPanel, this.hint, this.status);
-        dialog.append(content);
-        this.root.append(dialog);
+        this.dialog.append(content);
+        this.root.append(this.dialog);
         document.body.append(this.root);
         const documentationChip = this.chips.get('documentation');
         if (documentationChip) {
@@ -164,6 +175,13 @@ class QuickSearch {
     focus() {
         if (this.scope === 'aiChat') this.chat?.focus();
         else this.input.focus();
+    }
+
+    /** Maximizes the shared dialog or restores its default size after manual resizing. */
+    setMaximized(maximized) {
+        this.dialog.style.removeProperty('width');
+        this.dialog.style.removeProperty('height');
+        this.root.classList.toggle('md-quick-search--maximized', maximized);
     }
 
     cancel() {

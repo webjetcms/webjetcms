@@ -25,7 +25,8 @@
 </div>
 
 - [Rýchle vyhľadávanie](redactor/admin/search/README.md) je dostupné z hlavičky celej administrácie tlačidlom **Hľadať…** alebo skratkou **Ctrl+K / ⌘K**. Ponúka návrhy stránok podľa názvu a URL, výsledky z obsahu stránok, súborov, používateľov, textových kľúčov a položiek menu. Vybraný výraz môžete preniesť do príslušnej sekcie s ďalšími filtrami (#348).
-- Rýchle vyhľadávanie - nová karta [AI Chat](redactor/admin/search/README.md#ai-chat) umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Odpovede môžete kopírovať; rozhovor aj rozpísaná správa sa zachovajú pri prepínaní kariet a opätovnom otvorení dialógu.
+- Rýchle vyhľadávanie - nová karta [AI Chat](redactor/admin/search/README.md#ai-chat) umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Zaoblené pole na správu obsahuje výber asistenta a tlačidlo na odoslanie alebo zastavenie odpovede. Odpovede môžete kopírovať; rozhovor aj rozpísaná správa sa zachovajú pri prepínaní kariet a opätovnom otvorení dialógu.
+- Rýchle vyhľadávanie - veľkosť dialógu môžete upraviť ťahaním za pravý dolný roh, maximalizovať ho alebo obnoviť jeho pôvodnú veľkosť tlačidlami v hlavičke.
 
 ![](redactor/admin/search/quick-search.png)
 

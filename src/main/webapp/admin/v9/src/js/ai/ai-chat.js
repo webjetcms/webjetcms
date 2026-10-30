@@ -3,7 +3,7 @@ import { AiChatTransport } from './ai-chat-transport';
 
 /**
  * A reusable AI conversation that keeps its history while its view is unmounted.
- * Hosts can supply request context and additional answer or toolbar actions.
+ * Hosts can supply request context, composer controls and additional answer or toolbar actions.
  */
 export class AiChat {
 
@@ -34,13 +34,15 @@ export class AiChat {
         this.$history.append(this.$empty).on("scroll", () => this._saveScroll());
 
         const $composer = $('<div class="ai-chat-composer"></div>');
+        const $composerPanel = $('<div class="ai-chat-composer-panel"></div>');
         this.$notice = $('<div class="ai-chat-notice" role="status"></div>');
         this.$confirmation = $('<div class="ai-chat-confirmation" role="group"></div>').hide();
         this.renderedConfirmation = null;
-        this.$input = $('<textarea class="form-control ai-chat-input" rows="3"></textarea>')
+        this.$input = $('<textarea class="form-control ai-chat-input" rows="2"></textarea>')
             .attr({ "aria-label": this._text("message"), placeholder: this._text("placeholder") });
         this.$input.on("input", () => {
             this.state.draft = this.$input.val();
+            this._resizeInput();
             this._updateSendButton();
         });
         this.$input.on("keydown", event => {
@@ -50,12 +52,21 @@ export class AiChat {
             }
         });
         const $composerActions = $('<div class="ai-chat-composer-actions"></div>');
-        this.$send = this._button(this._text("send"), "send", "btn-primary")
+        if (this.options.showAttachment) {
+            const $attachment = this._iconButton(WJ.translate("datatables.upload.uploadFile.js"), "plus", "btn-ai-chat-attach").prop("disabled", true);
+            $composerActions.append($attachment);
+        }
+        this.$composerControls = $('<div class="ai-chat-composer-controls"></div>');
+        this.$send = this._iconButton(this._text("send"), "arrow-up", "btn-primary")
             .addClass("btn-ai-chat-send").on("click", () => this._sendDraft());
-        this.$stop = this._button(this._text("stop"), "square", "btn-outline-secondary")
-            .addClass("btn-ai-chat-stop").on("click", () => this.stop());
-        $composerActions.append(this.$stop, this.$send);
-        $composer.append(this.$notice, this.$confirmation, this.$input, $composerActions);
+        this.$stop = this._iconButton(this._text("stop"), "player-stop-filled", "btn-primary")
+            .addClass("btn-ai-chat-stop").on("click", () => {
+                this.stop();
+                this.$input[0].focus({ preventScroll: true });
+            });
+        $composerActions.append(this.$composerControls, this.$stop, this.$send);
+        $composerPanel.append(this.$input, $composerActions);
+        $composer.append(this.$notice, this.$confirmation, $composerPanel);
         this.$root.append(this.$toolbar, this.$history, $composer);
     }
 
@@ -65,8 +76,10 @@ export class AiChat {
         if (container?.nodeType !== 1) throw new TypeError("AI chat requires a container element.");
         this.unmount();
         container.appendChild(this.element);
+        if (this.options.composerControls) this.$composerControls.append(this.options.composerControls);
         this.mounted = true;
         this.refresh();
+        this._resizeInput();
         this.$input[0].focus({ preventScroll: true });
     }
 
@@ -116,7 +129,10 @@ export class AiChat {
         this.$history.attr("aria-busy", state.pending != null ? "true" : "false");
         this.$notice.text(state.notice || "").toggle(Boolean(state.notice));
         this._updateConfirmation();
-        if (this.$input.val() !== state.draft) this.$input.val(state.draft);
+        if (this.$input.val() !== state.draft) {
+            this.$input.val(state.draft);
+            this._resizeInput();
+        }
         this._updateSendButton();
         if (this.element.isConnected) {
             this.$history[0].scrollTop = followLatest ? this.$history[0].scrollHeight : scrollTop;
@@ -308,6 +324,18 @@ export class AiChat {
     _sendDraft() {
         this.send(this.state.draft);
         this.$input[0].focus({ preventScroll: true });
+    }
+
+    _iconButton(label, icon, classes) {
+        const $button = this._button(label, icon, classes).addClass("ai-chat-icon-button").attr("title", label);
+        $button.find("span").addClass("visually-hidden");
+        return $button;
+    }
+
+    _resizeInput() {
+        const input = this.$input[0];
+        input.style.height = "auto";
+        input.style.height = input.scrollHeight + "px";
     }
 
     _updateSendButton() {

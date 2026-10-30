@@ -13,7 +13,7 @@ export class QuickSearchChat {
         this.scrollController = new AbortController();
         this.element = node('div', 'md-quick-search__chat-host');
         this.assistantRow = node('div', 'md-quick-search__chat-assistant');
-        const label = node('label', 'form-label', text('chatAssistant'));
+        const label = node('label', 'visually-hidden', text('chatAssistant'));
         this.select = node('select', 'form-select');
         this.select.id = 'admin-quick-search-chat-assistant';
         label.htmlFor = this.select.id;
@@ -23,7 +23,7 @@ export class QuickSearchChat {
         this.status.setAttribute('role', 'status');
         this.status.tabIndex = -1;
         this.content = node('div', 'md-quick-search__chat-content');
-        this.element.append(this.assistantRow, this.status, this.content);
+        this.element.append(this.status, this.content);
     }
 
     /** Loads assistants on first use and restores the selected conversation on later visits. */
@@ -84,7 +84,6 @@ export class QuickSearchChat {
     render() {
         if (!this.mounted || this.disposed) return;
         const hasAssistants = !this.loading && !this.error && this.assistants?.length > 0;
-        this.assistantRow.hidden = !hasAssistants || this.assistants.length < 2;
         this.content.hidden = !hasAssistants;
         this.status.hidden = hasAssistants;
         this.status.replaceChildren();
@@ -112,7 +111,7 @@ export class QuickSearchChat {
         this.chat?.unmount();
         this.chat = this.conversations.get(id);
         if (this.chat == null) {
-            this.chat = new AiChat({ assistant });
+            this.chat = new AiChat({ assistant, composerControls: this.assistantRow, showAttachment: true });
             containNativeScroll(this.chat.element.querySelector('.ai-chat-history'), this.scrollController.signal);
             this.conversations.set(id, this.chat);
         }

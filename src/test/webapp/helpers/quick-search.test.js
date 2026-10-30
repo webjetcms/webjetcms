@@ -45,13 +45,17 @@ function fixture(t, denied = [], options = {}) {
         window, document: window.document, navigator: { platform: options.platform || 'Win32' }, URL, URLSearchParams, AbortController, setTimeout, clearTimeout,
         $: window.jQuery,
         AiChatTransport: class {
-            execute(assistant, inputData) {
+            execute(assistant, inputData, callbacks) {
                 return new Promise(resolve => {
-                    this.request = { assistant, inputData, resolve };
+                    this.request = { assistant, inputData, callbacks, resolve, cancellations: 0 };
                     chatRequests.push(this.request);
                 });
             }
-            cancel() { this.request?.resolve({ stopped: true }); }
+            cancel() {
+                if (!this.request) return;
+                this.request.cancellations++;
+                this.request.resolve({ stopped: true });
+            }
             dispose() {}
         },
         WJ: { translate: (key, params = []) => [key, ...params].join(' '), initTooltip: () => {},
@@ -1125,6 +1129,44 @@ function sendChat(input) {
     input.dispatchEvent(new input.ownerDocument.defaultView.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
 }
 
+test('Dialog window controls restore the default size without interrupting a chat or losing its draft', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    const { dialog, root } = f.controller;
+    const restore = root.querySelector('[aria-label="datatables.modal.minimize.js"]');
+    const maximize = root.querySelector('[aria-label="datatables.modal.maximize.js"]');
+    assert.ok(restore && maximize, 'Both window controls must have accessible names.');
+    typeChat(input, 'First question');
+    sendChat(input);
+    typeChat(input, 'An unsent follow-up');
+    const chat = f.controller.chat.chat;
+    const pending = chat.state.pending;
+
+    dialog.style.width = '1000px';
+    dialog.style.height = '750px';
+    maximize.click();
+    assert.equal(root.classList.contains('md-quick-search--maximized'), true);
+    assert.equal(dialog.style.width, '');
+    assert.equal(dialog.style.height, '');
+    assert.equal(chat.state.pending, pending, 'Resizing must preserve the in-flight request.');
+    assert.equal(input.value, 'An unsent follow-up');
+
+    f.chatRequests[0].resolve({ success: true, response: 'First reply', conversationId: 'conversation' });
+    await tick();
+    restore.click();
+    assert.equal(root.classList.contains('md-quick-search--maximized'), false);
+    assert.match(f.controller.chatPanel.textContent, /First reply/);
+    assert.equal(input.value, 'An unsent follow-up');
+    assert.equal(chat.state.conversationId, 'conversation');
+
+    dialog.style.width = '920px';
+    dialog.style.height = '720px';
+    restore.click();
+    assert.equal(dialog.style.width, '');
+    assert.equal(dialog.style.height, '');
+    assert.equal(f.chatRequests.length, 1);
+});
+
 test('AI Chat requires permission and ordinary searches never load or send a chat', t => {
     const denied = fixture(t, [...deniedRestPermissions, 'cmp_ai_button'], { aiChat: true });
     assert.equal(denied.controller.chips.has('aiChat'), false);
@@ -1168,6 +1210,7 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     await tick();
     typeChat(input, 'First draft');
     const selector = f.controller.chatPanel.querySelector('select');
+    assert.ok(selector.closest('.ai-chat-composer-actions'), 'Assistant selection belongs inside the composer.');
     selector.value = '8';
     selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
     let current = f.controller.chatPanel.querySelector('.ai-chat-input');
@@ -1177,6 +1220,7 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     selector.value = '7';
     selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
     assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
+    assert.equal(f.controller.chatPanel.querySelector('select'), selector, 'Switching conversations must retain the live selector.');
     assert.match(f.controller.chatPanel.textContent, /First reply/);
     f.controller.chips.get('admin').click();
     f.controller.chips.get('aiChat').click();
@@ -1189,6 +1233,48 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     sendChat(current);
     assert.equal(f.chatRequests[1].inputData.conversationId, 'first-conversation');
     assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');
+});
+
+test('Composer Stop cancels only the selected assistant and preserves partial replies and drafts', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    typeChat(input, 'First question');
+    sendChat(input);
+    const first = f.chatRequests[0];
+    const selector = f.controller.chatPanel.querySelector('select');
+    selector.value = '8';
+    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    const secondInput = f.controller.chatPanel.querySelector('.ai-chat-input');
+    typeChat(secondInput, 'Second question');
+    f.controller.chatPanel.querySelector('.btn-ai-chat-send').click();
+    const second = f.chatRequests[1];
+    second.callbacks.onUpdate('Partial reply');
+    typeChat(secondInput, 'My next question');
+    const stop = f.controller.chatPanel.querySelector('.btn-ai-chat-stop');
+    assert.notEqual(stop.style.display, 'none');
+    assert.equal(f.controller.chatPanel.querySelector('.btn-ai-chat-send').style.display, 'none');
+    stop.click();
+    second.callbacks.onUpdate('Late reply that must be ignored');
+    await tick();
+
+    assert.equal(second.cancellations, 1);
+    assert.equal(first.cancellations, 0);
+    assert.match(f.controller.chatPanel.textContent, /Partial reply/);
+    assert.doesNotMatch(f.controller.chatPanel.textContent, /Late reply/);
+    assert.equal(secondInput.value, 'My next question');
+    assert.equal(secondInput.ownerDocument.activeElement, secondInput);
+    assert.equal(stop.style.display, 'none');
+    assert.equal(f.controller.chatPanel.querySelector('.btn-ai-chat-send').disabled, false);
+    const attachment = f.controller.chatPanel.querySelector('.btn-ai-chat-attach');
+    assert.equal(attachment.disabled, true, 'The attachment control is a placeholder until uploads are implemented.');
+
+    selector.value = '7';
+    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    const firstStop = f.controller.chatPanel.querySelector('.btn-ai-chat-stop');
+    assert.notEqual(firstStop.style.display, 'none');
+    firstStop.click();
+    await tick();
+    assert.equal(first.cancellations, 1);
 });
 
 test('Chat assistant loading errors can be retried and an empty catalogue stays usable', async t => {

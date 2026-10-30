@@ -10,13 +10,13 @@ Pred zadaním výrazu uvidíte posledné hľadania a odkazy na dostupné sekcie.
 
 Rozsah **Všetko** zobrazuje najviac tri výsledky z každej oblasti. Kliknutím na rozsah alebo odkaz **Všetky** zobrazíte výsledky iba z vybratej oblasti. Ponuka sa riadi vašimi oprávneniami:
 
+- **AI Chat** – rozhovor s AI asistentom bez väzby na obsah otvorenej webovej stránky. Karta je hneď za rozsahom **Všetko** a je dostupná používateľom s oprávnením na používanie AI asistentov.
 - **Web stránky** – návrhy podľa názvu alebo URL stránky a hľadanie v obsahu. Návrh stránky otvorí jej editor.
 - **Súbory** – hľadanie v názvoch a indexovanom obsahu súborov.
 - **Administrácia** – odkazy na dostupné položky menu vrátane ich kariet.
 - **Používatelia** – hľadanie podľa mena, priezviska, celého mena, emailu alebo prihlasovacieho mena.
 - **Textové kľúče** – hľadanie kľúčov a ich prekladov.
 - **Dokumentácia** – sémantické vyhľadávanie s ukážkami z dokumentácie priamo v dialógu. Ak služba vráti aj AI odpoveď, zobrazí sa nad výsledkami a môžete ju rozbaliť. Nadpisy, zoznamy a ďalšie Markdown formátovanie zostanú čitateľné. Kliknutím na výsledok otvoríte príslušnú stránku dokumentácie v novej karte.
-- **AI Chat** – rozhovor s AI asistentom bez väzby na obsah otvorenej webovej stránky. Karta je dostupná používateľom s oprávnením na používanie AI asistentov.
 
 Na úvodnej stránke sa predvolí **Všetko**. Pri otvorení z podporovanej sekcie sa predvolí jej rozsah. Zmena rozsahu platí do zatvorenia dialógu. V poli ho prepnete aj pomocou **Alt+šípka vľavo/vpravo**. **Tab** a **Shift+Tab** presúvajú fokus medzi ovládacími prvkami, šípky hore/dole vyberajú výsledok a **Enter** ho otvorí.
 
@@ -26,6 +26,8 @@ Odkaz **Otvoriť výsledky v sekcii…** prenesie hľadaný výraz do príslušn
 
 Dialóg zavriete klávesom **Esc**, tlačidlom zatvorenia alebo kliknutím mimo neho. Fokus sa vráti na tlačidlo v hlavičke; hľadaný výraz sa do tlačidla neprepisuje.
 
+Veľkosť dialógu môžete meniť ťahaním za pravý dolný roh. Tlačidlo **Maximalizovať okno** v hlavičke zväčší dialóg na dostupnú plochu prehliadača. Tlačidlo **Zmenšiť okno** obnoví pôvodnú veľkosť aj po ručnom zväčšení. Zmena veľkosti zachová výsledky vyhľadávania, rozhovor aj rozpísanú správu v AI Chate.
+
 Dokumentácia sa predvolene neprehľadáva automaticky. Karta zobrazuje pomlčku, ktorá znamená **zatiaľ neprehľadané**, nie nulový počet výsledkov. V rozsahu **Všetko** nájdete vysvetlenie, na ktorý server sa výraz odošle, a odkaz **Načítať výsledky aj z externej dokumentácie**. Kliknutie na tento odkaz alebo na kartu **Dokumentácia** vyhľadá už zadaný výraz a zobrazí výsledky v dialógu. Tooltip karty vysvetľuje odoslanie výrazu na externý server. Klávesová skratka **Ctrl+Enter** vo Windows/Linux alebo **⌘+Enter** na Macu načíta výsledky dokumentácie v ľubovoľnom rozsahu otvoreného dialógu. Príslušná skratka sa zobrazuje pri odkaze.
 
 Po zmene výrazu sa výsledky dokumentácie vymažú a karta znova zobrazí pomlčku. Nové vyhľadávanie spustíte kliknutím na kartu alebo odkaz, prípadne klávesom **Enter** v rozsahu **Dokumentácia**. Enter v rozsahu **Všetko** predvolene prehľadáva iba interné zdroje. Prepínanie rozsahov pomocou **Alt+šípka** samo externý dotaz neodošle.
@@ -34,9 +36,11 @@ Po zmene výrazu sa výsledky dokumentácie vymažú a karta znova zobrazí poml
 
 ### AI Chat
 
-Na karte **AI Chat** si vyberte dostupného chatového asistenta a napíšte správu. **Enter** správu odošle, **Shift+Enter** vloží nový riadok. Odpoveď môžete skopírovať tlačidlom **Kopírovať**. Chat nepreberá obsah otvorenej stránky a neponúka jeho nahradenie ani doplnenie.
+Na karte **AI Chat** napíšte správu do zaobleného poľa v spodnej časti dialógu. V jeho dolnom riadku si vyberte nakonfigurovaného chatového asistenta. Správu odošlete tlačidlom so šípkou nahor alebo klávesom **Enter**; **Shift+Enter** vloží nový riadok. Pole sa počas písania zväčšuje podľa obsahu. Odpoveď môžete skopírovať tlačidlom **Kopírovať**. Chat nepreberá obsah otvorenej stránky a neponúka jeho nahradenie ani doplnenie.
 
-Rozhovor aj rozpísaná správa zostanú zachované pri prepnutí karty, výbere iného asistenta aj zatvorení a opätovnom otvorení vyhľadávania, kým neopustíte aktuálnu stránku administrácie. Každý asistent má vlastný rozhovor. Tlačidlo **Nový chat** začne nový rozhovor so zvoleným asistentom. Prebiehajúcu odpoveď môžete zastaviť.
+Rozhovor aj rozpísaná správa zostanú zachované pri prepnutí karty, výbere iného asistenta aj zatvorení a opätovnom otvorení vyhľadávania, kým neopustíte aktuálnu stránku administrácie. Každý asistent má vlastný rozhovor. Tlačidlo **Nový chat** začne nový rozhovor so zvoleným asistentom. Počas generovania sa odosielacie tlačidlo zmení na **Zastaviť** so štvorcovou ikonou. Zastaví odpoveď vybraného asistenta a zachová už prijatý text aj rozpísanú správu.
+
+Tlačidlo **+** je pripravené na budúce pridávanie súborov a zatiaľ je neaktívne. Chat nepodporuje hlasový vstup.
 
 Chat používa aktívnych a nakonfigurovaných asistentov s akciou **Chat**. Ak žiadny nie je dostupný, karta zobrazí oznam. Výraz z vyhľadávania sa do chatu neodosiela; správu odošlete až v poli chatu. Skratka na vyhľadávanie v dokumentácii počas písania v chate neprepína kartu.
 

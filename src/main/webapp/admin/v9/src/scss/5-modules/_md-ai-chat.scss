@@ -137,23 +137,71 @@
     .ai-chat-composer {
         flex: 0 0 auto;
         padding: 12px 16px 16px;
-        border-top: 1px solid var(--wj-nice-gray-100);
+    }
+
+    .ai-chat-composer-panel {
+        padding: 12px 12px 8px;
+        border: 1px solid var(--wj-nice-gray-100);
+        border-radius: 20px;
+        background-color: var(--wj-nice-gray);
+
+        &:focus-within {
+            border-color: var(--wj-nice-gray-200);
+            box-shadow: 0 0 0 1px var(--wj-nice-gray-200);
+        }
     }
 
     .ai-chat-input {
-        min-height: 72px;
-        max-height: 180px;
-        padding: 8px 10px;
-        resize: vertical;
+        min-height: 48px;
+        max-height: 160px;
+        padding: 0 4px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        resize: none;
         font-size: 14px;
+        line-height: 22px;
+
+        &:focus {
+            outline: none;
+            box-shadow: none;
+            background: transparent;
+        }
     }
 
     .ai-chat-composer-actions {
         display: flex;
-        justify-content: flex-end;
-        flex-wrap: wrap;
+        align-items: center;
         gap: 8px;
         margin-top: 8px;
+    }
+
+    .ai-chat-composer-controls {
+        display: flex;
+        flex: 1 1 auto;
+        justify-content: flex-end;
+        min-width: 0;
+    }
+
+    .ai-chat-icon-button {
+        display: inline-flex;
+        flex: 0 0 32px;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        line-height: 1;
+
+        .ti { margin: 0; font-size: 20px; }
+
+        &.btn-primary { background: var(--wj-ai-color); }
+        &.btn-primary:hover { background: var(--wj-ai-color-dark); }
+        &:focus-visible { outline: 2px solid var(--wj-ai-color); outline-offset: 2px; }
+        &.btn-ai-chat-attach:disabled { background: transparent; color: var(--wj-gray-text); opacity: 1; }
+        &.btn-ai-chat-stop .ti { font-size: 16px; }
     }
 
     .ai-chat-notice, .ai-chat-confirmation {
