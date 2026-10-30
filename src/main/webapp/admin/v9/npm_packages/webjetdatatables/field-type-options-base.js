@@ -155,6 +155,8 @@ export function createOptionsFieldType(config) {
                     values.push(val);
                 }
             });
+            // Keep form options unambiguous when the only label or value contains spaces or commas.
+            if (isEmptyOptionAllowed(conf) && values.length === 1) return values[0] + "|";
             return values.join("|");
         },
 
@@ -169,6 +171,7 @@ export function createOptionsFieldType(config) {
                 else parts = val.split("|");
 
                 for (let i = 0; i < parts.length; i++) {
+                    if (isEmptyOptionAllowed(conf) && parts[i].trim() === "") continue;
                     if (isEmptyOptionAllowed(conf) && parts[i].trim() === ":") {
                         setEmptyOptionSelected(conf, true);
                         continue;

@@ -1071,6 +1071,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     /**
      * Removes the manual empty-option sentinel when the field type hides its editor control.
      * Enumeration configurations and all other option tokens are preserved verbatim.
+     * Separators are retained so a single remaining option keeps its original parsing mode.
      *
      * @param value serialized options
      * @param fieldType configured form field type
@@ -1086,7 +1087,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         if (value.contains("|")) delimiter = "|";
         else if (value.contains(",")) delimiter = ",";
         return Arrays.stream(value.split(java.util.regex.Pattern.quote(delimiter), -1))
-            .filter(token -> ":".equals(token.trim()) == false)
+            .map(token -> ":".equals(token.trim()) ? "" : token)
             .collect(Collectors.joining(delimiter));
     }
 
