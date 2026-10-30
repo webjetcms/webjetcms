@@ -1,6 +1,20 @@
-Feature('apps.file-archive.file_archive_app');
+// Configuration changes and cleanup must run together without parallel archive tests.
+Feature('apps.file-archive.file_archive_app').tag('@singlethread');
 
 const SL = require("./SL.js");
+
+const HISTORY_VALIDITY_CONFIG = 'fileArchivCheckHistoryValid';
+const PATTERN_VERSION_CONFIG = 'fileArchivAllowPatternVersion';
+const HISTORY_TABLE = 'datatableFieldDTE_Field_editorFields-listOfVersions';
+const WAITING_TABLE = 'datatableFieldDTE_Field_editorFields-waitingFiles';
+const HISTORY_NAME_PREFIX = 'autotest-history-valid-';
+const WAITING_VERSION_STATUS = 'Má novú verziu dokumentu, ktorá čaká na nahratie (v budúcnosti)';
+const FILE_ARCHIVE_APP_URL = '/apps/manazer-dokumentov/archiv-suborov-test-behaviour.html';
+let historyName;
+let historyCurrentUrl;
+let historyUrls;
+let historyInvariantUrls;
+let pendingHistoryUrl;
 
 let randomNumber;
 let NO_ARCHIVE_DOCUMENTS = "Žiadne archívne verzie alebo vzory pre tento dokument.";
@@ -15,7 +29,7 @@ Before(({ I, login }) => {
 
 Scenario('Import', async () => {
     await SL.importFile("tests/apps/file-archive/docs/mvc_app_import.zip");
-});
+}).tag('@history-validity');
 
 Scenario('File archive app - inserting an app', async ({ I, DTE, Apps, Document }) => {
     const docId = '120040';
@@ -228,7 +242,7 @@ Scenario('File archive app - inserting an app', async ({ I, DTE, Apps, Document 
     I.seeElement(locate(".table tr td span").withText(ARCHIVE_DOCUMENTS));
     I.seeElement(locate(".table tr td span").withText("Vzory dokumentu"));
     I.switchToPreviousTab();
-});
+}).tag('@history-validity');
 
 Scenario('File archive app - structure and behaviour test', ({ I }) => {
     //
@@ -263,7 +277,7 @@ Scenario('File archive app - structure and behaviour test', ({ I }) => {
     I.click(locate(".table tr td span").withText("autotest-app-main-history"));
 });
 
-Scenario('File archive app - open files test', async ({ I }) => {
+Scenario('File archive app - open files test', async ({ I, Document }) => {
     I.closeOtherTabs();
     I.amOnPage('/apps/manazer-dokumentov/archiv-suborov-test-behaviour.html');
     I.waitForElement(".table.tabulkaStandard", 10);
@@ -294,7 +308,7 @@ Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({
     if (wasRemovedByElfinder){
         I.assertTrue(false, "The file was not removed by archive and had to be removed by elfinder!");
     }
-});
+}).tag('@history-validity');
 
 Scenario('Test google non index header in files',async ({ I, DT, DTE }) => {
     const filePath = "/files/archiv/nonindexheader.pdf";
@@ -389,6 +403,7 @@ function setValidationAndIndexation(I, DT, DTE, validFrom, validTo, indexation) 
 }
 
 Scenario('File archive app - only selected files', async ({ I, DT, DTE, Apps, Document }) => {
+    I.closeOtherTabs();
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=62096");
 
     I.say("Open app in new page");
@@ -469,7 +484,292 @@ Scenario('File archive app - only selected files', async ({ I, DT, DTE, Apps, Do
     I.waitForElement(links, 10);
     const descendingLinks = await I.grabAttributeFromAll(links, 'href');
     I.assertDeepEqual(descendingLinks, [...ascendingLinks].reverse(), 'Selected files must respect descending order');
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
 });
+
+Scenario('Clean earlier history validity fixtures', async ({ I, DT, DTE, Document }) => {
+    historyName = SL.randomName('history-valid');
+    historyUrls = {};
+    historyInvariantUrls = {};
+    pendingHistoryUrl = null;
+
+    Document.setConfigValue(HISTORY_VALIDITY_CONFIG, 'true', true);
+    Document.setConfigValue(PATTERN_VERSION_CONFIG, 'true', true);
+    await deleteWaitingHistoryVersions(I, DT, DTE);
+    await SL.deleteTestFiles('history-valid-');
+}).tag('@history-validity');
+
+Scenario('Create the historical-version validity matrix', async ({ I, DT, DTE }) => {
+    SL.openFileArchive('/files/archiv/archive_file_test.pdf');
+    SL.uploadFile(historyName, 'archive_file_test.pdf');
+    DTE.fillField('validFrom', '01.01.2000 00:00:00');
+    I.pressKey('Enter');
+    DTE.fillField('validTo', '01.01.2001 00:00:00');
+    I.pressKey('Enter');
+    I.clickCss('#pills-dt-fileArchiveDataTable-advanced-tab');
+    I.checkOption('#DTE_Field_editorFields-uploadRedundantFile_0');
+    DTE.save('fileArchiveDataTable', true);
+
+    // Set metadata before archiving, so the test does not need history-edit permissions.
+    for (const version of [
+        { file: 'archive_file_test_second.pdf', from: '01.01.2099 00:00:00', to: '01.01.2100 00:00:00', visible: true },
+        { file: 'archive_file_test_third.pdf', from: '', to: '', visible: false },
+        { file: 'archive_file_test_fourth.pdf', from: '', to: '', visible: true },
+        { file: 'archive_file_test_fifth.pdf', from: '', to: '', visible: true }
+    ]) {
+        DT.filterEquals('virtualFileName', historyName);
+        await SL.selectAll();
+        SL.editFile(null, null, null, null, 'Nahrať novú verziu', version.file);
+        DTE.fillField('validFrom', version.from);
+        I.pressKey('Enter');
+        DTE.fillField('validTo', version.to);
+        I.pressKey('Enter');
+        I.clickCss('#pills-dt-fileArchiveDataTable-advanced-tab');
+        if (version.visible) I.checkOption('#DTE_Field_showFile_0');
+        else I.uncheckOption('#DTE_Field_showFile_0');
+        I.checkOption('#DTE_Field_editorFields-uploadRedundantFile_0');
+        DTE.save('fileArchiveDataTable', true);
+    }
+
+    I.click(locate('#fileArchiveDataTable .dt-row-edit a').withText(historyName));
+    DTE.waitForEditor('fileArchiveDataTable');
+    const fileName = await I.grabValueFrom('#DTE_Field_fileName');
+    const filePath = await I.grabValueFrom('#DTE_Field_filePath');
+    historyCurrentUrl = '/' + filePath + fileName;
+    I.clickCss('#pills-dt-fileArchiveDataTable-listOfVersions-tab');
+    DT.waitForLoader(HISTORY_TABLE);
+    I.waitForText(historyName, 10, '#' + HISTORY_TABLE);
+    const versions = await I.executeScript((tableId) => {
+        return $('#' + tableId).DataTable().rows().data().toArray().map(row => ({
+            filePath: row.filePath, fileName: row.fileName, showFile: row.showFile,
+            validFrom: row.validFrom, validTo: row.validTo
+        }));
+    }, HISTORY_TABLE);
+    I.assertEqual(versions.length, 4);
+    const versionUrl = number => {
+        const version = versions.find(row => row.fileName === SL.getVersionName(fileName, number));
+        I.assertTrue(Boolean(version), 'Historical version ' + number + ' was not found');
+        return '/' + version.filePath + version.fileName;
+    };
+    historyUrls = {
+        expired: versionUrl(1),
+        future: versionUrl(2),
+        hidden: versionUrl(3),
+        valid: versionUrl(4)
+    };
+    I.assertEqual(versions.filter(version => version.showFile === false).length, 1);
+    I.assertEqual(versions.filter(version => version.validFrom && version.validTo).length, 2);
+    DTE.cancel('fileArchiveDataTable');
+    await checkDownload(I, historyCurrentUrl, 200);
+}).tag('@history-validity');
+
+Scenario('Create current, pattern and pending-upload invariants', async ({ I, DT, DTE }) => {
+    const futureFrom = '01.01.2099 00:00:00';
+    const futureTo = '01.01.2100 00:00:00';
+
+    const futureMainName = historyName + '-current-future';
+    SL.openFileArchive('/files/archiv/archive_replace.pdf');
+    SL.uploadFile(futureMainName, 'archive_replace.pdf', futureFrom, futureTo);
+    I.clickCss('#pills-dt-fileArchiveDataTable-advanced-tab');
+    I.checkOption('#DTE_Field_editorFields-uploadRedundantFile_0');
+    DTE.save('fileArchiveDataTable', true);
+    historyInvariantUrls.futureMain = await getCurrentFileUrl(I, DT, DTE, futureMainName);
+
+    const hiddenMainName = historyName + '-current-hidden';
+    SL.openFileArchive('/files/archiv/archive_file_test_fourth.pdf');
+    SL.uploadFile(hiddenMainName, 'archive_file_test_fourth.pdf');
+    I.clickCss('#pills-dt-fileArchiveDataTable-advanced-tab');
+    I.uncheckOption('#DTE_Field_showFile_0');
+    I.checkOption('#DTE_Field_editorFields-uploadRedundantFile_0');
+    DTE.save('fileArchiveDataTable', true);
+    historyInvariantUrls.hiddenMain = await getCurrentFileUrl(I, DT, DTE, hiddenMainName);
+
+    const mainPath = historyCurrentUrl.substring(1);
+    const versionedPatternName = historyName + '-pattern-versioned';
+    await createPatternFixture(
+        I, DT, DTE, versionedPatternName, 'archive_export_import.pdf', mainPath,
+        '01.01.2000 00:00:00', '01.01.2001 00:00:00');
+
+    for (const sourceFile of ['archive_file_test_third.pdf', 'archive_file_test_fourth.pdf']) {
+        SL.openFileArchive('/files/archiv/archive_export_import.pdf');
+        DT.filterEquals('virtualFileName', versionedPatternName);
+        await SL.selectAll();
+        SL.editFile(null, null, null, null, 'Nahrať novú verziu', sourceFile);
+        DTE.fillField('validFrom', '');
+        I.pressKey('Enter');
+        DTE.fillField('validTo', '');
+        I.pressKey('Enter');
+        I.clickCss('#pills-dt-fileArchiveDataTable-advanced-tab');
+        I.checkOption('#DTE_Field_editorFields-uploadRedundantFile_0');
+        DTE.save('fileArchiveDataTable', true);
+    }
+
+    DT.filterEquals('virtualFileName', versionedPatternName);
+    I.click(locate('#fileArchiveDataTable .dt-row-edit a').withText(versionedPatternName));
+    DTE.waitForEditor('fileArchiveDataTable');
+    const currentPatternFileName = await I.grabValueFrom('#DTE_Field_fileName');
+    const currentPatternFilePath = await I.grabValueFrom('#DTE_Field_filePath');
+    historyInvariantUrls.validPattern = '/' + currentPatternFilePath + currentPatternFileName;
+    I.clickCss('#pills-dt-fileArchiveDataTable-listOfVersions-tab');
+    DT.waitForLoader(HISTORY_TABLE);
+    I.waitForText(versionedPatternName, 10, '#' + HISTORY_TABLE);
+    const patternVersions = await I.executeScript((tableId) => {
+        return $('#' + tableId).DataTable().rows().data().toArray().map(row => ({
+            filePath: row.filePath, fileName: row.fileName,
+            validFrom: row.validFrom, validTo: row.validTo
+        }));
+    }, HISTORY_TABLE);
+    I.assertEqual(patternVersions.length, 2);
+    const patternVersionUrl = number => {
+        const version = patternVersions.find(row => row.fileName === SL.getVersionName(currentPatternFileName, number));
+        I.assertTrue(Boolean(version), 'Historical pattern version ' + number + ' was not found');
+        return '/' + version.filePath + version.fileName;
+    };
+    I.assertEqual(patternVersions.filter(version => version.validFrom && version.validTo).length, 1);
+    historyInvariantUrls.expiredPatternHistory = patternVersionUrl(1);
+    historyInvariantUrls.validPatternHistory = patternVersionUrl(2);
+    DTE.cancel('fileArchiveDataTable');
+
+    historyInvariantUrls.futurePattern = await createPatternFixture(
+        I, DT, DTE, historyName + '-pattern-future', 'archive_file_test_second.pdf', mainPath, futureFrom, futureTo);
+
+    SL.openFileArchive('/files/archiv/archive_file_test.pdf');
+    DT.filterEquals('virtualFileName', historyName);
+    await SL.selectAll();
+    SL.editFile(null, null, null, null, 'Nahrať novú verziu', 'archive_file_test_fifth.pdf');
+    DTE.clickSwitch('editorFields-saveLater_0');
+    DTE.fillField('editorFields-dateUploadLater', '01.01.2100 00:00:00');
+    I.clickCss('#pills-dt-fileArchiveDataTable-advanced-tab');
+    I.checkOption('#DTE_Field_editorFields-uploadRedundantFile_0');
+    DTE.save('fileArchiveDataTable', true);
+
+    DT.filterEquals('virtualFileName', historyName);
+    I.click(locate('#fileArchiveDataTable .dt-row-edit a').withText(historyName));
+    DTE.waitForEditor('fileArchiveDataTable');
+    I.clickCss('#pills-dt-fileArchiveDataTable-waitingFiles-tab');
+    DT.waitForLoader(WAITING_TABLE);
+    I.waitForText(historyName, 10, '#' + WAITING_TABLE);
+    const waitingVersions = await I.executeScript((tableId) => {
+        return $('#' + tableId).DataTable().rows().data().toArray().map(row => ({
+            filePath: row.filePath, fileName: row.fileName
+        }));
+    }, WAITING_TABLE);
+    I.assertEqual(waitingVersions.length, 1);
+    pendingHistoryUrl = '/' + waitingVersions[0].filePath + waitingVersions[0].fileName;
+    DTE.cancel('fileArchiveDataTable');
+}).tag('@history-validity');
+
+Scenario('Apply history validity configuration immediately and preserve visibility', async ({ I, Document }) => {
+    const { expired, future, hidden, valid } = historyUrls;
+    const { futureMain, hiddenMain, validPattern, expiredPatternHistory, validPatternHistory, futurePattern } = historyInvariantUrls;
+    for (const checkHistory of [true, false, true]) {
+        Document.setConfigValue(HISTORY_VALIDITY_CONFIG, String(checkHistory), true);
+        await checkDownload(I, expired, checkHistory ? 404 : 200);
+        await checkDownload(I, future, checkHistory ? 404 : 200);
+        await checkDownload(I, hidden, 404);
+        await checkDownload(I, valid, 200);
+        await checkDownload(I, historyCurrentUrl, 200);
+        await checkDownload(I, futureMain, 404);
+        await checkDownload(I, hiddenMain, 404);
+        await checkDownload(I, validPattern, 200);
+        await checkDownload(I, expiredPatternHistory, checkHistory ? 404 : 200);
+        await checkDownload(I, validPatternHistory, 200);
+        await checkDownload(I, futurePattern, 404);
+
+        I.amOnPage(FILE_ARCHIVE_APP_URL);
+        I.waitForText(historyName, 10, '.file-archive-app');
+        checkAppFileVisibility(I, expired, !checkHistory);
+        checkAppFileVisibility(I, future, !checkHistory);
+        checkAppFileVisibility(I, hidden, false);
+        checkAppFileVisibility(I, valid, true);
+        checkAppFileVisibility(I, historyCurrentUrl, true);
+        checkAppFileVisibility(I, futureMain, false);
+        checkAppFileVisibility(I, hiddenMain, false);
+        checkAppFileVisibility(I, validPattern, true);
+        checkAppFileVisibility(I, expiredPatternHistory, false);
+        checkAppFileVisibility(I, validPatternHistory, false);
+        checkAppFileVisibility(I, futurePattern, false);
+        checkAppFileVisibility(I, pendingHistoryUrl, false);
+    }
+}).tag('@history-validity');
+
+Scenario('Restore history validity configuration and remove test documents', async ({ I, DT, DTE, Document }) => {
+    Document.setConfigValue(HISTORY_VALIDITY_CONFIG, 'true', true);
+    Document.setConfigValue(PATTERN_VERSION_CONFIG, 'true', true);
+    await deleteWaitingHistoryVersions(I, DT, DTE);
+    await SL.deleteTestFiles('history-valid-');
+    const deletedUrls = [historyCurrentUrl, pendingHistoryUrl, ...Object.values(historyUrls || {}), ...Object.values(historyInvariantUrls || {})]
+        .filter(Boolean);
+    for (const url of deletedUrls) await checkDownload(I, url, 404);
+}).tag('@history-validity');
+
+/** Removes scheduled replacements before their published parent records are deleted. */
+async function deleteWaitingHistoryVersions(I, DT, DTE) {
+    SL.openFileArchive('/files/archiv/cleanup.pdf');
+    DT.filterStartsWith('virtualFileName', HISTORY_NAME_PREFIX);
+    DT.filterSelect('editorFields.statusIcons', WAITING_VERSION_STATUS);
+    const recordCount = await DT.getRecordCount('fileArchiveDataTable');
+
+    for (let index = 0; index < recordCount; index++) {
+        SL.openFileArchive('/files/archiv/cleanup.pdf');
+        DT.filterStartsWith('virtualFileName', HISTORY_NAME_PREFIX);
+        DT.filterSelect('editorFields.statusIcons', WAITING_VERSION_STATUS);
+        I.click(locate('#fileArchiveDataTable .dt-row-edit a').first());
+        DTE.waitForEditor('fileArchiveDataTable');
+        I.clickCss('#pills-dt-fileArchiveDataTable-waitingFiles-tab');
+        DT.waitForLoader(WAITING_TABLE);
+
+        if (await DT.getRecordCount(WAITING_TABLE) > 0) {
+            I.clickCss('#' + WAITING_TABLE + '_wrapper button.buttons-select-all');
+            I.clickCss('#' + WAITING_TABLE + '_wrapper button.buttons-remove');
+            DTE.waitForEditor(WAITING_TABLE);
+            I.click('Zmazať', 'div.DTE_Action_Remove');
+            I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#' + WAITING_TABLE);
+        }
+        DTE.save('fileArchiveDataTable');
+    }
+}
+
+/** Checks the HTTP response so a rendered error page cannot pass as a downloaded document. */
+async function checkDownload(I, url, status) {
+    const response = await I.sendGetRequest(url);
+    I.assertEqual(response.status, status, 'Unexpected download status for ' + url);
+    if (status === 200) I.assertContain(response.headers['content-type'], 'application/pdf');
+}
+
+/** Checks that the page application only renders links available for download. */
+function checkAppFileVisibility(I, url, visible) {
+    const selector = `.file-archive-app a[href^="${url}?v="]`;
+    if (visible) I.seeElementInDOM(selector);
+    else I.dontSeeElementInDOM(selector);
+}
+
+/** Returns the public URL stored for the current archive record. */
+async function getCurrentFileUrl(I, DT, DTE, virtualFileName) {
+    SL.openFileArchive('/files/archiv/lookup.pdf');
+    DT.filterEquals('virtualFileName', virtualFileName);
+    I.click(locate('#fileArchiveDataTable .dt-row-edit a').withText(virtualFileName));
+    DTE.waitForEditor('fileArchiveDataTable');
+    const fileName = await I.grabValueFrom('#DTE_Field_fileName');
+    const filePath = await I.grabValueFrom('#DTE_Field_filePath');
+    DTE.cancel('fileArchiveDataTable');
+    return (filePath.startsWith('/') ? filePath : '/' + filePath) + fileName;
+}
+
+/** Creates a current pattern with the requested dates and returns its public URL. */
+async function createPatternFixture(I, DT, DTE, virtualFileName, sourceFile, mainPath, validFrom, validTo) {
+    SL.openFileArchive('/files/archiv/' + sourceFile);
+    SL.uploadFile(virtualFileName, sourceFile, validFrom, validTo);
+    I.clickCss('#pills-dt-fileArchiveDataTable-advanced-tab');
+    I.clickCss('#DTE_Field_referenceToMain');
+    const mainOption = `//li[contains(@class, "ui-menu-item")]//div[text()="${mainPath}"]`;
+    I.waitForElement(mainOption, 10);
+    I.click(mainOption);
+    I.checkOption('#DTE_Field_editorFields-uploadRedundantFile_0');
+    DTE.save('fileArchiveDataTable', true);
+    return getCurrentFileUrl(I, DT, DTE, virtualFileName);
+}
 
 async function checkSelectedFiles(I, selectedGlobalIds) {
     for (const globalId of selectedGlobalIds) {
