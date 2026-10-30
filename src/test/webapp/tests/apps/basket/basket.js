@@ -282,10 +282,12 @@ function sanitazeValue(value) {
 }
 
 async function checkDeliveryValue(I, wantedValue) {
-    const deliveryValue = await I.executeScript(() => {
-        return $("#deliveryMethodId option:selected").text();
-    });
-    I.assertEqual(deliveryValue.trim(), wantedValue.trim());
+    // Changing the country reloads delivery options asynchronously.
+    await I.retry({
+        retries: 20,
+        minTimeout: 1000,
+        maxTimeout: 1000
+    }).seeTextEquals(wantedValue.trim(), '#deliveryMethodId option:checked');
 }
 
 async function sortAndCheck(I, sortMethod, expectedOrder) {

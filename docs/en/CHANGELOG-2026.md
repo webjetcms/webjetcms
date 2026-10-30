@@ -311,6 +311,12 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Redis session - fixed uploading files in parts, consuming one-time CSRF tokens, and updating logged-in user data after editing profile via registration form. Changed objects are written back to session.
+- Page editor - fixed a bug when opening a preview after restoring a session from a serialized storage, such as Redis. Missing editor data will be restored from the preview version of the page.
+- Templates - creation, modification and deletion audit uses uniform prefixes `CREATE:`, `UPDATE:` and `DELETE:` with the template ID and name.
+- Page Editor - when switching pages, it waits for CKEditor to complete the refresh so that the content of the previous page is not displayed and saved.
+- Websites - slashes in the page title, menu title, and header, footer, or navigation selection are displayed as `/` instead of `&#47;`.
+- AI assistants - when HTTP error occurs while generating an image, an error is displayed and the processing indicator is terminated. The request can be retried.
 - Datatables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - the titles, alignment, and color menus are no longer clipped at the bottom of the dialog box and remain available even in a low browser window (#376).
 - E-commerce - fixed adding a product category without a marked product in the table (#373).
 - Web pages - Page URLs, redirects, and image perex now preserve parameters even after loading via JPA, including history. The HTML sanitizer no longer rewrites the `&` and `=` characters in URLs to HTML entities (#373).

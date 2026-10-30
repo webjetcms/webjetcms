@@ -311,6 +311,12 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Redis session - opravené nahrávanie súborov po častiach, spotrebovanie jednorazových CSRF tokenov a aktualizácia údajov prihláseného používateľa po úprave profilu cez registračný formulár. Zmenené objekty sa zapíšu späť do session.
+- Editor stránok - opravená chyba pri otvorení náhľadu po obnovení session zo serializovaného úložiska, napríklad Redis. Chýbajúce údaje editora sa obnovia z náhľadovej verzie stránky.
+- Šablóny - audit vytvorenia, úpravy a zmazania používa jednotné prefixy `CREATE:`, `UPDATE:` a `DELETE:` s ID a názvom šablóny.
+- Editor stránok - pri prepínaní stránok čaká na dokončenie obnovy CKEditora, aby sa nezobrazil a neuložil obsah predchádzajúcej stránky.
+- Webové stránky - lomky v názve stránky, názve v menu a vo výbere hlavičky, pätičky či navigácie sa zobrazujú ako `/` namiesto `&#47;`.
+- AI asistenti - pri HTTP chybe generovania obrázka sa zobrazí chyba a ukončí indikátor spracovania. Požiadavku možno zopakovať.
 - Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - ponuky nadpisov, zarovnania a farieb sa už neorezávajú na spodnom okraji dialógového okna a zostávajú dostupné aj v nízkom okne prehliadača (#376).
 - Elektronický obchod - opravené pridanie kategórie produktov bez označeného produktu v tabuľke (#373).
 - Webové stránky - URL stránky, presmerovania a perex obrázka zachovávajú parametre aj po načítaní cez JPA vrátane histórie. HTML sanitizér už neprepisuje znaky `&` a `=` v URL na HTML entity (#373).

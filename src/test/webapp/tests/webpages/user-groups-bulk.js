@@ -48,6 +48,66 @@ Scenario('Combined group picker, cancellation and persisted deltas', async ({ I,
     I.dontSeeElement(picker);
 });
 
+Scenario('Reopening a page waits for slow CKEditor iframe restoration', async ({ I, DT, DTE }) => {
+    await createPages(I, DT, DTE);
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
+    DT.filterContains('title', name);
+    I.click(name + '-0', '#datatableInit');
+    DTE.waitForEditor();
+    await I.executeScript(async () => {
+        const conf = webpagesDatatable.EDITOR.field('data').s.opts;
+        await conf.wjeditorReadyPromise;
+        conf.wjeditor.ckEditorInstance.config.contentsCss.push('/autotest-editor-recreate.css');
+        const originalSetData = conf.wjeditor.setData;
+        window.autotestEditorWrite = { started: false, ready: false, overlappingWrites: 0 };
+        conf.wjeditor.setData = function(data) {
+            const state = window.autotestEditorWrite;
+            state.started = true;
+            state.status = this.ckEditorInstance.status;
+            const listener = this.ckEditorInstance.on('afterSetData', () => {
+                if (this.ckEditorInstance.status === 'recreating') state.overlappingWrites++;
+            });
+            const ready = originalSetData.call(this, data);
+            ready.then(() => { state.ready = true; listener.removeListener(); });
+            return ready;
+        };
+    });
+    DTE.cancel();
+
+    let release;
+    const loadGate = new Promise(resolve => { release = resolve; });
+    const routePattern = '**/autotest-editor-recreate.css*';
+    const holdStylesheet = async route => {
+        await loadGate;
+        await route.fulfill({ status: 200, contentType: 'text/css', body: '' });
+    };
+    await I.mockRoute(routePattern, holdStylesheet);
+    try {
+        I.click(name + '-1', '#datatableInit');
+        DTE.waitForEditor();
+        I.waitForFunction(() => window.autotestEditorWrite.started, [], 10);
+        const pending = await I.executeScript(() => window.autotestEditorWrite);
+        I.assertEqual(pending.status, 'recreating', 'The previous iframe restoration must still be pending');
+        I.assertFalse(pending.ready);
+        I.assertEqual(pending.overlappingWrites, 0, 'The new page write must wait for iframe restoration');
+        release();
+        const content = await I.executeScript(async () => {
+            const editor = webpagesDatatable.EDITOR;
+            await editor.field('data').s.opts.wjeditorReadyPromise;
+            return { id: editor.currentJson.docId, stored: editor.currentJson.data,
+                rendered: ckEditorInstance.getData(), dirty: editor.field('data').isDirty() };
+        });
+        I.assertEqual(content.id, pageIds[1]);
+        I.assertContain(content.stored, name + ' content 1');
+        I.assertContain(content.rendered, name + ' content 1');
+        I.assertFalse(content.dirty, 'Loading the selected page must establish its clean baseline');
+        DTE.cancel();
+    } finally {
+        release();
+        await I.stopMockingRoute(routePattern, holdStylesheet);
+    }
+});
+
 Scenario('Both user group actions require pageSave permission', async ({ I, DT, DTE }) => {
     await createPages(I, DT, DTE);
     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67&removePerm=pageSave');

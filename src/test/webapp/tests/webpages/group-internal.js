@@ -31,7 +31,7 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
 
      // 2. nastavenie moznosti neverejne/nedostupne pre priecinok name-autotest a jeho overenie v stromovej strukture
      I.say('2. Priecinok je neverejny/nedostupny a jeho overenie v stromovej strukture');
-     I.click(auto_name);
+     I.jstreeClick(auto_name, true);
      I.click('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning');
      DTE.waitForEditor("groups-datatable");
      DTE.selectOption('internal', 'Nedostupné/Neverejné (interné pre administrátorov)'); // zmena dostupnosti priecinku pre verejnost
