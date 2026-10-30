@@ -177,7 +177,7 @@ Aplikácia sa do verejnej web stránky vkladá rovnako ako iná štandardná apl
 
 Ak vytvorenie alebo vykonanie Spring aplikácie vyhodí výnimku, chybová hláška nahradí iba jej značku `!INCLUDE(...)!`. Texty, JSP aplikácie a ostatné Spring aplikácie na stránke zostanú zachované. Chybová hláška sa neukladá do cache aplikácie, takže pri ďalšom načítaní sa jej vykonanie skúsi znova.
 
-Hláška používa preložený názov z `@WebjetAppStore.nameKey`; ak aplikácia túto anotáciu nemá, použije sa upravený názov triedy bez balíka. Podrobnosti výnimky sa zobrazujú iba prihlásenému administrátorovi, ak nie je nastavený request atribút `writeTagDontShowError`.
+Hláška používa preložený názov z `@WebjetAppStore.nameKey`. Ak aplikácia túto anotáciu nemá, použije sa upravený názov triedy bez balíka. Podrobnosti výnimky sa zobrazujú iba prihlásenému administrátorovi, ak nie je nastavený request atribút `writeTagDontShowError`.
 
 ### Používanie parametrov aplikácie
 

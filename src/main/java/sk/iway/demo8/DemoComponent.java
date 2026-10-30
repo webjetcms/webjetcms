@@ -156,7 +156,7 @@ public class DemoComponent extends WebjetComponentAbstract {
 
 		if ("npe".equals(request.getParameter("act"))) {
 			String npe = null;
-			npe.toString(); // This will throw a NullPointerException
+			npe.toString(); // This will throw a NullPointerException for testing purposes
 		}
 
 		return "/components/aceintegration/demo-component/view";

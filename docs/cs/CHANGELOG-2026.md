@@ -139,6 +139,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
+- Vícekrokové formuláře - pomocné zápisy statistiky na [veřejném uzlu clusteru s omezenými databázovými právy](install/config/ro-user.md#víceleté-formuláře) již neblokují zobrazení, validaci ani odeslání formuláře. Při chybě se návštěvníkovi zobrazí název aplikace namísto názvu Java třídy (#384).
 - Odložené odesílání emailů - zvětšený sloupec `emails.message` na `LONGTEXT` v MySQL/MariaDB, aby uložení velkého HTML emailu neselhalo. Doplněn [návod na menší CSS pro email a PDF](redactor/apps/form/README.md#css-styly-pro-email-a-pdf) (#374).
 - Nastavení formulářů - přidaná karta **Volitelná pole** s poli A–F. Pole jsou dostupná také v editoru aplikace Formulář snadno a přes `FormSettingsEntity`. V HTML překladových klíčů lze použít [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláře) pro A–F, emailová nastavení, přesměrování, limity souborů a vzhled. Podporuje je i náhled a emailová podoba vícekrokových formulářů. A–F i text před a za emailem umožňují HTML (#364).
 - Vícekrokové formuláře - přidána možnost upravit [HTML tlačítka na předchozí krok](redactor/apps/formsimple/README.md#html-kód-tlačítek) přes překladový klíč `components.mustistep.form.back_button` (#osk782).
@@ -311,6 +312,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Spring aplikace - [chyba při vytvoření nebo provedení aplikace](custom-apps/spring-mvc/README.md#chyba-při-provádění-aplikace) nahradí pouze její značku `INCLUDE`. Okolní text, JSP aplikace i ostatní Spring aplikace zůstanou na stránce zachovány a hláška uvede název aplikace, která selhala (#384).
 - Redis session - opraveno nahrávání souborů po částech, spotřebování jednorázových CSRF tokenů a aktualizace údajů přihlášeného uživatele po úpravě profilu přes registrační formulář. Změněné objekty se zapíší zpět do session.
 - Editor stránek - opravena chyba při otevření náhledu po obnovení session ze serializovaného úložiště, například Redis. Chybějící data editoru se obnoví z náhledové verze stránky.
 - Šablony - audit vytvoření, úpravy a smazání používá jednotné prefixy `CREATE:`, `UPDATE:` a `DELETE:` s ID a názvem šablony.
