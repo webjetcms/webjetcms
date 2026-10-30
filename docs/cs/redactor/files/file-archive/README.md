@@ -63,6 +63,25 @@ Karta obsahuje základní informace pro vložení dokumentu.
   - **Nahrát po** - výběr data a času, po kterém se má dokumentu nahrát
   - **Emaily oddělené čárkou (notifikace po nahrání)** - zadejte emaily oddělené čárkou, na které chcete zaslat notifikaci o úspěšném/neúspěšném nahrání dokumentu
 
+#### Platnost a stahování historických verzí
+
+Konfigurační proměnná `fileArchivCheckHistoryValid` mění pouze chování již nahraných historických verzí. Nevyplněné datum příslušnou mez platnosti neomezuje.
+
+Údaje o zobrazení v aplikaci uvedené v tabulce předpokládají, že dokument vyhovuje ostatním filtrům aplikace. Archivní verze se vypisují pouze při zapnuté možnosti **Zobrazit archivní verze** a vzory při zapnuté možnosti **Zobrazit vzory**.
+
+| Typ a stav záznamu | `true` (výchozí hodnota) | `false` |
+| --- | --- | --- |
+| Historická verze dokumentu, **Zobrazit** zapnuto, datum platné | Stáhne se a zobrazí se v aplikaci | Stáhne se a zobrazí se v aplikaci |
+| Historická verze dokumentu, **Zobrazit** zapnuto, před **Platností od** nebo po **Platnosti do** | Vrátí chybu 404 a v aplikaci se nezobrazí | Stáhne se a zobrazí se v aplikaci |
+| Historická verze vzoru, **Zobrazit** zapnuto, datum platné | Stáhne se, v aplikaci se nezobrazí | Stáhne se, v aplikaci se nezobrazí |
+| Historická verze vzoru, **Zobrazit** zapnuto, před **Platností od** nebo po **Platnosti do** | Vrátí chybu 404 a v aplikaci se nezobrazí | Stáhne se, v aplikaci se nezobrazí |
+| Dokument nebo vzor, ​​**Zobrazit** vypnuto | Vrátí chybu 404 a v aplikaci se nezobrazí | Vrátí chybu 404 a v aplikaci se nezobrazí |
+| Aktuální dokument nebo aktuální vzor, ​​**Zobrazit** zapnuto, datum platné | Stáhne se a zobrazí se v aplikaci | Stáhne se a zobrazí se v aplikaci |
+| Aktuální dokument nebo aktuální vzor, ​​**Zobrazit** zapnuto, datum neplatné | Vrátí chybu 404 a v aplikaci se nezobrazí | Vrátí chybu 404 a v aplikaci se nezobrazí |
+| Verze čekající na nahrání | Čekající verze se nezobrazí, aktuálně publikovaná verze zůstává zobrazena | Čekající verze se nezobrazí, aktuálně publikovaná verze zůstává zobrazena |
+
+Při hodnotě `false` zůstávají data historických verzí uložena a zobrazena v archivu jako informace o účinnosti dokumentu. Aplikace mezi vzory vypisuje pouze jejich aktuální verze. U obou hodnot se nadále kontrolují přístupová oprávnění. Nastavení indexování dokumentů zůstávají zachována.
+
 ### Karta - Pokročilé
 
 ![](editor_advanced.png)

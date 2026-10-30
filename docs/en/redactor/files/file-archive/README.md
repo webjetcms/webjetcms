@@ -63,6 +63,25 @@ The card contains basic information for inserting a document.
   - **Upload after** - select the date and time after which the document should be uploaded
   - **Comma-separated emails (notification after upload)** - enter comma-separated emails to which you want to send notification about successful/unsuccessful document upload
 
+#### Validity and downloading of historical versions
+
+The configuration variable `fileArchivCheckHistoryValid` only changes the behavior of already uploaded historical versions. An empty date does not limit the respective validity limit.
+
+The in-app display data in the table assumes that the document meets the other application filters. Archive versions are listed only when the **Show archive versions** option is enabled, and templates are listed only when the **Show templates** option is enabled.
+
+| Record type and status | `true` (default value) | `false` |
+| --- | --- | --- |
+| Historical version of the document, **View** enabled, date valid | It will be downloaded and displayed in the app. | It will be downloaded and displayed in the app. |
+| Historical version of the document, **Show** enabled, before **Valid from** or after **Valid to** | Returns a 404 error and does not appear in the application | It will be downloaded and displayed in the app. |
+| Historical version of the pattern, **Show** enabled, date valid | It will download, but it won't appear in the app. | It will download, but it won't appear in the app. |
+| Historical version of the pattern, **Show** enabled, before **Valid from** or after **Valid to** | Returns a 404 error and does not appear in the application | It will download, but it won't appear in the app. |
+| Document or pattern, **Show** off | Returns a 404 error and does not appear in the application | Returns a 404 error and does not appear in the application |
+| Current document or current template, **Show** on, date valid | It will be downloaded and displayed in the app. | It will be downloaded and displayed in the app. |
+| Current document or current template, **Show** on, date invalid | Returns a 404 error and does not appear in the application | Returns a 404 error and does not appear in the application |
+| Version waiting to be uploaded | The pending version will not be displayed, the currently published version remains displayed. | The pending version will not be displayed, the currently published version remains displayed. |
+
+With the value `false`, the dates of historical versions remain stored and displayed in the archive as information about the document's effectiveness. The application lists only their current versions among the templates. With both values, access permissions are still checked. Document indexing settings are preserved.
+
 ### Tab - Advanced
 
 ![](editor_advanced.png)
