@@ -169,7 +169,9 @@ module.exports = {
    */
   setConfigValue(name, value, temporary = false) {
     I.amOnPage("/admin/v9/settings/configuration/");
-    I.clickCss("button.buttons-create");
+    I.waitForVisible("#configurationDatatable_wrapper button.buttons-create", 20);
+    DT.waitForLoader("configurationDatatable");
+    I.clickCss("#configurationDatatable_wrapper button.buttons-create");
     DTE.waitForEditor("configurationDatatable");
     I.fillField("#DTE_Field_name", name);
     I.fillField("#DTE_Field_value", value);
