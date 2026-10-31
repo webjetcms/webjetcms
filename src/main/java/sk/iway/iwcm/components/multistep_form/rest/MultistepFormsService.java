@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -177,7 +178,7 @@ public class MultistepFormsService {
     }
 
     /**
-     * Provide available regular expression validations as label/value pairs for UI.
+     * Provide available regular expression validations sorted by code as label/value pairs for UI.
      *
      * @param regExpRepository repository of regex definitions
      * @param request          request used to resolve localized titles
@@ -186,9 +187,10 @@ public class MultistepFormsService {
     public static final List<LabelValue> getRegExOptions(RegExpRepository regExpRepository, HttpServletRequest request) {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
         List<LabelValue> options = new ArrayList<>();
+        List<RegExpEntity> regularExpressions = regExpRepository.findAll(Sort.by(Sort.Order.asc("type").ignoreCase()));
 
-        for(RegExpEntity regEx : regExpRepository.findAll())
-            options.add( new LabelValue(prop.getText(regEx.getTitle()), regEx.getId() + ""));
+        for(RegExpEntity regEx : regularExpressions)
+            options.add( new LabelValue(regEx.getType() + " - " + prop.getText(regEx.getTitle()), regEx.getId() + ""));
 
         return options;
     }
