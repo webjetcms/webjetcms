@@ -139,7 +139,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
-- Regulárne výrazy - zoznam zobrazuje preložený názov podľa jazyka administrácie a pôvodný názov označuje ako **Prekladový kľúč**. Výber **Povolená hodnota** vo viackrokových formulároch používa formát **kód - názov**.
+- Regulárne výrazy - zoznam zobrazuje preložený názov podľa jazyka administrácie a pôvodný názov označuje ako **Prekladový kľúč**. Výber **Povolená hodnota** vo viackrokových formulároch používa formát **kód - názov** (#387).
 - Viackrokové formuláre - opravený preklep v prekladových kľúčoch z `components.mustistep.*` na `components.multistep.*` (#378).
 - Viackrokové formuláre - pomocné zápisy štatistiky na [verejnom uzle clustra s obmedzenými databázovými právami](install/config/ro-user.md#viackrokové-formuláre) už neblokujú zobrazenie, validáciu ani odoslanie formulára. Pri chybe sa návštevníkovi zobrazí názov aplikácie namiesto názvu Java triedy (#384).
 - Odložené odosielanie emailov - zväčšený stĺpec `emails.message` na `LONGTEXT` v MySQL/MariaDB, aby uloženie veľkého HTML emailu nezlyhalo. Doplnený [návod na menšie CSS pre email a PDF](redactor/apps/form/README.md#css-štýly-pre-email-a-pdf) (#374).
