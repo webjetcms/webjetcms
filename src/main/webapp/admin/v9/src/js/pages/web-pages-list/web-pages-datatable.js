@@ -676,13 +676,9 @@ export class WebPagesDatatable {
             if (self.webpagesDatatable.DATA.id===e.detail.id) {
                 if (self.webpagesDatatable.EDITOR.currentJson?.docId === -1) {
                     if ($("#pills-dt-"+self.webpagesDatatable.DATA.id+"-content-tab").hasClass("active")) {
-                        //je to nova stranka, prepni sa na kartu Zakladne
-                        setTimeout(()=> {
-                            $("#pills-dt-"+self.webpagesDatatable.DATA.id+"-basic-tab").trigger("click");
-                            setTimeout(()=> {
-                                $("#"+self.webpagesDatatable.DATA.id+"_modal #DTE_Field_title").focus();
-                            }, 200);
-                        }, 700);
+                        // Initialize before the user can select another tab; delayed focus steals their selection.
+                        $("#pills-dt-"+self.webpagesDatatable.DATA.id+"-basic-tab").trigger("click");
+                        $("#"+self.webpagesDatatable.DATA.id+"_modal #DTE_Field_title").focus();
                     }
                 }
                 //pri duplikovani zmazme niektore hodnoty

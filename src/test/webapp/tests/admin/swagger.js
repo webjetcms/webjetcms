@@ -13,6 +13,8 @@ Scenario("base tests", async ({I, Document}) => {
 
     I.amOnPage(swaggerUrl);
     I.waitForText(title, 60, "h1.title");
+    // Swagger virtualizes operations outside the viewport; filter before locating the endpoint.
+    I.fillField(".operation-filter-input", "/admin/rest/web-pages/{id}");
     I.waitForElement(locate("button.opblock-summary-control").withText("/admin/rest/web-pages/{id}"), 60);
 
     I.amOnPage("/apps/prihlaseny-pouzivatel/zakaznicka-zona/csrf-logoff.html");
