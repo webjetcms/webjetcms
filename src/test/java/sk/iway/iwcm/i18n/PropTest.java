@@ -1,21 +1,38 @@
 package sk.iway.iwcm.i18n;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.RETURNS_SELF;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
+
+import java.sql.ResultSet;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
 
-/** Tests independent missing-key reporting and default-language fallback. */
+/** Tests database translation compatibility, missing-key reporting and default-language fallback. */
 class PropTest {
 
     /** Verifies all combinations of reporting and fallback without coupling the two flags. */
@@ -82,6 +99,72 @@ class PropTest {
             assertEquals(false, isMissingKeyRecorded(key));
         } finally {
             removeMissingKey(key);
+        }
+    }
+
+    /** Applies legacy DB overrides before migration without changing values or unrelated keys. */
+    @ParameterizedTest
+    @ValueSource(strings = { "", "example.com-", "42." })
+    void normalizesDatabaseOverridesBeforeCaching(String prefix) {
+        String legacyKey = prefix + "components.mustistep.form.back_button";
+        String currentKey = prefix + "components.multistep.form.back_button";
+        String customValue = "Custom components.mustistep.form.back_button Späť";
+        IwayProperties defaults = new IwayProperties();
+        defaults.setProperty(currentKey, "File default");
+
+        Prop prop = loadDatabaseTranslations(defaults, List.of(
+                Map.entry(" " + legacyKey + " ", customValue),
+                Map.entry("components.mustistep_extra.label", "Unrelated")));
+
+        assertEquals(customValue, prop.getProperties().getProperty(currentKey));
+        assertFalse(prop.getProperties().containsKey(legacyKey));
+        assertEquals("Unrelated", prop.getProperties().getProperty("components.mustistep_extra.label"));
+    }
+
+    /** Gives the corrected DB key precedence regardless of update order, matching the migration. */
+    @ParameterizedTest
+    @CsvSource({ "'', true", "'', false", "example.com-, true", "example.com-, false", "42., true", "42., false" })
+    void prefersCorrectedDatabaseKeyWhenBothExist(String prefix, boolean correctedFirst) {
+        String currentKey = prefix + "components.multistep.form.back_button";
+        Map.Entry<String, String> legacy = Map.entry(prefix + "components.mustistep.form.back_button", "Legacy override");
+        Map.Entry<String, String> corrected = Map.entry(currentKey, "Corrected override");
+        List<Map.Entry<String, String>> rows = List.of(legacy, corrected);
+        if (correctedFirst) rows = List.of(corrected, legacy);
+        IwayProperties defaults = new IwayProperties();
+        defaults.setProperty(currentKey, "File default");
+
+        Prop prop = loadDatabaseTranslations(defaults, rows);
+
+        assertEquals("Corrected override", prop.getProperties().getProperty(currentKey));
+    }
+
+    /** Loads through the real language cache path while substituting only file defaults and DB rows. */
+    @SuppressWarnings("unchecked")
+    private Prop loadDatabaseTranslations(IwayProperties defaults, List<Map.Entry<String, String>> rows) {
+        MockServletContext context = new MockServletContext();
+        try (var props = mockStatic(Prop.class, CALLS_REAL_METHODS);
+                var startup = mockStatic(InitServlet.class);
+                var queries = mockConstruction(ComplexQuery.class, withSettings().defaultAnswer(RETURNS_SELF), (query, construction) -> {
+                    doAnswer(call -> {
+                        Mapper<Void> mapper = call.getArgument(0);
+                        for (Map.Entry<String, String> row : rows) {
+                            ResultSet result = mock(ResultSet.class);
+                            when(result.getString("prop_key")).thenReturn(row.getKey());
+                            when(result.getString("prop_value")).thenReturn(row.getValue());
+                            mapper.map(result);
+                        }
+                        return List.of();
+                    }).when(query).list(any(Mapper.class));
+                })) {
+            props.when(() -> Prop.getDefaulProperties("en", "_en", context)).thenReturn(defaults);
+            startup.when(InitServlet::isWebjetConfigured).thenReturn(true);
+
+            Prop prop = Prop.getInstance(context, "en", false);
+
+            assertSame(prop, Prop.getInstance(context, "en", false));
+            assertEquals(1, queries.constructed().size());
+            verify(queries.constructed().get(0)).setParams("en");
+            return prop;
         }
     }
 

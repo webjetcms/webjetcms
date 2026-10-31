@@ -374,7 +374,7 @@ public class IwayProperties extends Hashtable<String, String>
                String value = (separatorIndex < len) ? line.substring(valueIndex, len) : "";
 
                // Convert then store key and value
-               key = loadConvert(key).replace("components.mustistep.", "components.multistep.");
+               key = Prop.fixKeyTypo(loadConvert(key));
                value = loadConvert(value);
                put(key, value);
             }
