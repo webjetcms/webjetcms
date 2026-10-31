@@ -111,6 +111,7 @@ public class UpdateDatabase
 		Logger.println(UpdateDatabase.class,"----- Updating database [DBType="+Constants.DB_TYPE+"] -----");
 		//aktualizuj databazu
 		autoUpdateDatabase();
+		migrateMultistepTranslationKeys();
 
 		//aktualizuj zlozitejsie veci
 		splitFullName();
@@ -377,6 +378,68 @@ public class UpdateDatabase
 		catch (Exception e)
 		{
 			sk.iway.iwcm.Logger.error(e);
+		}
+	}
+
+	/**
+	 * Renames legacy multistep translation keys and removes duplicates in the same language.
+	 * Existing corrected keys take precedence; retained records keep their IDs, values and dates.
+	 * Completed changes are retained on failure; remaining keys are retried on the next startup.
+	 */
+	private static void migrateMultistepTranslationKeys() {
+		String note = "31.10.2026 migrate multistep translation keys and remove legacy duplicates";
+		try {
+			if (isAllreadyUpdated(note)) return;
+
+			String table = ConfDB.PROPERTIES_TABLE_NAME;
+			int renamed = 0;
+			int deleted = 0;
+			try (Connection connection = DBPool.getConnection()) {
+				if (connection == null) throw new SQLException("Database connection is not available");
+				record LegacyKey(long id, String key, String language) {}
+				List<LegacyKey> legacyKeys = new ArrayList<>();
+				try (PreparedStatement select = connection.prepareStatement(
+						"SELECT id, prop_key, lng FROM " + table + " WHERE prop_key LIKE ? ORDER BY id")) {
+					select.setString(1, "%components.mustistep.%");
+					try (ResultSet rows = select.executeQuery()) {
+						while (rows.next()) {
+							legacyKeys.add(new LegacyKey(rows.getLong("id"), rows.getString("prop_key"), rows.getString("lng")));
+						}
+					}
+				}
+
+				try (PreparedStatement find = connection.prepareStatement("SELECT id FROM " + table + " WHERE prop_key = ? AND lng = ?");
+						PreparedStatement rename = connection.prepareStatement("UPDATE " + table + " SET prop_key = ? WHERE id = ?");
+						PreparedStatement delete = connection.prepareStatement("DELETE FROM " + table + " WHERE id = ?")) {
+					for (LegacyKey legacy : legacyKeys) {
+						String correctedKey = Prop.fixKeyTypo(legacy.key());
+						// Case-insensitive database collations can also select keys without this exact typo.
+						if (correctedKey.equals(legacy.key())) continue;
+
+						find.setString(1, correctedKey);
+						find.setString(2, legacy.language());
+						boolean correctedExists;
+						try (ResultSet rows = find.executeQuery()) {
+							correctedExists = rows.next();
+						}
+
+						if (correctedExists) {
+							delete.setLong(1, legacy.id());
+							deleted += delete.executeUpdate();
+						} else {
+							rename.setString(1, correctedKey);
+							rename.setLong(2, legacy.id());
+							renamed += rename.executeUpdate();
+						}
+					}
+				}
+			}
+
+			Prop.getInstance(true);
+			saveSuccessUpdate(note);
+			Logger.println(UpdateDatabase.class, "Multistep translation keys: renamed=" + renamed + ", removed duplicates=" + deleted);
+		} catch (Exception e) {
+			Logger.error(UpdateDatabase.class, e);
 		}
 	}
 

@@ -4418,34 +4418,5 @@
             </object>
         </void>
 
-        <void method="add">
-            <object class="sk.iway.iwcm.system.UpdateDBBean">
-                <void property="author"><string>sivan</string></void>
-                <void property="date"><string>28.10.2026</string></void>
-                <void property="desc"><string>Fix multistep form translation keys</string></void>
-                <void property="mysql"><string>
-                    UPDATE _properties_ old_key
-                    LEFT JOIN _properties_ new_key ON new_key.prop_key = REPLACE(old_key.prop_key, 'components.mustistep.', 'components.multistep.') AND new_key.lng = old_key.lng
-                    SET old_key.prop_key = REPLACE(old_key.prop_key, 'components.mustistep.', 'components.multistep.')
-                    WHERE old_key.prop_key LIKE '%components.mustistep.%' AND new_key.prop_key IS NULL;
-                </string></void>
-                <void property="mssql"><string>
-                    UPDATE _properties_ SET prop_key = REPLACE(prop_key, 'components.mustistep.', 'components.multistep.')
-                    WHERE prop_key LIKE '%components.mustistep.%'
-                    AND NOT EXISTS (SELECT 1 FROM _properties_ new_key WHERE new_key.prop_key = REPLACE(_properties_.prop_key, 'components.mustistep.', 'components.multistep.') AND new_key.lng = _properties_.lng);
-                </string></void>
-                <void property="oracle"><string>
-                    UPDATE webjet_properties SET prop_key = REPLACE(prop_key, 'components.mustistep.', 'components.multistep.')
-                    WHERE prop_key LIKE '%components.mustistep.%'
-                    AND NOT EXISTS (SELECT 1 FROM webjet_properties new_key WHERE new_key.prop_key = REPLACE(webjet_properties.prop_key, 'components.mustistep.', 'components.multistep.') AND new_key.lng = webjet_properties.lng);
-                </string></void>
-                <void property="pgsql"><string>
-                    UPDATE _properties_ SET prop_key = REPLACE(prop_key, 'components.mustistep.', 'components.multistep.')
-                    WHERE prop_key LIKE '%components.mustistep.%'
-                    AND NOT EXISTS (SELECT 1 FROM _properties_ new_key WHERE new_key.prop_key = REPLACE(_properties_.prop_key, 'components.mustistep.', 'components.multistep.') AND new_key.lng = _properties_.lng);
-                </string></void>
-            </object>
-        </void>
-
     </object>
 </java>
