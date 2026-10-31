@@ -15,8 +15,9 @@
 
         regExpDataTable = WJ.DataTable({
             url: url,
-            serverSide: true,
+            serverSide: false,
             columns: columns,
+            order: [ [2, 'asc'] ],
             id: "regExpDataTable",
             fetchOnEdit: true,
             fetchOnCreate: true

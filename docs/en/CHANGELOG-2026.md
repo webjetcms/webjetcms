@@ -139,6 +139,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Regular expressions - the list displays the translated name according to the administration language and indicates the original name as **Translation key**. The **Allowed value** selection in multi-step forms uses the format **code - name** (#387).
 - Multi-step forms - fixed typo in translation keys from `components.mustistep.*` to `components.multistep.*` (#378).
 - Multi-step forms - auxiliary statistics entries on [public cluster node with limited database rights](install/config/ro-user.md#multi-step-forms) no longer block form display, validation, or submission. In case of an error, the visitor will see the application name instead of the Java class name (#384).
 - Delayed email sending - increased column `emails.message` to `LONGTEXT` in MySQL/MariaDB so that saving a large HTML email does not fail. Added [instructions for smaller CSS for email and PDF](redactor/apps/form/README.md#css-styles-for-email-and-pdf) (#374).

@@ -91,7 +91,7 @@ Editor pro přidávání a úpravu položek je speciální tím, že mění svů
 
 - **Typ pole** - určuje jaký druh vstupu bude položka představovat (např. textové pole, výběr z rozbalovacího seznamu, zaškrtávací políčko atd.). Jednotlivá pole [připravuje designér web sídla](../formsimple/README.md#informace-pro-web-designera) a jsou stejné jako pro aplikaci formulář snadno.
 - **Povinné pole** - zda je položka povinná k vyplnění.
-- **Povolená hodnota** - pro pokročilou validaci vstupu uživatele umíte zvolit libovolný počet regulárních výrazů, které musí být splněny, aby byl vstup platný. Více se o nich dozvíte v sekci [Regulární výrazy](../form/regexps.md).
+- **Povolená hodnota** - pro pokročilou validaci vstupu uživatele umíte zvolit libovolný počet regulárních výrazů, které musí být splněny, aby byl vstup platný. Každá možnost používá formát **kód - název**, například **alphabetLowercase - povoleno jen malé znaky**. Název se zobrazuje v jazyce administrace. Podle názvu i kódu můžete vyhledávat. Kód odpovídá sloupci **Kód** v sekci [Regulární výrazy](../form/regexps.md).
 - **Oříznout mezery** - pokud je zvoleno, úvodní a koncové mezery se z hodnoty odstraní ještě před validací a uložením. Nastavení je dostupné pro podporovaná textová pole; nepoužívá se pro výběrová pole a formátované textové pole.
 - **Název pole** - název, který se zobrazí uživateli. Pokud není zadán použije se název shodný s typem pole.
 - **Identifikátor položky ve formuláři** - technický identifikátor se automaticky vytvoří z názvu položky a doplní se rozlišující příponou tak, aby byl ve formuláři jedinečný. Zobrazuje se až při úpravě uložené položky a nelze jej měnit. Používá se v podmínkách, uložených datech a v [značkách hodnot položek](#značky-hodnot-položek).
