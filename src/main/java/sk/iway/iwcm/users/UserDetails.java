@@ -1102,7 +1102,8 @@ public class UserDetails implements Serializable
 	}
 
 	public void setPosition(String position) {
-        if (Constants.getString("usersPositionList").startsWith("enumeration_")) {
+		String usersPositionList = Constants.getString("usersPositionList");
+        if (usersPositionList != null && usersPositionList.startsWith("enumeration_")) {
             if (Tools.isNotEmpty(position) && Tools.isNumeric(position) == false) {
                 String pos = position.trim();
                 int enumerationId = Tools.getIntValue(Constants.getString("usersPositionList").substring(Constants.getString("usersPositionList").indexOf("_") + 1), 0);

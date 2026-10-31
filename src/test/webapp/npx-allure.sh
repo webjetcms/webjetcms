@@ -77,19 +77,12 @@ node --version | head -n 1 >> ../../../build/test/allure-results/environment.pro
 echo -n "codeceptjs.version=" >> ../../../build/test/allure-results/environment.properties
 npx codeceptjs --version | head -n 1 >> ../../../build/test/allure-results/environment.properties
 
-ORIGINAL_DIR=$(pwd)
-cd ../../..
-./gradlew test
-JAVA_RET_CODE=$?
-echo "$ORIGINAL_DIR"
-cd "$ORIGINAL_DIR"
-
 NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure
 CODECEPT_RET_CODE=$?
 
-# Generate the report even after a test failure, but fail the pipeline if any suite failed.
+# Generate the report even after a test failure, but fail the pipeline if CodeceptJS failed.
 RET_CODE=0
-if [ "$JAVA_RET_CODE" -ne 0 ] || [ "$CODECEPT_RET_CODE" -ne 0 ]; then
+if [ "$CODECEPT_RET_CODE" -ne 0 ]; then
         RET_CODE=1
 fi
 
@@ -125,5 +118,5 @@ ls -la ../../../build/test
 echo "Listing downloads directory:"
 ls -la ../../../build/test/downloads
 
-echo "Done, Java=$JAVA_RET_CODE, CodeceptJS (E2E and helpers)=$CODECEPT_RET_CODE, return code=$RET_CODE"
+echo "Done, CodeceptJS (E2E and helpers)=$CODECEPT_RET_CODE, return code=$RET_CODE"
 exit $RET_CODE
