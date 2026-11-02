@@ -119,6 +119,8 @@ public class AiChatService implements DisposableBean {
             } finally {
                 if (!started.get()) {
                     store.finish(prepared.scope(), turn.thread().getId(), turn.message().getId(), "", "stopped", 0, "CANCELLED", null);
+                    // Queued tasks never enter generate(), so finish any pending deletion here.
+                    cleanup(turn.thread().getId(), prepared.scope());
                 }
             }
         }

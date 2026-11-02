@@ -35,6 +35,7 @@
 - AI Chat - prepnutie asistenta obnoví jeho naposledy otvorený rozhovor vrátane rozpísanej správy a neodoslaných príloh. Tlačidlo **Nový chat** naďalej začne nový rozhovor.
 - AI Chat - oneskorené načítanie histórie už neprepíše práve dokončenú odpoveď ani nevráti odoslanú otázku do poľa na správu. Po dokončení odpovede sa načíta aktuálna história (#386).
 - AI Chat - generovanie a zastavenie odpovede zohľadňujú vlastníka aj doménu rozhovoru. Rozhovory s rovnakým ID u rôznych používateľov alebo domén sa navzájom neblokujú ani nezastavujú (#386).
+- AI Chat - vymazanie rozhovoru sa dokončí aj vtedy, keď sa jeho úloha zruší ešte pred začatím generovania odpovede. Rozhovor už nezostane čakať na opakované vymazanie (#386).
 - AI Chat - opravené zobrazovanie interných zástupných značiek namiesto príkazov `!INCLUDE(...)!` z príloh. Text príkazov zostáva dostupný aj pri pokračovaní rozhovoru.
 - AI Chat - odpovede asistenta zobrazujú Markdown vrátane tabuliek počas generovania aj v histórii. Kopírovanie zachová pôvodné Markdown značky. Tlačidlo kopírovania zobrazuje iba ikonu s textom v bubline a nachádza sa pred údajom o použitých tokenoch.
 - AI Chat - v histórii môžete vyhľadávať rozhovory podľa názvu, textu správ, asistenta a poskytovateľa aj bez diakritiky. Vyhľadávanie zahŕňa aj staršie rozhovory, ktoré ešte nie sú načítané v zozname.

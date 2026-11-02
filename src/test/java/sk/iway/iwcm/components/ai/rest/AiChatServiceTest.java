@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.AfterEach;
@@ -19,8 +20,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.webjetcms.ai.AiErrorCategory;
 import com.webjetcms.ai.AiProviderConfig;
@@ -45,6 +48,7 @@ class AiChatServiceTest {
     private final AiChatStore store = new AiChatStore();
     private final LibrarySupportLogic provider = mock(LibrarySupportLogic.class);
     private final AiChatResponseDeletion deletion = mock(AiChatResponseDeletion.class);
+    private final AiTaskRegistry tasks = mock(AiTaskRegistry.class);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final AiProviderConfig config = AiProviderConfig.builder("key").build();
     private AiChatStore.Scope scope;
@@ -71,7 +75,6 @@ class AiChatServiceTest {
         var configuration = mock(WebjetAiConfigurationService.class);
         when(configuration.resolveForDomain(provider, scope.domainName())).thenReturn(config);
         when(configuration.chatScope(config)).thenReturn("scope");
-        var tasks = mock(AiTaskRegistry.class);
         when(tasks.runChatTask(anyString(), same(scope), any(), any())).thenAnswer(call ->
             call.<Callable<AssistantResponseDTO>>getArgument(2).call());
         service = new AiChatService(store, assistants, List.of(provider), tasks, deletion, configuration, mock(AiStatRepository.class));
@@ -142,6 +145,22 @@ class AiChatServiceTest {
         verify(deletion, times(2)).deleteResponse("openai", "response-one", config);
         verify(deletion).deleteResponse("openai", "response-two", config);
         assertTrue(store.list(scope, 0).items().isEmpty());
+    }
+
+    /** Deletion finishes after a queued task is cancelled before generation starts. */
+    @Test
+    void deletesConversationWhenQueuedTaskIsCancelled() throws Exception {
+        var prepared = prepare(null, null);
+        String id = prepared.turn().thread().getId();
+        doAnswer(call -> {
+            assertFalse(service.delete(id, scope).deleted());
+            return AssistantResponseDTO.fromError(new CancellationException());
+        }).when(tasks).runChatTask(eq(id), same(scope), any(), any());
+
+        assertEquals("CANCELLED", execute(prepared).getErrorCategory());
+        assertEquals(HttpStatus.NOT_FOUND,
+            assertThrows(ResponseStatusException.class, () -> store.get(id, scope)).getStatusCode());
+        verify(provider, never()).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any());
     }
 
     /** Expiration stops continuation without resending historical text or silently starting a new context. */
