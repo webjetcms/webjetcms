@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import { AiChatTransport } from './ai-chat-transport';
 import { chatRequestId, chatAttachmentUrl, fetchChatAttachment } from './chat-history-api';
+import { setChatTooltip, initChatTooltips, disposeChatTooltips } from './chat-tooltips';
 
 /**
  * A reusable AI conversation that keeps its history while its view is unmounted.
@@ -121,6 +122,7 @@ export class AiChat {
             this._saveScroll();
         }
         this.mounted = false;
+        disposeChatTooltips(this.element);
         this.$root.detach();
     }
 
@@ -140,10 +142,12 @@ export class AiChat {
         ]);
         this._renderActions(this.$toolbarEndActions, this.toolbarEndView, toolbarActions.filter(action => action.position === "end"));
         const title = this.options.getTitle?.();
-        this.$toolbarTitle.text(title || "").attr("title", title || "").prop("hidden", !title);
+        this.$toolbarTitle.text(title || "").prop("hidden", !title);
+        setChatTooltip(this.$toolbarTitle[0], title);
         this.$empty.toggle(state.messages.length === 0);
         for (const [message, view] of this.messageViews) {
             if (!state.messages.includes(message)) {
+                disposeChatTooltips(view.$article);
                 view.$article.remove();
                 this.messageViews.delete(message);
             }
@@ -177,6 +181,7 @@ export class AiChat {
         this._updateSendButton();
         this._renderAttachments(this.$attachments, state.attachments, true);
         this._releaseAttachmentUrls();
+        initChatTooltips(this.element);
         if (this.element.isConnected) {
             this.$history[0].scrollTop = followLatest ? this.$history[0].scrollHeight : scrollTop;
             this._saveScroll();
@@ -401,8 +406,9 @@ export class AiChat {
     }
 
     _iconButton(label, icon, classes) {
-        const $button = this._button(label, icon, classes).addClass("ai-chat-icon-button").attr("title", label);
+        const $button = this._button(label, icon, classes).addClass("ai-chat-icon-button");
         $button.find("span").addClass("visually-hidden");
+        setChatTooltip($button[0], label);
         return $button;
     }
 
@@ -416,8 +422,12 @@ export class AiChat {
         this.$send.prop("disabled", this.state.pending != null || this.state.serverBusy || this.state.readOnlyReason
             || this.state.needsNewChat || (!this.state.draft.trim() && !this.state.attachments.length)).toggle(this.state.pending == null);
         this.$stop.toggle(this.state.pending != null);
-        this.$attachmentButton?.prop('disabled', !this._canAttach())
-            .attr('title', this.options.persistent ? WJ.translate('datatables.upload.uploadFile.js') : this._text('attachmentsUnavailable'));
+        if (this.$attachmentButton) {
+            this.$attachmentButton.prop('disabled', !this._canAttach());
+            setChatTooltip(this.$attachmentButton[0], this.options.persistent
+                ? WJ.translate('datatables.upload.uploadFile.js') : this._text('attachmentsUnavailable'));
+        }
+        initChatTooltips(this.$send.add(this.$stop).add(this.$attachmentButton));
     }
 
     _canAttach() {
@@ -460,6 +470,7 @@ export class AiChat {
         if ($container[0].attachmentItems === attachments && $container[0].attachmentEditable === this._canAttach()) return;
         $container[0].attachmentItems = attachments;
         $container[0].attachmentEditable = this._canAttach();
+        disposeChatTooltips($container);
         $container.empty().toggle(attachments.length > 0);
         for (const attachment of attachments) {
             const $item = $('<div class="ai-chat-attachment" role="listitem"></div>');
@@ -714,6 +725,7 @@ export class AiChat {
         const key = JSON.stringify(actions.map(action => [action.id, action.label, action.icon, Boolean(action.iconOnly), Boolean(action.disabled), action.expanded]));
         if (view.actionKey === key) return;
         view.actionKey = key;
+        disposeChatTooltips($container);
         $container.empty();
         actions.forEach((action, index) => {
             const $button = action.iconOnly ? this._iconButton(action.label, action.icon) : this._button(action.label, action.icon);
@@ -742,7 +754,8 @@ export class AiChat {
                 }
             }
             if (!this.state.disposed && $button[0].isConnected) {
-                $button.attr("title", this._text("copied")).find("span").text(this._text("copied"));
+                $button.find("span").text(this._text("copied"));
+                setChatTooltip($button[0], this._text("copied"));
             }
         } catch (error) {
             if (this.state.disposed) return;

@@ -42,6 +42,7 @@
 - AI Chat - upravený vzhľad rozhovoru: názov v hlavičke, svetlofialové otázky, ikony asistenta, prehľadnejšie prílohy a tabuľky. História zvýrazňuje vybraný rozhovor a obsahuje tlačidlo **Nový chat** aj ikony na skrytie panela a vymazanie rozhovoru. Asistenta si vyberáte v poli na písanie správy.
 - AI Chat - ikona **Súbory v chate** otvára pravý panel s prílohami zo všetkých správ vybraného rozhovoru. Rozlišuje nahrané súbory a súbory vrátené asistentom, umožňuje hľadanie podľa názvu a stiahnutie súboru.
 - AI Chat - správy využívajú celú dostupnú šírku aj pri zväčšení dialógu. Odpovede zostávajú pri ľavom okraji a otázky pri pravom.
+- AI Chat - opravené zarovnanie ikon a vzhľad tlačidiel na odoslanie a zastavenie odpovede pri otvorení chatu z poľa v editore webovej stránky. Tlačidlá **Pridať** a **Nahradiť obsah** pri odpovedi zobrazujú iba ikony. Tlačidlá chatu, názvy rozhovorov a súborov používajú štandardné bubliny WebJET pri prejdení myšou aj pri ovládaní klávesnicou.
 
 ![](redactor/admin/search/quick-search.png)
 

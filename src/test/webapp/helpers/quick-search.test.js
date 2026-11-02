@@ -31,7 +31,9 @@ const documentationResult = {
 
 /** Runs the production search, DOM rendering and request parsing with a deterministic clock. */
 function fixture(t, denied = [], options = {}) {
-    const dom = new JSDOM('<!doctype html><button id="trigger">Search</button>', { url: 'http://localhost/admin/v9/' });
+    const dom = new JSDOM('<!doctype html><button id="trigger">Search</button>', {
+        url: 'http://localhost/admin/v9/', runScripts: 'outside-only'
+    });
     const { window } = dom;
     window.adminSearchContext = options.adminSearchContext;
     window.adminHelpContext = { documentationBaseUrl: options.documentationBaseUrl || 'https://docs.webjetcms.sk' };
@@ -52,6 +54,12 @@ function fixture(t, denied = [], options = {}) {
     const timers = new Map(), requests = [], chatRequests = [];
     const setTimeout = (fn, delay) => { timers.set(++nextId, { fn, at: now + delay }); return nextId; };
     const clearTimeout = id => timers.delete(id);
+    if (options.aiChat) {
+        window.setTimeout = setTimeout;
+        window.clearTimeout = clearTimeout;
+        window.eval(fs.readFileSync(require.resolve('bootstrap/dist/js/bootstrap.bundle.js'), 'utf8'));
+        window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
+    }
     const context = vm.createContext({
         window, document: window.document, navigator: { platform: options.platform || 'Win32', clipboard: options.clipboard }, URL: ChatURL, URLSearchParams, AbortController, setTimeout, clearTimeout,
         crypto: require('node:crypto').webcrypto,
@@ -96,7 +104,10 @@ function fixture(t, denied = [], options = {}) {
     vm.runInContext(readAdmin('admin-menu.js'), context);
     vm.runInContext(`{ ${readAdmin('documentation-search.js')}; Object.assign(this, { documentationUrl, documentationMarkdown }); }`, context);
     if (options.aiChat) {
+        const tooltipStart = webjet.indexOf('    function initTooltip(');
+        vm.runInContext(`${webjet.slice(tooltipStart, webjet.indexOf('\n    /**', tooltipStart))}\nWJ.initTooltip = initTooltip;`, context);
         vm.runInContext(readAdmin('ai/chat-history-api.js'), context);
+        vm.runInContext(readAdmin('ai/chat-tooltips.js'), context);
         vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
         vm.runInContext(`{ ${readAdmin('ai/quick-search-chat.js')}; Object.assign(this, { QuickSearchChat }); }`, context);
     }
@@ -1166,6 +1177,54 @@ async function openSavedChat(f, id, answer) {
     });
     await opening;
 }
+
+test('Chat controls and history use WebJET tooltips and release overlays when hidden or rebuilt', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    const document = input.ownerDocument;
+    const { window } = document.defaultView;
+    const hover = element => element.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true }));
+    const tooltipText = () => document.querySelector('.tooltip-inner')?.textContent;
+
+    hover(host.chat.$attachmentButton[0]);
+    f.advance(299);
+    assert.equal(tooltipText(), undefined);
+    f.advance(1);
+    assert.match(tooltipText(), /datatables.upload.uploadFile.js/);
+    assert.equal(host.chat.$attachmentButton.attr('title'), undefined, 'Native tooltips must stay disabled.');
+    assert.ok(document.querySelector('.tooltip-ai'));
+
+    host.toggleHistory(true);
+    const title = '**Notes** <img src=x onerror=alert(1)>';
+    await f.respond(f.requests.at(-1), { items: [{ id: 'one', title, assistantId: 7 }], hasMore: false });
+    const row = host.historyList.querySelector('.md-quick-search__chat-history-select');
+    row.focus();
+    f.advance(300);
+    assert.ok([...document.querySelectorAll('.tooltip-inner')].some(tooltip => tooltip.textContent === title));
+    assert.equal(document.querySelector('.tooltip-inner img, .tooltip-inner b'), null, 'Conversation titles remain plain text.');
+
+    for (const control of [row, host.closeHistory, host.historyList.querySelector('.md-quick-search__chat-history-action')]) {
+        assert.equal(control.hasAttribute('title'), false);
+        assert.ok(window.bootstrap.Tooltip.getInstance(control));
+    }
+    host.renderHistory();
+    assert.equal(window.bootstrap.Tooltip.getInstance(row), null);
+    hover(host.closeHistory);
+    host.toggleHistory(false);
+    f.advance(300);
+    assert.equal(window.bootstrap.Tooltip.getInstance(host.closeHistory), null, 'Closing a panel cancels pending tooltips.');
+
+    typeChat(input, 'Draft');
+    const send = host.chat.$send[0];
+    assert.equal(send.hasAttribute('title'), false);
+    hover(send);
+    f.controller.chips.get('all').click();
+    f.advance(500);
+    assert.equal(document.querySelector('.tooltip'), null, 'Closing the chat removes overlays and pending hover timers.');
+    f.controller.chips.get('aiChat').click();
+    assert.ok(window.bootstrap.Tooltip.getInstance(send), 'Reopening the chat restores tooltips.');
+});
 
 test('Chat history search debounces typing, retains its query across pages and restores all threads when cleared', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });

@@ -343,10 +343,10 @@ export class EditorAi {
     _getChatAnswerActions(conversation, message) {
         if (!message.text?.trim()) return [];
         return [{
-            id: "add", label: WJ.translate("components.ai_assistants.chat.add.js"), icon: "plus",
+            id: "add", label: WJ.translate("components.ai_assistants.chat.add.js"), icon: "plus", iconOnly: true,
             disabled: conversation.applying, run: () => this.insertChatAnswer(conversation, message, "append")
         }, {
-            id: "replace", icon: "replace", disabled: conversation.applying,
+            id: "replace", icon: "replace", iconOnly: true, disabled: conversation.applying,
             label: WJ.translate(conversation.selection != null
                 ? "components.ai_assistants.chat.replaceSelection.js" : "components.ai_assistants.chat.replace.js"),
             run: () => this.insertChatAnswer(conversation, message, "replace")

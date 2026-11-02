@@ -158,7 +158,7 @@
         }
     }
 
-    .btn-primary {
+    .btn-primary:not(.ai-chat-icon-button) {
         background-color: var(--wj-ai-color);
         border-color: var(--wj-ai-color);
         background: linear-gradient(92.29deg, #8A3EFF 0%, #6E00DC 100%),

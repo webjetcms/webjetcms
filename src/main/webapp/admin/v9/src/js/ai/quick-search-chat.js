@@ -1,6 +1,7 @@
 import { AiChat } from './ai-chat';
 import { node, icon, fetchJson, containNativeScroll } from '../dashboard/widget-utils';
 import { chatHistoryRequest, historyText } from './chat-history-api';
+import { setChatTooltip, initChatTooltips, disposeChatTooltips } from './chat-tooltips';
 
 const text = key => WJ.translate(`admin.quickSearch.${key}.js`);
 const filesText = key => WJ.translate(`components.ai_assistants.chat.files.${key}.js`);
@@ -111,12 +112,14 @@ export class QuickSearchChat {
         else this.render();
         if (this.historyOpen) this.loadHistory();
         if (this.chat?.state.threadId && !this.chat.state.pending) this.refreshConversation(this.chat);
+        initChatTooltips(this.element);
         this.focus();
     }
 
     /** Keeps conversation state and pending responses while the search tab is hidden. */
     unmount() {
         this.chat?.unmount();
+        disposeChatTooltips(this.element);
         this.element.remove();
         this.mounted = false;
     }
@@ -263,6 +266,8 @@ export class QuickSearchChat {
         if (open && this.filesOpen && this.element.clientWidth < 768) this.toggleFiles(false);
         this.historyOpen = open;
         this.historyPanel.hidden = !open;
+        if (open) initChatTooltips(this.historyPanel);
+        else disposeChatTooltips(this.historyPanel);
         this.element.classList.toggle('md-quick-search__chat-host--history-open', open);
         this.chat?.refresh();
         this.status.querySelector('[aria-controls]')?.setAttribute('aria-expanded', String(open));
@@ -278,6 +283,8 @@ export class QuickSearchChat {
         if (open && this.historyOpen && this.element.clientWidth < 768) this.toggleHistory(false);
         this.filesOpen = open;
         this.filesPanel.hidden = !open;
+        if (open) initChatTooltips(this.filesPanel);
+        else disposeChatTooltips(this.filesPanel);
         this.chat?.refresh();
         if (open) {
             this.renderFiles();
@@ -305,13 +312,14 @@ export class QuickSearchChat {
         if (this.renderedFilesChat === chat && this.renderedFilesKey === key) return;
         this.renderedFilesChat = chat;
         this.renderedFilesKey = key;
+        disposeChatTooltips(this.filesList);
         this.filesList.replaceChildren();
         const list = node('ul', 'list-unstyled');
         for (const { attachment, role } of entries) {
             if (query && !attachment.name.toLocaleLowerCase().includes(query)) continue;
             const row = node('li', 'md-quick-search__chat-file');
             const download = this.button('', () => chat.downloadAttachment(attachment, download), 'md-quick-search__chat-file-download');
-            download.title = attachment.name;
+            setChatTooltip(download, attachment.name);
             download.setAttribute('aria-label', WJ.translate('components.ai_assistants.chat.downloadAttachment.js', [attachment.name]));
             const info = node('span', 'md-quick-search__chat-file-info');
             info.append(node('span', 'md-quick-search__chat-history-title', attachment.name),
@@ -322,6 +330,7 @@ export class QuickSearchChat {
         }
         this.filesList.append(list);
         if (!list.children.length) this.filesList.append(node('p', '', filesText(query ? 'noResults' : 'empty')));
+        initChatTooltips(this.filesList);
     }
 
     /** Restarts pagination and cancels stale results as soon as the history query changes. */
@@ -370,6 +379,7 @@ export class QuickSearchChat {
 
     renderHistory() {
         if (!this.historyList || this.disposed) return;
+        disposeChatTooltips(this.historyList);
         this.historyList.replaceChildren();
         this.historyList.setAttribute('aria-busy', String(Boolean(this.historyLoading)));
         if (this.historyError) {
@@ -379,7 +389,7 @@ export class QuickSearchChat {
         for (const item of this.historyItems) {
             const row = node('li', 'md-quick-search__chat-history-item');
             const select = this.button('', () => this.openThread(item.id), 'md-quick-search__chat-history-select');
-            select.title = item.title;
+            setChatTooltip(select, item.title);
             select.append(node('span', 'md-quick-search__chat-history-title', item.title), node('small', '', item.assistantName || item.provider));
             if (item.id === this.chat?.state.threadId) select.setAttribute('aria-current', 'true');
             const pending = item.status === 'DELETE_PENDING';
@@ -400,6 +410,7 @@ export class QuickSearchChat {
             more.disabled = this.historyLoading;
             this.historyList.append(more);
         }
+        initChatTooltips(this.historyList);
     }
 
     async openThread(id) {
@@ -555,7 +566,7 @@ export class QuickSearchChat {
 
     iconButton(label, name, run) {
         const button = this.button('', run, 'btn btn-sm md-quick-search__chat-history-action');
-        button.title = label;
+        setChatTooltip(button, label);
         button.setAttribute('aria-label', label);
         button.append(icon(`ti-${name}`));
         return button;

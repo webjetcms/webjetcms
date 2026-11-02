@@ -177,7 +177,7 @@ $f-toast-error: #790011;
                     min-width: 100px;
                 }
             }
-            .btn {
+            .btn:not(.ai-chat-icon-button) {
                 font-size: 14px;
                 line-height: 22.4px;
                 padding: 3px 8px;
