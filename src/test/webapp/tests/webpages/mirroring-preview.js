@@ -9,7 +9,7 @@ const groupModal = '#groups-datatable_modal';
 const pageModal = '#datatableInit_modal';
 const folders = {};
 const roots = {};
-let suffix, pageTitle, originalConfig, originalTitleSync, originalMirroring;
+let suffix, pageTitle, originalConfig, originalTitleSync, originalMirroring, originalShowPages;
 let cancelSyncUser;
 let deletePermissionGroups;
 const editableGroups = '#editorAppDTE_Field_editorFields-editableGroups';
@@ -127,6 +127,7 @@ Scenario('Create own language folders and preserve settings', async ({ I, DT, DT
     I.click('button.buttons-jstree-settings');
     I.waitForVisible('#jstreeSettingsModal', 10);
     originalMirroring = await I.grabCheckedElementStatus('#jstree-settings-showbadmirrorings');
+    originalShowPages = await I.grabCheckedElementStatus('#jstree-settings-showpages');
     I.click('#jstreeSettingsModal .btn-close-editor');
     I.waitForInvisible('#jstreeSettingsModal', 10);
 
@@ -168,7 +169,8 @@ Scenario('Create own language folders and preserve settings', async ({ I, DT, DT
         }
         I.click(locate(node(roots[key]) + ' > ul > li > a.jstree-anchor').withText(pageTitle));
         DT.waitForLoader();
-        folders[key] = { name: pageTitle, id: await I.grabValueFrom('#tree-folder-id'), path: roots[key].path + '/' + pageTitle };
+        folders[key] = { name: pageTitle, id: await I.grabValueFrom('#tree-folder-id'), path: roots[key].path + '/' + pageTitle,
+            docId: await I.grabAttributeFrom('#datatableInit tbody tr[id]', 'id') };
         I.see(pageTitle, '#datatableInit tbody');
     }
     // Give the source a unique folder name so tree search hides its mirrors.
@@ -184,6 +186,7 @@ Scenario('Create own language folders and preserve settings', async ({ I, DT, DT
 Scenario('Navigate between language mirrors during search', async ({ I, DT }) => {
     openFolder(I, DT, folders.sk);
     showMirroring(I, true);
+    openFolder(I, DT, folders.sk);
     const link = node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders.en.id}"]`;
     I.see('EN', link);
     I.dontSeeElement(node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders.sk.id}"]`);
@@ -219,6 +222,43 @@ Scenario('Show mirrored page and folder paths in delete dialogs', ({ I, DT, DTE 
     I.waitForEnabled(groupModal + ' button.btn-primary', 20);
     I.dontSeeElement(groupModal + ' .delete-mirrors-info');
     DTE.cancel();
+});
+
+Scenario('Open mirrored pages from language links in the tree', async ({ I, DT, DTE }) => {
+    openFolder(I, DT, folders.sk);
+    I.click('button.buttons-jstree-settings');
+    I.waitForVisible('#jstreeSettingsModal', 10);
+    I.checkOption('#jstree-settings-showpages');
+    I.checkOption('#jstree-settings-showbadmirrorings');
+    I.click('#jstree-settings-submit');
+    I.waitForInvisible('#jstreeSettingsModal', 10);
+    I.jstreeWaitForLoader();
+    openFolder(I, DT, folders.sk);
+    const pageNode = '#docId-' + folders.sk.docId;
+    if (await I.grabNumberOfVisibleElements(node(folders.sk) + '.jstree-closed')) I.click(node(folders.sk) + ' > .jstree-ocl');
+    const link = pageNode + ` > .jstree-mirrors .jstree-mirror-link[data-doc-id="${folders.en.docId}"]`;
+    I.waitForVisible(link, 20);
+    I.see('EN', link);
+    I.see('CS', pageNode + ' > .jstree-mirrors');
+    I.dontSeeElement(pageNode + ` .jstree-mirror-link[data-doc-id="${folders.sk.docId}"]`);
+    I.see('+1', pageNode + ' > .jstree-mirrors .jstree-mirror-more');
+    I.click(link);
+    DTE.waitForEditor();
+    I.seeInCurrentUrl('?docid=' + folders.en.docId);
+    I.seeInField('#tree-folder-id', folders.en.id);
+    DTE.cancel();
+
+    openFolder(I, DT, folders.sk);
+    I.waitForVisible(link, 20);
+    I.click(pageNode + ' > .jstree-mirrors .jstree-mirror-more');
+    I.click(pageNode + ` .jstree-mirror-link[data-doc-id="${folders['duplicate-sk'].docId}"]`);
+    DTE.waitForEditor();
+    I.seeInCurrentUrl('?docid=' + folders['duplicate-sk'].docId);
+    DTE.cancel();
+
+    showMirroring(I, false);
+    I.dontSeeElement('#SomStromcek .jstree-mirrors');
+    showMirroring(I, true);
 });
 
 Scenario('Hide mirror links without the mirroring permission', ({ I }) => {
@@ -557,6 +597,15 @@ Scenario('Restore settings and remove own fixtures through the UI', async ({ I, 
     if (originalTitleSync !== undefined) Document.setConfigValue('syncGroupAndWebpageTitle', originalTitleSync, true);
     I.amOnPage(pageUrl);
     if (originalMirroring !== undefined) showMirroring(I, originalMirroring);
+    if (originalShowPages !== undefined) {
+        I.click('button.buttons-jstree-settings');
+        I.waitForVisible('#jstreeSettingsModal', 10);
+        if (originalShowPages) I.checkOption('#jstree-settings-showpages');
+        else I.uncheckOption('#jstree-settings-showpages');
+        I.click('#jstree-settings-submit');
+        I.waitForInvisible('#jstreeSettingsModal', 10);
+        I.jstreeWaitForLoader();
+    }
 
     // Remove only our exact page titles from Trash, including pages detached from their folders.
     I.click('#pills-trash-tab');

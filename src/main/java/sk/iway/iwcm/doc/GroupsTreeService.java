@@ -12,10 +12,12 @@ import sk.iway.iwcm.admin.jstree.JsTreeItemState;
 import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
+import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.doc.mirroring.dto.MirroringDTO;
 import sk.iway.iwcm.doc.mirroring.rest.MirroringService;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.rest.WebPagesListener;
+import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
@@ -201,17 +203,18 @@ public class GroupsTreeService {
     }
 
     /**
-     * Adds permitted language counterparts to folders returned by the main webpage tree.
+     * Adds permitted language counterparts to folders and pages returned by the main webpage tree.
      *
-     * <p>Branches without mirrored folders skip the lookup. Otherwise, the complete cached
+     * <p>Folder branches without mirrored folders skip the folder lookup. Otherwise, the complete cached
      * {@link GroupsDB} folder list is indexed once per request. Only requested sync IDs
      * undergo domain, trash and permission filtering and language resolution.
      *
      * <p>The index and resolved links, including empty results, are reused only within the
      * current request. Later requests rebuild them and reevaluate permissions for both
-     * source and destination folders.
+     * source and destination items. Pages use a database batch because their basic cache
+     * does not include sync IDs.
      *
-     * @param items tree rows whose folder items receive counterpart links in place
+     * @param items tree rows whose folder and page items receive counterpart links in place
      * @param user current user whose webpage, mirroring and folder permissions are checked
      * @param click tree mode used to exclude selectors, system trees and trash trees
      * @param request request providing the main-tree opt-in and storing both lookup caches
@@ -223,6 +226,8 @@ public class GroupsTreeService {
         String uri = request.getRequestURI();
         if ("true".equals(request.getParameter("showMirrorLinks")) == false
                 && (uri == null || uri.contains("/admin/v9/webpages/web-pages-list") == false)) return;
+
+        setPageMirroringLinks(items, user, request);
 
         Set<Integer> syncIds = items.stream().filter(GroupsJsTreeItem.class::isInstance)
             .map(GroupsJsTreeItem.class::cast).map(item -> item.getGroup().getSyncId())
@@ -280,6 +285,65 @@ public class GroupsTreeService {
                 if (destinations.isEmpty() == false) groupItem.setMirrors(destinations);
             }
         }
+    }
+
+    /** Resolves page counterparts in one batch per branch; basic cached pages do not contain sync IDs. */
+    private void setPageMirroringLinks(List<JsTreeItem> items, Identity user, HttpServletRequest request) {
+        List<DocumentsJsTreeItem> pages = items.stream().filter(DocumentsJsTreeItem.class::isInstance)
+            .map(DocumentsJsTreeItem.class::cast).toList();
+        if (pages.isEmpty()) return;
+
+        String cacheKey = GroupsTreeService.class.getName() + ".pageMirrorLinks";
+        @SuppressWarnings("unchecked")
+        Map<Integer, List<DocumentsJsTreeItem.MirrorLink>> links = (Map<Integer, List<DocumentsJsTreeItem.MirrorLink>>) request.getAttribute(cacheKey);
+        if (links == null) {
+            links = new HashMap<>();
+            request.setAttribute(cacheKey, links);
+        }
+        Map<Integer, List<DocumentsJsTreeItem.MirrorLink>> resolved = links;
+        List<Integer> sourceIds = new ArrayList<>();
+        for (DocumentsJsTreeItem page : pages) {
+            int docId = page.getDocDetails().getDocId();
+            if (links.containsKey(docId)) continue;
+            links.put(docId, new ArrayList<>());
+            if (canShowPageMirror(page.getDocDetails(), user)) sourceIds.add(docId);
+        }
+        if (sourceIds.isEmpty() == false) {
+            String placeholders = String.join(",", Collections.nCopies(sourceIds.size(), "?"));
+            String sql = "SELECT source.doc_id AS source_id, mirror.doc_id FROM documents source"
+                + " JOIN documents mirror ON mirror.sync_id=source.sync_id AND mirror.doc_id<>source.doc_id"
+                + " WHERE source.sync_id>0 AND source.doc_id IN (" + placeholders + ")";
+            DocDB docDB = DocDB.getInstance();
+            GroupsDB groupsDB = GroupsDB.getInstance();
+            new ComplexQuery().setSql(sql).setParams(sourceIds.toArray()).list(rs -> {
+                DocDetails mirror = docDB.getBasicDocDetails(rs.getInt("doc_id"), false);
+                if (canShowPageMirror(mirror, user)) {
+                    String language = GroupMirroringServiceV9.getLanguage(groupsDB.getGroup(mirror.getGroupId()));
+                    if (Tools.isNotEmpty(language)) {
+                        language = language.toLowerCase(Locale.ROOT).replace('_', '-');
+                        if ("cz".equals(language)) language = "cs";
+                        resolved.get(rs.getInt("source_id")).add(new DocumentsJsTreeItem.MirrorLink(mirror.getDocId(), language, mirror.getFullPath()));
+                    }
+                }
+                return null;
+            });
+            for (Integer docId : sourceIds) {
+                links.get(docId).sort(Comparator.comparing(DocumentsJsTreeItem.MirrorLink::language)
+                    .thenComparingInt(DocumentsJsTreeItem.MirrorLink::docId));
+            }
+        }
+        for (DocumentsJsTreeItem page : pages) {
+            List<DocumentsJsTreeItem.MirrorLink> destinations = links.get(page.getDocDetails().getDocId());
+            if (destinations.isEmpty() == false) page.setMirrors(destinations);
+        }
+    }
+
+    /** Applies the tree domain, trash and hidden-folder filters together with page editing scope. */
+    private boolean canShowPageMirror(DocDetails doc, Identity user) {
+        if (doc == null) return false;
+        GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());
+        if (group == null || filterByPerms(filterTrash(filterByDomain(List.of(group), null)), user).isEmpty()) return false;
+        return EditorService.hasPagePermission(user, doc);
     }
 
     /** Applies mirroring diagnostics only to permitted folders in the main webpage tree. */

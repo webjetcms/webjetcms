@@ -1,0 +1,143 @@
+package sk.iway.iwcm.doc;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.sql.ResultSet;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockHttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.i18n.Prop;
+
+/** Covers page language links when the tree's basic page cache has no sync IDs. */
+class GroupsTreePageMirrorsTest {
+    /** Filters inaccessible, foreign-domain and deleted pages and reuses the request-local batch. */
+    @Test
+    void resolvesPageLinksWithoutCachedSyncIds() throws Exception {
+        Identity user = mock(Identity.class);
+        DocDB docs = mock(DocDB.class);
+        GroupsDB groups = mock(GroupsDB.class);
+        Prop prop = mock(Prop.class);
+        try (MockedStatic<DocDB> docAccess = mockStatic(DocDB.class);
+                MockedStatic<GroupsDB> groupAccess = mockStatic(GroupsDB.class);
+                MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class);
+                MockedStatic<Prop> translations = mockStatic(Prop.class);
+                MockedStatic<EditorService> permissions = mockStatic(EditorService.class);
+                MockedStatic<GroupMirroringServiceV9> languages = mockStatic(GroupMirroringServiceV9.class);
+                MockedConstruction<ComplexQuery> queries = mockConstruction(ComplexQuery.class, (query, context) -> {
+                    when(query.setSql(anyString())).thenReturn(query);
+                    when(query.setParams(any(Object[].class))).thenReturn(query);
+                    when(query.list(any())).thenAnswer(invocation -> {
+                        Mapper<?> mapper = invocation.getArgument(0);
+                        for (int id : new int[] { 11, 12, 13, 14, 15, 16 }) {
+                            ResultSet row = mock(ResultSet.class);
+                            when(row.getInt("source_id")).thenReturn(10);
+                            when(row.getInt("doc_id")).thenReturn(id);
+                            mapper.map(row);
+                        }
+                        return List.of();
+                    });
+                })) {
+            docAccess.when(DocDB::getInstance).thenReturn(docs);
+            groupAccess.when(GroupsDB::getInstance).thenReturn(groups);
+            groupAccess.when(() -> GroupsDB.isGroupEditable(user, 100)).thenReturn(true);
+            constants.when(() -> Constants.getBoolean("multiDomainEnabled")).thenReturn(true);
+            constants.when(() -> Constants.getString("defaultLanguage")).thenReturn("sk");
+            domains.when(CloudToolsForCore::getDomainName).thenReturn("autotest.example");
+            translations.when(() -> Prop.getInstance("sk")).thenReturn(prop);
+            when(prop.getText("config.trash_dir")).thenReturn("/System/Trash");
+
+            GroupDetails group = group(100, "autotest.example", "/autotest");
+            when(groups.getGroup(100)).thenReturn(group);
+            languages.when(() -> GroupMirroringServiceV9.getLanguage(group)).thenReturn("EN");
+            GroupDetails foreign = group(200, "foreign.example", "/autotest-foreign");
+            GroupDetails trash = group(300, "autotest.example", "/System/Trash/autotest");
+            GroupDetails czech = group(400, "autotest.example", "/autotest-czech");
+            when(groups.getGroup(200)).thenReturn(foreign);
+            when(groups.getGroup(300)).thenReturn(trash);
+            when(groups.getGroup(400)).thenReturn(czech);
+            groupAccess.when(() -> GroupsDB.isGroupEditable(user, 400)).thenReturn(true);
+            languages.when(() -> GroupMirroringServiceV9.getLanguage(czech)).thenReturn("cz");
+
+            DocDetails source = page(10, 100);
+            permissions.when(() -> EditorService.hasPagePermission(user, source)).thenReturn(true);
+            for (int id = 11; id <= 16; id++) {
+                int groupId = switch (id) { case 13 -> 200; case 14 -> 300; case 16 -> 400; default -> 100; };
+                DocDetails page = page(id, groupId);
+                when(docs.getBasicDocDetails(id, false)).thenReturn(page);
+                permissions.when(() -> EditorService.hasPagePermission(user, page)).thenReturn(id != 12);
+            }
+            MockHttpServletRequest request = request();
+            GroupsTreeService service = new GroupsTreeService();
+            DocumentsJsTreeItem node = new DocumentsJsTreeItem(source, 10);
+            service.setMirroringLinks(List.of(node), user, "dt-tree-filter-system-trash", request);
+            assertEquals(List.of(16, 11, 15), node.getMirrors().stream().map(DocumentsJsTreeItem.MirrorLink::docId).toList());
+            assertEquals("cs", node.getMirrors().get(0).language());
+            assertEquals("/autotest-page-11", node.getMirrors().get(1).path());
+
+            DocumentsJsTreeItem reloaded = new DocumentsJsTreeItem(source, 10);
+            service.setMirroringLinks(List.of(reloaded), user, "dt-tree-filter-system-trash", request);
+            assertEquals(node.getMirrors(), reloaded.getMirrors());
+            assertEquals(1, queries.constructed().size());
+        }
+    }
+
+    /** Disabled mirroring and selector/system/trash modes never query or expose page links. */
+    @Test
+    void skipsDisabledAndNonMainTrees() {
+        Identity user = mock(Identity.class);
+        GroupsTreeService service = new GroupsTreeService();
+        DocumentsJsTreeItem page = new DocumentsJsTreeItem(page(10, 100), 10);
+        try (MockedConstruction<ComplexQuery> queries = mockConstruction(ComplexQuery.class)) {
+            for (String mode : List.of("dt-tree-system", "dt-tree-trash", "select")) {
+                service.setMirroringLinks(List.of(page), user, mode, request());
+            }
+            MockHttpServletRequest hidden = request();
+            hidden.setParameter("showBadMirrorings", "false");
+            service.setMirroringLinks(List.of(page), user, "dt-tree", hidden);
+            when(user.isDisabledItem("cmp_mirroring")).thenReturn(true);
+            service.setMirroringLinks(List.of(page), user, "dt-tree", request());
+            assertNull(page.getMirrors());
+            assertTrue(queries.constructed().isEmpty());
+        }
+    }
+
+    private MockHttpServletRequest request() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/admin/rest/groups/tree");
+        request.setParameter("showMirrorLinks", "true");
+        request.setParameter("showBadMirrorings", "true");
+        return request;
+    }
+
+    private GroupDetails group(int id, String domain, String path) {
+        GroupDetails group = new GroupDetails();
+        group.setGroupId(id);
+        group.setGroupName("autotest");
+        group.setDomainName(domain);
+        group.setFullPath(path);
+        return group;
+    }
+
+    private DocDetails page(int id, int groupId) {
+        DocDetails page = new DocDetails();
+        page.setDocId(id);
+        page.setGroupId(groupId);
+        page.setTitle("autotest-page-" + id);
+        page.setFullPath("/autotest-page-" + id);
+        return page;
+    }
+}

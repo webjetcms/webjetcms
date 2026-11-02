@@ -47,13 +47,15 @@ Zároveň pri prechádzaní stromovej štruktúry sa v adresnom riadku prehliada
 
 Po zapnutí voľby **Zobraziť zrkadlenie** v nastavení stromovej štruktúry sa pri priečinkoch prepojených [zrkadlením štruktúry](../apps/docmirroring/README.md) na pravom okraji riadka zobrazia skratky jazykov ostatných prepojených priečinkov, napríklad **DE** a **EN**. Odkazy sú stále viditeľné ako sivý text bez rámčeka. Pri prejdení kurzorom alebo zameraní klávesnicou sa konkrétny odkaz zvýrazní modrou farbou a podčiarknutím. Kliknutím na skratku otvoríte príslušný priečinok aj jeho zoznam stránok. Po podržaní kurzora nad odkazom alebo jeho zameraní klávesnicou sa v bubline zobrazí iba cesta a ID cieľového priečinka, napríklad `/English/Pre biznis/Megamenu (#201)`. Bublinu zatvoríte aj klávesom `Escape`.
 
-Priamo v riadku sú najviac dva odkazy. Ďalšie nájdete v ponuke **+N**, kde číslo označuje počet ďalších prepojených priečinkov. Jazyk sa preberá z nastavenia priečinka, jeho nadradených priečinkov alebo šablóny.
+Ak zapnete aj voľbu **Web Stránky**, jazykové odkazy sa zobrazia aj pri prepojených stránkach v strome. Kliknutím na jazyk otvoríte konkrétnu prepojenú stránku v editore, rovnako ako pri zadaní jej ID do poľa **ID / adresa**. Prepojenie sa určuje podľa `sync_id` stránky, aj keď má stránka iný názov alebo je presunutá do iného priečinka. Zobrazujú sa iba dostupné stránky v aktuálnej doméne mimo koša.
+
+Priamo v riadku sú najviac dva odkazy. Ďalšie nájdete v ponuke **+N**, kde číslo označuje počet ďalších prepojených priečinkov alebo stránok. Jazyk sa preberá z nastavenia priečinka, jeho nadradených priečinkov alebo šablóny.
 
 Prepojené priečinky aktuálneho výberu sú v načítanej časti stromu zvýraznené. Ak je aktívne vyhľadávanie v strome, pri prechode cez jazykový odkaz sa zruší, aby sa mohol zobraziť cieľový priečinok.
 
 ![Jazykové odkazy medzi zrkadlenými priečinkami](mirroring/tree-navigation.png)
 
-Odkazy sú dostupné používateľom s právom na **Zrkadlenie štruktúry** a zobrazujú len priečinky, ku ktorým majú prístup v rámci zvolenej domény. V kartách **Systémové**, **Zmazané** ani vo výberových poliach priečinkov sa jazykové odkazy nezobrazujú.
+Odkazy sú dostupné používateľom s právom na **Zrkadlenie štruktúry** a zobrazujú len priečinky a stránky, ku ktorým majú prístup v rámci zvolenej domény. V kartách **Systémové**, **Zmazané** ani vo výberových poliach priečinkov sa jazykové odkazy nezobrazujú.
 
 ### Zobraziť stránky aj z podadresárov
 

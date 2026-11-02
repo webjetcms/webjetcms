@@ -1,7 +1,11 @@
 package sk.iway.iwcm.doc;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Getter;
+import lombok.Setter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.jstree.JsTreeItemState;
@@ -10,6 +14,14 @@ import sk.iway.iwcm.admin.jstree.JsTreeItemType;
 public class DocumentsJsTreeItem extends JsTreeItem {
     @JsonProperty("docDetails")
     private DocDetails docDetails;
+
+    /** Accessible language counterparts in the main webpage tree, excluding this page. */
+    @Getter
+    @Setter
+    private List<MirrorLink> mirrors;
+
+    /** Navigation metadata for one permitted mirrored page. */
+    public record MirrorLink(int docId, String language, String path) { }
 
     public DocumentsJsTreeItem(DocDetails docDetails, int groupDefaultDocId) {
         this.docDetails = docDetails;
