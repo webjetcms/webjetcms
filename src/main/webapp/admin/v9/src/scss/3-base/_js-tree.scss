@@ -7,24 +7,35 @@
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     > .jstree-children { grid-column: 1 / -1; }
-    &:has(> .jstree-anchor:hover, > .jstree-anchor:focus-visible, > .jstree-mirrors:hover, > .jstree-mirrors:focus-within) {
+    &:has(> .jstree-anchor:hover, > .jstree-anchor.jstree-hovered, > .jstree-anchor:focus-visible, > .jstree-mirrors:hover, > .jstree-mirrors:focus-within) {
       > .jstree-anchor:not(.jstree-clicked), > .jstree-mirrors {
         background: $nice-gray;
-        border-radius: $border-radius;
+        border-color: $nice-gray;
       }
+    }
+    > .jstree-anchor.jstree-clicked + .jstree-mirrors {
+      background: $nice-gray;
+      border-color: #d0d6e9;
     }
   }
   .jstree-has-mirrors > .jstree-anchor {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    border-right: 0;
+    border-radius: $border-radius 0 0 $border-radius;
+    transition: none;
   }
   .jstree-mirrors {
     display: inline-flex;
     align-items: center;
     gap: 1px;
     min-height: 30px;
-    margin: 0 12px 0 4px;
+    margin: 0 6px 0 0;
+    padding: 0 6px 0 4px;
+    border: 1px solid transparent;
+    border-left: 0;
+    border-radius: 0 $border-radius $border-radius 0;
     > .ti { font-size: 16px; }
     [hidden] { display: none; }
   }
@@ -49,9 +60,8 @@
     }
     &:focus-visible { outline: 2px solid $secondary; outline-offset: 2px; }
   }
-  .jstree-mirror-peer > .jstree-anchor:not(.jstree-clicked) {
+  .jstree-mirror-peer > .jstree-anchor:not(.jstree-clicked), .jstree-mirror-peer > .jstree-mirrors {
     background: mix($primary, $white, 5%);
-    border-radius: $border-radius;
   }
   .jstree-mirror-menu {
     max-width: min(420px, calc(100vw - 30px));
