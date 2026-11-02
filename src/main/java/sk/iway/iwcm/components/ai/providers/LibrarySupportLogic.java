@@ -349,13 +349,13 @@ public abstract class LibrarySupportLogic implements AiInterface {
         }
     }
 
-    /** Executes a persisted chat turn; its caller owns persistence and metadata-only auditing. */
+    /** Executes a persisted chat turn with literal attachment context; its caller owns persistence and metadata-only auditing. */
     public AiResponse getPersistentChatResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData,
         java.util.function.Consumer<String> onText, boolean streaming, com.webjetcms.ai.AiProviderConfig providerConfig) throws AiProviderException, IOException {
         checkCancellation(inputData);
         if (textOperation(assistant) != AiOperation.CHAT) throw new IllegalStateException("Assistant does not support saved chat");
-        IncludesHandler includes = IncludesHandler.protectIncludes(inputData);
-        AiRequest providerRequest = prepareProviderRequest(AiOperation.CHAT, assistant, inputData, includes);
+        // Keep attachment commands literal so provider-side history can reuse them without a CMS token map.
+        AiRequest providerRequest = prepareProviderRequest(AiOperation.CHAT, assistant, inputData, null);
         if (streaming && isStreamingEnabled(assistant)) {
             return aiClient.stream(getProviderId(), providerRequest, providerConfig,
                 delta -> onText.accept(delta), inputData.getCancellationToken());
