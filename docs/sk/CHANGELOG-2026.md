@@ -32,6 +32,7 @@
 - AI Chat - opravené zamietnuté načítanie príloh z histórie. Názov súboru aj tlačidlo na stiahnutie používajú overenú požiadavku s CSRF hlavičkou; rovnakým spôsobom sa načítavajú náhľady obrázkov.
 - AI Chat - história rozhovorov a prílohy sa nepridávajú do ZIP archívov ani offline exportu webu, ani pri exporte nadradeného priečinka.
 - AI Chat - lokálna história rozhovorov a prílohy sú vylúčené z balíka WAR a ignorované v Gite, aby sa neprenášali do distribúcie ani repozitára.
+- AI Chat - prepnutie asistenta obnoví jeho naposledy otvorený rozhovor vrátane rozpísanej správy a neodoslaných príloh. Tlačidlo **Nový chat** naďalej začne nový rozhovor.
 - AI Chat - odpovede asistenta zobrazujú Markdown vrátane tabuliek počas generovania aj v histórii. Kopírovanie zachová pôvodné Markdown značky. Tlačidlo kopírovania zobrazuje iba ikonu s textom v bubline a nachádza sa pred údajom o použitých tokenoch.
 - AI Chat - v histórii môžete vyhľadávať rozhovory podľa názvu, textu správ, asistenta a poskytovateľa aj bez diakritiky. Vyhľadávanie zahŕňa aj staršie rozhovory, ktoré ešte nie sú načítané v zozname.
 - AI Chat - upravený vzhľad rozhovoru: názov v hlavičke, svetlofialové otázky, ikony asistenta, prehľadnejšie prílohy a tabuľky. História zvýrazňuje vybraný rozhovor a obsahuje tlačidlo **Nový chat** aj ikony na skrytie panela a vymazanie rozhovoru. Asistenta si vyberáte v poli na písanie správy.

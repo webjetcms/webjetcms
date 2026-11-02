@@ -44,7 +44,7 @@ V hlavičke rozhovoru sa zobrazuje jeho názov. Otázky majú svetlofialové poz
 
 Pri mene odosielateľa sa zobrazuje dátum a čas vytvorenia otázky alebo odpovede vo formáte administrácie a časovom pásme prehliadača. Uložené rozhovory zobrazujú pôvodný čas správ; pri starších správach bez časového údaja sa dátum nezobrazuje.
 
-Rozhovor aj rozpísaná správa zostanú zachované pri prepnutí karty, výbere iného asistenta aj zatvorení a opätovnom otvorení vyhľadávania, kým neopustíte aktuálnu stránku administrácie. Každý asistent má vlastný rozhovor. Tlačidlo **Nový chat** začne nový rozhovor so zvoleným asistentom. Počas generovania sa odosielacie tlačidlo zmení na **Zastaviť** so štvorcovou ikonou. Zastaví odpoveď vybraného asistenta a zachová už prijatý text aj rozpísanú správu.
+Rozhovor aj rozpísaná správa zostanú zachované pri prepnutí karty, výbere iného asistenta aj zatvorení a opätovnom otvorení vyhľadávania, kým neopustíte aktuálnu stránku administrácie. Pri návrate k asistentovi sa obnoví jeho naposledy otvorený rozhovor vrátane rozpísanej správy a neodoslaných príloh. Platí to aj pre nový rozhovor, v ktorom ste ešte neposlali správu. Tlačidlo **Nový chat** začne nový rozhovor so zvoleným asistentom. Počas generovania sa odosielacie tlačidlo zmení na **Zastaviť** so štvorcovou ikonou. Zastaví odpoveď vybraného asistenta a zachová už prijatý text aj rozpísanú správu.
 
 Pri asistentoch OpenAI a Gemini s vypnutým dočasným režimom sa rozhovory ukladajú na serveri. V histórii nájdete svoje rozhovory pre aktuálnu doménu aj po obnovení stránky. Pokračovanie využíva kontext uložený u poskytovateľa. Ak už nie je dostupný, rozhovor zostane na čítanie a môžete začať nový chat.
 

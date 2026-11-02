@@ -9,6 +9,7 @@ const filesText = key => WJ.translate(`components.ai_assistants.chat.files.${key
 export class QuickSearchChat {
     constructor() {
         this.conversations = new Set();
+        this.lastConversationByAssistant = new Map();
         this.historyOpen = false;
         this.filesOpen = false;
         this.historyItems = [];
@@ -26,7 +27,7 @@ export class QuickSearchChat {
         this.select = node('select', 'form-select');
         this.select.id = 'admin-quick-search-chat-assistant';
         label.htmlFor = this.select.id;
-        this.select.addEventListener('change', () => this.selectAssistant(this.select.value, true));
+        this.select.addEventListener('change', () => this.selectAssistant(this.select.value));
         this.assistantRow.append(label, this.select);
         this.status = node('div', 'md-quick-search__chat-status');
         this.status.setAttribute('role', 'status');
@@ -186,11 +187,10 @@ export class QuickSearchChat {
         const assistant = this.assistants?.find(item => String(item.assistantId) === id);
         if (assistant == null || !this.mounted || this.disposed) return;
         this.selectionVersion++;
-        let chat = !fresh && this.chat?.assistant?.assistantId === assistant.assistantId ? this.chat : null;
-        if (!chat && !assistant.persistentChat) chat = [...this.conversations]
-            .find(item => !item.options.persistent && item.assistant.assistantId === assistant.assistantId);
+        let chat = fresh ? null : this.lastConversationByAssistant.get(id);
         if (!chat) chat = this.createChat(assistant);
         this.showChat(chat);
+        this.refreshConversation(chat);
     }
 
     createChat(assistant) {
@@ -225,6 +225,7 @@ export class QuickSearchChat {
         this.chat = chat;
         this.newChatButton.disabled = false;
         const id = String(chat.assistant.assistantId);
+        this.lastConversationByAssistant.set(id, chat);
         if (![...this.select.options].some(option => option.value === id)) {
             const option = node('option', '', chat.assistant.description || chat.assistant.providerTitle);
             option.value = id;
@@ -522,6 +523,8 @@ export class QuickSearchChat {
         if (chat) {
             clearTimeout(chat.historyRefreshTimer);
             this.conversations.delete(chat);
+            const assistantId = String(chat.assistant.assistantId);
+            if (this.lastConversationByAssistant.get(assistantId) === chat) this.lastConversationByAssistant.delete(assistantId);
             chat.destroy();
             if (this.chat === chat) {
                 this.chat = null;
@@ -559,6 +562,7 @@ export class QuickSearchChat {
         this.scrollController.abort();
         for (const chat of this.conversations) { clearTimeout(chat.historyRefreshTimer); chat.destroy(); }
         this.conversations.clear();
+        this.lastConversationByAssistant.clear();
         this.unmount();
     }
 }

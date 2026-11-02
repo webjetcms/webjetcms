@@ -1132,11 +1132,11 @@ const chatAssistants = [
 ];
 
 /** Opens the real chat host and supplies the authorized assistant catalogue. */
-async function openChat(f) {
+async function openChat(f, assistants = chatAssistants) {
     f.controller.chips.get('aiChat').click();
     const request = f.requests.find(request => request.url.pathname === '/admin/rest/ai/assistant/chat-assistants/');
     assert.ok(request, 'The chat tab must load its page-independent assistant catalogue.');
-    await f.respond(request, chatAssistants);
+    await f.respond(request, assistants);
     return f.controller.chatPanel.querySelector('.ai-chat-input');
 }
 
@@ -1147,6 +1147,24 @@ function typeChat(input, value) {
 
 function sendChat(input) {
     input.dispatchEvent(new input.ownerDocument.defaultView.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+}
+
+function selectChatAssistant(host, id) {
+    host.select.value = String(id);
+    host.select.dispatchEvent(new host.select.ownerDocument.defaultView.Event('change', { bubbles: true }));
+}
+
+/** Opens a saved conversation through the real history request and response path. */
+async function openSavedChat(f, id, answer) {
+    const opening = f.controller.chat.openThread(id);
+    await f.respond(f.requests.at(-1), {
+        thread: { id, assistantId: 7, canContinue: true, revision: 1 },
+        messages: [
+            { id: `${id}-question`, role: 'user', text: 'Saved question', status: 'complete' },
+            { id: `${id}-answer`, turnId: `${id}-question`, role: 'assistant', text: answer, status: 'complete' }
+        ]
+    });
+    await opening;
 }
 
 test('Chat history search debounces typing, retains its query across pages and restores all threads when cleared', async t => {
@@ -1669,6 +1687,142 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     sendChat(current);
     assert.equal(f.chatRequests[1].inputData.conversationId, 'first-conversation');
     assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');
+});
+
+test('Persistent assistant switching preserves an unsent draft and its original attachment', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    const file = new File(['Private draft attachment'], 'notes.txt', { type: 'text/plain' });
+    typeChat(input, 'First unsent draft');
+    host.chat._addAttachments([file]);
+
+    selectChatAssistant(host, 8);
+    assert.equal(host.chat.$input.val(), '');
+    typeChat(host.chat.$input[0], 'Second unsent draft');
+    selectChatAssistant(host, 7);
+
+    assert.equal(host.chat.$input.val(), 'First unsent draft');
+    assert.match(host.chat.$attachments.text(), /notes.txt/);
+    assert.equal(f.chatRequests.length, 0, 'Switching assistants must not submit either draft.');
+    sendChat(host.chat.$input[0]);
+    assert.equal(f.chatRequests[0].inputData.userPrompt, 'First unsent draft');
+    assert.equal(f.chatRequests[0].inputData.files[0], file);
+    selectChatAssistant(host, 8);
+    assert.equal(host.chat.$input.val(), 'Second unsent draft');
+});
+
+test('Persistent New chat starts empty and assistant switching resumes the new draft', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    typeChat(input, 'Previous draft');
+    host.chat._addAttachments([new File(['Previous attachment'], 'previous.txt', { type: 'text/plain' })]);
+    host.chat.element.querySelector('[data-ai-action="new"]').click();
+
+    assert.equal(host.chat.$input.val(), '');
+    assert.equal(host.chat.$attachments.text(), '');
+    assert.equal(host.chat.element.querySelector('.ai-chat-message'), null);
+    typeChat(host.chat.$input[0], 'New conversation draft');
+    selectChatAssistant(host, 8);
+    selectChatAssistant(host, 7);
+
+    assert.equal(host.chat.$input.val(), 'New conversation draft');
+    assert.equal(host.chat.$attachments.text(), '');
+    sendChat(host.chat.$input[0]);
+    assert.equal(f.chatRequests[0].inputData.userPrompt, 'New conversation draft');
+    assert.equal(f.chatRequests[0].inputData.files, undefined);
+});
+
+test('Persistent assistant switching resumes the last selected saved thread even when it was created earlier', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    await openSavedChat(f, 'older-thread', 'Older saved answer');
+    typeChat(host.chat.$input[0], 'Older thread draft');
+    await openSavedChat(f, 'newer-thread', 'Newer saved answer');
+    typeChat(host.chat.$input[0], 'Newer thread draft');
+    await openSavedChat(f, 'older-thread', 'Older saved answer');
+
+    selectChatAssistant(host, 8);
+    selectChatAssistant(host, 7);
+
+    assert.equal(host.chat.$input.val(), 'Older thread draft');
+    assert.match(host.chat.element.textContent, /Older saved answer/);
+    assert.doesNotMatch(host.chat.element.textContent, /Newer saved answer/);
+});
+
+test('Returning to a busy persistent thread refreshes its completed response and retains the draft', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    const opening = host.openThread('busy-thread');
+    const detail = {
+        thread: { id: 'busy-thread', assistantId: 7, canContinue: true, busy: true, revision: 1 },
+        messages: [
+            { id: 'question', role: 'user', text: 'Saved question', status: 'complete' },
+            { id: 'answer', turnId: 'question', role: 'assistant', text: 'Partial answer', status: 'pending' }
+        ]
+    };
+    await f.respond(f.requests.at(-1), detail);
+    await opening;
+    typeChat(host.chat.$input[0], 'Keep this follow-up draft');
+    assert.equal(host.chat.$send.prop('disabled'), true);
+    selectChatAssistant(host, 8);
+    const requestsBeforeReturn = f.requests.length;
+    f.advance(1500);
+    assert.equal(f.requests.length, requestsBeforeReturn, 'An inactive thread does not keep polling.');
+
+    selectChatAssistant(host, 7);
+    assert.equal(f.requests.length, requestsBeforeReturn + 1, 'Returning must refresh the cached busy state.');
+    assert.equal(f.requests.at(-1).url.pathname, '/admin/rest/ai/chat/threads/busy-thread');
+    await f.respond(f.requests.at(-1), {
+        thread: { ...detail.thread, busy: false },
+        messages: [detail.messages[0], { ...detail.messages[1], text: 'Completed answer', status: 'complete' }]
+    });
+
+    assert.equal(host.chat.$input.val(), 'Keep this follow-up draft');
+    assert.equal(host.chat.$send.prop('disabled'), false);
+    assert.match(host.chat.element.textContent, /Completed answer/);
+});
+
+test('Persistent assistant switching starts a usable chat after its last selected thread is removed', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    await openSavedChat(f, 'removed-thread', 'Removed saved answer');
+    typeChat(host.chat.$input[0], 'Removed thread draft');
+    selectChatAssistant(host, 8);
+    typeChat(host.chat.$input[0], 'Keep second assistant draft');
+    host.removeChat('removed-thread');
+
+    assert.equal(host.chat.$input.val(), 'Keep second assistant draft');
+    selectChatAssistant(host, 7);
+    const input = f.controller.chatPanel.querySelector('.ai-chat-input');
+    assert.ok(input, 'The removed conversation must not leave an empty chat panel.');
+    assert.equal(input.disabled, false);
+    assert.equal(input.value, '');
+    assert.doesNotMatch(host.chat.element.textContent, /Removed saved answer/);
+    typeChat(input, 'A new usable draft');
+    selectChatAssistant(host, 8);
+    selectChatAssistant(host, 7);
+    assert.equal(host.chat.$input.val(), 'A new usable draft');
+});
+
+test('Removing an older saved thread preserves the newer selection for the same persistent assistant', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    await openSavedChat(f, 'older-thread', 'Older saved answer');
+    await openSavedChat(f, 'newer-thread', 'Newer saved answer');
+    typeChat(host.chat.$input[0], 'Keep newer thread draft');
+    selectChatAssistant(host, 8);
+    host.removeChat('older-thread');
+    selectChatAssistant(host, 7);
+
+    assert.equal(host.chat.$input.val(), 'Keep newer thread draft');
+    assert.match(host.chat.element.textContent, /Newer saved answer/);
+    assert.doesNotMatch(host.chat.element.textContent, /Older saved answer/);
 });
 
 test('History New chat resets only the selected conversation and returns focus to its composer', async t => {
