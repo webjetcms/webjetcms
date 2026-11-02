@@ -121,9 +121,11 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.wait(1);
      I.click('Zmazať', "#groups-datatable_modal");
      DTE.waitForLoader();
+     DTE.waitForModalClose("groups-datatable_modal");
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
      I.waitForText('Webové stránky', 10);
      DT.waitForLoader();
+     I.waitForInvisible(locate('#SomStromcek a.jstree-anchor').withText(auto_folder), 20);
      I.dontSee(auto_folder);
      I.wait(1);
      // zmazanie name-autotest
@@ -132,10 +134,11 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.clickCss('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
      I.wait(1);
      I.click('Zmazať', "#groups-datatable_modal");
-     I.wait(1);
+     DTE.waitForModalClose("groups-datatable_modal");
      DT.waitForLoader();
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
      I.waitForText('Webové stránky', 10);
+     I.waitForInvisible(locate('#SomStromcek a.jstree-anchor').withText(auto_name), 20);
      I.dontSee(auto_name);
 });
 

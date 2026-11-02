@@ -758,23 +758,68 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
     display: block !important;
 }
 
+.ui-dialog.elfinder-dialog.elfinder-dialog-error,
+.ui-dialog.elfinder-dialog.elfinder-dialog-notify {
+    overflow: hidden;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 24px rgba(31, 32, 34, 0.18);
+}
+
 .ui-dialog.elfinder-dialog.elfinder-dialog-error {
-    width: 640px !important;
+    width: 480px !important;
     max-width: calc(100% - 24px) !important;
+
+    .ui-dialog-titlebar.ui-widget-header {
+        min-height: 44px;
+        padding: 12px 56px 0 16px;
+        background: #fff;
+        border-bottom: 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .ui-dialog-titlebar .elfinder-titlebar-button {
+        width: 28px !important;
+        height: 28px !important;
+        color: $dark-60 !important;
+        border: 0 !important;
+
+        &:hover {
+            color: $secondary !important;
+            background: $nice-gray !important;
+        }
+    }
 
     .ui-dialog-content.ui-widget-content {
         position: relative;
         box-sizing: border-box;
+        min-height: 72px;
         max-height: min(60vh, 480px) !important;
-        padding: 16px 20px 16px 56px !important;
+        padding: 16px 20px 20px 68px !important;
         overflow-y: auto;
         overflow-wrap: anywhere;
-        line-height: 1.5;
+        line-height: 20px;
     }
 
-    .elfinder-dialog-icon {
+    .elfinder-dialog-icon-error {
         top: 16px;
-        margin-top: 0;
+        left: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        margin: 0;
+        color: $danger;
+        background: rgba($danger, 0.08) !important;
+        border-radius: 8px;
+
+        &::before {
+            font-family: 'tabler-icons-filled' !important;
+            content: $ti-icon-exclamation-circle;
+            font-size: 24px;
+            line-height: 1;
+        }
     }
 }
 
@@ -1014,9 +1059,6 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
     width: 380px !important;
     max-width: calc(100% - 24px);
     height: auto !important;
-    overflow: hidden;
-    border-radius: 10px !important;
-    box-shadow: 0 8px 24px rgba(31, 32, 34, 0.18);
 
     &:has(.elfinder-notify:nth-child(2)) {
         min-height: 148px !important;

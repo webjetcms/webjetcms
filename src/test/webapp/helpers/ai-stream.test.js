@@ -117,3 +117,48 @@ test('a complete final record without a trailing newline and zero tokens is vali
     assert.equal(execution.totalTokens, 0);
     assert.deepEqual(updates.at(-1), { text: 'Local answer', final: true });
 });
+
+for (const response of [
+    { status: 504, statusText: 'Gateway Timeout' },
+    { status: 403, statusText: '', responseJSON: { error: 'Image generation is not allowed' } },
+    { status: 0, statusText: '' }
+]) {
+    test(`Image HTTP failure (${response.status}) returns an error and releases the active request`, async t => {
+        const { JSDOM } = require('jsdom');
+        const window = new JSDOM('').window;
+        t.after(() => window.close());
+        const $ = require('jquery')(window);
+        $.ajax = () => {
+            const request = $.Deferred();
+            queueMicrotask(() => request.reject(response, 'error', response.statusText));
+            return request.promise();
+        };
+        const context = vm.createContext({ $, WJ: { translate: key => key } });
+        const Executor = vm.runInContext(sources + '\nAiRestExecutor;', context);
+        const executor = new Executor(null, { aiUserInterface: {
+            renderImageSelection() { assert.fail('A failed request must not show image selection'); }
+        } });
+        const execution = await executor.executeImageAction({ assistantId: 7 }, {}, null);
+        assert.equal(execution.success, false);
+        assert.equal(execution.errorText, response.responseJSON?.error || response.statusText || 'HTTP ' + response.status);
+        assert.equal(executor.curentAssistantId, null);
+        assert.equal(executor.curentTimestamp, null);
+    });
+}
+
+test('A successful image response keeps the image picker and clears the active request', async () => {
+    const selections = [];
+    const context = vm.createContext({
+        $: { ajax: async () => ({ tempFiles: ['/autotest.png'], generatedFileName: 'autotest.png', totalTokens: 12 }) },
+        WJ: { translate: key => key }
+    });
+    const Executor = vm.runInContext(sources + '\nAiRestExecutor;', context);
+    const executor = new Executor(null, { aiUserInterface: { renderImageSelection: (...args) => selections.push(args) } });
+    const execution = await executor.executeImageAction({ assistantId: 7, to: 'image' }, {}, null);
+    assert.equal(execution.errorText, null);
+    assert.equal(execution.totalTokens, 12);
+    assert.equal(execution.success, false, 'The image picker replaces the generic success dialog');
+    assert.equal(selections.length, 1);
+    assert.equal(executor.curentAssistantId, null);
+    assert.equal(executor.curentTimestamp, null);
+});

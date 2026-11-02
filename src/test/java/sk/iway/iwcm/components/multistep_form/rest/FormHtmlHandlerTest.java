@@ -182,7 +182,7 @@ class FormHtmlHandlerTest {
         Prop prop = mock(Prop.class);
         StringBuilder formEndHtml = new StringBuilder("<button type=\"submit\">Send</button></form><script></script>");
         String loaderHtml = "<div class=\"loader\">Loading...</div>";
-        when(prop.getText("components.mustistep.form.loader")).thenReturn(loaderHtml);
+        when(prop.getText("components.multistep.form.loader")).thenReturn(loaderHtml);
 
         FormHtmlHandler.appendFormLoader(formEndHtml, false, prop);
 
@@ -190,7 +190,7 @@ class FormHtmlHandlerTest {
             "<button type=\"submit\">Send</button>" + loaderHtml + "</form><script></script>",
             formEndHtml.toString()
         );
-        verify(prop).getText("components.mustistep.form.loader");
+        verify(prop).getText("components.multistep.form.loader");
     }
 
     /**
@@ -239,15 +239,15 @@ class FormHtmlHandlerTest {
         when(steps.findAllByFormNameAndDomainIdOrderBySortPriorityAsc("contact", 7)).thenReturn(List.of(step));
         when(items.getAllStepItems(2L, 7)).thenReturn(List.of());
         Map<String, String> templates = Map.ofEntries(
-            Map.entry("components.mustistep.form.start", "<form action=\"${formActionSrc}\" data-title=\"${settings.subject}\">${settings.fieldA}"),
-            Map.entry("components.mustistep.step.start", "<section data-title=\"${settings.subject}\">"),
-            Map.entry("components.mustistep.step.header", "<h2>${step-header} ${settings.fieldA}</h2>"),
-            Map.entry("components.mustistep.rowView.start", "<div class=\"row\" data-title=\"${settings.subject}\">"),
-            Map.entry("components.mustistep.rowView.end", "</div><i>${settings.subject}</i>"),
-            Map.entry("components.mustistep.step.end", "<footer>${settings.fieldA}</footer></section>"),
-            Map.entry("components.mustistep.form.back_button", "<button type=\"button\" data-multistep-back-step=\"${previousStepId}\" title=\"${settings.subject}\">${backButtonText}${settings.fieldA}</button>"),
-            Map.entry("components.mustistep.form.end", "<button type=\"submit\" title=\"${settings.subject}\">${submitButtonText}</button>{tech-info}</form>"),
-            Map.entry("components.mustistep.form.loader", "<div class=\"loader\">${settings.fieldA}</div>"),
+            Map.entry("components.multistep.form.start", "<form action=\"${formActionSrc}\" data-title=\"${settings.subject}\">${settings.fieldA}"),
+            Map.entry("components.multistep.step.start", "<section data-title=\"${settings.subject}\">"),
+            Map.entry("components.multistep.step.header", "<h2>${step-header} ${settings.fieldA}</h2>"),
+            Map.entry("components.multistep.rowView.start", "<div class=\"row\" data-title=\"${settings.subject}\">"),
+            Map.entry("components.multistep.rowView.end", "</div><i>${settings.subject}</i>"),
+            Map.entry("components.multistep.step.end", "<footer>${settings.fieldA}</footer></section>"),
+            Map.entry("components.multistep.form.back_button", "<button type=\"button\" data-multistep-back-step=\"${previousStepId}\" title=\"${settings.subject}\">${backButtonText}${settings.fieldA}</button>"),
+            Map.entry("components.multistep.form.end", "<button type=\"submit\" title=\"${settings.subject}\">${submitButtonText}</button>{tech-info}</form>"),
+            Map.entry("components.multistep.form.loader", "<div class=\"loader\">${settings.fieldA}</div>"),
             Map.entry("components.formsimple.techinfo", "<div class=\"techinfo\">${settings.subject} ${settings.fieldA}</div>")
         );
         Prop prop = mock(Prop.class);

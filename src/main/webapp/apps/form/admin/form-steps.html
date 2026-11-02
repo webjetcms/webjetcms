@@ -496,6 +496,17 @@
         formItemsDataTable.on("draw", function() { loadStepPreview(); });
 
         let regexRequestId = 0;
+
+        function updateEmptyOptionVisibility() {
+            const fieldType = formItemsDataTable.EDITOR.field("fieldType").val();
+            const hiddenFields = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType
+                .find(type => type.value === fieldType)?.label || "";
+            const hidden = hiddenFields.split(",").some(field => field.trim() === "emptyOption");
+            const control = $(formItemsDataTable.EDITOR.field("valueAsOptions").node()).find(".options-empty-option");
+            control.toggleClass("d-none", hidden);
+            if (hidden) control.find("input").prop("checked", false);
+        }
+
         formItemsDataTable.EDITOR.on('initCreate initEdit initRemove close cancelOpen', function() {
             // Responses and relation confirmations belong to the editor session that started them.
             regexRequestId++;
@@ -523,6 +534,8 @@
                     const selectedFieldType = $(this).val();
                     const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
                     const inputTypeByFieldType = formItemsDataTable.DATA.jsonOptions.inputType;
+
+                    updateEmptyOptionVisibility();
 
                     let itsCreateAction = false;
 
@@ -689,6 +702,7 @@
                     }
                 });
             }
+            updateEmptyOptionVisibility();
         });
     });
 

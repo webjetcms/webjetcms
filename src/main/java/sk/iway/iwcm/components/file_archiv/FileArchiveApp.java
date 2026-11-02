@@ -164,7 +164,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
             //Only files, that are allready uploaded
             List<FileArchivatorBean> historyFiles = FileArchivatorDB.getByReferenceId(fileArchiveId)
                 .stream()
-                .filter(f -> ( Integer.valueOf(-1).equals(f.getUploaded()) && f.getShowFile() ) )
+                .filter(f -> ( Integer.valueOf(-1).equals(f.getUploaded()) && f.getShowFile() && f.isValidDates() ) )
                 .toList();
 
             return sortFiles(historyFiles, order, asc);
@@ -178,7 +178,11 @@ public class FileArchiveApp extends WebjetComponentAbstract {
                 addDefaultPredicates(predicates, root, builder);
                 return builder.and(predicates.toArray(new Predicate[predicates.size()]));
             };
-            return sortFiles(repository.findAll(spec), orderPatterns, ascPatterns);
+            List<FileArchivatorBean> patternFiles = repository.findAll(spec)
+                .stream()
+                .filter(FileArchivatorBean::isValidDates)
+                .toList();
+            return sortFiles(patternFiles, orderPatterns, ascPatterns);
         }
     }
 

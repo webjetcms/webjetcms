@@ -344,6 +344,8 @@ module.exports = function () {
 
     dtWaitForLoader(name) {
       if (typeof name == "undefined") { name = "div.dt-processing"; }
+      // CodeceptJS waits on the first match, which may belong to an idle table.
+      name += ":visible";
       this.waitForInvisible(name, 40);
       //ak by sa este nestihol zobrazit kym sa vykona prva podmienka, pre istotu pockame a potom skusime znova
       this.wait(0.5);
@@ -352,7 +354,7 @@ module.exports = function () {
     },
 
     dtEditorWaitForLoader() {
-      let name = "div.DTE_Processing_Indicator";
+      let name = "div.DTE_Processing_Indicator:visible";
       this.waitForInvisible(name, 200);
       this.wait(0.5);
     },

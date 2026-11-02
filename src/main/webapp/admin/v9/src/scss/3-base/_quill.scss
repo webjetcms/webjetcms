@@ -68,6 +68,21 @@
   span.ql-formats button i.fa {
     font-size: 15px;
   }
+
+  .quill-wrapper & .ql-picker.ql-expanded .ql-picker-options {
+    // Fixed menus must not inherit the viewport width from Quill's min-width: 100%.
+    min-width: 0;
+    margin-top: 0;
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+    // Keep vertically shifted options above the picker label (z-index: 2).
+    z-index: 3;
+
+    &[data-popper-reference-hidden] {
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
 }
 
 .DTE_Field_Type_quill.error {

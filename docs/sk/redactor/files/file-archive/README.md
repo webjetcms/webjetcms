@@ -63,6 +63,25 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
   - **Nahrať po** - výber dátumu a času, po ktorom sa má dokumentu nahrať
   - **Emaily oddelené čiarkou (notifikácia po nahraní)** - zadajte emaily oddelené čiarkou, na ktoré chcete zaslať notifikáciu o úspešnom/neúspešnom nahraní dokumentu
 
+#### Platnosť a sťahovanie historických verzií
+
+Konfiguračná premenná fileArchivCheckHistoryValid určuje, či sa pri už nahraných historických verziách kontrolujú dátumy **Platnosť od a Platnosť do**. Pri predvolenej hodnote true sa historická verzia dokumentu mimo rozsahu platnosti nezobrazí v zozname starších verzií v aplikácii na webovej stránke a nedá sa stiahnuť. Pri hodnote `false` sa dátumy ignorujú, takže verzia môže byť zobrazená a dostupná na stiahnutie aj mimo rozsahu platnosti. Ostatné podmienky zobrazenia a prístupové oprávnenia zostávajú zachované. Nevyplnený dátum príslušnú hranicu platnosti neobmedzuje.
+
+Údaje o zobrazení v aplikácii uvedené v tabuľke predpokladajú, že dokument vyhovuje ostatným filtrom aplikácie. Archívne verzie sa vypisujú iba pri zapnutej možnosti **Zobraziť archívne verzie** a vzory pri zapnutej možnosti **Zobraziť vzory**.
+
+| Typ a stav záznamu | `true` (predvolená hodnota) | `false` |
+| --- | --- | --- |
+| Historická verzia dokumentu, **Zobraziť** zapnuté, dátum platný | Stiahne sa a zobrazí sa v aplikácii | Stiahne sa a zobrazí sa v aplikácii |
+| Historická verzia dokumentu, **Zobraziť** zapnuté, pred **Platnosťou od** alebo po **Platnosti do** | Vráti chybu 404 a v aplikácii sa nezobrazí | Stiahne sa a zobrazí sa v aplikácii |
+| Historická verzia vzoru, **Zobraziť** zapnuté, dátum platný | Stiahne sa, v aplikácii sa nezobrazí | Stiahne sa, v aplikácii sa nezobrazí |
+| Historická verzia vzoru, **Zobraziť** zapnuté, pred **Platnosťou od** alebo po **Platnosti do** | Vráti chybu 404 a v aplikácii sa nezobrazí | Stiahne sa, v aplikácii sa nezobrazí |
+| Dokument alebo vzor, **Zobraziť** vypnuté | Vráti chybu 404 a v aplikácii sa nezobrazí | Vráti chybu 404 a v aplikácii sa nezobrazí |
+| Aktuálny dokument alebo aktuálny vzor, **Zobraziť** zapnuté, dátum platný | Stiahne sa a zobrazí sa v aplikácii | Stiahne sa a zobrazí sa v aplikácii |
+| Aktuálny dokument alebo aktuálny vzor, **Zobraziť** zapnuté, dátum neplatný | Vráti chybu 404 a v aplikácii sa nezobrazí | Vráti chybu 404 a v aplikácii sa nezobrazí |
+| Verzia čakajúca na nahratie | Čakajúca verzia sa nezobrazí, aktuálne publikovaná verzia zostáva zobrazená | Čakajúca verzia sa nezobrazí, aktuálne publikovaná verzia zostáva zobrazená |
+
+Pri hodnote `false` zostávajú dátumy historických verzií uložené a zobrazené v archíve ako informácia o účinnosti dokumentu. Aplikácia medzi vzormi vypisuje iba ich aktuálne verzie. Pri oboch hodnotách sa naďalej kontrolujú prístupové oprávnenia. Nastavenia indexovania dokumentov zostávajú zachované.
+
 ### Karta - Pokročilé
 
 ![](editor_advanced.png)

@@ -91,7 +91,7 @@ Editor pre pridávanie a úpravu položiek je špeciálny tým, že mení svoj o
 
 - **Typ poľa** - určuje aký druh vstupu bude položka predstavovať (napr. textové pole, výber z rozbaľovacieho zoznamu, zaškrtávacie políčko atď.). Jednotlivé polia [pripravuje dizajnér web sídla](../formsimple/README.md#informácia-pre-web-dizajnéra) a sú rovnaké ako pre aplikáciu formulár ľahko.
 - **Povinné pole** - či je položka povinná na vyplnenie.
-- **Povolená hodnota** - pre pokročilú validáciu vstupu používateľa viete zvoliť ľubovoľný počet regulárnych výrazov, ktoré musia byť splnené, aby bol vstup platný. Viac sa o nich dozviete v sekcii [Regulárne výrazy](../form/regexps.md).
+- **Povolená hodnota** - pre pokročilú validáciu vstupu používateľa viete zvoliť ľubovoľný počet regulárnych výrazov, ktoré musia byť splnené, aby bol vstup platný. Každá možnosť používa formát **kód - názov**, napríklad **alphabetLowercase - povolené len malé znaky**. Názov sa zobrazuje v jazyku administrácie. Podľa názvu aj kódu môžete vyhľadávať. Kód zodpovedá stĺpcu **Kód** v sekcii [Regulárne výrazy](../form/regexps.md).
 - **Orezať medzery** - ak je zvolené, úvodné a koncové medzery sa z hodnoty odstránia ešte pred validáciou a uložením. Nastavenie je dostupné pre podporované textové polia; nepoužíva sa pre výberové polia a formátované textové pole.
 - **Názov poľa** - názov, ktorý sa zobrazí používateľovi. Ak nie je zadaný použije sa názov zhodný s typom poľa.
 - **Identifikátor položky vo formulári** - technický identifikátor sa automaticky vytvorí z názvu položky a doplní sa rozlišujúcou príponou tak, aby bol vo formulári jedinečný. Zobrazuje sa až pri úprave uloženej položky a nie je možné ho meniť. Používa sa v podmienkach, uložených dátach a v [značkách hodnôt položiek](#značky-hodnôt-položiek).
@@ -101,7 +101,7 @@ V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:
 - **Krok formuláru** - krok, ku ktorému položka patrí, môžete tak ľahko položku presunúť do iného kroku.
 - **Poradie** - určuje poradie položky v rámci kroku.
 - **Predvyplnená hodnota** - hodnota, ktorá sa zobrazí vyplnená v poli, používateľ tak nemusí nastaviť hodnotu, ak je všeobecne známa. Toto pole sa zobrazuje iba ak nejde o položku typu výberové pole.
-- **Povolené možnosti** - pri položke typu výberové pole (select, checkbox skupina, radio skupina, automatické dopĺňanie a pod.) môžete manuálne definovať zoznam možností. Každá možnosť sa skladá z textu zobrazeného používateľovi a hodnoty odoslanej pri odoslaní formulára. Možnosti je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`. Pre výberový zoznam môžete tlačidlom **Pridať prázdnu možnosť** vložiť na začiatok aj voľbu bez hodnoty. Pole sa zobrazuje iba ak nie je povolená možnosť **Použiť prepojenie na číselník**.
+- **Povolené možnosti** - pri položke typu výberové pole (select, checkbox skupina, radio skupina, automatické dopĺňanie a pod.) môžete manuálne definovať zoznam možností. Každá možnosť sa skladá z textu zobrazeného používateľovi a hodnoty odoslanej pri odoslaní formulára. Možnosti je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`. Prepínačom **Pridať prázdnu možnosť** - môžete do výberového zoznamu alebo skupiny výberových polí vložiť na začiatok aj voľbu bez hodnoty. Pri novom poli je prepínač vypnutý. Pole sa zobrazuje iba ak nie je povolená možnosť **Použiť prepojenie na číselník**.
 
 ![](form-item-editor-advanced.png)
 
@@ -119,6 +119,18 @@ Ak chcete definovať vlastné položky formulárov, alebo chcete zmeniť existuj
 !>**Upozornenie:** vo viackrokovom formulári nefungujú vlastné typy položiek, ktoré priamo vykreslia natívny element `<input type="file">`. Súbor je možné nahrať iba pomocou komponentu `Dropzone`.
 
 !>**Upozornenie:** pri úprave položky formuláru neodporúčame meniť typ položky, ale radšej nahradiť pôvodnú položku novou.
+
+### Prázdna možnosť
+
+Prepínač **Pridať prázdnu možnosť** pridá do zoznamu (select) prázdny riadok a do skupiny rádií voľbu **Bez zvolenej možnosti** na zrušenie výberu. Hodnota je prázdna, takže povinné pole vyžaduje inú možnosť. Text rádia určuje kľúč `components.formsimple.emptyOptionLabel.radiogroup`. Pri zaškrtávacom poli a automatickom dopĺňaní je prepínač predvolene skrytý, pretože ich možno vyprázdniť bez neho.
+
+Prítomnosť `emptyOption` v kľúči `components.formsimple.hide.TYP_POLA` prepínač skryje; odstránením ho znova sprístupníte. Pre rádio:
+
+```properties
+components.formsimple.hide.radiogroup=placeholder,trimValue,regexValidationArr,emptyOption
+```
+
+Ostatné položky zachovajte a zmenu nastavte vo všetkých používaných jazykoch. Pri skrytí sa prázdna možnosť nezobrazí ani v starších formulároch a pri uložení sa odstráni z konfigurácie. Nastavenie platí iba pre manuálne možnosti, nie pre prepojenie na číselník.
 
 ### Validácia pri opustení poľa
 
