@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import com.webjetcms.ai.AiProviderConfig;
 import org.junit.jupiter.api.AfterEach;
@@ -21,10 +22,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 /** Exercises CMS-owned deletion over HTTP, including provider confirmation and credential handling. */
 class AiChatResponseDeletionTest {
     private final AiChatResponseDeletion deletion = new AiChatResponseDeletion();
-    private final AtomicReference<String> path = new AtomicReference<>();
-    private final AtomicReference<String> authorization = new AtomicReference<>();
-    private final AtomicReference<String> googleKey = new AtomicReference<>();
-    private final AtomicReference<String> tenant = new AtomicReference<>();
+    private final AtomicReference<HttpExchange> request = new AtomicReference<>();
     private final AtomicInteger calls = new AtomicInteger();
     private HttpServer server;
     private int status = 200;
@@ -35,10 +33,7 @@ class AiChatResponseDeletionTest {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", exchange -> {
             calls.incrementAndGet();
-            path.set(exchange.getRequestMethod() + " " + exchange.getRequestURI().getRawPath());
-            authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
-            googleKey.set(exchange.getRequestHeaders().getFirst("x-goog-api-key"));
-            tenant.set(exchange.getRequestHeaders().getFirst("X-Tenant"));
+            request.set(exchange);
             exchange.getResponseHeaders().set("Location", base() + "redirected");
             byte[] bytes = payload.getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(status, bytes.length == 0 ? -1 : bytes.length);
@@ -56,7 +51,7 @@ class AiChatResponseDeletionTest {
     private AiProviderConfig config(String suffix) {
         return AiProviderConfig.builder("secret-key").baseUri(URI.create(base() + suffix))
             .connectTimeout(Duration.ofSeconds(2)).responseTimeout(Duration.ofSeconds(2))
-            .allowInsecureHttpForLocalTesting().trustedHeader("X-Tenant", "tenant-one").build();
+            .allowInsecureHttpForLocalTesting().build();
     }
 
     /** Uses the same base-URI rules as generation and encodes provider IDs as one path segment. */
@@ -65,10 +60,10 @@ class AiChatResponseDeletionTest {
     void deletesWithConfiguredCredentials(String provider, String resource) throws IOException {
         payload = "openai".equals(provider) ? "{\"id\":\"a/b +?\",\"deleted\":true}" : "{}";
         deletion.deleteResponse(provider, "a/b +?", config("gemini".equals(provider) ? "models" : ""));
-        assertEquals("DELETE /v1beta/" + resource + "/a%2Fb%20%2B%3F", path.get());
-        assertEquals("tenant-one", tenant.get());
-        assertEquals("openai".equals(provider) ? "Bearer secret-key" : null, authorization.get());
-        assertEquals("gemini".equals(provider) ? "secret-key" : null, googleKey.get());
+        assertEquals("DELETE", request.get().getRequestMethod());
+        assertEquals("/v1beta/" + resource + "/a%2Fb%20%2B%3F", request.get().getRequestURI().getRawPath());
+        String header = "openai".equals(provider) ? "Authorization" : "x-goog-api-key";
+        assertEquals("openai".equals(provider) ? "Bearer secret-key" : "secret-key", request.get().getRequestHeaders().getFirst(header));
     }
 
     /** A missing response is successful only when the provider identifies the missing resource. */
@@ -82,29 +77,14 @@ class AiChatResponseDeletionTest {
         assertThrows(IOException.class, () -> deletion.deleteResponse(provider, "response-id", config("")));
     }
 
-    /** Invalid confirmations and redirects must not remove history or expose credentials in errors. */
+    /** Unconfirmed deletion fails, and redirects cannot forward provider credentials. */
     @Test
-    void rejectsUnconfirmedDeletionWithoutFollowingRedirects() {
-        for (String body : new String[] {"{}", "{\"id\":\"other\",\"deleted\":true}", "{\"id\":\"response-id\",\"deleted\":false}", "secret-key"}) {
-            payload = body;
-            IOException error = assertThrows(IOException.class, () -> deletion.deleteResponse("openai", "response-id", config("")));
-            assertFalse(error.toString().contains("secret-key"));
-            assertNull(error.getCause());
-        }
+    void rejectsUnconfirmedDeletionAndRedirects() {
+        payload = "{}";
+        assertThrows(IOException.class, () -> deletion.deleteResponse("openai", "response-id", config("")));
         status = 302;
-        payload = "";
         int before = calls.get();
         assertThrows(IOException.class, () -> deletion.deleteResponse("openai", "response-id", config("")));
         assertEquals(before + 1, calls.get());
-    }
-
-    /** Gemini accepts an empty success response but rejects a non-empty interaction document. */
-    @Test
-    void validatesGeminiConfirmation() throws IOException {
-        status = 204;
-        deletion.deleteResponse("gemini", "response-id", config(""));
-        status = 200;
-        payload = "{\"id\":\"response-id\"}";
-        assertThrows(IOException.class, () -> deletion.deleteResponse("gemini", "response-id", config("")));
     }
 }

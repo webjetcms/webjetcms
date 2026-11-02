@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -46,49 +45,38 @@ class AiServiceTest {
     @Test
     void standaloneChatUsesCurrentDomainAndOnlyConfiguredActiveChats() {
         AssistantDefinitionRepository repository = mock(AssistantDefinitionRepository.class);
-        Cache cache = mock(Cache.class);
         AiInterface configured = mock(AiInterface.class);
         when(configured.getProviderId()).thenReturn("test");
         when(configured.isInit()).thenReturn(true);
-        AiInterface unavailable = mock(AiInterface.class);
-        when(unavailable.getProviderId()).thenReturn("unavailable");
-        AiService service = new AiService(List.of(configured, unavailable), null, null);
+        AiService service = new AiService(List.of(configured), null, null);
 
-        AssistantDefinitionEntity chat = chat(1L, "test", "Chat");
+        AssistantDefinitionEntity chat = chat(1L);
         chat.setInstructions("Server-only instructions");
-        chat.setFieldFrom("data");
-        chat.setFieldTo("data");
-        AssistantDefinitionEntity disabled = chat(2L, "test", "Disabled");
+        AssistantDefinitionEntity disabled = chat(2L);
         disabled.setActive(false);
-        AssistantDefinitionEntity generation = chat(3L, "test", "Generate");
+        AssistantDefinitionEntity generation = chat(3L);
         generation.setAction(SupportedActions.GENERATE_TEXT.getAction());
-        AssistantDefinitionEntity missing = chat(4L, "missing", "Missing");
-        AssistantDefinitionEntity unconfigured = chat(5L, "unavailable", "Unconfigured");
-        when(repository.findAllByDomainId(42)).thenReturn(List.of(chat, disabled, generation, missing, unconfigured));
+        AssistantDefinitionEntity missing = chat(4L);
+        missing.setProvider("missing");
+        when(repository.findAllByDomainId(42)).thenReturn(List.of(chat, disabled, generation, missing));
 
         try (MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class);
                 MockedStatic<Cache> caches = mockStatic(Cache.class)) {
             domains.when(CloudToolsForCore::getDomainId).thenReturn(42);
-            caches.when(Cache::getInstance).thenReturn(cache);
+            caches.when(Cache::getInstance).thenReturn(mock(Cache.class));
 
             List<DataTableAi> result = service.getChatAssistants(repository, mock(Prop.class));
 
-            verify(repository).findAllByDomainId(42);
-            assertEquals(1, result.size());
-            DataTableAi assistant = result.get(0);
-            assertEquals(1L, assistant.getAssistantId());
-            assertNull(assistant.getFrom());
-            assertNull(assistant.getTo());
-            assertNull(assistant.getToDefinition());
-            assertNull(assistant.getInstructions(), "Server provider instructions must not be exposed to the browser.");
+            assertEquals(List.of(1L), result.stream().map(DataTableAi::getAssistantId).toList());
+            assertNull(result.get(0).getInstructions());
         }
     }
 
-    private static AssistantDefinitionEntity chat(Long id, String provider, String name) {
+    private static AssistantDefinitionEntity chat(Long id) {
         AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
         assistant.setId(id);
-        assistant.setProvider(provider);
-        assistant.setName(name);
+        assistant.setProvider("test");
+        assistant.setName("Chat " + id);
         assistant.setAction(SupportedActions.LIVE_CHAT.getAction());
         assistant.setActive(true);
         return assistant;

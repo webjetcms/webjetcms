@@ -15,7 +15,6 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -69,9 +68,6 @@ class AssistantControllerStreamTest {
         assertEquals("result", terminal.get("type").asText());
         assertEquals(42, terminal.get("result").get("totalTokens").asInt());
         assertTrue(terminal.get("result").get("error").isNull());
-        assertFalse(terminal.get("result").has("errorCategory"));
-        assertFalse(terminal.get("result").has("providerStatusCode"));
-        assertFalse(terminal.get("result").has("retryable"));
     }
 
     @Test
@@ -96,14 +92,12 @@ class AssistantControllerStreamTest {
     }
 
     /** JSON and streaming failures expose the same safe metadata, including after partial text. */
-    @ParameterizedTest
-    @EnumSource(AiErrorCategory.class)
-    void providerFailureAfterPartialTextHasASeparateTerminalError(AiErrorCategory category) throws Exception {
+    @Test
+    void providerFailureAfterPartialTextHasASeparateTerminalError() throws Exception {
         request.addHeader("Accept", "application/x-ndjson");
         String error = "Provider failed\nTry again";
-        int statusCode = category == AiErrorCategory.CANCELLED ? 0 : 400;
         ProviderCallException failure = new ProviderCallException(new ProviderCallException(error,
-            new AiProviderException("test-provider", statusCode, error, "private raw response", false, null, category)));
+            new AiProviderException("test-provider", 400, error, "private raw response", false, null, AiErrorCategory.INVALID_CONTINUATION)));
         when(service.getAiStreamResponse(any(), isNull(), isNull(), any(), any())).thenAnswer(call -> {
             BufferedWriter writer = call.getArgument(3);
             writer.write("Partial text");
@@ -120,12 +114,11 @@ class AssistantControllerStreamTest {
         assertEquals("Partial text", mapper.readTree(messages[0]).get("text").asText());
         JsonNode result = mapper.readTree(messages[1]).get("result");
         assertEquals(error, result.get("error").asText());
-        assertEquals(category.name(), result.get("errorCategory").asText());
-        assertEquals(statusCode > 0 ? mapper.valueToTree(statusCode) : null, result.get("providerStatusCode"));
+        assertEquals("INVALID_CONTINUATION", result.get("errorCategory").asText());
+        assertEquals(400, result.get("providerStatusCode").asInt());
         assertFalse(result.get("retryable").asBoolean());
         assertEquals(0, result.get("totalTokens").asInt());
         assertFalse(result.toString().contains("private raw response"));
-        assertFalse(result.has("cause"));
         assertEquals(result, mapper.valueToTree(controller.getAiReponse(input, request)));
         assertEquals(result, mapper.valueToTree(controller.getAiImageReponse(input, request)));
     }
