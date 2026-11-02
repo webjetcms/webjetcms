@@ -63,7 +63,7 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	/**
 	 * Checks the filename against the media types displayed by a file picker.
 	 * This is an additional restriction; upload permissions and size limits still apply.
-	 * @param selectedType the picker mode
+	 * @param selectedType the picker mode - type from FsService.TYPE_*
 	 * @param fileName the file name or path, without a chunk suffix
 	 * @return whether the file type can be used in the picker
 	 */
