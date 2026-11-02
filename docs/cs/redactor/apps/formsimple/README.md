@@ -182,7 +182,7 @@ components.formsimple.label.pokyny=Pokyny
 components.formsimple.input.pokyny=<div class="form-instructions">${settings.fieldA}</div><p>Povolené prípony: ${settings.allowedExtensions}; maximálna veľkosť súboru: ${settings.maxSizeInKilobytes} kB.</p>
 ```
 
-Značky můžete také přidat do stávajícího kódu začátku formuláře, například jako atribut `data-form-name="${settings.formName}"`, nebo za otevírací `<form>` vložit `<div class="form-intro">${settings.fieldB}</div>`. Ponechte přitom původní atributy a skripty šablony. Pro Formulář snadno jde o klíč `components.formsimple.form.start`, pro vícekrokový formulář o `components.mustistep.form.start`.
+Značky můžete také přidat do stávajícího kódu začátku formuláře, například jako atribut `data-form-name="${settings.formName}"`, nebo za otevírací `<form>` vložit `<div class="form-intro">${settings.fieldB}</div>`. Ponechte přitom původní atributy a skripty šablony. Pro Formulář snadno jde o klíč `components.formsimple.form.start`, pro vícekrokový formulář o `components.multistep.form.start`.
 
 Stejné značky fungují v konci formuláře, tooltipových šablonách, prvních nadpisech polí, opakovaných položkách `${iterable}` a technických informacích `components.formsimple.techinfo`. Ve vícekrokovém formuláři jsou dostupné iv HTML obalech kroků a řádků, nadpisu kroku, tlačítku Zpět a indikátoru načítání.
 
@@ -214,29 +214,29 @@ HTML kód tlačítek ve [víceletých formulářích](../multistep-form/README.m
 
 #### Tlačítko pro pokračování nebo odeslání
 
-Klíč `components.mustistep.form.end` obsahuje HTML kód tlačítka pro přechod na další krok a v posledním kroku pro odeslání formuláře. Výchozí část hodnoty, která určuje vzhled tlačítka, je:
+Klíč `components.multistep.form.end` obsahuje HTML kód tlačítka pro přechod na další krok a v posledním kroku pro odeslání formuláře. Výchozí část hodnoty, která určuje vzhled tlačítka, je:
 
 ```html
 <button type="submit" class="btn btn-primary mt-3" name="saveForm">${submitButtonText}</button>
 ```
 
-Značka `${submitButtonText}` se nahradí textem nastaveným v aktuálním kroku. Pokud text není zadán, použije se překlad `components.mustistep.form.next_step` (**Přejít na další krok**) nebo v posledním kroku `components.mustistep.form.save_form` (**Odeslat formulář**).
+Značka `${submitButtonText}` se nahradí textem nastaveným v aktuálním kroku. Pokud text není zadán, použije se překlad `components.multistep.form.next_step` (**Přejít na další krok**) nebo v posledním kroku `components.multistep.form.save_form` (**Odeslat formulář**).
 
 Při změně vzhledu zachovejte `type="submit"`, `name="saveForm"` a značku `${submitButtonText}`. Klíč obsahuje také značku `{tech-info}` pro technické informace, zavírací tag `</form>` a skript pro inicializaci tooltipů. Tyto části ponechte; při úpravě tlačítka měňte pouze jeho HTML kód.
 
 #### Tlačítko na předchozí krok
 
-HTML kód tlačítka **Zpět** se nastavuje přes klíč `components.mustistep.form.back_button`. Tlačítko se zobrazí od druhého kroku; do emailové podoby formuláře se nevkládá.
+HTML kód tlačítka **Zpět** se nastavuje přes klíč `components.multistep.form.back_button`. Tlačítko se zobrazí od druhého kroku; do emailové podoby formuláře se nevkládá.
 
 V hodnotě klíče jsou dostupné značky:
 
 - `${previousStepId}` - ​​ID předchozího kroku.
-- `${backButtonText}` - ​​text tlačítka nastavený v aktuálním kroku, případně výchozí překlad `components.mustistep.form.back_step`. Text se před vložením do HTML escapuje.
+- `${backButtonText}` - ​​text tlačítka nastavený v aktuálním kroku, případně výchozí překlad `components.multistep.form.back_step`. Text se před vložením do HTML escapuje.
 
 Výchozí kód:
 
 ```properties
-components.mustistep.form.back_button=<button type="button" class="btn btn-outline-secondary mt-3 me-2" data-multistep-back-step="${previousStepId}">${backButtonText}</button>
+components.multistep.form.back_button=<button type="button" class="btn btn-outline-secondary mt-3 me-2" data-multistep-back-step="${previousStepId}">${backButtonText}</button>
 ```
 
 Při změně vzhledu zachovejte `type="button"` a atribut `data-multistep-back-step="${previousStepId}"`, podle kterého se provádí návrat na předchozí krok.

@@ -54,7 +54,7 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 - **Vyžadovať potvrdenie súhlasu emailom** - aktivuje režim [potvrdenia emailovej adresy](#nastavenie-potvrdenia-emailovej-adresy).
 - **Poslať formulár ako prílohu do e-mailu** - zapnutím sa formulár do emailu priloží ako príloha vo formáte HTML.
   - **Názov prílohy formulára** - názov prílohy vo formáte HTML.
-- **Šifrovací kľúč** - ak chcete hodnoty formuláru zašifrovať, môžete zadať [šifrovací kľúč](../../admin/README.md#hlavička). Pri viackrokových formulároch sa hodnoty aj HTML podoba v databáze ukladajú zašifrované. Odoslaný email a generovaná PDF kópia obsahujú čitateľné vyplnené hodnoty.
+- **Šifrovací kľúč** - verejný kľúč na šifrovanie hodnôt a HTML podoby odoslaného formulára v databáze. Vytvorenie páru kľúčov, nastavenie a dešifrovanie údajov opisuje [Šifrovanie formulárov](encryption.md). Odoslaný email a generovaná PDF kópia obsahujú čitateľné vyplnené hodnoty.
 - **Doc id stránky, na ktorej sa formulár nachádza** - doc ID stránky na ktorej sa formulár nachádza. Štandardne sa systém túto stránku snaží určiť na základe ```refereru```, alebo posledne zobrazenej stránky v `session`. Pre presné určenie je možné zadať túto hodnotu. Ak nie je zadaná WebJET ju automaticky doplní pri zobrazení formuláru.
 - **Doc id notifikácie pre používateľa** - ak je nastavené na hodnotu niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa email / e-mail) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu.
 - **Doc id stránky s verziou pre email** - doc ID stránky, ktorej obsah sa použije na vytvorenie emailovej podoby formulára. Ak je zadaná hodnota `none`, určenie stránky pre email sa nepoužije. Ak hodnota nie je zadaná vôbec, použije sa hodnota parametra ```useFormDocId```. Pri viackrokovom formulári môžete v obsahu zvolenej stránky použiť značku v tvare `!identifikator-polozky!`; pri odoslaní sa nahradí hodnotou príslušnej [položky formulára](../multistep-form/README.md#značky-hodnôt-položiek). Obsah a CSS štýly stránky sa použijú aj pre uloženú HTML podobu a PDF verziu formulára. Ak zvolená stránka neexistuje, použije sa štandardné zobrazenie formulára.
@@ -97,6 +97,23 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 - **Povolené prípony** - čiarkou oddelený zoznam povolených prípon nahrávaných súborov, napr. `jpg,png,pdf,docx`.
 - **Maximálna výška (pre obrázky)** - maximálna výška nahrávaného obrázku v pixeloch.
 - **Maximálna šírka (pre obrázky)** - maximálna šírka nahrávaného obrázku v pixeloch.
+
+## CSS štýly pre email a PDF
+
+Pri príprave HTML emailu z klasického alebo viackrokového formulára WebJET načíta CSS štýly stránky použitej pre email. Veľké CSS súbory webu zväčšujú aj odosielanú správu. Dizajnér môže pripraviť menšie súbory obsahujúce iba štýly potrebné na zobrazenie vyplneného formulára.
+
+Pre každý CSS súbor WebJET najprv hľadá súbor s príponou `-email.css` v rovnakom priečinku. Napríklad:
+
+| CSS súbor šablóny | Prednostne použitá verzia pre email |
+| --- | --- |
+| `/templates/orange/dist/css/main.css` | `/templates/orange/dist/css/main-email.css` |
+| `/templates/orange/dist/css/theme.css` | `/templates/orange/dist/css/theme-email.css` |
+
+Ak verzia `*-email.css` existuje, nahradí pôvodný súbor. Ak neexistuje, načíta sa pôvodné CSS. Toto pravidlo sa vyhodnocuje samostatne pre hlavné a druhoradé CSS šablóny, súbory z konfiguračnej premennej `editorEditorCss` a dodatočné CSS odovzdané z nastavení formulára. Náhrada jedného súboru nevypne ostatné štýly, preto pripravte menšie verzie pre všetky veľké CSS súbory, ktoré formulár používa.
+
+Obsah vybraných súborov sa vloží do emailu a PDF podkladu cez značku `<style>`. Uložená HTML podoba formulára odkazuje na rovnaké súbory značkami `<link>`, preto ich ponechajte dostupné aj po odoslaní formulára. Úpravu emailových CSS overte aj pri zobrazení uloženého formulára a jeho PDF verzie. Zobrazenie formulára na webovej stránke naďalej používa pôvodné CSS.
+
+Ak stránka nemá dostupnú šablónu, použije sa `/css/email.css`; ak ani tento súbor neexistuje, použije sa súbor z konfiguračnej premennej `editorPageCss`. Pri odosielaní ako čistý text sa CSS nepridáva.
 
 ## Nastavenie potvrdenia emailovej adresy
 

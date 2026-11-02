@@ -10,6 +10,48 @@ const SKILLS = '.agents/skills/';
 const KNOWLEDGE = '.github/agents/';
 const README = '.github/skills-distribution/README.md';
 const EXCLUDED_SKILLS = '.github/skills-distribution/excluded-skills.txt';
+const CATALOG = 'docs/en/developer/guidelines/ai-skills.md';
+const CATALOG_START = '<!-- webjet-skills-catalog:start -->';
+const CATALOG_END = '<!-- webjet-skills-catalog:end -->';
+
+/** Require one complete catalog block so a damaged marker cannot silently omit documentation. */
+function catalogBlock(text, path) {
+    const start = text.indexOf(CATALOG_START);
+    const end = text.indexOf(CATALOG_END);
+    if (start < 0 || end < start || text.indexOf(CATALOG_START, start + 1) !== -1 || text.indexOf(CATALOG_END, end + 1) !== -1) {
+        throw new Error(`Missing or duplicate skill catalog markers: ${path}`);
+    }
+    return { start, end, content: text.slice(start + CATALOG_START.length, end).trim() };
+}
+
+/** Copy the translated English table, checking coverage and omitting unpublished skills. */
+async function exportCatalog(root, mappings, tracked, excluded, revision) {
+    if (!tracked.has(CATALOG)) throw new Error(`Required file is not tracked: ${CATALOG}`);
+    const document = await readFile(join(root, CATALOG), 'utf8');
+    const lines = catalogBlock(document, CATALOG).content.split(/\r?\n/);
+    if (lines[0] !== '| Skill | What is it for and when to use it? | Example of chat entry |' || lines[1] !== '| --- | --- | --- |') {
+        throw new Error(`Invalid skill catalog table header: ${CATALOG}`);
+    }
+    const names = new Set();
+    const rows = [];
+    for (const line of lines.slice(2)) {
+        const match = line.match(/^\| \[`(wj-[a-z0-9-]+)`\]\(([^)]+)\) \| ([^|]+) \| ([^|]+) \|$/);
+        if (!match || !match[3].trim() || !match[4].trim()) throw new Error(`Invalid skill catalog row: ${line}`);
+        const [, name, target] = match;
+        const source = `${SKILLS}${name}/SKILL.md`;
+        if (names.has(name) || !tracked.has(source) || target !== `${SOURCE}/blob/main/${source}`) {
+            throw new Error(`Duplicate, unknown or incorrectly linked skill in catalog: ${name}`);
+        }
+        names.add(name);
+        // Public documentation links to GitHub; rebase these links for the distribution rewrite.
+        if (!excluded.has(name)) rows.push(line.replace(`](${target})`, `](${posix.relative(posix.dirname(CATALOG), source)})`));
+    }
+    for (const path of tracked) {
+        const name = path.match(/^\.agents\/skills\/(wj-[^/]+)\/SKILL\.md$/)?.[1];
+        if (name && !names.has(name)) throw new Error(`Missing skill catalog entry: ${name}. Update ${CATALOG}.`);
+    }
+    return rewriteLinks([...lines.slice(0, 2), ...rows].join('\n'), CATALOG, 'README.md', mappings, tracked, revision);
+}
 
 function git(root, args) {
     return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
@@ -98,6 +140,11 @@ export async function exportSkills({ root, output, revision }) {
         files.set(destination, { content, executable: (stat.mode & 0o111) !== 0 });
     }
     if (!files.has('skills/wj-project-context/references/AGENTS.md')) throw new Error('Canonical WebJET knowledge index is missing.');
+    const readme = files.get('README.md');
+    const template = readme.content.toString('utf8');
+    const block = catalogBlock(template, README);
+    const catalog = await exportCatalog(root, mappings, tracked, excluded, revision);
+    readme.content = Buffer.from(`${template.slice(0, block.start + CATALOG_START.length)}\n${catalog}\n${template.slice(block.end)}`);
     const skills = validateDistribution(files);
     const hash = createHash('sha256');
     for (const [path, file] of [...files].sort(([a], [b]) => a.localeCompare(b))) {

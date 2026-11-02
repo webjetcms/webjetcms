@@ -53,7 +53,7 @@ src/test/webapp/
    auto_name = 'name-autotest-' + randomNumber;
    ```
 
-3. **No fixed waits**: Never use `I.wait(N)` for synchronization. Always use `waitFor*` methods:
+3. **No fixed waits**: Never use `I.wait(N)` for synchronization. Use dedicated `waitFor*` methods or bounded retries of assertions:
    ```javascript
    // BAD
    I.click("Pridať");
@@ -80,7 +80,25 @@ src/test/webapp/
 
 7. **Always run tests with local URL**: Use `CODECEPT_URL='http://iwcm.interway.sk'` so tests run against local development version. Do not use `*:prod` scripts for branch verification. For the exact commands, see **Running Tests**.
 
-8. **Prefer standard CodeceptJS commands**: Avoid direct `I.usePlaywrightTo` calls when standard commands can perform the operation. Prefer `I.mockRoute()` / `I.stopMockingRoute()` for request interception, `I.executeScript()` for browser-side JavaScript, `I.waitForFunction()` for conditions, and existing action and assertion commands. Use `I.usePlaywrightTo` only for a justified operation that cannot be implemented directly with the available CodeceptJS commands. Check the configured helpers and installed version first, keep the callback limited to the unsupported operation, and explain the reason in a short English comment.
+8. **Prefer standard CodeceptJS commands**: Avoid direct `I.usePlaywrightTo` calls when standard commands can perform the operation. Prefer `I.mockRoute()` / `I.stopMockingRoute()` for request interception, existing action and assertion commands, and the waiting patterns below. Use `I.executeScript()` for browser-side JavaScript. Use `I.usePlaywrightTo` only for a justified operation that cannot be implemented directly with the available CodeceptJS commands. Check the configured helpers and installed version first, keep the callback limited to the unsupported operation, and explain the reason in a short English comment.
+
+### Waiting for asynchronous UI updates
+
+Prefer dedicated waits such as `I.waitForText()` and `I.waitForVisible()`. When waiting for an assertion to pass, prefer a bounded `I.retry(...).seeTextEquals(...)` or another matching CodeceptJS assertion over `I.waitForFunction()`. Retry only the assertion, so the action that triggered the update runs once.
+
+For example, after changing the country, wait for the exact text of the selected delivery option:
+
+```javascript
+await I.retry({
+    retries: 20,
+    minTimeout: 1000,
+    maxTimeout: 1000
+}).seeTextEquals(wantedValue.trim(), '#deliveryMethodId option:checked');
+```
+
+This retries the check at most 20 times with one-second intervals and finishes as soon as it passes. Scope the assertion to the relevant state: text elsewhere in the select does not prove that the option is selected. The assertion also performs the final check, so a separate `I.executeScript()` and `I.assertEqual()` are unnecessary.
+
+Reserve `I.waitForFunction()` for browser-side state that cannot be expressed using the available wait or assertion commands, and explain that need in a short English comment.
 
 ## Authentication
 

@@ -397,8 +397,8 @@ Scenario('Slash in group name @singlethread', ({ I, DT, DTE }) => {
 
     I.amOnPage("/test-stavov/lomka-nazve/");
 
-    //there was no other way to do this except by this script, codecept always returns / as unencoded value
-    //$(function() { $("#unescapedTitle").text("!REQUEST(doc_title)!"); });
+    // The fixture uses jQuery.text() to expose the stored entity instead of rendering it as a slash.
+    // Keep it encoded so full-path consumers do not mistake the title's slash for a folder separator.
     I.waitForText("Lomka&#47;v nazve", 10, "#unescapedTitle");
 });
 

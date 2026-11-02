@@ -126,6 +126,36 @@ class PageUrlStopWordsTest extends BaseWebjetTest {
         assertEquals(globalRemove, Constants.getBoolean("urlRemoveSpojky"));
     }
 
+    /** Generated URLs use visible title text while the stored title and navigation HTML remain unchanged. */
+    @ParameterizedTest
+    @CsvSource(value = {
+        "John's page|johns-page",
+        "John&#39;s page|johns-page",
+        "John&#x27;s page|johns-page",
+        "R&D|rd",
+        "R&amp;D|rd",
+        "A = B|a-=-b",
+        "Žltá&nbsp;modrá|zlta-modra",
+        "<strong>John's page</strong>|johns-page",
+        "<strong>R&amp;D</strong>|rd",
+        "Cena &lt; 5|cena-5",
+        "Literal &amp;amp;|literal-amp"
+    }, delimiter = '|', quoteCharacter = '"')
+    void generatesUrlFromTitleText(String title, String expectedSlug) {
+        Constants.setBoolean("urlRemoveSpojky", false);
+        page.setTitle(title);
+        page.setNavbar(title);
+        String storedTitle = page.getTitle();
+        String storedNavbar = page.getNavbar();
+
+        for (String extension : List.of(".html", "/")) {
+            Constants.setString("editorPageExtension", extension);
+            assertEquals(FOLDER_PATH + expectedSlug + extension, DocDB.getURL(page, group, FOLDER_PATH));
+        }
+        assertEquals(storedTitle, page.getTitle());
+        assertEquals(storedNavbar, page.getNavbar());
+    }
+
     /** Existing boolean overloads continue to require both the caller and global configuration to enable removal. */
     @ParameterizedTest
     @CsvSource({ "false, false, false", "false, true, false", "true, false, false", "true, true, true" })
@@ -165,7 +195,9 @@ class PageUrlStopWordsTest extends BaseWebjetTest {
     void preservesExplicitUrlsAndFolderHomePage() {
         Constants.setBoolean("urlRemoveSpojky", true);
         template.setUrlRemoveSpojkyMode(1);
-        page.setVirtualPath(FOLDER_PATH + "manual-a-page.html");
+        page.setTitle("John's R&D");
+        page.setNavbar(page.getTitle());
+        page.setVirtualPath(FOLDER_PATH + "manual-a-page.html?q=a&lang=sk");
         assertEquals(page.getVirtualPath(), DocDB.getURL(page, group, FOLDER_PATH));
         page.setVirtualPath("");
         page.setDocId(group.getDefaultDocId());

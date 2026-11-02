@@ -35,8 +35,11 @@ function openUserSettingsDialog(I) {
      I.click(locate(".dropdown-item").withText('Profil'));
      I.switchTo("#modalIframeIframeElement");
      I.waitForText(userLogin, 60);
+     // Permission selection is applied on WJ.DTE.opened, after the form fields appear.
+     DTE.waitForEditor();
      I.waitForElement("#pills-dt-datatableInit-rightsTab-tab", 10);
      I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
+     I.waitForVisible('#perms_menuGallery a', 10);
 }
 
 // skontroluj ci mam prava na galeriu
@@ -301,6 +304,13 @@ Scenario('Zakazany priecinok v galerii', async ({ I }) => {
 Scenario("Delete folders 1", async ({ I }) => {
      await resetGalleryAccess(I)
      I.amOnPage('/admin/v9/apps/gallery/');
+     I.waitForVisible('#SomStromcek a.jstree-anchor', 20);
+     I.jstreeWaitForLoader();
+     // A failed setup may never create the fixture; do not report it again as a cleanup failure.
+     if (await I.grabNumberOfVisibleElements(locate('#SomStromcek a.jstree-anchor').withText(mainFolder)) === 0) {
+          I.say('The test folder was not created; nothing to delete.');
+          return;
+     }
 
      // vymaz subfolder2 + hlavny priecinok autotestfolder
      I.say('Vymaz subfolder2 + hlavny priecinok autotestfolder');

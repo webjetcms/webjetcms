@@ -98,3 +98,11 @@ Retain the installer's project lock file and installed files according to your t
 4. Run `wj-setup` and review its diff. It does not remove old hand-written references to `.github/agents`; reconcile those manually if they conflict with the new context.
 
 To remove the integration, use `npx skills remove` for the selected WebJET skills and remove only the marked WebJET blocks from project instruction files. Keep unrelated project instructions.
+
+## Skill catalog
+
+The following catalog and example prompts come from the English [WebJET usage guide](../../docs/en/developer/guidelines/ai-skills.md#webjet-skills-overview). Copy a prompt into your agent's chat and replace the bracketed placeholders. Skill names link to their full instructions and prerequisites. Only skills included in this distribution are listed.
+
+<!-- webjet-skills-catalog:start -->
+<!-- Filled by export-skills.mjs from docs/en/developer/guidelines/ai-skills.md. -->
+<!-- webjet-skills-catalog:end -->

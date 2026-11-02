@@ -91,7 +91,7 @@ The editor for adding and editing items is special in that it changes its conten
 
 - **Field type** - determines what kind of input the item will represent (e.g. text field, drop-down list selection, checkbox, etc.). Individual fields [are prepared by the website designer](../formsimple/README.md#information-for-web-designer) and are the same as for the Easy Form application.
 - **Required field** - whether the item is required to be filled out.
-- **Allowed value** - for advanced validation of user input, you can choose any number of regular expressions that must be met for the input to be valid. You can learn more about them in the [Regular expressions](../form/regexps.md) section.
+- **Allowed value** - for advanced user input validation, you can select any number of regular expressions that must be met for the input to be valid. Each option uses the format **code - name**, for example **alphabetLowercase - only lowercase characters allowed**. The name is displayed in the administration language. You can search by both name and code. The code corresponds to the **Code** column in the [Regular expressions] section (../form/regexps.md).
 - **Trim spaces** - if selected, leading and trailing spaces will be removed from the value before validation and saving. The setting is available for supported text fields; it is not used for select fields and formatted text fields.
 - **Field name** - the name that will be displayed to the user. If not specified, the name matching the field type will be used.
 - **Item identifier in the form** - the technical identifier is automatically created from the item name and supplemented with a distinctive suffix so that it is unique in the form. It is only displayed when editing a saved item and cannot be changed. It is used in conditions, saved data, and [item value tags](#item-value-tags).
@@ -101,7 +101,7 @@ In the **Advanced** tab, you can set additional optional parameters such as:
 - **Form Step** - the step the item belongs to, so you can easily move the item to another step.
 - **Order** - determines the order of the item within the step.
 - **Prefilled value** - a value that will be displayed filled in the field, so the user does not have to set a value if it is generally known. This field is only displayed if it is not a select field type item.
-- **Allowed options** - for a selection field type item (select, checkbox group, radio group, autocomplete, etc.), you can manually define a list of options. Each option consists of the text displayed to the user and the value sent when the form is submitted. Options can be added, removed, and reordered using `drag & drop`. For a selection list, you can also insert an option without a value at the beginning using the **Add empty option** button. The field is displayed only if the **Use link to code list** option is not enabled.
+- **Allowed options** - for a selection field type item (select, checkbox group, radio group, autocomplete, etc.), you can manually define a list of options. Each option consists of the text displayed to the user and the value sent when the form is submitted. Options can be added, removed, and reordered using `drag & drop`. With the **Add empty option** switch - you can also insert an option without a value at the beginning of a selection list or group of selection fields. The switch is disabled for a new field. The field is displayed only if the **Use link to code list** option is not enabled.
 
 ![](form-item-editor-advanced.png)
 
@@ -119,6 +119,18 @@ If you want to define your own form items, or want to change existing ones, or c
 !>**Warning:** Custom item types that directly render the native `<input type="file">` element do not work in a multi-step form. The file can only be uploaded using the `Dropzone` component.
 
 !>**Warning:** When editing a form item, we do not recommend changing the item type, but rather replacing the original item with a new one.
+
+### Empty option
+
+The **Add Empty Option** radio button adds an empty row to the select list and a **No Option Selected** radio button to the radio group to deselect. The value is empty, so the required field requires another option. The radio text is specified by the key `components.formsimple.emptyOptionLabel.radiogroup`. For checkboxes and autocomplete, the radio button is hidden by default because they can be cleared without it.
+
+The presence of `emptyOption` in the `components.formsimple.hide.TYP_POLA` key hides the switch; removing it will make it available again. For radio:
+
+```properties
+components.formsimple.hide.radiogroup=placeholder,trimValue,regexValidationArr,emptyOption
+```
+
+Keep the other items and apply the change to all languages ​​used. When hidden, the empty option will not appear in older forms and will be removed from the configuration when saved. The setting only applies to manual options, not to the dialpad link.
 
 ### Validation when leaving the field
 
