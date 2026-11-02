@@ -25,6 +25,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
+import sk.iway.iwcm.components.ai.rest.AiChatStore.Scope;
 import sk.iway.iwcm.users.UsersDB;
 
 @Component
@@ -93,14 +94,18 @@ public class AiTaskRegistry implements DisposableBean {
         return runTask(taskId, task, inputData);
     }
 
-    /** Uses the durable thread ID so cancellation also works from another browser session. */
-    public AssistantResponseDTO runChatTask(String threadId, Callable<AssistantResponseDTO> task, InputDataDTO inputData) throws ProviderCallException {
-        return runTask("ai_chat_" + threadId, task, inputData);
+    /** Scopes client-supplied thread IDs by owner and domain, independently of the browser session. */
+    public AssistantResponseDTO runChatTask(String threadId, Scope scope, Callable<AssistantResponseDTO> task, InputDataDTO inputData) throws ProviderCallException {
+        return runTask(getChatTaskId(threadId, scope), task, inputData);
     }
 
-    public void cancelChatTask(String threadId) {
-        Future<AssistantResponseDTO> future = futuresMap.get("ai_chat_" + threadId);
+    public void cancelChatTask(String threadId, Scope scope) {
+        Future<AssistantResponseDTO> future = futuresMap.get(getChatTaskId(threadId, scope));
         if (future != null) future.cancel(true);
+    }
+
+    private static String getChatTaskId(String threadId, Scope scope) {
+        return "ai_chat_" + scope.userId() + "_" + scope.domainId() + "_" + scope.domainName() + "_" + threadId;
     }
 
     private AssistantResponseDTO runTask(String taskId, Callable<AssistantResponseDTO> task, InputDataDTO inputData) throws ProviderCallException {

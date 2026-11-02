@@ -72,8 +72,8 @@ class AiChatServiceTest {
         when(configuration.resolveForDomain(provider, scope.domainName())).thenReturn(config);
         when(configuration.chatScope(config)).thenReturn("scope");
         var tasks = mock(AiTaskRegistry.class);
-        when(tasks.runChatTask(anyString(), any(), any())).thenAnswer(call ->
-            call.<Callable<AssistantResponseDTO>>getArgument(1).call());
+        when(tasks.runChatTask(anyString(), same(scope), any(), any())).thenAnswer(call ->
+            call.<Callable<AssistantResponseDTO>>getArgument(2).call());
         service = new AiChatService(store, assistants, List.of(provider), tasks, deletion, configuration, mock(AiStatRepository.class));
         audit = mockStatic(Adminlog.class);
         translations = mockStatic(Prop.class);

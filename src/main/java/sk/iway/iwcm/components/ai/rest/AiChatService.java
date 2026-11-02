@@ -110,7 +110,7 @@ public class AiChatService implements DisposableBean {
             input.setPreviousResponseId(turn.thread().getLastResponseId());
             AtomicBoolean started = new AtomicBoolean();
             try {
-                result = tasks.runChatTask(turn.thread().getId(), () -> {
+                result = tasks.runChatTask(turn.thread().getId(), prepared.scope(), () -> {
                     started.set(true);
                     return generate(prepared, input, output, streaming, request);
                 }, input);
@@ -236,12 +236,12 @@ public class AiChatService implements DisposableBean {
 
     public void stop(String id, Scope scope) {
         store.stop(id, scope, false);
-        tasks.cancelChatTask(id);
+        tasks.cancelChatTask(id, scope);
     }
 
     public Deletion delete(String id, Scope scope) {
         store.stop(id, scope, true);
-        tasks.cancelChatTask(id);
+        tasks.cancelChatTask(id, scope);
         return cleanup(id, scope);
     }
 
