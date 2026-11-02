@@ -4,20 +4,14 @@ export function bindMirrorLinks() {
     const tree = $(treeElement).jstree(true);
     if (!tree) return;
 
-    const back = document.createElement("button");
-    back.type = "button";
-    back.className = "btn btn-sm btn-outline-secondary buttons-mirror-back";
-    back.innerHTML = '<i class="ti ti-arrow-left" aria-hidden="true"></i>';
-    back.hidden = true;
-    document.querySelector(".wp-header-tree .dt-buttons").append(back);
     const status = document.createElement("span");
     status.className = "visually-hidden";
     status.setAttribute("aria-live", "polite");
     treeElement.after(status);
 
-    let previousId = null;
     let pendingId = null;
     const dropdowns = new Set();
+    const tooltips = new Set();
 
     function highlight() {
         treeElement.querySelectorAll(".jstree-mirror-peer").forEach(row => row.classList.remove("jstree-mirror-peer"));
@@ -37,22 +31,42 @@ export function bindMirrorLinks() {
     }
 
     function render() {
+        for (const icon of tooltips) {
+            if (!treeElement.contains(icon)) {
+                bootstrap.Tooltip.getInstance(icon)?.dispose();
+                tooltips.delete(icon);
+            }
+        }
         for (const button of dropdowns) {
             if (!treeElement.contains(button)) {
                 bootstrap.Dropdown.getInstance(button)?.dispose();
                 dropdowns.delete(button);
             }
         }
+        if (window.jstreeSettings.isShowBadMirrorings() == false) {
+            pendingId = null;
+            return;
+        }
         treeElement.querySelectorAll(".jstree-anchor").forEach(anchor => {
             if (anchor.nextElementSibling?.classList.contains("jstree-mirrors")) return;
             const node = tree.get_node(anchor);
-            const mirrors = node.original?.mirrors;
-            if (!mirrors?.length) return;
+            const mirrors = node.original?.mirrors || [];
+            const problem = node.original?.mirroringProblem;
+            if (!mirrors.length && !problem) return;
             const group = document.createElement("span");
             group.className = "jstree-mirrors dropdown";
             group.setAttribute("role", "group");
             group.setAttribute("aria-label", treeElement.dataset.mirrorsLabel);
-            group.innerHTML = '<i class="ti ti-link" aria-hidden="true"></i>';
+            if (problem) {
+                const icon = document.createElement("i");
+                icon.className = problem.icon;
+                icon.title = problem.title;
+                icon.tabIndex = 0;
+                icon.setAttribute("role", "img");
+                icon.setAttribute("aria-label", problem.title);
+                group.append(icon);
+                tooltips.add(icon);
+            }
             const menu = document.createElement("div");
             menu.className = "dropdown-menu jstree-mirror-menu";
             mirrors.forEach((mirror, index) => {
@@ -84,6 +98,7 @@ export function bindMirrorLinks() {
                 dropdowns.add(more);
             }
             anchor.after(group);
+            WJ.initTooltip($(group).children("i"));
             anchor.parentElement.classList.add("jstree-has-mirrors");
         });
         highlight();
@@ -109,18 +124,7 @@ export function bindMirrorLinks() {
         event.stopPropagation();
         const more = link.closest(".jstree-mirrors").querySelector(".jstree-mirror-more");
         if (more) bootstrap.Dropdown.getInstance(more)?.hide();
-        const source = tree.get_node(link.closest(".jstree-node"));
-        previousId = source.id;
-        const label = `${treeElement.dataset.mirrorsBack} ${source.original.groupDetails.fullPath}`;
-        back.title = label;
-        back.setAttribute("aria-label", label);
-        back.hidden = false;
         navigate(link.dataset.groupId);
-    });
-    back.addEventListener("click", () => {
-        if (previousId) navigate(previousId);
-        previousId = null;
-        back.hidden = true;
     });
     $(treeElement).on("ready.jstree redraw.jstree after_open.jstree rename_node.jstree", render);
     $(treeElement).on("changed.jstree", highlight);

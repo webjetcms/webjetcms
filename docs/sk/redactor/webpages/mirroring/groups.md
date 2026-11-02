@@ -34,7 +34,7 @@ Nakoľko previazané by mali byť rovnaké štruktúry, rozdielne hĺbky previaz
 
 ### Upozornenia v stromovej štruktúre
 
-Rovnaké kontroly môžete zobraziť priamo v sekcii **Web stránky**. V [nastavení stromovej štruktúry](../README.md#nastavenie-zobrazenia-stromovej-štruktúry) zapnite voľbu **Zobraziť chybné zrkadlenia**. Pri priečinkoch s problémom sa namiesto bežnej ikony priečinka zobrazí červená ikona pre **Zlé mapovanie** alebo žltá ikona pre **Nerovnomerné vnorenie**. Ak má prepojenie oba problémy, zobrazí sa červená ikona. Opis problému nájdete po podržaní kurzora nad názvom priečinka.
+Rovnaké kontroly môžete zobraziť priamo v sekcii **Web stránky**. V [nastavení stromovej štruktúry](../README.md#nastavenie-zobrazenia-stromovej-štruktúry) zapnite voľbu **Zobraziť zrkadlenie**. Pri priečinkoch s problémom sa vpravo pred jazykovými odkazmi zobrazí červená ikona pre **Zlé mapovanie** alebo žltá ikona pre **Nerovnomerné vnorenie**. Ak má prepojenie oba problémy, zobrazí sa červená ikona. Opis problému nájdete po podržaní kurzora nad ikonou upozornenia.
 
 ![Červené upozornenie na zlé mapovanie a žlté upozornenie na nerovnomerné vnorenie](tree-problems.png)
 

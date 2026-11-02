@@ -11,8 +11,9 @@ window.jstreeSettings = new JstreeSettings({
 
 // Send the current toggle immediately, without waiting for the settings save request.
 window.getJstreeUrl = function() {
-    let url = WJ.urlUpdateParam($("#SomStromcek").data("rest-url"), "showBadMirrorings", window.jstreeSettings.isShowBadMirrorings());
-    return WJ.urlUpdateParam(url, "showMirrorLinks", true);
+    const showMirroring = window.jstreeSettings.isShowBadMirrorings();
+    let url = WJ.urlUpdateParam($("#SomStromcek").data("rest-url"), "showBadMirrorings", showMirroring);
+    return WJ.urlUpdateParam(url, "showMirrorLinks", showMirroring);
 };
 
 window.WebPagesDatatable = WebPagesDatatable;

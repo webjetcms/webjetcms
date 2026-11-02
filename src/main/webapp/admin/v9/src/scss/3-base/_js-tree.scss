@@ -3,19 +3,29 @@
 }
 
 #SomStromcek {
+  .jstree-has-mirrors {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    > .jstree-children { grid-column: 1 / -1; }
+    &:has(> .jstree-anchor:hover, > .jstree-anchor:focus-visible, > .jstree-mirrors:hover, > .jstree-mirrors:focus-within) {
+      > .jstree-anchor:not(.jstree-clicked), > .jstree-mirrors {
+        background: $nice-gray;
+        border-radius: $border-radius;
+      }
+    }
+  }
   .jstree-has-mirrors > .jstree-anchor {
-    max-width: calc(100% - 125px);
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .jstree-mirrors {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 1px;
     min-height: 30px;
-    margin-left: 4px;
-    vertical-align: top;
-    > .ti { color: $gray-text; font-size: 14px; }
+    margin: 0 12px 0 4px;
+    > .ti { font-size: 16px; }
     [hidden] { display: none; }
   }
   .jstree-mirror-link, .jstree-mirror-more {
@@ -25,14 +35,18 @@
     min-width: 28px;
     min-height: 24px;
     padding: 0 4px;
-    border: 1px solid mix($primary, $white, 25%);
+    border: 0;
     border-radius: 4px;
-    background: $white;
-    color: $primary;
+    background: transparent;
+    color: $gray-text;
     font-size: 12px;
     line-height: 1.5;
     text-decoration: none;
-    &:hover { background: mix($primary, $white, 5%); text-decoration: underline; }
+    &:hover, &:focus-visible {
+      background: mix($primary, $white, 5%);
+      color: $primary;
+      text-decoration: underline;
+    }
     &:focus-visible { outline: 2px solid $secondary; outline-offset: 2px; }
   }
   .jstree-mirror-peer > .jstree-anchor:not(.jstree-clicked) {

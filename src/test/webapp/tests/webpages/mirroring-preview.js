@@ -9,7 +9,7 @@ const groupModal = '#groups-datatable_modal';
 const pageModal = '#datatableInit_modal';
 const folders = {};
 const roots = {};
-let suffix, pageTitle, originalConfig, originalTitleSync, originalWarnings;
+let suffix, pageTitle, originalConfig, originalTitleSync, originalMirroring;
 let cancelSyncUser;
 let deletePermissionGroups;
 const editableGroups = '#editorAppDTE_Field_editorFields-editableGroups';
@@ -50,9 +50,10 @@ async function readConfiguration(I, DT, DTE, name) {
     return value;
 }
 
-function showWarnings(I, enabled) {
+function showMirroring(I, enabled) {
     I.click('button.buttons-jstree-settings');
     I.waitForVisible('#jstreeSettingsModal', 10);
+    I.see('Zobraziť zrkadlenie', '#jstreeSettingsModal');
     if (enabled) I.checkOption('#jstree-settings-showbadmirrorings');
     else I.uncheckOption('#jstree-settings-showbadmirrorings');
     I.click('#jstree-settings-submit');
@@ -125,7 +126,7 @@ Scenario('Create own language folders and preserve settings', async ({ I, DT, DT
     I.amOnPage(pageUrl);
     I.click('button.buttons-jstree-settings');
     I.waitForVisible('#jstreeSettingsModal', 10);
-    originalWarnings = await I.grabCheckedElementStatus('#jstree-settings-showbadmirrorings');
+    originalMirroring = await I.grabCheckedElementStatus('#jstree-settings-showbadmirrorings');
     I.click('#jstreeSettingsModal .btn-close-editor');
     I.waitForInvisible('#jstreeSettingsModal', 10);
 
@@ -180,8 +181,9 @@ Scenario('Create own language folders and preserve settings', async ({ I, DT, DT
     DTE.save();
 });
 
-Scenario('Navigate to a mirror during search and return to the source', async ({ I, DT }) => {
+Scenario('Navigate between language mirrors during search', async ({ I, DT }) => {
     openFolder(I, DT, folders.sk);
+    showMirroring(I, true);
     const link = node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders.en.id}"]`;
     I.see('EN', link);
     I.dontSeeElement(node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders.sk.id}"]`);
@@ -192,10 +194,9 @@ Scenario('Navigate to a mirror during search and return to the source', async ({
     I.assertEqual(await I.grabValueFrom('#tree-folder-search-input'), '');
     I.seeInField('#tree-folder-id', folders.en.id);
     I.seeElement(node(folders.sk) + '.jstree-mirror-peer');
-    I.click('.buttons-mirror-back');
+    I.click(node(folders.en) + ` .jstree-mirror-link[data-group-id="${folders.sk.id}"]`);
     I.waitForElement(node(folders.sk) + ' > a.jstree-clicked', 30);
     I.seeElement(node(folders.en) + '.jstree-mirror-peer');
-    I.dontSeeElement('.buttons-mirror-back');
 });
 
 Scenario('Show mirrored page and folder paths in delete dialogs', ({ I, DT, DTE }) => {
@@ -338,10 +339,13 @@ Scenario('Reject folder deletion without deleteDir while editing remains allowed
 
 Scenario('Show warning icons beside the affected folders and navigate overflow links', ({ I, DT, DTE }) => {
     openFolder(I, DT, folders.sk);
-    showWarnings(I, true);
+    showMirroring(I, true);
     openFolder(I, DT, folders.sk);
-    I.waitForElement(node(folders.sk) + ' > a .ti-exclamation-circle.text-danger', 30);
-    I.dontSeeElement(node(folders.sk) + ' > a .ti-alert-triangle');
+    I.waitForElement(node(folders.sk) + ' > .jstree-mirrors .ti-exclamation-circle.text-danger', 30);
+    I.dontSeeElement(node(folders.sk) + ' > .jstree-mirrors .ti-alert-triangle');
+    I.seeElement(node(folders.sk) + ' > a .ti-folder-filled');
+    I.dontSeeElement(node(folders.sk) + ' > a .ti-exclamation-circle');
+    I.dontSeeElement('#SomStromcek .jstree-mirrors .ti-link');
     I.see('+1', node(folders.sk) + ' .jstree-mirror-more');
     I.click(node(folders.sk) + ' .jstree-mirror-more');
     I.click(node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders['duplicate-sk'].id}"]`);
@@ -354,14 +358,18 @@ Scenario('Show warning icons beside the affected folders and navigate overflow l
     DTE.selectOption('lng', 'Nemecký');
     DTE.save();
     openFolder(I, DT, folders.sk);
-    I.waitForElement(node(folders.sk) + ' > a .ti-alert-triangle.text-warning', 30);
-    I.dontSeeElement(node(folders.sk) + ' > a .ti-exclamation-circle.text-danger');
+    I.waitForElement(node(folders.sk) + ' > .jstree-mirrors .ti-alert-triangle.text-warning', 30);
+    I.dontSeeElement(node(folders.sk) + ' > .jstree-mirrors .ti-exclamation-circle.text-danger');
     I.see('CS', node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders.cz.id}"]`);
 
-    showWarnings(I, false);
+    showMirroring(I, false);
+    I.dontSeeElement('#SomStromcek .jstree-mirrors');
     openFolder(I, DT, folders.sk);
-    I.dontSeeElement(node(folders.sk) + ' > a .ti-alert-triangle.text-warning');
-    I.seeElement(node(folders.sk) + ' .jstree-mirror-link');
+    I.dontSeeElement(node(folders.sk) + ' > .jstree-mirrors .ti-alert-triangle.text-warning');
+    I.dontSeeElement(node(folders.sk) + ' .jstree-mirror-link');
+    I.dontSeeElement('#SomStromcek .jstree-mirrors');
+    I.dontSeeElement('#SomStromcek .jstree-mirror-peer');
+    I.seeElement(node(folders.sk) + ' > a .ti-folder-filled');
 });
 
 Scenario('Reject mirrored page deletion if the last mirror is forbidden', async ({ I, DT, DTE, Document }) => {
@@ -548,7 +556,7 @@ Scenario('Restore settings and remove own fixtures through the UI', async ({ I, 
     if (originalConfig !== undefined) Document.setConfigValue(configName, originalConfig, true);
     if (originalTitleSync !== undefined) Document.setConfigValue('syncGroupAndWebpageTitle', originalTitleSync, true);
     I.amOnPage(pageUrl);
-    if (originalWarnings !== undefined) showWarnings(I, originalWarnings);
+    if (originalMirroring !== undefined) showMirroring(I, originalMirroring);
 
     // Remove only our exact page titles from Trash, including pages detached from their folders.
     I.click('#pills-trash-tab');

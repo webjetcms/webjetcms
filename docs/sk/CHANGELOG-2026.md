@@ -49,7 +49,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
-- Zrkadlenie štruktúry - pred zmazaním stránky alebo priečinka sa zobrazí [zoznam zrkadlených položiek](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa zmažú spolu s výberom. Strom priečinkov obsahuje [jazykové odkazy s návratom do pôvodného priečinka](redactor/webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) a voliteľné [upozornenia na chybné zrkadlenia](redactor/webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre) (#58846).
+- Zrkadlenie štruktúry - pred zmazaním stránky alebo priečinka sa zobrazí [zoznam zrkadlených položiek](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa zmažú spolu s výberom. Voľba **Zobraziť zrkadlenie** v strome priečinkov zapína [jazykové odkazy medzi priečinkami](redactor/webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) aj [upozornenia na chybné zrkadlenia](redactor/webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre) na pravom okraji riadka. Jazykové odkazy majú sivý text bez rámčeka a zvýraznia sa pri prejdení kurzorom alebo zameraní klávesnicou (#58846).
 
 ![Upozornenie pred zmazaním zrkadleného priečinka](redactor/webpages/mirroring/delete-groups.png)
 

@@ -47,7 +47,7 @@ Scenario('Prepare the existing mirroring screenshot fixtures', async ({ I, DT, D
     saveSettings(I);
 });
 
-Scenario('Capture language navigation and the return button', ({ I, DT, Document }) => {
+Scenario('Capture language navigation', ({ I, DT, Document }) => {
     // These existing language roots are also used by the mirroring examples.
     openFolder(I, DT, 9811);
     I.jstreeFilter('Slovensky');
@@ -55,18 +55,15 @@ Scenario('Capture language navigation and the return button', ({ I, DT, Document
     I.waitForElement('#SomStromcek li[id="9812"] > a.jstree-clicked', 30);
     DT.waitForLoader();
     I.seeInField('#tree-folder-search-input', '');
-    I.seeElement('.buttons-mirror-back');
     I.seeElement('#SomStromcek li[id="9811"].jstree-mirror-peer');
     Document.screenshotElement('.tree-col', '/redactor/webpages/mirroring/tree-navigation.png', 1280, 440);
-    I.click('.buttons-mirror-back');
-    I.waitForElement('#SomStromcek li[id="9811"] > a.jstree-clicked', 30);
 });
 
 Scenario('Capture tree settings and diagnostic icons', ({ I, DT, Document }) => {
     // Reuse the deliberately invalid mappings from screenshots/generator/webpages/mirroring.js.
     openFolder(I, DT, 99802);
-    I.waitForElement('#SomStromcek li[id="99802"] > a .ti-exclamation-circle.text-danger', 30);
-    I.seeElement('#SomStromcek li[id="99888"] > a .ti-alert-triangle.text-warning');
+    I.waitForElement('#SomStromcek li[id="99802"] > .jstree-mirrors .ti-exclamation-circle.text-danger', 30);
+    I.seeElement('#SomStromcek li[id="99888"] > .jstree-mirrors .ti-alert-triangle.text-warning');
     openSettings(I);
     Document.screenshotElement('#jstreeSettingsModal .modal-content', '/redactor/webpages/jstree-settings.png', 1280, 760);
     I.click('#jstreeSettingsModal .btn-close-editor');

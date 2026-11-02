@@ -31,6 +31,14 @@ public class GroupsJsTreeItem extends JsTreeItem {
     /** Navigation metadata for one permitted mirrored folder. */
     public record MirrorLink(int groupId, String language, String path) { }
 
+    /** Optional diagnostic displayed after the folder name without replacing its icon. */
+    @Getter
+    @Setter
+    private MirroringProblem mirroringProblem;
+
+    /** Icon and localized accessible description of a mirroring problem. */
+    public record MirroringProblem(String icon, String title) { }
+
     public GroupsJsTreeItem(GroupDetails group, UserDetails user, boolean showPages) {
         this(group, user, showPages, true);
     }

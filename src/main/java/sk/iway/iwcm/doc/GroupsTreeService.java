@@ -218,6 +218,7 @@ public class GroupsTreeService {
      */
     void setMirroringLinks(List<JsTreeItem> items, Identity user, String click, HttpServletRequest request) {
         if (items.isEmpty() || user.isDisabledItem("menuWebpages") || user.isDisabledItem("cmp_mirroring")) return;
+        if (isMirroringShown(user, request) == false) return;
         if (Arrays.asList("dt-tree-group-filter-system-trash", "dt-tree-filter-system-trash", "dt-tree-group", "dt-tree").contains(click) == false) return;
         String uri = request.getRequestURI();
         if ("true".equals(request.getParameter("showMirrorLinks")) == false
@@ -288,13 +289,7 @@ public class GroupsTreeService {
                 "dt-tree-group-system", "dt-tree-system", "dt-tree-group-trash", "dt-tree-trash",
                 "dt-tree-group", "dt-tree").contains(click) == false) return;
 
-        String show = request.getParameter("showBadMirrorings");
-        String requestUri = request.getRequestURI();
-        if (show == null && (requestUri == null || requestUri.contains("/admin/v9/webpages/web-pages-list") == false)) return;
-        boolean enabled = show == null
-            ? new AdminSettingsService(user).getJsonBooleanValue("jstreeSettings_web-pages-list", "showBadMirrorings")
-            : "true".equals(show);
-        if (enabled == false || items.isEmpty()) return;
+        if (isMirroringShown(user, request) == false || items.isEmpty()) return;
 
         String cacheKey = GroupsTreeService.class.getName() + ".mirroringProblems";
         @SuppressWarnings("unchecked")
@@ -315,19 +310,27 @@ public class GroupsTreeService {
                 MirroringDTO problem = problems.get(group.getSyncId());
                 if (problem == null) continue;
 
+                String icon;
                 String title;
                 if (Tools.isTrue(problem.getMultipleErr())) {
-                    item.setIcon("ti ti-exclamation-circle text-danger");
+                    icon = "ti ti-exclamation-circle text-danger";
                     title = prop.getText("components.mirroring.multiple_mapping_err");
                 } else {
-                    item.setIcon("ti ti-alert-triangle text-warning");
+                    icon = "ti ti-alert-triangle text-warning";
                     title = prop.getText("components.mirroring.uneven_nesting_err");
                 }
-                if (item.getAAttr() == null) item.setAAttr(new HashMap<>());
-                item.getAAttr().put("title", title);
-                item.getAAttr().put("aria-label", group.getGroupName() + ": " + title);
+                groupItem.setMirroringProblem(new GroupsJsTreeItem.MirroringProblem(icon, title));
             }
         }
+    }
+
+    /** Resolves the shared mirroring toggle for both initial rendering and tree reloads. */
+    private boolean isMirroringShown(Identity user, HttpServletRequest request) {
+        String show = request.getParameter("showBadMirrorings");
+        if (show != null) return "true".equals(show);
+        String requestUri = request.getRequestURI();
+        if (requestUri == null || requestUri.contains("/admin/v9/webpages/web-pages-list") == false) return false;
+        return new AdminSettingsService(user).getJsonBooleanValue("jstreeSettings_web-pages-list", "showBadMirrorings");
     }
 
     public static List<GroupDetails> sortGroupsBasedOnUserSettings(Identity user, List<GroupDetails> groups) {
