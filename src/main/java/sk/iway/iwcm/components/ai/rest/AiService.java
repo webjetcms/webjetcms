@@ -225,6 +225,13 @@ public class AiService {
         return false;
     }
 
+    private boolean isPersistentChatEnabled(AssistantDefinitionEntity assistant) {
+        return List.of("openai", "gemini").contains(assistant.getProvider()) && aiInterfaces.stream()
+            .anyMatch(provider -> provider.getProviderId().equals(assistant.getProvider())
+                && provider instanceof sk.iway.iwcm.components.ai.providers.LibrarySupportLogic library
+                && library.supportsPersistentChat(assistant));
+    }
+
     public String getBonusHtml(Long assistantId, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) {
 
         AssistantDefinitionEntity assistant = getAssistant(assistantId, assistantRepo, Prop.getInstance(request));
@@ -408,6 +415,7 @@ public class AiService {
         ai.setProviderTitle(providerTitle);
 
         ai.setUseStreaming(aiService == null ? Tools.isTrue(assistant.getUseStreaming()) : aiService.isStreamingEnabled(assistant));
+        ai.setPersistentChat(aiService != null && aiService.isPersistentChatEnabled(assistant));
         ai.setAction(assistant.getAction());
         ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + assistant.getGroupName()));
         ai.setUserPromptEnabled(Tools.isTrue(assistant.getUserPromptEnabled()));

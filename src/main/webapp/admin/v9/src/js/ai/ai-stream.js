@@ -5,7 +5,7 @@
  * @param {function(string): void} onDelta Receives generated text as it arrives.
  * @returns {Promise<object>} Final assistant response, including usage and any provider error.
  */
-export async function readAiStream(response, onDelta) {
+export async function readAiStream(response, onDelta, onMetadata = () => {}) {
     if (!response.ok) {
         await response.body?.cancel();
         throw new Error(`HTTP ${response.status} ${response.statusText}`.trim());
@@ -27,6 +27,9 @@ export async function readAiStream(response, onDelta) {
         const message = JSON.parse(line);
         if (message?.type === "delta" && typeof message.text === "string") {
             onDelta(message.text);
+        } else if (message?.type === "metadata" && typeof message.metadata?.threadId === "string"
+            && typeof message.metadata?.messageId === "string" && Number.isInteger(message.metadata?.revision)) {
+            onMetadata(message.metadata);
         } else if (message?.type === "result" && Number.isInteger(message.result?.totalTokens)
             && message.result.totalTokens >= 0
             && (message.result.error == null || typeof message.result.error === "string")) {

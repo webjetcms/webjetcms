@@ -416,6 +416,23 @@ class LibrarySupportLogicTest {
         return assistant;
     }
 
+    /** Image interpretation uses non-stored text generation and shares the chat cancellation signal. */
+    @Test
+    void describesUploadedImagesWithoutRetainingAnExtraResponse() throws Exception {
+        AiClient client = mock(AiClient.class);
+        TestLibrarySupportLogic logic = new TestLibrarySupportLogic(client, null);
+        InputDataDTO input = textInput();
+        var config = AiProviderConfig.builder("key").build();
+        var image = new com.webjetcms.ai.BinaryContent(new byte[] {1, 2, 3}, "image/png", "image.png");
+        logic.describeChatImage(image, assistant(), input, config);
+        var request = ArgumentCaptor.forClass(AiRequest.class);
+        verify(client).execute(eq("test-provider"), request.capture(), same(config), same(input.getCancellationToken()));
+        assertEquals(AiOperation.TEXT, request.getValue().operation());
+        assertEquals(image, request.getValue().inputMedia());
+        assertFalse(request.getValue().store());
+        assertNull(request.getValue().previousResponseId());
+    }
+
     private static final class TestLibrarySupportLogic extends LibrarySupportLogic {
 
         private TestLibrarySupportLogic(AiClient aiClient, WebjetAiConfigurationService configurationService) {

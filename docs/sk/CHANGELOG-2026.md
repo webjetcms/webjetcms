@@ -25,8 +25,16 @@
 </div>
 
 - [Rýchle vyhľadávanie](redactor/admin/search/README.md) je dostupné z hlavičky celej administrácie tlačidlom **Hľadať…** alebo skratkou **Ctrl+K / ⌘K**. Ponúka návrhy stránok podľa názvu a URL, výsledky z obsahu stránok, súborov, používateľov, textových kľúčov a položiek menu. Vybraný výraz môžete preniesť do príslušnej sekcie s ďalšími filtrami (#348).
-- Rýchle vyhľadávanie - nová karta [AI Chat](redactor/admin/search/README.md#ai-chat) umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Zaoblené pole na správu obsahuje výber asistenta a tlačidlo na odoslanie alebo zastavenie odpovede. Odpovede môžete kopírovať; rozhovor aj rozpísaná správa sa zachovajú pri prepínaní kariet a opätovnom otvorení dialógu.
+- Rýchle vyhľadávanie - nová karta [AI Chat](redactor/admin/search/README.md#ai-chat) umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Zaoblené pole na správu obsahuje výber asistenta a tlačidlo na odoslanie alebo zastavenie odpovede. Otázky aj odpovede zobrazujú dátum a čas vytvorenia pri mene odosielateľa. Odpovede môžete kopírovať; rozhovor aj rozpísaná správa sa zachovajú pri prepínaní kariet a opätovnom otvorení dialógu.
 - Rýchle vyhľadávanie - veľkosť dialógu môžete upraviť ťahaním za pravý dolný roh, maximalizovať ho alebo obnoviť jeho pôvodnú veľkosť tlačidlami v hlavičke.
+- AI Chat - históriu rozhovorov a vymazanie odpovedí u poskytovateľa spravuje WebJET CMS bez úprav knižnice `webjet-ai`. Pokračovanie používa uložené ID odpovede; pri strate kontextu u poskytovateľa zostáva história dostupná na čítanie.
+- AI Chat - do ukladaných rozhovorov môžete pridať obrázky, dokumenty a textové súbory cez tlačidlo **+**, pretiahnutím alebo vložením obrázka zo schránky. Prílohy majú náhľady a spolu so súborom histórie `ai_chat.json` sa ukladajú do vlastného priečinka `/files/protected/ai-chat/<userId>/<threadId>/`. Nové súbory majú poradové číslo a pôvodnú príponu, napríklad `1.docx`, `2.png`, `3.jpg`; číslovanie pokračuje naprieč správami rozhovoru. Staršie rozhovory sa presunú automaticky pri načítaní. Z histórie môžete prílohy kedykoľvek stiahnuť pod pôvodným názvom. Ich obsah sa použije ako kontext rozhovoru.
+- AI Chat - opravené zamietnuté načítanie príloh z histórie. Názov súboru aj tlačidlo na stiahnutie používajú overenú požiadavku s CSRF hlavičkou; rovnakým spôsobom sa načítavajú náhľady obrázkov.
+- AI Chat - odpovede asistenta zobrazujú Markdown vrátane tabuliek počas generovania aj v histórii. Kopírovanie zachová pôvodné Markdown značky. Tlačidlo kopírovania zobrazuje iba ikonu s textom v bubline a nachádza sa pred údajom o použitých tokenoch.
+- AI Chat - v histórii môžete vyhľadávať rozhovory podľa názvu, textu správ, asistenta a poskytovateľa aj bez diakritiky. Vyhľadávanie zahŕňa aj staršie rozhovory, ktoré ešte nie sú načítané v zozname.
+- AI Chat - upravený vzhľad rozhovoru: názov v hlavičke, svetlofialové otázky, ikony asistenta, prehľadnejšie prílohy a tabuľky. História zvýrazňuje vybraný rozhovor a obsahuje tlačidlo **Nový chat** aj ikony na skrytie panela a vymazanie rozhovoru. Asistenta si vyberáte v poli na písanie správy.
+- AI Chat - ikona **Súbory v chate** otvára pravý panel s prílohami zo všetkých správ vybraného rozhovoru. Rozlišuje nahrané súbory a súbory vrátené asistentom, umožňuje hľadanie podľa názvu a stiahnutie súboru.
+- AI Chat - správy využívajú celú dostupnú šírku aj pri zväčšení dialógu. Odpovede zostávajú pri ľavom okraji a otázky pri pravom.
 
 ![](redactor/admin/search/quick-search.png)
 

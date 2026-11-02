@@ -1,4 +1,5 @@
 import { readAiStream } from './ai-stream';
+import { historyText, checkAiResponse } from './chat-history-api';
 
 /**
  * Sends a text request and returns the CMS response before editor or chat formatting.
@@ -9,35 +10,41 @@ import { readAiStream } from './ai-stream';
  * @param {function(string): void} [options.onDelta] Receives raw text fragments as they arrive.
  * @returns {Promise<object>} CMS response containing text, usage, continuation and error metadata.
  */
-export async function requestAiText(inputData, { streaming = false, signal, onDelta = () => {} } = {}) {
-    const response = await fetch(streaming
+export async function requestAiText(inputData, { streaming = false, signal, onDelta = () => {}, endpoint, onMetadata = () => {} } = {}) {
+    let body = JSON.stringify(inputData);
+    const headers = {
+        "Accept": streaming ? "application/x-ndjson" : "application/json",
+        "X-CSRF-Token": window.csrfToken
+    };
+    if (endpoint && inputData.files?.length) {
+        const { files, ...message } = inputData;
+        body = new FormData();
+        body.append('message', JSON.stringify(message));
+        for (const file of files) body.append('files', file, file.name);
+    } else {
+        headers['Content-Type'] = 'application/json; charset=utf-8';
+    }
+    const response = await fetch(endpoint || (streaming
         ? "/admin/rest/ai/assistant/response-stream/"
-        : "/admin/rest/ai/assistant/response/", {
+        : "/admin/rest/ai/assistant/response/"), {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            "Accept": streaming ? "application/x-ndjson" : "application/json",
-            "X-CSRF-Token": window.csrfToken
-        },
-        body: JSON.stringify(inputData),
+        headers,
+        body,
         signal
     });
     if (!response.ok) {
-        await response.body?.cancel();
-        if (response.status === 401) WJ.keepSessionShowLogoffMessage();
-        else if (response.status === 403) {
-            try {
-                WJ.keepSessionShowTokenMessage(window.csrfError);
-            } catch (error) {
-                window.alert(window.csrfError);
-            }
-        }
-        throw new Error(`HTTP ${response.status} ${response.statusText}`.trim());
+        let detail;
+        if (endpoint) {
+            try { detail = await response.json(); } catch (error) { /* Use the HTTP status if there is no JSON error. */ }
+        } else await response.body?.cancel();
+        checkAiResponse(response, typeof detail?.error === 'string'
+            ? historyText(detail.error)
+            : `HTTP ${response.status} ${response.statusText}`.trim());
     }
 
     let result;
     if (streaming) {
-        result = await readAiStream(response, onDelta);
+        result = await readAiStream(response, onDelta, onMetadata);
     } else {
         const contentType = response.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase();
         if (contentType !== "application/json") {

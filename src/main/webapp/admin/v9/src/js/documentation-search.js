@@ -1,6 +1,7 @@
 import { node } from './dashboard/widget-utils';
 
-const markdownTags = { A: 'a', B: 'strong', I: 'em', BR: 'br', H1: 'h1', H2: 'h2', H3: 'h3', BLOCKQUOTE: 'blockquote', UL: 'ul', LI: 'li' };
+const markdownTags = { A: 'a', B: 'strong', I: 'em', BR: 'br', H1: 'h1', H2: 'h2', H3: 'h3', BLOCKQUOTE: 'blockquote', UL: 'ul', LI: 'li',
+    TABLE: 'table', THEAD: 'thead', TBODY: 'tbody', TR: 'tr', TH: 'th', TD: 'td' };
 
 /** Copies only formatting produced by WJ.parseMarkdown, never response attributes or active elements. */
 function appendMarkdown(parent, source) {

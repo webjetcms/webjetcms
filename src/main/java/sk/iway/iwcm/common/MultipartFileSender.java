@@ -58,6 +58,12 @@ public class MultipartFileSender {
          return;
       }
 
+      if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(new java.io.File(file.getPath()))) {
+         response.setHeader("Cache-Control", "no-store");
+         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+         return;
+      }
+
       if (!file.exists()) {
          Logger.error(MultipartFileSender.class, "File doesn't exist at URI : "+file.getAbsolutePath());
          response.sendError(HttpServletResponse.SC_NOT_FOUND);

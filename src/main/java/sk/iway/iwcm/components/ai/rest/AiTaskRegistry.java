@@ -90,6 +90,20 @@ public class AiTaskRegistry implements DisposableBean {
      */
     public final AssistantResponseDTO runAssistantTask(Callable<AssistantResponseDTO> task, InputDataDTO inputData, HttpServletRequest request) throws ProviderCallException {
         String taskId = getTaskId(inputData.getAssistantId(), inputData.getTimestamp(), request);
+        return runTask(taskId, task, inputData);
+    }
+
+    /** Uses the durable thread ID so cancellation also works from another browser session. */
+    public AssistantResponseDTO runChatTask(String threadId, Callable<AssistantResponseDTO> task, InputDataDTO inputData) throws ProviderCallException {
+        return runTask("ai_chat_" + threadId, task, inputData);
+    }
+
+    public void cancelChatTask(String threadId) {
+        Future<AssistantResponseDTO> future = futuresMap.get("ai_chat_" + threadId);
+        if (future != null) future.cancel(true);
+    }
+
+    private AssistantResponseDTO runTask(String taskId, Callable<AssistantResponseDTO> task, InputDataDTO inputData) throws ProviderCallException {
         AiCancellationToken cancellation = new AiCancellationToken();
         inputData.setCancellationToken(cancellation);
         // Capture current RequestBean (thread-local) from caller thread

@@ -50,7 +50,7 @@ export class AiChatTransport {
         try {
             const operation = assistant.provider === "browser"
                 ? this._executeBrowser(assistant, inputData, request, current, update, callbacks)
-                : this._executeRest(assistant, inputData, request, update);
+                : this._executeRest(assistant, inputData, request, update, callbacks);
             const result = await Promise.race([operation, cancellation]);
             if (!current()) return { ...executionResult, response: request.text, stopped: true };
             return { ...executionResult, ...result };
@@ -63,16 +63,26 @@ export class AiChatTransport {
         }
     }
 
-    async _executeRest(assistant, inputData, request, update) {
-        const data = { ...inputData, assistantId: request.assistantId, timestamp: request.timestamp };
+    async _executeRest(assistant, inputData, request, update, callbacks) {
+        const persistent = inputData.persistentChat === true;
+        const data = persistent ? {
+            assistantId: request.assistantId, threadId: inputData.threadId, revision: inputData.revision,
+            requestId: inputData.requestId, retryMessageId: inputData.retryMessageId, userPrompt: inputData.userPrompt,
+            ...(inputData.files?.length ? { files: inputData.files } : {})
+        } : { ...inputData, assistantId: request.assistantId, timestamp: request.timestamp };
+        if (persistent) request.threadId = data.threadId || data.requestId;
         if (typeof data.conversationId !== "string" || data.conversationId.length === 0) delete data.conversationId;
         const result = await requestAiText(data, {
             streaming: assistant.useStreaming === true,
+            endpoint: persistent ? '/admin/rest/ai/chat/messages' : undefined,
             signal: request.controller.signal,
-            onDelta: text => update(request.text + text)
+            onDelta: text => update(request.text + text),
+            onMetadata: metadata => callbacks.onMetadata?.(metadata)
         });
+        if (result.threadId) callbacks.onMetadata?.(result);
         if (result.error) {
             return {
+                persisted: Boolean(result.threadId),
                 response: request.text,
                 errorText: result.error,
                 errorCategory: typeof result.errorCategory === "string" ? result.errorCategory : null,
@@ -82,9 +92,11 @@ export class AiChatTransport {
             };
         }
         return {
+            persisted: Boolean(result.threadId),
             success: true,
             response: typeof result.response === "string" ? result.response : request.text,
             totalTokens: result.totalTokens,
+            attachments: Array.isArray(result.attachments) ? result.attachments : [],
             conversationId: typeof result.conversationId === "string" && result.conversationId.length > 0 ? result.conversationId : null
         };
     }
@@ -133,6 +145,10 @@ export class AiChatTransport {
         request.controller.abort();
         if (request.browser != null) {
             this._destroyBrowser(request);
+        } else if (request.threadId) {
+            fetch(`/admin/rest/ai/chat/threads/${encodeURIComponent(request.threadId)}/stop`, {
+                method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }, keepalive: true
+            }).catch(() => {});
         } else {
             const parameters = new URLSearchParams({ assistantId: request.assistantId, timestamp: request.timestamp });
             fetch("/admin/rest/ai/assistant/stop-assistant/?" + parameters, {

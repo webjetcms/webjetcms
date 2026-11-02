@@ -27,6 +27,12 @@ public class AssistantResponseDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean retryable;
     private String conversationId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String threadId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String messageId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long revision;
     private int totalTokens;
     private List<String> tempFiles = new ArrayList<>();
     private String generatedFileName;

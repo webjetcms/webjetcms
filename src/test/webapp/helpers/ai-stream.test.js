@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const sourceDirectory = path.resolve(__dirname, '../../../main/webapp/admin/v9/npm_packages/webjetdatatables/ai');
-const sources = ['../../../src/js/ai/ai-stream.js', '../../../src/js/ai/ai-rest-transport.js',
+const sources = ['../../../src/js/ai/chat-history-api.js', '../../../src/js/ai/ai-stream.js', '../../../src/js/ai/ai-rest-transport.js',
     '../../../src/js/ai/ai-response-parser.js',
     'ai-execution-result.js', 'ai-rest-executor.js', '../../../src/js/ai/ai-chat-transport.js'].map(filename =>
     fs.readFileSync(path.join(sourceDirectory, filename), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')
@@ -13,7 +13,7 @@ const sources = ['../../../src/js/ai/ai-stream.js', '../../../src/js/ai/ai-rest-
 
 function loadTransport(fetch, notifications = []) {
     const context = vm.createContext({
-        TextDecoder, AbortController, URLSearchParams, fetch, console: { log() {} },
+        TextDecoder, AbortController, URLSearchParams, FormData, fetch, console: { log() {} },
         window: { csrfToken: 'test-csrf', csrfError: 'Token expired', alert: text => notifications.push(text) },
         WJ: {
             keepSessionShowLogoffMessage: () => notifications.push('Session expired'),
@@ -30,6 +30,31 @@ function delta(text) {
 function result(payload) {
     return JSON.stringify({ type: 'result', result: payload }) + '\n';
 }
+
+test('saved chat uploads use multipart with the CSRF token and preserve streaming', async () => {
+    let request;
+    const file = new File(['Private attachment'], 'notes.txt', { type: 'text/plain' });
+    const { AiChatTransport } = loadTransport(async (url, options) => {
+        request = { url, ...options };
+        return new Response(delta('Answer') + result({ response: 'Answer', totalTokens: 7, threadId: 'thread' }),
+            { headers: { 'Content-Type': 'application/x-ndjson' } });
+    });
+    const response = await new AiChatTransport().execute({ assistantId: 7, useStreaming: true }, {
+        persistentChat: true, userPrompt: 'Read this file', requestId: 'request', files: [file]
+    });
+    assert.equal(response.success, true);
+    assert.equal(response.response, 'Answer');
+    assert.equal(request.url, '/admin/rest/ai/chat/messages');
+    assert.equal(request.headers['X-CSRF-Token'], 'test-csrf');
+    assert.equal(request.headers.Accept, 'application/x-ndjson');
+    assert.equal(request.headers['Content-Type'], undefined, 'The browser must supply the multipart boundary.');
+    const message = JSON.parse(request.body.get('message'));
+    assert.equal(message.assistantId, 7);
+    assert.equal(message.userPrompt, 'Read this file');
+    assert.equal(message.files, undefined);
+    assert.equal(await request.body.get('files').text(), 'Private attachment');
+    assert.equal(request.body.get('files').name, 'notes.txt');
+});
 
 /** Exercises the real executor, substituting only the HTTP response and editor. */
 async function execute(chunks, streaming = true) {

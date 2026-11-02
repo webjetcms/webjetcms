@@ -14,6 +14,7 @@ import java.util.ArrayList;
 
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 
 /**
  * IwcmInputStream.java
@@ -40,6 +41,7 @@ public class IwcmInputStream extends InputStream
 
 	public IwcmInputStream(File f) throws FileNotFoundException
 	{
+        AiChatPaths.requireGenericAccess(f);
 		String virtualPath = IwcmFsDB.getVirtualPath(f.getPath());
 
 		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
@@ -62,6 +64,7 @@ public class IwcmInputStream extends InputStream
 
 	public IwcmInputStream(File f,int fatId)
 	{
+        AiChatPaths.requireGenericAccess(f);
 		String virtualPath = IwcmFsDB.getVirtualPath(f.getPath());
 		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
 		file=new File(Tools.getRealPath(virtualPath));
@@ -70,6 +73,7 @@ public class IwcmInputStream extends InputStream
 
 	public IwcmInputStream(String virtualPath,int fatId)
 	{
+        AiChatPaths.requireGenericAccess(new File(Tools.getRealPath(virtualPath)));
 		this.fatId=fatId;
 		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
 		file=new File(Tools.getRealPath(virtualPath));
@@ -82,6 +86,7 @@ public class IwcmInputStream extends InputStream
 
 	public IwcmInputStream(String virtualPath, boolean isVirtualPath) throws FileNotFoundException
 	{
+        AiChatPaths.requireGenericAccess(new File(isVirtualPath ? Tools.getRealPath(virtualPath) : virtualPath));
 		if (isVirtualPath)
 		{
 			isDBStorage = IwcmFsDB.useDBStorage(virtualPath);

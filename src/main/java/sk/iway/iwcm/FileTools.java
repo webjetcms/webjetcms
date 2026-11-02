@@ -134,6 +134,8 @@ public class FileTools
 	 */
 	public static boolean copyFile(File src, File dest)
 	{
+        if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(src)
+            || sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(dest)) return false;
 		boolean ret = false;
 		try
 		{
@@ -290,6 +292,7 @@ public class FileTools
      */
 	public static boolean deleteDirTree(IwcmFile file, long minFileAge)
 	{
+        if (file != null && sk.iway.iwcm.components.ai.chat.AiChatPaths.containsPrivateTree(new File(file.getPath()))) return false;
 		boolean result = true;
 
 		long minLastModified = Tools.getNow() - minFileAge;
