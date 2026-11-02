@@ -3273,6 +3273,8 @@
         insert_content_into_ckeditor_at_cursor: function(html) {
             var oEditor = this.library_editor_bookmark ? this.library_editor_bookmark.editor : window.getCkEditorInstance();
             if (this.library_editor_bookmark) {
+                // Focus without starting the browser's scroll to the beginning of a long inline editor.
+                oEditor.editable().$.focus({ preventScroll: true });
                 oEditor.focus();
                 oEditor.getSelection().selectBookmarks(this.library_editor_bookmark.marks);
             }

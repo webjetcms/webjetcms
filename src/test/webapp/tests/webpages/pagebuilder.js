@@ -3539,6 +3539,59 @@ Scenario('library content initializes duplicable elements immediately', async ({
     DTE.cancel();
 });
 
+Scenario('library image insertion keeps the scrolled destination visible', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    I.executeScript(() => {
+        const paragraph = document.querySelector('section.pb-workbench-autotest .pb-workbench-copy');
+        const spacer = document.createElement('p');
+        spacer.textContent = 'Tall content autotest';
+        spacer.style.height = '1400px';
+        paragraph.before(spacer);
+        const pb = window.pageBuilder;
+        pb.template.library.find(item => item.textKey === 'content').groups.push({
+            id: 'autotest-blog-image', textKey: 'Blog image autotest',
+            content: '<div class="autotest-blog-image"><img alt="Image autotest" src="/templates/aceintegration/jet/assets/images/logo-jet.png"></div>'
+        });
+        pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
+    });
+    const paragraph = workbenchFixture+' .pb-workbench-copy';
+    I.click(paragraph);
+    // Magicline needs a pointer position relative to the paragraph inside the scaled iframe.
+    I.usePlaywrightTo('hover the content insertion destination', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const box = await frame.locator(paragraph).boundingBox();
+        await page.mouse.move(box.x+20, box.y+2);
+    });
+    I.waitForVisible('#pb-wjmagiclinePlus', 10);
+    // The animated handle listens to mouseup and cannot satisfy locator stability checks.
+    I.executeScript(() => document.querySelector('#pb-wjmagiclinePlus').dispatchEvent(new MouseEvent('mouseup', {bubbles: true})));
+    I.waitForVisible('.pb-library--content', 10);
+    I.clickCss('.pb-library--content [data-library-type=library]');
+    I.fillField('.pb-library--content .library-template-block--content .library-filter-input', 'Blog image autotest');
+    const before = await I.executeScript(() => window.scrollY);
+    I.assertAbove(before, 1000, 'The destination must be below the start of the editable region');
+    I.clickCss('.pb-library--content [data-library-item-id=autotest-blog-image]');
+    I.waitForInvisible('.pb-library--content', 10);
+    I.waitForElement(workbenchFixture+' .autotest-blog-image img', 10);
+    const after = await I.executeScript(() => window.scrollY);
+    I.assertBelow(Math.abs(after-before), 5, 'Inserting an image block must preserve the viewport: '+before+' -> '+after);
+    I.doubleClick(workbenchFixture+' .autotest-blog-image img');
+    I.waitForVisible('.cke_dialog_container', 10);
+    I.switchTo('#wjImageIframeElement');
+    I.waitForVisible('#txtUrl', 10);
+    I.fillField('#txtUrl', '/templates/aceintegration/jet/assets/images/logo-jet.png?autotest=changed');
+    I.switchTo();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_ok');
+    I.waitForInvisible('.cke_dialog_container', 10);
+    I.seeNumberOfElements(workbenchFixture+' .autotest-blog-image img', 1);
+    I.seeElement(workbenchFixture+' .autotest-blog-image img[src$="?autotest=changed"]');
+    I.saveScreenshot('autotest-pagebuilder-blog-image.png');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
 Scenario('library content insertion preserves the CKEditor selection', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     await assertWorkbenchEditorFocused(I, workbenchFixture+' .pb-workbench-copy');
