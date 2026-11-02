@@ -306,12 +306,16 @@ Presné endpointy zoznamu balíkov a merge patria do príslušných dokumentov. 
 
 | Endpoint | Výsledok |
 | --- | --- |
+| `GET /admin/rest/content-branches` | Dostupné neuzavreté verzie aktuálnej admin domény pre prepínač, vrátane názvu a stavu. Prehľad môže výslovne vyžiadať aj uzavreté verzie cez `includeClosed=true`. |
+| `POST /admin/rest/content-branches` s `{ "name": "Vianočná kampaň", "description": "...", "expectedDomainName": "www.firma.sk" }` | Overí práva a údaje aj zhodu očakávanej domény formulára s aktuálnou admin doménou servera; nesúlad vráti `409`. Vlastníka určí server a založí prázdnu `DRAFT` verziu bez termínu. Vráti `201` a identitu/názov/doménu/stav. Nemení admin výber, nevytvára snapshot webu ani vetvu z inej vetvy. |
 | `GET /admin/rest/content-branches/context` | Produkcia alebo zvolená vetva pre aktuálnu doménu, názov a aktuálne oprávnenia. |
 | `POST /admin/rest/content-branches/context` s `{ "branchId": 42 }` | Overenie a zmena výberu v administrácii; `0` vyberie produkciu. Existujúca CSRF ochrana zostáva. |
 | `GET /admin/rest/content-branches/42/preview-link?docId=123` | Overená URL na výslednú stránku vetvy; pri zmazanej/nedostupnej položke vysvetlená chyba. |
 | `GET /__branch-preview/42/...` | Chránený náhľad stránky alebo podporovaného assetu. |
 
 Server odpovedá `403` pri nedostatočnom oprávnení, `404` pri neexistujúcom zdroji v príslušnom kontexte a `409` pri neplatnom stave alebo nesúlade administračnej obrazovky s výberom. Chyby používať v existujúcom štýle REST/DataTables, bez nového všeobecného API obalu.
+
+UI `Vytvoriť` použije POST kolekcie a otvorí detail; `Upravovať web` až následne použije POST `/context` s vráteným ID. Rovnaký endpoint výberu používa prepínač. Pri chybe sa aktívny indikátor nezmení. Vybraný neuzavretý stav môže dovoliť iba čítanie; voľba kontextu sama nemení životný cyklus vetvy. Po uzavretí aktívnej verzie sa zápis odmietne a UI ponúkne explicitný prechod na produkciu; starý request sa nikdy automaticky nepresmeruje na LIVE. Konkrétne stavy, formulár a navigáciu určuje [návrh UI](05-rozhranie.md).
 
 ## 11. Overenie návrhu pri realizácii
 

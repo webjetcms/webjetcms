@@ -59,7 +59,7 @@ Nové scenáre umiestniť napr. do `src/test/webapp/tests/webpages/content-branc
 
 Minimálny spoločný príbeh:
 
-1. Vytvoriť vetvu, upraviť existujúcu stránku a založiť nový priečinok s dvoma stránkami.
+1. Cez `Nová pracovná verzia` vytvoriť prázdnu vetvu a overiť, že admin výber ostal pôvodný. Aktivovať ju cez `Upravovať web`, upraviť existujúcu stránku a založiť nový priečinok s dvoma stránkami; zmeny sa do balíka pridajú uložením bez osobitného zaraďovania.
 2. Nahrať obrázok a PDF, pridať médium pod stabilným ID.
 3. V náhľade prejsť z úvodnej stránky cez menu na novú stránku a stiahnuť pracovné PDF. Novú dostupnú novinku s perexom a existujúcou perex skupinou nájsť aj cez reálnu aplikáciu Novinky, jej filter a stránkovanie.
 4. Vedľa otvoriť produkciu: žiadne pracovné údaje ani bajty sa nezobrazia.
@@ -68,6 +68,10 @@ Minimálny spoločný príbeh:
 7. V samostatnom scenári naplánovať balík, spôsobiť nový konflikt a overiť zastavenie.
 
 Rovnakú prílohu otestovať aj cez thumbnail a po predchádzajúcom zahriatí produkčnej cache. HTML nesmie obsahovať fyzické pracovné cesty. Nepodporovaný formulárový zápis z preview nesmie odoslať email či vytvoriť produkčnú objednávku.
+
+UI scenáre doplnia druhý vstup vytvorenia cez prepínač, návrat na produkciu, neuložený formulár, read-only naplánovanú verziu a uzavretie práve vybranej verzie. V poslednom prípade starý SAVE zlyhá a neuloží do LIVE; prechod na produkciu je výslovný. Podrobnosti sú v častiach 1–2 a akceptácii [05](05-rozhranie.md).
+
+Pri vytváraní otvoriť dialóg pre doménu A a v druhej záložke zmeniť doménu na B. Odoslanie pôvodného formulára vráti `409`, zachová jeho text a nevytvorí balík v nesprávnej doméne.
 
 Pred merge načítať dokument a médium aj cez ich produkčné JPA repositories. Po JDBC publikovaní musí nové repository čítanie a verejný render vrátiť ten istý nový obsah aj kategorizáciu; tým sa overí invalidácia persistence cache, nie iba HTML cache.
 

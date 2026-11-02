@@ -4,6 +4,8 @@ Stav: **kompletný návrh na záverečné posúdenie, bez implementácie**. Podk
 
 Cieľom je pripraviť viac stránok, zmeny stromu, stránkové médiá a redakčné súbory v jednej pracovnej vetve. Redaktor môže preklikať pripravovaný web, porovnať zmeny s produkciou, vyriešiť konflikty a publikovať balík okamžite alebo v spoločnom termíne. Existujúce aj nové stránky a priečinky si zachovajú ID.
 
+**Kde vytvorím balík a ako ho vyberiem?** [Rýchly postup v návrhu UI](05-rozhranie.md#rýchly-postup-od-vytvorenia-po-prepnutie) ukazuje vytvorenie cez `Pracovné verzie`, aktiváciu cez `Upravovať web` a prepínač pod doménou. Dokument obsahuje formulár aj rozbalenú ponuku produkcie a pracovných verzií.
+
 ## Dohodnutý základ
 
 - Vetva je pracovná vrstva nad aktuálnou produkciou. Neupravené položky sa čítajú z produkcie; pri prvej zmene sa zachytí základ na porovnanie a pracovná verzia.
@@ -40,7 +42,7 @@ Tento adresár nie je návrhom kopírovania celého Git modelu. Git ostáva prir
 | [03 — Náhľad a Java](03-nahlad-a-java.md) | Triedy a integračné body, DocDB/GroupsDB, SQL/JPA, URL gateway, cache a adaptéry. |
 | [03a — Novinky](03a-novinky.md) | Konkrétny návrh NewsApp/NewsActionBean: pracovné stránky pred filtrami, kategórie, čas, count/paging, admin editor a zhoda po merge. |
 | [04 — Merge a publikovanie](04-merge-a-publikovanie.md) | Pracovné ukladanie, porovnanie, API, poradie zápisov, termín a chyby. |
-| [05 — Rozhranie](05-rozhranie.md) | Prepínač vetiev, wireframes, konflikty, plánovanie a priebeh. |
+| [05 — Rozhranie](05-rozhranie.md) | Vytvorenie balíka krok za krokom, formulár, aktivácia a prepínač pod doménou; konflikty, plánovanie a priebeh. |
 | [06 — Implementačný plán](06-plan-implementacie.md) | Osem postupných krokov, závislosti, podmienky dokončenia a odhad. |
 | [07 — Overenie](07-overenie.md) | Šestnásť akceptačných oblastí vrátane Noviniek a existujúce testy, na ktoré nadviazať. |
 | [08 — Ďalšie moduly](08-rozsirovanie-modulov.md) | Porovnanie architektúr, spoločná budúca JSON tabuľka, príprava jadra už dnes a konkrétny postup pre základný banner a galériu. |

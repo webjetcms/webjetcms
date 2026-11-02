@@ -81,7 +81,7 @@ Práca:
 1. Zaviesť request-local výsledný pohľad a oddelené objekty stránok/priečinkov; zapojiť detail, metadáta, URL→ID, ID→URL a strom v `DocDB`/`GroupsDB`.
 2. Zapnúť gateway a URL helper pred `PathFilter`, výstupný prepis podporovaných URL/redirectov a vypnutie HTML/component cache.
 3. Adaptovať `NewsQuery`, relevantné SQL zoznamy `DocDB`, administratívne JPA listy a `GroupsTreeService` pred filtráciou/paging. Zachovať celý render `NewsApp` → `NewsActionBean` → `NewsQuery` → Velocity; zapojiť účinné korene/default stránky, všetky štandardné filtre, `previewAt`, perex skupiny, unikátne výsledky, count a stránkovanie. Cielené opravy joinov/poradia platia aj v LIVE. Podrobnosti a hranice vlastných kritérií určuje `03a`.
-4. Dodať základ prepínača a trvalého označenia kontextu podľa UI návrhu. Každá obsahová AJAX/write požiadavka nesie kontext obrazovky; mismatch sa odmietne.
+4. Dodať základ prepínača pod doménou, vytvorenia cez `Nová pracovná verzia`, následnej aktivácie cez `Upravovať web` a trvalého označenia kontextu podľa UI návrhu. Každá obsahová AJAX/write požiadavka nesie kontext obrazovky; mismatch sa odmietne. Vytvorenie samo admin výber nemení.
 5. Dodať integračný kontrakt a inventár podporovaných komponentov/šablón. V preview sa neodosielajú formuláre ani nezapisuje produkčná návštevnosť; vlastné dynamické komponenty potrebujú explicitný adaptér.
 
 **Hranica:** testovacie pracovné riadky možno pripravovať fixture/službou z P02; kompletná redakčná editácia príde v P04/P05. Verejné vyhľadávacie indexy a zákaznícke obchodné dáta zostávajú produkčné; UI/integrácia nesmú tvrdiť opak.

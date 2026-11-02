@@ -4,7 +4,19 @@
 
 Zvolená jednoduchá politika rieši konflikt celého objektu voľbou produkcie alebo pracovnej verzie. Samostatné polia sa používajú na vysvetlenie rozdielov, automaticky sa nespájajú. Branch sa po publikovaní uzavrie, individuálne plány sa nesmú s balíkom potichu prekryť a zrkadlenie sa nevykoná implicitne. Zdieľané systémové stránky sú iba na čítanie. Redakčné súbory používajú dnešné mapovanie úložiska a oprávnenia; pri spoločných fyzických cestách UI upozorní na dosah na ďalšie domény. Databázové predpoklady vrátane InnoDB rieši dátový návrh.
 
-## 1. Základná orientácia
+## Rýchly postup: od vytvorenia po prepnutie
+
+`Package/balík` a `branch/vetva` označujú ten istý pripravovaný obsah; používateľ nevytvára dva samostatné objekty. V UI používame názov **Pracovná verzia**, napríklad „Vianočná kampaň“.
+
+1. V administrácii vyberiem doménu a otvorím **Pracovné verzie → Nová pracovná verzia**. Rovnaký formulár otvorím aj z prepínača pod doménou.
+2. Vyplním názov a prípadne poznámku. **Vytvoriť** založí prázdnu rozpracovanú verziu a otvorí jej detail.
+3. Kliknem **Upravovať web**. Tým sa verzia vyberie v administrácii a otvorí sa bežný strom stránok. V hlavičke vidím jej názov.
+4. Upravujem existujúcimi editormi. Uloženie automaticky pridá zmenu do balíka; stránky a súbory netreba osobitne označovať tlačidlom „pridať do balíka“.
+5. Cez **Náhľad** preklikám pracovný web. Cez prepínač **Pracovná verzia** sa vrátim na **Produkcia** alebo vyberiem inú verziu.
+
+Vytvorenie, výber na editovanie, otvorenie náhľadu a publikovanie sú samostatné akcie. Prepnutie verzie nič nepublikuje a zachová už uložené pracovné zmeny. Rozbalená ponuka je nižšie; presný formulár je v časti 2.
+
+## 1. Prepínač produkcie a pracovných verzií
 
 Redaktor pracuje v existujúcom editore, strome stránok a správcovi súborov. Prepínač mení zdroj obsahu pre podporované obrazovky. Detaily ukladania, názvy tabuliek ani staging cesty sa v bežnom rozhraní nezobrazujú.
 
@@ -24,7 +36,26 @@ Redaktor pracuje v existujúcom editore, strome stránok a správcovi súborov. 
 └───────────────────┴──────────────────────────────────────────────────┘
 ```
 
-Prepínač ponúka `Produkcia`, aktívne pracovné verzie vybranej domény a `Spravovať pracovné verzie`. Zobrazuje iba verzie, ku ktorým má používateľ prístup. Aktívny kontext je vždy napísaný aj v hlavičke; samotná farba nestačí. V produkcii je označenie `Produkcia`, v branch názov pracovnej verzie.
+Prepínač je v spoločnom bočnom paneli **hneď pod výberom domény**, dostupný aj pri prechode zo stránok do súborov či médií. Ponúka `Produkcia`, neuzavreté pracovné verzie vybranej domény, `Nová pracovná verzia` a `Spravovať pracovné verzie`. Zobrazuje iba verzie, ku ktorým má používateľ prístup. Aktívny kontext je vždy napísaný aj v hlavičke; samotná farba nestačí. V produkcii je označenie `Produkcia`, v branch názov pracovnej verzie.
+
+```text
+Doména
+[ www.firma.sk                       ▾ ]
+
+Pracovná verzia
+[ Vianočná kampaň                    ▾ ]
+┌──────────────────────────────────────┐
+│   Produkcia                          │
+│ ✓ Vianočná kampaň · Rozpracovaná       │
+│   Nový cenník · Rozpracovaná          │
+│   Jesenná ponuka · Naplánovaná        │
+│ ──────────────────────────────────── │
+│ + Nová pracovná verzia               │
+│   Spravovať pracovné verzie          │
+└──────────────────────────────────────┘
+```
+
+Pri prvom prihlásení je vybraná produkcia. Výber platí pre administráciu daného používateľa/session; neprepína ostatných redaktorov. Viacerí oprávnení redaktori môžu vybrať tú istú pracovnú verziu a pripravovať spoločný balík. Vypnutá funkcia alebo chýbajúce funkčné oprávnenie skryje nové ovládanie; obsahové práva sa naďalej overujú pri jednotlivých operáciách.
 
 Na menšej obrazovke zostáva názov kontextu v hlavičke dostupný aj pri zatvorenom bočnom menu. Dlhý názov sa skráti vizuálne, plný názov musí zostať dostupný používateľovi klávesnice a čítačke obrazovky.
 
@@ -35,6 +66,29 @@ Na menšej obrazovke zostáva názov kontextu v hlavičke dostupný aj pri zatvo
 3. Pri zmene domény sa zvolí produkcia novej domény. Pracovná verzia patriaca predchádzajúcej doméne sa neprenesie.
 4. Nepodporovaná obrazovka pri aktívnej branch zobrazí `Táto funkcia sa v pracovnej verzii neupravuje` a odkaz na vedomé prepnutie do produkcie. Podľa typu obrazovky môže poskytnúť čítanie; zápis server odmietne.
 
+Výber inej verzie používa tú istú akciu ako `Upravovať web` v jej detaile. Pri zmene cez prepínač zostane používateľ v rovnakej podporovanej sekcii; strom a zoznam sa načítajú pre zvolenú verziu. Ak pôvodne otvorený objekt v novom kontexte neexistuje, otvorí sa zoznam s vysvetlením. Pri chybe prepnutia zostane označený pôvodný kontext, nie vizuálne premenovaný editor so starými dátami.
+
+Pri neuloženom formulári je voľba jednoznačná:
+
+```text
+Máte neuložené zmeny vo verzii „Vianočná kampaň“.
+Pred prepnutím ich môžete uložiť v otvorenom editore.
+
+[Zostať v editore]  [Zahodiť neuložené zmeny a prepnúť]
+```
+
+Uloženie pred prepnutím prebehne bežným tlačidlom editora v pôvodnom kontexte. Tým sa vyhneme nejasnému „uložiť a prepnúť“, ktoré by mohlo vyzerať ako prenos zmien do cieľovej verzie.
+
+| Stav vybranej verzie | Správanie UI |
+| --- | --- |
+| Rozpracovaná (`DRAFT`) | Bežná editácia podľa práv. |
+| Naplánovaná (`SCHEDULED`) | Obsah iba na čítanie a náhľad. Úpravy sa povolia až po výslovnom `Zrušiť plánovanie` v detaile. |
+| Vyžaduje zásah (`NEEDS_ATTENTION`) | Otvorí sa detail problému; `Obnoviť prípravu` použije existujúce `reopen` a až potom umožní editáciu. |
+| Publikuje sa / Publikovanie zlyhalo | Otvorí sa priebeh alebo obnova; výber neodomkne obsah na editovanie. |
+| Publikovaná / Zrušená | Nie sú v ponuke aktívnych verzií; dostupné zostávajú v prehľade ako záznam výsledku. |
+
+Ak sa už vybraná verzia medzičasom uzavrie, obrazovka ukáže stav a akciu `Prejsť do produkcie`. Nevymení potichu cieľ otvoreného formulára za produkciu. Server starý zápis odmietne; nový kontext sa použije až po vedomom prepnutí a obnovení obrazovky.
+
 ### Záložky a request kontext
 
 Každá otvorená obrazovka nesie kontext platný pri jej načítaní: doménu a `branchId`, vrátane explicitného označenia produkcie. Session uchováva jeden aktuálne vybraný administrátorský kontext. Pri zápise sa explicitný kontext requestu musí zhodovať s aktuálnym výberom v session; server zároveň overí doménu, prístup, stav branch a cieľový záznam.
@@ -43,9 +97,9 @@ Ak používateľ prepne branch v inej záložke, zápis zo staršieho kontextu s
 
 Týmto sa nezavádza viac nezávislých administrátorských kontextov v jednej session. Session nesmie potichu preurčiť cieľ requestu už otvoreného formulára. Rovnaké pravidlo platí pre vnorené médiá, upload, strom priečinkov a pomocné dialógy. Preview je výnimkou z výberu administrácie: jeho samostatná URL nesie konkrétnu branch a používa session iba na prihlásenie a overenie prístupu.
 
-## 2. Zoznam a vytvorenie pracovnej verzie
+## 2. Vytvorenie pracovnej verzie a zoznam balíkov
 
-Nová položka administrácie `Pracovné verzie` otvorí bežný DataTable:
+Nová položka administrácie `Pracovné verzie` otvorí bežný DataTable s tlačidlom **Nová pracovná verzia**. Je dostupný aj cez `Spravovať pracovné verzie` v prepínači. Tvorba a výber používajú rovnaké existujúce funkčné/obsahové práva návrhu; vytvorenie neudeľuje právo priamo publikovať.
 
 | Stĺpec | Príklad | Správanie |
 | --- | --- | --- |
@@ -56,9 +110,33 @@ Nová položka administrácie `Pracovné verzie` otvorí bežný DataTable:
 | Publikovanie | 1. 12. 2026 09:00, Europe/Bratislava | Používateľ vidí aj časové pásmo. |
 | Vytvoril / Upravil | Meno, dátum | Bežné auditné údaje. |
 
-Vytvorenie obsahuje názov, nepovinnú poznámku a prehľad aktuálnej domény. Stručný text vysvetlí model: `Nezmenené stránky a súbory preberá pracovná verzia z aktuálnej produkcie. Vaše úpravy sa zverejnia až publikovaním.`
+Oba vstupy `Nová pracovná verzia` otvoria rovnaký malý dialóg:
 
-Vytvorenie samo nekopíruje celý web ani neplánuje termín. Po vytvorení sa otvorí detail s akciami `Začať upravovať` a `Otvoriť náhľad`. Vstup do editora potom používa novú branch.
+```text
+Nová pracovná verzia
+
+Doména: www.firma.sk
+Základ: aktuálna produkcia
+
+Názov *   [ Vianočná kampaň                         ]
+Poznámka  [ Príprava decembrovej ponuky             ]
+
+Nezmenené stránky a súbory preberá pracovná verzia
+z aktuálnej produkcie. Vaše úpravy sa zverejnia až
+publikovaním.
+
+[Zrušiť]                                  [Vytvoriť]
+```
+
+Názov je povinný, po odstránení okrajových medzier nesmie byť prázdny a má limit dátového modelu 255 znakov. Poznámka je nepovinná. Doména a základ sú informácie iba na čítanie; doména pochádza z aktuálneho výberu administrácie. Rovnaký názov nie je technická chyba; pri zhode v ponuke sa doplní dátum vytvorenia, prípadne ID na rozlíšenie.
+
+Formulár odošle aj očakávanú doménu z času otvorenia. Ak používateľ medzičasom prepne doménu v inej záložke, server vytvorenie odmietne cez `409` a dialóg zachová vyplnené údaje. Zobrazená doména sa nesmie potichu zmeniť pri odoslaní; klientský údaj slúži iba na kontrolu zhody, vlastníka stále určuje server.
+
+Vytvorenie založí prázdnu `DRAFT` verziu s nulou zmien a otvorí jej detail s akciami `Upravovať web` a `Otvoriť náhľad`. **Samotné vytvorenie nemení aktuálny výber administrácie.** `Upravovať web` výslovne aktivuje novú verziu, obnoví hlavičku/prepínač a otvorí bežný strom stránok. Koordinátor tak môže verziu iba založiť a redaktori si ju vyberú neskôr. Kliknutie na názov v zozname otvorí detail, neprepne editor.
+
+Vzniká pracovná vrstva, nie kópia všetkých stránok a súborov; prvý náhľad preto ukazuje aktuálnu produkciu. Aj keď vytvorím novú verziu pri vybranej inej pracovnej verzii, jej základom je produkcia. Rozpracované zmeny predchádzajúcej verzie sa do nej nekopírujú. Termín sa nastaví až cez `Naplánovať` v detaile. Práva na tieto akcie určujú existujúce pravidlá publikovania.
+
+Odchod do vytvárania/detailu aj aktivácia cez `Upravovať web` rešpektujú rovnakú ochranu neuložených zmien ako prepínač. Otvorenie `Náhľad` naopak používa samostatnú záložku a nemení admin výber. Technický kontrakt vytvorenia a výberu je v [03 — Riadiace API](03-nahlad-a-java.md#10-navrhované-riadiace-api).
 
 ## 3. Detail a prehľad pripravenosti
 
@@ -264,5 +342,7 @@ Backend môže smerovať nové operácie pod `/admin/rest/content-branches/{id}/
 8. Simulovaná čiastočná chyba zobrazí pravdivý počet dokončených položiek. Obnova stránky zachová priebeh a pokračovanie nezduplikuje výsledky. Obsah branch ostane uzavretý; nové `LIVE/WORK` riešenie je dostupné iba pre položky bez produkčného zápisu. Novšia produkčná zmena už aplikovanej položky vyžiada konkrétne posúdenie obnovy.
 9. Nepodporovaná akcia vráti zrozumiteľnú chybu; manuálne odoslaný request nezmení produkciu. Oprávnenia sa overia aj pri publikovaní a pokračovaní.
 10. Základné obrazovky, tri panely porovnania a dialógy fungujú pri šírkach pod 1200 px a pod 768 px, klávesnicou a s čitateľnými stavmi bez závislosti od farby.
+11. Vytvorenie cez prehľad aj prepínač založí prázdnu `DRAFT` verziu pre aktuálnu doménu. Otvorí detail bez zmeny admin výberu; až `Upravovať web` aktivuje novú verziu. Prvé uloženie pridá zmenu automaticky.
+12. Naplánovaná verzia zostáva iba na čítanie; otvorenie detailu ani výber nezruší plán. Uzavretie verzie pri otvorenom editore neprepne starý zápis do produkcie.
 
 Existujúce vzory testov: [webpages/media.js](../../../src/test/webapp/tests/webpages/media.js), [webpages/planned-publishing.js](../../../src/test/webapp/tests/webpages/planned-publishing.js), [admin/elfinder.js](../../../src/test/webapp/tests/admin/elfinder.js) a [a11y/elfinder.js](../../../src/test/webapp/tests/a11y/elfinder.js). Nové scenáre sa vytvoria až počas príslušnej implementačnej etapy podľa `wj-codeceptjs`.
