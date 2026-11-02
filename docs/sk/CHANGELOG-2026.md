@@ -25,24 +25,7 @@
 </div>
 
 - [Rýchle vyhľadávanie](redactor/admin/search/README.md) je dostupné z hlavičky celej administrácie tlačidlom **Hľadať…** alebo skratkou **Ctrl+K / ⌘K**. Ponúka návrhy stránok podľa názvu a URL, výsledky z obsahu stránok, súborov, používateľov, textových kľúčov a položiek menu. Vybraný výraz môžete preniesť do príslušnej sekcie s ďalšími filtrami (#348).
-- Rýchle vyhľadávanie - nová karta [AI Chat](redactor/admin/search/README.md#ai-chat) umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Zaoblené pole na správu obsahuje výber asistenta a tlačidlo na odoslanie alebo zastavenie odpovede. Otázky aj odpovede zobrazujú dátum a čas vytvorenia pri mene odosielateľa. Odpovede môžete kopírovať; rozhovor aj rozpísaná správa sa zachovajú pri prepínaní kariet a opätovnom otvorení dialógu.
-- Rýchle vyhľadávanie - veľkosť dialógu môžete upraviť ťahaním za pravý dolný roh, maximalizovať ho alebo obnoviť jeho pôvodnú veľkosť tlačidlami v hlavičke.
-- AI Chat - históriu rozhovorov a vymazanie odpovedí u poskytovateľa spravuje WebJET CMS bez úprav knižnice `webjet-ai`. Pokračovanie používa uložené ID odpovede; pri strate kontextu u poskytovateľa zostáva história dostupná na čítanie.
-- AI Chat - do ukladaných rozhovorov môžete pridať obrázky, dokumenty a textové súbory cez tlačidlo **+**, pretiahnutím alebo vložením obrázka zo schránky. Prílohy majú náhľady a spolu so súborom histórie `ai_chat.json` sa ukladajú do vlastného priečinka `/files/protected/ai-chat/<userId>/<threadId>/`. Nové súbory majú poradové číslo a pôvodnú príponu, napríklad `1.docx`, `2.png`, `3.jpg`; číslovanie pokračuje naprieč správami rozhovoru. Staršie rozhovory sa presunú automaticky pri načítaní. Z histórie môžete prílohy kedykoľvek stiahnuť pod pôvodným názvom. Ich obsah sa použije ako kontext rozhovoru.
-- AI Chat - opravené zamietnuté načítanie príloh z histórie. Názov súboru aj tlačidlo na stiahnutie používajú overenú požiadavku s CSRF hlavičkou; rovnakým spôsobom sa načítavajú náhľady obrázkov.
-- AI Chat - história rozhovorov a prílohy sa nepridávajú do ZIP archívov ani offline exportu webu, ani pri exporte nadradeného priečinka.
-- AI Chat - lokálna história rozhovorov a prílohy sú vylúčené z balíka WAR a ignorované v Gite, aby sa neprenášali do distribúcie ani repozitára.
-- AI Chat - prepnutie asistenta obnoví jeho naposledy otvorený rozhovor vrátane rozpísanej správy a neodoslaných príloh. Tlačidlo **Nový chat** naďalej začne nový rozhovor.
-- AI Chat - oneskorené načítanie histórie už neprepíše práve dokončenú odpoveď ani nevráti odoslanú otázku do poľa na správu, a to aj pri otvorení rozhovoru z histórie. Po dokončení odpovede sa načíta aktuálna história (#386).
-- AI Chat - generovanie a zastavenie odpovede zohľadňujú vlastníka aj doménu rozhovoru. Rozhovory s rovnakým ID u rôznych používateľov alebo domén sa navzájom neblokujú ani nezastavujú (#386).
-- AI Chat - vymazanie rozhovoru sa dokončí aj vtedy, keď sa jeho úloha zruší ešte pred začatím generovania odpovede. Rozhovor už nezostane čakať na opakované vymazanie (#386).
-- AI Chat - opravené zobrazovanie interných zástupných značiek namiesto príkazov `!INCLUDE(...)!` z príloh. Text príkazov zostáva dostupný aj pri pokračovaní rozhovoru.
-- AI Chat - odpovede asistenta zobrazujú Markdown vrátane tabuliek počas generovania aj v histórii. Kopírovanie zachová pôvodné Markdown značky. Tlačidlo kopírovania zobrazuje iba ikonu s textom v bubline a nachádza sa pred údajom o použitých tokenoch.
-- AI Chat - v histórii môžete vyhľadávať rozhovory podľa názvu, textu správ, asistenta a poskytovateľa aj bez diakritiky. Vyhľadávanie zahŕňa aj staršie rozhovory, ktoré ešte nie sú načítané v zozname.
-- AI Chat - upravený vzhľad rozhovoru: názov v hlavičke, svetlofialové otázky, ikony asistenta, prehľadnejšie prílohy a tabuľky. História zvýrazňuje vybraný rozhovor a obsahuje tlačidlo **Nový chat** aj ikony na skrytie panela a vymazanie rozhovoru. Asistenta si vyberáte v poli na písanie správy.
-- AI Chat - ikona **Súbory v chate** otvára pravý panel s prílohami zo všetkých správ vybraného rozhovoru. Rozlišuje nahrané súbory a súbory vrátené asistentom, umožňuje hľadanie podľa názvu a stiahnutie súboru.
-- AI Chat - správy využívajú celú dostupnú šírku aj pri zväčšení dialógu. Odpovede zostávajú pri ľavom okraji a otázky pri pravom.
-- AI Chat - opravené zarovnanie ikon a vzhľad tlačidiel na odoslanie a zastavenie odpovede pri otvorení chatu z poľa v editore webovej stránky. Tlačidlá **Pridať** a **Nahradiť obsah** pri odpovedi zobrazujú iba ikony. Tlačidlá chatu, názvy rozhovorov a súborov používajú štandardné bubliny WebJET pri prejdení myšou aj pri ovládaní klávesnicou.
+- Nová karta [AI Chat](redactor/admin/search/README.md#ai-chat) v rýchlom vyhľadávaní umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Podporuje výber asistenta, priebežné zobrazovanie a zastavenie odpovedí, Markdown s tabuľkami a kopírovanie textu. Pri ukladaných rozhovoroch OpenAI a Gemini môžete pridávať obrázky a dokumenty, vyhľadávať v histórii a sťahovať prílohy z panela **Súbory v chate**. História a prílohy sú dostupné iba vlastníkovi rozhovoru v príslušnej doméne. Prepínanie asistentov zachová rozpísané správy aj neodoslané prílohy; okno môžete zväčšiť alebo maximalizovať (#386).
 
 ![](redactor/admin/search/quick-search.png)
 
@@ -358,12 +341,6 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Optimalizované načítanie skupiny šablón pri zobrazení stránky a hľadaní voliteľných polí. Skupina je uložená do cache a znova použitá bez potreby jej čítania z databázy (#311).
 
 ### Bezpečnosť
-
-- AI Chat - obrázkové vstupy AI asistentov odmietajú súkromné prílohy rozhovorov vrátane symbolických odkazov, aby nebolo možné obísť kontrolu vlastníka rozhovoru (#386).
-
-- AI Chat - história a prílohy sú chránené aj pred premenovaním cez vlastnosti súboru. Nemožno premenovať ich priečinok, jeho obsah ani nadradený priečinok (#386).
-
-- AI Chat - hromadné nahrávanie súborov odmieta zápis do súkromného priečinka rozhovorov, aby nemohlo prepísať históriu ani prílohy (#386).
 
 - AI asistenti - vyhľadávanie v štatistike a grafy používania zobrazujú iba záznamy a asistentov aktuálnej domény.
 

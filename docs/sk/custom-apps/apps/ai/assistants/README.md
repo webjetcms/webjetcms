@@ -336,11 +336,34 @@ Streamovanie musí byť zapnuté v asistentovi a metadáta nesmú označovať zv
 
 Prehliadačový poskytovateľ zachováva pôvodné nastavenie. Lokálne adaptéry pri zisťovaní schopností nenačítavajú modely; naďalej platia ich obmedzenia nastavené pri ukladaní asistenta.
 
+### Ukladané rozhovory
+
+`QuickSearchChat` používa zdieľaný komponent `AiChat`. Zoznam dostupných asistentov načíta cez `GET /admin/rest/ai/assistant/chat-assistants/`. Metadáta `persistentChat` povoľujú ukladanie iba aktívnym asistentom s akciou `live_chat`, explicitným `useTemporal=false`, poskytovateľom OpenAI alebo Gemini a podporou chatu v adaptéri a modeli. Väzby na entitu a polia sa v samostatnom chate nepoužívajú.
+
+Ukladaný chat obsluhujú `AiChatController`, `AiChatService` a `AiChatStore` v CMS. Endpointy pod `/admin/rest/ai/chat` vyžadujú oprávnenie `cmp_ai_button`, prihláseného vlastníka rozhovoru a správnu doménu:
+
+| Metóda a cesta | Účel |
+| --- | --- |
+| `GET /threads?page=0&query=...` | Stránkovaná história; vyhľadáva aj v texte správ, názve asistenta a poskytovateľa bez ohľadu na diakritiku. |
+| `GET /threads/{id}` | Detail rozhovoru, správy, prílohy a dostupnosť pokračovania. |
+| `POST /messages` | Nová správa alebo pokračovanie. JSON obsahuje `assistantId`, `requestId`, `userPrompt`, pri pokračovaní aj `threadId` a `revision` a pri opakovaní dokončeného pokusu `retryMessageId`. |
+| `POST /threads/{id}/stop` | Zastavenie aktívnej požiadavky vlastníka rozhovoru. |
+| `DELETE /threads/{id}` | Odstránenie odpovedí u poskytovateľa a následne lokálnej histórie s prílohami. |
+| `GET /threads/{id}/attachments/{attachmentId}` | Autorizované načítanie prílohy; `download=true` vynúti stiahnutie. |
+
+Pri prílohách používa `POST /messages` formát `multipart/form-data`: pole `message` obsahuje JSON požiadavky a polia `files` sú súbory. `AiChatAttachments` kontroluje formát a limity: 5 súborov, spolu 10 MB, 100 000 znakov extrahovaného textu a najviac 200 strán PDF. Podporované formáty sú uvedené v [používateľskom návode](../../../../redactor/ai/chat/README.md#prílohy). Text dokumentov a opis obrázkov sa použijú ako kontext; opis obrázka vytvára zvolený model.
+
+Každý rozhovor má priečinok `/files/protected/ai-chat/<userId>/<threadId>/` so súborom `ai_chat.json`. Prílohy dostávajú poradové číslo a pôvodnú príponu, napríklad `1.docx`, `2.png`; číslovanie pokračuje naprieč správami. Pri sťahovaní sa obnoví pôvodný názov. Staršie uložené rozhovory sa pri načítaní presunú do tejto štruktúry. História a prílohy sú vylúčené z WAR, Gitu, ZIP archívov a offline exportu. Bežné súborové operácie ich nemajú sprístupňovať, premenovať ani prepísať; klient ich načítava cez autorizovaný endpoint s CSRF hlavičkou vrátane náhľadov obrázkov.
+
+`AiChatStore` uchováva ID odpovedí poskytovateľa na serveri. `requestId` chráni pred duplicitným odoslaním a `revision` pred pokračovaním z neaktuálneho stavu. Po strate kontextu alebo zmene asistenta či konfigurácie poskytovateľa môže história zostať iba na čítanie. Mazanie zabezpečuje `AiChatResponseDeletion`; ak poskytovateľ odstránenie nepotvrdí, stav zostane `DELETE_PENDING` a lokálne údaje sa zachovajú na opakovanie akcie.
+
+Chat pri poli používa `AiChat` bez perzistencie a príloh. `EditorAi` poskytuje kontext poľa alebo výberu a akcie na vloženie odpovede. Rozhovory drží oddelene podľa cieľového poľa a asistenta, pri zatvorení editora ich zruší. Nepridávajú sa do histórie `QuickSearchChat`.
+
 ### Prenos priebežnej odpovede do administrácie
 
 Textové generovanie v editore aj chat používajú `requestAiText` zo súboru `ai-rest-transport.js`. Funkcia odosiela požiadavku s CSRF tokenom, kontroluje HTTP a JSON odpoveď a pri streamovaní používa `readAiStream`. Vracia text a metadáta CMS bez úpravy obsahu. Funkcia `parseAiResponse` zo súboru `ai-response-parser.js` oddeľuje HTML a vysvetlenie pre generovanie v editore aj vloženie odpovede z chatu. Správu rozhovoru zabezpečuje `AiChat`. Pri HTTP chybách 401 a 403 zobrazí prenosová funkcia existujúce upozornenie na odhlásenie alebo chybu CSRF tokenu.
 
-Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičkou `Accept: application/x-ndjson`. Server posiela samostatné JSON správy oddelené novým riadkom:
+Generovanie v editore a neukladaný chat volajú `POST /admin/rest/ai/assistant/response-stream/` s hlavičkou `Accept: application/x-ndjson`. Ukladaný chat používa `POST /admin/rest/ai/chat/messages` s rovnakou hlavičkou; pred textom odošle aj správu `metadata` s identifikátormi rozhovoru a správ a aktuálnou revíziou. Server posiela samostatné JSON správy oddelené novým riadkom:
 
 ```json
 {"type":"delta","text":"Prvá časť odpovede.\n"}
@@ -350,7 +373,7 @@ Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičk
 
 Správy `delta` obsahujú iba generovaný text. Záverečná správa `result` obsahuje `AssistantResponseDTO` vrátane spotreby tokenov a prípadnej chyby. Klient skladá neúplné riadky medzi sieťovými blokmi a spracuje aj viac správ v jednom bloku. Odpoveď považuje za úspešnú až po prijatí záverečnej správy bez chyby a ukončení prenosu.
 
-Bez explicitnej požiadavky na `application/x-ndjson` zostáva pre starších klientov pôvodný formát `text/plain`. CMS adaptéry naďalej zapisujú obyčajný text do `BufferedWriter`; oddelenie správ zabezpečuje `AssistantController`, bez zmeny rozhrania knižnice `webjet-ai`.
+Bez explicitnej požiadavky na `application/x-ndjson` zostáva na endpointoch `response-stream` pre starších klientov pôvodný formát `text/plain`; endpoint `/chat/messages` vracia bežnú JSON odpoveď. CMS adaptéry naďalej zapisujú obyčajný text do `BufferedWriter`; oddelenie správ zabezpečujú controllery cez `AssistantStreamWriter`, bez zmeny rozhrania knižnice `webjet-ai`.
 
 ### Chyby poskytovateľa
 

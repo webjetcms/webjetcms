@@ -36,33 +36,13 @@ Po zmene výrazu sa výsledky dokumentácie vymažú a karta znova zobrazí poml
 
 ### AI Chat
 
-Na karte **AI Chat** napíšte správu do zaobleného poľa v spodnej časti dialógu. V jeho dolnom riadku si vyberte nakonfigurovaného chatového asistenta. Správu odošlete tlačidlom so šípkou nahor alebo klávesom **Enter**; **Shift+Enter** vloží nový riadok. Pole sa počas písania zväčšuje podľa obsahu. Odpoveď môžete skopírovať tlačidlom s ikonou kopírovania pred údajom **Použité tokeny**. Text **Kopírovať** sa zobrazí po podržaní kurzora nad tlačidlom. Chat nepreberá obsah otvorenej stránky a neponúka jeho nahradenie ani doplnenie.
+Karta **AI Chat** otvorí samostatný rozhovor s AI asistentom. V poli správy vyberte asistenta, napíšte požiadavku a odošlite ju klávesom **Enter** alebo tlačidlom so šípkou. Obsah otvorenej webovej stránky ani výraz z vyhľadávania sa do rozhovoru neposiela.
 
-Odpovede asistenta zobrazujú formátovanie Markdown vrátane nadpisov, zoznamov, zvýraznenia, kódu a tabuliek, aj počas generovania a po otvorení uloženého rozhovoru. Tlačidlo **Kopírovať** skopíruje pôvodný text s Markdown značkami.
+Pri ukladaných chatoch OpenAI a Gemini môžete pridávať prílohy, hľadať v histórii a pokračovať v rozhovore aj po obnovení stránky. Ikony v hlavičke otvárajú panely **História chatov** a **Súbory v chate**. Prepnutie asistenta alebo zatvorenie dialógu zachová rozpísanú správu, kým neopustíte aktuálnu stránku administrácie.
 
-V hlavičke rozhovoru sa zobrazuje jeho názov. Otázky majú svetlofialové pozadie a odpovede asistenta označuje ikona iskier. Správy využívajú dostupnú šírku dialógu: odpovede zostávajú pri ľavom okraji a otázky pri pravom aj po zväčšení okna. Tabuľky oddeľujú riadky jemnými čiarami a číselné hodnoty zarovnávajú doprava, ak odpoveď neurčuje iné zarovnanie. Výber asistenta zostáva v poli na písanie správy.
+![AI Chat s históriou rozhovorov a odpoveďou vo forme tabuľky](../../ai/chat/chat-history.png)
 
-Pri mene odosielateľa sa zobrazuje dátum a čas vytvorenia otázky alebo odpovede vo formáte administrácie a časovom pásme prehliadača. Uložené rozhovory zobrazujú pôvodný čas správ; pri starších správach bez časového údaja sa dátum nezobrazuje.
-
-Rozhovor aj rozpísaná správa zostanú zachované pri prepnutí karty, výbere iného asistenta aj zatvorení a opätovnom otvorení vyhľadávania, kým neopustíte aktuálnu stránku administrácie. Pri návrate k asistentovi sa obnoví jeho naposledy otvorený rozhovor vrátane rozpísanej správy a neodoslaných príloh. Platí to aj pre nový rozhovor, v ktorom ste ešte neposlali správu. Tlačidlo **Nový chat** začne nový rozhovor so zvoleným asistentom. Počas generovania sa odosielacie tlačidlo zmení na **Zastaviť** so štvorcovou ikonou. Zastaví odpoveď vybraného asistenta a zachová už prijatý text aj rozpísanú správu.
-
-Pri asistentoch OpenAI a Gemini s vypnutým dočasným režimom sa rozhovory ukladajú na serveri. V histórii nájdete svoje rozhovory pre aktuálnu doménu aj po obnovení stránky. Pokračovanie využíva kontext uložený u poskytovateľa. Ak už nie je dostupný, rozhovor zostane na čítanie a môžete začať nový chat.
-
-V paneli **História chatov** môžete hľadať podľa názvu rozhovoru, textu otázok a odpovedí alebo mena asistenta a poskytovateľa. Vyhľadávanie prehľadá aj staršie, zatiaľ nenačítané rozhovory a nerozlišuje veľké písmená ani diakritiku. Vymazaním výrazu znova zobrazíte celú históriu.
-
-Vybraný rozhovor v histórii označuje fialový pásik a farebné pozadie. Tlačidlo **Nový chat** je pri otvorenej histórii v jej hornej časti; po skrytí panela je v hlavičke rozhovoru. Panel skryjete ikonou bočného panela pri nadpise **História chatov**.
-
-Ikona **Súbory v chate** v pravom hornom rohu rozhovoru otvorí panel so súbormi zo všetkých jeho správ. Nájdete v ňom nahrané prílohy aj súbory vrátené asistentom, označené ako **Nahrané** alebo **Vygenerované**. Podľa názvu ich môžete vyhľadať a kliknutím stiahnuť. Rozpísané, ešte neodoslané prílohy sa do zoznamu nezaradia. Pri prepnutí rozhovoru sa zobrazia súbory vybraného chatu. Na úzkej obrazovke sa panely histórie a súborov otvárajú ponad rozhovor vždy po jednom. Kláves **Esc** zatvorí panel a vráti fokus na jeho ikonu.
-
-Tlačidlo **Vymazať** s ikonou koša pri rozhovore odstráni uložené odpovede u poskytovateľa a potom lokálnu históriu. Ak poskytovateľ vymazanie nepotvrdí, rozhovor zostane označený na vymazanie a akciu môžete zopakovať. Pri prerušenej požiadavke bez vráteného ID odpovede nie je možné potvrdiť úplné vymazanie; rozhranie tento stav zobrazí.
-
-Pri ukladaných chatoch OpenAI a Gemini pridáte prílohy tlačidlom s ikonou kancelárskej sponky, pretiahnutím súborov do poľa správy alebo vložením obrázka zo schránky. Pred odoslaním uvidíte názvy súborov a náhľady obrázkov; prílohu môžete odstrániť tlačidlom **×**. Môžete odoslať aj samotné prílohy bez správy.
-
-Jedna správa môže obsahovať najviac 5 príloh s celkovou veľkosťou do 10 MB. Podporované sú obrázky PNG, JPEG a WebP, dokumenty PDF, DOCX, XLSX a PPTX a textové súbory v UTF-8 (napríklad TXT, Markdown, CSV alebo JSON). Dokumenty musia obsahovať čitateľný text; skenované PDF bez textovej vrstvy sa nespracujú. Text príloh jednej správy môže mať najviac 100 000 znakov. Obrázky najprv opíše zvolený model; tento krok spotrebúva tokeny a jeho opis sa použije ako kontext rozhovoru. Model preto musí podporovať obrazový vstup.
-
-Každý rozhovor má vlastný priečinok `/files/protected/ai-chat/<userId>/<threadId>/`, ktorý obsahuje súbor `ai_chat.json` s históriou rozhovoru a všetky jeho prílohy. Nové prílohy sa ukladajú pod poradovým číslom s pôvodnou príponou, napríklad `1.docx`, `2.png`, `3.jpg`; číslovanie pokračuje aj v ďalších správach rozhovoru. Staršie rozhovory sa pri načítaní automaticky presunú do tejto štruktúry a ich JSON súbor sa premenuje na `ai_chat.json`. Prílohy zostávajú pri správe v histórii aj po obnovení stránky. Kliknutím na názov súboru alebo tlačidlo **Stiahnuť prílohu** ich uložíte pod pôvodným názvom. Stiahnuť ich môže iba ich vlastník v príslušnej doméne, aj keď už nie je možné pokračovať v rozhovore. Ak sa prílohu nepodarí načítať, chat zobrazí chybový oznam. Vymazaním rozhovoru sa odstráni celý jeho priečinok vrátane príloh. V neukladaných chatoch je tlačidlo na prílohy neaktívne. Chat nepodporuje hlasový vstup.
-
-Chat používa aktívnych a nakonfigurovaných asistentov s akciou **Chat**. Ak žiadny nie je dostupný, karta zobrazí oznam. Výraz z vyhľadávania sa do chatu neodosiela; správu odošlete až v poli chatu. Skratka na vyhľadávanie v dokumentácii počas písania v chate neprepína kartu.
+Podrobný postup, rozdiel medzi ukladanými a dočasnými rozhovormi, podporované prílohy a prácu s odpoveďami nájdete v kapitole [AI Chat](../../ai/chat/README.md).
 
 ### Nastavenie vyhľadávania v dokumentácii
 

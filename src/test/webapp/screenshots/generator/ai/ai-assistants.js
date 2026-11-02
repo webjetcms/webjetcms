@@ -336,49 +336,45 @@ Scenario('ai-assistants empty', async ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/ai/datatables/no-assistants-available.png", 1280, 420);
 });
 
+let originalPageBuilderChatMode;
+
 Scenario('ai-assistants pagebuilder-chat', async ({ I, DT, DTE, Document, i18n }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=34495");
     DT.waitForLoader();
+    originalPageBuilderChatMode = await I.executeScript(() => WJ.getAdminSetting('editorTypeForced') || '');
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
-    I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+    I.resizeWindow(1440, 1000);
     I.clickCss("#pills-dt-datatableInit-content-tab");
     DTE.waitForCkeditor();
+    I.clickCss('#DTE_Field_data-editorTypeSelector button');
+    I.click(locate('.dropdown-item').withText('Page Builder'));
+    I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 10);
+    DTE.waitForCkeditor();
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
-
     I.clickCss("span.cke_button_icon.cke_button__aibutton_icon");
     I.switchTo();
-    I.waitForVisible("#toast-container-ai > div.toast-info");
-
-    I.click( locate('button.btn-ai-action').withText(i18n.get("Web Designer (PageBuilder)")).withChild(locate('span.provider').withText(gemini)) );
-    I.wait(2);
-    I.waitForElement("#ai-user-prompt");
-    I.doubleClick("#ai-user-prompt");
-    I.clickCss("label[for=bonusContent-replaceMode-replace]");
-    I.click("#ai-user-prompt"); //move cursor from tooltip
-    Document.screenshot("/redactor/ai/datatables/pb-chat-prompt.png");
-
-    I.clickCss("#toast-container-ai .btn.btn-generate");
-    I.waitForElement(".btn-ai-continue-chat", 120);
+    I.waitForVisible("#toast-container-ai > div.toast-info", 10);
+    I.click(locate('button.btn-ai-action').withText(i18n.get("Web Designer (PageBuilder)")).withChild(locate('span.provider').withText(gemini)));
+    I.waitForVisible("#toast-container-ai .ai-chat-input", 10);
+    I.fillField("#toast-container-ai .ai-chat-input", "Ukážka autotest: vytvor jednoduchý úvodný PageBuilder blok pre školenie WebJET CMS. Len nadpis a jedna veta, bez obrázkov.");
+    I.clickCss("#toast-container-ai .btn-ai-chat-send");
+    I.waitForVisible('#toast-container-ai .ai-chat-message-actions button[data-ai-action="replace"]', 120);
+    I.clickCss('#toast-container-ai .ai-chat-message-actions button[data-ai-action="replace"]');
+    I.waitForText("Zrušiť vloženie", 10, "#toast-container-ai .ai-chat-toolbar");
+    I.clickCss("#toast-container-ai .toast-close-button");
+    I.waitForInvisible("#toast-container-ai", 10);
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForText("WebJET", 10);
     I.scrollPageToTop();
     I.switchTo();
-    Document.screenshot("/redactor/ai/datatables/pb-chat-success.png");
+    Document.screenshotElement("#datatableInit_modal .modal-content", "/redactor/ai/chat/chat-pagebuilder.png");
+    DTE.cancel();
+    I.wjSetDefaultWindowSize();
+});
 
-    I.click(".btn-ai-continue-chat");
-    I.fillField("#ai-user-prompt", "Zmeň nadpis na názov firmy Super Barber Bernolákovo, telefón na 02/3278 8888 a doplň do stránky nový blok s novinkami a trendami v účesoch a strihaní.");
-    I.clickCss("label[for=bonusContent-replaceMode-edit]");
-    I.click("#ai-user-prompt"); //move cursor from tooltip
-    Document.screenshot("/redactor/ai/datatables/pb-chat-edit.png");
-
-    I.clickCss("#toast-container-ai .btn.btn-generate");
-    I.waitForElement(".btn-ai-continue-chat", 120);
-    I.switchTo("#DTE_Field_data-pageBuilderIframe");
-    I.scrollPageToTop();
-    I.switchTo();
-    Document.screenshot("/redactor/ai/datatables/pb-chat-edit-success.png");
-
-    I.switchTo();
+Scenario('ai-assistants pagebuilder-chat cleanup', ({ Document }) => {
+    if (originalPageBuilderChatMode !== undefined) Document.setEditorMode(originalPageBuilderChatMode);
 });
 
 Scenario('OpenRouter', async ({ I, DT, DTE, Document }) => {

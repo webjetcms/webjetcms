@@ -157,27 +157,15 @@ Nemusíte upravovať celý obsah stránky. Asistent pracujúci s `PageBuilder` p
 
 ## Režim chat
 
-Ak je asistent nastavený do režimu chat, aplikujú sa zmeny v PageBuilder na celú štruktúru, nielen textový/editovateľný obsah. Asistent tak dokáže generovať nové bloky, upravovať existujúce a podobne. Viete mu zadávať požiadavky na úpravu textov v stránke a generovanie nových blokov. Režim aktivujete nastavením poľa Typ požiadavky na hodnotu `Chat` vo vlastnostiach asistenta.
+Asistent s typom požiadavky **Chat** otvorí rozhovor, v ktorom môžete zadanie postupne spresňovať. Dostupný je pri textových poliach, v editore stránky aj v PageBuilderi podľa nastavenia asistenta. Odpoveď sa zobrazí v chate a obsah editora zmeníte až vlastným potvrdením.
 
-Okno so zadaním požiadavky obsahuje nové polia na nastavenie režimu:
+Pod dokončenou odpoveďou nájdete ikony **Pridať**, **Nahradiť obsah** a **Kopírovať**. Pri označenom texte sa namiesto nahradenia celého obsahu ponúkne **Nahradiť označený text**. Názov tlačidla sa zobrazí v bubline po prejdení myšou alebo zameraní klávesnicou. Po vložení môžete použiť **Zrušiť vloženie**, pokiaľ ste obsah medzitým ďalej neupravili.
 
-- **Pridať** - výstupný HTML kód z požiadavky pridá na koniec stránky. Neposiela asistentovi aktuálny obsah stránky, vykonanie je teda lacnejšie (spotrebuje sa menej tokenov).
-- **Upraviť** - spolu s inštrukciou a vašou požiadavkou sa pošle aj aktuálny HTML kód stránky, v ktorom vie asistent upraviť texty, bloky, HTML kód. Spotrebuje sa viac tokenov na vykonanie požiadavky.
-- **Nahradiť** - podobne ako pridať, spolu s požiadavkou sa neposiela aktuálny kód stránky. Výsledkom je nahradená aktuálna stránka. Vhodné, ak chcete začať od znova a zmazať celý aktuálny obsah.
+![Chat pri textovom poli s tlačidlami na vloženie odpovede](../chat/chat-editor.png)
 
-![](pb-chat-prompt.png)
+V PageBuilderi môže asistent pripraviť aj HTML bloky. Vložíte ich rovnakými tlačidlami pod odpoveďou a ďalšie úpravy zadáte novou správou. Zatvorenie okna AI zachová rozhovor, zatvorenie samotného editora ho ukončí. Chat pri poli sa neukladá do histórie rýchleho vyhľadávania.
 
-Po vykonaní požiadavky sa zobrazí okno so stavom a počtom použitých tokenov. Naviac ale v tomto okne je možnosť **Pokračovať**, ktorá znova zobrazí okno pre zadanie požiadavky.
-
-![](pb-chat-success.png)
-
-Môžete teda pokračovať v úpravách na web stránke a zadať požiadavku na úpravu textu stránky. Zvolením možnosti **Upraviť** sa odošle spolu s vašou požiadavkou aj aktuálny HTML kód stránky, asistent v ňom teda vie vykonať zmeny.
-
-![](pb-chat-edit.png)
-
-Vykonané úpravy sa zobrazia vo web stránke a znova môžete kliknutím na Pokračovať zadať ďalšiu požiadavku, alebo kliknutím na **OK** asistenta ukončiť. Všimnite si na fotke, že podľa zadanej požiadavky je upravený nadpis oproti predchádzajúcej verzii.
-
-![](pb-chat-edit-success.png)
+Podrobnosti práce s výberom, kontextom a ukladaním sú v kapitole [Chat pri poli a v editore stránky](../chat/README.md#chat-pri-poli-a-v-editore-stránky). Na samostatný rozhovor s prílohami použite kartu [AI Chat v rýchlom vyhľadávaní](../chat/README.md#začatie-rozhovoru).
 
 ## Obrázky v stránke
 

@@ -87,11 +87,23 @@ Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré u
 
 - **Zachovať HTML kód** – ak je zapnuté, HTML značky zo zdrojového poľa sa neodstránia a odošlú sa poskytovateľovi tak, ako sú. Zapnite iba v prípade, že model potrebuje pracovať so štruktúrovaným HTML (napr. analýza alebo úprava obsahu). Inak ponechajte vypnuté kvôli čistejšiemu vstupu.
 - **Využiť postupné načítanie** – odpoveď sa bude zobrazovať po častiach (streamovanie) namiesto jedného bloku. Vhodné pri dlhších generovaných textoch, aby mal používateľ okamžitú spätnú väzbu. Funguje iba pre textové výstupy.
-- **Zapnúť dočasný chat** – kontext a výmena správ sa po ukončení relácie neukladajú. Použite pri citlivom alebo jednorazovom dopyte. História nebude k dispozícii pre ďalšie pokračovanie.
+- **Zapnúť dočasný chat** – vypne ukladanie rozhovoru do histórie AI Chatu. Zobrazené správy zostávajú iba na aktuálnej stránke administrácie a prílohy nie sú dostupné. Pre uloženú históriu na karte AI Chat túto voľbu vypnite a použite podporovaný model OpenAI alebo Gemini. Nastavenie nenahrádza pravidlá spracovania a uchovávania údajov u poskytovateľa.
 - **Požadovať vstup od používateľa** – pred spustením asistenta musí používateľ zadať vlastný vstup (napr. zadanie témy, doplňujúcej inštrukcie alebo kľúčových slov). Ak je vypnuté, asistent beží bez dodatočného vstupu.
 - **Popis požiadavky** – krátka nápoveda zobrazovaná pri poli na zadanie vstupu (uľahčuje používateľovi pochopiť, čo má napísať). Môže byť zadaný aj prekladový kľúč; jeho vyhodnotená hodnota sa zobrazí v poli pod ním.
 
 ![](datatable-advanced-tab.png)
+
+## Nastavenie chatového asistenta
+
+1. V **Nastavenia → AI asistenti** vytvorte alebo upravte asistenta a zapnite **Povoliť používanie**.
+2. Na karte **Akcia** vyberte **Typ požiadavky → Chat**.
+3. Na karte **Poskytovateľ** vyberte nakonfigurovaného poskytovateľa a model podporujúci požadovaný spôsob práce.
+4. V **Inštrukciách** určite úlohu asistenta, jazyk a požadovaný formát odpovedí.
+5. Pre ukladané rozhovory s prílohami na karte **AI Chat** použite OpenAI alebo Gemini, model s podporou chatu a vypnite **Zapnúť dočasný chat**. Pre priebežné zobrazovanie odpovede zapnite **Využiť postupné načítanie**, ak ho model podporuje.
+
+V rýchlom vyhľadávaní sa ponúkajú aktívni chatoví asistenti aktuálnej domény s nakonfigurovaným poskytovateľom. Nastavenia **Použiť pre Entitu**, **Zdrojové pole** a **Cieľové pole** určujú dostupnosť a kontext v editore; samostatný chat v rýchlom vyhľadávaní ich nepoužíva a nepreberá obsah otvorenej stránky.
+
+Používateľ potrebuje oprávnenie na používanie AI asistentov (`cmp_ai_button`). Ak zmeníte model, asistenta alebo konfiguráciu poskytovateľa, starší uložený rozhovor môže zostať dostupný iba na čítanie. Postup práce s rozhovormi je v kapitole [AI Chat](../chat/README.md).
 
 ## Poskytovatelia
 
