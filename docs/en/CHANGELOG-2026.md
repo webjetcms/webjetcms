@@ -316,6 +316,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Web pages - the insert image dialog limits file selection to images, videos, and audio files, even in the Files folder. Unsupported types recognized by the browser will be rejected before submission. Additionally, the server will validate the extension before saving (#375).
+- Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the page is opened (#372).
 - Spring applications - [error creating or executing application](custom-apps/spring-mvc/README.md#error-executing-application) will replace only its `INCLUDE` tag. Surrounding text, JSP applications, and other Spring applications will remain on the page, and the message will state the name of the application that failed (#384).
 - Redis session - fixed uploading files in parts, consuming one-time CSRF tokens, and updating logged-in user data after editing profile via registration form. Changed objects are written back to session.
 - Page editor - fixed a bug when opening a preview after restoring a session from a serialized storage, such as Redis. Missing editor data will be restored from the preview version of the page.
