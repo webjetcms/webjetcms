@@ -31,10 +31,10 @@ export function bindMirrorLinks() {
     }
 
     function render() {
-        for (const icon of tooltips) {
-            if (!treeElement.contains(icon)) {
-                bootstrap.Tooltip.getInstance(icon)?.dispose();
-                tooltips.delete(icon);
+        for (const element of tooltips) {
+            if (!treeElement.contains(element)) {
+                bootstrap.Tooltip.getInstance(element)?.dispose();
+                tooltips.delete(element);
             }
         }
         for (const button of dropdowns) {
@@ -76,8 +76,9 @@ export function bindMirrorLinks() {
                 link.dataset.groupId = mirror.groupId;
                 link.textContent = mirror.language.toUpperCase();
                 const label = `${treeElement.dataset.mirrorsOpen} ${link.textContent}: ${mirror.path} (#${mirror.groupId})`;
-                link.title = label;
+                link.dataset.bsTitle = `${mirror.path} (#${mirror.groupId})`;
                 link.setAttribute("aria-label", label);
+                tooltips.add(link);
                 if (index < 2) group.append(link);
                 else {
                     link.classList.add("dropdown-item");
@@ -98,7 +99,7 @@ export function bindMirrorLinks() {
                 dropdowns.add(more);
             }
             anchor.after(group);
-            WJ.initTooltip($(group).children("i"));
+            WJ.initTooltip($(group).find("i, .jstree-mirror-link"));
             anchor.parentElement.classList.add("jstree-has-mirrors");
         });
         highlight();
@@ -122,6 +123,7 @@ export function bindMirrorLinks() {
         if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
         event.preventDefault();
         event.stopPropagation();
+        bootstrap.Tooltip.getInstance(link)?.hide();
         const more = link.closest(".jstree-mirrors").querySelector(".jstree-mirror-more");
         if (more) bootstrap.Dropdown.getInstance(more)?.hide();
         navigate(link.dataset.groupId);

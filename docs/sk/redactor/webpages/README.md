@@ -45,7 +45,7 @@ Zároveň pri prechádzaní stromovej štruktúry sa v adresnom riadku prehliada
 
 ### Prechod medzi zrkadlenými priečinkami
 
-Po zapnutí voľby **Zobraziť zrkadlenie** v nastavení stromovej štruktúry sa pri priečinkoch prepojených [zrkadlením štruktúry](../apps/docmirroring/README.md) na pravom okraji riadka zobrazia skratky jazykov ostatných prepojených priečinkov, napríklad **DE** a **EN**. Odkazy sú stále viditeľné ako sivý text bez rámčeka. Pri prejdení kurzorom alebo zameraní klávesnicou sa konkrétny odkaz zvýrazní modrou farbou a podčiarknutím. Kliknutím na skratku otvoríte príslušný priečinok aj jeho zoznam stránok. Po podržaní kurzora nad odkazom sa zobrazí cesta a ID cieľového priečinka.
+Po zapnutí voľby **Zobraziť zrkadlenie** v nastavení stromovej štruktúry sa pri priečinkoch prepojených [zrkadlením štruktúry](../apps/docmirroring/README.md) na pravom okraji riadka zobrazia skratky jazykov ostatných prepojených priečinkov, napríklad **DE** a **EN**. Odkazy sú stále viditeľné ako sivý text bez rámčeka. Pri prejdení kurzorom alebo zameraní klávesnicou sa konkrétny odkaz zvýrazní modrou farbou a podčiarknutím. Kliknutím na skratku otvoríte príslušný priečinok aj jeho zoznam stránok. Po podržaní kurzora nad odkazom alebo jeho zameraní klávesnicou sa v bubline zobrazí iba cesta a ID cieľového priečinka, napríklad `/English/Pre biznis/Megamenu (#201)`. Bublinu zatvoríte aj klávesom `Escape`.
 
 Priamo v riadku sú najviac dva odkazy. Ďalšie nájdete v ponuke **+N**, kde číslo označuje počet ďalších prepojených priečinkov. Jazyk sa preberá z nastavenia priečinka, jeho nadradených priečinkov alebo šablóny.
 
