@@ -261,18 +261,18 @@ Pri pokuse o úpravu alebo odstránenie položky, ktorá je použitá v podmienk
 
 ### Väzby
 
-Karta **Väzby** pri úprave existujúceho poľa ukazuje, ktoré ďalšie polia používajú jeho hodnotu. Úvodná veta vysvetľuje, čo hodnota otvoreného poľa ovplyvňuje:
+Karta **Väzby** pri úprave existujúceho poľa ukazuje, ktoré ďalšie polia používajú jeho hodnotu.
 
 - **Zobrazenie polí** – polia, ktorých zobrazenie závisí od tohto poľa.
 - **Povinné vyplnenie polí** – polia, ktorých povinné vyplnenie závisí od tohto poľa.
 
 ![Karta Väzby so zoznamami polí používaných v podmienkach zobrazenia a povinnosti.](tab-relations.png)
 
-Hlavička každej sekcie uvádza počet polí, pri názve poľa je samostatne označený krok formulára. Každé pole sa v príslušnom zozname zobrazí raz, aj keď sa naň odkazuje vo viacerých častiach podmienky. Ak používa hodnotu na oba účely, zobrazí sa v oboch zoznamoch. Prázdny zoznam vysvetľuje, že toto pole neovplyvňuje zobrazenie alebo povinné vyplnenie ďalších polí.
+Každé pole sa v príslušnom zozname zobrazí raz, aj keď sa naň odkazuje vo viacerých častiach podmienky.
 
 Kliknutím na názov otvoríte editor daného poľa. Ak je v inom kroku, prepne sa aj vybraný krok formulára. Pri neuložených zmenách si pred prechodom môžete vybrať, či ich chcete zahodiť, alebo zostať v pôvodnom editore.
 
-Napríklad pri pravidle „Telefónne číslo je povinné, ak Meno a priezvisko obsahuje test“ nájdete v karte **Väzby** poľa **Meno a priezvisko** položku **Telefónne číslo** v zozname podmienok povinnosti. Samotné pravidlo naďalej upravujete v karte **Povinnosť** poľa **Telefónne číslo**.
+Napríklad pri pravidle „Telefónne číslo je povinné, ak Meno a priezvisko obsahuje text“ nájdete v karte **Väzby** poľa **Meno a priezvisko** položku **Telefónne číslo** v zozname podmienok povinnosti. Samotné pravidlo naďalej upravujete v karte **Povinnosť** poľa **Telefónne číslo**.
 
 ### Štatistika
 

@@ -139,7 +139,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
-- Multistep forms - the new [Dependencies](redactor/apps/multistep-form/README.md#dependencies) tab in the field editor displays separate lists of fields that use its value in display and obligation conditions (#osk859).
 - Regular expressions - the list displays the translated name according to the administration language and indicates the original name as **Translation key**. The **Allowed value** selection in multi-step forms uses the format **code - name** (#387).
 - Multi-step forms - fixed typo in translation keys from `components.mustistep.*` to `components.multistep.*` (#378).
 - Multi-step forms - auxiliary statistics entries on [public cluster node with limited database rights](install/config/ro-user.md#multi-step-forms) no longer block form display, validation, or submission. In case of an error, the visitor will see the application name instead of the Java class name (#384).
@@ -179,6 +178,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Easy form and multi-step forms - the default tooltip is now available with both mouse and keyboard, provides a stable contextual title and description, remains displayed when the cursor is moved to its content, and can be closed with the `Escape` key (#306).
 - Multistep forms - added [copy fields between forms and steps](redactor/apps/multistep-form/README.md#copy-fields-between-forms). Paste opens the editor with saved field settings; display conditions and obligations are not carried over. Internal clipboard works across browser tabs and allows repeated pasting for 30 minutes (#58826).
 - Multi-step forms - added option [Show content without redirection](redactor/apps/form/README.md#tab---settings). The switch will use the web page from the **Redirect after completion** field and after successful submission will replace the default message with its content without changing the URL address. If the visitor does not have permission to view the web page, the default message about successful submission will be displayed (#58826).
+- Multistep forms - the new [Bindings](redactor/apps/multistep-form/README.md#bindings) tab in the field editor displays separate lists of fields that use its value in display and obligation conditions (#377).
+
+![](editor/apps/multistep-form/tab-relations.png)
 
 ### Semantic search
 
