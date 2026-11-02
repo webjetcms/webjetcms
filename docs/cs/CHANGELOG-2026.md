@@ -6,6 +6,7 @@
 
 ### Průlomové změny
 
+- Formuláře - šifrovací klíč se u klasických formulářů a aplikací Formulář snadno načítá výhradně ze serverových nastavení formuláře. Pokud byl dosud zadán pouze v HTML poli `encryptKey`, přeneste jej do pole **Šifrovací klíč** v administraci. Parametr odeslaný návštěvníkům již šifrování neovlivňuje. Více v návodu [Šifrování formulářů](redactor/apps/form/encryption.md#nastavení-veřejného-klíče-pro-formulář) (#376).
 - Databáze - minimální podporovaná verze je MariaDB 10.11 LTS nebo MySQL 8.4 LTS. Před aktualizací WebJET CMS na starším serveru aktualizujte databázi podle postupu jejího výrobce. Podrobnosti a požadavky aktualizovaného JDBC ovladače jsou v [návodu k instalaci](install/setup/README.md#základní-požadavky-na-server) (#349).
 - Statistika – prohlížeče se po aktualizaci ukládají bez čísla verze, která se v dnešní době velmi často mění. Po nasazení této verze je třeba spustit migraci historických statistik na URL `/admin/v9/settings/stat-browser-migration/`, bez jejího dokončení zůstanou historické údaje rozděleny podle čísla verze prohlížečů (#303).
 - Z administrace byla odstraněna závislost na knihovně [Vue.js](https://vuejs.org). Před aktualizací doporučujeme ověřit kompatibilitu vlastních aplikací. Velikost JavaScript souborů se zmenšila o cca 170kB, což má dopad také na rychlost inicializace administrace. Více v [sekci pro programátora](#pre-programátora).
@@ -13,6 +14,8 @@
 - Export obsahu pro Flash - odstraněna byla historická funkce generování XML souborů `/flash_xml/{docId}.xml` při publikování stránky. Konfigurační proměnná `exportFlash` již není podporována a její definování v `SpringConfig` funkci neobnoví (#293).
 - Microsoft SQL Server - ukončena byla podpora verzí starších než 2012 a odstraněna konfigurační proměnná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 nebo novější, starý způsob stránkování pomocí `TOP` již není podporován (#293).
 - Formulář snadno a vícekrokové formuláře - upravené zobrazení `tooltip` z původního `i` elementu na standardní `button`. Je tak splněn požadavek na přístupnost - tooltip je dostupný myší i klávesnicí (#306).
+- Galerie - metoda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vrací místo `void` výsledek zpracování typu `int`: `0` při úspěchu, jinak kód chyby. Po aktualizaci je třeba překompilovat závislý Java kód i JSP soubory, například vyčištěním pracovní složky konkrétní aplikace v Tomcat (#371).
+- Vícekrokové formuláře - metody `validateStep` a `runStepInterceptor` rozhraní [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhraní-formprocessorinterface) dostávají za `formName` nový parametr `FormSettingsEntity formSettings`. Pokud používáte vlastní Java třídu pro zpracování formulářů je třeba ji upravit a znovu zkompilovat. Nastavení již nemusí načítat podle jména formuláře, ale dostanete jej přímo (#364).
 
 ### Úvodní obrazovka
 
@@ -102,6 +105,23 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 - Změna URL složky s aplikováním na podsložky a podstránky aktualizuje i nezobrazované stránky, naplánované verze, verze čekající na schválení a poslední pracovní verzi. Zachovává jejich obsah, stav a termín publikování; naplánované publikování již nevrátí původní URL (#353).
 - SEO - nastavení **Procházet** nabízí samostatné volby povolit (`index`) a zakázat (`noindex`). Sekce **HTTP hlavičky** na kartě Základní zobrazuje aktuální náhled `X-Robots-Tag`, `Referrer-Policy` a při nastaveném přesměrování i `Location` podle neuložených nastavení stránky a konfigurace serveru (#353).
 - Historie - uživatelé s oprávněním **Čištění databáze** mohou [mazat historické verze](redactor/webpages/history.md) přímo v editoru stránky, i hromadným výběrem. Aktuálně publikovaná verze a verze čekající na schválení jsou chráněny. Bez tohoto oprávnění zůstává dostupné rušení budoucího naplánovaného publikování (#353).
+- Plánované publikování - při zapnutí `plannedPublishingEnabled` lze připravit budoucí verzi stránky s chráněnými obrázky, dokumenty a samostatnou sadou médií [postup a podmínky nasazení](redactor/webpages/planned-publishing.md) (#362).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Webové stránky - nové menu [Další akce](redactor/webpages/README.md#další-akce-a-hromadná-změna-skupin) v pravé části nástrojové lišty obsahuje hromadné přidání a odebrání značky i skupiny uživatelů bez přepsání ostatních skupin. Skupiny práv a e-mailové skupiny se vybírají společně. Přesunuli jsme do něj také kontrolu odkazů, statistiku stránky, uložení jako AB test a Import/Export (#368).
+
+![Nabídka Další akce v seznamu webových stránek](redactor/webpages/more-actions.png)
+
+- Webové stránky - [výchozí nastavení stromu](redactor/webpages/README.md#výchozí-nastavení-pro-uživatele) pro nového uživatele lze nastavit přes konfigurační proměnnou `webpagesTreeDefaultSettings` (#368).
+- Editor stránek - v úzkém okně se skupiny nástrojů přesunou do [panelu Další nástroje](redactor/webpages/working-in-editor/README.md#panel-nástrojů-v-úzkém-okně). Lišta se nezalamuje do dalšího pásu a nepřekrývá přepínač editoru a rozměrů. Tlačítko se třemi tečkami je přímo za poslední skupinou ikon a má bublinovou nápovědu. Stejné ovládání funguje ve Standardním editoru i v Page Builderu (#372).
+
+![Panel Další nástroje v mobilním náhledu Page Buildera](redactor/webpages/working-in-editor/toolbar-overflow.png)
+
+- Page Builder - dialogy, které se nevejdou do šířky náhledu, se automaticky rozšíří na velikost okna prohlížeče. Po potvrzení nebo zavření se obnoví původní šířka náhledu a posun stránky. Ovládací prvky Page Buildera používají jazyk administrace (#372).
+- Obrázky - přidána podpora obrázků a animací ve [formátu AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Serverové úpravy, vodotisk a miniatury přes `/thumb` zachovávají snímky, průhlednost a časování animace. Zpracování vyžaduje `ImageMagick` 7.1.2-34 nebo novější s `libheif` 1.22.0 nebo novějším. Editor obrázků ukládá statický obrázek (#371).
 
 ### Headless režim
 
@@ -119,7 +139,12 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
-- Vícekrokové formuláře - přidána možnost upravit [HTML tlačítka na předchozí krok](redactor/apps/formsimple/README.md#html-kód-tlačítek) přes překladový klíč `components.mustistep.form.back_button` (#osk782).
+- Regulární výrazy - seznam zobrazuje přeložený název podle jazyka administrace a původní název označuje jako **Překladový klíč**. Výběr **Povolená hodnota** ve vícekrokových formulářích používá formát **kód - název** (#387).
+- Vícekrokové formuláře - opravený překlep v překladových klíčích z `components.mustistep.*` na `components.multistep.*` (#378).
+- Vícekrokové formuláře - pomocné zápisy statistiky na [veřejném uzlu clusteru s omezenými databázovými právy](install/config/ro-user.md#víceleté-formuláře) již neblokují zobrazení, validaci ani odeslání formuláře. Při chybě se návštěvníkovi zobrazí název aplikace namísto názvu Java třídy (#384).
+- Odložené odesílání emailů - zvětšený sloupec `emails.message` na `LONGTEXT` v MySQL/MariaDB, aby uložení velkého HTML emailu neselhalo. Doplněn [návod na menší CSS pro email a PDF](redactor/apps/form/README.md#css-styly-pro-email-a-pdf) (#374).
+- Nastavení formulářů - přidaná karta **Volitelná pole** s poli A–F. Pole jsou dostupná také v editoru aplikace Formulář snadno a přes `FormSettingsEntity`. V HTML překladových klíčů lze použít [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláře) pro A–F, emailová nastavení, přesměrování, limity souborů a vzhled. Podporuje je i náhled a emailová podoba vícekrokových formulářů. A–F i text před a za emailem umožňují HTML (#364).
+- Vícekrokové formuláře - přidána možnost upravit [HTML tlačítka na předchozí krok](redactor/apps/formsimple/README.md#html-kód-tlačítek) přes překladový klíč `components.multistep.form.back_button` (#osk782).
 - Vícekrokové formuláře - po neúspěšném přechodu na další krok nebo odeslání se stránka posune na první viditelné chybové hlášení i při opakovaném pokusu (#58794).
 - Formuláře - validace nahraných souborů rozlišuje nepovolený znak v názvu a nepovolenou příponu. Chyba názvu uvede konkrétní zakázaný znak nebo řetězec. Názvy souborů v chybových hlášeních se zobrazují jako text, aby se případné HTML značky v názvu neprovedly (#58794).
 - Vícekrokové formuláře - při [návratu na předchozí krok](redactor/apps/multistep-form/README.md#návrat-na-předchozí-krok) se zachovají rozpracované hodnoty i dokončené nahrávání (#58794).
@@ -136,6 +161,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ![](redactor/apps/multistep-form/stat-section-advanced.png)
 
+- Vícekrokové formuláře - [prázdná možnost](redactor/apps/multistep-form/README.md#prázdná-možnost) ve skupině výběrových polí zobrazuje nastavitelný text **Bez zvolené možnosti** (#381).
 - Do vícekrokových formulářů přidána možnost jednoduše nastavovat výběrová pole a skupiny zaškrtávacích / výběrových polí (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -171,6 +197,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Aplikace
 
+- AI asistenti - opraveno zpracování průběžných textových odpovědí včetně Gemini. Počet tokenů a chybové zprávy se správně zpracují i ​​při rozdělení nebo spojení síťových bloků; technické údaje se nevkládají do generovaného textu. Přerušená odpověď se již neoznačí jako úspěšně dokončená.
 - Číselníky - výběr a správa typů se přesunuly do stromu v levém panelu s vyhledáváním. Více v [dokumentaci Číselníků](redactor/apps/enumeration/README.md) (#58786).
 - Blog - výběr a přidávání sekcí jsou dostupné ve stromu v levém panelu s vyhledáváním. Více v [dokumentaci Blogu](redactor/apps/blog/README.md) (#58786).
 - Novinky - výběr složky se přesunul do stromu v levém panelu s vyhledáváním, dostupného iv editoru aplikace. Automatické hledání složek vynechává kořeny blogerů i jejich podsložky. Více v [dokumentaci Novinek](redactor/apps/news/README.md) (#58786).
@@ -204,11 +231,28 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Manažer dokumentů - vylepšená kontrola práv na souborový systém. Ikona pro přidání složky se zobrazuje jen pokud uživatel má právo zápisu, při výběru složky se kontrolují práva, pokud uživatel nemá právo zápisu souborů do `/files/archiv` zobrazí se chybová zpráva (#osk802).
+- Výběr složky - zakázané složky ve stromové struktuře se zobrazují ikonou složky s křížkem (#osk802).
+- Manažer dokumentů - strom složek má minimální šířku 200 px, aby vyhledávací pole s tlačítky nepřesahovalo do tabulky ani při nastavení menšího poměru. Nastavení šířky v pixelech proto nabízejí hodnoty od 200 px (#360).
+- Manažer dokumentů - pole **Produkt** a **Kategorie** při uložení, přejmenování a hromadném nahrávání normalizují tvrdé mezery, tabulátory a zalomení řádků, sloučí opakované mezery a odstraní okrajové mezery i rušivé neviditelné znaky z kopírovaného textu. **Upozornění:** při opětovném uložení existujícího dokumentu se odstraní tvrdé mezery v názvu, produktech a podobně. Filtry v aplikaci ve webových stránkách se automaticky neaktualizují. Pokud používají původní název s tvrdými nebo opakovanými mezerami či neviditelnými znaky, dokument se po uložení nemusí ve filtrovaném seznamu zobrazit. Opravte názvy ve všech dotčených dokumentech a v aplikacích nastavte filtry podle nových hodnot. Uložení jednoho dokumentu neopraví ostatní dokumenty se stejným názvem produktu nebo kategorie (#360).
+- Manažer dokumentů - v [aplikaci na webové stránce](redactor/files/file-archive/file-archive-app.md#karta---rozšířené) přidáno řazení podle začátku a konce platnosti, kódu produktu, produktu, kategorie, jména souboru a velikosti dokumentu (#359, #osk791).
+- Manažer dokumentů - konfigurační proměnnou `fileArchivCheckHistoryValid=false` lze povolit stahování historických verzí i mimo rozsah platnosti; historické verze dokumentů se tehdy zobrazí i v aplikaci na webové stránce. Data zůstávají zobrazena v archivu; výchozí hodnota `true` zachovává kontrolu platnosti od i do. Více v [dokumentaci](redactor/files/file-archive/README.md#platnost-a-stahování-historických-verzí) (#380).
+
 ### Galerie
 
 - Přidána možnost nastavit samostatný způsob [změny velikosti pro velký obrázek](redactor/apps/gallery/structure.md#karta-rozměry) nezávisle na malém obrázku. Ve výchozím nastavení se použije způsob změny velikosti stejně jako je nastaveno pro malý obrázek. Nastavení lze volitelně překopírovat i do podsložek (#58633).
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
+
+### Datové tabulky
+
+- Sekce **Nastavení → Datové tabulky** sdružuje [Nastavení polí](frontend/datatables/fields-settings.md), [Nastavení karet](frontend/datatables/tabs-settings.md) a [Volitelná pole](frontend/datatables/custom-fields-settings.md). Pro jednotlivé entity a domény můžete měnit názvy, pořadí a zobrazení polí či zakázat jejich úpravy. Můžete také upravovat karty editoru a vytvářet vlastní karty s volitelnými poli. **Upozornění:** Původní oprávnění **Volitelná pole** (`customFields`) bylo odstraněno. Po aktualizaci je třeba příslušným uživatelům nebo skupinám práv přidělit nové oprávnění **Datové tabulky** (`dataTablesConfig`). Původní oprávnění se automaticky nepřenesou (#366).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Webové stránky - při ukládání se zachovají hodnoty polí skrytých v editoru a polí se zakázanými úpravami podle stejných pravidel jako v ostatních datových tabulkách. Při úpravě z historie se použijí hodnoty z vybrané verze stránky (#366).
 
 ### Volitelná pole
 
@@ -272,6 +316,26 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Spring aplikace - [chyba při vytvoření nebo provedení aplikace](custom-apps/spring-mvc/README.md#chyba-při-provádění-aplikace) nahradí pouze její značku `INCLUDE`. Okolní text, JSP aplikace i ostatní Spring aplikace zůstanou na stránce zachovány a hláška uvede název aplikace, která selhala (#384).
+- Redis session - opraveno nahrávání souborů po částech, spotřebování jednorázových CSRF tokenů a aktualizace údajů přihlášeného uživatele po úpravě profilu přes registrační formulář. Změněné objekty se zapíší zpět do session.
+- Editor stránek - opravena chyba při otevření náhledu po obnovení session ze serializovaného úložiště, například Redis. Chybějící data editoru se obnoví z náhledové verze stránky.
+- Šablony - audit vytvoření, úpravy a smazání používá jednotné prefixy `CREATE:`, `UPDATE:` a `DELETE:` s ID a názvem šablony.
+- Editor stránek - při přepínání stránek čeká na dokončení obnovy CKEditoru, aby se nezobrazil a neuložil obsah předchozí stránky.
+- Webové stránky - lomítka v názvu stránky, názvu v menu a ve výběru hlavičky, patičky či navigace se zobrazují jako `/` místo `&#47;`.
+- AI asistenti - při HTTP chybě generování obrázku se zobrazí chyba a ukončí indikátor zpracování. Požadavek lze zopakovat.
+- Datové tabulky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - nabídky nadpisů, zarovnání a barev se již neořezávají na spodním okraji dialogového okna a zůstávají dostupné iv nízkém okně prohlížeče (#376).
+- Elektronický obchod - opraveno přidání kategorie produktů bez označeného produktu v tabulce (#373).
+- Webové stránky - URL stránky, přesměrování a perex obrázku zachovávají parametry i po načtení přes JPA včetně historie. HTML sanitizér již nepřepisuje znaky `&` a `=` v URL na HTML entity (#373).
+- Webové stránky - přesměrování stránky se přihlášenému administrátorovi neukládá do cache prohlížeče, aby se jeho změna nebo zrušení projevily při dalším otevření stránek (#372).
+- Editor stránek - při automatické maximalizaci v nízkém nebo úzkém okně zůstává celý panel nástrojů nad obsahem stránky. Obsah již neprosvítá pod ikonami a názvy skupin (#372).
+- Editor stránek - při selhání získání obsahu nebo hodnotě `undefined` se zobrazí chyba a uložení se zastaví, aby se nepřepsal původní obsah. Atributy `contenteditable` se odstraňují při načítání i ukládání HTML včetně kódu vloženého v HTML režimu (#369).
+- Page Builder - při selhání načítání obsahu lze přepnout do HTML režimu obnovením posledního dostupného HTML. Obnova vyžaduje potvrzení, protože nemusí obsahovat nejnovější změny (#369).
+- Page Builder - opraveno zamrznutí editoru při otevření HTML se zbývajícím atributem `contenteditable="true"`. CKEditor se na stejném bloku již neinicializuje dvakrát.
+- Page Builder - nepodporované elementy označené `pb-editable`, například položky seznamu `li`, již nezablokují přepnutí z HTML editoru. Jejich obsah zůstává zachován a lze jej upravovat přes nadřazenou editovatelnou oblast (#382).
+- Page Builder - vnořené značky `pb-editable` a `pb-content` se odstraní před spuštěním editoru. V jednom bloku nevznikají vnořené CKEditory a při vytváření odstavců či seznamů se nekopíruje nadbytečné označení. Text a ostatní CSS třídy zůstávají zachovány (#382).
+- Email - opraveno ovlivňování SMTP nastavení mezi aplikacemi na společném aplikačním serveru. Každé odeslání používá vlastní properties a mailovou session, takže se nepřenáší SSL port, autentifikace ani nastavení Amazon SES z jiné aplikace (#367).
+- Page Builder - opraveno hromadění prázdných řádků v HTML vnořených bloků. Při ukládání a přepnutí do HTML editoru se odstraní i staré nadbytečné řádky mezi elementy. Obsah `pre`, `textarea` a mezery zachovávané přes CSS `white-space` zůstávají nezměněny (#367).
+- Webové stránky - opravené zasekávání a skákání při [srovnávání verzí](redactor/webpages/history.md), pokud šablona stránky používá plynulé posouvání (`scroll-behavior: smooth`) (#367).
 - Webové stránky - editor JSON přijímá také pole a jednoduché hodnoty s komentáři. Opraveno rozdělení sloupců a posouvání v Page Builderu a zavírání tooltipu při úpravě z historie (#346).
 - Vícekrokové formuláře - opravena validace polí s řetězenými podmínkami viditelnosti (#58794).
 - Formuláře - opraveno archivování formulářů (#305).
@@ -282,6 +346,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Page Builder - opraveno zbytečné posouvání stránky nahoru/dolů pokud jste upravovali aplikaci ve stránce (#343).
 - Page Builder - opraveno zobrazení nástrojové lišty pokud stránka neobsahuje žádnou sekci (#343).
 - Page Builder - přidána možnost nastavit [šířku okna struktura](frontend/page-builder/settings.md) (#343)
+- Administrace - opraveno zobrazení ikony zaškrtnutí u vybrané položky v nabídce automatického doplňování (#osk800).
 
 ### Výkon
 
@@ -290,6 +355,16 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Bezpečnost
 
+- Dependency Check - aktualizované knihovny `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizace Jackson zpřísňuje kontrolu typů při polymorfní deserializaci; vlastní integrace používající názvy Java tříd v JSON je třeba ověřit (#385).
+- Dependency Check - výjimky pro `CVE-2026-116802`, `CVE-2026-116803` a `CVE-2026-116804` v `DOMPurify 3.4.16` byly ověřeny a omezeny na přesný hash dodávaného `Swagger UI 5.34.0` bundle. Integrace ošetřuje HTML řetězce bez XHTML režimu, `IN_PLACE`, `SAFE_FOR_TEMPLATES` a zvracení DOM; její hook neodstraňuje uzly. Výjimky potvrzují nepoužití dotčených režimů, nikoli opravu knihovny DOMPurify (#385).
+- Dependency Check - aktualizované knihovny `Hibernate Validator 9.0.0.Final → 9.0.2.Final` s opravou `CVE-2026-93879`, tranzitivní závislost `ASM 9.7.1 → 9.11.1` s opravami zpracování Java bytecode a závislost sestavení administrace `ip-address 10.7.1 → 10.7.4` s opravou `CVE-2026-111997`. Aktualizace nevyžadují změnu verze Java ani úpravu aplikačních API (#385).
+- Dependency Check - doplněná výjimka pro `CVE-2026-104828` v `neko-htmlunit 4.5.0`, existující výjimka pro `CVE-2026-47842` byla znovu ověřena pro `spring-security-crypto 7.1.2`. Ověřené integrace nepoužívají `HTMLWriterFilter` ani staré AES API. Výjimky jsou omezeny na konkrétní verze; při změně integrací je třeba je přehodnotit. Nejedná se o opravu těchto knihoven (#385).
+- Formuláře - zamezené přepsání šifrovacího klíče parametrem `encryptKey` v požadavku. Podvržený, prázdný nebo poškozený parametr nezmění šifrování uložených hodnot ani HTML podoby formuláře (#376).
+- Node.js - verze pro vývoj a sestavení projektu v `.nvmrc` a `devcontainer` aktualizována na `22.23.4`, která opravuje zranitelnost Brotli dekodéru CVE-2026-111497. Lokálně iv build prostředích aktualizujte Node.js podle [návodu k instalaci](developer/install/README.md#rspack-build-js-css-a-pug-souborů) (#373).
+- Web stránky - při ukládání se ověřují práva k původní stránce ik cílové složce při přesunu. Změnou ID a složky v požadavku nelze převzít cizí stránku (#373).
+- Web stránky - název stránky a název v menu se čistí od nebezpečného HTML při ukládání i načítání (#373).
+- HTML sanitizace - přidán sdílený `AllowSafeHtmlAttributeConverterWithSave` k čištění HTML při ukládání i načítání. Používá se na cestu z názvů složek ve stránkách a historii; ošetřeny jsou i starší JDBC zápisy.
+- Datatabulky - při vykreslování odkazů a obrázků se escapují URL v HTML atributech, aby vložené uvozovky nemohly vytvořit další atribut. Samotná URL v datech zůstává nezměněna (#373).
 - Dependency Check - aktualizované knihovny `Jackson 2.22.3/3.2.3`, `jsoup 1.23.2`, `logback-core/classic 1.6.5`, `slf4j-api 2.0.19`, `mariadb-java-client 3.5.10`, `postgresql 42.7.14`, `Swagger UI 5.32.15` (s `DOMPurify 3.4.13`), `moment 2.31.0` včetně statické kopie, @@CODE `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` a `undici 6.28.1`. Sestavení vyžaduje Node.js 20 nebo 22 a novější (#349).
 - Dependency Check - přidány výjimky pro `kotlin-stdlib 2.4.0`, `webjet-ai/webjet-ai-local 2.0.4`, `spring-security-crypto 7.1.1`, `http-cache-semantics 4.2.0`, `fabric 5.2.4/5.5.2` a `jQuery 3.3.1` v testovací šabloně eshopu. Výjimky pro `ai.djl:api 0.36.0` a `tar 6.2.1` představují schválené přijetí zbytkového rizika. Podrobnosti jsou v `dependency-check-suppressions-project.xml` (#349).
 - Přidána podpora generování `nonce` pro [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
@@ -298,12 +373,17 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Dokumentace
 
+- AI skills - doplněn [přehled WebJET skillů](developer/guidelines/ai-skills.md#přehled-webjet-skills) s účelem a příklady použití. Stejná tabulka se automaticky přenáší do README distribuce `webjetcms/skills`. Export kontroluje úplnost seznamu (#376).
+- Formuláře - doplněný návod [Šifrování formulářů](redactor/apps/form/encryption.md) s vytvořením a nastavením klíčů, dešifrováním záznamů, rozsahem ochrany a technickým popisem algoritmů (#376).
 - Datatabulky - doplněné vysvětlení [upozornění na neuložené změny](redactor/datatables/README.md#upozornění-na-neuložené-změny) při obnovení nebo opuštění stránky a při zavření editoru tlačítkem Zrušit (#339).
 - Vytvořena nová sekce [Přehled nových vlastností](sales/README.md) která obsahuje popisy nových vlastností a **funkcionalit WebJET CMS srozumitelným jazykem**, bez zbytečně technických formulací (#58505).
 - Vytvořená sekce [Řešení problémů](sysadmin/troubleshooting/README.md) v manuálu pro provoz.
 
 ### Pro programátora
 
+- Datatabulky - tabulky nastavení mají společný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Stávající tabulka `custom_fields` se při aktualizaci automaticky přejmenuje se zachováním údajů; vlastní SQL dotazy je třeba upravit na `dt_customfields` (#58830).
+- Datatabulky - třídy pro [systémová nastavení](developer/datatables/README.md#systémová-nastavení) volitelných polí, polí a karet byly přesunuty pod `sk.iway.iwcm.system.datatable.settings` do podbalíků `customfields`, `fields` a `tabs`. Vlastní kód a šablony používající tyto třídy vyžadují aktualizaci importů a úplných názvů tříd (#58830).
+- Datatabulky - přidaný typ pole [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pro výběr jedné možnosti ze skupiny tlačítek. Používá styly administrace a podporuje i volbu **Bez změny** při třístavových nastaveních (#58830).
 - SBOM - přidáno [generování společného seznamu Java a npm závislostí](developer/install/sbom.md) ve formátu CycloneDX JSON příkazem `ant -f ant/build.xml sbom`, včetně tranzitivních závislostí a validace reportu.
 - [Centrální generátor novinek](developer/install/social-media-feed.md) po úspěšném publikování odstraní nepoužívané náhledy s 30denní ochrannou lhůtou. Zachová obrázky aktuálních příspěvků i záložních údajů pro výpadek zdroje (#358).
 - Editor stránek - [nastavení nabídky Styly](frontend/examples/template-bare/README.md#vyhledávání-a-skupiny-stylů) podporuje metadata v komentářích `editor.scss` / `editor.css` pro kategorie a jejich ikony, vzájemně se nahrazující skupiny, povolené elementy a základní třídy zachovány. Nová nabídka je ve výchozím nastavení zapnuta; nastavením `ckeditor_styleComboEnabled=false` se obnoví původní výběr stylů (#OSK764).
@@ -630,6 +710,13 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Cluster - optimalizované zapisování změny v clusteru při startu nového uzlu (#337).
 - Redis - zlepšený přenos informace o nahrávaném souboru v session (#342).
 - Bezpečnost - aktualizovaná knihovna `FreeMarker` z verze `2.3.34` na `2.3.35`.
+- Bezpečnost - aktualizovaná knihovna `Hibernate Validator` z verze `6.2.5.Final` na `6.2.6.Final` s opravou `CVE-2026-93879`. Zachována kompatibilita s `javax.validation`.
+- Bezpečnost - aktualizované závislosti sestavení administrace `PostCSS` z verze `8.5.12` na `8.5.23` a `source-map-js` z verze `1.2.1` na `1.2.2` s opravami `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` a `CVE-2026-93749`.
+- Bezpečnost - doplněné výjimky Dependency Check pro konkrétní HIGH nálezy v nepoužívaných funkcích `Moment, Vue SSR, DOMPurify, Neko, Spring` a pro nesprávné přiřazení XML chyby k použité verzi `jsoup`. Výjimky jsou omezeny na posouzené verze knihoven nebo hash Swagger UI; při zapnutí dotčených funkcí či zákaznickém rozšíření konfigurace je třeba je přehodnotit. Nejedná se o opravu těchto knihoven.
+- Bezpečnost - aktualizované knihovny `Jackson Databind, Core, JAX-RS, JAXB` modul z verze `2.22.1` na `2.22.4` s opravou [CVE-2026-110879](https://github.com/FasterXML/jackson-databind/security/advisories/GHSA-m8x7-2 `Jackson Annotations` zůstává ve verzi `2.22`.
+- Bezpečnost - doplněna výjimka pro [CVE-2026-116804](https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7) v konkrétním souboru Swagger UI. Použitá konfigurace DOMPurify nezapíná režimy potřebné ke zneužití této chyby.
+- Aktualizovaná knihovna `swagger-ui` na verzi 5.34.0.
+- Bezpečnost - opravená aplikační ochrana před [CVE-2025-22228](https://spring.io/security/cve-2025-22228/). Bcrypt hesla delší než 72 bajtů v UTF-8 při přihlášení nefungují a hlásí se jako nesprávné heslo. Při diakritice a dalších více bajtových znacích může jít io méně než 72 znaků. Platí to pro stávající i nová hesla, jejich ukládání se nemění a konverze se neprovádí. Uživatel musí použít obnovu zapomenutého hesla nebo reset administrátorem.
 - Bezpečnost - aktualizované knihovny administrace `Lodash` z verze `4.17.21` na `4.18.1` a `PostCSS` z verze `8.5.2` na `8.5.12`. V rámci aktualizace PostCSS byla aktualizována i jeho závislost `Nano ID` z verze `3.3.8` na `3.3.20`.
 - Bezpečnost - vypnutá kompilace výrazů SpringEL v Thymeleaf šablonách a ve výchozím nastavení i ve Spring jako ochrana před [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Standardní syntax šablon a povolená volání metod zůstávají podporovány, úprava šablon není nutná. U šablon s velkým množstvím opakovaně vyhodnocovaných výrazů může vykreslování trvat déle.
 - Bezpečnost - vypnuté ukládání chráněných souborů z `/files/protected/` do cache prohlížeče a proxy serverů nastavením HTTP hlaviček před odesláním souboru. Opraveno nastavení délky odpovědi při odesílání celého souboru i jeho rozsahu, aby Spring Security zapsal bezpečnostní hlavičky včas.

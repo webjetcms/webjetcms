@@ -79,6 +79,7 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
             return;
         }
 
+        Identity user = getUser();
         if (addRoot) {
             Prop prop = Prop.getInstance(getRequest());
             DirTreeItem rootItem = new DirTreeItem(rootDirectory);
@@ -86,7 +87,7 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
             rootItem.setParent("#");
             rootItem.setChildren(hasSubdirectories(rootDirectory, rootDirectory));
             rootItem.getState().setOpened(true);
-            rootItem.setIcon("ti ti-folder-filled");
+            setFolderIcon(rootItem, user);
 
             result.put("result", true);
             result.put("items", List.of(rootItem));
@@ -102,7 +103,7 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
         List<DirTreeItem> items = new ArrayList<>();
         for (IwcmFile child : FileTools.sortFilesByName(directories)) {
             DirTreeItem treeItem = new DirTreeItem(child);
-            treeItem.setIcon("ti ti-folder-filled");
+            setFolderIcon(treeItem, user);
             treeItem.setChildren(hasSubdirectories(child, rootDirectory));
             items.add(treeItem);
         }
@@ -114,6 +115,11 @@ public class FileArchiveTreeRestController extends JsTreeRestController<DirTreeI
 
         result.put("result", true);
         result.put("items", items);
+    }
+
+    static void setFolderIcon(DirTreeItem item, Identity user) {
+        item.setIcon(user != null && user.isFolderWritable(item.getVirtualPath())
+                ? "ti ti-folder-filled" : "ti ti-folder-x");
     }
 
     @Override

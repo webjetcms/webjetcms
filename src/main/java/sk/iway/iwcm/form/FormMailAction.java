@@ -11,7 +11,9 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.PdfTools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
+import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.multistep_form.rest.FormHtmlHandler;
 import sk.iway.iwcm.components.multistep_form.rest.FormMailService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
@@ -739,7 +741,9 @@ public class FormMailAction
 		}
 
 		CryptoFactory cryptoFactory = new CryptoFactory();
-		String publicKey = request.getParameter("encryptKey");
+		// Only server-side settings may select the encryption key, including when encryption is disabled.
+		FormSettingsEntity formSettings = Tools.isNotEmpty(formName) ? FormSettingsService.loadEntity(DB.internationalToEnglish(formName)) : null;
+		String publicKey = formSettings == null ? null : formSettings.getEncryptKey();
 
 		StringBuilder db_data = null;
 		StringBuilder db_data_names = null;
@@ -837,7 +841,8 @@ public class FormMailAction
 
 		if ("true".equals(request.getParameter("addTechInfo")))
 		{
-			String techInfoHtml = prop.getText("components.formsimple.techinfo");
+			String techInfoHtml = FormsService.replaceFields(prop.getText("components.formsimple.techinfo"),
+				FormsService.getSettingsReplacementMap(FormSettingsService.loadEntity(formName)));
 			techInfoHtml = ShowDoc.updateCodes(null, techInfoHtml, docId, request, Constants.getServletContext());
 			if (forceTextPlain)
 			{
@@ -1477,7 +1482,7 @@ public class FormMailAction
 				else
 				{
 					//vygeneruj mail a posli ho
-					Properties props = System.getProperties();
+					Properties props = new Properties();
 
 					try
 					{
@@ -1551,7 +1556,7 @@ public class FormMailAction
 						}
 
 						String from = email;
-						msg.setFrom(new InternetAddress(getFirstEmail(email), meno));
+						msg.setFrom(new InternetAddress(getFirstEmail(email), meno, SetCharacterEncodingFilter.getEncoding()));
 
 						//iteruj cez polozky formularu
 						String fieldsEmailHeader = request.getParameter("fieldsEmailHeader");

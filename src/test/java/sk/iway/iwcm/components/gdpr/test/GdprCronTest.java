@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.gdpr.test;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import sk.iway.iwcm.Constants;
@@ -12,9 +13,12 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 
 public class GdprCronTest extends BaseWebjetTest {
 
+    private static boolean originalJspJarPackaging;
+
     @BeforeAll
     public static void initJpa()
     {
+        originalJspJarPackaging = Constants.getBoolean("enableJspJarPackaging");
         /*
         Constants.setServletContext(new MockServletContext("/") {
             @Override
@@ -28,6 +32,12 @@ public class GdprCronTest extends BaseWebjetTest {
         DBPool.getInstance();
         DBPool.jpaInitialize();
         Constants.setBoolean("enableJspJarPackaging", true);
+    }
+
+    @AfterAll
+    public static void restoreJarPackaging()
+    {
+        Constants.setBoolean("enableJspJarPackaging", originalJspJarPackaging);
     }
 
     @Test

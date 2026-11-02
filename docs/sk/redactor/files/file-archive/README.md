@@ -8,13 +8,21 @@ V zobrazenom zozname vidíme všetky dokumenty, ktoré boli vložené do manaž�
 
 Na ľavej strane sa nachádza **stromová štruktúra priečinkov** (JSTREE), ktorá umožňuje prechádzať priečinky archívu a filtrovať dokumenty podľa zvoleného priečinka. Strom zobrazuje priečinky z koreňového adresára archívu nastaveného konfiguračnou premennou `fileArchivDefaultDirPath` (štandardne `files/archiv/`). Priečinok pre naplánované nahrávanie z konfiguračnej premennej `fileArchivInsertLaterDirPath` sa v strome nezobrazuje.
 
+Priečinky, do ktorých nemáte právo zápisu, sú označené ikonou <i class="ti ti-folder-x"></i>. Označenie sa vzťahuje aj na koreňový priečinok archívu. Takéto priečinky môžete rozbaliť a prejsť do podpriečinkov, ku ktorým máte oprávnenie.
+
+Ak pri výbere cieľového adresára pre nahratie dokumentu nemáte právo zápisu do priečinka aktuálne zadaného v poli, po otvorení výberu sa zobrazí upozornenie s jeho cestou. Ak je v poli povolený podpriečinok, upozornenie sa nezobrazí ani pri zakázanom koreňovom priečinku archívu. V strome vyberte priečinok, do ktorého môžete zapisovať.
+
+Výber priečinka po otvorení rozbalí cestu k priečinku zadanému v poli a označí ho, ak máte oprávnenie na jeho výber. Platí to aj pre vnorené podpriečinky a ručne upravenú cestu. Kliknutím na priečinok výber potvrdíte.
+
 Po kliknutí na priečinok v strome sa v tabuľke zobrazia iba dokumenty patriace do daného priečinka. Zvolený priečinok sa zároveň použije ako cieľový adresár pre [hromadné nahrávanie súborov](#hromadné-nahrávanie-súborov) a automaticky sa predvyplní pri vytváraní nového dokumentu cez editor.
 
 Nad stromom sa nachádzajú tlačidlá:
 
-- <i class="ti ti-plus"></i> - **Pridať** - vytvorí nový podpriečinok v aktuálne označenom priečinku. Tlačidlo sa zobrazuje používateľom s právom `menuFileArchivManagerCategory` a vytvorenie priečinka vyžaduje právo zápisu do zvoleného priečinka.
+- <i class="ti ti-plus"></i> - **Pridať** - vytvorí nový podpriečinok v aktuálne označenom priečinku. Tlačidlo sa zobrazuje používateľom s právom `menuFileArchivManagerCategory` a je aktívne, keď máte právo zápisu do zvoleného priečinka. Nový podpriečinok môžete vytvoriť aj v povolenom podpriečinku archívu, ak do koreňového priečinka nemáte právo zápisu.
 - <i class="ti ti-refresh"></i> - **Obnoviť** - obnoví stromovú štruktúru priečinkov
 - <i class="ti ti-adjustments-horizontal"></i> - **Nastavenia** - umožňuje nastaviť šírku stromovej štruktúry voči tabuľke
+
+Šírku stromu môžete zvoliť pomerom voči tabuľke alebo v pixeloch. Strom má minimálnu šírku `200 px`, aby sa doň zmestilo vyhľadávacie pole aj s tlačidlami. Menší pomer túto hranicu nezníži.
 
 ![](datatable.png)
 
@@ -55,6 +63,25 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
   - **Nahrať po** - výber dátumu a času, po ktorom sa má dokumentu nahrať
   - **Emaily oddelené čiarkou (notifikácia po nahraní)** - zadajte emaily oddelené čiarkou, na ktoré chcete zaslať notifikáciu o úspešnom/neúspešnom nahraní dokumentu
 
+#### Platnosť a sťahovanie historických verzií
+
+Konfiguračná premenná fileArchivCheckHistoryValid určuje, či sa pri už nahraných historických verziách kontrolujú dátumy **Platnosť od a Platnosť do**. Pri predvolenej hodnote true sa historická verzia dokumentu mimo rozsahu platnosti nezobrazí v zozname starších verzií v aplikácii na webovej stránke a nedá sa stiahnuť. Pri hodnote `false` sa dátumy ignorujú, takže verzia môže byť zobrazená a dostupná na stiahnutie aj mimo rozsahu platnosti. Ostatné podmienky zobrazenia a prístupové oprávnenia zostávajú zachované. Nevyplnený dátum príslušnú hranicu platnosti neobmedzuje.
+
+Údaje o zobrazení v aplikácii uvedené v tabuľke predpokladajú, že dokument vyhovuje ostatným filtrom aplikácie. Archívne verzie sa vypisujú iba pri zapnutej možnosti **Zobraziť archívne verzie** a vzory pri zapnutej možnosti **Zobraziť vzory**.
+
+| Typ a stav záznamu | `true` (predvolená hodnota) | `false` |
+| --- | --- | --- |
+| Historická verzia dokumentu, **Zobraziť** zapnuté, dátum platný | Stiahne sa a zobrazí sa v aplikácii | Stiahne sa a zobrazí sa v aplikácii |
+| Historická verzia dokumentu, **Zobraziť** zapnuté, pred **Platnosťou od** alebo po **Platnosti do** | Vráti chybu 404 a v aplikácii sa nezobrazí | Stiahne sa a zobrazí sa v aplikácii |
+| Historická verzia vzoru, **Zobraziť** zapnuté, dátum platný | Stiahne sa, v aplikácii sa nezobrazí | Stiahne sa, v aplikácii sa nezobrazí |
+| Historická verzia vzoru, **Zobraziť** zapnuté, pred **Platnosťou od** alebo po **Platnosti do** | Vráti chybu 404 a v aplikácii sa nezobrazí | Stiahne sa, v aplikácii sa nezobrazí |
+| Dokument alebo vzor, **Zobraziť** vypnuté | Vráti chybu 404 a v aplikácii sa nezobrazí | Vráti chybu 404 a v aplikácii sa nezobrazí |
+| Aktuálny dokument alebo aktuálny vzor, **Zobraziť** zapnuté, dátum platný | Stiahne sa a zobrazí sa v aplikácii | Stiahne sa a zobrazí sa v aplikácii |
+| Aktuálny dokument alebo aktuálny vzor, **Zobraziť** zapnuté, dátum neplatný | Vráti chybu 404 a v aplikácii sa nezobrazí | Vráti chybu 404 a v aplikácii sa nezobrazí |
+| Verzia čakajúca na nahratie | Čakajúca verzia sa nezobrazí, aktuálne publikovaná verzia zostáva zobrazená | Čakajúca verzia sa nezobrazí, aktuálne publikovaná verzia zostáva zobrazená |
+
+Pri hodnote `false` zostávajú dátumy historických verzií uložené a zobrazené v archíve ako informácia o účinnosti dokumentu. Aplikácia medzi vzormi vypisuje iba ich aktuálne verzie. Pri oboch hodnotách sa naďalej kontrolujú prístupové oprávnenia. Nastavenia indexovania dokumentov zostávajú zachované.
+
 ### Karta - Pokročilé
 
 ![](editor_advanced.png)
@@ -72,6 +99,8 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
   - nemôže to byť vzor
 - **Poznámka** - poznámka sa zobrazí na stránke pri odkaze na dokument
 - **Uložiť dokument aj keď už existuje** - povolí uloženie súboru s rovnakým obsahom, aký už má iný dokument v manažéri. Podrobnosti nájdete v časti [Kontrola duplicitných dokumentov](#kontrola-duplicitných-dokumentov).
+
+Pri ukladaní a premenovaní polí **Produkt** a **Kategória** sa tvrdé a ostatné Unicode medzery, tabulátory a zalomenia riadkov prevedú na obyčajnú medzeru. Opakované medzery sa zlúčia a medzery na začiatku a konci názvu sa odstránia. Odstránia sa aj zvyšné riadiace znaky a neviditeľné znaky BOM, mäkký spojovník a word joiner; zero-width space sa prevedie na medzeru. Úprava platí aj pri hromadnom nahrávaní dokumentov, takže kopírovanie názvov z iných dokumentov nevytvára odlišné kategórie iba kvôli týmto znakom.
 
 !>**Upozornenie:** polia **Produkt** / **Kategória**  / **Kód produktu** Vám neskôr poslúžia pri filtrovaní zobrazenia súborov na stránke
 

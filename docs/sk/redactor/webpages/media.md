@@ -48,3 +48,5 @@ Skupina médií môže mať nastavené obmedzenie pre zobrazenie skupiny len v u
 Všetky Média záznamy sú filtrované podľa práve zvolenej domény.
 
 V prípade záznamov z **Správa všetkých médií** je parameter mena tabuľky nastavovaný na hodnotu **documents** automaticky na pozadí. Pre identifikáciu či ide o volanie datatabuľky práve z tejto sekcie zabezpečuje url parameter ```isCalledFromTable=true```.
+
+Pri ukladaní média cez REST API musí byť stránka určená parametrom `docId` v URL (`-1` pre ešte neuloženú stránku) alebo výberom stránky v `editorFields.docDetails` pri `isCalledFromTable=true`. Samotné `mediaFkId` v odoslanej entite nestačí. Názov sady médií určuje server podľa kontextu požiadavky; pri plánovaných médiách sa posiela aj `planned=true`.

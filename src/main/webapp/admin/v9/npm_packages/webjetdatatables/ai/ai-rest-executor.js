@@ -36,80 +36,38 @@ export class AiRestExecutor {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json; charset=utf-8",
+                        "Accept": "application/x-ndjson",
                         'X-CSRF-Token': window.csrfToken
                     },
                     body: JSON.stringify(inputData)
                 });
 
-                if (!response.ok) {
-                    let bodyText = "";
-                    try { bodyText = await response.text(); } catch {}
-                    console.log(`ERR HTTP ${response.status} ${response.statusText}`);
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder("utf-8");
                 let wholeText = "";
-                let done = false;
-                let totalTokens = 0;
-
-                while (!done) {
-                    const { value, done: streamDone } = await reader.read();
-                    done = streamDone;
-                    if (done) {
-                        //console.log("Stream complete : ", value);
-                        break;
-                    }
-
-                    const chunk = decoder.decode(value, { stream: true });
-                    //console.log("Received:", chunk);
-
-                    let isJson = false;
-                    let parsed = null;
-                    try {
-                        parsed = JSON.parse(chunk);
-                        isJson = typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
-                    } catch (e) {
-                        isJson = false;
-                    }
-
-                    if (isJson == false) {
-                        wholeText += chunk;
-                        //self.EDITOR.set(aiCol.to, wholeText);
-
-                        //console.log("Setting partial text:", wholeText);
-
-                        let explanatoryJson = self._handleExplanatoryResponse(wholeText);
-                        if (setFunction != null) {
-                            setFunction(explanatoryJson.html, false);
-                        } else {
-                            self.EDITOR.set(aiCol.to, explanatoryJson.html);
-                        }
-                        executionResult.success = true;
+                const result = await self._readStream(response, text => {
+                    wholeText += text;
+                    const explanatoryJson = self._handleExplanatoryResponse(wholeText);
+                    if (setFunction != null) {
+                        setFunction(explanatoryJson.html, false);
                     } else {
-                        //handle parsed.error
-                        totalTokens += parsed.totalTokens;
-                        if (parsed.error) {
-                            executionResult.errorText = parsed.error;
-                        } else {
-                            executionResult.success = true;
-                        }
+                        self.EDITOR.set(aiCol.to, explanatoryJson.html);
                     }
-                }
+                });
+                executionResult.totalTokens = result.totalTokens;
 
-                //console.log("Setting final text:", wholeText);
-                executionResult.totalTokens = totalTokens;
-
-                let explanatoryJson = self._handleExplanatoryResponse(wholeText);
-                if (setFunction != null) {
-                    setFunction(explanatoryJson.html, true);
+                if (result.error) {
+                    executionResult.errorText = result.error;
                 } else {
-                    self.EDITOR.set(aiCol.to, explanatoryJson.html);
-                }
-                if (explanatoryJson.explanatoryText != null) {
+                    const explanatoryJson = self._handleExplanatoryResponse(wholeText);
+                    if (setFunction != null) {
+                        setFunction(explanatoryJson.html, true);
+                    } else {
+                        self.EDITOR.set(aiCol.to, explanatoryJson.html);
+                    }
                     executionResult.explanatoryText = explanatoryJson.explanatoryText;
+                    executionResult.success = true;
                 }
             } catch (err) {
+                executionResult.errorText = err.message || String(err);
                 console.log("ERRR : ", err);
             }
         } else {
@@ -152,6 +110,65 @@ export class AiRestExecutor {
         self.curentTimestamp = null;
 
         return executionResult;
+    }
+
+    /**
+     * Reads newline-delimited messages independently of HTTP chunk boundaries.
+     * A terminal result is required before a streamed edit can be considered complete.
+     * @param {Response} response HTTP response containing delta and result messages.
+     * @param {function(string): void} onDelta Receives generated text as it arrives.
+     * @returns {Promise<object>} Final assistant response, including tokens and any provider error.
+     */
+    async _readStream(response, onDelta) {
+        if (!response.ok) {
+            await response.body?.cancel();
+            throw new Error(`HTTP ${response.status} ${response.statusText}`.trim());
+        }
+        if (response.headers.get("Content-Type")?.split(";")[0].trim() !== "application/x-ndjson") {
+            await response.body?.cancel();
+            throw new Error("Unexpected AI stream content type.");
+        }
+        if (!response.body) throw new Error("Missing AI response stream.");
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8", { fatal: true });
+        let buffer = "";
+        let result = null;
+        let finished = false;
+        const readMessage = line => {
+            if (line.trim() === "") return;
+            if (result !== null) throw new Error("Unexpected message after AI stream result.");
+            const message = JSON.parse(line);
+            if (message?.type === "delta" && typeof message.text === "string") {
+                onDelta(message.text);
+            } else if (message?.type === "result" && Number.isInteger(message.result?.totalTokens)
+                && message.result.totalTokens >= 0
+                && (message.result.error == null || typeof message.result.error === "string")) {
+                result = message.result;
+            } else {
+                throw new Error("Invalid AI stream message.");
+            }
+        };
+
+        try {
+            while (!finished) {
+                const { value, done } = await reader.read();
+                finished = done;
+                buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
+                let newline;
+                while ((newline = buffer.indexOf("\n")) !== -1) {
+                    const line = buffer.substring(0, newline);
+                    buffer = buffer.substring(newline + 1);
+                    readMessage(line);
+                }
+            }
+            readMessage(buffer);
+            if (result === null) throw new Error("Incomplete AI response stream.");
+            return result;
+        } finally {
+            if (!finished) await reader.cancel().catch(() => {});
+            reader.releaseLock();
+        }
     }
 
     /**
@@ -223,32 +240,32 @@ export class AiRestExecutor {
         self.curentAssistantId = inputData.assistantId;
         self.curentTimestamp = inputData.timestamp;
 
-        await $.ajax({
-            type: "POST",
-            url: "/admin/rest/ai/assistant/response-image/",
-            data: JSON.stringify(inputData),
-            contentType: "application/json; charset=utf-8",
-            success: function(res)
-            {
-                //handle res.error
-                if (res.error) {
-                    executionResult.errorText = res.error;
+        try {
+            const res = await $.ajax({
+                type: "POST",
+                url: "/admin/rest/ai/assistant/response-image/",
+                data: JSON.stringify(inputData),
+                contentType: "application/json; charset=utf-8"
+            });
+            if (res.error) {
+                executionResult.errorText = res.error;
+            } else {
+                if (typeof res.tempFiles == "object" && res.tempFiles.length > 0) {
+                    self.editorAiInstance.aiUserInterface.renderImageSelection(button, aiCol, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
                 } else {
-                    if (typeof res.tempFiles == "object" && res.tempFiles.length>0) self.editorAiInstance.aiUserInterface.renderImageSelection(button, aiCol, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
-                    else executionResult.errorText = WJ.translate("components.ai_assistants.editor.image_generation.no_images.js");
-                    executionResult.totalTokens = res.totalTokens;
-                    //set to false, otherwise dialog will be rerendered with default success message
-                    executionResult.success = false;
+                    executionResult.errorText = WJ.translate("components.ai_assistants.editor.image_generation.no_images.js");
                 }
-            },
-            error: function(xhr, ajaxOptions, thrownError) {
-                executionResult.errorText = thrownError;
+                executionResult.totalTokens = res.totalTokens;
+                // Image selection handles the successful response without the generic success dialog.
+                executionResult.success = false;
             }
-        });
-
-        //Remove old run info
-        self.curentAssistantId = null;
-        self.curentTimestamp = null;
+        } catch (error) {
+            executionResult.errorText = error.responseJSON?.error || error.statusText || error.message ||
+                (error.status != null ? "HTTP " + error.status : String(error));
+        } finally {
+            self.curentAssistantId = null;
+            self.curentTimestamp = null;
+        }
 
         return executionResult;
     }

@@ -191,9 +191,7 @@ if (jsessionid > 0)
 	path = path.substring(0, jsessionid);
 	response.setStatus(302);
 	response.setHeader("Location", path);
-	response.setHeader("Pragma","No-Cache");
-	response.setDateHeader("Expires",0);
-	response.setHeader("Cache-Control","no-Cache");
+	PathFilter.setNoCacheHeaders(response);
 	out.println("Redirecting");
 	return;
 }
@@ -298,9 +296,7 @@ if (path.length() <= 3 && ua!=null && ua.toLowerCase().indexOf("bot")!=-1)
 	return;
 }
 
-response.setHeader("Pragma","No-Cache");
-response.setDateHeader("Expires",0);
-response.setHeader("Cache-Control","no-Cache");
+PathFilter.setNoCacheHeaders(response);
 
 String referer = request.getHeader("referer");
 

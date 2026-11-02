@@ -88,10 +88,11 @@
     &.DTE_nested_modal.show .close {
         top: 14px;
     }
-    .cke_top {
+    // Only legacy toolbars need a scrollable, height-limited ribbon.
+    .cke_top:not(.wj-cke-toolbar-top) {
         overflow: scroll;
     }
-    .cke_top span.cke_toolbox {
+    .cke_top span.cke_toolbox:not(.wj-cke-toolbar) {
         max-height: 55px;
         min-height: auto;
         width: 1100px;

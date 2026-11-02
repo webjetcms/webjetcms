@@ -169,7 +169,9 @@ module.exports = {
    */
   setConfigValue(name, value, temporary = false) {
     I.amOnPage("/admin/v9/settings/configuration/");
-    I.clickCss("button.buttons-create");
+    I.waitForVisible("#configurationDatatable_wrapper button.buttons-create", 20);
+    DT.waitForLoader("configurationDatatable");
+    I.clickCss("#configurationDatatable_wrapper button.buttons-create");
     DTE.waitForEditor("configurationDatatable");
     I.fillField("#DTE_Field_name", name);
     I.fillField("#DTE_Field_value", value);
@@ -182,10 +184,7 @@ module.exports = {
    * reset editorType force mode to pageBuilder (default)
    */
   resetPageBuilderMode() {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/");
-    I.executeScript(function () {
-        window.WJ.setAdminSetting("editorTypeForced", "pageBuilder");
-    });
+    this.setEditorMode("pageBuilder");
   },
 
   /**
@@ -194,9 +193,13 @@ module.exports = {
    */
   setEditorMode(mode) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    // Navigation can finish before the administration bundle has initialized WJ.
+    I.waitForFunction(() => typeof window.WJ?.setAdminSetting === "function", [], 20);
     I.executeScript(function (mode) {
         window.WJ.setAdminSetting("editorTypeForced", mode);
     }, mode);
+    // setAdminSetting starts an asynchronous POST but does not return its promise.
+    I.waitForFunction(() => window.jQuery.active === 0, [], 20);
   },
 
   /**

@@ -21,26 +21,28 @@ public interface FormProcessorInterface {
      * Validates user-submitted data for a specific step of a multistep form.
      *
      * @param formName logical identifier of the form
+     * @param formSettings settings already loaded for the current form and domain
      * @param stepEntity step being validated
      * @param stepData JSON payload containing the step fields and values
      * @param request current HTTP request for context and additional data
      * @param errors mutable map to collect field or general error messages (key → message)
      * @throws SaveFormException when validation fails in a way that should stop processing
      */
-    public void validateStep(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException;
+    public void validateStep(String formName, FormSettingsEntity formSettings, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException;
 
     /**
      * Executes an optional interceptor after a step is submitted, for example sending
      * a verification code to email or SMS.
      *
      * @param formName logical identifier of the form
+     * @param formSettings settings already loaded for the current form and domain
      * @param stepEntity step that was submitted
      * @param stepData JSON payload containing the step fields and values
      * @param request current HTTP request for context and additional data
      * @param errors mutable map to collect error messages produced by the interceptor
      * @throws SaveFormException to abort the flow when the interceptor detects blocking issues
      */
-    public void runStepInterceptor(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException;
+    public void runStepInterceptor(String formName, FormSettingsEntity formSettings, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException;
 
     /**
      * Performs custom final save logic for the form. The return value controls

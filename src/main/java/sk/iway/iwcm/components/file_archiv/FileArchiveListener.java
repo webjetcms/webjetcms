@@ -9,6 +9,7 @@ import org.springframework.ui.ModelMap;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -18,6 +19,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.elfinder.DirTreeItem;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * Thymeleaf event listener for the file archive admin page.
@@ -52,7 +54,8 @@ public class FileArchiveListener {
             }
 
             if (Tools.isNotEmpty(rootPath) && FileArchiveTreeRestController.isWithinRoot(dir, rootPath)) {
-                model.addAttribute("treeInitialJson", JsonTools.objectToJSON(getTreeInitialJson(dir, rootPath, Prop.getInstance(event.getSource().getRequest()))));
+                Identity user = UsersDB.getCurrentUser(event.getSource().getRequest());
+                model.addAttribute("treeInitialJson", JsonTools.objectToJSON(getTreeInitialJson(dir, rootPath, Prop.getInstance(event.getSource().getRequest()), user)));
             }
         } catch (Exception ex) {
             Logger.error(getClass(), ex);
@@ -69,9 +72,11 @@ public class FileArchiveListener {
      * from the root path down to the requested directory.
      * @param dir - the currently selected directory path
      * @param rootPath - the archive root directory path
+     * @param prop - translations for the current request
+     * @param user - the current user whose folder permissions determine the icons
      * @return list of DirTreeItem nodes to be serialized as JSON for jsTree
      */
-    private List<DirTreeItem> getTreeInitialJson(String dir, String rootPath, Prop prop) {
+    private List<DirTreeItem> getTreeInitialJson(String dir, String rootPath, Prop prop, Identity user) {
         List<DirTreeItem> treeInitialJson = new ArrayList<>();
 
         IwcmFile rootDirectory = IwcmFile.fromVirtualPath(rootPath);
@@ -85,7 +90,7 @@ public class FileArchiveListener {
         rootItem.setParent("#");
         rootItem.setChildren(hasSubdirectories(rootDirectory));
         rootItem.getState().setOpened(true);
-        rootItem.setIcon("ti ti-folder-filled");
+        FileArchiveTreeRestController.setFolderIcon(rootItem, user);
         if (dir.equals(rootPath)) {
             rootItem.getState().setSelected(true);
         }
@@ -106,7 +111,7 @@ public class FileArchiveListener {
                             DirTreeItem childItem = new DirTreeItem(child);
                             childItem.setParent(currentPath.toString());
                             childItem.setChildren(hasSubdirectories(child));
-                            childItem.setIcon("ti ti-folder-filled");
+                            FileArchiveTreeRestController.setFolderIcon(childItem, user);
 
                             String childPath = child.getVirtualPath();
                             if (dir.startsWith(childPath + "/") || dir.equals(childPath)) {

@@ -24,6 +24,14 @@ Hlavní stránka složky má standardně synchronizovaný [název webové strán
 
 Každá stránka, která má být veřejně zobrazitelná na web sídle musí mít zadané „Ano“ v části **Zobrazovat**. Pokud nemá takové nastavení, je pro návštěvníka nedostupná. Dostupná bude jen pro přihlášeného administrátora, aby během tvorby web stránky viděl, jak bude skutečně vypadat.
 
+### Přesměrování
+
+Do pole **URL adresa, na kterou chcete web stránku přesměrovat** můžete zadat cestu, například `/xiaomi`, nebo úplnou URL adresu. Přesměrování zrušíte vyprázdněním pole a uložením stránky.
+
+Přihlášenému administrátorovi se přesměrování neukládá do cache prohlížeče, aby mohl ihned ověřit jeho změnu nebo zrušení. Starší přesměrování, které si prohlížeč již zapamatoval, může vyžadovat vymazání paměti cache. Běžným návštěvníkům se přesměrování na cestu odesílá jako trvalé přesměrování `301`, které si prohlížeč může uložit.
+
+Vypnutá možnost **Zobrazovat** neuchovává smazané přesměrování. Taková stránka je pro běžného návštěvníka nedostupná; Online administrátor ji může otevřít a ověřit i její přesměrování.
+
 ### Zařazení ve stromové struktuře
 
 Web stránku můžete uložit do **více složek**, jejichž seznam je v sekci Zařazení ve stromové struktuře. Hlavní složka je označena jako Nadřazená složka, dodatečné jsou v části Kopie web stránky v. Technicky vzniknou kopie web stránky ve všech zvolených složkách. Při uložení libovolné stránky se zkopírují všechny údaje do ostatních kopií web stránky kromě:
@@ -147,6 +155,8 @@ Perex (Anotace) obsahuje stručný popis, čeho se stránka týká. Neměl by b�
 Obrázek můžete definovat přes ikonku, která se nachází za políčkem **Obrázek**.
 
 ### Publikování web stránky
+
+Při zapnuté funkci `plannedPublishingEnabled` můžete připravit [plánovanou verzi is chráněnými obrázky, soubory a médii](../planned-publishing.md), nezávisle na živé stránce a běžné pracovní verzi.
 
 Pokud jste si načasovali publikování webové stránky a chcete být o tomto publikování jako **autor stránky** informován, stačí nastavit konfigurační proměnnou ```webpagesNotifyAutorOnPublish```. Přednastavená hodnota je **true**, čili vždy po publikování nové verze web stránky se jejímu autorovi odešle následující informační email.
 

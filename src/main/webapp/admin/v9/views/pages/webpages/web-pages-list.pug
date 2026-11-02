@@ -268,15 +268,7 @@ block content
 
                     var groupColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.GroupDetails')})];
 
-                    var groupsTabs = [
-                        { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                        { id: 'template', title: '[[\#{editor.tab.template}]]' },
-                        { id: 'menu', title: '[[\#{editor.tab.navigation}]]' },
-                        { id: 'access', title: '[[\#{editor.tab.permissions}]]' },
-                        { id: 'publishing', title: '[[\#{editor.tab.publishing}]]' },
-                        { id: 'fields', title: '[[\#{editor.tab.fields}]]' },
-                        { id: 'history', title: '[[\#{editor.tab.history}]]', content: '<div class="groupHistoryPlaceholder"><div>' }
-                    ];
+                    var groupsTabs = [(${layout.getDataTableTabs('sk.iway.iwcm.doc.GroupDetails')})];
 
                     window.WJ.DataTable.mergeColumns(
                         groupColumns,
@@ -1021,11 +1013,19 @@ block content
                     }
 
                     if("pills-folders-tab" == currentTab) {
-                        $("button.buttons-linkcheck").show();
-                        $("button.buttons-abtest").show();
+                        webpagesDatatable.showButton("linkcheck");
+                        webpagesDatatable.showButton("abtest");
+                        webpagesDatatable.showButton("addPerexGroup");
+                        webpagesDatatable.showButton("removePerexGroup");
+                        webpagesDatatable.showButton("addUserGroup");
+                        webpagesDatatable.showButton("removeUserGroup");
                     } else {
-                        $("button.buttons-linkcheck").hide();
-                        $("button.buttons-abtest").hide();
+                        webpagesDatatable.hideButton("linkcheck");
+                        webpagesDatatable.hideButton("abtest");
+                        webpagesDatatable.hideButton("addPerexGroup");
+                        webpagesDatatable.hideButton("removePerexGroup");
+                        webpagesDatatable.hideButton("addUserGroup");
+                        webpagesDatatable.hideButton("removeUserGroup");
                     }
 
                     //if ("pills-trash-tab"==currentTab)

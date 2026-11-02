@@ -27,6 +27,8 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @Table(name = "enumeration_type")
@@ -38,6 +40,14 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_UPDATEDB)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "strings", title = "enum_type.strings"),
+    @DataTableTab(id = "numbers", title = "enum_type.numbers"),
+    @DataTableTab(id = "booleans", title = "enum_type.booleans"),
+    @DataTableTab(id = "dates", title = "enum_type.dates"),
+    @DataTableTab(id = "stringFieldTypes", title = "enum_type.string_field_types", hideOnCreate = true)
+})
 public class EnumerationTypeBean extends ActiveRecordRepository implements Serializable {
 
     private static final long serialVersionUID = -1L;

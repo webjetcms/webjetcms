@@ -237,6 +237,10 @@ Pokud se vyžaduje editování elementu, který není z mezi výše zmíněných
 
 Tento element nebude možné nastylovat pomocí Page Builder, ale bude editovatelný pomocí CK editoru.
 
+Samostatný editor se vytvoří pouze na elementech podporovaných CKEditorem, například `div`, `p` nebo nadpisech. Na nepodporovaných prvcích, například `li`, `ul` nebo `td`, se označení `pb-editable` ignoruje, aby vložený HTML kód nezablokoval otevření Page Buildera. Element i jeho obsah zůstanou zachovány. Pokud je uvnitř editovatelného obalu, jeho text lze upravovat přes tento obal; například celý seznam vložte do `div.pb-editable`.
+
+Editovatelné oblasti nevnořujte do sebe. Pokud například `div.pb-editable` obsahuje `p.pb-editable`, Page Builder před spuštěním editoru odstraní vnořenému odstavci značku `pb-editable`. Rovněž odstraní vnořené značky `pb-content`. Text, ostatní CSS třídy a označení vnější oblasti zůstanou zachovány. Obsah spravuje jeden CKEditor, takže Enter a vytvoření seznamu nepřenášejí nadbytečné označení na nové odstavce či položky seznamu.
+
 ```html
 <div class="pb-editable"></div>
 ```

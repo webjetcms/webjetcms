@@ -48,6 +48,13 @@ Po nastavení pokračujte návodom [Použitie AI skills](../guidelines/ai-skills
 
 ## rspack build JS, CSS a PUG súborov
 
+Použite verziu Node.js uvedenú v `.nvmrc` v koreni projektu. Ak používate `nvm`, pred zostavením spustite z koreňa projektu:
+
+```shell
+nvm install
+nvm use
+```
+
 Súbory pre administráciu sú zostavované cez rspack zo zdrojových ```js/scss/pug``` súborov. Pre prvotnú inštaláciu spustite v novom termináli:
 
 ```shell

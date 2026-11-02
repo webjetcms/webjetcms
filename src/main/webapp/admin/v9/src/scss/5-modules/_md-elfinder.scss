@@ -521,7 +521,8 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-png { display: block !important; }
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-png::before { display: none !important; }
 
-.elfinder-cwd-icon-webp::before {
+.elfinder-cwd-icon-webp::before,
+.elfinder-cwd-icon-avif::before {
     color: white !important;
     background-color: $dark-60 !important;
     font-size: 14px !important;
@@ -1712,3 +1713,6 @@ div.ui-dialog-content:has(div.CodeMirror) {
         }
     }
 }
+
+.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-avif { display: block !important; }
+.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-avif::before { display: none !important; }

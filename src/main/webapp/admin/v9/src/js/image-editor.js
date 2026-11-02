@@ -48,6 +48,10 @@ export class ImageEditor extends Editor {
         const imageBlob = this.getImageBlob();
         const formatedBlobData = new FormData();
 
+        this.#start = 0;
+        this.#end = this.#bytesPerChunk;
+        this.#chunkRank = 0;
+        this.#progress = 0;
         this.#blobSizeBytes = Number(imageBlob.size);
         this.#totalChunkCount = `${!Number.isInteger(imageBlob.size / this.#bytesPerChunk) ? Math.floor(imageBlob.size / this.#bytesPerChunk) + 1 : Math.floor(imageBlob.size / this.#bytesPerChunk)}`;
         this.#convertSize = 100 / this.#totalChunkCount;
@@ -79,7 +83,7 @@ export class ImageEditor extends Editor {
         form.set('dzchunkindex', this.#chunkRank)
         form.set('file', chunk);
         this.onPostImage(url, form).then((response, status) => {
-            if (status == 'success') {
+            if (status == 'success' && response.success !== false && !response.error) {
                 this.#start = this.#end;
                 this.#end = this.#start + this.#bytesPerChunk;
                 this.#chunkRank += 1;
@@ -94,7 +98,7 @@ export class ImageEditor extends Editor {
                     WJ.dispatchEvent("WJ.imageEditor.upload.success", {});
                 }
             } else {
-                WJ.notifyError('Nepodarilo sa to', 'Skúste to neskor');
+                WJ.notifyError(WJ.translate('multiple_files_upload.upload_error'), response.error || '');
                 $( document ).trigger('initErrorMessageFromOutside', [this.#file, response]);
             }
         })

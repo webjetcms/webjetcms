@@ -424,6 +424,31 @@ Standard field for selecting one of the options.
     private Boolean sexMale;
 ```
 
+## BUTTON_GROUP
+
+The field allows you to select one option from a group of Bootstrap buttons. It is suitable for short lists, such as **Yes / No / No change**. All options are visible next to each other and the selected option has a blue background.
+
+Define the options in the same way as `RADIO`, via `editor.options` or the `getOptions()` REST controller method. The text of the selected option is displayed in the datatable.
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.BUTTON_GROUP,
+        title = "settings.fields-settings.visible",
+        defaultValue = "null",
+        alwaysCopyProperties = true,
+        editor = @DataTableColumnEditor(options = {
+            @DataTableColumnEditorAttr(key = "button.yes", value = "true"),
+            @DataTableColumnEditorAttr(key = "button.no", value = "false"),
+            @DataTableColumnEditorAttr(key = "settings.fields-settings.unchanged", value = "null")
+        })
+    )
+    private Boolean visible;
+```
+
+In the example, the third option has the value `"null"`. It is also selected when the value `null` is loaded. The `alwaysCopyProperties` attribute allows you to save a change from `true` or `false` back to `null`.
+
+You can also control the field with the keyboard: use the Tab key to move to a group and the arrow keys to change the selected option. The JavaScript editor type is `buttonGroup` and supports the standard methods `val()`, `update()`, `enable()` and `disable()`.
+
 ## BOOLEAN
 
 Represents a simplified notation of a field of type ```CHECKBOX``` for a binary yes/no choice.

@@ -78,7 +78,9 @@ import sk.iway.iwcm.system.spring.SpringAppInitializer;
         "sk.iway.iwcm.components.multistep_form",
         "sk.iway.iwcm.components.form_settings.jpa",
         "sk.iway.iwcm.rag.jpa",
-        "sk.iway.iwcm.components.customfields.jpa"
+        "sk.iway.iwcm.system.datatable.settings.customfields.jpa",
+        "sk.iway.iwcm.system.datatable.settings.fields.jpa",
+        "sk.iway.iwcm.system.datatable.settings.tabs.jpa"
     }
 ) // package s repozitarmi
 public class V9JpaDBConfig {
@@ -145,7 +147,9 @@ public class V9JpaDBConfig {
                             "sk.iway.iwcm.components.multistep_form",
                             "sk.iway.iwcm.components.form_settings.jpa",
                             "sk.iway.iwcm.rag.jpa",
-                            "sk.iway.iwcm.components.customfields.jpa"
+                            "sk.iway.iwcm.system.datatable.settings.customfields.jpa",
+                            "sk.iway.iwcm.system.datatable.settings.fields.jpa",
+                            "sk.iway.iwcm.system.datatable.settings.tabs.jpa"
         );
 
         Properties properties = new Properties();

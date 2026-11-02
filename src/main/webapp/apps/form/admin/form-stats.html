@@ -1,10 +1,5 @@
 <script data-th-inline="javascript">
     window.helpLink = "/redactor/apps/multistep-form/stat";
-    let stepTabs = [
-        { id: 'main', title: /*[[\#{datatable.tab.basic}]]*/ '', selected: true },
-        { id: 'advanced', title: /*[[\#{datatable.tab.advanced}]]*/ '', selected: false },
-        { id: 'stepBonusHtml', title: /*[[\#{components.insert_script.body}]]*/ '', content: "<div></div>" }
-    ];
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);

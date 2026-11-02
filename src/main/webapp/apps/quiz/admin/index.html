@@ -13,11 +13,7 @@ window.domReady.add(function () {
 
     window.helpLink = "/redactor/apps/quiz/README";
 
-    var tabs = [
-        { id: 'main', title: '[[#{components.quiz.main_tab}]]', selected: true },
-        { id: 'questions', title: '[[#{components.quiz.questions_tab}]]', selected: false },
-        { id: 'results', title: '[[#{components.quiz.results_tab}]]', selected: false }
-    ];
+    var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.quiz.jpa.QuizEntity')})];
 
     quizDataTable = WJ.DataTable({
         url: url,

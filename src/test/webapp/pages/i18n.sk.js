@@ -77,6 +77,10 @@ module.exports = {
             "PassKey": "Prístupový kľúč",
             "Thumbnail": "Miniatúra",
             "Submit": "Potvrdiť",
+            // Form encryption
+            "Setup": "Nastaviť",
+            "Decryption key set successfully": "Dešifrovací kľúč úspešne nastavený",
+            "Print": "Vytlačiť",
             // Dashboard device verification
             "You signed in from a new browser": "Prihlásili ste sa z nového prehliadača",
             "This browser": "Tento prehliadač",
@@ -90,6 +94,13 @@ module.exports = {
             "someone is trying to sign in to your account from a browser you blocked:": "niekto sa pokúša prihlásiť do vášho účtu z prehliadača, ktorý ste zablokovali:",
             "The code could not be verified. Check it or request a new one. It expires in 10 minutes and allows up to 5 attempts.": "Kód sa nepodarilo overiť. Skontrolujte ho alebo si vyžiadajte nový. Platí 10 minút a máte najviac 5 pokusov.",
             "Step 2": "Krok 2",
+            "Photobank": "Fotobanka",
+            // DataTable settings screenshots
+            "Additional data": "Doplňujúce údaje",
+            "Additional information about the web page.": "Doplňujúce informácie k webovej stránke.",
+            "Additional information": "Doplňujúce informácie",
+            "Select box": "Výberové pole",
+            "Operating system": "Operačný systém"
         }
     }
 }

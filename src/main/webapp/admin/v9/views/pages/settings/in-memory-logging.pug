@@ -14,10 +14,7 @@ block content
             let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.logging.InMemoryLoggingEvent")})];
             //console.log(columns);
 
-            let tabs = [
-                { id: 'main', title: '[[\#{components.in-memory-logging.tab.basic_info}]]', selected: true },
-                { id: 'description', title: '[[\#{components.in-memory-logging.tab.stack-trace}]]', content: '<div></div>' }
-            ];
+            let tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.system.logging.InMemoryLoggingEvent')})];
 
             var order = [];
             order.push([3, 'desc']);

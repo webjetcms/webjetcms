@@ -89,6 +89,11 @@
      <mime-type>text/plain</mime-type>
   </mime-mapping>
 
+  <mime-mapping>
+     <extension>avif</extension>
+     <mime-type>image/avif</mime-type>
+  </mime-mapping>
+
   <!-- The Usual Welcome File List -->
   <welcome-file-list>
     <welcome-file>index.jsp</welcome-file>

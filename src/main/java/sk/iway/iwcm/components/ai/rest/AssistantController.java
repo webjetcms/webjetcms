@@ -105,16 +105,20 @@ public class AssistantController {
         return responseDto;
     }
 
-    @PostMapping(value="/response-stream/", produces = MediaType.TEXT_PLAIN_VALUE)
+    @PostMapping(value="/response-stream/", produces = { MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_NDJSON_VALUE })
     public void streamData(@RequestBody InputDataDTO inputData, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Older clients keep the plain-text format; the admin UI explicitly requests framed messages.
+        boolean framed = MediaType.parseMediaTypes(request.getHeader("Accept")).stream()
+            .anyMatch(type -> MediaType.APPLICATION_NDJSON.includes(type) && type.getQualityValue() > 0);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setContentType("text/plain;charset="+StandardCharsets.UTF_8.name());
+        response.setContentType((framed ? MediaType.APPLICATION_NDJSON_VALUE : MediaType.TEXT_PLAIN_VALUE)
+            + ";charset=" + StandardCharsets.UTF_8.name());
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("X-Accel-Buffering", "no"); // for Nginx (disable buffering)
 
-        BufferedWriter writer = new BufferedWriter(
-            new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)
-        );
+        OutputStreamWriter output = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8);
+        AssistantStreamWriter streamWriter = framed ? new AssistantStreamWriter(output) : null;
+        BufferedWriter writer = new BufferedWriter(framed ? streamWriter : output);
 
         //5 hours of debugging, if this is not here, that writer.flush later will cause 401/403 error for REST calls
         writer.write("");
@@ -142,8 +146,12 @@ public class AssistantController {
                 responseDto.setError(getErrMsg(exceptionMessage, request));
             }
 
-            writer.write(responseDto.toJsonString());
-            writer.flush();
+            if (streamWriter != null) {
+                writer.flush();
+                streamWriter.writeResult(responseDto);
+            } else {
+                writer.write(responseDto.toJsonString());
+            }
             writer.close();
         }
     }

@@ -32,6 +32,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -42,6 +44,14 @@ import sk.iway.iwcm.users.UsersDB;
 @Table(name="file_archiv")
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+	@DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+	@DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+	@DataTableTab(id = "customFields", title = "editor.tab.fields"),
+	@DataTableTab(id = "listOfVersions", title = "components.file_archiv.list_of_version"),
+	@DataTableTab(id = "waitingFiles", title = "components.file_archiv.waiting_files"),
+	@DataTableTab(id = "listOfPattern", title = "components.file_archiv.listOfPattern")
+})
 public class FileArchivatorBean extends ActiveRecordRepository implements Serializable
 {
 
@@ -339,11 +349,16 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	}
 
 	/**
-	 * Vrati true ak su platne datumy (alebo su null) pre aktualny cas
+	 * Checks the configured validity range against the current time, including both boundaries.
+	 * Uploaded historical versions ignore both dates when {@code fileArchivCheckHistoryValid} is disabled.
+	 *
+	 * @return {@code true} if the dates permit access; visibility and permissions are checked separately
 	 */
 	public boolean isValidDates()
 	{
 		if (validFrom == null && validTo == null) return true;
+		if (referenceId != null && referenceId > 0 && Integer.valueOf(-1).equals(getUploaded())
+				&& Constants.getBoolean("fileArchivCheckHistoryValid") == false) return true;
 
 		Date now = new Date(Tools.getNow());
 		if (validFrom != null && validFrom.after(now)) return false;

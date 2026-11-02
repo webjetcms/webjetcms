@@ -12,11 +12,7 @@
 
     let stepColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity")})]*/ '';
     let stepUrl = "/admin/rest/form-steps";
-    let stepTabs = [
-        { id: 'main', title: /*[[\#{datatable.tab.basic}]]*/ '', selected: true },
-        { id: 'advanced', title: /*[[\#{datatable.tab.advanced}]]*/ '', selected: false },
-        { id: 'stepBonusHtml', title: /*[[\#{components.insert_script.body}]]*/ '', content: "<div></div>" }
-    ];
+    let stepTabs = /*[(${layout.getDataTableTabs('sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity')})]*/ [];
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
@@ -385,6 +381,17 @@
         formItemsDataTable.on("draw", function() { loadStepPreview(); });
 
         let regexRequestId = 0;
+
+        function updateEmptyOptionVisibility() {
+            const fieldType = formItemsDataTable.EDITOR.field("fieldType").val();
+            const hiddenFields = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType
+                .find(type => type.value === fieldType)?.label || "";
+            const hidden = hiddenFields.split(",").some(field => field.trim() === "emptyOption");
+            const control = $(formItemsDataTable.EDITOR.field("valueAsOptions").node()).find(".options-empty-option");
+            control.toggleClass("d-none", hidden);
+            if (hidden) control.find("input").prop("checked", false);
+        }
+
         formItemsDataTable.EDITOR.on('initCreate initEdit initRemove close cancelOpen', function() {
             // Responses belong to the editor session in which the field type changed.
             regexRequestId++;
@@ -406,6 +413,8 @@
                     const selectedFieldType = $(this).val();
                     const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
                     const inputTypeByFieldType = formItemsDataTable.DATA.jsonOptions.inputType;
+
+                    updateEmptyOptionVisibility();
 
                     let itsCreateAction = false;
 
@@ -572,6 +581,7 @@
                     }
                 });
             }
+            updateEmptyOptionVisibility();
         });
     });
 

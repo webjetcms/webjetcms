@@ -17,6 +17,7 @@
   - [Basic work](/redactor/webpages/README.md)
   - [Webpage editing](/redactor/webpages/editor/README.md)
   - [Working in editor](/redactor/webpages/working-in-editor/README.md)
+  - [Planned publishing with protected files](/redactor/webpages/planned-publishing.md)
   - [Website folder](/redactor/webpages/group.md)
   - [History](/redactor/webpages/history.md)
   - [Recover from Trash](/redactor/webpages/recover.md)
@@ -81,6 +82,7 @@
   - Forms
     - [List of forms](/redactor/apps/form/README.md)
     - [Form Items](/redactor/apps/multistep-form/README.md)
+    - [Form Encryption](/redactor/apps/form/encryption.md)
     - [Form Statistics](/redactor/apps/multistep-form/stat.md)
     - [Regular expressions](/redactor/apps/form/regexps.md)
   - Forum/Discussion

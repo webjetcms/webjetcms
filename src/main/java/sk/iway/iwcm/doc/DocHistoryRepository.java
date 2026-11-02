@@ -15,6 +15,10 @@ import java.util.Optional;
 @Repository
 public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, JpaSpecificationExecutor<DocHistory> {
 
+    List<DocHistory> findByDocIdAndPublicableTrueOrderByIdDesc(Integer docId);
+
+    List<DocHistory> findByPublicableTrue();
+
     List<DocHistory> findByDocIdAndPublishStartDateBetween(Integer docId, Date publishStartDateFrom, Date publishStartDateTo);
 
     //

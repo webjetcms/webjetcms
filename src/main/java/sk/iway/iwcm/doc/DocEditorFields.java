@@ -103,6 +103,13 @@ public class DocEditorFields extends BaseEditorFields {
     })
     private boolean publishAfterStart = false;
 
+    public boolean isPlannedPublishingEnabled() { return PlannedAccess.enabled(); }
+
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
+    private boolean plannedMedia = false;
+
+    private Long plannedHistoryId;
+
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "&nbsp;",
         tab = "perex", hidden = true, sortAfter = "publishEndDate",
         editor = { @DataTableColumnEditor(
@@ -121,7 +128,7 @@ public class DocEditorFields extends BaseEditorFields {
         hidden = true,
         editor = { @DataTableColumnEditor(
             attr = {
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/media?docId={docId}&groupId={groupId}"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/media?docId={docId}&groupId={groupId}&planned={editorFields.plannedMedia}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.spirit.model.Media"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")
             }

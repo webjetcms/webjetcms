@@ -3,6 +3,20 @@
 
 Knižnica [datatables.net](http://datatables.net) je pokročilá tabuľka s napojením na REST služby.
 
+## Systémové nastavenia
+
+Java triedy pre nastavenia datatabuliek sú v balíku `sk.iway.iwcm.system.datatable.settings`:
+
+| Podbalík | Databázová tabuľka | Účel |
+| --- | --- | --- |
+| [`customfields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/) | `dt_customfields` | Konfigurácia a validácia voliteľných polí. |
+| [`fields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/fields/) | `dt_fields` | Nastavenia vlastností polí a stĺpcov. |
+| [`tabs`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/tabs/) | `dt_tabs` | Nastavenia kariet editora. |
+
+Každý podbalík obsahuje `jpa` pre entity a repozitáre a `rest` pre služby a REST controllery. Pri použití týchto tried vo vlastnom kóde alebo šablónach aktualizujte importy a úplné názvy tried na uvedené balíky.
+
+Pôvodná tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje na `dt_customfields` so zachovaním údajov. Vlastné SQL dotazy musia používať nový názov tabuľky.
+
 ## Základná inicializácia v spolupráca s Spring REST
 
 WebJET implementácia datatables sa konfiguruje pomocou JSON objektu columns. V tomto objekte je definícia stĺpcov pre datatabuľku aj pre datatables editor. Konštruktorom WJ.DataTable sa následne tabuľka inicializuje.
@@ -384,6 +398,27 @@ V `init` funkcii je možné použiť nasledovné volania:
 - `$.fn.dataTable.Buttons.showIfRowSelected(this, dt);` - tlačidlo je aktívne len ak je označený aspoň jeden riadok
 - `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - tlačidlo je aktívne len ak nie je označený žiaden riadok
 - `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - tlačidlo je aktívne len ak je označený presne jeden riadok
+
+## Menu Ďalšie akcie
+
+Menej časté akcie môžete vložiť do menu **Ďalšie akcie** pomocou `table.addMoreAction(config)` alebo poľa `moreActions` v nastaveniach `WJ.DataTable`. Menu sa vytvorí až pri prvej pridanej akcii a zobrazí sa vpravo pri nastaveniach a obnovení údajov. Implementácia je oddelená v `npm_packages/webjetdatatables/more-actions.js`.
+
+Konfigurácia používa štandardné vlastnosti tlačidla DataTables. Do `text` zadajte ikonu, do `attr.title` preložený názov, ktorý sa zobrazí vedľa ikony. Zachovávajú sa `action`, `init` aj aktivovanie podľa výberu riadkov:
+
+```javascript
+table.addMoreAction({
+    text: '<i class="ti ti-tag-plus" aria-hidden="true"></i>',
+    attr: { title: WJ.translate('my.action.js'), 'data-dtbtn': 'myAction' },
+    init: function(dt) {
+        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+    },
+    action: function() {
+        table.executeAction('myAction');
+    }
+});
+```
+
+Na skrývanie a zobrazovanie položiek používajte `table.hideButton('myAction')` a `table.showButton('myAction')`. Fungujú aj pri zatvorenom menu, ktorého položky nie sú pripojené k DOM. Menu sa skryje, keď neobsahuje žiadnu zobrazenú položku. Oprávnenie overte pred pridaním položky a znova na serveri pri vykonaní akcie.
 
 ## Tlačidlo pre vykonanie serverovej akcie
 

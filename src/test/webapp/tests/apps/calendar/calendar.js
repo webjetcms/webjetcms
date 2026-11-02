@@ -16,7 +16,9 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables}) => {
     await DataTables.baseTest({
         dataTable: 'calendarEventsDataTable',
         perms: 'cmp_calendar',
-        createSteps: function(I, options) {
+        createSteps: function(I, options, DT, DTE) {
+            // The initial title focus does not wait for the rich-text field in the hidden description tab.
+            DTE.waitForCkeditor();
         },
         editSteps: function(I, options) {
         },

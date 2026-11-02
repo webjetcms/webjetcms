@@ -281,13 +281,19 @@ Scenario('Should not cache SK gallery images after logout and language switch to
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_cancel');
     DTE.cancel("datatableInit");
-    I.relogin("admin", true, true, language = "cs");
+    I.relogin("admin", true, true, "cs");
 
     openAppstore(I, DT, DTE);
 
     I.seeElementInDOM('.app-components-app-cookiebar-title img[src="/components/app-cookiebar/screenshot-1-cs.jpg"]');
     I.seeElementInDOM('.app-components-app-cookiebar-title img[src="/components/app-cookiebar/screenshot-2-cs.jpg"]');
     I.seeElementInDOM('.app-demo-komponenta img[src="/components/app-cookiebar/screenshot-2-cs.jpg"]');
+});
+
+Scenario('logout cs language', ({ I }) => {
+    I.switchTo();
+    //logout to switch back to SK language
+    I.logout();
 });
 
 function openAppstore(I, DT, DTE){

@@ -50,6 +50,29 @@ The interface [`FormProcessorInterface`](../../../../../src/main/java/sk/iway/iw
 - `runStepInterceptor` - ​​the method is called after the step is validated, but before saving. In this method, any interceptor that is needed for the given step can be run. For example, it can be sending an email/SMS with a code that needs to be entered in the next step.
 - `handleFormSave` - ​​the method is called by the overall saving of the form. This method allows for the actual saving of the form, for example by sending it to the `CRM` system. The method returns a `boolean` value that determines whether the classic `WebJET` saving of the form should also be called.
 
+All three methods receive a parameter `formName` followed by `FormSettingsEntity formSettings`. These are settings already loaded for the form being processed and the current domain; you don't need to search for them by name again in the validator.
+
+```java
+@Override
+public void validateStep(String formName, FormSettingsEntity formSettings,
+        FormStepEntity stepEntity, JSONObject stepData,
+        HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    String expectedValue = formSettings.getFieldA();
+    if (Tools.isNotEmpty(expectedValue) && !expectedValue.equals(stepData.optString("reference"))) {
+        errors.put("reference", "Zadaná referencia nezodpovedá nastaveniu formulára.");
+    }
+}
+
+@Override
+public void runStepInterceptor(String formName, FormSettingsEntity formSettings,
+        FormStepEntity stepEntity, JSONObject stepData,
+        HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    // Use the provided settings when processing the submitted step.
+}
+```
+
+**Breaking change:** custom implementations of `validateStep` and `runStepInterceptor` must add the second parameter `FormSettingsEntity formSettings` and recompile. Old signatures are not supported. Signature `handleFormSave` is unchanged.
+
 More detailed information about the functioning of individual methods and their parameters is described directly in the file.
 
 !>**Warning:** The [MultistepFormsService](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/rest/MultistepFormsService.java) class takes care of loading and calling individual methods of the form handler (if defined).

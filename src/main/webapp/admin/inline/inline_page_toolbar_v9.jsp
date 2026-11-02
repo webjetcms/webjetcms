@@ -27,6 +27,10 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     </script>
     <iwcm:combine type="css" set="adminInlineCss"/>
     <iwcm:combine type="js" set="adminInlineJs"/>
+    <script>
+        // Disable automatic editors before DOM ready, including for persisted contenteditable attributes.
+        CKEDITOR.disableAutoInline = true;
+    </script>
 
     <!-- /NINJA PAGE BUILDER -->
     <style>
@@ -127,7 +131,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         pageDiv.data('plugin_ninjaPageBuilder').prepare_application_blocks(pageDiv);
         <%--var editableElements = pageDiv.find("* [class*='npb-column__content']");--%>
         //console.log("initPageBuilderEditors, pageDiv=", pageDiv);
-        var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content']");
+        // Grid content remains discoverable after nested markers are removed and its column is moved.
+        var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content'], .<%=pbPrefix%>-column__content");
         const readyPromises = [];
         editableElements.each(function()
         {
@@ -135,8 +140,21 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             var $this = $(this);
             var $that = $this;
 
+            // Content inside an existing editor must not create another inline editor.
+            if ($this.parentsUntil(pageDiv, ".editableElement").length) {
+                $this.removeClass("<%=pbPrefix%>-editable <%=pbPrefix%>-content");
+                return;
+            }
+
             //na tomto elemente je to uz inicializovane, preskocme
             if ($this.hasClass("editableElement")) return;
+
+            // Ignore copied PB markers on elements that cannot host an inline editor.
+            const tagName = this.tagName.toLowerCase();
+            if (!CKEDITOR.dtd.$editable[tagName] && tagName !== "textarea") return;
+
+            // Clean descendants before CKEditor captures data and starts copying paragraph classes.
+            $this.find(".<%=pbPrefix%>-editable, .<%=pbPrefix%>-content").removeClass("<%=pbPrefix%>-editable <%=pbPrefix%>-content");
 
             this.form = document.editorForm;
 
@@ -364,7 +382,6 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     $(document).ready(()=> {
 
-        CKEDITOR.disableAutoInline = true;
         CKEDITOR.dtd.$editable.span = 1
         CKEDITOR.dtd.$editable.a = 1
         var ckEditorAutofocusInstanceName = null;

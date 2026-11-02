@@ -2364,7 +2364,7 @@ public class Tools
 				path = f.getAbsolutePath();
 			}
 		} catch (Exception ex) {
-			sk.iway.iwcm.Logger.error(ex);
+			sk.iway.iwcm.Logger.error(Tools.class, ex.getLocalizedMessage());
 		}
 
 		if (path == null) {
@@ -3184,6 +3184,42 @@ public class Tools
 		if (value == null) return value;
 
 		return value.trim();
+	}
+
+	/**
+	 * Normalizes whitespace and common copy/paste artifacts in a single-line plain-text value.
+	 * Unicode spaces (including NBSP), tabs, line breaks, NEL and zero-width spaces become
+	 * ordinary spaces. Consecutive spaces are collapsed and leading/trailing spaces are removed.
+	 * Other ISO control characters, soft hyphens, word joiners and BOMs are removed.
+	 * Other formatting characters, including ZWJ/ZWNJ used in emoji and scripts, are preserved.
+	 * This method does not decode HTML entities and is not intended for rich text or multiline content.
+	 *
+	 * @param value plain text to normalize, or {@code null}
+	 * @return normalized text, or {@code null} if the input is {@code null}
+	 */
+	public static String removeNbsp(String value) {
+		if (value == null) return null;
+
+		StringBuilder result = new StringBuilder(value.length());
+		boolean pendingSpace = false;
+		for (int offset = 0; offset < value.length();) {
+			int codePoint = value.codePointAt(offset);
+			offset += Character.charCount(codePoint);
+
+			if (Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint)
+					|| codePoint == 0x0085 || codePoint == 0x200B) {
+				pendingSpace = result.length() > 0;
+			} else if (Character.isISOControl(codePoint) || codePoint == 0x00AD
+					|| codePoint == 0x2060 || codePoint == 0xFEFF) {
+				// Discard non-spacing artifacts without joining words separated by whitespace.
+				continue;
+			} else {
+				if (pendingSpace) result.append(' ');
+				result.appendCodePoint(codePoint);
+				pendingSpace = false;
+			}
+		}
+		return result.toString();
 	}
 
 	/**
