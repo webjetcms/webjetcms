@@ -240,32 +240,32 @@ export class AiRestExecutor {
         self.curentAssistantId = inputData.assistantId;
         self.curentTimestamp = inputData.timestamp;
 
-        await $.ajax({
-            type: "POST",
-            url: "/admin/rest/ai/assistant/response-image/",
-            data: JSON.stringify(inputData),
-            contentType: "application/json; charset=utf-8",
-            success: function(res)
-            {
-                //handle res.error
-                if (res.error) {
-                    executionResult.errorText = res.error;
+        try {
+            const res = await $.ajax({
+                type: "POST",
+                url: "/admin/rest/ai/assistant/response-image/",
+                data: JSON.stringify(inputData),
+                contentType: "application/json; charset=utf-8"
+            });
+            if (res.error) {
+                executionResult.errorText = res.error;
+            } else {
+                if (typeof res.tempFiles == "object" && res.tempFiles.length > 0) {
+                    self.editorAiInstance.aiUserInterface.renderImageSelection(button, aiCol, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
                 } else {
-                    if (typeof res.tempFiles == "object" && res.tempFiles.length>0) self.editorAiInstance.aiUserInterface.renderImageSelection(button, aiCol, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
-                    else executionResult.errorText = WJ.translate("components.ai_assistants.editor.image_generation.no_images.js");
-                    executionResult.totalTokens = res.totalTokens;
-                    //set to false, otherwise dialog will be rerendered with default success message
-                    executionResult.success = false;
+                    executionResult.errorText = WJ.translate("components.ai_assistants.editor.image_generation.no_images.js");
                 }
-            },
-            error: function(xhr, ajaxOptions, thrownError) {
-                executionResult.errorText = thrownError;
+                executionResult.totalTokens = res.totalTokens;
+                // Image selection handles the successful response without the generic success dialog.
+                executionResult.success = false;
             }
-        });
-
-        //Remove old run info
-        self.curentAssistantId = null;
-        self.curentTimestamp = null;
+        } catch (error) {
+            executionResult.errorText = error.responseJSON?.error || error.statusText || error.message ||
+                (error.status != null ? "HTTP " + error.status : String(error));
+        } finally {
+            self.curentAssistantId = null;
+            self.curentTimestamp = null;
+        }
 
         return executionResult;
     }

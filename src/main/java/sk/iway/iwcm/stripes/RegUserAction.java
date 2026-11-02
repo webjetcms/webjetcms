@@ -556,6 +556,8 @@ public class RegUserAction extends WebJETActionBean
 
 			userIdentity.setPosition(usr.getPosition());
 			userIdentity.setParentId(usr.getParentId());
+			//redis trigger session update
+			LogonTools.setUserToSession(getSession(), userIdentity);
 		}
 	}
 

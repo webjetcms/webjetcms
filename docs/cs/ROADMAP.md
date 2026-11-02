@@ -67,7 +67,7 @@ filtr bere pouze první hodnotu. Dodělat tedy možnost `IN` pro možnost zadán
 - [x] +Webové stránky - hromadné přidání a odebrání značky i skupiny uživatelů při zachování ostatních skupin přes menu Další akce, do kterého byl přesunut i Import/Export (#368).
 - [ ] +Webové stránky - při smazání složky, která má i zrcadlenou verzi zobrazit notifikaci, že byly smazány i zrcadlené složky XXX,YYY.
 - [x] +Přidat podporu obrázků a animací typu AVIF (#371).
-- [ ] +Možnost změnit pořadí polí v datatables editoru, kartu ve které se pole nachází, případně i vytvořit novou kartu do které se pole vloží. Tedy konfiguračně upravit hodnoty co se dnes nastavují cea anotace.
+- [x] +Možnost změnit pořadí polí v datatables editoru, kartu ve které se pole nachází, případně i vytvořit novou kartu do které se pole vloží. Tedy konfiguračně upravit hodnoty co se dnes nastavují cea anotace (#366).
 
 ## 2025
 

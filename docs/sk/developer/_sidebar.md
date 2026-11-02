@@ -92,6 +92,7 @@
 - Požiadavky na vývoj
     - [Použitie AI skills](/developer/guidelines/ai-skills.md)
     - [Práca s Git/Gitlab](/developer/guidelines/gitlab.md)
+    - [Práca s Git worktrees](/developer/guidelines/worktrees.md)
     - [Definícia hotového - Definition of Done](/developer/guidelines/definition-of-done.md)
     - [Názvoslovie termínov/výrazov](/developer/guidelines/terms.md)
 - Deployment

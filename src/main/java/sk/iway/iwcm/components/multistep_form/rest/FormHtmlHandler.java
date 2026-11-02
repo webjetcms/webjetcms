@@ -58,10 +58,10 @@ import org.jsoup.nodes.Element;
  */
 public class FormHtmlHandler {
 
-    private static final String FORM_START_KEY = "components.mustistep.form.start";
-    private static final String FORM_END_KEY = "components.mustistep.form.end";
-    private static final String FORM_BACK_BUTTON_KEY = "components.mustistep.form.back_button";
-    private static final String FORM_LOADER_KEY = "components.mustistep.form.loader";
+    private static final String FORM_START_KEY = "components.multistep.form.start";
+    private static final String FORM_END_KEY = "components.multistep.form.end";
+    private static final String FORM_BACK_BUTTON_KEY = "components.multistep.form.back_button";
+    private static final String FORM_LOADER_KEY = "components.multistep.form.loader";
 
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
@@ -257,11 +257,11 @@ public class FormHtmlHandler {
         // Form step wrapper start
 
         StringBuilder stepWrapperStart = new StringBuilder();
-        stepWrapperStart.append(renderTemplate("components.mustistep.step.start", Map.of(), request));
+        stepWrapperStart.append(renderTemplate("components.multistep.step.start", Map.of(), request));
 
         if (Tools.isNotEmpty(formStep.getHeader())) {
             // Swap header title
-            stepWrapperStart.append(renderTemplate("components.mustistep.step.header", Map.of("step-header", StringEscapeUtils.unescapeHtml4(formStep.getHeader())), request));
+            stepWrapperStart.append(renderTemplate("components.multistep.step.header", Map.of("step-header", StringEscapeUtils.unescapeHtml4(formStep.getHeader())), request));
 
             // Swap user info
             stepWrapperStart = DocTools.updateUserCodes(UsersDB.getCurrentUser(request), stepWrapperStart);
@@ -276,15 +276,15 @@ public class FormHtmlHandler {
 
         formStepHtml.append(stepWrapperStart);
 
-        if (rowView) formStepHtml.append(renderTemplate("components.mustistep.rowView.start", Map.of(), request));
+        if (rowView) formStepHtml.append(renderTemplate("components.multistep.rowView.start", Map.of(), request));
 
         // Into formStep we must insert step items
         formStepHtml.append( getStepItems(formStep.getId(), request) );
 
-        if (rowView) formStepHtml.append( renderTemplate("components.mustistep.rowView.end", Map.of(), request));
+        if (rowView) formStepHtml.append( renderTemplate("components.multistep.rowView.end", Map.of(), request));
 
         // Form step wrapper end
-        formStepHtml.append( renderTemplate("components.mustistep.step.end", Map.of(), request) );
+        formStepHtml.append( renderTemplate("components.multistep.step.end", Map.of(), request) );
 
         return formStepHtml;
     }
@@ -804,15 +804,15 @@ public class FormHtmlHandler {
 
         String backBtnLabel;
         if(Tools.isNotEmpty(actualStep.getBackStepBtnLabel())) backBtnLabel = actualStep.getBackStepBtnLabel();
-        else backBtnLabel = prop.getText("components.mustistep.form.back_step");
+        else backBtnLabel = prop.getText("components.multistep.form.back_step");
 
         String nextBtnLabel;
         if(Tools.isNotEmpty(actualStep.getNextStepBtnLabel())) nextBtnLabel = actualStep.getNextStepBtnLabel();
         else {
             if(actualStep.isLastStep()) // last step
-                nextBtnLabel = prop.getText("components.mustistep.form.save_form");
+                nextBtnLabel = prop.getText("components.multistep.form.save_form");
             else // not last step
-                nextBtnLabel = prop.getText("components.mustistep.form.next_step");
+                nextBtnLabel = prop.getText("components.multistep.form.next_step");
         }
 
         return new Pair<>(backBtnLabel, nextBtnLabel);

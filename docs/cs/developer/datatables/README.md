@@ -3,6 +3,20 @@
 
 Knihovna [datatables.net](http://datatables.net) je pokročilá tabulka s napojením na REST služby.
 
+## Systémová nastavení
+
+Java třídy pro nastavení datatabulek jsou v balíku `sk.iway.iwcm.system.datatable.settings`:
+
+| Podbalík | Databázová tabulka | Účel |
+| --- | --- | --- |
+| [`customfields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/) | `dt_customfields` | Konfigurace a validace volitelných polí. |
+| [`fields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/fields/) | `dt_fields` | Nastavení vlastností polí a sloupců. |
+| [`tabs`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/tabs/) | `dt_tabs` | Nastavení karet editoru. |
+
+Každý podbalík obsahuje `jpa` pro entity a repozitáře a `rest` pro služby a REST controllery. Při použití těchto tříd ve vlastním kódu nebo šablonách aktualizujte importy a úplné názvy tříd na uvedené balíky.
+
+Původní tabulka `custom_fields` se při aktualizaci automaticky přejmenuje na `dt_customfields` se zachováním údajů. Vlastní SQL dotazy musí používat nový název tabulky.
+
 ## Základní inicializace v spolupráce s Spring REST
 
 WebJET implementace datatables se konfiguruje pomocí JSON objektu columns. V tomto objektu je definice sloupců pro datatabulku i pro datatables editor. Konstruktorem WJ.DataTable se následně tabulka inicializuje.

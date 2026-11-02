@@ -20,6 +20,51 @@ test.beforeEach(t => {
   });
 });
 
+test("applies video zoom and captures the full viewport in headless Chromium", () => {
+  const environment = { ...process.env, CODECEPT_VIDEO: "true", CODECEPT_SHOW: "false", CODECEPT_BROWSER: "chromium" };
+  delete environment.CODECEPT_VIDEO_ZOOM;
+  delete environment.CODECEPT_VIDEO_WIDTH;
+  delete environment.CODECEPT_VIDEO_HEIGHT;
+  const result = spawnSync(process.execPath, ["-e", `
+    const assert = require("node:assert/strict");
+    const { chromium } = require("playwright");
+    const { getVideoSettings } = require("./helpers/video_settings.js");
+    const config = require("./codecept.video.conf.js").config.helpers.Playwright;
+    const VideoPlaywrightHelper = require("./helpers/video_playwright_helper.js");
+    (async () => {
+      for (const [zoom, expectedWidth, expectedHeight] of [[undefined, 1360, 765], ["1", 1920, 1080]]) {
+        if (zoom === undefined) delete process.env.CODECEPT_VIDEO_ZOOM;
+        else process.env.CODECEPT_VIDEO_ZOOM = zoom;
+        const settings = getVideoSettings();
+        const browser = await chromium.launch({ ...config.chromium, channel: config.channel, headless: true });
+        try {
+          const context = await browser.newContext({ viewport: { width: settings.width, height: settings.height } });
+          const page = await context.newPage();
+          const helper = new VideoPlaywrightHelper(config);
+          helper.browserContext = context;
+          await helper._setPage(page);
+          await page.setContent("<body>Video zoom verification</body>");
+          assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight]), [expectedWidth, expectedHeight]);
+          assert.deepEqual([settings.viewportWidth, settings.viewportHeight], [expectedWidth, expectedHeight]);
+          const session = await context.newCDPSession(page);
+          for (const size of [{ width: 1920, height: 1080 }, { width: 1280, height: 720 }]) {
+            if (size.width !== 1920) await helper.resizeWindow(size.width, size.height);
+            const frame = new Promise(resolve => session.once("Page.screencastFrame", resolve));
+            await session.send("Page.startScreencast", { format: "jpeg", maxWidth: size.width, maxHeight: size.height });
+            const { metadata } = await frame;
+            assert.deepEqual([metadata.deviceWidth, metadata.deviceHeight], [size.width, size.height]);
+            await session.send("Page.stopScreencast");
+          }
+          await session.detach();
+        } finally {
+          await browser.close();
+        }
+      }
+    })().catch(error => { console.error(error); process.exitCode = 1; });
+  `], { cwd: path.resolve(__dirname, ".."), env: environment, encoding: "utf8", timeout: 30000 });
+  assert.equal(result.status, 0, result.error?.message || result.stderr || result.stdout);
+});
+
 test("rejects malformed VIDEO_SHOT while loading the video configuration", () => {
   const result = spawnSync(process.execPath, ["-e", "require('./codecept.video.conf.js')"], {
     cwd: path.resolve(__dirname, ".."), env: { ...process.env, VIDEO_SHOT: "../outro" }, encoding: "utf8"

@@ -5,9 +5,11 @@
 - Nastavenia
   - [Šablóny](/frontend/setup/README.md)
   - [Všeobecné nastavenia](/frontend/setup/config.md)
-  - Voliteľné polia
-    - [Voliteľné polia](/frontend/webpages/customfields/README.md)
-    - [Nastavenie](/frontend/webpages/customfields/custom-fields-settings.md)
+  - Dátové tabuľky
+    - [Nastavenia polí](/frontend/datatables/fields-settings.md)
+    - [Nastavenia kariet](/frontend/datatables/tabs-settings.md)
+    - [Voliteľné polia](/frontend/datatables/custom-fields-settings.md)
+  - [Voliteľné polia cez prekladové kľúče](/frontend/webpages/customfields/README.md)
   - [FontAwesome](/frontend/webpages/fontawesome/README.md)
   - [CKEditor](/frontend/setup/ckeditor.md)
 - Šablóny

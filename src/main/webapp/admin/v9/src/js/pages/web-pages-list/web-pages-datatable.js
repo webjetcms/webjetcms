@@ -105,19 +105,7 @@ export class WebPagesDatatable {
     }
 
     static getEditorTabs() {
-        var tabs = [
-            { id: 'content', title: WJ.translate('editor.tab.editor'), selected: true, content: '' },
-            { id: 'basic', title: WJ.translate('editor.tab.basic_info') },
-            { id: 'template', title: WJ.translate('editor.tab.template') },
-            { id: 'menu', title: WJ.translate('editor.tab.navigation') },
-            { id: 'access', title: WJ.translate('editor.tab.permissions') },
-            { id: 'perex', title: WJ.translate('editor.tab.public') },
-            { id: 'media', title: WJ.translate('editor.tab.media'), content: '<div class="mediaContentPlaceholder"><div>' },
-            { id: 'fields', title: WJ.translate('editor.tab.fields') },
-            { id: 'attributes', title: WJ.translate('editor.tab.atributes') },
-            { id: 'history', title: WJ.translate('editor.tab.history'), content: '<div class="historyContentPlaceholder"><div>' }
-        ];
-        return tabs;
+        return window.webPagesEditorTabs.map(tab => ({ ...tab }));
     }
 
     #bindAll() {
@@ -561,6 +549,7 @@ export class WebPagesDatatable {
     #bindHttpHeaders() {
         const modal = $("#" + this.webpagesDatatable.DATA.id + "_modal");
         const basic = modal.find("div[id$='-basic'].tab-pane");
+        if (basic.length === 0) return;
         if (basic.find(".webpage-http-headers").length === 0) {
             const section = $(`<div class="DTE_Field form-group row webpage-http-headers">
                 <div class="col-sm-4"></div>
@@ -569,7 +558,9 @@ export class WebPagesDatatable {
             </div>`);
             section.find("h5").text(WJ.translate("editor.http_headers.js"));
             section.find("button").attr({ title: WJ.translate("editor.http_headers.tooltip.js"), "aria-label": WJ.translate("editor.http_headers.js") });
-            $(this.webpagesDatatable.EDITOR.field("cacheable").node()).after(section);
+            const editor = this.webpagesDatatable.EDITOR;
+            if (editor.fields().includes("cacheable")) $(editor.field("cacheable").node()).after(section);
+            else basic.append(section);
             WJ.initTooltip(section.find("button"));
         }
         basic.find(".webpage-http-headers pre").text(WJ.translate("editor.http_headers.loading.js"));
@@ -586,8 +577,13 @@ export class WebPagesDatatable {
         this.#httpHeadersRequest?.abort();
         output.attr("aria-busy", "true");
         const editor = this.webpagesDatatable.EDITOR;
-        const values = editor.get(["title", "navbar", "tempId", "virtualPath", "editorVirtualPath", "generateUrlFromTitle", "urlInheritGroup", "searchable", "followLinks", "externalLink"]);
-        values.groupId = editor.get("editorFields.groupDetails").groupId;
+        const fields = editor.fields();
+        // Configured-out fields have no Editor instance; their stored values still affect the headers.
+        const readValue = name => fields.includes(name) ? editor.get(name)
+            : name.split('.').reduce((value, key) => value?.[key], editor.currentJson);
+        const values = Object.fromEntries(["title", "navbar", "tempId", "virtualPath", "editorVirtualPath", "generateUrlFromTitle", "urlInheritGroup", "searchable", "followLinks", "externalLink"]
+            .map(name => [name, readValue(name)]));
+        values.groupId = readValue("editorFields.groupDetails")?.groupId ?? editor.currentJson?.groupId;
         values.docId = editor.currentJson?.docId ?? -1;
         const json = JSON.stringify(values, (key, value) => {
             if (Array.isArray(value) && value.length === 1 && [true, false, "true", "false"].includes(value[0])) return value[0] === true || value[0] === "true";
@@ -680,13 +676,9 @@ export class WebPagesDatatable {
             if (self.webpagesDatatable.DATA.id===e.detail.id) {
                 if (self.webpagesDatatable.EDITOR.currentJson?.docId === -1) {
                     if ($("#pills-dt-"+self.webpagesDatatable.DATA.id+"-content-tab").hasClass("active")) {
-                        //je to nova stranka, prepni sa na kartu Zakladne
-                        setTimeout(()=> {
-                            $("#pills-dt-"+self.webpagesDatatable.DATA.id+"-basic-tab").trigger("click");
-                            setTimeout(()=> {
-                                $("#"+self.webpagesDatatable.DATA.id+"_modal #DTE_Field_title").focus();
-                            }, 200);
-                        }, 700);
+                        // Initialize before the user can select another tab; delayed focus steals their selection.
+                        $("#pills-dt-"+self.webpagesDatatable.DATA.id+"-basic-tab").trigger("click");
+                        $("#"+self.webpagesDatatable.DATA.id+"_modal #DTE_Field_title").focus();
                     }
                 }
                 //pri duplikovani zmazme niektore hodnoty

@@ -1,6 +1,16 @@
 import WJ from "../../src/js/webjet";
 import {escapeJsonForHtml} from "./jsoneditor-utils.mjs";
 
+/**
+ * Escapes a raw URL for a quoted HTML attribute without decoding existing entities.
+ * @param {*} url URL as stored in the entity.
+ * @returns {string} HTML attribute text whose parsed value equals the original URL.
+ */
+function escapeUrlAttribute(url) {
+    return String(url ?? "").replaceAll("&", "&amp;").replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
 function prepareForSearch(td) {
     return $.fn.DataTable.util.diacritics(td)
 }
@@ -203,7 +213,7 @@ export function renderTd(row, td, rowData) {
 
             if ("quill" === editorType) linkText = WJ.htmlToText(td);
 
-            return  '<div class="datatable-column-width"><a href="' + template + '"' + ariaLabelAttr + '>'+ renderPrefix(row) + linkText + renderSuffix(row) + '</a></div>';
+            return  '<div class="datatable-column-width"><a href="' + escapeUrlAttribute(template) + '"' + ariaLabelAttr + '>'+ renderPrefix(row) + linkText + renderSuffix(row) + '</a></div>';
         } else {
             const isJsonEditor = "jsoneditor" === editorType;
             var text = isJsonEditor ? escapeJsonForHtml(td) : WJ.htmlToText(td);
@@ -469,10 +479,10 @@ export function renderLink(td, type, rowData, row) {
                 }
             });
 
-            return  "<a href=\"" + template + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
+            return  "<a href=\"" + escapeUrlAttribute(template) + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
         }
 
-        return  "<a href=\"" + td + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
+        return  "<a href=\"" + escapeUrlAttribute(td) + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
 
     }
 }
@@ -485,7 +495,7 @@ export function renderImage(td, type, rowData, row, text=true) {
     } else {
 
         if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".jpeg") || td.endsWith(".svg") || td.endsWith(".webp") || td.endsWith(".avif"))) {
-            let link =  "<a href=\"" + WJ.escapeHtml(td) + "\" target=\"_blank\"><img src=\""+td+"\" loading=\"lazy\" alt=\"\"/> ";
+            let link =  "<a href=\"" + escapeUrlAttribute(td) + "\" target=\"_blank\"><img src=\""+escapeUrlAttribute(td)+"\" loading=\"lazy\" alt=\"\"/> ";
             if (true === text) link += renderTd(row, td, rowData);
             link += "</a>";
             return link;

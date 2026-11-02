@@ -112,7 +112,7 @@ Pre funkčnosť je potrebné aby daný bean obsahoval atribúty s názvom ```fie
 Konfigurácia voliteľných polí sa skladá z dvoch zdrojov:
 
 1. prekladové kľúče (`editor.field_x`, `editor.field_x.type`, ...),
-2. záznamy z tabuľky `custom_fields`.
+2. záznamy z tabuľky `dt_customfields`.
 
 Pri generovaní `fieldsDefinition` v `BaseEditorFields.getFields` sa aplikuje priorita:
 
@@ -123,9 +123,9 @@ Pri generovaní `fieldsDefinition` v `BaseEditorFields.getFields` sa aplikuje pr
 
 Vyššia úroveň vždy prepíše nižšiu pre rovnaké písmeno poľa (`alphabet`).
 
-## Serializácia nastavení v `custom_fields.value`
+## Serializácia nastavení v `dt_customfields.value`
 
-Nastavenia špecifické pre typ poľa sa ukladajú do stĺpca `custom_fields.value`.
+Nastavenia špecifické pre typ poľa sa ukladajú do stĺpca `dt_customfields.value`.
 
 Používané formáty:
 
@@ -138,11 +138,11 @@ Používané formáty:
 - `enumeration_2_string1_string2` alebo `enumeration_2_string1_string2_null`
 - `json_group`/`json_doc` s voliteľným suffixom `_null`
 
-Transformáciu medzi editor poľami a internou hodnotou zabezpečujú metódy `CustomFieldsService.toEntity` a `CustomFieldsService.fromEntity`.
+Transformáciu medzi editor poľami a internou hodnotou zabezpečujú metódy `toEntity` a `fromEntity` triedy [CustomFieldsService](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/rest/CustomFieldsService.java) v balíku `sk.iway.iwcm.system.datatable.settings.customfields.rest`.
 
 ## JSON Editor
 
-Typ `jsoneditor` umožňuje priamo zadávať JSON hodnoty. V [nastaveniach voliteľných polí](../../frontend/webpages/customfields/custom-fields-settings.md) vyberte typ **Editor JSON**, alebo použite prekladové kľúče:
+Typ `jsoneditor` umožňuje priamo zadávať JSON hodnoty. V [nastaveniach voliteľných polí](../../frontend/datatables/custom-fields-settings.md) vyberte typ **Editor JSON**, alebo použite prekladové kľúče:
 
 ```properties
 editor.field_a=JSON data
@@ -202,7 +202,7 @@ Príklad podporovaného rozšíreného zápisu:
 
 Rozšírený zápis sa okrem kanonizácie znakov `<` a `>` ukladá v pôvodnej podobe vrátane apostrofov a komentárov. Nie je automaticky prevedený na striktný JSON pre `JSON.parse`; aplikácia, ktorá hodnotu spracúva, musí podporovať použitú syntax.
 
-Pre vlastné REST služby odvodené od `DatatableRestControllerV2` sa prekladové kľúče pre validáciu odvodia z `@DataTableColumn.title` na atribútoch `fieldA` až `fieldZ`. Kontext konfigurácie v tabuľke `custom_fields`, napríklad väzbu na rodičovskú entitu, určuje existujúci hook `getCustomFieldsSearchDto(T entity)`. Hook vychádza zo serverových údajov a vyhodnocuje sa pre konkrétny ukladaný záznam.
+Pre vlastné REST služby odvodené od `DatatableRestControllerV2` sa prekladové kľúče pre validáciu odvodia z `@DataTableColumn.title` na atribútoch `fieldA` až `fieldZ`. Kontext konfigurácie v tabuľke `dt_customfields`, napríklad väzbu na rodičovskú entitu, určuje existujúci hook `getCustomFieldsSearchDto(T entity)`. Hook vychádza zo serverových údajov a vyhodnocuje sa pre konkrétny ukladaný záznam.
 
 ### Kapacita databázy
 
@@ -243,7 +243,7 @@ EDITOR.on('preSubmit', function (e, data, action) {
 });
 ```
 
-Pri type `autocomplete` sa odosiela request na `/admin/FCKeditor/_editor_autocomplete.jsp` aj s parametrami `className` a `objectId`. Endpoint preto vie uprednostniť konfiguráciu z `custom_fields` pred generickým prekladovým kľúčom.
+Pri type `autocomplete` sa odosiela request na `/admin/FCKeditor/_editor_autocomplete.jsp` aj s parametrami `className` a `objectId`. Endpoint preto vie uprednostniť konfiguráciu z `dt_customfields` pred generickým prekladovým kľúčom.
 
 Pri typoch `select` a `multiselect` je podporovaný formát `label:value`. Ak hodnota neobsahuje presne jednu dvojbodku, použije sa rovnaký text pre `label` aj `value`.
 

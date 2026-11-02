@@ -49,6 +49,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.UrlRedirectDB;
 import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverterWithSave;
+import sk.iway.iwcm.system.jpa.PageTitleAttributeConverter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
@@ -864,7 +866,7 @@ public class EditorDB
 
 				//Logger.println(this,"INSERTING sql=" + sql);
 				ps = db_conn.prepareStatement(sql);
-				ps.setString(1, my_form.getTitle());
+				ps.setString(1, PageTitleAttributeConverter.sanitizeTitle(my_form.getTitle()));
 				if (publishDocData != null)
 				{
 					DB.setClob(ps, 2, publishDocData);
@@ -878,7 +880,7 @@ public class EditorDB
 					DB.setClob(ps, 3, data_asc);
 				}
 				ps.setString(4, my_form.getExternalLink());
-				ps.setString(5, my_form.getNavbar());
+				ps.setString(5, PageTitleAttributeConverter.sanitizeTitle(my_form.getNavbar()));
 
 				ps.setTimestamp(6, new Timestamp(now.getTime()));
 				if (my_form.getPublishStart() != null && my_form.getPublishStart().trim().length() > 0)
@@ -1010,7 +1012,7 @@ public class EditorDB
 		   	{
 		   		fileName = groupsDB.getGroupNamePath(my_form.getGroupId());
 		   	}
-				ps.setString(51, DB.prepareString(fileName,255));
+				ps.setString(51, DB.prepareString(AllowSafeHtmlAttributeConverterWithSave.sanitize(fileName), 255));
 
 				DocDB.getRootGroupL(my_form.getGroupId(), ps, 52);
 				ps.setInt(55, my_form.getFollowLinks());
@@ -1031,7 +1033,7 @@ public class EditorDB
 				ps = db_conn.prepareStatement("SELECT max(doc_id) FROM documents WHERE group_id=? AND title=?");
 				// AND date_created=?");
 				ps.setInt(1, my_form.getGroupId()); //aby sa pouzil index!!!
-				ps.setString(2, my_form.getTitle());
+				ps.setString(2, PageTitleAttributeConverter.sanitizeTitle(my_form.getTitle()));
 				//ps.setTimestamp(2, new Timestamp(now.getTime()));
 				rs = ps.executeQuery();
 				if (rs.next())
@@ -1093,7 +1095,7 @@ public class EditorDB
 							"WHERE doc_id=?";
 					//Logger.println(this,"UPDATING id=" + doc_id + " sql=" + sql);
 					ps = db_conn.prepareStatement(sql);
-					ps.setString(1, my_form.getTitle());
+					ps.setString(1, PageTitleAttributeConverter.sanitizeTitle(my_form.getTitle()));
 					//ps.setString(2, data);
 					//ps.setString(3, data_asc);
 
@@ -1101,7 +1103,7 @@ public class EditorDB
 					DB.setClob(ps, 3, data_asc);
 
 					ps.setString(4, my_form.getExternalLink());
-					ps.setString(5, my_form.getNavbar());
+					ps.setString(5, PageTitleAttributeConverter.sanitizeTitle(my_form.getNavbar()));
 
 					ps.setTimestamp(6, new Timestamp(now.getTime()));
 					if (my_form.getPublishStart() != null && my_form.getPublishStart().trim().length() > 0)
@@ -1233,7 +1235,7 @@ public class EditorDB
 			   	{
 			   		fileName = groupsDB.getGroupNamePath(my_form.getGroupId());
 			   	}
-					ps.setString(51, DB.prepareString(fileName, 255));
+					ps.setString(51, DB.prepareString(AllowSafeHtmlAttributeConverterWithSave.sanitize(fileName), 255));
 
 					DocDB.getRootGroupL(my_form.getGroupId(), ps, 52);
 					ps.setInt(55, my_form.getFollowLinks());
@@ -1372,14 +1374,14 @@ public class EditorDB
 						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 				//Logger.println(this,"INSERTING sql=" + sql);
 				ps = db_conn.prepareStatement(sql);
-				ps.setString(1, my_form.getTitle());
+				ps.setString(1, PageTitleAttributeConverter.sanitizeTitle(my_form.getTitle()));
 				//ps.setString(2, data);
 				//ps.setString(3, data_asc);
 				DB.setClob(ps, 2, data);
 				DB.setClob(ps, 3, data_asc);
 
 				ps.setString(4, my_form.getExternalLink());
-				ps.setString(5, my_form.getNavbar());
+				ps.setString(5, PageTitleAttributeConverter.sanitizeTitle(my_form.getNavbar()));
 
 				ps.setTimestamp(6, new Timestamp(now.getTime()));
 				if (my_form.getPublishStart() != null && my_form.getPublishStart().trim().length() > 0)
