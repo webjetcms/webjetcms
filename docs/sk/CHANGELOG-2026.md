@@ -358,6 +358,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- AI Chat - obrázkové vstupy AI asistentov odmietajú súkromné prílohy rozhovorov vrátane symbolických odkazov, aby nebolo možné obísť kontrolu vlastníka rozhovoru (#386).
+
 - AI Chat - história a prílohy sú chránené aj pred premenovaním cez vlastnosti súboru. Nemožno premenovať ich priečinok, jeho obsah ani nadradený priečinok (#386).
 
 - AI Chat - hromadné nahrávanie súborov odmieta zápis do súkromného priečinka rozhovorov, aby nemohlo prepísať históriu ani prílohy (#386).

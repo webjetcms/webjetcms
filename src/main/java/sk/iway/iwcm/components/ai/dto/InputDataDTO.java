@@ -22,6 +22,7 @@ import lombok.Setter;
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.SearchTools;
+import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.i18n.Prop;
 
 import org.apache.http.entity.ContentType;
@@ -132,6 +133,7 @@ public class InputDataDTO {
 
             String realPath = Tools.getRealPath(inputValue);
             File fileImage = new File(realPath);
+            AiChatPaths.requireGenericAccess(fileImage);
 
             if (fileImage.isFile() == false) throw new IllegalStateException(prop.getText("components.ai_assistants.not_image.err"));
 
