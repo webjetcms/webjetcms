@@ -50,12 +50,12 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 		return selectedType;
 	}
 
-	/** Returns the MIME families accepted by a media picker, or an empty list for unrestricted modes. */
+	/** Returns the MIME types and families accepted by a media picker, or an empty list for unrestricted modes. */
 	public static List<String> getAllowedMimeTypes(int selectedType) {
 		return switch (selectedType) {
 			case TYPE_IMAGES -> List.of("image/");
-			case TYPE_VIDEOS -> List.of("video/", "audio/");
-			case TYPE_MULTIMEDIA -> List.of("image/", "video/", "audio/");
+			case TYPE_VIDEOS -> List.of("video/", "audio/", "application/ogg");
+			case TYPE_MULTIMEDIA -> List.of("image/", "video/", "audio/", "application/ogg");
 			default -> List.of();
 		};
 	}

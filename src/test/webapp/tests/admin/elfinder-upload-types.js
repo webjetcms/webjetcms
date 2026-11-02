@@ -50,7 +50,7 @@ Scenario('image dialog rejects documents and accepts images in Files', async ({ 
     I.waitForText(folderName, 15, '.elfinder-path');
 
     I.startRecordingTraffic();
-    attachUpload(I, 'tests/apps/file-archive/docs/archive_replace.pdf', 'image/*,video/*,audio/*');
+    attachUpload(I, 'tests/apps/file-archive/docs/archive_replace.pdf', 'image/*,video/*,audio/*,application/ogg');
     I.waitForText('Nepovolený typ súboru', 20, '.elfinder-dialog-error');
     I.see(pdfName, '.elfinder-dialog-error');
     I.dontSeeElement(fileSelector(pdfName));
