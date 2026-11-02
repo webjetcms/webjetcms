@@ -139,7 +139,6 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
-- Viackrokové formuláre - nová karta [Väzby](redactor/apps/multistep-form/README.md#väzby) v editore poľa zobrazuje samostatné zoznamy polí, ktoré jeho hodnotu používajú v podmienkach zobrazenia a povinnosti (#osk859).
 - Regulárne výrazy - zoznam zobrazuje preložený názov podľa jazyka administrácie a pôvodný názov označuje ako **Prekladový kľúč**. Výber **Povolená hodnota** vo viackrokových formulároch používa formát **kód - názov** (#387).
 - Viackrokové formuláre - opravený preklep v prekladových kľúčoch z `components.mustistep.*` na `components.multistep.*` (#378).
 - Viackrokové formuláre - pomocné zápisy štatistiky na [verejnom uzle clustra s obmedzenými databázovými právami](install/config/ro-user.md#viackrokové-formuláre) už neblokujú zobrazenie, validáciu ani odoslanie formulára. Pri chybe sa návštevníkovi zobrazí názov aplikácie namiesto názvu Java triedy (#384).
@@ -179,6 +178,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Formulár ľahko a viackrokové formuláre - predvolený tooltip je po novom dostupný myšou aj klávesnicou, poskytuje stabilný kontextový názov a opis, zostáva zobrazený pri presune kurzora na jeho obsah a je možné ho zatvoriť klávesom `Escape` (#306).
 - Viackrokové formuláre - pridané [kopírovanie polí medzi formulármi a krokmi](redactor/apps/multistep-form/README.md#kopírovanie-polí-medzi-formulármi). Vloženie otvorí editor s uloženými nastaveniami poľa; podmienky zobrazenia a povinnosti sa neprenášajú. Interná schránka funguje medzi kartami prehliadača a umožňuje opakované vloženie počas 30 minút (#58826).
 - Viackrokové formuláre - pridaná možnosť [Zobraziť obsah bez presmerovania](redactor/apps/form/README.md#karta---nastavenia). Prepínač  použije webovú stránku z poľa **Presmerovanie po vyplnení** a po úspešnom odoslaní nahradí prednastavenu hlášku jej obsahom bez zmeny URL adresy. Ak návštevník nemá oprávnenie na zobrazenie webovej stránky, zobrazí sa prednastavená hláška o úspešnom odoslaní (#58826).
+- Viackrokové formuláre - nová karta [Väzby](redactor/apps/multistep-form/README.md#väzby) v editore poľa zobrazuje samostatné zoznamy polí, ktoré jeho hodnotu používajú v podmienkach zobrazenia a povinnosti (#377).
+
+![](redactor/apps/multistep-form/tab-relations.png)
 
 ### Sémantické vyhľadávanie
 

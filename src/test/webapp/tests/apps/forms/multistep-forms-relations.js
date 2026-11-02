@@ -32,6 +32,7 @@ function openField(I, DT, DTE, label) {
     I.seeElement(relationsTab);
     I.clickCss(relationsTab);
     I.waitForElement(relationsTab + '[aria-selected="true"]', 10);
+    I.seeTextEquals('Hodnota tohto poľa ovplyvňuje, či sa nasledujúce polia zobrazia alebo budú povinné.', '#formItemRelationsDescription');
 }
 
 function openSecondStep(I, DT) {
@@ -60,7 +61,10 @@ async function checkSingleUsage(I, list, name) {
 }
 
 async function checkEmptyUsage(I, list) {
-    I.see('Žiadne polia', list + 'Empty');
+    const message = list === visibilityUsage
+        ? 'Toto pole neovplyvňuje zobrazenie ďalších polí.'
+        : 'Toto pole neovplyvňuje povinné vyplnenie ďalších polí.';
+    I.seeTextEquals(message, list + 'Empty');
     I.assertEqual(await I.grabNumberOfVisibleElements(list + ' li'), 0, 'The previous field must not leave stale relationships');
     I.assertEqual(await I.grabTextFrom(list + 'Count'), '0', 'The count resets when there are no targets');
 }

@@ -259,6 +259,21 @@ When you try to edit or delete an item that is used in a condition of another it
 
 ![](save-condition-error.png)
 
+### Dependencies
+
+When editing an existing field, the **Dependencies** tab shows which other fields use its value. The introductory sentence explains what the value of the field being edited affects:
+
+- **Field visibility** – fields whose visibility depends on this field.
+- **Required fields** – fields whose required status depends on this field.
+
+![Dependencies tab showing fields whose visibility or required status depends on the current field.](tab-relations.png)
+
+The header of each section indicates the number of fields, with the form step indicated separately next to the field name. Each field appears once in the corresponding list, even if it is referenced in multiple parts of the condition. If it uses a value for both purposes, it appears in both lists. An empty list explains that this field does not affect the visibility or required status of other fields.
+
+Clicking on the name will open the editor for that field. If it is in a different step, the selected form step will also be switched. If you have unsaved changes, you can choose to discard them or stay in the original editor before switching.
+
+For example, for the rule "Phone number is required if First and Last name contains a test", you will find **Phone number** in the list of requirement conditions on the **First and Last name** field's **Dependencies** tab. You continue to edit the rule itself on the **Requirement** tab of the **Phone number** field.
+
 ### Statistics
 
 The **Statistics** tab allows you to enable response statistics for a given form item. To enable statistics, select the **Show statistics** option. Once enabled, all available statistics settings for the given item will be displayed.

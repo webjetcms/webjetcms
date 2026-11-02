@@ -139,6 +139,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
+- Vícekrokové formuláře - nová karta [Vazby](redactor/apps/multistep-form/README.md#vazby) v editoru pole zobrazuje samostatné seznamy polí, které jeho hodnotu používají v podmínkách zobrazení a povinnosti (#osk859).
 - Regulární výrazy - seznam zobrazuje přeložený název podle jazyka administrace a původní název označuje jako **Překladový klíč**. Výběr **Povolená hodnota** ve vícekrokových formulářích používá formát **kód - název** (#387).
 - Vícekrokové formuláře - opravený překlep v překladových klíčích z `components.mustistep.*` na `components.multistep.*` (#378).
 - Vícekrokové formuláře - pomocné zápisy statistiky na [veřejném uzlu clusteru s omezenými databázovými právy](install/config/ro-user.md#víceleté-formuláře) již neblokují zobrazení, validaci ani odeslání formuláře. Při chybě se návštěvníkovi zobrazí název aplikace namísto názvu Java třídy (#384).

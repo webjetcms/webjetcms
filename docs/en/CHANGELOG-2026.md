@@ -139,6 +139,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multistep forms - the new [Dependencies](redactor/apps/multistep-form/README.md#dependencies) tab in the field editor displays separate lists of fields that use its value in display and obligation conditions (#osk859).
 - Regular expressions - the list displays the translated name according to the administration language and indicates the original name as **Translation key**. The **Allowed value** selection in multi-step forms uses the format **code - name** (#387).
 - Multi-step forms - fixed typo in translation keys from `components.mustistep.*` to `components.multistep.*` (#378).
 - Multi-step forms - auxiliary statistics entries on [public cluster node with limited database rights](install/config/ro-user.md#multi-step-forms) no longer block form display, validation, or submission. In case of an error, the visitor will see the application name instead of the Java class name (#384).
