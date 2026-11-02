@@ -1048,6 +1048,127 @@ async function openWorkbenchFixture(I, DTE, Document) {
     I.waitForVisible('.pb-outline[data-type=column]', 10);
 }
 
+/** Keeps the caret far below the inline editor's start and enables customer-template smooth scrolling. */
+async function openScrolledWorkbenchFixture(I, DTE, Document) {
+    await openWorkbenchFixture(I, DTE, Document);
+    I.executeScript(() => {
+        const paragraph = document.querySelector('section.pb-workbench-autotest .pb-workbench-copy');
+        const spacer = document.createElement('p');
+        spacer.textContent = 'Tall content autotest';
+        spacer.style.height = '1400px';
+        paragraph.before(spacer);
+        document.documentElement.style.scrollBehavior = 'smooth';
+        window.scrollTo({top: paragraph.getBoundingClientRect().top + scrollY - innerHeight/2, behavior: 'instant'});
+    });
+    I.click(workbenchFixture+' .pb-workbench-copy');
+    I.assertAbove(await I.executeScript(() => window.scrollY), 1000, 'The caret must be below the start of the inline editor');
+}
+
+/** Samples rendered frames after the next user action, including delayed native focus scrolling. */
+function armWorkbenchScrollProbe(I, eventName = 'click') {
+    I.executeScript((root, eventName) => {
+        window.pbScrollProbe = {before: scrollY, samples: [], done: false};
+        window.addEventListener(eventName, () => {
+            const end = performance.now() + 600;
+            const sample = () => {
+                window.pbScrollProbe.samples.push(scrollY);
+                if (performance.now() < end) requestAnimationFrame(sample);
+                else window.pbScrollProbe.done = true;
+            };
+            requestAnimationFrame(sample);
+        }, {once: true, capture: true});
+    }, eventName);
+}
+
+/** Checks every observed frame, not just the scroll position after a corrective scroll. */
+async function assertWorkbenchScrollPreserved(I) {
+    // CodeceptJS uses a FrameLocator here, which cannot wait for JavaScript state directly.
+    await I.usePlaywrightTo('wait for scroll sampling in the canvas frame', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => window.pbScrollProbe.done, null, {timeout: 5000});
+    });
+    const probe = await I.executeScript(() => window.pbScrollProbe);
+    const min = Math.min(...probe.samples), max = Math.max(...probe.samples);
+    assert.ok(probe.samples.length > 1, 'The probe must observe multiple rendered frames');
+    assert.ok(Math.abs(min-probe.before) <= 1 && Math.abs(max-probe.before) <= 1,
+        'Restoring focus must preserve every rendered scroll position: '+JSON.stringify({before: probe.before, min, max}));
+}
+
+for (const action of ['library', 'style', 'copy']) {
+    Scenario('workbench restores focus without scrolling after '+action, async ({I, DTE, Document}) => {
+        await openScrolledWorkbenchFixture(I, DTE, Document);
+        if (action === 'library') {
+            I.clickCss('.cke_button__htmlbox');
+            I.waitForVisible('.pb-library--content', 10);
+            // CodeceptJS cannot poll asynchronous focus through its FrameLocator.
+            await I.usePlaywrightTo('wait for the library search focus', async ({page}) => {
+                const frame = await getPageBuilderFrame(page);
+                await frame.waitForFunction(() => document.activeElement.matches('.pb-library--content .library-filter-input'), null, {timeout: 10000});
+            });
+            armWorkbenchScrollProbe(I, 'keydown');
+            I.pressKey('Escape');
+            I.waitForInvisible('.pb-library', 10);
+        } else {
+            I.click('.pb-workbench [data-pb-action=more]');
+            if (action === 'style') {
+                I.click('.pb-workbench [data-pb-action=style]');
+                I.waitForVisible('.pb-modal', 10);
+                armWorkbenchScrollProbe(I);
+                I.click('.pb-modal__header__button-close');
+                I.waitForInvisible('.pb-modal', 10);
+            } else {
+                armWorkbenchScrollProbe(I);
+                I.click('.pb-workbench [data-pb-action=copy]');
+                I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.clipboard'));
+            }
+        }
+        await assertWorkbenchScrollPreserved(I);
+        I.switchTo();
+        I.amAcceptingPopups();
+        DTE.cancel();
+    });
+}
+
+for (const type of ['section', 'container', 'column']) {
+    Scenario('workbench keeps inserted '+type+' below the toolbar with smooth scrolling', async ({I, DTE, Document}) => {
+        await openScrolledWorkbenchFixture(I, DTE, Document);
+        I.executeScript((root, type) => {
+            const pb = window.pageBuilder, grid = pb.grid;
+            const column = '<div class="'+grid.column_default_class+'" style="padding-top:1200px"><p>Inserted block autotest</p></div>';
+            const container = '<div class="'+grid.container_default_class+'"><div class="'+grid.row_default_class+'">'+column+'</div></div>';
+            const content = {column, container, section: '<section class="'+grid.section_default_class+'">'+container+'</section>'}[type];
+            let library = pb.template.library.find(item => item.textKey === type);
+            if (!library) {
+                library = {textKey: type, groups: []};
+                pb.template.library.push(library);
+            }
+            library.groups.push({id: 'autotest-scroll-insert', textKey: 'Scroll insertion autotest', content});
+            pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
+        }, type);
+        I.click('.pb-workbench [data-pb-action=insert]');
+        const parent = {section: '#wjInline-docdata', container: workbenchFixture, column: workbenchFixture+' .row'}[type];
+        await chooseWorkbenchInsertion(I, type, parent, 1);
+        I.fillField('.pb-library .library-filter-input:visible', 'Scroll insertion autotest');
+        I.clickCss('.pb-library [data-library-item-id=autotest-scroll-insert]');
+        I.waitForInvisible('.pb-library', 10);
+        // CodeceptJS cannot poll asynchronous editor readiness through its FrameLocator.
+        await I.usePlaywrightTo('wait for the inserted block editor', async ({page}) => {
+            const frame = await getPageBuilderFrame(page);
+            await frame.waitForFunction(() => {
+                const selected = window.pageBuilder.ui.selected;
+                const field = selected?.querySelector('[data-ckeditor-instance]');
+                const editor = field && CKEDITOR.instances[field.dataset.ckeditorInstance];
+                return selected?.dataset.pbId === 'autotest-scroll-insert' && editor?.status === 'ready' && editor.focusManager.hasFocus;
+            }, null, {timeout: 10000});
+        });
+        const offset = await I.executeScript(() => window.pageBuilder.ui.selected.getBoundingClientRect().top - document.querySelector('.pb-workbench').getBoundingClientRect().bottom);
+        I.assertTrue(Math.abs(offset-20) <= 1, 'The inserted '+type+' must stay below the toolbar, without jumping to its first editor: '+offset);
+        I.switchTo();
+        I.amAcceptingPopups();
+        DTE.cancel();
+    });
+}
+
 /** Captures layout relative to the content root, independent of selection-induced scrolling. */
 async function workbenchGeometry(I) {
     return I.executeScript((root, selector) => {
