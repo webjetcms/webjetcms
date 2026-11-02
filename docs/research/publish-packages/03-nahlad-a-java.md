@@ -36,7 +36,7 @@ Koordináciu a spoločný prehľad rozšíri navrhovaný `ContentBranchTypeHandl
 
 Výber v administrácii sa uloží do session pre vybranú doménu. Zmena domény vyberie produkciu; novú vetvu používateľ vyberie výslovne. Prepínač obnoví otvorenú obsahovú obrazovku.
 
-Každá podporovaná administračná obrazovka dostane pri načítaní `contentBranchId`; hodnota `0` znamená produkciu. Jej AJAX požiadavky vrátane uploadu posielajú túto hodnotu ako hlavičku `X-WebJET-Content-Branch`, prípadne ako multipart pole s rovnakým významom. Server ju porovná s aktuálnym výberom v session a doménou. Nesúlad vráti `409` s pokynom obnoviť obrazovku. Chýbajúci údaj v pracovnom režime sa nesmie interpretovať ako súhlas so zápisom do produkcie.
+Každá podporovaná administračná obrazovka dostane pri načítaní `contentBranchId` a `contentBranchDomain`; hodnota ID `0` znamená produkciu. Jej AJAX požiadavky vrátane uploadu posielajú hlavičky `X-WebJET-Content-Branch` a `X-WebJET-Content-Domain`, prípadne zodpovedajúce multipart polia. Server porovná **obe** hodnoty s aktuálnym výberom v session a overí doménu cieľového objektu. Nesúlad vráti `409` s pokynom obnoviť obrazovku. Kontrola domény platí aj pre `branchId=0`: dve produkčné záložky rôznych domén majú rovnaké ID vetvy, ale iný cieľ. Chýbajúci kontext v pracovnom režime sa nesmie interpretovať ako súhlas so zápisom do produkcie.
 
 Táto kontrola rieši bežný prípad dvoch otvorených záložiek: prepnutie vetvy v jednej záložke nezmení nepozorovane cieľ uloženia formulára v druhej. Nerieši súbežné editovanie pomocou zámkov.
 
@@ -44,14 +44,16 @@ Riadiace endpointy `/admin/rest/content-branches/**` používajú explicitné ID
 
 ### Verejný náhľad
 
-Náhľad používa vlastnú cestu:
+Podľa Q19 náhľad používa vlastnú cestu **na hostiteľovi administrácie**, kde má používateľ existujúcu prihlasovaciu session. Verejná doména stránky je logická doména obsahu, nie podmienka prihlásenia:
 
 ```text
 Produkcia: https://www.example.sk/kampan/ponuka.html
-Náhľad:    https://www.example.sk/__branch-preview/42/kampan/ponuka.html
+Náhľad:    https://admin.example.sk/__branch-preview/42/kampan/ponuka.html
 ```
 
-ID vetvy v URL nie je prihlasovací token. Server pri každom requeste overí riadne prihláseného administrátora, oprávnenie na náhľad a príslušnosť vetvy k doméne. Prihlásenie prebieha existujúcim spôsobom na tom istom hostiteľovi. Anonymné zdieľanie náhľadu ani prenos prihlasovania medzi doménami nie sú súčasťou prvej verzie.
+ID vetvy v URL nie je prihlasovací token. Server pri každom requeste overí riadne prihláseného administrátora, oprávnenie na náhľad a prístup k doméne uloženej vo vetve. Doménu obsahu nepreberá z voľného query parametra ani aktuálneho výberu v admin session. Prihlásenie a bezpečný návrat na preview URL prebehnú na hostiteľovi administrácie; cookie sa medzi doménami neprenáša. Ak admin aj verejný web používajú rovnaký host, zostáva postup rovnaký. Anonymné zdieľanie nie je súčasťou prvej verzie.
+
+Toto rozdelenie rešpektuje [AdminLogonController.showForm](../../../src/main/java/sk/iway/iwcm/logon/AdminLogonController.java): pri nastavení `multiDomainAdminHost` dnešné prihlasovanie na inom hostiteľovi vracia 404 alebo presmeruje na admin host. Zapnutie branch preto nevyžaduje povoľovať administrátorské prihlasovanie na každej verejnej doméne.
 
 Preview cesta je nezávislá od výberu v administrácii. Používateľ môže mať vedľa seba produkciu a náhľad dvoch vetiev; náhľad vetvy 42 zostane vetvou 42 aj po prepnutí editora na inú vetvu. Bežná produkčná URL nikdy nezíska vetvový obsah iba podľa session.
 
@@ -75,10 +77,11 @@ Registráciu treba overiť integračným testom reálneho filter chainu. Samotn�
 
 1. Rozpozná produkčný request, podporovanú admin obrazovku alebo `/__branch-preview/{id}/...`.
 2. Pre vetvu načíta jej stav a doménu, overí používateľa a požadovaný režim. Pri chybe skončí bez fallbacku na produkciu.
-3. Uloží nemenný `ContentBranchContext` do request atribútu. Pre staršie statické helpery bude dostupný cez existujúci `RequestBean` a jeho request, bez druhého globálneho registra requestov.
-4. Pri preview vytvorí request wrapper s logickou cestou bez gateway prefixu. Vonkajšiu URL ponechá v samostatnom atribúte pre spätný prevod odkazov a diagnostiku.
-5. Nastaví súkromné `no-store` hlavičky, `isPreview` a ochranu pred indexovaním. Vnorený forward/include používa ten istý kontext a tú istú `ContentBranchView`.
-6. V `finally` uvoľní referencie na view a vlastné request atribúty. Prenos kontextu do nového background threadu nie je implicitný.
+3. Uloží nemenný `ContentBranchContext` do request atribútu aj do existujúceho `RequestBean` cez jeho `setAttribute/getAttribute`. Rovnakým spôsobom sprístupní jedno view. Nespolieha sa na `RequestBean.getRequest()`: dnešný encoding filter tento odkaz nastavuje iba pre vybrané elFinder URL. Nevzniká druhý globálny register requestov.
+4. Pri preview vytvorí request wrapper s logickou cestou bez gateway prefixu; zosúladí `getRequestURI`, `getServletPath`, `getPathInfo` a používané forward/include údaje. Vonkajšiu URL ponechá v samostatnom atribúte. Hostiteľ, TLS, cookie a autentifikačná session ostanú transportom administrácie; wrapper nepredstiera prihlásenie na verejnom hostiteľovi.
+5. Pred prvým obsahovým čítaním opraví už existujúci `RequestBean.domain` na overenú doménu vetvy a `RequestBean.url` na logickú cestu. `DocDB.getDomain(request)` v preview uprednostní overený kontext pred `preview.editorDomainName` v session. Obsahové doménové kontroly v `PathFilter`, URL mapa a file mapovanie používajú tú istú logickú doménu; prihlasovacie/transportné kontroly ďalej skutočný admin host. Produkčné doménové presmerovanie nesmie odsunúť preview na verejný host. Preview nemení doménový ani vetvový výber v session.
+6. Nastaví súkromné `no-store` hlavičky, `isPreview` a ochranu pred indexovaním. Vnorený forward/include používa ten istý kontext a tú istú `ContentBranchView`. Výstupný wrapper udrží tieto hlavičky aj pri neskoršom statickom servovaní a pred commitom odpovede; `PathFilter.setStaticContentHeaders` ich nesmie prepísať na verejnú cache.
+7. V `finally` uvoľní vlastné atribúty a view, obnoví zmenené hodnoty existujúceho `RequestBean`; jeho konečné odstránenie ostáva v životnom cykle encoding filtra. Prenos kontextu do nového background threadu nie je implicitný.
 
 Navrhovaná reprezentácia:
 
@@ -98,17 +101,41 @@ Mimo webového requestu je predvolený režim `LIVE`. Operácia riadená ID vetv
 
 Gateway nie je ľubovoľný proxy na vnútorné URL. Dovolí verejné stránky a podporované asset cesty; nepustí `/admin`, `/WEB-INF`, interné pracovné úložisko ani ľubovoľný spustiteľný JSP súbor. Cesty normalizuje pred rozhodnutím o obsluhe. Bežné práva k stránkam a súborom zostávajú zachované.
 
+Gateway odmietne aj legacy ovládacie parametre, ktoré menia zdroj alebo spôsob renderovania: `historyid`, `forward`, `forwarddoccompare`, `inlineEditorAdmin`. Samotná povolená `.html` cesta nestačí, pretože `PathFilter` ich môže preniesť do `ShowDoc`. Bežné parametre stránkovania, hľadania a filtrov Noviniek zostávajú funkčné. Preview sa nekombinuje s historickým náhľadom ani ľubovoľným JSP forwardom.
+
 ## 4. Výsledný pohľad na obsah
 
-Pre objekt s ID `x` platí:
+V administračnom editore (ADMIN) pre objekt s ID `x` platí:
 
 | Pracovný záznam vo vetve | Výsledok čítania |
 | --- | --- |
 | Neexistuje | Aktuálny produkčný objekt. |
-| Vloženie alebo zmena | Úplný pracovný objekt pod jeho stabilným ID. |
+| Vloženie alebo zmena | Pracovné podporované polia pod stabilným ID, doplnené podľa pravidiel projekcie nižšie. |
 | Zmazanie | Objekt vo výslednom pohľade neexistuje. |
 
-Základ porovnania `base_snapshot` sa pri bežnom náhľade nezobrazuje; slúži na trojcestné porovnanie pri merge. Náhľad neprepisuje tento základ novšou produkciou.
+Detail, metadáta aj SQL zdroj používajú rovnaké pravidlo: podporované redakčné polia z WORK, odvodené polia vypočítané z výsledného obsahu a prevádzkové či nepodporované read-only polia existujúceho objektu z aktuálneho LIVE. To zahŕňa `sync_id`/`sync_status` a existujúce `publish_start`/`publish_end`; pracovná kópia ich nesmie zmraziť, keď ich merge nesmie prepísať. Nový objekt bez LIVE riadka má dohodnuté počiatočné hodnoty vrátane dátumov podľa 03a. Zmena produkčného individuálneho plánu naďalej podlieha preflight kontrole. Nejde o automatické spájanie podporovaných obsahových polí: tie sa stále rozhodujú ako celý objekt.
+
+### Výsledok konfliktu v náhľade (Q16)
+
+PREVIEW používa rovnaké čisté trojcestné rozhodovanie ako merge v `04`. `ContentBranchView` pripraví jednu mapu rozhodnutí `type + objectKey → LIVE/WORK` pre pracovné položky; strom, URL, detail, SQL, médiá a súbory používajú tú istú mapu. Načítava sa podporovaný obsah upravených položiek, nie HTML celého webu. Pri súbore sa platnosť voľby overí odtlačkom aktuálnych bajtov; úložisko výsledných kópií navyše netreba.
+
+| Situácia | Náhľad |
+| --- | --- |
+| Bez pracovného riadka | Aktuálne LIVE. |
+| Platná `resolved_choice` | Zvolená LIVE alebo WORK; platnosť overí aktuálny live/work hash. |
+| Bez ručnej voľby, W=B | LIVE, aj keď si pracovný riadok uchoval starý obsah. |
+| Bez ručnej voľby, L=W | LIVE bez ďalšieho zápisu; zachová aj technické hodnoty, napríklad pôvodný cutoff média. |
+| Bez ručnej voľby, L=B a W je odlišné | WORK; zvolená DELETE položku skryje. |
+| Nový nevyriešený konflikt | WORK s viditeľným upozornením na nevyriešené konflikty a odkazom na porovnanie. Výsledok publikovania ešte nie je určený. |
+| Uložená voľba má neplatné vstupné hashe | `409` s odkazom na nové porovnanie; nepoužiť starú voľbu ani ju potichu zmeniť na WORK. |
+
+Uloženie vedomej pracovnej úpravy vyčistí jej predošlé rozhodnutie a zvýši revíziu; editor na to pri zvolenom LIVE upozorní. Naopak samotné zistenie neskoršej produkčnej zmeny rozhodnutie potichu nevymaže. `resolved_snapshot` nie je ďalší zdroj renderovania ani podklad SQL: pracovné typované údaje sa zachovajú, mapa vyberie zdroj. Nová tabuľka či parsovanie JSON v databáze nie sú potrebné. Kombinácia neplatných väzieb po výbere sa zobrazí ako konkrétna prekážka, nie produkčný fallback.
+
+Ak zvolený podporovaný cieľ už zodpovedá LIVE, spoločné rozhodovanie ho normalizuje na LIVE/no-op aj pri výslovnej voľbe WORK. Render tak nezmení technický marker média, ktorý publisher pri no-op nemení. Platnosť uloženej voľby sa overí pred touto normalizáciou.
+
+Publisher po začatí merge používa zmrazený výsledok a známe checkpointy z `04`; svoj zápis nesmie mylne považovať za cudziu zmenu. Pre jednoduchosť sa preklikateľný náhľad v `MERGING`/`MERGE_FAILED` neotvára, UI ponúkne priebeh a produkciu. `MERGED`/`CANCELLED` ponúknu archívny detail zmien, nie historický náhľad celého webu. Náhľad je dostupný v `DRAFT`, `SCHEDULED`, `NEEDS_ATTENTION`, podľa platnosti rozhodnutí.
+
+Základ porovnania `base_snapshot` sa v stránke nezobrazuje, ale vstupuje do rozhodovania mapy. Náhľad neprepisuje tento základ novšou produkciou.
 
 `ContentBranchView` postupne načíta:
 
@@ -119,7 +146,7 @@ Základ porovnania `base_snapshot` sa pri bežnom náhľade nezobrazuje; slúži
 
 Načítanie používa oddelené objekty. Pri produkčnom fallbacks možno čerpať z existujúcich cache, ale pred zmenou odvodených údajov alebo vrátením objektu do editora sa vytvorí kópia. V prvom kroku netreba do pamäte načítať HTML celého webu.
 
-Médium zahŕňa aj pracovný zoznam priradení do existujúcich kategórií z `group_ids_snapshot`. Čítač nesmie pre pracovné médium nahradiť tento zoznam produkčnou M:N väzbou. Kategórie zostávajú produkčným číselníkom; ich definície sa vo vetve nemenia. Filtrovanie podľa kategórie musí použiť výsledné členstvo pred count/radením/stránkovaním, podľa postupu v [dátovom modeli](02-datovy-model.md).
+Médium zahŕňa aj pracovný zoznam priradení do existujúcich kategórií z `group_ids_snapshot`. Pre zvolený WORK čítač nesmie nahradiť tento zoznam produkčnou M:N väzbou; pri LIVE/no-op naopak použije aktuálne produkčné priradenia. Kategórie zostávajú produkčným číselníkom; ich definície sa vo vetve nemenia. Filtrovanie podľa kategórie musí použiť výsledné členstvo pred count/radením/stránkovaním, podľa postupu v [dátovom modeli](02-datovy-model.md).
 
 Strom sa zostaví v dvoch krokoch: najskôr hodnoty a väzby podľa ID, potom odvodené cesty, URL a navigačné údaje. Tým sa vyhne rekurzívnemu vytváraniu `DocDB`/`GroupsDB` pri výpočte navbaru. Odstránený podstrom a presuny musia zodpovedať operáciám pripraveným zapisovacou službou; náhľad nesmie ponechať osirelé položky ako náhodný fallback.
 
@@ -155,7 +182,7 @@ Globálne pomocné údaje administrácie sa nezužujú na vetvu: napríklad [Lay
 
 ## 6. SQL zdroj pred filtrom a stránkovaním
 
-Výsledný zdroj stránok vznikne ako produkčné riadky bez prekrytých ID plus pracovné riadky bez zmazaní. Nasledujúci zápis je vysvetľujúci pseudokód; stĺpce a doménový rozsah určuje dátový model:
+Výsledný zdroj stránok vznikne ako produkčné riadky bez prekrytých ID plus pracovné riadky bez zmazaní. ADMIN prekryje všetky pracovné ID; PREVIEW iba ID so zvoleným WORK podľa mapy v časti 4. Nasledujúci zápis je vysvetľujúci pseudokód; stĺpce a doménový rozsah určuje dátový model:
 
 ```sql
 SELECT d.<explicitny_zoznam_stlpcov>
@@ -165,16 +192,20 @@ WHERE d.group_id IN (<povoleny_vysledny_rozsah>)
       SELECT 1
       FROM content_branch_document b
       WHERE b.branch_id = ? AND b.doc_id = d.doc_id
+        AND <b.doc_id_je_v_mnozine_WORK_pre_tento_rezim>
   )
 UNION ALL
 SELECT b.<pracovne_stlpce_v_rovnakom_poradi>
 FROM content_branch_document b
 WHERE b.branch_id = ?
+  AND <b.doc_id_je_v_mnozine_WORK_pre_tento_rezim>
   AND b.operation <> 'DELETE'
   AND b.group_id IN (<povoleny_vysledny_rozsah>)
 ```
 
 Produkčná časť musí rešpektovať aj spôsob rezervácie nových ID z dátového návrhu. Prípadný technický rezervačný záznam sa nesmie stať výslednou produkčnou stránkou.
+
+Predikát pracovnej množiny sa zostaví z overenej request mapy ako viazané ID; prázdna množina znamená čistý LIVE zdroj, nie neplatné `IN ()`. SQL bind limity sa dodržia bežným rozdelením množiny podľa DB. Vybraný LIVE objekt ostane v produkčnej časti a jeho WORK sa nevráti. Rovnaký postup platí pre médiá. Nevykonáva sa dodatočné skladanie už odstránkovaného výsledku.
 
 Nad touto reláciou sa použije existujúci význam dotazu:
 
@@ -228,14 +259,14 @@ Vo vnútri renderovania sa používa logická cesta `/kampan/ponuka.html`. Až v
 
 | Vstup | Správanie |
 | --- | --- |
-| Relatívna URL stránky alebo assetu | Vyhodnotí sa voči logickej URL aktuálneho dokumentu a prevedie do gateway. |
-| Koreňová URL tej istej domény | Dostane gateway prefix. |
-| Absolútna HTTP(S) URL tej istej domény | Prevedie sa do gateway toho istého hostiteľa. |
+| Relatívna URL stránky alebo assetu | Vyhodnotí sa voči logickej verejnej URL aktuálneho dokumentu a prevedie do gateway na admin hostiteľovi. |
+| Koreňová URL podporovanej stránky alebo assetu | Dostane gateway prefix na admin hostiteľovi. |
+| Absolútna HTTP(S) URL logickej verejnej domény vetvy | Prevedie sa na admin host a gateway tejto vetvy. |
 | `#sekcia`, `mailto:`, `tel:`, `data:`, externý hostiteľ | Zostáva bez zmeny. |
 | URL už v tej istej gateway | Nepridáva sa druhý prefix. |
 | Interná admin alebo zakázaná cesta | Nepovažuje sa za preview resource; platia bežné pravidlá prístupu. |
 
-Query parametre, fragment, UTF-8 a context path sa zachovajú. Redirect odpoveď aj `sendRedirect` použijú ten istý helper, aby kanonické presmerovanie nevyhodilo používateľa z náhľadu.
+Odkazy na inú verejnú doménu ostanú externými odkazmi; nepreberajú pracovný kontext cudzieho webu. Helper rozlišuje logickú verejnú doménu vetvy od transportného admin hosta a neodvodzuje prvú zo samotného `request.getServerName()`. Admin navigácia sa neprepisuje na obsah webu. Query parametre, fragment, UTF-8 a context path sa zachovajú. Redirect odpoveď aj `sendRedirect` použijú ten istý helper, aby kanonické presmerovanie nevyhodilo používateľa z náhľadu.
 
 Response wrapper spracuje HTML parserom, nie globálnym nahradením reťazca. Pokryje odkazy, `src`, relevantné `href`, `srcset`, `poster`, lokálne `form[action]`/`formaction`, známe lazy-load atribúty používané core šablónami a prípadný `<base>`. Core komponenty generujúce URL v JSON použijú helper priamo. Spracovanie URL v inline štýloch a JavaScriptom dopĺňaných atribútoch musí mať testované pravidlá pre podporované šablóny.
 
@@ -251,11 +282,15 @@ Toto pravidlo jadra nerozširuje budúcu úlohu bannerov o prestavbu ich štatis
 
 Výsledky thumbnailov majú vetvový priestor oddelený od produkcie; kľúč obsahuje aspoň ID vetvy, hash zdrojového obsahu a transformačné parametre. Gate chráni originál aj thumbnail. Detail napojenia na existujúce služby je v [analýze súborov](analyza-media-a-subory.md).
 
+Správny výber súboru je potrebný aj **pred** vytvorením HTML, nielen pri HTTP stiahnutí. `MediaDB.filterByAvailability` a `isExists` overujú lokálne prílohy cez LIVE filesystem; v branch musia použiť existenciu z file overlay, inak nový pracovný PDF z výpisu zmizne. `DocBasic.getPerexImageSmall/Normal/Original` cez [GalleryToolsForCore](../../../src/main/java/sk/iway/iwcm/common/GalleryToolsForCore.java) vyberá variant podľa existencie; rovnaké pravidlo platí aj tam. [ThumbTag](../../../src/main/java/sk/iway/iwcm/tags/ThumbTag.java) v preview obíde `thumbExternalServer` a vždy vydá chránenú gateway URL. Tieto konkrétne core čítače dostanú malý file-read/exists helper, nie globálny prepis `Tools.getRealPath` ani všeobecný virtuálny filesystem. Časový filter pracovného média použije výsledné `dateCreated` vlastníckej stránky podľa dátového modelu.
+
+Zákaznícka šablóna, ktorá sama používa `java.io.File`, `IwcmFile` alebo vlastnú CDN URL, potrebuje explicitný adaptér rovnako ako vlastné SQL. HTML rewrite nedokáže obnoviť obrázok či prílohu, ktorú server predtým z výstupu vyradil.
+
 Rozsah súborov sa určí existujúcim mapovaním domény na úložisko a dnešnými adresárovými právami pod povolenými obsahovými koreňmi. Nepridáva sa nový register vlastníctva ciest. Ak rovnaký fyzický adresár používajú viaceré domény, UI upozorní na možný účinok publikovania aj mimo domény vetvy; prvá verzia neskenuje všetky referencie iných webov.
 
 Nemenné CSS/JS šablóny môžu byť v preview obslúžené ako povolené produkčné zdroje. Ich definície sa vo vetve nemenia. Cesta gateway zabezpečuje odlišnú browser URL od produkcie; `no-store` bráni používaniu starého pracovného obsahu po ďalšej úprave.
 
-Reverse proxy/CDN musí cestu `/__branch-preview/` posielať aplikácii bez verejnej cache a bez priameho servovania `/images` či `/files` podľa prípony. Táto konfigurácia je súčasťou zapnutia preview na konkrétnom nasadení. Bežné produkčné pravidlá sa nemenia.
+Reverse proxy/CDN na admin hostiteľovi musí cestu `/__branch-preview/` posielať aplikácii bez verejnej cache a bez priameho servovania `/images` či `/files` podľa prípony. Táto konfigurácia je súčasťou zapnutia preview na konkrétnom nasadení. Bežné produkčné pravidlá sa nemenia.
 
 ### Hranica CSS a dynamického JavaScriptu
 
@@ -309,7 +344,7 @@ Presné endpointy zoznamu balíkov a merge patria do príslušných dokumentov. 
 | `GET /admin/rest/content-branches` | Dostupné neuzavreté verzie aktuálnej admin domény pre prepínač, vrátane názvu a stavu. Prehľad môže výslovne vyžiadať aj uzavreté verzie cez `includeClosed=true`. |
 | `POST /admin/rest/content-branches` s `{ "name": "Vianočná kampaň", "description": "...", "expectedDomainName": "www.firma.sk" }` | Overí práva a údaje aj zhodu očakávanej domény formulára s aktuálnou admin doménou servera; nesúlad vráti `409`. Vlastníka určí server a založí prázdnu `DRAFT` verziu bez termínu. Vráti `201` a identitu/názov/doménu/stav. Nemení admin výber, nevytvára snapshot webu ani vetvu z inej vetvy. |
 | `GET /admin/rest/content-branches/context` | Produkcia alebo zvolená vetva pre aktuálnu doménu, názov a aktuálne oprávnenia. |
-| `POST /admin/rest/content-branches/context` s `{ "branchId": 42 }` | Overenie a zmena výberu v administrácii; `0` vyberie produkciu. Existujúca CSRF ochrana zostáva. |
+| `POST /admin/rest/content-branches/context` s `{ "branchId": 42, "expectedDomainName": "www.firma.sk" }` | Overenie domény otvorenej obrazovky a zmena výberu v administrácii; `0` vyberie produkciu. Nesúlad domény vráti `409` aj pri voľbe `0`. Existujúca CSRF ochrana zostáva. |
 | `GET /admin/rest/content-branches/42/preview-link?docId=123` | Overená URL na výslednú stránku vetvy; pri zmazanej/nedostupnej položke vysvetlená chyba. |
 | `GET /__branch-preview/42/...` | Chránený náhľad stránky alebo podporovaného assetu. |
 
@@ -332,6 +367,10 @@ P01 má potvrdiť praktickú priechodnosť najrizikovejšej cesty skôr, než sa
 
 - authorizačné a doménové kontroly pred načítaním náhľadu, vrátane priameho asset URL;
 - vyčistenie kontextu po chybe a nasledujúci produkčný request na tom istom serverovom threade;
+- preview domény B na admin hoste pri session výbere domény A: route, `DocDB.getDomain`, `RequestBean`, médiá a file mapovanie musia čítať B bez zmeny session; login/redirect zostane na admin hoste;
+- starú produkčnú záložku A po prepnutí admin domény na B: `branchId=0` nesmie obísť doménový `409`;
+- nové pracovné PDF pri zapnutej kontrole dostupnosti médií, variant perex obrázka a `thumbExternalServer`: výstup musí používať branch súbory, nie produkčnú existenciu/cache;
+- no-store aj po downstream statických hlavičkách, chybovej odpovedi a conditional requeste;
 - strom s presunom, predvolenou stránkou a odmietnutím cyklu/osirelej väzby podľa zapisovacej validácie;
 - SQL binding, count, poradie a stránkovanie na skutočne podporovaných databázach;
 - admin detail/list/strom s rovnakým kontextom, neúplný list obsah a odmietnutie starého formulára po prepnutí vetvy;

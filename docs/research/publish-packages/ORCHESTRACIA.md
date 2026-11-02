@@ -35,7 +35,7 @@ Nový chat nie je technickou podmienkou; dôležitý je rovnaký checkout a evid
 
 1. Prečítaj koreňové `AGENTS.md`, `.github/agents/AGENTS.md` a pracovný návod. Skontroluj `git status` a aktuálnu vetvu. Zachovaj existujúce nesúvisiace zmeny; nevytváraj commity.
 2. Prečítaj tento dokument, `STAV.md`, `01-rozhodnutia.md` a **iba zadanú sekciu** v `06-plan-implementacie.md`.
-3. Over dokončenie predpokladov kroku podľa evidencie aj skutočného kódu. Samotný štítok DONE bez výsledkov nie je dôkaz.
+3. Pre P01 načítaj aj [kontrolu pripravenosti](09-kontrola-pripravenosti.md); uzatvorené Q16–Q19 sa znova nepýtajú. Over dokončenie predpokladov kroku podľa evidencie aj skutočného kódu. Samotný štítok DONE bez výsledkov nie je dôkaz.
 4. Načítaj návrhové dokumenty a zdrojové analýzy uvedené ako vstupy daného kroku. Presné implementačné správanie over proti aktuálnemu kódu; čísla riadkov v analýzach sú iba orientačné z času návrhu.
 5. Zaznamenaj v `STAV.md` krok `IN_PROGRESS`, použitú vetvu, výchozí stav a stručný rozsah. Pre implementáciu použi vhodnú existujúcu feature vetvu. Ak nie je, riaď sa repozitárovým pomenovaním a prideleným issue ID; číslo issue si nevymýšľaj.
 6. Vykonaj zadaný rozsah, príslušné overenia a skontroluj celý vlastný diff. Žiadna produkčná aktivácia, databázová konverzia alebo deploy nie je implicitnou súčasťou lokálnej implementácie.
@@ -61,6 +61,7 @@ Každý pomocný agent odovzdá zmenené súbory, overené správanie a neoveren
 - Ak zistenie mení potvrdenú požiadavku, napr. stabilné ID, izoláciu produkcie, rozsah podporovaného preview, oprávnenia alebo význam merge, agent najskôr doloží problém a konkrétny návrh úpravy. Závislú časť neimplementuje pod opačným predpokladom; nezávislé autorizované časti môže dokončiť.
 - Ak sa mení verejná Java/REST zmluva medzi etapami, aktualizuje sa jej jediný návrhový zdroj aj dotknutí volajúci. Nevytvárať súbežné alternatívne návrhy bez určenia platnej verzie.
 - „Zjednodušenie“ nesmie znamenať produkčný zápis počas práce vo vetve, prečíslovanie nového objektu pri merge alebo tiché zobrazenie produkcie pri chybe náhľadu.
+- P03 už obsahuje čítanie médií/súborových helperov a mapu zvoleného výsledku; P05 dodá redakčné zápisy, P06 UI rozhodnutí. ADMIN vždy uchová WORK, PREVIEW rešpektuje Q16. Neodsúvaj túto zhodu až na záverečný test.
 - Nový všeobecný workflow/lock/cache framework je mimo zadania. Ak obyčajná služba a krátka DB operácia riešia konkrétny problém, použi ich.
 - `NewsApp`/`NewsActionBean` je povinné jadro podľa doplnenia N1 a [03a — Novinky](03a-novinky.md). Neodsúvaj ho do voliteľného adaptéra. P03 nemá DONE bez čítacieho/render rozsahu T16; P04 musí dokázať reálne založenie novinky a P06 zhodu s produkciou po merge. Hranica vlastných ResultCriteria/contextClasses zostáva podľa `03a`.
 - Ďalší modul automaticky neznamená ďalšiu pracovnú tabuľku. Použi postup z `08`; bežný modul má explicitný DTO/handler a spoločné JSON úložisko. Typovanú výnimku zdôvodni konkrétnou query potrebou. Nevytváraj druhý merge alebo scheduler a nerozširuj úzky bannerový rozsah o riešenie štatistík.

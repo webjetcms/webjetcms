@@ -181,6 +181,8 @@ Porovnanie zvýrazní zmenené polia, ale rozhodnutie sa týka celého podporova
 
 Pre nový záznam sa zobrazia jeho hodnoty a cieľové umiestnenie. Pre zmazanie názov, ID, produkčný stav a konkrétne závislosti, ktoré bránia publikovaniu. Zrušenie pracovnej zmeny sa volá `Zahodiť túto zmenu` a vysvetlí, že branch začne opäť preberať produkčnú položku.
 
+Zahodenie zmeny je dostupné iba v `DRAFT`. Ak na nej závisia iné položky (napríklad stránky nového priečinka alebo odvodené URL pri jeho premenovaní), server ju odmietne s ich zoznamom. Používateľ ich musí vedome upraviť alebo zahodiť; nástroj ich potichu neodstráni. `Zahodiť pracovnú verziu` uzavrie celý dosiaľ nepublikovaný balík ako `CANCELLED`, po potvrdení názvu a počtu zahadzovaných zmien; v `MERGING` a `MERGE_FAILED` sa neponúka. Obsah sa nezmaže z produkcie ani sa nevykoná rollback. Archivovaný detail ostane dostupný podľa práv, fyzické čistenie úložiska sa riadi retenčným postupom.
+
 ## 5. Riešenie konfliktu
 
 ```text
@@ -208,6 +210,8 @@ Voľba sa aplikuje na celý objekt. Panel môže rozbaliť jednotlivé polia a z
 `Použiť produkciu` ponechá aktuálny podporovaný obsah celého produkčného objektu. `Použiť pracovnú verziu` ho nahradí pracovným obsahom; prevádzkové počítadlá sa riadia dátovým návrhom a neprepisujú sa starou kópiou. Tlačidlá sa nevolajú neurčito `Prepísať` a `Použiť moju`, pretože branch môže upravovať viac ľudí.
 
 Uloženie riešenia zaznamená výber verzie, ešte nič nepublikuje. Rozhodnutie sa viaže na porovnávaný produkčný a pracovný obsah. Ak sa niektorý vstup znova zmení, server vráti `Obsah sa od porovnania zmenil` a zobrazí nové porovnanie. Ručné úpravy už uložené cez branch editor zostávajú pracovným obsahom.
+
+Podľa Q16 sa uložená voľba prejaví aj v celom preklikateľnom náhľade. Po `Použiť produkciu` náhľad zobrazí produkčný výsledok položky vrátane jej vplyvu na URL, menu a Novinky; pracovný editor si ponechá rozpracovanú verziu. Pri otvorení editora sa zobrazí `Pre publikovanie je zvolená produkcia. Uložením pracovnej úpravy treba výsledok znova skontrolovať.` Neponúka sa druhý prepínač dvoch odlišných náhľadov webu.
 
 Konflikt úprava/zmazanie používa zrozumiteľné akcie `Ponechať produkčnú položku` a `Použiť pracovné zmazanie`, prípadne `Obnoviť pracovnú položku`, ak bola zmazaná produkcia. Nedá sa ním obísť neplatná väzba alebo chýbajúce oprávnenie.
 
@@ -239,13 +243,15 @@ Novinky vyhodnotené k 1. 12. 2026 09:00 (Europe/Bratislava)
 ... celý web s pracovnými stránkami, navigáciou, médiami a súbormi ...
 ```
 
-Náhľad vyžaduje platné prihlásenie do administrácie a prístup k danej verzii/obsahu. Skopírovaná URL nedáva prístup neprihlásenému klientovi. Po prihlásení sa používateľ vráti na bezpečne overenú pôvodnú preview URL. Názov branch je viditeľný aj po navigácii na inú stránku.
+Náhľad podľa Q19 beží na hostiteľovi administrácie, napríklad `https://cms.firma.sk/__branch-preview/42/ponuka/`, a vykresľuje doménu `www.firma.sk` uloženú vo vetve. Vyžaduje platné prihlásenie do tejto administrácie a prístup k danej verzii/obsahu. Skopírovaná URL nedáva prístup neprihlásenému klientovi. Po prihlásení sa používateľ vráti na bezpečne overenú pôvodnú preview URL. Názov branch aj logická doména sú viditeľné po navigácii na inú stránku; zmena admin domény otvorený náhľad neprepne.
+
+Náhľad používa zvolené výsledky z porovnania, kým editor používa WORK. Ak konflikt ešte nemá rozhodnutie, použije sa v náhľade pracovná verzia s výrazným upozornením `Náhľad obsahuje nevyriešené konflikty; výsledok publikovania ešte nie je určený` a odkazom na porovnanie. Ak sa po uloženej voľbe zmení jej produkčný vstup, náhľad vyžiada nové porovnanie namiesto tichého použitia starej voľby alebo návratu na WORK. V naplánovanej vetve treba pred zmenou rozhodnutia výslovne zrušiť plánovanie; pri `NEEDS_ATTENTION` obnoviť prípravu. Po vyriešení všetkých konfliktov sa kontroluje rovnaký výsledok, ktorý použije merge. Zámerné pracovné zmazanie sa v náhľade zobrazuje ako neprítomnosť; archívny detail po merge nesľubuje historický snapshot celého webu.
 
 Odkazy medzi stránkami, obrázky, thumbnaily a presmerovania zachovajú preview kontext. Tlačidlo `Produkcia` otvorí produkčnú URL v novej záložke, aby používateľ mohol výsledok porovnať. U novej stránky, ktorá ešte produkčnú verziu nemá, sa zobrazí `Zatiaľ nie je publikovaná`.
 
 Preview neprepisuje admin session výber. Potrebuje autentifikačnú session, ale nesmie z nej odhadovať, ktorú branch chce zobraziť. Konkrétna URL brána a nároky na proxy sú v [analýze médií a súborov](analyza-media-a-subory.md).
 
-Novinky sa zobrazia v pôvodnej šablóne aplikácie vrátane stránkovania a odkazov na detail. Náhľad použije pracovné parametre aplikácie aj pracovné stránky. Pri naplánovanej vetve banner uvedie budúci čas vyhodnotenia dátumových filtrov Noviniek; inak aktuálny čas requestu. Pri budúcom čase vysvetlí, že nejde o simuláciu všetkých budúcich zmien webu. Po posune termínu treba náhľad obnoviť. Presný kontrakt je v [03a](03a-novinky.md).
+Novinky sa zobrazia v pôvodnej šablóne aplikácie vrátane stránkovania a odkazov na detail. Náhľad použije parametre aplikácie a stránky zo zvoleného výsledku podľa Q16. Pri naplánovanej vetve banner uvedie budúci čas vyhodnotenia dátumových filtrov Noviniek; inak aktuálny čas requestu. Pri budúcom čase vysvetlí, že nejde o simuláciu všetkých budúcich zmien webu. Po posune termínu treba náhľad obnoviť. Presný kontrakt je v [03a](03a-novinky.md).
 
 Editor novej novinky ponechá voľbu výslednej dostupnosti, perex aj výber existujúcich perex skupín. Nápoveda vysvetlí, že zaradenie do výpisu závisí od nastavení aplikácie; nevyhovujúca novinka sa nasilu nepridá. Kategórie sa zobrazia aj v porovnaní zmien. Nevytvára sa ďalší editor Noviniek ani automatický diagnostický systém všetkých filtrov. Vnorená správa Noviniek preberie admin branch kontext vrátane kontroly zastaranej záložky.
 
@@ -272,6 +278,8 @@ Po naplánovaní detail zobrazuje termín a akcie `Zmeniť termín` a `Zrušiť 
 Ak sa plán už vykonáva, tieto akcie nie sú dostupné a server ich odmietne. Zmena termínu nemá predstierať zastavenie už prebiehajúceho publikovania. Pri probléme zistenom v termíne sa stav zmení na `Vyžaduje zásah`, s konkrétnym dôvodom a odkazom na dotknuté položky.
 
 Pri kolízii s existujúcim jednotlivým plánom sa zobrazí stránka, termín a odkaz na správu pôvodného plánu. Riešenie vyžaduje jeho explicitné zrušenie alebo zmenu. UI ani scheduler nesmú starý plán potichu vymazať. Ak niekto vytvorí kolidujúci individuálny plán až po naplánovaní branch, aktuálna kontrola pred prvým zápisom branch publikovanie zastaví so stavom `NEEDS_ATTENTION`. Nezavádza sa nový centrálny zákaz vytvárania individuálnych plánov; konflikt sa rieši pred vykonaním balíka.
+
+Kolízia môže pochádzať aj zo stránky mimo balíka, ak jej individuálny plán publikuje ten istý cieľový súbor. Detail preto ukáže aj cestu súboru a zdrojový plán, nie iba konflikty stránkových ID v balíku.
 
 ## 8. Priebeh, čiastočná chyba a pokračovanie
 
@@ -300,7 +308,7 @@ Ak sa po čiastočnom zápise zmenil produkčný obsah už aplikovanej položky,
 
 Prvá verzia nemusí ponúkať automatický návrat celej produkcie. Ak sa neskôr pridá rollback, potrebuje vlastnú špecifikáciu. Ani `Zrušiť plánovanie`, ani `Zahodiť pracovnú verziu` nesmú pôsobiť ako rollback čiastočne vykonaného merge.
 
-Po úspešnom merge je pracovná verzia iba na čítanie a zmizne z výberu aktívnych verzií. V prehľade ostane záznam výsledku. Ďalšia kampaň sa začne novou pracovnou verziou.
+Počas `MERGING`/`MERGE_FAILED` sa namiesto preklikateľného náhľadu ponúkne priebeh a odkaz na aktuálnu produkciu. Po úspešnom merge je pracovná verzia iba na čítanie a zmizne z výberu aktívnych verzií. V prehľade ostane záznam výsledku. Ďalšia kampaň sa začne novou pracovnou verziou.
 
 ## 9. Hranice podporovaných úprav
 
@@ -309,6 +317,8 @@ Redaktor môže meniť iba podporované polia a operácie. Schválený základ n
 Zdieľané systémové stránky sú iba na čítanie. Pri redakčných súboroch zostávajú dnešné povolené obsahové korene, mapovanie filesystemu a práva k priečinkom. Pri spoločnej fyzickej ceste správca súborov, detail zmeny a súhrn publikovania výrazne zobrazia: `Tento súbor môže používať viac domén. Jeho publikovanie ovplyvní všetky odkazy na túto cestu.` Nevzniká nová evidencia vlastníctva súboru podľa domény ani automatický skener všetkých jeho použití. V zdieľanom úložisku sa upozornenie zobrazuje konzervatívne aj bez dôkazu konkrétneho použitia inou doménou.
 
 Rozhranie nebude sľubovať automatické zrkadlenie pracovných úprav do ďalších stránok. Dotknuté väzby sa ukážu v kontrole pripravenosti podľa návrhu závislostí. Zmena URL stránky tiež nevytvorí potichu presmerovanie mimo rozsahu podporovaných tabuliek. Detail zmeny a záverečný súhrn uvedú pôvodnú a novú URL s upozornením `Skontrolujte odkazy na pôvodnú adresu; automatické presmerovanie sa nevytvorí.`
+
+Správca súborov podporuje vytvorenie prázdneho adresára a operácie nad jednotlivými bežnými súbormi. Premenovanie, presun, zmazanie a rekurzívne kopírovanie celého súborového adresára sú podľa Q17 vypnuté s vysvetlením; strom webových stránok toto obmedzenie nemá. Presun/premenovanie súboru tiež nevytvorí automatický redirect ani neupraví `file_atr`/`dirprop`; zobrazí upozornenie na pôvodnú cestu. Galerijné adresáre vrátane originálov a miniatúr sú podľa Q18 iba na čítanie do rozšírenia galérie. Nový adresár dedí dnešné práva rodiča; vlastnú ochranu či galerijné nastavenia vo vetve nedostane.
 
 Zakázanie tlačidla alebo položky menu nie je autorizácia. Každý zápisový endpoint, upload a pomocná operácia musí serverovo overiť podporu branch. Nepodporovaná operácia sa nesmie ticho vykonať nad produkciou.
 
@@ -328,7 +338,7 @@ Zakázanie tlačidla alebo položky menu nie je autorizácia. Každý zápisový
 
 Nový prehľad použije existujúce DataTables/Editor, Bootstrap 5, Tabler ikony a `Prop` pre preklady. Nový frontend framework nie je potrebný. Prístupnosť sa overí klávesnicou, viditeľným fokusom, názvami ovládacích prvkov a čitateľnými stavmi. Detaily porovnania možno realizovať samostatnou stránkou alebo existujúcim veľkým dialógom; rozhodnutie musí zohľadniť čitateľnosť troch verzií textu.
 
-Backend môže smerovať nové operácie pod `/admin/rest/content-branches/{id}/...`. Tento zápis je orientácia pre implementátora; presné metódy, payloady a chyby určí API návrh. Pri čítaní a zápise ostávajú serverové kontroly oprávnení a existujúca CSRF ochrana.
+Backend používa návrhové operácie pod `/admin/rest/content-branches/{id}/...`; konkrétne kontrakty sú v `03` a `04`. Pri čítaní a zápise ostávajú serverové kontroly oprávnení a existujúca CSRF ochrana.
 
 ## 11. Akceptačné scenáre UI
 

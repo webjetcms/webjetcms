@@ -1,10 +1,12 @@
 # Pracovné vetvy webu a publikačné balíky
 
-Stav: **kompletný návrh na záverečné posúdenie, bez implementácie**. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q15 a doplnenia N1/N2 sú v [rozhodnutiach](01-rozhodnutia.md).
+Stav: **návrh po kontrole pripravený na technické overenie P01, bez implementácie**. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1/N2 sú v [rozhodnutiach](01-rozhodnutia.md).
 
 Cieľom je pripraviť viac stránok, zmeny stromu, stránkové médiá a redakčné súbory v jednej pracovnej vetve. Redaktor môže preklikať pripravovaný web, porovnať zmeny s produkciou, vyriešiť konflikty a publikovať balík okamžite alebo v spoločnom termíne. Existujúce aj nové stránky a priečinky si zachovajú ID.
 
 **Kde vytvorím balík a ako ho vyberiem?** [Rýchly postup v návrhu UI](05-rozhranie.md#rýchly-postup-od-vytvorenia-po-prepnutie) ukazuje vytvorenie cez `Pracovné verzie`, aktiváciu cez `Upravovať web` a prepínač pod doménou. Dokument obsahuje formulár aj rozbalenú ponuku produkcie a pracovných verzií.
+
+Výsledok kontroly všetkých podkladov, opravené medzery a zostávajúce technické overenia sú v [09 — Kontrola pripravenosti](09-kontrola-pripravenosti.md). Q16–Q19 sú uzatvorené; žiadna ďalšia produktová otázka nezostáva otvorená. P01 musí ešte overiť kritické predpoklady v reálnom prostredí.
 
 ## Dohodnutý základ
 
@@ -16,7 +18,8 @@ Cieľom je pripraviť viac stránok, zmeny stromu, stránkové médiá a redakč
 - Náhľad podporuje jadro: stránky, strom, menu, navigáciu, novinky a médiá. Zákaznícke aplikácie s vlastným SQL/JPA potrebujú adaptačné API; ich vlastné obchodné dáta sa nevetvujú.
 - `NewsApp`/`NewsActionBean` zobrazia nové aj upravené pracovné stránky podľa existujúcich kritérií vrátane priečinkov, perex skupín, dátumov, radenia a stránkovania. Použijú spoločný účinný zdroj v `NewsQuery`; nevzniká druhá aplikácia Novinky. Výber existujúcich perex skupín je podporovaná úprava stránky.
 - Prvá verzia nemení atribúty stránok, multigroup väzby, definície kategórií médií, galerijné záznamy ani vlastnosti súborov uložené v ďalších tabuľkách. Zachováva členstvo médií v existujúcich kategóriách.
-- Náhľad je určený prihláseným používateľom administrácie s oprávnením k obsahu.
+- Náhľad je určený prihláseným používateľom administrácie s oprávnením k obsahu. Beží na hostiteľovi administrácie a obsah načíta pre overenú doménu vetvy. Ukazuje zvolený LIVE/WORK výsledok konfliktov; editor uchová pracovný obsah.
+- Súborový rozsah podporuje vytvorenie adresára a operácie nad jednotlivými súbormi. Presuny/premenovania/mazanie celých súborových adresárov a zápisy do galérií zostávajú mimo prvého vydania. Galériu zapojí neskoršie rozšírenie.
 - Merge môže spustiť iba používateľ, ktorý smie priamo publikovať všetky dotknuté stránky a meniť dotknuté priečinky/súbory. Nevzniká nový viacstupňový schvaľovací proces.
 - Konflikt sa rieši za celú položku výberom produkcie alebo pracovnej verzie. Rozdiely po poliach slúžia na porovnanie. Vlastná kombinácia sa pripraví bežnou editáciou; automatické skladanie HTML ani polí sa nepridáva.
 - Viac vetiev môže existovať vedľa seba. Každá je jednorazová a po úplnom merge sa uzavrie.
@@ -46,6 +49,7 @@ Tento adresár nie je návrhom kopírovania celého Git modelu. Git ostáva prir
 | [06 — Implementačný plán](06-plan-implementacie.md) | Osem postupných krokov, závislosti, podmienky dokončenia a odhad. |
 | [07 — Overenie](07-overenie.md) | Šestnásť akceptačných oblastí vrátane Noviniek a existujúce testy, na ktoré nadviazať. |
 | [08 — Ďalšie moduly](08-rozsirovanie-modulov.md) | Porovnanie architektúr, spoločná budúca JSON tabuľka, príprava jadra už dnes a konkrétny postup pre základný banner a galériu. |
+| [09 — Kontrola pripravenosti](09-kontrola-pripravenosti.md) | Výsledok auditu, opravené rozpory, potvrdené doplnenia a hranica pripravenosti na P01. |
 | [ORCHESTRACIA](ORCHESTRACIA.md) | Presné prompty na spustenie agentov, riadenie rozsahu a odovzdávanie práce. |
 | [STAV](STAV.md) | Evidencia návrhu a neskoršieho dokončovania krokov; teraz sú všetky nespustené. |
 

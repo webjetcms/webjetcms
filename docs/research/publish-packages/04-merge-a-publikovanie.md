@@ -31,6 +31,8 @@ Nie je potrebný nový všeobecný workflow systém. Potrebné sú tri jasné ce
 | `EditorService.deleteWebpageLogic`, `GroupsDB.deleteGroup` | Použiť explicitnú operáciu presunu do koša; nikdy náhodne neprejsť do vetvy trvalého mazania, ani pri vypnutej histórii. |
 | [PlannedChangesService](../../../src/main/java/sk/iway/iwcm/doc/PlannedChangesService.java) | Vyčleniť použiteľné file preflight/backup/replace/cache primitíva. Nevolať celý per-page postup, ktorý obnovuje produkčný priečinok/URL a pre médiá vytvára nové ID. |
 
+Čistá normalizácia nesmie automaticky volať dnešný `EditorUtils.getDataAsc()` so všetkými konfigurovateľnými vetvami. Pri `fulltextExecuteApps` totiž vykonáva aplikácie cez JSP include alebo loopback a `fulltextDataAscMethod` môže spustiť zákaznícky hook. Pracovné uloženie použije oddelené odvodenie textu bez týchto účinkov. Ak nasadenie vyžaduje vykonávanie aplikácií pri produkčnom indexovaní, patrí do výslovne overeného dokončovacieho kroku mimo dátovej transakcie, ktorý funguje bez HTTP requestu používateľa. Nepripravený hook alebo takáto konfigurácia sa oznámi pri kontrole kompatibility; nevolá sa skryto pri uložení vetvy a požadovaný index sa potichu nevynechá.
+
 Navrhované služby: `ContentBranchSaveService`, `ContentBranchMergeService` pre porovnanie a kontroly, `ContentBranchPublishService` pre vykonanie, jednoduchý `ContentRowWriter` pre DB zápis a `ContentPublishEffects` pre známe následky. Scheduler iba vyvolá tie isté služby. DTO a pomocné mapovanie majú zostať pri tejto funkcii.
 
 Podľa [návrhu rozšírení](08-rozsirovanie-modulov.md) koordinátor prijíma spoločné položky `BranchChange` a používa register `ContentBranchTypeHandler`. Handler pozná snapshot, práva, konkrétny zápis a účinky svojho typu; spoločná služba vlastní porovnanie, stav a checkpoint. Rozhodovanie sa nesmie rozrásť na samostatný merge engine pre každý modul. Dnešné typované tabuľky zostávajú zdrojom jadra, spoločná JSON tabuľka príde až s prvým ďalším modulom. Súborové kroky naďalej používajú svoju netransakčnú file službu a porovnanie hashov.
@@ -52,15 +54,18 @@ Pri stránke rovnaké pravidlo zahŕňa normalizované priradenia perex skupín 
 
 Aj keď produkcia zmenila iba názov a vetva iba perex, ide o konflikt. Je to zámerné zjednodušenie. UI ukáže rozdiely po poliach, pri HTML čitateľný diff a pri súboroch dostupný náhľad/verziu, ale automaticky neskladá nový obsah.
 
+Platná ručná voľba má prednosť pred automatickou maticou. Ak je jej cieľ už obsahovo rovný LIVE, výsledok sa normalizuje na LIVE/no-op aj pri voľbe WORK; preview aj publisher zachovajú živé technické hodnoty, napríklad `media.last_update`. Neplatná stará voľba sa týmto pravidlom neobchádza.
+
 Ak používateľ potrebuje kombináciu, upraví pracovnú verziu v bežnom editore a potom výslovne zvolí jej použitie voči aktuálnej produkcii. Samostatný tretí merge editor netreba.
 
-Rozhodnutie sa viaže na konkrétny `resolved_live_hash` a `resolved_work_hash`. Po zmene ktoréhokoľvek vstupu sa stará voľba nepoužije. Zvolený výsledok je v `resolved_snapshot`; pri konečnej príprave sa tam uloží aj automaticky určený výsledok položiek bez konfliktu. Pracovné stĺpce sa tým nemenia.
+Rozhodnutie sa viaže na konkrétny `resolved_live_hash` a `resolved_work_hash`. Po zmene ktoréhokoľvek vstupu sa stará voľba nepoužije. Zvolený výsledok je v `resolved_snapshot`; pri konečnej príprave sa tam uloží aj automaticky určený výsledok položiek bez konfliktu. Pracovné stĺpce sa tým nemenia a bežný editor naďalej upravuje WORK. Celowebový náhľad však podľa Q16 použije aktuálne platnú voľbu LIVE/WORK zo spoločnej mapy rozhodnutí opísanej v [03](03-nahlad-a-java.md); voľba LIVE sa musí prejaviť rovnako v detaile, URL, strome, Novinkách, médiách aj súboroch. Bez ručnej voľby sa použije automatické porovnanie B/L/W; nevyriešený konflikt zatiaľ ukáže WORK s viditeľným upozornením. Automatický prípad `W = B` zachová aktuálne LIVE. Ak sa produkcia zmení po ručnej voľbe, náhľad vráti `409` s odkazom na nové porovnanie, nie tichý návrat k WORK. Bežné pracovné uloženie starú voľbu vedome zruší a vyžiada nové porovnanie.
 
 ### Existencia, zmazanie a nové objekty
 
-Existencia je súčasťou porovnania, nie prázdna hodnota HTML. Kanonický stav rozlišuje aktívny objekt, objekt v koši a neexistujúci objekt; pri súbore sa porovnáva existencia aj hash bajtov.
+Existencia je súčasťou porovnania, nie prázdna hodnota HTML. Kanonický stav rozlišuje aktívny objekt, objekt v koši a neexistujúci objekt; pri súbore sa porovnáva existencia aj hash bajtov. Pracovné DELETE existujúcej stránky alebo priečinka má produkčný cieľ TRASH so zachovaným ID a príslušnými väzbami. V náhľade sa tento objekt nezobrazí, ale pri merge ani opakovaní sa TRASH nezamieňa s ABSENT. Stav potomka v koši vyplýva aj z jeho predkov; netreba presúvať každý riadok samostatne pod kôš.
 
 - Nový pracovný objekt s voľným rezervovaným ID sa vloží s týmto ID. Neočakávaný produkčný riadok pod rezervovaným ID je konflikt identity; nesmie sa prepísať. Výnimkou je vlastný preukázateľne dokončený krok pri opakovaní po chybe.
+- Zmazanie objektu vytvoreného iba v tejto vetve znamená zahodenie jeho pracovného vytvorenia, nie vloženie nového objektu rovno do produkčného koša. Po kontrole pracovných závislostí sa odstráni pracovná položka; rezervované ID sa znovu nepoužíva. Ak ho iné ponechané pracovné položky potrebujú, operácia sa odmietne s ich zoznamom.
 - Pracovné zmazanie nezmeneného produkčného objektu sa vykoná. Ak sa produkcia zmenila, treba rozhodnutie človeka. Ak požadované zmazanie už nastalo, ide o no-op.
 - Produkčné zmazanie pri pracovnej úprave je konflikt. Zachovanie produkcie ponechá zmazanie; použitie práce musí mať výslovne overenú podporu obnovenia pod rovnakým ID a práva na cieľ. Chýbajúca podmienka operáciu zablokuje.
 - Ak používateľ vyberie produkciu pre všetky konflikty a ostatné položky sú no-op, vetva sa môže úspešne uzavrieť bez obsahového zápisu.
@@ -77,14 +82,18 @@ Pred spustením treba overiť:
 2. Výsledný strom: rodičia, cykly, default stránky, vlastníci médií, dostupné šablóny a obsahové referencie. Vybrané verzie musia tvoriť platný celok aj vtedy, keď časť konfliktov vyhrala produkcia.
 3. Kolízie výsledných URL v rovnakej doméne, cieľových súborových ciest a identít. Kontrola pracuje s výsledkom celého plánu, nie iba s dnešnou produkčnou URL mapou.
 4. Zdrojové pracovné súbory, ich hashe, zapisovateľné cieľové umiestnenie a podporované úložisko. Neporovnávať iba mtime/veľkosť.
-5. Individuálne budúce plány stránok/priečinkov, čakajúce schválenia a naplánované zneprístupnenie dotknutých stránok. Kolízia sa musí vyriešiť vedome v pôvodnom nástroji; balík ju potichu nezruší ani neprevezme.
+5. Individuálne budúce plány stránok/priečinkov, čakajúce schválenia a naplánované zneprístupnenie dotknutých stránok. Pri súboroch navyše porovnať cieľové cesty so súbormi **všetkých** pending plánov stránok, aj stránok mimo balíka. Rozhodujúce je skutočné cieľové úložisko: rovnaká logická cesta v oddelených doménových úložiskách nie je kolízia, spoločný fyzický cieľ naprieč doménami je. Kolízia sa musí vyriešiť vedome v pôvodnom nástroji; balík ju potichu nezruší ani neprevezme.
 6. Rozsah podporovaných dát a známych vedľajších účinkov. Zdieľané System stránky mimo domény sú iba na čítanie. Súbory používajú dnešné doménové mapovanie a adresárové práva; pri spoločnom fyzickom adresári UI upozorní, že účinok môže presiahnuť doménu. Nepridáva sa nový register vlastníctva ani skenovanie všetkých referencií.
 
 Presun/premenovanie priečinka rozvinie ovplyvnené stránky, odkazy a médiá na viditeľné položky už pri príprave pracovných zmien. Pred merge sa rozsah znovu porovná s produkciou. Nový potomok alebo nová závislosť, ktorá by vyžadovala ďalší zápis, znamená nové posúdenie; nezahrnie sa potichu až počas publikovania.
 
 Dnešné `fixRenamedVirtualPath` mení aj odkazy médií a zapisuje pravidlo cez `UrlRedirectDB.addRedirect`. Preto sa nevolá ako jeden nekontrolovaný následok. Zmeny stránok/médií sú položky plánu; vytváranie trvalých redirect pravidiel je mimo prvého rozsahu. UI pri zmene URL tento rozdiel uvedie.
 
-Pri mazaní priečinka sa vytvorí explicitný zoznam dotknutých priečinkov, stránok a podporovaných závislostí. Pred vykonaním sa odhalia noví produkční potomkovia. Neexistuje implicitné „zmaž všetko, čo tam práve je“.
+Pri mazaní priečinka sa vytvorí explicitný zoznam dotknutých priečinkov, stránok a podporovaných závislostí. Pred vykonaním sa odhalia noví produkční potomkovia. Neexistuje implicitné „zmaž všetko, čo tam práve je“. Zoznam zároveň zachová informáciu, ktoré stránky a priečinky patria do mazaného podstromu a ktorý priečinok je jeho koreň; pri navzájom vnorených DELETE sa spracuje jeden takýto koreň. Samostatné mazanie stránky sa od tejto operácie odlíši.
+
+Preflight vyhľadá **už existujúci** správny kôš bez zápisu. Dnešné `GroupsDB.getTrashGroup()` môže volať `getCreateGroup()`, preto nie je vhodným read-only helperom. Ak kôš chýba, zablokujú sa dotknuté mazania s konkrétnym návodom pripraviť ho existujúcou administráciou; preflight ani publisher ho potichu nevytvoria. Kontrola musí tiež overiť, že možno uložiť obnovovací stav pred zmazaním podľa časti 8.
+
+Kontrola plánovaných súborov sa oddelí z dnešných `PlannedChangesService.checkConflicts()` a `plannedFiles()` do čítacieho helpera s explicitným kontextom domény/úložiska a zoznamom cieľov. Nepoužije celé `prepareSave()` ani inicializáciu plánovaných médií. Spustí sa pri príprave, v plánovanom termíne a znovu pred dotknutým súborovým krokom; netreba rezervovať cesty dlhodobým zámkom. Kontroluje aj DELETE existujúceho súboru, ktorý by neskôr prepísal cudzí individuálny plán.
 
 ## 5. Životný cyklus
 
@@ -108,7 +117,7 @@ V `MERGE_FAILED` sa pracovný obsah ani množina závislostí nemenia. Voľbu `L
 
 Jeden určený aplikačný uzol je publisher balíkov. V klastri sa scheduler tejto funkcie spúšťa len tam; ostatné uzly obsluhujú editor a náhľad. Manuálne spustenie tiež musí doraziť tomuto publisheru podľa existujúceho smerovania admin požiadaviek. Netreba distribuovanú frontu ani voľbu lídra.
 
-Prechod na `MERGING` je jeden podmienený DB update podľa ID, očakávanej revízie a povoleného predošlého stavu. Úspech musí znamenať práve jeden zmenený riadok. Druhé kliknutie alebo druhé spustenie toho istého balíka nezíska oprávnenie začať ďalší beh.
+Prechod na `MERGING` je jeden podmienený DB update podľa ID, očakávanej revízie a povoleného predošlého stavu. Úspech musí znamenať práve jeden zmenený riadok. Uloženie úplných cieľov, vstupných hashov a počiatočných checkpointov patrí do tej istej krátkej DB transakcie ako prevzatie vetvy; pád nesmie ponechať `MERGING` s iba časťou plánu. Nejde o transakciu samotného publikovania. Druhé kliknutie alebo druhé spustenie toho istého balíka nezíska oprávnenie začať ďalší beh.
 
 Pred prechodom sa kontroluje aktuálne porovnanie. Po prechode sú presné ciele, vstupné hashe a množina položiek uložené a nemeniteľné počas daného behu. Žiadny ďalší krok nepridáva skryté obsahové položky. Publisher spracúva balíky postupne; editor ostatných stránok ďalej funguje.
 
@@ -122,18 +131,20 @@ Pri páde procesu môže zostať `MERGING`. Po overení, že starý publisher u�
 | --- | --- |
 | 1 | Vytvoriť nové priečinky od rodičov k potomkom s rezervovanými ID. Odkaz na ešte nevytvorenú default stránku dočasne ponechať neutrálny; finálny odkaz je uložený v pláne. |
 | 2 | Zapísať podporované zmeny existujúcich priečinkov. Závislé default referencie sa dokončia po stránkach. Použiť výslovne vypočítané zmeny, nie opätovný neobmedzený prepočet potomkov. |
-| 3 | Zverejniť nové/zmenené súbory. Pred nahradením zachovať pôvodnú kópiu a použiť overený temp súbor + nahradenie jedného cieľa. |
+| 3 | Vytvoriť výslovne pripravené adresáre `DIRECTORY UPSERT` a potom zverejniť nové/zmenené súbory. Už existujúci správny adresár je po kontrole práv no-op. Pred nahradením súboru zachovať pôvodnú kópiu a použiť overený temp súbor + nahradenie jedného cieľa. |
 | 4 | Vložiť nové stránky s rezervovanými ID a aktualizovať existujúce stránky podľa ich pôvodných ID. Prepočítať odvodené polia zo zvoleného výsledku. |
 | 5 | Zapísať médiá po existencii vlastníckych stránok, po jednotlivých `media_id`, spolu so zvoleným zoznamom priradení do existujúcich kategórií. Nevytvárať novú sadu ID ani meniť definície kategórií. |
 | 6 | Dokončiť default stránky a ostatné odložené podporované referencie priečinkov. |
-| 7 | Vykonať explicitné mazania až po zmene referencií: médiá, stránky do koša, priečinky do koša od potomkov, samostatné súborové položky. |
+| 7 | Vykonať explicitné mazania až po zmene referencií: médiá, samostatné stránky do koša, potom pripravené podstromy podľa postupu nižšie a samostatné súborové položky. |
 | 8 | Dokončiť potrebné indexovanie a obnovu cache vrátane ostatných uzlov; až potom stav `MERGED`. |
 
 Existujúce objekty sa aktualizujú, nie odstraňujú a znovu vytvárajú. Nové objekty používajú explicitný insert writer z dokumentu 02a; JPA `save()` s kladným ID nesmie rozhodnúť o inom ID alebo nesprávnom UPDATE.
 
 Budúci modul doplní svoje konkrétne miesto do tohto pevného poradia: jeho súbory a nové referencované stránky/priečinky musia existovať pred zápisom modulu; odstránenie referencií pred zmazaním cieľov. Na tento účel netreba všeobecný grafový workflow. Závislosti, skupiny súborov a obmedzenia prvých modulov určuje [08](08-rozsirovanie-modulov.md).
 
-Stránky a priečinky sa pri zmazaní presúvajú do koša so zachovaním ID. Trvalé mazanie nie je operácia tejto verzie. Médium nemá rovnaký kôš: vymaže sa konkrétny riadok a jeho kategorizácia, pričom snapshot zostane vo vetve. To samo osebe nemaže jeho súbor. Súborové DELETE zachová zálohu podľa existujúcich file-history primitív.
+Samostatná stránka sa presunie do koša so zachovaným ID a `available=false`. Pri mazaní podstromu sa zachová jeho hierarchia: stránky ostanú vo svojich priečinkoch, potomkovia si zachovajú `parent_group_id` a iba koreň podstromu sa presunie pod kôš. Postup najskôr nastaví pripraveným stránkam `available=false` so zachovaným `group_id`, potom presunie koreň a dokončí kontrolu stavu TRASH všetkých evidovaných potomkov. Počas prvého kroku sa v checkpointe uchová skutočný medzistav; do `DONE` sa položky dokončia až po presune koreňa. Odvodená zmena stavu na TRASH cez vlastný už vykonaný koreňový krok nie je cudzia zmena, no obsahové rozdiely iných produkčných úprav sa ďalej kontrolujú. Nepoužije sa všeobecné rekurzívne `deleteGroup()` ani presun každej stránky a každého potomka priamo pod kôš. Tým zostane možná dnešná obnova podstromu.
+
+Trvalé mazanie stránok a priečinkov nie je operácia tejto verzie. Médium nemá rovnaký kôš: vymaže sa konkrétny riadok a jeho kategorizácia, pričom snapshot zostane vo vetve. To samo osebe nemaže jeho súbor. Súborové DELETE zachová zálohu podľa existujúcich file-history primitív. Podpora fyzických adresárov podľa Q17 je len vytvorenie cez `DIRECTORY UPSERT`; nezahŕňa ich premenovanie, presun, mazanie ani rekurzívne kopírovanie.
 
 Postupné publikovanie môže počas behu krátko ukazovať kombináciu starých a nových údajov. Návrh nesľubuje atómové prepnutie. Cache sa po dokončení aj po prerušení zosúladí so skutočne zapísaným stavom.
 
@@ -146,6 +157,8 @@ Nový insert chráni PK; nepotrebuje vopred uzamykať neexistujúci riadok. Vše
 Zápis stránky zahŕňa aj obnovu odvodeného `perex_group_doc` podľa zvoleného `perex_group` a dnešnej konfigurácie, iba pre daný `doc_id`. `PerexGroupsService` potrebuje úzku operáciu prijímajúcu rovnakú `Connection`; dnešné nezávislé repository volania nie sú náhradou. Nevolať `DocDB.udpdatePerexGroupDoc` s jeho automatickým rozšírením na multigroup kópie. Pri presune stránky do koša zachovať dnešnú jednopoložkovú kategorizáciu v súlade s výsledným riadkom, bez mazania väzieb iných stránok.
 
 To platí aj pre históriu a audit. Dnešný [Adminlog.add](../../../src/main/java/sk/iway/iwcm/Adminlog.java) otvára vlastné spojenie; pre publisher treba oddeliť zápis s prijatým `Connection`, pričom bežné verejné API zostane zachované. Podobne sa zapojí história dokumentov a historický záznam priečinka v `groups_scheduler`; nevytvorí sa budúci individuálny plán. Kontrola pripravenosti musí overiť engine všetkých týchto reálne zapisovaných tabuliek, nie iba troch obsahových tabuliek. Pri nepodporovanej konfigurácii sa funkcia nezapne; audit/história sa potichu nevynechajú.
+
+DELETE potrebuje obnovovací záznam **pred** zmenou: pôvodný rodič koreňa v poslednom neplánovanom `groups_scheduler` a pôvodné umiestnenie/dostupnosť stránok v histórii používanej dnešnou obnovou. Najnovšia história nesmie namiesto toho obsahovať iba kôš alebo `available=false`, inak sa podstrom obnoví na nesprávne miesto alebo zostane nedostupný. Pre stránky musí byť zvolený správny `actual` historický záznam; nestačí vložiť ľubovoľnú ďalšiu históriu. Zápis obnovovacích údajov sa vykoná v rovnakej krátkej transakcii ako príslušný prvý dátový krok a pri opakovaní sa neduplikuje. Tento minimálny záznam pre DELETE je funkčnou súčasťou presunu do koša, podobne ako checkpoint, aj pri vypnutej bežnej histórii. Nezapína kompletnú históriu ostatných úprav a nikdy neoprávňuje na hard delete. P01 overí kompatibilitu záznamu s dnešnou obnovou samostatnej stránky aj celého podstromu.
 
 Pevný postup položky používa existujúce stĺpce `apply_state`, `apply_phase`, `applied_hash`, `apply_error`:
 
@@ -196,8 +209,12 @@ Všetky mutácie používajú existujúcu autentifikáciu, CSRF ochranu, obsahov
 
 | Endpoint pod `/admin/rest/content-branches/{id}` | Kontrakt |
 | --- | --- |
+| `GET` | Detail vetvy: metadáta, stav, revízia, dostupné akcie a súhrn položiek. Aktuálnu pripravenosť potvrdzuje až `/prepare`; starý výsledok má čas kontroly. |
+| `PATCH` | `{ expectedRevision, name, description }`; v `DRAFT` upraví názov/poznámku a zvýši revíziu. Doména, vlastník a obsahové položky sa tým nemenia. |
+| `POST /discard-change` | `{ expectedRevision, type, objectKey, workHash }`; iba v `DRAFT` zahodí konkrétnu pracovnú zmenu po kontrole práv a závislostí. Závislé položky vráti ako prekážku, nemaže ich potichu. |
+| `POST /cancel` | `{ expectedRevision }`; uzavrie dosiaľ nepublikovanú vetvu z `DRAFT`, `SCHEDULED` alebo `NEEDS_ATTENTION` do `CANCELLED`, zruší jej termín. Nie je to fyzické čistenie ani rollback; v `MERGING`/`MERGE_FAILED` sa odmietne. |
 | `POST /prepare` | Overí `{ expectedRevision }`; vráti položky, chyby, konflikty, výslednú revíziu a `preparationHash` pre zobrazené porovnanie. Bez publikovania. |
-| `POST /resolve` | `{ expectedRevision, type, objectId, choice: LIVE\|WORK, liveHash, workHash }`; uloží voľbu len pre rovnaké vstupy a vráti novú revíziu. |
+| `POST /resolve` | `{ expectedRevision, type, objectKey, choice: LIVE\|WORK, liveHash, workHash }`; uloží `resolved_choice` aj vstupné hashe len pre rovnaké vstupy a vráti novú revíziu. Povolené v `DRAFT`, v `MERGE_FAILED` iba pre nedotknuté položky podľa časti 5. |
 | `POST /merge` | `{ expectedRevision, preparationHash }`; skontroluje aktuálnosť, prevezme vetvu podmieneným stavovým update a spustí pripravený plán. |
 | `POST /schedule` | `{ expectedRevision, preparationHash, publishAt }`; overí a uloží jeden termín a aktéra. |
 | `POST /unschedule` | `{ expectedRevision }`; vráti nespustenú naplánovanú vetvu do `DRAFT`. |
@@ -205,6 +222,8 @@ Všetky mutácie používajú existujúcu autentifikáciu, CSRF ochranu, obsahov
 | `POST /resume` | `{ expectedRevision, preparationHash }`; pokračuje iba po kontrole skutočného priebehu a aktuálnych konfliktov. |
 | `GET /progress` | Stav vetvy, dokončené/pending/chybné položky a posledná chyba. UI môže priebeh pravidelne načítať. |
 
-`objectId` pre súbor znamená jeho jednoznačný pracovný riadok/logický kľúč podľa dátového modelu, nie klientom zvolenú fyzickú cestu. Neaktuálna revízia alebo hash vráti `409` s potrebou obnoviť porovnanie. Nedostatočné právo vráti `403`; nie čiastočný súhlas s publikovaním zvyšku balíka.
+`objectKey` je jednotný kľúč typu podľa `08`: stabilné ID DB objektu alebo overená normalizovaná logická cesta súboru/adresára, nikdy fyzická staging cesta. Server ho vždy vyrieši v zvolenej vetve. Neaktuálna revízia alebo hash vráti `409` s potrebou obnoviť porovnanie. Nedostatočné právo vráti `403`; nie čiastočný súhlas s publikovaním zvyšku balíka.
+
+Funkčné právo k pracovným verziám dovoľuje vytvorenie/detail v dostupnej doméne; nie je členstvom tímu ani publikačným právom. Obsah detailu a diff sa sprístupňuje iba podľa existujúcich práv k príslušným položkám. Zahodenie jednej zmeny vyžaduje jej editačné práva; zrušenie celého balíka vyžaduje právo upravovať všetky jeho položky. Publikovanie/plánovanie navyše vyžaduje priame publikačné práva podľa Q9. Chýbajúce práva sa neobídu tým, že používateľ balík vytvoril. Zrušenie prázdneho balíka sa riadi funkčným a doménovým právom.
 
 Dokončenie návrhu sa overí najmä scenármi: zachovanie existujúcich aj nových ID, pracovné uloženie bez produkčných následkov, všetky štyri základné porovnania, konflikt zmazania, pribudnutý potomok, kolízia URL, zlyhanie po súbore/pred checkpointom, zlyhanie indexu po úspešnom DB zápise, novšia produkčná zmena pred `resume`, zmena práv pred termínom a kolízia so starým schedulerom. Podrobné implementačné kroky a testy nadväzujú v orchestračných dokumentoch.

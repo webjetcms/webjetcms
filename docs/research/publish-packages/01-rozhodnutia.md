@@ -21,6 +21,10 @@ Tento dokument je jediný register produktových rozhodnutí pre návrh. Technic
 | Q13 | Používateľ delegoval jednoduchší model spoločných prvkov. | Spoločné System stránky ostávajú read-only. Súbory používajú existujúce mapovanie úložísk a adresárové práva; fyzicky spoločné súbory možno meniť s upozornením na dosah na ďalšie domény. Nevzniká nový systém vlastníctva súborov ani vyhľadávanie všetkých použití. |
 | Q14 | Bez skrytého zrkadlenia a prekladov. | Publikovať iba explicitne zobrazené položky; zmeny jazykových stránok pripraví tím. |
 | Q15 | Funkcia môže vyžadovať InnoDB. | Žiadna podpora MyISAM v tejto funkcii a žiadna automatická konverzia zákazníckych tabuliek. |
+| Q16 | Preklikateľný náhľad zohľadní zvolený výsledok konfliktu. | Voľba produkcie sa prejaví aj v stránke, strome, Novinkách, médiách a súboroch. Pracovný editor uchová WORK; náhľad a editor majú odlišný účel. Nevyriešené konflikty sú v náhľade označené, nejde o potvrdený výsledok publikovania. |
+| Q17 | V súboroch vytvoriť adresár a upravovať jednotlivé súbory. | Prázdny adresár má položku v existujúcej pracovnej súborovej tabuľke. Presun, premenovanie, mazanie a rekurzívne kopírovanie súborových adresárov sa zatiaľ nepodporujú. Toto obmedzenie sa netýka stromu webových stránok. |
+| Q18 | Galerijné adresáre sú do rozšírenia galérie iba na čítanie. | Ani obyčajný upload alebo správca súborov nesmie meniť albumové súbory a ich varianty. Bežné obrázky a prílohy mimo galérie sa upravovať môžu. |
+| Q19 | Náhľad sa otvára na hostiteľovi administrácie. | Používa jeho prihlásenie; logická doména obsahu pochádza z overenej vetvy a je viditeľná v lište. Nevytvára sa prenos prihlásenia na verejnú doménu. |
 
 ## Doplnenie požiadavky 2. novembra 2026
 
@@ -32,7 +36,7 @@ Technický dôsledok N1: povoliť priradenie stránky k existujúcim perex skupi
 
 **N2 — Rozšíriteľnosť ďalších modulov.** Používateľ požaduje posúdiť budúce zapojenie galérie, bannerov a alternatívu k pracovnej tabuľke pre každý modul. Následne výslovne zúžil prvý príklad bannera na nový banner a úpravu názvu, popisu a obrázka; zapisovanie štatistík netreba riešiť. [Dokument 08](08-rozsirovanie-modulov.md) odporúča typované jadro a jednu spoločnú JSON tabuľku budúcich modulov, s malým integračným kontraktom pripraveným už teraz. Architektonická voľba je odporúčaním autora na posúdenie, nie dodatočnou potvrdenou odpoveďou používateľa. Rozsah P01–P08 sa nerozširuje o samotné moduly.
 
-Produktové otázky Q1–Q15 sú uzatvorené. Používateľ pri Q10 a Q13 výslovne prenechal technický výber autorovi; uvedené riešenia preto nevyžadujú ďalšie kolo tej istej otázky. Zostáva predložiť kompletný návrh na záverečné posúdenie spoločného porozumenia. To nie je povolenie implementácie.
+Produktové otázky Q1–Q19 sú uzatvorené. Q16–Q19 vyplynuli z kontroly pripravenosti 2. novembra 2026 a používateľ potvrdil uvedené odporúčania. Pri Q10 a Q13 výslovne prenechal technický výber autorovi; uvedené riešenia preto nevyžadujú ďalšie kolo tej istej otázky. Zostáva predložiť kompletný návrh na záverečné posúdenie spoločného porozumenia. To nie je povolenie implementácie.
 
 ## Strom návrhu
 

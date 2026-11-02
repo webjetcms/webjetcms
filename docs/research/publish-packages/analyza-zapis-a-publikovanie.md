@@ -23,6 +23,8 @@ ID existujúcich stránok a priečinkov možno zachovať aktualizáciou pôvodn�
 
 `EditorFacade.getExistingDocForEditor()` na riadku 282 je vhodný orientačný bod pre načítanie editovateľnej verzie. Načítanie cez `getDocForEditor()` navyše spracúva nové stránky, nastavenia priečinka a čistenie dočasných médií. Návrh musí rozlíšiť otvorenie editora a prosté čítanie verzie na porovnanie.
 
+[EditorUtils.getDataAsc()](../../../src/main/java/sk/iway/iwcm/editor/util/EditorUtils.java), riadky 192–330, nie je za každej konfigurácie čistá textová normalizácia. Pri `fulltextExecuteApps` volá [EditorToolsForCore.renderIncludes()](../../../src/main/java/sk/iway/iwcm/common/EditorToolsForCore.java), riadky 295–382: nastavuje request údaje, vykonáva JSP include, prípadne používa loopback HTTP. `fulltextDataAscMethod` navyše môže reflexiou zavolať zákaznícky kód. Toto volanie sa preto nemôže bez oddelenia preniesť do pracovného zápisu alebo krátkej DB transakcie background publishera. Výpočet bez vykonávania aplikácií a kontrolované produkčné indexovanie majú rôzne požiadavky.
+
 Existujú aj ďalšie zapisovacie cesty: [EditorDB](../../../src/main/java/sk/iway/iwcm/editor/EditorDB.java) obsahuje vlastné JDBC inserty/updaty `documents` a [DocDB.saveDoc()](../../../src/main/java/sk/iway/iwcm/doc/DocDB.java) zapisuje stránky priamo. Úprava modernej REST cesty sama osebe nezabezpečí kompatibilitu importov, starších komponentov alebo zákazníckeho kódu.
 
 ## Priečinok: zápisy a odvodené zmeny
@@ -47,6 +49,10 @@ Parameter `publishEvents=false` vypne udalosti, **nevypne ostatné vedľajšie �
 [SaveGroupListener.changeDirection()](../../../src/main/java/sk/iway/iwcm/editor/rest/SaveGroupListener.java), riadky 37–55, pri udalostiach porovnáva produkčný `parent_group_id` a `url_dir_name`; po zápise spúšťa `WebpagesService.regenerateUrl()`. Je naviazaný na HTTP požiadavku. Background merge nemôže predpokladať, že volanie `GroupsDB.setGroup()` zopakuje celý interaktívny postup vrátane tohto listenera.
 
 Mazanie má samostatnú semantiku: [EditorService.deleteWebpageLogic()](../../../src/main/java/sk/iway/iwcm/editor/service/EditorService.java) od riadka 1581 rozlišuje kôš a trvalé zmazanie, schvaľovanie, históriu a multigroup väzby. [GroupsDB.deleteGroup()](../../../src/main/java/sk/iway/iwcm/doc/GroupsDB.java) od riadka 2741 spracúva strom a súvisiace záznamy. V návrhu treba pomenovať rozdiel medzi „zmazať vo vetve“ a vykonaním produkčného mazania pri merge; pri prvom kroku sa produkčné dáta meniť nemajú.
+
+Pri mäkkom zmazaní podstromu `GroupsDB.deleteGroup()`, riadky 2899–2928, presunie pod kôš **iba jeho koreň**. Potomkovia si ponechajú rodičov, stránky svoje `group_id`; stránkam nastaví `available=false`. Presun každého potomka alebo každej stránky samostatne do koša by túto hierarchiu zničil. [GroupsService.recoverGroupFromTrash()](../../../src/main/java/sk/iway/iwcm/editor/service/GroupsService.java), riadky 94–102 a 122–150, obnovuje pôvodného rodiča z poslednej neplánovanej histórie priečinka a dostupnosť stránok z ich `actual` histórie. Publikačný writer preto nesmie pre DELETE nahradiť obnovovacie hodnoty novým záznamom obsahujúcim len cieľový kôš a nedostupnosť.
+
+Ani získanie cieľového koša nemusí byť čisté čítanie: `GroupsDB.getTrashGroup()`, riadky 4271–4276, používa `getCreateGroup()`. Preflight vetvy potrebuje samostatné vyhľadanie existujúceho koša bez vytvárania priečinkov. Chýbajúci kôš je pre dotknuté mazanie problém pripravenosti, nie oprávnenie na skrytý produkčný insert alebo trvalé zmazanie.
 
 ## Udalosti, zrkadlenie a viacnásobné umiestnenie
 
@@ -78,6 +84,8 @@ Služba obsahuje ochranu proti súbežnému alebo rekurzívnemu publikovaniu str
 [PlannedChangesService.prepareSave()](../../../src/main/java/sk/iway/iwcm/doc/PlannedChangesService.java), riadky 163–195, vyžaduje už uloženú stránku, zapnutú históriu a dátum publikovania. Obnovuje produkčnú URL a priečinok, inicializuje plánované médiá a deaktivuje staršie pending histórie. Uloženie nového dokumentu výlučne v pracovnej vetve preto nemožno postavit na nezmenenom `prepareSave()`.
 
 `preparePublication()` na riadku 372 najskôr kontroluje súbory, potom ich postupne zverejní. `publishFiles()` na riadku 534 používa zálohu pôvodného súboru a dočasný súbor s atómovým presunom **jednotlivého súboru**. Už nahradené súbory zostávajú zverejnené pri chybe neskoršej položky. DB a súbory netvoria jednu transakciu. Overené pomocné kroky možno použiť ako východisko; súčasný pracovný priestor je však viazaný na `docId`, nie na viac samostatných vetiev.
+
+`PlannedChangesService.checkConflicts()`, riadky 318–327, porovnáva verejné cieľové cesty súborov proti ostatným `findByPublicableTrue()` históriám, nielen proti plánom aktuálnej stránky. Pri externom doménovom úložisku filtruje doménu; `plannedFiles()` na riadkoch 478–495 číta pripravené súbory z filesystemu. Preto nestačí zistiť, že stránky patriace do balíka nemajú individuálny plán: cudzia naplánovaná stránka môže neskôr prepísať rovnaký súbor. Pre vetvy sa z týchto metód oddelí čítací helper s explicitným mapovaním cieľového úložiska, bez volania celej prípravy plánovanej stránky.
 
 [GroupPublisher.main()](../../../src/main/java/sk/iway/iwcm/doc/GroupPublisher.java), riadky 133–181, nezávisle spracúva `groups_scheduler` a zapisuje cez `GroupsDB.setGroup()`. Pri balíku treba určiť vzťah aj k tomuto scheduleru, nielen k `DocPublishService`.
 

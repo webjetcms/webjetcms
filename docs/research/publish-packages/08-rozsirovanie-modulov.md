@@ -53,7 +53,7 @@ Koordinátor zostáva vlastníkom B/L/W porovnania, rozhodnutia LIVE/WORK, stavu
 
 Nie je potrebný univerzálny jazyk filtrov, automatický preklad JPA, reflexívne kopírovanie entity ani dynamické spúšťanie kódu z JSON. Registry obsahuje explicitne dodané podporované typy. Neznámy/nedostupný typ existujúcej pracovnej položky zastaví prípravu publikovania s vysvetlením; položka sa nepreskočí.
 
-Čítanie zostáva samostatnou zodpovednosťou modulu: napríklad budúci `BannerBranchAdapter` sa zapojí do `BannerDB` a administrácie. Publikačný handler nie je transparentnou náhradou všetkých modulových query.
+Čítanie zostáva samostatnou zodpovednosťou modulu: napríklad budúci `BannerBranchAdapter` sa zapojí do `BannerDB` a administrácie. Publikačný handler nie je transparentnou náhradou všetkých modulových query. Adaptér náhľadu musí podľa Q16 rešpektovať spoločnú mapu zvolených LIVE/WORK výsledkov; editor uchováva WORK. Rovný cieľ sa normalizuje na LIVE/no-op a zastaraná voľba vyžiada nové porovnanie. Spoločné stĺpce zahŕňajú aj `resolved_choice`, nie iba snapshot výsledku.
 
 **Jeden typ má práve jedno autoritatívne pracovné úložisko.** Dnešný dokument nebude súčasne uložený v `content_branch_document` aj v `content_branch_item`. Spoločný obal je Java pohľad, nie ďalší povinný DB riadok. Ak sa niektorý typ neskôr presunie do iného storage, potrebuje jednorazovú migráciu existujúcich zmien, nie trvalý dvojitý zápis.
 
@@ -123,6 +123,8 @@ Práva zostávajú `menuBanner`, prípadné obmedzenie `cmp_banner_seeall`/`clie
 **Dôkaz dokončenia:** nový banner s konečným ID; zmena obsahu a obrázka iba vo vetve; rozdiel medzi LIVE a preview; konflikt pri odlišnej produkčnej zmene podporovaného poľa; po merge rovnaké ID a vybraný obsah. Pracovné obrázky využijú existujúce súborové testy. Zápisy štatistík nie sú predmetom tejto akceptácie. Nadviazať na [banner.js](../../../src/test/webapp/tests/apps/banner/banner.js) a [app-banner.js](../../../src/test/webapp/tests/apps/banner/app-banner.js).
 
 ## Druhý príklad: obrázky galérie
+
+Podľa Q18 sú galerijné cesty v P01–P08 iba na čítanie. Až toto rozšírenie povolí podporované spoločné úpravy metadát, originálu a variantov; obyčajný upload ani elFinder zákaz dovtedy neobídu.
 
 Jedna položka `gallery.image:<image_id>` obsahuje podporované metadáta obrázka, napríklad názov/cestu, jazykové popisy, autora, poradie a odkazy na existujúce kategórie. Bajty originálu a variantov patria spoločnému súborovému úložisku. `send_count` sa nevracia zo snapshotu do produkcie. Kategórie sú priamo v `gallery.perex_group`; nový všeobecný model kategórií nie je potrebný.
 

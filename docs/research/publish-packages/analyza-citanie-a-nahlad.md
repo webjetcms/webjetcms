@@ -47,6 +47,18 @@ URL návštevníka
 
 [ShowDoc](../../../src/main/java/sk/iway/iwcm/doc/ShowDoc.java) dnes umožňuje vložiť objekt cez request atribút `ShowdocAction.showDocData`, použiť `ShowDocBean.forceShowDoc` alebo načítať konkrétne `historyid`. Tieto mechanizmy sú užitočné pre náhľad jednej stránky, ale nemenia automaticky URL mapu ani následné čítanie súvisiacich stránok.
 
+### Kontext domény, prihlásenie a súborové helpery — doplnené auditom
+
+[SetCharacterEncodingFilter.registerDataContext](../../../src/main/java/sk/iway/iwcm/SetCharacterEncodingFilter.java) vytvára `RequestBean` už pred navrhovaným filtrom branch. Kopíruje doň URL a doménu; odkaz `RequestBean.request` nastavuje iba pre vybrané elFinder URL. Kontext náhľadu preto nemožno všeobecne získavať cez tento odkaz. [RequestBean](../../../src/main/java/sk/iway/iwcm/RequestBean.java) už poskytuje request-local `setAttribute/getAttribute`; netreba ďalší globálny register.
+
+`DocDB.getDomain(request)` bezpodmienečne uprednostňuje session `preview.editorDomainName`, ktorú nastavuje administrácia. [CloudToolsForCore](../../../src/main/java/sk/iway/iwcm/common/CloudToolsForCore.java) číta doménu aj logickú URL z `RequestBean`; URL ovplyvňuje osobitné mapovanie spoločných doménových adresárov. Vetva potrebuje explicitnú prednosť overenej domény a zosúladenie týchto hodnôt pred obsahovým routovaním, bez zmeny admin session. Samotné odstránenie prefixu z URI nestačí.
+
+[AdminLogonController.showForm](../../../src/main/java/sk/iway/iwcm/logon/AdminLogonController.java) pri `multiDomainAdminHost` na inom hostiteľovi vracia 404 alebo presmeruje login na admin host. Q19 preto určuje preview na hostiteľovi administrácie: tam zostane session, zatiaľ čo logická obsahová doména pochádza z overenej branch. Novší dokument 03 rozlišuje tieto dve identity a prevádza obsahové odkazy na admin gateway; nevyžaduje login na každej verejnej doméne.
+
+Niektoré core čítania kontrolujú fyzický súbor ešte pred vytvorením HTML. [MediaDB.filterByAvailability/isExists](../../../src/main/java/sk/iway/spirit/MediaDB.java) overujú lokálnu prílohu cez LIVE filesystem. `DocBasic.getPerexImageSmall/Normal/Original` deleguje na [GalleryToolsForCore](../../../src/main/java/sk/iway/iwcm/common/GalleryToolsForCore.java), ktorý volí variant pomocou `IwcmFile.exists`. [ThumbTag](../../../src/main/java/sk/iway/iwcm/tags/ThumbTag.java) pri `thumbExternalServer` môže vypísať externú produkčnú cache URL. Podporovaný branch náhľad potrebuje explicitne zapojiť tieto helpery do file overlay a obísť externý thumbnail server; iba prepísanie výsledných HTML URL nedoplní už vynechanú prílohu.
+
+`PathFilter.setStaticContentHeaders` môže neskôr nastaviť `Cache-Control: max-age=...`, aj keď skorší filter nastavil no-store. `writeAndCacheFile` používa globálny URL kľúč. Preview musí obísť túto obsahovú cache a zachovať privátne no-store hlavičky až do odoslania odpovede, aj pri statických a conditional requestoch.
+
 ### Hlavičky, pätičky, menu a navigácia
 
 `ShowDoc` načítava cez `DocDB.getDoc` aj hlavičku, pätičku, menu, pravé menu a dokumenty z polí šablóny. Ich referencie sú obyčajné ID stránok. Náhľad musí pri týchto čítaniach zachovať rovnaký kontext ako hlavná stránka.

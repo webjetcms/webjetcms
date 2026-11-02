@@ -1,6 +1,6 @@
 # Dátový model pracovnej vetvy
 
-Stav: technický návrh na posúdenie. Vychádza z uzatvorených Q1–Q15 v [registri rozhodnutí](01-rozhodnutia.md). Názvy nových tabuliek a tried sú navrhované, nejde o existujúci kód.
+Stav: technický návrh na posúdenie. Vychádza z uzatvorených Q1–Q19 v [registri rozhodnutí](01-rozhodnutia.md). Názvy nových tabuliek a tried sú navrhované, nejde o existujúci kód.
 
 ## Odporúčanie
 
@@ -63,6 +63,7 @@ Nasledujúce stĺpce majú všetky štyri obsahové tabuľky; nejde o ďalšiu u
 | `base_hash` | CHAR(64), nullable | SHA-256 kanonického pôvodného obsahu. Rýchle porovnanie; obsah pre diff zostáva v snapshote. |
 | `updated_by`, `updated_at` | INT, TIMESTAMP | Posledná pracovná úprava. |
 | `resolved_snapshot` | TEXT/CLOB, nullable | Pripravený výsledok automatického alebo ručného merge, vrátane rozhodnutia o existencii položky. |
+| `resolved_choice` | VARCHAR(8), nullable | Výslovná používateľská voľba `LIVE` alebo `WORK`; NULL znamená použitie automatických pravidiel B/L/W. Túto voľbu vie preview použiť bez SQL nad JSON. |
 | `resolved_live_hash`, `resolved_work_hash` | CHAR(64), nullable | Vstupy, ku ktorým sa ručné rozhodnutie vzťahuje. Zmena vstupu zneplatní rozhodnutie. |
 | `apply_state` | VARCHAR(16), NOT NULL | `PENDING`, `APPLYING`, `DONE`, `ERROR`. |
 | `apply_phase` | VARCHAR(24), nullable | Malý pevný zoznam krokov pre daný typ, napr. dáta/odvodené údaje. Nie všeobecný workflow engine. |
@@ -71,7 +72,11 @@ Nasledujúce stĺpce majú všetky štyri obsahové tabuľky; nejde o ďalšiu u
 
 Prázdny základ, chýbajúca pracovná hodnota a explicitné vymazanie sú tri odlišné stavy. Nevyjadrovať ich iba SQL NULL v obsahových poliach.
 
-`resolved_snapshot` je výsledok merge, nie ďalšia editovateľná verzia. Pri naplánovaní alebo spustení sa vyplní pre každú položku vrátane automaticky vybraných výsledkov bez konfliktu. Pracovné stĺpce zostávajú zdrojom náhľadu. Vlastnú kombináciu používateľ pripraví bežnou úpravou vo vetve; zvýši sa revision a vykoná nové porovnanie. Základ prvej úpravy ostáva zachovaný. Chýbajúca položka má osobitný kanonický hash stavu ABSENT; SQL NULL v poli sa s týmto stavom nezamieňa.
+`resolved_snapshot` je výsledok merge, nie ďalšia editovateľná verzia. Pri naplánovaní alebo spustení sa vyplní pre každú položku vrátane automaticky vybraných výsledkov bez konfliktu. `resolved_choice` sa ukladá iba pri výslovnej voľbe používateľa; automatický výsledok sa mimo zmrazeného merge plánu vždy znovu odvodí z B/L/W. Pracovné stĺpce sú zdrojom editora. Preklikateľný náhľad podľa Q16 používa zvolený výsledok: aktuálne LIVE alebo typované WORK, podľa mapy rozhodnutí v `03`. Nečíta starý `resolved_snapshot` ako obsah náhľadu.
+
+Vlastnú kombináciu používateľ pripraví bežnou úpravou vo vetve; zvýši sa revision, vyčistí voľba a jej odvodený výsledok a vykoná nové porovnanie. Základ prvej úpravy ostáva zachovaný. Zmena LIVE zneplatní uloženú voľbu cez hash; preview vyžiada nové porovnanie, nesmie ju potichu zameniť za WORK. Chýbajúca položka má osobitný kanonický hash stavu ABSENT; SQL NULL v poli sa s týmto stavom nezamieňa. Pre stránky/priečinky zmazané presunom do koša sa eviduje stav TRASH podľa `04`, nie fyzická absencia riadka.
+
+Spoločné pravidlo projekcie pre detail aj SQL: podporované obsahové polia zo zvolenej verzie, odvodené polia z jej účinných vstupov, prevádzkové a nepodporované read-only polia existujúceho objektu z aktuálneho LIVE. Týka sa aj `sync_id`/`sync_status` a existujúcich `publish_start`/`publish_end`, ktoré merge nemá prepísať pracovnou kópiou. Nový objekt má explicitné počiatočné hodnoty podľa mapovania a `03a`. P02 odovzdá maticu všetkých konkrétnych stĺpcov; všeobecné kopírovanie beanu nie je implementácia tohto kontraktu.
 
 ## Dokumenty
 
@@ -116,22 +121,30 @@ Kategórie sa pri merge synchronizujú iba pre dané médium. Ak kategória medz
 
 Nové médium potrebuje explicitný INSERT s rezervovaným `media_id`; kladné ID nesmie omylom vyvolať iba UPDATE alebo pridelenie iného ID JPA generátorom. Existujúce médium sa aktualizuje podľa ID. Zápis riadka a jeho kategorizácie je jedna krátka DB operácia, nie vymazanie celej sady príloh stránky.
 
+`media.last_update` je technický údaj viditeľnosti, nie čas redakčnej úpravy vo vetve. [MediaDB.getMedia(DocDetails)](../../../src/main/java/sk/iway/spirit/MediaDB.java) a [media.jsp](../../../src/main/webapp/components/media/media.jsp) filtrujú médiá podľa `last_update <= documents.date_created`. Nastavenie nového média na aktuálny čas by preto skrylo prílohu nezmenenej staršej stránky aj po merge. Pre skutočne zmenený `WORK` UPSERT sa pri publikovaní odvodí `last_update = new Date(owner.getDateCreated() / 1000 * 1000)` z **výslednej zvolenej vlastníckej stránky**, rovnako ako dnes v `PlannedChangesService.publishMedia`. Náhľad použije tú istú projekciu nad vlastníkom zo svojho účinného pohľadu; produkčný JPA objekt sa tým nemení. Dátum ani autor stránky sa kvôli médiu neposúvajú.
+
+Nezmenené médiá, rozhodnutie `LIVE` a no-op zachovajú pôvodný `last_update` aj dnešné filtrovanie. Hodnota sa nepovažuje za editovateľné obsahové pole ani samostatný konfliktový vstup; čas pracovnej úpravy eviduje `updated_at`. Nesmie sa plošne vypnúť dátumový filter pre všetky médiá vo vetve, pretože by sa mohli zobraziť existujúce nepublikované úpravy produkčných médií. Dnešné per-page plánovanie, jeho osobitný náhľad a filtrovanie historických stránok zostávajú zachované.
+
 Existujúci M:N filter médií sa musí adaptovať pred stránkovaním: produkčný join vyhodnotí iba médiá bez pracovného prepisu. Pre zmenené médiá služba vyhodnotí malý zoznam pracovných `group_ids_snapshot` a pripraví zodpovedajúce `media_id`; následne zlúči výsledky a až potom aplikuje poradie, počet a limit. Samotný produkčný join plus výmena už načítaných riadkov nestačí. Pri bežnom zozname príloh jednej stránky je vhodné zlúčenie v pamäti; globálny administračný zoznam potrebuje spoločné podmienky/count aj pre pracovné ID.
 
 ## Súbory
 
-`content_branch_file` obsahuje spoločné pracovné stĺpce, `logical_path VARCHAR(...)`, `base_content_hash CHAR(64)`, `work_content_hash CHAR(64)`, veľkosť a MIME informáciu. Dĺžku cesty a indexovanie zladiť s podporovanými DB a existujúcimi CMS limitmi; nepoužívať neoverený univerzálny index na dlhom UTF-8 VARCHAR.
+`content_branch_file` obsahuje spoločné pracovné stĺpce, `entry_kind VARCHAR(16) NOT NULL` s hodnotami `FILE` alebo `DIRECTORY`, `logical_path VARCHAR(...)`, `base_content_hash CHAR(64)`, `work_content_hash CHAR(64)`, veľkosť a MIME informáciu. Adresárový marker používa tú istú tabuľku; nemá binárny obsah a jeho obsahové hashe, veľkosť a MIME sú NULL. Jeho kanonický stav rozlišuje existenciu a druh položky na danej ceste. Dĺžku cesty a indexovanie zladiť s podporovanými DB a existujúcimi CMS limitmi; nepoužívať neoverený univerzálny index na dlhom UTF-8 VARCHAR.
 
-Odporúčanie: `path_key CHAR(64)` = SHA-256 normalizovanej logickej cesty, UNIQUE `(branch_id, path_key)`, pričom service vždy porovná aj plnú uloženú cestu. Tak netreba rozdielne indexy dlhých ciest podľa databázy. Normalizácia zachová pravidlá case sensitivity backendu, odstráni dot-segmenty a vyhodnotí povolený obsahový koreň; nesmie prepustiť cestu mimo neho.
+Odporúčanie: `path_key CHAR(64)` = SHA-256 normalizovanej logickej cesty, UNIQUE `(branch_id, path_key)`, pričom service vždy porovná aj plnú uloženú cestu. Tak netreba rozdielne indexy dlhých ciest podľa databázy. Normalizácia zachová pravidlá case sensitivity backendu, odstráni dot-segmenty a vyhodnotí povolený obsahový koreň; nesmie prepustiť cestu mimo neho. Koncová lomka nevytvorí druhú identitu toho istého adresára; súbor a adresár nemôžu obsadiť tú istú normalizovanú cestu.
 
 Neverejné úložisko sa odvodí serverom napr. `<private-storage>/content-branches/<branchId>/files/<rowId>/base` a `/work`. `rowId` identifikuje uložené bajty; používateľ neposiela fyzickú cestu. Na produkčnom multi-node nasadení musí byť tento priestor dostupný publisheru a uzlom náhľadu. V prvej podporovanej konfigurácii použiť spoločný filesystem, rovnako ako existujúce plánované súbory; IwcmFsDB storage je osobitné rozšírenie, nie tichý fallback do produkcie.
 
 Doména sama neurčuje vlastníctvo súboru: dve domény môžu mať ten istý fyzický `/images/logo.png`. Podľa Q13 použijeme dnešné mapovanie cez `Tools`/`FilePathTools`, povolené redakčné korene a existujúce adresárové práva. Nepridáva sa nová mapa vlastníctva súborov. Ak nasadenie používa spoločný fyzický priestor, UI pri súborových zmenách upozorní, že publikovanie ovplyvní všetky weby používajúce danú cestu. Taká zmena je dovolená oprávnenému používateľovi. Limit jednej domény sa týka obsahového stromu a kontextu vetvy; nie je prísľubom doménovej izolácie už zdieľaných súborov. Spoločné System stránky mimo doménového rozsahu zostávajú read-only. Neskúmame všetky potenciálne odkazy na súbor z iných webov.
 
-- `UPSERT`: pracovný obsah existuje, prípadná pôvodná kópia a hash sa zachytia pri prvej zmene.
-- `DELETE`: viditeľný tombstone, náhľad nepadne späť na produkčný súbor.
-- Presun/premenovanie: `DELETE` starej cesty a `UPSERT` novej. Zachovanie identity binárneho súboru sa nezavádza.
-- Priečinky filesystemu: odvodené z logických ciest. Hromadný presun/mazanie sa rozvinie na viditeľné konkrétne súborové položky. Nepodporované masové príkazy ostanú nedostupné do implementácie ich izolácie.
+- `FILE/UPSERT`: pracovný obsah existuje, prípadná pôvodná kópia a hash sa zachytia pri prvej zmene.
+- `FILE/DELETE`: viditeľný tombstone, náhľad nepadne späť na produkčný súbor.
+- Presun/premenovanie jednotlivého súboru: `DELETE` starej cesty a `UPSERT` novej. Kopírovanie jednotlivého súboru vytvorí iba cieľový `UPSERT`. Zachovanie identity binárneho súboru sa nezavádza.
+- `DIRECTORY/UPSERT`: iba vytvorenie prázdneho adresára cez `mkdir`. Marker je viditeľný aj po obnovení administrácie bez potreby prvého uploadu. Pri merge sa adresár vytvorí; už existujúci adresár na rovnakej ceste je po kontrole práv prípustný no-op. Súbor na tejto ceste je kolízia, nie cieľ na prepísanie.
+
+Podľa Q17 prvá verzia podporuje `mkdir` a operácie s jednotlivými súbormi. Presun, premenovanie, mazanie a rekurzívne kopírovanie súborových adresárov server odmietne; adresárový `DELETE` nie je podporovaná položka. Pracovný listing zohľadní explicitné adresárové markery aj rodičovské cesty pracovných súborov. Nový adresár dedí dnešné LIVE vlastnosti najbližšieho predka vrátane ochrany; neukladá sa snapshot `dirprop` ani nová tabuľka adresárových vlastností. Odobratie markeru z balíka sa odmietne, ak od neho závisia ponechané pracovné súbory alebo adresárové markery. Inak sa odstráni iba pracovný marker, nikdy produkčný adresár.
+
+Podľa Q18 sú galerijné cesty v prvej verzii iba na čítanie až do samostatného E03. Zákaz sa overí pre každú logickú cestu, ktorú operácia mení, pomocou dnešnej klasifikácie [GalleryDB.isGalleryFolder](../../../src/main/java/sk/iway/iwcm/gallery/GalleryDB.java), vrátane zdedených nastavení podadresárov. Platí pre hlavný obrázok, `o_` originál aj `s_` variant a pre založenie adresára v galérii. Obísť ho nesmie priamy upload, overwrite, správca súborov ani premenovanie/presun do alebo z galérie. Bežné obrázky a prílohy mimo tohto rozsahu naďalej používajú pracovnú súborovú službu; galerijný metadata writer sa nezapína potichu.
 
 Pracovné nahrávanie zapisuje temp súbor a až po úspechu nahradí pracovnú kópiu. Neúspešný upload neznehodnotí predošlú pracovnú verziu. Hash sa používa pre konflikt obsahu; rovnaká veľkosť a mtime samy osebe nie sú dôkaz rovnakých bajtov.
 

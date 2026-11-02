@@ -11,10 +11,10 @@ Použiť reálnu podporovanú databázu, existujúce Java testovacie zázemie a 
 | T01 | ID existujúcej a novej stránky, priečinka a média; produkčný insert medzi dvoma pracovnými vytvoreniami; reštart DB | Všetky identity sú odlišné a po merge zostanú rovnaké. Pred merge neexistuje nový produkčný obsahový riadok. |
 | T02 | Uloženie stránky, priečinka, média a upload vo vetve | Produkčný obsah, kategorizácia, história, galéria a indexy sa nezmenia. Výnimkou sú technická spotreba ID a audit práce s vetvou. |
 | T03 | Otvorenie náhľadu a preklik cez menu, breadcrumb, novinky, default stránku a premenovanú URL | Všade sa používa tá istá vetva; nový/zmazaný obsah a strom sa zobrazia konzistentne. |
-| T04 | Vetva A, vetva B a produkcia; zmena neupravenej produkčnej položky | Pracovné verzie sa neprepisujú; neupravená položka sa aktualizuje z produkcie; položka s pracovným prepisom ostane pracovná. |
+| T04 | Vetva A, vetva B a produkcia; zmena neupravenej produkčnej položky | Pracovné verzie sa neprepisujú; neupravená položka sa aktualizuje z produkcie; editor uchová pracovný prepis, PREVIEW rešpektuje zvolený výsledok podľa Q16. |
 | T05 | Obmedzený redaktor, cudzia doména/ID, anonymný preview request, priamy asset/thumbnail request | Server odmietne neoprávnené čítanie/zápis; náhľad ani obrázok neobídu autentifikáciu. |
 | T06 | Formulár otvorený v produkcii alebo branch, potom prepnutie kontextu v druhom tabe | Starý request sa odmietne s možnosťou zachovať obsah formulára; nikdy sa neuloží do iného kontextu. |
-| T07 | Nové/nahradené/zmazané obrázky a PDF; CKEditor upload, moderný upload, elFinder; verejná cache/CDN | Produkcia vracia pôvodné bajty, gateway pracovné. DELETE nepadne na produkciu. Thumbnail ani `304` nepoužije cudziu verziu. |
+| T07 | Nové/nahradené/zmazané obrázky a PDF; CKEditor upload, moderný upload, elFinder; verejná cache/CDN | Produkcia vracia pôvodné bajty, gateway bajty zvolené mapou LIVE/WORK. DELETE nepadne na produkciu. Thumbnail ani `304` nepoužije cudziu verziu. |
 | T08 | Merge matica B/L/W, vrátane nových objektov, mazania a neskoršej zmeny po vyriešení konfliktu | Pravidlá celého objektu sú dodržané; zastarané rozhodnutie sa neprenesie na nový obsah. Zmena dvoch rôznych polí v produkcii/vetve je v tejto verzii tiež konflikt. |
 | T09 | Médiá: titulok, poradie, kategorizácia, nové médium, vymazanie, vlastník novej stránky | Upsert zachová `media_id`; DELETE ovplyvní iba konkrétne médium a väzby, nie automaticky súbor. Pracovná kategorizácia ovplyvní filtre/count. |
 | T10 | SQL/JPA filter, count, sort a paging noviniek/admin zoznamu s novou a zmazanou položkou | Výsledok vzniká nad účinnou množinou pred limitom. Nové položky sa nestratia a zmazané nezostanú v počte. |
@@ -72,6 +72,19 @@ Rovnakú prílohu otestovať aj cez thumbnail a po predchádzajúcom zahriatí p
 UI scenáre doplnia druhý vstup vytvorenia cez prepínač, návrat na produkciu, neuložený formulár, read-only naplánovanú verziu a uzavretie práve vybranej verzie. V poslednom prípade starý SAVE zlyhá a neuloží do LIVE; prechod na produkciu je výslovný. Podrobnosti sú v častiach 1–2 a akceptácii [05](05-rozhranie.md).
 
 Pri vytváraní otvoriť dialóg pre doménu A a v druhej záložke zmeniť doménu na B. Odoslanie pôvodného formulára vráti `409`, zachová jeho text a nevytvorí balík v nesprávnej doméne.
+
+Spresnenia po kontrole návrhu (patria do existujúcich T01–T16, nejde o ďalšiu etapu):
+
+- **T03/T08/T16:** po voľbe `Použiť produkciu` sa stránka, URL, menu, News list/count/paging, médiá a súbory zhodujú so zvoleným výsledkom. Editor naďalej uchová WORK. Otestovať aj automatické W=B→LIVE; pri novom nevyriešenom konflikte náhľad jasne označí pracovný predpoklad. Zmena LIVE po uloženej voľbe zastaví náhľad s odkazom na nové porovnanie, nepoužije neplatné rozhodnutie.
+- **T03/T05:** centrálna administrácia na inom hostiteľovi než verejný web; jej session otvorí náhľad správnej logickej domény aj po prepnutí admin domény. Overiť `RequestBean`, `DocDB.getDomain`, routovanie, absolútne odkazy a média bez prenesenia prihlásenia na verejný hostiteľ.
+- **T05:** na povolenej stránkovej preview URL odmietnuť `historyid`, `forward`, `forwarddoccompare` a `inlineEditorAdmin`, pričom bežné News page/search/filter parametre ostanú funkčné.
+- **T06:** stará LIVE obrazovka domény A, druhý tab prepne na LIVE domény B. Oba majú branchId=0, ale pôvodný request musí vrátiť `409` pre nesúlad domény.
+- **T07:** nové PDF prejde cez `MediaDB.filterByAvailability`; perex obrázky small/normal/original a thumbnail s nakonfigurovaným externým serverom zobrazia pracovné bajty bez produkčnej cache. Prázdny adresár zostane v branch liste po obnovení, nevznikne na produkcii a publikuje sa pred jeho súbormi. Galerijné cesty, rekurzívne operácie adresárov a vedľajšie zápisy redirect/file_atr/dirprop server odmietne alebo v podporovanej operácii vôbec nespustí.
+- **T09/T16:** pridať/upraviť médium starej stránky bez uloženia stránky. WORK médium použije `lastUpdate` odvodený z výsledného `dateCreated` vlastníka na sekundy; overiť vlastníka z WORK aj zvoleného LIVE. Nezmenené LIVE médium s budúcim `lastUpdate` musí zostať skryté dnešným cutoffom. Autor a SAVE_DATE stránky sa neposunú.
+- **T10/T16:** po prvej pracovnej úprave zmeniť v produkcii read-only `publish_start`/`publish_end` alebo prevádzkový údaj. Účinný detail aj SQL používajú aktuálne LIVE hodnoty, ktoré zachová merge; nová stránka má dohodnuté počiatočné hodnoty.
+- **T11/T15:** zmazať viacúrovňový podstrom a obnoviť ho dnešnou obnovou z koša. Zachovať parent väzby potomkov, vlastnícke groupId stránok, pôvodnú dostupnosť a všetky ID. Overiť chybu medzi zneprístupnením stránok a presunom koreňa. Samotná kontrola nesmie vytvoriť kôš ani iný produkčný záznam.
+- **T12:** balík mení iba súbor, ale individuálny plán stránky mimo balíka cieli na rovnaký fyzický súbor. Príprava aj spustenie konflikt ukážu; plán sa nezruší. Oddelené doménové úložiská s rovnakou logickou cestou nevytvoria falošný konflikt.
+- **T02/T13:** s `fulltextExecuteApps` a nakonfigurovaným fulltext hookom nevykoná branch save živé JSP, loopback request ani zákaznícky zápis. Podporované odvodenie textu a následné indexovanie sa overia osobitne.
 
 Pred merge načítať dokument a médium aj cez ich produkčné JPA repositories. Po JDBC publikovaní musí nové repository čítanie a verejný render vrátiť ten istý nový obsah aj kategorizáciu; tým sa overí invalidácia persistence cache, nie iba HTML cache.
 

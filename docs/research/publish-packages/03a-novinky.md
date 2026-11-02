@@ -8,7 +8,7 @@ Redaktor otvorí pracovnú vetvu, pridá novinku do priečinka, vyplní perex, p
 
 Nová stránka sa do zoznamu nepridáva nasilu. Musí vyhovovať zdrojovému priečinku, dostupnosti, perexu, kategóriám, dátumom, právam a ďalším nastaveným filtrom. Napríklad stránka s prázdnym perexom sa pri `perexNotRequired=false` správne nezobrazí. Zobrazenie stránky v editore samo osebe neznamená zaradenie do verejných noviniek.
 
-Pri rovnakých dátach, čase vyhodnotenia, identite návštevníka a šablóne musí náhľad vrátiť rovnaké ID, poradie a počet ako produkcia po použití pracovných zmien. Ak používateľ pri konflikte vyberie produkciu, výsledok sa prirodzene riadi touto voľbou. Živý overlay nie je predpoveď neskorších cudzích úprav ani individuálnych plánovaných zmien.
+Pri rovnakých dátach, čase vyhodnotenia, identite návštevníka a šablóne musí náhľad vrátiť rovnaké ID, poradie a počet ako produkcia po použití zvoleného výsledku. Podľa Q16 voľba produkcie mení už samotný náhľad Noviniek, nielen neskorší merge. Platí aj pre parametre aplikácie v HTML vlastníckej stránky, priečinky a médiá. Editor uchová pracovný obsah oddelene. Kým konflikt nemá rozhodnutie, náhľad ukazuje WORK s viditeľným upozornením; zastaraná uložená voľba vyžiada nové porovnanie podľa `03`. Živý overlay nie je predpoveď neskorších cudzích úprav ani individuálnych plánovaných zmien.
 
 ## Existujúca cesta a konkrétne zásahy
 
@@ -39,16 +39,18 @@ Nevzniká `BranchNewsApp`, kópia `NewsActionBean`, nová šablóna výpisu ani 
 V produkcii `NewsQuery` naďalej používa `documents d`. V overenom vetvovom kontexte dostane od `ContentBranchSql` účinný zdroj s rovnakým aliasom `d`:
 
 ```text
-LIVE stránky bez pracovného záznamu s rovnakým doc_id
+LIVE stránky bez účinného pracovného prepisu s rovnakým doc_id
 UNION ALL
-pracovné UPSERT stránky danej vetvy
+účinné WORK UPSERT stránky danej vetvy
 ```
 
-Pracovná `DELETE` potlačí produkčný riadok. Doménu a povolený rozsah určí spoločný čítač. Až nad týmto zdrojom sa vykonajú dnešné filtre. Nemožno najskôr vybrať desať produkčných noviniek a potom ich nahradiť či doplniť pracovnými: novinka presunutá do filtra by chýbala a počet/ďalšia strana by boli nesprávne.
+Účinná WORK `DELETE` potlačí produkčný riadok; pri voľbe LIVE sa pracovné zmazanie v náhľade neuplatní. Doménu a povolený rozsah určí spoločný čítač. Až nad týmto zdrojom sa vykonajú dnešné filtre. Nemožno najskôr vybrať desať produkčných noviniek a potom ich nahradiť či doplniť pracovnými: novinka presunutá do filtra by chýbala a počet/ďalšia strana by boli nesprávne.
 
 Navrhovaný kontrakt je SQL fragment + usporiadané bind parametre. Kontext je explicitne prevzatý z overeného requestu, nie z používateľského `filter` alebo voľného URL parametra. Bežné volanie bez vetvového kontextu zostane LIVE. Pre list aj count sa samostatne zostaví celý plán a argumenty; dnešné mutable pole `arguments` nesmie ponechať parametre predchádzajúceho vykonania. Parametre zdroja sa bindujú v poradí SQL pred parametrami vonkajších kritérií.
 
-Projekcia musí obsahovať polia `FieldEnum` aj potrebné `DataAccessHelper.getDocFields()`. `loadData=false` vynecháva telo z výsledného SELECT, nie z dostupných filtrov. HTML sa nesmie skrátiť kvôli UNION/CLOB. Prevádzkové polia, napríklad `forum_count` používané radením RATING, sa pre existujúcu pracovnú stránku čítajú z aktuálnej produkcie; pre novú dostanú bežné počiatočné hodnoty. Nevydávajú sa za zmrazený redakčný obsah.
+Projekcia musí obsahovať polia `FieldEnum` aj potrebné `DataAccessHelper.getDocFields()`. `loadData=false` vynecháva telo z výsledného SELECT, nie z dostupných filtrov. HTML sa nesmie skrátiť kvôli UNION/CLOB. Prevádzkové aj nepodporované read-only polia, napríklad `forum_count`, `sync_id`/`sync_status` či existujúce `publish_start`/`publish_end`, sa pre existujúcu pracovnú stránku čítajú z aktuálnej produkcie; pre novú dostanú výslovne určené počiatočné hodnoty. Nevydávajú sa za zmrazený redakčný obsah. Rovnakú klasifikáciu používa detail, SQL projekcia a merge writer; odvodené polia sa prepočítajú z účinných vstupov.
+
+V ADMIN režime je účinný prepis každý pracovný záznam. V PREVIEW režime ho určuje spoločná mapa B/L/W rozhodnutí z `03`: pri zvolenom LIVE stránka zostane v produkčnej vetve SQL, pri WORK sa nahradí pracovnou projekciou alebo vylúči cez DELETE. Výber sa aplikuje **pred všetkými filtrami a count/paging**, neprepisuje až výsledný zoznam. Nečíta sa `resolved_snapshot` cez databázové JSON funkcie a nevzniká druhá tabuľka výsledných stránok.
 
 Oba režimy použijú rovnaké deterministické radenie: doterajšie poradie a posledný rozlišovací `doc_id`, ak už nie je súčasťou poradia. `count` počíta rovnakú množinu bez stránkovacieho limitu; po odpočítaní počiatočného offsetu je minimum nula. Každý `doc_id` je v jednom výpise najviac raz ešte pred aplikovaním LIMIT/OFFSET.
 
@@ -68,7 +70,7 @@ Tieto úpravy sa overia aj na LIVE výpise, aby sa opravou iba v náhľade nevyt
 | Prázdny `groupIds` | Zachovať dnešný fallback na priečinok aktuálnej **účinnej** stránky. Explicitne vybraný zmazaný/neplatný koreň znamená prázdny výsledok alebo validačnú chybu; nikdy rozšírenie na celý web. |
 | `docMode` 0/1/2 | Všetky / iba default / bez default stránok podľa účinných `defaultDocId` priečinkov. |
 | `available`, `includeActualDoc` | Len výsledne dostupné stránky; podľa nastavenia vynechať stabilné ID aktuálnej stránky. |
-| `perexNotRequired` | Použiť pracovné `html_data`. Prázdny perex zostáva platným dôvodom nezaradenia. |
+| `perexNotRequired` | Použiť účinné `html_data` z vybranej verzie. Prázdny perex zostáva platným dôvodom nezaradenia. |
 | `perexGroup`, `perexGroupNot`, tag, author, `requestPerexGroupsName` | Zachovať dnešné tokenové a include/exclude podmienky nad účinným `perex_group`; názvy sa rozlišujú cez existujúce definície v aktuálnej doméne. |
 | `publishType` | Rovnakých päť režimov a hraničných podmienok; čas je určený nižšie. |
 | `filter`, `search`, `DatabaseCriteria` | Zachovať dnešné operátory a zloženie AND/OR nad účinnými poliami. Opakované hodnoty a textové vyhľadanie sa nesmú stratiť pri prechode na ďalšiu stranu. |
@@ -84,7 +86,7 @@ Vlastné `ResultCriteria` a `contextClasses`, ktoré vykonávajú zákaznícky J
 Aby nová novinka vyhovela bežnému kategorizačnému filtru, vo vetve možno vyberať **existujúce perex skupiny**. Hodnota je už v `documents.perex_group`; uloží sa do rovnakého poľa pracovnej projekcie. Nová pracovná tabuľka nie je potrebná. Definície skupín sa naďalej spravujú iba v produkcii.
 
 - Mapper načíta/zapíše `perex_group`, editor ponúkne existujúce platné skupiny domény. Snapshot/hash používajú normalizovanú množinu ID bez duplicít; fyzický tokenový formát ostáva kompatibilný s dnešným filtrom.
-- Náhľad filtruje priamo pracovnú hodnotu. Pracovné uloženie **nezapisuje** produkčný `perex_group_doc`.
+- Náhľad filtruje účinné `perex_group` z vybranej LIVE/WORK verzie. Pracovné uloženie **nezapisuje** produkčný `perex_group_doc`.
 - Merge overí platnosť odkazovaných skupín. Zaniknutá/neprístupná skupina je konkrétna validačná chyba. Kategorizácia je súčasťou konfliktu celej stránky.
 - Pri skutočnom zápise obnoví odvodený `perex_group_doc` pre toto jediné `doc_id` podľa existujúcej konfigurácie. Nepoužije sa bez úpravy `DocDB.udpdatePerexGroupDoc`, ktoré prechádza aj multigroup kópie.
 - [PerexGroupsService](../../../src/main/java/sk/iway/iwcm/components/perex_groups/PerexGroupsService.java) dostane úzky variant synchronizácie jedného dokumentu s prijatou JDBC `Connection`, bez vlastného commit/close. Riadok stránky, odvodené väzby a checkpoint sa zapíšu v už navrhnutej krátkej transakcii položky. Existujúce repository volania samy osebe nezaručujú rovnakú transakciu.
@@ -123,7 +125,7 @@ Dnešné `EditorService.saveEditedDoc` mení `date_created` a `author_id` pri ul
 
 `NewsActionBean` nemá aktívnu spoločnú cache výsledkov noviniek; instance list nie je dôvod zavádzať novú cache vrstvu. Preview obchádza vonkajšiu HTML/component/CDN cache podľa dokumentu 03. Cache produkčných **definícií** News šablón môže zostať spoločná. SQL chyba vetvy sa nesmie zmeniť na zdanlivo prázdny zoznam: v preview sa zobrazí chyba načítania komponentu a zapíše diagnostika, bez produkčného fallbacku.
 
-V admin editore sa po uložení pracovnej novinky zobrazí jej riadok aj v správe Noviniek. Iframe `/apps/news/admin/?include=...` dostane `contentBranchId` ako bootstrap parameter overený voči session/doméne; následné REST požiadavky používajú štandardnú kontextovú hlavičku. Starý iframe po prepnutí vetvy skončí `409` rovnako ako editor. Úprava samotného base controllera nestačí: `NewsRestController` má vlastné override a `convertIdsToNamePair` tiež priamo skenuje `documents.data` pri zisťovaní priečinkov z vložených aplikácií. Tento scan musí použiť účinné stránky, aby našiel aj novo pridanú aplikáciu či zmenené parametre. Práva stromu a `cmp_news` zostávajú zachované.
+V admin editore sa po uložení pracovnej novinky zobrazí jej riadok aj v správe Noviniek. Iframe `/apps/news/admin/?include=...` dostane `contentBranchId` aj `contentBranchDomain` ako bootstrap údaje overené voči session/doméne; následné REST požiadavky posielajú obe kontextové hlavičky podľa `03`. Starý iframe po prepnutí vetvy skončí `409` rovnako ako editor. Úprava samotného base controllera nestačí: `NewsRestController` má vlastné override a `convertIdsToNamePair` tiež priamo skenuje `documents.data` pri zisťovaní priečinkov z vložených aplikácií. Tento scan musí použiť účinné stránky, aby našiel aj novo pridanú aplikáciu či zmenené parametre. Práva stromu a `cmp_news` zostávajú zachované.
 
 ## Etapy a povinné dôkazy
 
@@ -140,7 +142,7 @@ Podrobný plán P01–P08 zostáva v [06](06-plan-implementacie.md); testy dopĺ
 | N07 | Chránené stránky podľa identity, dva News komponenty s deduplikáciou, pracovné include parametre a efektívne helpery šablóny. | P03, médiá P05 |
 | N08 | Klik na ďalšiu stranu, detail, obrázok a médium ostáva vo vetve; produkcia a druhá vetva majú nezávislé výsledky aj po zahriatí cache. | P03, upload P05 |
 | N09 | Admin News iframe vrátane novej aplikácie/nového koreňa, uloženie aj prehodenie vetvy v druhom tabe; správne práva a `409`. | P04 |
-| N10 | Pri rovnakom T/identite/šablóne porovnať predmerge náhľad s postmerge produkciou: ID, poradie, count, názvy, perex, autor, dátumy, odkazy, médiá. Normalizovať iba preview prefix/banner. | P06 |
+| N10 | Pri rovnakom T/identite/šablóne porovnať predmerge náhľad s postmerge produkciou: ID, poradie, count, názvy, perex, autor, dátumy, odkazy, médiá. Zahrnúť voľbu LIVE aj WORK, automatické W=B→LIVE a odmietnutie zastaranej voľby. Normalizovať iba preview host/prefix/banner. | P06 |
 | N11 | Merge kategorizácie zachová ID, obnoví väzby len daného dokumentu a nezrkadlí kópie; chyba DB kroku nepublikuje samostatne väzby; zaniknutá skupina zastaví preflight. | P06 |
 | N12 | Naplánovaný termín a jeho posun menia `previewAt`; zrušený plán používa aktuálny čas. Skutočný merge nepremenúva autora ani nereštartuje SAVE_DATE/DATE. | P07 |
 

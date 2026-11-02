@@ -49,11 +49,12 @@ Práca:
 3. Na reprezentatívnej podporovanej šablóne vyskúšať gateway, jednu prepísanú stránku, zmenené menu/URL, obrázok a thumbnail. Overiť aj root-relative CSS/JS požiadavky.
 4. Overiť SQL zloženie produkcie a pracovných dokumentov pred filtrovaním/count/paging pre `NewsQuery`; stačia testovacie riadky, netreba hotový editor. Povinne nové/zmenené/zmazané novinky, pracovná perex skupina, oba režimy `perexGroupUseJoin` a atribútové násobenie riadkov. Doložiť jedinečné ID, bind parametre a CLOB projekciu podľa N01/N02/N06 z `03a`.
 5. Posúdiť navrhovaný spoločný obal/handler z dokumentu 08 proti dnešným štyrom typom jadra. Overiť, že nevyžaduje dvojité pracovné ukladanie ani prepis `NewsQuery` na JSON; generický storage a budúce moduly zatiaľ nevytvárať.
-6. Zapísať výsledky, podmienky prostredia, potrebné template adaptéry a upravený odhad do dokumentu výsledkov kroku v tomto adresári.
+6. Na testovacom podstrome overiť obnovu z koša cez minimálne pre-delete histórie podľa `04`, aj pri vypnutej bežnej histórii. Tým sa uzavrie formát obnovovacích údajov, nejde ešte o implementáciu celého publishera.
+7. Zapísať výsledky, podmienky prostredia, potrebné template adaptéry a upravený odhad do dokumentu výsledkov kroku v tomto adresári.
 
 **Hranica:** skúšobný kód/fixture na testovanie predpokladov; žiadne všeobecné prepisovanie DocDB, žiadna produkčná migrácia. Použiteľný skúšobný kód možno v ďalších krokoch upratať do výslednej implementácie, nie držať dve konkurenčné implementácie.
 
-**Dokončené, keď:** sú doložené T01, prvá časť T03/T07/T10 a jasne uvedené výsledky každého DB profilu. Ak sa ukáže zásadný rozpor so stabilnými ID alebo použiteľným náhľadom, autor upraví návrh a vysvetlí konkrétny kompromis. Automaticky nepostupuje k veľkému refaktoringu na základe neovereného predpokladu.
+**Dokončené, keď:** je doložená rezervačná časť T01 pre stránky/priečinky vrátane súbežného produkčného insertu a reštartu, prvá časť T03/T07/T10 a výsledky každého deklarovaného DB profilu. Celé T01 vrátane média a výsledného merge dokončia P02/P06; P01 ich nesmie vykázať ako vykonané. Chýbajúci kritický profil znamená `PARTIAL`, nie DONE. Ak sa ukáže zásadný rozpor so stabilnými ID alebo použiteľným náhľadom, autor upraví návrh a vysvetlí konkrétny kompromis. Automaticky nepostupuje k veľkému refaktoringu na základe neovereného predpokladu.
 
 ## P02 — Úložisko, ID a základ kontextu
 
@@ -67,6 +68,7 @@ Práca:
 4. Pridať feature flag `contentBranchesEnabled`, overenie enginov/práv/úložiska a centrálny READ_COMMITTED režim pri zapnutej funkcii. Všetky uzly obsluhujúce obsah musia mať rovnakú konfiguráciu.
 5. Zaviesť nemenný request kontext, explicitný LIVE technický režim a minimálne API vytvorenia/listovania vetvy. Zapojenie produkčného publikovania musí zostať explicitne LIVE.
 6. Zaviesť stabilné `type + objectKey`, spoločný obal zmien a malý register podporovaných typov. Každý dnešný typ číta práve svoju pracovnú tabuľku. Nepoužívať názov tabuľky/Java triedy dodaný klientom a nepridávať zatiaľ `content_branch_item`.
+7. Odovzdať konkrétnu maticu stĺpcov a mapovanie pre každý typ: WORK obsah, odvodené polia, aktuálne LIVE údaje a hodnoty nového objektu. Zaviesť čisté B/L/W rozhodovanie z `04`, ktoré použije náhľad v P03 a publisher v P06; zatiaľ bez produkčného merge. Súborový model zahrnie aj vytvorenie prázdneho adresára v tej istej tabuľke podľa Q17.
 
 **Existujúce miesta:** `DBPool`, `PkeyGenerator`, `ConstantsV9`, SQL XML aktualizácie, `V9JpaDBConfig`, `V9SpringConfig`. Writer znovu použije mapovanie produkčných polí; nemení PK ani bežné produkčné generátory.
 
@@ -83,6 +85,8 @@ Práca:
 3. Adaptovať `NewsQuery`, relevantné SQL zoznamy `DocDB`, administratívne JPA listy a `GroupsTreeService` pred filtráciou/paging. Zachovať celý render `NewsApp` → `NewsActionBean` → `NewsQuery` → Velocity; zapojiť účinné korene/default stránky, všetky štandardné filtre, `previewAt`, perex skupiny, unikátne výsledky, count a stránkovanie. Cielené opravy joinov/poradia platia aj v LIVE. Podrobnosti a hranice vlastných kritérií určuje `03a`.
 4. Dodať základ prepínača pod doménou, vytvorenia cez `Nová pracovná verzia`, následnej aktivácie cez `Upravovať web` a trvalého označenia kontextu podľa UI návrhu. Každá obsahová AJAX/write požiadavka nesie kontext obrazovky; mismatch sa odmietne. Vytvorenie samo admin výber nemení.
 5. Dodať integračný kontrakt a inventár podporovaných komponentov/šablón. V preview sa neodosielajú formuláre ani nezapisuje produkčná návštevnosť; vlastné dynamické komponenty potrebujú explicitný adaptér.
+6. Už tu zapojiť čítanie `MediaDB`, kontrolu existencie pracovných súborov, perex obrázkové helpery a lokálne thumbnaily. P05 pridá ich redakčné zápisy, nie prvú funkčnú čítaciu cestu. WORK médiám premietnuť čas výslednej vlastníckej stránky podľa `02`; LIVE médiá zachovajú dnešný filter dostupnosti.
+7. Náhľad otvárať na admin hostiteľovi s overenou logickou doménou vetvy (Q19). Odlíšiť WORK pohľad editora od zvoleného výsledku v preview (Q16), vrátane SQL, stromu a súborov. Rozhodnutia možno pripraviť fixture; používateľské riešenie konfliktu dodá P06. Prenos kontextu musí overovať doménu aj branch ID, vrátane LIVE→LIVE po zmene domény.
 
 **Hranica:** testovacie pracovné riadky možno pripravovať fixture/službou z P02; kompletná redakčná editácia príde v P04/P05. Verejné vyhľadávacie indexy a zákaznícke obchodné dáta zostávajú produkčné; UI/integrácia nesmú tvrdiť opak.
 
@@ -115,11 +119,12 @@ T16 navyše preukáže skutočné vytvorenie dostupnej novinky s perexom a exist
 
 Práca:
 
-1. Zaviesť explicitnú súborovú službu `read/list/put/delete/move`; zápis nikdy nepoužije produkčný fallback. Storage `operation` je `UPSERT/DELETE`, `put` je názov servisnej operácie.
+1. Zaviesť explicitnú súborovú službu `read/list/mkdir/put/delete/move`; zápis nikdy nepoužije produkčný fallback. Storage `operation` je `UPSERT/DELETE`, `put` je názov servisnej operácie. `mkdir` vytvorí marker adresára v rovnakej tabuľke; delete/move/rename sa týkajú iba jednotlivých súborov. Rekurzívne operácie adresárov server odmietne podľa Q17.
 2. Napojenie cez `IwcmFsVolume`/`FsService`, moderný admin upload a CKEditor upload. Príkazy obchádzajúce volume sa buď napoja, alebo server vo vetve odmietne; na začiatok netreba ZIP extract alebo hromadné transformácie.
-3. Oddeliť pracovné transformácie obrázkov od GalleryDB, file_atr, dirprop, fulltextu a customer hookov. Zachovať dnešné upload typové/veľkostné/prístupové kontroly.
+3. Oddeliť pracovné operácie bežných obrázkov od GalleryDB, file_atr, dirprop, fulltextu, redirectov a customer hookov. Galerijné cesty a varianty sú podľa Q18 iba na čítanie, vrátane priameho uploadu či elFinder bypassu. Zachovať dnešné upload typové/veľkostné/prístupové kontroly; konkrétne následky príkazov inventarizuje súborová analýza.
 4. Zapájať médiá cez `MediaRestController`, `MediaDB`, `MediaService`, presné ID a kategorizáciu. Filtrovanie kategórií musí rešpektovať pracovný zoznam pred paging.
 5. Doplniť gateway asset streaming a oddelené thumbnail kľúče, súborové konflikty a informáciu o dosahu spoločného fyzického úložiska.
+6. Overiť media-only uloženie bez uloženia stránky: WORK médium v náhľade aj po publikovaní zostane viditeľné pri staršom `dateCreated` stránky. Nezmeniť tým autora, SAVE_DATE ani viditeľnosť rozpracovaných produkčných médií.
 
 **Dokončené, keď:** T02/T05/T07/T09 prejdú pre oba upload vstupy a elFinder. Produkčná URL nikdy nevráti pracovné bajty; pracovná DELETE sa nikdy neprepadne na pôvodný súbor. Nové aj existujúce médiá zachovajú ID.
 
@@ -135,6 +140,7 @@ Práca:
 4. Dokončiť základné UI prehľadu, rozhodnutí a priebehu. Pri chybe ukázať dokončené/pending položky a bezpečné pokračovanie.
 5. Pri merge stránky zachovať zvolené perex skupiny, autora a dátumy. Odvodený `perex_group_doc` synchronizovať na rovnakom JDBC spojení iba pre dané ID, bez automatických multigroup zmien. Podľa N10/N11 porovnať render pred merge a po ňom pri rovnakých vstupoch.
 6. Zapojiť dnešné typy cez obslužný kontrakt dokumentu 08: spoločné porovnanie/checkpointy/UI, konkrétna validácia a zápis typu. Typové filtre UI odvodiť z registra. Súborový zápis zostáva mimo DB transakcie; pevné poradie merge sa nemení na všeobecný workflow engine.
+7. Overiť zmazanie a obnovu celého podstromu so zachovaným vnorením a ID; presunúť do koša iba jeho koreň podľa `04`. Kontrola súborových plánov zahrnie aj iné stránky mimo balíka. Ručná voľba produkcie sa okamžite prejaví v celom náhľade a Novinkách; zastaraná voľba sa nesmie použiť bez novej kontroly.
 
 **Hranica:** žiadna globálna transakcia, distribuovaný lock manager ani samostatný workflow engine. Krátka operácia jedného DB riadka/väzieb môže mať štandardnú DB transakciu. Súbory a celý balík do nej nepatria. Plný rollback celého webu sa neponúka.
 
