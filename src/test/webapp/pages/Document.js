@@ -193,6 +193,8 @@ module.exports = {
    */
   setEditorMode(mode) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    // Navigation can finish before the administration bundle has initialized WJ.
+    I.waitForFunction(() => typeof window.WJ?.setAdminSetting === "function", [], 20);
     I.executeScript(function (mode) {
         window.WJ.setAdminSetting("editorTypeForced", mode);
     }, mode);

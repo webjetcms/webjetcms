@@ -66,7 +66,12 @@ Scenario("toggle buttons", async ({ I, DT, a11y }) => {
 Scenario("export modal", async ({ I, DT, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     I.click(DT.btn.export_button);
-    I.waitForElement("#datatableExportModal", 5);
+    I.waitForVisible("#datatableExportModal.show", 5);
+    // Measure the final colors, after Bootstrap finishes the modal's fade transition.
+    I.waitForFunction(() => {
+        const modal = document.querySelector("#datatableExportModal");
+        return getComputedStyle(modal).opacity === "1" && modal.getAnimations({ subtree: true }).length === 0;
+    }, [], 5);
     await a11y.check();
 });
 

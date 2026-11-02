@@ -369,23 +369,32 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, 
 
     //reset PB settings
     Document.resetPageBuilderMode();
+    const modeSelector = "#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle";
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
     DTE.waitForEditor();
 
     I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
     I.waitForElement("#DTE_Field_data-editorTypeSelector select", 10);
+    // Selecting an option programmatically can bypass the inert state during Page Builder startup.
+    I.waitForFunction(() => {
+        const frame = document.querySelector("#DTE_Field_data-pageBuilderIframe");
+        return frame?.contentWindow.pageBuilderReady === true && frame.contentDocument.body.inert !== true;
+    }, [], 20);
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
     I.waitForElement("div.exit-inline-editor", 10);
     I.selectOption({css: "div.exit-inline-editor select"}, "");
     I.switchTo();
-    I.wait(2);
+    I.waitForInvisible("#DTE_Field_data-pageBuilderIframe", 10);
+    I.waitForVisible("#trEditor div.wysiwyg_textarea", 10);
+    // Closing before the asynchronous mode switch finishes prevents its preference from being saved.
+    I.waitForFunction(() => window.editorTypeForced === "" && window.jQuery.active === 0, [], 20);
 
     DTE.cancel();
 
     I.click("Produktová stránka - PageBuilder");
     DTE.waitForEditor();
-    I.waitForElement("div.exit-inline-editor", 10);
+    I.waitForVisible(modeSelector, 10);
 
     DTE.cancel();
 
@@ -393,8 +402,8 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, 
     I.say("stranka bez pagebuildera");
     I.click("Produktová stránka - B verzia");
     DTE.waitForEditor();
-    I.wait(2);
-    I.clickCss("div.exit-inline-editor button");
+    I.waitForVisible(modeSelector, 10);
+    I.clickCss(modeSelector);
     I.dontSee("Page Builder", "ul.dropdown-menu.inner.show li a span");
     I.pressKey(['Escape']);
 
@@ -404,8 +413,8 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, 
     I.say("otvor znova PB a over, ze mame selector aj s moznostou PageBuilder");
     I.click("Produktová stránka - PageBuilder");
     DTE.waitForEditor();
-    I.waitForElement("div.exit-inline-editor", 10);
-    I.clickCss("div.exit-inline-editor button");
+    I.waitForVisible(modeSelector, 10);
+    I.clickCss(modeSelector);
     I.see("Page Builder", "ul.dropdown-menu.inner.show li a span");
     I.pressKey(['Escape']);
 
@@ -2792,19 +2801,16 @@ async function validateThumb(I, elementText, checkData, setData = null) {
 
 function insertLink(I, link) {
     I.clickCss(".cke_button.cke_button__link.cke_button_off");
-    I.switchTo(locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find("table.cke_dialog #wjLinkIframe"));
-    I.wait(1); //necessary static waiting
-    I.waitForElement('#txtUrl', 10);
+    I.waitForVisible(".cke_dialog_container:visible #wjLinkIframe", 10);
+    I.switchTo(".cke_dialog_container:visible #wjLinkIframe");
+    I.waitForVisible("#finder .elfinder-cwd-wrapper", 30);
+    I.waitForVisible('#txtUrl', 10);
     I.fillField("#txtUrl", link);
+    I.pressKey("Tab");
     I.switchTo();
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
-    I.clickCss('.cke_dialog_ui_button_ok');
-    I.executeScript(() => {
-    const element = document.querySelector('#cke_730_uiElement #wjLinkIframe');
-        if (element) {
-          element.remove();
-        }
-    });
+    I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_ok');
+    I.waitForInvisible('.cke_dialog_container:visible', 10);
 }
 
 Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({I, DTE, Document}) => {
