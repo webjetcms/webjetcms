@@ -76,7 +76,11 @@ Pri pridávaní alebo aktualizovaní závislostí platia tieto pravidlá:
 - nepoužíva sa globálny `force`, `strictly` alebo `resolutionStrategy.useVersion`, ktorý by mohol budúcu opravenú verziu znížiť,
 - každá výnimka sa overí grafom závislostí a integračnými testami a odstráni sa, keď ju už aktuálny Boot BOM nepotrebuje.
 
-Knižnica `webjet-ai` musí byť kompilovaná a testovaná s verziovým radom Jacksonu kompatibilným s aktuálnym Spring Boot BOM. WebJET preto nepridáva samostatný Jackson `enforcedPlatform`. Ak by budúca verzia knižnice vyžadovala novší Jackson, musí sa ako vedomá výnimka posúdiť a otestovať celá rodina Jackson knižníc.
+Knižnica `webjet-ai` musí byť kompilovaná a testovaná s verziovým radom Jacksonu kompatibilným s aktuálnym Spring Boot BOM. WebJET nepridáva samostatný Jackson `enforcedPlatform`.
+
+Aktuálnou bezpečnostnou výnimkou sú minimálne verzie `Jackson 2.22.4` a `Jackson 3.2.4`, zhodné s vetvou `main`. Mapa `jacksonMinimumVersions` v `build.gradle` uvádza používané moduly, pre ktoré sa publikujú Gradle constraints aj Maven `dependencyManagement`. Obmedzenia povoľujú novšiu verziu v rámci rovnakého major radu. `jackson-annotations` zostáva vo verzii `2.22`, ktorú používajú oba rady. Pri pridaní ďalšieho Jackson modulu treba overiť aj jeho minimálnu verziu a zarovnanie celej rodiny.
+
+Moduly z tejto mapy sú zároveň deklarované ako priame závislosti bez verzie. Gradle `versionMapping` tak zapíše aktualizované verzie aj priamo do publikovaného POM. Samotné constraints by konzumentovi nezaručili aktualizáciu modulov prichádzajúcich cez knižnice tretích strán. `verifyGeneratedPom` overuje minimálne verzie, zhodu oboch POM variantov a verzie vyhodnotené zo syntetickej závislosti na publikovanom POM.
 
 Aktuálne vybrané verzie je možné skontrolovať napríklad príkazmi:
 
@@ -98,7 +102,9 @@ Aktuálne vybrané verzie je možné skontrolovať napríklad príkazmi:
 
 Závislosti bez verzie sú platné v `build.gradle`, pretože ich verzie dodáva BOM. Publikácia používa Gradle [`versionMapping`](https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:resolved_dependencies), ktoré do POM pre priame závislosti zapíše konkrétne verzie vybrané z `runtimeClasspath`. POM tak zodpovedá verziám, s ktorými bol WebJET zostavený a testovaný; nejde o uzamknutie celého tranzitívneho grafu. Import Spring Boot BOM sa zároveň publikuje v časti `dependencyManagement`.
 
-Interný Gradle graf zámerne obsahuje embedded Tomcat pre `bootRun` a executable WAR. Publikačný POM má iný runtime kontrakt: `spring-boot-starter-tomcat-runtime`, `tomcat-embed-jasper` a API dodávané aplikačným serverom publikuje so scope `provided`. Zo `spring-boot-starter-webmvc` vylučuje `spring-boot-starter-tomcat`; zo Springdoc vetvy vylučuje `tomcat-embed-el`. Bez týchto vylúčení by sa Tomcat vrátil inou tranzitívnou cestou aj napriek scope `provided`. Maven scope `provided` nie je tranzitívny, preto zákaznícky WAR tieto knižnice nepreberie.
+Interný Gradle graf zámerne obsahuje embedded Tomcat pre `bootRun` a executable WAR. Publikačný POM má iný runtime kontrakt: `spring-boot-starter-tomcat-runtime`, `tomcat-embed-jasper` a API dodávané aplikačným serverom publikuje so scope `provided`. Zo `spring-boot-starter-webmvc` vylučuje `spring-boot-starter-tomcat`; z validation startera vylučuje `tomcat-embed-el`, ktorý poskytuje externý Tomcat. Bez týchto vylúčení by sa embedded knižnice vrátili tranzitívne aj napriek scope `provided`. Maven scope `provided` nie je tranzitívny, preto zákaznícky WAR tieto knižnice nepreberie.
+
+OpenAPI dokumentáciu generuje vlastný `OpenApiRestController` na `/admin/rest/openapi/api-docs`; UI používa statické súbory z `/admin/swagger-ui/`. Závislosti Springdoc ani Swagger UI WebJar preto nie sú súčasťou distribúcie. Java knižnice Swagger zostávajú dostupné cez `swagger-jaxrs2-jakarta`. Validáciu zabezpečuje samostatný `spring-boot-starter-validation`. Úloha `verifyGeneratedPom` kontroluje, že sa Springdoc ani Swagger UI WebJar nevrátia do runtime grafu alebo grafu konzumenta POM.
 
 Generovanie Gradle module metadata (`.module`) je pre túto publikáciu vypnuté. Metadata komponentu by opisovala interný executable-WAR graf a Gradle konzument by ju uprednostnil pred POM-om, čím by obišiel externý Tomcat kontrakt. Maven POM je preto jediný publikovaný model závislostí.
 
@@ -106,16 +112,32 @@ Generovanie Gradle module metadata (`.module`) je pre túto publikáciu vypnuté
 
 Maven `dependencyManagement` sa automaticky nededí iba tým, že projekt pridá WebJET ako závislosť. Maven konzument preto musí vo vlastnom builde importovať rovnaký Spring Boot BOM. Inak môže závislosť dostupná iba cez knižnicu tretej strany ponechať inú Spring Boot patch verziu, hoci priame WebJET závislosti už majú vyhodnotené verzie.
 
-Ak publikovaný WebJET POM používa vyššiu vyhodnotenú verziu bezpečnostne aktualizovanej knižnice ako importovaný Boot BOM, Maven konzument ju musí zopakovať vo vlastnom `dependencyManagement`. Správa závislostí konzumenta má prednosť aj pred priamou verziou vo WebJET POM. Aktuálne sa to týka Log4j-to-SLF4J bridge; konfigurácia vyzerá nasledovne:
+Ak publikovaný WebJET POM používa vyššiu vyhodnotenú verziu bezpečnostne aktualizovanej knižnice ako importovaný Boot BOM, Maven konzument ju musí zopakovať vo vlastnom `dependencyManagement`. Správa závislostí konzumenta má prednosť aj pred priamou verziou vo WebJET POM. Aktuálne sa to týka Jacksonu a Log4j-to-SLF4J bridge. V zákazníckom POM importujte oba Jackson BOM pred Spring Boot BOM, aby mali pri správe rovnakých modulov prednosť:
 
 ```xml
 <properties>
-    <spring-boot.version>4.1.1</spring-boot.version>
+    <spring-boot.version>4.1.2</spring-boot.version>
+    <webjet-jackson2.version>2.22.4</webjet-jackson2.version>
+    <webjet-jackson3.version>3.2.4</webjet-jackson3.version>
     <webjet-log4j-to-slf4j.version>2.26.1</webjet-log4j-to-slf4j.version>
 </properties>
 
 <dependencyManagement>
     <dependencies>
+        <dependency>
+            <groupId>com.fasterxml.jackson</groupId>
+            <artifactId>jackson-bom</artifactId>
+            <version>${webjet-jackson2.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson</groupId>
+            <artifactId>jackson-bom</artifactId>
+            <version>${webjet-jackson3.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-dependencies</artifactId>
@@ -132,7 +154,7 @@ Ak publikovaný WebJET POM používa vyššiu vyhodnotenú verziu bezpečnostne 
 </dependencyManagement>
 ```
 
-Verzia Spring Boot sa musí zhodovať s verziou pluginu v príslušnom WebJET release. Hodnota Log4j bridge sa musí zhodovať s konkrétnou vyhodnotenou verziou v publikovanom WebJET POM; `log4jToSlf4jMinimumVersion` je iba spodná hranica a po budúcej aktualizácii BOM môže byť nižšia než skutočne vybraná verzia. Keď už Boot BOM spravuje rovnakú alebo novšiu kompatibilnú verziu, samostatná položka sa odstráni.
+Verzia Spring Boot sa musí zhodovať s verziou pluginu v príslušnom WebJET release. Hodnoty Jacksonu a Log4j bridge sa musia zhodovať s konkrétnymi vyhodnotenými verziami v publikovanom WebJET POM; premenné s príponou `MinimumVersion` v `build.gradle` sú iba spodné hranice a po budúcej aktualizácii BOM môžu byť nižšie než skutočne vybrané verzie. Keď už Boot BOM spravuje rovnakú alebo novšiu kompatibilnú verziu, príslušná samostatná výnimka sa odstráni.
 
 Verzia externého Tomcatu je prevádzková požiadavka na aplikačný server, nie závislosť zákazníckeho WAR-u. Musí spĺňať verziu podporovanú daným WebJET release a bezpečnostné aktualizácie sa vykonávajú aktualizáciou servera. `tomcatMinimumVersion` v `build.gradle` chráni iba embedded runtime vývojového/executable variantu; zákaznícky projekt nemá pridávať `tomcat-embed-*` do svojho `dependencyManagement`, pokiaľ vedome nevytvára vlastnú embedded distribúciu.
 

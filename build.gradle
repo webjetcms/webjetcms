@@ -12,7 +12,7 @@ import com.github.jk1.license.filter.LicenseBundleNormalizer
 plugins {
     id 'java'
     id 'war'
-    id 'org.springframework.boot' version '4.1.1'
+    id 'org.springframework.boot' version '4.1.2'
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.14"
     // Compile Java and annotation processors with javac first, then weave the bytecode with ajc.
@@ -63,9 +63,11 @@ ext {
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";
     // Spring Boot 4.x manages Spring 7.x, Spring Data 4.x and Spring Security 7.x versions.
-    // Tomcat temporarily needs a higher security floor than the version managed by Boot 4.1.1.
+    // Keep a Tomcat security floor while allowing the Boot BOM to select newer versions.
     tomcatMinimumVersion = "11.0.25";
     log4jToSlf4jMinimumVersion = "2.26.1";
+    jackson2MinimumVersion = '2.22.4';
+    jackson3MinimumVersion = '3.2.4';
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
     webjetAiVersion = '2.0.4';
@@ -76,6 +78,21 @@ def embeddedTomcatModules = [
     'org.apache.tomcat.embed:tomcat-embed-el',
     'org.apache.tomcat.embed:tomcat-embed-jasper',
     'org.apache.tomcat.embed:tomcat-embed-websocket'
+]
+
+// Keep the Jackson modules used by WebJET above the security baseline from main.
+// Explicit module constraints also publish these floors to Maven dependencyManagement.
+def jacksonMinimumVersions = [
+    'com.fasterxml.jackson.core:jackson-core': jackson2MinimumVersion,
+    'com.fasterxml.jackson.core:jackson-databind': jackson2MinimumVersion,
+    'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml': jackson2MinimumVersion,
+    'com.fasterxml.jackson.datatype:jackson-datatype-jsr310': jackson2MinimumVersion,
+    'com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-base': jackson2MinimumVersion,
+    'com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-json-provider': jackson2MinimumVersion,
+    'com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations': jackson2MinimumVersion,
+    'tools.jackson.core:jackson-core': jackson3MinimumVersion,
+    'tools.jackson.core:jackson-databind': jackson3MinimumVersion,
+    'tools.jackson.dataformat:jackson-dataformat-cbor': jackson3MinimumVersion
 ]
 
 // Gradle's War component publishes providedCompile/providedRuntime dependencies with
@@ -93,7 +110,7 @@ def springBootWebMvcCoordinate = 'org.springframework.boot:spring-boot-starter-w
 def springBootTomcatStarterCoordinate = 'org.springframework.boot:spring-boot-starter-tomcat'
 def externalTomcatDependencyExclusions = [
     (springBootWebMvcCoordinate): [springBootTomcatStarterCoordinate],
-    'org.springdoc:springdoc-openapi-starter-webmvc-ui': [
+    'org.springframework.boot:spring-boot-starter-validation': [
         'org.apache.tomcat.embed:tomcat-embed-el'
     ]
 ]
@@ -254,7 +271,23 @@ dependencies {
     providedCompile platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
     providedRuntime platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
 
+    // Publish resolved versions directly; constraints alone do not protect consumers
+    // when a third-party dependency introduces an older Jackson module.
+    jacksonMinimumVersions.keySet().each { coordinate ->
+        implementation(coordinate)
+    }
+
     constraints {
+        jacksonMinimumVersions.each { coordinate, minimumVersion ->
+            def nextMajorVersion = minimumVersion.tokenize('.').first().toInteger() + 1
+            implementation(coordinate) {
+                version {
+                    require("[${minimumVersion},${nextMajorVersion}.0.0)")
+                    prefer(minimumVersion)
+                }
+                because 'Use security-fixed Jackson modules without blocking a newer Boot-managed release'
+            }
+        }
         ['implementation', 'providedRuntime'].each { configurationName ->
             embeddedTomcatModules.each { moduleName ->
                 add(configurationName, moduleName) {
@@ -296,8 +329,8 @@ dependencies {
     providedRuntime('org.apache.tomcat.embed:tomcat-embed-jasper') {
         exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
     }
-    // OpenAPI/Swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0'
+    // OpenAPI uses WebJET's controller and static UI; keep validation independent of Springdoc.
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     //WebJET AI
     implementation "com.webjetcms:webjet-ai:${webjetAiVersion}"
@@ -459,6 +492,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
 
+    // Declare directly so the fixed accessors-smart transitive dependency is included in the distributed Maven POM.
+    implementation('org.ow2.asm:asm:9.11.1')
 }
 
 war {
@@ -1303,6 +1338,24 @@ tasks.register('verifyGeneratedPom') {
                 throw new GradleException("Generated POM must not import a separate Jackson BOM: ${pomFile}")
             }
 
+            jacksonMinimumVersions.each { coordinate, minimumVersion ->
+                String resolvedVersion = resolvedVersions[coordinate]
+                if (resolvedVersion == null || compareVersions(resolvedVersion, minimumVersion) < 0) {
+                    throw new GradleException(
+                        "runtimeClasspath must contain ${coordinate} at ${minimumVersion} or newer: ${resolvedVersion}"
+                    )
+                }
+                List<Node> managedJacksonDependencies = managedDependencies.findAll { dependency ->
+                    dependencyCoordinate(dependency) == coordinate
+                }
+                if (managedJacksonDependencies.size() != 1 ||
+                    childText(managedJacksonDependencies.first(), 'version') != resolvedVersion) {
+                    throw new GradleException(
+                        "Generated POM dependencyManagement must preserve ${coordinate}:${resolvedVersion}: ${pomFile}"
+                    )
+                }
+            }
+
             String log4jBridgeCoordinate = 'org.apache.logging.log4j:log4j-to-slf4j'
             Node log4jBridgeDependency = directDependenciesByCoordinate[log4jBridgeCoordinate]
             String resolvedLog4jBridgeVersion = resolvedVersions[log4jBridgeCoordinate]
@@ -1489,11 +1542,29 @@ tasks.register('verifyGeneratedPom') {
                 "Generated POM consumer contains unresolved dependencies: ${unresolvedConsumerDependencies}"
             )
         }
-        Set<String> consumerModules = consumerRuntime.incoming.resolutionResult.allComponents.collect { component ->
+        Map<String, String> consumerVersions = consumerRuntime.incoming.resolutionResult.allComponents.findAll { component ->
+            component.id instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier
+        }.collectEntries { component ->
             def identifier = component.id
-            identifier instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier ?
-                "${identifier.group}:${identifier.module}".toString() : null
-        }.findAll { coordinate -> coordinate != null } as Set<String>
+            [("${identifier.group}:${identifier.module}".toString()): identifier.version]
+        }
+        ['runtimeClasspath': resolvedVersions, 'POM consumer': consumerVersions].each { graphName, versions ->
+            List<String> redundantOpenApiModules = versions.keySet().findAll { coordinate ->
+                coordinate.startsWith('org.springdoc:') || coordinate == 'org.webjars:swagger-ui'
+            }.sort()
+            if (redundantOpenApiModules.isEmpty() == false) {
+                throw new GradleException("${graphName} contains redundant OpenAPI modules: ${redundantOpenApiModules}")
+            }
+        }
+        jacksonMinimumVersions.keySet().each { coordinate ->
+            if (consumerVersions[coordinate] != resolvedVersions[coordinate]) {
+                throw new GradleException(
+                    "Generated POM consumer must preserve ${coordinate}:${resolvedVersions[coordinate]}, " +
+                    "resolved ${consumerVersions[coordinate]}"
+                )
+            }
+        }
+        Set<String> consumerModules = consumerVersions.keySet()
         Set<String> forbiddenConsumerTomcatModules = consumerModules.findAll { coordinate ->
             coordinate.startsWith('org.apache.tomcat.embed:') ||
                 coordinate == 'org.apache.tomcat:tomcat-annotations-api' ||
