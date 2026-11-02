@@ -64,15 +64,11 @@ Scenario('Capture tree settings and diagnostic icons', ({ I, DT, Document }) => 
     openFolder(I, DT, 99802);
     I.waitForElement('#SomStromcek li[id="99802"] > .jstree-mirrors .ti-exclamation-circle.text-danger', 30);
     I.seeElement('#SomStromcek li[id="99888"] > .jstree-mirrors .ti-alert-triangle.text-warning');
-    openSettings(I);
-    Document.screenshotElement('#jstreeSettingsModal .modal-content', '/redactor/webpages/jstree-settings.png', 1280, 760);
-    I.click('#jstreeSettingsModal .btn-close-editor');
-    I.waitForInvisible('#jstreeSettingsModal', 10);
 
     Document.screenshotElement('#SomStromcek li[id="99799"]', '/redactor/webpages/mirroring/tree-problems.png', 1280, 680);
 });
 
-Scenario('Capture page and folder delete previews without deleting content', ({ I, DT, DTE, Document }) => {
+Scenario('Capture page and folder delete previews without deleting content', ({ I, DT, DTE, Document, i18n }) => {
     // This existing recovery fixture has active mirroring between its SK and EN roots.
     openFolder(I, DT, 113666);
     DT.filterEquals('title', 'sk_doc_recover');
@@ -80,14 +76,14 @@ Scenario('Capture page and folder delete previews without deleting content', ({ 
     I.click('#datatableInit_wrapper button.buttons-select-all');
     I.click(DT.btn.delete_button);
     DTE.waitForEditor();
-    I.waitForText('Zmazané budú aj nasledujúce zrkadlené webové stránky:', 30, '#datatableInit_modal .delete-mirrors-info');
+    i18n.waitForText('The following mirrored pages will also be deleted:', 30, '#datatableInit_modal .delete-mirrors-info');
     I.seeElement('#datatableInit_modal button.btn-primary:enabled');
     Document.screenshotElement('#datatableInit_modal .modal-content', '/redactor/webpages/mirroring/delete-pages.png', 1280, 600);
     DTE.cancel();
 
     I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor('groups-datatable');
-    I.waitForText('Zmazané budú aj nasledujúce zrkadlené priečinky:', 30, '#groups-datatable_modal .delete-mirrors-info');
+    i18n.waitForText('The following mirrored folders will also be deleted:', 30, '#groups-datatable_modal .delete-mirrors-info');
     I.seeElement('#groups-datatable_modal button.btn-primary:enabled');
     Document.screenshotElement('#groups-datatable_modal .modal-content', '/redactor/webpages/mirroring/delete-groups.png', 1280, 600);
     DTE.cancel();

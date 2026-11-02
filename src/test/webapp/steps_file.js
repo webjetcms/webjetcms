@@ -500,7 +500,8 @@ module.exports = function () {
 
     jstreeReset() {
       this.clickCss("button.buttons-jstree-settings");
-      this.waitForElement("#jstreeSettingsModal");
+      this.waitForElement("#jstreeSettingsModal", 10);
+      this.waitForVisible("#jstree-settings-showid", 10);
       this.uncheckOption("#jstree-settings-showid");
       this.uncheckOption("#jstree-settings-showorder");
       this.uncheckOption("#jstree-settings-showpages");
