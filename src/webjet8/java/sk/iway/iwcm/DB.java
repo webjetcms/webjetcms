@@ -1210,6 +1210,52 @@ public class DB
 	}
 
 	/**
+	 * Builds a complete, parenthesized SQL IN condition for comma-separated integer IDs.
+	 * Lists are split using {@code dbInClauseMaxItems} (default 1000) on every database.
+	 * Oracle is always capped at 1000 for compatibility with older supported versions;
+	 * non-positive configuration values fall back to 1000.
+	 * Chunks are joined with OR inside outer parentheses, so surrounding AND conditions
+	 * apply to every chunk. Splitting does not avoid limits on the whole SQL statement.
+	 *
+	 * <pre>{@code
+	 * String sql = "SELECT * FROM documents_history d WHERE "
+	 *     + DB.getInCondition("d.history_id", historyIds.toString())
+	 *     + " AND d.publicable=" + DB.getBooleanSql(true);
+	 * }</pre>
+	 *
+	 * @param columnName trusted column name, optionally qualified by a table name or alias;
+	 *                   only identifier syntax is validated, not the query context
+	 * @param values comma-separated signed long IDs; surrounding whitespace is ignored;
+	 *               SQL expressions, quoted strings and empty list items are not supported
+	 * @return a parenthesized condition, or {@code (1=0)} for null or blank input
+	 * @throws IllegalArgumentException if the column syntax or any ID is invalid
+	 */
+	public static String getInCondition(String columnName, String values)
+	{
+		if (isValidColumnName(columnName, true) == false)
+			throw new IllegalArgumentException("Invalid SQL column name");
+		if (values == null || values.isBlank()) return "(1=0)";
+
+		int maxItems = Constants.getInt("dbInClauseMaxItems");
+		if (maxItems <= 0) maxItems = 1000;
+		if (Constants.DB_TYPE == Constants.DB_ORACLE) maxItems = Math.min(maxItems, 1000);
+
+		String[] ids = values.split(",", -1);
+		StringBuilder condition = new StringBuilder("(");
+		for (int i = 0; i < ids.length; i++)
+		{
+			if (i % maxItems == 0)
+			{
+				if (i > 0) condition.append(") OR ");
+				condition.append(columnName).append(" IN (");
+			}
+			else condition.append(',');
+			condition.append(Long.parseLong(ids[i].trim()));
+		}
+		return condition.append("))").toString();
+	}
+
+	/**
 	 * Add lower/unaccent(column) for case insensitive search in Oracle/PostgreSQL
 	 * @param column
 	 * @return
