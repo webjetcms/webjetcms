@@ -33,7 +33,7 @@
 - AI Chat - história rozhovorov a prílohy sa nepridávajú do ZIP archívov ani offline exportu webu, ani pri exporte nadradeného priečinka.
 - AI Chat - lokálna história rozhovorov a prílohy sú vylúčené z balíka WAR a ignorované v Gite, aby sa neprenášali do distribúcie ani repozitára.
 - AI Chat - prepnutie asistenta obnoví jeho naposledy otvorený rozhovor vrátane rozpísanej správy a neodoslaných príloh. Tlačidlo **Nový chat** naďalej začne nový rozhovor.
-- AI Chat - oneskorené načítanie histórie už neprepíše práve dokončenú odpoveď ani nevráti odoslanú otázku do poľa na správu. Po dokončení odpovede sa načíta aktuálna história (#386).
+- AI Chat - oneskorené načítanie histórie už neprepíše práve dokončenú odpoveď ani nevráti odoslanú otázku do poľa na správu, a to aj pri otvorení rozhovoru z histórie. Po dokončení odpovede sa načíta aktuálna história (#386).
 - AI Chat - generovanie a zastavenie odpovede zohľadňujú vlastníka aj doménu rozhovoru. Rozhovory s rovnakým ID u rôznych používateľov alebo domén sa navzájom neblokujú ani nezastavujú (#386).
 - AI Chat - vymazanie rozhovoru sa dokončí aj vtedy, keď sa jeho úloha zruší ešte pred začatím generovania odpovede. Rozhovor už nezostane čakať na opakované vymazanie (#386).
 - AI Chat - opravené zobrazovanie interných zástupných značiek namiesto príkazov `!INCLUDE(...)!` z príloh. Text príkazov zostáva dostupný aj pri pokračovaní rozhovoru.

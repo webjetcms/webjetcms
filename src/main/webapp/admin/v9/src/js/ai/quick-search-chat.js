@@ -406,16 +406,16 @@ export class QuickSearchChat {
         const selection = ++this.selectionVersion;
         try {
             let chat = this.findThread(id);
-            if (!chat?.state.pending) {
+            if (chat) {
+                this.refreshConversation(chat);
+            } else {
                 const detail = await chatHistoryRequest(`/threads/${encodeURIComponent(id)}`, { signal: this.scrollController.signal });
                 if (this.disposed || selection !== this.selectionVersion) return;
-                if (!chat) {
-                    const assistant = this.assistants?.find(item => item.assistantId === detail.thread.assistantId) || {
-                        assistantId: detail.thread.assistantId, provider: detail.thread.provider,
-                        description: detail.thread.assistantName, providerTitle: detail.thread.assistantName
-                    };
-                    chat = this.createChat({ ...assistant, persistentChat: true });
-                }
+                const assistant = this.assistants?.find(item => item.assistantId === detail.thread.assistantId) || {
+                    assistantId: detail.thread.assistantId, provider: detail.thread.provider,
+                    description: detail.thread.assistantName, providerTitle: detail.thread.assistantName
+                };
+                chat = this.createChat({ ...assistant, persistentChat: true });
                 this.applyDetail(chat, detail);
             }
             if (selection !== this.selectionVersion || this.disposed) return;
