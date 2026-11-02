@@ -461,13 +461,18 @@ export class QuickSearchChat {
     }
 
     async refreshConversation(chat) {
-        if (!chat.state.threadId || chat.state.pending || chat.state.disposed || this.disposed || chat.historyRefreshing) return;
+        if (!chat.state.threadId || chat.state.pending || chat.state.disposed || this.disposed) return;
+        if (chat.historyRefreshing) {
+            // A completed turn needs fresh history; the in-flight response may predate it.
+            chat.historyRefreshQueued = true;
+            return;
+        }
         chat.historyRefreshing = true;
         try {
             const detail = await chatHistoryRequest(`/threads/${encodeURIComponent(chat.state.threadId)}`, { signal: this.scrollController.signal });
-            if (!this.disposed) this.applyDetail(chat, detail);
+            if (!this.disposed && !chat.historyRefreshQueued) this.applyDetail(chat, detail);
         } catch (error) {
-            if (this.disposed) return;
+            if (this.disposed || chat.historyRefreshQueued) return;
             if (error.status === 404 && (chat.deletionRequested || chat.threadInfo?.status === 'DELETE_PENDING')) this.removeChat(chat.state.threadId);
             else if (error.status === 404 && !chat.threadInfo && chat.state.revision == null) {
                 chat.state.threadId = null;
@@ -476,6 +481,10 @@ export class QuickSearchChat {
             else if (error.status !== 404) { chat.state.notice = error.message; chat.refresh(); }
         } finally {
             chat.historyRefreshing = false;
+            if (chat.historyRefreshQueued) {
+                chat.historyRefreshQueued = false;
+                this.refreshConversation(chat);
+            }
         }
     }
 

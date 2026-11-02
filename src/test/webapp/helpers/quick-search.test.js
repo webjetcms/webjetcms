@@ -1786,6 +1786,34 @@ test('Returning to a busy persistent thread refreshes its completed response and
     assert.match(host.chat.element.textContent, /Completed answer/);
 });
 
+test('A completed turn ignores stale history and requests a fresh reload', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    await openSavedChat(f, 'saved-thread', 'Saved answer');
+    const host = f.controller.chat;
+    const chat = host.chat;
+    const detail = { thread: { ...chat.threadInfo }, messages: [...chat.state.messages] };
+    host.refreshConversation(chat);
+    const olderRefresh = f.requests.at(-1);
+    const requestsBeforeCompletion = f.requests.length;
+
+    typeChat(chat.$input[0], 'Second question');
+    sendChat(chat.$input[0]);
+    const turn = f.chatRequests.at(-1);
+    turn.callbacks.onMetadata({ threadId: detail.thread.id, revision: 2,
+        messageId: 'second-answer', userMessageId: 'second-question' });
+    turn.resolve({ success: true, persisted: true, response: 'Second answer' });
+    await tick();
+    await f.respond(olderRefresh, detail);
+
+    assert.equal(chat.state.revision, 2);
+    assert.deepEqual(Array.from(chat.state.messages, message => message.text),
+        ['Saved question', 'Saved answer', 'Second question', 'Second answer']);
+    assert.equal(chat.$input.val(), '');
+    assert.equal(f.requests.length, requestsBeforeCompletion + 1, 'Completion must trigger one fresh history request.');
+    assert.equal(f.requests.at(-1).url.pathname, olderRefresh.url.pathname);
+});
+
 test('Persistent assistant switching starts a usable chat after its last selected thread is removed', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
