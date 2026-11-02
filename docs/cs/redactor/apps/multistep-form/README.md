@@ -259,6 +259,21 @@ Při pokusu o úpravu nebo odstranění položky, která je použita v podmínce
 
 ![](save-condition-error.png)
 
+### Vazby
+
+Karta **Vazby** při úpravě stávajícího pole ukazuje, která další pole používají jeho hodnotu.
+
+- **Zobrazení polí** – pole, jejichž zobrazení závisí na tomto poli.
+- **Povinné vyplnění polí** – pole, jejichž povinné vyplnění závisí na tomto poli.
+
+![Karta Vazby se seznamy polí používaných v podmínkách zobrazení a povinnosti.](tab-relations.png)
+
+Každé pole se v příslušném seznamu zobrazí jednou, i když se na něj odkazuje ve více částech podmínky.
+
+Klepnutím na název otevřete editor daného pole. Pokud je v jiném kroku, přepne se i vybraný krok formuláře. Při neuložených změnách si před přechodem můžete vybrat, zda je chcete zahodit, nebo zůstat v původním editoru.
+
+Například u pravidla „Telefonní číslo je povinné, pokud Jméno a příjmení obsahuje text“ naleznete v kartě **Vazby** pole **Jméno a příjmení** položku **Telefonní číslo** v seznamu podmínek povinnosti. Samotné pravidlo nadále upravujete v kartě **Povinnost** pole **Telefonní číslo**.
+
 ### Statistika
 
 Karta **Statistika** umožňuje zapnout statistiku odpovědí pro danou položku formuláře. Statistiku aktivujete zvolením možnosti **Zobrazit statistiku**. Po jejím zapnutí se zobrazí všechna dostupná nastavení statistiky pro danou položku.

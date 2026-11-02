@@ -38,9 +38,11 @@ import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.FormsServiceImpl;
 import sk.iway.iwcm.components.forms.RegExpRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.ConditionType;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.components.multistep_form.support.FormItemUsage;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.stat.rest.StatService;
@@ -471,6 +473,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         entity.setGeneratedTitle(generatedTitle);
 
         if(ProcessItemAction.GETONE.equals(action)) {
+            setFieldUsage(entity);
             entity.setRegexValidationArr( Tools.getTokensInteger(entity.getRegexValidation(), "+") );
 
             // IF colorScheme is set, useColorScheme is true and vice versa
@@ -503,6 +506,35 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         }
 
         return entity;
+    }
+
+    /** Populates reverse condition references only for a persisted field in the current domain. */
+    private void setFieldUsage(FormItemEntity entity) {
+        entity.setVisibilityUsage(List.of());
+        entity.setRequirementUsage(List.of());
+
+        if(entity.getId() == null || entity.getId() < 1 || Tools.isEmpty(entity.getFormName()) ||
+            Tools.isEmpty(entity.getItemFormId()) ||
+            Objects.equals(entity.getDomainId(), CloudToolsForCore.getDomainId()) == false ||
+            MultistepFormsService.getChartStatInfo(getRequest()) != null) return;
+
+        entity.setVisibilityUsage(getFieldUsage(entity, ConditionType.VISIBILITY));
+        entity.setRequirementUsage(getFieldUsage(entity, ConditionType.REQUIREMENT));
+    }
+
+    /** Returns referenced fields in form order, with one entry per logical field identifier. */
+    private List<FormItemUsage> getFieldUsage(FormItemEntity entity, ConditionType conditionType) {
+        int domainId = CloudToolsForCore.getDomainId();
+        List<Long> ids = formItemsConditionsRepository.getDependedItems(entity.getFormName(), entity.getItemFormId(), conditionType, domainId);
+        if(ids.isEmpty()) return List.of();
+
+        List<FormItemEntity> fields = formItemsRepository.findAllByFormNameAndIdInAndDomainId(entity.getFormName(), ids, domainId)
+            .stream()
+            .filter(field -> Objects.equals(field.getItemFormId(), entity.getItemFormId()) == false)
+            .toList();
+        if(fields.isEmpty()) return List.of();
+
+        return multistepFormsService.prepareFieldUsage(fields, entity.getFormName(), getProp());
     }
 
     /**

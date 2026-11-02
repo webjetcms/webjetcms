@@ -2,6 +2,8 @@ package sk.iway.iwcm.components.multistep_form.jpa;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -16,6 +18,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
+import sk.iway.iwcm.components.multistep_form.support.FormItemUsage;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -42,6 +45,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
     @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
     @DataTableTab(id = MultistepFormsService.VISIBILITY_TAB, title = "components.form_items_condition.visibility_tab"),
     @DataTableTab(id = MultistepFormsService.REQUIREMENT_TAB, title = "components.form_items_condition.requirement_tab"),
+    @DataTableTab(id = "relations", title = "components.form_items.relations.tab"),
     @DataTableTab(id = "stat", title = "components.form_items.stat_tab")
 })
 public class FormItemEntity extends BaseEditorFields {
@@ -199,6 +203,14 @@ public class FormItemEntity extends BaseEditorFields {
         )}
     )
     private List<FormItemsConditionEntity> requirementConditions;
+
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<FormItemUsage> visibilityUsage = List.of();
+
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<FormItemUsage> requirementUsage = List.of();
 
     @Column(name = "error_count")
     private Integer errorCount;

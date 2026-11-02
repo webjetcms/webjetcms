@@ -259,6 +259,21 @@ When you try to edit or delete an item that is used in a condition of another it
 
 ![](save-condition-error.png)
 
+### Bindings
+
+The **Links** tab shows which other fields use its value when editing an existing field.
+
+- **Field Display** – fields whose display depends on this field.
+- **Mandatory fields** – fields whose mandatory completion depends on this field.
+
+![Relations tab with lists of fields used in display conditions and obligations.](tab-relations.png)
+
+Each field appears once in the corresponding list, even if it is referenced in multiple parts of the condition.
+
+Clicking on the name will open the editor for that field. If it is in a different step, the selected form step will also be switched. If you have unsaved changes, you can choose to discard them or stay in the original editor before switching.
+
+For example, for the rule "Phone number is required if First and Last name contains text", you will find **Phone number** in the list of requirement conditions on the **First and Last name** field's **Relationships** tab. You continue to edit the rule itself on the **Requirement** tab of the **Phone number** field.
+
 ### Statistics
 
 The **Statistics** tab allows you to enable response statistics for a given form item. To enable statistics, select the **Show statistics** option. Once enabled, all available statistics settings for the given item will be displayed.
