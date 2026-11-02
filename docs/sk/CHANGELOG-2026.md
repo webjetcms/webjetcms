@@ -355,6 +355,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- AI Chat - história a prílohy sú chránené aj pred premenovaním cez vlastnosti súboru. Nemožno premenovať ich priečinok, jeho obsah ani nadradený priečinok (#386).
+
 - AI asistenti - vyhľadávanie v štatistike a grafy používania zobrazujú iba záznamy a asistentov aktuálnej domény.
 
 - AI asistenti - sťahovanie a uloženie dočasných obrázkov prijíma iba názov existujúceho súboru v priečinku AI. Absolútne cesty, prechody do iných priečinkov a symbolické odkazy sú odmietnuté.

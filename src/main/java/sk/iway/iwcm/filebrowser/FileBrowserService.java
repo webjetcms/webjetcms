@@ -191,10 +191,12 @@ public class FileBrowserService {
 		{
 			if (!editForm.getFile().equals(editForm.getOrigFile()))
 			{
-				Adminlog.add(Adminlog.TYPE_FILE_EDIT, "Rename file: oldUrl="+editForm.getDir()+"/"+editForm.getOrigFile()+" newUrl="+editForm.getDir()+"/"+editForm.getFile(), -1, -1);
-
 				String dir = Tools.getRealPath(editForm.getDir());
-				Tools.renameFile(dir + File.separatorChar + editForm.getOrigFile(), dir + File.separatorChar + editForm.getFile());
+				if (Tools.renameFile(dir + File.separatorChar + editForm.getOrigFile(), dir + File.separatorChar + editForm.getFile()) == false)
+				{
+					return SpringUrlMapping.redirectTo403();
+				}
+				Adminlog.add(Adminlog.TYPE_FILE_EDIT, "Rename file: oldUrl="+editForm.getDir()+"/"+editForm.getOrigFile()+" newUrl="+editForm.getDir()+"/"+editForm.getFile(), -1, -1);
 				needRefreshParent = true;
 
 				//ak existuje full text zmen odkaz

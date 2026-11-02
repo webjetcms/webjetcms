@@ -22,6 +22,7 @@ import sk.iway.Html2Text;
 import sk.iway.Password;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FilePathTools;
+import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.components.domainRedirects.DomainRedirectDB;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
@@ -176,6 +177,9 @@ public class Tools
 	 */
 	public static boolean renameFile(String oldFilePath, String newFilePath)
 	{
+		// Legacy disk renames bypass IwcmFile, so protect private chat paths and their parent directories here too.
+		if (AiChatPaths.containsPrivateTree(new File(oldFilePath)) || AiChatPaths.containsPrivateTree(new File(newFilePath))) return false;
+
 		if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(oldFilePath)))
 		{
 			new IwcmFile(oldFilePath).renameTo(new IwcmFile(newFilePath));
