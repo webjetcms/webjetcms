@@ -78,9 +78,9 @@ class DeleteMirrorsServiceTest {
 
         DeleteMirrorsResult result = preview(folders, List.of(10, 11));
 
-        assertEquals(List.of(12), result.getItems().stream().map(DeleteMirrorsResult.Item::getId).toList());
+        assertEquals(List.of(folders ? 12 : pageId(12)), result.getItems().stream().map(DeleteMirrorsResult.Item::getId).toList());
         DeleteMirrorsResult.Item visible = result.getItems().get(0);
-        assertEquals(folders ? "/autotest-folder-12" : "/autotest-folder-12/autotest-page-12", visible.getFullPath());
+        assertEquals(folders ? "/autotest-folder-12" : "/autotest-folder-12/autotest-page-1012", visible.getFullPath());
         assertEquals(DOMAIN, visible.getDomainName());
         assertTrue(result.isHiddenMirrors());
     }
@@ -110,7 +110,12 @@ class DeleteMirrorsServiceTest {
     }
 
     private DeleteMirrorsResult preview(boolean folders, List<Integer> ids) {
-        return folders ? service.getGroupMirrors(ids, user) : service.getPageMirrors(ids, user);
+        return folders ? service.getGroupMirrors(ids, user) : service.getPageMirrors(ids.stream().map(DeleteMirrorsServiceTest::pageId).toList(), user);
+    }
+
+    // Keep page IDs distinct from folder IDs to catch lookups using the wrong identifier.
+    private static int pageId(int groupId) {
+        return 1000 + groupId;
     }
 
     private void addItem(int id, boolean accessible) {
@@ -123,20 +128,20 @@ class DeleteMirrorsServiceTest {
         groupAccess.when(() -> GroupsDB.isGroupEditable(user, id)).thenReturn(accessible);
 
         DocDetails page = new DocDetails();
-        page.setDocId(id);
+        page.setDocId(pageId(id));
         page.setGroupId(id);
-        page.setFullPath(folder.getFullPath() + "/autotest-page-" + id);
-        when(documents.getBasicDocDetails(id, false)).thenReturn(page);
+        page.setFullPath(folder.getFullPath() + "/autotest-page-" + pageId(id));
+        when(documents.getBasicDocDetails(pageId(id), false)).thenReturn(page);
         when(editor.isPageEditable(user, page, true)).thenReturn(accessible);
-        pageMirrors.when(() -> DocMirroringServiceV9.getSyncId(id)).thenReturn(SYNC_ID);
+        pageMirrors.when(() -> DocMirroringServiceV9.getSyncId(pageId(id))).thenReturn(SYNC_ID);
         folderMirrors.when(() -> GroupMirroringServiceV9.getSyncId(id)).thenReturn(SYNC_ID);
         mirroring.when(() -> MirroringService.isEnabled(id)).thenReturn(true);
     }
 
     private void setMirrors(int sourceId, Integer... ids) {
-        List<DocDetails> pages = Arrays.stream(ids).map(id -> documents.getBasicDocDetails(id, false)).toList();
+        List<DocDetails> pages = Arrays.stream(ids).map(id -> documents.getBasicDocDetails(pageId(id), false)).toList();
         List<GroupDetails> folders = Arrays.stream(ids).map(groups::getGroup).toList();
-        pageMirrors.when(() -> DocMirroringServiceV9.getDocBySyncId(SYNC_ID, sourceId)).thenReturn(pages);
+        pageMirrors.when(() -> DocMirroringServiceV9.getDocBySyncId(SYNC_ID, pageId(sourceId))).thenReturn(pages);
         folderMirrors.when(() -> GroupMirroringServiceV9.getGroupsBySyncId(SYNC_ID, sourceId)).thenReturn(folders);
     }
 }

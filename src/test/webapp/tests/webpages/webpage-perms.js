@@ -41,7 +41,7 @@ Scenario('uvodne overenie prav', ({ I, DT }) => {
     I.seeElement(locate('.nav-link').withText("Zmazané"));
 });
 
-Scenario('stranky-overenie prav na tlacidla', ({ I, DT, DTE }) => {
+Scenario('stranky-overenie prav na tlacidla', async ({ I, DT, DTE }) => {
     I.relogin("admin");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=1&removePerm=addPage,pageSave,deletePage,pageSaveAs");
     I.dontSeeElement("#datatableInit_wrapper button.buttons-create");
@@ -82,6 +82,18 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, DT, DTE }) => {
     DTE.waitForEditor();
     I.see("Naozaj chcete zmazať položku?");
     checkDeniedDeletePreview(I, DTE);
+
+    // The preview guard must not be the only protection against a direct delete request.
+    const docId = await I.grabAttributeFrom(locate('#datatableInit tbody tr').withText('Nedá sa zmazať'), 'id');
+    const session = await I.grabCookie('JSESSIONID');
+    const response = await I.sendPostRequest('/admin/rest/web-pages/editor', {
+        action: 'remove', data: { [docId]: { docId: Number(docId) } }
+    }, {
+        'x-auth-token': '', Cookie: 'JSESSIONID=' + session.value,
+        'X-CSRF-Token': await I.grabValueFrom('form[name="adminLogoffForm"] input[name="__token"]'),
+        Referer: await I.grabCurrentUrl()
+    });
+    I.assertContain(response.data.error || '', 'nemáte právo na zmazanie web stránky');
 
     // Reload the page to verify that the rejected preview left the existing content intact.
     I.amOnPage("/admin/v9/webpages/web-pages-list/?removePerm=addPage,pageSave,deletePage,pageSaveAs,forceShowButton&groupid=67");

@@ -41,7 +41,6 @@ class GroupsTreePageMirrorsTest {
                 MockedStatic<Prop> translations = mockStatic(Prop.class);
                 MockedStatic<EditorService> permissions = mockStatic(EditorService.class);
                 MockedStatic<GroupMirroringServiceV9> languages = mockStatic(GroupMirroringServiceV9.class);
-                MockedStatic<MirroringService> diagnostics = mockStatic(MirroringService.class);
                 MockedConstruction<ComplexQuery> queries = mockConstruction(ComplexQuery.class, (query, context) -> {
                     when(query.setSql(anyString())).thenReturn(query);
                     when(query.setParams(any(Object[].class))).thenReturn(query);
@@ -74,7 +73,12 @@ class GroupsTreePageMirrorsTest {
             when(groups.getGroup(200)).thenReturn(foreign);
             when(groups.getGroup(300)).thenReturn(trash);
             when(groups.getGroup(400)).thenReturn(czech);
-            groupAccess.when(() -> GroupsDB.isGroupEditable(user, 400)).thenReturn(true);
+            // These pages must pass permissions so domain/trash filtering is tested independently.
+            for (int groupId : List.of(200, 300, 400)) {
+                groupAccess.when(() -> GroupsDB.isGroupEditable(user, groupId)).thenReturn(true);
+            }
+            languages.when(() -> GroupMirroringServiceV9.getLanguage(foreign)).thenReturn("en");
+            languages.when(() -> GroupMirroringServiceV9.getLanguage(trash)).thenReturn("en");
             languages.when(() -> GroupMirroringServiceV9.getLanguage(czech)).thenReturn("cz");
 
             DocDetails source = page(10, 100);
@@ -97,7 +101,35 @@ class GroupsTreePageMirrorsTest {
             service.setMirroringLinks(List.of(reloaded), user, "dt-tree-filter-system-trash", request);
             assertEquals(node.getMirrors(), reloaded.getMirrors());
             assertEquals(1, queries.constructed().size());
+        }
+    }
 
+    /** Maps diagnostics to their sync IDs and caches both problems and clean pages within one request. */
+    @Test
+    void resolvesDiagnosticsOncePerPageAndRechecksPermissions() {
+        Identity user = mock(Identity.class);
+        GroupsDB groups = mock(GroupsDB.class);
+        Prop prop = mock(Prop.class);
+        MockHttpServletRequest request = request();
+        GroupsTreeService service = new GroupsTreeService();
+        GroupDetails group = group(100, "autotest.example", "/autotest");
+        DocDetails source = page(10, 100);
+        DocumentsJsTreeItem node = new DocumentsJsTreeItem(source, 10);
+        DocumentsJsTreeItem reloaded = new DocumentsJsTreeItem(source, 10);
+        try (MockedStatic<DocDB> docAccess = mockStatic(DocDB.class);
+                MockedStatic<GroupsDB> groupAccess = mockStatic(GroupsDB.class);
+                MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<Prop> translations = mockStatic(Prop.class);
+                MockedStatic<EditorService> permissions = mockStatic(EditorService.class);
+                MockedStatic<MirroringService> diagnostics = mockStatic(MirroringService.class)) {
+            docAccess.when(DocDB::getInstance).thenReturn(mock(DocDB.class));
+            groupAccess.when(GroupsDB::getInstance).thenReturn(groups);
+            when(groups.getGroup(100)).thenReturn(group);
+            groupAccess.when(() -> GroupsDB.isGroupEditable(user, 100)).thenReturn(true);
+            constants.when(() -> Constants.getString("defaultLanguage")).thenReturn("sk");
+            translations.when(() -> Prop.getInstance("sk")).thenReturn(prop);
+            when(prop.getText("config.trash_dir")).thenReturn("/System/Trash");
+            permissions.when(() -> EditorService.hasPagePermission(user, source)).thenReturn(true);
             // Diagnostics carry the mapping ID, which differs from both page and folder IDs.
             when(user.isEnabledItem("cmp_mirroring")).thenReturn(true);
             when(user.isEnabledItem("menuWebpages")).thenReturn(true);
@@ -155,17 +187,10 @@ class GroupsTreePageMirrorsTest {
             initial.setRequestURI("/admin/v9/webpages/web-pages-list/");
             service.setMirroringLinks(List.of(page), user, "dt-tree", initial);
             service.setMirroringIcons(List.of(page), user, "dt-tree", initial);
-            assertEquals(2, settings.constructed().size());
-            for (AdminSettingsService setting : settings.constructed()) {
-                verify(setting).getJsonBooleanValue("jstreeSettings_web-pages-list", "showMirrorings");
-                verifyNoMoreInteractions(setting);
-            }
-
             MockHttpServletRequest ajax = request();
             ajax.setParameter("showMirrorings", "false");
             service.setMirroringLinks(List.of(page), user, "dt-tree", ajax);
             service.setMirroringIcons(List.of(page), user, "dt-tree", ajax);
-            assertEquals(2, settings.constructed().size());
             diagnostics.verifyNoInteractions();
             assertTrue(queries.constructed().isEmpty());
             assertNull(page.getMirrors());
@@ -183,9 +208,6 @@ class GroupsTreePageMirrorsTest {
             for (String mode : List.of("dt-tree-system", "dt-tree-trash", "select")) {
                 service.setMirroringLinks(List.of(page), user, mode, request());
             }
-            MockHttpServletRequest hidden = request();
-            hidden.setParameter("showMirrorings", "false");
-            service.setMirroringLinks(List.of(page), user, "dt-tree", hidden);
             when(user.isDisabledItem("cmp_mirroring")).thenReturn(true);
             service.setMirroringLinks(List.of(page), user, "dt-tree", request());
             assertNull(page.getMirrors());

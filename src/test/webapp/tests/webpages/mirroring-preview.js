@@ -1,4 +1,5 @@
-Feature('webpages.mirroring-preview').tag('@singlethread');
+// Suite cleanup uses the browser after the final scenario, including filtered runs.
+Feature('webpages.mirroring-preview').tag('@singlethread').config('Playwright', { restart: 'session' });
 
 const WebjetDteJsTree = require('../../pages/WebjetDteJsTree');
 
@@ -12,17 +13,24 @@ const roots = {};
 let suffix, pageTitle, originalConfig, originalTitleSync, originalMirroring, originalShowPages;
 let cancelSyncUser;
 let deletePermissionGroups;
+let fixtureStarted = false, fixtureReady = false;
 const editableGroups = '#editorAppDTE_Field_editorFields-editableGroups';
 const enabledItems = '#DTE_Field_editorFields-enabledItems';
 const clonePermission = enabledItems + ' li[id="perms_cmp_clone_structure"] > a';
 
-Before(async ({ I, login, Document }) => {
+Before(async ({ I, login, DT, DTE, Document }) => {
     login('admin');
     I.amOnPage(pageUrl);
     if ((await I.grabTextFrom('div.js-domain-toggler div.bootstrap-select button')).trim() !== domain) {
         Document.switchDomain(domain);
     }
-    if (!suffix) suffix = I.getRandomText();
+    if (!fixtureStarted) {
+        fixtureStarted = true;
+        suffix = I.getRandomText();
+        await prepareFixtures(I, DT, DTE, Document);
+        fixtureReady = true;
+    }
+    I.assertTrue(fixtureReady, 'Mirroring fixture setup must complete before running a scenario');
 });
 
 function node(folder) {
@@ -118,7 +126,7 @@ async function syncMembers(I, DT, DTE, lookup) {
     return result;
 }
 
-Scenario('Create own language folders and preserve settings', async ({ I, DT, DTE, Document }) => {
+async function prepareFixtures(I, DT, DTE, Document) {
     originalConfig = await readConfiguration(I, DT, DTE, configName);
     originalTitleSync = await readConfiguration(I, DT, DTE, 'syncGroupAndWebpageTitle');
     Document.setConfigValue('syncGroupAndWebpageTitle', 'false', true);
@@ -181,7 +189,7 @@ Scenario('Create own language folders and preserve settings', async ({ I, DT, DT
     folders.sk.path += '-source';
     I.fillField('#DTE_Field_groupName', folders.sk.name);
     DTE.save();
-});
+}
 
 Scenario('Navigate between language mirrors during search', async ({ I, DT }) => {
     openFolder(I, DT, folders.sk);
@@ -200,28 +208,9 @@ Scenario('Navigate between language mirrors during search', async ({ I, DT }) =>
     I.click(node(folders.en) + ` .jstree-mirror-link[data-group-id="${folders.sk.id}"]`);
     I.waitForElement(node(folders.sk) + ' > a.jstree-clicked', 30);
     I.seeElement(node(folders.en) + '.jstree-mirror-peer');
-});
-
-Scenario('Show mirrored page and folder paths in delete dialogs', ({ I, DT, DTE }) => {
-    openPageDelete(I, DT, DTE, folders.sk);
-    I.waitForText(folders.en.path, 20, pageModal + ' .delete-mirrors-info.alert-warning');
-    I.dontSee(folders.sk.path, pageModal + ' .delete-mirrors-info');
-    I.seeElement(pageModal + ' button.btn-primary:enabled');
-    DTE.cancel();
-
-    I.click(DT.btn.tree_delete_button);
-    DTE.waitForEditor('groups-datatable');
-    I.waitForText(folders.en.path, 20, groupModal + ' .delete-mirrors-info.alert-warning');
-    I.dontSee(folders.sk.path, groupModal + ' .delete-mirrors-info');
-    I.seeElement(groupModal + ' button.btn-primary:enabled');
-    DTE.cancel();
-
-    openFolder(I, DT, roots.plain);
-    I.click(DT.btn.tree_delete_button);
-    DTE.waitForEditor('groups-datatable');
-    I.waitForEnabled(groupModal + ' button.btn-primary', 20);
-    I.dontSeeElement(groupModal + ' .delete-mirrors-info');
-    DTE.cancel();
+    I.click(node(folders.sk) + ' .jstree-mirror-more');
+    I.click(node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders['duplicate-sk'].id}"]`);
+    I.waitForElement(node(folders['duplicate-sk']) + ' > a.jstree-clicked', 30);
 });
 
 Scenario('Open mirrored pages from language links in the tree', async ({ I, DT, DTE }) => {
@@ -256,12 +245,9 @@ Scenario('Open mirrored pages from language links in the tree', async ({ I, DT, 
     I.seeInCurrentUrl('?docid=' + folders['duplicate-sk'].docId);
     DTE.cancel();
 
-    showMirroring(I, false);
-    I.dontSeeElement('#SomStromcek .jstree-mirrors');
-    showMirroring(I, true);
 });
 
-Scenario('Open the affected folder and page mappings from warning icons', async ({ I, DT, DTE }) => {
+Scenario('Open affected mappings and update diagnostics after correcting a duplicate language', async ({ I, DT, DTE }) => {
     const mappings = await syncMembers(I, DT, DTE, pageTitle);
     openFolder(I, DT, folders.sk);
     I.click('button.buttons-jstree-settings');
@@ -291,9 +277,27 @@ Scenario('Open the affected folder and page mappings from warning icons', async 
         I.assertDeepEqual(members, mappings[index].members);
         DTE.cancel(table);
     }
+    openFolder(I, DT, folders['duplicate-sk']);
+    // Resolving the duplicate language leaves only the different folder-depth warning.
+    I.click(DT.btn.tree_edit_button);
+    DTE.waitForEditor('groups-datatable');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
+    DTE.selectOption('lng', 'Nemecký');
+    DTE.save();
+    openFolder(I, DT, folders.sk);
+    I.waitForElement(node(folders.sk) + ' > .jstree-mirrors .ti-alert-triangle.text-warning', 30);
+    I.dontSeeElement(node(folders.sk) + ' > .jstree-mirrors .ti-exclamation-circle.text-danger');
+    I.see('CS', node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders.cz.id}"]`);
+
+    showMirroring(I, false);
+    I.dontSeeElement('#SomStromcek .jstree-mirrors');
+    openFolder(I, DT, folders.sk);
+    I.dontSeeElement('#SomStromcek .jstree-mirrors');
+    I.dontSeeElement('#SomStromcek .jstree-mirror-peer');
 });
 
 Scenario('Hide mirror links without the mirroring permission', ({ I }) => {
+    showMirroring(I, true);
     I.amOnPage(pageUrl + '?groupid=' + folders.sk.id + '&removePerm=cmp_mirroring');
     I.waitForElement(node(folders.sk) + ' > a.jstree-clicked', 30);
     I.dontSeeElement(node(folders.sk) + ' .jstree-mirror-link');
@@ -409,41 +413,6 @@ Scenario('Reject folder deletion without deleteDir while editing remains allowed
     I.relogin('admin');
 });
 
-Scenario('Show warning icons beside the affected folders and navigate overflow links', ({ I, DT, DTE }) => {
-    openFolder(I, DT, folders.sk);
-    showMirroring(I, true);
-    openFolder(I, DT, folders.sk);
-    I.waitForElement(node(folders.sk) + ' > .jstree-mirrors .ti-exclamation-circle.text-danger', 30);
-    I.dontSeeElement(node(folders.sk) + ' > .jstree-mirrors .ti-alert-triangle');
-    I.seeElement(node(folders.sk) + ' > a .ti-folder-filled');
-    I.dontSeeElement(node(folders.sk) + ' > a .ti-exclamation-circle');
-    I.dontSeeElement('#SomStromcek .jstree-mirrors .ti-link');
-    I.see('+1', node(folders.sk) + ' .jstree-mirror-more');
-    I.click(node(folders.sk) + ' .jstree-mirror-more');
-    I.click(node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders['duplicate-sk'].id}"]`);
-    I.waitForElement(node(folders['duplicate-sk']) + ' > a.jstree-clicked', 30);
-
-    // Resolving the duplicate language leaves only the different folder-depth warning.
-    I.click(DT.btn.tree_edit_button);
-    DTE.waitForEditor('groups-datatable');
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    DTE.selectOption('lng', 'Nemecký');
-    DTE.save();
-    openFolder(I, DT, folders.sk);
-    I.waitForElement(node(folders.sk) + ' > .jstree-mirrors .ti-alert-triangle.text-warning', 30);
-    I.dontSeeElement(node(folders.sk) + ' > .jstree-mirrors .ti-exclamation-circle.text-danger');
-    I.see('CS', node(folders.sk) + ` .jstree-mirror-link[data-group-id="${folders.cz.id}"]`);
-
-    showMirroring(I, false);
-    I.dontSeeElement('#SomStromcek .jstree-mirrors');
-    openFolder(I, DT, folders.sk);
-    I.dontSeeElement(node(folders.sk) + ' > .jstree-mirrors .ti-alert-triangle.text-warning');
-    I.dontSeeElement(node(folders.sk) + ' .jstree-mirror-link');
-    I.dontSeeElement('#SomStromcek .jstree-mirrors');
-    I.dontSeeElement('#SomStromcek .jstree-mirror-peer');
-    I.seeElement(node(folders.sk) + ' > a .ti-folder-filled');
-});
-
 Scenario('Reject mirrored page deletion if the last mirror is forbidden', async ({ I, DT, DTE, Document }) => {
     const ids = {};
     for (const [key, folder] of Object.entries(folders)) {
@@ -496,7 +465,7 @@ Scenario('Reject mirrored page deletion if the last mirror is forbidden', async 
     }
 });
 
-Scenario('Restore editable roots after denied mirror deletion', async ({ I, DT, DTE }) => {
+async function restoreDeletePermissions(I, DT, DTE) {
     if (deletePermissionGroups === undefined) return;
     I.relogin('admin');
     I.amOnPage('/admin/v9/users/user-list/');
@@ -512,40 +481,90 @@ Scenario('Restore editable roots after denied mirror deletion', async ({ I, DT, 
     }
     I.assertDeepEqual(await I.grabValueFromAll(editableGroups + ' input.form-control'), deletePermissionGroups);
     DTE.save();
-    I.waitForInvisible(pageModal);
-});
+    await I.waitForInvisible(pageModal);
+    deletePermissionGroups = undefined;
+}
 
-Scenario('Move the previewed pages and both selected mirrored folders to Trash', async ({ I, DT, DTE }) => {
-    const mirrored = [folders.sk, folders.en, folders.cz, folders['duplicate-sk']];
+Scenario('Preview and bulk-delete mirrors without permanently deleting selected counterparts or descendants', async ({ I, DT, DTE }) => {
+    const mirrored = Object.values(folders);
+    const descendants = [];
+    const childTitle = pageTitle + '-descendant';
+    openFolder(I, DT, folders.sk);
+    I.click(DT.btn.tree_add_button);
+    DTE.waitForEditor('groups-datatable');
+    I.fillField('#DTE_Field_groupName', childTitle);
+    DTE.save();
+    for (const folder of mirrored) {
+        openFolder(I, DT, folder);
+        if (await I.grabNumberOfVisibleElements(node(folder) + '.jstree-closed')) I.click(node(folder) + ' > .jstree-ocl');
+        I.jstreeWaitForLoader();
+        I.click(locate(node(folder) + ' > ul > li > a.jstree-anchor').withText(childTitle));
+        DT.waitForLoader();
+        descendants.push({ name: childTitle, id: await I.grabValueFrom('#tree-folder-id'),
+            docId: await I.grabAttributeFrom('#datatableInit tbody tr.is-default-page', 'id') });
+    }
+
     openPageDelete(I, DT, DTE, folders.sk);
-    for (const folder of mirrored.slice(1)) I.waitForText(folder.path, 20, pageModal + ' .delete-mirrors-info');
-    confirmDelete(I, DTE, pageModal);
+    for (const folder of mirrored.slice(1)) I.waitForText(folder.path, 20, pageModal + ' .delete-mirrors-info.alert-warning');
+    I.dontSee(folders.sk.path, pageModal + ' .delete-mirrors-info');
+    I.seeElement(pageModal + ' button.btn-primary:enabled');
+    DTE.cancel();
+
+    // Submit two counterparts from different folders in one request, including a page reached by the first cascade.
+    const selected = [folders.sk.docId, folders.en.docId];
+    const headers = await requestHeaders(I);
+    const preview = await I.sendPostRequest('/admin/rest/web-pages/deletion-preview?ids=' + selected.join(','), {}, headers);
+    I.assertEqual(preview.status, 200);
+    I.assertDeepEqual(preview.data.items.map(item => item.id).sort((a, b) => a - b),
+        [folders.cz.docId, folders['duplicate-sk'].docId].map(Number).sort((a, b) => a - b));
+    const data = {};
+    for (const id of selected) data[id] = (await I.sendGetRequest('/admin/rest/web-pages/' + id, headers)).data;
+    const deleted = await I.sendPostRequest('/admin/rest/web-pages/editor', { action: 'remove', data }, headers);
+    I.assertEqual(deleted.status, 200);
+    I.assertEmpty(deleted.data.error || '');
+    I.assertEmpty(deleted.data.fieldErrors || []);
     I.click('#pills-trash-tab');
     DT.waitForLoader();
     DT.filterEquals('title', pageTitle);
-    I.seeNumberOfElements('#datatableInit tbody tr td.dt-row-edit', mirrored.length);
+    I.assertDeepEqual((await I.grabAttributeFromAll('#datatableInit tbody tr[id]', 'id')).sort(),
+        mirrored.map(folder => folder.docId).sort());
 
     openFolder(I, DT, folders.sk);
-    if (await I.grabNumberOfVisibleElements(node(roots.en) + '.jstree-closed')) {
-        I.click(node(roots.en) + ' > .jstree-ocl');
-        I.jstreeWaitForLoader();
+    for (const folder of [roots.en, folders.sk]) {
+        if (await I.grabNumberOfVisibleElements(node(folder) + '.jstree-closed')) {
+            I.click(node(folder) + ' > .jstree-ocl');
+            I.jstreeWaitForLoader();
+        }
     }
-    I.click(node(folders.en) + ' > a', null, { modifiers: ['Meta'] });
-    DT.waitForLoader();
-    I.seeElement(node(folders.sk) + ' > a.jstree-clicked');
-    I.seeElement(node(folders.en) + ' > a.jstree-clicked');
+    // Select a descendant as well as two mirrored parents to exercise request-wide deletion deduplication.
+    for (const folder of [folders.en, descendants[0]]) {
+        I.click(node(folder) + ' > a', null, { modifiers: ['Meta'] });
+        DT.waitForLoader();
+    }
+    for (const folder of [folders.sk, folders.en, descendants[0]]) I.seeElement(node(folder) + ' > a.jstree-clicked');
     I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor('groups-datatable');
-    for (const folder of mirrored.slice(2)) I.waitForText(folder.path, 20, groupModal + ' .delete-mirrors-info');
+    for (const folder of mirrored.slice(2)) I.waitForText(folder.path, 20, groupModal + ' .delete-mirrors-info.alert-warning');
     confirmDelete(I, DTE, groupModal);
-    for (const folder of mirrored) {
+    for (const folder of [...mirrored, ...descendants]) {
         openFolder(I, DT, folder);
         I.seeElement('#pills-trash-tab.active');
         I.see(folder.name, node(folder) + ' > a');
     }
+    I.amOnPage(pageUrl);
+    I.click('#pills-trash-tab');
+    DT.waitForLoader();
+    DT.filterEquals('title', childTitle);
+    I.assertDeepEqual((await I.grabAttributeFromAll('#datatableInit tbody tr[id]', 'id')).sort(),
+        descendants.map(folder => folder.docId).sort());
+
     openFolder(I, DT, roots.plain);
     I.dontSeeElement('#pills-trash-tab.active');
-    I.see(roots.plain.name, '#datatableInit tbody');
+    I.click(DT.btn.tree_delete_button);
+    DTE.waitForEditor('groups-datatable');
+    I.waitForEnabled(groupModal + ' button.btn-primary', 20);
+    I.dontSeeElement(groupModal + ' .delete-mirrors-info');
+    DTE.cancel();
 });
 
 Scenario('Cancel mirroring only in an editable subtree of the current domain', async ({ I, DT, DTE, Document }) => {
@@ -604,25 +623,38 @@ Scenario('Cancel mirroring only in an editable subtree of the current domain', a
     I.assertDeepEqual(await syncMembers(I, DT, DTE, before), before.map((row, i) => ({ ...row, members: row.members.filter(id => id !== sourceIds[i]) })));
 });
 
-Scenario('Restore settings and remove own fixtures through the UI', async ({ I, DT, DTE, Document }) => {
+async function restoreCancelSyncPermissions(I, DTE) {
+    if (!cancelSyncUser) return;
     I.relogin('admin');
-    if (cancelSyncUser) {
-        I.amOnPage('/admin/v9/users/user-list/?id=' + cancelSyncUser.id);
-        DTE.waitForEditor();
-        I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
-        if (!cancelSyncUser.enabledItems.includes('perms_cmp_clone_structure_anchor') && await I.grabNumberOfVisibleElements(clonePermission + '.jstree-clicked')) I.click(clonePermission);
-        const paths = await I.grabValueFromAll(editableGroups + ' input.form-control');
-        for (let index = paths.length - 1; index >= 0; index--) {
-            if (paths[index].endsWith('/' + roots.plain.name)) I.click(locate(editableGroups + ' button.btn-webjet-jstree-item-remove').at(index + 1));
-        }
-        DTE.save();
-        I.amOnPage('/admin/v9/users/user-list/?id=' + cancelSyncUser.id);
-        DTE.waitForEditor();
-        I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
-        I.assertDeepEqual((await I.grabAttributeFromAll(enabledItems + ' a.jstree-clicked', 'id')).sort(), cancelSyncUser.enabledItems);
-        I.assertDeepEqual(await I.grabValueFromAll(editableGroups + ' input.form-control'), cancelSyncUser.editableGroups);
-        DTE.cancel();
+    I.amOnPage('/admin/v9/users/user-list/?id=' + cancelSyncUser.id);
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
+    if (!cancelSyncUser.enabledItems.includes('perms_cmp_clone_structure_anchor') && await I.grabNumberOfVisibleElements(clonePermission + '.jstree-clicked')) I.click(clonePermission);
+    const paths = await I.grabValueFromAll(editableGroups + ' input.form-control');
+    for (let index = paths.length - 1; index >= 0; index--) {
+        if (paths[index].endsWith('/' + roots.plain.name)) I.click(locate(editableGroups + ' button.btn-webjet-jstree-item-remove').at(index + 1));
     }
+    DTE.save();
+    I.amOnPage('/admin/v9/users/user-list/?id=' + cancelSyncUser.id);
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
+    I.assertDeepEqual((await I.grabAttributeFromAll(enabledItems + ' a.jstree-clicked', 'id')).sort(), cancelSyncUser.enabledItems);
+    I.assertDeepEqual(await I.grabValueFromAll(editableGroups + ' input.form-control'), cancelSyncUser.editableGroups);
+    DTE.cancel();
+    await I.waitForInvisible(pageModal);
+    cancelSyncUser = undefined;
+}
+
+After(async ({ I, DT, DTE }) => {
+    await restoreDeletePermissions(I, DT, DTE);
+    await restoreCancelSyncPermissions(I, DTE);
+});
+
+AfterSuite(async ({ I, DT, DTE, Document }) => {
+    if (!fixtureStarted) return;
+    await restoreDeletePermissions(I, DT, DTE);
+    await restoreCancelSyncPermissions(I, DTE);
+    I.relogin('admin');
     I.amOnPage(pageUrl);
     if ((await I.grabTextFrom('div.js-domain-toggler div.bootstrap-select button')).trim() !== domain) {
         Document.switchDomain(domain);
@@ -671,8 +703,5 @@ Scenario('Restore settings and remove own fixtures through the UI', async ({ I, 
         confirmDelete(I, DTE, groupModal);
         I.waitForInvisible(node(folder), 20);
     }
-});
-
-Scenario('Log out to reset the selected domain', ({ I }) => {
     I.logout();
 });
