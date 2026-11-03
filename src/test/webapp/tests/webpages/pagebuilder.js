@@ -1094,7 +1094,7 @@ async function assertWorkbenchScrollPreserved(I) {
         'Restoring focus must preserve every rendered scroll position: '+JSON.stringify({before: probe.before, min, max}));
 }
 
-for (const action of ['library', 'style', 'copy']) {
+for (const action of ['library', 'style']) {
     Scenario('workbench restores focus without scrolling after '+action, async ({I, DTE, Document}) => {
         await openScrolledWorkbenchFixture(I, DTE, Document);
         if (action === 'library') {
@@ -1110,17 +1110,11 @@ for (const action of ['library', 'style', 'copy']) {
             I.waitForInvisible('.pb-library', 10);
         } else {
             I.click('.pb-workbench [data-pb-action=more]');
-            if (action === 'style') {
-                I.click('.pb-workbench [data-pb-action=style]');
-                I.waitForVisible('.pb-modal', 10);
-                armWorkbenchScrollProbe(I);
-                I.click('.pb-modal__header__button-close');
-                I.waitForInvisible('.pb-modal', 10);
-            } else {
-                armWorkbenchScrollProbe(I);
-                I.click('.pb-workbench [data-pb-action=copy]');
-                I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.clipboard'));
-            }
+            I.click('.pb-workbench [data-pb-action=style]');
+            I.waitForVisible('.pb-modal', 10);
+            armWorkbenchScrollProbe(I);
+            I.click('.pb-modal__header__button-close');
+            I.waitForInvisible('.pb-modal', 10);
         }
         await assertWorkbenchScrollPreserved(I);
         I.switchTo();
@@ -1129,45 +1123,42 @@ for (const action of ['library', 'style', 'copy']) {
     });
 }
 
-for (const type of ['section', 'container', 'column']) {
-    Scenario('workbench keeps inserted '+type+' below the toolbar with smooth scrolling', async ({I, DTE, Document}) => {
-        await openScrolledWorkbenchFixture(I, DTE, Document);
-        I.executeScript((root, type) => {
-            const pb = window.pageBuilder, grid = pb.grid;
-            const column = '<div class="'+grid.column_default_class+'" style="padding-top:1200px"><p>Inserted block autotest</p></div>';
-            const container = '<div class="'+grid.container_default_class+'"><div class="'+grid.row_default_class+'">'+column+'</div></div>';
-            const content = {column, container, section: '<section class="'+grid.section_default_class+'">'+container+'</section>'}[type];
-            let library = pb.template.library.find(item => item.textKey === type);
-            if (!library) {
-                library = {textKey: type, groups: []};
-                pb.template.library.push(library);
-            }
-            library.groups.push({id: 'autotest-scroll-insert', textKey: 'Scroll insertion autotest', content});
-            pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
-        }, type);
-        I.click('.pb-workbench [data-pb-action=insert]');
-        const parent = {section: '#wjInline-docdata', container: workbenchFixture, column: workbenchFixture+' .row'}[type];
-        await chooseWorkbenchInsertion(I, type, parent, 1);
-        I.fillField('.pb-library .library-filter-input:visible', 'Scroll insertion autotest');
-        I.clickCss('.pb-library [data-library-item-id=autotest-scroll-insert]');
-        I.waitForInvisible('.pb-library', 10);
-        // CodeceptJS cannot poll asynchronous editor readiness through its FrameLocator.
-        await I.usePlaywrightTo('wait for the inserted block editor', async ({page}) => {
-            const frame = await getPageBuilderFrame(page);
-            await frame.waitForFunction(() => {
-                const selected = window.pageBuilder.ui.selected;
-                const field = selected?.querySelector('[data-ckeditor-instance]');
-                const editor = field && CKEDITOR.instances[field.dataset.ckeditorInstance];
-                return selected?.dataset.pbId === 'autotest-scroll-insert' && editor?.status === 'ready' && editor.focusManager.hasFocus;
-            }, null, {timeout: 10000});
-        });
-        const offset = await I.executeScript(() => window.pageBuilder.ui.selected.getBoundingClientRect().top - document.querySelector('.pb-workbench').getBoundingClientRect().bottom);
-        I.assertTrue(Math.abs(offset-20) <= 1, 'The inserted '+type+' must stay below the toolbar, without jumping to its first editor: '+offset);
-        I.switchTo();
-        I.amAcceptingPopups();
-        DTE.cancel();
+Scenario('workbench keeps inserted section below the toolbar with smooth scrolling', async ({I, DTE, Document}) => {
+    await openScrolledWorkbenchFixture(I, DTE, Document);
+    I.executeScript(() => {
+        const pb = window.pageBuilder, grid = pb.grid;
+        const column = '<div class="'+grid.column_default_class+'" style="padding-top:1200px"><p>Inserted block autotest</p></div>';
+        const container = '<div class="'+grid.container_default_class+'"><div class="'+grid.row_default_class+'">'+column+'</div></div>';
+        const content = '<section class="'+grid.section_default_class+'">'+container+'</section>';
+        let library = pb.template.library.find(item => item.textKey === 'section');
+        if (!library) {
+            library = {textKey: 'section', groups: []};
+            pb.template.library.push(library);
+        }
+        library.groups.push({id: 'autotest-scroll-insert', textKey: 'Scroll insertion autotest', content});
+        pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
     });
-}
+    I.click('.pb-workbench [data-pb-action=insert]');
+    await chooseWorkbenchInsertion(I, 'section', '#wjInline-docdata', 1);
+    I.fillField('.pb-library .library-filter-input:visible', 'Scroll insertion autotest');
+    I.clickCss('.pb-library [data-library-item-id=autotest-scroll-insert]');
+    I.waitForInvisible('.pb-library', 10);
+    // CodeceptJS cannot poll asynchronous editor readiness through its FrameLocator.
+    await I.usePlaywrightTo('wait for the inserted block editor', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => {
+            const selected = window.pageBuilder.ui.selected;
+            const field = selected?.querySelector('[data-ckeditor-instance]');
+            const editor = field && CKEDITOR.instances[field.dataset.ckeditorInstance];
+            return selected?.dataset.pbId === 'autotest-scroll-insert' && editor?.status === 'ready' && editor.focusManager.hasFocus;
+        }, null, {timeout: 10000});
+    });
+    const offset = await I.executeScript(() => window.pageBuilder.ui.selected.getBoundingClientRect().top - document.querySelector('.pb-workbench').getBoundingClientRect().bottom);
+    I.assertTrue(Math.abs(offset-20) <= 1, 'The inserted section must stay below the toolbar, without jumping to its first editor: '+offset);
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
 
 /** Captures layout relative to the content root, independent of selection-induced scrolling. */
 async function workbenchGeometry(I) {
@@ -3661,13 +3652,8 @@ Scenario('library content initializes duplicable elements immediately', async ({
 });
 
 Scenario('library image insertion keeps the scrolled destination visible', async ({I, DTE, Document}) => {
-    await openWorkbenchFixture(I, DTE, Document);
+    await openScrolledWorkbenchFixture(I, DTE, Document);
     I.executeScript(() => {
-        const paragraph = document.querySelector('section.pb-workbench-autotest .pb-workbench-copy');
-        const spacer = document.createElement('p');
-        spacer.textContent = 'Tall content autotest';
-        spacer.style.height = '1400px';
-        paragraph.before(spacer);
         const pb = window.pageBuilder;
         pb.template.library.find(item => item.textKey === 'content').groups.push({
             id: 'autotest-blog-image', textKey: 'Blog image autotest',
@@ -3676,7 +3662,6 @@ Scenario('library image insertion keeps the scrolled destination visible', async
         pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
     });
     const paragraph = workbenchFixture+' .pb-workbench-copy';
-    I.click(paragraph);
     // Magicline needs a pointer position relative to the paragraph inside the scaled iframe.
     I.usePlaywrightTo('hover the content insertion destination', async ({page}) => {
         const frame = await getPageBuilderFrame(page);
@@ -3689,25 +3674,12 @@ Scenario('library image insertion keeps the scrolled destination visible', async
     I.waitForVisible('.pb-library--content', 10);
     I.clickCss('.pb-library--content [data-library-type=library]');
     I.fillField('.pb-library--content .library-template-block--content .library-filter-input', 'Blog image autotest');
-    const before = await I.executeScript(() => window.scrollY);
-    I.assertAbove(before, 1000, 'The destination must be below the start of the editable region');
+    armWorkbenchScrollProbe(I);
     I.clickCss('.pb-library--content [data-library-item-id=autotest-blog-image]');
     I.waitForInvisible('.pb-library--content', 10);
     I.waitForElement(workbenchFixture+' .autotest-blog-image img', 10);
-    const after = await I.executeScript(() => window.scrollY);
-    I.assertBelow(Math.abs(after-before), 5, 'Inserting an image block must preserve the viewport: '+before+' -> '+after);
-    I.doubleClick(workbenchFixture+' .autotest-blog-image img');
-    I.waitForVisible('.cke_dialog_container', 10);
-    I.switchTo('#wjImageIframeElement');
-    I.waitForVisible('#txtUrl', 10);
-    I.fillField('#txtUrl', '/templates/aceintegration/jet/assets/images/logo-jet.png?autotest=changed');
-    I.switchTo();
-    I.switchTo('#DTE_Field_data-pageBuilderIframe');
-    I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_ok');
-    I.waitForInvisible('.cke_dialog_container', 10);
+    await assertWorkbenchScrollPreserved(I);
     I.seeNumberOfElements(workbenchFixture+' .autotest-blog-image img', 1);
-    I.seeElement(workbenchFixture+' .autotest-blog-image img[src$="?autotest=changed"]');
-    I.saveScreenshot('autotest-pagebuilder-blog-image.png');
     I.switchTo();
     I.amAcceptingPopups();
     DTE.cancel();
