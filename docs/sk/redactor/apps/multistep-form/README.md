@@ -221,7 +221,7 @@ Ide o plochú štruktúru (bez zátvoriek), takže nie je podporené vnáranie p
 
 Každá podmienka obsahuje tieto parametre:
 
-- **Pole formulára** - položka, ktorej hodnota sa použije pri vyhodnotení podmienky. Možnosti sú zoradené rovnako ako vo formulári.
+- **Pole formulára** - položka, ktorej hodnota sa použije pri vyhodnotení podmienky. Možnosti sú zoradené rovnako ako vo formulári. Rádiové tlačidlá s rovnakým názvom poľa a nastavením **Povinné pole** sa ponúkajú ako jedna skupina na pozícii prvého tlačidla, aj keď sú medzi nimi iné polia. Upravovaná položka sa v zozname neponúka. Pri úprave rádiového tlačidla sa neponúka celá jeho skupina, pretože tlačidlá zdieľajú rovnaký identifikátor položky.
 - **Podmienka porovnania** - spôsob porovnania hodnoty poľa:
   - **rovná sa**
   - **nerovná sa**
@@ -231,8 +231,8 @@ Každá podmienka obsahuje tieto parametre:
   - **končí na**
   - **je prázdne**
   - **nie je prázdne**
-- **Porovnávaná hodnota** - hodnota, voči ktorej sa porovná obsah vybraného poľa.
-- **Ignorovať veľkosť písmen** - porovnanie nebude citlivé na veľké/malé písmená.
+- **Porovnávaná hodnota** - hodnota, voči ktorej sa porovná obsah vybraného poľa. Pri výberových zoznamoch, skupinách výberových a zaškrtávacích polí a samostatných rádiových tlačidlách vyberáte z možností daného poľa. Zobrazuje sa text možnosti, uloží sa jej hodnota. Podporované sú aj možnosti z číselníka. Pri ostatných poliach zadávate text. Prázdnu hodnotu overíte podmienkou **je prázdne** alebo **nie je prázdne**.
+- **Ignorovať veľkosť písmen** - porovnanie nebude citlivé na veľké/malé písmená. Voľba sa zobrazuje iba pri ručnom zadávaní porovnávanej hodnoty, pri výbere z preddefinovaných možností je skrytá.
 - **Logický operátor** - spojenie s nasledujúcou podmienkou:
   - `AND` - musia platiť obe podmienky,
   - `OR` - stačí, ak platí aspoň jedna podmienka.
