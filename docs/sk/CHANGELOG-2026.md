@@ -49,10 +49,6 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
-- Zrkadlenie štruktúry - pred zmazaním stránky alebo priečinka sa zobrazí [zoznam zrkadlených položiek](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa zmažú spolu s výberom. Voľba **Zobraziť zrkadlenie** v strome priečinkov zapína [jazykové odkazy medzi priečinkami](redactor/webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) aj [upozornenia na chybné zrkadlenia](redactor/webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre) na pravom okraji riadka. Pri zapnutej voľbe **Web Stránky** sa jazykové odkazy zobrazujú aj pri stránkach a otvárajú prepojenú jazykovú verziu v editore. Kliknutím na upozornenie pri priečinku alebo stránke otvoríte editor konkrétneho mapovania v sekcii **Zrkadlenie**. Jazykové odkazy majú sivý text bez rámčeka a zvýraznia sa pri prejdení kurzorom alebo zameraní klávesnicou (#58846).
-
-![Upozornenie pred zmazaním zrkadleného priečinka](redactor/webpages/mirroring/delete-groups.png)
-
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">
@@ -126,6 +122,10 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 - Page Builder - dialógy, ktoré sa nezmestia do šírky náhľadu, sa automaticky rozšíria na veľkosť okna prehliadača. Po potvrdení alebo zatvorení sa obnoví pôvodná šírka náhľadu a posun stránky. Ovládacie prvky Page Buildera používajú jazyk administrácie (#372).
 - Obrázky - pridaná podpora obrázkov a animácií vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Serverové úpravy, vodotlač a miniatúry cez `/thumb` zachovávajú snímky, priehľadnosť a časovanie animácie. Spracovanie vyžaduje `ImageMagick` 7.1.2-34 alebo novší s `libheif` 1.22.0 alebo novším. Editor obrázkov ukladá statický obrázok (#371).
+
+- Zrkadlenie štruktúry - pred zmazaním stránky alebo priečinka sa zobrazí [zoznam zrkadlených položiek](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa tiež zmažú. Voľba **Zobraziť zrkadlenie** pridáva do stromu [odkazy na jazykové verzie](redactor/webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) a [upozornenia na chybné mapovania](redactor/webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre) (#370).
+
+![](redactor/webpages/mirroring/tree-problems.png)
 
 ### Headless režim
 
@@ -323,11 +323,6 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
-- Zrkadlenie štruktúry - uloženie [pracovnej verzie stránky](redactor/apps/docmirroring/README.md#úprava-existujúcej-web-stránky) už neprepisuje obsah zverejnených jazykových verzií, ani keď je ich autorom automatický prekladač (#58846).
-- Zrkadlenie štruktúry - pri [hromadnom mazaní](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov) viacerých prepojených stránok alebo priečinkov sa každá položka spracuje iba raz. Už presunutá položka sa pri spracovaní ďalšieho riadku znova nezmaže z koša (#58846).
-- Zrkadlenie štruktúry - pri presune stránky alebo priečinka sa zachovajú existujúce jazykové verzie bez vytvorenia duplicitných kópií. Po presune zrkadleného priečinka sa aktualizujú aj automaticky generované alebo zdedené URL adresy stránok v ňom aj v jeho podpriečinkoch (#58846).
-- Klonovanie a zrkadlenie štruktúry - dočasné nastavenia klonovania už neovplyvňujú súbežné úpravy stránok. Súbežné klonovania si pri ukladaní konfigurácie v jednej JVM neprepisujú pridané mapovania a administračné tabuľky zrkadlenia nezdieľajú doménu, jazykové mapovanie ani validačné chyby medzi požiadavkami (#58846).
-- Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránk (#372).
 - Webové stránky - dialóg na vloženie obrázka obmedzuje výber súborov na obrázky, videá a zvukové súbory aj v priečinku Súbory. Nepodporované typy rozpoznané prehliadačom odmietne ešte pred odoslaním. Server navyše overí príponu pred uložením (#375).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránky (#372).
 - Spring aplikácie - [chyba pri vytvorení alebo vykonaní aplikácie](custom-apps/spring-mvc/README.md#chyba-pri-vykonávaní-aplikácie) nahradí iba jej značku `INCLUDE`. Okolitý text, JSP aplikácie aj ostatné Spring aplikácie zostanú na stránke zachované a hláška uvedie názov aplikácie, ktorá zlyhala (#384).
@@ -361,6 +356,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Page Builder - opravené zobrazenie nástrojovej lišty ak stránka neobsahuje žiadnu sekciu (#343).
 - Page Builder - pridaná možnosť nastaviť [šírku okna štruktúra](frontend/page-builder/settings.md) (#343)
 - Administrácia - opravené zobrazenie ikony zaškrtnutia pri vybranej položke v ponuke automatického dopĺňania (#osk800).
+- Zrkadlenie štruktúry - [pracovná verzia](redactor/apps/docmirroring/README.md#úprava-existujúcej-web-stránky) už neprepisuje zverejnené preklady a [hromadné mazanie](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov) nespracuje tú istú položku opakovane. Presun nevytvára duplicitné jazykové verzie; pri presune priečinka sa aktualizujú generované a zdedené URL. Dočasné nastavenia klonovania a stav administrácie zrkadlenia sa nezdieľajú medzi súbežnými požiadavkami (#370).
 
 ### Výkon
 
@@ -369,8 +365,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
-- Webové stránky - pred zmazaním stránky sa overia práva ku všetkým jej zrkadleným verziám. Pri nedostatočných právach sa mazanie tejto skupiny stránok nezačne. Mazanie priečinkov vyžaduje právo `deleteDir` aj pri priamom volaní REST API (#58846).
-- Klonovanie štruktúry - [zrušenie zrkadlenia](redactor/apps/clone-structure/README.md#zrušenie-zrkadlenia) overuje práva na celý vybraný podstrom, pri zapnutom oddelení domén aj aktuálnu doménu a pri zapnutej kontrole používateľských skupín aj prístup k jeho stránkam (#58846).
+- Webové stránky - mazanie overuje práva ku všetkým zrkadleným stránkam a pri priečinkoch vyžaduje aj `deleteDir`. [Zrušenie zrkadlenia](redactor/apps/clone-structure/README.md#zrušenie-zrkadlenia) kontroluje oprávnenia pre celý podstrom vrátane nakonfigurovaných obmedzení domény a používateľských skupín (#370).
 - Dependency Check - aktualizované knižnice `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizácia Jackson sprísňuje kontrolu typov pri polymorfnej deserializácii; vlastné integrácie používajúce názvy Java tried v JSON je potrebné overiť (#385).
 - Dependency Check - výnimky pre `CVE-2026-116802`, `CVE-2026-116803` a `CVE-2026-116804` v `DOMPurify 3.4.16` boli overené a obmedzené na presný hash dodávaného `Swagger UI 5.34.0` bundle. Integrácia ošetruje HTML reťazce bez XHTML režimu, `IN_PLACE`, `SAFE_FOR_TEMPLATES` a vracania DOM; jej hook neodstraňuje uzly. Výnimky potvrdzujú nepoužitie dotknutých režimov, nie opravu knižnice DOMPurify (#385).
 - Dependency Check - aktualizované knižnice `Hibernate Validator 9.0.0.Final → 9.0.2.Final` s opravou `CVE-2026-93879`, tranzitívna závislosť `ASM 9.7.1 → 9.11.1` s opravami spracovania Java bytecode a závislosť zostavenia administrácie `ip-address 10.7.1 → 10.7.4` s opravou `CVE-2026-111997`. Aktualizácie nevyžadujú zmenu verzie Java ani úpravu aplikačných API (#385).
@@ -397,7 +392,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
-- Klonovanie štruktúry - [stav klonovania](developer/apps/docmirroring.md#klonovanie-a-zrušenie-zrkadlenia) je uložený v aktuálnej požiadavke. Odstránené boli konfiguračné premenné `mirroringMode`, `cloneActionSrcId` a `cloneActionDestId`; rozšírenia majú použiť `MirroringService.isCloneAction()` a parametre `srcGroupId` a `destGroupId` v `RequestBean` (#58846).
+- Klonovanie štruktúry - premenné `mirroringMode`, `cloneActionSrcId` a `cloneActionDestId` nahradil [stav aktuálnej požiadavky](developer/apps/docmirroring.md#klonovanie-a-zrušenie-zrkadlenia). Vlastné rozšírenia majú použiť `MirroringService.isCloneAction()` a parametre `srcGroupId` a `destGroupId` v `RequestBean` (#370).
 - Datatabuľky - tabuľky nastavení majú spoločný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Existujúca tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje so zachovaním údajov; vlastné SQL dotazy treba upraviť na `dt_customfields` (#58830).
 - Datatabuľky - triedy pre [systémové nastavenia](developer/datatables/README.md#systémové-nastavenia) voliteľných polí, polí a kariet boli presunuté pod `sk.iway.iwcm.system.datatable.settings` do podbalíkov `customfields`, `fields` a `tabs`. Vlastný kód a šablóny používajúce tieto triedy vyžadujú aktualizáciu importov a úplných názvov tried (#58830).
 - Datatabuľky - pridaný typ poľa [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pre výber jednej možnosti zo skupiny tlačidiel. Používa štýly administrácie a podporuje aj voľbu **Bez zmeny** pri trojstavových nastaveniach (#58830).
