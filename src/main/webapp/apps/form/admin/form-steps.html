@@ -729,7 +729,10 @@
         function updateValueOptions(clearValue) {
             const sourceId = table.EDITOR.field("itemFormId").val();
             const source = table.DATA.jsonOptions?.itemFormId?.find(option => option.value === sourceId);
-            if (clearValue) table.EDITOR.field("value").val("");
+            if (clearValue) {
+                table.EDITOR.field("value").val("");
+                if (Array.isArray(source?.original)) table.EDITOR.field("caseInsensitive").val(false);
+            }
             table.EDITOR.field("value").update(source?.original ?? null);
             updateOperatorFields();
         }

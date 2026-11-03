@@ -896,14 +896,19 @@ public class MultistepFormsService {
             boolean singleChoice = "radio".equals(field.getFieldType()) || "checkbox".equals(field.getFieldType());
             if (iterable == false && singleChoice == false) continue;
 
+            String iterableCode = iterable ? prop.getText("components.formsimple.iterable." + field.getFieldType()) : null;
+            boolean separateLabels = iterable && (AUTOCOMPLETE_FIELD_TYPE.equals(field.getFieldType()) ||
+                (iterableCode != null && iterableCode.contains("${value-label}")));
             List<LabelValue> options = result.computeIfAbsent(field.getItemFormId(), key -> new ArrayList<>());
             String[] tokens = iterable
                 ? FormsService.parseIterableValues(FormsService.removeUnsupportedEmptyOption(field.getValue(), field.getFieldType(), prop))
                 : new String[] { Tools.getStringValue(field.getValue(), "") };
             for (String token : tokens) {
+                // The empty-option sentinel is not a comparison value, even without a label placeholder.
+                if (iterable && ":".equals(token)) continue;
                 String label = token;
                 String value = token;
-                int separator = iterable ? token.indexOf(':') : -1;
+                int separator = separateLabels ? token.indexOf(':') : -1;
                 if (separator >= 0) {
                     label = token.substring(0, separator);
                     value = token.substring(separator + 1);
