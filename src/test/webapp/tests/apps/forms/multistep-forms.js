@@ -7,6 +7,7 @@ var newMultistepFormName;
 var duplicatedMultistepFormName;
 var specialFormName;
 var emptyOptionFormName;
+var stepOrderFormName;
 Before(({ I, DT, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {
@@ -15,6 +16,7 @@ Before(({ I, DT, login }) => {
         duplicatedMultistepFormName = "multistepform_duplicate_autotest_" + randomNumber;
         specialFormName = "multistep_new_logic_autotest_" + randomNumber;
         emptyOptionFormName = "multistep_empty_option_autotest_" + randomNumber;
+        stepOrderFormName = "step_order_autotest_" + randomNumber;
     }
 
     DT.addContext("formSteps", "#formStepsDataTable_wrapper");
@@ -1193,6 +1195,83 @@ Scenario("check special form options behavior", ({ I, DT, DTE }) => {
     I.seeElement("div.DTE_Field_Name_useValueAsEnumeration");
     I.dontSeeElement("div.DTE_Field_Name_valueAsOptions");
     I.seeElement("div.DTE_Field_Name_valueAsEnumeration");
+});
+
+Scenario('Field step labels follow drag-and-drop order immediately and after reload', async ({ I, DT, DTE }) => {
+    const fieldLabel = 'Step order field autotest';
+    const steps = '#formStepsDataTable_wrapper #formStepsDataTable';
+    const items = '#formItemsDataTable';
+
+    function editField(stepNumber, stepId) {
+        I.clickIfVisible(locate(items + ' tbody tr:not(.selected)').withText(fieldLabel).find('td:last-child'));
+        I.click(DT.btn.formItems_edit_button);
+        DTE.waitForEditor('formItemsDataTable');
+        I.clickCss('#pills-dt-formItemsDataTable-advanced-tab');
+        I.seeTextEquals('Krok ' + stepNumber, '#DTE_Field_stepId option:checked');
+        I.seeInField('#DTE_Field_stepId', String(stepId));
+    }
+
+    I.amOnPage('/apps/form/admin/');
+    DT.waitForLoader('formsDataTable');
+    I.clickCss('#formsDataTable_wrapper .buttons-create');
+    DTE.waitForEditor('formsDataTable');
+    DTE.fillField('formName', stepOrderFormName);
+    DTE.save();
+    I.waitForElement(steps + ' tbody tr.selected');
+    DT.waitForLoader('formItemsDataTable');
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    DTE.selectOption('fieldType', 'Meno');
+    DTE.fillQuill('label', fieldLabel);
+    DTE.save();
+    I.waitForText(fieldLabel, 10, items);
+    const firstStepId = await I.grabAttributeFrom(steps + ' tbody tr.selected', 'id');
+
+    I.click(DT.btn.formSteps_add_button);
+    DTE.waitForEditor('formStepsDataTable');
+    DTE.save();
+    I.waitForText('Krok 2', 10, steps);
+    const secondStepId = await I.grabAttributeFrom(steps + ' tbody tr:last-child', 'id');
+    editField(1, firstStepId);
+    DTE.cancel();
+
+    I.dragAndDrop(steps + ' tbody tr:last-child .row-reorder-handler', steps + ' tbody tr:first-child .row-reorder-handler', { force: true });
+    I.waitForElement(steps + ' tbody tr:last-child[id="' + firstStepId + '"]');
+    DT.waitForLoader('formStepsDataTable');
+    DT.waitForLoader('formItemsDataTable');
+    I.seeTextEquals('Krok 2', steps + ' tbody tr.selected .text-muted');
+    editField(2, firstStepId);
+    I.seeTextEquals('Krok 1', '#DTE_Field_stepId option[value="' + secondStepId + '"]');
+    DTE.save();
+    I.waitForText(fieldLabel, 10, items);
+
+    I.refreshPage();
+    I.waitForElement(steps + ' tbody tr.selected');
+    I.click(locate(steps + ' tbody tr td').withText('Krok 2'));
+    I.waitForText(fieldLabel, 10, items);
+    editField(2, firstStepId);
+    DTE.cancel();
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    I.clickCss('#pills-dt-formItemsDataTable-advanced-tab');
+    I.seeTextEquals('Krok 2', '#DTE_Field_stepId option:checked');
+    I.seeInField('#DTE_Field_stepId', String(firstStepId));
+    DTE.cancel();
+
+    I.dragAndDrop(steps + ' tbody tr:last-child .row-reorder-handler', steps + ' tbody tr:first-child .row-reorder-handler', { force: true });
+    I.waitForElement(steps + ' tbody tr:first-child[id="' + firstStepId + '"]');
+    DT.waitForLoader('formStepsDataTable');
+    DT.waitForLoader('formItemsDataTable');
+    editField(1, firstStepId);
+    DTE.cancel();
+});
+
+Scenario('Cleanup step order autotest form', ({ I, DT }) => {
+    I.amOnPage('/apps/form/admin/');
+    DT.filterEquals('formName', stepOrderFormName);
+    DT.deleteAll('formsDataTable');
 });
 
 Scenario('Empty option settings by field type', async ({ I, DT, DTE }) => {
