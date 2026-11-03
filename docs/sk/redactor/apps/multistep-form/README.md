@@ -96,6 +96,8 @@ Editor pre pridávanie a úpravu položiek je špeciálny tým, že mení svoj o
 - **Názov poľa** - názov, ktorý sa zobrazí používateľovi. Ak nie je zadaný použije sa názov zhodný s typom poľa.
 - **Identifikátor položky vo formulári** - technický identifikátor sa automaticky vytvorí z názvu položky a doplní sa rozlišujúcou príponou tak, aby bol vo formulári jedinečný. Zobrazuje sa až pri úprave uloženej položky a nie je možné ho meniť. Používa sa v podmienkach, uložených dátach a v [značkách hodnôt položiek](#značky-hodnôt-položiek).
 
+Pravidlá **Povolená hodnota** sa pri povinnom poli kontrolujú aj pre prázdnu hodnotu. Pri nepovinnom poli sa kontrolujú iba vtedy, keď je pole vyplnené. Pri odoslaní kroku sa povinnosť určí podľa karty **Povinnosť**, ak obsahuje podmienky; inak podľa prepínača **Povinné pole**.
+
 V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:
 
 - **Krok formuláru** - krok, ku ktorému položka patrí, môžete tak ľahko položku presunúť do iného kroku.

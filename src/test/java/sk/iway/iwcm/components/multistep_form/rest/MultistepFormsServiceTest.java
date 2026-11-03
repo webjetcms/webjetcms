@@ -25,6 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
@@ -45,6 +46,7 @@ import sk.iway.iwcm.components.forms.FormsController;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.forms.FormsService;
+import sk.iway.iwcm.components.forms.RegExpEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
@@ -54,6 +56,7 @@ import sk.iway.iwcm.components.upload.XhrFileUploadService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.form.FormFileRestriction;
+import sk.iway.iwcm.form.FormDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.cluster.ClusterDB;
@@ -62,6 +65,70 @@ import sk.iway.iwcm.system.cluster.ClusterDB;
  * Tests caching, identifiers, conditions, uploads, and saved selections in {@link MultistepFormsService}.
  */
 class MultistepFormsServiceTest {
+
+    /** Verifies that allowed-value rules check empty required fields and only filled optional fields. */
+    @ParameterizedTest
+    @CsvSource({
+        "false, , '', false, false, false",
+        "false, , , false, false, false",
+        "false, , '   ', false, false, false",
+        "false, , '   ', true, false, false",
+        "false, , ABC123, false, false, false",
+        "false, , ' ABC123 ', true, false, false",
+        "false, , ' ABC123 ', false, false, true",
+        "false, , invalid!, false, false, true",
+        "true, , '', false, true, true",
+        "true, , '   ', true, true, true",
+        "true, , ABC123, false, false, false",
+        "true, , invalid!, false, false, true",
+        "false, true, '', false, true, true",
+        "false, true, invalid!, false, false, true",
+        "false, true, ABC123, false, false, false",
+        "true, false, '', false, false, false",
+        "true, false, invalid!, false, false, true",
+        "true, false, ABC123, false, false, false"
+    })
+    void validatesAllowedValuesAccordingToRequirement(boolean required, Boolean requiredByCondition,
+            String value, boolean trimValue, boolean requiredError, boolean regexError) {
+        MultistepFormsService service = new MultistepFormsService(null, null, null, null, null);
+        MockHttpServletRequest request = formRequest();
+        FormItemEntity field = validationField("name", "text");
+        field.setRequired(required);
+        field.setTrimValue(trimValue);
+        field.setRegexValidation("1");
+        JSONObject received = new JSONObject().put("name", value);
+        HashMap<String, String> errors = new HashMap<>();
+        FormConditionsHandler conditions = null;
+        if (requiredByCondition != null) {
+            conditions = mock(FormConditionsHandler.class);
+            when(conditions.isFieldRequiredByCondition(field, received)).thenReturn(requiredByCondition);
+        }
+
+        RegExpEntity regex = new RegExpEntity();
+        regex.setId(1L);
+        regex.setType("alphanumeric");
+        regex.setRegExp("[a-zA-Z0-9]+");
+        FormDB database = mock(FormDB.class);
+        when(database.getAllRegularExpressionAsEntity()).thenReturn(List.of(regex));
+        Prop prop = mock(Prop.class);
+        when(prop.getText("checkform.title.required")).thenReturn("Required field");
+        when(prop.getText("validation.expression.valueFailedExpression")).thenReturn("Invalid format");
+
+        try (
+            MockedStatic<Constants> constants = mockStatic(Constants.class);
+            MockedStatic<Prop> props = mockStatic(Prop.class);
+            MockedStatic<FormDB> databases = mockStatic(FormDB.class)
+        ) {
+            props.when(() -> Prop.getInstance("en")).thenReturn(prop);
+            databases.when(FormDB::getInstance).thenReturn(database);
+
+            ReflectionTestUtils.invokeMethod(service, "validateFields", List.of(field), received, false, conditions, request, errors);
+
+            assertEquals(requiredError || regexError, errors.containsKey("name"));
+            assertEquals(requiredError, errors.getOrDefault("name", "").contains("Required field"));
+            assertEquals(regexError, errors.getOrDefault("name", "").contains("Invalid format"));
+        }
+    }
 
     /**
      * Verifies cached copies are reused and reloaded after administrative changes or cluster eviction.

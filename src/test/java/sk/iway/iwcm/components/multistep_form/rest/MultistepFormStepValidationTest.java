@@ -38,6 +38,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.forms.RegExpEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.ConditionType;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionEntity;
@@ -107,7 +108,9 @@ class MultistepFormStepValidationTest {
 
         // Evaluate the dependent field first to catch order-dependent normalization.
         List<FormItemEntity> fields = new ArrayList<>();
-        fields.add(field(10L, "company", "text", true));
+        FormItemEntity company = field(10L, "company", "text", true);
+        company.setRegexValidation("1");
+        fields.add(company);
         if (checkboxInCurrentStep) fields.add(field(11L, "invoice", "checkbox", false));
         FormItemEntity note = field(12L, "note", "text", false);
         note.setTrimValue(true);
@@ -128,9 +131,14 @@ class MultistepFormStepValidationTest {
         }
         Prop prop = mock(Prop.class);
         when(prop.getText("checkform.title.required")).thenReturn("Required field");
+        when(prop.getText("validation.expression.valueFailedExpression")).thenReturn("Invalid format");
         when(prop.getText("components.formsimple.input.checkbox")).thenReturn("<input type=\"checkbox\">");
+        RegExpEntity regex = new RegExpEntity();
+        regex.setId(1L);
+        regex.setType("alphanumeric");
+        regex.setRegExp("[a-zA-Z0-9]+");
         FormDB formDB = mock(FormDB.class);
-        when(formDB.getAllRegularExpressionAsEntity()).thenReturn(List.of());
+        when(formDB.getAllRegularExpressionAsEntity()).thenReturn(List.of(regex));
         Cache cache = mock(Cache.class);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -208,6 +216,7 @@ class MultistepFormStepValidationTest {
                 }
             } else {
                 assertTrue(response.getJSONObject("fieldErrors").has("company"));
+                assertEquals("company - Required field\nInvalid format", response.getJSONObject("fieldErrors").getString("company"));
                 assertFalse(response.has("step-id"));
                 assertEquals("yes", request.getSession().getAttribute(sessionKey + "_invoice"));
                 assertEquals("Previous company", request.getSession().getAttribute(sessionKey + "_company"));
