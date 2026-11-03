@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.webjetcms.ai.AiClient;
 import com.webjetcms.ai.AiErrorCategory;
 import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiResponse;
@@ -43,7 +44,7 @@ public class AiChatService implements DisposableBean {
     private final AssistantDefinitionRepository assistants;
     private final List<AiInterface> providers;
     private final AiTaskRegistry tasks;
-    private final AiChatResponseDeletion deletion;
+    private final AiClient aiClient;
     private final WebjetAiConfigurationService configuration;
     private final AiStatRepository statistics;
     private final ScheduledExecutorService heartbeat = Executors.newScheduledThreadPool(1, task -> {
@@ -266,7 +267,7 @@ public class AiChatService implements DisposableBean {
             }
             for (AiChatEntry message : transcript.messages()) {
                 if (message.getProviderResponseId() != null && !message.isProviderDeleted()) {
-                    deletion.deleteResponse(provider.getProviderId(), message.getProviderResponseId(), config);
+                    aiClient.deleteResponse(provider.getProviderId(), message.getProviderResponseId(), config);
                     store.deletedResponse(scope, id, claim, message.getId());
                 }
             }

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
@@ -19,16 +18,20 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.MockedStatic;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.webjetcms.ai.AiClient;
 import com.webjetcms.ai.AiErrorCategory;
 import com.webjetcms.ai.AiProviderConfig;
 import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiResponse;
+import com.webjetcms.ai.AiResponseDeletion;
 import com.webjetcms.ai.TokenUsage;
 
 import sk.iway.iwcm.Adminlog;
@@ -48,7 +51,7 @@ class AiChatServiceTest {
     @TempDir Path root;
     private final AiChatStore store = new AiChatStore();
     private final LibrarySupportLogic provider = mock(LibrarySupportLogic.class);
-    private final AiChatResponseDeletion deletion = mock(AiChatResponseDeletion.class);
+    private final AiClient aiClient = mock(AiClient.class);
     private final AiTaskRegistry tasks = mock(AiTaskRegistry.class);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final AiProviderConfig config = AiProviderConfig.builder("key").build();
@@ -78,7 +81,7 @@ class AiChatServiceTest {
         when(configuration.chatScope(config)).thenReturn("scope");
         when(tasks.runChatTask(anyString(), same(scope), any(), any())).thenAnswer(call ->
             call.<Callable<AssistantResponseDTO>>getArgument(2).call());
-        service = new AiChatService(store, assistants, List.of(provider), tasks, deletion, configuration, mock(AiStatRepository.class));
+        service = new AiChatService(store, assistants, List.of(provider), tasks, aiClient, configuration, mock(AiStatRepository.class));
         audit = mockStatic(Adminlog.class);
         translations = mockStatic(Prop.class);
         Prop prop = mock(Prop.class);
@@ -125,9 +128,10 @@ class AiChatServiceTest {
         assertEquals(2, saved.get(0).getAttachments().size());
     }
 
-    /** Continues once per request and keeps local history until remote deletion succeeds. */
-    @Test
-    void continuesDeduplicatesAndDeletesConversation() throws Exception {
+    /** Keeps history after partial cleanup and retries only responses without confirmed deletion or absence. */
+    @ParameterizedTest
+    @EnumSource(AiResponseDeletion.class)
+    void continuesDeduplicatesAndDeletesConversation(AiResponseDeletion outcome) throws Exception {
         var first = prepare(null, null);
         assertEquals("Answer", execute(first).getResponse());
         String id = first.turn().thread().getId();
@@ -139,12 +143,18 @@ class AiChatServiceTest {
             return new AiResponse("Next answer", List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", "response-two");
         });
         assertEquals("Next answer", execute(prepare(id, 1L)).getResponse());
-        doThrow(new IOException("Unavailable")).doNothing().when(deletion).deleteResponse("openai", "response-one", config);
+        when(aiClient.deleteResponse("openai", "response-one", config)).thenReturn(outcome);
+        when(aiClient.deleteResponse("openai", "response-two", config))
+            .thenThrow(new AiProviderException("openai", "Unavailable")).thenReturn(outcome);
         assertEquals("deleteFailed", service.delete(id, scope).error());
-        assertEquals(4, store.get(id, scope).messages().size());
+        var saved = new AiChatStore().get(id, scope);
+        assertEquals("DELETE_PENDING", saved.thread().getStatus());
+        assertEquals(4, saved.messages().size());
+        assertTrue(saved.messages().get(1).isProviderDeleted());
+        assertFalse(saved.messages().get(3).isProviderDeleted());
         assertTrue(service.delete(id, scope).deleted());
-        verify(deletion, times(2)).deleteResponse("openai", "response-one", config);
-        verify(deletion).deleteResponse("openai", "response-two", config);
+        verify(aiClient).deleteResponse("openai", "response-one", config);
+        verify(aiClient, times(2)).deleteResponse("openai", "response-two", config);
         assertTrue(store.list(scope, 0).items().isEmpty());
     }
 
