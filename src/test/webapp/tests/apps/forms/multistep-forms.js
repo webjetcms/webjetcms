@@ -757,7 +757,7 @@ Scenario('Duplicate multistep form', async ({ I, DT, DTE, TempMail }) => {
     I.assertEqual(secondStepItemsCount, 3, "Duplicated second step should contain all form items");
 });
 
-Scenario('Delete all form records and keep form definition', ({ I, DT }) => {
+Scenario('Delete all form records and keep form definition', async ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/detail/?formName=" + newMultistepFormName);
     DT.waitForLoader("formDetailDataTable");
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy", "#formDetailDataTable");
@@ -770,13 +770,19 @@ Scenario('Delete all form records and keep form definition', ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
     DT.filterEquals("formName", newMultistepFormName);
     I.waitForText(newMultistepFormName, 10, "#formsDataTable");
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1, "Deleting submissions must preserve form settings");
 });
 
-Scenario('Remove original and duplicated form definitions', ({ I, DT }) => {
+Scenario('Remove original and duplicated form definitions', async ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
 
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1);
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1);
     removeFormDefinition(I, DT, newMultistepFormName);
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 0, "Deleting a form must remove its settings");
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1, "Another form's settings must remain");
     removeFormDefinition(I, DT, duplicatedMultistepFormName);
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 0, "Deleting a duplicate must remove its settings");
 });
 
 Scenario('Remove archived form data', async ({ I, DT, DTE }) => {
@@ -1066,6 +1072,17 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
             normalize(expectedHtml),
             'Form HTML does not match exactly'
         );
+}
+
+async function getFormSettingsCount(I, formName) {
+    return I.executeScript(async (name) => {
+        const response = await fetch("/admin/rest/form-settings/search/findByColumns?searchFormName=" + encodeURIComponent("^" + name + "$"), {
+            headers: { "X-CSRF-Token": window.csrfToken }
+        });
+        if (response.ok === false) throw new Error("Could not load form settings: " + response.status);
+        const settings = await response.json();
+        return settings.content.length;
+    }, formName);
 }
 
 function removeFormDefinition(I, DT, formName) {

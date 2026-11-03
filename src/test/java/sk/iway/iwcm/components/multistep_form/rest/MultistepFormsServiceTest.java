@@ -40,6 +40,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.forms.FormsController;
 import sk.iway.iwcm.components.forms.FormsEntity;
@@ -147,9 +148,10 @@ class MultistepFormsServiceTest {
                 form.setDomainId(field.getDomainId());
                 FormsRepository forms = mock(FormsRepository.class);
                 FormStepsRepository steps = mock(FormStepsRepository.class);
+                FormSettingsRepository settings = mock(FormSettingsRepository.class);
                 when(forms.findFirstByIdAndDomainId(form.getId(), field.getDomainId())).thenReturn(Optional.of(form));
-                FormsService<FormsRepository, FormsEntity> formsService = new FormsService<>(forms, null, steps, items);
-                assertTrue(formsService.deleteItem(form, form.getId(), steps, items, null));
+                FormsService<FormsRepository, FormsEntity> formsService = new FormsService<>(forms, settings, steps, items);
+                assertTrue(formsService.deleteItem(form, form.getId(), steps, items, settings));
             }
             default -> throw new IllegalArgumentException("Unknown cache invalidation operation: " + operation);
         }

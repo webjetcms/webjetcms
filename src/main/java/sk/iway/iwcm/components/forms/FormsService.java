@@ -654,32 +654,30 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      * Deletes one submission or all records and structure belonging to a form definition.
      *
      * Deleting a management record, identified by a missing creation date, removes all submissions,
-     * steps, and items with the same form name. Form settings are intentionally preserved.
+     * steps, items, and settings with the same form name in the current domain.
      *
-     * @param entity  entity carrying the form name to delete
+     * @param entity  submitted record; the stored record determines the form name to delete
      * @param id  database identifier of the record initiating the deletion
      * @param formStepsRepository  repository used to remove multistep form steps
      * @param formItemsRepository  repository used to remove multistep form items
-     * @param formSettingsRepository  settings repository retained for deletion workflow compatibility
+     * @param formSettingsRepository  repository used to remove form settings
      * @return {@code true} when deletion succeeds; {@code false} for another domain or on failure
      */
     public boolean deleteItem(E entity, long id, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, FormSettingsRepository formSettingsRepository) {
         try {
-            String formName = entity.getFormName();
             E entityDb = getById(id);
 
             int domainId = CloudToolsForCore.getDomainId();
-            if (domainId != entityDb.getDomainId()) return false;
+            if (entityDb == null || domainId != entityDb.getDomainId()) return false;
+            String formName = entityDb.getFormName();
 
             if (entityDb.getCreateDate() == null) {
-                //zmaz vsetky podla mena formu, ak su uz len 2 zaznamy (cize riadiaci + jeden form) zmaz tiez vsetko
+                // Delete the form definition, submissions, structure, and settings in this domain.
                 formsRepository.deleteByFormNameAndDomainId(formName, domainId);
-                // Ak ma, zmaz aj steps/items (multistep forms)
                 formStepsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
                 formItemsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
+                formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
                 MultistepFormsService.clearValidationFieldsCache(formName, domainId);
-                // DO NOT DELETE maybe form is still in webpage and we just deleted form records
-                // formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
             } else {
                 // remove form filled record
                 formsRepository.deleteById(id);
