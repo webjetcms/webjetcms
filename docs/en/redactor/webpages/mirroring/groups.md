@@ -32,6 +32,18 @@ Since only folders with the same content in a different language mutation should
 
 Since the same structures should be linked, different depths of linked folders indicate an error between the structures. Unlike **bad mapping**, this may not necessarily be an error, such links are marked for better detection of potential errors.
 
+### Notifications in a tree structure
+
+You can view the same controls directly in the **Websites** section. In [tree structure settings](../README.md#tree-structure-display-settings) enable the **Show mirroring** option.
+
+![](../jstree-settings.png)
+
+For folders with a problem, a red icon for **Bad mapping** or a yellow icon for **Uneven nesting** will appear to the right before the language links. If a link has both problems, a red icon will appear. You can find a description of the problem by hovering over the alert icon.
+
+![](tree-problems.png)
+
+The option is available to users with the **Mirror Structure** right. Folder icon without access<i class="ti ti-folder-x" role="presentation"></i> will be preserved. Clicking on the notification will open the corresponding mapping editor directly in the **Folders** tab. The link uses the Sync ID of the mapping, not the folder ID.
+
 ## Delete/Unlink
 
 When deleting/unlinking the entire link, the existing synchronization parameter `syncId` is lost, as it has nothing to link anymore. For each folder that was linked, the **unlink folder** action is performed.

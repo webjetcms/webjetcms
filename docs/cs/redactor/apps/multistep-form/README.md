@@ -221,7 +221,7 @@ Jedná se o plochou strukturu (bez závorek), takže není podpořeno vnořován
 
 Každá podmínka obsahuje tyto parametry:
 
-- **Pole formuláře** - položka, jejíž hodnota se použije při vyhodnocení podmínky. Možnosti jsou seřazeny stejně jako ve formuláři.
+- **Pole formuláře** - položka, jejíž hodnota se použije při vyhodnocení podmínky. Možnosti jsou seřazeny stejně jako ve formuláři. Rádiová tlačítka se stejným názvem pole a nastavením **Povinné pole** se nabízejí jako jedna skupina na pozici prvního tlačítka, i když jsou mezi nimi jiná pole. Upravovaná položka se v seznamu nenabízí. Při úpravě rádiového tlačítka se nenabízí celá jeho skupina, protože tlačítka sdílejí stejný identifikátor položky.
 - **Podmínka porovnání** - způsob porovnání hodnoty pole:
   - **rovná se**
   - **nerovná se**
@@ -231,8 +231,8 @@ Každá podmínka obsahuje tyto parametry:
   - **končí na**
   - **je prázdné**
   - **není prázdné**
-- **Srovnávaná hodnota** - hodnota, vůči které se porovná obsah vybraného pole.
-- **Ignorovat velikost písmen** - porovnání nebude citlivé na velká/malá písmena.
+- **Srovnávaná hodnota** - hodnota, vůči které se porovná obsah vybraného pole. U výběrových seznamů, skupin výběrových a zaškrtávacích polí a samostatných rádiových tlačítek vybíráte pro podmínky **rovná se** a **nerovná se** z možností daného pole. Zobrazuje se text možnosti, uloží se její hodnota. Podporovány jsou i možnosti z číselníku. Při podmínkách **obsahuje**, **neobsahuje**, **začíná na** a **končí na** iu ostatních polí zadáváte text. Prázdnou hodnotu ověříte podmínkou **je prázdné** nebo **není prázdné**.
+- **Ignorovat velikost písmen** - porovnání nebude citlivé na velká/malá písmena. Volba se zobrazuje pouze při ručním zadávání srovnávané hodnoty, při výběru z předdefinovaných možností je skrytá.
 - **Logický operátor** - spojení s následující podmínkou:
   - `AND` - ​​musí platit obě podmínky,
   - `OR` - ​​stačí, pokud platí alespoň jedna podmínka.

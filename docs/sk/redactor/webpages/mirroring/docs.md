@@ -34,7 +34,11 @@ Nakoľko previazané by mali byť rovnaké štruktúry, rozdielne hĺbky rodičo
 
 ### Upozornenia v stromovej štruktúre
 
-Ak v nastavení stromu zapnete **Web Stránky** aj **Zobraziť zrkadlenie**, pri stránkach s problémom sa zobrazí červené alebo žlté upozornenie. Kliknutím naň otvoríte editor príslušného mapovania na karte **Stránky** v sekcii **Zrkadlenie**. Pri súbehu oboch problémov má červené upozornenie na zlé mapovanie prednosť.
+Ak v nastavení stromu zapnete **Web Stránky** aj **Zobraziť zrkadlenie**, pri stránkach s problémom sa zobrazí červené alebo žlté upozornenie.
+
+![](../jstree-settings.png)
+
+Kliknutím naň otvoríte editor príslušného mapovania na karte **Stránky** v sekcii **Zrkadlenie**. Pri súbehu oboch problémov má červené upozornenie na zlé mapovanie prednosť.
 
 ![](tree-problems.png)
 

@@ -45,7 +45,11 @@ Zároveň pri prechádzaní stromovej štruktúry sa v adresnom riadku prehliada
 
 ### Prechod medzi zrkadlenými priečinkami
 
-Po zapnutí voľby **Zobraziť zrkadlenie** v nastavení stromovej štruktúry sa pri priečinkoch prepojených [zrkadlením štruktúry](../apps/docmirroring/README.md) na pravom okraji riadka zobrazia skratky jazykov ostatných prepojených priečinkov, napríklad **DE** a **EN**.
+Po zapnutí voľby **Zobraziť zrkadlenie** v nastavení stromovej štruktúry
+
+![](jstree-settings.png)
+
+sa pri priečinkoch prepojených [zrkadlením štruktúry](../apps/docmirroring/README.md) na pravom okraji riadka zobrazia skratky jazykov ostatných prepojených priečinkov, napríklad **DE** a **EN**.
 
 ![](mirroring/tree-navigation.png)
 
