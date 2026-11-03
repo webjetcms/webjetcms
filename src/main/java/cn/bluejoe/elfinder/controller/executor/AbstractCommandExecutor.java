@@ -225,6 +225,10 @@ public abstract class AbstractCommandExecutor implements CommandExecutor
 		map.put("separator", "/");
 		map.put("copyOverwrite", 1);
 		map.put("archivers", getArchivers());
+		List<String> allowedTypes = sk.iway.iwcm.system.elfinder.FsService.getAllowedMimeTypes(cwd.getFsServiceSelectedType());
+		if (!allowedTypes.isEmpty()) {
+			map.put("uploadMime", Map.of("allow", allowedTypes, "deny", List.of("all"), "firstOrder", "deny"));
+		}
 		if (ContextFilter.isRunning(request)) map.put("tmbUrl", request.getContextPath() + "/thumb");
 		else map.put("tmbUrl", "/thumb");
 

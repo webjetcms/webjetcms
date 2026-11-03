@@ -5,12 +5,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import sk.iway.iwcm.test.BaseWebjetTest;
+import sk.iway.iwcm.test.SerializingMockHttpSession;
 import sk.iway.iwcm.test.TestRequest;
 import sk.iway.iwcm.system.stripes.CSRF;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -92,6 +96,32 @@ class CSRFSecurityTest extends BaseWebjetTest {
         ((TestRequest)request).setParameter("__token", token);
         assertFalse(CSRF.verifyTokenAndDeleteIt(request),
             "Token should not be reusable (one-time use)");
+    }
+
+    /** Consuming a token must persist its removal even when session reads return detached copies. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void consumesTokenAcrossSessionReads(boolean serialized) {
+        HttpSession testedSession = serialized ? new SerializingMockHttpSession() : session;
+        String token = CSRF.getCsrfToken(testedSession, true);
+
+        assertTrue(CSRF.verifyTokenAndDeleteIt(testedSession, token));
+        assertFalse(CSRF.verifyTokenAndDeleteIt(testedSession, token));
+        assertFalse(CSRF.verifyTokenAjax(testedSession, token));
+    }
+
+    /** AJAX and rejected requests leave a valid token available until explicitly consumed. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void retainsAjaxTokenAcrossSessionReads(boolean serialized) {
+        HttpSession testedSession = serialized ? new SerializingMockHttpSession() : session;
+        String token = CSRF.getCsrfToken(testedSession, true);
+
+        assertTrue(CSRF.verifyTokenAjax(testedSession, token));
+        assertFalse(CSRF.verifyTokenAndDeleteIt(testedSession, "invalid-token"));
+        assertTrue(CSRF.verifyTokenAjax(testedSession, token));
+        assertTrue(CSRF.verifyTokenAndDeleteIt(testedSession, token));
+        assertFalse(CSRF.verifyTokenAjax(testedSession, token));
     }
 
     // --- Tests for the security fix: spam protection bypass removed ---

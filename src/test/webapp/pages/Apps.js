@@ -154,6 +154,8 @@ module.exports = {
             I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
         } else{
             I.amOnPage('/admin/v9/webpages/web-pages-list/');
+            I.waitForVisible(DT.btn.add_button, 20);
+            DT.waitForLoader();
             I.click(DT.btn.add_button);
         }
         DTE.waitForEditor();

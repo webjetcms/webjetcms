@@ -106,6 +106,8 @@ function openDocument(I, DTE) {
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=163800');
     DTE.waitForEditor();
     I.clickCss('#pills-dt-datatableInit-basic-tab');
+    // Hiding a configured field must not break the header preview's value collection.
+    I.waitForText('X-Robots-Tag:', 20, '.webpage-http-headers pre');
 }
 
 function openSetting(I, DT, DTE) {

@@ -278,21 +278,30 @@ Scenario('close tabs', ({ I }) => {
     I.closeOtherTabs();
 });
 
+function waitForImageEditor(I, name) {
+    // TUI renders its buttons before loading the image and attaching their click handlers.
+    I.waitForFunction(([name]) => typeof imageEditorInstance !== "undefined" &&
+        imageEditorInstance?.getImageName() === name && imageEditorInstance.ui?._initMenuEvent === true,
+    [name], 30);
+    I.waitForVisible("#photoEditorContainer canvas", 10);
+}
+
 function editImage(name, save, I, DTE) {
     I.say("Edit image "+name)
     I.waitForText(name, 10, "#galleryTable");
     I.click(locate("td.dt-row-edit a").withText(name));
     DTE.waitForEditor("galleryTable");
     I.clickCss("#pills-dt-galleryTable-photoeditor-tab");
-    I.waitForElement("li.tie-btn-crop.tui-image-editor-item", 10);
+    waitForImageEditor(I, name);
 
     if (save) {
-        I.forceClickCss("li.tie-btn-flip.tui-image-editor-item");
-        I.wait(0.5);
-        I.forceClickCss("div.tui-image-editor-button.flipX");
-        I.wait(0.5);
-        I.forceClickCss("div.tui-image-editor-button.flipX");
-        I.wait(0.5);
+        // The reused editor can keep this submenu open from the previous image.
+        I.clickIfVisible("li.tie-btn-flip.tui-image-editor-item:not(.active)");
+        I.waitForVisible("div.tui-image-editor-button.flipX", 10);
+        I.clickCss("div.tui-image-editor-button.flipX");
+        // Verify that the real edit reached the undo stack before saving the image.
+        I.waitForFunction(() => !imageEditorInstance.isEmptyUndoStack(), [], 10);
+        I.clickCss("div.tui-image-editor-button.flipX");
         DTE.save("galleryTable");
         waitForUploadMessage(I, name);
     } else {
@@ -306,11 +315,8 @@ function editImage(name, save, I, DTE) {
 function waitForUploadMessage(I, name) {
     I.waitForElement("#toast-container-upload", 10);
     I.waitForElement(locate("#toast-container-upload div.toast-message span").withText(name), 10);
-    I.waitForElement("#toast-container-upload i.ti-spin", 10);
-    I.waitForInvisible("#toast-container-upload i.ti-spin", 30);
-    I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 10);
-    I.wait(0.5);
-    I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 10);
+    // A fast upload may finish before the spinner can be observed.
+    I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 30);
 }
 
 Scenario('Gallery - image editor test', async ({ I, DT, DTE, Document }) => {
@@ -345,14 +351,15 @@ Scenario('Gallery - image editor test', async ({ I, DT, DTE, Document }) => {
     I.click(locate("td.dt-row-edit a").withText(realFileName));
     DTE.waitForEditor("galleryTable");
     I.clickCss("#pills-dt-galleryTable-photoeditor-tab");
-    I.waitForElement("li.tie-btn-crop.tui-image-editor-item", 10);
+    waitForImageEditor(I, realFileName);
 
     I.say(`Rotating image ${realFileName}` )
-    I.forceClickCss("li.tie-btn-rotate.tui-image-editor-item.normal");
+    I.clickCss("li.tie-btn-rotate.tui-image-editor-item.normal");
+    I.waitForVisible(".tui-image-editor-button.clockwise", 10);
     I.clickCss(".tui-image-editor-button.clockwise");
     I.clickCss(".tui-image-editor-button.clockwise");
     I.clickCss(".tui-image-editor-button.clockwise");
-    I.forceClickCss("li.tie-btn-rotate.tui-image-editor-item.normal");
+    I.clickCss("li.tie-btn-rotate.tui-image-editor-item.normal");
     await Document.compareScreenshotElement('div.tui-image-editor-canvas-container', "autotest-turtle0.png", null, null, 20);
 
     DTE.save("galleryTable");

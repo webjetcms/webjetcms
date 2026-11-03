@@ -62,12 +62,12 @@ public class FormStepEntity {
 
     @Lob
     @Column(name = "header")
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.mustistep.form.header.title", tab = "main", renderFunction = "renderStepName")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.multistep.form.header.title", tab = "main", renderFunction = "renderStepName")
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String header;
 
     @Column(name = "next_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.next_step.title", tab = "advanced", hidden = true, editor = {
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.multistep.form.next_step.title", tab = "advanced", hidden = true, editor = {
 			@DataTableColumnEditor(
 				attr = { @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "components.app-cookiebar.buttonText") }
 			)
@@ -76,7 +76,7 @@ public class FormStepEntity {
     private String nextStepBtnLabel;
 
     @Column(name = "back_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.multistep.form.back_step.title", tab = "advanced", hidden = true)
     private String backStepBtnLabel;
 
     @Lob

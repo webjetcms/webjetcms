@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -52,6 +53,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp;
+import sk.iway.iwcm.components.multistep_form.support.FormItemUsage;
 import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
@@ -177,7 +179,7 @@ public class MultistepFormsService {
     }
 
     /**
-     * Provide available regular expression validations as label/value pairs for UI.
+     * Provide available regular expression validations sorted by code as label/value pairs for UI.
      *
      * @param regExpRepository repository of regex definitions
      * @param request          request used to resolve localized titles
@@ -186,9 +188,10 @@ public class MultistepFormsService {
     public static final List<LabelValue> getRegExOptions(RegExpRepository regExpRepository, HttpServletRequest request) {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
         List<LabelValue> options = new ArrayList<>();
+        List<RegExpEntity> regularExpressions = regExpRepository.findAll(Sort.by(Sort.Order.asc("type").ignoreCase()));
 
-        for(RegExpEntity regEx : regExpRepository.findAll())
-            options.add( new LabelValue(prop.getText(regEx.getTitle()), regEx.getId() + ""));
+        for(RegExpEntity regEx : regularExpressions)
+            options.add( new LabelValue(regEx.getType() + " - " + prop.getText(regEx.getTitle()), regEx.getId() + ""));
 
         return options;
     }
@@ -842,6 +845,34 @@ public class MultistepFormsService {
     }
 
     /**
+     * Builds reverse-condition links using the first referenced item in form display order.
+     *
+     * @param fields referenced items scoped to the form and current domain
+     * @param formName form whose step positions and labels are used
+     * @param prop localization provider
+     * @return one link per logical field identifier, with the selected item's ID, step and label
+     */
+    public final List<FormItemUsage> prepareFieldUsage(List<FormItemEntity> fields, String formName, Prop prop) {
+        Map<Long, Integer> stepPositions = new HashMap<>();
+        for(FormStepEntity step : formStepsRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
+            stepPositions.put(step.getId(), step.getCurrentPosition());
+        }
+
+        Set<String> fieldIds = new HashSet<>();
+        return fields.stream()
+            .sorted(Comparator
+                .comparingInt((FormItemEntity field) -> stepPositions.getOrDefault(field.getStepId(), 0))
+                .thenComparingInt(field -> field.getSortPriority() != null ? field.getSortPriority() : 0))
+            .filter(field -> fieldIds.add(field.getItemFormId()))
+            .map(field -> new FormItemUsage(
+                field.getId(),
+                field.getStepId(),
+                "(" + prop.getText("components.form_items.step_title") + " " + stepPositions.get(field.getStepId()) + ") " + getFieldName(field, prop),
+                field.getItemFormId()))
+            .toList();
+    }
+
+    /**
      * Sort fields by step and field order and convert them into label/value options.
      *
      * @param fields        source field list
@@ -1169,7 +1200,7 @@ public class MultistepFormsService {
             if(nextStep == null) {
                 String forwardOk = formSettings.getForward();
                 // Because we are going save form for real now, add count to attempts of form submission
-                formSettingsRepository.incrementResponseAttempts(formName, CloudToolsForCore.getDomainId());
+                FormSettingsService.tryIncrementResponseAttempts(formName, CloudToolsForCore.getDomainId(), formSettingsRepository);
 
                 // HERE we can run custom saving of form
                 boolean continueWithSaving = customFormSave(formProcessor, formName, request, formSettings, iLastDocId);
@@ -1207,7 +1238,19 @@ public class MultistepFormsService {
             response.put("fieldErrors", errors);
 
             // increment field error count
-            formItemsRepository.incrementErrorCountByItemFormIds(formName, CloudToolsForCore.getDomainId(), new ArrayList<>(errors.keySet()));
+            tryIncrementFieldErrorCount(formName, CloudToolsForCore.getDomainId(), new ArrayList<>(errors.keySet()));
+        }
+    }
+
+    private void tryIncrementFieldErrorCount(String formName, int domainId, List<String> itemFormIds) {
+        if (ClusterDB.isPublicNode()) return;
+
+        try {
+            formItemsRepository.incrementErrorCountByItemFormIds(formName, domainId, itemFormIds);
+        } catch (RuntimeException exception) {
+            Logger.warn(MultistepFormsService.class,
+                "Unable to increment form field error count for formName=" + formName + ", domainId=" + domainId,
+                exception);
         }
     }
 

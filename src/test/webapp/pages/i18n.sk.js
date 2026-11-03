@@ -77,6 +77,10 @@ module.exports = {
             "PassKey": "Prístupový kľúč",
             "Thumbnail": "Miniatúra",
             "Submit": "Potvrdiť",
+            // Form encryption
+            "Setup": "Nastaviť",
+            "Decryption key set successfully": "Dešifrovací kľúč úspešne nastavený",
+            "Print": "Vytlačiť",
             // Dashboard device verification
             "You signed in from a new browser": "Prihlásili ste sa z nového prehliadača",
             "This browser": "Tento prehliadač",

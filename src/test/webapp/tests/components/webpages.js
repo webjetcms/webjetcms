@@ -1222,7 +1222,7 @@ function editGroup (I, DT, DTE, groupName) {
 function changeDocName(I, DTE, newDocName) {
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("#DTE_Field_title", newDocName);
-    DTE.save();
+    DTE.save("datatableInit", true);
 }
 
 function changeGroupMainDoc(I, arr, id) {

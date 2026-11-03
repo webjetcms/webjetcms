@@ -235,7 +235,7 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     DTE.waitForEditor("groups-datatable");
     I.seeElement("#groups-datatable_modal");
     I.fillField("Názov priečinku", folder_name);
-    DTE.save();
+    DTE.save("groups-datatable", true);
     I.dontSee("K tomuto adresáru nemáte prístupové práva");
     I.dontSeeElement("#groups-datatable_modal");
     DT.waitForLoader();
