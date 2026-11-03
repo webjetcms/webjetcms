@@ -4,7 +4,7 @@
 
 ## Odporúčanie
 
-**Nepokračovať pravidlom „ďalší modul = ďalšia pracovná tabuľka“.** Ponechať typované úložiská jadra a pre ďalšie bežné redakčné moduly použiť jednu spoločnú tabuľku `content_branch_item` s explicitnými JSON snapshotmi. Modul dodá adaptér svojho čítania, pracovného uloženia a publikovania. Porovnanie, konflikty, plánovanie, stav, prehľad zmien a pokračovanie po chybe zostanú spoločné.
+**Nepokračovať pravidlom „ďalší modul = ďalšia pracovná tabuľka“.** Ponechať typované úložiská jadra a pre ďalšie bežné redakčné moduly použiť jednu spoločnú tabuľku `branch_items` s explicitnými JSON snapshotmi. Modul dodá adaptér svojho čítania, pracovného uloženia a publikovania. Porovnanie, konflikty, plánovanie, stav, prehľad zmien a pokračovanie po chybe zostanú spoločné.
 
 V prvej implementácii ponechať päť tabuliek z [02](02-datovy-model.md). Už teraz navrhnúť koordinátor a UI cez registrované typy položiek, aby nepoznali iba stránky/priečinky/médiá/súbory. Spoločnú šiestu tabuľku vytvoriť až s prvým ďalším modulom a overiť ju na reálnom bannere. Galéria a ďalší podobný modul potom využijú rovnakú tabuľku. Nevytvárať dnes prázdne úložisko a všeobecný plugin framework bez prvého použitia.
 
@@ -39,7 +39,7 @@ Neskoršie zjednotenie `groups` a `media` do JSON je technicky možné, ale samo
 
 Položka dostane vnútornú identitu `type + objectKey`, napríklad `document:123`, `group:45`, `media:900`, neskôr `banner:810` alebo `gallery.image:911`. Súbor ponechá dnešnú normalizovanú logickú cestu a `path_key`. Identita balíka je samostatná. Typ nie je názov SQL tabuľky ani Java trieda poslaná klientom.
 
-Navrhovaný malý `ContentBranchTypeHandler` a register Spring beanov oddelia:
+Navrhovaný malý `BranchTypeHandler` a register Spring beanov oddelia:
 
 | Zodpovednosť typu | Kontrakt |
 | --- | --- |
@@ -55,9 +55,9 @@ Nie je potrebný univerzálny jazyk filtrov, automatický preklad JPA, reflexív
 
 Čítanie zostáva samostatnou zodpovednosťou modulu: napríklad budúci `BannerBranchAdapter` sa zapojí do `BannerDB` a administrácie. Publikačný handler nie je transparentnou náhradou všetkých modulových query. Adaptér náhľadu musí podľa Q16 rešpektovať spoločnú mapu zvolených LIVE/WORK výsledkov; editor uchováva WORK. Rovný cieľ sa normalizuje na LIVE/no-op a zastaraná voľba vyžiada nové porovnanie. Spoločné stĺpce zahŕňajú aj `resolved_choice`, nie iba snapshot výsledku.
 
-**Jeden typ má práve jedno autoritatívne pracovné úložisko.** Dnešný dokument nebude súčasne uložený v `content_branch_document` aj v `content_branch_item`. Spoločný obal je Java pohľad, nie ďalší povinný DB riadok. Ak sa niektorý typ neskôr presunie do iného storage, potrebuje jednorazovú migráciu existujúcich zmien, nie trvalý dvojitý zápis.
+**Jeden typ má práve jedno autoritatívne pracovné úložisko.** Dnešný dokument nebude súčasne uložený v `branch_documents` aj v `branch_items`. Spoločný obal je Java pohľad, nie ďalší povinný DB riadok. Ak sa niektorý typ neskôr presunie do iného storage, potrebuje jednorazovú migráciu existujúcich zmien, nie trvalý dvojitý zápis.
 
-## Jedna budúca tabuľka `content_branch_item`
+## Jedna budúca tabuľka `branch_items`
 
 Tabuľka preberie spoločné stĺpce zo sekcie „Spoločné pracovné stĺpce“ v [02](02-datovy-model.md): `row_id`, `branch_id`, operáciu, základ, hashe, metadáta úpravy, vyriešený výsledok a checkpointy. Navyše:
 
@@ -83,7 +83,7 @@ Príklad obsahového banneru, ilustračný JSON, nie serializácia `BannerBean`:
 }
 ```
 
-Pri novom bannere snapshot obsahuje aj minimum potrebné na vytvorenie, napríklad typ, existujúcu skupinu/umiestnenie a hodnoty inicializované podľa bežného editora. Odkaz na súbor je logická cesta; bajty sú v `content_branch_file` a existujúcom neverejnom úložisku. Pri zmene toho istého obrázka v editore súborov a v module sa používa rovnaká súborová položka, nie dve nezávislé pracovné kópie.
+Pri novom bannere snapshot obsahuje aj minimum potrebné na vytvorenie, napríklad typ, existujúcu skupinu/umiestnenie a hodnoty inicializované podľa bežného editora. Odkaz na súbor je logická cesta; bajty sú v `branch_files` a existujúcom neverejnom úložisku. Pri zmene toho istého obrázka v editore súborov a v module sa používa rovnaká súborová položka, nie dve nezávislé pracovné kópie.
 
 Formát patrí konkrétnemu codec/mapperu typu. Poradie JSON kľúčov a množinových zoznamov ID nesmie meniť hash; pri zozname s obsahovo významným poradím sa poradie zachová. Pri kompatibilnom rozšírení použije mapper známu predvolenú hodnotu; pri zmene významu alebo premenovaní polí migruje BASE/WORK/resolved spolu a zneplatní staré vyriešenie konfliktu. Neznáma verzia dá chybu. Otvorená vetva po upgrade nesmie ticho stratiť pole. Nie je potrebná všeobecná revízna databáza.
 
@@ -158,7 +158,7 @@ Podľa použitého resize režimu sa dnes pracuje s originálom `o_...`, hlavný
 | 6. Publikovanie | Handler zápisu a účinkov, validačné referencie, umiestnenie do pevného poradia merge, spoločný diff. | Konflikt, merge aj pokračovanie používajú existujúci koordinátor a zachovajú ID. |
 | 7. Overenie | Príbeh redaktora v preview/LIVE, práva, konflikty, súbory a konkrétne modulu vlastné riziká. | Existuje report a inventár podpory; bez tvrdenia, že registrácia handlera automaticky pokryla všetky cesty. |
 
-Pri prvom ďalšom module sa v kroku 3 jednorazovo vytvorí `content_branch_item` a spoločný repository/codec kontrakt. Ďalšie moduly pridajú DTO, handler/adaptér a testy. Nemajú opakovať scheduler, stavový automat, merge obrazovku ani vlastné úložisko príloh.
+Pri prvom ďalšom module sa v kroku 3 jednorazovo vytvorí `branch_items` a spoločný repository/codec kontrakt. Ďalšie moduly pridajú DTO, handler/adaptér a testy. Nemajú opakovať scheduler, stavový automat, merge obrazovku ani vlastné úložisko príloh.
 
 Poradie publikovania ostáva jednoduché: nové stránky/priečinky a potrebné súbory pred modulom, ktorý ich používa; modulové referencie sa upravia pred zmazaním ich cieľov. Zatiaľ stačí doplniť konkrétne miesto typu v pevnom pláne z dokumentu 04. Všeobecný grafový orchestrátor nie je potrebný. Obsahový cyklus, ktorý daný typ nevie vykonať týmto poradím, sa uvedie ako nepodporovaná operácia, nie ako dôvod vopred vybudovať workflow engine.
 
@@ -181,7 +181,7 @@ Implementuj E01 a E02 podľa docs/research/publish-packages/08-rozsirovanie-modu
 Riaď sa ORCHESTRACIA.md a skontroluj skutočný stav jadra v STAV.md.
 Rozsah: nové bannery, názov/popisy/obrázky existujúcich bannerov,
 bežný serverový render typov 1 a 4 a spoločný merge. Štatistiky nemeníš.
-Použi jednu spoločnú content_branch_item, nevytváraj bannerovú pracovnú tabuľku.
+Použi jednu spoločnú branch_items, nevytváraj bannerovú pracovnú tabuľku.
 Dokonči overenia dohodnutého rozsahu, zapíš výsledky a skonči.
 Bez Git commitov a bez zapnutia na produkcii.
 ```

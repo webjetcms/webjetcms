@@ -38,6 +38,10 @@ Technický dôsledok N1: povoliť priradenie stránky k existujúcim perex skupi
 
 Produktové otázky Q1–Q19 sú uzatvorené. Q16–Q19 vyplynuli z kontroly pripravenosti 2. novembra 2026 a používateľ potvrdil uvedené odporúčania. Pri Q10 a Q13 výslovne prenechal technický výber autorovi; uvedené riešenia preto nevyžadujú ďalšie kolo tej istej otázky. Zostáva predložiť kompletný návrh na záverečné posúdenie spoločného porozumenia. To nie je povolenie implementácie.
 
+## Pomenovanie tabuliek a Java tried, 3. november 2026
+
+**N3 — Krátky prefix a presný názov originálu.** Používateľ požaduje prefix `branch_` a zachovanie názvu pôvodnej tabuľky vrátane množného čísla. Záväzné mapovanie a názvy pomocných tabuliek sú v [dátovom modeli](02-datovy-model.md#odporúčanie); platia aj pre SQL príklady a implementačné zadania. Navrhované Java triedy a rozhrania používajú krátky prefix `Branch` a jadrový balík `sk.iway.iwcm.branch` podľa [Java návrhu](03-nahlad-a-java.md#1-rozdelenie-zodpovednosti), vrátane ukážok kódu a testovacích príkazov. Krátke pomenovanie platí aj pre kontextové polia, konfiguračný prepínač, REST endpointy a adresáre úložiska/testov.
+
 ## Strom návrhu
 
 ```mermaid

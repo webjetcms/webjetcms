@@ -6,11 +6,11 @@ Najjednoduchší zvolený merge porovnáva **celý obsahový objekt**, nie jedno
 
 ## 1. Zápis pracovnej verzie
 
-`ContentBranchSaveService` dostane používateľa, vetvu, objekt a hash verzie zobrazenej v editore. Uložiť možno iba editovateľnú vetvu. Overí existujúce práva na objekt aj cieľ presunu, doménu, povolené polia a závislosti.
+`BranchSaveService` dostane používateľa, vetvu, objekt a hash verzie zobrazenej v editore. Uložiť možno iba editovateľnú vetvu. Overí existujúce práva na objekt aj cieľ presunu, doménu, povolené polia a závislosti.
 
 Pri prvej zmene existujúcej položky porovná hash načítaný editorom s aktuálnou produkciou. Ak sa medzitým zmenila, vráti `409` a údaje na obnovenie/porovnanie. Neuloží starý formulár s novším základom. Pri ďalšom uložení porovná hash pracovnej verzie; základ prvej úpravy zostáva rovnaký. Táto kontrola bráni bežnému prepísaniu neaktuálnym formulárom bez dlhého zámku editora.
 
-Po spoločnej validácii a normalizácii uloží pracovné stĺpce, pri prvej zmene aj `base_snapshot`/`base_hash`, zvýši `content_branch.revision` a zneplatní predchádzajúce rozhodnutie konfliktu danej položky. Krátka DB operácia musí skontrolovať stav vetvy a uložiť dáta spolu; nesmie uložiť obsah po tom, čo iný request prepol vetvu na `MERGING`.
+Po spoločnej validácii a normalizácii uloží pracovné stĺpce, pri prvej zmene aj `base_snapshot`/`base_hash`, zvýši `branches.revision` a zneplatní predchádzajúce rozhodnutie konfliktu danej položky. Krátka DB operácia musí skontrolovať stav vetvy a uložiť dáta spolu; nesmie uložiť obsah po tom, čo iný request prepol vetvu na `MERGING`.
 
 Nové objekty použijú rezerváciu konečného ID z dokumentu 02a. Kladné ID nového objektu nie je dôkaz, že už existuje v produkcii. Médiá novej stránky sa priradia priamo k jej rezervovanému `doc_id`, nie k spoločnému dočasnému priestoru používateľa.
 
@@ -33,9 +33,9 @@ Nie je potrebný nový všeobecný workflow systém. Potrebné sú tri jasné ce
 
 Čistá normalizácia nesmie automaticky volať dnešný `EditorUtils.getDataAsc()` so všetkými konfigurovateľnými vetvami. Pri `fulltextExecuteApps` totiž vykonáva aplikácie cez JSP include alebo loopback a `fulltextDataAscMethod` môže spustiť zákaznícky hook. Pracovné uloženie použije oddelené odvodenie textu bez týchto účinkov. Ak nasadenie vyžaduje vykonávanie aplikácií pri produkčnom indexovaní, patrí do výslovne overeného dokončovacieho kroku mimo dátovej transakcie, ktorý funguje bez HTTP requestu používateľa. Nepripravený hook alebo takáto konfigurácia sa oznámi pri kontrole kompatibility; nevolá sa skryto pri uložení vetvy a požadovaný index sa potichu nevynechá.
 
-Navrhované služby: `ContentBranchSaveService`, `ContentBranchMergeService` pre porovnanie a kontroly, `ContentBranchPublishService` pre vykonanie, jednoduchý `ContentRowWriter` pre DB zápis a `ContentPublishEffects` pre známe následky. Scheduler iba vyvolá tie isté služby. DTO a pomocné mapovanie majú zostať pri tejto funkcii.
+Navrhované služby: `BranchSaveService`, `BranchMergeService` pre porovnanie a kontroly, `BranchPublishService` pre vykonanie, jednoduchý `ContentRowWriter` pre DB zápis a `ContentPublishEffects` pre známe následky. Scheduler iba vyvolá tie isté služby. DTO a pomocné mapovanie majú zostať pri tejto funkcii.
 
-Podľa [návrhu rozšírení](08-rozsirovanie-modulov.md) koordinátor prijíma spoločné položky `BranchChange` a používa register `ContentBranchTypeHandler`. Handler pozná snapshot, práva, konkrétny zápis a účinky svojho typu; spoločná služba vlastní porovnanie, stav a checkpoint. Rozhodovanie sa nesmie rozrásť na samostatný merge engine pre každý modul. Dnešné typované tabuľky zostávajú zdrojom jadra, spoločná JSON tabuľka príde až s prvým ďalším modulom. Súborové kroky naďalej používajú svoju netransakčnú file službu a porovnanie hashov.
+Podľa [návrhu rozšírení](08-rozsirovanie-modulov.md) koordinátor prijíma spoločné položky `BranchChange` a používa register `BranchTypeHandler`. Handler pozná snapshot, práva, konkrétny zápis a účinky svojho typu; spoločná služba vlastní porovnanie, stav a checkpoint. Rozhodovanie sa nesmie rozrásť na samostatný merge engine pre každý modul. Dnešné typované tabuľky zostávajú zdrojom jadra, spoločná JSON tabuľka príde až s prvým ďalším modulom. Súborové kroky naďalej používajú svoju netransakčnú file službu a porovnanie hashov.
 
 ## 3. Trojcestné porovnanie celého objektu
 
@@ -185,7 +185,7 @@ Hotové DB zápisy sa pri chybe indexovania alebo cache nevykonávajú znovu. Pr
 
 ## 9. Kontrolované publikačné účinky
 
-`ContentBranchPublishService` beží v explicitnom produkčnom režime. Pridá produkčný audit s ID vetvy a vykoná históriu podľa existujúcich pravidiel/konfigurácie, odvodené údaje, cache a potrebné indexovanie. História, ktorá je vypnutá konfiguráciou, nesmie zmeniť požiadavku na zachovanie ID pri presune do koša.
+`BranchPublishService` beží v explicitnom produkčnom režime. Pridá produkčný audit s ID vetvy a vykoná históriu podľa existujúcich pravidiel/konfigurácie, odvodené údaje, cache a potrebné indexovanie. História, ktorá je vypnutá konfiguráciou, nesmie zmeniť požiadavku na zachovanie ID pri presune do koša.
 
 Keďže writer zapisuje cez JDBC, dokončenie musí zneplatniť aj príslušné JPA/EclipseLink cache dokumentov, médií a ich kategorizácie, nielen `DocDB`/`GroupsDB`. Použijú sa čerstvé čítacie kontexty; už načítaná spravovaná entita nesmie pri neskoršom flush prepísať výsledok. Overenie začne zahriatím produkčného repository aj verejnej cache, potom vykoná merge a skontroluje obe čítacie cesty. Podpora jednotlivých persistence jednotiek a ostatných uzlov patrí do konkrétneho dokončovacieho helpera, nie do náhodného volania všetkých save listenerov.
 
@@ -207,7 +207,7 @@ Balík nevytvára paralelné publikačné histórie pre dnešný `DocPublishServ
 
 Všetky mutácie používajú existujúcu autentifikáciu, CSRF ochranu, obsahové práva a očakávanú `revision`. Riadiace endpointy pracujú s explicitným ID vetvy a produkčným technickým kontextom podľa dokumentu 03.
 
-| Endpoint pod `/admin/rest/content-branches/{id}` | Kontrakt |
+| Endpoint pod `/admin/rest/branches/{id}` | Kontrakt |
 | --- | --- |
 | `GET` | Detail vetvy: metadáta, stav, revízia, dostupné akcie a súhrn položiek. Aktuálnu pripravenosť potvrdzuje až `/prepare`; starý výsledok má čas kontroly. |
 | `PATCH` | `{ expectedRevision, name, description }`; v `DRAFT` upraví názov/poznámku a zvýši revíziu. Doména, vlastník a obsahové položky sa tým nemenia. |

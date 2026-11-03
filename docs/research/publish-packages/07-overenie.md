@@ -55,7 +55,7 @@ MySQL/MariaDB: overiť reálny engine existujúcich aj nových dotknutých tabul
 
 ## E2E overenie
 
-Nové scenáre umiestniť napr. do `src/test/webapp/tests/webpages/content-branches/`; názov adresára je návrh. Použiť existujúce `I`, `DT`, `DTE`, `Document` a `Browser` helpery a postup z `wj-codeceptjs` pri realizácii. Používateľove súčasné lokálne úpravy testov sa zachovajú.
+Nové scenáre umiestniť napr. do `src/test/webapp/tests/webpages/branches/`; názov adresára je návrh. Použiť existujúce `I`, `DT`, `DTE`, `Document` a `Browser` helpery a postup z `wj-codeceptjs` pri realizácii. Používateľove súčasné lokálne úpravy testov sa zachovajú.
 
 Minimálny spoločný príbeh:
 
@@ -102,7 +102,7 @@ Presné aktuálne príkazy sú v [pracovnom návode](../../../.github/agents/CON
 
 ```sh
 ./gradlew compileJava
-./gradlew test --tests 'sk.iway.iwcm.components.contentbranch.*'
+./gradlew test --tests 'sk.iway.iwcm.branch.*'
 npm --prefix src/main/webapp/admin/v9 run prod
 ```
 
@@ -110,7 +110,7 @@ Vzor CodeceptJS z `src/test/webapp` po spustení testovacieho CMS:
 
 ```sh
 CODECEPT_URL='https://hostname-testovacieho-webu' CODECEPT_SHOW=false \
-  npx codeceptjs run tests/webpages/content-branches/ --steps
+  npx codeceptjs run tests/webpages/branches/ --steps
 ```
 
 Balík testov, hostname a cesty vzniknú až pri implementácii. Príkazy sú návody, nie tvrdenie, že už existujú nové triedy alebo testy. DB profil a prihlasovanie sa prevezmú z bezpečne nakonfigurovaného prostredia; tajné hodnoty sa nezapisujú do dokumentácie ani testovacích logov.

@@ -6,7 +6,7 @@ Požiadavka je potvrdená: aj objekt vytvorený až vo vetve dostane konečné k
 
 Pre stránky a priečinky ponechať existujúci natívny generátor databázy. Pracovná vetva z neho spotrebuje číslo rovnako ako produkčné vytvorenie. Bežný editor, JDBC importy a zákaznícke inserty bez explicitného ID tak naďalej používajú jeden zdroj čísel.
 
-Produkčné `documents.doc_id` a `groups.group_id` ostanú jednoduché primárne kľúče. V `content_branch_document` a `content_branch_group` je samostatné `row_id` identitou pracovného riadka a `doc_id`/`group_id` konečnou identitou obsahu. Rezervovanie nemení ID už existujúcich objektov.
+Produkčné `documents.doc_id` a `groups.group_id` ostanú jednoduché primárne kľúče. V `branch_documents` a `branch_groups` je samostatné `row_id` identitou pracovného riadka a `doc_id`/`group_id` konečnou identitou obsahu. Rezervovanie nemení ID už existujúcich objektov.
 
 Pre databázy so samostatnou sekvenciou sa číslo prečíta priamo. Pri `AUTO_INCREMENT` a `IDENTITY` ho získa krátky technický insert, ktorý sa v tej istej transakcii zmaže. V produkčnej tabuľke nezostane žiadny potvrdený zástupný riadok.
 
@@ -21,7 +21,7 @@ BEGIN
   INSERT minimálny technický riadok do documents alebo groups bez ID
   prečítaj vygenerované ID z tohto INSERTu
   DELETE tento technický riadok podľa získaného ID
-  INSERT pracovný riadok do content_branch_document alebo content_branch_group
+  INSERT pracovný riadok do branch_documents alebo branch_groups
          s týmto doc_id alebo group_id a označením novej položky
 COMMIT
 vráť uložený pracovný objekt redaktorovi
@@ -55,7 +55,7 @@ PostgreSQL prideľuje `nextval` atómovo a pri rollbacku hodnotu nevracia, záro
 
 Toto je konkrétna podmienka, nie všeobecná úvaha o súbežnosti. [DBPool](../../../src/main/java/sk/iway/iwcm/DBPool.java) pri získaní spojenia nastavuje `autoCommit=true`; bežné `getConnection()` používa `READ_COMMITTED`, ale bezparametrické `getConnectionReadUncommited()` prepína na `READ_UNCOMMITTED` (riadky 478–549 a 602–627). Táto druhá cesta by mohla vidieť a uložiť do cache technický riadok ešte pred jeho zmazaním.
 
-Odporúčaná zmena je **jedna centrálna podmienka v `DBPool.setTransactionIsolationReadUNCommited()`**: ak je zapnuté `contentBranchesEnabled`, použije `READ_COMMITTED`. Platí aj pre bežnú produkčnú požiadavku, ktorá by inak mohla vidieť technický riadok. Pri vypnutej funkcii zostáva doterajšie správanie. Tým sa pokryjú aj spoločné query helpery, ktoré izolačnú úroveň menia až po získaní spojenia; netreba osobitne upravovať každý obsahový SELECT.
+Odporúčaná zmena je **jedna centrálna podmienka v `DBPool.setTransactionIsolationReadUNCommited()`**: ak je zapnuté `branchesEnabled`, použije `READ_COMMITTED`. Platí aj pre bežnú produkčnú požiadavku, ktorá by inak mohla vidieť technický riadok. Pri vypnutej funkcii zostáva doterajšie správanie. Tým sa pokryjú aj spoločné query helpery, ktoré izolačnú úroveň menia až po získaní spojenia; netreba osobitne upravovať každý obsahový SELECT.
 
 Pri zapnutej funkcii musia oba izolačné helpery pri zlyhaní nastavenia skončiť chybou. Dnešné zachytenie a zalogovanie výnimky na riadkoch 602–633 nestačí. `getConnection()` v takom prípade nesmie vrátiť získané spojenie a musí ho uzavrieť; pri chybe resetovania sa nesmie vrátiť do poolu ako použiteľné. Pripravenosť zároveň overí najmenej `READ_COMMITTED` na datasource používanom priamo cez JPA. Globálna podmienka musí platiť na všetkých uzloch, ktoré čítajú rovnakú produkčnú DB, pred povolením rezervácií.
 

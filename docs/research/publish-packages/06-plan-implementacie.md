@@ -65,9 +65,9 @@ Práca:
 1. Pridať päť tabuliek cez existujúce SQL XML migrácie pre podporované DB, entity/repositories/mappery a potrebnú registráciu Spring/JPA balíka.
 2. Zaviesť explicitnú klasifikáciu obsahových polí: podporované, odvodené, prevádzkové, mimo rozsahu. Kanonické snapshoty a hashe nesmú závisieť od poradia JSON properties, transient polí a runtime počítadiel.
 3. Implementovať natívnu rezerváciu nových ID a explicitný writer; upraviť striktnú rezerváciu médií podľa `02a`.
-4. Pridať feature flag `contentBranchesEnabled`, overenie enginov/práv/úložiska a centrálny READ_COMMITTED režim pri zapnutej funkcii. Všetky uzly obsluhujúce obsah musia mať rovnakú konfiguráciu.
+4. Pridať feature flag `branchesEnabled`, overenie enginov/práv/úložiska a centrálny READ_COMMITTED režim pri zapnutej funkcii. Všetky uzly obsluhujúce obsah musia mať rovnakú konfiguráciu.
 5. Zaviesť nemenný request kontext, explicitný LIVE technický režim a minimálne API vytvorenia/listovania vetvy. Zapojenie produkčného publikovania musí zostať explicitne LIVE.
-6. Zaviesť stabilné `type + objectKey`, spoločný obal zmien a malý register podporovaných typov. Každý dnešný typ číta práve svoju pracovnú tabuľku. Nepoužívať názov tabuľky/Java triedy dodaný klientom a nepridávať zatiaľ `content_branch_item`.
+6. Zaviesť stabilné `type + objectKey`, spoločný obal zmien a malý register podporovaných typov. Každý dnešný typ číta práve svoju pracovnú tabuľku. Nepoužívať názov tabuľky/Java triedy dodaný klientom a nepridávať zatiaľ `branch_items`.
 7. Odovzdať konkrétnu maticu stĺpcov a mapovanie pre každý typ: WORK obsah, odvodené polia, aktuálne LIVE údaje a hodnoty nového objektu. Zaviesť čisté B/L/W rozhodovanie z `04`, ktoré použije náhľad v P03 a publisher v P06; zatiaľ bez produkčného merge. Súborový model zahrnie aj vytvorenie prázdneho adresára v tej istej tabuľke podľa Q17.
 
 **Existujúce miesta:** `DBPool`, `PkeyGenerator`, `ConstantsV9`, SQL XML aktualizácie, `V9JpaDBConfig`, `V9SpringConfig`. Writer znovu použije mapovanie produkčných polí; nemení PK ani bežné produkčné generátory.

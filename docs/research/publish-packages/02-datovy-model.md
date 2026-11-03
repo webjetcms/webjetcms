@@ -4,13 +4,23 @@ Stav: technický návrh na posúdenie. Vychádza z uzatvorených Q1–Q19 v [reg
 
 ## Odporúčanie
 
-Pridať päť tabuliek: `content_branch`, `content_branch_document`, `content_branch_group`, `content_branch_media`, `content_branch_file`. Produkčné `documents`, `groups`, `media` zachovajú dnešný význam aj primárne kľúče. Nepridávame do nich `branch_id`, nemeníme všetky cudzie odkazy na zložený kľúč a nekopírujeme celú databázu.
+Pridať päť tabuliek: `branches`, `branch_documents`, `branch_groups`, `branch_media`, `branch_files`. Produkčné `documents`, `groups`, `media` zachovajú dnešný význam aj primárne kľúče. Nepridávame do nich `branch_id`, nemeníme všetky cudzie odkazy na zložený kľúč a nekopírujeme celú databázu.
+
+Pracovná tabuľka mapujúca existujúcu tabuľku sa podľa požiadavky používateľa z 3. novembra 2026 volá **`branch_` + presný názov pôvodnej tabuľky**, vrátane množného čísla:
+
+| Produkčná tabuľka | Pracovná tabuľka |
+| --- | --- |
+| `documents` | `branch_documents` |
+| `groups` | `branch_groups` |
+| `media` | `branch_media` |
+
+Pomocné tabuľky bez priameho produkčného náprotivku majú názvy `branches` (balíky), `branch_files` (súbory a adresárové markery) a neskôr `branch_items` (spoločné položky ďalších modulov). `branch_files` mapuje filesystem, nie produkčnú tabuľku `files`. Pravidlo pomenovania neurčuje počet tabuliek budúcich modulov; ich spoločné úložisko zostáva podľa dokumentu 08.
 
 Každá pracovná obsahová tabuľka obsahuje iba zmenené položky. Ukladá pôvodný stav pre trojcestné porovnanie a aktuálnu pracovnú verziu. Stránky, priečinky a médiá majú typované pracovné stĺpce. Základ a ručné vyriešenie konfliktu sú JSON v textovom/CLOB stĺpci; SQL nad JSON nie je potrebné.
 
 Typované pracovné dokumenty sú potrebné najmä pre novinky: účinný obsah sa musí skladať **pred** SQL filtrom, počtom a stránkovaním. Jedna univerzálna tabuľka s JSON by síce mala menej stĺpcov, ale presunula by zložitosť do náhľadu existujúcich aplikácií. Pri priečinkoch a médiách rovnaký tvar uľahčí mapovanie a kontrolu polí.
 
-Päť tabuliek je rozsah jadra, nie predpis kopírovať tabuľky každého budúceho modulu. [Návrh rozšírení](08-rozsirovanie-modulov.md) pridáva s prvým ďalším modulom jednu spoločnú `content_branch_item` pre explicitné JSON objekty; banner aj obrázok galérie ju môžu zdieľať. Dnešné typy a budúce JSON typy používajú spoločný obal a merge, ale každý typ má iba jedno autoritatívne pracovné úložisko. Prvá migrácia stále vytvára iba uvedených päť tabuliek.
+Päť tabuliek je rozsah jadra, nie predpis kopírovať tabuľky každého budúceho modulu. [Návrh rozšírení](08-rozsirovanie-modulov.md) pridáva s prvým ďalším modulom jednu spoločnú `branch_items` pre explicitné JSON objekty; banner aj obrázok galérie ju môžu zdieľať. Dnešné typy a budúce JSON typy používajú spoločný obal a merge, ale každý typ má iba jedno autoritatívne pracovné úložisko. Prvá migrácia stále vytvára iba uvedených päť tabuliek.
 
 ## Čo sa mení v existujúcich tabuľkách
 
@@ -20,7 +30,7 @@ Päť tabuliek je rozsah jadra, nie predpis kopírovať tabuľky každého budú
 | `groups` | Žiadny stĺpec vetvy a žiadna zmena PK. Nová explicitná insert operácia s rezervovaným `group_id`; dnešné `groupId > 0` nesmie nesprávne zvoliť UPDATE. |
 | `media` | Žiadny stĺpec vetvy a žiadna zmena PK. Merge aktualizuje podľa `media_id`; nepoužije vymazanie celej sady a vytvorenie kópií. |
 | `media_group_to_media` | Súčasť zápisu konkrétneho média pri merge. Pracovný zoznam existujúcich kategórií sa uchová s médiom. Definície `media_groups` sa nemenia. |
-| `perex_group_doc` | Odvodený index hodnoty `documents.perex_group`; pri merge sa synchronizuje iba pre konkrétny dokument. Pracovné priradenia existujúcich perex skupín sú v `content_branch_document.perex_group`, bez novej väzbovej tabuľky. |
+| `perex_group_doc` | Odvodený index hodnoty `documents.perex_group`; pri merge sa synchronizuje iba pre konkrétny dokument. Pracovné priradenia existujúcich perex skupín sú v `branch_documents.perex_group`, bez novej väzbovej tabuľky. |
 | `documents_history`, audit, existujúce indexy | Naplnia sa pri skutočnom publikovaní príslušnými podporovanými operáciami. Nie sú úložiskom vetiev. História vetvy nevyžaduje novú plnú revíznu databázu. |
 | `groups_scheduler`, per-page plánované údaje | Nie sú schedulerom balíkov. Pred merge sa kontroluje kolízia; starý plán sa potichu nemení. |
 | `pkey_generator` | Existujúci mechanizmus pre médiá potrebuje striktné hlásenie zlyhania a ochranu proti zníženiu čítača; podrobnosti v návrhu ID. |
@@ -28,7 +38,7 @@ Päť tabuliek je rozsah jadra, nie predpis kopírovať tabuľky každého budú
 
 Podmienky databázového enginu a konkrétne operácie rezervácie sú v [identifikátoroch](02a-identifikatory.md). „Bez zmeny PK“ neznamená „bez zmeny Java insert ciest“.
 
-## `content_branch`
+## `branches`
 
 Nasleduje logická schéma. Migrácia musí použiť typy a generátory danej podporovanej DB podľa existujúceho XML update mechanizmu.
 
@@ -80,7 +90,7 @@ Spoločné pravidlo projekcie pre detail aj SQL: podporované obsahové polia zo
 
 ## Dokumenty
 
-`content_branch_document` obsahuje `doc_id INT NOT NULL`, spoločné pracovné stĺpce a projekciu dnešných obsahových stĺpcov `documents`. Jedinečnosť `(branch_id, doc_id)`, index `(branch_id, group_id)`, prípadne `(branch_id, virtual_path)` podľa plánu skutočných query. Nevytvárať na pracovnej tabuľke fulltextové indexy pre každú vetvu; všeobecné vyhľadávanie v tomto rozsahu nebuduje samostatný index vetvy.
+`branch_documents` obsahuje `doc_id INT NOT NULL`, spoločné pracovné stĺpce a projekciu dnešných obsahových stĺpcov `documents`. Jedinečnosť `(branch_id, doc_id)`, index `(branch_id, group_id)`, prípadne `(branch_id, virtual_path)` podľa plánu skutočných query. Nevytvárať na pracovnej tabuľke fulltextové indexy pre každú vetvu; všeobecné vyhľadávanie v tomto rozsahu nebuduje samostatný index vetvy.
 
 Presná východisková projekcia je definovaná mapovaním [DocBasic](../../../src/main/java/sk/iway/iwcm/doc/DocBasic.java) a perzistentnými poľami [DocDetails](../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java), overenými proti výslednej schéme po migráciách. Starý `blank_web.sql` sám osebe nie je kompletná aktuálna schéma.
 
@@ -97,13 +107,13 @@ Presná východisková projekcia je definovaná mapovaním [DocBasic](../../../s
 | `sync_id`, `sync_status`, multigroup, atribúty | V prvom rozsahu nemeniť. Samotný fyzický stĺpec v documents ešte neznamená podporu súvisiaceho workflow. |
 | Dátumy individuálneho štartu a konca publikovania | Existujúce hodnoty vo vetve nemeniteľné; čas vykonania publikovania riadi balík. Nová stránka dostane začiatok raz podľa `editorAutoFillPublishStart` (čas vytvorenia alebo NULL), koniec NULL a vypnuté individuálne plánovacie príznaky; nezdedí skrytý plán z predlohy. Existujúca budúca individuálna zmena sa vyrieši pred merge. Event dátum zostáva upraviteľný. |
 
-Implementácia vytvorí explicitný `ContentBranchDocumentMapper` a zoznam podporovaných/odvodených/prevádzkových polí. Test musí zachytiť nové perzistentné pole, ktoré nebolo do jednej kategórie zaradené. Nepoužívať slepé kopírovanie všetkých Java properties pri merge.
+Implementácia vytvorí explicitný `BranchDocumentMapper` a zoznam podporovaných/odvodených/prevádzkových polí. Test musí zachytiť nové perzistentné pole, ktoré nebolo do jednej kategórie zaradené. Nepoužívať slepé kopírovanie všetkých Java properties pri merge.
 
 Pracovné `available` znamená výslednú dostupnosť stránky po merge; nevnucovať false na ukrytie pracovného obsahu, ktorý je izolovaný samostatnou tabuľkou. Podrobné pravidlá perex kategorizácie, dátumov a mapovania pre `NewsApp`/`NewsActionBean` sú v [03a](03a-novinky.md). Snapshot kanonizuje perex skupiny ako zoradené jedinečné ID, writer zachová dnešný tokenový formát. Pri merge sa overí existencia a dostupnosť odkazovaných skupín v doméne.
 
 ## Priečinky
 
-`content_branch_group` obsahuje `group_id INT NOT NULL`, spoločné stĺpce a typované perzistentné stĺpce dnešnej tabuľky `groups`. Jedinečnosť `(branch_id, group_id)`, index `(branch_id, parent_group_id)`.
+`branch_groups` obsahuje `group_id INT NOT NULL`, spoločné stĺpce a typované perzistentné stĺpce dnešnej tabuľky `groups`. Jedinečnosť `(branch_id, group_id)`, index `(branch_id, parent_group_id)`.
 
 Podporovať názov, navigačný názov, rodiča v rovnakej doméne, URL segment, poradie, existujúcu šablónu, jazyk, dostupné navigačné/prístupové nastavenia, voliteľné polia a default stránku. `domain_name` je hranica vetvy, nie spôsob presunu do inej domény. Zmeny synchronizačných identifikátorov, schvaľovacích definícií a súborových vlastností priečinka sú mimo rozsahu.
 
@@ -113,7 +123,7 @@ Efektívny strom sa skladá z kópie produkčnej štruktúry a pracovných prepi
 
 ## Médiá
 
-`content_branch_media` obsahuje `media_id INT NOT NULL`, spoločné stĺpce a obsahové stĺpce `media`, vrátane `media_fk_table_name`, `media_fk_id`, odkazov, titulkov, lokalizovaných popisov, poradia a voliteľných polí. Pridať `group_ids_snapshot TEXT/CLOB` so zoradeným zoznamom existujúcich kategórií. Jedinečnosť `(branch_id, media_id)`, index `(branch_id, media_fk_id)`.
+`branch_media` obsahuje `media_id INT NOT NULL`, spoločné stĺpce a obsahové stĺpce `media`, vrátane `media_fk_table_name`, `media_fk_id`, odkazov, titulkov, lokalizovaných popisov, poradia a voliteľných polí. Pridať `group_ids_snapshot TEXT/CLOB` so zoradeným zoznamom existujúcich kategórií. Jedinečnosť `(branch_id, media_id)`, index `(branch_id, media_fk_id)`.
 
 Prvý rozsah podporuje vlastníka `documents`. Práva a doména sa odvodia od vlastníckej stránky; samotný `media_id` ani číselný `domain_id` nestačí. Nové médium má vlastné stabilné ID. Dočasné `documents_temp` médiá používateľa sa nesmú miešať medzi produkciou a vetvou; podporovaný editor môže vytvoriť pracovné médium rovno pri konkrétnom rezervovanom `doc_id`.
 
@@ -129,11 +139,11 @@ Existujúci M:N filter médií sa musí adaptovať pred stránkovaním: produkč
 
 ## Súbory
 
-`content_branch_file` obsahuje spoločné pracovné stĺpce, `entry_kind VARCHAR(16) NOT NULL` s hodnotami `FILE` alebo `DIRECTORY`, `logical_path VARCHAR(...)`, `base_content_hash CHAR(64)`, `work_content_hash CHAR(64)`, veľkosť a MIME informáciu. Adresárový marker používa tú istú tabuľku; nemá binárny obsah a jeho obsahové hashe, veľkosť a MIME sú NULL. Jeho kanonický stav rozlišuje existenciu a druh položky na danej ceste. Dĺžku cesty a indexovanie zladiť s podporovanými DB a existujúcimi CMS limitmi; nepoužívať neoverený univerzálny index na dlhom UTF-8 VARCHAR.
+`branch_files` obsahuje spoločné pracovné stĺpce, `entry_kind VARCHAR(16) NOT NULL` s hodnotami `FILE` alebo `DIRECTORY`, `logical_path VARCHAR(...)`, `base_content_hash CHAR(64)`, `work_content_hash CHAR(64)`, veľkosť a MIME informáciu. Adresárový marker používa tú istú tabuľku; nemá binárny obsah a jeho obsahové hashe, veľkosť a MIME sú NULL. Jeho kanonický stav rozlišuje existenciu a druh položky na danej ceste. Dĺžku cesty a indexovanie zladiť s podporovanými DB a existujúcimi CMS limitmi; nepoužívať neoverený univerzálny index na dlhom UTF-8 VARCHAR.
 
 Odporúčanie: `path_key CHAR(64)` = SHA-256 normalizovanej logickej cesty, UNIQUE `(branch_id, path_key)`, pričom service vždy porovná aj plnú uloženú cestu. Tak netreba rozdielne indexy dlhých ciest podľa databázy. Normalizácia zachová pravidlá case sensitivity backendu, odstráni dot-segmenty a vyhodnotí povolený obsahový koreň; nesmie prepustiť cestu mimo neho. Koncová lomka nevytvorí druhú identitu toho istého adresára; súbor a adresár nemôžu obsadiť tú istú normalizovanú cestu.
 
-Neverejné úložisko sa odvodí serverom napr. `<private-storage>/content-branches/<branchId>/files/<rowId>/base` a `/work`. `rowId` identifikuje uložené bajty; používateľ neposiela fyzickú cestu. Na produkčnom multi-node nasadení musí byť tento priestor dostupný publisheru a uzlom náhľadu. V prvej podporovanej konfigurácii použiť spoločný filesystem, rovnako ako existujúce plánované súbory; IwcmFsDB storage je osobitné rozšírenie, nie tichý fallback do produkcie.
+Neverejné úložisko sa odvodí serverom napr. `<private-storage>/branches/<branchId>/files/<rowId>/base` a `/work`. `rowId` identifikuje uložené bajty; používateľ neposiela fyzickú cestu. Na produkčnom multi-node nasadení musí byť tento priestor dostupný publisheru a uzlom náhľadu. V prvej podporovanej konfigurácii použiť spoločný filesystem, rovnako ako existujúce plánované súbory; IwcmFsDB storage je osobitné rozšírenie, nie tichý fallback do produkcie.
 
 Doména sama neurčuje vlastníctvo súboru: dve domény môžu mať ten istý fyzický `/images/logo.png`. Podľa Q13 použijeme dnešné mapovanie cez `Tools`/`FilePathTools`, povolené redakčné korene a existujúce adresárové práva. Nepridáva sa nová mapa vlastníctva súborov. Ak nasadenie používa spoločný fyzický priestor, UI pri súborových zmenách upozorní, že publikovanie ovplyvní všetky weby používajúce danú cestu. Taká zmena je dovolená oprávnenému používateľovi. Limit jednej domény sa týka obsahového stromu a kontextu vetvy; nie je prísľubom doménovej izolácie už zdieľaných súborov. Spoločné System stránky mimo doménového rozsahu zostávajú read-only. Neskúmame všetky potenciálne odkazy na súbor z iných webov.
 

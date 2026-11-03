@@ -338,7 +338,7 @@ Zakázanie tlačidla alebo položky menu nie je autorizácia. Každý zápisový
 
 Nový prehľad použije existujúce DataTables/Editor, Bootstrap 5, Tabler ikony a `Prop` pre preklady. Nový frontend framework nie je potrebný. Prístupnosť sa overí klávesnicou, viditeľným fokusom, názvami ovládacích prvkov a čitateľnými stavmi. Detaily porovnania možno realizovať samostatnou stránkou alebo existujúcim veľkým dialógom; rozhodnutie musí zohľadniť čitateľnosť troch verzií textu.
 
-Backend používa návrhové operácie pod `/admin/rest/content-branches/{id}/...`; konkrétne kontrakty sú v `03` a `04`. Pri čítaní a zápise ostávajú serverové kontroly oprávnení a existujúca CSRF ochrana.
+Backend používa návrhové operácie pod `/admin/rest/branches/{id}/...`; konkrétne kontrakty sú v `03` a `04`. Pri čítaní a zápise ostávajú serverové kontroly oprávnení a existujúca CSRF ochrana.
 
 ## 11. Akceptačné scenáre UI
 

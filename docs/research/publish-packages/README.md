@@ -1,6 +1,6 @@
 # Pracovné vetvy webu a publikačné balíky
 
-Stav: **návrh po kontrole pripravený na technické overenie P01, bez implementácie**. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1/N2 sú v [rozhodnutiach](01-rozhodnutia.md).
+Stav: **návrh po kontrole pripravený na technické overenie P01, bez implementácie**. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1–N3 sú v [rozhodnutiach](01-rozhodnutia.md).
 
 Cieľom je pripraviť viac stránok, zmeny stromu, stránkové médiá a redakčné súbory v jednej pracovnej vetve. Redaktor môže preklikať pripravovaný web, porovnať zmeny s produkciou, vyriešiť konflikty a publikovať balík okamžite alebo v spoločnom termíne. Existujúce aj nové stránky a priečinky si zachovajú ID.
 
@@ -92,7 +92,7 @@ Označenie „navrhovaná trieda/tabuľka/API“ znamená budúcu implementáciu
 
 ## Rast o ďalšie moduly
 
-Odporúčanie je kombinovať typované jadro so spoločnou `content_branch_item` pre budúce moduly. Pri banneroch a galérii tak neskôr pribudne jedna tabuľka spolu, nie jedna na každý modul. V P02/P06 sa pripraví spoločná identita položky a obslužné rozhranie typu; fyzické všeobecné úložisko vznikne až s prvým modulom. Moduly stále potrebujú vlastné zapojenie čítania a zápisu. Podrobný postup, alternatívy a orientačné náklady sú v [08](08-rozsirovanie-modulov.md).
+Odporúčanie je kombinovať typované jadro so spoločnou `branch_items` pre budúce moduly. Pri banneroch a galérii tak neskôr pribudne jedna tabuľka spolu, nie jedna na každý modul. V P02/P06 sa pripraví spoločná identita položky a obslužné rozhranie typu; fyzické všeobecné úložisko vznikne až s prvým modulom. Moduly stále potrebujú vlastné zapojenie čítania a zápisu. Podrobný postup, alternatívy a orientačné náklady sú v [08](08-rozsirovanie-modulov.md).
 
 Prvý príklad bannera je podľa používateľa úzky: nový banner alebo zmena názvu, popisu a obrázka; bez úprav zapisovania štatistík. Budúce kroky E01–E03 nie sú automaticky súčasťou dnešného rozsahu ani odhadu P01–P08.
 

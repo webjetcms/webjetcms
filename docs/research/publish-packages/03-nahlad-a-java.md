@@ -6,29 +6,29 @@ Vychádza z potvrdeného rozsahu: živý overlay jednej domény, postupné zlú�
 
 ## 1. Rozdelenie zodpovednosti
 
-Produkčné `documents`, `groups` a `media` zostanú produkčným zdrojom. Pracovné verzie budú v piatich tabuľkách návrhu dátového modelu: `content_branch`, `content_branch_document`, `content_branch_group`, `content_branch_media`, `content_branch_file`. Pracovné záznamy majú pôvodnú identitu objektu, typ operácie, základ porovnania a typované pracovné polia. Súbory majú logickú cestu, odtlačky a interné umiestnenie pracovného obsahu. Presné stĺpce a prideľovanie ID určuje dokument dátového modelu.
+Produkčné `documents`, `groups` a `media` zostanú produkčným zdrojom. Pracovné verzie budú v piatich tabuľkách návrhu dátového modelu: `branches`, `branch_documents`, `branch_groups`, `branch_media`, `branch_files`. Pracovné záznamy majú pôvodnú identitu objektu, typ operácie, základ porovnania a typované pracovné polia. Súbory majú logickú cestu, odtlačky a interné umiestnenie pracovného obsahu. Presné stĺpce a prideľovanie ID určuje dokument dátového modelu.
 
 Tento dokument pokrýva čítanie výsledného obsahu. Ukladanie pracovnej verzie a produkčné zlúčenie sú samostatné vstupy: načítanie vetvového `DocDetails` nikdy samo osebe neoprávňuje zavolať produkčné `DocDetailsRepository.save`.
 
-Navrhované nové Java triedy patria do balíka `sk.iway.iwcm.components.contentbranch`. DTO a entity patria k tomuto balíku, nie do novej všeobecnej CMS vrstvy.
+Navrhované nové Java triedy a rozhrania používajú prefix `Branch`, napríklad `BranchFilter`, `BranchContext` a `BranchReader`. Patria priamo do jadrového balíka `sk.iway.iwcm.branch`, so zdrojmi v `src/main/java/sk/iway/iwcm/branch/`. Do rovnakého balíka patria aj DTO a entity.
 
 | Navrhovaná trieda | Úloha |
 | --- | --- |
-| `ContentBranchContext` | Overený kontext jedného requestu: režim, ID vetvy, doména a používateľ. |
-| `ContentBranchFilter` | Vyhodnotí admin kontext alebo preview gateway, skontroluje prístup a nastaví kontext pred routovaním. |
-| `ContentBranchView` | Výsledný strom, základné metadáta, URL mapa a načítané pracovné záznamy počas jedného requestu. |
-| `ContentBranchReadService` | Načíta produkciu a pracovné verzie, zostaví výsledné objekty; poskytne aj rozhranie zákazníckym komponentom. |
-| `ContentBranchSql` | Zostaví parametrizovaný zdroj stránok/médií pre podporované SQL zoznamy. |
-| `ContentBranchDocumentQuery` | Administračné filtre a stránkovanie nad výsledným zdrojom stránok. |
-| `ContentBranchPreviewUrls` | Prevod logickej URL do preview gateway; používa sa aj pre komponenty a presmerovania. |
-| `ContentBranchPreviewResponseWrapper` | Pre podporovaný HTML výstup upraví navigačné a asset URL bez zmeny uloženého obsahu. |
-| `ContentBranchRestController` | Výber vetvy, údaje o aktívnom kontexte a odkaz na náhľad. Ostatné riadiace operácie definujú dokumenty UI a merge. |
+| `BranchContext` | Overený kontext jedného requestu: režim, ID vetvy, doména a používateľ. |
+| `BranchFilter` | Vyhodnotí admin kontext alebo preview gateway, skontroluje prístup a nastaví kontext pred routovaním. |
+| `BranchView` | Výsledný strom, základné metadáta, URL mapa a načítané pracovné záznamy počas jedného requestu. |
+| `BranchReadService` | Načíta produkciu a pracovné verzie, zostaví výsledné objekty; poskytne aj rozhranie zákazníckym komponentom. |
+| `BranchSql` | Zostaví parametrizovaný zdroj stránok/médií pre podporované SQL zoznamy. |
+| `BranchDocumentQuery` | Administračné filtre a stránkovanie nad výsledným zdrojom stránok. |
+| `BranchPreviewUrls` | Prevod logickej URL do preview gateway; používa sa aj pre komponenty a presmerovania. |
+| `BranchPreviewResponseWrapper` | Pre podporovaný HTML výstup upraví navigačné a asset URL bez zmeny uloženého obsahu. |
+| `BranchRestController` | Výber vetvy, údaje o aktívnom kontexte a odkaz na náhľad. Ostatné riadiace operácie definujú dokumenty UI a merge. |
 
-`ContentBranchView` je obyčajný objekt requestu. Nepotrebuje vlastný scheduler, zámky ani spoločný distribuovaný cache systém. Výsledné `DocDetails` a `GroupDetails` sú oddelené objekty, ktoré nemajú väzbu na produkčný JPA persistence context ani zdieľané produkčné cache.
+`BranchView` je obyčajný objekt requestu. Nepotrebuje vlastný scheduler, zámky ani spoločný distribuovaný cache systém. Výsledné `DocDetails` a `GroupDetails` sú oddelené objekty, ktoré nemajú väzbu na produkčný JPA persistence context ani zdieľané produkčné cache.
 
 Pre časové filtre Noviniek view uchová jeden request údaj `previewAt`: budúci termín `publish_at` v stave `SCHEDULED`, inak čas začiatku requestu. Nejde o nový DB stĺpec ani globálne prepisovanie času. Presné pravidlá a označenie v náhľade určuje [03a — Novinky](03a-novinky.md).
 
-Koordináciu a spoločný prehľad rozšíri navrhovaný `ContentBranchTypeHandler` s identitou `type + objectKey` a spoločným obalom `BranchChange` podľa [08](08-rozsirovanie-modulov.md). Dnešné typy používajú vlastné pracovné tabuľky; budúce moduly môžu použiť jednu spoločnú JSON tabuľku. Tento kontrakt nenahrádza modulové čítanie: detail/zoznam/render sa zapoja explicitným adaptérom, nie zachytávaním všetkých SQL/JPA volaní.
+Koordináciu a spoločný prehľad rozšíri navrhovaný `BranchTypeHandler` s identitou `type + objectKey` a spoločným obalom `BranchChange` podľa [08](08-rozsirovanie-modulov.md). Dnešné typy používajú vlastné pracovné tabuľky; budúce moduly môžu použiť jednu spoločnú JSON tabuľku. Tento kontrakt nenahrádza modulové čítanie: detail/zoznam/render sa zapoja explicitným adaptérom, nie zachytávaním všetkých SQL/JPA volaní.
 
 ## 2. Dva odlišné kontexty používateľa
 
@@ -36,11 +36,11 @@ Koordináciu a spoločný prehľad rozšíri navrhovaný `ContentBranchTypeHandl
 
 Výber v administrácii sa uloží do session pre vybranú doménu. Zmena domény vyberie produkciu; novú vetvu používateľ vyberie výslovne. Prepínač obnoví otvorenú obsahovú obrazovku.
 
-Každá podporovaná administračná obrazovka dostane pri načítaní `contentBranchId` a `contentBranchDomain`; hodnota ID `0` znamená produkciu. Jej AJAX požiadavky vrátane uploadu posielajú hlavičky `X-WebJET-Content-Branch` a `X-WebJET-Content-Domain`, prípadne zodpovedajúce multipart polia. Server porovná **obe** hodnoty s aktuálnym výberom v session a overí doménu cieľového objektu. Nesúlad vráti `409` s pokynom obnoviť obrazovku. Kontrola domény platí aj pre `branchId=0`: dve produkčné záložky rôznych domén majú rovnaké ID vetvy, ale iný cieľ. Chýbajúci kontext v pracovnom režime sa nesmie interpretovať ako súhlas so zápisom do produkcie.
+Každá podporovaná administračná obrazovka dostane pri načítaní `branchId` a `branchDomain`; hodnota ID `0` znamená produkciu. Jej AJAX požiadavky vrátane uploadu posielajú hlavičky `X-WebJET-Branch` a `X-WebJET-Branch-Domain`, prípadne zodpovedajúce multipart polia. Server porovná **obe** hodnoty s aktuálnym výberom v session a overí doménu cieľového objektu. Nesúlad vráti `409` s pokynom obnoviť obrazovku. Kontrola domény platí aj pre `branchId=0`: dve produkčné záložky rôznych domén majú rovnaké ID vetvy, ale iný cieľ. Chýbajúci kontext v pracovnom režime sa nesmie interpretovať ako súhlas so zápisom do produkcie.
 
 Táto kontrola rieši bežný prípad dvoch otvorených záložiek: prepnutie vetvy v jednej záložke nezmení nepozorovane cieľ uloženia formulára v druhej. Nerieši súbežné editovanie pomocou zámkov.
 
-Riadiace endpointy `/admin/rest/content-branches/**` používajú explicitné ID cieľovej vetvy a produkčný technický kontext. To je potrebné najmä pri porovnávaní a merge: produkčné čítanie nesmie náhodou vrátiť pracovnú verziu len preto, že ju má používateľ vybranú v editore.
+Riadiace endpointy `/admin/rest/branches/**` používajú explicitné ID cieľovej vetvy a produkčný technický kontext. To je potrebné najmä pri porovnávaní a merge: produkčné čítanie nesmie náhodou vrátiť pracovnú verziu len preto, že ju má používateľ vybranú v editore.
 
 ### Verejný náhľad
 
@@ -65,7 +65,7 @@ Navrhované poradie je:
 
 ```text
 existujúce prihlásenie a RequestBean
-  → ContentBranchFilter
+  → BranchFilter
   → existujúce ďalšie filtre
   → PathFilter
   → ShowDoc / komponent / podporovaný asset
@@ -73,20 +73,20 @@ existujúce prihlásenie a RequestBean
 
 Registráciu treba overiť integračným testom reálneho filter chainu. Samotná existencia Spring beanu nezaručuje správne poradie ani zahrnutie statických súborov.
 
-`ContentBranchFilter` vykoná tieto kroky:
+`BranchFilter` vykoná tieto kroky:
 
 1. Rozpozná produkčný request, podporovanú admin obrazovku alebo `/__branch-preview/{id}/...`.
 2. Pre vetvu načíta jej stav a doménu, overí používateľa a požadovaný režim. Pri chybe skončí bez fallbacku na produkciu.
-3. Uloží nemenný `ContentBranchContext` do request atribútu aj do existujúceho `RequestBean` cez jeho `setAttribute/getAttribute`. Rovnakým spôsobom sprístupní jedno view. Nespolieha sa na `RequestBean.getRequest()`: dnešný encoding filter tento odkaz nastavuje iba pre vybrané elFinder URL. Nevzniká druhý globálny register requestov.
+3. Uloží nemenný `BranchContext` do request atribútu aj do existujúceho `RequestBean` cez jeho `setAttribute/getAttribute`. Rovnakým spôsobom sprístupní jedno view. Nespolieha sa na `RequestBean.getRequest()`: dnešný encoding filter tento odkaz nastavuje iba pre vybrané elFinder URL. Nevzniká druhý globálny register requestov.
 4. Pri preview vytvorí request wrapper s logickou cestou bez gateway prefixu; zosúladí `getRequestURI`, `getServletPath`, `getPathInfo` a používané forward/include údaje. Vonkajšiu URL ponechá v samostatnom atribúte. Hostiteľ, TLS, cookie a autentifikačná session ostanú transportom administrácie; wrapper nepredstiera prihlásenie na verejnom hostiteľovi.
 5. Pred prvým obsahovým čítaním opraví už existujúci `RequestBean.domain` na overenú doménu vetvy a `RequestBean.url` na logickú cestu. `DocDB.getDomain(request)` v preview uprednostní overený kontext pred `preview.editorDomainName` v session. Obsahové doménové kontroly v `PathFilter`, URL mapa a file mapovanie používajú tú istú logickú doménu; prihlasovacie/transportné kontroly ďalej skutočný admin host. Produkčné doménové presmerovanie nesmie odsunúť preview na verejný host. Preview nemení doménový ani vetvový výber v session.
-6. Nastaví súkromné `no-store` hlavičky, `isPreview` a ochranu pred indexovaním. Vnorený forward/include používa ten istý kontext a tú istú `ContentBranchView`. Výstupný wrapper udrží tieto hlavičky aj pri neskoršom statickom servovaní a pred commitom odpovede; `PathFilter.setStaticContentHeaders` ich nesmie prepísať na verejnú cache.
+6. Nastaví súkromné `no-store` hlavičky, `isPreview` a ochranu pred indexovaním. Vnorený forward/include používa ten istý kontext a tú istú `BranchView`. Výstupný wrapper udrží tieto hlavičky aj pri neskoršom statickom servovaní a pred commitom odpovede; `PathFilter.setStaticContentHeaders` ich nesmie prepísať na verejnú cache.
 7. V `finally` uvoľní vlastné atribúty a view, obnoví zmenené hodnoty existujúceho `RequestBean`; jeho konečné odstránenie ostáva v životnom cykle encoding filtra. Prenos kontextu do nového background threadu nie je implicitný.
 
 Navrhovaná reprezentácia:
 
 ```java
-public record ContentBranchContext(
+public record BranchContext(
     long branchId,
     String domainName,
     int userId,
@@ -117,7 +117,7 @@ Detail, metadáta aj SQL zdroj používajú rovnaké pravidlo: podporované reda
 
 ### Výsledok konfliktu v náhľade (Q16)
 
-PREVIEW používa rovnaké čisté trojcestné rozhodovanie ako merge v `04`. `ContentBranchView` pripraví jednu mapu rozhodnutí `type + objectKey → LIVE/WORK` pre pracovné položky; strom, URL, detail, SQL, médiá a súbory používajú tú istú mapu. Načítava sa podporovaný obsah upravených položiek, nie HTML celého webu. Pri súbore sa platnosť voľby overí odtlačkom aktuálnych bajtov; úložisko výsledných kópií navyše netreba.
+PREVIEW používa rovnaké čisté trojcestné rozhodovanie ako merge v `04`. `BranchView` pripraví jednu mapu rozhodnutí `type + objectKey → LIVE/WORK` pre pracovné položky; strom, URL, detail, SQL, médiá a súbory používajú tú istú mapu. Načítava sa podporovaný obsah upravených položiek, nie HTML celého webu. Pri súbore sa platnosť voľby overí odtlačkom aktuálnych bajtov; úložisko výsledných kópií navyše netreba.
 
 | Situácia | Náhľad |
 | --- | --- |
@@ -137,7 +137,7 @@ Publisher po začatí merge používa zmrazený výsledok a známe checkpointy z
 
 Základ porovnania `base_snapshot` sa v stránke nezobrazuje, ale vstupuje do rozhodovania mapy. Náhľad neprepisuje tento základ novšou produkciou.
 
-`ContentBranchView` postupne načíta:
+`BranchView` postupne načíta:
 
 - produkčný strom domény a pracovné zmeny priečinkov;
 - výsledné základné metadáta stránok potrebné pre menu a URL;
@@ -157,7 +157,7 @@ Pri editácii zostávajú dostupné produkčné šablóny a číselníky. Zmena 
 [DocDB](../../../src/main/java/sk/iway/iwcm/doc/DocDB.java) aj [GroupsDB](../../../src/main/java/sk/iway/iwcm/doc/GroupsDB.java) majú súkromné konštruktory, spoločné inštancie a veľa metód pracujúcich priamo s ich kolekciami. Navrhuje sa ponechať existujúce signatúry a rozlíšiť produkčnú inštanciu od fasády jedného vetvového requestu.
 
 - Produkčné `getInstance()` vracia dnešnú spoločnú inštanciu.
-- Vetvové `getInstance()` vracia fasádu uloženú v `ContentBranchView`.
+- Vetvové `getInstance()` vracia fasádu uloženú v `BranchView`.
 - Nový interný konštruktor fasády prijme view. Nespustí produkčné preloady, publikovanie, cluster refresh ani mazanie spoločnej cache.
 - Kolekcie priečinkov, základných stránok a URL vo fasáde patria view. Existujúce výpočty stromu a menu tak pracujú nad správnymi vstupmi.
 - Metódy s priamym SQL majú explicitnú vetvovú cestu; samotná alternatívna inštancia ich SQL nezmení.
@@ -190,13 +190,13 @@ FROM documents d
 WHERE d.group_id IN (<povoleny_vysledny_rozsah>)
   AND NOT EXISTS (
       SELECT 1
-      FROM content_branch_document b
+      FROM branch_documents b
       WHERE b.branch_id = ? AND b.doc_id = d.doc_id
         AND <b.doc_id_je_v_mnozine_WORK_pre_tento_rezim>
   )
 UNION ALL
 SELECT b.<pracovne_stlpce_v_rovnakom_poradi>
-FROM content_branch_document b
+FROM branch_documents b
 WHERE b.branch_id = ?
   AND <b.doc_id_je_v_mnozine_WORK_pre_tento_rezim>
   AND b.operation <> 'DELETE'
@@ -222,7 +222,7 @@ Nepoužívať `SELECT *`: technické stĺpce vetvy do projekcie nepatria a porad
 
 `UNION ALL` je zámerný aj kvôli obsahovým CLOB poliam. Oracle LOB dokumentácia výslovne povoľuje túto operáciu, ale nie bežný `UNION` alebo `DISTINCT` nad CLOB. Konkrétnu projekciu, joins a stránkovanie musí P01 overiť na podporovaných verziách; HTML sa kvôli zjednodušeniu dotazu nesmie orezať na krátky VARCHAR. [Oracle 19c: SQL Semantics and LOBs](https://docs.oracle.com/en/database/oracle/oracle-database/19/adlob/SQL-semantics-and-LOBs.html).
 
-`ContentBranchSql` vracia SQL fragment spolu s bind parametrami. Názvy stĺpcov a tabuliek pochádzajú z kódu; ID vetvy, hodnoty filtrov a rozsahy sa bindujú. Nejde o zachytávač alebo textový prepis všetkých SQL dotazov v aplikácii.
+`BranchSql` vracia SQL fragment spolu s bind parametrami. Názvy stĺpcov a tabuliek pochádzajú z kódu; ID vetvy, hodnoty filtrov a rozsahy sa bindujú. Nejde o zachytávač alebo textový prepis všetkých SQL dotazov v aplikácii.
 
 V [NewsQuery](../../../src/main/java/sk/iway/iwcm/components/news/NewsQuery.java) treba upraviť `getSelectSql`, `getNewsList`, `getNewsCount` a viazanie argumentov tak, aby používali rovnaký zdroj. `setArguments` musí vedieť nadviazať na index po parametroch zdroja. Podrobný záväzný kontrakt pre `NewsApp`/`NewsActionBean`, kritériá, čas, perex skupiny, jedinečné ID pred paging a konzistentné počty je v [03a](03a-novinky.md). Štandardné `DatabaseCriteria` sa podporujú. Zákaznícke `ResultCriteria` v prvom preview rozsahu vrátia vysvetlenie nepodporovaného rozšírenia; ich LIVE API sa nemení a nepridáva sa skrytá zmena významu vlastných filtrov.
 
@@ -238,7 +238,7 @@ Konkrétne rozdelenie v existujúcom kóde:
 
 | Vstup | Produkcia | Vetva |
 | --- | --- | --- |
-| [WebpagesDatatable.getAllItems](../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesDatatable.java) a [WebpagesService.getAllItems](../../../src/main/java/sk/iway/iwcm/editor/service/WebpagesService.java) | Dnešný JPA tok. | `ContentBranchDocumentQuery`, potom spoločné `preparePage` a redakčné options. |
+| [WebpagesDatatable.getAllItems](../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesDatatable.java) a [WebpagesService.getAllItems](../../../src/main/java/sk/iway/iwcm/editor/service/WebpagesService.java) | Dnešný JPA tok. | `BranchDocumentQuery`, potom spoločné `preparePage` a redakčné options. |
 | `WebpagesDatatable.findByColumns` | Dnešné JPA specifications. | Zachytiť pred volaním `super.findByColumns`; filter vyhodnotiť nad výslednou SQL reláciou. |
 | `getOneItem` a `WebpagesService.getOneItem` | Dnešný detail/história. | Pracovný detail alebo produkčný fallback v oddelenom objekte; pracovný režim sa nemieša s `historyId`. |
 | `insertItem`, `editItem`, `deleteItem`, `processAction` | Dnešný zapisovací tok. | Explicitná vetvová služba. Nepodporované hromadné operácie sa odmietnu pred zápisom. |
@@ -255,7 +255,7 @@ Pri výstupe zoznamu zachovať `DATA_NOT_LOADED`. Detail na uloženie sa musí v
 
 Vo vnútri renderovania sa používa logická cesta `/kampan/ponuka.html`. Až výstup sa preloží na `/__branch-preview/42/kampan/ponuka.html`. Uložené HTML, `virtual_path`, `media_link` ani parametre komponentov sa týmto prefixom nemenia.
 
-`ContentBranchPreviewUrls` vykoná jeden spoločný prevod:
+`BranchPreviewUrls` vykoná jeden spoločný prevod:
 
 | Vstup | Správanie |
 | --- | --- |
@@ -303,7 +303,7 @@ Overovací krok P01 musí pokryť predvolené podporované šablóny: ich root-r
 Zákaznícky komponent nemá priamo čítať pracovné tabuľky ani si vyrábať vlastný názov gateway. Dostane malé čítacie rozhranie a samostatný URL helper. Navrhované signatúry:
 
 ```java
-public interface ContentBranchReader {
+public interface BranchReader {
     Optional<DocDetails> findDocument(int docId);
     Optional<GroupDetails> findGroup(int groupId);
     List<GroupDetails> childGroups(int parentGroupId);
@@ -316,12 +316,12 @@ public interface ContentPreviewUrls {
 }
 ```
 
-`ContentBranchReadService` môže implementovať prvé rozhranie; druhé implementuje spoločný helper. Ide o návrh API, uvedené triedy ešte neexistujú. Vstupy pre filtre tvoria typované polia a povolené operátory, nie ľubovoľný SQL text. Rovnaké rozhranie v produkčnom režime číta produkciu. `findDocument` nevydáva produkčný objekt, ak je dané ID vo vetve označené ako zmazané.
+`BranchReadService` môže implementovať prvé rozhranie; druhé implementuje spoločný helper. Ide o návrh API, uvedené triedy ešte neexistujú. Vstupy pre filtre tvoria typované polia a povolené operátory, nie ľubovoľný SQL text. Rovnaké rozhranie v produkčnom režime číta produkciu. `findDocument` nevydáva produkčný objekt, ak je dané ID vo vetve označené ako zmazané.
 
 Pre špecifický komponent, ktorý potrebuje vlastné SQL joins, je interným integračným bodom:
 
 ```java
-SqlFragment documentSource(ContentBranchContext context, String alias);
+SqlFragment documentSource(BranchContext context, String alias);
 
 public interface SqlFragment {
     String sql();
@@ -341,11 +341,11 @@ Presné endpointy zoznamu balíkov a merge patria do príslušných dokumentov. 
 
 | Endpoint | Výsledok |
 | --- | --- |
-| `GET /admin/rest/content-branches` | Dostupné neuzavreté verzie aktuálnej admin domény pre prepínač, vrátane názvu a stavu. Prehľad môže výslovne vyžiadať aj uzavreté verzie cez `includeClosed=true`. |
-| `POST /admin/rest/content-branches` s `{ "name": "Vianočná kampaň", "description": "...", "expectedDomainName": "www.firma.sk" }` | Overí práva a údaje aj zhodu očakávanej domény formulára s aktuálnou admin doménou servera; nesúlad vráti `409`. Vlastníka určí server a založí prázdnu `DRAFT` verziu bez termínu. Vráti `201` a identitu/názov/doménu/stav. Nemení admin výber, nevytvára snapshot webu ani vetvu z inej vetvy. |
-| `GET /admin/rest/content-branches/context` | Produkcia alebo zvolená vetva pre aktuálnu doménu, názov a aktuálne oprávnenia. |
-| `POST /admin/rest/content-branches/context` s `{ "branchId": 42, "expectedDomainName": "www.firma.sk" }` | Overenie domény otvorenej obrazovky a zmena výberu v administrácii; `0` vyberie produkciu. Nesúlad domény vráti `409` aj pri voľbe `0`. Existujúca CSRF ochrana zostáva. |
-| `GET /admin/rest/content-branches/42/preview-link?docId=123` | Overená URL na výslednú stránku vetvy; pri zmazanej/nedostupnej položke vysvetlená chyba. |
+| `GET /admin/rest/branches` | Dostupné neuzavreté verzie aktuálnej admin domény pre prepínač, vrátane názvu a stavu. Prehľad môže výslovne vyžiadať aj uzavreté verzie cez `includeClosed=true`. |
+| `POST /admin/rest/branches` s `{ "name": "Vianočná kampaň", "description": "...", "expectedDomainName": "www.firma.sk" }` | Overí práva a údaje aj zhodu očakávanej domény formulára s aktuálnou admin doménou servera; nesúlad vráti `409`. Vlastníka určí server a založí prázdnu `DRAFT` verziu bez termínu. Vráti `201` a identitu/názov/doménu/stav. Nemení admin výber, nevytvára snapshot webu ani vetvu z inej vetvy. |
+| `GET /admin/rest/branches/context` | Produkcia alebo zvolená vetva pre aktuálnu doménu, názov a aktuálne oprávnenia. |
+| `POST /admin/rest/branches/context` s `{ "branchId": 42, "expectedDomainName": "www.firma.sk" }` | Overenie domény otvorenej obrazovky a zmena výberu v administrácii; `0` vyberie produkciu. Nesúlad domény vráti `409` aj pri voľbe `0`. Existujúca CSRF ochrana zostáva. |
+| `GET /admin/rest/branches/42/preview-link?docId=123` | Overená URL na výslednú stránku vetvy; pri zmazanej/nedostupnej položke vysvetlená chyba. |
 | `GET /__branch-preview/42/...` | Chránený náhľad stránky alebo podporovaného assetu. |
 
 Server odpovedá `403` pri nedostatočnom oprávnení, `404` pri neexistujúcom zdroji v príslušnom kontexte a `409` pri neplatnom stave alebo nesúlade administračnej obrazovky s výberom. Chyby používať v existujúcom štýle REST/DataTables, bez nového všeobecného API obalu.

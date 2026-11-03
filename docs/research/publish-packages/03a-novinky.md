@@ -32,11 +32,11 @@ Pri rovnakých dátach, čase vyhodnotenia, identite návštevníka a šablóne 
 | [NewsRestController](../../../src/main/java/sk/iway/iwcm/components/news/NewsRestController.java) | Overiť override `getAllItems`/`getOneItem`, strom aj `convertIdsToNamePair`; nespoliehať sa iba na úpravu predka `WebpagesDatatable`. |
 | [editor-component.html](../../../src/main/webapp/apps/news/admin/editor-component.html) | Vnorená správa noviniek preberie overený admin kontext. Je to administračný zoznam; verejný vzhľad sa kontroluje na stránke v náhľade. |
 
-Nevzniká `BranchNewsApp`, kópia `NewsActionBean`, nová šablóna výpisu ani osobitný index noviniek. Spoločné `ContentBranchSql` a `ContentBranchView` už potrebuje zvyšok návrhu.
+Nevzniká `BranchNewsApp`, kópia `NewsActionBean`, nová šablóna výpisu ani osobitný index noviniek. Spoločné `BranchSql` a `BranchView` už potrebuje zvyšok návrhu.
 
 ## Zdroj dát pred vyhodnotením podmienok
 
-V produkcii `NewsQuery` naďalej používa `documents d`. V overenom vetvovom kontexte dostane od `ContentBranchSql` účinný zdroj s rovnakým aliasom `d`:
+V produkcii `NewsQuery` naďalej používa `documents d`. V overenom vetvovom kontexte dostane od `BranchSql` účinný zdroj s rovnakým aliasom `d`:
 
 ```text
 LIVE stránky bez účinného pracovného prepisu s rovnakým doc_id
@@ -99,7 +99,7 @@ To je jediná nová úprava vedľajšieho zápisu potrebná pre štandardné kat
 
 Existujúce `publish_start`/`publish_end` zostávajú vo vetve read-only podľa pôvodného rozsahu. Pri novej stránke sa `publish_start` inicializuje raz podľa `editorAutoFillPublishStart` na čas vytvorenia alebo NULL, `publish_end` je NULL a individuálne plánovacie príznaky vypnuté. Kopírovanie predlohy novej stránky nesmie potichu zdediť starý koniec alebo budúci individuálny plán. Hodnoty a dostupnosť editor zobrazí; spoločný termín balíka ich neprepisuje. Event dátum zostáva upraviteľný.
 
-Čas `previewAt` je request údaj v `ContentBranchView`, nie nový DB stĺpec ani globálny posun hodín. Pri `SCHEDULED` vetve s budúcim `publish_at` sa použije tento termín; inak čas začiatku requestu. Všetky výskyty Noviniek v tom istom requeste dostanú rovnakú hodnotu. LIVE používa dnešný čas. Po zrušení plánu alebo prechode do `NEEDS_ATTENTION` sa opäť použije aktuálny čas. Posun termínu sa prejaví po obnovení náhľadu.
+Čas `previewAt` je request údaj v `BranchView`, nie nový DB stĺpec ani globálny posun hodín. Pri `SCHEDULED` vetve s budúcim `publish_at` sa použije tento termín; inak čas začiatku requestu. Všetky výskyty Noviniek v tom istom requeste dostanú rovnakú hodnotu. LIVE používa dnešný čas. Po zrušení plánu alebo prechode do `NEEDS_ATTENTION` sa opäť použije aktuálny čas. Posun termínu sa prejaví po obnovení náhľadu.
 
 `addPublishType` použije tento čas namiesto vlastného `Tools.getNow()`. Nemení sa globálne `Tools.getNow`, nespúšťajú sa budúce per-page plány a nepredstiera sa budúci stav iných aplikácií. Banner uvedie napríklad `Novinky vyhodnotené k 1. 12. 2026 09:00 (Europe/Bratislava)` a pri budúcom termíne krátke vysvetlenie rozsahu tejto predikcie. Samostatný simulátor času alebo návštevníckych rolí sa nepridáva.
 
@@ -125,7 +125,7 @@ Dnešné `EditorService.saveEditedDoc` mení `date_created` a `author_id` pri ul
 
 `NewsActionBean` nemá aktívnu spoločnú cache výsledkov noviniek; instance list nie je dôvod zavádzať novú cache vrstvu. Preview obchádza vonkajšiu HTML/component/CDN cache podľa dokumentu 03. Cache produkčných **definícií** News šablón môže zostať spoločná. SQL chyba vetvy sa nesmie zmeniť na zdanlivo prázdny zoznam: v preview sa zobrazí chyba načítania komponentu a zapíše diagnostika, bez produkčného fallbacku.
 
-V admin editore sa po uložení pracovnej novinky zobrazí jej riadok aj v správe Noviniek. Iframe `/apps/news/admin/?include=...` dostane `contentBranchId` aj `contentBranchDomain` ako bootstrap údaje overené voči session/doméne; následné REST požiadavky posielajú obe kontextové hlavičky podľa `03`. Starý iframe po prepnutí vetvy skončí `409` rovnako ako editor. Úprava samotného base controllera nestačí: `NewsRestController` má vlastné override a `convertIdsToNamePair` tiež priamo skenuje `documents.data` pri zisťovaní priečinkov z vložených aplikácií. Tento scan musí použiť účinné stránky, aby našiel aj novo pridanú aplikáciu či zmenené parametre. Práva stromu a `cmp_news` zostávajú zachované.
+V admin editore sa po uložení pracovnej novinky zobrazí jej riadok aj v správe Noviniek. Iframe `/apps/news/admin/?include=...` dostane `branchId` aj `branchDomain` ako bootstrap údaje overené voči session/doméne; následné REST požiadavky posielajú obe kontextové hlavičky podľa `03`. Starý iframe po prepnutí vetvy skončí `409` rovnako ako editor. Úprava samotného base controllera nestačí: `NewsRestController` má vlastné override a `convertIdsToNamePair` tiež priamo skenuje `documents.data` pri zisťovaní priečinkov z vložených aplikácií. Tento scan musí použiť účinné stránky, aby našiel aj novo pridanú aplikáciu či zmenené parametre. Práva stromu a `cmp_news` zostávajú zachované.
 
 ## Etapy a povinné dôkazy
 
