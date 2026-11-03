@@ -1,6 +1,6 @@
 # Pracovné vetvy webu a publikačné balíky
 
-Stav: **návrh po kontrole pripravený na technické overenie P01, bez implementácie**. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1–N3 sú v [rozhodnutiach](01-rozhodnutia.md).
+Stav: **návrh po kontrole pripravený na technické overenie P01, bez implementácie**. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1–N4 sú v [rozhodnutiach](01-rozhodnutia.md).
 
 Cieľom je pripraviť viac stránok, zmeny stromu, stránkové médiá a redakčné súbory v jednej pracovnej vetve. Redaktor môže preklikať pripravovaný web, porovnať zmeny s produkciou, vyriešiť konflikty a publikovať balík okamžite alebo v spoločnom termíne. Existujúce aj nové stránky a priečinky si zachovajú ID.
 
@@ -16,6 +16,7 @@ Výsledok kontroly všetkých podkladov, opravené medzery a zostávajúce techn
 - Súborová časť zahŕňa redakčné obrázky, PDF a prílohy. Zdrojové súbory šablón, CSS/JS, JSP/Java a konfigurácia sa nevetvujú.
 - Nové objekty dostanú konečné ID už vo vetve. V produkcii sa pred publikovaním nesmú objaviť ako obsahové položky.
 - Náhľad podporuje jadro: stránky, strom, menu, navigáciu, novinky a médiá. Zákaznícke aplikácie s vlastným SQL/JPA potrebujú adaptačné API; ich vlastné obchodné dáta sa nevetvujú.
+- `menu_ul_li.jsp`/`MenuULLI` vykreslí menu nad zvolenými stránkami a priečinkami vetvy: názvy, poradie, viditeľnosť, default odkazy aj aktívnu cestu. Konkrétne zmeny triedy, JSP a testy určuje [03b — Menu](03b-menu.md).
 - `NewsApp`/`NewsActionBean` zobrazia nové aj upravené pracovné stránky podľa existujúcich kritérií vrátane priečinkov, perex skupín, dátumov, radenia a stránkovania. Použijú spoločný účinný zdroj v `NewsQuery`; nevzniká druhá aplikácia Novinky. Výber existujúcich perex skupín je podporovaná úprava stránky.
 - Prvá verzia nemení atribúty stránok, multigroup väzby, definície kategórií médií, galerijné záznamy ani vlastnosti súborov uložené v ďalších tabuľkách. Zachováva členstvo médií v existujúcich kategóriách.
 - Náhľad je určený prihláseným používateľom administrácie s oprávnením k obsahu. Beží na hostiteľovi administrácie a obsah načíta pre overenú doménu vetvy. Ukazuje zvolený LIVE/WORK výsledok konfliktov; editor uchová pracovný obsah.
@@ -44,6 +45,7 @@ Tento adresár nie je návrhom kopírovania celého Git modelu. Git ostáva prir
 | [02a — Stabilné identifikátory](02a-identifikatory.md) | Konkrétna rezervácia ID podľa databázy, explicitné inserty a režim čítania. |
 | [03 — Náhľad a Java](03-nahlad-a-java.md) | Triedy a integračné body, DocDB/GroupsDB, SQL/JPA, URL gateway, cache a adaptéry. |
 | [03a — Novinky](03a-novinky.md) | Konkrétny návrh NewsApp/NewsActionBean: pracovné stránky pred filtrami, kategórie, čas, count/paging, admin editor a zhoda po merge. |
+| [03b — Menu](03b-menu.md) | Povinný menu_ul_li.jsp/MenuULLI: účinný strom, parametre, aktívna cesta, default odkazy, perex/HTML, cache a M01–M11. |
 | [04 — Merge a publikovanie](04-merge-a-publikovanie.md) | Pracovné ukladanie, porovnanie, API, poradie zápisov, termín a chyby. |
 | [05 — Rozhranie](05-rozhranie.md) | Vytvorenie balíka krok za krokom, formulár, aktivácia a prepínač pod doménou; konflikty, plánovanie a priebeh. |
 | [06 — Implementačný plán](06-plan-implementacie.md) | Osem postupných krokov, závislosti, podmienky dokončenia a odhad. |

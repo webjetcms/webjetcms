@@ -64,6 +64,7 @@ Každý pomocný agent odovzdá zmenené súbory, overené správanie a neoveren
 - P03 už obsahuje čítanie médií/súborových helperov a mapu zvoleného výsledku; P05 dodá redakčné zápisy, P06 UI rozhodnutí. ADMIN vždy uchová WORK, PREVIEW rešpektuje Q16. Neodsúvaj túto zhodu až na záverečný test.
 - Nový všeobecný workflow/lock/cache framework je mimo zadania. Ak obyčajná služba a krátka DB operácia riešia konkrétny problém, použi ich.
 - `NewsApp`/`NewsActionBean` je povinné jadro podľa doplnenia N1 a [03a — Novinky](03a-novinky.md). Neodsúvaj ho do voliteľného adaptéra. P03 nemá DONE bez čítacieho/render rozsahu T16; P04 musí dokázať reálne založenie novinky a P06 zhodu s produkciou po merge. Hranica vlastných ResultCriteria/contextClasses zostáva podľa `03a`.
+- `menu_ul_li.jsp`/`MenuULLI` je povinné jadro podľa N4 a [03b — Menu](03b-menu.md). P03 nemá DONE bez skutočného renderovania M01–M09; P04 overí aj `MenuApp` selector a P06 zhodu menu po merge. Ponechaj existujúci renderer nad spoločnými fasádami; nový menu framework ani pracovná tabuľka sa nepridávajú.
 - Ďalší modul automaticky neznamená ďalšiu pracovnú tabuľku. Použi postup z `08`; bežný modul má explicitný DTO/handler a spoločné JSON úložisko. Typovanú výnimku zdôvodni konkrétnou query potrebou. Nevytváraj druhý merge alebo scheduler a nerozširuj úzky bannerový rozsah o riešenie štatistík.
 
 ## Dokončenie kroku
@@ -95,12 +96,12 @@ Výchozí commit je identifikátor na orientáciu, nie pokyn vytvoriť nový com
 
 | Krok | Hlavné podklady |
 | --- | --- |
-| P01 | `02a-identifikatory.md`, `03-nahlad-a-java.md`, `03a-novinky.md`, odporúčanie/príprava v `08`, tri `analyza-*.md` |
+| P01 | `02a-identifikatory.md`, `03-nahlad-a-java.md`, `03a-novinky.md`, `03b-menu.md`, odporúčanie/príprava v `08`, tri `analyza-*.md` |
 | P02 | `02-datovy-model.md`, `02a-identifikatory.md`, kontext v `03`, spoločný kontrakt v `08` |
-| P03 | `03-nahlad-a-java.md`, `03a-novinky.md`, `05-rozhranie.md`, čítacia/súborová analýza |
-| P04 | `02`, pracovné ukladanie v `04`, `03a-novinky.md`, `05`, zapisovacia analýza |
+| P03 | `03-nahlad-a-java.md`, `03a-novinky.md`, `03b-menu.md`, `05-rozhranie.md`, čítacia/súborová analýza |
+| P04 | `02`, pracovné ukladanie v `04`, `03a-novinky.md`, `03b-menu.md`, `05`, zapisovacia analýza |
 | P05 | `02`, súborová analýza, `03`, mediálne/súborové časti `04` a `05` |
-| P06 | `04-merge-a-publikovanie.md`, `05-rozhranie.md`, `03a-novinky.md`, `07-overenie.md`, obsluha typov v `08` |
+| P06 | `04-merge-a-publikovanie.md`, `05-rozhranie.md`, `03a-novinky.md`, `03b-menu.md`, `07-overenie.md`, obsluha typov v `08` |
 | P07 | plánovanie v `04` a `05`, čas Noviniek v `03a`, relevantné prípady `07` |
 | P08 | `07-overenie.md`, všetky výsledky v `STAV.md`, skutočné implementačné zmeny |
 

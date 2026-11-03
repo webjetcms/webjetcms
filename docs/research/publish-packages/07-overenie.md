@@ -10,7 +10,7 @@ Použiť reálnu podporovanú databázu, existujúce Java testovacie zázemie a 
 | --- | --- | --- |
 | T01 | ID existujúcej a novej stránky, priečinka a média; produkčný insert medzi dvoma pracovnými vytvoreniami; reštart DB | Všetky identity sú odlišné a po merge zostanú rovnaké. Pred merge neexistuje nový produkčný obsahový riadok. |
 | T02 | Uloženie stránky, priečinka, média a upload vo vetve | Produkčný obsah, kategorizácia, história, galéria a indexy sa nezmenia. Výnimkou sú technická spotreba ID a audit práce s vetvou. |
-| T03 | Otvorenie náhľadu a preklik cez menu, breadcrumb, novinky, default stránku a premenovanú URL | Všade sa používa tá istá vetva; nový/zmazaný obsah a strom sa zobrazia konzistentne. |
+| T03 | Skutočný `menu_ul_li.jsp`/`MenuULLI`, M01–M11 z [03b](03b-menu.md); preklik cez menu, breadcrumb, novinky a default/premenovanú stránku | Rovnaký zvolený výsledok vetvy ovplyvní položky, názvy, poradie, aktívnu cestu, viditeľnosť, HTML/perex a odkazy. Nový/zmazaný obsah sa zobrazí konzistentne, vrátane `onlySetVariables`. |
 | T04 | Vetva A, vetva B a produkcia; zmena neupravenej produkčnej položky | Pracovné verzie sa neprepisujú; neupravená položka sa aktualizuje z produkcie; editor uchová pracovný prepis, PREVIEW rešpektuje zvolený výsledok podľa Q16. |
 | T05 | Obmedzený redaktor, cudzia doména/ID, anonymný preview request, priamy asset/thumbnail request | Server odmietne neoprávnené čítanie/zápis; náhľad ani obrázok neobídu autentifikáciu. |
 | T06 | Formulár otvorený v produkcii alebo branch, potom prepnutie kontextu v druhom tabe | Starý request sa odmietne s možnosťou zachovať obsah formulára; nikdy sa neuloží do iného kontextu. |
@@ -26,6 +26,8 @@ Použiť reálnu podporovanú databázu, existujúce Java testovacie zázemie a 
 | T16 | Kompletná `NewsApp`/`NewsActionBean`: N01–N12 z [03a](03a-novinky.md) | Nové/upravené/zmazané novinky, účinné priečinky, kategórie, dátumy, práva a filtre ovplyvnia render, count a paging. Admin iframe zachová vetvu. Pri rovnakých vstupoch sa náhľad zhoduje s produkciou po merge; zachová autora, dátumy a perex väzby. |
 
 T16 sa overuje postupne: SQL fixture v P01, render/čítanie v P03, reálna editácia v P04, médiá v P05, porovnanie po merge v P06 a termín v P07. Nie je to až koncový voliteľný test. Presná matica a úmyselné hranice zákazníckych kritérií sú v [03a — Novinky](03a-novinky.md).
+
+T03 zahŕňa konkrétny menu kontrakt z [03b](03b-menu.md): P01 overí základ cez JSP, P03 M01–M09 s fixture, P04 editor parametrov M10 a skutočné redakčné zmeny, P06 rozhodnutia Q16 a zhodu po merge M11. Nadviazať na [apps/menu.js](../../../src/test/webapp/tests/apps/menu.js), ale doplniť render a prekliky; kontrola parametrov ani admin stromu nestačí. Menu nepoužíva `previewAt` Noviniek ako nový časový filter.
 
 ## Pripravenosť na ďalšie moduly
 
@@ -61,10 +63,10 @@ Minimálny spoločný príbeh:
 
 1. Cez `Nová pracovná verzia` vytvoriť prázdnu vetvu a overiť, že admin výber ostal pôvodný. Aktivovať ju cez `Upravovať web`, upraviť existujúcu stránku a založiť nový priečinok s dvoma stránkami; zmeny sa do balíka pridajú uložením bez osobitného zaraďovania.
 2. Nahrať obrázok a PDF, pridať médium pod stabilným ID.
-3. V náhľade prejsť z úvodnej stránky cez menu na novú stránku a stiahnuť pracovné PDF. Novú dostupnú novinku s perexom a existujúcou perex skupinou nájsť aj cez reálnu aplikáciu Novinky, jej filter a stránkovanie.
+3. V náhľade prejsť z úvodnej stránky cez reálne `menu_ul_li.jsp`/`MenuULLI` na novú stránku a stiahnuť pracovné PDF. Novú dostupnú novinku s perexom a existujúcou perex skupinou nájsť aj cez reálnu aplikáciu Novinky, jej filter a stránkovanie.
 4. Vedľa otvoriť produkciu: žiadne pracovné údaje ani bajty sa nezobrazia.
 5. Upraviť existujúcu produkčnú stránku, zistiť konflikt, vybrať správnu celú verziu.
-6. Publikovať a overiť ID, strom, mediálne/perex väzby, verejné URL a súbory. Pri rovnakom T, identite a šablóne porovnať predmerge a postmerge Novinky vrátane poradia, count, autora a dátumov.
+6. Publikovať a overiť ID, strom, mediálne/perex väzby, verejné URL a súbory. Porovnať menu pred merge a po ňom podľa M11 vrátane default odkazu a aktívnych tried. Pri rovnakom T, identite a šablóne porovnať predmerge a postmerge Novinky vrátane poradia, count, autora a dátumov.
 7. V samostatnom scenári naplánovať balík, spôsobiť nový konflikt a overiť zastavenie.
 
 Rovnakú prílohu otestovať aj cez thumbnail a po predchádzajúcom zahriatí produkčnej cache. HTML nesmie obsahovať fyzické pracovné cesty. Nepodporovaný formulárový zápis z preview nesmie odoslať email či vytvoriť produkčnú objednávku.

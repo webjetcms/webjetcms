@@ -47,3 +47,7 @@ Návrhový odhad 57–96 vývojárskych dní zostáva orientačný. Audit odstr�
 Skontrolované: `README`, `01`, `02`, `02a`, `03`, `03a`, `04`, `05`, `06`, `07`, `08`, `ORCHESTRACIA`, `STAV` a všetky tri `analyza-*.md`. Budúca JSON tabuľka modulov zostáva jedna spoločná; typované jadro sa kvôli tejto kontrole neprestavuje. Úzky bannerový rozsah sa nerozšíril o riešenie štatistík.
 
 Záverečné statické overenie kontroluje lokálne odkazy a kotvy, párovanie blokov kódu, whitespace a rozsah Git diffu. Výsledok je evidovaný v [STAV.md](STAV.md). Nejde o runtime test budúceho CMS ani o potvrdenie univerzálnej kompatibility zákazníckeho kódu.
+
+## Doplnenie po audite: menu, 3. november 2026
+
+Požiadavka N4 spresňuje povinný tok `menu_ul_li.jsp` → `MenuULLI`. Nový [03b](03b-menu.md) vychádza z kontroly reálneho JSP, triedy, `MenuApp` a existujúcich menu/sitemap testov. V P03 sa overuje výsledné menu, jeho aktívna cesta, default odkazy, request premenné a plný obsah; všeobecný test `DocDB` nestačí. Etapy, orchestrácia a T03 odkazujú na M01–M11. Produktová otázka tým nepribudla; navigácia bola súčasťou jadra už podľa Q6. Adresár teraz obsahuje 18 MD súborov. Runtime overenie zostáva úlohou implementácie.

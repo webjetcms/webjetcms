@@ -173,10 +173,13 @@ Nejde o subclass s prepisovaním desiatok metód. Ide o druhý interný režim e
 | `getDocByGroup`, `getDocPerex` a ich count cesty | Parametrizovaný výsledný SQL zdroj pred filtrovaním a stránkovaním. |
 | `GroupsDB.getGroup`, `getGroups`, `getGroupsAll`, `getGroupsTree`, rodičia a URL helpery | Použitie výsledného grafu view. |
 | `GroupsDB.getParentGroupsCached`, `getAllSystemFolders` | Vo vetve obísť existujúce spoločné `Cache` kľúče a použiť request-local view. Tieto cache existujú aj mimo singleton kolekcií. |
+| `menu_ul_li.jsp` → `MenuULLI.doTree`, `getGroupTree`, `hasChilds` | Povinná integrácia podľa [03b — Menu](03b-menu.md): rovnaké fasády v celej rekurzii, účinné korene/default stránky, viditeľnosť, aktívna cesta, perex/HTML a request premenné. Samotné prekrytie `getDoc` nestačí. |
 | `DocDB.getInstance` a publikačná kontrola | Vo vetvovom režime nespúšťa `DocPublishService.checkWebpagesToPublish`. Produkčná cesta zostáva zachovaná. |
 | Zápisové metódy a `updateInternalCaches` | Pracovný zápis používa príslušnú vetvovú službu. Náhodné volanie produkčnej mutácie vo vetve sa odmietne; nevytvorí neúplný produkčný zápis. |
 
 Treba prejsť aj static helpery, ktoré obchádzajú inštanciu. Integračný test iba `getDoc` nie je dokončením tohto kroku. Konkrétny inventár a jeho uzavretie patrí do implementačnej úlohy podľa [analýzy](analyza-citanie-a-nahlad.md).
+
+`MenuULLI` ostáva existujúcim rendererom v balíku komponentu; nevzniká samostatné branch menu. Zmenený strom a stránky sa skladajú pred jeho výpočtom z rovnakého `BranchView` a mapy Q16 ako zvyšok náhľadu. Dokument [03b](03b-menu.md) určuje konkrétne úpravy JSP/triedy, zachované parametre a povinné M01–M11 pre T03. Úspešný admin strom ani všeobecný test metadát nenahradia preklik cez výsledné JSP menu.
 
 Globálne pomocné údaje administrácie sa nezužujú na vetvu: napríklad [LayoutService](../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutService.java) dnes získava ponuku domén cez `GroupsDB.getUserRootDomainNames`. Tento zoznam sa naďalej odvodzuje z produkcie a oprávnení, aby po výbere vetvy nezmizla možnosť prepnúť doménu. Zdieľané System referencie sa čítajú podľa dohodnutého read-only pravidla; nepatria medzi nové vetvové zápisy.
 

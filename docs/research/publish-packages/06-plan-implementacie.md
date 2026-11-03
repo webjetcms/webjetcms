@@ -38,15 +38,17 @@ flowchart LR
 
 P04 a P05 sa môžu realizovať paralelne po dohodnutí mapovania dokumentov, uloženia nových ID a kontextu. V spoločných triedach pracuje vždy jeden vlastník; druhý agent môže paralelne písať izolované služby, UI alebo testovať výsledok. Pri menšom tíme stačí celé poradie vykonať sekvenčne.
 
+Doplnenie N4 výslovne zahŕňa `menu_ul_li.jsp` → `MenuULLI` podľa [03b — Menu](03b-menu.md). Náklady patria do už plánovaného menu/náhľadu; P01 preverí konkrétny tok a upraví odhad, ak odhalí ďalšie zásahy. Menu nemožno odložiť medzi zákaznícke adaptéry ani uzavrieť iba testom `DocDB`.
+
 ## P01 — Technické overenie pred rozšírením jadra
 
-**Vstupy:** dátový model, identifikátory, náhľad, `03a-novinky.md`, tri zdrojové analýzy. **Účel:** overiť najdrahšie predpoklady, nie začať kompletnú implementáciu potajme.
+**Vstupy:** dátový model, identifikátory, náhľad, `03a-novinky.md`, `03b-menu.md`, tri zdrojové analýzy. **Účel:** overiť najdrahšie predpoklady, nie začať kompletnú implementáciu potajme.
 
 Práca:
 
 1. Na jednorazovej testovacej DB overiť rezerváciu stránkového/priečinkového ID a explicitný insert pre všetky deklarované DB profily podľa `02a`. Nezasahovať do produkčných dát.
 2. Overiť, že krátky technický insert nevie žiadna podporovaná core čítacia cesta uvidieť pri zapnutom READ_COMMITTED režime. Zaznamenať chýbajúce externé DB profily ako neoverené, nie ako úspešné.
-3. Na reprezentatívnej podporovanej šablóne vyskúšať gateway, jednu prepísanú stránku, zmenené menu/URL, obrázok a thumbnail. Overiť aj root-relative CSS/JS požiadavky.
+3. Na reprezentatívnej podporovanej šablóne vyskúšať gateway, jednu prepísanú stránku, obrázok a thumbnail. Menu overiť cez skutočný `menu_ul_li.jsp`/`MenuULLI` s pridanou položkou, zmeneným názvom/presunom a preklikom na účinnú default stránku (základ M01/M08 z `03b`). Overiť aj root-relative CSS/JS požiadavky.
 4. Overiť SQL zloženie produkcie a pracovných dokumentov pred filtrovaním/count/paging pre `NewsQuery`; stačia testovacie riadky, netreba hotový editor. Povinne nové/zmenené/zmazané novinky, pracovná perex skupina, oba režimy `perexGroupUseJoin` a atribútové násobenie riadkov. Doložiť jedinečné ID, bind parametre a CLOB projekciu podľa N01/N02/N06 z `03a`.
 5. Posúdiť navrhovaný spoločný obal/handler z dokumentu 08 proti dnešným štyrom typom jadra. Overiť, že nevyžaduje dvojité pracovné ukladanie ani prepis `NewsQuery` na JSON; generický storage a budúce moduly zatiaľ nevytvárať.
 6. Na testovacom podstrome overiť obnovu z koša cez minimálne pre-delete histórie podľa `04`, aj pri vypnutej bežnej histórii. Tým sa uzavrie formát obnovovacích údajov, nejde ešte o implementáciu celého publishera.
@@ -76,7 +78,7 @@ Práca:
 
 ## P03 — Čítanie a preklikateľný náhľad
 
-**Vstupy:** `03-nahlad-a-java.md`, `03a-novinky.md`, dátový model, výsledok P01.
+**Vstupy:** `03-nahlad-a-java.md`, `03a-novinky.md`, `03b-menu.md`, dátový model, výsledok P01.
 
 Práca:
 
@@ -87,6 +89,7 @@ Práca:
 5. Dodať integračný kontrakt a inventár podporovaných komponentov/šablón. V preview sa neodosielajú formuláre ani nezapisuje produkčná návštevnosť; vlastné dynamické komponenty potrebujú explicitný adaptér.
 6. Už tu zapojiť čítanie `MediaDB`, kontrolu existencie pracovných súborov, perex obrázkové helpery a lokálne thumbnaily. P05 pridá ich redakčné zápisy, nie prvú funkčnú čítaciu cestu. WORK médiám premietnuť čas výslednej vlastníckej stránky podľa `02`; LIVE médiá zachovajú dnešný filter dostupnosti.
 7. Náhľad otvárať na admin hostiteľovi s overenou logickou doménou vetvy (Q19). Odlíšiť WORK pohľad editora od zvoleného výsledku v preview (Q16), vrátane SQL, stromu a súborov. Rozhodnutia možno pripraviť fixture; používateľské riešenie konfliktu dodá P06. Prenos kontextu musí overovať doménu aj branch ID, vrátane LIVE→LIVE po zmene domény.
+8. Upraviť `MenuULLI` aj jeho JSP tok podľa `03b`: spoločné fasády v rekurzii, aktuálna stránka bez query `docid`, korene/predkovia, default stránky, `hasChilds`, perex/HTML, request premenné a výstupné odkazy. Zachovať dnešné menu parametre a pravidlá; overiť reálne HTML aj `onlySetVariables`.
 
 **Hranica:** testovacie pracovné riadky možno pripravovať fixture/službou z P02; kompletná redakčná editácia príde v P04/P05. Verejné vyhľadávacie indexy a zákaznícke obchodné dáta zostávajú produkčné; UI/integrácia nesmú tvrdiť opak.
 
@@ -94,9 +97,11 @@ Práca:
 
 **Povinná podmienka Noviniek:** T16/N01–N08 v čítacom rozsahu musia prejsť na skutočnom renderi s fixture dátami. Samotný `DocDB.getDoc`, mockovaný zoznam alebo viditeľný riadok v administrácii nestačí na DONE P03. Súborové/mediálne závislosti N07/N08 sa tu overia pripravenými fixture dátami; kompletné nahrávanie príde v P05.
 
+**Povinná podmienka menu:** T03/M01–M09 v čítacom rozsahu cez reálny JSP render s fixture dátami. Test musí overiť odkazy, aktívnu cestu a cache izoláciu, nielen zoznam ID. Voľby Q16 možno pripraviť fixture; ich používateľské riešenie príde v P06. Súbor v HTML menu môže byť pripravený fixture, upload príde v P05.
+
 ## P04 — Editácia stránok a priečinkov
 
-**Vstupy:** `02`, `03`, `03a-novinky.md`, pravidlá pracovného zápisu z `04`, UI editora.
+**Vstupy:** `02`, `03`, `03a-novinky.md`, `03b-menu.md`, pravidlá pracovného zápisu z `04`, UI editora.
 
 Práca:
 
@@ -106,6 +111,7 @@ Práca:
 4. Zaviesť pracovné mazanie a vrátenie zmeny; kontrolovať strom, cieľový priečinok, doménu, default stránku a URL kolízie.
 5. Jasne vypnúť nepodporované polia, multi-group operácie a legacy/import cesty, ktoré by pri aktívnej branch zapísali produkciu. Rovnaké pravidlo musí presadiť server.
 6. Zachovať pracovnú cieľovú dostupnosť, perex skupiny a normalizované dátumy/autora podľa `03a`. Napojenie správy Noviniek zahŕňa `NewsRestController`, scan vložených aplikácií a kontext vnoreného iframe; neuspokojiť sa s úpravou predka controllera.
+7. Overiť aj editor parametrov `MenuApp`: výber nového pracovného priečinka, uloženie a opätovné načítanie INCLUDE, oba kontextové údaje selectoru a reálny render podľa M10. Pridanie, presun a zmazanie cez bežný editor musia ovplyvniť menu podľa M01/M02.
 
 **Hranica:** pracovné uloženie nesmie zapisovať produkčné `documents_history`, spúšťať zrkadlenie, preklad, index ani aktualizáciu živých médií. Zdieľané System stránky sú na čítanie. Multigroup stránky sa v prvej verzii needitujú, ak by sa museli synchronizovať kópie mimo explicitného balíka; UI uvedie konkrétny dôvod.
 
@@ -130,7 +136,7 @@ Práca:
 
 ## P06 — Porovnanie a manuálny merge
 
-**Vstupy:** `04-merge-a-publikovanie.md`, `05-rozhranie.md`, merge kontrakt v `03a-novinky.md`, všetky pracovné zapisovacie cesty.
+**Vstupy:** `04-merge-a-publikovanie.md`, `05-rozhranie.md`, merge kontrakt v `03a-novinky.md`, `03b-menu.md`, všetky pracovné zapisovacie cesty.
 
 Práca:
 
@@ -147,6 +153,8 @@ Práca:
 **Dokončené, keď:** T01/T08/T09/T11/T13/T15 prejdú; dvadsaťstránkový balík s médiami, presunom priečinka a prílohou možno pripraviť, porovnať a zverejniť pod pôvodnými ID. Chyba v polovici nezmení už splnené kroky na falošný úspech a opakovanie neprepíše novšiu produkciu.
 
 Pre T16 prejdú N10/N11: po merge sa zoznam Noviniek zhoduje s predmerge náhľadom v ID, poradí, počte a obsahu pri rovnakých dátach, T, identite a šablóne. Samotný merge nezmení SAVE_DATE, autora ani kategorizáciu.
+
+Pre T03 prejdú M09/M11 z `03b`: výber LIVE/WORK sa prejaví v menu a po merge sa zhodujú položky, aktívne triedy, poradie a odkazy pri rovnakej identite/parametroch.
 
 ## P07 — Plánovanie a dokončenie UI
 
@@ -175,7 +183,7 @@ Práca:
 4. Aktualizovať príslušné core release podklady podľa vtedy aktuálneho príspevkového procesu. Nevymýšľať číslo PR.
 5. Pilotné zapnutie na konkrétnom nasadení vykonať až na pokyn používateľa pre toto nasadenie; predtým je výsledkom otestovaná implementácia s vypnutým predvoleným flagom.
 
-**Dokončené, keď:** všetky povinné prípady T01–T16 vrátane N01–N12 majú doložený výsledok, otvorené obmedzenia sú viditeľné v dokumentácii a neoverený DB profil nie je deklarovaný ako podporovaný. Dokumentácia obsahuje skutočný inventár podporovaných šablón/aplikácií, nie všeobecný prísľub kompatibility ľubovoľného webu. Regresia zahrnie existujúce `apps/news.js`, render Noviniek s feature flag off/on a porovnanie s výsledkom merge.
+**Dokončené, keď:** všetky povinné prípady T01–T16 vrátane N01–N12 a M01–M11 majú doložený výsledok, otvorené obmedzenia sú viditeľné v dokumentácii a neoverený DB profil nie je deklarovaný ako podporovaný. Dokumentácia obsahuje skutočný inventár podporovaných šablón/aplikácií, nie všeobecný prísľub kompatibility ľubovoľného webu. Regresia zahrnie existujúce `apps/news.js`, render Noviniek s feature flag off/on a porovnanie s výsledkom merge.
 
 Overenie pripravenosti rozšírení z dokumentu 07 doloží spoločné spracovanie všetkých dnešných typov a odmietnutie neznámeho typu bez jeho preskočenia. Nevytvára sa kvôli tomu produkčná implementácia banneru/galérie; budúce kroky E01–E03 zostávajú mimo DONE P08.
 

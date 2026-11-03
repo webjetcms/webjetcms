@@ -42,6 +42,10 @@ Produktové otázky Q1–Q19 sú uzatvorené. Q16–Q19 vyplynuli z kontroly pri
 
 **N3 — Krátky prefix a presný názov originálu.** Používateľ požaduje prefix `branch_` a zachovanie názvu pôvodnej tabuľky vrátane množného čísla. Záväzné mapovanie a názvy pomocných tabuliek sú v [dátovom modeli](02-datovy-model.md#odporúčanie); platia aj pre SQL príklady a implementačné zadania. Navrhované Java triedy a rozhrania používajú krátky prefix `Branch` a jadrový balík `sk.iway.iwcm.branch` podľa [Java návrhu](03-nahlad-a-java.md#1-rozdelenie-zodpovednosti), vrátane ukážok kódu a testovacích príkazov. Krátke pomenovanie platí aj pre kontextové polia, konfiguračný prepínač, REST endpointy a adresáre úložiska/testov.
 
+## Menu webu, 3. november 2026
+
+**N4 — menu_ul_li.jsp/MenuULLI je povinná súčasť vetvy.** Používateľ výslovne požaduje, aby menu zobrazovalo zmenené aj pridané stránky a priečinky a fungovalo pri preklikávaní pracovného webu. [03b — Menu](03b-menu.md) určuje úpravy existujúcej triedy/JSP, pomocných čítaní, cache a povinné overenie. Ide o spresnenie už dohodnutej navigácie Q6; nevzniká nový renderer, pracovná tabuľka ani samostatná etapa.
+
 ## Strom návrhu
 
 ```mermaid

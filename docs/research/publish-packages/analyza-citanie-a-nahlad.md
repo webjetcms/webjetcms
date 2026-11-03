@@ -63,7 +63,13 @@ Niektoré core čítania kontrolujú fyzický súbor ešte pred vytvorením HTML
 
 `ShowDoc` načítava cez `DocDB.getDoc` aj hlavičku, pätičku, menu, pravé menu a dokumenty z polí šablóny. Ich referencie sú obyčajné ID stránok. Náhľad musí pri týchto čítaniach zachovať rovnaký kontext ako hlavná stránka.
 
-[MenuULLI](../../../src/main/java/sk/iway/iwcm/components/menu/MenuULLI.java) používa najmä `GroupsDB.getGroupsAll`, `getGroup`, `DocDB.getBasicDocDetailsByGroup`, `getBasicDocDetails` a `getDocLink`. Pokrytie týchto metód môže obslúžiť bežné menu aj sitemapu bez novej implementácie ich vykresľovania.
+[menu_ul_li.jsp](../../../src/main/webapp/components/menu/menu_ul_li.jsp) pripravuje `PageParams` a request nastavenia a volá [MenuULLI.doTree](../../../src/main/java/sk/iway/iwcm/components/menu/MenuULLI.java). [MenuApp](../../../src/main/java/sk/iway/iwcm/components/menu/MenuApp.java) je editor parametrov s týmto JSP ako `componentPath`, nie druhý verejný renderer. N4 výslovne zaraďuje tento tok do povinného jadra; presný návrh je v [03b — Menu](03b-menu.md).
+
+`MenuULLI` používa `GroupsDB.getGroupsAll/getGroup/getRoot/getParentGroups`, `DocDB.getBasicDocDetailsByGroup/getBasicDocDetails/getDocLink` a v `menuIncludePerex`/`menuInfoDirName` aj plný `getDoc`. Súkromné `getGroupTree` a rekurzia získavajú ďalšie inštancie cez `getInstance`; `hasChilds` má vlastný prechod kolekcií. Nestačí preto preveriť iba hlavný detail stránky. Trieda nemá vlastné SQL ani cache HTML a možno ponechať spoločný renderer nad účinnými fasádami.
+
+Konkrétne hranice z kódu: `getBasicDocDetails(id, true)` vie vytvoriť placeholder, začiatok `doTree` odvodzuje aktívne ID primárne z parametrov a `onlySetVariables`/`!ROOT_GROUP_*!` odovzdávajú výsledky cez request. Skrytý koreň má na úrovni 1 výnimku, chránený odkaz môže zostať s CSS označením. Menu nepoužíva časové filtre Noviniek. Návrh preto zahŕňa platnú aktuálnu stránku aj bez query `docid`, odstránenie placeholder fallbacku v tomto toku, účinné predky/default stránky, izoláciu request premenných a zachovanie dnešných prezentačných pravidiel.
+
+`GroupsDB.getGroupsAll` preberá poradie z `reloadGroups` (`sort_priority, group_name`); existujúci `groupsDbSorter` má iný rozhodovací údaj pri zhode. `DocDB.ORDER_PRIORITY` pre stránky nemá zaručené poradie podľa ID pri rovnakých prioritách. `getRoot`/`getParentGroups` zohľadňujú aj prázdny navigačný názov. Tieto detaily sú dôležité pre rovnaké menu pred merge a po ňom. [sitemap/ul_li_jquery.jsp](../../../src/main/webapp/components/sitemap/ul_li_jquery.jsp) používa ten istý renderer s `isSitemap=true`; neznamená to pokrytie ostatných sitemap ani headless implementácií.
 
 [NavbarStandard](../../../src/main/java/sk/iway/iwcm/doc/NavbarStandard.java) prechádza rodičov cez `GroupsDB`; [NavbarService](../../../src/main/java/sk/iway/iwcm/doc/NavbarService.java) vyberá implementáciu navigácie. Potrebný je celý výsledný strom, nie len nahradenie jedného objektu priečinka. `GroupDetails` navyše obsahuje odvodené navigačné údaje, ktoré musia vzniknúť z rovnakého pohľadu na stránky.
 
@@ -144,7 +150,7 @@ Komponent používajúci podporované `DocDB`/`GroupsDB` metódy môže získať
 
 Jednoduché textové hľadanie v `src/main/java` našlo priame SQL s `documents` v 53 súboroch a s `groups` v 18 súboroch. Je to orientačný rozsah auditu, nie počet nutných úprav: obsahuje administráciu aj úlohy na pozadí, nezachytí všetky dynamicky zostavené dotazy a neobsahuje zákaznícky kód mimo repozitára.
 
-Dokončený návrh musí uviesť podporované core cesty a spôsob adaptácie vlastného komponentu. Bežné menu, breadcrumbs, zloženie stránky a štandardné novinky patria medzi hlavné kandidáty na povinné pokrytie. Tvrdenie „náhľad celého webu“ nemožno bez tejto hranice rozšíriť na ľubovoľnú zákaznícku aplikáciu.
+Dokončený návrh musí uviesť podporované core cesty a spôsob adaptácie vlastného komponentu. Bežné menu, breadcrumbs, zloženie stránky a štandardné novinky patria do povinného jadra podľa Q6, N1 a N4. Tvrdenie „náhľad celého webu“ nemožno bez tejto hranice rozšíriť na ľubovoľnú zákaznícku aplikáciu.
 
 Väzby `perex_group_doc`, `doc_atr` a `doc_atr_def` sú mimo používateľom pomenovaných troch tabuliek, ale existujúce zoznamy ich čítajú. Ich nezmenené produkčné údaje možno používať ako vstup náhľadu; možnosť meniť ich vo vetve musí mať vlastné rozhodnutie o rozsahu.
 
