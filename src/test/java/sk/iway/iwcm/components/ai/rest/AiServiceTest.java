@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockMultipartFile;
 
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -80,5 +82,31 @@ class AiServiceTest {
         assistant.setAction(SupportedActions.LIVE_CHAT.getAction());
         assistant.setActive(true);
         return assistant;
+    }
+
+    /** Files are allowed only for OpenAI/Gemini text chats, including temporary chats. */
+    @Test
+    void validatesPageChatAttachmentSupport() {
+        InputDataDTO input = new InputDataDTO();
+        input.setInputValueType(InputDataDTO.InputValueType.TEXT);
+        input.setChatAttachments(AiChatAttachments.read(List.of(
+            new MockMultipartFile("files", "notes.txt", "text/plain", new byte[] {65}))));
+        AssistantDefinitionEntity assistant = chat(12L);
+        Prop prop = mock(Prop.class);
+        for (String provider : List.of("openai", "gemini")) {
+            assistant.setProvider(provider);
+            for (boolean temporal : List.of(true, false)) {
+                assistant.setUseTemporal(temporal);
+                AiService.validateChatAttachments(assistant, input, prop);
+            }
+        }
+        assistant.setProvider("browser");
+        assertThrows(IllegalStateException.class, () -> AiService.validateChatAttachments(assistant, input, prop));
+        assistant.setProvider("openai");
+        assistant.setAction(SupportedActions.GENERATE_TEXT.getAction());
+        assertThrows(IllegalStateException.class, () -> AiService.validateChatAttachments(assistant, input, prop));
+        assistant.setAction(SupportedActions.LIVE_CHAT.getAction());
+        input.setInputValueType(InputDataDTO.InputValueType.IMAGE);
+        assertThrows(IllegalStateException.class, () -> AiService.validateChatAttachments(assistant, input, prop));
     }
 }

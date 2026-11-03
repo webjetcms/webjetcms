@@ -200,7 +200,8 @@ export class AiChat {
         try {
             inputData = retryMessage?.inputData ? { ...retryMessage.inputData } : {
                 inputValue: "", inputValueType: "text", outputValueType: "text",
-                ...this.options.getInputData?.(prompt), userPrompt: prompt
+                ...this.options.getInputData?.(prompt), userPrompt: prompt,
+                ...(state.attachments.length ? { files: state.attachments.map(item => item.file) } : {})
             };
         } catch (error) {
             state.notice = error.message || this._text("unavailable");
@@ -339,7 +340,11 @@ export class AiChat {
         state.conversationId = null;
         delete message.inputData.conversationId;
         state.needsNewChat = false;
-        if (!state.draft.trim()) state.draft = message.userPrompt;
+        if (!state.draft.trim() && !state.attachments.length) {
+            state.draft = message.userPrompt;
+            const question = state.messages[state.messages.indexOf(message) - 1];
+            state.attachments = [...(question?.attachments || [])];
+        }
         state.notice = this._text("restarted");
         this._changed();
         if (this.mounted) this.$input[0].focus({ preventScroll: true });
@@ -424,14 +429,14 @@ export class AiChat {
         this.$stop.toggle(this.state.pending != null);
         if (this.$attachmentButton) {
             this.$attachmentButton.prop('disabled', !this._canAttach());
-            setChatTooltip(this.$attachmentButton[0], this.options.persistent
+            setChatTooltip(this.$attachmentButton[0], this.options.persistent || this.options.allowAttachments
                 ? WJ.translate('datatables.upload.uploadFile.js') : this._text('attachmentsUnavailable'));
         }
         initChatTooltips(this.$send.add(this.$stop).add(this.$attachmentButton));
     }
 
     _canAttach() {
-        return this.options.showAttachment && this.options.persistent && !this.state.disposed
+        return this.options.showAttachment && (this.options.persistent || this.options.allowAttachments) && !this.state.disposed
             && !this.state.pending && !this.state.serverBusy && !this.state.readOnlyReason && !this.state.needsNewChat;
     }
 

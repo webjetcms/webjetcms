@@ -144,6 +144,7 @@ public class AiService {
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
+        validateChatAttachments(assistant, inputData, prop);
 
         if(shouldRemoveHtml(assistant, inputData)) {
             inputData.removeHtml();
@@ -194,6 +195,7 @@ public class AiService {
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
+        validateChatAttachments(assistant, inputData, prop);
 
         if(shouldRemoveHtml(assistant, inputData)) {
             inputData.removeHtml();
@@ -216,6 +218,16 @@ public class AiService {
 
     static boolean shouldRemoveHtml(AssistantDefinitionEntity assistant, InputDataDTO inputData) {
         return Tools.isFalse(assistant.getKeepHtml()) && inputData.isStructuredInput() == false;
+    }
+
+    /** Restricts multipart input to supported text chat assistants before starting provider work. */
+    static void validateChatAttachments(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop) {
+        if (inputData.getChatAttachments() == null || inputData.getChatAttachments().isEmpty()) return;
+        if (!SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())
+            || !List.of("openai", "gemini").contains(assistant.getProvider())
+            || !InputDataDTO.InputValueType.TEXT.equals(inputData.getInputValueType())) {
+            throw new IllegalStateException(prop.getText("components.ai_assistants.chat.attachmentsUnavailable.js"));
+        }
     }
 
     private boolean isStreamingEnabled(AssistantDefinitionEntity assistant) {

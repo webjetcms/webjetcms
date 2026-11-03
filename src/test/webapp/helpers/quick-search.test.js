@@ -110,6 +110,9 @@ function fixture(t, denied = [], options = {}) {
         vm.runInContext(readAdmin('ai/chat-tooltips.js'), context);
         vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
         vm.runInContext(`{ ${readAdmin('ai/quick-search-chat.js')}; Object.assign(this, { QuickSearchChat }); }`, context);
+        if (options.editorChat) {
+            vm.runInContext(`${readAdmin('../../npm_packages/webjetdatatables/editor-ai.js')}\nthis.EditorAi = EditorAi;`, context);
+        }
     }
     vm.runInContext(`${readAdmin('quick-search.js')}\nthis.QuickSearch = QuickSearch;`, context);
     const controller = new context.QuickSearch(window.document.querySelector('#trigger'));
@@ -120,6 +123,18 @@ function fixture(t, denied = [], options = {}) {
     });
     controller.open();
     t.after(() => { controller.cancel(); controller.chat?.destroy(); window.close(); });
+    const editorChat = (assistant, inputValue = '<p>Existing page</p>', columnOptions = {}) => {
+        const values = { data: inputValue };
+        const editor = Object.assign(Object.create(context.EditorAi.prototype), {
+            EDITOR: { get: field => values[field] }, chatConversations: new Map(),
+            aiUserInterface: { _showLoader() {}, _hideLoader() {} }
+        });
+        const conversation = editor.getChatConversation(window.document.querySelector('#trigger'),
+            { name: 'data', type: 'textarea', ...columnOptions }, { ...assistant, from: 'data', to: 'data' });
+        conversation.chat.mount(window.document.body);
+        t.after(() => conversation.chat.destroy());
+        return { ...conversation, values };
+    };
     const type = value => {
         controller.input.value = value;
         controller.input.dispatchEvent(new window.Event('input', { bubbles: true }));
@@ -150,7 +165,7 @@ function fixture(t, denied = [], options = {}) {
     const rest = () => requests.filter(request => !request.url.pathname.endsWith('/_doc_autocomplete.jsp'));
     const activeRest = () => rest().filter(request => !request.settled && !request.signal.aborted);
     return { controller, requests, chatRequests, type, enter, advance, respond, autocomplete, rest, activeRest,
-        downloads, blobs, revokedUrls, notifications, clicks: () => clicks };
+        downloads, blobs, revokedUrls, notifications, editorChat, clicks: () => clicks };
 }
 
 for (const [platform, modifier] of [['Win32', 'ctrlKey'], ['MacIntel', 'metaKey']]) {
@@ -1747,6 +1762,93 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     assert.equal(f.chatRequests[1].inputData.conversationId, 'first-conversation');
     assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');
 });
+
+for (const provider of ['openai', 'gemini']) {
+    test(`Page chat with ${provider} sends selected files with editor context and retains them for a retry`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+        const { chat, values } = f.editorChat({ ...chatAssistants[0], provider });
+        const file = new File(['Document content'], 'notes.txt', { type: 'text/plain' });
+        const attach = chat.element.querySelector('.btn-ai-chat-attach');
+        assert.equal(attach.disabled, false);
+        const fileInput = chat.element.querySelector('input[type="file"]');
+        Object.defineProperty(fileInput, 'files', { configurable: true, value: [file] });
+        fileInput.dispatchEvent(new fileInput.ownerDocument.defaultView.Event('change', { bubbles: true }));
+        assert.match(chat.$attachments.text(), /notes.txt/);
+        assert.equal(chat.$send.prop('disabled'), false, 'A file alone can be sent.');
+        chat.state.conversationId = 'previous-turn';
+
+        const sending = chat.send('');
+        const request = f.chatRequests[0];
+        assert.match(request.inputData.userPrompt, /attachmentPrompt/);
+        assert.equal(request.inputData.files[0], file);
+        assert.equal(request.inputData.inputValue, '<p>Existing page</p>');
+        assert.equal(request.inputData.conversationId, 'previous-turn');
+        assert.equal(request.inputData.persistentChat, undefined, 'Editor uploads must retain the editor request path.');
+        assert.equal(chat.state.attachments.length, 0);
+        assert.equal(attach.disabled, true, 'Do not accept files while sending.');
+        chat._addAttachments([new File(['Not accepted'], 'pending.txt')]);
+        assert.equal(chat.state.attachments.length, 0);
+        request.resolve({ success: false, errorText: 'Temporary failure', retryable: true });
+        await sending;
+        assert.equal(attach.disabled, false);
+
+        values.data = '<p>Edited after the failed request</p>';
+        const failed = chat.state.messages.at(-1);
+        const retrying = chat.send(failed.userPrompt, failed);
+        assert.equal(f.chatRequests[1].inputData.files[0], file);
+        assert.equal(f.chatRequests[1].inputData.inputValue, '<p>Existing page</p>', 'Retry the original page context.');
+        assert.equal(f.chatRequests[1].inputData.conversationId, 'previous-turn');
+        f.chatRequests[1].resolve({ success: true, response: 'Suggested content', conversationId: 'next-turn' });
+        await retrying;
+
+        const following = chat.send('Continue editing');
+        assert.equal(f.chatRequests[2].inputData.files, undefined, 'A new turn must not silently re-upload previous files.');
+        assert.equal(f.chatRequests[2].inputData.inputValue, values.data);
+        assert.equal(f.chatRequests[2].inputData.conversationId, 'next-turn');
+        f.chatRequests[2].resolve({ success: true, response: 'Follow-up content' });
+        await following;
+    });
+}
+
+test('Page chat rejects uploads for unsupported providers and image fields', t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    for (const [provider, renderFormat] of [['browser', ''], ['local', ''], ['openai', 'dt-format-image'], ['gemini', 'dt-format-image']]) {
+        const { chat } = f.editorChat({ ...chatAssistants[0], provider }, '/images/photo.png', { renderFormat });
+        assert.equal(chat.element.querySelector('.btn-ai-chat-attach').disabled, true);
+        chat._addAttachments([new File(['Document content'], 'notes.txt')]);
+        assert.equal(chat.state.attachments.length, 0);
+        assert.equal(chat.$send.prop('disabled'), true);
+    }
+    assert.equal(f.chatRequests.length, 0);
+});
+
+for (const draft of ['', 'A separate follow-up draft']) {
+    test(`Page chat restart ${draft ? 'preserves a separate draft' : 'restores failed attachments'} after an expired continuation`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+        const { chat } = f.editorChat(chatAssistants[0]);
+        const file = new File(['Document content'], 'notes.txt', { type: 'text/plain' });
+        chat._addAttachments([file]);
+        chat.state.conversationId = 'expired-turn';
+        const sending = chat.send('Update the page using this document');
+        if (draft) typeChat(chat.$input[0], draft);
+        f.chatRequests[0].resolve({ success: false, errorText: 'Expired continuation', errorCategory: 'INVALID_CONTINUATION' });
+        await sending;
+        assert.equal(chat.state.needsNewChat, true);
+        chat.element.querySelector('[data-ai-action="restart"]').click();
+
+        assert.equal(chat.state.needsNewChat, false);
+        assert.equal(chat.state.conversationId, null);
+        assert.equal(chat.$input.val(), draft || 'Update the page using this document');
+        assert.equal(f.chatRequests.length, 1, 'Restarting restores the composer without sending it.');
+        assert.deepEqual(Array.from(chat.state.attachments, item => item.file), draft ? [] : [file]);
+
+        const restarted = chat.send(chat.state.draft);
+        assert.equal(f.chatRequests[1].inputData.conversationId, undefined);
+        assert.equal(f.chatRequests[1].inputData.files?.[0], draft ? undefined : file);
+        f.chatRequests[1].resolve({ success: true, response: 'Fresh conversation answer' });
+        await restarted;
+    });
+}
 
 test('Persistent assistant switching preserves an unsent draft and its original attachment', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });

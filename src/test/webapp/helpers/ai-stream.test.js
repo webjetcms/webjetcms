@@ -31,30 +31,38 @@ function result(payload) {
     return JSON.stringify({ type: 'result', result: payload }) + '\n';
 }
 
-test('saved chat uploads use multipart with the CSRF token and preserve streaming', async () => {
-    let request;
-    const file = new File(['Private attachment'], 'notes.txt', { type: 'text/plain' });
-    const { AiChatTransport } = loadTransport(async (url, options) => {
-        request = { url, ...options };
-        return new Response(delta('Answer') + result({ response: 'Answer', totalTokens: 7, threadId: 'thread' }),
-            { headers: { 'Content-Type': 'application/x-ndjson' } });
+for (const [persistentChat, streaming] of [[true, true], [false, false], [false, true]]) {
+    test(`chat uploads preserve context, CSRF and multipart data (saved=${persistentChat}, streaming=${streaming})`, async () => {
+        let request;
+        const file = new File(['Private attachment'], 'notes.txt', { type: 'text/plain' });
+        const payload = { response: 'Answer', totalTokens: 7, conversationId: 'next-turn' };
+        const accept = streaming ? 'application/x-ndjson' : 'application/json';
+        const input = persistentChat ? { requestId: 'request' } : {
+            inputValue: '<p>Existing page</p>', inputValueType: 'text', outputValueType: 'text', conversationId: 'previous-turn'
+        };
+        const { AiChatTransport } = loadTransport(async (url, options) => {
+            request = { url, ...options };
+            return new Response(streaming ? delta('Answer') + result(payload) : JSON.stringify(payload),
+                { headers: { 'Content-Type': accept } });
+        });
+        const response = await new AiChatTransport().execute({ assistantId: 7, useStreaming: streaming }, {
+            ...input, persistentChat, userPrompt: 'Read this file', files: [file]
+        });
+        assert.equal(response.success, true);
+        assert.equal(response.response, 'Answer');
+        assert.equal(response.conversationId, 'next-turn');
+        assert.equal(request.url, persistentChat ? '/admin/rest/ai/chat/messages'
+            : `/admin/rest/ai/assistant/${streaming ? 'response-stream' : 'response'}/`);
+        assert.equal(request.headers['X-CSRF-Token'], 'test-csrf');
+        assert.equal(request.headers.Accept, accept);
+        assert.equal(request.headers['Content-Type'], undefined, 'The browser must supply the multipart boundary.');
+        const { timestamp, persistentChat: ignored, ...message } = JSON.parse(request.body.get('message'));
+        assert.deepEqual(message, { ...input, assistantId: 7, userPrompt: 'Read this file' });
+        if (!persistentChat) assert.ok(Number.isInteger(timestamp));
+        assert.equal(await request.body.get('files').text(), 'Private attachment');
+        assert.equal(request.body.get('files').name, 'notes.txt');
     });
-    const response = await new AiChatTransport().execute({ assistantId: 7, useStreaming: true }, {
-        persistentChat: true, userPrompt: 'Read this file', requestId: 'request', files: [file]
-    });
-    assert.equal(response.success, true);
-    assert.equal(response.response, 'Answer');
-    assert.equal(request.url, '/admin/rest/ai/chat/messages');
-    assert.equal(request.headers['X-CSRF-Token'], 'test-csrf');
-    assert.equal(request.headers.Accept, 'application/x-ndjson');
-    assert.equal(request.headers['Content-Type'], undefined, 'The browser must supply the multipart boundary.');
-    const message = JSON.parse(request.body.get('message'));
-    assert.equal(message.assistantId, 7);
-    assert.equal(message.userPrompt, 'Read this file');
-    assert.equal(message.files, undefined);
-    assert.equal(await request.body.get('files').text(), 'Private attachment');
-    assert.equal(request.body.get('files').name, 'notes.txt');
-});
+}
 
 /** Exercises the real executor, substituting only the HTTP response and editor. */
 async function execute(chunks, streaming = true) {

@@ -357,7 +357,9 @@ Každý rozhovor má priečinok `/files/protected/ai-chat/<userId>/<threadId>/` 
 
 `AiChatStore` uchováva ID odpovedí poskytovateľa na serveri. `requestId` chráni pred duplicitným odoslaním a `revision` pred pokračovaním z neaktuálneho stavu. Po strate kontextu alebo zmene asistenta či konfigurácie poskytovateľa môže história zostať iba na čítanie. Mazanie zabezpečuje `AiChatResponseDeletion`; ak poskytovateľ odstránenie nepotvrdí, stav zostane `DELETE_PENDING` a lokálne údaje sa zachovajú na opakovanie akcie.
 
-Chat pri poli používa `AiChat` bez perzistencie a príloh. `EditorAi` poskytuje kontext poľa alebo výberu a akcie na vloženie odpovede. Rozhovory drží oddelene podľa cieľového poľa a asistenta, pri zatvorení editora ich zruší. Nepridávajú sa do histórie `QuickSearchChat`.
+Chat pri poli používa `AiChat` bez perzistencie. `EditorAi` poskytuje kontext poľa alebo výberu a akcie na vloženie odpovede. Rozhovory drží oddelene podľa cieľového poľa a asistenta, pri zatvorení editora ich zruší. Nepridávajú sa do histórie `QuickSearchChat`.
+
+Pre chatových asistentov OpenAI a Gemini podporujú endpointy `POST /admin/rest/ai/assistant/response/` a `POST /admin/rest/ai/assistant/response-stream/` aj `multipart/form-data`. Pole `message` obsahuje JSON `InputDataDTO` vrátane kontextu poľa, `userPrompt`, `assistantId`, `timestamp` a prípadného `conversationId`; opakované polia `files` obsahujú prílohy. Bez príloh zostáva požiadavka v JSON. Server používa rovnakú validáciu a extrakciu obsahu ako ukladaný chat, ale súbory drží iba počas spracovania požiadavky. Obsah príloh doplní ku kontextu poľa. Podpora príloh pri poli nevyžaduje vypnutý dočasný chat.
 
 ### Prenos priebežnej odpovede do administrácie
 

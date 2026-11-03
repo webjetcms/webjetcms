@@ -46,6 +46,7 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
+import sk.iway.iwcm.components.ai.rest.AiChatAttachments;
 import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
@@ -161,10 +162,12 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiOperation operation = textOperation(assistant);
             AiChatSession.Continuation continuation = resolveChat(operation, assistant, inputData, request);
             IncludesHandler includesHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
+            AiProviderConfig config = configurationService.resolve(this, request);
+            TokenUsage attachmentUsage = prepareChatAttachments(assistant, inputData, config);
             AiResponse response = aiClient.execute(
                 getProviderId(),
                 prepareProviderRequest(operation, assistant, inputData, includesHandler),
-                configurationService.resolve(this, request),
+                config,
                 inputData.getCancellationToken()
             );
 
@@ -178,13 +181,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 assistant,
                 METHOD_TEXT_RESPONSE,
                 responseDto.getResponse(),
-                response.usage(),
+                response.usage().plus(attachmentUsage),
                 statRepo,
                 request
             );
             rememberChat(operation, assistant, response, includesHandler, responseDto, inputData, request);
         } catch (CancellationException exception) {
             throw exception;
+        } catch (AiChatAttachments.UnreadableException exception) {
+            checkCancellation(inputData);
+            return unreadableAttachment(assistant, prop);
         } catch (AiProviderException exception) {
             checkCancellation(inputData);
             errorAdminLog(assistant, inputPair, METHOD_TEXT_RESPONSE, exception, prop);
@@ -230,11 +236,13 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiOperation operation = textOperation(assistant);
             AiChatSession.Continuation continuation = resolveChat(operation, assistant, inputData, request);
             IncludesHandler includeHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
+            AiProviderConfig config = configurationService.resolve(this, request);
+            TokenUsage attachmentUsage = prepareChatAttachments(assistant, inputData, config);
 
             AiResponse response = aiClient.stream(
                 getProviderId(),
                 prepareProviderRequest(operation, assistant, inputData, includeHandler),
-                configurationService.resolve(this, request),
+                config,
                 delta -> {
                     checkCancellation(inputData);
                     try {
@@ -258,13 +266,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 assistant,
                 METHOD_TEXT_STREAM_RESPONSE,
                 responseDto.getResponse(),
-                response.usage(),
+                response.usage().plus(attachmentUsage),
                 statRepo,
                 request
             );
             rememberChat(operation, assistant, response, includeHandler, responseDto, inputData, request);
         } catch (CancellationException exception) {
             throw exception;
+        } catch (AiChatAttachments.UnreadableException exception) {
+            checkCancellation(inputData);
+            return unreadableAttachment(assistant, prop);
         } catch (AiProviderException exception) {
             if (outputFailure.get() != null) {
                 errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE,
@@ -378,6 +389,42 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 + "Return an image description, without pretending to have answered the conversation.")
             .userPrompt(input.getUserPrompt()).inputMedia(image).build();
         return aiClient.execute(getProviderId(), request, config, input.getCancellationToken());
+    }
+
+    /** Extracts untrusted file content without changing the page input or creating persistent chat files. */
+    private TokenUsage prepareChatAttachments(AssistantDefinitionEntity assistant, InputDataDTO input, AiProviderConfig config)
+        throws IOException, AiProviderException {
+        input.setChatAttachmentContext(null);
+        TokenUsage usage = TokenUsage.EMPTY;
+        if (input.getChatAttachments() == null || input.getChatAttachments().isEmpty()) return usage;
+        StringBuilder context = new StringBuilder();
+        for (var upload : input.getChatAttachments()) {
+            checkCancellation(input);
+            var attachment = upload.attachment();
+            String content;
+            if (attachment.mediaType().startsWith("image/")) {
+                AiResponse description = describeChatImage(new BinaryContent(upload.bytes(), attachment.mediaType(), attachment.name()),
+                    assistant, input, config);
+                content = description.text();
+                usage = usage.plus(description.usage());
+            } else {
+                content = AiChatAttachments.documentText(attachment, upload.bytes());
+            }
+            context.append("\nAttachment: ").append(attachment.name()).append('\n').append(content).append('\n');
+            if (context.length() > AiChatAttachments.MAX_TEXT) throw new AiChatAttachments.UnreadableException();
+        }
+        checkCancellation(input);
+        input.setChatAttachmentContext(context.toString());
+        return usage;
+    }
+
+    private static AssistantResponseDTO unreadableAttachment(AssistantDefinitionEntity assistant, Prop prop) {
+        Adminlog.add(Adminlog.TYPE_AI, "Page chat attachment unreadable for assistant " + assistant.getId(), -1, -1);
+        AssistantResponseDTO result = new AssistantResponseDTO();
+        result.setError(prop.getText("components.ai_assistants.chat.history.attachmentUnreadable.js"));
+        result.setErrorCategory("ATTACHMENT_INVALID");
+        result.setRetryable(false);
+        return result;
     }
 
     private static void checkCancellation(InputDataDTO inputData) {
@@ -894,6 +941,8 @@ public abstract class LibrarySupportLogic implements AiInterface {
             if (inputData.getInputFile() == null) return builder.build();
             builder.inputMedia(BinaryContent.from(inputData.getInputFile().toPath(), inputData.getMimeType()));
         } else {
+            String attachments = inputData.getChatAttachmentContext();
+            if (Tools.isNotEmpty(attachments)) inputText = (inputText == null ? "" : inputText) + attachments;
             builder.inputText(inputText);
         }
         return builder.build();

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -23,6 +24,7 @@ import sk.iway.Html2Text;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.components.ai.chat.AiChatPaths;
+import sk.iway.iwcm.components.ai.rest.AiChatAttachments;
 import sk.iway.iwcm.i18n.Prop;
 
 import org.apache.http.entity.ContentType;
@@ -57,6 +59,14 @@ public class InputDataDTO {
 
     /** Session-owned continuation returned by the last successful chat turn. */
     String conversationId;
+
+    /** Validated multipart attachments, retained only for this assistant request. */
+    @JsonIgnore
+    List<AiChatAttachments.Upload> chatAttachments = List.of();
+
+    /** Extracted attachment content, kept separate from page context and trusted prompt macros. */
+    @JsonIgnore
+    String chatAttachmentContext;
 
     /** Provider continuation resolved on the server, never accepted from JSON. */
     @JsonIgnore

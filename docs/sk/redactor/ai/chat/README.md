@@ -52,7 +52,7 @@ Ak poskytovateľ vymazanie nepotvrdí, rozhovor zostane označený na vymazanie.
 
 ## Prílohy
 
-Prílohy sú dostupné v ukladaných rozhovoroch na karte **AI Chat**. Môžete napríklad priložiť program školenia a požiadať asistenta, aby z neho vytvoril tabuľku alebo pozvánku.
+Prílohy sú dostupné v ukladaných rozhovoroch na karte **AI Chat** aj v chate pri poli a v editore stránky s asistentom **OpenAI** alebo **Gemini**. Môžete napríklad priložiť program školenia a požiadať asistenta, aby z neho vytvoril tabuľku alebo pozvánku.
 
 1. Kliknite na ikonu kancelárskej sponky **Nahrať súbor**, pretiahnite súbory do poľa správy alebo doň vložte obrázok zo schránky.
 2. Skontrolujte názvy súborov a náhľady obrázkov. Nechcenú prílohu pred odoslaním odstráňte tlačidlom **×**.
@@ -84,6 +84,8 @@ Prílohu stiahnete aj kliknutím na jej názov alebo ikonu sťahovania priamo pr
 
 Pri textovom poli alebo v paneli nástrojov editora kliknite na ikonu AI a vyberte asistenta s typom požiadavky **Chat**. Napíšte zadanie a odošlite ho. Zdrojový obsah určuje nastavenie asistenta; pri označenom texte v podporovanom editore sa použije tento výber.
 
+Pri asistentoch **OpenAI** a **Gemini** môžete pridať súbory sponkou **Nahrať súbor**, pretiahnutím do správy alebo vložením obrázka zo schránky. Platia rovnaké [formáty a limity príloh](#prílohy) ako na karte AI Chat. Asistent dostane obsah príloh spolu s obsahom poľa alebo označeným textom. Prílohy môžete používať aj pri zapnutej voľbe **Zapnúť dočasný chat**.
+
 Odpoveď sa najskôr zobrazí v chate. Obsah poľa alebo stránky zmeníte až tlačidlom pod dokončenou odpoveďou:
 
 | Tlačidlo | Výsledok |
@@ -101,13 +103,13 @@ V PageBuilderi môže odpoveď obsahovať aj HTML bloky. Ich pridanie alebo nahr
 
 ![Blok školenia vložený z odpovede asistenta do PageBuildera](chat-pagebuilder.png)
 
-Chaty pri poliach sú oddelené podľa poľa a asistenta. Zatvorenie okna AI ich zachová, ale zatvorenie samotného editora ich ukončí a zruší bežiace požiadavky. Tieto rozhovory sa nepridávajú do histórie v rýchlom vyhľadávaní a neponúkajú nahrávanie príloh.
+Chaty pri poliach sú oddelené podľa poľa a asistenta. Zatvorenie okna AI ich zachová vrátane rozpísanej správy a neodoslaných príloh, ale zatvorenie samotného editora ich ukončí a zruší bežiace požiadavky. Tieto rozhovory sa nepridávajú do histórie v rýchlom vyhľadávaní a ich prílohy sa v CMS trvalo neukladajú.
 
 ## Dostupnosť a riešenie problémov
 
 - **Karta AI Chat sa nezobrazuje:** používateľ potrebuje oprávnenie na používanie AI asistentov.
 - **Nie je dostupný žiadny asistent:** správca musí povoliť asistenta s typom požiadavky **Chat** a nakonfigurovať jeho poskytovateľa. Postup je v [nastavení chatového asistenta](../settings/README.md#nastavenie-chatového-asistenta).
-- **Sponka na prílohy je neaktívna:** vybraný chat sa neukladá, práve spracúva požiadavku alebo je dostupný iba na čítanie.
+- **Sponka na prílohy je neaktívna:** asistent nepodporuje prílohy, chat práve spracúva požiadavku alebo je dostupný iba na čítanie. Na karte AI Chat v rýchlom vyhľadávaní musí byť navyše zapnuté ukladanie rozhovoru.
 - **Prílohu nemožno spracovať:** overte formát, veľkosť a čitateľnosť textu; pri obrázku aj podporu obrazového vstupu modelom.
 - **Odpoveď sa nepodarilo dokončiť:** chat zobrazí dôvod a podľa typu chyby ponúkne opakovanie požiadavky alebo nový chat. Požiadavky sa automaticky neopakujú.
 

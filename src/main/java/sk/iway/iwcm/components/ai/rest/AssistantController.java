@@ -5,17 +5,25 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webjetcms.ai.AiErrorCategory;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,6 +52,7 @@ public class AssistantController {
     private final AssistantDefinitionRepository assistantRepo;
 
     private final AiTaskRegistry aiTaskRegistry;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     public AssistantController(AiService aiService, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, AiTaskRegistry aiTaskRegistry) {
@@ -73,6 +82,13 @@ public class AssistantController {
         return responseDto;
     }
 
+    /** Runs a page chat turn with validated files that are not saved to chat history. */
+    @PostMapping(value = "/response/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public AssistantResponseDTO uploadResponse(@RequestParam String message, @RequestParam("files") List<MultipartFile> files,
+        HttpServletRequest request) {
+        return getAiReponse(uploadInput(message, files), request);
+    }
+
     @PostMapping(value = "/response-image/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiImageReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
         AssistantResponseDTO responseDto = null;
@@ -93,7 +109,8 @@ public class AssistantController {
         return responseDto;
     }
 
-    @PostMapping(value="/response-stream/", produces = { MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_NDJSON_VALUE })
+    @PostMapping(value="/response-stream/", consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = { MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_NDJSON_VALUE })
     public void streamData(@RequestBody InputDataDTO inputData, HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Older clients keep the plain-text format; the admin UI explicitly requests framed messages.
         boolean framed = MediaType.parseMediaTypes(request.getHeader("Accept")).stream()
@@ -135,6 +152,40 @@ public class AssistantController {
             }
             writer.close();
         }
+    }
+
+    /** Streams a page chat turn using the same upload validation and cancellation as ordinary turns. */
+    @PostMapping(value = "/response-stream/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+        produces = { MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_NDJSON_VALUE })
+    public void uploadStream(@RequestParam String message, @RequestParam("files") List<MultipartFile> files,
+        HttpServletRequest request, HttpServletResponse response) throws IOException {
+        streamData(uploadInput(message, files), request, response);
+    }
+
+    private InputDataDTO uploadInput(String message, List<MultipartFile> files) {
+        InputDataDTO input;
+        try {
+            input = mapper.readValue(message, InputDataDTO.class);
+        } catch (IOException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalidInput");
+        }
+        if (input == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalidInput");
+        input.setChatAttachments(AiChatAttachments.read(files));
+        return input;
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> tooLarge() {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of("error", "attachmentLimit"));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> uploadError(ResponseStatusException exception) {
+        return ResponseEntity.status(exception.getStatusCode())
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of("error", exception.getReason() == null ? "generationFailed" : exception.getReason()));
     }
 
     @GetMapping("/file/binary/")

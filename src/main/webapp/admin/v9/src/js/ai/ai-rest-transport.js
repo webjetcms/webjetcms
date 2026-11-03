@@ -16,7 +16,8 @@ export async function requestAiText(inputData, { streaming = false, signal, onDe
         "Accept": streaming ? "application/x-ndjson" : "application/json",
         "X-CSRF-Token": window.csrfToken
     };
-    if (endpoint && inputData.files?.length) {
+    const multipart = inputData.files?.length > 0;
+    if (multipart) {
         const { files, ...message } = inputData;
         body = new FormData();
         body.append('message', JSON.stringify(message));
@@ -34,7 +35,7 @@ export async function requestAiText(inputData, { streaming = false, signal, onDe
     });
     if (!response.ok) {
         let detail;
-        if (endpoint) {
+        if (endpoint || multipart) {
             try { detail = await response.json(); } catch (error) { /* Use the HTTP status if there is no JSON error. */ }
         } else await response.body?.cancel();
         checkAiResponse(response, typeof detail?.error === 'string'

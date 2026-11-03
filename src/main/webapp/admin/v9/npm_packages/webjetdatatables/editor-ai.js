@@ -316,6 +316,7 @@ export class EditorAi {
             conversation = { key, button, column, aiCol, selection: null, undo: null, applying: false, revision: 0 };
             conversation.chat = new AiChat({
                 assistant: aiCol,
+                showAttachment: true,
                 getInputData: () => ({
                     inputValue: this._isChatSelectionValid(conversation.selection)
                         ? conversation.selection.inputValue : this.EDITOR.get(conversation.aiCol.from || conversation.aiCol.to),
@@ -336,6 +337,8 @@ export class EditorAi {
         conversation.column = column;
         conversation.aiCol = aiCol;
         conversation.chat.assistant = aiCol;
+        conversation.chat.options.allowAttachments = ['openai', 'gemini'].includes(aiCol.provider)
+            && this._getColumnType(column, aiCol.from) === 'text';
         conversation.selection = this._captureChatSelection(column, aiCol);
         return conversation;
     }
