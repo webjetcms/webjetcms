@@ -8,8 +8,6 @@ Ak pripravujete nové web sídlo môžete vopred pripraviť stromovú štruktúr
 
 ## Exportovanie web stránok
 
-Pri obrázkoch vložených cez adresu `/thumb/...` sa do ZIP archívu pribalí pôvodný obrázok. Adresa obrázka v HTML vrátane parametrov rozmerov zostane zachovaná, takže po importe môže WebJET CMS opäť vytvoriť požadovaný náhľad.
-
 Najprv sa uistite, či sa nachádzate v adresári, ktorý chcete exportovať. Otvorte ponuku **Ďalšie akcie** a vyberte **Import/Export**. Pre štandardný export obsahu zvoľte v tomto okne možnosť **Exportovať web stránky do ZIP archívu (xml)** a spustite export vo zvolenej vetve stromu stránok tlačidlo s textom **OK**.
 
 Výstup by mal vyzerať podobne ako na nasledujúcom obrázku. Úplne na konci výstupu sa zobrazí odkaz na ZIP súbor k stiahnutiu. Ponúknutý súbor si stiahnete na váš počítač. Tento súbor budete môcť následne použiť na import na inom prostredí CMS WebJET.
