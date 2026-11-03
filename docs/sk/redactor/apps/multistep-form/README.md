@@ -231,7 +231,7 @@ Každá podmienka obsahuje tieto parametre:
   - **končí na**
   - **je prázdne**
   - **nie je prázdne**
-- **Porovnávaná hodnota** - hodnota, voči ktorej sa porovná obsah vybraného poľa. Pri výberových zoznamoch, skupinách výberových a zaškrtávacích polí a samostatných rádiových tlačidlách vyberáte z možností daného poľa. Zobrazuje sa text možnosti, uloží sa jej hodnota. Podporované sú aj možnosti z číselníka. Pri ostatných poliach zadávate text. Prázdnu hodnotu overíte podmienkou **je prázdne** alebo **nie je prázdne**.
+- **Porovnávaná hodnota** - hodnota, voči ktorej sa porovná obsah vybraného poľa. Pri výberových zoznamoch, skupinách výberových a zaškrtávacích polí a samostatných rádiových tlačidlách vyberáte pre podmienky **rovná sa** a **nerovná sa** z možností daného poľa. Zobrazuje sa text možnosti, uloží sa jej hodnota. Podporované sú aj možnosti z číselníka. Pri podmienkach **obsahuje**, **neobsahuje**, **začína na** a **končí na** aj pri ostatných poliach zadávate text. Prázdnu hodnotu overíte podmienkou **je prázdne** alebo **nie je prázdne**.
 - **Ignorovať veľkosť písmen** - porovnanie nebude citlivé na veľké/malé písmená. Voľba sa zobrazuje iba pri ručnom zadávaní porovnávanej hodnoty, pri výbere z preddefinovaných možností je skrytá.
 - **Logický operátor** - spojenie s nasledujúcou podmienkou:
   - `AND` - musia platiť obe podmienky,

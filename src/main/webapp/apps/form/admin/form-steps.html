@@ -736,7 +736,9 @@
                 table.EDITOR.field("value").val("");
                 if (Array.isArray(source?.original)) table.EDITOR.field("caseInsensitive").val(false);
             }
-            table.EDITOR.field("value").update(source?.original ?? null);
+            const operator = (table.EDITOR.field("operator").val() || "").toUpperCase();
+            const useText = ["CONTAINS", "NOT_CONTAINS", "STARTS_WITH", "ENDS_WITH"].includes(operator);
+            table.EDITOR.field("value").update(useText ? null : source?.original ?? null);
             updateOperatorFields();
         }
 
@@ -755,7 +757,7 @@
             $(table.EDITOR.field("itemFormId").input()).off("change.conditionValue")
                 .on("change.conditionValue", (event, data) => updateValueOptions(data?.editor !== true));
             $(table.EDITOR.field("operator").input()).off("change.conditionValue")
-                .on("change.conditionValue", updateOperatorFields);
+                .on("change.conditionValue", () => updateValueOptions(false));
             updateValueOptions(false);
 
             if (table.DATA.id === "datatableFieldDTE_Field_visibilityConditions") {
