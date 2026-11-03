@@ -2,6 +2,7 @@
 <script type="text/javascript" src="/components/_common/javascript/jquery.browser.js"></script>
 <script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.js"></script>
 <script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.icon.js"></script>
+<script type="text/javascript" src="/apps/form/admin/form-condition-value.js"></script>
 
 <script data-th-inline="javascript">
     window.helpLink = "/redactor/apps/multistep-form/README";
@@ -723,17 +724,41 @@
     });
 
     function bindTableEvent(table) {
+        table.EDITOR.on('close', function() {
+            $(table.EDITOR.field("itemFormId").input()).off("change.conditionValue");
+            $(table.EDITOR.field("operator").input()).off("change.conditionValue");
+        });
+
+        function updateValueOptions(clearValue) {
+            const sourceId = table.EDITOR.field("itemFormId").val();
+            const source = table.DATA.jsonOptions?.itemFormId?.find(option => option.value === sourceId);
+            if (clearValue) {
+                table.EDITOR.field("value").val("");
+                if (Array.isArray(source?.original)) table.EDITOR.field("caseInsensitive").val(false);
+            }
+            const operator = (table.EDITOR.field("operator").val() || "").toUpperCase();
+            const useText = ["CONTAINS", "NOT_CONTAINS", "STARTS_WITH", "ENDS_WITH"].includes(operator);
+            table.EDITOR.field("value").update(useText ? null : source?.original ?? null);
+            updateOperatorFields();
+        }
+
+        function updateOperatorFields() {
+            const operator = table.EDITOR.field("operator").val() || "";
+            const hideValue = conditionsWithoutValue.includes(operator.toUpperCase());
+            const hasOptions = $(table.EDITOR.field("value").input()).is("select");
+            if (hideValue) table.EDITOR.field("value").hide();
+            else table.EDITOR.field("value").show();
+            if (hideValue || hasOptions) table.EDITOR.field("caseInsensitive").hide();
+            else table.EDITOR.field("caseInsensitive").show();
+        }
+
         table.EDITOR.on('open', function(e, mode, action) {
-            $("#" + table.DATA.id + "_modal #DTE_Field_operator").on("change", function() {
-                const operator = table.EDITOR.field("operator").val();
-                if(conditionsWithoutValue.includes(operator.toUpperCase())) {
-                    table.EDITOR.field("value").hide();
-                    table.EDITOR.field("caseInsensitive").hide();
-                } else {
-                    table.EDITOR.field("value").show();
-                    table.EDITOR.field("caseInsensitive").show();
-                }
-            });
+            // Editor emits a deferred change event when restoring the saved source field.
+            $(table.EDITOR.field("itemFormId").input()).off("change.conditionValue")
+                .on("change.conditionValue", (event, data) => updateValueOptions(data?.editor !== true));
+            $(table.EDITOR.field("operator").input()).off("change.conditionValue")
+                .on("change.conditionValue", () => updateValueOptions(false));
+            updateValueOptions(false);
 
             if (table.DATA.id === "datatableFieldDTE_Field_visibilityConditions") {
                 $("#datatableFieldDTE_Field_visibilityConditions_modal #DTE_Field_infolabel").text("[[#{components.form_items_condition.infolabel.visibility}]]");
