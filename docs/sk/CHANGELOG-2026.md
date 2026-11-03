@@ -319,6 +319,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Webové stránky - opravený [export do ZIP archívu](redactor/webpages/import-export.md) pre obrázky vložené cez `/thumb/`, ktoré sa pôvodne do exportu nepridali (#389).
 - Webové stránky - dialóg na vloženie obrázka obmedzuje výber súborov na obrázky, videá a zvukové súbory aj v priečinku Súbory. Nepodporované typy rozpoznané prehliadačom odmietne ešte pred odoslaním. Server navyše overí príponu pred uložením (#375).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránky (#372).
 - Spring aplikácie - [chyba pri vytvorení alebo vykonaní aplikácie](custom-apps/spring-mvc/README.md#chyba-pri-vykonávaní-aplikácie) nahradí iba jej značku `INCLUDE`. Okolitý text, JSP aplikácie aj ostatné Spring aplikácie zostanú na stránke zachované a hláška uvedie názov aplikácie, ktorá zlyhala (#384).
@@ -336,6 +337,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Editor stránok - pri zlyhaní získania obsahu alebo hodnote `undefined` sa zobrazí chyba a uloženie sa zastaví, aby sa neprepísal pôvodný obsah. Atribúty `contenteditable` sa odstraňujú pri načítaní aj ukladaní HTML vrátane kódu vloženého v HTML režime (#369).
 - Page Builder - pri zlyhaní načítania obsahu možno prepnúť do HTML režimu obnovením posledného dostupného HTML. Obnova vyžaduje potvrdenie, pretože nemusí obsahovať najnovšie zmeny (#369).
 - Page Builder - opravené zamrznutie editora pri otvorení HTML so zvyšným atribútom `contenteditable="true"`. CKEditor sa na rovnakom bloku už neinicializuje dvakrát.
+- Page Builder - obnovenie fokusu po vložení obsahu alebo štrukturálneho bloku, presune, duplikovaní a zatvorení vlastností či knižnice neposúva stránku k začiatku editora. Oprava funguje aj v šablónach s plynulým posúvaním (`scroll-behavior: smooth`) (#389).
 - Page Builder - nepodporované elementy označené `pb-editable`, napríklad položky zoznamu `li`, už nezablokujú prepnutie z HTML editora. Ich obsah zostáva zachovaný a možno ho upravovať cez nadradenú editovateľnú oblasť (#382).
 - Page Builder - vnorené značky `pb-editable` a `pb-content` sa odstránia pred spustením editora. V jednom bloku nevznikajú vnorené CKEditory a pri vytváraní odsekov či zoznamov sa nekopíruje nadbytočné označenie. Text a ostatné CSS triedy zostávajú zachované (#382).
 - Email - opravené ovplyvňovanie SMTP nastavení medzi aplikáciami na spoločnom aplikačnom serveri. Každé odoslanie používa vlastné properties a mailovú session, takže sa neprenáša SSL port, autentifikácia ani nastavenia Amazon SES z inej aplikácie (#367).
