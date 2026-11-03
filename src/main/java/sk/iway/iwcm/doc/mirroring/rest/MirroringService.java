@@ -95,6 +95,30 @@ public class MirroringService {
     }
 
     /**
+     * Returns page diagnostics keyed by page ID, retaining the mapping's sync ID in each DTO.
+     * Uses the same domain scope and validation as the page mirroring table.
+     * @param request current administration request
+     * @return only pages in mappings with duplicate languages or uneven nesting
+     */
+    public static Map<Integer, MirroringDTO> getPageProblems(HttpServletRequest request) {
+        MirroringService service = new MirroringService();
+        service.setSupportValues(request);
+        Map<Integer, Integer> syncIds = service.getDocSyncMap();
+        Map<Integer, MirroringDTO> problemsBySyncId = new HashMap<>();
+        for (MirroringDTO item : service.getDocsData(service.docsDb.getBasicDocDetailsAll(), syncIds)) {
+            if (Tools.isTrue(item.getMultipleErr()) || Tools.isTrue(item.getNestingWarn())) {
+                problemsBySyncId.put(item.getId().intValue(), item);
+            }
+        }
+        Map<Integer, MirroringDTO> problems = new HashMap<>();
+        syncIds.forEach((docId, syncId) -> {
+            MirroringDTO problem = problemsBySyncId.get(syncId);
+            if (problem != null) problems.put(docId, problem);
+        });
+        return problems;
+    }
+
+    /**
      * Return page with MirroringDTO items. Items are paged and sorted. EditorFields are not set yet.
      * @param pageable
      * @param request
@@ -431,9 +455,11 @@ public class MirroringService {
      * @return
      */
     private List<MirroringDTO> getDocsData() {
+        return getDocsData(docsDb.getBasicDocDetailsAll(), getDocSyncMap());
+    }
 
-        List<DocDetails> docs = docsDb.getBasicDocDetailsAll();
-
+    /** Loads sync IDs separately because basic cached page metadata does not contain them. */
+    private Map<Integer, Integer> getDocSyncMap() {
         String sql = "SELECT doc_id, sync_id FROM documents WHERE sync_id IS NOT NULL AND sync_id > 0";
 
         Map<Integer, Integer> docSyncMap = new HashMap<>();
@@ -449,7 +475,7 @@ public class MirroringService {
             }
         });
 
-        return getDocsData(docs, docSyncMap);
+        return docSyncMap;
     }
 
     /**

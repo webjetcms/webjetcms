@@ -346,8 +346,8 @@ public class GroupsTreeService {
         return EditorService.hasPagePermission(user, doc);
     }
 
-    /** Applies mirroring diagnostics only to permitted folders in the main webpage tree. */
-    private void setMirroringIcons(List<JsTreeItem> items, Identity user, String click, HttpServletRequest request) {
+    /** Applies mirroring diagnostics only to permitted folders and pages in the main webpage tree. */
+    void setMirroringIcons(List<JsTreeItem> items, Identity user, String click, HttpServletRequest request) {
         if (user.isEnabledItem("cmp_mirroring") == false || user.isEnabledItem("menuWebpages") == false) return;
         if (Arrays.asList("dt-tree-group-filter-system-trash", "dt-tree-filter-system-trash",
                 "dt-tree-group-system", "dt-tree-system", "dt-tree-group-trash", "dt-tree-trash",
@@ -374,18 +374,30 @@ public class GroupsTreeService {
                 MirroringDTO problem = problems.get(group.getSyncId());
                 if (problem == null) continue;
 
-                String icon;
-                String title;
-                if (Tools.isTrue(problem.getMultipleErr())) {
-                    icon = "ti ti-exclamation-circle text-danger";
-                    title = prop.getText("components.mirroring.multiple_mapping_err");
-                } else {
-                    icon = "ti ti-alert-triangle text-warning";
-                    title = prop.getText("components.mirroring.uneven_nesting_err");
+                groupItem.setMirroringProblem(toMirroringProblem(problem, prop));
+            } else if (item instanceof DocumentsJsTreeItem pageItem && canShowPageMirror(pageItem.getDocDetails(), user)) {
+                String pageCacheKey = GroupsTreeService.class.getName() + ".pageMirroringProblems";
+                @SuppressWarnings("unchecked")
+                Map<Integer, MirroringDTO> pageProblems = (Map<Integer, MirroringDTO>) request.getAttribute(pageCacheKey);
+                if (pageProblems == null) {
+                    pageProblems = MirroringService.getPageProblems(request);
+                    request.setAttribute(pageCacheKey, pageProblems);
                 }
-                groupItem.setMirroringProblem(new GroupsJsTreeItem.MirroringProblem(icon, title));
+                MirroringDTO problem = pageProblems.get(pageItem.getDocDetails().getDocId());
+                if (problem != null) pageItem.setMirroringProblem(toMirroringProblem(problem, prop));
             }
         }
+    }
+
+    /** Keeps the error priority and mapping identifier consistent for folder and page links. */
+    private GroupsJsTreeItem.MirroringProblem toMirroringProblem(MirroringDTO problem, Prop prop) {
+        String icon = "ti ti-alert-triangle text-warning";
+        String title = prop.getText("components.mirroring.uneven_nesting_err");
+        if (Tools.isTrue(problem.getMultipleErr())) {
+            icon = "ti ti-exclamation-circle text-danger";
+            title = prop.getText("components.mirroring.multiple_mapping_err");
+        }
+        return new GroupsJsTreeItem.MirroringProblem(icon, title, problem.getId().intValue());
     }
 
     /** Resolves the shared mirroring toggle for both initial rendering and tree reloads. */

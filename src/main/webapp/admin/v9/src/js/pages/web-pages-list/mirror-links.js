@@ -59,14 +59,17 @@ export function bindMirrorLinks() {
             group.setAttribute("role", "group");
             group.setAttribute("aria-label", isPage ? treeElement.dataset.mirrorsPagesLabel : treeElement.dataset.mirrorsLabel);
             if (problem) {
+                const link = document.createElement("a");
+                link.className = "jstree-mirror-problem";
+                link.href = `/admin/v9/webpages/mirroring/?id=${problem.syncId}${isPage ? "#pills-docs" : ""}`;
+                link.dataset.bsTitle = problem.title;
+                link.setAttribute("aria-label", problem.title);
                 const icon = document.createElement("i");
                 icon.className = problem.icon;
-                icon.title = problem.title;
-                icon.tabIndex = 0;
-                icon.setAttribute("role", "img");
-                icon.setAttribute("aria-label", problem.title);
-                group.append(icon);
-                tooltips.add(icon);
+                icon.setAttribute("aria-hidden", "true");
+                link.append(icon);
+                group.append(link);
+                tooltips.add(link);
             }
             const menu = document.createElement("div");
             menu.className = "dropdown-menu jstree-mirror-menu";
@@ -107,7 +110,7 @@ export function bindMirrorLinks() {
                 dropdowns.add(more);
             }
             anchor.after(group);
-            WJ.initTooltip($(group).find("i, .jstree-mirror-link"));
+            WJ.initTooltip($(group).find(".jstree-mirror-problem, .jstree-mirror-link"));
             anchor.parentElement.classList.add("jstree-has-mirrors");
         });
         highlight();

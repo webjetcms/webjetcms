@@ -3,7 +3,7 @@ Feature('webpages.mirroring-preview').tag('@singlethread');
 const WebjetDteJsTree = require('../../pages/WebjetDteJsTree');
 
 const pageUrl = '/admin/v9/webpages/web-pages-list/';
-const domain = 'mirroring.tau27.iway.sk';
+const domain = process.env.CODECEPT_MIRRORING_DOMAIN || 'mirroring.tau27.iway.sk';
 const configName = 'structureMirroringConfig';
 const groupModal = '#groups-datatable_modal';
 const pageModal = '#datatableInit_modal';
@@ -259,6 +259,38 @@ Scenario('Open mirrored pages from language links in the tree', async ({ I, DT, 
     showMirroring(I, false);
     I.dontSeeElement('#SomStromcek .jstree-mirrors');
     showMirroring(I, true);
+});
+
+Scenario('Open the affected folder and page mappings from warning icons', async ({ I, DT, DTE }) => {
+    const mappings = await syncMembers(I, DT, DTE, pageTitle);
+    openFolder(I, DT, folders.sk);
+    I.click('button.buttons-jstree-settings');
+    I.waitForVisible('#jstreeSettingsModal', 10);
+    I.checkOption('#jstree-settings-showpages');
+    I.checkOption('#jstree-settings-showbadmirrorings');
+    I.click('#jstree-settings-submit');
+    I.waitForInvisible('#jstreeSettingsModal', 10);
+    I.jstreeWaitForLoader();
+
+    for (const [index, type] of ['groups', 'docs'].entries()) {
+        openFolder(I, DT, folders.sk);
+        if (await I.grabNumberOfVisibleElements(node(folders.sk) + '.jstree-closed')) I.click(node(folders.sk) + ' > .jstree-ocl');
+        const source = type === 'groups' ? node(folders.sk) : '#docId-' + folders.sk.docId;
+        const link = source + ' > .jstree-mirrors > a.jstree-mirror-problem';
+        const href = '/admin/v9/webpages/mirroring/?id=' + mappings[index].syncId + (type === 'docs' ? '#pills-docs' : '');
+        I.waitForVisible(link, 20);
+        I.seeElement(link + ' .ti-exclamation-circle.text-danger');
+        I.assertEqual(await I.grabAttributeFrom(link, 'href'), href);
+        I.click(link);
+        const table = type + 'MirroringTable';
+        DTE.waitForEditor(table);
+        I.seeElement('#pills-' + type + '-tab.active');
+        I.seeNumberOfElements('div.modal.show', 1);
+        I.dontSeeElement('#mirroringConfDataTable_modal');
+        const members = (await I.grabValueFromAll('#' + table + '_modal input[id^="DTE_Field_selector"]')).map(Number).filter(id => id > 0).sort((a, b) => a - b);
+        I.assertDeepEqual(members, mappings[index].members);
+        DTE.cancel(table);
+    }
 });
 
 Scenario('Hide mirror links without the mirroring permission', ({ I }) => {
@@ -592,7 +624,9 @@ Scenario('Restore settings and remove own fixtures through the UI', async ({ I, 
         DTE.cancel();
     }
     I.amOnPage(pageUrl);
-    Document.switchDomain(domain);
+    if ((await I.grabTextFrom('div.js-domain-toggler div.bootstrap-select button')).trim() !== domain) {
+        Document.switchDomain(domain);
+    }
     if (originalConfig !== undefined) Document.setConfigValue(configName, originalConfig, true);
     if (originalTitleSync !== undefined) Document.setConfigValue('syncGroupAndWebpageTitle', originalTitleSync, true);
     I.amOnPage(pageUrl);

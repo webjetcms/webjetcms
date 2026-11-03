@@ -38,7 +38,7 @@ Rovnaké kontroly môžete zobraziť priamo v sekcii **Web stránky**. V [nastav
 
 ![Červené upozornenie na zlé mapovanie a žlté upozornenie na nerovnomerné vnorenie](tree-problems.png)
 
-Voľba je dostupná používateľom s právom na **Zrkadlenie štruktúry**. Ikona priečinka bez prístupu <i class="ti ti-folder-x" role="presentation"></i> sa zachová. Upozornenie pomáha nájsť problém; samotné prepojenie upravíte v tejto sekcii na karte **Priečinky**.
+Voľba je dostupná používateľom s právom na **Zrkadlenie štruktúry**. Ikona priečinka bez prístupu <i class="ti ti-folder-x" role="presentation"></i> sa zachová. Kliknutím na upozornenie otvoríte priamo editor príslušného mapovania na karte **Priečinky**. Odkaz používa Sync ID mapovania, nie ID priečinka.
 
 ## Vymazanie/zrušenie previazania
 

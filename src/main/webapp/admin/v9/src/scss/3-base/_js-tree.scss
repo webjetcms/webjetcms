@@ -36,8 +36,19 @@
     border: 1px solid transparent;
     border-left: 0;
     border-radius: 0 $border-radius $border-radius 0;
-    > .ti { font-size: 16px; }
     [hidden] { display: none; }
+  }
+  .jstree-mirror-problem {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
+    border-radius: 4px;
+    text-decoration: none;
+    > .ti { font-size: 16px; }
+    &:hover { background: mix($primary, $white, 5%); }
+    &:focus-visible { outline: 2px solid $secondary; outline-offset: 2px; }
   }
   .jstree-mirror-link, .jstree-mirror-more {
     display: inline-flex;

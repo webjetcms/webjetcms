@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.sql.ResultSet;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
@@ -19,9 +20,11 @@ import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.doc.mirroring.dto.MirroringDTO;
+import sk.iway.iwcm.doc.mirroring.rest.MirroringService;
 import sk.iway.iwcm.i18n.Prop;
 
-/** Covers page language links when the tree's basic page cache has no sync IDs. */
+/** Covers page language links and diagnostics when the tree's basic page cache has no sync IDs. */
 class GroupsTreePageMirrorsTest {
     /** Filters inaccessible, foreign-domain and deleted pages and reuses the request-local batch. */
     @Test
@@ -37,6 +40,7 @@ class GroupsTreePageMirrorsTest {
                 MockedStatic<Prop> translations = mockStatic(Prop.class);
                 MockedStatic<EditorService> permissions = mockStatic(EditorService.class);
                 MockedStatic<GroupMirroringServiceV9> languages = mockStatic(GroupMirroringServiceV9.class);
+                MockedStatic<MirroringService> diagnostics = mockStatic(MirroringService.class);
                 MockedConstruction<ComplexQuery> queries = mockConstruction(ComplexQuery.class, (query, context) -> {
                     when(query.setSql(anyString())).thenReturn(query);
                     when(query.setParams(any(Object[].class))).thenReturn(query);
@@ -92,6 +96,34 @@ class GroupsTreePageMirrorsTest {
             service.setMirroringLinks(List.of(reloaded), user, "dt-tree-filter-system-trash", request);
             assertEquals(node.getMirrors(), reloaded.getMirrors());
             assertEquals(1, queries.constructed().size());
+
+            // Diagnostics carry the mapping ID, which differs from both page and folder IDs.
+            when(user.isEnabledItem("cmp_mirroring")).thenReturn(true);
+            when(user.isEnabledItem("menuWebpages")).thenReturn(true);
+            translations.when(() -> Prop.getInstance(request)).thenReturn(prop);
+            MirroringDTO pageProblem = new MirroringDTO();
+            pageProblem.setId(500L);
+            pageProblem.setNestingWarn(true);
+            MirroringDTO groupProblem = new MirroringDTO();
+            groupProblem.setId(700L);
+            groupProblem.setMultipleErr(true);
+            groupProblem.setNestingWarn(true);
+            group.setSyncId(700);
+            diagnostics.when(() -> MirroringService.getGroupProblems(request)).thenReturn(Map.of(700, groupProblem));
+            diagnostics.when(() -> MirroringService.getPageProblems(request)).thenReturn(Map.of(10, pageProblem));
+            GroupsJsTreeItem folder = new GroupsJsTreeItem(group, user, true);
+            service.setMirroringIcons(List.of(folder, node), user, "dt-tree", request);
+            assertEquals(500, node.getMirroringProblem().syncId());
+            assertEquals("ti ti-alert-triangle text-warning", node.getMirroringProblem().icon());
+            assertEquals(700, folder.getMirroringProblem().syncId());
+            assertEquals("ti ti-exclamation-circle text-danger", folder.getMirroringProblem().icon());
+            service.setMirroringIcons(List.of(reloaded), user, "dt-tree", request);
+            assertEquals(node.getMirroringProblem(), reloaded.getMirroringProblem());
+            diagnostics.verify(() -> MirroringService.getPageProblems(request), times(1));
+            permissions.when(() -> EditorService.hasPagePermission(user, source)).thenReturn(false);
+            DocumentsJsTreeItem forbidden = new DocumentsJsTreeItem(source, 10);
+            service.setMirroringIcons(List.of(forbidden), user, "dt-tree", request);
+            assertNull(forbidden.getMirroringProblem());
         }
     }
 

@@ -36,8 +36,8 @@ public class GroupsJsTreeItem extends JsTreeItem {
     @Setter
     private MirroringProblem mirroringProblem;
 
-    /** Icon and localized accessible description of a mirroring problem. */
-    public record MirroringProblem(String icon, String title) { }
+    /** Icon, localized accessible description and mapping ID of a mirroring problem. */
+    public record MirroringProblem(String icon, String title, int syncId) { }
 
     public GroupsJsTreeItem(GroupDetails group, UserDetails user, boolean showPages) {
         this(group, user, showPages, true);

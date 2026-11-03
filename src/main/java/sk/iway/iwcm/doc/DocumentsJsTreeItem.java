@@ -23,6 +23,11 @@ public class DocumentsJsTreeItem extends JsTreeItem {
     /** Navigation metadata for one permitted mirrored page. */
     public record MirrorLink(int docId, String language, String path) { }
 
+    /** Optional diagnostic linking to this page's synchronization mapping. */
+    @Getter
+    @Setter
+    private GroupsJsTreeItem.MirroringProblem mirroringProblem;
+
     public DocumentsJsTreeItem(DocDetails docDetails, int groupDefaultDocId) {
         this.docDetails = docDetails;
 
