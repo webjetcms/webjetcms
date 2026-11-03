@@ -41,7 +41,13 @@ Pri presune do iného zrkadleného priečinka sa presunú existujúce jazykové 
 
 Zvyšné vlastnosti adresárov/stránok ostávajú zachované a nemajú vplyv na svoj ekvivalent v druhej jazykovej mutácii.
 
-Pred zmazaním sa v potvrdzovacom okne zobrazí [zoznam zrkadlených stránok alebo priečinkov](../../webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa zmažú spolu s vybranou položkou. V stromovej štruktúre môžete pomocou [jazykových odkazov](../../webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) prejsť do prepojeného priečinka a zapnúť si [upozornenia na chybné previazania](../../webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre).
+Pred zmazaním sa v potvrdzovacom okne zobrazí [zoznam zrkadlených stránok alebo priečinkov](../../webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa zmažú spolu s vybranou položkou.
+
+![](../../webpages/mirroring/delete-groups.png)
+
+V stromovej štruktúre môžete pomocou [jazykových odkazov](../../webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) prejsť do prepojeného priečinka a zapnúť si [upozornenia na chybné previazania](../../webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre).
+
+![](../../webpages/mirroring/tree-problems.png)
 
 ## Vytvorenie odkazu na jazykové mutácie v hlavičke stránky
 

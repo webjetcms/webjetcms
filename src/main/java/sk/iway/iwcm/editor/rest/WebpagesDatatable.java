@@ -331,6 +331,9 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     public boolean checkItemPerms(DocDetails entity, Long id) {
         if (getUser() == null) return false;
 
+        // A selected page may already have been deleted through its mirror in this request.
+        // Its permissions were checked before deletion; do not reject it now because it is in Trash or missing.
+        // The deletion service also checks this marker and skips deleting the page again.
         if (id != null && DeleteRequestContext.isDeleted(DocDetails.class, id.intValue())) return true;
 
         // The action endpoint uses -1 for actions without a selected record.

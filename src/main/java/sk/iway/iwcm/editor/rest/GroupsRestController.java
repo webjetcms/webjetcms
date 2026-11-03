@@ -87,8 +87,15 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         this.deleteMirrorsService = deleteMirrorsService;
     }
 
-    @PostMapping("/delete-mirrors")
-    public DeleteMirrorsResult getDeleteMirrors(@RequestParam("ids") List<Integer> ids) {
+    /**
+     * Previews additional mirrored folders affected by deleting the selected folders, without deleting data.
+     * Called by {@code bindDeleteMirrors} when the folder delete confirmation opens, before submission is enabled.
+     *
+     * @param ids IDs of the folders selected for deletion
+     * @return unique additional mirrors with accessible paths and a flag indicating any inaccessible mirrors
+     */
+    @PostMapping("/deletion-preview")
+    public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
         return deleteMirrorsService.getGroupMirrors(ids, getUser());
     }
 
@@ -774,6 +781,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             throwError("admin.delete.deleteDirDisabled.error");
             return false;
         }
+        // A previous selected folder may already have deleted this folder through mirroring or as a descendant.
+        // Treat this row as completed instead of validating its new Trash location or deleting it again.
         if (DeleteRequestContext.isDeleted(GroupDetails.class, (int) id)) return true;
 
         List<String> errors = new ArrayList<>();
@@ -958,6 +967,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean checkItemPerms(GroupDetails entity, Long id) {
+        // Mirroring or parent deletion may already have processed this selected folder in the same request.
+        // Allow the completed row through; deleteItem will skip it without checking its changed location again.
         if (id != null && DeleteRequestContext.isDeleted(GroupDetails.class, id.intValue())) return true;
         if (InitServlet.isTypeCloud() && entity.getGroupId()>0) {
             GroupDetails old = GroupsDB.getInstance().getGroup(entity.getGroupId());

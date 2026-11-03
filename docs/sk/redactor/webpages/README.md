@@ -45,15 +45,11 @@ Zároveň pri prechádzaní stromovej štruktúry sa v adresnom riadku prehliada
 
 ### Prechod medzi zrkadlenými priečinkami
 
-Po zapnutí voľby **Zobraziť zrkadlenie** v nastavení stromovej štruktúry sa pri priečinkoch prepojených [zrkadlením štruktúry](../apps/docmirroring/README.md) na pravom okraji riadka zobrazia skratky jazykov ostatných prepojených priečinkov, napríklad **DE** a **EN**. Odkazy sú stále viditeľné ako sivý text bez rámčeka. Pri prejdení kurzorom alebo zameraní klávesnicou sa konkrétny odkaz zvýrazní modrou farbou a podčiarknutím. Kliknutím na skratku otvoríte príslušný priečinok aj jeho zoznam stránok. Po podržaní kurzora nad odkazom alebo jeho zameraní klávesnicou sa v bubline zobrazí iba cesta a ID cieľového priečinka, napríklad `/English/Pre biznis/Megamenu (#201)`. Bublinu zatvoríte aj klávesom `Escape`.
+Po zapnutí voľby **Zobraziť zrkadlenie** v nastavení stromovej štruktúry sa pri priečinkoch prepojených [zrkadlením štruktúry](../apps/docmirroring/README.md) na pravom okraji riadka zobrazia skratky jazykov ostatných prepojených priečinkov, napríklad **DE** a **EN**.
 
-Ak zapnete aj voľbu **Web Stránky**, jazykové odkazy sa zobrazia aj pri prepojených stránkach v strome. Kliknutím na jazyk otvoríte konkrétnu prepojenú stránku v editore, rovnako ako pri zadaní jej ID do poľa **ID / adresa**. Prepojenie sa určuje podľa `sync_id` stránky, aj keď má stránka iný názov alebo je presunutá do iného priečinka. Zobrazujú sa iba dostupné stránky v aktuálnej doméne mimo koša.
-
-Priamo v riadku sú najviac dva odkazy. Ďalšie nájdete v ponuke **+N**, kde číslo označuje počet ďalších prepojených priečinkov alebo stránok. Jazyk sa preberá z nastavenia priečinka, jeho nadradených priečinkov alebo šablóny.
+![](mirroring/tree-navigation.png)
 
 Prepojené priečinky aktuálneho výberu sú v načítanej časti stromu zvýraznené. Ak je aktívne vyhľadávanie v strome, pri prechode cez jazykový odkaz sa zruší, aby sa mohol zobraziť cieľový priečinok.
-
-![Jazykové odkazy medzi zrkadlenými priečinkami](mirroring/tree-navigation.png)
 
 Odkazy sú dostupné používateľom s právom na **Zrkadlenie štruktúry** a zobrazujú len priečinky a stránky, ku ktorým majú prístup v rámci zvolenej domény. V kartách **Systémové**, **Zmazané** ani vo výberových poliach priečinkov sa jazykové odkazy nezobrazujú.
 
@@ -77,11 +73,7 @@ Ak označíte naraz viac navzájom zrkadlených stránok alebo priečinkov, kaž
 
 ![Potvrdenie zmazania priečinka so zoznamom zrkadlených priečinkov](mirroring/delete-groups.png)
 
-Zoznam obsahuje priamo prepojené stránky alebo priečinky. Pri priečinkoch nerozpisuje všetky ich podpriečinky a stránky. Ak sa mazanie týka aj zrkadlených položiek, ku ktorým nemáte prístup, zobrazí sa všeobecné upozornenie bez ich názvov a ciest.
-
-Pri mazaní web stránky sa pred vykonaním operácie overia práva ku všetkým jej zrkadleným verziám. Ak k niektorej z nich nemáte potrebné práva, zobrazí sa chyba a zdrojová stránka ani jej zrkadlené verzie sa nezmažú. Všeobecné upozornenie v náhľade teda neznamená, že máte právo tieto stránky zmazať. Na zmazanie priečinka potrebujete právo na mazanie priečinkov; samotné právo na ich úpravu nestačí.
-
-Tlačidlo **Zmazať** je dostupné až po načítaní zoznamu. Ak sa zoznam nepodarí načítať, mazanie zostane zablokované; zatvorte okno a skúste ho otvoriť znova. Pri položkách bez zrkadlených verzií sa po načítaní žiadne dodatočné upozornenie nezobrazuje.
+Zoznam obsahuje priamo prepojené stránky alebo priečinky bez podpriečinkov.
 
 ### Obnovenie web stránok a adresárov z koša
 
@@ -128,8 +120,8 @@ V stromovej štruktúre priečinkov a stránok sa môžu zobraziť nasledovné t
 - <i class="ti ti-map-pin" role="presentation"></i> stránka je zobrazená v menu
 - <i class="ti ti-map-pin-off" role="presentation"></i> stránka nie je zobrazená v menu
 - <i class="ti ti-folder-x" role="presentation"></i> nemáte práva na editáciu/zmazanie priečinku, v tomto priečinku nebudete vidieť ani žiaden zoznam web stránok (aj keď priečinok v skutočnosti web stránky obsahuje). Používa sa v prípade, keď máte povolené práva len na niektorý z podpriečinkov.
-- <i class="ti ti-exclamation-circle" style="color: #E00028;" role="presentation"></i> viacero zrkadlených priečinkov v rovnakom jazyku; zobrazí sa vpravo pred jazykovými odkazmi pri zapnutej voľbe **Zobraziť zrkadlenie**.
-- <i class="ti ti-alert-triangle" style="color: #fabd00;" role="presentation"></i> zrkadlené priečinky majú rozdielnu hĺbku vnorenia; zobrazí sa vpravo pred jazykovými odkazmi pri zapnutej voľbe **Zobraziť zrkadlenie**.
+- <i class="ti ti-exclamation-circle" style="color: #E00028;" role="presentation"></i> viacero zrkadlených priečinkov v rovnakom jazyku. Zobrazí sa pri zapnutej voľbe **Zobraziť zrkadlenie**.
+- <i class="ti ti-alert-triangle" style="color: #fabd00;" role="presentation"></i> zrkadlené priečinky majú rozdielnu hĺbku vnorenia. Zobrazí sa pri zapnutej voľbe **Zobraziť zrkadlenie**.
 - <i class="ti ti-lock" role="presentation"></i> zámok = dostupné len pre prihláseného návštevníka
 - <span style="color: #E00028">červená farba</span> = nedostupné pre verejnosť (interný adresár) alebo stránka s vypnutým zobrazením
 - <i class="ti ti-star"></i>, **tučné písmo** = hlavná stránka adresára
@@ -145,7 +137,7 @@ V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class
 - **Poradie usporiadania** - Za názvom zobrazí poradie usporiadania vo forme (poradie).
 - **Web Stránky** - Zobrazí v stromovej štruktúre aj web stránky. **Upozornenie:** znižuje výkon a rýchlosť načítania údajov. Možnosť odporúčame zapnúť len ak potrebujete presúvať web stránky pomocou funkcie `Drag&Drop`.
 - **Priečinky stromovej štruktúry ako tabuľku** - Zobrazí kartu Priečinky v datatabuľke. Umožňuje používať funkcie datatabuľky ako hromadné operácie, duplikovať, upraviť v zobrazení mriežky atď. s priečinkami stromovej štruktúry.
-- **Zobraziť zrkadlenie** - Na pravom okraji riadka priečinka zobrazí odkazy na jazykové verzie a upozornenie na [zlé mapovanie alebo nerovnomerné vnorenie](mirroring/groups.md#stav-previazania). Červená ikona označuje viacnásobné mapovanie rovnakého jazyka, žltá rozdielnu hĺbku vnorenia. Pri súbehu oboch problémov má červená ikona prednosť. Voľba je dostupná používateľom s právom na **Zrkadlenie štruktúry** a zapamätá sa pre prihláseného používateľa. Predvolene je vypnutá. Jej vypnutie skryje jazykové odkazy aj upozornenia; bežné ikony priečinkov sa nemenia.
+- **Zobraziť zrkadlenie** - Na pravom okraji zobrazí odkazy na jazykové verzie a upozornenie na [zlé mapovanie alebo nerovnomerné vnorenie](mirroring/groups.md#stav-previazania). Červená ikona označuje viacnásobné mapovanie rovnakého jazyka, žltá rozdielnu hĺbku vnorenia. Pri súbehu oboch problémov má červená ikona prednosť. Voľba je dostupná používateľom s právom na **Zrkadlenie štruktúry** a zapamätá sa pre prihláseného používateľa. Predvolene je vypnutá.
 - **Šírka stromu** - Vyberte pomer šírky stromu a tabuľky (štandardne 4:8) alebo pevnú šírku stromu 120px, 150px, 200px, 250px, 300px, 400px alebo 500px. Pri pevnej šírke sa strom pri zväčšení okna nerozširuje a tabuľka využije zvyšný priestor. Upozornenie: pri niektorých šírkach a nevhodnej veľkosti monitora môže dôjsť k nesprávnemu zobrazeniu nástrojovej lišty/tlačidiel.
 - **Zoradiť strom podľa** - Výber parametra adresára, podľa ktorého sa má strom priečinkov usporiadať. Výberové pole podporuje nasledujúce parametre
   - **Priorita**

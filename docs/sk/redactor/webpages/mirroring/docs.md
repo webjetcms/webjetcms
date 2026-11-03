@@ -36,6 +36,8 @@ Nakoľko previazané by mali byť rovnaké štruktúry, rozdielne hĺbky rodičo
 
 Ak v nastavení stromu zapnete **Web Stránky** aj **Zobraziť zrkadlenie**, pri stránkach s problémom sa zobrazí červené alebo žlté upozornenie. Kliknutím naň otvoríte editor príslušného mapovania na karte **Stránky** v sekcii **Zrkadlenie**. Pri súbehu oboch problémov má červené upozornenie na zlé mapovanie prednosť.
 
+![](tree-problems.png)
+
 ## Vymazanie/zrušenie previazania
 
 Pri vymazaní/zrušení celého previazania zaniká existujúci synchronizačný parameter `syncId`, nakoľko už nemá čo previazať.

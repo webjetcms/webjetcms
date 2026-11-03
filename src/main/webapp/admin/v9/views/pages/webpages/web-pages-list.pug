@@ -249,7 +249,7 @@ block content
                         }
                     });
                     webpagesDatatable = wpdInstance.createDatatable();
-                    window.bindDeleteMirrors(webpagesDatatable, "/admin/rest/web-pages/delete-mirrors", "pages");
+                    window.bindDeleteMirrors(webpagesDatatable, "/admin/rest/web-pages/deletion-preview", "pages");
 
                     var buttonCounter = 4;
                     webpagesDatatable.button().add(buttonCounter++, {
@@ -332,7 +332,7 @@ block content
                         }
                     });
 
-                    window.bindDeleteMirrors(groupsDatatable, "/admin/rest/groups/delete-mirrors", "groups");
+                    window.bindDeleteMirrors(groupsDatatable, "/admin/rest/groups/deletion-preview", "groups");
 
                     groupsDatatable.hideButton("import");
                     groupsDatatable.hideButton("export");

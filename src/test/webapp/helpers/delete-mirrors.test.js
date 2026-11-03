@@ -44,7 +44,7 @@ function fixture(t, itemType = "pages") {
     const filename = path.resolve(__dirname, "../../../main/webapp/admin/v9/src/js/pages/web-pages-list/delete-mirrors.js");
     const context = vm.createContext({$, WJ: {translate: key => key}});
     vm.runInContext(fs.readFileSync(filename, "utf8").replace(/^export /gm, ""), context, {filename});
-    const endpoint = "/admin/rest/" + (itemType === "pages" ? "web-pages" : "groups") + "/delete-mirrors";
+    const endpoint = "/admin/rest/" + (itemType === "pages" ? "web-pages" : "groups") + "/deletion-preview";
     context.bindDeleteMirrors({EDITOR: editor, DATA: {id: "mirrors"}}, endpoint, itemType);
     const open = () => editor.remove([0, 1], {
         message: '<div class="col-sm-7 offset-sm-4">Confirm deletion</div>',

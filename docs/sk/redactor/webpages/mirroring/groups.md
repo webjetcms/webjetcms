@@ -36,7 +36,7 @@ Nakoľko previazané by mali byť rovnaké štruktúry, rozdielne hĺbky previaz
 
 Rovnaké kontroly môžete zobraziť priamo v sekcii **Web stránky**. V [nastavení stromovej štruktúry](../README.md#nastavenie-zobrazenia-stromovej-štruktúry) zapnite voľbu **Zobraziť zrkadlenie**. Pri priečinkoch s problémom sa vpravo pred jazykovými odkazmi zobrazí červená ikona pre **Zlé mapovanie** alebo žltá ikona pre **Nerovnomerné vnorenie**. Ak má prepojenie oba problémy, zobrazí sa červená ikona. Opis problému nájdete po podržaní kurzora nad ikonou upozornenia.
 
-![Červené upozornenie na zlé mapovanie a žlté upozornenie na nerovnomerné vnorenie](tree-problems.png)
+![](tree-problems.png)
 
 Voľba je dostupná používateľom s právom na **Zrkadlenie štruktúry**. Ikona priečinka bez prístupu <i class="ti ti-folder-x" role="presentation"></i> sa zachová. Kliknutím na upozornenie otvoríte priamo editor príslušného mapovania na karte **Priečinky**. Odkaz používa Sync ID mapovania, nie ID priečinka.
 

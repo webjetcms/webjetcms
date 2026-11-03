@@ -56,8 +56,15 @@ public class WebpagesRestController extends WebpagesDatatable {
         this.editorService = editorService;
     }
 
-    @PostMapping("/delete-mirrors")
-    public DeleteMirrorsResult getDeleteMirrors(@RequestParam("ids") List<Integer> ids) {
+    /**
+     * Previews additional mirrored pages affected by deleting the selected pages, without deleting data.
+     * Called by {@code bindDeleteMirrors} when the page delete confirmation opens, before submission is enabled.
+     *
+     * @param ids IDs of the pages selected for deletion
+     * @return unique additional mirrors with accessible paths and a flag indicating any inaccessible mirrors
+     */
+    @PostMapping("/deletion-preview")
+    public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
         return deleteMirrorsService.getPageMirrors(ids, getUser());
     }
 

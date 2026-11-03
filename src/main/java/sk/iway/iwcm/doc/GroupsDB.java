@@ -2784,6 +2784,8 @@ public class GroupsDB extends DB
 	 */
 	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents, boolean withHistory, boolean refreshDocGroupsDB)
 	{
+		// Bulk deletion can reach a folder already deleted through its mirror or parent in this request.
+		// Treat it as completed: processing it again after moving it to Trash would permanently delete it.
 		if (DeleteRequestContext.isDeleted(GroupDetails.class, groupId)) return true;
 
 		Connection db_conn = null;
@@ -2948,6 +2950,8 @@ public class GroupsDB extends DB
 			db_conn.close();
 			db_conn = null;
 
+			// Mark all processed folders, including descendants, as deleted in this request only after success.
+			// Later bulk-selection or mirroring calls will skip them, preventing a second deletion from Trash.
 			for (GroupDetails deletedGroup : deletedGroups) {
 				DeleteRequestContext.markDeleted(GroupDetails.class, deletedGroup.getGroupId());
 			}

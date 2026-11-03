@@ -58,8 +58,8 @@ Služba `sk.iway.iwcm.editor.service.DeleteMirrorsService` poskytuje údaje pre 
 
 | Požiadavka | Výsledok |
 | --- | --- |
-| `POST /admin/rest/web-pages/delete-mirrors` | Priamo zrkadlené verzie vybraných web stránok. |
-| `POST /admin/rest/groups/delete-mirrors` | Priamo zrkadlené priečinky bez rozpisu ich stránok a podpriečinkov. |
+| `POST /admin/rest/web-pages/deletion-preview` | Priamo zrkadlené verzie vybraných web stránok. |
+| `POST /admin/rest/groups/deletion-preview` | Priamo zrkadlené priečinky bez rozpisu ich stránok a podpriečinkov. |
 
 Obe požiadavky prijímajú formulárový parameter `ids`, teda kladné ID oddelené čiarkou. Vyžadujú prihlásenie, právo `menuWebpages` a prístup k vybraným položkám. Pri stránkach sa overuje `EditorService.isPageEditable(user, doc, true)`, pri priečinkoch práva `editDir`, `deleteDir` a `GroupsDB.isGroupEditable`. V MultiWeb režime sa kontroluje aj doména nájomcu.
 
@@ -81,8 +81,6 @@ Funkcia `bindDeleteMirrors` v `admin/v9/src/js/pages/web-pages-list/delete-mirro
 Klonovanie nemení globálne hodnoty `structureMirroringDisabledOnCreate` ani `syncGroupAndWebpageTitle`. Zrkadliace služby pri klonovaní zachovajú zobrazovanie zdrojových stránok a spôsob zobrazenia priečinkov v menu; `GroupsService.canSyncTitle` počas tejto požiadavky vypne synchronizáciu názvu priečinka s hlavnou stránkou. Súbežné požiadavky používajú bežné nastavenia.
 
 Pôvodná hodnota atribútu sa obnoví v bloku `finally`. Pri `keepMirroring=true` sa mapovanie následne zlúči s aktuálnou zdieľanou konfiguráciou a uloží cez `ConfDB.setName`. Metóda `saveMirroringConfig` je synchronizovaná v rámci jednej JVM, aby súbežné klonovania navzájom neprepísali pridané mapovania. Pri `keepMirroring=false` sa zdieľaná konfigurácia nemení; odstránia sa `syncId` v cieli a aj v zdroji, ak zdroj pred klonovaním nemal vlastné `syncId`.
-
-Konfiguračné premenné `mirroringMode`, `cloneActionSrcId` a `cloneActionDestId` boli odstránené. Vlastné rozšírenia majú stav klonovania zisťovať cez `MirroringService.isCloneAction()` a ID čítať z uvedených parametrov aktuálnej požiadavky.
 
 `POST /apps/clone_structure/admin/cancel_sync` prijíma parameter `rootGroupId` a vyžaduje právo `cmp_clone_structure`. Neplatné alebo neexistujúce ID sa odmietne stavom `400`. Pred volaním `MirroringService.clearSyncId` sa pre celý podstrom vrátane koreňa overí `GroupsDB.isGroupEditable`; pri `multiDomainEnabled=true` aj príslušnosť k aktuálnej doméne. Pri `adminCheckUserGroups=true` sa navyše overí `DocDB.canAccess(doc, user, true)` pre každú stránku. Pri nedostatočných právach alebo nesprávnej doméne sa vráti `403` bez zmeny prepojení.
 
