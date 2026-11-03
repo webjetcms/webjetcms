@@ -15,6 +15,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 
 @Entity
 @Table(name = "form_items_conditions")
@@ -61,7 +62,8 @@ public class FormItemsConditionEntity {
 
     @Column(name = "value")
     @NotBlank
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_items_condition.value")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_items_condition.value", className = "ai-off",
+        editor = @DataTableColumnEditor(type = "formConditionValue"))
     private String value;
 
     @Column(name = "case_insensitive")

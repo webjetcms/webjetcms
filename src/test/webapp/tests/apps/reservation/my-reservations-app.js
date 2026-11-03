@@ -159,14 +159,21 @@ async function createTimedReservation(I, config) {
     openTimedReservationDate(I, TIMED_DATE);
     I.waitForElement(timedCellSelector(config.objectCellId, config.startHour), 10);
 
+    let expectedPrice = 0;
     for (let hour = config.startHour; hour <= config.endHour; hour++) {
-        I.clickCss(timedCellSelector(config.objectCellId, hour));
+        const cell = timedCellSelector(config.objectCellId, hour);
+        const cellPrice = await I.grabAttributeFrom(cell, "data-price");
+        I.assertTrue(cellPrice != null && cellPrice.trim() !== "" && Number.isFinite(Number(cellPrice)), "Each selected hour must have a numeric price.");
+        expectedPrice += Number(cellPrice);
+        I.clickCss(cell);
     }
 
     const endHourText = String(config.endHour + 1).padStart(2, "0");
     I.seeInField("#timeRange", `${String(config.startHour).padStart(2, "0")}:00 - ${endHourText}:00`);
+    // Wait for the complete selection's price, not an earlier response for fewer hours.
+    I.waitForValue("#price", String(expectedPrice), 10);
     const price = await I.grabValueFrom("#price");
-    I.assertNotEqual(price, "", "Reservation price must be calculated before submitting.");
+    I.assertEqual(Number(price), expectedPrice, "Reservation price must equal the sum of the selected hourly prices.");
 
     I.fillField("#purpose", config.purpose);
     I.waitForVisible(locate("#reservationForm button").withAttr({ type: "submit" }), 10);

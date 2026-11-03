@@ -9,9 +9,15 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.jstree.JsTreeItemState;
+import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.doc.mirroring.dto.MirroringDTO;
+import sk.iway.iwcm.doc.mirroring.rest.MirroringService;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.rest.WebPagesListener;
+import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
@@ -191,7 +197,236 @@ public class GroupsTreeService {
             }
         }
 
+        setMirroringLinks(items, user, click, request);
+        setMirroringIcons(items, user, click, request);
         return items;
+    }
+
+    /**
+     * Adds permitted language counterparts to folders and pages returned by the main webpage tree.
+     *
+     * <p>Folder branches without mirrored folders skip the folder lookup. Otherwise, the complete cached
+     * {@link GroupsDB} folder list is indexed once per request. Only requested sync IDs
+     * undergo domain, trash and permission filtering and language resolution.
+     *
+     * <p>The index and resolved links, including empty results, are reused only within the
+     * current request. Later requests rebuild them and reevaluate permissions for both
+     * source and destination items. Pages use a database batch because their basic cache
+     * does not include sync IDs.
+     *
+     * @param items tree rows whose folder and page items receive counterpart links in place
+     * @param user current user whose webpage, mirroring and folder permissions are checked
+     * @param click tree mode used to exclude selectors, system trees and trash trees
+     * @param request request providing the main-tree opt-in and storing both lookup caches
+     */
+    void setMirroringLinks(List<JsTreeItem> items, Identity user, String click, HttpServletRequest request) {
+        if (items.isEmpty() || user.isDisabledItem("menuWebpages") || user.isDisabledItem("cmp_mirroring")) return;
+        if (isMirroringShown(user, request) == false) return;
+        if (Arrays.asList("dt-tree-group-filter-system-trash", "dt-tree-filter-system-trash", "dt-tree-group", "dt-tree").contains(click) == false) return;
+        String uri = request.getRequestURI();
+        if ("true".equals(request.getParameter("showMirrorLinks")) == false
+                && (uri == null || uri.contains("/admin/v9/webpages/web-pages-list") == false)) return;
+
+        setPageMirroringLinks(items, user, request);
+
+        Set<Integer> syncIds = items.stream().filter(GroupsJsTreeItem.class::isInstance)
+            .map(GroupsJsTreeItem.class::cast).map(item -> item.getGroup().getSyncId())
+            .filter(syncId -> syncId > 0).collect(Collectors.toSet());
+        if (syncIds.isEmpty()) return;
+
+        String cacheKey = GroupsTreeService.class.getName() + ".mirrorLinks";
+        @SuppressWarnings("unchecked")
+        Map<Integer, List<GroupsJsTreeItem.MirrorLink>> links = (Map<Integer, List<GroupsJsTreeItem.MirrorLink>>) request.getAttribute(cacheKey);
+        if (links == null) {
+            links = new HashMap<>();
+            request.setAttribute(cacheKey, links);
+        }
+        syncIds.removeAll(links.keySet());
+        if (syncIds.isEmpty() == false) {
+            String groupsCacheKey = GroupsTreeService.class.getName() + ".mirrorGroups";
+            @SuppressWarnings("unchecked")
+            Map<Integer, List<GroupDetails>> groupsBySyncId = (Map<Integer, List<GroupDetails>>) request.getAttribute(groupsCacheKey);
+            if (groupsBySyncId == null) {
+                // Index cached folders once per request; permission checks only run for the requested mirror groups.
+                groupsBySyncId = new HashMap<>();
+                for (GroupDetails group : GroupsDB.getInstance().getGroupsAll()) {
+                    if (group.getSyncId() > 0) groupsBySyncId.computeIfAbsent(group.getSyncId(), key -> new ArrayList<>()).add(group);
+                }
+                request.setAttribute(groupsCacheKey, groupsBySyncId);
+            }
+            List<GroupDetails> candidates = new ArrayList<>();
+            for (Integer syncId : syncIds) {
+                candidates.addAll(groupsBySyncId.getOrDefault(syncId, Collections.emptyList()));
+                links.put(syncId, new ArrayList<>());
+            }
+            List<GroupDetails> groups = filterByPerms(filterTrash(filterByDomain(candidates, null)), user);
+            for (GroupDetails group : groups) {
+                String language = GroupMirroringServiceV9.getLanguage(group);
+                if (Tools.isEmpty(language)) continue;
+                language = language.toLowerCase(Locale.ROOT).replace('_', '-');
+                if ("cz".equals(language)) language = "cs";
+                links.get(group.getSyncId())
+                    .add(new GroupsJsTreeItem.MirrorLink(group.getGroupId(), language, group.getFullPath()));
+            }
+            for (Integer syncId : syncIds) {
+                List<GroupsJsTreeItem.MirrorLink> mirrors = links.get(syncId);
+                mirrors.sort(Comparator.comparing(GroupsJsTreeItem.MirrorLink::language)
+                    .thenComparingInt(GroupsJsTreeItem.MirrorLink::groupId));
+            }
+        }
+        for (JsTreeItem item : items) {
+            if (item instanceof GroupsJsTreeItem groupItem) {
+                GroupDetails group = groupItem.getGroup();
+                List<GroupsJsTreeItem.MirrorLink> mirrors = links.get(group.getSyncId());
+                // A filtered source must not regain metadata through a shared sync ID.
+                if (mirrors == null || mirrors.stream().noneMatch(link -> link.groupId() == group.getGroupId())) continue;
+                List<GroupsJsTreeItem.MirrorLink> destinations = mirrors.stream()
+                    .filter(link -> link.groupId() != group.getGroupId()).toList();
+                if (destinations.isEmpty() == false) groupItem.setMirrors(destinations);
+            }
+        }
+    }
+
+    /** Resolves page counterparts in one batch per branch; basic cached pages do not contain sync IDs. */
+    private void setPageMirroringLinks(List<JsTreeItem> items, Identity user, HttpServletRequest request) {
+        List<DocumentsJsTreeItem> pages = items.stream().filter(DocumentsJsTreeItem.class::isInstance)
+            .map(DocumentsJsTreeItem.class::cast).toList();
+        if (pages.isEmpty()) return;
+
+        String cacheKey = GroupsTreeService.class.getName() + ".pageMirrorLinks";
+        @SuppressWarnings("unchecked")
+        Map<Integer, List<DocumentsJsTreeItem.MirrorLink>> links = (Map<Integer, List<DocumentsJsTreeItem.MirrorLink>>) request.getAttribute(cacheKey);
+        if (links == null) {
+            links = new HashMap<>();
+            request.setAttribute(cacheKey, links);
+        }
+        Map<Integer, List<DocumentsJsTreeItem.MirrorLink>> resolved = links;
+        List<Integer> sourceIds = new ArrayList<>();
+        for (DocumentsJsTreeItem page : pages) {
+            int docId = page.getDocDetails().getDocId();
+            if (links.containsKey(docId)) continue;
+            links.put(docId, new ArrayList<>());
+            if (canShowPageMirror(page.getDocDetails(), user)) sourceIds.add(docId);
+        }
+        if (sourceIds.isEmpty() == false) {
+            String placeholders = String.join(",", Collections.nCopies(sourceIds.size(), "?"));
+            String sql = "SELECT source.doc_id AS source_id, mirror.doc_id FROM documents source"
+                + " JOIN documents mirror ON mirror.sync_id=source.sync_id AND mirror.doc_id<>source.doc_id"
+                + " WHERE source.sync_id>0 AND source.doc_id IN (" + placeholders + ")";
+            DocDB docDB = DocDB.getInstance();
+            GroupsDB groupsDB = GroupsDB.getInstance();
+            new ComplexQuery().setSql(sql).setParams(sourceIds.toArray()).list(rs -> {
+                DocDetails mirror = docDB.getBasicDocDetails(rs.getInt("doc_id"), false);
+                if (canShowPageMirror(mirror, user)) {
+                    String language = GroupMirroringServiceV9.getLanguage(groupsDB.getGroup(mirror.getGroupId()));
+                    if (Tools.isNotEmpty(language)) {
+                        language = language.toLowerCase(Locale.ROOT).replace('_', '-');
+                        if ("cz".equals(language)) language = "cs";
+                        resolved.get(rs.getInt("source_id")).add(new DocumentsJsTreeItem.MirrorLink(mirror.getDocId(), language, mirror.getFullPath()));
+                    }
+                }
+                return null;
+            });
+            for (Integer docId : sourceIds) {
+                links.get(docId).sort(Comparator.comparing(DocumentsJsTreeItem.MirrorLink::language)
+                    .thenComparingInt(DocumentsJsTreeItem.MirrorLink::docId));
+            }
+        }
+        for (DocumentsJsTreeItem page : pages) {
+            List<DocumentsJsTreeItem.MirrorLink> destinations = links.get(page.getDocDetails().getDocId());
+            if (destinations.isEmpty() == false) page.setMirrors(destinations);
+        }
+    }
+
+    /** Applies the tree domain, trash and hidden-folder filters together with page editing scope. */
+    private boolean canShowPageMirror(DocDetails doc, Identity user) {
+        if (doc == null) return false;
+        GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());
+        if (group == null || filterByPerms(filterTrash(filterByDomain(List.of(group), null)), user).isEmpty()) return false;
+        return EditorService.hasPagePermission(user, doc);
+    }
+
+    /** Applies mirroring diagnostics only to permitted folders and pages in the main webpage tree. */
+    void setMirroringIcons(List<JsTreeItem> items, Identity user, String click, HttpServletRequest request) {
+        if (user.isEnabledItem("cmp_mirroring") == false || user.isEnabledItem("menuWebpages") == false) return;
+        if (Arrays.asList("dt-tree-group-filter-system-trash", "dt-tree-filter-system-trash",
+                "dt-tree-group-system", "dt-tree-system", "dt-tree-group-trash", "dt-tree-trash",
+                "dt-tree-group", "dt-tree").contains(click) == false) return;
+
+        if (isMirroringShown(user, request) == false || items.isEmpty()) return;
+
+        String cacheKey = GroupsTreeService.class.getName() + ".mirroringProblems";
+        @SuppressWarnings("unchecked")
+        Map<Integer, MirroringDTO> problems = (Map<Integer, MirroringDTO>) request.getAttribute(cacheKey);
+        if (problems == null) {
+            problems = MirroringService.getGroupProblems(request);
+            request.setAttribute(cacheKey, problems);
+        }
+
+        Prop prop = Prop.getInstance(request);
+        for (JsTreeItem item : items) {
+            if (item instanceof GroupsJsTreeItem groupItem) {
+                // The frontend uses this icon to disable editing of restricted folders.
+                if ("ti ti-folder-x".equals(item.getIcon())) continue;
+                GroupDetails group = groupItem.getGroup();
+                if (group.getGroupId() < 1 || group.getSyncId() < 1) continue;
+                if (Constants.getBoolean("multiDomainEnabled") && CloudToolsForCore.getDomainName().equals(group.getDomainName()) == false) continue;
+                MirroringDTO problem = problems.get(group.getSyncId());
+                if (problem == null) continue;
+
+                groupItem.setMirroringProblem(toMirroringProblem(problem, prop));
+            }
+        }
+        setPageMirroringIcons(items, user, request, prop);
+    }
+
+    /** Checks only newly encountered pages and remembers clean mappings for the rest of this request. */
+    private void setPageMirroringIcons(List<JsTreeItem> items, Identity user, HttpServletRequest request, Prop prop) {
+        List<DocumentsJsTreeItem> pages = items.stream().filter(DocumentsJsTreeItem.class::isInstance)
+            .map(DocumentsJsTreeItem.class::cast).filter(page -> canShowPageMirror(page.getDocDetails(), user)).toList();
+        if (pages.isEmpty()) return;
+
+        String cacheKey = GroupsTreeService.class.getName() + ".pageMirroringProblems";
+        @SuppressWarnings("unchecked")
+        Map<Integer, MirroringDTO> problems = (Map<Integer, MirroringDTO>) request.getAttribute(cacheKey);
+        if (problems == null) {
+            problems = new HashMap<>();
+            request.setAttribute(cacheKey, problems);
+        }
+        List<Integer> sourceIds = new ArrayList<>();
+        for (DocumentsJsTreeItem page : pages) {
+            int docId = page.getDocDetails().getDocId();
+            if (problems.containsKey(docId) == false) {
+                sourceIds.add(docId);
+                // Null distinguishes a checked page without a problem from an unchecked page.
+                problems.put(docId, null);
+            }
+        }
+        if (sourceIds.isEmpty() == false) problems.putAll(MirroringService.getPageProblems(request, sourceIds));
+        for (DocumentsJsTreeItem page : pages) {
+            MirroringDTO problem = problems.get(page.getDocDetails().getDocId());
+            if (problem != null) page.setMirroringProblem(toMirroringProblem(problem, prop));
+        }
+    }
+
+    /** Keeps the error priority and mapping identifier consistent for folder and page links. */
+    private GroupsJsTreeItem.MirroringProblem toMirroringProblem(MirroringDTO problem, Prop prop) {
+        String icon = "ti ti-alert-triangle text-warning";
+        String title = prop.getText("components.mirroring.uneven_nesting_err");
+        if (Tools.isTrue(problem.getMultipleErr())) {
+            icon = "ti ti-exclamation-circle text-danger";
+            title = prop.getText("components.mirroring.multiple_mapping_err");
+        }
+        return new GroupsJsTreeItem.MirroringProblem(icon, title, problem.getId().intValue());
+    }
+
+    /** Resolves the shared mirroring toggle for both initial rendering and tree reloads. */
+    private boolean isMirroringShown(Identity user, HttpServletRequest request) {
+        String show = request.getParameter("showMirrorings");
+        if (show != null) return "true".equals(show);
+        String requestUri = request.getRequestURI();
+        if (requestUri == null || requestUri.contains("/admin/v9/webpages/web-pages-list") == false) return false;
+        return new AdminSettingsService(user).getJsonBooleanValue("jstreeSettings_web-pages-list", "showMirrorings");
     }
 
     public static List<GroupDetails> sortGroupsBasedOnUserSettings(Identity user, List<GroupDetails> groups) {

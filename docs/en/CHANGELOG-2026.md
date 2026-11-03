@@ -123,6 +123,14 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 - Page Builder - dialogs that do not fit within the preview width will automatically expand to the size of the browser window. After confirmation or closing, the original preview width and page offset will be restored. Page Builder controls use the administration language (#372).
 - Images - added support for images and animations in [AVIF format](frontend/thumb-servlet/README.md#images-avif). Server-side editing, watermarking, and thumbnails via `/thumb` preserve frames, transparency, and animation timing. Processing requires `ImageMagick` 7.1.2-34 or later with `libheif` 1.22.0 or later. Image editor saves a static image (#371).
 
+- Mirroring the structure - before deleting a page or folder, a [list of mirrored items](redactor/webpages/README.md#deleting-mirrored-pages-and-folders) will be displayed, which will also be deleted.
+
+![](redactor/webpages/mirroring/delete-groups.png)
+
+- Structure mirroring - the **Show mirroring** option in the tree structure display settings adds [language version links](redactor/webpages/README.md#navigation-between-mirrored-folders) and [warnings about incorrect mappings](redactor/webpages/mirroring/groups.md#warnings-in-tree-structure) to the tree (#370).
+
+![](redactor/webpages/mirroring/tree-navigation.png)
+
 ### Headless mode
 
 Added [headless mode support](frontend/headless/README.md), in which WebJET CMS serves purely as a `backend` CMS. Content, navigation, search and forms are accessible via REST API. Frontend application (e.g. Astro, Next.js, Vue, React or any HTTP client) will download the data and display it according to its own templates (#258).
@@ -139,10 +147,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
-- Regular expressions - the list displays the translated name according to the administration language and indicates the original name as **Translation key**. The **Allowed value** selection in multi-step forms uses the format **code - name** (#387).
-- Multi-step forms - fixed typo in translation keys from `components.mustistep.*` to `components.multistep.*` (#378).
-- Multi-step forms - auxiliary statistics entries on [public cluster node with limited database rights](install/config/ro-user.md#multi-step-forms) no longer block form display, validation, or submission. In case of an error, the visitor will see the application name instead of the Java class name (#384).
-- Delayed email sending - increased column `emails.message` to `LONGTEXT` in MySQL/MariaDB so that saving a large HTML email does not fail. Added [instructions for smaller CSS for email and PDF](redactor/apps/form/README.md#css-styles-for-email-and-pdf) (#374).
 - Form Settings - added **Optional Fields** tab with fields A–F. Fields are also available in the Form Simple editor and via `FormSettingsEntity`. In the HTML of the translation keys, you can use [`${settings.*}`](redactor/apps/formsimple/README.md#fields-from-form-settings) tags for A–F, email settings, redirects, file limits, and appearance. They are also supported by the preview and email appearance of multi-step forms. A–F and the text before and after the email are enabled by HTML (#364).
 - Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.multistep.form.back_button` (#osk782).
 - Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
@@ -178,6 +182,16 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Easy form and multi-step forms - the default tooltip is now available with both mouse and keyboard, provides a stable contextual title and description, remains displayed when the cursor is moved to its content, and can be closed with the `Escape` key (#306).
 - Multistep forms - added [copy fields between forms and steps](redactor/apps/multistep-form/README.md#copy-fields-between-forms). Paste opens the editor with saved field settings; display conditions and obligations are not carried over. Internal clipboard works across browser tabs and allows repeated pasting for 30 minutes (#58826).
 - Multi-step forms - added option [Show content without redirection](redactor/apps/form/README.md#tab---settings). The switch will use the web page from the **Redirect after completion** field and after successful submission will replace the default message with its content without changing the URL address. If the visitor does not have permission to view the web page, the default message about successful submission will be displayed (#58826).
+- Multistep forms - the new [Bindings](redactor/apps/multistep-form/README.md#bindings) tab in the field editor displays separate lists of fields that use its value in display and obligation conditions (#377).
+
+![](editor/apps/multistep-form/tab-relations.png)
+
+- Multi-step forms - when setting display conditions and obligations, the compared value for selection fields is selected from their options, including code lists and common radio groups. There is no need to enter values ​​manually (#391).
+- Multi-step forms - selecting **Form Step** in the item editor now shows the current step number even after changing the order of steps by dragging with the mouse (#392).
+- Regular expressions - the list displays the translated name according to the administration language and indicates the original name as **Translation key**. The **Allowed value** selection in multi-step forms uses the format **code - name** (#387).
+- Multi-step forms - fixed typo in translation keys from `components.mustistep.*` to `components.multistep.*` (#378).
+- Multi-step forms - auxiliary statistics entries on [public cluster node with limited database rights](install/config/ro-user.md#multi-step-forms) no longer block form display, validation, or submission. In case of an error, the visitor will see the application name instead of the Java class name (#384).
+- Delayed email sending - increased column `emails.message` to `LONGTEXT` in MySQL/MariaDB so that saving a large HTML email does not fail. Added [instructions for smaller CSS for email and PDF](redactor/apps/form/README.md#css-styles-for-email-and-pdf) (#374).
 
 ### Semantic search
 
@@ -316,6 +330,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Websites - fixed [export to ZIP archive](redactor/webpages/import-export.md) for images inserted via `/thumb/` that were not originally added to the export (#389).
+- Web pages - the insert image dialog limits file selection to images, videos, and audio files, even in the Files folder. Unsupported types recognized by the browser will be rejected before submission. Additionally, the server will validate the extension before saving (#375).
+- Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the page is opened (#372).
 - Spring applications - [error creating or executing application](custom-apps/spring-mvc/README.md#error-executing-application) will replace only its `INCLUDE` tag. Surrounding text, JSP applications, and other Spring applications will remain on the page, and the message will state the name of the application that failed (#384).
 - Redis session - fixed uploading files in parts, consuming one-time CSRF tokens, and updating logged-in user data after editing profile via registration form. Changed objects are written back to session.
 - Page editor - fixed a bug when opening a preview after restoring a session from a serialized storage, such as Redis. Missing editor data will be restored from the preview version of the page.
@@ -331,6 +348,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
 - Page Builder - when content loading fails, you can switch to HTML mode by restoring the last available HTML. The restore requires confirmation as it may not contain the latest changes (#369).
 - Page Builder - fixed editor freeze when opening HTML with remaining `contenteditable="true"` attribute. CKEditor no longer initializes twice on the same block.
+- Page Builder - restoring focus after inserting content or a structural block, moving, duplicating, and closing properties or libraries does not move the page to the beginning of the editor. The fix also works in templates with smooth scrolling (`scroll-behavior: smooth`) (#389).
 - Page Builder - unsupported elements marked `pb-editable`, such as list items `li`, no longer block switching from the HTML editor. Their content remains intact and can be edited via the parent editable area (#382).
 - Page Builder - nested tags `pb-editable` and `pb-content` are removed before the editor is launched. Nested CKEditors are not created in one block and redundant markup is not copied when creating paragraphs or lists. Text and other CSS classes are preserved (#382).
 - Email - fixed SMTP settings being affected between applications on a shared application server. Each send uses its own properties and mail session, so SSL port, authentication, or Amazon SES settings from another application are not transferred (#367).
@@ -347,6 +365,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Builder - fixed displaying the toolbar if the page does not contain any sections (#343).
 - Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
 - Administration - fixed display of check mark icon when an item is selected in the autocomplete menu (#osk800).
+- Structure mirroring - [draft version](redactor/apps/docmirroring/README.md#edit-existing-webpage) no longer overwrites published translations and [bulk delete](redactor/webpages/README.md#delete-mirrored-pages-and-folders) no longer processes the same item repeatedly. Moving does not create duplicate language versions. When moving a folder, generated and inherited URLs are updated. Temporary cloning settings and mirror administration state are not shared between concurrent requests (#370).
 
 ### Performance
 
@@ -355,6 +374,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- Websites - deletion checks permissions for all mirrored pages and also requires `deleteDir` for folders. [Unmirroring](redactor/apps/clone-structure/README.md#unmirroring) checks permissions for the entire subtree including configured domain and user group restrictions (#370).
 - Dependency Check - updated libraries `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` with fix `CVE-2026-110879` and `undici 6.28.1 → 6.29.1` with fix `CVE-2026-109383`. Jackson update tightens type checking during polymorphic deserialization; custom integrations using Java class names in JSON need to be verified (#385).
 - Dependency Check - exceptions for `CVE-2026-116802`, `CVE-2026-116803` and `CVE-2026-116804` in `DOMPurify 3.4.16` have been verified and constrained to the exact hash of the supplied `Swagger UI 5.34.0` bundle. The integration handles HTML strings without XHTML mode, `IN_PLACE`, `SAFE_FOR_TEMPLATES` and DOM returns; its hook does not remove nodes. The exceptions confirm the non-use of the affected modes, not a fix for the DOMPurify library (#385).
 - Dependency Check - updated libraries `Hibernate Validator 9.0.0.Final → 9.0.2.Final` with fix `CVE-2026-93879`, transitive dependency `ASM 9.7.1 → 9.11.1` with Java bytecode processing fixes, and administration build dependency `ip-address 10.7.1 → 10.7.4` with fix `CVE-2026-111997`. The updates do not require a Java version change or application API modification (#385).

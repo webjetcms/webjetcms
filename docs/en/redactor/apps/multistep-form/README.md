@@ -221,7 +221,7 @@ This is a flat structure (without parentheses), so nesting of conditions is not 
 
 Each condition contains the following parameters:
 
-- **Form field** - an item whose value will be used when evaluating a condition. The options are ordered the same as in a form.
+- **Form Field** - an item whose value is used when evaluating a condition. The options are ordered the same as in the form. Radio buttons with the same field name and the **Required Field** setting are offered as one group in the first button position, even if there are other fields between them. The item being edited is not offered in the list. When editing a radio button, its entire group is not offered because the buttons share the same item identifier.
 - **Comparison condition** - method of comparing field values:
   - **equals**
   - **does not equal**
@@ -231,8 +231,8 @@ Each condition contains the following parameters:
   - **ends on**
   - **is empty**
   - **not empty**
-- **Compared value** - the value against which the contents of the selected field will be compared.
-- **Ignore case** - the comparison will not be case sensitive.
+- **Compared value** - the value against which the contents of the selected field are compared. For picklists, groups of selection and checkboxes, and individual radio buttons, you select from the options of the given field for the conditions **equals** and **not equals**. The text of the option is displayed, and its value is saved. Options from the code list are also supported. For the conditions **contains**, **does not contain**, **starts with**, and **ends with**, you enter text for the other fields as well. You can check for an empty value with the condition **is empty** or **is not empty**.
+- **Ignore case** - the comparison will not be case sensitive. The option is only displayed when manually entering the value to be compared, it is hidden when selecting from predefined options.
 - **Logical operator** - connection with the following condition:
   - `AND` - ​​both conditions must apply,
   - `OR` - ​​it is enough if at least one condition applies.
@@ -258,6 +258,21 @@ Each condition contains the following parameters:
 When you try to edit or delete an item that is used in a condition of another item, an error and a notification with a list of dependent items will appear.
 
 ![](save-condition-error.png)
+
+### Bindings
+
+The **Links** tab shows which other fields use its value when editing an existing field.
+
+- **Field Display** – fields whose display depends on this field.
+- **Mandatory fields** – fields whose mandatory completion depends on this field.
+
+![Relations tab with lists of fields used in display conditions and obligations.](tab-relations.png)
+
+Each field appears once in the corresponding list, even if it is referenced in multiple parts of the condition.
+
+Clicking on the name will open the editor for that field. If it is in a different step, the selected form step will also be switched. If you have unsaved changes, you can choose to discard them or stay in the original editor before switching.
+
+For example, for the rule "Phone number is required if First and Last name contains text", you will find **Phone number** in the list of requirement conditions on the **First and Last name** field's **Relationships** tab. You continue to edit the rule itself on the **Requirement** tab of the **Phone number** field.
 
 ### Statistics
 

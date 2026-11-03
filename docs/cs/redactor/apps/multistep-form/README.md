@@ -221,7 +221,7 @@ Jedná se o plochou strukturu (bez závorek), takže není podpořeno vnořován
 
 Každá podmínka obsahuje tyto parametry:
 
-- **Pole formuláře** - položka, jejíž hodnota se použije při vyhodnocení podmínky. Možnosti jsou seřazeny stejně jako ve formuláři.
+- **Pole formuláře** - položka, jejíž hodnota se použije při vyhodnocení podmínky. Možnosti jsou seřazeny stejně jako ve formuláři. Rádiová tlačítka se stejným názvem pole a nastavením **Povinné pole** se nabízejí jako jedna skupina na pozici prvního tlačítka, i když jsou mezi nimi jiná pole. Upravovaná položka se v seznamu nenabízí. Při úpravě rádiového tlačítka se nenabízí celá jeho skupina, protože tlačítka sdílejí stejný identifikátor položky.
 - **Podmínka porovnání** - způsob porovnání hodnoty pole:
   - **rovná se**
   - **nerovná se**
@@ -231,8 +231,8 @@ Každá podmínka obsahuje tyto parametry:
   - **končí na**
   - **je prázdné**
   - **není prázdné**
-- **Srovnávaná hodnota** - hodnota, vůči které se porovná obsah vybraného pole.
-- **Ignorovat velikost písmen** - porovnání nebude citlivé na velká/malá písmena.
+- **Srovnávaná hodnota** - hodnota, vůči které se porovná obsah vybraného pole. U výběrových seznamů, skupin výběrových a zaškrtávacích polí a samostatných rádiových tlačítek vybíráte pro podmínky **rovná se** a **nerovná se** z možností daného pole. Zobrazuje se text možnosti, uloží se její hodnota. Podporovány jsou i možnosti z číselníku. Při podmínkách **obsahuje**, **neobsahuje**, **začíná na** a **končí na** iu ostatních polí zadáváte text. Prázdnou hodnotu ověříte podmínkou **je prázdné** nebo **není prázdné**.
+- **Ignorovat velikost písmen** - porovnání nebude citlivé na velká/malá písmena. Volba se zobrazuje pouze při ručním zadávání srovnávané hodnoty, při výběru z předdefinovaných možností je skrytá.
 - **Logický operátor** - spojení s následující podmínkou:
   - `AND` - ​​musí platit obě podmínky,
   - `OR` - ​​stačí, pokud platí alespoň jedna podmínka.
@@ -258,6 +258,21 @@ Každá podmínka obsahuje tyto parametry:
 Při pokusu o úpravu nebo odstranění položky, která je použita v podmínce jiné položky, se zobrazí chyba i notifikace se seznamem závislých položek.
 
 ![](save-condition-error.png)
+
+### Vazby
+
+Karta **Vazby** při úpravě stávajícího pole ukazuje, která další pole používají jeho hodnotu.
+
+- **Zobrazení polí** – pole, jejichž zobrazení závisí na tomto poli.
+- **Povinné vyplnění polí** – pole, jejichž povinné vyplnění závisí na tomto poli.
+
+![Karta Vazby se seznamy polí používaných v podmínkách zobrazení a povinnosti.](tab-relations.png)
+
+Každé pole se v příslušném seznamu zobrazí jednou, i když se na něj odkazuje ve více částech podmínky.
+
+Klepnutím na název otevřete editor daného pole. Pokud je v jiném kroku, přepne se i vybraný krok formuláře. Při neuložených změnách si před přechodem můžete vybrat, zda je chcete zahodit, nebo zůstat v původním editoru.
+
+Například u pravidla „Telefonní číslo je povinné, pokud Jméno a příjmení obsahuje text“ naleznete v kartě **Vazby** pole **Jméno a příjmení** položku **Telefonní číslo** v seznamu podmínek povinnosti. Samotné pravidlo nadále upravujete v kartě **Povinnost** pole **Telefonní číslo**.
 
 ### Statistika
 
