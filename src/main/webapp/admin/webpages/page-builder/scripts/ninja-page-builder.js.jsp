@@ -715,12 +715,9 @@
         restore_workbench_focus: function() {
             if (!this.ui) return;
             var ui = this.ui, bookmark = ui.bookmarks;
-            ui.restoringFocus = true;
             if (bookmark && bookmark.editor.status === 'ready' && bookmark.editor.element.$.isConnected) {
-                bookmark.editor.focus();
-                bookmark.editor.getSelection().selectBookmarks(bookmark.marks);
+                this.focus_ckeditor_without_scrolling(bookmark.editor, bookmark.marks);
             }
-            ui.restoringFocus = false;
             ui.bookmarks = null;
             this.refresh_workbench_selection();
             var button = ui.bar.find('[data-pb-action="'+ui.returnAction+'"]:visible');
@@ -2858,6 +2855,21 @@
             return next.length ? next : editors.last();
         },
 
+        /** Restores an editor and optional caret bookmarks without native or CSS-smooth canvas scrolling. */
+        focus_ckeditor_without_scrolling: function(editor, bookmarks) {
+            var x = window.scrollX, y = window.scrollY, ui = this.ui;
+            var restoringFocus = ui && ui.restoringFocus;
+            if (ui) ui.restoringFocus = true;
+            try {
+                editor.editable().$.focus({ preventScroll: true });
+                editor.focus();
+                if (bookmarks) editor.getSelection().selectBookmarks(bookmarks);
+            } finally {
+                if (ui) ui.restoringFocus = restoringFocus;
+                window.scrollTo({ left: x, top: y, behavior: 'instant' });
+            }
+        },
+
         /** Restores the shared toolbar without changing the structural selection or scrolling the canvas. */
         focus_ckeditor_element: function(el) {
             if (typeof CKEDITOR === 'undefined') return;
@@ -2869,11 +2881,7 @@
             var focus = function() {
                 if (editor.status !== 'ready' || !me.$wrapper[0].contains(node[0]) ||
                     (ui && (me.ui !== ui || ui.selected !== selected))) return;
-                var x = window.scrollX, y = window.scrollY;
-                if (ui) ui.restoringFocus = true;
-                editor.focus();
-                if (ui) ui.restoringFocus = false;
-                window.scrollTo(x, y);
+                me.focus_ckeditor_without_scrolling(editor);
                 me.schedule_workbench();
             };
             if (editor.status === 'ready') focus();
@@ -3273,8 +3281,7 @@
         insert_content_into_ckeditor_at_cursor: function(html) {
             var oEditor = this.library_editor_bookmark ? this.library_editor_bookmark.editor : window.getCkEditorInstance();
             if (this.library_editor_bookmark) {
-                oEditor.focus();
-                oEditor.getSelection().selectBookmarks(this.library_editor_bookmark.marks);
+                this.focus_ckeditor_without_scrolling(oEditor, this.library_editor_bookmark.marks);
             }
             if (html.indexOf("<span") == 0) {
                 oEditor.insertHtml(html)
@@ -4068,22 +4075,14 @@
                     this.select_workbench_element($(inserted)[0], true);
                     this.focus_ckeditor_element($(inserted)[0]);
                 } else {
-                    window.scrollTo(ui.insertScroll.x, ui.insertScroll.y);
+                    window.scrollTo({ left: ui.insertScroll.x, top: ui.insertScroll.y, behavior: 'instant' });
                     this.position_workbench_insertion(ui.bar[0].getBoundingClientRect().bottom);
                     var destination = ui.insertPoints.find(item => item.source[0] === point.source[0]);
                     (destination ? destination.button : ui.bar.find('[data-pb-action=insert]'))[0].focus({ preventScroll: true });
                 }
             } else if (!inserted) {
                 if (bookmark && bookmark.editor.status === 'ready') {
-                    var x = window.scrollX, y = window.scrollY;
-                    if (ui) ui.restoringFocus = true;
-                    try {
-                        bookmark.editor.focus();
-                        bookmark.editor.getSelection().selectBookmarks(bookmark.marks);
-                    } finally {
-                        if (ui) ui.restoringFocus = false;
-                        window.scrollTo(x, y);
-                    }
+                    this.focus_ckeditor_without_scrolling(bookmark.editor, bookmark.marks);
                 } else {
                     var target = returnFocus && returnFocus.isConnected && $(returnFocus).is(':visible') ? returnFocus : this.clicked_button[0];
                     if (target && target.isConnected) target.focus({ preventScroll: true });
