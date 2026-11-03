@@ -408,6 +408,9 @@
                             }
                         }
                     }, 800);
+                } else if (formItemsDataTable != null && formStepsDataTable.rows({ selected: true }).any()) {
+                    // Refresh the editor's step options after changes to the steps or their order.
+                    formItemsDataTable.ajax.reload(null, false);
                 }
             }
         });

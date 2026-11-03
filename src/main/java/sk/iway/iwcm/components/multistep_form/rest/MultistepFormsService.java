@@ -997,7 +997,7 @@ public class MultistepFormsService {
         if(Tools.isEmpty(formName)) return options;
 
         int counter = 1;
-        for(FormStepEntity step : formStepsRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
+        for(FormStepEntity step : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId())) {
             StringBuilder label = new StringBuilder();
             label.append(prop.getText("components.form_items.step_title")).append(" ").append(counter);
 
