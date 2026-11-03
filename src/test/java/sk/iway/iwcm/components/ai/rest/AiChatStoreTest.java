@@ -8,6 +8,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.UUID;
 
+import com.webjetcms.ai.AiRequestLifecycle;
+import com.webjetcms.ai.AiRequestLifecycle.State;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -48,7 +51,7 @@ class AiChatStoreTest {
         String id = first.thread().getId(), message = first.message().getId();
         assertTrue(store.begin(input, scope, assistant, "config").duplicate());
         store.submitted(scope, id, message);
-        store.responseId(scope, id, message, "response-one");
+        store.lifecycle(scope, id, message, new AiRequestLifecycle(State.RESPONSE_OBSERVED, "response-one"));
         store.finish(scope, id, message, "Answer", "complete", 2, null, null);
         store.finish(scope, id, message, "", "stopped", 0, "CANCELLED", null);
         assertEquals("Answer", new AiChatStore().get(id, scope).messages().get(1).getText());
@@ -196,7 +199,7 @@ class AiChatStoreTest {
         store.finish(scope, id, message, "Partial", "stopped", 0, "CANCELLED", null);
         String claim = store.claimDeletion(id, scope);
         assertThrows(ResponseStatusException.class, () -> store.remove(scope, id, claim));
-        store.responseId(scope, id, message, "known-response");
+        store.lifecycle(scope, id, message, new AiRequestLifecycle(State.RESPONSE_OBSERVED, "known-response"));
         assertThrows(ResponseStatusException.class, () -> store.remove(scope, id, claim));
         store.deletedResponse(scope, id, claim, message);
         store.remove(scope, id, claim);

@@ -18,6 +18,8 @@ import org.springframework.web.server.ResponseStatusException;
 import com.webjetcms.ai.AiClient;
 import com.webjetcms.ai.AiErrorCategory;
 import com.webjetcms.ai.AiProviderException;
+import com.webjetcms.ai.AiRequestLifecycle;
+import com.webjetcms.ai.AiRequestLifecycle.State;
 import com.webjetcms.ai.AiResponse;
 import com.webjetcms.ai.BinaryContent;
 
@@ -143,6 +145,8 @@ public class AiChatService implements DisposableBean {
         String status = "error";
         String category = "UNKNOWN";
         Integer providerStatus = null;
+        AiRequestLifecycle lifecycle = AiRequestLifecycle.unknown();
+        boolean submitted = false;
         var renewal = heartbeat.scheduleWithFixedDelay(() -> {
             try {
                 if (!store.heartbeat(prepared.scope(), threadId, messageId)) input.getCancellationToken().cancel();
@@ -157,7 +161,6 @@ public class AiChatService implements DisposableBean {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "providerChanged");
             }
             Consumer<String> onText = delta -> {
-                if (input.getCancellationToken().isCancelled()) throw new CancellationException();
                 text.append(delta);
                 if (System.currentTimeMillis() - checkpoint[0] >= 1000) {
                     if (!store.progress(prepared.scope(), threadId, messageId, text.toString())) throw new CancellationException();
@@ -184,8 +187,9 @@ public class AiChatService implements DisposableBean {
             }
             input.setInputValue(input.getInputValue() + context);
             store.submitted(prepared.scope(), threadId, messageId);
-            AiResponse response = provider.getPersistentChatResponse(prepared.assistant(), input, onText, streaming, providerConfig);
-            store.responseId(prepared.scope(), threadId, messageId, response.responseId());
+            submitted = true;
+            AiResponse response = provider.getPersistentChatResponse(prepared.assistant(), input, onText, streaming, providerConfig,
+                responseId -> store.lifecycle(prepared.scope(), threadId, messageId, new AiRequestLifecycle(State.RESPONSE_OBSERVED, responseId)));
             if (input.getCancellationToken().isCancelled()) throw new CancellationException();
             text.setLength(0);
             text.append(response.text());
@@ -207,9 +211,7 @@ public class AiChatService implements DisposableBean {
         } catch (AiProviderException exception) {
             category = exception.category().name();
             providerStatus = exception.statusCode() > 0 ? exception.statusCode() : null;
-            if (List.of(400, 401, 403, 404, 409, 422, 429).contains(exception.statusCode())) {
-                store.rejected(prepared.scope(), threadId, messageId);
-            }
+            if (submitted) lifecycle = exception.lifecycle();
             status = exception.category() == AiErrorCategory.CANCELLED ? "stopped" : "error";
             return failure(category, providerStatus, request);
         } catch (Exception exception) {
@@ -222,15 +224,13 @@ public class AiChatService implements DisposableBean {
             renewal.cancel(false);
             boolean interrupted = Thread.interrupted();
             try {
-                store.finish(prepared.scope(), threadId, messageId, text.toString(), status, tokens, category, providerStatus);
-                audit(threadId, status, category);
                 try {
-                    if ("DELETE_PENDING".equals(store.get(threadId, prepared.scope()).thread().getStatus())) {
-                        cleanup(threadId, prepared.scope());
-                    }
-                } catch (ResponseStatusException exception) {
-                    if (exception.getStatusCode() != HttpStatus.NOT_FOUND) throw exception;
+                    store.lifecycle(prepared.scope(), threadId, messageId, lifecycle);
+                } finally {
+                    store.finish(prepared.scope(), threadId, messageId, text.toString(), status, tokens, category, providerStatus);
                 }
+                audit(threadId, status, category);
+                cleanup(threadId, prepared.scope());
             } finally {
                 if (interrupted) Thread.currentThread().interrupt();
             }
@@ -271,17 +271,15 @@ public class AiChatService implements DisposableBean {
                     store.deletedResponse(scope, id, claim, message.getId());
                 }
             }
-            if (transcript.messages().stream().anyMatch(AiChatEntry::isStorageUnknown)) {
-                store.deletionFailed(scope, id, claim, "cleanupUnknown");
-                return new Deletion(false, "cleanupUnknown");
-            }
             store.remove(scope, id, claim);
             audit(id, "deleted", null);
             return new Deletion(true, null);
         } catch (Exception exception) {
-            store.deletionFailed(scope, id, claim, "deleteFailed");
+            String error = exception instanceof ResponseStatusException failure && "cleanupUnknown".equals(failure.getReason())
+                ? "cleanupUnknown" : "deleteFailed";
+            store.deletionFailed(scope, id, claim, error);
             audit(id, "delete_failed", null);
-            return new Deletion(false, "deleteFailed");
+            return new Deletion(false, error);
         }
     }
 

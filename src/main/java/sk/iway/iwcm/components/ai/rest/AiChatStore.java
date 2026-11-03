@@ -21,6 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.webjetcms.ai.AiRequestLifecycle;
+import com.webjetcms.ai.AiRequestLifecycle.State;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.chat.AiChatDocument;
@@ -250,20 +253,15 @@ public class AiChatStore {
         });
     }
 
-    public void responseId(Scope scope, String threadId, String messageId, String responseId) {
-        if (responseId == null || responseId.isBlank() || responseId.length() > 2000) throw conflict("invalidResponse");
+    /** Persists provider facts for cleanup without advancing successful continuation. */
+    public void lifecycle(Scope scope, String threadId, String messageId, AiRequestLifecycle lifecycle) {
+        String responseId = lifecycle.responseId();
+        if (lifecycle.state() == State.UNKNOWN || (lifecycle.state() == State.RESPONSE_OBSERVED && responseId == null)) return;
+        if (responseId != null && responseId.length() > 2000) throw conflict("invalidResponse");
         update(threadId, scope, true, document -> {
             AiChatEntry message = entry(document, messageId);
-            if (message.getProviderResponseId() != null && !message.getProviderResponseId().equals(responseId)) throw conflict("invalidResponse");
-            message.setProviderResponseId(responseId);
+            if (responseId != null && message.getProviderResponseId() == null) message.setProviderResponseId(responseId);
             message.setStorageUnknown(false);
-            return null;
-        });
-    }
-
-    public void rejected(Scope scope, String threadId, String messageId) {
-        update(threadId, scope, true, document -> {
-            entry(document, messageId).setStorageUnknown(false);
             return null;
         });
     }

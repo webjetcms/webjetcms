@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webjetcms.ai.AiClient;
 import com.webjetcms.ai.AiCapabilities;
 import com.webjetcms.ai.AiCapabilities.Support;
+import com.webjetcms.ai.AiLifecycleListener;
 import com.webjetcms.ai.AiOperation;
 import com.webjetcms.ai.AiPromptTemplate;
 import com.webjetcms.ai.AiProviderConfig;
@@ -200,7 +201,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiResponse response;
             if (writer == null) {
                 response = aiClient.execute(getProviderId(), providerRequest, config, inputData.getCancellationToken());
-                checkCancellation(inputData);
                 responseDto.setResponse(includeHandler.restoreIncludes(response.text()));
             } else {
                 response = aiClient.stream(getProviderId(), providerRequest, config, delta -> {
@@ -213,7 +213,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
                         throw exception;
                     }
                 }, inputData.getCancellationToken());
-                checkCancellation(inputData);
                 includeHandler.finish(writer);
                 responseDto.setResponse(includeHandler.getWholeResponse());
             }
@@ -228,31 +227,21 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 statRepo,
                 request
             );
-            rememberChat(operation, assistant, response, includeHandler, responseDto, inputData, request);
+            checkCancellation(inputData);
+            if (operation == AiOperation.CHAT && Thread.currentThread().isInterrupted() == false) {
+                responseDto.setConversationId(AiChatSession.remember(assistant, request, response.responseId(), includeHandler.getIncludes()));
+            }
         } catch (CancellationException exception) {
             throw exception;
         } catch (AiChatAttachments.UnreadableException exception) {
             checkCancellation(inputData);
             return unreadableAttachment(assistant, prop);
-        } catch (AiProviderException exception) {
+        } catch (Exception exception) {
             if (outputFailure.get() != null) {
-                errorAdminLog(assistant, inputPair, method,
-                    new Pair<>(safeMessage(outputFailure.get()), null));
+                errorAdminLog(assistant, inputPair, method, outputFailure.get(), prop);
             }
             checkCancellation(inputData);
             errorAdminLog(assistant, inputPair, method, exception, prop);
-        } catch (Exception exception) {
-            if (outputFailure.get() != null) {
-                errorAdminLog(assistant, inputPair, method,
-                    new Pair<>(safeMessage(outputFailure.get()), null));
-            }
-            checkCancellation(inputData);
-            errorAdminLog(
-                assistant,
-                inputPair,
-                method,
-                new Pair<>(safeMessage(exception), null)
-            );
         }
         return responseDto;
     }
@@ -306,31 +295,19 @@ public abstract class LibrarySupportLogic implements AiInterface {
         return continuation;
     }
 
-    private void rememberChat(
-        AiOperation operation, AssistantDefinitionEntity assistant, AiResponse response, IncludesHandler includesHandler,
-        AssistantResponseDTO responseDto, InputDataDTO inputData, HttpServletRequest request
-    ) {
-        checkCancellation(inputData);
-        if (operation == AiOperation.CHAT && Thread.currentThread().isInterrupted() == false) {
-            responseDto.setConversationId(AiChatSession.remember(
-                assistant, request, response.responseId(), includesHandler.getIncludes()
-            ));
-        }
-    }
-
-    /** Executes a persisted chat turn with literal attachment context; its caller owns persistence and metadata-only auditing. */
+    /** Reports cleanup IDs independently of successful continuation, including failed or cancelled turns. */
     public AiResponse getPersistentChatResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData,
-        java.util.function.Consumer<String> onText, boolean streaming, com.webjetcms.ai.AiProviderConfig providerConfig) throws AiProviderException, IOException {
-        checkCancellation(inputData);
+        java.util.function.Consumer<String> onText, boolean streaming, AiProviderConfig providerConfig,
+        AiLifecycleListener lifecycleListener) throws AiProviderException, IOException {
         if (textOperation(assistant) != AiOperation.CHAT) throw new IllegalStateException("Assistant does not support saved chat");
         // Keep attachment commands literal so provider-side history can reuse them without a CMS token map.
         AiRequest providerRequest = prepareProviderRequest(AiOperation.CHAT, assistant, inputData, null);
         if (streaming && isStreamingEnabled(assistant)) {
             return aiClient.stream(getProviderId(), providerRequest, providerConfig,
-                delta -> onText.accept(delta), inputData.getCancellationToken());
+                onText::accept, inputData.getCancellationToken(), lifecycleListener);
         }
         return aiClient.execute(getProviderId(), providerRequest,
-            providerConfig, inputData.getCancellationToken());
+            providerConfig, inputData.getCancellationToken(), lifecycleListener);
     }
 
     public boolean supportsPersistentChat(AssistantDefinitionEntity assistant) {
@@ -461,17 +438,9 @@ public abstract class LibrarySupportLogic implements AiInterface {
             );
         } catch (CancellationException exception) {
             throw exception;
-        } catch (AiProviderException exception) {
-            checkCancellation(inputData);
-            errorAdminLog(assistant, inputPair, METHOD_IMAGE_RESPONSE, exception, prop);
         } catch (Exception exception) {
             checkCancellation(inputData);
-            errorAdminLog(
-                assistant,
-                inputPair,
-                METHOD_IMAGE_RESPONSE,
-                new Pair<>(safeMessage(exception), null)
-            );
+            errorAdminLog(assistant, inputPair, METHOD_IMAGE_RESPONSE, exception, prop);
         }
         return responseDto;
     }
@@ -1097,46 +1066,28 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AssistantDefinitionEntity assistant,
         Pair<String, String> inputPair,
         String methodName,
-        AiProviderException exception,
+        Exception exception,
         Prop prop
     ) throws ProviderCallException {
-        errorAdminLog(
-            assistant,
-            inputPair,
-            methodName,
-            new Pair<>(providerErrorMessage(exception, prop), exception.rawResponse()),
-            exception
-        );
-    }
-
-    private void errorAdminLog(
-        AssistantDefinitionEntity assistant,
-        Pair<String, String> inputPair,
-        String methodName,
-        Pair<String, String> error
-    ) throws ProviderCallException {
-        errorAdminLog(assistant, inputPair, methodName, error, null);
-    }
-
-    private void errorAdminLog(
-        AssistantDefinitionEntity assistant,
-        Pair<String, String> inputPair,
-        String methodName,
-        Pair<String, String> error,
-        Throwable cause
-    ) throws ProviderCallException {
+        String message = safeMessage(exception);
+        String rawResponse = null;
+        AiProviderException cause = exception instanceof AiProviderException providerException ? providerException : null;
+        if (cause != null) {
+            message = providerErrorMessage(cause, prop);
+            rawResponse = cause.rawResponse();
+        }
         StringBuilder audit = new StringBuilder("ERROR: ");
         audit.append(assistant.getName()).append(" (").append(assistant.getProvider()).append(") ");
         audit.append(methodName).append('\n');
         appendAssistantInfo(assistant, audit);
-        audit.append("\nError message:\n").append(error.getFirst());
+        audit.append("\nError message:\n").append(message);
         audit.append("\nInput value:\n").append(auditValue(inputPair.getFirst()));
         if (Tools.isNotEmpty(inputPair.getSecond())) {
             audit.append("\nUser prompt:\n").append(auditValue(inputPair.getSecond()));
         }
-        audit.append("\nFull response:\n").append(auditValue(error.getSecond()));
+        audit.append("\nFull response:\n").append(auditValue(rawResponse));
         Adminlog.add(Adminlog.TYPE_AI, audit.toString(), -1, -1);
-        throw new ProviderCallException(error.getFirst(), cause);
+        throw new ProviderCallException(message, cause);
     }
 
     private void appendAssistantInfo(AssistantDefinitionEntity assistant, StringBuilder audit) {

@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -37,6 +38,7 @@ import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockMultipartFile;
 
 import com.webjetcms.ai.AiClient;
+import com.webjetcms.ai.AiLifecycleListener;
 import com.webjetcms.ai.AiCapabilities;
 import com.webjetcms.ai.AiCapabilities.Continuation;
 import com.webjetcms.ai.AiCapabilities.Operation;
@@ -233,6 +235,7 @@ class LibrarySupportLogicTest {
     @Test
     void generatesImageNameThroughDirectPreparedLibraryRequest() throws Exception {
         AiProvider provider = mock(AiProvider.class);
+        doCallRealMethod().when(provider).execute(any(), any(), any(), any());
         WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         TokenUsage usage = new TokenUsage(2, 3, 5, null);
@@ -316,7 +319,7 @@ class LibrarySupportLogicTest {
             assertEquals(streaming && !image ? "first" : "", output.toString());
             if (image) {
                 verify(client).execute(any(), any(), any(), same(input.getCancellationToken()));
-                verify(client, times(0)).stream(any(), any(), any(), any(), any());
+                verify(client, times(0)).stream(any(String.class), any(), any(), any(), any());
             }
             session.verify(() -> AiChatSession.resolve(null, assistant, null));
             session.verifyNoMoreInteractions();
@@ -331,8 +334,8 @@ class LibrarySupportLogicTest {
         TestLibrarySupportLogic logic = chatLogic(client);
         AiProviderException failure = new AiProviderException("test-provider", 400, "Invalid continuation",
             "private raw response", false, null, AiErrorCategory.INVALID_CONTINUATION);
-        when(client.execute(any(), any(), any(), any())).thenThrow(failure);
-        when(client.stream(any(), any(), any(), any(), any())).thenThrow(failure);
+        when(client.execute(any(String.class), any(), any(), any())).thenThrow(failure);
+        when(client.stream(any(String.class), any(), any(), any(), any())).thenThrow(failure);
         try (MockedStatic<Adminlog> audit = mockStatic(Adminlog.class)) {
             ProviderCallException exception = assertThrows(ProviderCallException.class, () -> {
                 if (streaming) logic.getAiStreamResponse(assistant(), textInput(), null, null, new BufferedWriter(new StringWriter()), null);
@@ -354,11 +357,12 @@ class LibrarySupportLogicTest {
         InputDataDTO input = textInput();
         input.setInputValue(attachment);
         StringBuilder output = new StringBuilder();
+        AiLifecycleListener lifecycle = mock(AiLifecycleListener.class);
         var requests = ArgumentCaptor.forClass(AiRequest.class);
-        when(client.execute(any(), requests.capture(), any(), same(input.getCancellationToken())))
+        when(client.execute(any(), requests.capture(), any(), same(input.getCancellationToken()), same(lifecycle)))
             .thenAnswer(call -> new AiResponse(call.getArgument(1, AiRequest.class).inputText(),
                 List.of(), TokenUsage.EMPTY, "completed", "response-one"));
-        when(client.stream(any(), requests.capture(), any(), any(), same(input.getCancellationToken())))
+        when(client.stream(any(), requests.capture(), any(), any(), same(input.getCancellationToken()), same(lifecycle)))
             .thenAnswer(call -> {
                 String text = call.getArgument(1, AiRequest.class).inputText();
                 AiStreamListener listener = call.getArgument(3);
@@ -367,12 +371,13 @@ class LibrarySupportLogicTest {
                 }
                 return new AiResponse(text, List.of(), TokenUsage.EMPTY, "completed", "response-one");
             });
-        AiResponse response = logic.getPersistentChatResponse(chatAssistant(), input, output::append, streaming, AiProviderConfig.empty());
+        AiResponse response = logic.getPersistentChatResponse(chatAssistant(), input, output::append, streaming,
+            AiProviderConfig.empty(), lifecycle);
         assertEquals(attachment, response.text());
         if (streaming) assertEquals(attachment, output.toString());
         input.setInputValue("");
         input.setPreviousResponseId(response.responseId());
-        logic.getPersistentChatResponse(chatAssistant(), input, output::append, streaming, AiProviderConfig.empty());
+        logic.getPersistentChatResponse(chatAssistant(), input, output::append, streaming, AiProviderConfig.empty(), lifecycle);
         AiRequest continuation = requests.getValue();
         assertEquals("response-one", continuation.previousResponseId());
         assertEquals("", continuation.inputText());
@@ -382,6 +387,7 @@ class LibrarySupportLogicTest {
     @ValueSource(booleans = {false, true})
     void chatRetainsPromptDefenseForAttachmentIncludes(boolean persistent) throws Exception {
         AiProvider provider = mock(AiProvider.class);
+        doCallRealMethod().when(provider).execute(any(), any(), any(), any());
         when(provider.id()).thenReturn("test-provider");
         when(provider.capabilities("test-model")).thenReturn(chatCapabilities(Support.SUPPORTED));
         when(provider.inputHandling(AiOperation.CHAT)).thenReturn(AiInputHandling.PROTECTED_PROMPT);
@@ -403,7 +409,7 @@ class LibrarySupportLogicTest {
             MockedStatic<AiChatSession> session = mockStatic(AiChatSession.class)) {
             session.when(() -> AiChatSession.resolve(null, assistant, null))
                 .thenReturn(new AiChatSession.Continuation(null, Map.of()));
-            if (persistent) logic.getPersistentChatResponse(assistant, input, text -> { }, false, AiProviderConfig.empty());
+            if (persistent) logic.getPersistentChatResponse(assistant, input, text -> { }, false, AiProviderConfig.empty(), AiLifecycleListener.none());
             else logic.getAiResponse(assistant, input, null, null, null);
             var request = ArgumentCaptor.forClass(AiRequest.class);
             verify(provider).execute(request.capture(), any(), same(input.getCancellationToken()));
@@ -488,8 +494,8 @@ class LibrarySupportLogicTest {
             assertEquals("Use a readable document.", result.getError());
             assertEquals("ATTACHMENT_INVALID", result.getErrorCategory());
             assertFalse(result.getRetryable());
-            verify(client, times(0)).execute(any(), any(), any(), any());
-            verify(client, times(0)).stream(any(), any(), any(), any(), any());
+            verify(client, times(0)).execute(any(String.class), any(), any(), any());
+            verify(client, times(0)).stream(any(String.class), any(), any(), any(), any());
         }
     }
 

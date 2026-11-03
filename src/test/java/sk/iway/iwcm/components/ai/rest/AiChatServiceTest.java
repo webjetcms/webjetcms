@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -28,6 +29,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.webjetcms.ai.AiClient;
 import com.webjetcms.ai.AiErrorCategory;
+import com.webjetcms.ai.AiLifecycleListener;
+import com.webjetcms.ai.AiRequestLifecycle;
+import com.webjetcms.ai.AiRequestLifecycle.State;
 import com.webjetcms.ai.AiProviderConfig;
 import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiResponse;
@@ -46,7 +50,7 @@ import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 
-/** Verifies saved conversations using only final provider responses and previousResponseId. */
+/** Verifies cleanup of observed responses and continuation from completed turns only. */
 class AiChatServiceTest {
     @TempDir Path root;
     private final AiChatStore store = new AiChatStore();
@@ -87,8 +91,10 @@ class AiChatServiceTest {
         Prop prop = mock(Prop.class);
         when(prop.getText(anyString())).thenAnswer(call -> call.getArgument(0));
         translations.when(() -> Prop.getInstance(request)).thenReturn(prop);
-        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config))).thenReturn(
-            new AiResponse("Answer", List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", "response-one"));
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenAnswer(call -> {
+            call.<AiLifecycleListener>getArgument(5).onResponseId("response-one");
+            return new AiResponse("Answer", List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", "response-one");
+        });
     }
 
     @AfterEach
@@ -112,10 +118,11 @@ class AiChatServiceTest {
         var prepared = service.prepare(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Read these", null), scope, files);
         when(provider.describeChatImage(any(), any(), any(), same(config))).thenReturn(
             new AiResponse("Image description", List.of(), new TokenUsage(2, 2, 4, Map.of()), "completed"));
-        when(provider.getPersistentChatResponse(any(), any(), any(), eq(true), same(config))).thenAnswer(call -> {
+        when(provider.getPersistentChatResponse(any(), any(), any(), eq(true), same(config), any())).thenAnswer(call -> {
             InputDataDTO input = call.getArgument(1);
             assertTrue(input.getInputValue().contains(text));
             assertTrue(input.getInputValue().contains("Image description"));
+            call.<AiLifecycleListener>getArgument(5).onResponseId("response-one");
             call.<Consumer<String>>getArgument(2).accept(text);
             return new AiResponse(text, List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", "response-one");
         });
@@ -137,9 +144,10 @@ class AiChatServiceTest {
         String id = first.turn().thread().getId();
         var duplicate = service.prepare(new AiChatRequest(id, 12L, first.turn().message().getRequestId(), 0L, "Question", null), scope);
         assertEquals("Answer", execute(duplicate).getResponse());
-        verify(provider, times(1)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any());
-        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config))).thenAnswer(call -> {
+        verify(provider, times(1)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenAnswer(call -> {
             assertEquals("response-one", call.<InputDataDTO>getArgument(1).getPreviousResponseId());
+            call.<AiLifecycleListener>getArgument(5).onResponseId("response-two");
             return new AiResponse("Next answer", List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", "response-two");
         });
         assertEquals("Next answer", execute(prepare(id, 1L)).getResponse());
@@ -166,7 +174,7 @@ class AiChatServiceTest {
             "Document context".getBytes(StandardCharsets.UTF_8))));
         var first = service.prepare(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null,
             context, "<p>Original page</p>"), scope, files);
-        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config))).thenAnswer(call -> {
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenAnswer(call -> {
             InputDataDTO input = call.getArgument(1);
             assertTrue(input.getInputValue().startsWith("<p>Original page</p>"));
             assertTrue(input.getInputValue().contains("Document context"));
@@ -177,7 +185,7 @@ class AiChatServiceTest {
         var retry = service.prepare(new AiChatRequest(id, 12L, UUID.randomUUID().toString(), 1L, "Question", first.turn().message().getId(),
             context, "<p>Changed page</p>"), scope);
         execute(retry);
-        verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config));
+        verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any());
         assertEquals(context, service.detail(id, scope).thread().context());
         assertTrue(service.list(scope, 0, "").items().isEmpty());
         assertEquals(1, service.list(scope, 0, "", context).items().size());
@@ -196,21 +204,29 @@ class AiChatServiceTest {
         assertEquals("CANCELLED", execute(prepared).getErrorCategory());
         assertEquals(HttpStatus.NOT_FOUND,
             assertThrows(ResponseStatusException.class, () -> store.get(id, scope)).getStatusCode());
-        verify(provider, never()).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any());
+        verify(provider, never()).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
     }
 
-    /** Expiration stops continuation without resending historical text or silently starting a new context. */
-    @Test
-    void expirationKeepsHistoryAndDoesNotReplay() throws Exception {
+    /** Failed turns keep the last continuation and use lifecycle facts, not HTTP status, for cleanup. */
+    @ParameterizedTest
+    @CsvSource({"NOT_SUBMITTED,503,", "REJECTED,503,", "UNKNOWN,429,", "RESPONSE_OBSERVED,404,failed-response", "RESPONSE_OBSERVED,429,"})
+    void expirationKeepsHistoryAndDoesNotReplay(State state, int status, String responseId) throws Exception {
         var first = prepare(null, null);
         execute(first);
         String id = first.turn().thread().getId();
-        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), any())).thenThrow(
-            new AiProviderException("openai", 404, "Expired", null, false).withCategory(AiErrorCategory.INVALID_CONTINUATION));
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any())).thenThrow(
+            new AiProviderException("openai", status, "Expired", null, false).withCategory(AiErrorCategory.INVALID_CONTINUATION)
+                .withLifecycle(new AiRequestLifecycle(state, responseId)));
         assertEquals("INVALID_CONTINUATION", execute(prepare(id, 1L)).getErrorCategory());
         var detail = service.detail(id, scope);
         assertFalse(detail.thread().canContinue());
         assertEquals(4, detail.messages().size());
-        verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any());
+        var saved = new AiChatStore().get(id, scope);
+        assertEquals("response-one", saved.thread().getLastResponseId());
+        assertEquals(responseId, saved.messages().get(3).getProviderResponseId());
+        boolean unknown = state == State.UNKNOWN || (state == State.RESPONSE_OBSERVED && responseId == null);
+        assertEquals(unknown, saved.messages().get(3).isStorageUnknown());
+        assertEquals(!unknown, service.delete(id, scope).deleted());
+        verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
     }
 }
