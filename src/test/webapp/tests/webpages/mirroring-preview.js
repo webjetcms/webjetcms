@@ -54,8 +54,8 @@ function showMirroring(I, enabled) {
     I.click('button.buttons-jstree-settings');
     I.waitForVisible('#jstreeSettingsModal', 10);
     I.see('Zobraziť zrkadlenie', '#jstreeSettingsModal');
-    if (enabled) I.checkOption('#jstree-settings-showbadmirrorings');
-    else I.uncheckOption('#jstree-settings-showbadmirrorings');
+    if (enabled) I.checkOption('#jstree-settings-showmirrorings');
+    else I.uncheckOption('#jstree-settings-showmirrorings');
     I.click('#jstree-settings-submit');
     I.waitForInvisible('#jstreeSettingsModal', 10);
     I.jstreeWaitForLoader();
@@ -126,7 +126,7 @@ Scenario('Create own language folders and preserve settings', async ({ I, DT, DT
     I.amOnPage(pageUrl);
     I.click('button.buttons-jstree-settings');
     I.waitForVisible('#jstreeSettingsModal', 10);
-    originalMirroring = await I.grabCheckedElementStatus('#jstree-settings-showbadmirrorings');
+    originalMirroring = await I.grabCheckedElementStatus('#jstree-settings-showmirrorings');
     originalShowPages = await I.grabCheckedElementStatus('#jstree-settings-showpages');
     I.click('#jstreeSettingsModal .btn-close-editor');
     I.waitForInvisible('#jstreeSettingsModal', 10);
@@ -229,7 +229,7 @@ Scenario('Open mirrored pages from language links in the tree', async ({ I, DT, 
     I.click('button.buttons-jstree-settings');
     I.waitForVisible('#jstreeSettingsModal', 10);
     I.checkOption('#jstree-settings-showpages');
-    I.checkOption('#jstree-settings-showbadmirrorings');
+    I.checkOption('#jstree-settings-showmirrorings');
     I.click('#jstree-settings-submit');
     I.waitForInvisible('#jstreeSettingsModal', 10);
     I.jstreeWaitForLoader();
@@ -267,7 +267,7 @@ Scenario('Open the affected folder and page mappings from warning icons', async 
     I.click('button.buttons-jstree-settings');
     I.waitForVisible('#jstreeSettingsModal', 10);
     I.checkOption('#jstree-settings-showpages');
-    I.checkOption('#jstree-settings-showbadmirrorings');
+    I.checkOption('#jstree-settings-showmirrorings');
     I.click('#jstree-settings-submit');
     I.waitForInvisible('#jstreeSettingsModal', 10);
     I.jstreeWaitForLoader();

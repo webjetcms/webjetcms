@@ -422,11 +422,11 @@ public class GroupsTreeService {
 
     /** Resolves the shared mirroring toggle for both initial rendering and tree reloads. */
     private boolean isMirroringShown(Identity user, HttpServletRequest request) {
-        String show = request.getParameter("showBadMirrorings");
+        String show = request.getParameter("showMirrorings");
         if (show != null) return "true".equals(show);
         String requestUri = request.getRequestURI();
         if (requestUri == null || requestUri.contains("/admin/v9/webpages/web-pages-list") == false) return false;
-        return new AdminSettingsService(user).getJsonBooleanValue("jstreeSettings_web-pages-list", "showBadMirrorings");
+        return new AdminSettingsService(user).getJsonBooleanValue("jstreeSettings_web-pages-list", "showMirrorings");
     }
 
     public static List<GroupDetails> sortGroupsBasedOnUserSettings(Identity user, List<GroupDetails> groups) {

@@ -89,10 +89,10 @@ include ../pug/mixins
     .col-sm-7
       .DTE_Field_InputControl
         .custom-control.form-switch
-            input#jstree-settings-showbadmirrorings.form-check-input(type='checkbox' name='jstree-settings-showbadmirrorings' value='true')
-            label.form-check-label(for='jstree-settings-showbadmirrorings') [[\#{webpages.jstree.showbadmirrorings}]]
+            input#jstree-settings-showmirrorings.form-check-input(type='checkbox' name='jstree-settings-showmirrorings' value='true')
+            label.form-check-label(for='jstree-settings-showmirrorings') [[\#{webpages.jstree.showmirrorings}]]
     .col-sm-1.form-group-tooltip
-      button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.showbadmirrorings.tooltip}')
+      button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.showmirrorings.tooltip}')
         i.ti.ti-info-circle
   .form-group.row.row-hr
     .col-sm-7.offset-sm-4

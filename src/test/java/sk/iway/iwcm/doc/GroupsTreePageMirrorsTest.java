@@ -149,7 +149,7 @@ class GroupsTreePageMirrorsTest {
         try (MockedStatic<MirroringService> diagnostics = mockStatic(MirroringService.class);
                 MockedConstruction<ComplexQuery> queries = mockConstruction(ComplexQuery.class);
                 MockedConstruction<AdminSettingsService> settings = mockConstruction(AdminSettingsService.class, (setting, context) -> {
-                    when(setting.getJsonBooleanValue("jstreeSettings_web-pages-list", "showBadMirrorings")).thenReturn(false);
+                    when(setting.getJsonBooleanValue("jstreeSettings_web-pages-list", "showMirrorings")).thenReturn(false);
                 })) {
             MockHttpServletRequest initial = new MockHttpServletRequest();
             initial.setRequestURI("/admin/v9/webpages/web-pages-list/");
@@ -157,11 +157,12 @@ class GroupsTreePageMirrorsTest {
             service.setMirroringIcons(List.of(page), user, "dt-tree", initial);
             assertEquals(2, settings.constructed().size());
             for (AdminSettingsService setting : settings.constructed()) {
-                verify(setting).getJsonBooleanValue("jstreeSettings_web-pages-list", "showBadMirrorings");
+                verify(setting).getJsonBooleanValue("jstreeSettings_web-pages-list", "showMirrorings");
+                verifyNoMoreInteractions(setting);
             }
 
             MockHttpServletRequest ajax = request();
-            ajax.setParameter("showBadMirrorings", "false");
+            ajax.setParameter("showMirrorings", "false");
             service.setMirroringLinks(List.of(page), user, "dt-tree", ajax);
             service.setMirroringIcons(List.of(page), user, "dt-tree", ajax);
             assertEquals(2, settings.constructed().size());
@@ -183,7 +184,7 @@ class GroupsTreePageMirrorsTest {
                 service.setMirroringLinks(List.of(page), user, mode, request());
             }
             MockHttpServletRequest hidden = request();
-            hidden.setParameter("showBadMirrorings", "false");
+            hidden.setParameter("showMirrorings", "false");
             service.setMirroringLinks(List.of(page), user, "dt-tree", hidden);
             when(user.isDisabledItem("cmp_mirroring")).thenReturn(true);
             service.setMirroringLinks(List.of(page), user, "dt-tree", request());
@@ -196,7 +197,7 @@ class GroupsTreePageMirrorsTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/admin/rest/groups/tree");
         request.setParameter("showMirrorLinks", "true");
-        request.setParameter("showBadMirrorings", "true");
+        request.setParameter("showMirrorings", "true");
         return request;
     }
 

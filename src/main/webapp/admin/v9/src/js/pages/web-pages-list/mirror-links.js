@@ -43,7 +43,7 @@ export function bindMirrorLinks() {
                 dropdowns.delete(button);
             }
         }
-        if (window.jstreeSettings.isShowBadMirrorings() == false) {
+        if (window.jstreeSettings.isShowMirrorings() == false) {
             pendingId = null;
             return;
         }

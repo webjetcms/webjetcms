@@ -2,7 +2,7 @@ Feature('webpages.mirroring-preview').tag('@singlethread');
 
 const pageUrl = '/admin/v9/webpages/web-pages-list/';
 const domain = 'mirroring.tau27.iway.sk';
-const settingsFields = ['showid', 'showorder', 'showpages', 'showfolders-dt', 'showbadmirrorings'];
+const settingsFields = ['showid', 'showorder', 'showpages', 'showfolders-dt', 'showmirrorings'];
 let originalSettings;
 
 Before(({ login }) => {
@@ -40,7 +40,7 @@ Scenario('Prepare the existing mirroring screenshot fixtures', async ({ I, DT, D
     }
     for (const field of settingsFields) {
         const selector = '#jstree-settings-' + field;
-        if (field === 'showbadmirrorings') I.checkOption(selector);
+        if (field === 'showmirrorings') I.checkOption(selector);
         else I.uncheckOption(selector);
     }
     I.selectOption('#jstree-settings-treeWidth', '6:6');

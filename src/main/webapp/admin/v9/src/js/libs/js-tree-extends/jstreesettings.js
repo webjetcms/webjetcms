@@ -46,7 +46,7 @@ export class JstreeSettings {
             $("#jstree-settings-showorder").prop("checked", self.isPriotityShow());
             $("#jstree-settings-showpages").prop("checked", self.isPagesShow());
             $("#jstree-settings-showfolders-dt").prop("checked", self.isShowFoldersDt());
-            $("#jstree-settings-showbadmirrorings").prop("checked", self.isShowBadMirrorings());
+            $("#jstree-settings-showmirrorings").prop("checked", self.isShowMirrorings());
             $("#jstree-settings-treeWidth").selectpicker("val", "" + self.getTreeWidth());
             $("#jstree-settings-treeSortType").selectpicker("val", self.getTreeSortType());
             $("#jstree-settings-treeSortOrderAsc").prop("checked", self.isTreeSortOrderAsc());
@@ -72,7 +72,7 @@ export class JstreeSettings {
             settings.showPriority = $("#jstree-settings-showorder").is(":checked");
             settings.showPages = $("#jstree-settings-showpages").is(":checked");
             settings.showFoldersDt = $("#jstree-settings-showfolders-dt").is(":checked");
-            settings.showBadMirrorings = $("#jstree-settings-showbadmirrorings").is(":checked");
+            settings.showMirrorings = $("#jstree-settings-showmirrorings").is(":checked");
             var treeWidth = parseInt($("#jstree-settings-treeWidth").val());
             settings.treeWidth = treeWidth;
 
@@ -151,8 +151,8 @@ export class JstreeSettings {
         return 4;
     }
 
-    isShowBadMirrorings() {
-        return this.getSettings().showBadMirrorings === true;
+    isShowMirrorings() {
+        return this.getSettings().showMirrorings === true;
     }
 
     getTreeSortType() {
