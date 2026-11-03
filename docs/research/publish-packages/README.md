@@ -8,6 +8,8 @@ Cieľom je pripraviť viac stránok, zmeny stromu, stránkové médiá a redakč
 
 **Kde vytvorím balík a ako ho vyberiem?** [Rýchly postup v návrhu UI](05-rozhranie.md#rýchly-postup-od-vytvorenia-po-prepnutie) ukazuje vytvorenie cez `Pracovné verzie`, aktiváciu cez `Upravovať web` a prepínač pod doménou. Dokument obsahuje formulár aj rozbalenú ponuku produkcie a pracovných verzií.
 
+**Ako začnem implementáciu?** [Orchestrácia](ORCHESTRACIA.md#ako-prácu-spustiť) obsahuje kopírovateľný prompt pre P01, pokračovanie P02–P08 aj obnovu rozpracovaného kroku. [Modely a roly](ORCHESTRACIA.md#modely-a-spôsob-riadenia) odporúčajú jeden model GPT-6.1 Sol / High pre hlavného agenta aj pomocníkov; voliteľné alternatívy sú uvedené osobitne. Ide o pokyny agentovi, nie samostatný program, ktorý treba inštalovať.
+
 Výsledok kontroly všetkých podkladov, opravené medzery a zostávajúce technické overenia sú v [09 — Kontrola pripravenosti](09-kontrola-pripravenosti.md). Q16–Q19 sú uzatvorené; žiadna ďalšia produktová otázka nezostáva otvorená. P01 musí ešte overiť kritické predpoklady v reálnom prostredí.
 
 ## Dohodnutý základ
@@ -54,7 +56,7 @@ Tento adresár nie je návrhom kopírovania celého Git modelu. Git ostáva prir
 | [07 — Overenie](07-overenie.md) | Šestnásť akceptačných oblastí vrátane Noviniek a existujúce testy, na ktoré nadviazať. |
 | [08 — Ďalšie moduly](08-rozsirovanie-modulov.md) | Porovnanie architektúr, spoločná budúca JSON tabuľka, príprava jadra už dnes a konkrétny postup pre základný banner a galériu. |
 | [09 — Kontrola pripravenosti](09-kontrola-pripravenosti.md) | Výsledok auditu, opravené rozpory, potvrdené doplnenia a hranica pripravenosti na P01. |
-| [ORCHESTRACIA](ORCHESTRACIA.md) | Presné prompty na spustenie agentov, riadenie rozsahu a odovzdávanie práce. |
+| [ORCHESTRACIA](ORCHESTRACIA.md) | Modely a roly, prompty P01–P08, pokračovanie po prerušení, riadenie rozsahu a odovzdávanie práce. |
 | [STAV](STAV.md) | Evidencia návrhu a neskoršieho dokončovania krokov; teraz sú všetky nespustené. |
 
 Overený stav jadra je oddelený od navrhovaných zmien: [čítanie a náhľad](analyza-citanie-a-nahlad.md), [zápis a publikovanie](analyza-zapis-a-publikovanie.md), [médiá a súbory](analyza-media-a-subory.md). Tieto analýzy vysvetľujú, prečo treba uvedené zásahy a ktoré existujúce postupy sa nedajú použiť bez úpravy.

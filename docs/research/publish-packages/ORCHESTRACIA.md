@@ -15,16 +15,49 @@ Podľa požiadavky N5 z [rozhodnutí](01-rozhodnutia.md#jednoduchosť-a-poc-3-no
 
 Pred odovzdaním odstráň nepoužité prípravné vrstvy a uveď zostávajúce obmedzenia. Ekvivalentné zjednodušenie nevyžaduje nové povolenie; zjednodušením nesmie zaniknúť potvrdená funkcia. Táto priorita platí pre všetky kroky a budúce moduly, aj pri čítaní starších technických odporúčaní v tomto adresári.
 
+## Modely a spôsob riadenia
+
+**Odporúčaný začiatok: GPT-6.1 Sol, reasoning High, pre všetky P01–P08.** Jeden hlavný agent zároveň implementuje, riadi pomocníkov a kontroluje výsledok. Tento Markdown je jeho pracovný návod, nie spustiteľný orchestrátor ani proces, ktorý sám rozbehne všetkých osem etáp. Netreba pridávať Agents SDK, API klienta ani vlastný plánovač agentov do WebJETu.
+
+Odporúčanie je určené pre tento projekt a bolo overené voči OpenAI Docs 3. novembra 2026. Oficiálna dokumentácia odporúča Sol pre náročnú prácu s kódom a rozlišuje model od úrovne uvažovania. High tu volíme pre zásahy do existujúcich čítacích a zapisovacích ciest; nie je to požiadavka na zložitejšiu implementáciu. [Modely a reasoning v Codexe](https://learn.chatgpt.com/docs/models).
+
+| Práca / rola | Odporúčaný model a reasoning | Použitie |
+| --- | --- | --- |
+| Hlavný agent, implementácia P01–P08 | GPT-6.1 Sol (`gpt-6.1-sol`), High | Predvolená voľba pre celý postup; medzi etapami netreba meniť model. |
+| Pomocník na kód, SQL, preview alebo testy | Rovnaký model a reasoning ako hlavný agent | Predvolený režim delegovania, ak má úloha jasné hranice a samostatné súbory/dáta. |
+| Nezávislá kontrola ID, izolácie a merge | GPT-6.1 Sol, High | Samostatný kontext kontrolóra; iný model nie je podmienkou nezávislej kontroly. |
+| Voliteľný úsporný pomocník | GPT-6 Luna (`gpt-6-luna`), High | Iba úzky inventár súborov, sumarizácia výsledkov alebo jednoduchá dokumentácia. O správnosti merge/ID rozhoduje hlavný agent. |
+| Voliteľná konzultácia zložitého problému | GPT-6 Astra (`gpt-6-astra`), Medium | Konkrétny nevyriešený problém P01/P02/P03/P06; nie povinná druhá implementácia každej etapy. |
+
+Rozdelenie úloh v tabuľke je odporúčanie autora návrhu. Sol je podľa OpenAI určený aj na komplexné programovanie, Astra na najnáročnejšiu prácu a Luna na úzko vymedzené opakované úlohy. Dostupnosť závisí od účtu a klienta. [Katalóg modelov](https://developers.openai.com/api/docs/models), [nastavenie modelov subagentov](https://learn.chatgpt.com/docs/agent-configuration/subagents).
+
+Hlavný model a reasoning si vyber v ovládaní modelu pri poli správy; samotné meno modelu v tomto MD ho neprepne. V CLI na to slúži `/model`. Pre prvý beh stačí High; Max/Ultra nie sú podmienkou realizácie. Ultra môže využívať subagentov, ale delegovanie možno vyžiadať aj samostatným pokynom. [Ovládanie modelov](https://learn.chatgpt.com/docs/models), [delegovanie v Codexe](https://learn.chatgpt.com/docs/agent-configuration/subagents).
+
+Predvolený režim tohto plánu používa pre pomocníkov rovnaký model ako hlavný agent. Voliteľnú Lunu/Astru použi až po výslovnom výbere používateľa; netreba kvôli nim vytvárať `.codex/agents/` ani meniť globálnu konfiguráciu. Pri delegovaní rešpektuj skutočné možnosti klienta: jeho konfigurácia môže model pomocníka ovplyvniť. Ak požadovaný model alebo reasoning nemožno zvoliť, uveď dostupnú alternatívu; nevydávaj požiadavku v prompte za potvrdené nastavenie. Do výsledku zaznamenaj známe použité modely, pri neznámom nastavení napíš „neoverené“.
+
 ## Ako prácu spustiť
 
-Najskôr posúď [prehľad návrhu](README.md), [rozhodnutia](01-rozhodnutia.md) a [rozsah/odhad](06-plan-implementacie.md). Ak návrh zodpovedá zamýšľanému výsledku, môžeš v tomto alebo novom chate zadať:
+1. Otvor existujúci worktree `webjetcms-feature-58858-publishing-packages` na vetve `feature/58858-publishing-packages`. Pokračovať možno v tomto chate; nový chat má používať ten istý worktree a rozpracované súbory.
+2. Vyber GPT-6.1 Sol / High, ak je v ponuke. Použi bežný režim, ktorý vie upravovať súbory a spúšťať overenia; samotný plánovací režim implementáciu nevykoná.
+3. Maj dostupné lokálne/testovacie WebJET prostredie. Agent podľa [pracovného návodu](../../../.github/agents/CONTRIBUTING.md) najskôr zistí konfiguráciu, testový admin host, šablónu a jeden reálny DB profil. P01 používa jednorazovú testovaciu DB; ak potrebné prostredie chýba, agent má uviesť konkrétne čo chýba a dokončiť nezávislú prácu. Prihlasovacie údaje patria do lokálnej konfigurácie, nie do MD alebo promptu.
+4. Zadaj iba P01. Po odovzdaní posúď výsledok, až potom zadaj P02. Ďalej pokračuj po jednej etape podľa tabuľky nižšie.
+
+Štartovací prompt pre tento checkout:
 
 ```text
+Pracuj v existujúcom worktree:
+/Users/jeeff/Documents.nosync/workspace-visualstudio/github.com_webjetcms/webjetcms-feature-58858-publishing-packages
+
 Implementuj iba krok P01 návrhu docs/research/publish-packages.
 Riaď sa docs/research/publish-packages/ORCHESTRACIA.md.
+Buď hlavný implementátor a koordinátor. Na nezávislú prácu môžeš
+použiť najviac dvoch pomocných agentov naraz s rovnakým modelom;
+ich výsledky skontroluj a integruj. Ak delegovanie nie je dostupné,
+vykonaj krok samostatne.
 Dodrž prioritu jednoduchého POC; over jeden skutočný DB profil a zapíš ktorý.
 Vychádzaj z uzatvorených rozhodnutí, výsledok zapíš do STAV.md.
 Zachovaj cudzie lokálne zmeny a nevytváraj Git commity.
+Bez produkčného nasadenia a bez začatia P02.
 Po P01 skonči s výsledkami overenia a aktualizovaným odhadom.
 ```
 
@@ -34,12 +67,53 @@ Po dokončení a posúdení výsledkov P01 sa pokračuje napríklad:
 
 ```text
 Implementuj krok P02 podľa docs/research/publish-packages/ORCHESTRACIA.md.
-Skontroluj výsledky P01 v STAV.md a nadviaž na existujúci kód.
+Pokračuj v rovnakom worktree, na rovnakom POC profile
+a s rovnakým režimom modelov a delegovania.
+Skontroluj v STAV.md dokončenie predpokladov zadaného kroku
+podľa plánu 06 a nadviaž na existujúci kód.
 Dokonči rozsah a overenia P02, aktualizuj STAV.md a skonči.
 Bez Git commitov a bez nasadenia na produkciu.
 ```
 
 P02 sa postupne nahradí P03 až P08. Nepotrebuješ kopírovať celý návrh do promptu. Ak chceš dlhší súvislý beh, rozsah povedz výslovne, napr. „realizuj P03–P05“. Bez takéhoto zadania agent po určenom kroku nepokračuje do ďalšieho.
+
+### Čo očakávať po jednotlivých etapách
+
+| Etapa | Čo si overiť v odovzdaní |
+| --- | --- |
+| P01 | Dôkaz ID, SQL a reálneho náhľadu na zvolenom profile; výsledky overenia a spresnený odhad. Ešte nejde o hotovú editáciu. |
+| P02 | Úložisko, kontext a konečné ID; pri vypnutej funkcii funguje dnešná administrácia. |
+| P03 | Preklikateľný náhľad, menu, Novinky, obrázky a médiá. Dáta ešte môžu pripravovať testovacie fixture. |
+| P04 | Vytvorenie a úpravy stránok/priečinkov vo vetve bez zmeny produkčného obsahu. |
+| P05 | Pracovný upload, médiá a súbory; verejné URL stále vracajú produkčné súbory. |
+| P06 | Konflikty, voľba LIVE/WORK a ručný merge so zachovanými ID. **Prvý použiteľný ručný POC.** |
+| P07 | Spoločný termín, posun/zrušenie a zastavenie pri novom probléme. |
+| P08 | Regresia, konkrétne obmedzenia a návod na nasadenie. Produkčné zapnutie je osobitný pokyn. |
+
+Po každej etape skontroluj zhrnutie a diff: čo funguje, aké testy prešli, čo zostáva neoverené a či tomu zodpovedá `STAV.md`. Od P03 má zmysel pozrieť aj náhľad; po P06 si prejsť celý ručný redakčný tok. Agent dodá konkrétne testovacie URL a kroky reprodukcie. Commity môžeš medzi etapami vytvoriť sám; nie sú podmienkou pokračovania agenta. Presné dokončovacie podmienky zostávajú v [pláne](06-plan-implementacie.md).
+
+Pri `PARTIAL` dokonči tú istú etapu; ďalší závislý krok ešte nespúšťaj. Pri `BLOCKED` najskôr odstráň uvedenú prekážku. Chýbajúci iný DB profil neblokuje POC, chýbajúci dôkaz na zvolenom profile áno. Prerušenie chatu neznamená začať implementáciu odznova.
+
+### Pokračovanie po prerušení alebo v novom chate
+
+Vyber ten istý worktree a model. Nahraď P03 skutočným rozpracovaným krokom:
+
+```text
+Pracuj v existujúcom worktree:
+/Users/jeeff/Documents.nosync/workspace-visualstudio/github.com_webjetcms/webjetcms-feature-58858-publishing-packages
+
+Pokračuj v rozpracovanom P03 podľa docs/research/publish-packages/ORCHESTRACIA.md.
+Prečítaj STAV.md, git diff a skutočný stav kódu.
+Nadviaž na hotové časti a dokonči chýbajúcu prácu a overenia
+na rovnakom POC profile. Zachovaj existujúce zmeny.
+Použi predvolený režim modelov a delegovania z orchestrácie.
+Aktualizuj STAV.md, odovzdaj výsledok a skonči.
+Bez Git commitov, produkčného nasadenia a ďalšej etapy.
+```
+
+Pri novom chate na už dokončenej hranici použi prompt pre ďalšiu etapu vyššie a doplň túto cestu worktree. Dokumenty a výsledný kód prenášajú stav; netreba ručne kopírovať celú históriu rozhovoru.
+
+### Budúce rozšírenia a chaty
 
 Budúce moduly sa zadávajú osobitne podľa [08 — Rozširovanie modulov](08-rozsirovanie-modulov.md). P02/P06 pripravia spoločnú identitu a spracovanie dnešných typov, bez povinného rozhrania/DI registra; E01 vytvorí spoločné JSON úložisko až spolu s prvým modulom E02. E03 môže neskôr pridať galériu. Tieto kroky nie sú automatickým pokračovaním P08. V dokumente 08 je presný vzor zadania základného bannera bez úprav štatistík.
 
@@ -58,7 +132,9 @@ Nový chat nie je technickou podmienkou; dôležitý je rovnaký checkout a evid
 
 ## Rozdelenie medzi agentov
 
-Jeden hlavný agent vlastní integráciu, zmluvy a záznam stavu. Pomocní agenti môžu paralelne:
+Jeden hlavný agent vlastní integráciu, zmluvy a záznam stavu; sám aj implementuje. Pre tento POC použi najviac **dvoch aktívnych pomocníkov naraz** v celom tíme, bežne stačí jeden. Krátku alebo závislú úlohu vykoná hlavný agent sám. Ak prostredie neposkytuje subagentov, celý krok možno dokončiť jedným agentom; nezavádza sa náhradný vlastný orchestrátor.
+
+Modely určuje [tabuľka vyššie](#modely-a-spôsob-riadenia). Pomocní agenti môžu paralelne:
 
 - overovať databázové profily alebo konkrétne čítacie cesty;
 - implementovať samostatné súbory služieb/UI so zadaným kontraktom;
@@ -66,6 +142,8 @@ Jeden hlavný agent vlastní integráciu, zmluvy a záznam stavu. Pomocní agent
 - vykonať nezávislé relevantné testy, ak sa nekrižujú testovacie dáta.
 
 Pred delegovaním hlavný agent uvedie výstup, vlastníctvo súborov a závislosti. Dvaja agenti neupravujú súčasne `DocDB`, `GroupsDB`, editor pipeline, migrácie alebo spoločné kontrakty. P04/P05 možno rozdeliť po uzavretí zmlúv P02/P03. P06 nevzniká paralelne nad neurčeným pracovným formátom.
+
+Prakticky: v P01 môže jeden pomocník preveriť rezerváciu ID a druhý čítacie cesty menu/Noviniek; hlavný agent spojí dôkazy. V implementačných etapách pridelí pomocníkovi oddelený súbor alebo kontrolu diffu. Kontrolór najskôr odovzdá zistenia bez úprav rovnakých súborov, v ktorých práve pracuje implementátor. Zapisovacie testy nad rovnakou DB/fixture sa spúšťajú sekvenčne. Na začiatok je jednoduchšie zadať P04 a P05 postupne.
 
 Každý pomocný agent odovzdá zmenené súbory, overené správanie a neoverené podmienky. Hlavný agent zodpovedá za konzistenciu výsledku, aj keď kontrolu vykonal ďalší agent.
 
@@ -97,6 +175,7 @@ Záznam dokončenia vlož do `STAV.md` pod príslušný krok, napríklad:
 P03 — DONE
 Vetva / výchozí commit: ...
 POC profil / rozsah overenia: DB, verzia, driver, inštancia, šablóna
+Modely / reasoning: hlavný agent, pomocníci; neznáme nastavenie označiť
 Výsledok: ...
 Hlavné zmenené súbory a API: ...
 Overenie: príkaz, DB/profil, výsledok, report
