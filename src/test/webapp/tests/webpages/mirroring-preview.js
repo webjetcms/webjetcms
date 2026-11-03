@@ -550,13 +550,13 @@ Scenario('Preview and bulk-delete mirrors without permanently deleting selected 
         openFolder(I, DT, folder);
         I.seeElement('#pills-trash-tab.active');
         I.see(folder.name, node(folder) + ' > a');
+        if (descendants.includes(folder)) {
+            // Deleting a folder keeps its pages inside that folder, not in the Trash root.
+            DT.filterEquals('title', childTitle);
+            I.assertDeepEqual(await I.grabAttributeFromAll('#datatableInit tbody tr[id]', 'id'), [folder.docId]);
+            I.seeElement(`#datatableInit tbody tr[id="${folder.docId}"].is-not-public`);
+        }
     }
-    I.amOnPage(pageUrl);
-    I.click('#pills-trash-tab');
-    DT.waitForLoader();
-    DT.filterEquals('title', childTitle);
-    I.assertDeepEqual((await I.grabAttributeFromAll('#datatableInit tbody tr[id]', 'id')).sort(),
-        descendants.map(folder => folder.docId).sort());
 
     openFolder(I, DT, roots.plain);
     I.dontSeeElement('#pills-trash-tab.active');
