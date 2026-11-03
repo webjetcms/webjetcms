@@ -8,7 +8,6 @@ import java.io.IOException;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -29,16 +28,13 @@ import sk.iway.iwcm.Tools;
  *@created      Date: 14.5.2013 14:12:57
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
-public class ExportSync extends HttpServlet
+public class ExportSync
 {
+	private ExportSync()
+	{
+		//no instance
+	}
 
-	/**
-	 * Comment for <code>serialVersionUID</code>
-	 */
-	private static final long serialVersionUID = -5912813630916961279L;
-	
-	
-	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
 		String path = Tools.URLDecode(request.getPathInfo());
@@ -97,6 +93,6 @@ public class ExportSync extends HttpServlet
 			response.getWriter().print("<html><body>404 - not found</body></html>");
 			return;
 		}
-		
+
 	}
 }

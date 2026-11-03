@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 @Component
 public class SpringDataHelper {
@@ -26,13 +27,21 @@ public class SpringDataHelper {
             EntityManager freshEntityManager = null;
             try {
                 EntityManager entityManager = entry.getValue();
-                if (entityManager.contains(entity)==false) {
-                    //this will throw IllegalArgumentException if the entity is not managed
+                EntityManagerFactory factory = entityManager.getEntityManagerFactory();
+
+                // Do NOT call entityManager.contains(entity) on the shared, transactional EntityManager.
+                // This method is called from JPA lifecycle callbacks (@PreUpdate) that run during the
+                // UnitOfWork commit. On EclipseLink 5.x touching the committing EntityManager corrupts the
+                // change set and leads to "uowChangeSet is null" NullPointerException during commit.
+                // Instead only check whether this persistence unit manages the entity class via the metamodel.
+                boolean managesEntityClass = factory.getMetamodel().getEntities().stream()
+                    .anyMatch(entityType -> entityType.getJavaType().equals(entity.getClass()));
+                if (managesEntityClass == false) {
                     continue; // Skip to the next persistence unit
                 }
 
                 // Create a fresh EntityManager for the current persistence unit
-                freshEntityManager = entityManager.getEntityManagerFactory().createEntityManager();
+                freshEntityManager = factory.createEntityManager();
 
                 // Try to fetch the entity from the database
                 Object dbEntity = freshEntityManager.find(entity.getClass(), id);

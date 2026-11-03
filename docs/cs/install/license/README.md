@@ -4,7 +4,7 @@ Licenční číslo pro WebJET se zadává v sekci Nastavení/Konfigurace do konf
 
 ## Nesprávné licenční číslo
 
-Pokud WebJET obsahuje licenční číslo s exspirovaným datem platnosti, nesprávným doménovým jménem, ​​nebo licenční číslo je nesprávně zadané, zobrazí se po přihlášení do administrace možnost aktualizovat licenční číslo, v logech serveru se při startu zobrazí:
+Pokud WebJET obsahuje licenční číslo s exspirovaným datem platnosti nebo je licenční číslo nesprávně zadané, v logech serveru se při startu zobrazí:
 
 ```log
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - -----------------------------------------------
@@ -20,7 +20,9 @@ Pokud WebJET obsahuje licenční číslo s exspirovaným datem platnosti, nespr�
   for new license.
 ```
 
-Pokud se možnost zadat licenční číslo nezobrazí automaticky po otevření administrační části otevřete adresu `/wjerrorpages/setup/license`.
+Při neplatné licenci se WebJET automaticky spustí v omezeném režimu obnovy licence. Aplikační server zůstane spuštěný, běžným návštěvníkům se zobrazí chybová stránka a na adrese `/wjerrorpages/setup/license` bude dostupný formulář pro zadání nové licence. Plný setup režim se nezpřístupní a není nutné nastavovat `WEBJET_SETUP_ENABLED` ani `WEBJET_SETUP_TOKEN`.
+
+Při vzdáleném použití přistupujte k formuláři výhradně přes HTTPS a podle možností omezte přístup pomocí reverzního proxy nebo firewallu.
 
 ![](license.png)
 
@@ -28,7 +30,7 @@ Zadejte přihlašovací údaje pro ověření oprávnění do administrace a nov
 
 ![](license-saved.png)
 
-Pokud se aplikační server nerestartuje automaticky, proveďte restart aplikačního serveru. Při novém startu se použije zadané licenční číslo.
+Po úspěšném uložení proveďte úplný manuální restart aplikačního serveru. Při novém startu se použije zadané licenční číslo a WebJET se spustí v produkčním režimu.
 
 ## Zadání licenčního čísla přímo do databáze
 

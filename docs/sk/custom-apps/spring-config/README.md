@@ -110,6 +110,62 @@ public class JpaDBConfig {
 }
 ```
 
+### Vlastné databázové spojenie
+
+Klientské entity môžu používať samostatné DB spojenie definované v `poolman.xml`, napríklad `jpa_data`. V uvedenom príklade nastavte názov existujúceho spojenia:
+
+```java
+String dataSourceName = "jpa_data";
+```
+
+Prepojenie repozitárov, entít a transakcií určuje klientský `JpaDBConfig`:
+
+| Nastavenie | Význam v uvedenom príklade |
+| --- | --- |
+| `emf.setDataSource(...)` | DB spojenie `jpa_data` získané cez `DBPool`. |
+| `emf.setPackagesToScan(...)` | Balíky klientských JPA entít. |
+| `entityManagerFactoryRef = "basecmsEntityManager"` | Klientské repozitáre používajú tento `EntityManagerFactory`. |
+| `transactionManagerRef = "basecmsTransactionManager"` | Transakcie repozitárov riadi tento manažér, naviazaný na rovnaký `EntityManagerFactory`. |
+
+Názov DB spojenia `jpa_data` a názvy Spring beanov `basecmsEntityManager` či `basecmsTransactionManager` sú samostatné nastavenia a nemusia sa zhodovať. Ak už klient toto prepojenie používa, oprava vytvárania predvoleného `TransactionTemplate` nevyžaduje zmenu jeho `poolman.xml` ani repozitárov.
+
+### Transakcie v klientskych službách
+
+Pri spojení viacerých operácií nad klientskými repozitármi do jednej transakcie určite manažér na metóde služby pomocou Spring anotácie `org.springframework.transaction.annotation.Transactional`:
+
+```java
+@Transactional("basecmsTransactionManager")
+public void saveOrder() {
+    // Update customer entities through their repositories.
+}
+```
+
+Hodnota anotácie je názov transakčného manažéra, nie názov DB spojenia. Samotné `@Transactional` potrebuje jednoznačný predvolený manažér; nastavenie `transactionManagerRef` na repozitároch neurčuje manažér anotácie na službe. Pri viacerých manažéroch bez určeného predvoleného manažéra preto použite explicitný názov.
+
+WebJET kvôli predvolenému `TransactionTemplate` neoznačuje CMS manažér ako `@Primary`. Existujúci klientský `@Primary` zostáva zachovaný. Vytvorenie šablóny nemení výber manažéra pre `@Transactional` ani pre klientské repozitáre.
+
+### Programové transakcie
+
+Pre programové riadenie transakcií vytvára WebJET predvolený bean `transactionTemplate`, ktorý je explicitne naviazaný na `webjet2022TransactionManager`. Používa teda CMS databázu aj vtedy, keď má klient vlastný transakčný manažér označený ako `@Primary`. Databáza šablóny sa nevyberá podľa entít alebo repozitárov použitých vo volaní `execute(...)`.
+
+Ak klient potrebuje `TransactionTemplate` pre svoju databázu `jpa_data`, pridá do svojho `JpaDBConfig` vlastný bean s klientským manažérom:
+
+```java
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.transaction.support.TransactionTemplate;
+
+// Add this bean method to JpaDBConfig.
+@Bean
+public TransactionTemplate customerTransactionTemplate(
+        @Qualifier("basecmsTransactionManager") PlatformTransactionManager manager) {
+    return new TransactionTemplate(manager);
+}
+```
+
+Klientské konfigurácie sa spracujú pred vyhodnotením podmienok automatickej konfigurácie. Ak klient už definuje vlastný bean typu `TransactionOperations` (vrátane `TransactionTemplate`), WebJET predvolenú šablónu nevytvorí, bez ohľadu na názov klientského beanu. Existujúcu klientskú šablónu preto nie je potrebné premenovať. Pri viacerých vlastných šablónach vyberte pri injektovaní konkrétnu cez `@Qualifier("customerTransactionTemplate")`.
+
+Vlastnú šablónu potrebujete iba pri použití programových transakcií nad klientskou databázou. Pre klientské repozitáre a služby so správne zvoleným manažérom v `@Transactional` ju netreba vytvárať.
+
 ## Nastavenie SpringSecurity
 
 Ak potrebujete upraviť nastavenie pre ```SpringSecurity``` môžete vo vašej triede ```SpringConfig``` implementovať ```sk.iway.iwcm.system.spring.ConfigurableSecurity```. V metóde ```configureSecurity(HttpSecurity http)``` máte dostupný objekt ```HttpSecurity``` v ktorom môžete doplniť potrebné nastavenia:

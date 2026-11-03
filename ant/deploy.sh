@@ -24,9 +24,9 @@ ant update-version
 #ant fixSrc
 
 #ant deploy
-ant -Dcompress=true createUpdateZip
-ant -Dcompress=true createUpdateZipJar
-ant rsyncToLicenseServer
+#ant -Dcompress=true createUpdateZip
+#ant -Dcompress=true createUpdateZipJar
+#ant rsyncToLicenseServer
 ant -Dcompress=true deployGithub
 
 #MavenCentral: just run ant -Dcompress=true deployMavenCentral

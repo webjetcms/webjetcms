@@ -82,7 +82,7 @@ public class MultipartFileSender {
       String ifNoneMatch = request.getHeader("If-None-Match");
       if (ifNoneMatch != null && HttpUtils.matches(ifNoneMatch, fileName)) {
          response.setHeader("ETag", fileName); // Required in 304.
-         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+         response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
          return;
       }
 
@@ -91,7 +91,7 @@ public class MultipartFileSender {
       long ifModifiedSince = request.getDateHeader("If-Modified-Since");
       if (ifNoneMatch == null && ifModifiedSince != -1 && ifModifiedSince + 1000 > lastModified) {
          response.setHeader("ETag", fileName); // Required in 304.
-         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+         response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
          return;
       }
 
