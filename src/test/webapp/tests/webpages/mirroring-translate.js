@@ -14,7 +14,8 @@ var docDataENupdate2 = ["dog", "cat", "coconut"];
 
 Before(({ I, DT }) => {
     if (typeof randomText=="undefined") {
-        randomText = 'autotest-' + I.getRandomTextShort();
+        // Titles must not contain "autotest", which makes TranslationService skip translation.
+        randomText = I.getRandomTextShort();
     }
 
     DT.addContext('configuration', '#configurationDatatable_wrapper');
@@ -49,7 +50,7 @@ async function testTranslation(I, DT, DTE, Document, useAutotranslator) {
         await setConfValues(I, DT, DTE, "autotranslator");
 
         docTitleSK = "Dobré ráno - A - " + randomText;
-        docTitleEN = docTitleSK;
+        docTitleEN = "Good Morning - A - " + randomText;
 
         I.amOnPage("/admin/v9/webpages/web-pages-list/");
         DT.waitForLoader();
@@ -60,7 +61,7 @@ async function testTranslation(I, DT, DTE, Document, useAutotranslator) {
         await setConfValues(I, DT, DTE, "");
 
         docTitleSK = "Dobré ráno - B - " + randomText;
-        docTitleEN = docTitleSK;
+        docTitleEN = "Good Morning - B - " + randomText;
 
         I.amOnPage("/admin/v9/webpages/web-pages-list/");
         DT.waitForLoader();
