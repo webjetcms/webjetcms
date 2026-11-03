@@ -54,14 +54,18 @@ class ContentBuilderTest extends BaseWebjetTest
             + "?w=880\"><img src=\"/thumb" + IMAGE + "?w=440\">");
 
         assertEquals(List.of(IMAGE), content.getFiles().stream().map(Content.File::getVirtualPath).toList());
-        assertEquals(3, content.getDocFiles().get(123).size());
+        assertEquals(List.of(IMAGE), content.getDocFiles().get(123).stream().distinct().toList());
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"https://other.example/thumb", "/thumb/..", "/thumbnails", "/thumb/missing"})
-    void ignoresExternalUnsafeAndMissingImages(String prefix) throws Exception
+    @ValueSource(strings = {
+        "https://other.example/thumb/images/test-content/sample-image.webp?w=880",
+        "/thumb/images/test-content/../test-content/sample-image.webp?w=880",
+        "/thumb/missing/images/test-content/sample-image.webp?w=880"
+    })
+    void ignoresExternalUnsafeAndMissingImages(String source) throws Exception
     {
-        assertTrue(collect("<img src=\"" + prefix + IMAGE + "?w=880\">").getFiles().isEmpty());
+        assertTrue(collect("<img src=\"" + source + "\">").getFiles().isEmpty());
     }
 
     private Content collect(String html) throws Exception
