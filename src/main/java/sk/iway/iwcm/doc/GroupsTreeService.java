@@ -375,17 +375,37 @@ public class GroupsTreeService {
                 if (problem == null) continue;
 
                 groupItem.setMirroringProblem(toMirroringProblem(problem, prop));
-            } else if (item instanceof DocumentsJsTreeItem pageItem && canShowPageMirror(pageItem.getDocDetails(), user)) {
-                String pageCacheKey = GroupsTreeService.class.getName() + ".pageMirroringProblems";
-                @SuppressWarnings("unchecked")
-                Map<Integer, MirroringDTO> pageProblems = (Map<Integer, MirroringDTO>) request.getAttribute(pageCacheKey);
-                if (pageProblems == null) {
-                    pageProblems = MirroringService.getPageProblems(request);
-                    request.setAttribute(pageCacheKey, pageProblems);
-                }
-                MirroringDTO problem = pageProblems.get(pageItem.getDocDetails().getDocId());
-                if (problem != null) pageItem.setMirroringProblem(toMirroringProblem(problem, prop));
             }
+        }
+        setPageMirroringIcons(items, user, request, prop);
+    }
+
+    /** Checks only newly encountered pages and remembers clean mappings for the rest of this request. */
+    private void setPageMirroringIcons(List<JsTreeItem> items, Identity user, HttpServletRequest request, Prop prop) {
+        List<DocumentsJsTreeItem> pages = items.stream().filter(DocumentsJsTreeItem.class::isInstance)
+            .map(DocumentsJsTreeItem.class::cast).filter(page -> canShowPageMirror(page.getDocDetails(), user)).toList();
+        if (pages.isEmpty()) return;
+
+        String cacheKey = GroupsTreeService.class.getName() + ".pageMirroringProblems";
+        @SuppressWarnings("unchecked")
+        Map<Integer, MirroringDTO> problems = (Map<Integer, MirroringDTO>) request.getAttribute(cacheKey);
+        if (problems == null) {
+            problems = new HashMap<>();
+            request.setAttribute(cacheKey, problems);
+        }
+        List<Integer> sourceIds = new ArrayList<>();
+        for (DocumentsJsTreeItem page : pages) {
+            int docId = page.getDocDetails().getDocId();
+            if (problems.containsKey(docId) == false) {
+                sourceIds.add(docId);
+                // Null distinguishes a checked page without a problem from an unchecked page.
+                problems.put(docId, null);
+            }
+        }
+        if (sourceIds.isEmpty() == false) problems.putAll(MirroringService.getPageProblems(request, sourceIds));
+        for (DocumentsJsTreeItem page : pages) {
+            MirroringDTO problem = problems.get(page.getDocDetails().getDocId());
+            if (problem != null) page.setMirroringProblem(toMirroringProblem(problem, prop));
         }
     }
 

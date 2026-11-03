@@ -95,24 +95,38 @@ public class MirroringService {
     }
 
     /**
-     * Returns page diagnostics keyed by page ID, retaining the mapping's sync ID in each DTO.
-     * Uses the same domain scope and validation as the page mirroring table.
+     * Returns diagnostics for the requested pages, including all counterparts when checking their mappings.
+     * Uses the same domain scope and validation as the page mirroring table without scanning unrelated pages.
      * @param request current administration request
-     * @return only pages in mappings with duplicate languages or uneven nesting
+     * @param sourceIds page IDs in the loaded tree branch
+     * @return requested pages in mappings with duplicate languages or uneven nesting
      */
-    public static Map<Integer, MirroringDTO> getPageProblems(HttpServletRequest request) {
+    public static Map<Integer, MirroringDTO> getPageProblems(HttpServletRequest request, List<Integer> sourceIds) {
+        if (sourceIds.isEmpty()) return Collections.emptyMap();
+
         MirroringService service = new MirroringService();
         service.setSupportValues(request);
-        Map<Integer, Integer> syncIds = service.getDocSyncMap();
+        String placeholders = String.join(",", Collections.nCopies(sourceIds.size(), "?"));
+        String sql = "SELECT doc_id, sync_id FROM documents WHERE sync_id IN"
+            + " (SELECT sync_id FROM documents WHERE sync_id>0 AND doc_id IN (" + placeholders + "))";
+        Map<Integer, Integer> syncIds = new HashMap<>();
+        List<DocDetails> docs = new ArrayList<>();
+        new ComplexQuery().setSql(sql).setParams(sourceIds.toArray()).list(rs -> {
+            int docId = rs.getInt("doc_id");
+            syncIds.put(docId, rs.getInt("sync_id"));
+            DocDetails doc = service.docsDb.getBasicDocDetails(docId, false);
+            if (doc != null) docs.add(doc);
+            return null;
+        });
         Map<Integer, MirroringDTO> problemsBySyncId = new HashMap<>();
-        for (MirroringDTO item : service.getDocsData(service.docsDb.getBasicDocDetailsAll(), syncIds)) {
+        for (MirroringDTO item : service.getDocsData(docs, syncIds)) {
             if (Tools.isTrue(item.getMultipleErr()) || Tools.isTrue(item.getNestingWarn())) {
                 problemsBySyncId.put(item.getId().intValue(), item);
             }
         }
         Map<Integer, MirroringDTO> problems = new HashMap<>();
-        syncIds.forEach((docId, syncId) -> {
-            MirroringDTO problem = problemsBySyncId.get(syncId);
+        sourceIds.forEach(docId -> {
+            MirroringDTO problem = problemsBySyncId.get(syncIds.get(docId));
             if (problem != null) problems.put(docId, problem);
         });
         return problems;

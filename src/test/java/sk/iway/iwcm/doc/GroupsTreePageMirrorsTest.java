@@ -15,6 +15,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -110,7 +111,7 @@ class GroupsTreePageMirrorsTest {
             groupProblem.setNestingWarn(true);
             group.setSyncId(700);
             diagnostics.when(() -> MirroringService.getGroupProblems(request)).thenReturn(Map.of(700, groupProblem));
-            diagnostics.when(() -> MirroringService.getPageProblems(request)).thenReturn(Map.of(10, pageProblem));
+            diagnostics.when(() -> MirroringService.getPageProblems(request, List.of(10))).thenReturn(Map.of(10, pageProblem));
             GroupsJsTreeItem folder = new GroupsJsTreeItem(group, user, true);
             service.setMirroringIcons(List.of(folder, node), user, "dt-tree", request);
             assertEquals(500, node.getMirroringProblem().syncId());
@@ -119,11 +120,55 @@ class GroupsTreePageMirrorsTest {
             assertEquals("ti ti-exclamation-circle text-danger", folder.getMirroringProblem().icon());
             service.setMirroringIcons(List.of(reloaded), user, "dt-tree", request);
             assertEquals(node.getMirroringProblem(), reloaded.getMirroringProblem());
-            diagnostics.verify(() -> MirroringService.getPageProblems(request), times(1));
+            diagnostics.verify(() -> MirroringService.getPageProblems(request, List.of(10)), times(1));
+
+            // Later branches in the same request must be checked, including pages with no problem.
+            DocumentsJsTreeItem clean = new DocumentsJsTreeItem(page(20, 100), 10);
+            permissions.when(() -> EditorService.hasPagePermission(user, clean.getDocDetails())).thenReturn(true);
+            diagnostics.when(() -> MirroringService.getPageProblems(request, List.of(20))).thenReturn(Map.of());
+            service.setMirroringIcons(List.of(reloaded, clean), user, "dt-tree", request);
+            service.setMirroringIcons(List.of(clean), user, "dt-tree", request);
+            assertNull(clean.getMirroringProblem());
+            diagnostics.verify(() -> MirroringService.getPageProblems(request, List.of(20)), times(1));
+            diagnostics.verify(() -> MirroringService.getPageProblems(request, List.of(10)), times(1));
             permissions.when(() -> EditorService.hasPagePermission(user, source)).thenReturn(false);
             DocumentsJsTreeItem forbidden = new DocumentsJsTreeItem(source, 10);
             service.setMirroringIcons(List.of(forbidden), user, "dt-tree", request);
             assertNull(forbidden.getMirroringProblem());
+        }
+    }
+
+    /** Both the saved preference and the AJAX toggle stop all mirror lookups when switched off. */
+    @Test
+    void disabledSettingSkipsLinksAndDiagnostics() {
+        Identity user = mock(Identity.class);
+        when(user.isEnabledItem("cmp_mirroring")).thenReturn(true);
+        when(user.isEnabledItem("menuWebpages")).thenReturn(true);
+        GroupsTreeService service = new GroupsTreeService();
+        DocumentsJsTreeItem page = new DocumentsJsTreeItem(page(10, 100), 10);
+        try (MockedStatic<MirroringService> diagnostics = mockStatic(MirroringService.class);
+                MockedConstruction<ComplexQuery> queries = mockConstruction(ComplexQuery.class);
+                MockedConstruction<AdminSettingsService> settings = mockConstruction(AdminSettingsService.class, (setting, context) -> {
+                    when(setting.getJsonBooleanValue("jstreeSettings_web-pages-list", "showBadMirrorings")).thenReturn(false);
+                })) {
+            MockHttpServletRequest initial = new MockHttpServletRequest();
+            initial.setRequestURI("/admin/v9/webpages/web-pages-list/");
+            service.setMirroringLinks(List.of(page), user, "dt-tree", initial);
+            service.setMirroringIcons(List.of(page), user, "dt-tree", initial);
+            assertEquals(2, settings.constructed().size());
+            for (AdminSettingsService setting : settings.constructed()) {
+                verify(setting).getJsonBooleanValue("jstreeSettings_web-pages-list", "showBadMirrorings");
+            }
+
+            MockHttpServletRequest ajax = request();
+            ajax.setParameter("showBadMirrorings", "false");
+            service.setMirroringLinks(List.of(page), user, "dt-tree", ajax);
+            service.setMirroringIcons(List.of(page), user, "dt-tree", ajax);
+            assertEquals(2, settings.constructed().size());
+            diagnostics.verifyNoInteractions();
+            assertTrue(queries.constructed().isEmpty());
+            assertNull(page.getMirrors());
+            assertNull(page.getMirroringProblem());
         }
     }
 
