@@ -139,7 +139,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
-- Viackrokové formuláre - výber **Krok formuláru** v editore položky zobrazuje aktuálne číslo kroku aj po zmene poradia krokov potiahnutím myšou.
+- Viackrokové formuláre - výber **Krok formuláru** v editore položky zobrazuje aktuálne číslo kroku aj po zmene poradia krokov potiahnutím myšou (#392).
 - Regulárne výrazy - zoznam zobrazuje preložený názov podľa jazyka administrácie a pôvodný názov označuje ako **Prekladový kľúč**. Výber **Povolená hodnota** vo viackrokových formulároch používa formát **kód - názov** (#387).
 - Viackrokové formuláre - opravený preklep v prekladových kľúčoch z `components.mustistep.*` na `components.multistep.*` (#378).
 - Viackrokové formuláre - pomocné zápisy štatistiky na [verejnom uzle clustra s obmedzenými databázovými právami](install/config/ro-user.md#viackrokové-formuláre) už neblokujú zobrazenie, validáciu ani odoslanie formulára. Pri chybe sa návštevníkovi zobrazí názov aplikácie namiesto názvu Java triedy (#384).
