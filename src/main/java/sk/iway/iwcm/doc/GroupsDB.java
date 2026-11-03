@@ -9,6 +9,7 @@ import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.helpers.BeanDiff;
 import sk.iway.iwcm.helpers.BeanDiffPrinter;
@@ -2783,9 +2784,14 @@ public class GroupsDB extends DB
 	 */
 	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents, boolean withHistory, boolean refreshDocGroupsDB)
 	{
+		// Bulk deletion can reach a folder already deleted through its mirror or parent in this request.
+		// Treat it as completed: processing it again after moving it to Trash would permanently delete it.
+		if (DeleteRequestContext.isDeleted(GroupDetails.class, groupId)) return true;
+
 		Connection db_conn = null;
 		PreparedStatement ps = null;
 		GroupsDB groupsDB = GroupsDB.getInstance();
+		List<GroupDetails> deletedGroups;
 
 		//kontrola prav
 		GroupDetails group = groupsDB.getGroup(groupId);
@@ -2823,6 +2829,7 @@ public class GroupsDB extends DB
 				StringBuilder groups = new StringBuilder();
 				//List subGroups = groupsDB.getGroups(my_form.getGroupId());
 				List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, includeParent, true);
+				deletedGroups = subGroups;
 
 				for (GroupDetails element : subGroups)
 				{
@@ -2913,6 +2920,7 @@ public class GroupsDB extends DB
 				//deaktivuj vsetky stranky v tejto skupine a podskupinach
 				StringBuilder groups = new StringBuilder();
 				List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, true, true);
+				deletedGroups = subGroups;
 
 				for (GroupDetails g : subGroups)
 				{
@@ -2941,6 +2949,12 @@ public class GroupsDB extends DB
 
 			db_conn.close();
 			db_conn = null;
+
+			// Mark all processed folders, including descendants, as deleted in this request only after success.
+			// Later bulk-selection or mirroring calls will skip them, preventing a second deletion from Trash.
+			for (GroupDetails deletedGroup : deletedGroups) {
+				DeleteRequestContext.markDeleted(GroupDetails.class, deletedGroup.getGroupId());
+			}
 
 			if (refreshDocGroupsDB) {
 				//oznam ostatnym Node-om, ze sa nieco zmenilo

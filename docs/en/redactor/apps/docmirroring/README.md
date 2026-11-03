@@ -37,7 +37,17 @@ The following operations are mirrored in further work:
 - Change the order of a directory/page in the structure (except root folders)
 - Moving a directory/page to another directory
 
+When moving to another mirrored folder, existing language versions are moved, preserving their IDs. No additional copies are created in place of the moved items. After a folder is moved, automatically generated or inherited URLs for pages in the moved folder and its subfolders are also updated in its mirrored versions according to the new location.
+
 The remaining properties of directories/pages remain intact and do not affect their equivalent in the second language mutation.
+
+Before deletion, a confirmation window will display a [list of mirrored pages or folders](../../webpages/README.md#deleting-mirrored-pages-and-folders) that will be deleted along with the selected item.
+
+![](../../webpages/mirroring/delete-groups.png)
+
+In the tree structure, you can use [language links](../../webpages/README.md#navigation-between-mirrored-folders) to navigate to a linked folder and enable [warnings about incorrect linking](../../webpages/mirroring/groups.md#warnings-in-the-tree-structure).
+
+![](../../webpages/mirroring/tree-problems.png)
 
 ## Creating a link to language mutations in the page header
 
@@ -108,6 +118,8 @@ WebJET needs to know whether the translated page has already been edited by a re
 
 In users, create a new (virtual) user with rights to edit the necessary web pages and enter his login name in the conf. variable `structureMirroringAutoTranslatorLogin`. You should never log in with such a user and use him for editorial activities, he is only a technical/virtual user. The default login name is `autotranslator`, if you use this login name you do not need to set the mentioned conf. variable.
 
+When saving a **draft version**, the content of already published language versions is not overwritten, even if the user is set as the author in `structureMirroringAutoTranslatorLogin`. Unpublished language versions can be updated according to the conditions listed below. When publishing the source page, these conditions are also evaluated for published language versions.
+
 Automatic translation of an existing page will be performed under the following conditions:
 
 - If the configuration variable `structureMirroringAutoTranslatorLogin` is set and the given user exists in the database.
@@ -116,7 +128,7 @@ Automatic translation of an existing page will be performed under the following 
 
 With the value set to `structureMirroringAutoTranslatorLogin`, detection is more reliable, because even the unpublished version of the website could have been corrected/corrected by another user, but not published yet. Your change would overwrite the text, which is an undesirable situation. We recommend creating a (virtual) user and setting their login name to `structureMirroringAutoTranslatorLogin` for more reliable detection of changes.
 
-When saving the page, the changes are applied to all copies. So if I create an EN and DE version from the SK version (which are not yet published, or have not been changed by a real editor), then when changing the EN version, the text will be translated into the DE version. The SK version will not be affected, because it is typically already published, or created by a real (not `structureMirroringAutoTranslatorLogin`) user.
+Changes to the content are transferred to all copies that meet the above conditions. For example, when editing the EN version, the text can be translated into the DE version if it has not yet been corrected by the editor. When saving the working EN version, the already published DE version will not be changed.
 
 If the config variable `syncGroupAndWebpageTitle` is set to the value `true` (which is the default value), the folder name is automatically synchronized with the name of the main page in the folder. When the name of the main page is changed, the folder is also renamed, even in translated versions.
 

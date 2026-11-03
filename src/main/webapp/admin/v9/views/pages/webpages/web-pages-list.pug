@@ -74,6 +74,13 @@ block content
                 let hasTrashTab = [(${hasTrashTab})];
                 let showTab = "[(${showTab})]";
 
+                // Match lazy-loaded children to the tree data injected by the server before jsTree initializes.
+                if (showTab === "pills-system-tab") {
+                    $("#SomStromcek").data("rest-url", "/admin/rest/groups/tree?click=dt-tree-group-system");
+                } else if (showTab === "pills-trash-tab") {
+                    $("#SomStromcek").data("rest-url", "/admin/rest/groups/tree?click=dt-tree-group-trash");
+                }
+
                 let changesId =  [(${layout.getConstant('systemPagesRecentPages')})];
 
                 //we need to reload webpages after jstree reload into selected element, when user click from System tab to Active tab
@@ -249,6 +256,7 @@ block content
                         }
                     });
                     webpagesDatatable = wpdInstance.createDatatable();
+                    window.bindDeleteMirrors(webpagesDatatable, "/admin/rest/web-pages/deletion-preview", "pages");
 
                     var buttonCounter = 4;
                     webpagesDatatable.button().add(buttonCounter++, {
@@ -330,6 +338,8 @@ block content
                             remove: 'deleteDir'
                         }
                     });
+
+                    window.bindDeleteMirrors(groupsDatatable, "/admin/rest/groups/deletion-preview", "groups");
 
                     groupsDatatable.hideButton("import");
                     groupsDatatable.hideButton("export");

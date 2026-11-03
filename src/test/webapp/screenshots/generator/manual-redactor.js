@@ -730,6 +730,7 @@ Scenario('jstree-settings', ({ I, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.click("button.buttons-jstree-settings");
     I.waitForElement("#jstreeSettingsModal");
+    I.waitForVisible("#jstree-settings-showid", 10);
     I.checkOption("#jstree-settings-showid");
     I.checkOption("#jstree-settings-showorder");
     I.checkOption("#jstree-settings-showpages");
@@ -743,7 +744,8 @@ Scenario('jstree-settings', ({ I, DTE, Document }) => {
 
     Document.screenshot("/redactor/webpages/jstree-settings.png");
 
-    DTE.cancel();
+    I.click('#jstreeSettingsModal .btn-close-editor');
+    I.waitForInvisible('#jstreeSettingsModal', 10);
 
     I.jstreeReset();
 });
