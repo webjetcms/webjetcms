@@ -473,29 +473,21 @@ export class QuickSearchChat {
 
     async refreshConversation(chat) {
         if (!chat.state.threadId || chat.state.pending || chat.state.disposed || this.disposed) return;
-        if (chat.historyRefreshing) {
-            // A completed turn needs fresh history; the in-flight response may predate it.
-            chat.historyRefreshQueued = true;
-            return;
-        }
-        chat.historyRefreshing = true;
+        // Replace an older read immediately; it may predate a just-completed turn.
+        chat.historyController?.abort();
+        const controller = new AbortController();
+        chat.historyController = controller;
         try {
-            const detail = await chatHistoryRequest(`/threads/${encodeURIComponent(chat.state.threadId)}`, { signal: this.scrollController.signal });
-            if (!this.disposed && !chat.historyRefreshQueued) this.applyDetail(chat, detail);
+            const detail = await chatHistoryRequest(`/threads/${encodeURIComponent(chat.state.threadId)}`, { signal: controller.signal });
+            if (!controller.signal.aborted) this.applyDetail(chat, detail);
         } catch (error) {
-            if (this.disposed || chat.historyRefreshQueued) return;
+            if (controller.signal.aborted) return;
             if (error.status === 404 && (chat.deletionRequested || chat.threadInfo?.status === 'DELETE_PENDING')) this.removeChat(chat.state.threadId);
             else if (error.status === 404 && !chat.threadInfo && chat.state.revision == null) {
                 chat.state.threadId = null;
                 chat.refresh();
             }
             else if (error.status !== 404) { chat.state.notice = error.message; chat.refresh(); }
-        } finally {
-            chat.historyRefreshing = false;
-            if (chat.historyRefreshQueued) {
-                chat.historyRefreshQueued = false;
-                this.refreshConversation(chat);
-            }
         }
     }
 
@@ -542,6 +534,7 @@ export class QuickSearchChat {
         this.historyItems = this.historyItems.filter(item => item.id !== id);
         if (chat) {
             clearTimeout(chat.historyRefreshTimer);
+            chat.historyController?.abort();
             this.conversations.delete(chat);
             const assistantId = String(chat.assistant.assistantId);
             if (this.lastConversationByAssistant.get(assistantId) === chat) this.lastConversationByAssistant.delete(assistantId);
@@ -580,7 +573,11 @@ export class QuickSearchChat {
         clearTimeout(this.historySearchTimer);
         this.historyController?.abort();
         this.scrollController.abort();
-        for (const chat of this.conversations) { clearTimeout(chat.historyRefreshTimer); chat.destroy(); }
+        for (const chat of this.conversations) {
+            clearTimeout(chat.historyRefreshTimer);
+            chat.historyController?.abort();
+            chat.destroy();
+        }
         this.conversations.clear();
         this.lastConversationByAssistant.clear();
         this.unmount();

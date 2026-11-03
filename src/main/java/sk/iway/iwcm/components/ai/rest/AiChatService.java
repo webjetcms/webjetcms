@@ -104,9 +104,7 @@ public class AiChatService implements DisposableBean {
             input.setInputValue("");
             input.setInputValueType(InputDataDTO.InputValueType.TEXT);
             input.setOutputValueType(InputDataDTO.InputValueType.TEXT);
-            var transcript = store.get(turn.thread().getId(), prepared.scope());
-            input.setUserPrompt(transcript.messages().stream().filter(m -> m.getId().equals(turn.message().getTurnId()))
-                .findFirst().orElseThrow().getText());
+            input.setUserPrompt(turn.question().getText());
             input.setPreviousResponseId(turn.thread().getLastResponseId());
             AtomicBoolean started = new AtomicBoolean();
             try {
@@ -163,10 +161,8 @@ public class AiChatService implements DisposableBean {
                 output.accept(delta);
             };
             if (input.getCancellationToken().isCancelled()) throw new CancellationException();
-            AiChatEntry question = store.get(threadId, prepared.scope()).messages().stream()
-                .filter(message -> message.getId().equals(prepared.turn().message().getTurnId())).findFirst().orElseThrow();
             StringBuilder context = new StringBuilder();
-            for (var attachment : question.getAttachments()) {
+            for (var attachment : prepared.turn().question().getAttachments()) {
                 if (input.getCancellationToken().isCancelled()) throw new CancellationException();
                 byte[] bytes = store.attachment(threadId, attachment.id(), prepared.scope()).bytes();
                 String content;

@@ -135,31 +135,7 @@ public class AiService {
     }
 
     public AssistantResponseDTO getAiResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
-
-        Prop prop = Prop.getInstance(request);
-        inputData.prepareData(request);
-
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
-
-        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
-            throw new IllegalStateException( getNotSupportedAction(prop) );
-        }
-        validateChatAttachments(assistant, inputData, prop);
-
-        if(shouldRemoveHtml(assistant, inputData)) {
-            inputData.removeHtml();
-        }
-
-        for(AiInterface aiInterface : aiInterfaces) {
-            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                // Prepare task
-                Callable<AssistantResponseDTO> task = () -> aiInterface.getAiResponse(assistant, inputData, prop, statRepo, request);
-                // Run task
-                return aiTaskRegistry.runAssistantTask(task, inputData, request);
-            }
-        }
-
-        throw new IllegalStateException( getSomethingWrongErr(prop) );
+        return textResponse(inputData, statRepo, assistantRepo, null, request);
     }
 
     public AssistantResponseDTO getAiImageResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
@@ -186,7 +162,12 @@ public class AiService {
     }
 
     public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, BufferedWriter writer, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
+        return textResponse(inputData, statRepo, assistantRepo, writer, request);
+    }
 
+    /** Prepares text input once for both transports, then dispatches through the cancellable task registry. */
+    private AssistantResponseDTO textResponse(InputDataDTO inputData, AiStatRepository statRepo,
+        AssistantDefinitionRepository assistantRepo, BufferedWriter writer, HttpServletRequest request) throws ProviderCallException {
         Prop prop = Prop.getInstance(request);
         inputData.prepareData(request);
 
@@ -203,11 +184,14 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                if (aiInterface.isStreamingEnabled(assistant) == false) {
+                if (writer != null && aiInterface.isStreamingEnabled(assistant) == false) {
                     throw new IllegalStateException(getNotSupportedAction(prop));
                 }
                 // Prepare task
-                Callable<AssistantResponseDTO> task = () -> aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request);
+                Callable<AssistantResponseDTO> task = () -> {
+                    if (writer == null) return aiInterface.getAiResponse(assistant, inputData, prop, statRepo, request);
+                    return aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request);
+                };
                 // Run task
                 return aiTaskRegistry.runAssistantTask(task, inputData, request);
             }

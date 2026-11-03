@@ -11,9 +11,9 @@ const sources = ['../../../src/js/ai/chat-history-api.js', '../../../src/js/ai/a
     fs.readFileSync(path.join(sourceDirectory, filename), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')
 ).join('\n');
 
-function loadTransport(fetch, notifications = []) {
+function loadTransport(fetch, notifications = [], AiBrowserExecutor) {
     const context = vm.createContext({
-        TextDecoder, AbortController, URLSearchParams, FormData, fetch, console: { log() {} },
+        TextDecoder, AbortController, URLSearchParams, FormData, fetch, AiBrowserExecutor, console: { log() {}, warn() {} },
         window: { csrfToken: 'test-csrf', csrfError: 'Token expired', alert: text => notifications.push(text) },
         WJ: {
             keepSessionShowLogoffMessage: () => notifications.push('Session expired'),

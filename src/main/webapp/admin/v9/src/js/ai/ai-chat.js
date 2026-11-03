@@ -240,7 +240,7 @@ export class AiChat {
         state.notice = null;
         state.followLatest = true;
 
-        const request = { message, transport: null, disposed: false };
+        const request = { message, transport: null };
         state.pending = request;
         const current = () => !state.disposed && state.pending === request;
         this._changed();
@@ -298,7 +298,7 @@ export class AiChat {
                 message.error = error.message || String(error);
             }
         } finally {
-            this._disposeRequest(request);
+            request.transport?.dispose();
             if (current()) {
                 state.pending = null;
                 state.confirmation?.resolve(false);
@@ -317,7 +317,7 @@ export class AiChat {
         this.state.notice = null;
         this.state.confirmation?.resolve(false);
         request.transport?.cancel();
-        this._disposeRequest(request);
+        request.transport?.dispose();
         this._changed();
         this.options.onSettled?.(this);
     }
@@ -360,12 +360,6 @@ export class AiChat {
         this.messageViews.clear();
         Object.assign(this.state, this._initialState(), { disposed: true });
         this._releaseAttachmentUrls();
-    }
-
-    _disposeRequest(request) {
-        if (request.disposed) return;
-        request.disposed = true;
-        request.transport?.dispose();
     }
 
     _changed() {

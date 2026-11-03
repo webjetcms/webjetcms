@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -322,16 +324,20 @@ class LibrarySupportLogicTest {
         }
     }
 
-    @Test
-    void preservesStructuredProviderFailure() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void preservesStructuredProviderFailure(boolean streaming) throws Exception {
         AiClient client = mock(AiClient.class);
         TestLibrarySupportLogic logic = chatLogic(client);
         AiProviderException failure = new AiProviderException("test-provider", 400, "Invalid continuation",
             "private raw response", false, null, AiErrorCategory.INVALID_CONTINUATION);
         when(client.execute(any(), any(), any(), any())).thenThrow(failure);
+        when(client.stream(any(), any(), any(), any(), any())).thenThrow(failure);
         try (MockedStatic<Adminlog> audit = mockStatic(Adminlog.class)) {
-            ProviderCallException exception = assertThrows(ProviderCallException.class,
-                () -> logic.getAiResponse(assistant(), textInput(), null, null, null));
+            ProviderCallException exception = assertThrows(ProviderCallException.class, () -> {
+                if (streaming) logic.getAiStreamResponse(assistant(), textInput(), null, null, new BufferedWriter(new StringWriter()), null);
+                else logic.getAiResponse(assistant(), textInput(), null, null, null);
+            });
             assertEquals(AiErrorCategory.INVALID_CONTINUATION, exception.getErrorCategory());
             assertEquals(400, exception.getProviderStatusCode());
             assertFalse(exception.getRetryable());

@@ -41,7 +41,7 @@ public class AiChatStore {
             this(userId, domainId, domainName, Path.of(Tools.getRealPath(AiChatPaths.ROOT)).toAbsolutePath().normalize());
         }
     }
-    public record Turn(AiChatThread thread, AiChatEntry message, boolean duplicate) { }
+    public record Turn(AiChatThread thread, AiChatEntry question, AiChatEntry message, boolean duplicate) { }
     public record Transcript(AiChatThread thread, List<AiChatEntry> messages) { }
     public record History(List<AiChatThread> items, boolean hasMore) { }
 
@@ -129,12 +129,13 @@ public class AiChatStore {
             AiChatEntry duplicate = document.getMessages().stream()
                 .filter(m -> input.requestId().equals(m.getRequestId()) && "assistant".equals(m.getRole())).findFirst().orElse(null);
             if (duplicate != null) {
-                if (!Objects.equals(entry(document, duplicate.getTurnId()).getText(), input.userPrompt())) throw conflict("requestChanged");
-                if (input.retryMessageId() == null && !sameAttachments(entry(document, duplicate.getTurnId()).getAttachments(), uploads)) {
+                AiChatEntry question = entry(document, duplicate.getTurnId());
+                if (!Objects.equals(question.getText(), input.userPrompt())) throw conflict("requestChanged");
+                if (input.retryMessageId() == null && !sameAttachments(question.getAttachments(), uploads)) {
                     throw conflict("requestChanged");
                 }
                 if (recovered) AiChatFiles.write(path, document);
-                return new Turn(thread, duplicate, true);
+                return new Turn(thread, question, duplicate, true);
             }
             if ("EXPIRED".equals(thread.getStatus())) throw conflict("expired");
             if (!"ACTIVE".equals(thread.getStatus())) throw conflict("deletePending");
@@ -187,7 +188,7 @@ public class AiChatStore {
                 for (Path attachmentPath : written) Files.deleteIfExists(attachmentPath);
                 throw exception;
             }
-            return new Turn(thread, answer, false);
+            return new Turn(thread, question, answer, false);
         });
     }
 
@@ -272,8 +273,7 @@ public class AiChatStore {
             if (document == null) return null;
             AiChatThread thread = document.getThread();
             AiChatEntry message = entry(document, messageId);
-            boolean current = messageId.equals(thread.getActiveMessageId());
-            if (!current) return null;
+            if (!messageId.equals(thread.getActiveMessageId())) return null;
             boolean stopped = thread.isStopRequested();
             message.setText(text);
             message.setStatus(stopped ? "stopped" : status);
@@ -281,13 +281,11 @@ public class AiChatStore {
             message.setErrorCategory(stopped ? "CANCELLED" : category);
             message.setProviderStatus(providerStatus);
             message.setUpdated(new Date());
-            if (current) {
-                if (!stopped && "complete".equals(status)) thread.setLastResponseId(message.getProviderResponseId());
-                if (!stopped && "INVALID_CONTINUATION".equals(category)) thread.setStatus("EXPIRED");
-                thread.setActiveMessageId(null);
-                thread.setLeaseUntil(null);
-                thread.setUpdated(new Date());
-            }
+            if (!stopped && "complete".equals(status)) thread.setLastResponseId(message.getProviderResponseId());
+            if (!stopped && "INVALID_CONTINUATION".equals(category)) thread.setStatus("EXPIRED");
+            thread.setActiveMessageId(null);
+            thread.setLeaseUntil(null);
+            thread.setUpdated(new Date());
             return null;
         });
     }

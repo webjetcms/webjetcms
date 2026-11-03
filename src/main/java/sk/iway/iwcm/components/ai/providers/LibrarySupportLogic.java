@@ -154,56 +154,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AiStatRepository statRepo,
         HttpServletRequest request
     ) throws ProviderCallException {
-        AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
-
-        try {
-            checkCancellation(inputData);
-            AiOperation operation = textOperation(assistant);
-            AiChatSession.Continuation continuation = resolveChat(operation, assistant, inputData, request);
-            IncludesHandler includesHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
-            AiProviderConfig config = configurationService.resolve(this, request);
-            TokenUsage attachmentUsage = prepareChatAttachments(assistant, inputData, config);
-            AiResponse response = aiClient.execute(
-                getProviderId(),
-                prepareProviderRequest(operation, assistant, inputData, includesHandler),
-                config,
-                inputData.getCancellationToken()
-            );
-
-            checkCancellation(inputData);
-            response = response.withText(includesHandler.restoreIncludes(response.text()));
-            responseDto.setResponse(response.text());
-            checkCancellation(inputData);
-            successAdminLog(
-                responseDto,
-                inputPair,
-                assistant,
-                METHOD_TEXT_RESPONSE,
-                responseDto.getResponse(),
-                response.usage().plus(attachmentUsage),
-                statRepo,
-                request
-            );
-            rememberChat(operation, assistant, response, includesHandler, responseDto, inputData, request);
-        } catch (CancellationException exception) {
-            throw exception;
-        } catch (AiChatAttachments.UnreadableException exception) {
-            checkCancellation(inputData);
-            return unreadableAttachment(assistant, prop);
-        } catch (AiProviderException exception) {
-            checkCancellation(inputData);
-            errorAdminLog(assistant, inputPair, METHOD_TEXT_RESPONSE, exception, prop);
-        } catch (Exception exception) {
-            checkCancellation(inputData);
-            errorAdminLog(
-                assistant,
-                inputPair,
-                METHOD_TEXT_RESPONSE,
-                new Pair<>(safeMessage(exception), null)
-            );
-        }
-        return responseDto;
+        return textResponse(assistant, inputData, prop, statRepo, null, request);
     }
 
     /**
@@ -227,8 +178,15 @@ public abstract class LibrarySupportLogic implements AiInterface {
         BufferedWriter writer,
         HttpServletRequest request
     ) throws ProviderCallException {
+        return textResponse(assistant, inputData, prop, statRepo, writer, request);
+    }
+
+    /** Runs the same text-turn lifecycle for both transports; a writer selects streaming delivery. */
+    private AssistantResponseDTO textResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData,
+        Prop prop, AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws ProviderCallException {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
+        String method = writer == null ? METHOD_TEXT_RESPONSE : METHOD_TEXT_STREAM_RESPONSE;
         AtomicReference<IOException> outputFailure = new AtomicReference<>();
 
         try {
@@ -238,12 +196,14 @@ public abstract class LibrarySupportLogic implements AiInterface {
             IncludesHandler includeHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
             AiProviderConfig config = configurationService.resolve(this, request);
             TokenUsage attachmentUsage = prepareChatAttachments(assistant, inputData, config);
-
-            AiResponse response = aiClient.stream(
-                getProviderId(),
-                prepareProviderRequest(operation, assistant, inputData, includeHandler),
-                config,
-                delta -> {
+            AiRequest providerRequest = prepareProviderRequest(operation, assistant, inputData, includeHandler);
+            AiResponse response;
+            if (writer == null) {
+                response = aiClient.execute(getProviderId(), providerRequest, config, inputData.getCancellationToken());
+                checkCancellation(inputData);
+                responseDto.setResponse(includeHandler.restoreIncludes(response.text()));
+            } else {
+                response = aiClient.stream(getProviderId(), providerRequest, config, delta -> {
                     checkCancellation(inputData);
                     try {
                         includeHandler.handleLine(delta, writer);
@@ -252,19 +212,17 @@ public abstract class LibrarySupportLogic implements AiInterface {
                         inputData.getCancellationToken().cancel();
                         throw exception;
                     }
-                },
-                inputData.getCancellationToken()
-            );
-            checkCancellation(inputData);
-            includeHandler.finish(writer);
-
-            responseDto.setResponse(includeHandler.getWholeResponse());
+                }, inputData.getCancellationToken());
+                checkCancellation(inputData);
+                includeHandler.finish(writer);
+                responseDto.setResponse(includeHandler.getWholeResponse());
+            }
             checkCancellation(inputData);
             successAdminLog(
                 responseDto,
                 inputPair,
                 assistant,
-                METHOD_TEXT_STREAM_RESPONSE,
+                method,
                 responseDto.getResponse(),
                 response.usage().plus(attachmentUsage),
                 statRepo,
@@ -278,21 +236,21 @@ public abstract class LibrarySupportLogic implements AiInterface {
             return unreadableAttachment(assistant, prop);
         } catch (AiProviderException exception) {
             if (outputFailure.get() != null) {
-                errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE,
+                errorAdminLog(assistant, inputPair, method,
                     new Pair<>(safeMessage(outputFailure.get()), null));
             }
             checkCancellation(inputData);
-            errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE, exception, prop);
+            errorAdminLog(assistant, inputPair, method, exception, prop);
         } catch (Exception exception) {
             if (outputFailure.get() != null) {
-                errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE,
+                errorAdminLog(assistant, inputPair, method,
                     new Pair<>(safeMessage(outputFailure.get()), null));
             }
             checkCancellation(inputData);
             errorAdminLog(
                 assistant,
                 inputPair,
-                METHOD_TEXT_STREAM_RESPONSE,
+                method,
                 new Pair<>(safeMessage(exception), null)
             );
         }

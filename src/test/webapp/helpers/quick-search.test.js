@@ -1971,7 +1971,9 @@ for (const [reload, revision] of [['refresh', 1], ['open', 1], ['open', 2]]) {
         }
         turn.resolve({ success: true, persisted: true, response: 'Second answer' });
         await tick();
-        assert.equal(f.requests.length, requestsBeforeCompletion);
+        assert.equal(f.requests.length, requestsBeforeCompletion + 1, 'A completed turn immediately requests fresh history.');
+        assert.equal(olderRefresh.signal.aborted, true, 'The old history read must be cancelled.');
+        const freshRefresh = f.requests.at(-1);
         await f.respond(olderRefresh, detail);
 
         assert.equal(chat.state.revision, 2);
@@ -1980,8 +1982,14 @@ for (const [reload, revision] of [['refresh', 1], ['open', 1], ['open', 2]]) {
         assert.deepEqual(Array.from(chat.state.messages, message => message.text),
             ['Saved question', 'Saved answer', 'Second question', 'Second answer']);
         assert.equal(chat.$input.val(), '');
-        assert.equal(f.requests.length, requestsBeforeCompletion + 1, 'Exactly one fresh history request must follow.');
-        assert.equal(f.requests.at(-1).url.pathname, olderRefresh.url.pathname);
+        assert.equal(f.requests.length, requestsBeforeCompletion + 1, 'A stale completion must not start another history request.');
+        assert.equal(freshRefresh.url.pathname, olderRefresh.url.pathname);
+        await f.respond(freshRefresh, {
+            thread: { ...detail.thread, revision: 2, busy: false },
+            messages: chat.state.messages.map(message => ({ ...message, requestId: turn.inputData.requestId }))
+        });
+        assert.equal(chat.state.messages.at(-1).text, 'Second answer');
+        assert.equal(chat.state.serverBusy, false);
     });
 }
 

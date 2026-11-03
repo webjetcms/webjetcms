@@ -97,6 +97,9 @@ class AiChatAttachmentsTest {
         var retry = store.begin(new AiChatRequest(id, 12L, UUID.randomUUID().toString(), 1L, "Read this", turn.message().getId()),
             scope, assistant, "config");
         assertEquals(turn.message().getTurnId(), retry.message().getTurnId());
+        assertEquals(turn.question().getId(), retry.question().getId());
+        assertEquals("Read this", retry.question().getText());
+        assertEquals(turn.question().getAttachments(), retry.question().getAttachments());
         store.finish(scope, id, retry.message().getId(), "Answer", "complete", 1, null, null);
         var next = store.begin(new AiChatRequest(id, 12L, UUID.randomUUID().toString(), 2L, "More", null),
             scope, assistant, "config", upload("notes.md", "Notes".getBytes(UTF_8)));

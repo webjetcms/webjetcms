@@ -33,25 +33,23 @@ export class AiChatTransport {
             timestamp: AiChatTransport.lastTimestamp,
             controller: new AbortController(),
             browser: null,
-            cancelled: false,
             text: "",
-            resolveCancellation: null,
-            cancelConfirmation: null
+            resolveCancellation: null
         };
         this.request = request;
-        const current = () => !this.disposed && !request.cancelled && this.request === request;
+        const current = () => this.request === request;
         const update = text => {
             if (!current()) return;
             request.text = typeof text === "string" ? text : String(text ?? "");
             callbacks.onUpdate?.(request.text);
         };
-        const cancellation = new Promise(resolve => { request.resolveCancellation = () => resolve(null); });
+        request.cancellation = new Promise(resolve => { request.resolveCancellation = () => resolve(null); });
 
         try {
             const operation = assistant.provider === "browser"
                 ? this._executeBrowser(assistant, inputData, request, current, update, callbacks)
                 : this._executeRest(assistant, inputData, request, update, callbacks);
-            const result = await Promise.race([operation, cancellation]);
+            const result = await Promise.race([operation, request.cancellation]);
             if (!current()) return { ...executionResult, response: request.text, stopped: true };
             return { ...executionResult, ...result };
         } catch (error) {
@@ -109,16 +107,13 @@ export class AiChatTransport {
             setDownloadStatus: percent => {
                 if (current()) callbacks.onDownload?.(percent);
             },
-            requestBrowserConfirmation: (text, buttonText) => new Promise((resolve, reject) => {
-                if (!current()) { resolve(false); return; }
-                const cancel = () => resolve(false);
-                request.cancelConfirmation = cancel;
-                Promise.resolve().then(() => current() && callbacks.onConfirm != null
-                    ? callbacks.onConfirm(text, buttonText) : false
-                ).then(confirmed => resolve(current() && confirmed === true), reject).finally(() => {
-                    if (request.cancelConfirmation === cancel) request.cancelConfirmation = null;
-                });
-            })
+            requestBrowserConfirmation: async (text, buttonText) => {
+                const confirmed = await Promise.race([
+                    Promise.resolve().then(() => current() && callbacks.onConfirm?.(text, buttonText)),
+                    request.cancellation
+                ]);
+                return current() && confirmed === true;
+            }
         };
         request.browser = new AiBrowserExecutor(null, bridge);
         if (!request.browser.isAvailable(assistant)) {
@@ -137,11 +132,9 @@ export class AiChatTransport {
     /** Stops the current turn without changing the caller's successful continuation. */
     cancel() {
         const request = this.request;
-        if (request == null || request.cancelled) return;
-        request.cancelled = true;
+        if (request == null) return;
         this.request = null;
         request.resolveCancellation();
-        request.cancelConfirmation?.();
         request.controller.abort();
         if (request.browser != null) {
             this._destroyBrowser(request);
