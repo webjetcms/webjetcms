@@ -31,6 +31,7 @@ import sk.iway.iwcm.components.ai.chat.AiChatThread;
 import sk.iway.iwcm.components.ai.chat.AiChatAttachment;
 import sk.iway.iwcm.components.ai.rest.AiChatAttachments.Upload;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
+import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 
 /** Private JSON conversations. Provider calls never hold filesystem locks. */
@@ -50,6 +51,10 @@ public class AiChatStore {
     }
 
     public History list(Scope scope, int page, String query) {
+        return list(scope, page, query, null);
+    }
+
+    public History list(Scope scope, int page, String query, AiChatContext context) {
         String search = normalizeSearch(query).strip();
         return locked(scope, directory -> {
             List<AiChatThread> history = new ArrayList<>();
@@ -60,7 +65,8 @@ public class AiChatStore {
                     if (document == null) continue;
                     AiChatThread thread = document.getThread();
                     validateFile(path, thread);
-                    if (belongsTo(thread, scope) && matchesSearch(document, search)) history.add(thread);
+                    if (belongsTo(thread, scope) && Objects.equals(thread.getContext(), context)
+                        && matchesSearch(document, search)) history.add(thread);
                 }
             }
             history.sort(Comparator.comparing(AiChatThread::getUpdated).reversed().thenComparing(AiChatThread::getId, Comparator.reverseOrder()));
@@ -118,6 +124,7 @@ public class AiChatStore {
                 thread.setProviderScope(providerScope);
                 thread.setModel(assistant.getModel());
                 thread.setAssistantVersion(assistantVersion(assistant));
+                thread.setContext(input.context());
                 String title = input.userPrompt().strip().replaceAll("(?U)\\s+", " ");
                 thread.setTitle(title.substring(0, title.offsetByCodePoints(0, Math.min(80, title.codePointCount(0, title.length())))));
                 thread.setCreated(new Date());
@@ -125,12 +132,16 @@ public class AiChatStore {
                 document.setThread(thread);
             }
             AiChatThread thread = document.getThread();
+            if (!Objects.equals(thread.getContext(), input.context())) throw conflict("requestChanged");
             boolean recovered = recover(document);
             AiChatEntry duplicate = document.getMessages().stream()
                 .filter(m -> input.requestId().equals(m.getRequestId()) && "assistant".equals(m.getRole())).findFirst().orElse(null);
             if (duplicate != null) {
                 AiChatEntry question = entry(document, duplicate.getTurnId());
                 if (!Objects.equals(question.getText(), input.userPrompt())) throw conflict("requestChanged");
+                if (input.retryMessageId() == null && !Objects.equals(question.getInputValue(), input.inputValue())) {
+                    throw conflict("requestChanged");
+                }
                 if (input.retryMessageId() == null && !sameAttachments(question.getAttachments(), uploads)) {
                     throw conflict("requestChanged");
                 }
@@ -159,6 +170,7 @@ public class AiChatStore {
                 question = message(document, input.requestId(), "user", null);
                 question.setTurnId(question.getId());
                 question.setText(input.userPrompt());
+                question.setInputValue(input.inputValue());
                 question.setStatus("complete");
                 question.setAttachments(storedUploads.stream().map(Upload::attachment).toList());
             }

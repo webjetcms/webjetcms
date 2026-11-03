@@ -50,6 +50,8 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- AI Chat pri poli - pridaná ukladaná história filtrovaná podľa rovnakého poľa a záznamu. Starší rozhovor môžete vyhľadať, otvoriť a pokračovať v ňom aj po zatvorení editora; odpovede zostávajú dostupné na vloženie do poľa.
+
 - AI Chat pri poli a v editore stránky - pridané nahrávanie obrázkov a dokumentov pre asistentov OpenAI a Gemini. Súbory môžete vybrať sponkou, pretiahnuť do správy alebo vložiť obrázok zo schránky; asistent ich spracuje spolu s obsahom stránky. Pri neplatnej alebo príliš veľkej prílohe sa dôvod odmietnutia zobrazí aj pri priebežnom zobrazovaní odpovede.
 
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).

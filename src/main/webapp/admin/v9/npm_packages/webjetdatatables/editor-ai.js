@@ -3,6 +3,7 @@ import { AiRestExecutor } from "./ai/ai-rest-executor";
 import { AiUserInterface } from "./ai/ai-ui";
 import { AiExecutionResult } from "./ai/ai-execution-result";
 import { AiChat } from "../../src/js/ai/ai-chat";
+import { QuickSearchChat } from "../../src/js/ai/quick-search-chat";
 import { parseAiResponse } from "../../src/js/ai/ai-response-parser";
 
 /**
@@ -256,9 +257,6 @@ export class EditorAi {
                 this.undoField.editors.forEach(editor => {
                     editor.instance.setData(editor.value);
                 });
-            } else if (this.undoField.type === "pageBuilder-full") {
-                let options = this.EDITOR.field(this.undoField.to).s.opts;
-                options.wjeditor.pbInsertContent(this.undoField.value, "replace", true);
             } else if (this.undoField.type === "field" && this.undoField.to != null) {
                 this.EDITOR.set(this.undoField.to, this.undoField.value);
             }
@@ -267,15 +265,6 @@ export class EditorAi {
                 $("#toast-container-ai .header-back-button .btn-outline-secondary").trigger("click");
             }
         }
-    }
-
-    continueChat() {
-        //show back previous user prompt
-        this.revertUserPrompt();
-        //clear value
-        $("#ai-user-prompt").val("");
-        //focus into input
-        $("#ai-user-prompt").focus();
     }
 
     revertUserPrompt() {
@@ -310,37 +299,79 @@ export class EditorAi {
 
     /** Returns a reusable chat with editor-specific insertion callbacks for this field. */
     getChatConversation(button, column, aiCol) {
-        const key = JSON.stringify([aiCol.to || column.name, aiCol.assistantId]);
+        const context = this._getChatContext(aiCol.to || column.name);
+        const key = JSON.stringify([context, aiCol.to || column.name, context ? null : aiCol.assistantId]);
         let conversation = this.chatConversations.get(key);
         if (conversation == null) {
             conversation = { key, button, column, aiCol, selection: null, undo: null, applying: false, revision: 0 };
-            conversation.chat = new AiChat({
-                assistant: aiCol,
+            const toolbarActions = () => conversation.undo == null ? [] : [{
+                id: "undo", label: WJ.translate("components.ai_assistants.chat.undo.js"), icon: "arrow-back",
+                disabled: conversation.applying, run: () => this.undoChatInsertion(conversation)
+            }];
+            const chatOptions = assistant => ({
+                assistant,
                 showAttachment: true,
+                allowAttachments: ['openai', 'gemini'].includes(assistant.provider)
+                    && this._getColumnType(column, assistant.from) === 'text',
                 getInputData: () => ({
                     inputValue: this._isChatSelectionValid(conversation.selection)
-                        ? conversation.selection.inputValue : this.EDITOR.get(conversation.aiCol.from || conversation.aiCol.to),
-                    inputValueType: this._getColumnType(conversation.column, conversation.aiCol.from),
+                        ? conversation.selection.inputValue : this.EDITOR.get(assistant.from || assistant.to || column.name),
+                    inputValueType: this._getColumnType(conversation.column, assistant.from),
                     outputValueType: "text"
                 }),
                 getAnswerActions: message => this._getChatAnswerActions(conversation, message),
-                getToolbarActions: () => conversation.undo == null ? [] : [{
-                    id: "undo", label: WJ.translate("components.ai_assistants.chat.undo.js"), icon: "arrow-back",
-                    disabled: conversation.applying, run: () => this.undoChatInsertion(conversation)
-                }],
+                getToolbarActions: toolbarActions,
                 onChange: () => this._updateChatLoader(conversation),
                 onReset: () => { conversation.revision++; conversation.undo = null; }
             });
+            if (context != null) {
+                const assistants = (column.ai || [aiCol]).filter(item => item.action === 'live_chat'
+                    && (item.to || column.name) === context.fieldName).map(item => ({ ...item,
+                        persistentChat: item.persistentChat === true && this._getColumnType(column, item.from) === 'text' }));
+                conversation.host = new QuickSearchChat({
+                    context, assistants, assistantId: aiCol.assistantId, historyOpen: true,
+                    getChatOptions: chatOptions,
+                    onShowChat: chat => {
+                        if (conversation.chat !== chat) {
+                            conversation.revision++;
+                            conversation.undo = null;
+                        }
+                        conversation.chat = chat;
+                        conversation.aiCol = { ...aiCol, ...chat.assistant, to: context.fieldName };
+                        if (this.aiUserInterface.currentChat === conversation) {
+                            this.aiUserInterface._renderHeader(conversation.button, conversation.column, conversation.aiCol);
+                        }
+                    }
+                });
+            } else {
+                conversation.chat = new AiChat(chatOptions(aiCol));
+            }
             this.chatConversations.set(key, conversation);
         }
         conversation.button = button;
         conversation.column = column;
         conversation.aiCol = aiCol;
-        conversation.chat.assistant = aiCol;
-        conversation.chat.options.allowAttachments = ['openai', 'gemini'].includes(aiCol.provider)
-            && this._getColumnType(column, aiCol.from) === 'text';
+        if (conversation.host) {
+            conversation.host.unmount();
+            conversation.host.selectAssistant(String(aiCol.assistantId));
+        } else {
+            conversation.chat.assistant = aiCol;
+            conversation.chat.options.allowAttachments = ['openai', 'gemini'].includes(aiCol.provider)
+                && this._getColumnType(column, aiCol.from) === 'text';
+        }
         conversation.selection = this._captureChatSelection(column, aiCol);
         return conversation;
+    }
+
+    /** Uses the REST resource and saved record ID so identical fields in different editors cannot share history. */
+    _getChatContext(fieldName) {
+        const data = this.EDITOR.TABLE?.DATA;
+        const ids = this.EDITOR.ids?.();
+        if (!data?.url || this.EDITOR.mode?.() !== 'edit' || ids?.length !== 1) return null;
+        const id = ids[0];
+        if (id == null || String(id).trim() === '' || Number(id) <= 0) return null;
+        return { entityType: new URL(data.url, window.location.href).pathname.replace(/\/$/, ''),
+            entityId: String(id), fieldName };
     }
 
     _getChatAnswerActions(conversation, message) {
@@ -383,14 +414,15 @@ export class EditorAi {
 
     _updateChatLoader(conversation) {
         const working = [...this.chatConversations.values()].some(item =>
-            item.aiCol.to === conversation.aiCol.to && item.chat.state.pending != null);
+            item.aiCol.to === conversation.aiCol.to && (item.host
+                ? [...item.host.conversations].some(chat => chat.state.pending != null) : item.chat.state.pending != null));
         if (working) this._showLoader(conversation.button);
         else this._hideLoader(conversation.button);
     }
 
     /** Clears all chat state only after the enclosing editor has really closed. */
     disposeChats() {
-        for (const conversation of this.chatConversations.values()) conversation.chat.destroy();
+        for (const conversation of this.chatConversations.values()) (conversation.host || conversation.chat).destroy();
         this.chatConversations.clear();
         this.chatApplyingFields.clear();
         if (this.aiUserInterface.isActive()) this._closeToast();
@@ -584,12 +616,6 @@ export class EditorAi {
 
         self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
-        let mode = "";
-        if ($("#bonusContent-replaceMode-append").is(":checked")) mode = "append";
-        else if ($("#bonusContent-replaceMode-replace").is(":checked")) mode = "replace";
-        else if ($("#bonusContent-replaceMode-edit").is(":checked")) mode = "edit";
-        //console.log("mode=", mode);
-
         if (ckEditorRanges != null && ckEditorSelectionInstance != null) {
 
             // Get selected HTML
@@ -614,135 +640,70 @@ export class EditorAi {
             if (executionResult!=null) totalTokens += executionResult.totalTokens;
 
         } else if (isPageBuilder) {
-            //console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
+            //get all PB editor instances and execute action on them separately
+            let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
+            let reuseApiInstance = false;
 
-            if ("append"===mode || "replace"===mode || "edit"===mode) {
-                //append new content into page
-                let reuseApiInstance = false;
-                let self = this;
-                let options = self.EDITOR.field(aiCol.to).s.opts;
-                let lastLength = 0;
+            self.undoField = {};
+            self.undoField.type = "pageBuilder";
+            self.undoField.editors = [];
+            let successCount = 0;
+            let explanatoryText = null;
+            executionResult = new AiExecutionResult();
 
-                //set HTML only for edit mode, because otherwise AI may duplicate whole page content
-                if ("edit" === mode) inputData.inputValue = self.EDITOR.get(from);
-                else inputData.inputValue = "";
-
-                self.undoField = {};
-                self.undoField.type = "pageBuilder-full";
-                self.undoField.value = options.wjeditor.getData();
-                self.undoField.to = aiCol.to;
-
-                //save credits during development
-                let fakeData = false;
-                if (fakeData === true) {
-                    //wait for 10 seconds
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                    let response = `<section class="py-5 aaaa-apend text-center text-lg-start">
-                        <div class="container">
-                        <div class="row align-items-center g-5">
-                        <div class="col-12 col-lg-6">
-                        <h1 class="display-5 fw-bold">Spoľahlivý Opravár Vody, Plynu a&nbsp;Elektriny v&nbsp;Bratislave</h1>
-
-                        <p class="lead my-4">Profesionálne služby v&nbsp;oblasti vodovodných a&nbsp;plynových prípojok, ako aj odborné revízie elektriny. Rýchlo, kvalitne a&nbsp;za férovú cenu.</p>
-
-                        <p><a class="btn btn-primary btn-lg" href="#kontakt">Kontaktujte ma</a></p>
-                        </div>
-
-                        <div class="col-12 col-lg-6"><img alt="Ilustračný obrázok opravy vodovodného potrubia" class="img-fluid rounded-3 shadow-sm" src="/components/news/admin_imgplaceholder.png" /></div>
-                        </div>
-                        </div>
-                        </section>`;
-                        options.wjeditor.pbInsertContent(response, mode, true);
-                        executionResult = new AiExecutionResult();
-                        executionResult.totalTokens = 100;
-                        executionResult.success = true;
-                        console.log("executionResult=", executionResult);
-                } else {
-                    executionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response, final) => {
-                        let insertData = final;
-                        if (final === false && lastLength+300 < response.length && response.lastIndexOf("</section>") > response.length-60) {
-                            insertData = true;
-                            //insert only valid HTML code with complete sections
-                            response = response.substring(0, response.lastIndexOf("</section>")+10);
-                            lastLength = response.length;
-                        }
-
-                        if (insertData) {
-                            //if (final === true) console.log("Inserting into PageBuilder:", response, "final=", final);
-                            options.wjeditor.pbInsertContent(response, mode, final);
-                        }
-                    });
+            for (let i=0; i<editors.length; i++) {
+                if (self.stopped === true) {
+                    executionResult.stopped = true;
+                    break;
                 }
 
+                let editor = editors[i];
+                if (i>0) reuseApiInstance = true;
+                //console.log("Executing on editor: ", editor);
 
-                totalTokens = executionResult.totalTokens;
-            } else {
+                self.setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
 
-                //get all PB editor instances and execute action on them separately
-                let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
-                let reuseApiInstance = false;
+                inputData.inputValue = editor.getData();
+                self.undoField.editors.push({instance: editor, value: inputData.inputValue});
 
-                self.undoField = {};
-                self.undoField.type = "pageBuilder";
-                self.undoField.editors = [];
-                let successCount = 0;
-                let explanatoryText = null;
-                executionResult = new AiExecutionResult();
+                let editorExecutionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
+                    //console.log("response="+response, "setting to editor: ", editor);
 
-                for (let i=0; i<editors.length; i++) {
-                    if (self.stopped === true) {
-                        executionResult.stopped = true;
-                        break;
+                    //if response contains section wrapped extract only inner part, it is often wrapped by AI into section element, but we are allready inside outer section
+                    let startSection = response.indexOf("<section");
+                    let endSection = response.lastIndexOf("</section>");
+                    if (startSection != -1 && endSection != -1) {
+                        //move to end of <section tag
+                        startSection = response.indexOf(">", startSection);
+                        response = response.substring(startSection+1, endSection+10);
                     }
 
-                    let editor = editors[i];
-                    if (i>0) reuseApiInstance = true;
-                    //console.log("Executing on editor: ", editor);
+                    if (self.stopped === false) editor.setData(response);
+                });
+                //console.log("editorExecutionResult=", editorExecutionResult);
+                if (editorExecutionResult!=null) {
+                    totalTokens += editorExecutionResult.totalTokens;
 
-                    self.setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
+                    if (editorExecutionResult.stopped === true) {
+                        this._stoppedSignalReceived(button);
+                        return;
+                    }
 
-                    inputData.inputValue = editor.getData();
-                    self.undoField.editors.push({instance: editor, value: inputData.inputValue});
+                    //preserve status to executionResults
+                    if (editorExecutionResult.statusKey != null) executionResult.statusKey = editorExecutionResult.statusKey;
+                    if (editorExecutionResult.statusKeyParams != null) executionResult.statusKeyParams = editorExecutionResult.statusKeyParams;
+                    if (editorExecutionResult.errorText != null) executionResult.errorText = editorExecutionResult.errorText;
+                    if (editorExecutionResult.success === true) successCount++;
 
-                    let editorExecutionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
-                        //console.log("response="+response, "setting to editor: ", editor);
-
-                        //if response contains section wrapped extract only inner part, it is often wrapped by AI into section element, but we are allready inside outer section
-                        let startSection = response.indexOf("<section");
-                        let endSection = response.lastIndexOf("</section>");
-                        if (startSection != -1 && endSection != -1) {
-                            //move to end of <section tag
-                            startSection = response.indexOf(">", startSection);
-                            response = response.substring(startSection+1, endSection+10);
-                        }
-
-                        if (self.stopped === false) editor.setData(response);
-                    });
-                    //console.log("editorExecutionResult=", editorExecutionResult);
-                    if (editorExecutionResult!=null) {
-                        totalTokens += editorExecutionResult.totalTokens;
-
-                        if (editorExecutionResult.stopped === true) {
-                            this._stoppedSignalReceived(button);
-                            return;
-                        }
-
-                        //preserve status to executionResults
-                        if (editorExecutionResult.statusKey != null) executionResult.statusKey = editorExecutionResult.statusKey;
-                        if (editorExecutionResult.statusKeyParams != null) executionResult.statusKeyParams = editorExecutionResult.statusKeyParams;
-                        if (editorExecutionResult.errorText != null) executionResult.errorText = editorExecutionResult.errorText;
-                        if (editorExecutionResult.success === true) successCount++;
-
-                        if (editorExecutionResult.explanatoryText != null) {
-                            if (explanatoryText == null || explanatoryText.trim() === "") explanatoryText = editorExecutionResult.explanatoryText;
-                            else explanatoryText += "\n---\n" + editorExecutionResult.explanatoryText;
-                        }
+                    if (editorExecutionResult.explanatoryText != null) {
+                        if (explanatoryText == null || explanatoryText.trim() === "") explanatoryText = editorExecutionResult.explanatoryText;
+                        else explanatoryText += "\n---\n" + editorExecutionResult.explanatoryText;
                     }
                 }
-
-                if (successCount === editors.length) executionResult.success = true;
-                executionResult.explanatoryText = explanatoryText;
             }
+
+            if (successCount === editors.length) executionResult.success = true;
+            executionResult.explanatoryText = explanatoryText;
 
         } else {
 
@@ -755,24 +716,7 @@ export class EditorAi {
             } catch (error) {
                 console.error("Error setting undoField:", error);
             }
-            if ("append"===mode || "replace"===mode || "edit"===mode) {
-                executionResult = await this._executeSingleAction(button, column, aiCol, inputData, false, (response, finished) => {
-                    //console.log("response="+response, "setting to field: ", self.EDITOR, "inputData=", inputData)
-                    // Append or replace field with AI response, do not stream, wait for finished
-                    // In edit mode we replace whole content
-                    if (finished === true) {
-                        if ("append"===mode) {
-                            let currentValue = self.EDITOR.get(aiCol.to);
-                            if (currentValue == null) currentValue = "";
-                            self.EDITOR.set(aiCol.to, currentValue + response);
-                        } else if ("replace"===mode || "edit"===mode) {
-                            self.EDITOR.set(aiCol.to, response);
-                        }
-                    }
-                });
-            } else {
-                executionResult = await this._executeSingleAction(button, column, aiCol, inputData);
-            }
+            executionResult = await this._executeSingleAction(button, column, aiCol, inputData);
 
             if (executionResult!=null) totalTokens += executionResult.totalTokens;
         }

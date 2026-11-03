@@ -1,17 +1,19 @@
 import { AiChat } from './ai-chat';
 import { node, icon, fetchJson, containNativeScroll } from '../dashboard/widget-utils';
-import { chatHistoryRequest, historyText } from './chat-history-api';
+import { chatHistoryRequest, chatRequestId, historyText } from './chat-history-api';
 import { setChatTooltip, initChatTooltips, disposeChatTooltips } from './chat-tooltips';
 
 const text = key => WJ.translate(`admin.quickSearch.${key}.js`);
 const filesText = key => WJ.translate(`components.ai_assistants.chat.files.${key}.js`);
 
-/** Hosts independent, copy-only conversations with the configured chat assistants. */
+/** Hosts saved conversations, optionally scoped to an editor field with insertion actions. */
 export class QuickSearchChat {
-    constructor() {
+    constructor(options = {}) {
+        this.options = options;
+        const idPrefix = options.context ? `ai-field-chat-${chatRequestId()}` : 'admin-ai-chat';
         this.conversations = new Set();
         this.lastConversationByAssistant = new Map();
-        this.historyOpen = false;
+        this.historyOpen = options.historyOpen === true;
         this.filesOpen = false;
         this.historyItems = [];
         this.historyPage = 0;
@@ -23,10 +25,11 @@ export class QuickSearchChat {
         this.disposed = false;
         this.scrollController = new AbortController();
         this.element = node('div', 'md-quick-search__chat-host');
+        this.element.classList.toggle('md-quick-search__chat-host--history-open', this.historyOpen);
         this.assistantRow = node('div', 'md-quick-search__chat-assistant');
         const label = node('label', 'visually-hidden', text('chatAssistant'));
         this.select = node('select', 'form-select');
-        this.select.id = 'admin-quick-search-chat-assistant';
+        this.select.id = options.context ? `${idPrefix}-assistant` : 'admin-quick-search-chat-assistant';
         label.htmlFor = this.select.id;
         this.select.addEventListener('change', () => this.selectAssistant(this.select.value));
         this.assistantRow.append(label, this.select);
@@ -37,8 +40,8 @@ export class QuickSearchChat {
         this.main = node('div', 'md-quick-search__chat-main');
         this.main.append(this.status, this.content);
         this.historyPanel = node('aside', 'md-quick-search__chat-history');
-        this.historyPanel.id = 'admin-ai-chat-history';
-        this.historyPanel.hidden = true;
+        this.historyPanel.id = `${idPrefix}-history`;
+        this.historyPanel.hidden = !this.historyOpen;
         this.historyPanel.setAttribute('aria-label', historyText('title'));
         const heading = node('div', 'md-quick-search__chat-history-heading');
         this.closeHistory = this.iconButton(historyText('close'), 'layout-sidebar', () => this.toggleHistory(false));
@@ -53,7 +56,7 @@ export class QuickSearchChat {
         const search = node('div', 'md-quick-search__chat-history-search');
         const searchLabel = node('label', 'visually-hidden', historyText('search'));
         this.historySearch = node('input', 'form-control form-control-sm');
-        this.historySearch.id = 'admin-ai-chat-history-search';
+        this.historySearch.id = `${idPrefix}-history-search`;
         this.historySearch.type = 'search';
         this.historySearch.placeholder = historyText('search');
         this.historySearch.autocomplete = 'off';
@@ -72,7 +75,7 @@ export class QuickSearchChat {
         });
         containNativeScroll(this.historyList, this.scrollController.signal);
         this.filesPanel = node('aside', 'md-quick-search__chat-files');
-        this.filesPanel.id = 'admin-ai-chat-files';
+        this.filesPanel.id = `${idPrefix}-files`;
         this.filesPanel.hidden = true;
         this.filesPanel.setAttribute('aria-label', filesText('title'));
         const filesHeading = node('div', 'md-quick-search__chat-history-heading');
@@ -81,7 +84,7 @@ export class QuickSearchChat {
         const filesSearch = node('div', 'md-quick-search__chat-history-search');
         const filesSearchLabel = node('label', 'visually-hidden', filesText('search'));
         this.filesSearch = node('input', 'form-control form-control-sm');
-        this.filesSearch.id = 'admin-ai-chat-files-search';
+        this.filesSearch.id = `${idPrefix}-files-search`;
         this.filesSearch.type = 'search';
         this.filesSearch.placeholder = filesText('search');
         this.filesSearch.autocomplete = 'off';
@@ -100,6 +103,15 @@ export class QuickSearchChat {
         });
         containNativeScroll(this.filesList, this.scrollController.signal);
         this.element.append(this.historyPanel, this.main, this.filesPanel);
+        if (options.assistants) {
+            this.assistants = options.assistants;
+            for (const assistant of this.assistants) {
+                const option = node('option', '', assistant.description || assistant.providerTitle);
+                option.value = assistant.assistantId;
+                this.select.append(option);
+            }
+            this.select.value = String(options.assistantId);
+        }
     }
 
     /** Loads assistants on first use and restores the selected conversation on later visits. */
@@ -185,26 +197,32 @@ export class QuickSearchChat {
         }
     }
 
-    /** Retains each assistant's transcript and draft without supplying any page or field context. */
+    /** Retains each assistant's transcript and draft in this host's context. */
     selectAssistant(id, fresh = false) {
         const assistant = this.assistants?.find(item => String(item.assistantId) === id);
-        if (assistant == null || !this.mounted || this.disposed) return;
+        if (assistant == null || this.disposed) return;
         this.selectionVersion++;
         let chat = fresh ? null : this.lastConversationByAssistant.get(id);
         if (!chat) chat = this.createChat(assistant);
         this.showChat(chat);
-        this.refreshConversation(chat);
+        if (this.mounted) this.refreshConversation(chat);
     }
 
     createChat(assistant) {
         const persistent = assistant.persistentChat === true;
+        const options = this.options.getChatOptions?.(assistant) || {};
         const chat = new AiChat({
             assistant, persistent, composerControls: this.assistantRow, showAttachment: true,
+            context: this.options.context,
+            ...options,
             notice: persistent ? null : historyText('unsaved'),
             getTitle: () => chat.threadInfo?.title || chat.state.messages.find(message => message.role === 'user')?.text
                 || (this.historyOpen ? WJ.translate('components.ai_assistants.chat.new.js') : ''),
-            getToolbarActions: () => this.toolbarActions(chat),
-            onChange: current => { if (this.chat === current) this.renderFiles(); },
+            getToolbarActions: () => [...this.toolbarActions(chat), ...(options.getToolbarActions?.(chat) || [])],
+            onChange: current => {
+                if (this.chat === current) this.renderFiles();
+                options.onChange?.(current);
+            },
             onNewChat: persistent ? current => {
                 current.stop();
                 const selected = this.assistants?.find(item => item.assistantId === current.assistant.assistantId) || this.assistants?.[0];
@@ -226,6 +244,7 @@ export class QuickSearchChat {
         if (this.chat !== chat) this.filesSearch.value = '';
         this.chat?.unmount();
         this.chat = chat;
+        this.options.onShowChat?.(chat);
         this.newChatButton.disabled = false;
         const id = String(chat.assistant.assistantId);
         this.lastConversationByAssistant.set(id, chat);
@@ -237,7 +256,7 @@ export class QuickSearchChat {
         this.select.value = id;
         this.status.hidden = true;
         this.content.hidden = false;
-        chat.mount(this.content);
+        if (this.mounted) chat.mount(this.content);
         this.renderHistory();
         this.renderFiles();
     }
@@ -361,8 +380,9 @@ export class QuickSearchChat {
         this.renderHistory();
         try {
             const page = append ? this.historyPage + 1 : 0;
-            const query = this.historyQuery ? `&query=${encodeURIComponent(this.historyQuery)}` : '';
-            const result = await chatHistoryRequest(`/threads?page=${page}${query}`, { signal: controller.signal });
+            const parameters = new URLSearchParams({ page, ...this.options.context });
+            if (this.historyQuery) parameters.set('query', this.historyQuery);
+            const result = await chatHistoryRequest(`/threads?${parameters}`, { signal: controller.signal });
             if (controller.signal.aborted || this.disposed) return;
             this.historyItems = append ? [...new Map([...this.historyItems, ...result.items].map(item => [item.id, item])).values()] : result.items;
             this.historyPage = page;
@@ -422,6 +442,7 @@ export class QuickSearchChat {
             } else {
                 const detail = await chatHistoryRequest(`/threads/${encodeURIComponent(id)}`, { signal: this.scrollController.signal });
                 if (this.disposed || selection !== this.selectionVersion) return;
+                if (!this.matchesContext(detail.thread.context)) throw new Error(historyText('requestChanged'));
                 const assistant = this.assistants?.find(item => item.assistantId === detail.thread.assistantId) || {
                     assistantId: detail.thread.assistantId, provider: detail.thread.provider,
                     description: detail.thread.assistantName, providerTitle: detail.thread.assistantName
@@ -442,6 +463,7 @@ export class QuickSearchChat {
 
     applyDetail(chat, detail) {
         if (chat.state.pending || chat.state.disposed) return;
+        if (!this.matchesContext(detail.thread.context)) throw new Error(historyText('requestChanged'));
         const unsaved = chat.state.messages.at(-1);
         const rejected = unsaved?.inputData?.requestId && !detail.messages.some(message => message.requestId === unsaved.inputData.requestId);
         if (rejected && !chat.state.draft.trim()) chat.state.draft = unsaved.userPrompt || '';
@@ -527,6 +549,13 @@ export class QuickSearchChat {
 
     findThread(id) {
         return [...this.conversations].find(chat => chat.state.threadId === id);
+    }
+
+    matchesContext(context) {
+        const expected = this.options.context;
+        if (!expected) return context == null;
+        return context?.entityType === expected.entityType && context.entityId === expected.entityId
+            && context.fieldName === expected.fieldName;
     }
 
     removeChat(id) {

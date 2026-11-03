@@ -54,7 +54,7 @@ public class AiChatService implements DisposableBean {
 
     public record ThreadView(String id, String title, Long assistantId, String assistantName, String provider, String model,
         Date created, Date updated, String status, long revision, boolean busy, boolean canContinue,
-        String unavailableReason, String deletionError) { }
+        String unavailableReason, String deletionError, AiChatContext context) { }
     public record MessageView(String id, String turnId, String requestId, String role, String text, String status,
         Date created, int totalTokens, String errorCategory, Integer providerStatusCode, List<AttachmentView> attachments) { }
     public record AttachmentView(String id, String name, String mediaType, long size, String url) { }
@@ -64,7 +64,11 @@ public class AiChatService implements DisposableBean {
     public record Prepared(Turn turn, AssistantDefinitionEntity assistant, Scope scope) { }
 
     public HistoryPage list(Scope scope, int page, String query) {
-        var result = store.list(scope, page, query);
+        return list(scope, page, query, null);
+    }
+
+    public HistoryPage list(Scope scope, int page, String query, AiChatContext context) {
+        var result = store.list(scope, page, query, context);
         return new HistoryPage(result.items().stream().map(this::view).toList(), result.hasMore());
     }
 
@@ -101,7 +105,7 @@ public class AiChatService implements DisposableBean {
         } else {
             InputDataDTO input = new InputDataDTO();
             input.setAssistantId(prepared.assistant().getId());
-            input.setInputValue("");
+            input.setInputValue(turn.question().getInputValue() == null ? "" : turn.question().getInputValue());
             input.setInputValueType(InputDataDTO.InputValueType.TEXT);
             input.setOutputValueType(InputDataDTO.InputValueType.TEXT);
             input.setUserPrompt(turn.question().getText());
@@ -177,7 +181,7 @@ public class AiChatService implements DisposableBean {
                 context.append("\nAttachment: ").append(attachment.name()).append('\n').append(content).append('\n');
                 if (context.length() > AiChatAttachments.MAX_TEXT) throw new AiChatAttachments.UnreadableException();
             }
-            input.setInputValue(context.toString());
+            input.setInputValue(input.getInputValue() + context);
             store.submitted(prepared.scope(), threadId, messageId);
             AiResponse response = provider.getPersistentChatResponse(prepared.assistant(), input, onText, streaming, providerConfig);
             store.responseId(prepared.scope(), threadId, messageId, response.responseId());
@@ -290,7 +294,7 @@ public class AiChatService implements DisposableBean {
             .equals(thread.getProviderScope())) reason = "providerChanged";
         return new ThreadView(thread.getId(), thread.getTitle(), thread.getAssistantId(), thread.getAssistantName(), thread.getProvider(),
             thread.getModel(), thread.getCreated(), thread.getUpdated(), thread.getStatus(), thread.getRevision(),
-            thread.getActiveMessageId() != null, reason == null, reason, thread.getDeletionError());
+            thread.getActiveMessageId() != null, reason == null, reason, thread.getDeletionError(), thread.getContext());
     }
 
     private static MessageView view(String threadId, AiChatEntry message) {

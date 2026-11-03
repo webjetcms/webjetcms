@@ -41,13 +41,15 @@ export class AiUserInterface {
             role: "dialog", "aria-modal": "true", "aria-label": conversation.aiCol.description
         });
         $("#toast-container-ai").removeClass("ai-status-working ai-status-success ai-status-error");
-        conversation.chat.mount($("#toast-container-ai-content").empty()[0]);
+        $("#toast-container-ai").toggleClass("ai-chat-with-history", conversation.host != null);
+        (conversation.host || conversation.chat).mount($("#toast-container-ai-content").empty()[0]);
         this.$chatDialog.on("keydown.aiChatHost", event => this._handleChatDialogKey(event));
     }
 
     detachChat() {
-        this.currentChat?.chat.unmount();
+        if (this.currentChat) (this.currentChat.host || this.currentChat.chat).unmount();
         this.currentChat = null;
+        $("#toast-container-ai").removeClass("ai-chat-with-history");
         this.$chatDialog?.off("keydown.aiChatHost");
         if (this.chatDialogAttributes != null) {
             this.$chatDialog.css("display", this.chatDialogDisplay || "");
@@ -66,7 +68,7 @@ export class AiUserInterface {
             event.stopPropagation();
             this._closeToast();
         } else if (event.key === "Tab") {
-            const $controls = this.$chatDialog.find('button, textarea, [tabindex="0"]').filter(":visible:not(:disabled)");
+            const $controls = this.$chatDialog.find('button, input, select, textarea, [tabindex="0"]').filter(":visible:not(:disabled)");
             const first = $controls[0];
             const last = $controls[$controls.length - 1];
             if (event.shiftKey && document.activeElement === first) {
@@ -221,6 +223,8 @@ export class AiUserInterface {
 
             // Bind click to _executeAction
             btn.on('click', () => {
+                const conversation = aiCol.action === "live_chat"
+                    ? this.editorAiInstance.getChatConversation(button, column, aiCol) : null;
                 this.viewRevision++;
                 this.activeAssistant = aiCol;
                 //use original button clicked - which shows this popup
@@ -233,7 +237,7 @@ export class AiUserInterface {
                 toastContainerAi.addClass("ai-action-" + aiCol.action.replaceAll("_", "-"));
 
                 if (aiCol.action === "live_chat") {
-                    this.openChat(this.editorAiInstance.getChatConversation(button, column, aiCol));
+                    this.openChat(conversation);
                 } else if (true === aiCol.userPromptEnabled) {
                     //we must first show dialog with textarea and after that call _executeAction
                     this._renderUserPromptDialog(button, column, aiCol);
@@ -369,12 +373,6 @@ export class AiUserInterface {
                     this.editorAiInstance.undo();
                 });
 
-                //generate continue chat button
-                let continueChatButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-continue-chat" type="button"><i class="ti ti-player-play-filled"></i> ' + WJ.translate("components.ai_assistants.editor.continueChat.js")+'</button></div>');
-                continueChatButton.find("button").on('click', () => {
-                    this.editorAiInstance.continueChat();
-                });
-
                 //generate OK button, on click close toast
                 let okButton = $('<div class="text-end"><button class="btn btn-primary btn-ai-ok" type="button"><i class="ti ti-check"></i> ' + WJ.translate("button.ok")+'</button></div>');
                 okButton.find("button").on('click', () => {
@@ -382,7 +380,6 @@ export class AiUserInterface {
                 });
                 let buttonContainer = $('<div class="ai-status-buttons-container d-flex justify-content-end gap-2 mt-1"></div>');
                 buttonContainer.append(undoButton);
-                buttonContainer.append(continueChatButton);
                 buttonContainer.append(okButton);
                 contentContainer.append(buttonContainer);
             }

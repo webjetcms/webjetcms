@@ -15,6 +15,7 @@ public class AiChatEntry {
     private long sortOrder;
     private String role;
     private String text;
+    private String inputValue;
     private String status;
     private Date created;
     private Date updated;

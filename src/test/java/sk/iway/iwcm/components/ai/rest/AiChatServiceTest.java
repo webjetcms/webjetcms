@@ -33,6 +33,7 @@ import com.webjetcms.ai.TokenUsage;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
+import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -145,6 +146,31 @@ class AiChatServiceTest {
         verify(deletion, times(2)).deleteResponse("openai", "response-one", config);
         verify(deletion).deleteResponse("openai", "response-two", config);
         assertTrue(store.list(scope, 0).items().isEmpty());
+    }
+
+    /** Retrying a saved field turn uses its original field snapshot and attachments. */
+    @Test
+    void continuesFieldChatWithCurrentInputAndOriginalRetryContext() throws Exception {
+        var context = new AiChatContext("/admin/rest/web-pages", "42", "data");
+        var files = AiChatAttachments.read(List.of(new MockMultipartFile("files", "notes.txt", "text/plain",
+            "Document context".getBytes(StandardCharsets.UTF_8))));
+        var first = service.prepare(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null,
+            context, "<p>Original page</p>"), scope, files);
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config))).thenAnswer(call -> {
+            InputDataDTO input = call.getArgument(1);
+            assertTrue(input.getInputValue().startsWith("<p>Original page</p>"));
+            assertTrue(input.getInputValue().contains("Document context"));
+            throw new AiProviderException("openai", 503, "Try again", null, true);
+        });
+        execute(first);
+        String id = first.turn().thread().getId();
+        var retry = service.prepare(new AiChatRequest(id, 12L, UUID.randomUUID().toString(), 1L, "Question", first.turn().message().getId(),
+            context, "<p>Changed page</p>"), scope);
+        execute(retry);
+        verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config));
+        assertEquals(context, service.detail(id, scope).thread().context());
+        assertTrue(service.list(scope, 0, "").items().isEmpty());
+        assertEquals(1, service.list(scope, 0, "", context).items().size());
     }
 
     /** Deletion finishes after a queued task is cancelled before generation starts. */

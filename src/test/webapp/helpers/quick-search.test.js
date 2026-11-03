@@ -111,6 +111,8 @@ function fixture(t, denied = [], options = {}) {
         vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
         vm.runInContext(`{ ${readAdmin('ai/quick-search-chat.js')}; Object.assign(this, { QuickSearchChat }); }`, context);
         if (options.editorChat) {
+            vm.runInContext(readAdmin('ai/ai-response-parser.js'), context);
+            vm.runInContext(readAdmin('../../npm_packages/webjetdatatables/ai/ai-execution-result.js'), context);
             vm.runInContext(`${readAdmin('../../npm_packages/webjetdatatables/editor-ai.js')}\nthis.EditorAi = EditorAi;`, context);
         }
     }
@@ -123,17 +125,19 @@ function fixture(t, denied = [], options = {}) {
     });
     controller.open();
     t.after(() => { controller.cancel(); controller.chat?.destroy(); window.close(); });
-    const editorChat = (assistant, inputValue = '<p>Existing page</p>', columnOptions = {}) => {
-        const values = { data: inputValue };
+    const editorChat = (assistant, inputValue = '<p>Existing page</p>', columnOptions = {}, record = {}) => {
+        const values = { data: inputValue, id: record.id };
         const editor = Object.assign(Object.create(context.EditorAi.prototype), {
-            EDITOR: { get: field => values[field] }, chatConversations: new Map(),
-            aiUserInterface: { _showLoader() {}, _hideLoader() {} }
+            EDITOR: { get: field => values[field], mode: () => record.mode || 'edit', ids: () => record.ids || [values.id],
+                TABLE: record.url ? { DATA: { url: record.url, editorId: 'id' } } : undefined },
+            chatConversations: new Map(), chatApplyingFields: new Map(), undoField: null,
+            aiUserInterface: { _showLoader() {}, _hideLoader() {}, setCurrentStatus() {} }
         });
         const conversation = editor.getChatConversation(window.document.querySelector('#trigger'),
             { name: 'data', type: 'textarea', ...columnOptions }, { ...assistant, from: 'data', to: 'data' });
-        conversation.chat.mount(window.document.body);
-        t.after(() => conversation.chat.destroy());
-        return { ...conversation, values };
+        (conversation.host || conversation.chat).mount(window.document.body);
+        t.after(() => (conversation.host || conversation.chat).destroy());
+        return Object.assign(conversation, { values, editor });
     };
     const type = value => {
         controller.input.value = value;
@@ -1761,6 +1765,152 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     sendChat(current);
     assert.equal(f.chatRequests[1].inputData.conversationId, 'first-conversation');
     assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');
+});
+
+test('Saved field chats send their record context and reopen only matching history with insertion actions', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    const conversation = f.editorChat({ ...chatAssistants[0], persistentChat: true }, '<p>Existing page</p>', {},
+        { url: '/admin/rest/web-pages/?groupId=1', id: 42 });
+    const { chat, host, editor } = conversation;
+    const context = { entityType: '/admin/rest/web-pages', entityId: '42', fieldName: 'data' };
+    let loading = false;
+    editor.aiUserInterface._showLoader = () => { loading = true; };
+    editor.aiUserInterface._hideLoader = () => { loading = false; };
+    assert.equal(chat.options.persistent, true);
+    const sending = chat.send('Improve this page');
+    assert.equal(loading, true);
+    assert.deepEqual(JSON.parse(JSON.stringify(f.chatRequests[0].inputData.context)), context);
+    assert.equal(f.chatRequests[0].inputData.inputValue, '<p>Existing page</p>');
+    f.chatRequests[0].resolve({ success: true, persisted: true, response: 'Improved page' });
+    await sending;
+    assert.equal(loading, false);
+
+    host.toggleHistory(true);
+    const history = f.requests.at(-1);
+    for (const [key, value] of Object.entries(context)) assert.equal(history.url.searchParams.get(key), value);
+    await f.respond(history, { items: [{ id: 'saved-field', title: 'Saved field question' }], hasMore: true });
+    host.historySearch.value = 'Earlier question';
+    host.searchHistory();
+    f.advance(300);
+    const search = f.requests.at(-1);
+    for (const [key, value] of Object.entries(context)) assert.equal(search.url.searchParams.get(key), value);
+    assert.equal(search.url.searchParams.get('query'), 'Earlier question');
+    await f.respond(search, { items: [{ id: 'saved-field', title: 'Saved field question' }], hasMore: true });
+    host.loadHistory(true);
+    assert.equal(f.requests.at(-1).url.searchParams.get('page'), '1');
+    for (const [key, value] of Object.entries(context)) assert.equal(f.requests.at(-1).url.searchParams.get(key), value);
+    await f.respond(f.requests.at(-1), { items: [], hasMore: false });
+
+    const opening = host.openThread('saved-field');
+    await f.respond(f.requests.at(-1), { thread: { id: 'saved-field', assistantId: 7, revision: 2, canContinue: true, context },
+        messages: [{ id: 'answer', role: 'assistant', text: 'Saved answer', status: 'complete' }] });
+    await opening;
+    assert.equal(conversation.chat.state.threadId, 'saved-field');
+    const inserted = [];
+    editor.insertChatAnswer = (target, message, mode) => inserted.push({ target, text: message.text, mode });
+    conversation.chat.element.querySelector('[data-ai-action="replace"]').click();
+    assert.equal(inserted[0].target, conversation);
+    assert.equal(inserted[0].text, 'Saved answer');
+    assert.equal(inserted[0].mode, 'replace');
+
+    const foreign = host.openThread('another-record');
+    await f.respond(f.requests.at(-1), { thread: { id: 'another-record', assistantId: 7, context: { ...context, entityId: '43' } }, messages: [] });
+    await foreign;
+    assert.equal(conversation.chat.state.threadId, 'saved-field');
+    assert.match(host.historyError, /unavailable/);
+});
+
+for (const pageBuilder of [false, true]) {
+    for (const mode of ['append', 'replace']) {
+        test(`Chat ${mode} inserts a reply and undo restores the original content (PageBuilder=${pageBuilder})`, async t => {
+            const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+            const conversation = f.editorChat({ ...chatAssistants[0], persistentChat: true }, undefined, {},
+                pageBuilder ? { url: '/admin/rest/web-pages/', id: 42 } : {});
+            const { editor, values, chat } = conversation;
+            const original = values.data;
+            const wjeditor = pageBuilder ? {
+                editingMode: 'pageBuilder', getData: () => values.data,
+                pbInsertContent: (content, action) => { values.data = (action === 'append' ? values.data : '') + content; }
+            } : null;
+            editor.EDITOR.field = () => ({ s: { opts: { wjeditor } } });
+            editor.EDITOR.set = (field, value) => { values[field] = value; };
+            const message = { role: 'assistant', status: 'complete', text: '```html\n<p>Answer</p>\n```' };
+            chat.state.messages.push(message);
+            await editor.insertChatAnswer(conversation, message, mode);
+            assert.equal(values.data, (mode === 'append' ? original : '') + '<p>Answer</p>');
+            assert.ok(conversation.undo);
+            assert.ok(chat.element.querySelector('[data-ai-action="undo"]'));
+            await editor.undoChatInsertion(conversation);
+            assert.equal(values.data, original);
+            assert.equal(conversation.undo, null);
+            assert.equal(chat.element.querySelector('[data-ai-action="undo"]'), null);
+        });
+    }
+}
+
+test('Ordinary PageBuilder generation still edits each region and can undo all regions', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    const { editor } = f.editorChat(chatAssistants[0]);
+    const regions = ['First region', 'Second region'].map(value => ({
+        value, getData() { return this.value; }, setData(value) { this.value = value; }, getSelection: () => null
+    }));
+    editor.EDITOR.field = () => ({ s: { opts: {
+        wjeditor: { editingMode: 'pageBuilder', getWysiwygEditors: () => regions }
+    } } });
+    editor._executeSingleAction = async (button, column, assistant, input, reuse, update) => {
+        update(input.inputValue + ' edited', true);
+        return { success: true, totalTokens: 3 };
+    };
+    await editor._executeAction(null, { name: 'data', type: 'wysiwyg' }, {
+        ...chatAssistants[0], action: 'generate_text', from: 'data', to: 'data'
+    });
+    assert.deepEqual(regions.map(region => region.value), ['First region edited', 'Second region edited']);
+    editor.undo();
+    assert.deepEqual(regions.map(region => region.value), ['First region', 'Second region']);
+});
+
+test('Editor chat identity separates records and fields while retaining each assistant in the same field host', t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    const assistants = chatAssistants.map(item => ({ ...item, from: 'data', to: 'data', persistentChat: true }));
+    const column = { name: 'data', type: 'textarea', ai: assistants };
+    const first = f.editorChat(assistants[0], '', column, { url: '/admin/rest/web-pages', id: 42 });
+    const { editor, values } = first;
+    const initialChat = first.chat;
+    initialChat.state.draft = 'Unsent draft';
+    initialChat.refresh();
+    const revision = first.revision;
+    first.undo = { value: 'Old content' };
+    const secondAssistant = editor.getChatConversation(null, column, assistants[1]);
+    assert.equal(secondAssistant, first);
+    assert.notEqual(secondAssistant.chat, initialChat);
+    assert.ok(first.revision > revision);
+    assert.equal(first.undo, null);
+    assert.equal(secondAssistant.host.mounted, false);
+    assert.equal(secondAssistant.chat.mounted, false);
+    secondAssistant.host.mount(secondAssistant.host.element.ownerDocument.body);
+    const restored = editor.getChatConversation(null, column, assistants[0]);
+    assert.equal(restored.chat, initialChat);
+    assert.equal(restored.chat.state.draft, 'Unsent draft');
+    values.id = 43;
+    const otherRecord = editor.getChatConversation(null, column, assistants[0]);
+    assert.notEqual(otherRecord.host, first.host);
+    assert.equal(otherRecord.host.options.context.entityId, '43');
+    t.after(() => otherRecord.host.destroy());
+    const otherField = editor.getChatConversation(null, { name: 'title', type: 'text' }, { ...assistants[0], to: 'title' });
+    assert.notEqual(otherField.host, otherRecord.host);
+    assert.equal(otherField.host.options.context.fieldName, 'title');
+    t.after(() => otherField.host.destroy());
+});
+
+test('Unsaved and multi-record editors never fall back to standalone saved history', t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    for (const record of [{ id: -1 }, { id: 0 }, { id: 42, mode: 'create' }, { id: 42, ids: [42, 43] }]) {
+        const conversation = f.editorChat({ ...chatAssistants[0], persistentChat: true }, '', {},
+            { url: '/admin/rest/web-pages', ...record });
+        assert.equal(conversation.host, undefined);
+        assert.equal(conversation.chat.options.persistent, undefined);
+    }
+    assert.equal(f.requests.length, 0);
 });
 
 for (const provider of ['openai', 'gemini']) {

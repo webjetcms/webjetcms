@@ -103,7 +103,11 @@ V PageBuilderi môže odpoveď obsahovať aj HTML bloky. Ich pridanie alebo nahr
 
 ![Blok školenia vložený z odpovede asistenta do PageBuildera](chat-pagebuilder.png)
 
-Chaty pri poliach sú oddelené podľa poľa a asistenta. Zatvorenie okna AI ich zachová vrátane rozpísanej správy a neodoslaných príloh, ale zatvorenie samotného editora ich ukončí a zruší bežiace požiadavky. Tieto rozhovory sa nepridávajú do histórie v rýchlom vyhľadávaní a ich prílohy sa v CMS trvalo neukladajú.
+Pri uloženom zázname otvoríte ikonou **História chatov** rozhovory patriace k rovnakému poľu toho istého záznamu. Napríklad história poľa obsahu stránky nezobrazí rozhovory k jej názvu ani k obsahu inej stránky. Zoznam zahŕňa chaty rôznych asistentov pre toto pole; môžete v ňom vyhľadávať, otvoriť starší rozhovor a pokračovať v ňom. Aj pri otvorenej staršej odpovedi zostávajú dostupné tlačidlá na vloženie obsahu.
+
+Pri podporovaných asistentoch OpenAI a Gemini s vypnutou voľbou **Zapnúť dočasný chat** sa správy aj prílohy ukladajú. História zostáva dostupná po zatvorení editora alebo obnovení stránky a je oddelená od samostatných rozhovorov v rýchlom vyhľadávaní. Nové, ešte neuložené záznamy a hromadná úprava viacerých záznamov používajú dočasný chat bez ukladanej histórie.
+
+Zatvorenie okna AI zachová rozpísanú správu a neodoslané prílohy, kým zostáva otvorený editor. Zatvorenie samotného editora ich zahodí a zruší bežiace požiadavky; už uložené rozhovory tým nevymažete. Pri dočasných chatoch sa správy ani prílohy v CMS trvalo neukladajú.
 
 ## Dostupnosť a riešenie problémov
 

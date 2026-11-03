@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
+import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.rest.AiChatStore.Scope;
 import sk.iway.iwcm.users.UsersDB;
@@ -41,9 +42,11 @@ public class AiChatController {
 
     @GetMapping("/threads")
     public AiChatService.HistoryPage list(@RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "") String query, HttpServletRequest request, HttpServletResponse response) {
+        @RequestParam(defaultValue = "") String query, @RequestParam(required = false) String entityType,
+        @RequestParam(required = false) String entityId, @RequestParam(required = false) String fieldName,
+        HttpServletRequest request, HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store");
-        return service.list(scope(request), page, query);
+        return service.list(scope(request), page, query, AiChatContext.from(entityType, entityId, fieldName));
     }
 
     @GetMapping("/threads/{id}")

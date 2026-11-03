@@ -31,13 +31,14 @@ function result(payload) {
     return JSON.stringify({ type: 'result', result: payload }) + '\n';
 }
 
-for (const [persistentChat, streaming] of [[true, true], [false, false], [false, true]]) {
+for (const [persistentChat, streaming] of [[true, true], [true, false], [false, false], [false, true]]) {
     test(`chat uploads preserve context, CSRF and multipart data (saved=${persistentChat}, streaming=${streaming})`, async () => {
         let request;
         const file = new File(['Private attachment'], 'notes.txt', { type: 'text/plain' });
         const payload = { response: 'Answer', totalTokens: 7, conversationId: 'next-turn' };
         const accept = streaming ? 'application/x-ndjson' : 'application/json';
-        const input = persistentChat ? { requestId: 'request' } : {
+        const input = persistentChat ? { requestId: 'request', inputValue: '<p>Existing page</p>',
+            context: { entityType: '/admin/rest/web-pages', entityId: '42', fieldName: 'data' } } : {
             inputValue: '<p>Existing page</p>', inputValueType: 'text', outputValueType: 'text', conversationId: 'previous-turn'
         };
         const { AiChatTransport } = loadTransport(async (url, options) => {

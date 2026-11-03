@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
+import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 
 /** Covers persistent conversation lifecycle, isolation and history lookup. */
@@ -116,6 +117,59 @@ class AiChatStoreTest {
         assertEquals("Answer", store.get(id, scope).messages().get(1).getText());
         assertFalse(Files.exists(legacy));
         assertArrayEquals(original, Files.readAllBytes(path));
+    }
+
+    /** Field filtering precedes pagination and excludes other records, fields, resources and standalone chats. */
+    @Test
+    void isolatesFieldHistoryAndPreservesContextAfterReload() {
+        var context = new AiChatContext("/admin/rest/web-pages", "42", "data");
+        var ids = new HashSet<String>();
+        for (int i = 0; i < 32; i++) {
+            var input = new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Field question", null, context, "Original HTML");
+            var turn = store.begin(input, scope, assistant, "config");
+            ids.add(turn.thread().getId());
+        }
+        for (var other : new AiChatContext[] { null,
+            new AiChatContext(context.entityType(), "43", context.fieldName()),
+            new AiChatContext(context.entityType(), context.entityId(), "title"),
+            new AiChatContext("/admin/rest/groups", context.entityId(), context.fieldName()) }) {
+            store.begin(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Field question", null, other, null), scope, assistant, "config");
+        }
+        var reloaded = new AiChatStore();
+        var first = reloaded.list(scope, 0, "FIELD", context);
+        var second = reloaded.list(scope, 1, "FIELD", context);
+        assertEquals(30, first.items().size());
+        assertTrue(first.hasMore());
+        assertEquals(2, second.items().size());
+        assertFalse(second.hasMore());
+        var actual = new HashSet<String>();
+        first.items().forEach(thread -> actual.add(thread.getId()));
+        second.items().forEach(thread -> actual.add(thread.getId()));
+        assertEquals(ids, actual);
+        assertEquals(1, reloaded.list(scope, 0).items().size());
+        var saved = reloaded.get(first.items().get(0).getId(), scope);
+        assertEquals(context, saved.thread().getContext());
+        assertEquals("Original HTML", saved.messages().get(0).getInputValue());
+    }
+
+    /** Neither continuation nor duplicate request IDs may move a conversation into another field. */
+    @Test
+    void rejectsChangingThreadContextAndReusesOriginalInputForRetry() {
+        var context = new AiChatContext("/admin/rest/web-pages", "42", "data");
+        var input = new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null, context, "Original HTML");
+        var turn = store.begin(input, scope, assistant, "config");
+        String id = turn.thread().getId();
+        store.finish(scope, id, turn.message().getId(), "", "error", 0, "UNKNOWN", null);
+        for (String requestId : new String[] {input.requestId(), UUID.randomUUID().toString()}) {
+            assertEquals("requestChanged", assertThrows(ResponseStatusException.class, () -> store.begin(
+                new AiChatRequest(id, 12L, requestId, 1L, "Question", null, null, "Original HTML"), scope, assistant, "config")).getReason());
+        }
+        assertEquals("requestChanged", assertThrows(ResponseStatusException.class, () -> store.begin(
+            new AiChatRequest(id, 12L, input.requestId(), 1L, "Question", null, context, "Changed HTML"), scope, assistant, "config")).getReason());
+        var retry = store.begin(new AiChatRequest(id, 12L, UUID.randomUUID().toString(), 1L, "Question", turn.message().getId(),
+            context, "Changed HTML"), scope, assistant, "config");
+        assertEquals("Original HTML", retry.question().getInputValue());
+        assertThrows(ResponseStatusException.class, () -> AiChatContext.from(context.entityType(), null, context.fieldName()));
     }
 
     @Test

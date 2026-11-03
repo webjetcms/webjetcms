@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.ai.chat;
 import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.components.ai.dto.AiChatContext;
 
 /** Private, domain-scoped chat and its durable execution/deletion state. */
 @Getter
@@ -13,6 +14,7 @@ public class AiChatThread {
     private Integer domainId;
     private String domainName;
     private String title;
+    private AiChatContext context;
     private Long assistantId;
     private String assistantName;
     private String provider;
