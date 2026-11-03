@@ -4,6 +4,10 @@ Toto je plán budúcej implementácie. V aktuálnej fáze sa nevykonal žiadny k
 
 ## Poradie a veľkosť
 
+Platí [priorita jednoduchého POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc). P01 preverí technické predpoklady; **po P06 vznikne prvý použiteľný ručný balík** na jednom pomenovanom DB profile, jednej inštancii a reprezentatívnej šablóne. P07 pridá dohodnuté plánovanie. P08 rozšíri regresiu a overí pripravenosť konkrétneho nasadenia. Ide o míľniky rovnakého riešenia, nie dve samostatné implementácie; po zadanom kroku agent vždy skončí.
+
+Všetky dokončovacie podmienky nižšie sa vyhodnocujú na zvolenom POC profile, ktorý sa zapisuje do `STAV.md`. Ostatné profily sú dovtedy neoverené a funkcia sa na nich neaktivuje; ich absencia neblokuje pokračovanie POC. Pred rozšírením podpory sa na ďalšom profile dokončia príslušné migrácie a DB overenia. Funkčný rozsah ani kontroly izolácie, práv a ID sa tým nevypúšťajú.
+
 | Krok | Výsledok | Závisí od | Orientačná práca vývojára |
 | --- | --- | --- | --- |
 | P01 | Dôkaz priechodnosti ID, náhľadu a účinného SQL zdroja | Návrh | 4–7 dní |
@@ -16,15 +20,15 @@ Toto je plán budúcej implementácie. V aktuálnej fáze sa nevykonal žiadny k
 | P08 | Integračné overenie, dokumentácia a pilotné zapnutie | P07 | 8–12 dní |
 | **Spolu** | **Celý dohodnutý výsledok** | | **57–96 vývojárskych dní** |
 
-Ide o návrhový odhad pre vývojárov, ktorí poznajú WebJET, s pripravenými DB/testovacími profilmi. Nie je to záväzný termín ani počet dní agentického behu. Pri dvoch vývojároch a priebežnej podpore QA je rozumné uvažovať približne **10–16 kalendárnych týždňov**; kroky nie sú plne paralelné. Samostatne počítať s približne 15–25 QA dňami podľa existujúcich testovacích prostredí. P01 má spresniť odhad pred väčšou investíciou.
+Ide o pôvodný návrhový odhad celého výsledku vrátane širšieho overenia pre vývojárov, ktorí poznajú WebJET, s pripravenými DB/testovacími profilmi. Nie je to rozpočet prvého POC, záväzný termín ani počet dní agentického behu. Pri dvoch vývojároch a priebežnej podpore QA je rozumné uvažovať približne **10–16 kalendárnych týždňov**; kroky nie sú plne paralelné. Samostatne počítať s približne 15–25 QA dňami podľa existujúcich testovacích prostredí. P01 má spresniť odhad pred väčšou investíciou a oddeliť prácu na POC od overenia ďalších nasadení.
 
 Odhad nezahŕňa zákaznícke SQL/JS adaptéry, prestavbu šablón mimo podporovaného jadra, konverziu veľkých MyISAM databáz, nové schvaľovacie workflow, anonymný náhľad ani podporu DB storage súborov. Pôvodných 7–10 týždňov z konkurenčného prieskumu sa týkalo užšieho release koordinátora; nie je to odhad tejto kompletnej pracovnej vetvy.
 
-Najväčšia neistota je v izolovaní existujúcich save vedľajších účinkov a v pokrytí celého náhľadu. Päť tabuliek samo osebe nie je dominantnou časťou práce. Rezervácia ID vrátane DB profilov tvorí významnú časť P01/P02; nemožno ju označiť za hotovú iba podľa správania jednej lokálnej MariaDB.
+Najväčšia neistota je v izolovaní existujúcich save vedľajších účinkov a v pokrytí celého náhľadu. Päť tabuliek samo osebe nie je dominantnou časťou práce. Rezervácia ID tvorí významnú časť P01/P02. Úspech na jednom profile postačí pre tento POC profil; nedokazuje podporu ďalších databáz.
 
 Požiadavka N1 na `NewsApp`/`NewsActionBean` je povinnou súčasťou týchto etáp podľa [03a — Novinky](03a-novinky.md). Odhad už základné Novinky zahŕňal; P01 ho spresní o konkrétne SQL/atribútové prípady a podporované DB. Pribúda perex kategorizácia existujúcimi skupinami, bez šiestej pracovnej tabuľky a bez ďalšej etapy. Novinky sa nesmú odsunúť medzi zákaznícke adaptéry.
 
-Požiadavka N2 pridáva návrh [rozširovania modulov](08-rozsirovanie-modulov.md). V týchto etapách sa pripraví iba spoločná identita/obal položiek a register obslužných typov; banner, galéria ani ich spoločná JSON tabuľka sa ešte neimplementujú. P01 uvedie vplyv tohto rozdelenia služieb na pôvodný odhad osobitne. Budúce E01–E03 majú samostatné orientačné náklady v dokumente 08 a vyžadujú vlastné zadanie.
+Požiadavka N2 pridáva návrh [rozširovania modulov](08-rozsirovanie-modulov.md). V týchto etapách sa pripraví iba spoločná identita/obal položiek a konkrétne služby dnešných typov; bez povinného handler rozhrania či Spring registra podľa N5. Banner, galéria ani ich spoločná JSON tabuľka sa ešte neimplementujú. P01 uvedie vplyv tohto rozdelenia služieb na pôvodný odhad osobitne. Budúce E01–E03 majú samostatné orientačné náklady v dokumente 08 a vyžadujú vlastné zadanie.
 
 ```mermaid
 flowchart LR
@@ -46,17 +50,17 @@ Doplnenie N4 výslovne zahŕňa `menu_ul_li.jsp` → `MenuULLI` podľa [03b — 
 
 Práca:
 
-1. Na jednorazovej testovacej DB overiť rezerváciu stránkového/priečinkového ID a explicitný insert pre všetky deklarované DB profily podľa `02a`. Nezasahovať do produkčných dát.
-2. Overiť, že krátky technický insert nevie žiadna podporovaná core čítacia cesta uvidieť pri zapnutom READ_COMMITTED režime. Zaznamenať chýbajúce externé DB profily ako neoverené, nie ako úspešné.
+1. Zvoliť jeden reálny DB profil dostupný v testovacom prostredí a zapísať jeho verziu/driver. Na jednorazovej testovacej DB overiť rezerváciu stránkového/priečinkového ID a explicitný insert podľa príslušnej časti `02a`. Nezasahovať do produkčných dát ani nezriaďovať všetky ostatné DB iba kvôli prvému POC.
+2. Na zvolenom profile overiť, že krátky technický insert nevie žiadna podporovaná core čítacia cesta uvidieť pri zapnutom READ_COMMITTED režime. Ostatné DB profily zaznamenať ako neoverené; pred ich aktiváciou potrebujú vlastný dôkaz.
 3. Na reprezentatívnej podporovanej šablóne vyskúšať gateway, jednu prepísanú stránku, obrázok a thumbnail. Menu overiť cez skutočný `menu_ul_li.jsp`/`MenuULLI` s pridanou položkou, zmeneným názvom/presunom a preklikom na účinnú default stránku (základ M01/M08 z `03b`). Overiť aj root-relative CSS/JS požiadavky.
 4. Overiť SQL zloženie produkcie a pracovných dokumentov pred filtrovaním/count/paging pre `NewsQuery`; stačia testovacie riadky, netreba hotový editor. Povinne nové/zmenené/zmazané novinky, pracovná perex skupina, oba režimy `perexGroupUseJoin` a atribútové násobenie riadkov. Doložiť jedinečné ID, bind parametre a CLOB projekciu podľa N01/N02/N06 z `03a`.
-5. Posúdiť navrhovaný spoločný obal/handler z dokumentu 08 proti dnešným štyrom typom jadra. Overiť, že nevyžaduje dvojité pracovné ukladanie ani prepis `NewsQuery` na JSON; generický storage a budúce moduly zatiaľ nevytvárať.
-6. Na testovacom podstrome overiť obnovu z koša cez minimálne pre-delete histórie podľa `04`, aj pri vypnutej bežnej histórii. Tým sa uzavrie formát obnovovacích údajov, nejde ešte o implementáciu celého publishera.
+5. Posúdiť spoločnú identitu/obal z dokumentu 08 proti dnešným štyrom typom jadra. Stačia konkrétne služby a explicitné rozlíšenie typu; žiadny dvojitý zápis ani prepis `NewsQuery` na JSON. Generický storage, register handlerov a budúce moduly zatiaľ nevytvárať.
+6. V zdrojovom kóde overiť, ktoré údaje potrebuje dnešná obnova z koša a či ich uchová minimum z `04`. Skutočný test zmazania/obnovy podstromu aj pri vypnutej bežnej histórii patrí do P06 k reálnemu writeru.
 7. Zapísať výsledky, podmienky prostredia, potrebné template adaptéry a upravený odhad do dokumentu výsledkov kroku v tomto adresári.
 
 **Hranica:** skúšobný kód/fixture na testovanie predpokladov; žiadne všeobecné prepisovanie DocDB, žiadna produkčná migrácia. Použiteľný skúšobný kód možno v ďalších krokoch upratať do výslednej implementácie, nie držať dve konkurenčné implementácie.
 
-**Dokončené, keď:** je doložená rezervačná časť T01 pre stránky/priečinky vrátane súbežného produkčného insertu a reštartu, prvá časť T03/T07/T10 a výsledky každého deklarovaného DB profilu. Celé T01 vrátane média a výsledného merge dokončia P02/P06; P01 ich nesmie vykázať ako vykonané. Chýbajúci kritický profil znamená `PARTIAL`, nie DONE. Ak sa ukáže zásadný rozpor so stabilnými ID alebo použiteľným náhľadom, autor upraví návrh a vysvetlí konkrétny kompromis. Automaticky nepostupuje k veľkému refaktoringu na základe neovereného predpokladu.
+**Dokončené, keď:** je na pomenovanom POC profile doložená rezervačná časť T01 pre stránky/priečinky vrátane súbežného produkčného insertu a reštartu, prvá časť T03/T07/T10 a zdrojové zistenia o obnove koša. Celé T01 vrátane média a výsledného merge dokončia P02/P06; P01 ich nesmie vykázať ako vykonané. Chýbajúce kritické overenie zvoleného profilu znamená `PARTIAL`, nie DONE; chýbajúca iná DB sa eviduje ako zatiaľ nepodporovaná. Ak sa ukáže zásadný rozpor so stabilnými ID alebo použiteľným náhľadom, autor upraví návrh a vysvetlí konkrétny kompromis. Automaticky nepostupuje k veľkému refaktoringu na základe neovereného predpokladu.
 
 ## P02 — Úložisko, ID a základ kontextu
 
@@ -64,12 +68,12 @@ Práca:
 
 Práca:
 
-1. Pridať päť tabuliek cez existujúce SQL XML migrácie pre podporované DB, entity/repositories/mappery a potrebnú registráciu Spring/JPA balíka.
+1. Pridať päť tabuliek cez existujúce SQL XML migrácie pre zvolený POC profil, entity/repositories/mappery a potrebnú registráciu Spring/JPA balíka. Ďalšie DB varianty doplniť a overiť pred deklarovaním ich podpory.
 2. Zaviesť explicitnú klasifikáciu obsahových polí: podporované, odvodené, prevádzkové, mimo rozsahu. Kanonické snapshoty a hashe nesmú závisieť od poradia JSON properties, transient polí a runtime počítadiel.
 3. Implementovať natívnu rezerváciu nových ID a explicitný writer; upraviť striktnú rezerváciu médií podľa `02a`.
 4. Pridať feature flag `branchesEnabled`, overenie enginov/práv/úložiska a centrálny READ_COMMITTED režim pri zapnutej funkcii. Všetky uzly obsluhujúce obsah musia mať rovnakú konfiguráciu.
 5. Zaviesť nemenný request kontext, explicitný LIVE technický režim a minimálne API vytvorenia/listovania vetvy. Zapojenie produkčného publikovania musí zostať explicitne LIVE.
-6. Zaviesť stabilné `type + objectKey`, spoločný obal zmien a malý register podporovaných typov. Každý dnešný typ číta práve svoju pracovnú tabuľku. Nepoužívať názov tabuľky/Java triedy dodaný klientom a nepridávať zatiaľ `branch_items`.
+6. Zaviesť stabilné `type + objectKey` a spoločný obal zmien. Stačí explicitné rozlíšenie štyroch podporovaných typov a priame volania ich služieb. Každý typ číta práve svoju pracovnú tabuľku. Nepoužívať názov tabuľky/Java triedy dodaný klientom a nepridávať zatiaľ `branch_items` ani povinný DI register.
 7. Odovzdať konkrétnu maticu stĺpcov a mapovanie pre každý typ: WORK obsah, odvodené polia, aktuálne LIVE údaje a hodnoty nového objektu. Zaviesť čisté B/L/W rozhodovanie z `04`, ktoré použije náhľad v P03 a publisher v P06; zatiaľ bez produkčného merge. Súborový model zahrnie aj vytvorenie prázdneho adresára v tej istej tabuľke podľa Q17.
 
 **Existujúce miesta:** `DBPool`, `PkeyGenerator`, `ConstantsV9`, SQL XML aktualizácie, `V9JpaDBConfig`, `V9SpringConfig`. Writer znovu použije mapovanie produkčných polí; nemení PK ani bežné produkčné generátory.
@@ -145,8 +149,8 @@ Práca:
 3. Implementovať jednoduché poradie produkčných krokov a ich evidenciu v pracovných riadkoch; stabilné ID, podporný audit/história/index/cache, bez skrytého zrkadlenia a prekladu.
 4. Dokončiť základné UI prehľadu, rozhodnutí a priebehu. Pri chybe ukázať dokončené/pending položky a bezpečné pokračovanie.
 5. Pri merge stránky zachovať zvolené perex skupiny, autora a dátumy. Odvodený `perex_group_doc` synchronizovať na rovnakom JDBC spojení iba pre dané ID, bez automatických multigroup zmien. Podľa N10/N11 porovnať render pred merge a po ňom pri rovnakých vstupoch.
-6. Zapojiť dnešné typy cez obslužný kontrakt dokumentu 08: spoločné porovnanie/checkpointy/UI, konkrétna validácia a zápis typu. Typové filtre UI odvodiť z registra. Súborový zápis zostáva mimo DB transakcie; pevné poradie merge sa nemení na všeobecný workflow engine.
-7. Overiť zmazanie a obnovu celého podstromu so zachovaným vnorením a ID; presunúť do koša iba jeho koreň podľa `04`. Kontrola súborových plánov zahrnie aj iné stránky mimo balíka. Ručná voľba produkcie sa okamžite prejaví v celom náhľade a Novinkách; zastaraná voľba sa nesmie použiť bez novej kontroly.
+6. Zapojiť dnešné typy podľa rozdelenia zodpovedností v dokumente 08: spoločné porovnanie/checkpointy/UI, konkrétna validácia a zápis typu. Pre typové filtre UI stačí pevný zoznam štyroch typov; rozhranie handlera/register nie sú podmienkou. Súborový zápis zostáva mimo DB transakcie; pevné poradie merge sa nemení na všeobecný workflow engine.
+7. Overiť zmazanie a obnovu celého podstromu so zachovaným vnorením a ID, aj pri vypnutej bežnej histórii; presunúť do koša iba jeho koreň podľa `04`. Kontrola súborových plánov zahrnie aj iné stránky mimo balíka. Ručná voľba produkcie sa okamžite prejaví v celom náhľade a Novinkách; zastaraná voľba sa nesmie použiť bez novej kontroly.
 
 **Hranica:** žiadna globálna transakcia, distribuovaný lock manager ani samostatný workflow engine. Krátka operácia jedného DB riadka/väzieb môže mať štandardnú DB transakciu. Súbory a celý balík do nej nepatria. Plný rollback celého webu sa neponúka.
 
@@ -188,6 +192,8 @@ Práca:
 Overenie pripravenosti rozšírení z dokumentu 07 doloží spoločné spracovanie všetkých dnešných typov a odmietnutie neznámeho typu bez jeho preskočenia. Nevytvára sa kvôli tomu produkčná implementácia banneru/galérie; budúce kroky E01–E03 zostávajú mimo DONE P08.
 
 ## Zjednodušenia, ktoré ponechávame
+
+Tieto konkrétne voľby dopĺňajú záväznú prioritu N5 a [pravidlá POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc). Agent nemá pridávať ďalšie vrstvy len preto, že návrh opisuje možné budúce rozšírenia.
 
 - Jedna verzia na položku a vetvu, celý podporovaný objekt pri konflikte, bez automatického HTML merge.
 - Jednorazové vetvy, bez rebase/cherry-pick a bez merge vetva→vetva.

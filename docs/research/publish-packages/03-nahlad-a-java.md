@@ -12,6 +12,8 @@ Tento dokument pokrýva čítanie výsledného obsahu. Ukladanie pracovnej verzi
 
 Navrhované nové Java triedy a rozhrania používajú prefix `Branch`, napríklad `BranchFilter`, `BranchContext` a `BranchReader`. Patria priamo do jadrového balíka `sk.iway.iwcm.branch`, so zdrojmi v `src/main/java/sk/iway/iwcm/branch/`. Do rovnakého balíka patria aj DTO a entity.
 
+Zoznam nižšie rozdeľuje zodpovednosti; nevyžaduje ku každej službe interface, factory ani ďalšie vrstvy. Podľa [priority POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc) majú byť implementácie konkrétne a čitateľné. Integračné API pre zákaznícke komponenty má reálny účel, samotná možnosť budúceho rozšírenia však nestačí na nový abstraktný framework.
+
 | Navrhovaná trieda | Úloha |
 | --- | --- |
 | `BranchContext` | Overený kontext jedného requestu: režim, ID vetvy, doména a používateľ. |
@@ -28,7 +30,7 @@ Navrhované nové Java triedy a rozhrania používajú prefix `Branch`, napríkl
 
 Pre časové filtre Noviniek view uchová jeden request údaj `previewAt`: budúci termín `publish_at` v stave `SCHEDULED`, inak čas začiatku requestu. Nejde o nový DB stĺpec ani globálne prepisovanie času. Presné pravidlá a označenie v náhľade určuje [03a — Novinky](03a-novinky.md).
 
-Koordináciu a spoločný prehľad rozšíri navrhovaný `BranchTypeHandler` s identitou `type + objectKey` a spoločným obalom `BranchChange` podľa [08](08-rozsirovanie-modulov.md). Dnešné typy používajú vlastné pracovné tabuľky; budúce moduly môžu použiť jednu spoločnú JSON tabuľku. Tento kontrakt nenahrádza modulové čítanie: detail/zoznam/render sa zapoja explicitným adaptérom, nie zachytávaním všetkých SQL/JPA volaní.
+Koordinácia a spoločný prehľad použijú identitu `type + objectKey` a spoločný obal `BranchChange` podľa [08](08-rozsirovanie-modulov.md). Pre dnešné štyri typy stačia priame volania konkrétnych služieb; `BranchTypeHandler` možno vyčleniť pri skutočnom rozšírení, nie povinne v P02/P06. Dnešné typy používajú vlastné pracovné tabuľky; budúce moduly môžu použiť jednu spoločnú JSON tabuľku. Toto rozdelenie nenahrádza modulové čítanie: detail/zoznam/render sa zapoja explicitným adaptérom, nie zachytávaním všetkých SQL/JPA volaní.
 
 ## 2. Dva odlišné kontexty používateľa
 

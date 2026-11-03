@@ -123,7 +123,7 @@ Zápis média zachová kategorizáciu podľa potvrdeného rozsahu. Existujúce v
 
 ## Krátky overovací krok pred zapnutím
 
-Najskôr na každom podporovanom DB profile overiť samotné prideľovanie a explicitný merge bez zapínania celej funkcie:
+Pred aktiváciou na konkrétnom DB profile overiť samotné prideľovanie a explicitný merge bez zapínania celej funkcie. Podľa [priority POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc) sa najskôr overí jeden reálny profil; ostatné sú dovtedy neoverené a neblokujú P01. Na každom ďalšom profile sa kontroly vykonajú pred deklarovaním jeho podpory. Rozdelenie rezervačnej časti a výsledného merge medzi P01/P02/P06 určuje [plán](06-plan-implementacie.md).
 
 1. Vytvoriť pracovný dokument a priečinok, overiť absenciu ich riadkov v produkcii a prítomnosť konečných ID vo vetve.
 2. V druhej DB connection pozastaviť rezerváciu po inserte a overiť, že podporované obsahové čítania technický riadok nevrátia ani neuložia do cache. Zahrnúť oba streaming helpery, priame JPA čítanie, bežné načítanie štatistík/používateľov a chybové nastavenie izolácie; flag-off musí zachovať pôvodné správanie.
@@ -133,7 +133,7 @@ Najskôr na každom podporovanom DB profile overiť samotné prideľovanie a exp
 6. Na SQL Serveri overiť oprávnenia a vypnutie `IDENTITY_INSERT` aj pri chybe insertu. Bežný produkčný insert na opätovne použitom spojení musí fungovať.
 7. Pre médiá overiť rezerváciu medzi dvoma inštanciami generátora, reštart, rast čítača, explicitnú chybu pri nedostupnej DB alebo chýbajúcom riadku generátora a následný INSERT s tým istým ID. Zachované väzby kategórií a produkčná zmena kategorizácie nesmú viesť k strate údajov.
 
-Testy majú použiť reálne podporované databázy, nie H2. Tento krok je podmienkou aktivácie stabilných nových ID; text návrhu nenahrádza potvrdenie správania driverov a aktuálnych schém.
+Testy majú použiť reálnu databázu zvoleného profilu, nie H2. Príslušné kontroly sú podmienkou aktivácie stabilných nových ID na tomto profile; text návrhu nenahrádza potvrdenie správania drivera a aktuálnej schémy.
 
 ## Prečo sa nenavrhuje druhý globálny alokátor
 

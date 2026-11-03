@@ -165,7 +165,7 @@ Publikovanie: termín nie je nastavený
 
 Tabuľka zobrazuje skutočné zmeny branch. Nezahŕňa tisíce nezmenených zdedených položiek. Každý problém má konkrétny dôvod a akciu; všeobecné `Nepripravené` bez vysvetlenia nestačí.
 
-Typové filtre vo wireframe sú dnešný rozsah. Implementácia ich odvodí z registrovaných typov položiek podľa [08](08-rozsirovanie-modulov.md), aby neskôr pribudli Bannery alebo Galéria bez druhej obrazovky balíka. Typ poskytne názov, odkaz do svojho editora a popisy podporovaných polí pre spoločný diff. Neimplementuje sa všeobecný editor ľubovoľného JSON. Nové modulové typy sa v prvej verzii ešte neponúkajú.
+Typové filtre vo wireframe sú dnešný rozsah. Pre POC stačí pevný zoznam/enum štyroch typov podľa [08](08-rozsirovanie-modulov.md), bez registra handlerov. Pri zapojení Bannera alebo Galérie sa zoznam rozšíri v tej istej obrazovke. Typ poskytne názov, odkaz do svojho editora a popisy podporovaných polí pre spoločný diff. Neimplementuje sa všeobecný editor ľubovoľného JSON. Nové modulové typy sa v prvej verzii ešte neponúkajú.
 
 Zmena znamená `Nová`, `Upravená`, `Zmazaná`; pri súbore môže používateľ vidieť `Nahradený`. Presun ukáže pôvodné a cieľové umiestnenie. U záznamov sa v detaile zobrazí stabilné ID, aby používateľ vedel skontrolovať väzby. Technické ID netreba opakovať vo všetkých hlavných stĺpcoch.
 

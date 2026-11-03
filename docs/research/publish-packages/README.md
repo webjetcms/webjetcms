@@ -1,6 +1,8 @@
 # Pracovné vetvy webu a publikačné balíky
 
-Stav: **návrh po kontrole pripravený na technické overenie P01, bez implementácie**. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1–N4 sú v [rozhodnutiach](01-rozhodnutia.md).
+Stav: **návrh po kontrole pripravený na technické overenie P01, bez implementácie**. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1–N5 sú v [rozhodnutiach](01-rozhodnutia.md).
+
+**Priorita tejto fázy: jednoduchý a čitateľný POC.** Overujeme použiteľnosť pre niekoľko spolupracujúcich redaktorov. Použiť konkrétne služby a minimum vrstiev; nepripravovať frameworky pre hypotetické moduly, zriedkavé súbehy či veľkú prevádzku. Záväzné [pokyny pre agentov](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc) zachovávajú dohodnuté funkcie a určujú aj rozsah prvého overenia.
 
 Cieľom je pripraviť viac stránok, zmeny stromu, stránkové médiá a redakčné súbory v jednej pracovnej vetve. Redaktor môže preklikať pripravovaný web, porovnať zmeny s produkciou, vyriešiť konflikty a publikovať balík okamžite alebo v spoločnom termíne. Existujúce aj nové stránky a priečinky si zachovajú ID.
 
@@ -79,7 +81,7 @@ flowchart LR
 
 Návrh je realizovateľný, ale zasahuje do jadra čítania aj ukladania. Neodporúčam začať obrazovkou balíkov a až potom skúšať izoláciu webu. **Prvý krok P01 má overiť stabilné ID, účinné SQL zoznamy a náhľad na reálnej šablóne.** Po ňom sa spresní rozpočet alebo upraví technické riešenie bez rozpracovania celej funkcie.
 
-Pracovný odhad celého výsledku je **57–96 vývojárskych dní**, pri dvoch vývojároch a priebežnej QA približne **10–16 kalendárnych týždňov**. Predpoklady a vylúčené práce sú v pláne. Nie je to garancia; najmä pokrytie šablón, DB profilov a existujúcich vedľajších zápisov sa musí potvrdiť P01.
+Pracovný odhad celého výsledku je **57–96 vývojárskych dní**, pri dvoch vývojároch a priebežnej QA približne **10–16 kalendárnych týždňov**. Je to pôvodný odhad celého rozsahu vrátane širšieho overenia, nie cena prvého POC ani dôvod budovať zložité vrstvy. P01 na jednom reálnom DB profile spresní náklady a riziká. Použiteľný POC míľnik je po P06: príprava, náhľad, konflikty a ručný merge; P07 pridá dohodnuté plánovanie a P08 regresiu/pripravenosť nasadenia. Predpoklady, ďalšie profily a vylúčené práce sú v pláne.
 
 Zásadné praktické hranice:
 
@@ -94,7 +96,7 @@ Označenie „navrhovaná trieda/tabuľka/API“ znamená budúcu implementáciu
 
 ## Rast o ďalšie moduly
 
-Odporúčanie je kombinovať typované jadro so spoločnou `branch_items` pre budúce moduly. Pri banneroch a galérii tak neskôr pribudne jedna tabuľka spolu, nie jedna na každý modul. V P02/P06 sa pripraví spoločná identita položky a obslužné rozhranie typu; fyzické všeobecné úložisko vznikne až s prvým modulom. Moduly stále potrebujú vlastné zapojenie čítania a zápisu. Podrobný postup, alternatívy a orientačné náklady sú v [08](08-rozsirovanie-modulov.md).
+Odporúčanie je kombinovať typované jadro so spoločnou `branch_items` pre budúce moduly. Pri banneroch a galérii tak neskôr pribudne jedna tabuľka spolu, nie jedna na každý modul. V P02/P06 sa pripraví spoločná identita položky a spoločné spracovanie, s priamymi volaniami konkrétnych služieb. Rozhranie handlera/register nie sú povinné; fyzické všeobecné úložisko vznikne až s prvým modulom. Moduly stále potrebujú vlastné zapojenie čítania a zápisu. Podrobný postup, alternatívy a orientačné náklady sú v [08](08-rozsirovanie-modulov.md).
 
 Prvý príklad bannera je podľa používateľa úzky: nový banner alebo zmena názvu, popisu a obrázka; bez úprav zapisovania štatistík. Budúce kroky E01–E03 nie sú automaticky súčasťou dnešného rozsahu ani odhadu P01–P08.
 

@@ -46,6 +46,12 @@ Produktové otázky Q1–Q19 sú uzatvorené. Q16–Q19 vyplynuli z kontroly pri
 
 **N4 — menu_ul_li.jsp/MenuULLI je povinná súčasť vetvy.** Používateľ výslovne požaduje, aby menu zobrazovalo zmenené aj pridané stránky a priečinky a fungovalo pri preklikávaní pracovného webu. [03b — Menu](03b-menu.md) určuje úpravy existujúcej triedy/JSP, pomocných čítaní, cache a povinné overenie. Ide o spresnenie už dohodnutej navigácie Q6; nevzniká nový renderer, pracovná tabuľka ani samostatná etapa.
 
+## Jednoduchosť a POC, 3. november 2026
+
+**N5 — Najjednoduchšia čitateľná implementácia na overenie funkčnosti.** Používateľ zdôraznil, že v tejto fáze ide viac-menej o POC pre bežný malý redakčný tím. Nepridávať zbytočné abstrakcie ani riešenia veľmi málo pravdepodobných okrajových situácií. Záväzné realizačné pravidlá sú na začiatku [orchestrácie](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc); platia pre všetky návrhové dokumenty a zadania agentom.
+
+Technické dôsledky: prvé overenie na jednom reálnom DB profile a jednej inštancii; konkrétne služby bez povinného registra handlerov; prvý použiteľný ručný balík po P06. Ďalšie DB sa overia pred vyhlásením ich podpory. Plánovanie P07 aj dohodnuté funkcie zostávajú v rozsahu. Jednoduchosť nemení izoláciu produkcie, zachovanie ID, oprávnenia ani zhodu náhľadu s výsledkom. Budúci integračný kontrakt sa môže vyčleniť z fungujúceho kódu pri skutočnom rozšírení; nemusí mu predchádzať framework.
+
 ## Strom návrhu
 
 ```mermaid

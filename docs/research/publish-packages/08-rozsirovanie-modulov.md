@@ -6,7 +6,7 @@
 
 **Nepokračovať pravidlom „ďalší modul = ďalšia pracovná tabuľka“.** Ponechať typované úložiská jadra a pre ďalšie bežné redakčné moduly použiť jednu spoločnú tabuľku `branch_items` s explicitnými JSON snapshotmi. Modul dodá adaptér svojho čítania, pracovného uloženia a publikovania. Porovnanie, konflikty, plánovanie, stav, prehľad zmien a pokračovanie po chybe zostanú spoločné.
 
-V prvej implementácii ponechať päť tabuliek z [02](02-datovy-model.md). Už teraz navrhnúť koordinátor a UI cez registrované typy položiek, aby nepoznali iba stránky/priečinky/médiá/súbory. Spoločnú šiestu tabuľku vytvoriť až s prvým ďalším modulom a overiť ju na reálnom bannere. Galéria a ďalší podobný modul potom využijú rovnakú tabuľku. Nevytvárať dnes prázdne úložisko a všeobecný plugin framework bez prvého použitia.
+V prvej implementácii ponechať päť tabuliek z [02](02-datovy-model.md). Koordinátor a UI použijú spoločnú identitu a obal zmien dnešných štyroch typov. Podľa [priority POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc) stačia priame volania konkrétnych služieb, bez prípravného plugin frameworku. Spoločnú šiestu tabuľku vytvoriť až s prvým ďalším modulom a overiť ju na reálnom bannere. Galéria a ďalší podobný modul potom využijú rovnakú tabuľku.
 
 Tento smer umožní napríklad **päť tabuliek pre jadro, šesť spolu po doplnení bannerov aj galérie**. Nie je to sľub, že žiadny budúci modul nikdy nebude potrebovať ďalšiu SQL projekciu. Taká výnimka musí mať konkrétny dôvod v jeho filtrovaní a objeme dát, nie iba nový názov aplikácie.
 
@@ -39,7 +39,7 @@ Neskoršie zjednotenie `groups` a `media` do JSON je technicky možné, ale samo
 
 Položka dostane vnútornú identitu `type + objectKey`, napríklad `document:123`, `group:45`, `media:900`, neskôr `banner:810` alebo `gallery.image:911`. Súbor ponechá dnešnú normalizovanú logickú cestu a `path_key`. Identita balíka je samostatná. Typ nie je názov SQL tabuľky ani Java trieda poslaná klientom.
 
-Navrhovaný malý `BranchTypeHandler` a register Spring beanov oddelia:
+**Pre POC stačí enum typu a explicitné volania konkrétnych služieb.** Spoločný `BranchChange` nesie údaje pre porovnanie a UI; nevyžaduje hierarchiu generických tried. Nasledujúca tabuľka rozdeľuje zodpovednosti, nepredpisuje samostatný interface a implementáciu pre každú z nich:
 
 | Zodpovednosť typu | Kontrakt |
 | --- | --- |
@@ -49,9 +49,11 @@ Navrhovaný malý `BranchTypeHandler` a register Spring beanov oddelia:
 | Zápis DB | Použije prijatú `Connection` a zvolený obsah. Nevlastní samostatný commit; audit a checkpoint zostanú v transakcii položky. |
 | Dokončenie a UI | Oznámi potrebnú invalidáciu cache, názov/odkaz položky a popisy podporovaných polí pre spoločný diff. |
 
-Koordinátor zostáva vlastníkom B/L/W porovnania, rozhodnutia LIVE/WORK, stavu vetvy, termínu a evidencie vykonania. Existujúci `ContentRowWriter` je nízka zapisovacia vrstva jadra; handler ju môže použiť. Súborové kroky zostávajú v súborovej službe a **nevkladajú sa do DB transakcie** len preto, že majú rovnaký obal položky.
+Koordinátor zostáva vlastníkom B/L/W porovnania, rozhodnutia LIVE/WORK, stavu vetvy, termínu a evidencie vykonania. Navrhovaný `ContentRowWriter` je nízka zapisovacia vrstva jadra; konkrétne služby ju môžu použiť. Súborové kroky zostávajú v súborovej službe a **nevkladajú sa do DB transakcie** len preto, že majú rovnaký obal položky.
 
-Nie je potrebný univerzálny jazyk filtrov, automatický preklad JPA, reflexívne kopírovanie entity ani dynamické spúšťanie kódu z JSON. Registry obsahuje explicitne dodané podporované typy. Neznámy/nedostupný typ existujúcej pracovnej položky zastaví prípravu publikovania s vysvetlením; položka sa nepreskočí.
+Malý `BranchTypeHandler` možno vyčleniť až pri E01/E02, ak reálne zjednoduší zapojenie prvého ďalšieho modulu. Ani vtedy nie je Spring register povinný; postačí explicitné priradenie podporovaných typov k službám. Pojem „handler“ nižšie označuje obsluhu konkrétneho typu, nie požiadavku na vlastný framework. Spoločný lifecycle a `type + objectKey` umožnia toto rozdelenie neskôr bez zmeny pracovných dát.
+
+Nie je potrebný univerzálny jazyk filtrov, automatický preklad JPA, reflexívne kopírovanie entity ani dynamické spúšťanie kódu z JSON. Neznámy/nedostupný typ existujúcej pracovnej položky zastaví prípravu publikovania s vysvetlením; položka sa nepreskočí.
 
 Čítanie zostáva samostatnou zodpovednosťou modulu: napríklad budúci `BannerBranchAdapter` sa zapojí do `BannerDB` a administrácie. Publikačný handler nie je transparentnou náhradou všetkých modulových query. Adaptér náhľadu musí podľa Q16 rešpektovať spoločnú mapu zvolených LIVE/WORK výsledkov; editor uchováva WORK. Rovný cieľ sa normalizuje na LIVE/no-op a zastaraná voľba vyžiada nové porovnanie. Spoločné stĺpce zahŕňajú aj `resolved_choice`, nie iba snapshot výsledku.
 
@@ -63,7 +65,7 @@ Tabuľka preberie spoločné stĺpce zo sekcie „Spoločné pracovné stĺpce�
 
 | Stĺpec | Logický typ | Účel |
 | --- | --- | --- |
-| `item_type` | VARCHAR(64), NOT NULL | Registrovaný stabilný typ, napr. `banner`, `gallery.image`. |
+| `item_type` | VARCHAR(64), NOT NULL | Explicitne podporovaný stabilný typ, napr. `banner`, `gallery.image`. |
 | `object_key` | VARCHAR(128), NOT NULL | Kanonická identita objektu; pre tieto dva moduly desiatkový zápis konečného ID. Dlhé súborové cesty patria existujúcej súborovej službe. |
 | `schema_version` | INT, NOT NULL | Verzia explicitného formátu všetkých obsahových snapshotov položky. |
 | `work_snapshot` | TEXT/CLOB | Pracovný obsahový DTO ako JSON; DELETE vyjadruje operácia, nie náhodný NULL poľa. |
@@ -152,7 +154,7 @@ Podľa použitého resize režimu sa dnes pracuje s originálom `o_...`, hlavný
 | --- | --- | --- |
 | 1. Rozsah | Pomenovať používateľské operácie, obsahový objekt, LIVE/read-only polia a podporované renderery. | Je jasné, čo znamená „modul funguje vo vetve“; názov modulu sám nestačí. |
 | 2. Inventár | Vypísať tabuľky, ID generátory, UI/API zápisy, read query, súbory a skryté obsahové účinky. | Nezostala známa podporovaná operácia obchádzajúca pracovný zápis. |
-| 3. DTO a storage | Vytvoriť mapper podporovaných polí, verziu snapshotu a typ v registri; prednostne spoločná JSON tabuľka. | BASE/WORK/LIVE porovnanie zachová význam polí a nemení prevádzkové dáta. |
+| 3. DTO a storage | Vytvoriť mapper podporovaných polí, verziu snapshotu a explicitnú obsluhu typu; prednostne spoločná JSON tabuľka. | BASE/WORK/LIVE porovnanie zachová význam polí a nemení prevádzkové dáta. |
 | 4. Čítanie | Napojenie detailu/zoznamu/renderu, efektívnych súborov a URL. | Nový objekt a zmena vstupujúca do filtra sa prejavia pred paging; LIVE cache sa nemení. |
 | 5. Editácia | Kontext administrácie, práva, stable ID, pracovný save a jeho podporované súborové operácie. | Nový aj existujúci obsah zostáva izolovaný až do merge. |
 | 6. Publikovanie | Handler zápisu a účinkov, validačné referencie, umiestnenie do pevného poradia merge, spoločný diff. | Konflikt, merge aj pokračovanie používajú existujúci koordinátor a zachovajú ID. |
@@ -166,7 +168,7 @@ Poradie publikovania ostáva jednoduché: nové stránky/priečinky a potrebné 
 
 | Rozsah | Kedy | Orientácia po dokončenom jadre |
 | --- | --- | --- |
-| Spoločná identita/obal/registry a storage nezávislý koordinátor | V P02/P06, s overením v P08. | Malá úprava rozdelenia už potrebných služieb; P01 uvedie dopad na pôvodný odhad osobitne. Nejde o implementáciu budúcich modulov. |
+| Spoločná identita/obal a koordinátor s konkrétnymi službami typov | V P02/P06, s overením v P08. | Bez povinného handler rozhrania/DI registra. Nejde o implementáciu budúcich modulov. |
 | E01: všeobecné úložisko prvého modulu | Až spolu s prvým konkrétnym rozšírením. | Približne 2–4 vývojárske dni na storage/mapper integráciu a relevantné DB testy. |
 | E02: základný banner podľa zúženého rozsahu | Odporúčaný prvý používateľ E01. | Približne 3–6 dní navyše; bez úprav štatistík a prestavby všetkých spôsobov renderovania. |
 | E03: obrázky v existujúcich albumoch | Po overení E01, podľa samostatného zadania. | Približne 5–10 dní; cena závisí od ID a oddelenia upload/resize zápisov. |

@@ -10,6 +10,7 @@
 - Spresnenie UI: [05](05-rozhranie.md) obsahuje postup vytvorenia a aktivácie balíka, formulár, rozbalený prepínač pod doménou a pravidlá stavov/záložiek. Doplnené create/list API v 03 a príslušné overenia. Pokračovanie návrhu prebieha vo worktree `webjetcms-feature-58858-publishing-packages` na vetve `feature/58858-publishing-packages`.
 - Doplnenie N3: skrátené a zjednotené názvy tabuliek a Java tried. Triedy/rozhrania používajú prefix `Branch` v jadrovom balíku `sk.iway.iwcm.branch`; zjednotené sú aj kontextové polia, hlavičky, konfigurácia, REST a adresáre. Pomenovanie tabuliek je podľa [dátového modelu](02-datovy-model.md#odporúčanie). Mapované tabuľky zachovajú presný produkčný názov s prefixom `branch_`; aktualizované sú aj SQL príklady, etapy a názvy pomocných úložísk.
 - Doplnenie N4: povinný `menu_ul_li.jsp`/`MenuULLI` podľa [03b](03b-menu.md), vrátane editoru parametrov `MenuApp`, rekurzie, aktívnej cesty, perex/HTML, premenných a cache. T03 je rozpracované na M01–M11 v P01/P03/P04/P06/P08. Overené zdrojové integračné body a existujúce testy; bez runtime skúšok.
+- Doplnenie N5: záväzná [priorita jednoduchého čitateľného POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc). Konkrétne služby bez povinného handler/DI registra, bez hypotetických frameworkov a zriedkavých prevádzkových scenárov. Prvé overenie na jednom reálnom DB profile/inštancii; ďalšie profily až pred deklarovaním podpory. Ručný POC míľnik po P06, dohodnuté plánovanie zostáva P07. Obnova koša sa runtime overí v P06. Izolácia, ID, oprávnenia a náhľad sa nemenia.
 - Implementácia: **nespustená**, aktuálne zadanie povoľuje iba Markdown návrhy.
 - Skutočné runtime/DB/browser testy tejto funkcie: **nevykonané**; triedy, tabuľky a testy popísané v návrhu ešte neexistujú.
 - Dokumentačné overenie: 18 Markdown dokumentov, kontrola existencie lokálnych odkazov a ich Markdown kotiev, párovania blokov kódu a koncových whitespace; bez zistených chýb. `git diff --check` prešiel. Git zmeny sú výlučne návrhové Markdown súbory v tomto adresári, bez commitov. Zjednotený rozsah jadra, budúcich modulov, bannerových štatistík a etapového zadávania. Implementačné kroky zostávajú nespustené.
@@ -32,5 +33,7 @@ Prípustné evidenčné stavy krokov: `NOT_STARTED`, `IN_PROGRESS`, `PARTIAL`, `
 ## Výsledky krokov
 
 Zatiaľ žiadne. Budúci agent doplní výsledok podľa šablóny v [ORCHESTRACIA.md](ORCHESTRACIA.md).
+
+POC profil zatiaľ nie je zvolený; prvý implementačný krok zapíše konkrétnu DB/verziu/driver a šablónu z dostupného testovacieho prostredia. `DONE` jednotlivých krokov sa vzťahuje na tento uvedený profil. Ostatné DB/nasadenia sa do vykonaného overenia nezapočítajú.
 
 Budúce E01 (spoločný storage), E02 (základný banner) a E03 (úzka galéria) sú iba návrhy z dokumentu 08, zatiaľ nezadané na implementáciu. Ich budúca evidencia sa vedie oddelene od P01–P08.

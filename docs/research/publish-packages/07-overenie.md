@@ -4,6 +4,8 @@
 
 Použiť reálnu podporovanú databázu, existujúce Java testovacie zázemie a CodeceptJS/Playwright. H2 nie je náhrada za správanie identity, sekvencií, CLOB/UNION alebo transakcií. Čistý merge algoritmus a kanonizáciu možno testovať bez DB.
 
+Podľa [priority POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc) sa scenáre postupne vykonávajú na jednom pomenovanom DB profile, jednej inštancii a reprezentatívnej šablóne. Matica je plán overenia jednotlivých etáp, nie požiadavka vybudovať celý testovací systém už v P01. Chýbajúci ďalší DB profil neblokuje POC; nesmie sa však vykázať ako podporovaný. Nepotrebujeme záťažové testy stoviek redaktorov ani nový framework na simuláciu všetkých kombinácií porúch.
+
 ## Akceptačné prípady
 
 | ID | Scenár | Požadovaný výsledok |
@@ -31,7 +33,7 @@ T03 zahŕňa konkrétny menu kontrakt z [03b](03b-menu.md): P01 overí základ c
 
 ## Pripravenosť na ďalšie moduly
 
-V rámci P02/P06/P08 overiť kontrakt z [08](08-rozsirovanie-modulov.md): všetky dnešné typy používajú spoločné porovnanie/stav/UI a svoje jediné úložisko; neznámy typ sa pri príprave nepreskočí; súborová služba sa neocitne v DB transakcii. Súčasná akceptácia nevyžaduje generickú tabuľku ani implementované budúce moduly.
+V rámci P02/P06/P08 overiť rozdelenie zodpovedností z [08](08-rozsirovanie-modulov.md): všetky dnešné typy používajú spoločné porovnanie/stav/UI a svoje jediné úložisko; neznámy typ sa pri príprave nepreskočí; súborová služba sa neocitne v DB transakcii. Súčasná akceptácia nevyžaduje handler interface/register, generickú tabuľku ani implementované budúce moduly. Overuje sa správanie, nie konkrétny návrhový vzor.
 
 Pri neskoršom E01/E02 sa doplnia reálne testy JSON snapshotu/verzie, nového a upraveného bannera, jeho obrázka a spoločného merge; E03 pridá galerijné metadáta, súbory a ID. Podľa výslovného pokynu používateľa bannerové štatistiky zostanú bez úprav: nulové zápisy štatistík z preview nie sú akceptačným kritériom tohto rozšírenia. Obsahový merge existujúce počítadlá neprepisuje. Presné budúce scenáre určuje dokument 08.
 
@@ -49,7 +51,7 @@ Netreba testovať súkromné gettery alebo presné rozdelenie tried. Test má do
 
 ## DB integračné overenie
 
-Povinné pre každú deklarovanú DB: migrácia, kanonický read/write, CLOB/text projekcia v účinnom zdroji dokumentov, filter/count/paging, rezervácia ID a explicitný insert, zachovanie runtime polí a média s kategorizáciou. Osobitné scenáre ID sú v [02a](02a-identifikatory.md).
+Pred deklarovaním podpory konkrétnej DB sú povinné: migrácia, kanonický read/write, CLOB/text projekcia v účinnom zdroji dokumentov, filter/count/paging, rezervácia ID a explicitný insert, zachovanie runtime polí a média s kategorizáciou. V POC sa dokazujú postupne na zvolenom profile podľa etáp, bez povinnosti najskôr zriadiť všetky DB prostredia. Osobitné scenáre ID sú v [02a](02a-identifikatory.md).
 
 Rezervačný test cielene podrží transakciu po technickom inserte a z druhej connection spustí produkčný lookup, novinky a relevantný index/export. Vrátený výsledok nesmie obsahovať nepotvrdený riadok. To je cielený test skutočnej závislosti, nie záťažový test stoviek redaktorov.
 

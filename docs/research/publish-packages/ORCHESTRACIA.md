@@ -2,6 +2,19 @@
 
 Tento dokument je vstupný bod pre agenta realizujúceho dohodnutý návrh. Aktuálne ide **iba o dokumentáciu**; implementáciu spustí až neskorší výslovný pokyn používateľa. Pripravenosť a dokončené kroky sú v [STAV.md](STAV.md).
 
+## Záväzná priorita: jednoduchý a čitateľný POC
+
+Podľa požiadavky N5 z [rozhodnutí](01-rozhodnutia.md#jednoduchosť-a-poc-3-november-2026) teraz overujeme, či pracovná vetva funguje v bežnej redakčnej praxi s približne 3–5 spolupracujúcimi redaktormi. **Zvoľ najjednoduchší čitateľný kód, ktorý splní zadaný krok.** Technický návrh popisuje potrebné správanie a miesta zásahov; nie je pokynom vybudovať všetky naznačené vrstvy vopred.
+
+- Použi konkrétne služby, bežné metódy a explicitné mapovanie. Nevytváraj ku každej triede interface + implementáciu, generické repository, hierarchiu stratégií či factory bez skutočnej potreby v aktuálnom kroku. Krátke opakovanie je prijateľnejšie než abstrakcia, ktorá sťažuje čítanie.
+- Spoločné rozhranie vyčleň, keď ho odôvodňujú existujúci volajúci alebo dohodnuté integračné API. Pre štyri typy jadra stačí enum a priame volania služieb; `BranchTypeHandler` a Spring register nie sú povinnou prípravou na budúce moduly. Podrobnosti v [08](08-rozsirovanie-modulov.md#čo-pripraviť-už-v-p01p08).
+- Nerieš vopred hypotetické zriedkavé súbehy, automatický failover, distribuované zámky, všeobecný workflow, univerzálny SQL adaptér ani optimalizácie bez merania. Nepodporovanú situáciu radšej zrozumiteľne odmietni a zapíš obmedzenie. Nepridávaj retry/recovery framework iba pre prípad, že by raz mohol byť potrebný.
+- Zachovaj izoláciu produkcie, stabilné ID, existujúce oprávnenia, detekciu bežných konfliktov a pravdivý náhľad vrátane Noviniek a menu. Potrebné sú aj základná evidencia vykonaných položiek a zastavenie pri chybe. Krátke bežné DB transakcie pre rezerváciu ID a zápis položky zostávajú; globálna transakcia celého balíka sa nepridáva.
+- Najskôr over funkčný tok na jednej inštancii, jednom skutočnom DB profile a reprezentatívnej šablóne. Vybraný profil a obmedzenia zaznamenaj v `STAV.md`; ďalšie DB/topológie over pred deklarovaním alebo zapnutím ich podpory. Nepotrebujú blokovať prvé overenie POC. Nesplnená podmienka zvoleného profilu však zostáva prekážkou.
+- Testuj správanie redaktora a vyššie uvedené vlastnosti. Použi existujúce testovacie zázemie; nevytváraj vlastný framework, záťažové prostredie pre stovky redaktorov ani kombinácie málo pravdepodobných porúch. Konkrétne overenia zadaného kroku zostávajú platné v rozsahu zvoleného profilu.
+
+Pred odovzdaním odstráň nepoužité prípravné vrstvy a uveď zostávajúce obmedzenia. Ekvivalentné zjednodušenie nevyžaduje nové povolenie; zjednodušením nesmie zaniknúť potvrdená funkcia. Táto priorita platí pre všetky kroky a budúce moduly, aj pri čítaní starších technických odporúčaní v tomto adresári.
+
 ## Ako prácu spustiť
 
 Najskôr posúď [prehľad návrhu](README.md), [rozhodnutia](01-rozhodnutia.md) a [rozsah/odhad](06-plan-implementacie.md). Ak návrh zodpovedá zamýšľanému výsledku, môžeš v tomto alebo novom chate zadať:
@@ -9,6 +22,7 @@ Najskôr posúď [prehľad návrhu](README.md), [rozhodnutia](01-rozhodnutia.md)
 ```text
 Implementuj iba krok P01 návrhu docs/research/publish-packages.
 Riaď sa docs/research/publish-packages/ORCHESTRACIA.md.
+Dodrž prioritu jednoduchého POC; over jeden skutočný DB profil a zapíš ktorý.
 Vychádzaj z uzatvorených rozhodnutí, výsledok zapíš do STAV.md.
 Zachovaj cudzie lokálne zmeny a nevytváraj Git commity.
 Po P01 skonči s výsledkami overenia a aktualizovaným odhadom.
@@ -27,7 +41,7 @@ Bez Git commitov a bez nasadenia na produkciu.
 
 P02 sa postupne nahradí P03 až P08. Nepotrebuješ kopírovať celý návrh do promptu. Ak chceš dlhší súvislý beh, rozsah povedz výslovne, napr. „realizuj P03–P05“. Bez takéhoto zadania agent po určenom kroku nepokračuje do ďalšieho.
 
-Budúce moduly sa zadávajú osobitne podľa [08 — Rozširovanie modulov](08-rozsirovanie-modulov.md). P02/P06 pripravia iba spoločnú obsluhu typov; E01 vytvorí spoločné JSON úložisko až spolu s prvým modulom E02. E03 môže neskôr pridať galériu. Tieto kroky nie sú automatickým pokračovaním P08. V dokumente 08 je presný vzor zadania základného bannera bez úprav štatistík.
+Budúce moduly sa zadávajú osobitne podľa [08 — Rozširovanie modulov](08-rozsirovanie-modulov.md). P02/P06 pripravia spoločnú identitu a spracovanie dnešných typov, bez povinného rozhrania/DI registra; E01 vytvorí spoločné JSON úložisko až spolu s prvým modulom E02. E03 môže neskôr pridať galériu. Tieto kroky nie sú automatickým pokračovaním P08. V dokumente 08 je presný vzor zadania základného bannera bez úprav štatistík.
 
 Nový chat nie je technickou podmienkou; dôležitý je rovnaký checkout a evidencia výsledkov. Ak používateľ chce nový chat vytvoriť, môže tak urobiť cez dostupné nástroje aplikácie. Orchestrátor sám nezakladá používateľské chaty iba kvôli internému rozdeleniu práce; na pomocné paralelné úlohy použije subagentov.
 
@@ -37,7 +51,7 @@ Nový chat nie je technickou podmienkou; dôležitý je rovnaký checkout a evid
 2. Prečítaj tento dokument, `STAV.md`, `01-rozhodnutia.md` a **iba zadanú sekciu** v `06-plan-implementacie.md`.
 3. Pre P01 načítaj aj [kontrolu pripravenosti](09-kontrola-pripravenosti.md); uzatvorené Q16–Q19 sa znova nepýtajú. Over dokončenie predpokladov kroku podľa evidencie aj skutočného kódu. Samotný štítok DONE bez výsledkov nie je dôkaz.
 4. Načítaj návrhové dokumenty a zdrojové analýzy uvedené ako vstupy daného kroku. Presné implementačné správanie over proti aktuálnemu kódu; čísla riadkov v analýzach sú iba orientačné z času návrhu.
-5. Zaznamenaj v `STAV.md` krok `IN_PROGRESS`, použitú vetvu, výchozí stav a stručný rozsah. Pre implementáciu použi vhodnú existujúcu feature vetvu. Ak nie je, riaď sa repozitárovým pomenovaním a prideleným issue ID; číslo issue si nevymýšľaj.
+5. Zaznamenaj v `STAV.md` krok `IN_PROGRESS`, použitú vetvu, výchozí stav a stručný rozsah vrátane POC profilu (DB/verzia/driver, jedna inštancia, šablóna). Nadviaž na profil predchádzajúceho kroku. Pre implementáciu použi vhodnú existujúcu feature vetvu. Ak nie je, riaď sa repozitárovým pomenovaním a prideleným issue ID; číslo issue si nevymýšľaj.
 6. Vykonaj zadaný rozsah, príslušné overenia a skontroluj celý vlastný diff. Žiadna produkčná aktivácia, databázová konverzia alebo deploy nie je implicitnou súčasťou lokálnej implementácie.
 
 **Výstup vstupného postupu:** agent pozná konkrétny krok, jeho závislosti, povolené súbory/hranice a prípady z testovacej matice. Ak závislosť reálne chýba, uvedie konkrétny chýbajúci výsledok; neoznačí ju automaticky za splnenú.
@@ -71,7 +85,7 @@ Každý pomocný agent odovzdá zmenené súbory, overené správanie a neoveren
 
 Krok môže dostať `DONE`, iba ak:
 
-1. Spĺňa všetky dokončovacie podmienky svojej sekcie plánu.
+1. Spĺňa všetky dokončovacie podmienky svojej sekcie plánu na uvedenom POC profile. `DONE` potvrdzuje tento rozsah, nie pripravenosť všetkých DB a nasadení. Ďalší profil sa nesmie aktivovať bez jeho príslušných kontrol.
 2. Sú zapísané vykonané kontroly, prostredie a výsledky; nevykonaná kritická podmienka je viditeľná. `PARTIAL` je správnejší než nepravdivé DONE.
 3. Je skontrolovaný vlastný diff aj interakcia s existujúcim produkčným tokom.
 4. Nasledujúci agent má popísané zavedené API, migrácie/feature flag, relevantné súbory a nevyriešené záväzky.
@@ -82,10 +96,12 @@ Záznam dokončenia vlož do `STAV.md` pod príslušný krok, napríklad:
 ```text
 P03 — DONE
 Vetva / výchozí commit: ...
+POC profil / rozsah overenia: DB, verzia, driver, inštancia, šablóna
 Výsledok: ...
 Hlavné zmenené súbory a API: ...
 Overenie: príkaz, DB/profil, výsledok, report
 Neoverené podmienky: ...
+Odložené produkčné overenia / nepodporované profily: ...
 Odchýlky od návrhu: ...
 Vstup pre P04/P05: ...
 ```

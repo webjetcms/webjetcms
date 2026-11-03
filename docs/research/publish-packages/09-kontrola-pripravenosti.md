@@ -35,12 +35,12 @@ Jediný register rozhodnutí zostáva [01](01-rozhodnutia.md). Po týchto odpove
 
 ## Čo musí dokázať implementácia
 
-- P01: rezervácia a explicitný insert na všetkých deklarovaných DB/driveroch, nepreniknutie technického riadka, SQL projekcia vrátane CLOB, count/paging Noviniek a náhľad na reprezentatívnej šablóne/admin hoste. Overí aj kompatibilitu obnovovacích histórií koša.
+- P01: rezervácia a explicitný insert na jednom pomenovanom reálnom POC profile podľa N5, nepreniknutie technického riadka, SQL projekcia vrátane CLOB, count/paging Noviniek a náhľad na reprezentatívnej šablóne/admin hoste. Potrebné údaje obnovy koša preverí v zdrojoch; reálne zmazanie/obnovu aj pri vypnutej histórii overí P06. Ďalšie DB/driver profily sa overia pred deklarovaním ich podpory.
 - P02: konkrétne migrácie, matica stĺpcov, hodnoty nových objektov, kanonické hashe, kontrola enginov a spoločné rozhodovanie pre preview/publisher. Názvy navrhovaných tried nie sú dôkaz fungovania.
 - P03–P07: príslušné čítacie, zapisovacie a publikačné scenáre vrátane doplnení v [07](07-overenie.md). Chýbajúci DB profil alebo browser skúška sa eviduje ako neoverená podmienka, nie úspech.
 - P08: reálna kampaň, regresia produkčných tokov, inventár podporovaných šablón/komponentov a nasadzovací postup. Zapnutie na produkcii potrebuje osobitné zadanie pre konkrétne nasadenie.
 
-Návrhový odhad 57–96 vývojárskych dní zostáva orientačný. Audit odstránil rozpory, nezmeral výkon ani skutočný čas realizácie. P01 má jeho predpoklady aktualizovať.
+Návrhový odhad 57–96 vývojárskych dní zostáva orientačným odhadom celého rozsahu vrátane širšieho overenia, nie cenou prvého POC. Audit odstránil rozpory, nezmeral výkon ani skutočný čas realizácie. P01 má jeho predpoklady aktualizovať a oddeliť POC od overovania ďalších nasadení.
 
 ## Rozsah kontroly dokumentov
 
@@ -51,3 +51,7 @@ Záverečné statické overenie kontroluje lokálne odkazy a kotvy, párovanie b
 ## Doplnenie po audite: menu, 3. november 2026
 
 Požiadavka N4 spresňuje povinný tok `menu_ul_li.jsp` → `MenuULLI`. Nový [03b](03b-menu.md) vychádza z kontroly reálneho JSP, triedy, `MenuApp` a existujúcich menu/sitemap testov. V P03 sa overuje výsledné menu, jeho aktívna cesta, default odkazy, request premenné a plný obsah; všeobecný test `DocDB` nestačí. Etapy, orchestrácia a T03 odkazujú na M01–M11. Produktová otázka tým nepribudla; navigácia bola súčasťou jadra už podľa Q6. Adresár teraz obsahuje 18 MD súborov. Runtime overenie zostáva úlohou implementácie.
+
+## Doplnenie po audite: priorita POC, 3. november 2026
+
+N5 zdôrazňuje jednoduchý čitateľný kód a bežnú prácu malého redakčného tímu. Záväzné [pravidlá orchestrácie](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc) majú prednosť pred pôvodnou požiadavkou všetkých DB profilov už v P01 a prípravným registrom handlerov. Návrh teraz začína jedným skutočným profilom a konkrétnymi službami. Obnova koša sa runtime overí až s writerom v P06. Použiteľný ručný POC po P06 predchádza plánovaniu P07 a záverečnému overeniu P08; potvrdené funkcie, izolácia, práva, stabilné ID a základné pokračovanie po chybe zostávajú zachované.
