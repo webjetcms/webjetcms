@@ -215,7 +215,9 @@ Po kliknutí na ikonku se vám zobrazí dialogové okno pro vložení obrázku:
 
 ![](image_dialog.png)
 
-Při procházení přes stromovou strukturu jsou zobrazeny pouze soubory typu obrázek nebo video, ostatní soubory jsou filtrovány.
+Při procházení stromovou strukturou jsou zobrazeny pouze obrázky, videa a zvukové soubory. Stejné omezení platí i při nahrávání, včetně složky **Soubory**. Výběr souborů v počítači je omezen na tyto typy. Pokud například PDF nebo ZIP přesunete do dialogu, zobrazí se chyba **Nepovolený typ souboru** ještě před odesláním souboru. Soubory, jejichž typ prohlížeč nerozpozná, zkontroluje server před uložením. Při nahrávání více souborů se podporované soubory nahrají au ostatních se zobrazí upozornění.
+
+PDF a další dokumenty můžete nahrát přes dialog pro vložení odkazu, kartu **Média** nebo **Průzkumník**.
 
 ### Karta Obsah
 

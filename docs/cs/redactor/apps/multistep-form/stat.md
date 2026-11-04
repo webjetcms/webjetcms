@@ -28,6 +28,8 @@ Po klepnutí na tlačítko **Zobrazit pokročilou statistiku** se zobrazí i dal
 
 ![](stat-section-header-advanced.png)
 
+!>**Upozornění pro veřejný uzel clusteru:** Na uzlu s nastavením `clusterMyNodeType=public` se nezapisují průběžná počítadla **Zobrazení**, **Pokusů** ani validačních chyb položek. Odpovědi uložené v tabulce `forms` zůstávají dostupné v základních statistikách, ale hodnota **Poměr** nezahrnuje zobrazení formuláře na veřejném uzlu. Více v [nastavení databázového uživatele s právy pouze ke čtení](../../../install/config/ro-user.md#víceleté-formuláře).
+
 ## Filtrování období
 
 V horní liště stránky je datový filtr **Od - Do**. Po změně rozsahu a kliknutí na tlačítko filtrování se přepočítají odpovědi, grafy položek formuláře a statistiky, které se váží na uložená odeslání. Pokud rozsah nezadáte, použije se výchozí rozsah posledních 30 dnů.

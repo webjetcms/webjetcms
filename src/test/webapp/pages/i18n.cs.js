@@ -77,6 +77,10 @@ module.exports = {
             "PassKey": "Přístupový klíč",
             "Thumbnail": "Miniatura",
             "Submit": "Potvrdit",
+            // Form encryption
+            "Setup": "Nastavit",
+            "Decryption key set successfully": "Dešifrovací klíč úspěšně nastaven",
+            "Print": "Vytisknout",
             // Dashboard device verification
             "You signed in from a new browser": "Přihlásili jste se z nového prohlížeče",
             "This browser": "Tento prohlížeč",
@@ -96,7 +100,10 @@ module.exports = {
             "Additional information about the web page.": "Doplňující informace k webové stránce.",
             "Additional information": "Doplňující informace",
             "Select box": "Výběrové pole",
-            "Operating system": "Operační systém"
+            "Operating system": "Operační systém",
+            // Mirrored page and folder deletion previews
+            "The following mirrored pages will also be deleted:": "Smazány budou také následující zrcadlené webové stránky:",
+            "The following mirrored folders will also be deleted:": "Smazány budou také následující zrcadlené složky:"
         }
     }
 }

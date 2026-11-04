@@ -23,6 +23,7 @@ import sk.iway.iwcm.system.datatable.SortDefinition;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
+import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
@@ -44,6 +45,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @Service
+// Keep domain, operation type, language mappings and validation errors isolated per request.
+@RequestScope
 public class MirroringService {
 
     public static final Character LAST_ALPHABET = 'H';
@@ -56,7 +59,7 @@ public class MirroringService {
     private static final String PARAMETER_SYNCID_ERR = "Value of parameter syncId is not valid : ";
 
     private final List<String> supportedLngs = Arrays.asList( Constants.getArray("languages") );
-    private static Set<String> foundLng = new HashSet<>();
+    private Set<String> foundLng = new HashSet<>();
     private Map<String, Character> lngFieldCombination = new HashMap<>();
     private List<String> errorMessages = new ArrayList<>();
 
@@ -72,6 +75,62 @@ public class MirroringService {
     private Prop prop;
 
     /*********** PUBLIC methods **************/
+
+    /**
+     * Returns folder mirroring problems by sync ID using the same checks and domain
+     * scope as the mirroring table. Each call uses isolated service state.
+     * @param request current administration request
+     * @return only connections with duplicate mappings or uneven nesting
+     */
+    public static Map<Integer, MirroringDTO> getGroupProblems(HttpServletRequest request) {
+        MirroringService service = new MirroringService();
+        service.setSupportValues(request);
+        Map<Integer, MirroringDTO> problems = new HashMap<>();
+        for (MirroringDTO item : service.getGroupData()) {
+            if (Tools.isTrue(item.getMultipleErr()) || Tools.isTrue(item.getNestingWarn())) {
+                problems.put(item.getId().intValue(), item);
+            }
+        }
+        return problems;
+    }
+
+    /**
+     * Returns diagnostics for the requested pages, including all counterparts when checking their mappings.
+     * Uses the same domain scope and validation as the page mirroring table without scanning unrelated pages.
+     * @param request current administration request
+     * @param sourceIds page IDs in the loaded tree branch
+     * @return requested pages in mappings with duplicate languages or uneven nesting
+     */
+    public static Map<Integer, MirroringDTO> getPageProblems(HttpServletRequest request, List<Integer> sourceIds) {
+        if (sourceIds.isEmpty()) return Collections.emptyMap();
+
+        MirroringService service = new MirroringService();
+        service.setSupportValues(request);
+        String placeholders = String.join(",", Collections.nCopies(sourceIds.size(), "?"));
+        String sql = "SELECT doc_id, sync_id FROM documents WHERE sync_id IN"
+            + " (SELECT sync_id FROM documents WHERE sync_id>0 AND doc_id IN (" + placeholders + "))";
+        Map<Integer, Integer> syncIds = new HashMap<>();
+        List<DocDetails> docs = new ArrayList<>();
+        new ComplexQuery().setSql(sql).setParams(sourceIds.toArray()).list(rs -> {
+            int docId = rs.getInt("doc_id");
+            syncIds.put(docId, rs.getInt("sync_id"));
+            DocDetails doc = service.docsDb.getBasicDocDetails(docId, false);
+            if (doc != null) docs.add(doc);
+            return null;
+        });
+        Map<Integer, MirroringDTO> problemsBySyncId = new HashMap<>();
+        for (MirroringDTO item : service.getDocsData(docs, syncIds)) {
+            if (Tools.isTrue(item.getMultipleErr()) || Tools.isTrue(item.getNestingWarn())) {
+                problemsBySyncId.put(item.getId().intValue(), item);
+            }
+        }
+        Map<Integer, MirroringDTO> problems = new HashMap<>();
+        sourceIds.forEach(docId -> {
+            MirroringDTO problem = problemsBySyncId.get(syncIds.get(docId));
+            if (problem != null) problems.put(docId, problem);
+        });
+        return problems;
+    }
 
     /**
      * Return page with MirroringDTO items. Items are paged and sorted. EditorFields are not set yet.
@@ -410,9 +469,11 @@ public class MirroringService {
      * @return
      */
     private List<MirroringDTO> getDocsData() {
+        return getDocsData(docsDb.getBasicDocDetailsAll(), getDocSyncMap());
+    }
 
-        List<DocDetails> docs = docsDb.getBasicDocDetailsAll();
-
+    /** Loads sync IDs separately because basic cached page metadata does not contain them. */
+    private Map<Integer, Integer> getDocSyncMap() {
         String sql = "SELECT doc_id, sync_id FROM documents WHERE sync_id IS NOT NULL AND sync_id > 0";
 
         Map<Integer, Integer> docSyncMap = new HashMap<>();
@@ -428,7 +489,7 @@ public class MirroringService {
             }
         });
 
-        return getDocsData(docs, docSyncMap);
+        return docSyncMap;
     }
 
     /**
@@ -950,7 +1011,10 @@ public class MirroringService {
             Set<Integer> nestedLevels = new HashSet<>();
             if(paths != null) {
                 paths.forEach((lng, path) -> {
-                    item.setField(lngFieldCombination.get(lng), path);
+                    Character field = lngFieldCombination.get(lng);
+                    if (field != null) {
+                        item.setField(field, path);
+                    }
                     //There shoul not be 2 folders from same language that are synced
                     if(path.contains(JOINING))
                         item.setMultipleErr(Boolean.TRUE);

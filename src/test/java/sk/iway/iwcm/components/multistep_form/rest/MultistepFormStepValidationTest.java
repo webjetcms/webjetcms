@@ -26,12 +26,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 import org.mockito.MockedConstruction;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 
 import jakarta.servlet.http.Cookie;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
@@ -91,6 +93,10 @@ class MultistepFormStepValidationTest {
         formSettings.setFieldA("processor-configuration");
         formSettings.setAfterSendInterceptor(FormEmailVerificationProcessor.class.getName());
         when(settings.findByFormNameAndDomainId("contact-form", 1)).thenReturn(formSettings);
+        if (lastStep) {
+            when(settings.incrementResponseAttempts("contact-form", 1))
+                .thenThrow(new DataAccessResourceFailureException("form_settings is read-only"));
+        }
 
         FormItemsConditionEntity condition = new FormItemsConditionEntity();
         condition.setItemFormId("invoice");
@@ -116,6 +122,10 @@ class MultistepFormStepValidationTest {
                 .thenReturn(List.of(dependent));
         }
         when(items.findAllForValidation("contact-form", 1)).thenReturn(fields);
+        if (shouldProceed == false) {
+            when(items.incrementErrorCountByItemFormIds(eq("contact-form"), eq(1), any()))
+                .thenThrow(new DataAccessResourceFailureException("form_items is read-only"));
+        }
         Prop prop = mock(Prop.class);
         when(prop.getText("checkform.title.required")).thenReturn("Required field");
         when(prop.getText("components.formsimple.input.checkbox")).thenReturn("<input type=\"checkbox\">");
@@ -141,6 +151,7 @@ class MultistepFormStepValidationTest {
             MockedStatic<FormDB> formDatabases = mockStatic(FormDB.class);
             MockedStatic<Cache> caches = mockStatic(Cache.class);
             MockedStatic<XhrFileUploadServlet> uploads = mockStatic(XhrFileUploadServlet.class);
+            MockedStatic<Logger> logs = mockStatic(Logger.class);
             MockedStatic<Tools> tools = mockStatic(Tools.class, invocation -> {
                 if ("getSpringBean".equals(invocation.getMethod().getName())) {
                     return "formItemsConditionsRepository".equals(invocation.getArgument(0)) ? conditions : items;
@@ -175,6 +186,10 @@ class MultistepFormStepValidationTest {
             verify(processor, lastStep ? org.mockito.Mockito.times(1) : never())
                 .handleFormSave(eq("contact-form"), same(formSettings), any(), same(request));
             verify(settings).findByFormNameAndDomainId("contact-form", 1);
+            verify(settings, lastStep ? org.mockito.Mockito.times(1) : never())
+                .incrementResponseAttempts("contact-form", 1);
+            verify(items, shouldProceed ? never() : org.mockito.Mockito.times(1))
+                .incrementErrorCountByItemFormIds(eq("contact-form"), eq(1), any());
             draft = service.getDraftStepData("contact-form", 2L, request).first;
             if (checkboxInCurrentStep == false) verify(session, atLeastOnce()).getAttribute(sessionKey + "_invoice");
 

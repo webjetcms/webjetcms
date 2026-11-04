@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -52,6 +53,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp;
+import sk.iway.iwcm.components.multistep_form.support.FormItemUsage;
 import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
@@ -177,7 +179,7 @@ public class MultistepFormsService {
     }
 
     /**
-     * Provide available regular expression validations as label/value pairs for UI.
+     * Provide available regular expression validations sorted by code as label/value pairs for UI.
      *
      * @param regExpRepository repository of regex definitions
      * @param request          request used to resolve localized titles
@@ -186,9 +188,10 @@ public class MultistepFormsService {
     public static final List<LabelValue> getRegExOptions(RegExpRepository regExpRepository, HttpServletRequest request) {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
         List<LabelValue> options = new ArrayList<>();
+        List<RegExpEntity> regularExpressions = regExpRepository.findAll(Sort.by(Sort.Order.asc("type").ignoreCase()));
 
-        for(RegExpEntity regEx : regExpRepository.findAll())
-            options.add( new LabelValue(prop.getText(regEx.getTitle()), regEx.getId() + ""));
+        for(RegExpEntity regEx : regularExpressions)
+            options.add( new LabelValue(regEx.getType() + " - " + prop.getText(regEx.getTitle()), regEx.getId() + ""));
 
         return options;
     }
@@ -807,6 +810,19 @@ public class MultistepFormsService {
      * @return sorted condition field options grouped by step labels
      */
     public final List<LabelValue> getAvailableConditionFields(String formName, Long stepId, Prop prop) {
+        return getAvailableConditionFields(formName, stepId, null, prop);
+    }
+
+    /**
+     * Builds condition sources excluding the edited field and all radio options sharing its logical ID.
+     *
+     * @param formName logical form name
+     * @param stepId current step ID
+     * @param itemId edited item ID, or {@code null} to include all fields
+     * @param prop localization provider
+     * @return available source fields in form display order
+     */
+    public final List<LabelValue> getAvailableConditionFields(String formName, Long stepId, Long itemId, Prop prop) {
         int currentPosition = new SimpleQuery().forInt("SELECT current_position FROM form_steps WHERE id = ? AND domain_id = ?", stepId, CloudToolsForCore.getDomainId());
 
         Map<Long, String> stepNames = new HashMap<>();
@@ -818,7 +834,16 @@ public class MultistepFormsService {
             stepsIds.add(fse.getId());
         }
 
-        return sortFields(formItemsRepository.findAllByFormNameAndStepIdInAndDomainId(formName, stepsIds, CloudToolsForCore.getDomainId()), stepPositions, stepNames, prop);
+        List<FormItemEntity> fields = formItemsRepository.findAllByFormNameAndStepIdInAndDomainId(formName, stepsIds, CloudToolsForCore.getDomainId());
+        String excludedItemFormId = fields.stream()
+            .filter(field -> itemId != null && itemId.equals(field.getId()))
+            .map(FormItemEntity::getItemFormId)
+            .findFirst().orElse(null);
+        List<LabelValue> options = sortFields(fields, stepPositions, stepNames, prop);
+        if (excludedItemFormId != null) {
+            options.removeIf(option -> excludedItemFormId.equals(option.getValue()));
+        }
+        return options;
     }
 
     /**
@@ -842,13 +867,99 @@ public class MultistepFormsService {
     }
 
     /**
+     * Resolves selectable condition values from fields in the current and preceding steps.
+     * Radio options sharing a logical ID contribute to the same list, regardless of their adjacency.
+     *
+     * @param formName logical form name
+     * @param stepId current step ID
+     * @param prop localization provider
+     * @return options by logical field ID; text fields have no entry
+     */
+    public Map<String, List<LabelValue>> getConditionValueOptions(String formName, Long stepId, Prop prop) {
+        int domainId = CloudToolsForCore.getDomainId();
+        int position = new SimpleQuery().forInt("SELECT current_position FROM form_steps WHERE id = ? AND domain_id = ?", stepId, domainId);
+        Map<Long, Integer> stepPositions = new HashMap<>();
+        for (FormStepEntity step : formStepsRepository.getStepsUpToPosition(formName, position, domainId)) {
+            stepPositions.put(step.getId(), step.getCurrentPosition());
+        }
+        List<FormItemEntity> fields = formItemsRepository.findAllByFormNameAndStepIdInAndDomainId(formName, new ArrayList<>(stepPositions.keySet()), domainId)
+            .stream().sorted(Comparator.comparingInt((FormItemEntity field) -> stepPositions.get(field.getStepId()))
+                .thenComparingInt(field -> field.getSortPriority() == null ? 0 : field.getSortPriority())).toList();
+        return prepareConditionValueOptions(fields, prop);
+    }
+
+    /** Resolves configured choices using the same option parser as the rendered form. */
+    static Map<String, List<LabelValue>> prepareConditionValueOptions(List<FormItemEntity> fields, Prop prop) {
+        Map<String, List<LabelValue>> result = new LinkedHashMap<>();
+        for (FormItemEntity field : fields) {
+            boolean iterable = isFieldtypeIterable(field.getFieldType(), prop);
+            boolean singleChoice = "radio".equals(field.getFieldType()) || "checkbox".equals(field.getFieldType());
+            if (iterable == false && singleChoice == false) continue;
+
+            String iterableCode = iterable ? prop.getText("components.formsimple.iterable." + field.getFieldType()) : null;
+            boolean separateLabels = iterable && (AUTOCOMPLETE_FIELD_TYPE.equals(field.getFieldType()) ||
+                (iterableCode != null && iterableCode.contains("${value-label}")));
+            List<LabelValue> options = result.computeIfAbsent(field.getItemFormId(), key -> new ArrayList<>());
+            String[] tokens = iterable
+                ? FormsService.parseIterableValues(FormsService.removeUnsupportedEmptyOption(field.getValue(), field.getFieldType(), prop))
+                : new String[] { Tools.getStringValue(field.getValue(), "") };
+            for (String token : tokens) {
+                // The empty-option sentinel is not a comparison value, even without a label placeholder.
+                if (iterable && ":".equals(token)) continue;
+                String label = token;
+                String value = token;
+                int separator = separateLabels ? token.indexOf(':') : -1;
+                if (separator >= 0) {
+                    label = token.substring(0, separator);
+                    value = token.substring(separator + 1);
+                }
+                // Empty answers use the is_empty / is_not_empty operators.
+                if (Tools.isEmpty(value)) continue;
+                String optionValue = value;
+                if (options.stream().noneMatch(option -> optionValue.equals(option.getValue()))) {
+                    options.add(new LabelValue(label, value));
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Builds reverse-condition links using the first referenced item in form display order.
+     *
+     * @param fields referenced items scoped to the form and current domain
+     * @param formName form whose step positions and labels are used
+     * @param prop localization provider
+     * @return one link per logical field identifier, with the selected item's ID, step and label
+     */
+    public final List<FormItemUsage> prepareFieldUsage(List<FormItemEntity> fields, String formName, Prop prop) {
+        Map<Long, Integer> stepPositions = new HashMap<>();
+        for(FormStepEntity step : formStepsRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
+            stepPositions.put(step.getId(), step.getCurrentPosition());
+        }
+
+        Set<String> fieldIds = new HashSet<>();
+        return fields.stream()
+            .sorted(Comparator
+                .comparingInt((FormItemEntity field) -> stepPositions.getOrDefault(field.getStepId(), 0))
+                .thenComparingInt(field -> field.getSortPriority() != null ? field.getSortPriority() : 0))
+            .filter(field -> fieldIds.add(field.getItemFormId()))
+            .map(field -> new FormItemUsage(
+                field.getId(),
+                field.getStepId(),
+                "(" + prop.getText("components.form_items.step_title") + " " + stepPositions.get(field.getStepId()) + ") " + getFieldName(field, prop),
+                field.getItemFormId()))
+            .toList();
+    }
+
+    /**
      * Sort fields by step and field order and convert them into label/value options.
      *
      * @param fields        source field list
      * @param stepPositions map of step id to step position
      * @param stepNames     map of step id to localized step title
      * @param prop          localization provider
-     * @return options ordered by step position and sort priority, with consecutive duplicate field IDs omitted
+     * @return options ordered by step position and sort priority, retaining only the first occurrence of each field ID
      */
     private final List<LabelValue> sortFields(List<FormItemEntity> fields, Map<Long, Integer> stepPositions, Map<Long, String> stepNames, Prop prop) {
         List<FormItemEntity> sortedFields = fields
@@ -859,19 +970,15 @@ public class MultistepFormsService {
             .toList();
 
         List<LabelValue> options = new ArrayList<>();
-        String previousItemFormId = null;
-        boolean previousItemFormIdSet = false;
+        Set<String> addedItemFormIds = new HashSet<>();
 
         for (FormItemEntity fie : sortedFields) {
-            if (previousItemFormIdSet && fie.getItemFormId().equals(previousItemFormId)) continue;
+            if (addedItemFormIds.add(fie.getItemFormId()) == false) continue;
 
             StringBuilder itemName = new StringBuilder("");
             itemName.append("(").append(stepNames.get(fie.getStepId())).append(") ");
             itemName.append( MultistepFormsService.getFieldName(fie, prop) );
             options.add(new LabelValue(itemName.toString(), fie.getItemFormId()));
-
-            previousItemFormId = fie.getItemFormId();
-            previousItemFormIdSet = true;
         }
 
         return options;
@@ -890,7 +997,7 @@ public class MultistepFormsService {
         if(Tools.isEmpty(formName)) return options;
 
         int counter = 1;
-        for(FormStepEntity step : formStepsRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
+        for(FormStepEntity step : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId())) {
             StringBuilder label = new StringBuilder();
             label.append(prop.getText("components.form_items.step_title")).append(" ").append(counter);
 
@@ -1169,7 +1276,7 @@ public class MultistepFormsService {
             if(nextStep == null) {
                 String forwardOk = formSettings.getForward();
                 // Because we are going save form for real now, add count to attempts of form submission
-                formSettingsRepository.incrementResponseAttempts(formName, CloudToolsForCore.getDomainId());
+                FormSettingsService.tryIncrementResponseAttempts(formName, CloudToolsForCore.getDomainId(), formSettingsRepository);
 
                 // HERE we can run custom saving of form
                 boolean continueWithSaving = customFormSave(formProcessor, formName, request, formSettings, iLastDocId);
@@ -1207,7 +1314,19 @@ public class MultistepFormsService {
             response.put("fieldErrors", errors);
 
             // increment field error count
-            formItemsRepository.incrementErrorCountByItemFormIds(formName, CloudToolsForCore.getDomainId(), new ArrayList<>(errors.keySet()));
+            tryIncrementFieldErrorCount(formName, CloudToolsForCore.getDomainId(), new ArrayList<>(errors.keySet()));
+        }
+    }
+
+    private void tryIncrementFieldErrorCount(String formName, int domainId, List<String> itemFormIds) {
+        if (ClusterDB.isPublicNode()) return;
+
+        try {
+            formItemsRepository.incrementErrorCountByItemFormIds(formName, domainId, itemFormIds);
+        } catch (RuntimeException exception) {
+            Logger.warn(MultistepFormsService.class,
+                "Unable to increment form field error count for formName=" + formName + ", domainId=" + domainId,
+                exception);
         }
     }
 

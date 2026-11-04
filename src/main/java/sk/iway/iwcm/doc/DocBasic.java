@@ -94,7 +94,8 @@ public class DocBasic implements DocGroupInterface, Serializable
 			tab = "basic",
 			editor = {
 					@DataTableColumnEditor(attr = {
-							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true")
+							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true"),
+							@DataTableColumnEditorAttr(key = "data-dt-escape-slash", value = "true")
 					})
 			}
 	)
@@ -111,7 +112,8 @@ public class DocBasic implements DocGroupInterface, Serializable
 			editor = {
 					@DataTableColumnEditor(attr = {
 							@DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after"),
-							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true")
+							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true"),
+							@DataTableColumnEditorAttr(key = "data-dt-escape-slash", value = "true")
 					})
 			}
 	)

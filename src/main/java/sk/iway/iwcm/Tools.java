@@ -2362,7 +2362,7 @@ public class Tools
 				path = f.getAbsolutePath();
 			}
 		} catch (Exception ex) {
-			sk.iway.iwcm.Logger.error(ex);
+			sk.iway.iwcm.Logger.error(Tools.class, ex.getLocalizedMessage());
 		}
 
 		if (path == null) {

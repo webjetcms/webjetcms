@@ -203,10 +203,6 @@ public class ConstantsV9 {
 		Constants.setString("translationEngineClasses", "sk.iway.iwcm.system.translation.DeepL", Constants.MOD_TRANSLATIONS, "Čiarkou oddelený zoznam tried, ktoré implemetujú prekaldový modul (napr. DeepL alebo Google)");
 		Constants.setString("deepl_model_type", "prefer_quality_optimized", Constants.MOD_TRANSLATIONS, "Špecifikuje, ktorý DeepL model by sa mal použiť na preklad.");
 
-		Constants.setString("mirroringMode", "mirror", Constants.MOD_STRUCTURE_MIRRORING, "Used to signalize that mirroring is running in basic mode mirroring or clonning");
-		Constants.setInt("cloneActionSrcId", -1, Constants.MOD_STRUCTURE_MIRRORING,"Used to set SRC group id when performing clonning.");
-		Constants.setInt("cloneActionDestId", -1, Constants.MOD_STRUCTURE_MIRRORING, "Used to set DEST group id when performing clonning.");
-
 		Constants.setBoolean("ABTestingForLoggedUser", false, Constants.MOD_ABTEST, "Ak je nastavené na true, tak sa pre neprihláseného používateľa vždy použije variant A, pre prihláseného vždy variant B.");
 
 		Constants.setString("ai_openAiAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentication key to platform.openai.com");
@@ -351,6 +347,8 @@ public class ConstantsV9 {
 		Constants.setString("searchType", "db", Constants.MOD_SEARCH, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vektorove vyhladavanie), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
 
 		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_GDPR, "Koľko dní staré priečinky a stránky, ktoré sú v koši, sa majú vymazať (POZOR, nie ako dlho sú v koši).");
+
+		Constants.setBoolean("fileArchivCheckHistoryValid", true, Constants.MOD_FILE_ARCHIV, "Ak je true, historické verzie dokumentov možno stiahnuť iba v rozsahu Platnosť od a Platnosť do. Pri false sa oba dátumy historických verzií ignorujú; viditeľnosť a prístupové oprávnenia sa naďalej kontrolujú.");
 	}
 
 	/**

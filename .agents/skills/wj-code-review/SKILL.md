@@ -95,6 +95,16 @@ For each change, verify:
 - **Error handling**: Are exceptions caught at the right level? Are error messages meaningful?
 - **SQL/JPQL correctness**: Are queries correct? Are parameters properly bound (no injection risk)?
 
+#### HTTP session and Redis compatibility
+
+When changed code stores a session attribute or mutates an object read from session, trace the affected attribute's writes and subsequent reads. Include `setAttribute`, `Tools.sessionSetAttribute`, and application helpers.
+
+- **Serialization**: Check the complete object graph against the session codec, including nested collections and beans. With Java serialization, every reachable non-transient value must be serializable; adding `Serializable` only to the outer class is insufficient.
+- **Transient state**: Distinguish JPA `@Transient` from Java `transient`. Java serialization omits `transient` fields, and field initializers do not restore them during deserialization. Verify that required derived state is reconstructed before use. Removing `transient` also requires checking the nested object's serializability and whether that state belongs in session.
+- **Persisting mutations**: Verify that changed beans and collections are written back through `setAttribute` or the established helper after mutation, including item removal or token consumption. In-place changes to a detached object are insufficient. For logged-in `Identity` updates, use `LogonTools.setUserToSession` to keep authentication state coordinated.
+- **Regression coverage**: Check behavior with ordinary sessions and with serializing sessions that return detached copies. In core, reuse `src/test/java/sk/iway/iwcm/test/SerializingMockHttpSession.java`; in customer projects, check available helpers. Assertions must read the attribute again and verify state survives between requests, including transient reconstruction and one-time token consumption where relevant. This simulation does not replace testing the deployed Redis configuration.
+- **Deployment evidence**: Check the actual codec and Redis session read/update modes when available. If unknown, state the configuration dependency in the finding; distinguish a confirmed defect from a deployment-dependent risk.
+
 ### 5. Code Quality & Pattern Analysis
 
 Review new code for:

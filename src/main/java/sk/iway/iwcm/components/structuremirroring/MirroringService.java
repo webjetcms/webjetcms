@@ -8,6 +8,7 @@ import java.util.Set;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
@@ -29,11 +30,18 @@ import sk.iway.iwcm.doc.GroupsDB;
  */
 public class MirroringService {
 
-   public static final String MIRRORING_MODE_MIRROR = "mirror";
-   public static final String MIRRORING_MODE_CLONE = "clone";
-
    private MirroringService() {
       //tools class
+   }
+
+   public static boolean isCloneAction() {
+      // Only the cloning request has this override; concurrent requests keep normal mirroring behavior.
+      return RequestBean.getAttribute("structureMirroringConfig") != null;
+   }
+
+   private static String getMirroringConfig() {
+      String config = (String) RequestBean.getAttribute("structureMirroringConfig");
+      return config == null ? Constants.getString("structureMirroringConfig") : config;
    }
 
    /**
@@ -41,7 +49,7 @@ public class MirroringService {
     * @return
     */
    public static boolean isEnabled(int groupId) {
-      String mirroringConfig = Constants.getString("structureMirroringConfig");
+      String mirroringConfig = getMirroringConfig();
 
       if (Tools.isEmpty(mirroringConfig)) return false;
 
@@ -110,12 +118,14 @@ public class MirroringService {
     */
    public static int[] getRootIds(int groupId) {
       //format zapisu: id,id,id:POZNAMKA\n
-      String mirroringConfig = Constants.getString("structureMirroringConfig");
+      String mirroringConfig = getMirroringConfig();
       String[] lines = Tools.getTokens(mirroringConfig, "\n");
 
-      if(MIRRORING_MODE_CLONE.equals( Constants.getString("mirroringMode") )) {
-         int srcId = Constants.getInt("cloneActionSrcId");
-         int destId = Constants.getInt("cloneActionDestId");
+      if(isCloneAction()) {
+         // Use the validated IDs stored by CloneStructureService in this request.
+         RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+         int srcId = Tools.getIntValue(rb.getParameter("srcGroupId"), -1);
+         int destId = Tools.getIntValue(rb.getParameter("destGroupId"), -1);
 
          if(groupId == srcId) {
             return new int[] {srcId, destId};
@@ -153,7 +163,8 @@ public class MirroringService {
    }
 
    private static int[] getCloneRootIds(int groupId, String[] lines) {
-      int destId = Constants.getInt("cloneActionDestId");
+      RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+      int destId = Tools.getIntValue(rb.getParameter("destGroupId"), -1);
 
       //Accept only lines that contain wanted id AND DEST id
       Set<Integer> toReturn = new HashSet<>();
@@ -224,6 +235,7 @@ public class MirroringService {
    public static void checkRootGroupsConfig() {
       //preiteruj riadky konfiguracie a over/nastav zadanym adresarom syncid
       //format zapisu: id,id,id:POZNAMKA\n
+      // This updates persistent root sync IDs, so ignore the temporary clone mapping.
       String mirroringConfig = Constants.getString("structureMirroringConfig");
       String[] lines = Tools.getTokens(mirroringConfig, "\n");
       GroupsDB groupsDB = GroupsDB.getInstance();

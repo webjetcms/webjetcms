@@ -200,6 +200,8 @@ public class XhrFileUploadService {
                     sk.iway.iwcm.Logger.error(ioe);
                 }
             } else {
+                //redis trigger session update
+                session.setAttribute("partialUploadFile-" + name, holder);
                 MultipartWrapper.slowdownUpload();
             }
 

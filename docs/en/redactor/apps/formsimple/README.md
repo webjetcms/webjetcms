@@ -182,7 +182,7 @@ components.formsimple.label.pokyny=Pokyny
 components.formsimple.input.pokyny=<div class="form-instructions">${settings.fieldA}</div><p>Povolené prípony: ${settings.allowedExtensions}; maximálna veľkosť súboru: ${settings.maxSizeInKilobytes} kB.</p>
 ```
 
-You can also add tags to the existing form start code, for example as the `data-form-name="${settings.formName}"` attribute, or insert `<div class="form-intro">${settings.fieldB}</div>` after the opening `<form>`. Keep the original template attributes and scripts. For an Easy Form, this is the key `components.formsimple.form.start`, for a multi-step form, it is `components.mustistep.form.start`.
+You can also add tags to the existing form start code, for example as the `data-form-name="${settings.formName}"` attribute, or insert `<div class="form-intro">${settings.fieldB}</div>` after the opening `<form>`. Keep the original template attributes and scripts. For an Easy Form, this is the key `components.formsimple.form.start`, for a multi-step form, it is `components.multistep.form.start`.
 
 The same tags work in the form footer, tooltip templates, first field titles, repeated items `${iterable}`, and technical information `components.formsimple.techinfo`. In a multi-step form, they are also available in the HTML wrappers of steps and rows, the step title, the Back button, and the loading indicator.
 
@@ -214,29 +214,29 @@ You can edit the HTML code of the buttons in [multistep forms](../multistep-form
 
 #### Continue or submit button
 
-The key `components.mustistep.form.end` contains the HTML code for the button to go to the next step and, in the last step, to submit the form. The default part of the value that determines the appearance of the button is:
+The key `components.multistep.form.end` contains the HTML code for the button to go to the next step and, in the last step, to submit the form. The default part of the value that determines the appearance of the button is:
 
 ```html
 <button type="submit" class="btn btn-primary mt-3" name="saveForm">${submitButtonText}</button>
 ```
 
-The `${submitButtonText}` tag will be replaced with the text set in the current step. If no text is specified, the `components.mustistep.form.next_step` translation will be used (**Go to next step**) or in the last step `components.mustistep.form.save_form` (**Submit form**).
+The `${submitButtonText}` tag will be replaced with the text set in the current step. If no text is specified, the `components.multistep.form.next_step` translation will be used (**Go to next step**) or in the last step `components.multistep.form.save_form` (**Submit form**).
 
 When changing the appearance, keep the `type="submit"`, `name="saveForm"`, and `${submitButtonText}` tags. The key also contains the `{tech-info}` tag for technical information, the `</form>` closing tag, and the script to initialize the tooltips. Leave these parts; when editing the button, change only its HTML code.
 
 #### Previous step button
 
-The HTML code for the **Back** button is set via the `components.mustistep.form.back_button` key. The button appears from the second step; it is not inserted into the email form.
+The HTML code for the **Back** button is set via the `components.multistep.form.back_button` key. The button appears from the second step; it is not inserted into the email form.
 
 The following tags are available in the key value:
 
 - `${previousStepId}` - ​​ID of the previous step.
-- `${backButtonText}` - ​​button text set in the current step, or default translation `components.mustistep.form.back_step`. The text is escaped before being inserted into HTML.
+- `${backButtonText}` - ​​button text set in the current step, or default translation `components.multistep.form.back_step`. The text is escaped before being inserted into HTML.
 
 Default code:
 
 ```properties
-components.mustistep.form.back_button=<button type="button" class="btn btn-outline-secondary mt-3 me-2" data-multistep-back-step="${previousStepId}">${backButtonText}</button>
+components.multistep.form.back_button=<button type="button" class="btn btn-outline-secondary mt-3 me-2" data-multistep-back-step="${previousStepId}">${backButtonText}</button>
 ```
 
 When changing the appearance, keep `type="button"` and the `data-multistep-back-step="${previousStepId}"` attribute, which is used to return to the previous step.

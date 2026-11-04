@@ -11,6 +11,8 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocEditorFields;
+import sk.iway.iwcm.doc.PlannedAccess;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.EditorDB;
@@ -33,13 +35,23 @@ public class PreviewController {
             return "forward:/404.jsp";
         }
 
+        // Session serialization omits the transient editor fields, in redis it's null
+        if (doc.getEditorFields() == null) {
+            DocEditorFields editorFields = new DocEditorFields();
+            editorFields.fromDocDetails(doc, false, false);
+            if (PlannedAccess.enabled()) {
+                editorFields.setPlannedMedia(doc.isPublicable());
+            }
+            doc.setEditorFields(editorFields);
+        }
+
         PathFilter.setNoCacheHeaders(response);
         if (doc.getDocId() > 0 && (doc.isPublishAfterStart() || doc.getEditorFields().isPlannedMedia())) {
             if (EditorDB.isPageEditable(UsersDB.getCurrentUser(request), doc.getDocId())==false) {
                 response.setStatus(404);
                 return null;
             }
-            request.setAttribute(sk.iway.iwcm.doc.PlannedAccess.PREVIEW_DOC, sk.iway.iwcm.doc.PlannedAccess.masterId(doc.getDocId()));
+            request.setAttribute(PlannedAccess.PREVIEW_DOC, PlannedAccess.masterId(doc.getDocId()));
         }
         //set DocDetails @transient columns
         doc.setPublishStart(doc.getPublishStart());

@@ -91,7 +91,7 @@ Editor pro přidávání a úpravu položek je speciální tím, že mění svů
 
 - **Typ pole** - určuje jaký druh vstupu bude položka představovat (např. textové pole, výběr z rozbalovacího seznamu, zaškrtávací políčko atd.). Jednotlivá pole [připravuje designér web sídla](../formsimple/README.md#informace-pro-web-designera) a jsou stejné jako pro aplikaci formulář snadno.
 - **Povinné pole** - zda je položka povinná k vyplnění.
-- **Povolená hodnota** - pro pokročilou validaci vstupu uživatele umíte zvolit libovolný počet regulárních výrazů, které musí být splněny, aby byl vstup platný. Více se o nich dozvíte v sekci [Regulární výrazy](../form/regexps.md).
+- **Povolená hodnota** - pro pokročilou validaci vstupu uživatele umíte zvolit libovolný počet regulárních výrazů, které musí být splněny, aby byl vstup platný. Každá možnost používá formát **kód - název**, například **alphabetLowercase - povoleno jen malé znaky**. Název se zobrazuje v jazyce administrace. Podle názvu i kódu můžete vyhledávat. Kód odpovídá sloupci **Kód** v sekci [Regulární výrazy](../form/regexps.md).
 - **Oříznout mezery** - pokud je zvoleno, úvodní a koncové mezery se z hodnoty odstraní ještě před validací a uložením. Nastavení je dostupné pro podporovaná textová pole; nepoužívá se pro výběrová pole a formátované textové pole.
 - **Název pole** - název, který se zobrazí uživateli. Pokud není zadán použije se název shodný s typem pole.
 - **Identifikátor položky ve formuláři** - technický identifikátor se automaticky vytvoří z názvu položky a doplní se rozlišující příponou tak, aby byl ve formuláři jedinečný. Zobrazuje se až při úpravě uložené položky a nelze jej měnit. Používá se v podmínkách, uložených datech a v [značkách hodnot položek](#značky-hodnot-položek).
@@ -101,7 +101,7 @@ V kartě **Pokročilé** můžete nastavit další volitelné parametry jako:
 - **Krok formuláře** - krok, ke kterému položka patří, můžete tak snadno položku přesunout do jiného kroku.
 - **Pořadí** - určuje pořadí položky v rámci kroku.
 - **Předvyplněná hodnota** - hodnota, která se zobrazí vyplněná v poli, uživatel tak nemusí nastavit hodnotu, pokud je všeobecně známá. Toto pole se zobrazuje pouze pokud se nejedná o položku typu výběrové pole.
-- **Povolené možnosti** - u položky typu výběrové pole (select, checkbox skupina, radio skupina, automatické doplňování apod.) můžete manuálně definovat seznam možností. Každá možnost se skládá z textu zobrazeného uživateli a hodnoty odeslané při odeslání formuláře. Možnosti lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`. Pro výběrový seznam můžete tlačítkem **Přidat prázdnou možnost** vložit na začátek i volbu bez hodnoty. Pole se zobrazuje pouze pokud není povolena možnost **Použít propojení na číselník**.
+- **Povolené možnosti** - u položky typu výběrové pole (select, checkbox skupina, radio skupina, automatické doplňování apod.) můžete manuálně definovat seznam možností. Každá možnost se skládá z textu zobrazeného uživateli a hodnoty odeslané při odeslání formuláře. Možnosti lze přidávat, odebírat a měnit jejich pořadí pomocí `drag & drop`. Přepínačem **Přidat prázdnou možnost** - můžete do výběrového seznamu nebo skupiny výběrových polí vložit na začátek i volbu bez hodnoty. U nového pole je přepínač vypnutý. Pole se zobrazuje pouze pokud není povolena možnost **Použít propojení na číselník**.
 
 ![](form-item-editor-advanced.png)
 
@@ -119,6 +119,18 @@ Chcete-li definovat vlastní položky formulářů, nebo chcete změnit existuj�
 !>**Upozornění:** ve vícekrokovém formuláři nefungují vlastní typy položek, které přímo vykreslí nativní element `<input type="file">`. Soubor lze nahrát pouze pomocí komponenty `Dropzone`.
 
 !>**Upozornění:** při úpravě položky formuláře nedoporučujeme měnit typ položky, ale raději nahradit původní položku novou.
+
+### Prázdná možnost
+
+Přepínač **Přidat prázdnou možnost** přidá do seznamu (select) prázdný řádek a do skupiny rádií volbu **Bez zvolené možnosti** pro zrušení výběru. Hodnota je prázdná, takže povinné pole vyžaduje jinou možnost. Text rádia určuje klíč `components.formsimple.emptyOptionLabel.radiogroup`. Při zaškrtávacím poli a automatickém doplňování je přepínač ve výchozím nastavení skryt, protože je lze vyprázdnit bez něj.
+
+Přítomnost `emptyOption` v klíči `components.formsimple.hide.TYP_POLA` přepínač skryje; odstraněním jej znovu zpřístupníte. Pro rádio:
+
+```properties
+components.formsimple.hide.radiogroup=placeholder,trimValue,regexValidationArr,emptyOption
+```
+
+Ostatní položky zachovejte a změnu nastavte ve všech používaných jazycích. Při skrytí se prázdná možnost nezobrazí ani ve starších formulářích a při uložení se odstraní z konfigurace. Nastavení platí pouze pro manuální možnosti, nikoli pro propojení na číselník.
 
 ### Validace při opuštění pole
 
@@ -209,7 +221,7 @@ Jedná se o plochou strukturu (bez závorek), takže není podpořeno vnořován
 
 Každá podmínka obsahuje tyto parametry:
 
-- **Pole formuláře** - položka, jejíž hodnota se použije při vyhodnocení podmínky. Možnosti jsou seřazeny stejně jako ve formuláři.
+- **Pole formuláře** - položka, jejíž hodnota se použije při vyhodnocení podmínky. Možnosti jsou seřazeny stejně jako ve formuláři. Rádiová tlačítka se stejným názvem pole a nastavením **Povinné pole** se nabízejí jako jedna skupina na pozici prvního tlačítka, i když jsou mezi nimi jiná pole. Upravovaná položka se v seznamu nenabízí. Při úpravě rádiového tlačítka se nenabízí celá jeho skupina, protože tlačítka sdílejí stejný identifikátor položky.
 - **Podmínka porovnání** - způsob porovnání hodnoty pole:
   - **rovná se**
   - **nerovná se**
@@ -219,8 +231,8 @@ Každá podmínka obsahuje tyto parametry:
   - **končí na**
   - **je prázdné**
   - **není prázdné**
-- **Srovnávaná hodnota** - hodnota, vůči které se porovná obsah vybraného pole.
-- **Ignorovat velikost písmen** - porovnání nebude citlivé na velká/malá písmena.
+- **Srovnávaná hodnota** - hodnota, vůči které se porovná obsah vybraného pole. U výběrových seznamů, skupin výběrových a zaškrtávacích polí a samostatných rádiových tlačítek vybíráte pro podmínky **rovná se** a **nerovná se** z možností daného pole. Zobrazuje se text možnosti, uloží se její hodnota. Podporovány jsou i možnosti z číselníku. Při podmínkách **obsahuje**, **neobsahuje**, **začíná na** a **končí na** iu ostatních polí zadáváte text. Prázdnou hodnotu ověříte podmínkou **je prázdné** nebo **není prázdné**.
+- **Ignorovat velikost písmen** - porovnání nebude citlivé na velká/malá písmena. Volba se zobrazuje pouze při ručním zadávání srovnávané hodnoty, při výběru z předdefinovaných možností je skrytá.
 - **Logický operátor** - spojení s následující podmínkou:
   - `AND` - ​​musí platit obě podmínky,
   - `OR` - ​​stačí, pokud platí alespoň jedna podmínka.
@@ -246,6 +258,21 @@ Každá podmínka obsahuje tyto parametry:
 Při pokusu o úpravu nebo odstranění položky, která je použita v podmínce jiné položky, se zobrazí chyba i notifikace se seznamem závislých položek.
 
 ![](save-condition-error.png)
+
+### Vazby
+
+Karta **Vazby** při úpravě stávajícího pole ukazuje, která další pole používají jeho hodnotu.
+
+- **Zobrazení polí** – pole, jejichž zobrazení závisí na tomto poli.
+- **Povinné vyplnění polí** – pole, jejichž povinné vyplnění závisí na tomto poli.
+
+![Karta Vazby se seznamy polí používaných v podmínkách zobrazení a povinnosti.](tab-relations.png)
+
+Každé pole se v příslušném seznamu zobrazí jednou, i když se na něj odkazuje ve více částech podmínky.
+
+Klepnutím na název otevřete editor daného pole. Pokud je v jiném kroku, přepne se i vybraný krok formuláře. Při neuložených změnách si před přechodem můžete vybrat, zda je chcete zahodit, nebo zůstat v původním editoru.
+
+Například u pravidla „Telefonní číslo je povinné, pokud Jméno a příjmení obsahuje text“ naleznete v kartě **Vazby** pole **Jméno a příjmení** položku **Telefonní číslo** v seznamu podmínek povinnosti. Samotné pravidlo nadále upravujete v kartě **Povinnost** pole **Telefonní číslo**.
 
 ### Statistika
 
