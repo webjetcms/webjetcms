@@ -1349,6 +1349,29 @@ test('Saved chat attachments can be selected, removed and sent without a text pr
     await retry;
 });
 
+test('File drops across the chat host attach once to the active conversation', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    const first = host.chat;
+    const file = new File(['Document'], 'notes.txt', { type: 'text/plain' });
+    const drop = target => {
+        for (const type of ['dragover', 'drop']) {
+            const event = new target.ownerDocument.defaultView.Event(type, { bubbles: true, cancelable: true });
+            Object.defineProperty(event, 'dataTransfer', { value: { types: ['Files'], files: [file] } });
+            target.dispatchEvent(event);
+            assert.equal(event.defaultPrevented, true);
+        }
+    };
+    for (const target of [host.element, first.$history[0], first.$input[0]]) drop(target);
+    assert.equal(first.state.attachments.length, 3);
+    host.selectAssistant(String(chatAssistants[1].assistantId));
+    drop(host.element);
+    assert.equal(host.chat.state.attachments.length, 1);
+    assert.equal(host.chat.state.attachments[0].file, file);
+    assert.equal(first.state.attachments.length, 3, 'Inactive chats must not receive the drop.');
+});
+
 test('Saved chat rejects unsupported and excessive attachments without discarding the draft', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     f.controller.chips.get('aiChat').click();

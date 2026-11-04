@@ -213,6 +213,7 @@ export class QuickSearchChat {
         const options = this.options.getChatOptions?.(assistant) || {};
         const chat = new AiChat({
             assistant, persistent, composerControls: this.assistantRow, showAttachment: true,
+            dropTarget: this.element,
             context: this.options.context,
             ...options,
             notice: persistent ? null : historyText('unsaved'),

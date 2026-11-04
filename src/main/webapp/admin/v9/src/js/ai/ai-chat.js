@@ -73,13 +73,6 @@ export class AiChat {
             this.$attachmentButton = this._iconButton(WJ.translate("datatables.upload.uploadFile.js"), "paperclip", "btn-ai-chat-attach")
                 .on('click', () => this.$fileInput[0].click());
             $composerActions.append(this.$attachmentButton, this.$fileInput);
-            $composerPanel.on('dragover', event => {
-                if (this._canAttach() && Array.from(event.originalEvent?.dataTransfer?.types || []).includes('Files')) event.preventDefault();
-            }).on('drop', event => {
-                if (!event.originalEvent?.dataTransfer?.files?.length) return;
-                event.preventDefault();
-                this._addAttachments(event.originalEvent.dataTransfer.files);
-            });
             this.$input.on('paste', event => {
                 const files = event.originalEvent?.clipboardData?.files;
                 if (files?.length && this._canAttach()) {
@@ -110,6 +103,16 @@ export class AiChat {
         container.appendChild(this.element);
         if (this.options.composerControls) this.$composerControls.append(this.options.composerControls);
         this.mounted = true;
+        if (this.options.showAttachment) {
+            this.$dropTarget = $(this.options.dropTarget || this.element);
+            this.$dropTarget.on('dragover.aiChatAttachments', event => {
+                if (this._canAttach() && Array.from(event.originalEvent?.dataTransfer?.types || []).includes('Files')) event.preventDefault();
+            }).on('drop.aiChatAttachments', event => {
+                if (!event.originalEvent?.dataTransfer?.files?.length) return;
+                event.preventDefault();
+                this._addAttachments(event.originalEvent.dataTransfer.files);
+            });
+        }
         this.refresh();
         this._resizeInput();
         this.$input[0].focus({ preventScroll: true });
@@ -122,6 +125,8 @@ export class AiChat {
             this._saveScroll();
         }
         this.mounted = false;
+        this.$dropTarget?.off('.aiChatAttachments');
+        this.$dropTarget = null;
         disposeChatTooltips(this.element);
         this.$root.detach();
     }

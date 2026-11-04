@@ -26,7 +26,7 @@
 </div>
 
 - [Rýchle vyhľadávanie](redactor/admin/search/README.md) je dostupné z hlavičky celej administrácie tlačidlom **Hľadať…** alebo skratkou **Ctrl+K / ⌘K**. Ponúka návrhy stránok podľa názvu a URL, výsledky z obsahu stránok, súborov, používateľov, textových kľúčov a položiek menu. Vybraný výraz môžete preniesť do príslušnej sekcie s ďalšími filtrami (#348).
-- Nová karta [AI Chat](redactor/admin/search/README.md#ai-chat) v rýchlom vyhľadávaní umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Podporuje výber asistenta, priebežné zobrazovanie a zastavenie odpovedí, Markdown s tabuľkami a kopírovanie textu. Pri ukladaných rozhovoroch OpenAI a Gemini môžete pridávať obrázky a dokumenty, vyhľadávať v histórii a sťahovať prílohy z panela **Súbory v chate**. História a prílohy sú dostupné iba vlastníkovi rozhovoru v príslušnej doméne. Prepínanie asistentov zachová rozpísané správy aj neodoslané prílohy; okno môžete zväčšiť alebo maximalizovať (#386).
+- Nová karta [AI Chat](redactor/admin/search/README.md#ai-chat) v rýchlom vyhľadávaní umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Podporuje výber asistenta, priebežné zobrazovanie a zastavenie odpovedí, Markdown s tabuľkami a kopírovanie textu. Pri ukladaných rozhovoroch OpenAI a Gemini môžete pridávať obrázky a dokumenty pretiahnutím kamkoľvek do plochy chatu, vyhľadávať v histórii a sťahovať prílohy z panela **Súbory v chate**. História a prílohy sú dostupné iba vlastníkovi rozhovoru v príslušnej doméne. Prepínanie asistentov zachová rozpísané správy aj neodoslané prílohy; okno môžete zväčšiť alebo maximalizovať (#386).
 
 ![](redactor/admin/search/quick-search.png)
 

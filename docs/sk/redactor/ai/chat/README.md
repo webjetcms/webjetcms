@@ -54,7 +54,7 @@ Ak poskytovateľ vymazanie nepotvrdí, rozhovor zostane označený na vymazanie.
 
 Prílohy sú dostupné v ukladaných rozhovoroch na karte **AI Chat** aj v chate pri poli a v editore stránky s asistentom **OpenAI** alebo **Gemini**. Môžete napríklad priložiť program školenia a požiadať asistenta, aby z neho vytvoril tabuľku alebo pozvánku.
 
-1. Kliknite na ikonu kancelárskej sponky **Nahrať súbor**, pretiahnite súbory do poľa správy alebo doň vložte obrázok zo schránky.
+1. Kliknite na ikonu kancelárskej sponky **Nahrať súbor**, pretiahnite súbory kamkoľvek do plochy chatu alebo vložte obrázok zo schránky do poľa správy.
 2. Skontrolujte názvy súborov a náhľady obrázkov. Nechcenú prílohu pred odoslaním odstráňte tlačidlom **×**.
 3. Doplňte požiadavku a odošlite správu. Odoslať môžete aj samotné prílohy bez textu.
 
