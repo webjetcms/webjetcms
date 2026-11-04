@@ -65,7 +65,7 @@ The filter only takes the first value. So add the `IN` option to allow multiple 
 - [x] +AI - adjust `chunk` generation so that they start and end at sentence or word boundaries where possible (#58778).
 - [x] +Websites - configurable default view for user without custom setting (`webpagesTreeDefaultSettings`), default to ascending order; ID and order display can be enabled in configuration (#368).
 - [x] +Websites - bulk addition and removal of tags and user groups while preserving other groups via the More Actions menu, to which Import/Export (#368) has also been moved.
-- [ ] +Websites - when deleting a folder that also has a mirrored version, display a notification that the mirrored folders XXX,YYY have also been deleted.
+- [x] +Websites - before deleting a page or folder, show a warning with a list of mirrored items that will be deleted along with the selection (#58846).
 - [x] +Add support for AVIF images and animations (#371).
 - [x] + Possibility to change the order of fields in the datatables editor, the tab in which the field is located, or even create a new tab in which the fields are inserted. That is, to configure the values ​​that are currently set for annotations (#366).
 

@@ -101,21 +101,26 @@ public class KalendarUdalostiDB {
 			String[] perexGroupIdsArray = null;
 			if(Tools.isNotEmpty(perexGroupIds)) perexGroupIdsArray = Tools.getTokens(perexGroupIds, ",");
 			boolean perexGroupUseJoin = Constants.getBoolean("perexGroupUseJoin") && perexGroupIdsArray != null;
-			String groupNamesIn = "";
+			List<Object> perexGroupParameters = new ArrayList<>();
 			db_conn = DBPool.getConnection();
 
-			StringBuffer sql = new StringBuffer("SELECT "+D_DOCUMENT_FIELDS_NODATA+" FROM documents d WHERE d.group_id IN ("+groupIds+") AND d.available = "+DB.getBooleanSql(true)+" AND d.show_in_menu = "+DB.getBooleanSql(true));
+			StringBuffer sql = new StringBuffer("SELECT "+D_DOCUMENT_FIELDS_NODATA+" FROM documents d WHERE " + DB.getInCondition("d.group_id", groupIds) + " AND d.available = "+DB.getBooleanSql(true)+" AND d.show_in_menu = "+DB.getBooleanSql(true));
 			if(perexGroupIdsArray != null)
 			{
 				if(perexGroupUseJoin)
 				{
-					String gn;
-					for (int j=0; j<perexGroupIdsArray.length; j++)
+					List<Integer> perexIds = new ArrayList<>();
+					for (String perexGroupId : perexGroupIdsArray)
 					{
-						gn = perexGroupIdsArray[j];
-						if(Tools.getIntValue(gn,0) > 0) groupNamesIn += gn+(j != perexGroupIdsArray.length-1 ? "," : "");
+						int id = Tools.getIntValue(perexGroupId, 0);
+						if (id > 0) perexIds.add(id);
 					}
-					if(Tools.isNotEmpty(groupNamesIn)) sql.append(" AND p.perex_group_id IN (?)");
+					if (perexIds.isEmpty() == false)
+					{
+						// EXISTS keeps each event unique when it matches multiple perex groups.
+						sql.append(" AND EXISTS (SELECT 1 FROM perex_group_doc p WHERE p.doc_id=d.doc_id AND ")
+							.append(DB.getInCondition("p.perex_group_id", perexIds, perexGroupParameters)).append(")");
+					}
 				}
 				else
 				{
@@ -149,17 +154,19 @@ public class KalendarUdalostiDB {
 			else if (showType == SHOW_NEXT)
 				sql.append(" AND (publish_end IS NOT null AND publish_end > ?)");
 			sql.append(" ORDER BY d.publish_start ").append(desc ? "DESC" : "ASC");
-			if(limit > 0)
-				sql.append(" LIMIT ").append(limit);
 
 			//System.out.println(">> getDocListFromDB SQL: "+sql.toString());
 			Logger.debug(KalendarUdalostiDB.class, "getDocListFromDB SQL: "+sql.toString());
 
 			ps = db_conn.prepareStatement(sql.toString());
+			if (limit > 0) ps.setMaxRows(limit);
 			int ind = 1;
 			if(perexGroupIdsArray != null)
 			{
-				if(perexGroupUseJoin) ps.setString(ind++, groupNamesIn);
+				if(perexGroupUseJoin)
+				{
+					for (Object perexGroupId : perexGroupParameters) ps.setInt(ind++, (Integer) perexGroupId);
+				}
 				else
 				{
 					for(String pg : perexGroupIdsArray)

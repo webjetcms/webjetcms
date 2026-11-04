@@ -19,6 +19,73 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+for (const tab of ['changes', 'waiting']) {
+    /** Checks direct navigation and reload, including the table data source and tree visibility. */
+    Scenario(`Open and reload the ${tab} tab from a URL hash`, async ({ I, DT }) => {
+        const documentRoute = '**/admin/v9/webpages/web-pages-list/';
+        // Make the approval tab available without creating approval requests in the database.
+        if (tab === 'waiting') {
+            await I.mockRoute(documentRoute, async route => {
+                const response = await route.fetch();
+                const body = (await response.text()).replace(/\blet hasPagesToApprove\s*=\s*(?:true|false)\s*;/,
+                    'let hasPagesToApprove = true;');
+                await route.fulfill({ response, body });
+            });
+        }
+        try {
+            I.amOnPage(`/admin/v9/webpages/web-pages-list/#pills-${tab}`);
+            for (let load = 0; load < 2; load++) {
+                I.waitForElement(`#pills-pages #pills-${tab}-tab.active`, 20);
+                DT.waitForLoader();
+                I.dontSeeElement('.tree-col');
+                const source = await I.executeScript(() => ({
+                    url: webpagesDatatable.getAjaxUrl(), recentGroup: String(changesId)
+                }));
+                if (tab === 'changes') I.assertContain(source.url, `groupId=${source.recentGroup}`);
+                else I.assertContain(source.url, '/admin/rest/webpages/toapprove');
+                I.seeInCurrentUrl(`#pills-${tab}`);
+                if (load === 0) I.refreshPage();
+            }
+        } finally {
+            if (tab === 'waiting') await I.stopMockingRoute(documentRoute);
+        }
+    });
+}
+
+Scenario('Expand trash subfolders after opening a group URL', async ({ I, DT }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
+    DT.waitForLoader();
+    I.clickCss("#pills-trash-tab");
+    I.jstreeWaitForLoader();
+
+    // Use existing trash folders and remember a child loaded through the working tab switch.
+    const folders = "#SomStromcek > ul > li.jstree-closed";
+    I.waitForElement(folders, 10);
+    const groupIds = await I.grabAttributeFromAll(folders, "id");
+    I.assertAbove(groupIds.length, 1, "Trash must contain two expandable folders");
+    const folder = `#SomStromcek li[id='${groupIds[0]}']`;
+    I.clickCss(`${folder} > i.jstree-ocl`);
+    I.waitForVisible(`${folder} > ul > li`, 10);
+    const childIds = await I.grabAttributeFromAll(`${folder} > ul > li`, "id");
+    const child = `${folder} li[id='${childIds[0]}']`;
+
+    // A different selected folder prevents the server from preloading the tested children.
+    I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${groupIds[1]}#pills-trash`);
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+    I.seeElement("#pills-trash-tab.active");
+    I.clickCss(`${folder} > i.jstree-ocl`);
+    I.waitForVisible(child, 10);
+
+    I.clickCss("#pills-folders-tab");
+    I.jstreeWaitForLoader();
+    I.dontSeeElement(folder);
+    I.clickCss("#pills-trash-tab");
+    I.jstreeWaitForLoader();
+    I.clickCss(`${folder} > i.jstree-ocl`);
+    I.waitForVisible(child, 10);
+});
+
 Scenario('Otvorenie web stranok zadanim docid do pola', ({ I, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
 

@@ -13,7 +13,7 @@ Before(({ I, login }) => {
      }
 });
 
-Scenario('Prava na adresar', ({ I, DTE, DT }) => {
+Scenario('Prava na adresar', async ({ I, DTE, DT }) => {
      I.waitForText('Webové stránky', 10);
 
      // 1. vytvorenie noveho priecinka name-autotest
@@ -53,6 +53,8 @@ Scenario('Prava na adresar', ({ I, DTE, DT }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_3').find('.form-check-label'));
      DTE.save();
      I.waitForText(folder_name, 20);
+     // The folder name stays visible while the delayed tree refresh still shows the old permissions.
+     I.waitForInvisible(locate('#SomStromcek .jstree-anchor').withDescendant('.ti-lock-filled').withText(folder_name), 20);
      I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(folder_name));
      I.dontSeeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(folder_name));
      I.wait(1);
@@ -85,11 +87,11 @@ Scenario('Prava na adresar', ({ I, DTE, DT }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_0').find('.form-check-label'));
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-passwordProtectedSubFolders_0').find('.form-check-label')); // aplikovat na vsetky
      DTE.save();
-     I.waitForText(folder_name, 20);
-     I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(folder_name));
-     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(subfolder_one));
-     I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(subfolder_two));
-     I.wait(1);
+     // Applying permissions to descendants refreshes the tree and can reset its selection and expansion.
+     I.waitForVisible(locate('#SomStromcek .jstree-anchor').withDescendant('.ti-lock-filled').withText(folder_name), 20);
+     await expandTestFolder(I);
+     I.waitForVisible(locate('#SomStromcek .jstree-anchor').withDescendant('.ti-lock-filled').withText(subfolder_one), 10);
+     I.waitForVisible(locate('#SomStromcek .jstree-anchor').withDescendant('.ti-lock-filled').withText(subfolder_two), 10);
 
      // 6. zrusenie prav pre priecinok name-autotest a aplikovanie zmien na vsetky jeho podpriecinky
      I.say('6. Zrusenie prav pre priecinok name-autotest a aplikovanie zmien na vsetky jeho podpriecinky');
@@ -101,7 +103,8 @@ Scenario('Prava na adresar', ({ I, DTE, DT }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-passwordProtectedSubFolders_0').find('.form-check-label')); // aplikovat na vsetky
      DTE.save();
      I.waitForText(folder_name, 20);
-     I.wait(2);
+     I.waitForInvisible(locate('#SomStromcek .jstree-anchor').withDescendant('.ti-lock-filled').withText(folder_name), 20);
+     await expandTestFolder(I);
      I.jstreeClick(folder_name); //if refreshed click on it again
      I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(folder_name));
      I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(subfolder_one));
@@ -123,6 +126,17 @@ Scenario('Prava na adresar', ({ I, DTE, DT }) => {
      I.waitForText('Webové stránky', 20);
      I.dontSee(folder_name, '.jstree-anchor');
 });
+
+async function expandTestFolder(I) {
+     I.jstreeWaitForLoader();
+     const closedFolder = locate('#SomStromcek .jstree-node.jstree-closed')
+          .withChild(locate('.jstree-anchor').withText(folder_name));
+     if (await I.grabNumberOfVisibleElements(closedFolder) > 0) {
+          I.click(closedFolder.find('.jstree-ocl'));
+     }
+     I.waitForVisible(locate('#SomStromcek .jstree-anchor').withText(subfolder_one), 10);
+     I.waitForVisible(locate('#SomStromcek .jstree-anchor').withText(subfolder_two), 10);
+}
 
 Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE, DT }) => {
 

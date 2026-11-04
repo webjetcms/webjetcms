@@ -41,12 +41,16 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.forms.FormsController;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
-import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.RegExpEntity;
+import sk.iway.iwcm.components.forms.FormsDeletionService;
+import sk.iway.iwcm.components.forms.archive.FormsArchiveRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
+import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
@@ -214,9 +218,11 @@ class MultistepFormsServiceTest {
                 form.setDomainId(field.getDomainId());
                 FormsRepository forms = mock(FormsRepository.class);
                 FormStepsRepository steps = mock(FormStepsRepository.class);
+                FormSettingsRepository settings = mock(FormSettingsRepository.class);
                 when(forms.findFirstByIdAndDomainId(form.getId(), field.getDomainId())).thenReturn(Optional.of(form));
-                FormsService<FormsRepository, FormsEntity> formsService = new FormsService<>(forms, null, steps, items);
-                assertTrue(formsService.deleteItem(form, form.getId(), steps, items, null));
+                FormsDeletionService deletionService = new FormsDeletionService(forms, mock(FormsArchiveRepository.class),
+                    settings, steps, items, mock(FormItemsConditionsRepository.class), mock(DocDetailsRepository.class));
+                assertTrue(deletionService.delete(form.getId(), false).deleted());
             }
             default -> throw new IllegalArgumentException("Unknown cache invalidation operation: " + operation);
         }
@@ -274,6 +280,49 @@ class MultistepFormsServiceTest {
             assertEquals(List.of(), service.getAvailableConditionFields("contact-form", stepId, prop));
             verify(formItemsRepository).findAllByFormNameAndStepIdInAndDomainId("contact-form", List.of(stepId), 1);
             assertEquals(1, simpleQueries.constructed().size());
+        }
+    }
+
+    /** Verifies group exclusion and deduplication for separated radio options. */
+    @ParameterizedTest
+    @ValueSource(longs = {11L, 12L, 13L})
+    void excludesEditedLogicalFieldFromConditionOptions(long itemId) {
+        FormItemsRepository items = mock(FormItemsRepository.class);
+        FormStepsRepository steps = mock(FormStepsRepository.class);
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.form_items.step_title")).thenReturn("Step");
+        MultistepFormsService service = new MultistepFormsService(null, null, items, steps, null);
+
+        FormStepEntity step = new FormStepEntity();
+        step.setId(1L);
+        step.setCurrentPosition(1);
+        when(steps.getStepsUpToPosition("contact-form", 1, 1)).thenReturn(List.of(step));
+
+        FormItemEntity firstRadio = validationField("certificate-false", "radio");
+        FormItemEntity secondRadio = validationField("certificate-false", "radio");
+        FormItemEntity name = validationField("name-1", "text");
+        FormItemEntity requiredRadio = validationField("certificate-true", "radio");
+        List<FormItemEntity> fields = List.of(firstRadio, secondRadio, name, requiredRadio);
+        for (int index = 0; index < fields.size(); index++) {
+            fields.get(index).setId(11L + index);
+            fields.get(index).setSortPriority(index * 10);
+        }
+        name.setSortPriority(10);
+        secondRadio.setSortPriority(20);
+        when(items.findAllByFormNameAndStepIdInAndDomainId("contact-form", List.of(1L), 1)).thenReturn(fields);
+
+        try (MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
+                MockedConstruction<SimpleQuery> queries = mockConstruction(SimpleQuery.class,
+                    (query, context) -> when(query.forInt(
+                        "SELECT current_position FROM form_steps WHERE id = ? AND domain_id = ?", 1L, 1
+                    )).thenReturn(1))) {
+            cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(1);
+
+            List<String> expected = List.of("name-1", "certificate-true");
+            if (itemId == 13L) expected = List.of("certificate-false", "certificate-true");
+            assertEquals(expected, service.getAvailableConditionFields("contact-form", 1L, itemId, prop)
+                .stream().map(option -> option.getValue()).toList());
+            assertEquals(1, queries.constructed().size());
         }
     }
 

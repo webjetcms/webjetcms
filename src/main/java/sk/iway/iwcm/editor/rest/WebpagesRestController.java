@@ -32,6 +32,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.PerexGroupBean;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.DeleteMirrorsService;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -45,12 +46,26 @@ import sk.iway.iwcm.users.UserGroupsDB;
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
 public class WebpagesRestController extends WebpagesDatatable {
 
+    private final DeleteMirrorsService deleteMirrorsService;
     private final EditorService editorService;
 
     @Autowired
-    public WebpagesRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository, EditorService editorService) {
+    public WebpagesRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository, DeleteMirrorsService deleteMirrorsService, EditorService editorService) {
         super(docDetailsRepository, editorFacade, docAtrDefRepository);
+        this.deleteMirrorsService = deleteMirrorsService;
         this.editorService = editorService;
+    }
+
+    /**
+     * Previews additional mirrored pages affected by deleting the selected pages, without deleting data.
+     * Called by {@code bindDeleteMirrors} when the page delete confirmation opens, before submission is enabled.
+     *
+     * @param ids IDs of the pages selected for deletion
+     * @return unique additional mirrors with accessible paths and a flag indicating any inaccessible mirrors
+     */
+    @PostMapping("/deletion-preview")
+    public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
+        return deleteMirrorsService.getPageMirrors(ids, getUser());
     }
 
     /** Returns groups available on every selected page, or assigned to at least one page for removal. */

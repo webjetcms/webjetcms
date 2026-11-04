@@ -1651,7 +1651,7 @@ public class EditorDB
 						//http://intra.iway.sk/helpdesk/?bugID=7713
 
 						//musime im ale aktualizovat (mozne) zmenene hodnoty poradia usporiadania
-						String sql2 = "UPDATE documents_history SET sort_priority=?, temp_id=?, group_id=? WHERE history_id IN (" + historyIds + ") AND approved_by=-1";
+						String sql2 = "UPDATE documents_history SET sort_priority=?, temp_id=?, group_id=? WHERE " + DB.getInCondition("history_id", historyIds.toString()) + " AND approved_by=-1";
 
 						Logger.debug(EditorDB.class, "sql2="+sql2);
 
@@ -1664,7 +1664,7 @@ public class EditorDB
 					}
 					else
 					{
-						String sql2 = "DELETE FROM documents_history WHERE history_id IN (" + historyIds + ") AND approved_by=-1 AND author_id=?";
+						String sql2 = "DELETE FROM documents_history WHERE " + DB.getInCondition("history_id", historyIds.toString()) + " AND approved_by=-1 AND author_id=?";
 						//Logger.println(this,sql2+author_id);
 						ps = db_conn.prepareStatement(sql2);
 						ps.setInt(1, user.getUserId());
@@ -1706,7 +1706,7 @@ public class EditorDB
 
 				if (historyIds.length() > 0 )
 				{
-					ps = db_conn.prepareStatement("UPDATE documents_history SET actual=?, awaiting_approve=?, sync_status=1 WHERE history_id IN (" + historyIds + ")");
+					ps = db_conn.prepareStatement("UPDATE documents_history SET actual=?, awaiting_approve=?, sync_status=1 WHERE " + DB.getInCondition("history_id", historyIds.toString()));
 					ps.setBoolean(1, false);
 					ps.setNull(2, Types.VARCHAR);
 					//ps.setInt(3, user.getUserId());
@@ -1910,6 +1910,7 @@ public class EditorDB
 		}
 
 		//publishEvent(EditorAfterSaveEvent.class, my_form);
+		my_form.setPublish(requestPublish ? "1" : "0");
 		(new WebjetEvent<>(my_form, WebjetEventType.AFTER_SAVE)).publishEvent();
 
 		return(history_id);
@@ -1976,7 +1977,7 @@ public class EditorDB
 						{
 							GroupDetails group = groupsDB.getGroup(doc.getGroupId());
 							domain = group.getDomainName();
-							inSql = " AND group_id IN ("+groupsDB.getSubgroupsIds(domain)+")";
+							inSql = " AND " + DB.getInCondition("group_id", groupsDB.getSubgroupsIds(domain));
 						}
 					}
 
@@ -2093,7 +2094,7 @@ public class EditorDB
 			if (Constants.getBoolean("multiDomainEnabled")==true && Tools.isNotEmpty(domain))
 			{
 				GroupsDB groupsDB = GroupsDB.getInstance();
-				inSql = " AND group_id IN ("+groupsDB.getSubgroupsIds(domain)+")";
+				inSql = " AND " + DB.getInCondition("group_id", groupsDB.getSubgroupsIds(domain));
 			}
 
 			String sql = "SELECT doc_id, title, data FROM documents WHERE data LIKE ? "+inSql;

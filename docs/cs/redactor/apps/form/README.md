@@ -16,7 +16,13 @@ V editaci formuláře můžete měnit pole poznámka (ve kterém si můžete evi
 
 ![](detail-editnote.png)
 
-Vymazáním všech odeslaných záznamů v detailu formuláře se nevymaže jeho definice, nastavení ani položky. Samotný formulář odstraníte až vymazáním jeho řídícího záznamu v seznamu formulářů.
+Vymazáním všech odeslaných záznamů v detailu formuláře se nevymaže jeho definice, nastavení ani položky.
+
+Tlačítko **Smazat** v seznamu formulářů odstraní odeslané záznamy. Pokud formulář používá web stránka se zapnutým zobrazováním nebo obsahuje data v archivu, jeho nastavení, kroky, položky a podmínky zůstanou zachovány.
+
+Pokud formulář nepoužívá žádná zobrazovaná stránka a nemá data v archivu, smaže se celý včetně nastavení, kroků, položek a podmínek. Notifikace potvrdí úplné odstranění.
+
+Vymazání formuláře ze seznamu archivů odstraní pouze jeho archivní záznamy. Nastavení a položky se zachovají, pokud formulář zůstává v aktivním seznamu nebo jej používá zobrazovaná stránka.
 
 ## Vytvoření formuláře
 
