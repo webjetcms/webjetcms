@@ -86,6 +86,10 @@ Prílohu stiahnete aj kliknutím na jej názov alebo ikonu sťahovania priamo pr
 
 Pri textovom poli alebo v paneli nástrojov editora kliknite na ikonu AI a vyberte asistenta s typom požiadavky **Chat**. Napíšte zadanie a odošlite ho. Zdrojový obsah určuje nastavenie asistenta; pri označenom texte v podporovanom editore sa použije tento výber.
 
+Okno chatu môžete presunúť ťahaním za hornú lištu, aby nezakrývalo text stránky. Po zameraní lišty klávesom **Tab** ho môžete posúvať aj šípkami; so **Shift** sa posúva väčším krokom. Obsah editora môžete upravovať aj pri otvorenom chate.
+
+Tlačidlo **Minimalizovať chat** (mínus) vpravo hore skryje okno do AI ikony v pravom dolnom rohu. Kliknutím na **Obnoviť chat** sa vrátite k rovnakému rozhovoru, rozpísanej správe, neodoslaným prílohám a otvoreným panelom. Zachová sa aj pozícia okna; prebiehajúca odpoveď pokračuje počas minimalizovania. Pri zmenšení prehliadača sa presunuté okno prispôsobí tak, aby zostalo dostupné. Minimalizovaný chat obnovíte aj pôvodným tlačidlom AI pri rovnakom poli, ktoré je dostupné klávesom **Tab**. Zatvorenie editora odstráni aj minimalizovanú ikonu.
+
 Pri asistentoch **OpenAI** a **Gemini** môžete pridať súbory sponkou **Nahrať súbor**, pretiahnutím do správy alebo vložením obrázka zo schránky. Platia rovnaké [formáty a limity príloh](#prílohy) ako na karte AI Chat. Asistent dostane obsah príloh spolu s obsahom poľa alebo označeným textom. Prílohy môžete používať aj pri zapnutej voľbe **Zapnúť dočasný chat**.
 
 Odpoveď sa najskôr zobrazí v chate. Obsah poľa alebo stránky zmeníte až tlačidlom pod dokončenou odpoveďou:

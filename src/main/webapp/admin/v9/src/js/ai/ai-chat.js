@@ -188,7 +188,7 @@ export class AiChat {
         this._renderAttachments(this.$attachments, state.attachments, true);
         this._releaseAttachmentUrls();
         initChatTooltips(this.element);
-        if (this.element.isConnected) {
+        if (this.element.isConnected && this.$history[0].clientHeight > 0) {
             this.$history[0].scrollTop = followLatest ? this.$history[0].scrollHeight : scrollTop;
             this._saveScroll();
         }
@@ -604,7 +604,7 @@ export class AiChat {
     }
 
     _saveScroll() {
-        if (!this.mounted || !this.element.isConnected) return;
+        if (!this.mounted || !this.element.isConnected || this.$history[0].clientHeight === 0) return;
         const history = this.$history[0];
         this.state.scrollTop = history.scrollTop;
         this.state.followLatest = history.scrollHeight - history.scrollTop - history.clientHeight <= 40;

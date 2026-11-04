@@ -557,7 +557,21 @@
     }
 
     &.ai-action-live-chat {
-        pointer-events: auto;
+        pointer-events: none;
+        background-color: transparent;
+
+        .ai-chat-restore {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            pointer-events: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+            .ti { margin-right: 0; font-size: 24px; }
+        }
 
         &.ai-chat-with-history .toast.toast-info {
             width: min(1040px, calc(100vw - 32px));
@@ -566,6 +580,7 @@
 
         .toast.toast-info {
             display: flex;
+            pointer-events: auto;
             flex-direction: column;
             position: relative;
             width: min(720px, calc(100vw - 32px));
@@ -574,6 +589,24 @@
             height: min(680px, calc(100dvh - 40px));
             overflow: hidden;
 
+            &[hidden] { display: none !important; }
+
+            .ai-chat-minimize {
+                position: absolute;
+                top: 9px;
+                right: 52px;
+                z-index: 1;
+                width: 30px;
+                height: 30px;
+                padding: 0;
+                border: 0;
+                border-radius: 20px;
+                background-color: var(--wj-dark-20);
+                color: var(--bs-body-color);
+
+                &:hover { background-color: var(--wj-dark-60); }
+            }
+
             .toast-close-button {
                 position: absolute;
                 z-index: 1;
@@ -581,8 +614,16 @@
 
             div.toast-title {
                 flex: 0 0 auto;
-                padding-right: 56px;
+                padding-right: 92px;
+                cursor: grab;
+                touch-action: none;
+                user-select: none;
+
+                &:focus-visible { outline: 2px solid var(--bs-body-color); outline-offset: -3px; }
+                button { cursor: pointer; }
             }
+
+            &.ai-chat-dragging div.toast-title { cursor: grabbing; }
 
             div.toast-message {
                 display: flex;

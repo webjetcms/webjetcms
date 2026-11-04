@@ -1,4 +1,5 @@
 import { createWebjetDteJsTree } from '../../../src/js/web-components/webjet-dte-jstree';
+import { EditorChatWindow } from '../../../src/js/ai/editor-chat-window';
 
 /**
  * User Interface for AI interactions. It uses toastr to show popup with options and status.
@@ -38,15 +39,19 @@ export class AiUserInterface {
             this.chatDialogAttributes[name] = this.$chatDialog.attr(name);
         }
         this.$chatDialog.css("display", "flex").attr({
-            role: "dialog", "aria-modal": "true", "aria-label": conversation.aiCol.description
+            role: "dialog", "aria-modal": "false", "aria-label": conversation.aiCol.description
         });
         $("#toast-container-ai").removeClass("ai-status-working ai-status-success ai-status-error");
         $("#toast-container-ai").toggleClass("ai-chat-with-history", conversation.host != null);
         (conversation.host || conversation.chat).mount($("#toast-container-ai-content").empty()[0]);
+        this.chatWindow = new EditorChatWindow(this.$chatDialog[0],
+            () => this.activeButton?.trigger("focus"), () => conversation.chat.refresh());
         this.$chatDialog.on("keydown.aiChatHost", event => this._handleChatDialogKey(event));
     }
 
     detachChat() {
+        this.chatWindow?.destroy();
+        this.chatWindow = null;
         if (this.currentChat) (this.currentChat.host || this.currentChat.chat).unmount();
         this.currentChat = null;
         $("#toast-container-ai").removeClass("ai-chat-with-history");
@@ -67,17 +72,6 @@ export class AiUserInterface {
             event.preventDefault();
             event.stopPropagation();
             this._closeToast();
-        } else if (event.key === "Tab") {
-            const $controls = this.$chatDialog.find('button, input, select, textarea, [tabindex="0"]').filter(":visible:not(:disabled)");
-            const first = $controls[0];
-            const last = $controls[$controls.length - 1];
-            if (event.shiftKey && document.activeElement === first) {
-                event.preventDefault();
-                last?.focus();
-            } else if (!event.shiftKey && document.activeElement === last) {
-                event.preventDefault();
-                first?.focus();
-            }
         }
     }
 
@@ -104,6 +98,11 @@ export class AiUserInterface {
 
     generateAssistentOptions(button, column) {
         //console.log("AI button clicked for column:", column);
+
+        if (this.isActive() && this.chatWindow?.dialog.hidden && this.activeButton?.[0] === button?.[0]) {
+            this.chatWindow.restore();
+            return;
+        }
 
         const previous = AiUserInterface.activeInstance;
         previous?.detachChat();
