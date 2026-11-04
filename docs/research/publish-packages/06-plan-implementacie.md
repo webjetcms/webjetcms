@@ -1,6 +1,6 @@
 # Postupná realizácia
 
-Toto je plán budúcej implementácie. V aktuálnej fáze sa nevykonal žiadny krok P01–P08. [Orchestračný dokument](ORCHESTRACIA.md) určuje, ako kroky zadávať agentom a ako evidovať dokončenie. Produktový rozsah je uzatvorený v [rozhodnutiach](01-rozhodnutia.md); záverečné posúdenie technického návrhu ostáva na používateľovi.
+Tento plán určuje postup implementácie. Skutočný stav vykonaných krokov a ich dôkazy eviduje [STAV.md](STAV.md). [Orchestračný dokument](ORCHESTRACIA.md) určuje, ako kroky zadávať agentom a ako evidovať dokončenie. Produktový rozsah je uzatvorený v [rozhodnutiach](01-rozhodnutia.md); záverečné posúdenie technického návrhu ostáva na používateľovi.
 
 ## Poradie a veľkosť
 
