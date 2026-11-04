@@ -210,6 +210,49 @@ class MultistepFormsServiceTest {
         }
     }
 
+    /** Verifies group exclusion and deduplication for separated radio options. */
+    @ParameterizedTest
+    @ValueSource(longs = {11L, 12L, 13L})
+    void excludesEditedLogicalFieldFromConditionOptions(long itemId) {
+        FormItemsRepository items = mock(FormItemsRepository.class);
+        FormStepsRepository steps = mock(FormStepsRepository.class);
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.form_items.step_title")).thenReturn("Step");
+        MultistepFormsService service = new MultistepFormsService(null, null, items, steps, null);
+
+        FormStepEntity step = new FormStepEntity();
+        step.setId(1L);
+        step.setCurrentPosition(1);
+        when(steps.getStepsUpToPosition("contact-form", 1, 1)).thenReturn(List.of(step));
+
+        FormItemEntity firstRadio = validationField("certificate-false", "radio");
+        FormItemEntity secondRadio = validationField("certificate-false", "radio");
+        FormItemEntity name = validationField("name-1", "text");
+        FormItemEntity requiredRadio = validationField("certificate-true", "radio");
+        List<FormItemEntity> fields = List.of(firstRadio, secondRadio, name, requiredRadio);
+        for (int index = 0; index < fields.size(); index++) {
+            fields.get(index).setId(11L + index);
+            fields.get(index).setSortPriority(index * 10);
+        }
+        name.setSortPriority(10);
+        secondRadio.setSortPriority(20);
+        when(items.findAllByFormNameAndStepIdInAndDomainId("contact-form", List.of(1L), 1)).thenReturn(fields);
+
+        try (MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
+                MockedConstruction<SimpleQuery> queries = mockConstruction(SimpleQuery.class,
+                    (query, context) -> when(query.forInt(
+                        "SELECT current_position FROM form_steps WHERE id = ? AND domain_id = ?", 1L, 1
+                    )).thenReturn(1))) {
+            cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(1);
+
+            List<String> expected = List.of("name-1", "certificate-true");
+            if (itemId == 13L) expected = List.of("certificate-false", "certificate-true");
+            assertEquals(expected, service.getAvailableConditionFields("contact-form", 1L, itemId, prop)
+                .stream().map(option -> option.getValue()).toList());
+            assertEquals(1, queries.constructed().size());
+        }
+    }
+
     /**
      * Verifies that array upload values cannot bypass the combined file size limit.
      */

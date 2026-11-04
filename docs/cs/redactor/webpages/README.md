@@ -43,6 +43,20 @@ Seznam web stránek si v rámci jednoho přihlášení pamatuje naposledy otevř
 
 Zároveň při procházení stromové struktury se v adresním řádku prohlížeče zobrazuje adresa stránky s parametrem `groupid`, který reprezentuje ID složky. Při obnově stránky, nebo zaslání odkazu, se otevře složková struktura podle ID v adresním řádku. Na úvodní stránce si můžete do bloku Záložky [přidat adresu stránky is ID složky](https://youtu.be/G5Ts04jSMX8) a vytvořit tak na úvodní stránce odkaz do vnořené složkové struktury.
 
+### Přechod mezi zrcadlenými složkami
+
+Po zapnutí volby **Zobrazit zrcadlení** v nastavení stromové struktury
+
+![](jstree-settings.png)
+
+se u složek propojených [zrcadlením struktury](../apps/docmirroring/README.md) na pravém okraji řádku zobrazí zkratky jazyků ostatních propojených složek, například **DE** a **EN**.
+
+![](mirroring/tree-navigation.png)
+
+Propojené složky aktuálního výběru jsou v načtené části stromu zvýrazněny. Pokud je aktivní vyhledávání ve stromu, při přechodu přes jazykový odkaz se zruší, aby se mohla zobrazit cílová složka.
+
+Odkazy jsou dostupné uživatelům s právem na **Zrcadlení struktury** a zobrazují pouze složky a stránky, ke kterým mají přístup v rámci zvolené domény. V kartách **Systémové**, **Smazané** ani ve výběrových polích složek se jazykové odkazy nezobrazují.
+
 ### Zobrazit stránky iz podadresářů
 
 V případě potřeby můžete zobrazit web stránky iz podadresářů přepnutím přepínače **Zobrazit stránky iz podadresářů** v hlavičce datatabulky. Po přepnutí do režimu zobrazení stránek z podadresářů se zobrazí stránky z aktuálně zvoleného adresáře ve stromové struktuře včetně jeho podadresářů. Ve stromové struktuře můžete kliknout na jiný adresář, což znovu způsobí zobrazení stránek z vybraného adresáře a jeho podadresářů.
@@ -50,6 +64,20 @@ V případě potřeby můžete zobrazit web stránky iz podadresářů přepnut�
 V nastavení tabulky si můžete zapnout zobrazení sloupce **Nadřazená složka**, ve které budete vidět adresář, ve kterém se stránka nachází.
 
 ![](recursive-list.png)
+
+### Smazání zrcadlených stránek a složek
+
+Při smazání stránky nebo složky s aktivním [zrcadlením struktury](../apps/docmirroring/README.md) se v potvrzovacím okně zobrazí také seznam zrcadlených položek, které se smažou spolu s výběrem. U každé položky vidíte její úplnou cestu a doménu.
+
+![Potvrzení smazání stránky se seznamem jejích zrcadlených verzí](mirroring/delete-pages.png)
+
+Stejné upozornění se zobrazuje při mazání složek ze stromu iz karty **Složky**. Při hromadném mazání se každá zrcadlená položka zobrazí pouze jednou a položky, které jste již sami označili ke smazání, se v doplňkovém seznamu neopakují.
+
+Pokud označíte najednou více navzájem zrcadlených stránek nebo složek, každá položka se smaže pouze jednou. Položka, která se již v rámci této operace přesunula do koše, se při zpracování dalšího vybraného řádku znovu nemaže.
+
+![Potvrzení smazání složky se seznamem zrcadlených složek](mirroring/delete-groups.png)
+
+Seznam obsahuje přímo propojené stránky nebo složky bez podsložek.
 
 ### Obnovení web stránek a adresářů z koše
 
@@ -96,6 +124,8 @@ Ve stromové struktuře složek a stránek se mohou zobrazit následující typy
 -<i class="ti ti-map-pin" role="presentation"></i> stránka je zobrazena v menu
 -<i class="ti ti-map-pin-off" role="presentation"></i> stránka není zobrazena v menu
 -<i class="ti ti-folder-x" role="presentation"></i> nemáte práva na editaci/smazání složky, v této složce nebudete vidět ani žádný seznam web stránek (i když složku ve skutečnosti web stránky obsahuje). Používá se v případě, kdy máte povolena práva pouze na některou z podsložek.
+-<i class="ti ti-exclamation-circle" style="color: #E00028;" role="presentation"></i> více zrcadlených složek ve stejném jazyce. Zobrazí se při zapnuté volbě **Zobrazit zrcadlení**.
+-<i class="ti ti-alert-triangle" style="color: #fabd00;" role="presentation"></i> zrcadlené složky mají rozdílnou hloubku vnoření. Zobrazí se při zapnuté volbě **Zobrazit zrcadlení**.
 -<i class="ti ti-lock" role="presentation"></i> zámek = dostupné pouze pro přihlášeného návštěvníka
 - <span style="color: #E00028">červená barva</span> = nedostupné pro veřejnost (interní adresář) nebo stránka s vypnutým zobrazením
 -<i class="ti ti-star"></i> , **tučné písmo** = hlavní stránka adresáře
@@ -111,6 +141,7 @@ V případě potřeby můžete ve stromové struktuře klepnutím na ikonu<i cla
 - **Pořadí uspořádání** - Za názvem zobrazí pořadí uspořádání ve formě (pořadí).
 - **Web Stránky** - Zobrazí ve stromové struktuře i web stránky. **Upozornění:** snižuje výkon a rychlost načítání údajů. Možnost doporučujeme zapnout jen pokud potřebujete přesouvat web stránky pomocí funkce `Drag&Drop`.
 - **Složky stromové struktury jako tabulku** - Zobrazí kartu Složky v datatabulce. Umožňuje používat funkce datatabulky jako hromadné operace, duplikovat, upravit v zobrazení mřížky atp. se složkami stromové struktury.
+- **Zobrazit zrcadlení** - Na pravém okraji zobrazí odkazy na jazykové verze a upozornění na [špatné mapování nebo nerovnoměrné vnoření](mirroring/groups.md#stav-provázání). Červená ikona označuje vícenásobné mapování stejného jazyka, žlutá rozdílnou hloubku vnoření. Při souběhu obou problémů má červená ikona přednost. Volba je dostupná uživatelům s právem na **Zrcadlení struktury** a zapamatuje se pro přihlášeného uživatele. Ve výchozím nastavení je vypnuta.
 - **Šířka stromu** - Vyberte poměr šířky stromu a tabulky (standardně 4:8) nebo pevnou šířku stromu 120px, 150px, 200px, 250px, 300px, 400px nebo 500px. Při pevné šířce se strom při zvětšení okna nerozšiřuje a tabulka využije zbývající prostor. Upozornění: u některých šířek a nevhodné velikosti monitoru může dojít k nesprávnému zobrazení nástrojové lišty/tlačítek.
 - **Seřadit strom podle** - Výběr parametru adresáře, podle kterého se má strom složek uspořádat. Výběrové pole podporuje následující parametry
   - **Priorita**

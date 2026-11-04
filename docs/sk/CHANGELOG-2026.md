@@ -128,6 +128,14 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 - Page Builder - dialógy, ktoré sa nezmestia do šírky náhľadu, sa automaticky rozšíria na veľkosť okna prehliadača. Po potvrdení alebo zatvorení sa obnoví pôvodná šírka náhľadu a posun stránky. Ovládacie prvky Page Buildera používajú jazyk administrácie (#372).
 - Obrázky - pridaná podpora obrázkov a animácií vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Serverové úpravy, vodotlač a miniatúry cez `/thumb` zachovávajú snímky, priehľadnosť a časovanie animácie. Spracovanie vyžaduje `ImageMagick` 7.1.2-34 alebo novší s `libheif` 1.22.0 alebo novším. Editor obrázkov ukladá statický obrázok (#371).
 
+- Zrkadlenie štruktúry - pred zmazaním stránky alebo priečinka sa zobrazí [zoznam zrkadlených položiek](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa tiež zmažú.
+
+![](redactor/webpages/mirroring/delete-groups.png)
+
+- Zrkadlenie štruktúry - voľba **Zobraziť zrkadlenie** v nastavení zobrazenia stromovej štruktúry pridáva do stromu [odkazy na jazykové verzie](redactor/webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) a [upozornenia na chybné mapovania](redactor/webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre) (#370).
+
+![](redactor/webpages/mirroring/tree-navigation.png)
+
 ### Headless režim
 
 Pridaná [podpora headless režimu](frontend/headless/README.md), v ktorom WebJET CMS slúži čisto ako `backend` CMS. Obsah, navigácia, vyhľadávanie a formuláre sú dostupné cez REST API. Frontend aplikácia (napr. Astro, Next.js, Vue, React alebo akýkoľvek HTTP klient) si dáta stiahne a zobrazuje ich podľa vlastných šablón (#258).
@@ -144,10 +152,6 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
-- Regulárne výrazy - zoznam zobrazuje preložený názov podľa jazyka administrácie a pôvodný názov označuje ako **Prekladový kľúč**. Výber **Povolená hodnota** vo viackrokových formulároch používa formát **kód - názov** (#387).
-- Viackrokové formuláre - opravený preklep v prekladových kľúčoch z `components.mustistep.*` na `components.multistep.*` (#378).
-- Viackrokové formuláre - pomocné zápisy štatistiky na [verejnom uzle clustra s obmedzenými databázovými právami](install/config/ro-user.md#viackrokové-formuláre) už neblokujú zobrazenie, validáciu ani odoslanie formulára. Pri chybe sa návštevníkovi zobrazí názov aplikácie namiesto názvu Java triedy (#384).
-- Odložené odosielanie emailov - zväčšený stĺpec `emails.message` na `LONGTEXT` v MySQL/MariaDB, aby uloženie veľkého HTML emailu nezlyhalo. Doplnený [návod na menšie CSS pre email a PDF](redactor/apps/form/README.md#css-štýly-pre-email-a-pdf) (#374).
 - Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#364).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.multistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
@@ -186,6 +190,13 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Viackrokové formuláre - nová karta [Väzby](redactor/apps/multistep-form/README.md#väzby) v editore poľa zobrazuje samostatné zoznamy polí, ktoré jeho hodnotu používajú v podmienkach zobrazenia a povinnosti (#377).
 
 ![](redactor/apps/multistep-form/tab-relations.png)
+
+- Viackrokové formuláre - pri nastavovaní podmienok zobrazenia a povinnosti sa porovnávaná hodnota pre výberové polia vyberá z ich možností vrátane číselníkov a spoločných rádiových skupín. Nie je potrebné zadávať hodnoty ručne (#391).
+- Viackrokové formuláre - výber **Krok formuláru** v editore položky zobrazuje aktuálne číslo kroku aj po zmene poradia krokov potiahnutím myšou (#392).
+- Regulárne výrazy - zoznam zobrazuje preložený názov podľa jazyka administrácie a pôvodný názov označuje ako **Prekladový kľúč**. Výber **Povolená hodnota** vo viackrokových formulároch používa formát **kód - názov** (#387).
+- Viackrokové formuláre - opravený preklep v prekladových kľúčoch z `components.mustistep.*` na `components.multistep.*` (#378).
+- Viackrokové formuláre - pomocné zápisy štatistiky na [verejnom uzle clustra s obmedzenými databázovými právami](install/config/ro-user.md#viackrokové-formuláre) už neblokujú zobrazenie, validáciu ani odoslanie formulára. Pri chybe sa návštevníkovi zobrazí názov aplikácie namiesto názvu Java triedy (#384).
+- Odložené odosielanie emailov - zväčšený stĺpec `emails.message` na `LONGTEXT` v MySQL/MariaDB, aby uloženie veľkého HTML emailu nezlyhalo. Doplnený [návod na menšie CSS pre email a PDF](redactor/apps/form/README.md#css-štýly-pre-email-a-pdf) (#374).
 
 ### Sémantické vyhľadávanie
 
@@ -325,6 +336,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ### Oprava chýb
 
 - AI asistenti - uloženie vygenerovaného obrázka odstráni iba dočasné súbory z rovnakého generovania. Obrázky z iných požiadaviek a od ostatných používateľov zostanú zachované (#58850).
+- Webové stránky - opravený [export do ZIP archívu](redactor/webpages/import-export.md) pre obrázky vložené cez `/thumb/`, ktoré sa pôvodne do exportu nepridali (#389).
 - Webové stránky - dialóg na vloženie obrázka obmedzuje výber súborov na obrázky, videá a zvukové súbory aj v priečinku Súbory. Nepodporované typy rozpoznané prehliadačom odmietne ešte pred odoslaním. Server navyše overí príponu pred uložením (#375).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránky (#372).
 - Spring aplikácie - [chyba pri vytvorení alebo vykonaní aplikácie](custom-apps/spring-mvc/README.md#chyba-pri-vykonávaní-aplikácie) nahradí iba jej značku `INCLUDE`. Okolitý text, JSP aplikácie aj ostatné Spring aplikácie zostanú na stránke zachované a hláška uvedie názov aplikácie, ktorá zlyhala (#384).
@@ -342,6 +354,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Editor stránok - pri zlyhaní získania obsahu alebo hodnote `undefined` sa zobrazí chyba a uloženie sa zastaví, aby sa neprepísal pôvodný obsah. Atribúty `contenteditable` sa odstraňujú pri načítaní aj ukladaní HTML vrátane kódu vloženého v HTML režime (#369).
 - Page Builder - pri zlyhaní načítania obsahu možno prepnúť do HTML režimu obnovením posledného dostupného HTML. Obnova vyžaduje potvrdenie, pretože nemusí obsahovať najnovšie zmeny (#369).
 - Page Builder - opravené zamrznutie editora pri otvorení HTML so zvyšným atribútom `contenteditable="true"`. CKEditor sa na rovnakom bloku už neinicializuje dvakrát.
+- Page Builder - obnovenie fokusu po vložení obsahu alebo štrukturálneho bloku, presune, duplikovaní a zatvorení vlastností či knižnice neposúva stránku k začiatku editora. Oprava funguje aj v šablónach s plynulým posúvaním (`scroll-behavior: smooth`) (#389).
 - Page Builder - nepodporované elementy označené `pb-editable`, napríklad položky zoznamu `li`, už nezablokujú prepnutie z HTML editora. Ich obsah zostáva zachovaný a možno ho upravovať cez nadradenú editovateľnú oblasť (#382).
 - Page Builder - vnorené značky `pb-editable` a `pb-content` sa odstránia pred spustením editora. V jednom bloku nevznikajú vnorené CKEditory a pri vytváraní odsekov či zoznamov sa nekopíruje nadbytočné označenie. Text a ostatné CSS triedy zostávajú zachované (#382).
 - Email - opravené ovplyvňovanie SMTP nastavení medzi aplikáciami na spoločnom aplikačnom serveri. Každé odoslanie používa vlastné properties a mailovú session, takže sa neprenáša SSL port, autentifikácia ani nastavenia Amazon SES z inej aplikácie (#367).
@@ -358,6 +371,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Page Builder - opravené zobrazenie nástrojovej lišty ak stránka neobsahuje žiadnu sekciu (#343).
 - Page Builder - pridaná možnosť nastaviť [šírku okna štruktúra](frontend/page-builder/settings.md) (#343)
 - Administrácia - opravené zobrazenie ikony zaškrtnutia pri vybranej položke v ponuke automatického dopĺňania (#osk800).
+- Zrkadlenie štruktúry - [pracovná verzia](redactor/apps/docmirroring/README.md#úprava-existujúcej-web-stránky) už neprepisuje zverejnené preklady a [hromadné mazanie](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov) nespracuje tú istú položku opakovane. Presun nevytvára duplicitné jazykové verzie. Pri presune priečinka sa aktualizujú generované a zdedené URL. Dočasné nastavenia klonovania a stav administrácie zrkadlenia sa nezdieľajú medzi súbežnými požiadavkami (#370).
 
 ### Výkon
 
@@ -368,6 +382,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - AI asistenti - vyhľadávanie v štatistike a grafy používania zobrazujú iba záznamy a asistentov aktuálnej domény (#58850).
 - AI asistenti - sťahovanie a uloženie dočasných obrázkov prijíma iba názov existujúceho súboru v priečinku AI. Absolútne cesty, prechody do iných priečinkov a symbolické odkazy sú odmietnuté (#58850).
+- Webové stránky - mazanie overuje práva ku všetkým zrkadleným stránkam a pri priečinkoch vyžaduje aj `deleteDir`. [Zrušenie zrkadlenia](redactor/apps/clone-structure/README.md#zrušenie-zrkadlenia) kontroluje oprávnenia pre celý podstrom vrátane nakonfigurovaných obmedzení domény a používateľských skupín (#370).
 - Dependency Check - aktualizované knižnice `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizácia Jackson sprísňuje kontrolu typov pri polymorfnej deserializácii; vlastné integrácie používajúce názvy Java tried v JSON je potrebné overiť (#385).
 - Dependency Check - výnimky pre `CVE-2026-116802`, `CVE-2026-116803` a `CVE-2026-116804` v `DOMPurify 3.4.16` boli overené a obmedzené na presný hash dodávaného `Swagger UI 5.34.0` bundle. Integrácia ošetruje HTML reťazce bez XHTML režimu, `IN_PLACE`, `SAFE_FOR_TEMPLATES` a vracania DOM; jej hook neodstraňuje uzly. Výnimky potvrdzujú nepoužitie dotknutých režimov, nie opravu knižnice DOMPurify (#385).
 - Dependency Check - aktualizované knižnice `Hibernate Validator 9.0.0.Final → 9.0.2.Final` s opravou `CVE-2026-93879`, tranzitívna závislosť `ASM 9.7.1 → 9.11.1` s opravami spracovania Java bytecode a závislosť zostavenia administrácie `ip-address 10.7.1 → 10.7.4` s opravou `CVE-2026-111997`. Aktualizácie nevyžadujú zmenu verzie Java ani úpravu aplikačných API (#385).

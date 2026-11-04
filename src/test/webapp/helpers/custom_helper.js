@@ -10,6 +10,20 @@ class CustomWebjetHelper extends Helper {
   }
 
   /**
+   * Returns a cookie matching the current page URL, including HttpOnly session cookies.
+   * @param {string} name - cookie name
+   * @returns {Promise<object>} matching cookie
+   * @throws {Error} when the current page has no matching cookie
+   */
+  async grabCookieForCurrentUrl(name) {
+    const { browserContext, page } = this.helpers['Playwright'];
+    const cookies = await browserContext.cookies(page.url());
+    const cookie = cookies.find(cookie => cookie.name === name);
+    if (!cookie) throw new Error(`Cookie "${name}" is missing for the current page URL`);
+    return cookie;
+  }
+
+  /**
    * Metoda vrati stlpce vo formate .json
    * @param {string} dataTable objekt pre datatabulku
    */

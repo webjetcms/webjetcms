@@ -19,6 +19,40 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+Scenario('Expand trash subfolders after opening a group URL', async ({ I, DT }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
+    DT.waitForLoader();
+    I.clickCss("#pills-trash-tab");
+    I.jstreeWaitForLoader();
+
+    // Use existing trash folders and remember a child loaded through the working tab switch.
+    const folders = "#SomStromcek > ul > li.jstree-closed";
+    I.waitForElement(folders, 10);
+    const groupIds = await I.grabAttributeFromAll(folders, "id");
+    I.assertAbove(groupIds.length, 1, "Trash must contain two expandable folders");
+    const folder = `#SomStromcek li[id='${groupIds[0]}']`;
+    I.clickCss(`${folder} > i.jstree-ocl`);
+    I.waitForVisible(`${folder} > ul > li`, 10);
+    const childIds = await I.grabAttributeFromAll(`${folder} > ul > li`, "id");
+    const child = `${folder} li[id='${childIds[0]}']`;
+
+    // A different selected folder prevents the server from preloading the tested children.
+    I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${groupIds[1]}#pills-trash`);
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+    I.seeElement("#pills-trash-tab.active");
+    I.clickCss(`${folder} > i.jstree-ocl`);
+    I.waitForVisible(child, 10);
+
+    I.clickCss("#pills-folders-tab");
+    I.jstreeWaitForLoader();
+    I.dontSeeElement(folder);
+    I.clickCss("#pills-trash-tab");
+    I.jstreeWaitForLoader();
+    I.clickCss(`${folder} > i.jstree-ocl`);
+    I.waitForVisible(child, 10);
+});
+
 Scenario('Otvorenie web stranok zadanim docid do pola', ({ I, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
 
