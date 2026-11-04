@@ -224,6 +224,9 @@ Scenario('Recovery of mirrored doc logic', ({ I, DT, DTE }) => {
     I.see(skRecoverPage, "#datatableInit_wrapper");
     I.clickCss("#datatableInit_wrapper td.dt-select-td");
     I.click(DT.btn.delete_button);
+    DTE.waitForEditor();
+    // A failed mirror preview must remain a failure instead of repeatedly clicking a disabled button.
+    I.waitForEnabled('#datatableInit_modal .DTE_Form_Buttons button.btn-primary', 35);
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();
 

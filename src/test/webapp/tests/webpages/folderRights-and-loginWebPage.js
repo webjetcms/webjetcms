@@ -53,6 +53,8 @@ Scenario('Prava na adresar', async ({ I, DTE, DT }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_3').find('.form-check-label'));
      DTE.save();
      I.waitForText(folder_name, 20);
+     // The folder name stays visible while the delayed tree refresh still shows the old permissions.
+     I.waitForInvisible(locate('#SomStromcek .jstree-anchor').withDescendant('.ti-lock-filled').withText(folder_name), 20);
      I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(folder_name));
      I.dontSeeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-text-icon.ti.ti-lock-filled').withText(folder_name));
      I.wait(1);
