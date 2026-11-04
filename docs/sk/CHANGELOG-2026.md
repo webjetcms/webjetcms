@@ -401,6 +401,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- Publikačné balíky - pridaný vypnutý POC základ úložiska, kontextu, stabilných ID a porovnávania zmien. Podporený testovací profil a hranice ďalších etáp sú v [technických výsledkoch P02](../research/publish-packages/P02-vysledky.md).
+
 - Datatabuľky - tabuľky nastavení majú spoločný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Existujúca tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje so zachovaním údajov; vlastné SQL dotazy treba upraviť na `dt_customfields` (#58830).
 - Datatabuľky - triedy pre [systémové nastavenia](developer/datatables/README.md#systémové-nastavenia) voliteľných polí, polí a kariet boli presunuté pod `sk.iway.iwcm.system.datatable.settings` do podbalíkov `customfields`, `fields` a `tabs`. Vlastný kód a šablóny používajúce tieto triedy vyžadujú aktualizáciu importov a úplných názvov tried (#58830).
 - Datatabuľky - pridaný typ poľa [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pre výber jednej možnosti zo skupiny tlačidiel. Používa štýly administrácie a podporuje aj voľbu **Bez zmeny** pri trojstavových nastaveniach (#58830).

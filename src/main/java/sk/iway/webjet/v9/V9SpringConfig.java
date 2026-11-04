@@ -34,6 +34,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 @EnableWebMvc
 @ComponentScan({
     "sk.iway.iwcm.admin",
+    "sk.iway.iwcm.branch",
     "sk.iway.iwcm.calendar",
     "sk.iway.iwcm.doc",
     "sk.iway.iwcm.dmail.rest",

@@ -1,5 +1,7 @@
 # Dátový model pracovnej vetvy
 
+**Realizácia P02 (4. november 2026):** platné API, migrácia a hranice sú v [P02-vysledky.md](P02-vysledky.md), konkrétne polia v [matici stĺpcov](P02-matica-stlpcov.md). Nasledujúci návrh zahŕňa aj dosiaľ neimplementované etapy; stav kódu určuje [STAV.md](STAV.md).
+
 Stav: technický návrh na posúdenie. Vychádza z uzatvorených Q1–Q19 v [registri rozhodnutí](01-rozhodnutia.md). Názvy nových tabuliek a tried sú navrhované, nejde o existujúci kód.
 
 ## Odporúčanie

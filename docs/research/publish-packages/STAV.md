@@ -2,7 +2,7 @@
 
 ## Návrh
 
-- Dátum vzniku: 1. november 2026. Posledné doplnenie: 3. november 2026.
+- Dátum vzniku: 1. november 2026. Posledné doplnenie: 4. november 2026.
 - Produktové rozhodnutia Q1–Q19: uzatvorené; Q10/Q13 používateľ delegoval podľa jednoduchosti implementácie. Pri poslednej kontrole potvrdil náhľad zvoleného výsledku, vytvorenie súborového adresára bez rekurzívnych operácií, galériu iba na čítanie a náhľad na admin hostiteľovi.
 - Technický návrh: po opakovanej kontrole a realizácii technického kroku **P01**, bez ďalšej otvorenej produktovej otázky. [Výsledok kontroly](09-kontrola-pripravenosti.md) eviduje opravené medzery a predpoklady, ktoré musí dokázať reálna implementácia. Pripravenosť dokumentácie neznamená vykonané DB/browser testy ani automatické povolenie P02–P08.
 - Doplnenie N1: povinné `NewsApp`/`NewsActionBean`, podrobný návrh [03a](03a-novinky.md), perex skupiny existujúcich definícií, čas náhľadu a porovnanie s výsledkom po merge. Aktualizované etapy a test T16/N01–N12. Vykonaná nezávislá kontrola voči zdrojom; nepredstavuje runtime overenie.
@@ -12,7 +12,7 @@
 - Doplnenie N4: povinný `menu_ul_li.jsp`/`MenuULLI` podľa [03b](03b-menu.md), vrátane editoru parametrov `MenuApp`, rekurzie, aktívnej cesty, perex/HTML, premenných a cache. T03 je rozpracované na M01–M11 v P01/P03/P04/P06/P08. Overené zdrojové integračné body a existujúce testy; bez runtime skúšok.
 - Doplnenie N5: záväzná [priorita jednoduchého čitateľného POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc). Konkrétne služby bez povinného handler/DI registra, bez hypotetických frameworkov a zriedkavých prevádzkových scenárov. Prvé overenie na jednom reálnom DB profile/inštancii; ďalšie profily až pred deklarovaním podpory. Ručný POC míľnik po P06, dohodnuté plánovanie zostáva P07. Obnova koša sa runtime overí v P06. Izolácia, ID, oprávnenia a náhľad sa nemenia.
 - Návod na spustenie: [orchestrácia](ORCHESTRACIA.md) doplnená o modely/roly, etapový postup a pokračovanie po prerušení. Odporúčanie GPT-6.1 Sol / High nemení aktuálne nastavenie klienta; skutočné modely zaznamená implementačný agent. Hlavný agent môže použiť najviac dvoch pomocníkov naraz, bez vlastného agentového frameworku. Žiadna etapa sa týmto doplnením nespustila.
-- Implementácia: používateľ 3. novembra 2026 zadal **iba P01**. P02–P08 nie sú povolené.
+- Implementácia: používateľ 3. novembra 2026 zadal iba P01 a 4. novembra **iba P02**. Obe etapy sú uzavreté v nižšie uvedenom rozsahu. P03–P08 nie sú povolené.
 - P01: **DONE ako technický experiment na jednorazovom InnoDB profile**. Dokázané ID/reštart, SQL, core izolácia a minimálny reálny JSP/thumbnail gateway; zvlášť LIVE browser regresia pracovného webu. Nejde o hotovú editáciu/náhľad z P02/P03. Pracovná DB s MyISAM zatiaľ nie je vhodná na rezervácie.
 - Pred P01 prešlo dokumentačné overenie pôvodných 18 Markdown dokumentov. Aktuálne výsledky, skúšobné Java testy a medzery overenia sú evidované nižšie a v [P01-vysledky.md](P01-vysledky.md). Zmeny zostávajú bez commitov.
 
@@ -21,7 +21,7 @@
 | Krok | Stav | Výsledok |
 | --- | --- | --- |
 | P01 | DONE | ID/SQL/core izolácia a minimálny JSP/thumbnail gateway vrátane reálneho admin-host prekliku prešli na uvedenom InnoDB profile. |
-| P02 | NOT_STARTED | — |
+| P02 | DONE | Päť tabuliek, stabilné ID vrátane médií/reštartu, explicitné mapovanie/B-L-W, request kontext a create/list API; flag-off administrácia overená. |
 | P03 | NOT_STARTED | — |
 | P04 | NOT_STARTED | — |
 | P05 | NOT_STARTED | — |
@@ -32,6 +32,22 @@
 Prípustné evidenčné stavy krokov: `NOT_STARTED`, `IN_PROGRESS`, `PARTIAL`, `DONE`, `BLOCKED`. Ide iba o stav práce agentov, nie o databázové stavy publikačnej vetvy. Pri BLOCKED sa zapíše konkrétna prekážka a čo ju odstráni.
 
 ## Výsledky krokov
+
+### P02 — DONE (4. november 2026, iba zvolený POC profil)
+
+- **Vetva/východisko:** `feature/58858-publishing-packages`, `439613efa` (používateľov commit P01), vstupný strom čistý. P01 zachovaný. Žiadny agentový commit ani produkčné nasadenie; P03–P08 NOT_STARTED.
+- **Overenie predpokladov:** aktuálny kód potvrdil guard DBPool a globálny flag z P01. Zachovaná DB sa spustila: MariaDB 12.2.2 / Connector/J 3.5.10 / Java 17.0.18, jedna InnoDB inštancia `127.0.0.1:33316/webjet_p01`. P01 core izolácia/cache/JPA/streaming a SQL Noviniek znovu prešli. Žiadny ďalší DB profil sa tým nepovažuje za podporený.
+- **Výsledok:** XML migrácia piatich tabuliek, entity/repositories a Spring/JPA registrácia; konkrétna matica 77/31/23 stĺpcov; kanonické snapshoty ACTIVE/TRASH/ABSENT a hashe; čisté B/L/W; `BranchType`/`BranchChange`; JDBC pracovné operácie a explicitný LIVE INSERT writer. Bez branch_items/handler registra. Prázdny adresár má marker v branch_files, bez produkčného mkdir.
+- **Konečné ID:** dokument/priečinok technický INSERT → generated key → DELETE → WORK INSERT → COMMIT na jednom spojení. Médium cez striktnú cestu spoločného PkeyGenerator; bootstrap nikdy neznižuje čítač, chýbajúci riadok/DB chyba sa propaguje. Nové objekty bez LIVE riadka možno opakovane pracovné uložiť; zlyhanie insertu vracia chybu a iba medzeru v číslovaní.
+- **Kontext/API:** nemenný BranchContext a scope v request/RequestBean, explicitný technický LIVE; GET/POST `/admin/rest/branches`, serverová doména, menuBranches, CSRF, stale-domain409. Filter, prepínač a gateway nie sú zapojené (P03). Package-private BranchStore je kontrakt pre dôveryhodné služby/fixture, nie hotový obsahový editor.
+- **Aktivácia:** branchesEnabled=false, branchSingleWriterConfirmed=false, branchStorageRoot prázdny. Kľúče globálne. Readiness odmietne iný než overený MariaDB 12.2 profil, nesprávne enginy/schémy/generátor/práva/private storage; úplná kontrola pri vytvorení balíka overí aj priamy JPA datasource. InitServlet na vetvách nezávisí: chyba pripravenosti odmietne iba branch operáciu, neblokuje štart servera. Žiadna automatická konverzia ani produkčné zapnutie. Plný zoznam tabuliek a predpokladov je vo výsledkoch.
+- **Overenia:** záverečný Gradle **56/56 bez chýb/preskočení**; po review odstránená startup závislosť a presunutý úplný preflight do vytvorenia balíka, cielený opakovaný DB/REST beh **9/9**; dve reštartové fázy **1/1 + 1/1**; skutočný JDBC aj JPA save/flush/clear/reload, migrácia na existujúcej a čistej schéme, negatívny engine/grant/storage/generátor, obal TRASH, izolácia dvoch vetiev, veľké HTML a kategórie média. Explicitné inserty po reštarte zachovali nižšie/vyššie ID a odmietli duplicitu; nie je to merge P06.
+- **Flag-off pracovné prostredie:** lokálny server `iwcm.interway.sk:8086`, existujúci poolman-local a DB 3306. **2 úspešné Codecept scenáre**: login/menu/assety/thumbnail a strom/zoznam/filter/otvorenie editora. Prídavná migrácia sa aplikovala pri štarte aj tu; pôvodné MyISAM enginy sa nemenili, funkcia ostala vypnutá. Konkrétny host používateľ výslovne povolil po zamietnutí automatickou kontrolou.
+- **Dôkazy a odovzdanie:** [P02-vysledky.md](P02-vysledky.md) obsahuje API, konfiguráciu, príkazy, číselný reštartový dôkaz, hranice a povinnosti P03. [Matica stĺpcov](P02-matica-stlpcov.md) je spoločný základ detail/SQL/publisher projekcie. Reporty `build/test-results/p02/{final,before,after}/`, logy `/tmp/webjet-p02-*.log`; Markdown odkazy a git diff --check prešli.
+- **Modely/delegovanie:** hlavný agent a dvaja pomocníci s rovnakým zdedeným modelom/reasoning; presný identifikátor/nastavenie neoverené. Výsledky skontrolované a integrované, nezávislá kontrola opravila chyby hash roundtripu/WORK-only editácie a preverila rollback/ID hranice. Zapisovacie Java behy sekvenčne.
+- **Hranice:** žiadny nový produkčný render/preview, redakčný SAVE/upload, merge ani scheduler. Aktuálny LIVE kôš/predkovia a odvodené stromové údaje sa zapoja v P03/P04; runtime obnova koša v P06. Súborové fixture zatiaľ ukladajú iba metadáta. Iné DB/topológie, IwcmFsDB a rôzne JVM časové zóny neoverené. Pracovná MyISAM DB nie je pripravená na aktiváciu.
+- **Upratanie:** zastavený iba agentom spustený WebJET 8086 a jednorazová DB 33316; pracovná DB 3306 ostala bežať. P02 balíky aj reštartové fixture majú 0 riadkov, media generátor zachovaný (bez zníženia), enginy fixture obnovené na InnoDB. Dáta jednorazovej DB a prázdne private test úložisko ostali v /tmp, dočasný ignorovaný poolman-local-p01.xml odstránený.
+- **Zostávajúci odhad:** P03–P06 približne 32–56 vývojárskych dní, P07–P08 14–22; QA osobitne podľa P01. Prvý ručný použiteľný POC až P06. Toto zadanie sa uzatvára na P02.
 
 ### P01 — DONE (technické overenie na uvedenom profile)
 

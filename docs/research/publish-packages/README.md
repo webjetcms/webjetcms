@@ -1,6 +1,6 @@
 # Pracovné vetvy webu a publikačné balíky
 
-Stav: **návrh po kontrole pripravený na technické overenie P01, bez implementácie**. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1–N5 sú v [rozhodnutiach](01-rozhodnutia.md).
+Stav: **P01 a P02 dokončené na zvolenom InnoDB POC profile; funkcia zostáva vypnutá**. Aktuálne [výsledky P02](P02-vysledky.md), [matica stĺpcov](P02-matica-stlpcov.md) a [stav realizácie](STAV.md) určujú hranicu hotového kódu; nasledujúce kapitoly naďalej opisujú aj budúce P03–P08. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1–N5 sú v [rozhodnutiach](01-rozhodnutia.md).
 
 **Priorita tejto fázy: jednoduchý a čitateľný POC.** Overujeme použiteľnosť pre niekoľko spolupracujúcich redaktorov. Použiť konkrétne služby a minimum vrstiev; nepripravovať frameworky pre hypotetické moduly, zriedkavé súbehy či veľkú prevádzku. Záväzné [pokyny pre agentov](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc) zachovávajú dohodnuté funkcie a určujú aj rozsah prvého overenia.
 
@@ -10,7 +10,7 @@ Cieľom je pripraviť viac stránok, zmeny stromu, stránkové médiá a redakč
 
 **Ako začnem implementáciu?** [Orchestrácia](ORCHESTRACIA.md#ako-prácu-spustiť) obsahuje kopírovateľný prompt pre P01, pokračovanie P02–P08 aj obnovu rozpracovaného kroku. [Modely a roly](ORCHESTRACIA.md#modely-a-spôsob-riadenia) odporúčajú jeden model GPT-6.1 Sol / High pre hlavného agenta aj pomocníkov; voliteľné alternatívy sú uvedené osobitne. Ide o pokyny agentovi, nie samostatný program, ktorý treba inštalovať.
 
-Výsledok kontroly všetkých podkladov, opravené medzery a zostávajúce technické overenia sú v [09 — Kontrola pripravenosti](09-kontrola-pripravenosti.md). Q16–Q19 sú uzatvorené; žiadna ďalšia produktová otázka nezostáva otvorená. P01 musí ešte overiť kritické predpoklady v reálnom prostredí.
+Výsledok kontroly všetkých podkladov, opravené medzery a zostávajúce technické overenia sú v [09 — Kontrola pripravenosti](09-kontrola-pripravenosti.md). Q16–Q19 sú uzatvorené; žiadna ďalšia produktová otázka nezostáva otvorená. Reálne overenia P01/P02 a zostávajúce predpoklady nasledujúcich etáp sú evidované v STAV.md.
 
 ## Dohodnutý základ
 

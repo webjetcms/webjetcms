@@ -1,5 +1,7 @@
 # 03. Kontext vetvy, Java rozhrania a náhľad webu
 
+**Realizácia P02 (4. november 2026):** platné API, migrácia a hranice sú v [P02-vysledky.md](P02-vysledky.md), konkrétne polia v [matici stĺpcov](P02-matica-stlpcov.md). Nasledujúci návrh zahŕňa aj dosiaľ neimplementované etapy; stav kódu určuje [STAV.md](STAV.md).
+
 Stav: **technický návrh na spoločné posúdenie**. Tento dokument určuje navrhované správanie a integračné body; neobsahuje vykonanú implementáciu. Overený súčasný stav je v [analýze čítania](analyza-citanie-a-nahlad.md), súbory a médiá v [samostatnej analýze](analyza-media-a-subory.md).
 
 Vychádza z potvrdeného rozsahu: živý overlay jednej domény, postupné zlúčenie, obsahové súbory, stabilné ID aj nových objektov, štandardné menu/novinky/navigácia/médiá, náhľad pre prihlásených administrátorov a prispôsobenie vlastných komponentov cez adaptér. Úpravy súvisiacich tabuliek mimo dohodnutého rozsahu nie sú súčasťou vetvy. Publikovať celý balík smie používateľ s potrebnými právami ku všetkým položkám.
