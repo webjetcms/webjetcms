@@ -76,7 +76,7 @@ public class BlogService {
 		//Plus our groupId logic
 		List<Integer> bloggersGroupIds = getBloggerDataList(user, Tools.getIntValue(params.get("groupId"), -1));
 		if(bloggersGroupIds != null)
-			predicates.add(root.get("groupId").in(bloggersGroupIds));
+			predicates.add(JpaTools.in(root.get("groupId"), bloggersGroupIds, builder));
 	}
 
 	public static List<LabelValueInteger> getActualBloggerGroups(Identity currentUser) {

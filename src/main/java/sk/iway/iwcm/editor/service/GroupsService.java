@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
@@ -99,7 +98,7 @@ public class GroupsService extends NotifyService {
 		DocHistoryRepository docHistoryRepository = Tools.getSpringBean("docHistoryRepository", DocHistoryRepository.class);
 
 		//List of doc id's that available should be updated (depend on history)
-		List<Integer> docIdsToChange = (new SimpleQuery()).forListInteger("SELECT doc_id FROM documents WHERE group_id IN (" + groups.toString() + ")");
+		List<Integer> docIdsToChange = (new SimpleQuery()).forListInteger("SELECT doc_id FROM documents WHERE " + DB.getInCondition("group_id", groups.toString()));
 
 		//History records
 		List<DocHistory> historyRecords = docHistoryRepository.findByDocIdInActual(docIdsToChange);
@@ -132,8 +131,8 @@ public class GroupsService extends NotifyService {
 		}
 
 		//Updatw doc's available status
-		if (availableTrue.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(true)+", sync_status=1 WHERE doc_id IN (" + StringUtils.join(availableTrue, ",") + ")");
-		if (availableFalse.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(false)+", sync_status=1 WHERE doc_id IN (" + StringUtils.join(availableFalse, ",") + ")");
+		if (availableTrue.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(true)+", sync_status=1 WHERE " + DB.getInCondition("doc_id", availableTrue));
+		if (availableFalse.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(false)+", sync_status=1 WHERE " + DB.getInCondition("doc_id", availableFalse));
 
 		//aktualizuj FT stplce
 		DocDB.updateFileNameField(group.getGroupId());

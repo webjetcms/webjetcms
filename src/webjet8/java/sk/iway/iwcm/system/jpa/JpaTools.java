@@ -4,10 +4,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 
 import org.eclipse.persistence.expressions.Expression;
@@ -27,6 +29,7 @@ import org.springframework.data.jpa.repository.JpaContext;
 import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
@@ -52,6 +55,42 @@ public class JpaTools
 {
 	@Autowired
     private JpaContext jpaContext;
+
+	/**
+	 * Builds a Criteria IN predicate with the same chunk limit as DB.getInCondition.
+	 * Null/empty collections produce false; null items retain SQL NULL semantics.
+	 * Callers that omit an empty filter must keep that guard before calling this method.
+	 */
+	public static <T> Predicate in(javax.persistence.criteria.Expression<T> field, Collection<? extends T> values, CriteriaBuilder builder)
+	{
+		return membership(field, values, builder, false);
+	}
+
+	/** Builds a chunked exclusion; null/empty collections produce true. */
+	public static <T> Predicate notIn(javax.persistence.criteria.Expression<T> field, Collection<? extends T> values, CriteriaBuilder builder)
+	{
+		return membership(field, values, builder, true);
+	}
+
+	private static <T> Predicate membership(javax.persistence.criteria.Expression<T> field, Collection<? extends T> values, CriteriaBuilder builder, boolean negated)
+	{
+		if (values == null || values.isEmpty()) return negated ? builder.conjunction() : builder.disjunction();
+		int maxItems = DB.getInClauseMaxItems();
+		List<Predicate> predicates = new ArrayList<>();
+		List<T> chunk = new ArrayList<>();
+		for (T value : values)
+		{
+			chunk.add(value);
+			if (chunk.size() == maxItems)
+			{
+				predicates.add(field.in(chunk));
+				chunk = new ArrayList<>();
+			}
+		}
+		if (chunk.isEmpty() == false) predicates.add(field.in(chunk));
+		Predicate predicate = predicates.size() == 1 ? predicates.get(0) : builder.or(predicates.toArray(new Predicate[0]));
+		return negated ? builder.not(predicate) : predicate;
+	}
 
 	/**
 	 * Vrati EntityManager pre zadany nazov DB spojenia (v povodnom JPA to je persistenceUnit)
@@ -580,21 +619,25 @@ public class JpaTools
 			//remove predicates with name groupId
 			List<Predicate> predicatesToRemove = new ArrayList<>();
 			for (Predicate p : predicates) {
-				if (p instanceof CompoundExpressionImpl) {
-					CompoundExpressionImpl predicate = (CompoundExpressionImpl) p;
-					if (predicate.getChildExpressions().size()>0 && predicate.getChildExpressions().get(0) instanceof PathImpl) {
-						@SuppressWarnings("rawtypes")
-						PathImpl path = (PathImpl) predicate.getChildExpressions().get(0);
-						if (path.getCurrentNode().getName().equals(name)) {
-							predicatesToRemove.add(predicate);
-						}
-					}
-				}
+				if (isPredicateForField(p, name)) predicatesToRemove.add(p);
 			}
 			predicates.removeAll(predicatesToRemove);
 		} catch (Exception e) {
 			Logger.error(e);
 		}
+	}
+
+	/** Recognizes positive field predicates and their OR chunks, preserving exclusions and mixed filters. */
+	private static boolean isPredicateForField(javax.persistence.criteria.Expression<?> expression, String name)
+	{
+		if (expression instanceof CompoundExpressionImpl == false) return false;
+		List<javax.persistence.criteria.Expression<?>> children = ((CompoundExpressionImpl) expression).getChildExpressions();
+		if (children.isEmpty()) return false;
+		if (children.get(0) instanceof PathImpl)
+			return name.equals(((PathImpl<?>) children.get(0)).getCurrentNode().getName());
+		if (expression instanceof Predicate predicate && predicate.isNegated() == false && predicate.getOperator() == Predicate.BooleanOperator.OR)
+			return children.stream().allMatch(child -> isPredicateForField(child, name));
+		return false;
 	}
 
 	/**

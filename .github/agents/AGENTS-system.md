@@ -33,6 +33,11 @@ DataTable-specific material moved to `AGENTS-datatable.md`.
 - Domain-aware repositories implement `DomainIdRepository`.
 - Controllers gate domain predicates with `(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir"))`.
 
+### Criteria Membership Lists
+
+- Use `JpaTools.in(field, values, builder)` / `notIn` for unbounded Criteria collections; these share `DB.getInClauseMaxItems()` with SQL helpers. Keep caller guards when empty input means omitting a filter.
+- Bound repository collection parameters follow a different EclipseLink path; see the [SQL membership audit](../../docs/en/developer/backend/sql-in-condition-audit.md#orm-findings-criteria-literals-differ-from-bound-collection-parameters) before changing those queries.
+
 ### Validation
 
 - Standard Validator injected; merge constraint violations manually as needed via `BeanPropertyBindingResult`.

@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -114,6 +116,67 @@ class DBInConditionTest
 	void rejectsInvalidColumnSyntax(String columnName)
 	{
 		assertThrows(IllegalArgumentException.class, () -> DB.getInCondition(columnName, "1,2"));
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = {0, 1, 999, 1000, 1001, 2000, 2001})
+	void allNumericInputsUseTheSameSplittingAndExclusion(int count)
+	{
+		int[] array = IntStream.rangeClosed(1, count).toArray();
+		List<Integer> collection = Arrays.stream(array).boxed().toList();
+		String positive = DB.getInCondition("d.history_id", ids(count));
+		String negative = DB.getNotInCondition("d.history_id", ids(count));
+		assertEquals(positive, DB.getInCondition("d.history_id", array));
+		assertEquals(positive, DB.getInCondition("d.history_id", collection));
+		assertEquals(negative, DB.getNotInCondition("d.history_id", array));
+		assertEquals(negative, DB.getNotInCondition("d.history_id", collection));
+		assertEquals(count == 0 ? "(1=1)" : positive.replace(" IN (", " NOT IN (").replace(" OR ", " AND "), negative);
+	}
+
+	@Test
+	void parameterizedListsKeepValuesAndSurroundingParameterOrder()
+	{
+		Constants.setInt("dbInClauseMaxItems", 2);
+		List<Object> values = Arrays.asList("a,b", "O'Reilly", null, 42L, "tail");
+		List<Object> parameters = new ArrayList<>(List.of("before"));
+		assertEquals("(d.title IN (?,?) OR d.title IN (?,?) OR d.title IN (?))",
+			DB.getInCondition("d.title", values, parameters));
+		parameters.add("after");
+		assertEquals(Arrays.asList("before", "a,b", "O'Reilly", null, 42L, "tail", "after"), parameters);
+		parameters.clear();
+		assertEquals("(d.title NOT IN (?,?) AND d.title NOT IN (?,?) AND d.title NOT IN (?))",
+			DB.getNotInCondition("d.title", values, parameters));
+		assertEquals(values, parameters);
+	}
+
+	@Test
+	void emptyAndNullCollectionsHaveExplicitSetSemantics()
+	{
+		assertEquals("(1=0)", DB.getInCondition("id", (int[]) null));
+		assertEquals("(1=1)", DB.getNotInCondition("id", (int[]) null));
+		assertEquals("(1=0)", DB.getInCondition("id", (List<Integer>) null));
+		assertEquals("(1=1)", DB.getNotInCondition("id", (List<Integer>) null));
+		List<Object> parameters = new ArrayList<>(List.of(123));
+		assertEquals("(1=0)", DB.getInCondition("id", List.of(), parameters));
+		assertEquals("(1=1)", DB.getNotInCondition("id", null, parameters));
+		assertEquals(List.of(123), parameters);
+	}
+
+	@Test
+	void numericCollectionsDoNotTruncateOrOverflow()
+	{
+		assertThrows(IllegalArgumentException.class, () -> DB.getInCondition("id", List.of(new BigDecimal("1.5"))));
+		assertThrows(IllegalArgumentException.class, () -> DB.getInCondition("id", List.of(new BigInteger("9223372036854775808"))));
+		assertThrows(IllegalArgumentException.class, () -> DB.getInCondition("id", Arrays.asList(1, null)));
+		assertEquals("(id IN (9223372036854775807))", DB.getInCondition("id", List.of(Long.MAX_VALUE)));
+	}
+
+	@Test
+	void invalidColumnDoesNotAppendParameters()
+	{
+		List<Object> parameters = new ArrayList<>(List.of(123));
+		assertThrows(IllegalArgumentException.class, () -> DB.getInCondition("id) OR 1=1--", List.of(1), parameters));
+		assertEquals(List.of(123), parameters);
 	}
 
 	private static String ids(int count)

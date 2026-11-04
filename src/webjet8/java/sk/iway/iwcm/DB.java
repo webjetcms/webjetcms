@@ -11,9 +11,12 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
@@ -1232,25 +1235,109 @@ public class DB
 	 */
 	public static String getInCondition(String columnName, String values)
 	{
-		if (isValidColumnName(columnName, true) == false)
-			throw new IllegalArgumentException("Invalid SQL column name");
-		if (values == null || values.isBlank()) return "(1=0)";
+		return buildInCondition(columnName, splitInIds(values), false, null);
+	}
 
+	/**
+	 * Builds an IN condition from integer IDs without serializing the collection to CSV.
+	 * Null/empty collections match no rows; null items, fractional values and values
+	 * outside the signed long range are rejected. Column trust requirements and limits
+	 * are the same as {@link #getInCondition(String, String)}.
+	 */
+	public static String getInCondition(String columnName, Collection<? extends Number> values)
+	{
+		return buildInCondition(columnName, values, false, null);
+	}
+
+	/** Builds an IN condition from primitive IDs; null/empty arrays match no rows. */
+	public static String getInCondition(String columnName, int[] values)
+	{
+		return getInCondition(columnName, values == null ? Collections.emptyList() : Arrays.stream(values).boxed().toList());
+	}
+
+	/**
+	 * Builds a parameterized IN condition and appends the original values to parameters
+	 * in placeholder order. Existing parameters are retained. Null values keep SQL NULL
+	 * semantics; null/empty collections match no rows. The caller binds the parameters.
+	 * Splitting does not reduce the total number of parameters in the statement.
+	 */
+	public static String getInCondition(String columnName, Collection<?> values, List<Object> parameters)
+	{
+		return buildInCondition(columnName, values, false, Objects.requireNonNull(parameters, "parameters"));
+	}
+
+	/**
+	 * Builds a numeric CSV exclusion, joining NOT IN chunks with AND inside parentheses.
+	 * Null/blank input matches all rows. Validation follows {@link #getInCondition(String, String)}.
+	 */
+	public static String getNotInCondition(String columnName, String values)
+	{
+		return buildInCondition(columnName, splitInIds(values), true, null);
+	}
+
+	/** Numeric collection counterpart of {@link #getNotInCondition(String, String)}. */
+	public static String getNotInCondition(String columnName, Collection<? extends Number> values)
+	{
+		return buildInCondition(columnName, values, true, null);
+	}
+
+	/** Primitive ID counterpart of {@link #getNotInCondition(String, String)}. */
+	public static String getNotInCondition(String columnName, int[] values)
+	{
+		return getNotInCondition(columnName, values == null ? Collections.emptyList() : Arrays.stream(values).boxed().toList());
+	}
+
+	/**
+	 * Parameterized exclusion; values and parameter ordering follow
+	 * {@link #getInCondition(String, Collection, List)}. Empty input matches all rows.
+	 */
+	public static String getNotInCondition(String columnName, Collection<?> values, List<Object> parameters)
+	{
+		return buildInCondition(columnName, values, true, Objects.requireNonNull(parameters, "parameters"));
+	}
+
+	/** Returns the current IN-list limit shared by SQL and Criteria builders. */
+	public static int getInClauseMaxItems()
+	{
 		int maxItems = Constants.getInt("dbInClauseMaxItems");
 		if (maxItems <= 0) maxItems = 1000;
 		if (Constants.DB_TYPE == Constants.DB_ORACLE) maxItems = Math.min(maxItems, 1000);
+		return maxItems;
+	}
 
-		String[] ids = values.split(",", -1);
+	private static List<String> splitInIds(String values)
+	{
+		return values == null || values.isBlank() ? Collections.emptyList() : Arrays.asList(values.split(",", -1));
+	}
+
+	private static String buildInCondition(String columnName, Collection<?> values, boolean negated, List<Object> parameters)
+	{
+		if (isValidColumnName(columnName, true) == false)
+			throw new IllegalArgumentException("Invalid SQL column name");
+		if (values == null || values.isEmpty()) return negated ? "(1=1)" : "(1=0)";
+
+		int maxItems = getInClauseMaxItems();
 		StringBuilder condition = new StringBuilder("(");
-		for (int i = 0; i < ids.length; i++)
+		int i = 0;
+		for (Object value : values)
 		{
 			if (i % maxItems == 0)
 			{
-				if (i > 0) condition.append(") OR ");
-				condition.append(columnName).append(" IN (");
+				if (i > 0) condition.append(negated ? ") AND " : ") OR ");
+				condition.append(columnName).append(negated ? " NOT IN (" : " IN (");
 			}
 			else condition.append(',');
-			condition.append(Long.parseLong(ids[i].trim()));
+			if (parameters == null)
+			{
+				if (value == null) throw new IllegalArgumentException("An ID must not be null");
+				condition.append(Long.parseLong(value.toString().trim()));
+			}
+			else
+			{
+				condition.append('?');
+				parameters.add(value);
+			}
+			i++;
 		}
 		return condition.append("))").toString();
 	}

@@ -2734,7 +2734,7 @@ public class GroupsDB extends DB
 	}
 
 	private static void deleteGroupsApprove(String groups) {
-		(new SimpleQuery()).execute("DELETE FROM groups_approve WHERE group_id IN ("+groups+")");
+		(new SimpleQuery()).execute("DELETE FROM groups_approve WHERE " + DB.getInCondition("group_id", groups));
 	}
 
 	/**
@@ -2802,14 +2802,14 @@ public class GroupsDB extends DB
 				if(Tools.isNotEmpty(groups))	//ak nezaratam rodicovsky adresa, moze byt groups prazdne v pripade, ak rodicovsky adresar nemal ziadne podadresare
 				{
 					//vymaz stranky
-					String sql = "DELETE FROM documents WHERE group_id IN ("+groups+")";
+					String sql = "DELETE FROM documents WHERE " + DB.getInCondition("group_id", groups.toString());
 					ps = db_conn.prepareStatement(sql);
 					ps.executeUpdate();
 					ps.close();
 					ps = null;
 
 					//vymaz adresare
-					sql = "DELETE FROM groups WHERE group_id IN ("+groups+")";
+					sql = "DELETE FROM groups WHERE " + DB.getInCondition("group_id", groups.toString());
 					ps = db_conn.prepareStatement(sql);
 					ps.executeUpdate();
 					ps.close();
@@ -2853,7 +2853,7 @@ public class GroupsDB extends DB
 					if(foundSystemDir == false && "System".equalsIgnoreCase(g.getGroupName())) foundSystemDir = true;
 				}
 				// zakaz zobrazovanie stranok
-				sql = "UPDATE documents SET available=?, sync_status=1 WHERE group_id IN ("+groups.toString()+")";
+				sql = "UPDATE documents SET available=?, sync_status=1 WHERE " + DB.getInCondition("group_id", groups.toString());
 				ps = db_conn.prepareStatement(sql);
 				ps.setBoolean(1, false);
 				ps.executeUpdate();
@@ -3550,13 +3550,13 @@ public class GroupsDB extends DB
 
 		Adminlog.add(Adminlog.TYPE_CLIENT_SPECIFIC, messageToAdminlog.toString(), 0, 0);
 		SimpleQuery sq = new SimpleQuery();
-	  	sq.execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")", newDomain);
+		sq.execute("UPDATE groups SET domain_name=? WHERE " + DB.getInCondition("group_id", groupIds), newDomain);
 	  	sq.execute("UPDATE groups SET group_name=?, navbar=? WHERE group_id=?", newDomain, newDomain, group.getGroupId());
 	  	sq.execute("UPDATE url_redirect SET domain_name=? WHERE domain_name=?", newDomain, oldDomain);
 
 	  	//premenovanie liniek
-	  	sq.execute("UPDATE documents SET external_link=REPLACE(external_link, ?, ?) WHERE group_id IN ("+groupIds+")", "http://"+oldDomain, "http://"+newDomain);
-	  	sq.execute("UPDATE documents SET data=REPLACE(data, ?, ?) WHERE group_id IN ("+groupIds+")", "http://"+oldDomain, "http://"+newDomain);
+		sq.execute("UPDATE documents SET external_link=REPLACE(external_link, ?, ?) WHERE " + DB.getInCondition("group_id", groupIds), "http://"+oldDomain, "http://"+newDomain);
+		sq.execute("UPDATE documents SET data=REPLACE(data, ?, ?) WHERE " + DB.getInCondition("group_id", groupIds), "http://"+oldDomain, "http://"+newDomain);
 
 	  	Adminlog.add(Adminlog.TYPE_CLIENT_SPECIFIC, "Changed domain for cloud web, old domain: '"+oldDomain+"', new domain: '"+newDomain+"'", 0, 0);
 
@@ -3897,7 +3897,7 @@ public class GroupsDB extends DB
         Adminlog.add(Adminlog.TYPE_GROUP, "Force language [" + language + "] to subgroups: " + groupIds, parentGroupId, -1);
         try {
 			db_conn = DBPool.getConnection();
-            ps = db_conn.prepareStatement("UPDATE groups SET lng=? WHERE group_id IN (" + groupIds + ")");
+            ps = db_conn.prepareStatement("UPDATE groups SET lng=? WHERE " + DB.getInCondition("group_id", groupIds));
             ps.setString(1, language);
             ps.execute();
         } catch (Exception ex) {
@@ -3932,7 +3932,7 @@ public class GroupsDB extends DB
             Adminlog.add(Adminlog.TYPE_GROUP, "Force Show Menu Setings to subgroups: " + groupMenuIds, parentGroupId, -1);
             try {
 				db_conn = DBPool.getConnection();
-                ps = db_conn.prepareStatement("UPDATE groups SET internal=?, menu_type=?, logged_menu_type=?  WHERE group_id IN (" + groupMenuIds + ")");
+                ps = db_conn.prepareStatement("UPDATE groups SET internal=?, menu_type=?, logged_menu_type=?  WHERE " + DB.getInCondition("group_id", groupMenuIds));
                 ps.setBoolean(1, internal);
                 ps.setInt(2, menuType);
                 ps.setInt(3, loggedMenuType);
@@ -3965,7 +3965,7 @@ public class GroupsDB extends DB
 
         try {
 			db_conn = DBPool.getConnection();
-            ps = db_conn.prepareStatement("UPDATE groups SET password_protected=? WHERE group_id IN (" + groupIds + ")");
+            ps = db_conn.prepareStatement("UPDATE groups SET password_protected=? WHERE " + DB.getInCondition("group_id", groupIds));
             ps.setString(1, passwordProtectedString);
             ps.execute();
         } catch (Exception ex) {
@@ -3999,7 +3999,7 @@ public class GroupsDB extends DB
 
         try {
 			db_conn = DBPool.getConnection();
-            ps = db_conn.prepareStatement("UPDATE groups SET temp_id=? WHERE group_id IN (" + groupIds + ")");
+            ps = db_conn.prepareStatement("UPDATE groups SET temp_id=? WHERE " + DB.getInCondition("group_id", groupIds));
             ps.setInt(1, templateId);
             ps.execute();
         } catch (Exception ex) {
@@ -4028,7 +4028,7 @@ public class GroupsDB extends DB
 
         try {
 			db_conn = DBPool.getConnection();
-            ps = db_conn.prepareStatement("UPDATE documents SET temp_id=? WHERE group_id IN (" + groupIds + ")");
+            ps = db_conn.prepareStatement("UPDATE documents SET temp_id=? WHERE " + DB.getInCondition("group_id", groupIds));
             ps.setInt(1, templateId);
             ps.execute();
         } catch (Exception ex) {

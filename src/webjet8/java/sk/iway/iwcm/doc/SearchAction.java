@@ -610,18 +610,9 @@ public class SearchAction
 
 					//add ids into SQL query as root_group_l1 IN (...)
 					if (rootGroupIds.size() > 0) {
-						sql.append(" AND root_group_l1 IN (");
-						sqlTotalResults += " AND root_group_l1 IN (";
-						for (i = 0; i < rootGroupIds.size(); i++) {
-							if (i > 0) {
-								sql.append(",");
-								sqlTotalResults += ",";
-							}
-							sql.append(rootGroupIds.get(i));
-							sqlTotalResults += rootGroupIds.get(i);
-						}
-						sql.append(") ");
-						sqlTotalResults += ") ";
+						String condition = " AND " + DB.getInCondition("root_group_l1", rootGroupIds) + " ";
+						sql.append(condition);
+						sqlTotalResults += condition;
 					}
 				}
 			}
@@ -647,8 +638,8 @@ public class SearchAction
 			//ak mame nejake duplicity, vynecham z vyhladavania
 			if(Tools.isNotEmpty(docIdsNotIn.toString()))
 			{
-				sql.append(" AND d.doc_id NOT IN ("+docIdsNotIn.substring(0, docIdsNotIn.length()-1)+") ");
-				sqlTotalResults += " AND d.doc_id NOT IN ("+docIdsNotIn.substring(0, docIdsNotIn.length()-1)+") ";
+				sql.append(" AND " + DB.getNotInCondition("d.doc_id", docIdsNotIn.substring(0, docIdsNotIn.length()-1)) + " ");
+				sqlTotalResults += " AND " + DB.getNotInCondition("d.doc_id", docIdsNotIn.substring(0, docIdsNotIn.length()-1)) + " ";
 			}
 
 			String order_var = "ASC";

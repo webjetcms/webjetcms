@@ -302,7 +302,7 @@ public class AdminTools {
                     groupIds.append(String.valueOf(root.getGroupId()));
                 }
                 if (groupIds.length()>0) {
-                    WHERE += " AND d.root_group_l1 IN ("+groupIds.toString()+")";
+                    WHERE += " AND " + DB.getInCondition("d.root_group_l1", groupIds.toString());
                 }
 
                 //vyluc vsetky Kos adresare
@@ -314,7 +314,7 @@ public class AdminTools {
                     groupIdsTrash.append(String.valueOf(group.getGroupId()));
                 }
                 if (groupIdsTrash.length()>0) {
-                    WHERE += " AND d.group_id NOT IN ("+groupIdsTrash.toString()+") AND d.root_group_l2 NOT IN ("+groupIdsTrash.toString()+") ";
+                    WHERE += " AND " + DB.getNotInCondition("d.group_id", groupIdsTrash.toString()) + " AND " + DB.getNotInCondition("d.root_group_l2", groupIdsTrash.toString()) + " ";
                 }
             }
         }

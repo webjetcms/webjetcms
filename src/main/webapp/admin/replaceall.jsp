@@ -87,7 +87,7 @@ public List<DocDetails> replaceTextDocuments(String oldText, String newText, Str
 			String expandedGroups = getGroupIds(rootGroupIds);
 			if (Tools.isNotEmpty(expandedGroups))
 			{
-				sql += " AND group_id IN ("+expandedGroups+")";
+				sql += " AND " + DB.getInCondition("group_id", expandedGroups);
 			}
 		}
 
@@ -246,7 +246,7 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 			String expandedGroups = getGroupIds(rootGroupIds);
 			if (Tools.isNotEmpty(expandedGroups))
 			{
-				sql += " AND group_id IN ("+expandedGroups+")";
+				sql += " AND " + DB.getInCondition("group_id", expandedGroups);
 			}
 		}
 
