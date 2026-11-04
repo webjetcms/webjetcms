@@ -88,7 +88,7 @@ These also cause a documents query to fail, although the IN column belongs to a 
 - `UnusedFilesCleaner.disable` already flushes every 100 indices ([UnusedFilesCleaner.java:101-115](../../../../src/webjet8/java/sk/iway/iwcm/filebrowser/UnusedFilesCleaner.java#L101)): the first batch contains one ID and subsequent batches at most 100. Its `documents` update at `:124` is safe for the 1000-item problem. Avoid flagging it solely from the SQL text.
 - The JSP exclusions in `components/news/news.jsp:119`, `news-json.jsp:107`, `news_only_changed.jsp:105`, `newsGalleryFirst.jsp:108`, `components/forum/mb_list.jsp:103`, and basket product JSPs each exclude one `actualDocId`. They cannot exceed 1000 from this clause.
 - [scratchpad.jsp:359](../../../../src/main/webapp/scratchpad.jsp#L359) and `:367` contain fixed three-ID lists and are not dynamic production builders.
-- `KalendarUdalostiDB.java:118` is `IN (?)`, one expression. Binding a comma-separated string to one placeholder does not create an N-item list; it is not this limit issue. Do not mechanically treat it as a chunkable values list.
+- `KalendarUdalostiDB.java:118` originally used `IN (?)` with a bound CSV string and an undefined alias `p`. The subsequent SQL review repaired this with a correlated `EXISTS` and a chunked list of bound integer IDs, preserving one row per event. Its row limit now uses JDBC `setMaxRows` for database portability.
 - `NewsQuery.java:597` has another dynamic ID list, but its query only reads `doc_atr` and `doc_atr_def`, outside the requested table scope. Track in a future wider audit; it may remain a separate failure after fixing the main news query.
 - `AtrDB.java:93` is a text-group list in an attributes-only query, outside scope. The similar `:510` query is listed above because it reads `documents`.
 - `SearchAction.java:130-137` restricts selected root paths using `file_name LIKE ... OR ...`; it is not an `IN` list. Arbitrary `searchWhereSql`/`where_sql` extension strings cannot be proven safe by this inspection, because their contents are supplied by callers/custom code.
@@ -228,7 +228,7 @@ Use trusted column names; identifier validation does not authorize a column or r
 - History publishing in EditorDB; folder deletion/restoration, domain changes, inherited settings and both mirroring implementations.
 - NewsQuery, DocDB and SearchAction result/count pairs; public helpers and the two audited JSPs; joined perex and attribute filters.
 - All 16 Criteria expressions in WebpagesService, WebApproveRestController, SearchService, BlogService and SpecSearch. Repository queries already split by EclipseLink remain unchanged.
-- `groups_scheduler` required no change. The separate unbound `parent_group_id=?` in EditorService trash repair is recorded in the baseline inventory and remains outside this IN-list fix.
+- `groups_scheduler` required no change. The subsequent SQL review also repaired the previously unbound `parent_group_id=?` in EditorService trash repair by binding the trash folder ID, and parenthesized the folder-name/navbar OR filter in `replaceall.jsp` so the selected subtree applies to both alternatives.
 
 Specific compatibility constraints:
 
@@ -248,6 +248,7 @@ Verification is implemented in the following tests:
 - `DBInConditionTest`: numeric adapters, exclusions, placeholders, ordering, invalid input, empty inputs and configuration limits across the supported engines.
 - `HistoryDBTest`: published/unpublished history with 1001 IDs in the Oracle and shared non-Oracle SQL branches.
 - `NewsQueryInConditionTest`: data/count queries, inclusion/exclusion, surrounding filters and JDBC argument order.
+- `KalendarUdalostiDBTest`: correlated perex membership without duplicate events, chunked integer parameters before date parameters, legacy LIKE bindings, and a portable JDBC row limit.
 - `DocumentTreeInConditionTest`: one representative inherited menu-settings update over a 1001-folder subtree, original bind positions, active cloud domain filtering and an empty authorized set.
 - `JpaToolsInConditionTest`: actual CriteriaQuery translation for 1/999/1000/1001/2000/2001 values, complete negation and grouping with other AND/OR filters, empty-set composition, null items, blog filter replacement and provider expansion of bound collections.
 

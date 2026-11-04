@@ -239,7 +239,7 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 		String groupNameColumn = normalizeLineEndingsForLike ? getSqlNormalizedLineEndingColumn("group_name") : "group_name";
 		String navbarColumn = normalizeLineEndingsForLike ? getSqlNormalizedLineEndingColumn("navbar") : "navbar";
 
-		String sql = "SELECT group_id, group_name, navbar FROM groups WHERE "+groupNameColumn+" LIKE ? OR "+navbarColumn+" LIKE ?";
+		String sql = "SELECT group_id, group_name, navbar FROM groups WHERE ("+groupNameColumn+" LIKE ? OR "+navbarColumn+" LIKE ?)";
 
 		if (Tools.isNotEmpty(rootGroupIds))
 		{
