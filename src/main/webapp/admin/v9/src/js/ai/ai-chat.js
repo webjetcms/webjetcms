@@ -96,6 +96,10 @@ export class AiChat {
         this.$root.append(this.$toolbar, this.$history, $composer);
     }
 
+    isPending() {
+        return this.state.pending != null;
+    }
+
     /** Mounts this conversation in a host element and restores its draft and scroll position. */
     mount(container) {
         if (this.state.disposed) return;

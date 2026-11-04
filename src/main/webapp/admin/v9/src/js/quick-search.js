@@ -1,7 +1,7 @@
 import { menuEntries } from './admin-menu';
 import { node, icon, localUrl, containNativeScroll, fetchJson } from './dashboard/widget-utils';
 import { documentationUrl, documentationMarkdown } from './documentation-search';
-import { QuickSearchChat } from './ai/quick-search-chat';
+import { AiChatHost } from './ai/ai-chat-host';
 
 const text = (key, ...params) => WJ.translate(`admin.quickSearch.${key}.js`, ...params);
 const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
@@ -220,7 +220,9 @@ class QuickSearch {
         if (scope === 'documentation' && searchDocumentation && this.query.length > 0) this.loadRest(true);
         this.render();
         if (scope === 'aiChat' && previousScope !== 'aiChat') {
-            this.chat ||= new QuickSearchChat();
+            this.chat ||= new AiChatHost({
+                loadAssistants: signal => fetchJson('/admin/rest/ai/assistant/chat-assistants/', signal)
+            });
             this.chat.mount(this.chatPanel);
         }
         this.focus();

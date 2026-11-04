@@ -41,6 +41,7 @@ function fixture(t, denied = [], options = {}) {
     window.jQuery = options.aiChat ? jquery(window) : element => element;
     window.csrfToken = 'private-admin-csrf-token';
     const downloads = [], blobs = new Map(), revokedUrls = [], notifications = [];
+    const adminSettings = new Map(Object.entries(options.adminSettings ?? { aiChatHistoryOpen: 'false' }));
     let nextBlob = 0;
     class ChatURL extends URL {
         static createObjectURL(blob) {
@@ -80,6 +81,8 @@ function fixture(t, denied = [], options = {}) {
             dispose() {}
         },
         WJ: { translate: (key, params = []) => [key, ...params].join(' '), initTooltip: () => {},
+            getAdminSetting: name => adminSettings.get(name),
+            setAdminSetting: (name, value) => adminSettings.set(name, value),
             keepSessionShowLogoffMessage: () => notifications.push('signedOut'),
             keepSessionShowTokenMessage: () => notifications.push('csrf'),
             hasPermission: permission => (permission !== 'cmp_ai_button' || options.aiChat === true) && !denied.includes(permission) },
@@ -110,7 +113,7 @@ function fixture(t, denied = [], options = {}) {
         vm.runInContext(readAdmin('ai/chat-tooltips.js'), context);
         vm.runInContext(readAdmin('ai/ai-response-parser.js'), context);
         vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
-        vm.runInContext(`{ ${readAdmin('ai/quick-search-chat.js')}; Object.assign(this, { QuickSearchChat }); }`, context);
+        vm.runInContext(`{ ${readAdmin('ai/ai-chat-host.js')}; Object.assign(this, { AiChatHost }); }`, context);
         if (options.editorChat) {
             vm.runInContext(readAdmin('../../npm_packages/webjetdatatables/ai/ai-execution-result.js'), context);
             vm.runInContext(`${readAdmin('../../npm_packages/webjetdatatables/editor-ai.js')}\nthis.EditorAi = EditorAi;`, context);
@@ -135,8 +138,8 @@ function fixture(t, denied = [], options = {}) {
         });
         const conversation = editor.getChatConversation(window.document.querySelector('#trigger'),
             { name: 'data', type: 'textarea', ...columnOptions }, { ...assistant, from: 'data', to: 'data' });
-        (conversation.host || conversation.chat).mount(window.document.body);
-        t.after(() => (conversation.host || conversation.chat).destroy());
+        conversation.view.mount(window.document.body);
+        t.after(() => conversation.view.destroy());
         return Object.assign(conversation, { values, editor });
     };
     const type = value => {
@@ -169,7 +172,7 @@ function fixture(t, denied = [], options = {}) {
     const rest = () => requests.filter(request => !request.url.pathname.endsWith('/_doc_autocomplete.jsp'));
     const activeRest = () => rest().filter(request => !request.settled && !request.signal.aborted);
     return { controller, requests, chatRequests, type, enter, advance, respond, autocomplete, rest, activeRest,
-        downloads, blobs, revokedUrls, notifications, editorChat, clicks: () => clicks };
+        downloads, blobs, revokedUrls, notifications, adminSettings, editorChat, clicks: () => clicks };
 }
 
 for (const [platform, modifier] of [['Win32', 'ctrlKey'], ['MacIntel', 'metaKey']]) {
@@ -1217,13 +1220,13 @@ test('Chat controls and history use WebJET tooltips and release overlays when hi
     host.toggleHistory(true);
     const title = '**Notes** <img src=x onerror=alert(1)>';
     await f.respond(f.requests.at(-1), { items: [{ id: 'one', title, assistantId: 7 }], hasMore: false });
-    const row = host.historyList.querySelector('.md-quick-search__chat-history-select');
+    const row = host.historyList.querySelector('.ai-chat-host__history-select');
     row.focus();
     f.advance(300);
     assert.ok([...document.querySelectorAll('.tooltip-inner')].some(tooltip => tooltip.textContent === title));
     assert.equal(document.querySelector('.tooltip-inner img, .tooltip-inner b'), null, 'Conversation titles remain plain text.');
 
-    for (const control of [row, host.closeHistory, host.historyList.querySelector('.md-quick-search__chat-history-action')]) {
+    for (const control of [row, host.closeHistory, host.historyList.querySelector('.ai-chat-host__history-action')]) {
         assert.equal(control.hasAttribute('title'), false);
         assert.ok(window.bootstrap.Tooltip.getInstance(control));
     }
@@ -1820,6 +1823,61 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     assert.equal(f.chatRequests[1].inputData.conversationId, 'first-conversation');
     assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');
 });
+
+test('Global and field chat hosts share the history preference without sharing assistant catalogues', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true, adminSettings: {} });
+    await openChat(f);
+    const globalHost = f.controller.chat;
+    assert.equal(globalHost.historyOpen, true, 'History opens by default when no preference has been saved.');
+    globalHost.toggleHistory(false);
+    assert.equal(f.adminSettings.get('aiChatHistoryOpen'), 'false');
+
+    const first = f.editorChat(chatAssistants[0], '', {}, { url: '/admin/rest/web-pages', id: 42 });
+    assert.equal(first.host.historyOpen, false, 'Field chat uses the explicit preference from global chat.');
+    assert.equal(first.host.select.options.length, 1, 'Field chat offers only its supplied assistants.');
+    first.host.toggleHistory(true);
+    assert.equal(f.adminSettings.get('aiChatHistoryOpen'), 'true');
+    first.host.toggleHistory(false, false);
+    assert.equal(f.adminSettings.get('aiChatHistoryOpen'), 'true', 'Automatic closures retain the explicit preference.');
+
+    const second = f.editorChat(chatAssistants[1], '', {}, { url: '/admin/rest/web-pages', id: 43 });
+    assert.equal(second.host.historyOpen, true);
+    assert.equal(second.host.select.value, String(chatAssistants[1].assistantId));
+    assert.equal(f.requests.filter(request => request.url.pathname.endsWith('/chat-assistants/')).length, 1,
+        'Opening field chats must never load the global assistant catalogue.');
+});
+
+for (const saved of [false, true]) {
+    test(`Editor chat lifecycle retains pending work while hidden and cancels it on disposal (saved=${saved})`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+        const assistants = chatAssistants.map(item => ({ ...item, from: 'data', to: 'data', persistentChat: true }));
+        const conversation = f.editorChat(assistants[0], '', { ai: assistants },
+            { url: '/admin/rest/web-pages', id: saved ? 42 : -1 });
+        const { view, chat } = conversation;
+        const container = view.element.parentElement;
+        assert.equal(view.isPending(), false);
+        const sending = chat.send('Keep working while hidden');
+        const request = f.chatRequests[0];
+        assert.equal(view.isPending(), true);
+        if (saved) {
+            selectChatAssistant(conversation.host, assistants[1].assistantId);
+            assert.equal(conversation.chat.isPending(), false);
+            assert.equal(view.isPending(), true, 'Pending work includes the previous assistant after switching.');
+        }
+        view.unmount();
+        assert.equal(view.element.isConnected, false);
+        assert.equal(view.isPending(), true);
+        assert.equal(request.cancellations, 0);
+        view.mount(container);
+        assert.equal(view.element.isConnected, true);
+        assert.equal(view.isPending(), true);
+        view.destroy();
+        await sending;
+        assert.equal(request.cancellations, 1);
+        assert.equal(view.isPending(), false);
+        assert.equal(view.element.isConnected, false);
+    });
+}
 
 test('Saved field chats send their record context and reopen only matching history with insertion actions', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });

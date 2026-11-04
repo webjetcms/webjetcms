@@ -444,3 +444,188 @@
         .ai-chat-toolbar-title { font-size: 14px; }
     }
 }
+
+.ai-chat-host {
+    &, &__main, &__content {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+    }
+    & {
+        position: relative;
+        flex-direction: row;
+        container: ai-chat-host / inline-size;
+    }
+    &__history, &__files {
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 240px;
+        width: 240px;
+        min-height: 0;
+        background: var(--wj-nice-gray);
+        border-right: 1px solid var(--wj-nice-gray-100);
+
+        &[hidden] { display: none; }
+    }
+    &__files {
+        flex-basis: 280px;
+        width: 280px;
+        border-right: 0;
+        border-left: 1px solid var(--wj-nice-gray-100);
+    }
+    &__history-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 56px;
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+    &__history-action {
+        display: inline-flex;
+        flex: 0 0 28px;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        color: var(--wj-secondary);
+
+        .ti { margin: 0; font-size: 18px; }
+        &:hover { background: var(--wj-nice-gray-100); }
+    }
+    &__new {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin: 0 16px 16px;
+        padding: 7px 12px;
+        border-color: var(--wj-ai-color);
+        background: var(--wj-ai-color);
+        color: $white;
+        font-size: 14px;
+
+        .ti { margin: 0; font-size: 20px; }
+        &:hover, &:active, &:disabled { background: var(--wj-ai-color-dark); border-color: var(--wj-ai-color-dark); color: $white; }
+    }
+    &--history-open {
+        .ai-chat-toolbar [data-ai-action="history"], .ai-chat-toolbar [data-ai-action="new"] { display: none; }
+    }
+    &__history-list {
+        flex: 1;
+        overflow: auto;
+        overscroll-behavior: contain;
+        padding: 8px 12px 12px;
+        font-size: 14px;
+    }
+    &__history-search {
+        position: relative;
+        flex: 0 0 auto;
+        padding: 0 16px 12px;
+
+        > .ti { position: absolute; top: 8px; left: 25px; color: var(--wj-gray-text); font-size: 16px; }
+        .form-control { width: 100%; min-width: 0; min-height: 34px; padding-left: 32px; background: $white; }
+    }
+    &__history-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 4px;
+        padding: 0 6px 0 0;
+        border-radius: var(--wj-border-radius);
+
+        &:hover { background: var(--wj-nice-gray-100); }
+        &:has([aria-current="true"]) {
+            background: var(--wj-ai-color-hover);
+            &::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; border-radius: 6px 0 0 6px; background: var(--wj-ai-color); }
+        }
+    }
+    &__history-select {
+        display: block;
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--bs-body-color);
+        text-align: left;
+        overflow-wrap: anywhere;
+
+        small { display: block; margin-top: 3px; color: var(--wj-gray-text); font-size: 12px; }
+        &[aria-current="true"] .ai-chat-host__history-title { font-weight: bold; }
+        &:focus-visible { outline: 2px solid var(--wj-ai-color); outline-offset: -2px; }
+    }
+    &__history-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    &__file { margin-bottom: 8px; }
+    &__file-download {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        min-width: 0;
+        padding: 10px 8px;
+        border: 1px solid var(--wj-nice-gray-100);
+        border-radius: var(--wj-border-radius);
+        background: $white;
+        color: var(--wj-secondary);
+        text-align: left;
+
+        > .ti { flex: 0 0 auto; font-size: 18px; }
+        > .ti:first-child { padding: 6px; border-radius: 4px; background: var(--wj-ai-color-hover); color: var(--wj-ai-color-dark); }
+        &:hover { background: var(--wj-nice-gray); }
+        &:focus-visible { outline: 2px solid var(--wj-ai-color); outline-offset: 2px; }
+        &:disabled { opacity: .6; cursor: wait; }
+    }
+    &__file-info {
+        flex: 1 1 auto;
+        min-width: 0;
+
+        small { display: block; margin-top: 3px; color: var(--wj-gray-text); font-size: 12px; }
+    }
+    @container ai-chat-host (max-width: 767px) {
+        &__history, &__files {
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 280px;
+            max-width: 85%;
+            z-index: 5;
+            box-shadow: 4px 0 12px rgba(0, 0, 0, .15);
+        }
+        &__files { inset: 0 0 0 auto; box-shadow: -4px 0 12px rgba(0, 0, 0, .15); }
+    }
+    &__assistant {
+        min-width: 0;
+        max-width: 100%;
+
+        .form-select {
+            field-sizing: content;
+            width: auto;
+            max-width: min(100%, 280px);
+            min-height: 32px;
+            padding: 4px 28px 4px 8px;
+            border: 1px solid var(--wj-nice-gray-100);
+            border-radius: var(--wj-border-radius);
+            background-color: $white;
+            background-position: right 6px center;
+            color: var(--bs-body-color);
+            font-size: 13px;
+            text-overflow: ellipsis;
+            cursor: pointer;
+
+            &:hover { background-color: var(--wj-nice-gray); }
+            &:focus { box-shadow: none; }
+            &:focus-visible { outline: 2px solid var(--wj-ai-color); outline-offset: -2px; }
+        }
+    }
+    &__status { padding: 24px 16px; color: var(--wj-gray-text); font-size: 14px; text-align: center; }
+    &__status .btn { margin: 12px 8px 0; }
+}

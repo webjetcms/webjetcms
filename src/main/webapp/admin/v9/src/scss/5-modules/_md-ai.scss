@@ -184,7 +184,7 @@
         }
     }
 
-    .form-control:not(.ai-chat-input):not(.md-quick-search__chat-host .form-control) {
+    .form-control:not(.ai-chat-input):not(.ai-chat-host .form-control) {
         font-size: 14px;
         padding: 6px 2px 2px 11px;
     }

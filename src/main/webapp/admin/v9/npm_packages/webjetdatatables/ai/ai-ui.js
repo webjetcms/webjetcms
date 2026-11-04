@@ -43,7 +43,7 @@ export class AiUserInterface {
         });
         $("#toast-container-ai").removeClass("ai-status-working ai-status-success ai-status-error");
         $("#toast-container-ai").toggleClass("ai-chat-with-history", conversation.host != null);
-        (conversation.host || conversation.chat).mount($("#toast-container-ai-content").empty()[0]);
+        conversation.view.mount($("#toast-container-ai-content").empty()[0]);
         this.chatWindow = new EditorChatWindow(this.$chatDialog[0],
             () => this.activeButton?.trigger("focus"), () => conversation.chat.refresh());
         this.$chatDialog.on("keydown.aiChatHost", event => this._handleChatDialogKey(event));
@@ -52,7 +52,7 @@ export class AiUserInterface {
     detachChat() {
         this.chatWindow?.destroy();
         this.chatWindow = null;
-        if (this.currentChat) (this.currentChat.host || this.currentChat.chat).unmount();
+        this.currentChat?.view.unmount();
         this.currentChat = null;
         $("#toast-container-ai").removeClass("ai-chat-with-history");
         this.$chatDialog?.off("keydown.aiChatHost");

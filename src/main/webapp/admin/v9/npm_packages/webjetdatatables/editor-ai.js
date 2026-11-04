@@ -3,7 +3,7 @@ import { AiRestExecutor } from "./ai/ai-rest-executor";
 import { AiUserInterface } from "./ai/ai-ui";
 import { AiExecutionResult } from "./ai/ai-execution-result";
 import { AiChat } from "../../src/js/ai/ai-chat";
-import { QuickSearchChat } from "../../src/js/ai/quick-search-chat";
+import { AiChatHost } from "../../src/js/ai/ai-chat-host";
 import { parseAiResponse } from "../../src/js/ai/ai-response-parser";
 
 /**
@@ -328,7 +328,7 @@ export class EditorAi {
                 const assistants = (column.ai || [aiCol]).filter(item => item.action === 'live_chat'
                     && (item.to || column.name) === context.fieldName).map(item => ({ ...item,
                         persistentChat: item.persistentChat === true && this._getColumnType(column, item.from) === 'text' }));
-                conversation.host = new QuickSearchChat({
+                conversation.host = new AiChatHost({
                     context, assistants, assistantId: aiCol.assistantId, historyOpen: true,
                     getChatOptions: chatOptions,
                     onShowChat: chat => {
@@ -346,6 +346,7 @@ export class EditorAi {
             } else {
                 conversation.chat = new AiChat(chatOptions(aiCol));
             }
+            conversation.view = conversation.host || conversation.chat;
             this.chatConversations.set(key, conversation);
         }
         conversation.button = button;
@@ -414,15 +415,14 @@ export class EditorAi {
 
     _updateChatLoader(conversation) {
         const working = [...this.chatConversations.values()].some(item =>
-            item.aiCol.to === conversation.aiCol.to && (item.host
-                ? [...item.host.conversations].some(chat => chat.state.pending != null) : item.chat.state.pending != null));
+            item.aiCol.to === conversation.aiCol.to && item.view.isPending());
         if (working) this._showLoader(conversation.button);
         else this._hideLoader(conversation.button);
     }
 
     /** Clears all chat state only after the enclosing editor has really closed. */
     disposeChats() {
-        for (const conversation of this.chatConversations.values()) (conversation.host || conversation.chat).destroy();
+        for (const conversation of this.chatConversations.values()) conversation.view.destroy();
         this.chatConversations.clear();
         this.chatApplyingFields.clear();
         if (this.aiUserInterface.isActive()) this._closeToast();

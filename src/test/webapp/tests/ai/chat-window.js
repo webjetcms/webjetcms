@@ -43,7 +43,7 @@ Scenario('Move, minimize and restore preserve the conversation and release the e
     I.attachFile(`${container} input[type="file"]`, 'screenshots/generator/ai/program-skolenia-autotest.csv');
     I.waitForVisible(`${container} .ai-chat-composer .ai-chat-attachment`, 10);
     I.clickCss(`${container} .ai-chat-toolbar [data-ai-action="files"]`);
-    I.waitForVisible(`${container} .md-quick-search__chat-files`, 10);
+    I.waitForVisible(`${container} .ai-chat-host__files`, 10);
 
     const original = await I.executeScript(windowBounds);
     // CodeceptJS dragAndDrop targets elements; a pointer drag by a measured offset needs the mouse API.
@@ -68,7 +68,7 @@ Scenario('Move, minimize and restore preserve the conversation and release the e
     I.waitForVisible(input, 5);
     I.seeInField(input, 'Draft autotest');
     I.see('program-skolenia-autotest.csv', `${container} .ai-chat-composer`);
-    I.seeElement(`${container} .md-quick-search__chat-files`);
+    I.seeElement(`${container} .ai-chat-host__files`);
     I.assertDeepEqual(await I.executeScript(windowBounds), moved);
     I.assertEqual(await I.grabAttributeFrom(dialog, 'aria-modal'), 'false');
 

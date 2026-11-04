@@ -1,5 +1,5 @@
 import { AiChat } from './ai-chat';
-import { node, icon, fetchJson, containNativeScroll } from '../dashboard/widget-utils';
+import { node, icon, containNativeScroll } from '../dashboard/widget-utils';
 import { chatHistoryRequest, chatRequestId, historyText } from './chat-history-api';
 import { setChatTooltip, initChatTooltips, disposeChatTooltips } from './chat-tooltips';
 
@@ -7,8 +7,11 @@ const text = key => WJ.translate(`admin.quickSearch.${key}.js`);
 const filesText = key => WJ.translate(`components.ai_assistants.chat.files.${key}.js`);
 const HISTORY_OPEN_SETTING = 'aiChatHistoryOpen';
 
-/** Hosts saved conversations, optionally scoped to an editor field with insertion actions. */
-export class QuickSearchChat {
+/**
+ * Hosts conversations, assistant selection, history and files for global or entity chat.
+ * Callers supply assistants directly or through loadAssistants(signal), plus optional field context and actions.
+ */
+export class AiChatHost {
     constructor(options = {}) {
         this.options = options;
         const idPrefix = options.context ? `ai-field-chat-${chatRequestId()}` : 'admin-ai-chat';
@@ -26,36 +29,36 @@ export class QuickSearchChat {
         this.mounted = false;
         this.disposed = false;
         this.scrollController = new AbortController();
-        this.element = node('div', 'md-quick-search__chat-host');
-        this.element.classList.toggle('md-quick-search__chat-host--history-open', this.historyOpen);
-        this.assistantRow = node('div', 'md-quick-search__chat-assistant');
+        this.element = node('div', 'ai-chat-host');
+        this.element.classList.toggle('ai-chat-host--history-open', this.historyOpen);
+        this.assistantRow = node('div', 'ai-chat-host__assistant');
         const label = node('label', 'visually-hidden', text('chatAssistant'));
         this.select = node('select', 'form-select');
         this.select.id = options.context ? `${idPrefix}-assistant` : 'admin-quick-search-chat-assistant';
         label.htmlFor = this.select.id;
         this.select.addEventListener('change', () => this.selectAssistant(this.select.value));
         this.assistantRow.append(label, this.select);
-        this.status = node('div', 'md-quick-search__chat-status');
+        this.status = node('div', 'ai-chat-host__status');
         this.status.setAttribute('role', 'status');
         this.status.tabIndex = -1;
-        this.content = node('div', 'md-quick-search__chat-content');
-        this.main = node('div', 'md-quick-search__chat-main');
+        this.content = node('div', 'ai-chat-host__content');
+        this.main = node('div', 'ai-chat-host__main');
         this.main.append(this.status, this.content);
-        this.historyPanel = node('aside', 'md-quick-search__chat-history');
+        this.historyPanel = node('aside', 'ai-chat-host__history');
         this.historyPanel.id = `${idPrefix}-history`;
         this.historyPanel.hidden = !this.historyOpen;
         this.historyPanel.setAttribute('aria-label', historyText('title'));
-        const heading = node('div', 'md-quick-search__chat-history-heading');
+        const heading = node('div', 'ai-chat-host__history-heading');
         this.closeHistory = this.iconButton(historyText('close'), 'layout-sidebar', () => this.toggleHistory(false));
         heading.append(node('strong', '', historyText('title')), this.closeHistory);
         this.newChatButton = this.button(WJ.translate('components.ai_assistants.chat.new.js'), () => {
             this.chat?.newChat();
             if (this.element.clientWidth < 768) this.toggleHistory(false, false);
             this.focus();
-        }, 'btn btn-primary md-quick-search__chat-new');
+        }, 'btn btn-primary ai-chat-host__new');
         this.newChatButton.prepend(icon('ti-plus'));
         this.newChatButton.disabled = true;
-        const search = node('div', 'md-quick-search__chat-history-search');
+        const search = node('div', 'ai-chat-host__history-search');
         const searchLabel = node('label', 'visually-hidden', historyText('search'));
         this.historySearch = node('input', 'form-control form-control-sm');
         this.historySearch.id = `${idPrefix}-history-search`;
@@ -65,7 +68,7 @@ export class QuickSearchChat {
         searchLabel.htmlFor = this.historySearch.id;
         this.historySearch.addEventListener('input', () => this.searchHistory());
         search.append(searchLabel, icon('ti-search'), this.historySearch);
-        this.historyList = node('div', 'md-quick-search__chat-history-list');
+        this.historyList = node('div', 'ai-chat-host__history-list');
         this.historyList.setAttribute('aria-live', 'polite');
         this.historyPanel.append(heading, this.newChatButton, search, this.historyList);
         this.historyPanel.addEventListener('keydown', event => {
@@ -76,14 +79,14 @@ export class QuickSearchChat {
             }
         });
         containNativeScroll(this.historyList, this.scrollController.signal);
-        this.filesPanel = node('aside', 'md-quick-search__chat-files');
+        this.filesPanel = node('aside', 'ai-chat-host__files');
         this.filesPanel.id = `${idPrefix}-files`;
         this.filesPanel.hidden = true;
         this.filesPanel.setAttribute('aria-label', filesText('title'));
-        const filesHeading = node('div', 'md-quick-search__chat-history-heading');
+        const filesHeading = node('div', 'ai-chat-host__history-heading');
         filesHeading.append(node('strong', '', filesText('title')),
             this.iconButton(historyText('close'), 'layout-sidebar-right', () => this.toggleFiles(false)));
-        const filesSearch = node('div', 'md-quick-search__chat-history-search');
+        const filesSearch = node('div', 'ai-chat-host__history-search');
         const filesSearchLabel = node('label', 'visually-hidden', filesText('search'));
         this.filesSearch = node('input', 'form-control form-control-sm');
         this.filesSearch.id = `${idPrefix}-files-search`;
@@ -93,7 +96,7 @@ export class QuickSearchChat {
         filesSearchLabel.htmlFor = this.filesSearch.id;
         this.filesSearch.addEventListener('input', () => this.renderFiles());
         filesSearch.append(filesSearchLabel, icon('ti-search'), this.filesSearch);
-        this.filesList = node('div', 'md-quick-search__chat-history-list');
+        this.filesList = node('div', 'ai-chat-host__history-list');
         this.filesList.setAttribute('aria-live', 'polite');
         this.filesPanel.append(filesHeading, filesSearch, this.filesList);
         this.filesPanel.addEventListener('keydown', event => {
@@ -105,15 +108,22 @@ export class QuickSearchChat {
         });
         containNativeScroll(this.filesList, this.scrollController.signal);
         this.element.append(this.historyPanel, this.main, this.filesPanel);
-        if (options.assistants) {
-            this.assistants = options.assistants;
-            for (const assistant of this.assistants) {
-                const option = node('option', '', assistant.description || assistant.providerTitle);
-                option.value = assistant.assistantId;
-                this.select.append(option);
-            }
-            this.select.value = String(options.assistantId);
-        }
+        if (options.assistants || !options.loadAssistants) this.setAssistants(options.assistants || [], options.assistantId);
+    }
+
+    setAssistants(assistants, selectedId) {
+        this.assistants = assistants;
+        this.select.replaceChildren(...assistants.map(assistant => {
+            const option = node('option', '', assistant.description || assistant.providerTitle);
+            option.value = assistant.assistantId;
+            return option;
+        }));
+        if (selectedId != null) this.select.value = String(selectedId);
+    }
+
+    /** Includes background conversations when the user switches assistants. */
+    isPending() {
+        return [...this.conversations].some(chat => chat.isPending());
     }
 
     /** Loads assistants on first use and restores the selected conversation on later visits. */
@@ -130,7 +140,7 @@ export class QuickSearchChat {
         this.focus();
     }
 
-    /** Keeps conversation state and pending responses while the search tab is hidden. */
+    /** Keeps conversation state and pending responses while the host is hidden. */
     unmount() {
         this.chat?.unmount();
         disposeChatTooltips(this.element);
@@ -151,15 +161,10 @@ export class QuickSearchChat {
         this.controller = new AbortController();
         this.render();
         try {
-            const assistants = await fetchJson('/admin/rest/ai/assistant/chat-assistants/', this.controller.signal);
+            const assistants = await this.options.loadAssistants(this.controller.signal);
             if (this.disposed) return;
             if (!Array.isArray(assistants)) throw new Error('Invalid chat assistant response');
-            this.assistants = assistants.filter(assistant => assistant?.action === 'live_chat' && assistant.assistantId != null);
-            this.select.replaceChildren(...this.assistants.map(assistant => {
-                const option = node('option', '', assistant.description || assistant.providerTitle);
-                option.value = assistant.assistantId;
-                return option;
-            }));
+            this.setAssistants(assistants.filter(assistant => assistant?.action === 'live_chat' && assistant.assistantId != null));
         } catch (error) {
             if (this.disposed) return;
             this.error = true;
@@ -292,7 +297,7 @@ export class QuickSearchChat {
         this.historyPanel.hidden = !open;
         if (open) initChatTooltips(this.historyPanel);
         else disposeChatTooltips(this.historyPanel);
-        this.element.classList.toggle('md-quick-search__chat-host--history-open', open);
+        this.element.classList.toggle('ai-chat-host--history-open', open);
         this.chat?.refresh();
         this.status.querySelector('[aria-controls]')?.setAttribute('aria-expanded', String(open));
         if (open) {
@@ -341,12 +346,12 @@ export class QuickSearchChat {
         const list = node('ul', 'list-unstyled');
         for (const { attachment, role } of entries) {
             if (query && !attachment.name.toLocaleLowerCase().includes(query)) continue;
-            const row = node('li', 'md-quick-search__chat-file');
-            const download = this.button('', () => chat.downloadAttachment(attachment, download), 'md-quick-search__chat-file-download');
+            const row = node('li', 'ai-chat-host__file');
+            const download = this.button('', () => chat.downloadAttachment(attachment, download), 'ai-chat-host__file-download');
             setChatTooltip(download, attachment.name);
             download.setAttribute('aria-label', WJ.translate('components.ai_assistants.chat.downloadAttachment.js', [attachment.name]));
-            const info = node('span', 'md-quick-search__chat-file-info');
-            info.append(node('span', 'md-quick-search__chat-history-title', attachment.name),
+            const info = node('span', 'ai-chat-host__file-info');
+            info.append(node('span', 'ai-chat-host__history-title', attachment.name),
                 node('small', '', filesText(role === 'assistant' ? 'generated' : 'uploaded')));
             download.append(icon('ti-file-text'), info, icon('ti-download'));
             row.append(download);
@@ -412,10 +417,10 @@ export class QuickSearchChat {
         }
         const list = node('ul', 'list-unstyled');
         for (const item of this.historyItems) {
-            const row = node('li', 'md-quick-search__chat-history-item');
-            const select = this.button('', () => this.openThread(item.id), 'md-quick-search__chat-history-select');
+            const row = node('li', 'ai-chat-host__history-item');
+            const select = this.button('', () => this.openThread(item.id), 'ai-chat-host__history-select');
             setChatTooltip(select, item.title);
-            select.append(node('span', 'md-quick-search__chat-history-title', item.title), node('small', '', item.assistantName || item.provider));
+            select.append(node('span', 'ai-chat-host__history-title', item.title), node('small', '', item.assistantName || item.provider));
             if (item.id === this.chat?.state.threadId) select.setAttribute('aria-current', 'true');
             const pending = item.status === 'DELETE_PENDING';
             if (pending) select.append(node('small', 'text-danger', historyText('deletePending')));
@@ -592,7 +597,7 @@ export class QuickSearchChat {
     }
 
     iconButton(label, name, run) {
-        const button = this.button('', run, 'btn btn-sm md-quick-search__chat-history-action');
+        const button = this.button('', run, 'btn btn-sm ai-chat-host__history-action');
         setChatTooltip(button, label);
         button.setAttribute('aria-label', label);
         button.append(icon(`ti-${name}`));

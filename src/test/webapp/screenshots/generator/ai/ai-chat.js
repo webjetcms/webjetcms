@@ -32,13 +32,13 @@ Scenario('AI Chat documentation screenshots', ({ I, Document }) => {
 
     I.clickCss(historyButton);
     I.fillField('#admin-ai-chat-history-search', chatTitle);
-    I.waitForText(chatTitle, 20, '.md-quick-search__chat-history-item');
+    I.waitForText(chatTitle, 20, '.ai-chat-host__history-item');
     I.clickCss(`${modal} .md-quick-search__input-row`);
     Document.screenshotElement(`${modal} .modal-content`, '/redactor/ai/chat/chat-history.png');
 
-    I.clickCss('#admin-ai-chat-history .md-quick-search__chat-history-heading button');
+    I.clickCss('#admin-ai-chat-history .ai-chat-host__history-heading button');
     I.clickCss(filesButton);
-    I.waitForVisible('.md-quick-search__chat-file-download', 10);
+    I.waitForVisible('.ai-chat-host__file-download', 10);
     I.clickCss(`${modal} .md-quick-search__input-row`);
     Document.screenshotElement(`${modal} .modal-content`, '/redactor/ai/chat/chat-files.png');
     I.pressKey('Escape');
@@ -77,16 +77,16 @@ Scenario('Cleanup AI Chat documentation conversation', async ({ I }) => {
     I.waitForResponse(response => response.url().includes('/admin/rest/ai/chat/threads?')
         && response.url().includes('query=') && response.status() === 200, 20);
     I.waitForFunction(([title]) => {
-        const titles = Array.from(document.querySelectorAll('.md-quick-search__chat-history-item .md-quick-search__chat-history-title'));
+        const titles = Array.from(document.querySelectorAll('.ai-chat-host__history-item .ai-chat-host__history-title'));
         return titles.every(item => item.textContent.startsWith(title));
     }, [chatTitle], 20);
-    const items = await I.grabNumberOfVisibleElements('.md-quick-search__chat-history-item');
+    const items = await I.grabNumberOfVisibleElements('.ai-chat-host__history-item');
     for (let index = 0; index < items; index++) {
-        const remove = locate('.md-quick-search__chat-history-item').withText(chatTitle).find('button[aria-label]').first();
+        const remove = locate('.ai-chat-host__history-item').withText(chatTitle).find('button[aria-label]').first();
         const label = await I.grabAttributeFrom(remove, 'aria-label');
         I.amAcceptingPopups();
         I.click(remove);
         if (label.startsWith('Vymazať:')) I.acceptPopup();
-        I.waitForFunction(([expected]) => document.querySelectorAll('.md-quick-search__chat-history-item').length === expected, [items - index - 1], 30);
+        I.waitForFunction(([expected]) => document.querySelectorAll('.ai-chat-host__history-item').length === expected, [items - index - 1], 30);
     }
 });
