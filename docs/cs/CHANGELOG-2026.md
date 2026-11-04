@@ -357,6 +357,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Webové stránky - editor JSON přijímá také pole a jednoduché hodnoty s komentáři. Opraveno rozdělení sloupců a posouvání v Page Builderu a zavírání tooltipu při úpravě z historie (#346).
 - Vícekrokové formuláře - opravena validace polí s řetězenými podmínkami viditelnosti (#58794).
 - Formuláře - opraveno archivování formulářů (#305).
+- Formuláře - oddělené mazání odeslaných dat od nastavení a položek. Pokud formulář používá zobrazovaná stránka nebo má data v archivu, definice zůstane zachována a notifikace uvede důvod i docId stránek. Při úplném odstranění se smažou i kroky, položky a jejich podmínky (#393).
 - Průzkumník - upravené porovnávání souborů s diakritikou při kontrole existence souboru při jeho přepsání - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opraveno přidávání prázdného `P` elementu na konec stránky (#58317-13).
 - Webové stránky - opraveno načtení hodnoty `ckeditor_button_sizes` pro tlačítko typu `A` (#OSK674).
