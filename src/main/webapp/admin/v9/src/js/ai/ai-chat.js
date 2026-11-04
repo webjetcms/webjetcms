@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import { AiChatTransport } from './ai-chat-transport';
+import { splitChatResponse } from './ai-response-parser';
 import { chatRequestId, chatAttachmentUrl, fetchChatAttachment } from './chat-history-api';
 import { setChatTooltip, initChatTooltips, disposeChatTooltips } from './chat-tooltips';
 
@@ -167,7 +168,7 @@ export class AiChat {
             view.$label.text(message.role === "user" ? this._text("you") : this.assistant?.providerTitle || this.assistant?.description || "");
             this._updateMessageTime(message, view);
             if (view.text !== message.text) {
-                if (message.role === "assistant") this._renderMarkdown(view.$text, message.text || "");
+                if (message.role === "assistant") this._renderResponse(view, message.text || "");
                 else view.$text.text(message.text || "");
                 view.text = message.text;
             }
@@ -609,6 +610,33 @@ export class AiChat {
         this.state.followLatest = history.scrollHeight - history.scrollTop - history.clientHeight <= 40;
     }
 
+    /** Keeps HTML source collapsed by default and preserves open disclosures and focus during streaming. */
+    _renderResponse(view, text) {
+        const parts = splitChatResponse(text);
+        const removeParts = index => view.parts.splice(index).forEach(part => part.$element.remove());
+        parts.forEach((part, index) => {
+            if (view.parts[index]?.html !== part.html) removeParts(index);
+            let rendered = view.parts[index];
+            if (!rendered) {
+                const $element = part.html ? $('<details class="ai-chat-html-response"></details>') : $('<div class="ai-chat-markdown"></div>');
+                let $code;
+                if (part.html) {
+                    const $summary = $('<summary><i class="ti ti-file-type-html" aria-hidden="true"></i></summary>')
+                        .append($('<span></span>').text(this._text('htmlResponse')))
+                        .append('<i class="ti ti-chevron-down ai-chat-html-chevron" aria-hidden="true"></i>');
+                    $code = $('<code></code>');
+                    $element.append($summary, $('<pre></pre>').append($code));
+                }
+                rendered = { html: part.html, $element, $code };
+                view.parts.push(rendered);
+                view.$text.append($element);
+            }
+            if (part.html) rendered.$code.text(part.text);
+            else this._renderMarkdown(rendered.$element, part.text);
+        });
+        removeParts(parts.length);
+    }
+
     /** Renders assistant Markdown with inert formatting and validated links only. */
     _renderMarkdown($container, text) {
         const template = document.createElement('template');
@@ -676,7 +704,7 @@ export class AiChat {
         }
         $heading.append($label, $time);
         $article.append($heading, $attachments, $text, $status, $footer);
-        return { $article, $label, $time, $text, $attachments, $status, $usage, $actions, $footer, text: null, actionKey: null, actions: [] };
+        return { $article, $label, $time, $text, $attachments, $status, $usage, $actions, $footer, text: null, parts: [], actionKey: null, actions: [] };
     }
 
     /** Displays the message creation time without inventing dates for older transcripts. */

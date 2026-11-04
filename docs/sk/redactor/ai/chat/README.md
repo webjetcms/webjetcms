@@ -20,6 +20,8 @@ Ak má asistent zapnuté postupné načítanie, odpoveď pribúda po častiach. 
 
 Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy, pod odpoveďou údaj **Použité tokeny**. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
 
+Ak asistent vráti HTML kód, napríklad pri tvorbe PageBuilder stránky, zobrazí sa zbalený riadok s ikonou a označením **HTML odpoveď**. Kliknutím alebo klávesom **Enter** či **medzerník** zobrazíte zdrojový kód; opätovným aktivovaním ho zbalíte. Vysvetlenie mimo HTML bloku zostáva viditeľné. Kopírovanie aj vloženie odpovede do stránky používajú pôvodný obsah bez ohľadu na rozbalenie.
+
 ![Rozhovor s tabuľkou programu školenia a otvorenou históriou chatov](chat-history.png)
 
 Veľkosť dialógu zmeníte ťahaním za pravý dolný roh. Tlačidlami v hlavičke ho môžete maximalizovať alebo obnoviť pôvodnú veľkosť. **Esc** zatvorí dialóg; ak je fokus v otvorenom bočnom paneli, najskôr zatvorí tento panel.

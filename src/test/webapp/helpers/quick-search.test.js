@@ -108,10 +108,10 @@ function fixture(t, denied = [], options = {}) {
         vm.runInContext(`${webjet.slice(tooltipStart, webjet.indexOf('\n    /**', tooltipStart))}\nWJ.initTooltip = initTooltip;`, context);
         vm.runInContext(readAdmin('ai/chat-history-api.js'), context);
         vm.runInContext(readAdmin('ai/chat-tooltips.js'), context);
+        vm.runInContext(readAdmin('ai/ai-response-parser.js'), context);
         vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
         vm.runInContext(`{ ${readAdmin('ai/quick-search-chat.js')}; Object.assign(this, { QuickSearchChat }); }`, context);
         if (options.editorChat) {
-            vm.runInContext(readAdmin('ai/ai-response-parser.js'), context);
             vm.runInContext(readAdmin('../../npm_packages/webjetdatatables/ai/ai-execution-result.js'), context);
             vm.runInContext(`${readAdmin('../../npm_packages/webjetdatatables/editor-ai.js')}\nthis.EditorAi = EditorAi;`, context);
         }
@@ -1453,7 +1453,8 @@ test('AI Chat sends no webpage context and completed responses expose only Copy'
     f.chatRequests[0].resolve({ success: true, response: reply });
     await tick();
     const message = f.controller.chatPanel.querySelector('.ai-chat-assistant');
-    assert.equal(message.querySelector('.ai-chat-message-text').textContent, reply);
+    assert.equal(message.querySelector('details code').textContent, reply);
+    assert.equal(message.querySelector('details').open, false);
     assert.equal(message.querySelector('.ai-chat-message-text p'), null, 'Raw HTML must remain inert text.');
     const actions = message.querySelectorAll('.ai-chat-message-actions button');
     assert.equal(actions.length, 1);
@@ -1493,12 +1494,42 @@ test('AI Chat renders streamed Markdown tables and copies the original response 
     assert.equal(answer.querySelectorAll('tbody tr').length, 2);
 });
 
+test('HTML disclosures preserve explanations, literal source, focus and expanded state while streaming', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    typeChat(input, 'Create a PageBuilder section');
+    sendChat(input);
+    const request = f.chatRequests[0];
+    const prefix = '**Návrh stránky**\n\n```html\n';
+    request.callbacks.onUpdate(prefix + '<section');
+    const answer = f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-message-text');
+    const details = answer.querySelector('details');
+    assert.equal(details.open, false);
+    assert.equal(answer.querySelector('b').textContent, 'Návrh stránky');
+    const summary = details.querySelector('summary');
+    summary.click();
+    summary.focus();
+    const html = '<section><h1>**Literal heading**</h1><img src=x onerror="alert(1)"><script>alert(1)</script></section>';
+    const reply = prefix + html + '\n```\n\nHotovo. **Skontrolujte obsah.**';
+    request.callbacks.onUpdate(reply);
+    assert.equal(answer.querySelector('details'), details, 'Streaming must retain the native disclosure element.');
+    assert.equal(details.open, true);
+    assert.equal(input.ownerDocument.activeElement, summary);
+    assert.equal(details.querySelector('code').textContent, html);
+    assert.equal(answer.querySelector('section, img, script'), null);
+    assert.equal(answer.querySelectorAll('b')[1].textContent, 'Skontrolujte obsah.');
+    request.resolve({ success: true, response: reply });
+    await tick();
+    summary.click();
+    assert.equal(details.open, false);
+});
+
 test('AI Chat Markdown strips active content and attributes while preserving safe links and code', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     const input = await openChat(f);
     typeChat(input, 'Format this answer');
     sendChat(input);
-    const reply = '<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>\n\n'
+    const reply = 'Formatting examples:\n\n<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>\n\n'
         + '[Unsafe](javascript:alert(1)) [Obfuscated](java&#x73;cript:alert(1)) '
         + '[Control](java&#x09;script:alert(1)) [Data](data:text/html,danger)\n\n'
         + '[Safe](https://example.com/guide) [Breakout](https://example.com/" onclick="alert(1)" style="color:red)\n\n'

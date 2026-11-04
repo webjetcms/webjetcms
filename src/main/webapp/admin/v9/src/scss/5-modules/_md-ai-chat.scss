@@ -59,7 +59,7 @@
     .btn-outline-secondary {
         background-color: white;
 
-        &:hover {
+        &:hover, &:focus-visible {
             background-color: var(--wj-dark-20);
             border-color: var(--wj-dark-50);
             color: var(--bs-body-color);
@@ -187,8 +187,8 @@
         white-space: normal;
         overflow-x: auto;
 
-        > :first-child { margin-top: 0; }
-        > :last-child { margin-bottom: 0; }
+        > :first-child, .ai-chat-markdown > :first-child { margin-top: 0; }
+        > :last-child, .ai-chat-markdown > :last-child { margin-bottom: 0; }
         h1, h2, h3 { margin: 12px 0 6px; font-size: 16px; font-weight: bold; }
         ul { padding-left: 22px; }
         a { text-decoration: underline; }
@@ -224,6 +224,31 @@
         margin-top: 6px;
         font-size: 13px;
         color: var(--wj-gray-text);
+    }
+
+    .ai-chat-html-response {
+        margin: 8px 0;
+        border: 1px solid var(--wj-nice-gray-100);
+        border-radius: var(--wj-border-radius);
+
+        summary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: var(--wj-border-radius);
+            cursor: pointer;
+            list-style: none;
+
+            &::-webkit-details-marker { display: none; }
+            &:hover { background: var(--wj-nice-gray); }
+            &:focus-visible { outline: 2px solid var(--wj-ai-color); outline-offset: 2px; }
+            .ti { color: var(--wj-ai-color-dark); font-size: 20px; }
+            .ai-chat-html-chevron { margin-left: auto; font-size: 16px; }
+        }
+
+        &[open] .ai-chat-html-chevron { transform: rotate(180deg); }
+        pre { max-height: 320px; margin: 0; overflow: auto; }
     }
 
     .ai-chat-message-actions {
