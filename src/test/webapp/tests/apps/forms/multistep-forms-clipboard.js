@@ -111,6 +111,51 @@ Scenario('Copy a saved field, cancel and save independent repeated copies', asyn
             I.assertDeepEqual(record[field], source[field], field + ' must survive copy, save and reopen');
         }
     }
+
+    const conditionUrls = [];
+    I.clickCss(items + ' tbody tr[id="' + records[1].id + '"] td:last-child');
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor('formItemsDataTable');
+    for (const condition of ['visibilityConditions', 'requirementConditions']) {
+        const tableId = 'datatableFieldDTE_Field_' + condition;
+        I.clickCss('#pills-dt-formItemsDataTable-' + condition + '-tab');
+        I.clickCss('#' + tableId + '_wrapper button.buttons-create');
+        DTE.waitForEditor(tableId);
+        DTE.selectOption('itemFormId', '(Krok 1) ' + label);
+        DTE.selectOption('operator', 'je prázdne');
+        DTE.save(tableId);
+        DT.waitForLoader(tableId);
+        const saved = await I.executeScript(condition => {
+            const table = condition === 'visibilityConditions' ? visibilityConditionsDataTable : requirementConditionsDataTable;
+            return { url: WJ.urlAddPath(table.getAjaxUrl(), '/all'), count: table.rows().count() };
+        }, condition);
+        I.assertEqual(saved.count, 1, 'The copied field must have a saved ' + condition);
+        conditionUrls.push(saved.url);
+    }
+    DTE.cancel('formItemsDataTable');
+    I.clickCss(items + ' tbody tr[id="' + records[0].id + '"] td:last-child');
+    I.click(DT.btn.formItems_delete_button);
+    I.waitForVisible('div.DTE_Action_Remove', 10);
+    I.click('Zmazať', 'div.DTE_Action_Remove');
+    I.waitForText('Táto položka formulára sa používa v podmienkach, preto sa NEDÁ odstrániť.', 10, 'div.DTE_Action_Remove');
+    DTE.cancel('formItemsDataTable');
+    I.seeElement(items + ' tbody tr[id="' + records[0].id + '"]');
+    I.toastrClose();
+
+    I.clickCss(items + ' tbody tr[id="' + records[1].id + '"] td:last-child');
+    I.click(DT.btn.formItems_delete_button);
+    I.waitForVisible('div.DTE_Action_Remove', 10);
+    I.click('Zmazať', 'div.DTE_Action_Remove');
+    DT.waitForLoader('formItemsDataTable');
+    I.waitForInvisible(items + ' tbody tr[id="' + records[1].id + '"]', 10);
+    for (const url of conditionUrls) {
+        const result = await I.executeScript(async url => {
+            const response = await fetch(url, { headers: { 'X-CSRF-Token': window.csrfToken } });
+            return { status: response.status, data: await response.json() };
+        }, url);
+        I.assertEqual(result.status, 200, 'Conditions remain readable after deleting their owning field');
+        I.assertDeepEqual(result.data.content, [], 'Deleting a copied field must remove its saved conditions');
+    }
 });
 
 Scenario('Cleanup clipboard and pasted fields', async ({ I, DT }) => {

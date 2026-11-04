@@ -46,6 +46,7 @@ import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
@@ -410,6 +411,8 @@ class MultistepFormsServiceTest {
     private static MockedStatic<Tools> mockValidationFields(FormItemsRepository repository) {
         MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
         tools.when(() -> Tools.getSpringBean("formItemsRepository", FormItemsRepository.class)).thenReturn(repository);
+        tools.when(() -> Tools.getSpringBean("formItemsConditionsRepository", FormItemsConditionsRepository.class))
+            .thenReturn(mock(FormItemsConditionsRepository.class));
         return tools;
     }
 

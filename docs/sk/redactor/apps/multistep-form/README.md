@@ -253,6 +253,7 @@ Každá podmienka obsahuje tieto parametre:
 
 - Podmienka nemôže odkazovať sama na seba. Ide o nepovolený stav a podmienka sa nebude dať uložiť.
 - Položku, ktorá je použitá v podmienkach iných položiek, nie je možné odstrániť.
+- Pri odstránení položky sa odstránia aj jej podmienky zobrazenia a povinnosti. Polia, na ktoré tieto podmienky odkazovali, potom môžete odstrániť, ak ich nepoužíva podmienka ďalšej existujúcej položky. Podmienky sa odstránia aj pri zmazaní celého kroku alebo formulára.
 - Pri úprave takejto položky editor zobrazí upozornenie na závislé položky. Uloženie môžete povoliť v karte **Pokročilé** voľbou **Uložiť aj pri existujúcich závislých položkách**.
 
 Pri pokuse o úpravu alebo odstránenie položky, ktorá je použitá v podmienke inej položky, sa zobrazí chyba aj notifikácia so zoznamom závislých položiek.

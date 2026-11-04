@@ -44,6 +44,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.rest.FormConditionsHandler;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
@@ -654,7 +655,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      * Deletes one submission or all records and structure belonging to a form definition.
      *
      * Deleting a management record, identified by a missing creation date, removes all submissions,
-     * steps, and items with the same form name. Form settings are intentionally preserved.
+     * steps, items, and conditions with the same form name. Form settings are intentionally preserved.
      *
      * @param entity  entity carrying the form name to delete
      * @param id  database identifier of the record initiating the deletion
@@ -672,6 +673,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
             if (domainId != entityDb.getDomainId()) return false;
 
             if (entityDb.getCreateDate() == null) {
+                FormConditionsHandler.deleteFormConditions(formName, domainId);
                 //zmaz vsetky podla mena formu, ak su uz len 2 zaznamy (cize riadiaci + jeden form) zmaz tiez vsetko
                 formsRepository.deleteByFormNameAndDomainId(formName, domainId);
                 // Ak ma, zmaz aj steps/items (multistep forms)
