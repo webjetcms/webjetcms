@@ -1641,6 +1641,7 @@ public class MultistepFormsService {
                 }
             }
 
+            //if field is not required skip empty values
             if(isRequired == false && Tools.isEmpty(received.optString(itemFormId, ""))) continue;
 
             for(RegExpEntity regExp : allRegExps) {

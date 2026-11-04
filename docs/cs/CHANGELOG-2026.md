@@ -330,6 +330,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Vícekrokové formuláře - pravidla **Povolená hodnota** již neodmítnou prázdné nepovinné pole. U povinného pole se regulární výrazy kontrolují i ​​pro prázdnou hodnotu; při odeslání kroku se zohledňují i ​​podmínky povinnosti (#394).
 - Webové stránky - opraven [export do ZIP archivu](redactor/webpages/import-export.md) pro obrázky vložené přes `/thumb/`, které se původně do exportu nepřidaly (#389).
 - Webové stránky - dialog pro vložení obrázku omezuje výběr souborů na obrázky, videa a zvukové soubory i ve složce Soubory. Nepodporované typy rozpoznané prohlížečem odmítne ještě před odesláním. Server navíc ověří příponu před uložením (#375).
 - Webové stránky - přesměrování stránky se přihlášenému administrátorovi neukládá do cache prohlížeče, aby se jeho změna nebo zrušení projevily při dalším otevření stránky (#372).
@@ -727,6 +728,9 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- Databáze - opraveno generování SQL podmínek `IN` a `NOT IN` s velkým počtem hodnot rozdělením seznamů na menší části. Odstraněny chyby při překročení limitu 1000 hodnot v Oracle databázi, například při načítání historie stránky nebo práci s rozsáhlým stromem složek. Maximální počet hodnot v jedné části určuje konfigurační proměnná `dbInClauseMaxItems` (výchozí 1000, v Oracle nejvýše 1000).
+- Webové stránky - opraveno omezení hledání a nahrazování v názvech složek na vybraný strom složek a nastavení rodiče při opravě chybně smazaných složek během přesunu stránky do koše (#390).
+- Kalendář událostí - opraveno filtrování podle více perex skupin při nastavení `perexGroupUseJoin=true` bez duplicitních událostí. Upraveno omezení počtu výsledků i pro Oracle a Microsoft SQL (#390).
 - Webové stránky - opraveno zacyklení inicializace složek a kontroly plánovaného publikování při pomalém připojení k databázi (#337).
 - Cluster - optimalizované zapisování změny v clusteru při startu nového uzlu (#337).
 - Redis - zlepšený přenos informace o nahrávaném souboru v session (#342).
