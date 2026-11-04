@@ -14,6 +14,7 @@ var docDataENupdate2 = ["dog", "cat", "coconut"];
 
 Before(({ I, DT }) => {
     if (typeof randomText=="undefined") {
+        // Titles must not contain "autotest", which makes TranslationService skip translation.
         randomText = I.getRandomTextShort();
     }
 
@@ -108,6 +109,16 @@ async function testTranslation(I, DT, DTE, Document, useAutotranslator) {
         I.relogin("admin");
         I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=56846");
         I.see("Auto Translator", "#datatableInit");
+    }
+
+    if (useAutotranslator) {
+        I.say("Saving an SK draft must preserve the published EN translation");
+        openDoc(I, DT, DTE, docTitleSK, "SK");
+        await DTE.fillCkeditor(docDataSKupdate2);
+        I.checkOption("#webpagesSaveCheckbox");
+        DTE.save();
+        DTE.cancel();
+        checkBodyEN(I, DT, DTE, docTitleEN, docDataENupdate);
     }
 
     // UPDATE SK VERSION

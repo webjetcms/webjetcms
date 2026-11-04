@@ -36,6 +36,7 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
@@ -329,6 +330,12 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     @Override
     public boolean checkItemPerms(DocDetails entity, Long id) {
         if (getUser() == null) return false;
+
+        // A selected page may already have been deleted through its mirror in this request.
+        // Its permissions were checked before deletion; do not reject it now because it is in Trash or missing.
+        // The deletion service also checks this marker and skips deleting the page again.
+        if (id != null && DeleteRequestContext.isDeleted(DocDetails.class, id.intValue())) return true;
+
         // The action endpoint uses -1 for actions without a selected record.
         if (entity == null) return Long.valueOf(-1L).equals(id);
         if (entity.getDocId()>0) {
