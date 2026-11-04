@@ -4,6 +4,7 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Databáza - opravené generovanie SQL podmienok `IN` a `NOT IN` s veľkým počtom hodnôt rozdelením zoznamov na menšie časti. Odstránené chyby pri prekročení limitu 1000 hodnôt v Oracle databáze, napríklad pri načítaní histórie stránky alebo práci s rozsiahlym stromom priečinkov. Maximálny počet hodnôt v jednej časti určuje konfiguračná premenná `dbInClauseMaxItems` (predvolene 1000, v Oracle najviac 1000).
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
 - Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
 - Redis - zlepšený prenos informácie o nahrávanom súbore v session (#342).

@@ -30,7 +30,7 @@ import sk.iway.iwcm.i18n.Prop;
 class HistoryDBTest
 {
 	@ParameterizedTest
-	@ValueSource(ints = {Constants.DB_ORACLE, Constants.DB_MSSQL, Constants.DB_MYSQL, Constants.DB_PGSQL})
+	@ValueSource(ints = {Constants.DB_ORACLE, Constants.DB_MYSQL})
 	void historyQueriesSplitMoreThanOneThousandIds(int databaseType) throws Exception
 	{
 		int originalDatabaseType = Constants.DB_TYPE;

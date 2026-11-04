@@ -32,6 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import sk.iway.iwcm.Constants;
@@ -114,6 +115,24 @@ class JpaToolsInConditionTest
 		assertChunks(sql(JpaTools.in(group, ids, builder)), 1001, 2, 1000);
 		Constants.setInt("dbInClauseMaxItems", 2);
 		assertChunks(sql(JpaTools.in(group, List.of(1, 2, 3), builder)), 3, 2, 2);
+	}
+
+	@ParameterizedTest
+	@CsvSource({"false, false", "false, true", "true, false", "true, true"})
+	void chunkedMembershipKeepsGroupingWithOtherFilters(boolean exclusion, boolean conjunction)
+	{
+		Constants.setInt("dbInClauseMaxItems", 2);
+		List<Integer> values = List.of(1, 2, 3);
+		Predicate membership = exclusion ? JpaTools.notIn(group, values, builder) : JpaTools.in(group, values, builder);
+		Predicate otherFilter = builder.equal(id, 42);
+		SQLCall call = sql(conjunction ? builder.and(membership, otherFilter) : builder.or(membership, otherFilter));
+
+		String expectedMembership = "((group_id IN (?,?)) OR (group_id IN (?)))";
+		if (exclusion) expectedMembership = "NOT (" + expectedMembership + ")";
+		String expectedWhere = "(" + expectedMembership + (conjunction ? " AND " : " OR ") + "(doc_id = ?))";
+		String actualWhere = call.getSQLString().substring(call.getSQLString().indexOf(" WHERE ") + 7);
+		assertEquals(expectedWhere.replaceAll("\\s+", ""), actualWhere.replaceAll("\\s+", ""));
+		assertEquals(List.of(1, 2, 3, 42), call.getParameters());
 	}
 
 	@Test

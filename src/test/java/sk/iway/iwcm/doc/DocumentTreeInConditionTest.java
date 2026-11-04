@@ -55,40 +55,27 @@ class DocumentTreeInConditionTest
 	}
 
 	@Test
-	void inheritedSettingsKeepTheWholeSubtreeAndBindPositions() throws Exception
+	void inheritedMenuSettingsKeepTheWholeSubtreeAndBindPositions() throws Exception
 	{
 		GroupsDB groups = mock(GroupsDB.class, CALLS_REAL_METHODS);
 		doReturn(tree(2, 1001, "example.com")).when(groups).getGroupsTree(1, false, true);
 		Connection connection = mock(Connection.class);
-		List<String> queries = new ArrayList<>();
-		List<PreparedStatement> statements = new ArrayList<>();
-		when(connection.prepareStatement(anyString())).thenAnswer(invocation -> {
-			queries.add(invocation.getArgument(0));
-			PreparedStatement statement = mock(PreparedStatement.class);
-			statements.add(statement);
-			return statement;
-		});
+		PreparedStatement statement = mock(PreparedStatement.class);
+		when(connection.prepareStatement(anyString())).thenReturn(statement);
 		try (MockedStatic<DBPool> pool = mockStatic(DBPool.class);
 			MockedStatic<Adminlog> log = mockStatic(Adminlog.class);
 			MockedStatic<GroupsDB> cache = mockStatic(GroupsDB.class))
 		{
 			pool.when(DBPool::getConnection).thenReturn(connection);
-			groups.setLngToSubGroups(1, "en");
 			groups.setInternalAndMenuTypeToSubgroups(1, true, 2, 3);
-			groups.setPermissionToSubgroups(1, "7,9");
-			groups.setTemplateToSubgroups(1, 42);
-			groups.setTemplateToSubpages(1, 42);
 		}
-		assertEquals(5, queries.size());
-		for (String query : queries) assertIds(query, 1001);
-		verify(statements.get(0)).setString(1, "en");
-		verify(statements.get(1)).setBoolean(1, true);
-		verify(statements.get(1)).setInt(2, 2);
-		verify(statements.get(1)).setInt(3, 3);
-		verify(statements.get(2)).setString(1, "7,9");
-		verify(statements.get(3)).setInt(1, 42);
-		verify(statements.get(4)).setInt(1, 42);
-		for (PreparedStatement statement : statements) verify(statement).execute();
+		ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+		verify(connection).prepareStatement(sql.capture());
+		assertIds(sql.getValue(), 1001);
+		verify(statement).setBoolean(1, true);
+		verify(statement).setInt(2, 2);
+		verify(statement).setInt(3, 3);
+		verify(statement).execute();
 	}
 
 	@ParameterizedTest

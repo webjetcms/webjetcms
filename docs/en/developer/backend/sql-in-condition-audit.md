@@ -246,9 +246,9 @@ The search covered production Java/JSP/SQL/XML under `src/main` and `src/webjet8
 Verification is implemented in the following tests:
 
 - `DBInConditionTest`: numeric adapters, exclusions, placeholders, ordering, invalid input, empty inputs and configuration limits across the supported engines.
-- `HistoryDBTest`: published/unpublished history with 1001 IDs across all four engines.
+- `HistoryDBTest`: published/unpublished history with 1001 IDs in the Oracle and shared non-Oracle SQL branches.
 - `NewsQueryInConditionTest`: data/count queries, inclusion/exclusion, surrounding filters and JDBC argument order.
-- `DocumentTreeInConditionTest`: inherited settings over a 1001-folder subtree, original bind positions, active cloud domain filtering and an empty authorized set.
-- `JpaToolsInConditionTest`: actual CriteriaQuery translation for 1/999/1000/1001/2000/2001 values, negation, empty-set composition, null items, blog filter replacement and provider expansion of bound collections.
+- `DocumentTreeInConditionTest`: one representative inherited menu-settings update over a 1001-folder subtree, original bind positions, active cloud domain filtering and an empty authorized set.
+- `JpaToolsInConditionTest`: actual CriteriaQuery translation for 1/999/1000/1001/2000/2001 values, complete negation and grouping with other AND/OR filters, empty-set composition, null items, blog filter replacement and provider expansion of bound collections.
 
 Run with the repository's Gradle test task and the relevant class filters. These tests require no database credentials or connection. Live Oracle publishing, subtree operations and paging remain integration smoke checks for the deployment environment; the inspected dependency version does not establish the client's deployed provider version.
