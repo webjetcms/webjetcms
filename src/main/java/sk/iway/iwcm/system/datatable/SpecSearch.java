@@ -13,6 +13,7 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.users.UserDetails;
 
 /**
@@ -156,7 +157,7 @@ public class SpecSearch<T> {
 		}
 
 		List<Integer> userIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT user_id FROM users WHERE CONCAT(CONCAT(first_name, ' '), last_name) "+operator+" ? OR email "+operator+" ?", prepend+valueClean+append, prepend+valueClean+append);
-		if (userIds.size()>0) predicates.add(root.get(jpaProperty).in(userIds));
+		if (userIds.size()>0) predicates.add(JpaTools.in(root.get(jpaProperty), userIds, builder));
 		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));
 	}
 
@@ -303,13 +304,10 @@ public class SpecSearch<T> {
         if (Tools.isNotEmpty(user.getEditableGroups())) {
             GroupsDB groupsDB = GroupsDB.getInstance();
             int[] expandedGroupIds = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(), ","), true);
-			String groupIdsJoined = Arrays.stream(expandedGroupIds)
-			.mapToObj(String::valueOf)
-			.collect(Collectors.joining(","));
 
-			//Fix, if groupIdsJoined is empty ("=") sql is invalid
-			if(!groupIdsJoined.isEmpty()) {
-				List<Integer> docIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT doc_id FROM documents WHERE group_id IN ("+groupIdsJoined+")");
+			// Keep the existing behavior of omitting an empty group filter.
+			if(expandedGroupIds.length > 0) {
+				List<Integer> docIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT doc_id FROM documents WHERE " + DB.getInCondition("group_id", expandedGroupIds));
 				docIdsList.addAll(docIds);
 			}
         }

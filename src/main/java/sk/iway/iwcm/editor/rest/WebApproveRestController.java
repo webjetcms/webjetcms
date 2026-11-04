@@ -35,6 +35,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 
@@ -140,7 +141,7 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
                     if (groupIdsInDomain.isEmpty()) groupIdsInDomain.add(-1);
 
                     if (groupIdsInDomain.size()>0) {
-                        predicates.add(root.get("groupId").in(groupIdsInDomain));
+                        predicates.add(JpaTools.in(root.get("groupId"), groupIdsInDomain, builder));
                     }
                 }
             }
@@ -158,11 +159,11 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
             }
         }
         if (groupIdsInTrash.isEmpty()==false) {
-            predicates.add(builder.not(root.get("groupId").in(groupIdsInTrash)));
+            predicates.add(JpaTools.notIn(root.get("groupId"), groupIdsInTrash, builder));
         }
 
         //remove pages which current version is in Trash
-        if (skipHistoryId.isEmpty()==false) predicates.add(builder.not(root.get("id").in(skipHistoryId)));
+        if (skipHistoryId.isEmpty()==false) predicates.add(JpaTools.notIn(root.get("id"), skipHistoryId, builder));
 
         return predicates;
     }

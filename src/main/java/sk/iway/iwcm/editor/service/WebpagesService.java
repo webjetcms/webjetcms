@@ -484,7 +484,7 @@ public class WebpagesService {
         Adminlog.add(Adminlog.TYPE_GROUP, "Force "+DB.removeSlashes(attributeName)+" to subgroups: " + groupIds + " value=" + attributeValue, groupId, -1);
 
         try {
-			ps = db_conn.prepareStatement("UPDATE groups SET " + DB.removeSlashes(attributeName) + "=? WHERE group_id IN (" + groupIds + ")");
+			ps = db_conn.prepareStatement("UPDATE groups SET " + DB.removeSlashes(attributeName) + "=? WHERE " + DB.getInCondition("group_id", groupIds));
 
 			if (attributeValue instanceof String string) ps.setString(1, string);
 			else if (attributeValue instanceof Integer integer) ps.setInt(1, integer);
@@ -662,7 +662,7 @@ public class WebpagesService {
 						groupIds.add(rootGroup.getGroupId());
 					}
 					if (groupIds.isEmpty()==false) {
-						predicates.add(root.get("rootGroupL1").in(groupIds));
+						predicates.add(JpaTools.in(root.get("rootGroupL1"), groupIds, builder));
 					}
 
 					//Vylúč všetky kôš adresáre
@@ -673,10 +673,10 @@ public class WebpagesService {
 						groupIdsTrash.add(group.getGroupId());
 					}
 					if (groupIdsTrash.isEmpty()==false) {
-						predicates.add(builder.not(root.get(GROUP_ID).in(groupIdsTrash)));
+						predicates.add(JpaTools.notIn(root.get(GROUP_ID), groupIdsTrash, builder));
 						predicates.add(builder.or(
 							builder.isNull(root.get("rootGroupL2")),
-							builder.not(root.get("rootGroupL2").in(groupIdsTrash))
+							JpaTools.notIn(root.get("rootGroupL2"), groupIdsTrash, builder)
 						));
 					}
 				}
@@ -705,7 +705,7 @@ public class WebpagesService {
 				//ak sa jedna o posledny uzol daj to ako klasicku where kvoli efektivite
 				predicates.add(builder.equal(root.get(GROUP_ID), groupIds.get(0)));
 			} else if (groupIds.isEmpty()==false) {
-				predicates.add(root.get(GROUP_ID).in(groupIds));
+				predicates.add(JpaTools.in(root.get(GROUP_ID), groupIds, builder));
 			}
 		} else if (groupId>0)  {
 			predicates.add(builder.equal(root.get(GROUP_ID), groupId));
@@ -1173,17 +1173,16 @@ public class WebpagesService {
 			if (groupIds.size()==1) {
 				predicates.add(builder.equal(root.get(GROUP_ID), groupIds.get(0)));
 			} else if (groupIds.size()>1) {
-				predicates.add(root.get(GROUP_ID).in(groupIds));
+				predicates.add(JpaTools.in(root.get(GROUP_ID), groupIds, builder));
 			}
 
 			//filter iba hlavnych stranok adresarov
 			String searchStatusIcon = params.get("searchEditorFields.statusIcons");
 			if ("searchDefaultPage".equals(searchStatusIcon) && groupIds.size()>0) {
 				//ziskaj zoznam default_doc_id pre zvolene adresare
-				String ids = groupIds.stream().map(String::valueOf).collect(Collectors.joining(","));
-				List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE group_id IN ("+ids+")");
+				List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE " + DB.getInCondition("group_id", groupIds));
 				//pridaj to ako predikat
-				predicates.add(root.get("id").in(defaultDocIds));
+				predicates.add(JpaTools.in(root.get("id"), defaultDocIds, builder));
 			}
 		}
     }

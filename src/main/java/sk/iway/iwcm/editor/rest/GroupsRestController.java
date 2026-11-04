@@ -437,13 +437,13 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to subgroups: " + groupIds, entity.getGroupId(), entity.getTempId());
 
             //updatni groups
-            new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")",entity.getDomainName());
+            new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE " + DB.getInCondition("group_id", groupIds),entity.getDomainName());
 
             if (systemGroupIds!=null) {
                 Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
 
                 //updatni groups
-                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE " + DB.getInCondition("group_id", systemGroupIds), entity.getDomainName());
             }
 
             //aktualizuj presmerovania

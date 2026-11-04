@@ -24,6 +24,11 @@ Low-level, wide-use utility classes available across all packages.
 
 - `Tools` reads date/time formats & other settings from `Constants`; reinitialize after constants reload to keep patterns synchronized.
 
+### SQL Membership Lists
+
+- Build dynamic ID predicates with `DB.getInCondition` / `getNotInCondition` (CSV, numeric collection, or `int[]`); use the collection-plus-parameters overload for bound values. Keep existing permission/domain filtering before these calls.
+- Read [SQL membership contracts and migration inventory](../../docs/en/developer/backend/sql-in-condition-audit.md#implemented-interface-and-shared-implementation) when changing an IN/NOT IN query, especially empty-list handling or JDBC binding. The helpers split predicates while preserving a single query.
+
 ### HTML / JSON Safety
 
 - `JsonTools.prepare4Json` strips includes, normalizes image/link tags adding thumbnail attributes for admin previews.

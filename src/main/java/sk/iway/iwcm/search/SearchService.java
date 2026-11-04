@@ -1,6 +1,7 @@
 package sk.iway.iwcm.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,7 @@ import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
+import sk.iway.iwcm.system.jpa.JpaTools;
 
 /**
  * Search service to search term in ADMIN
@@ -75,7 +77,7 @@ public class SearchService {
         if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true)
         {
             Integer[] rootGroupIds = Tools.getTokensInteger(CloudToolsForCore.getRootGroupIds(), ",");
-            predicates.add(root.get("rootGroupL1").in((Object[])rootGroupIds));
+            predicates.add(JpaTools.in(root.get("rootGroupL1"), Arrays.asList(rootGroupIds), builder));
         }
 
         // Groups and Pages permissions check ONLY for docs filtering (files cant be changes anyway)
@@ -89,16 +91,16 @@ public class SearchService {
                 if(editablePagesIds.length > 0) {
                     // Right for pages in whole tree from given id + right for pages in editablePages
                     predicates.add(builder.or(
-                        root.get("groupId").in((Object[]) groupsTreeIds),
-                        root.get("id").in((Object[]) editablePagesIds)
+                        JpaTools.in(root.get("groupId"), Arrays.asList(groupsTreeIds), builder),
+                        JpaTools.in(root.get("id"), Arrays.asList(editablePagesIds), builder)
                     ));
                 } else {
                     // Right for pages in whole tree from given id
-                    predicates.add(root.get("groupId").in((Object[]) groupsTreeIds));
+                    predicates.add(JpaTools.in(root.get("groupId"), Arrays.asList(groupsTreeIds), builder));
                 }
             } else if(editablePagesIds.length > 0) {
                 // Right for pages in editablePages
-                predicates.add(root.get("id").in((Object[]) editablePagesIds));
+                predicates.add(JpaTools.in(root.get("id"), Arrays.asList(editablePagesIds), builder));
             }
         }
 
