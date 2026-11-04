@@ -5,16 +5,26 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.webjetcms.ai.AiErrorCategory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,6 +52,7 @@ public class AssistantController {
     private final AssistantDefinitionRepository assistantRepo;
 
     private final AiTaskRegistry aiTaskRegistry;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     public AssistantController(AiService aiService, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, AiTaskRegistry aiTaskRegistry) {
@@ -54,58 +65,52 @@ public class AssistantController {
     @PostMapping(value = "/response/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
         AssistantResponseDTO responseDto = null;
-        String exceptionMessage = null;
 
         try {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
             responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
-        } catch (ProviderCallException e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
         } catch (Exception e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
-            Adminlog.add(Adminlog.TYPE_AI, "AI response error: " + exceptionMessage, 0L, -1L);
+            responseDto = errorResponse(e, "AI response error: ");
         }
 
         if (responseDto == null) {
-            responseDto = new AssistantResponseDTO();
-            responseDto.setError(getErrMsg(exceptionMessage, request));
+            responseDto = AssistantResponseDTO.fromError(null);
         }
 
         return responseDto;
     }
 
+    /** Runs a page chat turn with validated files that are not saved to chat history. */
+    @PostMapping(value = "/response/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public AssistantResponseDTO uploadResponse(@RequestParam String message, @RequestParam("files") List<MultipartFile> files,
+        HttpServletRequest request) {
+        return getAiReponse(uploadInput(message, files), request);
+    }
+
     @PostMapping(value = "/response-image/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiImageReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
         AssistantResponseDTO responseDto = null;
-        String exceptionMessage = null;
 
         try {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
             responseDto = aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request);
-        } catch (ProviderCallException e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
         } catch (Exception e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
-            Adminlog.add(Adminlog.TYPE_AI, "AI response image error: " + exceptionMessage, 0L, -1L);
+            responseDto = errorResponse(e, "AI response image error: ");
         }
 
         if (responseDto == null) {
-            responseDto = new AssistantResponseDTO();
-            responseDto.setError(getErrMsg(exceptionMessage, request));
+            responseDto = AssistantResponseDTO.fromError(null);
         }
 
         return responseDto;
     }
 
-    @PostMapping(value="/response-stream/", produces = { MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_NDJSON_VALUE })
+    @PostMapping(value="/response-stream/", consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = { MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_NDJSON_VALUE })
     public void streamData(@RequestBody InputDataDTO inputData, HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Older clients keep the plain-text format; the admin UI explicitly requests framed messages.
         boolean framed = MediaType.parseMediaTypes(request.getHeader("Accept")).stream()
@@ -125,25 +130,18 @@ public class AssistantController {
         writer.flush();
 
         AssistantResponseDTO responseDto = null;
-        String exceptionMessage = null;
 
         try {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
             responseDto = aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request);
-        } catch (ProviderCallException e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
         } catch(Exception e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
-            Adminlog.add(Adminlog.TYPE_AI, "AI streamed response error: " + exceptionMessage, 0L, -1L);
+            responseDto = errorResponse(e, "AI streamed response error: ");
         } finally {
 
             if (responseDto == null) {
-                responseDto = new AssistantResponseDTO();
-                responseDto.setError(getErrMsg(exceptionMessage, request));
+                responseDto = AssistantResponseDTO.fromError(null);
             }
 
             if (streamWriter != null) {
@@ -156,12 +154,49 @@ public class AssistantController {
         }
     }
 
+    /** Streams a page chat turn using the same upload validation and cancellation as ordinary turns. */
+    @PostMapping(value = "/response-stream/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+        produces = { MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_NDJSON_VALUE })
+    public void uploadStream(@RequestParam String message, @RequestParam("files") List<MultipartFile> files,
+        HttpServletRequest request, HttpServletResponse response) throws IOException {
+        streamData(uploadInput(message, files), request, response);
+    }
+
+    private InputDataDTO uploadInput(String message, List<MultipartFile> files) {
+        InputDataDTO input;
+        try {
+            input = mapper.readValue(message, InputDataDTO.class);
+        } catch (IOException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalidInput");
+        }
+        if (input == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalidInput");
+        input.setChatAttachments(AiChatAttachments.read(files));
+        return input;
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> tooLarge() {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of("error", "attachmentLimit"));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> uploadError(ResponseStatusException exception) {
+        return ResponseEntity.status(exception.getStatusCode())
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of("error", exception.getReason() == null ? "generationFailed" : exception.getReason()));
+    }
+
     @GetMapping("/file/binary/")
 	public void execute(@RequestParam String fileName, HttpServletRequest request, HttpServletResponse response) {
         try {
             AiTempFileStorage.downloadFile(fileName, request, response);
+        } catch (IOException e) {
+            if (response.isCommitted() == false) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         } catch(Exception e) {
-           sk.iway.iwcm.Logger.error(e);
+            sk.iway.iwcm.Logger.error(e);
+            if (response.isCommitted() == false) response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -187,8 +222,15 @@ public class AssistantController {
         return UploadFileTools.getPageUploadSubDir(docId, groupId, title, "/images");
     }
 
-    private String getErrMsg(String errMsg, HttpServletRequest request) {
-        return errMsg;
+    private AssistantResponseDTO errorResponse(Exception exception, String auditMessage) {
+        AssistantResponseDTO response = AssistantResponseDTO.fromError(exception);
+        if (AiErrorCategory.CANCELLED.name().equals(response.getErrorCategory()) == false) {
+            exception.printStackTrace();
+            if (exception instanceof ProviderCallException == false) {
+                Adminlog.add(Adminlog.TYPE_AI, auditMessage + response.getError(), 0L, -1L);
+            }
+        }
+        return response;
     }
 
     @GetMapping("/check-name-location/")
@@ -213,6 +255,12 @@ public class AssistantController {
         column.setAi(ai); //set also to column for future use
 
         return column;
+    }
+
+    /** Returns configured assistants explicitly bound to global chat in the current domain. */
+    @GetMapping("/chat-assistants/")
+    public List<DataTableAi> getChatAssistants(HttpServletRequest request) {
+        return aiService.getChatAssistants(assistantRepo, sk.iway.iwcm.i18n.Prop.getInstance(request));
     }
 
     @GetMapping(value = "/stop-assistant/")

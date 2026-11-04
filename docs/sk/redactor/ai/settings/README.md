@@ -38,9 +38,9 @@ Na tejto karte nastavujete, akú akciu má AI asistent vykonávať, odkiaľ bude
   - Vygenerovať obrázok
   - Upraviť obrázok
   - Chat
-- **Použiť pre Entitu** – vyberáte entitu (tabuľku), v ktorej bude asistent dostupný. Pri písaní sa automaticky zobrazia všetky podporované entity.
+- **Použiť pre Entitu** – vyberáte entitu (tabuľku), v ktorej bude asistent dostupný. Pri písaní sa automaticky zobrazia všetky podporované entity aj hodnota `CHAT_SEARCH` pre samostatný AI Chat v rýchlom vyhľadávaní.
 - **Zdrojové pole** – určujete pole z vybranej entity, z ktorého má asistent čerpať dáta pri vykonávaní akcie. Toto pole nie je povinné; vyberte ho len v prípade, že sú potrebné vstupné dáta. Zobrazia sa všetky polia danej entity.
-- **Cieľové pole** – vyberáte pole v entite, kde sa uloží výsledok akcie asistenta alebo kde bude asistent dostupný. Opäť sa zobrazia všetky polia danej entity.
+- **Cieľové pole** – vyberáte pole v entite, kde sa uloží výsledok akcie asistenta alebo kde bude asistent dostupný. Opäť sa zobrazia všetky polia danej entity. Ak má chatový asistent v **Použiť pre Entitu** iba `CHAT_SEARCH`, cieľové pole môžete nechať prázdne; pri uložení sa doplní `*`.
 
 ![](datatable-action-tab.png)
 
@@ -87,11 +87,26 @@ Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré u
 
 - **Zachovať HTML kód** – ak je zapnuté, HTML značky zo zdrojového poľa sa neodstránia a odošlú sa poskytovateľovi tak, ako sú. Zapnite iba v prípade, že model potrebuje pracovať so štruktúrovaným HTML (napr. analýza alebo úprava obsahu). Inak ponechajte vypnuté kvôli čistejšiemu vstupu.
 - **Využiť postupné načítanie** – odpoveď sa bude zobrazovať po častiach (streamovanie) namiesto jedného bloku. Vhodné pri dlhších generovaných textoch, aby mal používateľ okamžitú spätnú väzbu. Funguje iba pre textové výstupy.
-- **Zapnúť dočasný chat** – kontext a výmena správ sa po ukončení relácie neukladajú. Použite pri citlivom alebo jednorazovom dopyte. História nebude k dispozícii pre ďalšie pokračovanie.
+- **Zapnúť dočasný chat** – vypne ukladanie rozhovoru do histórie AI Chatu. Zobrazené správy zostávajú iba na aktuálnej stránke administrácie a prílohy nie sú dostupné. Pre uloženú históriu na karte AI Chat túto voľbu vypnite a použite podporovaný model OpenAI alebo Gemini. Nastavenie nenahrádza pravidlá spracovania a uchovávania údajov u poskytovateľa.
 - **Požadovať vstup od používateľa** – pred spustením asistenta musí používateľ zadať vlastný vstup (napr. zadanie témy, doplňujúcej inštrukcie alebo kľúčových slov). Ak je vypnuté, asistent beží bez dodatočného vstupu.
 - **Popis požiadavky** – krátka nápoveda zobrazovaná pri poli na zadanie vstupu (uľahčuje používateľovi pochopiť, čo má napísať). Môže byť zadaný aj prekladový kľúč; jeho vyhodnotená hodnota sa zobrazí v poli pod ním.
 
 ![](datatable-advanced-tab.png)
+
+## Nastavenie chatového asistenta
+
+1. V **Nastavenia → AI asistenti** vytvorte alebo upravte asistenta a zapnite **Povoliť používanie**.
+2. Na karte **Akcia** vyberte **Typ požiadavky → Chat**.
+3. Pre zobrazenie v rýchlom vyhľadávaní nastavte **Použiť pre Entitu → CHAT_SEARCH**. Hodnota sa ponúkne po napísaní `chat`. Ak má byť asistent dostupný aj pri poli, pridajte ju k pôvodnej entite, napríklad `sk.iway.iwcm.doc.DocDetails,CHAT_SEARCH`, a ponechajte nastavenie cieľového poľa.
+4. Na karte **Poskytovateľ** vyberte nakonfigurovaného poskytovateľa a model podporujúci požadovaný spôsob práce.
+5. V **Inštrukciách** určite úlohu asistenta, jazyk a požadovaný formát odpovedí.
+6. Pre ukladané rozhovory s prílohami na karte **AI Chat** použite OpenAI alebo Gemini, model s podporou chatu a vypnite **Zapnúť dočasný chat**. Pre priebežné zobrazovanie odpovede zapnite **Využiť postupné načítanie**, ak ho model podporuje.
+
+V rýchlom vyhľadávaní sa ponúkajú iba aktívni chatoví asistenti aktuálnej domény s nakonfigurovaným poskytovateľom a výslovne uvedenou hodnotou `CHAT_SEARCH`. Samotná hodnota `*`, vzor ani väzba na inú entitu asistenta do tejto ponuky nezaradí. Pri existujúcich asistentoch, ktorých chcete používať v rýchlom vyhľadávaní, doplňte `CHAT_SEARCH` ručne.
+
+Hodnota `CHAT_SEARCH` je označenie pre globálny chat a nevyžaduje databázovú tabuľku. **Zdrojové pole** a **Cieľové pole** sa v ňom nepoužívajú a obsah otvorenej stránky sa neposiela. Po odstránení väzby `CHAT_SEARCH` zostanú uložené globálne rozhovory dostupné na čítanie, ale nemožno v nich pokračovať.
+
+Používateľ potrebuje oprávnenie na používanie AI asistentov (`cmp_ai_button`). Ak zmeníte model, asistenta alebo konfiguráciu poskytovateľa, starší uložený rozhovor môže zostať dostupný iba na čítanie. Postup práce s rozhovormi je v kapitole [AI Chat](../chat/README.md).
 
 ## Poskytovatelia
 

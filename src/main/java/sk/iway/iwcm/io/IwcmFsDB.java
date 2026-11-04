@@ -31,6 +31,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FilePathTools;
+import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.sync.FileBean;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
@@ -487,6 +488,21 @@ public class IwcmFsDB
 	 */
 	public static void writeFiletoDest(InputStream in, File file, int size,boolean closeInStream)
 	{
+		// Generic uploads bypass IwcmOutputStream; reject private chat paths before any storage changes.
+		try
+		{
+			AiChatPaths.requireGenericAccess(file);
+		}
+		catch (SecurityException exception)
+		{
+			if (closeInStream)
+			{
+				try { in.close(); }
+				catch (IOException closeException) { exception.addSuppressed(closeException); }
+			}
+			throw exception;
+		}
+
 		if (useDBStorage(getVirtualPath(file.getPath())))
 		{
 			Logger.error(IwcmFsDB.class, "writeFileToDest:" + file.getPath());

@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,8 +26,12 @@ public class IncludesHandler {
     private boolean finished;
 
     private IncludesHandler(Map<String, String> includes) {
+        this(includes, includes.keySet());
+    }
+
+    private IncludesHandler(Map<String, String> includes, Set<String> currentTokens) {
         this.includes = Map.copyOf(includes);
-        includes.keySet().forEach(token -> occurrences.put(token, 0));
+        currentTokens.forEach(token -> occurrences.put(token, 0));
         maximumTokenLength = includes.keySet().stream().mapToInt(String::length).max().orElse(0);
     }
 
@@ -76,17 +81,22 @@ public class IncludesHandler {
      * @return handler containing the protected commands, or an empty handler when protection is unnecessary or fails
      */
     static IncludesHandler protectIncludes(InputDataDTO inputData) {
+        return protectIncludes(inputData, Map.of());
+    }
+
+    /** Preserves tokens from earlier chat turns as well as the current input. */
+    static IncludesHandler protectIncludes(InputDataDTO inputData, Map<String, String> previousIncludes) {
         if (inputData.isStructuredInput()) return empty();
 
         String inputText = inputData.getInputValue();
-        if (inputText == null || inputText.isEmpty()) return empty();
+        if (inputText == null || inputText.isEmpty()) return new IncludesHandler(previousIncludes, Set.of());
 
         try {
             Matcher matcher = INCLUDE_PATTERN.matcher(inputText);
-            if (matcher.find() == false) return empty();
+            if (matcher.find() == false) return new IncludesHandler(previousIncludes, Set.of());
 
             String requestPrefix = newRequestPrefix(inputText);
-            Map<String, String> includes = new LinkedHashMap<>();
+            Map<String, String> includes = new LinkedHashMap<>(previousIncludes);
             StringBuffer protectedText = new StringBuffer();
             int index = 1;
 
@@ -98,11 +108,17 @@ public class IncludesHandler {
             matcher.appendTail(protectedText);
 
             inputData.setInputValue(protectedText.toString());
-            return new IncludesHandler(includes);
+            Set<String> currentTokens = new java.util.LinkedHashSet<>(includes.keySet());
+            currentTokens.removeAll(previousIncludes.keySet());
+            return new IncludesHandler(includes, currentTokens);
         } catch (RuntimeException ex) {
             Logger.debug(IncludesHandler.class, "Error while protecting !INCLUDE()! for AI assistant.", ex);
             return empty();
         }
+    }
+
+    Map<String, String> getIncludes() {
+        return includes;
     }
 
     /**
@@ -118,7 +134,7 @@ public class IncludesHandler {
     }
 
     public boolean hasIncludes() {
-        return includes.isEmpty() == false;
+        return occurrences.isEmpty() == false;
     }
 
     /**
@@ -127,8 +143,8 @@ public class IncludesHandler {
      * @return preservation instructions, or an empty string when no tokens are protected
      */
     String preservationInstructions() {
-        if (includes.isEmpty()) return "";
-        String example = includes.keySet().iterator().next();
+        if (occurrences.isEmpty()) return "";
+        String example = occurrences.keySet().iterator().next();
         return "The input contains WebJET INCLUDE tokens such as " + example + ". "
             + "Copy every INCLUDE token exactly as provided. Do not translate, rewrite, expand, explain, "
             + "remove, or otherwise change it. The output must contain every INCLUDE token.";
@@ -146,7 +162,7 @@ public class IncludesHandler {
         String restored = value;
         for (Map.Entry<String, String> entry : includes.entrySet()) {
             int count = countOccurrences(value, entry.getKey());
-            if (count > 0) occurrences.merge(entry.getKey(), count, Integer::sum);
+            if (count > 0 && occurrences.containsKey(entry.getKey())) occurrences.merge(entry.getKey(), count, Integer::sum);
             restored = restored.replace(entry.getKey(), entry.getValue());
         }
         return restored;
@@ -158,9 +174,16 @@ public class IncludesHandler {
      * @return index at which a possible incomplete token begins, or the pending length when none exists
      */
     private int partialTokenStart() {
+        int completedUntil = 0;
+        for (String token : includes.keySet()) {
+            int start = pending.lastIndexOf(token);
+            if (start >= 0) completedUntil = Math.max(completedUntil, start + token.length());
+        }
         int maximumSuffixLength = Math.min(pending.length(), Math.max(0, maximumTokenLength - 1));
         for (int length = maximumSuffixLength; length > 0; length--) {
             int start = pending.length() - length;
+            // A complete token's closing underscores must not become the next partial token.
+            if (start < completedUntil) continue;
             String suffix = pending.substring(start);
             for (String token : includes.keySet()) {
                 if (suffix.length() < token.length() && token.startsWith(suffix)) return start;

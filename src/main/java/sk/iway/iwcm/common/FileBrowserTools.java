@@ -73,6 +73,7 @@ public class FileBrowserTools {
      */
     public static String getForbiddenSymbol(String name)
     {
+        if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(name)) return "ai-chat";
         if (name == null)
         {
             return null;

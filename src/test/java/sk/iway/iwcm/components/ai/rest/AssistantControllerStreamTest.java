@@ -22,6 +22,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.webjetcms.ai.AiErrorCategory;
+import com.webjetcms.ai.AiProviderException;
 
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -89,24 +91,36 @@ class AssistantControllerStreamTest {
         assertEquals(42, mapper.readTree(messages[1]).get("result").get("totalTokens").asInt());
     }
 
+    /** JSON and streaming failures expose the same safe metadata, including after partial text. */
     @Test
     void providerFailureAfterPartialTextHasASeparateTerminalError() throws Exception {
         request.addHeader("Accept", "application/x-ndjson");
         String error = "Provider failed\nTry again";
+        ProviderCallException failure = new ProviderCallException(new ProviderCallException(error,
+            new AiProviderException("test-provider", 400, error, "private raw response", false, null, AiErrorCategory.INVALID_CONTINUATION)));
         when(service.getAiStreamResponse(any(), isNull(), isNull(), any(), any())).thenAnswer(call -> {
             BufferedWriter writer = call.getArgument(3);
             writer.write("Partial text");
             writer.flush();
-            throw new ProviderCallException(error);
+            throw failure;
         });
+        when(service.getAiResponse(any(), isNull(), isNull(), any())).thenThrow(failure);
+        when(service.getAiImageResponse(any(), isNull(), isNull(), any())).thenThrow(failure);
 
         controller.streamData(input, request, response);
 
         String[] messages = response.getContentAsString().split("\n");
         assertEquals(2, messages.length);
         assertEquals("Partial text", mapper.readTree(messages[0]).get("text").asText());
-        assertEquals(error, mapper.readTree(messages[1]).get("result").get("error").asText());
-        assertEquals(0, mapper.readTree(messages[1]).get("result").get("totalTokens").asInt());
+        JsonNode result = mapper.readTree(messages[1]).get("result");
+        assertEquals(error, result.get("error").asText());
+        assertEquals("INVALID_CONTINUATION", result.get("errorCategory").asText());
+        assertEquals(400, result.get("providerStatusCode").asInt());
+        assertFalse(result.get("retryable").asBoolean());
+        assertEquals(0, result.get("totalTokens").asInt());
+        assertFalse(result.toString().contains("private raw response"));
+        assertEquals(result, mapper.valueToTree(controller.getAiReponse(input, request)));
+        assertEquals(result, mapper.valueToTree(controller.getAiImageReponse(input, request)));
     }
 
     @ParameterizedTest

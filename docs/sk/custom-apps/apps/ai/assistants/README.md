@@ -12,6 +12,25 @@ Integrácia nového serverového poskytovateľa do projektu má tri časti:
 
 Identifikátor poskytovateľa je verejná konfiguračná hodnota. Musí byť stabilný, neprázdny, jedinečný a vo všetkých troch častiach úplne zhodný. Odporúčame použiť malé písmená, napríklad `acme`. Duplicitný identifikátor vrátane kolízie so vstavaným poskytovateľom spôsobí chybu pri štarte aplikácie.
 
+## Rozdelenie zodpovedností
+
+Pri zjednodušovaní adaptérov zachovajte nasledujúce úlohy v CMS:
+
+| Úloha | Implementácia v CMS |
+| --- | --- |
+| Oprávnenia, výber asistenta a kontrola povolenej akcie | `AssistantController`, `AiService` |
+| Konfigurácia poskytovateľa a doménový kontext | `WebjetAiConfigurationService`; `AiTaskRegistry` prenáša kontext do pracovného vlákna |
+| Príprava CMS vstupov a makier, ochrana a obnovenie príkazov `INCLUDE` | `LibrarySupportLogic`, `IncludesHandler` |
+| Audit a evidencia spotreby tokenov podľa používateľa a domény | `LibrarySupportLogic`, `AiStatService` |
+| Ukladanie a odstránenie dočasných obrázkov, kontrola cieľového priečinka | `AiTempFileStorage`, `AiTempFileRemover` |
+| Väzba pokračovania chatu na session, používateľa, doménu a asistenta | `AiChatSession`; prehliadač dostáva nepriehľadný token namiesto ID odpovede poskytovateľa |
+| Evidencia a zastavenie úloh používateľa | `AiTaskRegistry`; knižnici odovzdáva `AiCancellationToken` |
+| Vloženie odpovede do editora, práca s výberom a vrátenie zmien | `EditorAi`; prepis, koncept a obnovu rozhovoru spravuje `AiChat` |
+
+Knižnica dostáva pripravené `AiRequest` a `AiProviderConfig`, vracia `AiResponse` a chyby oznamuje výnimkou `AiProviderException`. Zabezpečuje protokol poskytovateľa, jeho modely a metadáta schopností, prenos streamu a klasifikáciu chýb. CMS podľa týchto údajov rozhoduje o sprístupnení funkcií a zachováva nastavenia asistenta, napríklad súhlas s ukladaním rozhovoru cez `useTemporal=false`.
+
+Spoločné JavaScriptové funkcie `requestAiText` a `parseAiResponse` zostávajú súčasťou CMS. Prvá komunikuje s REST službami CMS, druhá pripravuje obsah pre editor. Oprávnenia, session a ukladanie zmien naďalej spravujú príslušné CMS triedy uvedené v tabuľke.
+
 ## 1. Implementácia `AiProvider`
 
 Implementáciu umiestnite do samostatnej knižnice nezávislej od WebJET CMS. Nasledujúci minimálny príklad je úplný a kompilovateľný; pevnú odpoveď nahraďte volaním API dodávateľa:
@@ -309,9 +328,54 @@ Dôležité metódy:
 - `getAiStreamResponse` – streamuje textovú odpoveď cez `BufferedWriter`
 - `getBonusHtml` – vráti doplnkové polia podporované vybraným obrázkovým modelom
 
+### Podpora chatu a streamovania
+
+`LibrarySupportLogic` vyberá operáciu a overuje streamovanie podľa `AiClient.capabilities(providerId, model)`. Operáciu `CHAT` použije pre asistenta s akciou `LIVE_CHAT`, explicitným `useTemporal=false`, podporou chatu v adaptéri a modelom, ktorý chat výslovne neodmieta. V ostatných prípadoch zostáva operácia `TEXT`. Metadáta samy nepovoľujú ukladanie rozhovoru.
+
+Streamovanie musí byť zapnuté v asistentovi a metadáta nesmú označovať zvolenú operáciu alebo jej streamovanie ako nepodporované. Výsledok sa odovzdá v existujúcom `DataTableAi.useStreaming` a rovnaká kontrola sa použije pri volaní streamovacej REST služby. Uložená hodnota `useStreaming` sa nemení. Neznáma podpora modelu alebo streamovania (`UNKNOWN`) požiadavku neblokuje.
+
+Prehliadačový poskytovateľ zachováva pôvodné nastavenie. Lokálne adaptéry pri zisťovaní schopností nenačítavajú modely; naďalej platia ich obmedzenia nastavené pri ukladaní asistenta.
+
+### Ukladané rozhovory
+
+Globálny chat aj chat pri poli používajú `AiChatHost` zo súboru `ai/ai-chat-host.js`. Hostiteľ spravuje výber asistenta, históriu a panel súborov; jednotlivé rozhovory zobrazuje komponent `AiChat`. Spoločné štýly sú v `_md-ai-chat.scss` pod triedami `ai-chat` a `ai-chat-host`.
+
+Zoznam dostupných asistentov dodáva `QuickSearch` cez callback `loadAssistants(signal)`, ktorý volá `GET /admin/rest/ai/assistant/chat-assistants/`. Hostiteľ zabezpečuje stav načítavania, opakovanie po chybe a zrušenie požiadavky pri zániku. Globálna ponuka vyžaduje akciu `live_chat` a explicitný token `CHAT_SEARCH` v `className`; token sa ponúka v autocomplete bez registrácie JPA entity. Možno ho kombinovať s inými entitami pomocou čiarky, bodkočiarky alebo nového riadka. Vzory ani `*` nenahrádzajú explicitnú väzbu. Pri samotnom `CHAT_SEARCH` sa prázdne `fieldTo` pri ukladaní doplní na `*`; zdrojové ani cieľové pole sa v globálnom chate nepoužíva.
+
+Metadáta `persistentChat` povoľujú ukladanie iba aktívnym asistentom s akciou `live_chat`, explicitným `useTemporal=false`, poskytovateľom OpenAI alebo Gemini a podporou chatu v adaptéri a modeli. `AiChatService` kontroluje väzbu `CHAT_SEARCH` pri začatí aj pokračovaní globálneho rozhovoru a pri určovaní dostupnosti histórie. Po odstránení väzby zostáva história na čítanie. Rozhovory s kontextom poľa používajú pôvodné pravidlá dostupnosti v editore.
+
+Ukladaný chat obsluhujú `AiChatController`, `AiChatService` a `AiChatStore` v CMS. Endpointy pod `/admin/rest/ai/chat` vyžadujú oprávnenie `cmp_ai_button`, prihláseného vlastníka rozhovoru a správnu doménu:
+
+| Metóda a cesta | Účel |
+| --- | --- |
+| `GET /threads?page=0&query=...` | Stránkovaná história; vyhľadáva aj v texte správ, názve asistenta a poskytovateľa bez ohľadu na diakritiku. |
+| `GET /threads/{id}` | Detail rozhovoru, správy, prílohy a dostupnosť pokračovania. |
+| `POST /messages` | Nová správa alebo pokračovanie. JSON obsahuje `assistantId`, `requestId`, `userPrompt`, pri pokračovaní aj `threadId` a `revision` a pri opakovaní dokončeného pokusu `retryMessageId`. |
+| `POST /threads/{id}/stop` | Zastavenie aktívnej požiadavky vlastníka rozhovoru. |
+| `DELETE /threads/{id}` | Odstránenie odpovedí u poskytovateľa a následne lokálnej histórie s prílohami. |
+| `GET /threads/{id}/attachments/{attachmentId}` | Autorizované načítanie prílohy; `download=true` vynúti stiahnutie. |
+
+Pri prílohách používa `POST /messages` formát `multipart/form-data`: pole `message` obsahuje JSON požiadavky a polia `files` sú súbory. `AiChatAttachments` kontroluje formát a limity: 5 súborov, spolu 10 MB, 100 000 znakov extrahovaného textu a najviac 200 strán PDF. Podporované formáty sú uvedené v [používateľskom návode](../../../../redactor/ai/chat/README.md#prílohy). Text dokumentov a opis obrázkov sa použijú ako kontext; opis obrázka vytvára zvolený model.
+
+Každý rozhovor má priečinok `/files/protected/ai-chat/<userId>/<threadId>/` so súborom `ai_chat.json`. Prílohy dostávajú poradové číslo a pôvodnú príponu, napríklad `1.docx`, `2.png`; číslovanie pokračuje naprieč správami. Pri sťahovaní sa obnoví pôvodný názov. Staršie uložené rozhovory sa pri načítaní presunú do tejto štruktúry. História a prílohy sú vylúčené z WAR, Gitu, ZIP archívov a offline exportu. Bežné súborové operácie ich nemajú sprístupňovať, premenovať ani prepísať; klient ich načítava cez autorizovaný endpoint s CSRF hlavičkou vrátane náhľadov obrázkov.
+
+`AiChatStore` uchováva ID odpovedí poskytovateľa na serveri. `requestId` chráni pred duplicitným odoslaním a `revision` pred pokračovaním z neaktuálneho stavu. Po strate kontextu alebo zmene asistenta či konfigurácie poskytovateľa môže história zostať iba na čítanie. `AiChatService` maže uložené odpovede cez `AiClient.deleteResponse(providerId, responseId, config)` z knižnice `webjet-ai`. Výsledky `DELETED` aj `ALREADY_ABSENT` potvrdzujú, že odpoveď už u poskytovateľa nie je; až po potvrdení všetkých odpovedí CMS odstráni lokálnu históriu a prílohy. Pri výnimke zostane stav `DELETE_PENDING` a lokálne údaje sa zachovajú na opakovanie akcie, ktoré preskočí už potvrdené odpovede.
+
+Knižnica `webjet-ai` od verzie `2.1.0` oznamuje ID cez `AiLifecycleListener` už počas spracovania odpovede. CMS ho uloží na neskoršie odstránenie aj pri chybe alebo zastavení generovania; pokračovanie rozhovoru posunie iba po úspešnom dokončení. Pri chybe používa `AiProviderException.lifecycle()`: stavy `NOT_SUBMITTED` a `REJECTED` potvrdzujú, že nevznikla odpoveď na odstránenie. Stav `UNKNOWN` alebo `RESPONSE_OBSERVED` bez dostupného ID zostáva nevyriešený a bráni odstráneniu lokálnej histórie, pokiaľ CMS nezachytil ID skôr. Samotný HTTP stav ani možnosť opakovania požiadavky nepotvrdzujú odmietnutie poskytovateľom.
+
+Chat pri poli používa pre uložený záznam hostiteľský komponent `AiChatHost` s kontextom `AiChatContext`: `entityType` je cesta REST zdroja tabuľky bez koncového lomítka a query parametrov, `entityId` je ID upravovaného záznamu a `fieldName` je cieľové pole. `EditorAi` dodáva asistentov priamo z definície stĺpca, obsah poľa alebo označeného textu a akcie na vloženie odpovede. Globálny zoznam asistentov sa pri poli nenačítava. Nové záznamy a hromadná úprava používajú `AiChat` bez perzistencie. Editor pristupuje k obom variantom cez `conversation.view` s metódami `mount`, `unmount`, `destroy` a `isPending`; pri hostiteľovi zahŕňa `isPending` aj rozhovory bežiace na pozadí po prepnutí asistenta.
+
+Požiadavka `POST /messages` pri poli obsahuje aj objekt `context` s týmito tromi hodnotami a `inputValue` so zdrojovým obsahom. Kontext je uložený pri rozhovore a pokračovanie ho nemôže zmeniť. Zdrojový obsah sa uloží pri otázke, aby opakovanie neúspešného pokusu použilo pôvodný vstup spolu s pôvodnými prílohami. Nová otázka dostane aktuálny obsah poľa.
+
+História pri poli volá `GET /threads?page=0&entityType=...&entityId=...&fieldName=...`, prípadne s `query`. Server vyžaduje všetky tri filtre a porovnáva ich presne ešte pred stránkovaním. Bez filtrov vráti iba samostatné rozhovory bez kontextu. Kontext slúži na triedenie súkromnej histórie, neposkytuje prístup k samotnej entite; kontrola vlastníka a domény rozhovoru zostáva zachovaná. Pri zatvorení editora sa bežiace požiadavky zrušia a rozpísané správy zahodia, uložené rozhovory a prílohy zostanú dostupné.
+
+Pre chatových asistentov OpenAI a Gemini podporujú endpointy `POST /admin/rest/ai/assistant/response/` a `POST /admin/rest/ai/assistant/response-stream/` aj `multipart/form-data`. Pole `message` obsahuje JSON `InputDataDTO` vrátane kontextu poľa, `userPrompt`, `assistantId`, `timestamp` a prípadného `conversationId`; opakované polia `files` obsahujú prílohy. Bez príloh zostáva požiadavka v JSON. Server používa rovnakú validáciu a extrakciu obsahu ako ukladaný chat, ale súbory drží iba počas spracovania požiadavky. Obsah príloh doplní ku kontextu poľa. Podpora príloh pri poli nevyžaduje vypnutý dočasný chat.
+
 ### Prenos priebežnej odpovede do administrácie
 
-Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičkou `Accept: application/x-ndjson`. Server posiela samostatné JSON správy oddelené novým riadkom:
+Textové generovanie v editore aj chat používajú `requestAiText` zo súboru `ai-rest-transport.js`. Funkcia odosiela požiadavku s CSRF tokenom, kontroluje HTTP a JSON odpoveď a pri streamovaní používa `readAiStream`. Vracia text a metadáta CMS bez úpravy obsahu. Funkcia `parseAiResponse` zo súboru `ai-response-parser.js` oddeľuje HTML a vysvetlenie pre generovanie v editore aj vloženie odpovede z chatu. Správu rozhovoru zabezpečuje `AiChat`. Pri HTTP chybách 401 a 403 zobrazí prenosová funkcia existujúce upozornenie na odhlásenie alebo chybu CSRF tokenu.
+
+Generovanie v editore a neukladaný chat volajú `POST /admin/rest/ai/assistant/response-stream/` s hlavičkou `Accept: application/x-ndjson`. Ukladaný chat používa `POST /admin/rest/ai/chat/messages` s rovnakou hlavičkou; pred textom odošle aj správu `metadata` s identifikátormi rozhovoru a správ a aktuálnou revíziou. Server posiela samostatné JSON správy oddelené novým riadkom:
 
 ```json
 {"type":"delta","text":"Prvá časť odpovede.\n"}
@@ -321,4 +385,25 @@ Administrácia volá `POST /admin/rest/ai/assistant/response-stream/` s hlavičk
 
 Správy `delta` obsahujú iba generovaný text. Záverečná správa `result` obsahuje `AssistantResponseDTO` vrátane spotreby tokenov a prípadnej chyby. Klient skladá neúplné riadky medzi sieťovými blokmi a spracuje aj viac správ v jednom bloku. Odpoveď považuje za úspešnú až po prijatí záverečnej správy bez chyby a ukončení prenosu.
 
-Bez explicitnej požiadavky na `application/x-ndjson` zostáva pre starších klientov pôvodný formát `text/plain`. CMS adaptéry naďalej zapisujú obyčajný text do `BufferedWriter`; oddelenie správ zabezpečuje `AssistantController`, bez zmeny rozhrania knižnice `webjet-ai`.
+Bez explicitnej požiadavky na `application/x-ndjson` zostáva na endpointoch `response-stream` pre starších klientov pôvodný formát `text/plain`; endpoint `/chat/messages` vracia bežnú JSON odpoveď. CMS adaptéry naďalej zapisujú obyčajný text do `BufferedWriter`; oddelenie správ zabezpečujú controllery cez `AssistantStreamWriter`, bez zmeny rozhrania knižnice `webjet-ai`.
+
+### Chyby poskytovateľa
+
+Chybová odpoveď zachováva textové pole `error` a môže obsahovať aj `errorCategory`, `providerStatusCode` a `retryable`. Rovnaké polia sú v bežnej JSON odpovedi aj v záverečnej správe `result` streamu. `providerStatusCode` je kladný HTTP stav externej služby, nie CMS endpointu; pri neznámej hodnote sa neposiela. `retryable` je odporúčanie poskytovateľa (`true` alebo `false`), pri chýbajúcej informácii sa neposiela. Pri hodnote `false` chat neponúkne opakovanie rovnakej požiadavky; zastavenú odpoveď môže používateľ zopakovať. Úplná odpoveď poskytovateľa ani príčina výnimky sa do prehliadača neposielajú.
+
+| `errorCategory` | Správanie chatu |
+| --- | --- |
+| `CANCELLED` | Zobrazí zastavenú odpoveď a zachová posledné úspešné pokračovanie. |
+| `INVALID_CONTINUATION` | Ponúkne začatie nového rozhovoru. Až po voľbe používateľa zruší neplatné pokračovanie; prepis správ a rozpracovaný text zachová. |
+| `UNSUPPORTED_OPERATION` | Vysvetlí potrebu zmeniť asistenta alebo model namiesto opakovania rovnakej požiadavky. |
+| `UNKNOWN` | Použije bežné spracovanie chyby; rovnako spracuje neznámu budúcu kategóriu. |
+
+Chat požiadavky automaticky neopakuje ani nezačína nový rozhovor. Kategórie určuje knižnica podľa spoľahlivých údajov poskytovateľa, nie podľa textu chybovej správy. Vzdialené chyby pokračovania Gemini preto zatiaľ zostávajú `UNKNOWN`. Rovnako sa spracujú existujúce validačné chyby CMS, napríklad expirovaný alebo neplatný token rozhovoru v CMS session.
+
+### Zastavenie požiadavky
+
+`AiTaskRegistry` vytvára pre každú úlohu samostatný `AiCancellationToken`. Tlačidlo **Zastaviť**, začatie nového chatu alebo zatvorenie editora zruší cez existujúcu službu `stop-assistant` token aj `Future` príslušnej úlohy. `LibrarySupportLogic` odovzdáva token knižnici pri textových, chatových a obrázkových požiadavkách vrátane následného generovania názvu obrázka. Ostatné súbežné požiadavky zostávajú aktívne.
+
+OpenAI, Gemini a OpenRouter prerušia HTTP požiadavku vrátane čakania na ďalšiu časť streamu. Zastavený chat si zachová posledné úspešné pokračovanie; čiastočná odpoveď ho nenahradí. Samotné zatvorenie okna chatu iba skryje jeho obsah a bežiacu požiadavku nezastaví.
+
+Vlastný poskytovateľ môže prekryť varianty `execute` a `stream` s parametrom `AiCancellationToken` a pripojiť k nemu zrušenie svojho transportu. Predvolené implementácie vrátane lokálnych modelov kontrolujú zrušenie pred a po vykonaní a pri odovzdávaní častí odpovede; nedokážu vynútiť prerušenie blokovaného natívneho výpočtu. Zrušenie HTTP spojenia nezaručuje zastavenie spracovania alebo účtovania na strane externej služby a nemaže už uložený kontext rozhovoru.

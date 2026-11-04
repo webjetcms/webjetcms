@@ -4,6 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { JSDOM } = require('jsdom');
+const jquery = require('jquery');
+const moment = require('moment/min/moment-with-locales');
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const readAdmin = file => fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js', file), 'utf8')
@@ -29,20 +31,61 @@ const documentationResult = {
 
 /** Runs the production search, DOM rendering and request parsing with a deterministic clock. */
 function fixture(t, denied = [], options = {}) {
-    const dom = new JSDOM('<!doctype html><button id="trigger">Search</button>', { url: 'http://localhost/admin/v9/' });
+    const dom = new JSDOM('<!doctype html><button id="trigger">Search</button>', {
+        url: 'http://localhost/admin/v9/', runScripts: 'outside-only'
+    });
     const { window } = dom;
     window.adminSearchContext = options.adminSearchContext;
     window.adminHelpContext = { documentationBaseUrl: options.documentationBaseUrl || 'https://docs.webjetcms.sk' };
     window.userLng = options.language;
-    window.jQuery = element => element;
+    window.jQuery = options.aiChat ? jquery(window) : element => element;
     window.csrfToken = 'private-admin-csrf-token';
+    const downloads = [], blobs = new Map(), revokedUrls = [], notifications = [];
+    const adminSettings = new Map(Object.entries(options.adminSettings ?? { aiChatHistoryOpen: 'false' }));
+    let nextBlob = 0;
+    class ChatURL extends URL {
+        static createObjectURL(blob) {
+            const url = 'blob:http://localhost/chat-' + ++nextBlob;
+            blobs.set(url, blob);
+            return url;
+        }
+        static revokeObjectURL(url) { revokedUrls.push(url); blobs.delete(url); }
+    }
     let now = 0, nextId = 0, clicks = 0;
-    const timers = new Map(), requests = [];
+    const timers = new Map(), requests = [], chatRequests = [];
     const setTimeout = (fn, delay) => { timers.set(++nextId, { fn, at: now + delay }); return nextId; };
     const clearTimeout = id => timers.delete(id);
+    if (options.aiChat) {
+        window.setTimeout = setTimeout;
+        window.clearTimeout = clearTimeout;
+        window.eval(fs.readFileSync(require.resolve('bootstrap/dist/js/bootstrap.bundle.js'), 'utf8'));
+        window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
+    }
     const context = vm.createContext({
-        window, document: window.document, navigator: { platform: options.platform || 'Win32' }, URL, URLSearchParams, AbortController, setTimeout, clearTimeout,
-        WJ: { translate: (key, params = []) => [key, ...params].join(' '), initTooltip: () => {}, hasPermission: permission => !denied.includes(permission) },
+        window, document: window.document, navigator: { platform: options.platform || 'Win32', clipboard: options.clipboard }, URL: ChatURL, URLSearchParams, AbortController, setTimeout, clearTimeout,
+        crypto: require('node:crypto').webcrypto,
+        $: window.jQuery,
+        moment: value => moment(value).locale(options.language === 'cz' ? 'cs' : options.language || 'sk'),
+        AiChatTransport: class {
+            execute(assistant, inputData, callbacks) {
+                return new Promise(resolve => {
+                    this.request = { assistant, inputData, callbacks, resolve, cancellations: 0 };
+                    chatRequests.push(this.request);
+                });
+            }
+            cancel() {
+                if (!this.request) return;
+                this.request.cancellations++;
+                this.request.resolve({ stopped: true });
+            }
+            dispose() {}
+        },
+        WJ: { translate: (key, params = []) => [key, ...params].join(' '), initTooltip: () => {},
+            getAdminSetting: name => adminSettings.get(name),
+            setAdminSetting: (name, value) => adminSettings.set(name, value),
+            keepSessionShowLogoffMessage: () => notifications.push('signedOut'),
+            keepSessionShowTokenMessage: () => notifications.push('csrf'),
+            hasPermission: permission => (permission !== 'cmp_ai_button' || options.aiChat === true) && !denied.includes(permission) },
         bootstrap: { Modal: class {
             constructor(root) { this.root = root; }
             show() { this.root.classList.add('show'); this.root.dispatchEvent(new window.Event('shown.bs.modal')); }
@@ -51,6 +94,8 @@ function fixture(t, denied = [], options = {}) {
         fetch: (url, options) => new Promise(resolve => requests.push({ url: new URL(url, window.location.origin), options, signal: options.signal, resolve }))
     });
     const webjet = readAdmin('webjet.js');
+    const dateStart = webjet.indexOf('    function _formatTime(');
+    vm.runInContext(`{ ${webjet.slice(dateStart, webjet.indexOf('    function formatDateTimeSeconds(', dateStart))}\nWJ.formatDateTime = formatDateTime; }`, context);
     window.webjetTranslationService = { translate: key => key.endsWith('.documentationExternalNotice.js') ? `${key} {1}`
         : key.endsWith('.resultCount.js') ? `${key} {1}: {2}` : key };
     const translateStart = webjet.indexOf('    function translate(');
@@ -61,13 +106,42 @@ function fixture(t, denied = [], options = {}) {
     vm.runInContext(`{ ${readAdmin('dashboard/widget-utils.js')}; Object.assign(this, { node, icon, localUrl, containNativeScroll, fetchJson }); }`, context);
     vm.runInContext(readAdmin('admin-menu.js'), context);
     vm.runInContext(`{ ${readAdmin('documentation-search.js')}; Object.assign(this, { documentationUrl, documentationMarkdown }); }`, context);
+    if (options.aiChat) {
+        const tooltipStart = webjet.indexOf('    function initTooltip(');
+        vm.runInContext(`${webjet.slice(tooltipStart, webjet.indexOf('\n    /**', tooltipStart))}\nWJ.initTooltip = initTooltip;`, context);
+        vm.runInContext(readAdmin('ai/chat-history-api.js'), context);
+        vm.runInContext(readAdmin('ai/chat-tooltips.js'), context);
+        vm.runInContext(readAdmin('ai/ai-response-parser.js'), context);
+        vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
+        vm.runInContext(`{ ${readAdmin('ai/ai-chat-host.js')}; Object.assign(this, { AiChatHost }); }`, context);
+        if (options.editorChat) {
+            vm.runInContext(readAdmin('../../npm_packages/webjetdatatables/ai/ai-execution-result.js'), context);
+            vm.runInContext(`${readAdmin('../../npm_packages/webjetdatatables/editor-ai.js')}\nthis.EditorAi = EditorAi;`, context);
+        }
+    }
     vm.runInContext(`${readAdmin('quick-search.js')}\nthis.QuickSearch = QuickSearch;`, context);
     const controller = new context.QuickSearch(window.document.querySelector('#trigger'));
     controller.root.addEventListener('click', event => {
+        const download = event.target.closest('a[download]');
+        if (download) downloads.push({ name: download.download, url: download.href });
         if (event.target.closest('a')) { clicks++; event.preventDefault(); }
     });
     controller.open();
-    t.after(() => { controller.cancel(); window.close(); });
+    t.after(() => { controller.cancel(); controller.chat?.destroy(); window.close(); });
+    const editorChat = (assistant, inputValue = '<p>Existing page</p>', columnOptions = {}, record = {}) => {
+        const values = { data: inputValue, id: record.id };
+        const editor = Object.assign(Object.create(context.EditorAi.prototype), {
+            EDITOR: { get: field => values[field], mode: () => record.mode || 'edit', ids: () => record.ids || [values.id],
+                TABLE: record.url ? { DATA: { url: record.url, editorId: 'id' } } : undefined },
+            chatConversations: new Map(), chatApplyingFields: new Map(), undoField: null,
+            aiUserInterface: { _showLoader() {}, _hideLoader() {}, setCurrentStatus() {} }
+        });
+        const conversation = editor.getChatConversation(window.document.querySelector('#trigger'),
+            { name: 'data', type: 'textarea', ...columnOptions }, { ...assistant, from: 'data', to: 'data' });
+        conversation.view.mount(window.document.body);
+        t.after(() => conversation.view.destroy());
+        return Object.assign(conversation, { values, editor });
+    };
     const type = value => {
         controller.input.value = value;
         controller.input.dispatchEvent(new window.Event('input', { bubbles: true }));
@@ -97,7 +171,8 @@ function fixture(t, denied = [], options = {}) {
     const autocomplete = () => requests.filter(request => request.url.pathname.endsWith('/_doc_autocomplete.jsp'));
     const rest = () => requests.filter(request => !request.url.pathname.endsWith('/_doc_autocomplete.jsp'));
     const activeRest = () => rest().filter(request => !request.settled && !request.signal.aborted);
-    return { controller, requests, type, enter, advance, respond, autocomplete, rest, activeRest, clicks: () => clicks };
+    return { controller, requests, chatRequests, type, enter, advance, respond, autocomplete, rest, activeRest,
+        downloads, blobs, revokedUrls, notifications, adminSettings, editorChat, clicks: () => clicks };
 }
 
 for (const [platform, modifier] of [['Win32', 'ctrlKey'], ['MacIntel', 'metaKey']]) {
@@ -705,9 +780,8 @@ test('Documentation uses WebJET Markdown for optional AI answers, chunk lists an
     assert.equal(answer.querySelector('strong').textContent, 'Banner management');
     const card = f.controller.results.querySelector('.md-quick-search__documentation-result');
     assert.equal(card.querySelectorAll('li').length, 2);
-    assert.equal(card.querySelector('table'), null, 'Pipe tables remain readable text in the shared WebJET renderer.');
-    assert.match(card.textContent, /\| Name \| Value \|/);
-    assert.match(card.textContent, /\| Width \| 300 \|/);
+    assert.deepEqual([...card.querySelectorAll('th')].map(cell => cell.textContent), ['Name', 'Value']);
+    assert.deepEqual([...card.querySelectorAll('td')].map(cell => cell.textContent), ['Width', '300']);
     assert.match(card.querySelector('pre code').textContent, /const width = 300;/);
     const resultLink = card.querySelector('.md-quick-search__result');
     assert.equal(resultLink.href, 'https://manual.example.com/latest/en/editor/banner/');
@@ -1083,4 +1157,1251 @@ test('Documentation shortcuts remain inactive when documentation is disabled', a
             assert.equal(f.requests.length, 0);
         });
     }
+});
+
+const chatAssistants = [
+    { assistantId: 7, action: 'live_chat', provider: 'openai', providerTitle: 'First provider', description: 'First assistant' },
+    { assistantId: 8, action: 'live_chat', provider: 'gemini', providerTitle: 'Second provider', description: 'Second assistant' }
+];
+
+/** Opens the real chat host and supplies the authorized assistant catalogue. */
+async function openChat(f, assistants = chatAssistants) {
+    f.controller.chips.get('aiChat').click();
+    const request = f.requests.find(request => request.url.pathname === '/admin/rest/ai/assistant/chat-assistants/');
+    assert.ok(request, 'The chat tab must load its page-independent assistant catalogue.');
+    await f.respond(request, assistants);
+    return f.controller.chatPanel.querySelector('.ai-chat-input');
+}
+
+function typeChat(input, value) {
+    input.value = value;
+    input.dispatchEvent(new input.ownerDocument.defaultView.Event('input', { bubbles: true }));
+}
+
+function sendChat(input) {
+    input.dispatchEvent(new input.ownerDocument.defaultView.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+}
+
+function selectChatAssistant(host, id) {
+    host.select.value = String(id);
+    host.select.dispatchEvent(new host.select.ownerDocument.defaultView.Event('change', { bubbles: true }));
+}
+
+/** Opens a saved conversation through the real history request and response path. */
+async function openSavedChat(f, id, answer) {
+    const opening = f.controller.chat.openThread(id);
+    await f.respond(f.requests.at(-1), {
+        thread: { id, assistantId: 7, canContinue: true, revision: 1 },
+        messages: [
+            { id: `${id}-question`, role: 'user', text: 'Saved question', status: 'complete' },
+            { id: `${id}-answer`, turnId: `${id}-question`, role: 'assistant', text: answer, status: 'complete' }
+        ]
+    });
+    await opening;
+}
+
+test('Chat controls and history use WebJET tooltips and release overlays when hidden or rebuilt', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    const document = input.ownerDocument;
+    const { window } = document.defaultView;
+    const hover = element => element.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true }));
+    const tooltipText = () => document.querySelector('.tooltip-inner')?.textContent;
+
+    hover(host.chat.$attachmentButton[0]);
+    f.advance(299);
+    assert.equal(tooltipText(), undefined);
+    f.advance(1);
+    assert.match(tooltipText(), /datatables.upload.uploadFile.js/);
+    assert.equal(host.chat.$attachmentButton.attr('title'), undefined, 'Native tooltips must stay disabled.');
+    assert.ok(document.querySelector('.tooltip-ai'));
+
+    host.toggleHistory(true);
+    const title = '**Notes** <img src=x onerror=alert(1)>';
+    await f.respond(f.requests.at(-1), { items: [{ id: 'one', title, assistantId: 7 }], hasMore: false });
+    const row = host.historyList.querySelector('.ai-chat-host__history-select');
+    row.focus();
+    f.advance(300);
+    assert.ok([...document.querySelectorAll('.tooltip-inner')].some(tooltip => tooltip.textContent === title));
+    assert.equal(document.querySelector('.tooltip-inner img, .tooltip-inner b'), null, 'Conversation titles remain plain text.');
+
+    for (const control of [row, host.closeHistory, host.historyList.querySelector('.ai-chat-host__history-action')]) {
+        assert.equal(control.hasAttribute('title'), false);
+        assert.ok(window.bootstrap.Tooltip.getInstance(control));
+    }
+    host.renderHistory();
+    assert.equal(window.bootstrap.Tooltip.getInstance(row), null);
+    hover(host.closeHistory);
+    host.toggleHistory(false);
+    f.advance(300);
+    assert.equal(window.bootstrap.Tooltip.getInstance(host.closeHistory), null, 'Closing a panel cancels pending tooltips.');
+
+    typeChat(input, 'Draft');
+    const send = host.chat.$send[0];
+    assert.equal(send.hasAttribute('title'), false);
+    hover(send);
+    f.controller.chips.get('all').click();
+    f.advance(500);
+    assert.equal(document.querySelector('.tooltip'), null, 'Closing the chat removes overlays and pending hover timers.');
+    f.controller.chips.get('aiChat').click();
+    assert.ok(window.bootstrap.Tooltip.getInstance(send), 'Reopening the chat restores tooltips.');
+});
+
+test('Chat history search debounces typing, retains its query across pages and restores all threads when cleared', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    f.controller.root.ownerDocument.defaultView.webjetTranslationService.translate = key => `Translated ${key}`;
+    await openChat(f);
+    const host = f.controller.chat;
+    host.toggleHistory(true);
+    const search = host.historyPanel.querySelector('input[type="search"]');
+    assert.equal(search.ownerDocument.activeElement, search);
+    assert.equal(host.historyPanel.querySelector(`label[for="${search.id}"]`).textContent, search.placeholder);
+    const historyRequests = () => f.requests.filter(request => request.url.pathname === '/admin/rest/ai/chat/threads');
+    await f.respond(historyRequests().at(-1), { items: [{ id: 'old', title: 'Old conversation' }], hasMore: true });
+    typeChat(search, 'first');
+    f.advance(200);
+    typeChat(search, ' otázka & odpoveď? ');
+    f.advance(299);
+    assert.equal(historyRequests().length, 1);
+    assert.equal(host.historyList.querySelector('button'), null, 'Previous rows and pagination must disappear when the query changes.');
+    f.advance(1);
+    const request = historyRequests().at(-1);
+    assert.equal(request.url.searchParams.get('page'), '0');
+    assert.equal(request.url.searchParams.get('query'), 'otázka & odpoveď?');
+    assert.equal(request.options.headers['X-CSRF-Token'], 'private-admin-csrf-token');
+    await f.respond(request, { items: [{ id: 'match', title: 'Matching conversation' }], hasMore: true });
+    [...host.historyList.querySelectorAll('button')].find(button => button.textContent.endsWith('.more.js')).click();
+    const next = historyRequests().at(-1);
+    assert.equal(next.url.searchParams.get('page'), '1');
+    assert.equal(next.url.searchParams.get('query'), 'otázka & odpoveď?');
+    await f.respond(next, { items: [{ id: 'older', title: 'Older match' }], hasMore: false });
+    assert.equal(host.historyList.querySelectorAll('li').length, 2);
+    typeChat(search, '');
+    f.advance(300);
+    const cleared = historyRequests().at(-1);
+    assert.equal(cleared.url.searchParams.get('page'), '0');
+    assert.equal(cleared.url.searchParams.has('query'), false);
+    await f.respond(cleared, { items: [{ id: 'old', title: 'Old conversation' }], hasMore: false });
+    assert.match(host.historyList.textContent, /Old conversation/);
+    assert.equal(search.ownerDocument.activeElement, search, 'Updating results must preserve search focus.');
+    assert.equal(f.chatRequests.length, 0);
+});
+
+test('Chat history ignores stale search responses and distinguishes no matches from an empty history', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    f.controller.root.ownerDocument.defaultView.webjetTranslationService.translate = key => `Translated ${key}`;
+    await openChat(f);
+    const host = f.controller.chat;
+    host.toggleHistory(true);
+    const initial = f.requests.at(-1);
+    const search = host.historySearch;
+    typeChat(search, 'first');
+    assert.equal(initial.signal.aborted, true);
+    f.advance(300);
+    const first = f.requests.at(-1);
+    typeChat(search, 'second');
+    assert.equal(first.signal.aborted, true);
+    await f.respond(first, { items: [{ id: 'stale', title: 'Stale conversation' }], hasMore: true });
+    assert.equal(host.historyList.querySelector('li'), null);
+    assert.equal(host.historyList.getAttribute('aria-busy'), 'true');
+    f.advance(300);
+    await f.respond(f.requests.at(-1), { items: [], hasMore: false });
+    assert.match(host.historyList.textContent, /history.noResults.js/);
+    await f.respond(initial, { items: [{ id: 'older', title: 'Old unfiltered result' }], hasMore: true });
+    assert.match(host.historyList.textContent, /history.noResults.js/);
+    assert.equal(host.historyList.querySelector('li'), null);
+    typeChat(search, '');
+    f.advance(300);
+    await f.respond(f.requests.at(-1), { items: [], hasMore: false });
+    assert.match(host.historyList.textContent, /history.empty.js/);
+    typeChat(search, 'pending');
+    const count = f.requests.length;
+    host.destroy();
+    f.advance(1000);
+    assert.equal(f.requests.length, count, 'Destroying the host must cancel a delayed history search.');
+});
+
+test('Saved chat attachments can be selected, removed and sent without a text prompt', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    f.controller.chips.get('aiChat').click();
+    await f.respond(f.requests[0], [{ ...chatAssistants[0], persistentChat: true }]);
+    const chat = f.controller.chat.chat;
+    const file = new File(['Private document'], 'notes.txt', { type: 'text/plain' });
+    assert.equal(chat.element.querySelector('.btn-ai-chat-attach').disabled, false);
+    chat._addAttachments([file]);
+    assert.match(chat.$attachments.text(), /notes.txt/);
+    assert.equal(chat.$attachments.find('a').length, 0, 'Unsent documents must not open active blob URLs.');
+    assert.equal(chat.$send.prop('disabled'), false);
+    chat.$attachments.find('button').trigger('click');
+    assert.equal(chat.state.attachments.length, 0);
+    assert.equal(chat.$send.prop('disabled'), true);
+    chat._addAttachments([file]);
+    chat.$send.trigger('click');
+    assert.equal(f.chatRequests.length, 1);
+    assert.equal(f.chatRequests[0].inputData.files[0], file);
+    assert.match(f.chatRequests[0].inputData.userPrompt, /attachmentPrompt.js/);
+    assert.equal(chat.state.attachments.length, 0);
+    assert.equal(chat.state.messages[0].attachments[0].file, file);
+    assert.equal(chat.$attachmentButton.prop('disabled'), true);
+    f.chatRequests[0].resolve({ stopped: true });
+    await tick();
+    const retry = chat.send(chat.state.messages.at(-1).userPrompt, chat.state.messages.at(-1));
+    assert.equal(f.chatRequests[1].inputData.files[0], file, 'An unconfirmed retry must resend the original attachment.');
+    f.chatRequests[1].resolve({ success: true, response: 'Document summary', persisted: true });
+    await retry;
+});
+
+test('File drops across the chat host attach once to the active conversation', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    const first = host.chat;
+    const file = new File(['Document'], 'notes.txt', { type: 'text/plain' });
+    const drop = target => {
+        for (const type of ['dragover', 'drop']) {
+            const event = new target.ownerDocument.defaultView.Event(type, { bubbles: true, cancelable: true });
+            Object.defineProperty(event, 'dataTransfer', { value: { types: ['Files'], files: [file] } });
+            target.dispatchEvent(event);
+            assert.equal(event.defaultPrevented, true);
+        }
+    };
+    for (const target of [host.element, first.$history[0], first.$input[0]]) drop(target);
+    assert.equal(first.state.attachments.length, 3);
+    host.selectAssistant(String(chatAssistants[1].assistantId));
+    drop(host.element);
+    assert.equal(host.chat.state.attachments.length, 1);
+    assert.equal(host.chat.state.attachments[0].file, file);
+    assert.equal(first.state.attachments.length, 3, 'Inactive chats must not receive the drop.');
+});
+
+test('Saved chat rejects unsupported and excessive attachments without discarding the draft', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    f.controller.chips.get('aiChat').click();
+    await f.respond(f.requests[0], [{ ...chatAssistants[0], persistentChat: true }]);
+    const chat = f.controller.chat.chat;
+    typeChat(chat.$input[0], 'Keep this draft');
+    chat._addAttachments([new File(['test'], 'script.jsp')]);
+    assert.equal(chat.state.attachments.length, 0);
+    assert.match(chat.state.notice, /attachmentType.js/);
+    chat._addAttachments(Array.from({ length: 6 }, () => new File(['test'], 'notes.txt')));
+    assert.equal(chat.state.attachments.length, 0);
+    assert.match(chat.state.notice, /attachmentLimit.js/);
+    assert.equal(chat.state.draft, 'Keep this draft');
+    assert.equal(f.chatRequests.length, 0);
+});
+
+test('Dialog window controls restore the default size without interrupting a chat or losing its draft', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    const { dialog, root } = f.controller;
+    const restore = root.querySelector('[aria-label="datatables.modal.minimize.js"]');
+    const maximize = root.querySelector('[aria-label="datatables.modal.maximize.js"]');
+    assert.ok(restore && maximize, 'Both window controls must have accessible names.');
+    typeChat(input, 'First question');
+    sendChat(input);
+    typeChat(input, 'An unsent follow-up');
+    const chat = f.controller.chat.chat;
+    const pending = chat.state.pending;
+
+    dialog.style.width = '1000px';
+    dialog.style.height = '750px';
+    maximize.click();
+    assert.equal(root.classList.contains('md-quick-search--maximized'), true);
+    assert.equal(dialog.style.width, '');
+    assert.equal(dialog.style.height, '');
+    assert.equal(chat.state.pending, pending, 'Resizing must preserve the in-flight request.');
+    assert.equal(input.value, 'An unsent follow-up');
+
+    f.chatRequests[0].resolve({ success: true, response: 'First reply', conversationId: 'conversation' });
+    await tick();
+    restore.click();
+    assert.equal(root.classList.contains('md-quick-search--maximized'), false);
+    assert.match(f.controller.chatPanel.textContent, /First reply/);
+    assert.equal(input.value, 'An unsent follow-up');
+    assert.equal(chat.state.conversationId, 'conversation');
+
+    dialog.style.width = '920px';
+    dialog.style.height = '720px';
+    restore.click();
+    assert.equal(dialog.style.width, '');
+    assert.equal(dialog.style.height, '');
+    assert.equal(f.chatRequests.length, 1);
+});
+
+test('AI Chat requires permission and ordinary searches never load or send a chat', t => {
+    const denied = fixture(t, [...deniedRestPermissions, 'cmp_ai_button'], { aiChat: true });
+    assert.equal(denied.controller.chips.has('aiChat'), false);
+    const allowed = fixture(t, deniedRestPermissions, { aiChat: true });
+    assert.ok(allowed.controller.chips.has('aiChat'));
+    allowed.type('a private search term');
+    allowed.enter();
+    allowed.advance(5000);
+    assert.equal(allowed.requests.length, 0);
+    assert.equal(allowed.chatRequests.length, 0);
+});
+
+test('AI Chat sends no webpage context and completed responses expose only Copy', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    f.type('a search term that must not become the chat prompt');
+    const input = await openChat(f);
+    assert.equal(input.value, '');
+    typeChat(input, 'Write a short announcement');
+    sendChat(input);
+    assert.equal(f.chatRequests.length, 1);
+    assert.deepEqual(JSON.parse(JSON.stringify(f.chatRequests[0].inputData)), {
+        inputValue: '', inputValueType: 'text', outputValueType: 'text', userPrompt: 'Write a short announcement'
+    });
+    const reply = '<p>Our announcement</p>';
+    f.chatRequests[0].resolve({ success: true, response: reply });
+    await tick();
+    const message = f.controller.chatPanel.querySelector('.ai-chat-assistant');
+    assert.equal(message.querySelector('details code').textContent, reply);
+    assert.equal(message.querySelector('details').open, false);
+    assert.equal(message.querySelector('.ai-chat-message-text p'), null, 'Raw HTML must remain inert text.');
+    const actions = message.querySelectorAll('.ai-chat-message-actions button');
+    assert.equal(actions.length, 1);
+    assert.match(actions[0].textContent, /chat.copy.js/);
+});
+
+test('AI Chat renders streamed Markdown tables and copies the original response while user prompts stay literal', async t => {
+    let copied;
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, clipboard: { writeText: async value => { copied = value; } } });
+    const input = await openChat(f);
+    const prompt = '**My question** <img src=x onerror=alert(1)>';
+    typeChat(input, prompt);
+    sendChat(input);
+    const user = f.controller.chatPanel.querySelector('.ai-chat-user .ai-chat-message-text');
+    assert.equal(user.textContent, prompt);
+    assert.equal(user.querySelector('b, img'), null);
+    const request = f.chatRequests[0];
+    const header = '## Boxes\n\n| Size | Count |\n| :--- | ---: |';
+    request.callbacks.onUpdate(header + '\n| Small |');
+    const answer = f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-message-text');
+    assert.equal(answer.querySelector('h2').textContent, 'Boxes');
+    assert.deepEqual([...answer.querySelectorAll('th')].map(cell => cell.textContent), ['Size', 'Count']);
+    const reply = header + '\n| **Small** | 28 |\n| Large | 19 |\n\n- Total: `47`';
+    request.callbacks.onUpdate(reply);
+    assert.equal(answer.querySelectorAll('tbody tr').length, 2);
+    assert.equal(answer.querySelector('td b').textContent, 'Small');
+    assert.equal(answer.querySelector('td.text-end').textContent, '28');
+    assert.equal(answer.querySelector('li code').textContent, '47');
+    request.resolve({ success: true, response: reply });
+    await tick();
+    f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-message-actions button').click();
+    await tick();
+    assert.equal(copied, reply);
+    f.controller.modal.hide();
+    f.controller.open();
+    f.controller.chips.get('aiChat').click();
+    assert.equal(answer.querySelectorAll('tbody tr').length, 2);
+});
+
+test('HTML disclosures preserve explanations, literal source, focus and expanded state while streaming', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    typeChat(input, 'Create a PageBuilder section');
+    sendChat(input);
+    const request = f.chatRequests[0];
+    const prefix = '**Návrh stránky**\n\n```html\n';
+    request.callbacks.onUpdate(prefix + '<section');
+    const answer = f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-message-text');
+    const details = answer.querySelector('details');
+    assert.equal(details.open, false);
+    assert.equal(answer.querySelector('b').textContent, 'Návrh stránky');
+    const summary = details.querySelector('summary');
+    summary.click();
+    summary.focus();
+    const html = '<section><h1>**Literal heading**</h1><img src=x onerror="alert(1)"><script>alert(1)</script></section>';
+    const reply = prefix + html + '\n```\n\nHotovo. **Skontrolujte obsah.**';
+    request.callbacks.onUpdate(reply);
+    assert.equal(answer.querySelector('details'), details, 'Streaming must retain the native disclosure element.');
+    assert.equal(details.open, true);
+    assert.equal(input.ownerDocument.activeElement, summary);
+    assert.equal(details.querySelector('code').textContent, html);
+    assert.equal(answer.querySelector('section, img, script'), null);
+    assert.equal(answer.querySelectorAll('b')[1].textContent, 'Skontrolujte obsah.');
+    request.resolve({ success: true, response: reply });
+    await tick();
+    summary.click();
+    assert.equal(details.open, false);
+});
+
+test('AI Chat Markdown strips active content and attributes while preserving safe links and code', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    typeChat(input, 'Format this answer');
+    sendChat(input);
+    const reply = 'Formatting examples:\n\n<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>\n\n'
+        + '[Unsafe](javascript:alert(1)) [Obfuscated](java&#x73;cript:alert(1)) '
+        + '[Control](java&#x09;script:alert(1)) [Data](data:text/html,danger)\n\n'
+        + '[Safe](https://example.com/guide) [Breakout](https://example.com/" onclick="alert(1)" style="color:red)\n\n'
+        + "![Image alt' onerror='alert(1)](https://example.com/image.png)\n\n"
+        + '```\nconst value = "<safe>";\n```';
+    f.chatRequests[0].resolve({ success: true, response: reply });
+    await tick();
+    const answer = f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-message-text');
+    assert.equal(answer.querySelector('script, img, svg, iframe, object, [onclick], [onerror], [style]'), null);
+    assert.match(answer.textContent, /<script>alert\(1\)<\/script>/);
+    assert.equal(answer.querySelector('pre code').textContent.trim(), 'const value = "<safe>";');
+    const links = [...answer.querySelectorAll('a')];
+    assert.equal(links.length, 2);
+    for (const link of links) {
+        assert.equal(new URL(link.href).protocol, 'https:');
+        assert.equal(link.target, '_blank');
+        assert.equal(link.rel, 'noopener noreferrer');
+    }
+});
+
+test('Chat timestamps stay unchanged while streaming and reopening, and a retry dates only the new answer attempt', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    const started = Date.now();
+    typeChat(input, 'First question');
+    sendChat(input);
+    const chat = f.controller.chat.chat;
+    const [question, answer] = chat.state.messages;
+    const times = () => [...chat.element.querySelectorAll('time')].map(time => time.dateTime);
+    for (const message of [question, answer]) assert.ok(message.created >= started && message.created <= Date.now());
+    const original = times();
+    assert.deepEqual(original, [question, answer].map(message => new Date(message.created).toISOString()));
+    f.chatRequests[0].callbacks.onUpdate('Partial answer');
+    assert.deepEqual(times(), original);
+    f.chatRequests[0].resolve({ stopped: true });
+    await tick();
+    f.controller.modal.hide();
+    f.controller.open();
+    f.controller.chips.get('aiChat').click();
+    assert.deepEqual(times(), original);
+
+    answer.created = new Date(2020, 0, 1).getTime();
+    chat.refresh();
+    const retry = chat.send('First question', answer);
+    assert.equal(times()[0], original[0], 'Retrying an answer must preserve the question time.');
+    assert.ok(answer.created >= started, 'The replacement answer must use its new attempt time.');
+    f.chatRequests[1].resolve({ success: true, response: 'Completed answer' });
+    await retry;
+    assert.equal(times()[1], new Date(answer.created).toISOString());
+});
+
+test('Saved chat messages retain their server timestamps and use the administration date format', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, language: 'sk' });
+    await openChat(f);
+    const questionTime = new Date(2025, 0, 2, 14, 5);
+    const answerTime = new Date(2025, 0, 2, 14, 6);
+    const opening = f.controller.chat.openThread('saved-thread');
+    await f.respond(f.requests.find(request => request.url.pathname.endsWith('/threads/saved-thread')), {
+        thread: { id: 'saved-thread', assistantId: 7, canContinue: true, revision: 2 },
+        messages: [
+            { id: 'question', role: 'user', text: 'Saved question', created: questionTime.getTime() },
+            { id: 'answer', role: 'assistant', turnId: 'question', text: '| Box | Count |\n| --- | --- |\n| Small | 28 |', status: 'complete', created: answerTime.toISOString() }
+        ]
+    });
+    await opening;
+    const times = [...f.controller.chatPanel.querySelectorAll('time')];
+    assert.deepEqual(times.map(time => time.dateTime), [questionTime, answerTime].map(date => date.toISOString()));
+    assert.deepEqual(times.map(time => time.textContent), ['02.01.2025 14:05', '02.01.2025 14:06']);
+    assert.ok(times.every(time => time.style.display !== 'none'));
+    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-assistant table tbody td').textContent, 'Small');
+});
+
+test('Chat files collects all turns, searches filenames and downloads assistant attachments through the protected API', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f);
+    const host = f.controller.chat;
+    const threadId = '15d5965c-cbc8-481a-a18f-82185dd86417';
+    const attachment = (id, name) => ({ id, name, size: 12, mediaType: 'text/plain',
+        url: `/admin/rest/ai/chat/threads/${threadId}/attachments/${id}` });
+    const first = attachment('1.txt', 'notes.txt');
+    const generated = attachment('2.txt', 'report.txt');
+    const later = attachment('3.txt', 'notes.txt');
+    const opening = host.openThread(threadId);
+    await f.respond(f.requests.find(request => request.url.pathname.endsWith('/threads/' + threadId)), {
+        thread: { id: threadId, assistantId: 7, canContinue: false, unavailableReason: 'expired', revision: 1 },
+        messages: [
+            { id: 'question', role: 'user', text: 'First question', attachments: [first] },
+            { id: 'answer', role: 'assistant', text: 'Export ready', status: 'complete', attachments: [generated] },
+            { id: 'follow-up', role: 'user', text: 'Another upload with the same name', attachments: [later, first] }
+        ]
+    });
+    await opening;
+    const toggle = host.chat.element.querySelector('.ai-chat-toolbar-end-actions [data-ai-action="files"]');
+    toggle.click();
+    assert.equal(toggle.getAttribute('aria-controls'), host.filesPanel.id);
+    assert.equal(host.filesSearch.ownerDocument.activeElement, host.filesSearch);
+    assert.equal(host.filesList.querySelectorAll('li').length, 3, 'Distinct same-name uploads remain separate; repeated attachment references appear once.');
+    assert.match(host.filesList.textContent, /files.uploaded.js/);
+    assert.match(host.filesList.textContent, /files.generated.js/);
+    typeChat(host.filesSearch, 'REPORT');
+    assert.equal(host.filesList.querySelectorAll('li').length, 1);
+    const download = host.filesList.querySelector('button');
+    download.focus();
+    host.chat._changed();
+    assert.equal(host.filesSearch.ownerDocument.activeElement, download, 'Unrelated chat updates must retain the file list and its focus.');
+    download.click();
+    const request = f.requests.find(request => request.url.pathname === generated.url);
+    assert.equal(request.options.headers['X-CSRF-Token'], 'private-admin-csrf-token');
+    assert.equal(request.options.credentials, 'same-origin');
+    request.resolve(new Response('Generated file', { headers: { 'Content-Type': 'text/plain' } }));
+    await tick();
+    assert.equal(f.downloads[0].name, 'report.txt');
+    assert.equal(await f.blobs.get(f.downloads[0].url).text(), 'Generated file');
+    typeChat(host.filesSearch, 'missing');
+    assert.match(host.filesList.textContent, /files.noResults.js/);
+    typeChat(host.filesSearch, '');
+    assert.equal(host.filesList.querySelectorAll('li').length, 3);
+    host.selectAssistant('8');
+    assert.equal(host.filesList.querySelectorAll('li').length, 0, 'Switching conversations must not expose the previous chat files.');
+    assert.match(host.filesList.textContent, /files.empty.js/);
+});
+
+test('Chat files excludes unsent drafts, downloads local uploads and updates when an assistant returns a file', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    f.controller.chips.get('aiChat').click();
+    await f.respond(f.requests[0], [{ ...chatAssistants[0], persistentChat: true }]);
+    const host = f.controller.chat;
+    const chat = host.chat;
+    host.toggleFiles(true);
+    const file = new File(['Local document'], 'notes.txt', { type: 'text/plain' });
+    chat._addAttachments([file]);
+    assert.equal(host.filesList.querySelector('li'), null, 'A composer attachment is not part of the conversation until sent.');
+    chat.$send.trigger('click');
+    assert.equal(host.filesList.querySelectorAll('li').length, 1);
+    const requestCount = f.requests.length;
+    host.filesList.querySelector('button').click();
+    await tick();
+    assert.equal(f.requests.length, requestCount, 'A local upload download must not request an unsaved server attachment.');
+    assert.equal(f.downloads[0].name, 'notes.txt');
+    assert.equal(await f.blobs.get(f.downloads[0].url).text(), 'Local document');
+    const generated = { id: '2.txt', name: 'answer.txt', mediaType: 'text/plain',
+        url: '/admin/rest/ai/chat/threads/15d5965c-cbc8-481a-a18f-82185dd86417/attachments/2.txt' };
+    f.chatRequests[0].resolve({ success: true, response: 'File ready', attachments: [generated] });
+    await tick();
+    assert.equal(host.filesList.querySelectorAll('li').length, 2);
+    assert.match(host.filesList.textContent, /answer.txt/);
+    assert.match(host.filesList.textContent, /files.generated.js/);
+});
+
+test('Narrow chat panels replace each other and Escape closes files without closing the chat', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f);
+    const host = f.controller.chat;
+    Object.defineProperty(host.element, 'clientWidth', { value: 1000, configurable: true });
+    host.toggleHistory(true);
+    host.toggleFiles(true);
+    assert.equal(host.historyPanel.hidden, false);
+    assert.equal(host.filesPanel.hidden, false);
+    Object.defineProperty(host.element, 'clientWidth', { value: 500, configurable: true });
+    host.toggleFiles(true);
+    assert.equal(host.historyPanel.hidden, true);
+    const escape = new host.filesSearch.ownerDocument.defaultView.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    host.filesSearch.dispatchEvent(escape);
+    assert.equal(escape.defaultPrevented, true);
+    assert.equal(host.filesPanel.hidden, true);
+    assert.equal(host.filesSearch.ownerDocument.activeElement.getAttribute('aria-controls'), host.filesPanel.id);
+    assert.equal(f.controller.root.classList.contains('show'), true);
+    host.toggleFiles(true);
+    host.toggleHistory(true);
+    assert.equal(host.filesPanel.hidden, true);
+    assert.equal(host.historyPanel.hidden, false);
+    assert.equal(host.historySearch.ownerDocument.activeElement, host.historySearch);
+});
+
+for (const numbered of [false, true]) {
+    test(`Reopened history fetches ${numbered ? 'numbered' : 'legacy'} downloads and image previews with the required CSRF header`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true });
+        await openChat(f);
+        const threadId = '15d5965c-cbc8-481a-a18f-82185dd86417';
+        const attachments = [
+            { id: numbered ? '1.txt' : 'eb995413-51d3-4188-9dbd-f96b78407270', name: 'notes.txt', mediaType: 'text/plain' },
+            { id: numbered ? '2.png' : 'e4fac213-a054-4914-a177-09da3584f843', name: 'obrázok.png', mediaType: 'image/png' }
+        ].map(attachment => ({ ...attachment, url: `/admin/rest/ai/chat/threads/${threadId}/attachments/${attachment.id}` }));
+        const opening = f.controller.chat.openThread(threadId);
+        await f.respond(f.requests.find(request => request.url.pathname.endsWith('/threads/' + threadId)), {
+            thread: { id: threadId, assistantId: 7, canContinue: false, unavailableReason: 'expired', revision: 1 },
+            messages: [{ id: 'question', role: 'user', text: 'Saved attachments', attachments }]
+        });
+        await opening;
+        const buttons = [...f.controller.chatPanel.querySelectorAll('.ai-chat-attachment-download')];
+        assert.equal(buttons.length, 2);
+        assert.equal(f.controller.chatPanel.querySelector('a[href*="/attachments/"]'), null);
+        const preview = f.requests.find(request => request.url.pathname === attachments[1].url);
+        assert.equal(preview.options.headers['X-CSRF-Token'], 'private-admin-csrf-token');
+        assert.equal(preview.options.credentials, 'same-origin');
+        preview.resolve(new Response('image bytes', { headers: { 'Content-Type': 'image/png' } }));
+        await tick();
+        const imageUrl = f.controller.chatPanel.querySelector('img').getAttribute('src');
+        assert.match(imageUrl, /^blob:/);
+        buttons[1].click();
+        await tick();
+        assert.deepEqual(f.downloads[0], { name: 'obrázok.png', url: imageUrl });
+        f.controller.chatPanel.querySelector('.ai-chat-attachment-link').click();
+        const file = f.requests.find(request => request.url.pathname === attachments[0].url);
+        assert.equal(file.options.headers['X-CSRF-Token'], 'private-admin-csrf-token');
+        file.resolve(new Response('Saved document bytes', { headers: { 'Content-Type': 'text/plain' } }));
+        await tick();
+        assert.equal(f.downloads[1].name, 'notes.txt');
+        assert.equal(await f.blobs.get(f.downloads[1].url).text(), 'Saved document bytes');
+        buttons[0].click();
+        await tick();
+        assert.equal(f.downloads.length, 3, 'Both the filename and download icon must save the file.');
+        assert.equal(f.requests.filter(request => request.url.pathname === attachments[0].url).length, 1);
+        assert.equal(f.chatRequests.length, 0, 'Downloads must remain available without sending a new provider request.');
+        f.controller.chat.chat.destroy();
+        assert.equal(f.blobs.size, 0, 'Destroying the conversation must release its attachment blobs.');
+        assert.ok(f.revokedUrls.includes(imageUrl));
+    });
+}
+
+test('Attachment failures stay in chat without navigating to an access-denied page', async t => {
+    for (const status of [401, 403, 404, 200]) {
+        await t.test(String(status), async t => {
+            const f = fixture(t, deniedRestPermissions, { aiChat: true });
+            await openChat(f);
+            const attachment = { name: 'notes.txt', mediaType: 'text/plain',
+                url: '/admin/rest/ai/chat/threads/15d5965c-cbc8-481a-a18f-82185dd86417/attachments/eb995413-51d3-4188-9dbd-f96b78407270' };
+            const chat = f.controller.chat.chat;
+            chat.state.messages = [{ role: 'user', text: 'File', attachments: [attachment] }];
+            chat.refresh();
+            const button = chat.element.querySelector('.ai-chat-attachment-download');
+            button.click();
+            const request = f.requests.find(request => request.url.pathname === attachment.url);
+            request.resolve(new Response('<html>Access denied</html>', { status, headers: { 'Content-Type': 'text/html' } }));
+            await tick();
+            assert.equal(f.downloads.length, 0);
+            assert.match(chat.state.notice, /attachmentDownloadFailed/);
+            assert.equal(button.disabled, false);
+            if (status === 401) assert.deepEqual(f.notifications, ['signedOut']);
+            if (status === 403) assert.deepEqual(f.notifications, ['csrf']);
+        });
+    }
+});
+
+test('Chat hides unavailable or invalid dates instead of displaying the current time or an invalid date', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f);
+    const chat = f.controller.chat.chat;
+    chat.state.messages = [undefined, null, '', 'invalid-date'].map(created => ({ role: 'user', text: 'Older question', created }));
+    chat.refresh();
+    for (const time of chat.element.querySelectorAll('time')) {
+        assert.equal(time.style.display, 'none');
+        assert.equal(time.textContent, '');
+        assert.equal(time.hasAttribute('datetime'), false);
+    }
+});
+
+test('AI Chat preserves independent conversations and drafts through tabs and reopening', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    typeChat(input, 'First question');
+    sendChat(input);
+    f.chatRequests[0].resolve({ success: true, response: 'First reply', conversationId: 'first-conversation' });
+    await tick();
+    typeChat(input, 'First draft');
+    const selector = f.controller.chatPanel.querySelector('select');
+    assert.ok(selector.closest('.ai-chat-composer-actions'), 'Assistant selection belongs inside the composer.');
+    selector.value = '8';
+    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    let current = f.controller.chatPanel.querySelector('.ai-chat-input');
+    assert.equal(current.value, '');
+    assert.doesNotMatch(f.controller.chatPanel.textContent, /First reply/);
+    typeChat(current, 'Second draft');
+    selector.value = '7';
+    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
+    assert.equal(f.controller.chatPanel.querySelector('select'), selector, 'Switching conversations must retain the live selector.');
+    assert.match(f.controller.chatPanel.textContent, /First reply/);
+    f.controller.chips.get('admin').click();
+    f.controller.chips.get('aiChat').click();
+    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
+    f.controller.modal.hide();
+    f.controller.open();
+    f.controller.chips.get('aiChat').click();
+    current = f.controller.chatPanel.querySelector('.ai-chat-input');
+    assert.equal(current.value, 'First draft');
+    sendChat(current);
+    assert.equal(f.chatRequests[1].inputData.conversationId, 'first-conversation');
+    assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');
+});
+
+test('Global and field chat hosts share the history preference without sharing assistant catalogues', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true, adminSettings: {} });
+    await openChat(f);
+    const globalHost = f.controller.chat;
+    assert.equal(globalHost.historyOpen, true, 'History opens by default when no preference has been saved.');
+    globalHost.toggleHistory(false);
+    assert.equal(f.adminSettings.get('aiChatHistoryOpen'), 'false');
+
+    const first = f.editorChat(chatAssistants[0], '', {}, { url: '/admin/rest/web-pages', id: 42 });
+    assert.equal(first.host.historyOpen, false, 'Field chat uses the explicit preference from global chat.');
+    assert.equal(first.host.select.options.length, 1, 'Field chat offers only its supplied assistants.');
+    first.host.toggleHistory(true);
+    assert.equal(f.adminSettings.get('aiChatHistoryOpen'), 'true');
+    first.host.toggleHistory(false, false);
+    assert.equal(f.adminSettings.get('aiChatHistoryOpen'), 'true', 'Automatic closures retain the explicit preference.');
+
+    const second = f.editorChat(chatAssistants[1], '', {}, { url: '/admin/rest/web-pages', id: 43 });
+    assert.equal(second.host.historyOpen, true);
+    assert.equal(second.host.select.value, String(chatAssistants[1].assistantId));
+    assert.equal(f.requests.filter(request => request.url.pathname.endsWith('/chat-assistants/')).length, 1,
+        'Opening field chats must never load the global assistant catalogue.');
+});
+
+for (const saved of [false, true]) {
+    test(`Editor chat lifecycle retains pending work while hidden and cancels it on disposal (saved=${saved})`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+        const assistants = chatAssistants.map(item => ({ ...item, from: 'data', to: 'data', persistentChat: true }));
+        const conversation = f.editorChat(assistants[0], '', { ai: assistants },
+            { url: '/admin/rest/web-pages', id: saved ? 42 : -1 });
+        const { view, chat } = conversation;
+        const container = view.element.parentElement;
+        assert.equal(view.isPending(), false);
+        const sending = chat.send('Keep working while hidden');
+        const request = f.chatRequests[0];
+        assert.equal(view.isPending(), true);
+        if (saved) {
+            selectChatAssistant(conversation.host, assistants[1].assistantId);
+            assert.equal(conversation.chat.isPending(), false);
+            assert.equal(view.isPending(), true, 'Pending work includes the previous assistant after switching.');
+        }
+        view.unmount();
+        assert.equal(view.element.isConnected, false);
+        assert.equal(view.isPending(), true);
+        assert.equal(request.cancellations, 0);
+        view.mount(container);
+        assert.equal(view.element.isConnected, true);
+        assert.equal(view.isPending(), true);
+        view.destroy();
+        await sending;
+        assert.equal(request.cancellations, 1);
+        assert.equal(view.isPending(), false);
+        assert.equal(view.element.isConnected, false);
+    });
+}
+
+test('Saved field chats send their record context and reopen only matching history with insertion actions', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    const conversation = f.editorChat({ ...chatAssistants[0], persistentChat: true }, '<p>Existing page</p>', {},
+        { url: '/admin/rest/web-pages/?groupId=1', id: 42 });
+    const { chat, host, editor } = conversation;
+    const context = { entityType: '/admin/rest/web-pages', entityId: '42', fieldName: 'data' };
+    let loading = false;
+    editor.aiUserInterface._showLoader = () => { loading = true; };
+    editor.aiUserInterface._hideLoader = () => { loading = false; };
+    assert.equal(chat.options.persistent, true);
+    const sending = chat.send('Improve this page');
+    assert.equal(loading, true);
+    assert.deepEqual(JSON.parse(JSON.stringify(f.chatRequests[0].inputData.context)), context);
+    assert.equal(f.chatRequests[0].inputData.inputValue, '<p>Existing page</p>');
+    f.chatRequests[0].resolve({ success: true, persisted: true, response: 'Improved page' });
+    await sending;
+    assert.equal(loading, false);
+
+    host.toggleHistory(true);
+    const history = f.requests.at(-1);
+    for (const [key, value] of Object.entries(context)) assert.equal(history.url.searchParams.get(key), value);
+    await f.respond(history, { items: [{ id: 'saved-field', title: 'Saved field question' }], hasMore: true });
+    host.historySearch.value = 'Earlier question';
+    host.searchHistory();
+    f.advance(300);
+    const search = f.requests.at(-1);
+    for (const [key, value] of Object.entries(context)) assert.equal(search.url.searchParams.get(key), value);
+    assert.equal(search.url.searchParams.get('query'), 'Earlier question');
+    await f.respond(search, { items: [{ id: 'saved-field', title: 'Saved field question' }], hasMore: true });
+    host.loadHistory(true);
+    assert.equal(f.requests.at(-1).url.searchParams.get('page'), '1');
+    for (const [key, value] of Object.entries(context)) assert.equal(f.requests.at(-1).url.searchParams.get(key), value);
+    await f.respond(f.requests.at(-1), { items: [], hasMore: false });
+
+    const opening = host.openThread('saved-field');
+    await f.respond(f.requests.at(-1), { thread: { id: 'saved-field', assistantId: 7, revision: 2, canContinue: true, context },
+        messages: [{ id: 'answer', role: 'assistant', text: 'Saved answer', status: 'complete' }] });
+    await opening;
+    assert.equal(conversation.chat.state.threadId, 'saved-field');
+    const inserted = [];
+    editor.insertChatAnswer = (target, message, mode) => inserted.push({ target, text: message.text, mode });
+    conversation.chat.element.querySelector('[data-ai-action="replace"]').click();
+    assert.equal(inserted[0].target, conversation);
+    assert.equal(inserted[0].text, 'Saved answer');
+    assert.equal(inserted[0].mode, 'replace');
+
+    const foreign = host.openThread('another-record');
+    await f.respond(f.requests.at(-1), { thread: { id: 'another-record', assistantId: 7, context: { ...context, entityId: '43' } }, messages: [] });
+    await foreign;
+    assert.equal(conversation.chat.state.threadId, 'saved-field');
+    assert.match(host.historyError, /unavailable/);
+});
+
+for (const pageBuilder of [false, true]) {
+    for (const mode of ['append', 'replace']) {
+        test(`Chat ${mode} inserts a reply and undo restores the original content (PageBuilder=${pageBuilder})`, async t => {
+            const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+            const conversation = f.editorChat({ ...chatAssistants[0], persistentChat: true }, undefined, {},
+                pageBuilder ? { url: '/admin/rest/web-pages/', id: 42 } : {});
+            const { editor, values, chat } = conversation;
+            const original = values.data;
+            const wjeditor = pageBuilder ? {
+                editingMode: 'pageBuilder', getData: () => values.data,
+                pbInsertContent: (content, action) => { values.data = (action === 'append' ? values.data : '') + content; }
+            } : null;
+            editor.EDITOR.field = () => ({ s: { opts: { wjeditor } } });
+            editor.EDITOR.set = (field, value) => { values[field] = value; };
+            const message = { role: 'assistant', status: 'complete', text: '```html\n<p>Answer</p>\n```' };
+            chat.state.messages.push(message);
+            await editor.insertChatAnswer(conversation, message, mode);
+            assert.equal(values.data, (mode === 'append' ? original : '') + '<p>Answer</p>');
+            assert.ok(conversation.undo);
+            assert.ok(chat.element.querySelector('[data-ai-action="undo"]'));
+            await editor.undoChatInsertion(conversation);
+            assert.equal(values.data, original);
+            assert.equal(conversation.undo, null);
+            assert.equal(chat.element.querySelector('[data-ai-action="undo"]'), null);
+        });
+    }
+}
+
+test('Ordinary PageBuilder generation still edits each region and can undo all regions', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    const { editor } = f.editorChat(chatAssistants[0]);
+    const regions = ['First region', 'Second region'].map(value => ({
+        value, getData() { return this.value; }, setData(value) { this.value = value; }, getSelection: () => null
+    }));
+    editor.EDITOR.field = () => ({ s: { opts: {
+        wjeditor: { editingMode: 'pageBuilder', getWysiwygEditors: () => regions }
+    } } });
+    editor._executeSingleAction = async (button, column, assistant, input, reuse, update) => {
+        update(input.inputValue + ' edited', true);
+        return { success: true, totalTokens: 3 };
+    };
+    await editor._executeAction(null, { name: 'data', type: 'wysiwyg' }, {
+        ...chatAssistants[0], action: 'generate_text', from: 'data', to: 'data'
+    });
+    assert.deepEqual(regions.map(region => region.value), ['First region edited', 'Second region edited']);
+    editor.undo();
+    assert.deepEqual(regions.map(region => region.value), ['First region', 'Second region']);
+});
+
+test('Editor chat identity separates records and fields while retaining each assistant in the same field host', t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    const assistants = chatAssistants.map(item => ({ ...item, from: 'data', to: 'data', persistentChat: true }));
+    const column = { name: 'data', type: 'textarea', ai: assistants };
+    const first = f.editorChat(assistants[0], '', column, { url: '/admin/rest/web-pages', id: 42 });
+    const { editor, values } = first;
+    const initialChat = first.chat;
+    initialChat.state.draft = 'Unsent draft';
+    initialChat.refresh();
+    const revision = first.revision;
+    first.undo = { value: 'Old content' };
+    const secondAssistant = editor.getChatConversation(null, column, assistants[1]);
+    assert.equal(secondAssistant, first);
+    assert.notEqual(secondAssistant.chat, initialChat);
+    assert.ok(first.revision > revision);
+    assert.equal(first.undo, null);
+    assert.equal(secondAssistant.host.mounted, false);
+    assert.equal(secondAssistant.chat.mounted, false);
+    secondAssistant.host.mount(secondAssistant.host.element.ownerDocument.body);
+    const restored = editor.getChatConversation(null, column, assistants[0]);
+    assert.equal(restored.chat, initialChat);
+    assert.equal(restored.chat.state.draft, 'Unsent draft');
+    values.id = 43;
+    const otherRecord = editor.getChatConversation(null, column, assistants[0]);
+    assert.notEqual(otherRecord.host, first.host);
+    assert.equal(otherRecord.host.options.context.entityId, '43');
+    t.after(() => otherRecord.host.destroy());
+    const otherField = editor.getChatConversation(null, { name: 'title', type: 'text' }, { ...assistants[0], to: 'title' });
+    assert.notEqual(otherField.host, otherRecord.host);
+    assert.equal(otherField.host.options.context.fieldName, 'title');
+    t.after(() => otherField.host.destroy());
+});
+
+test('Unsaved and multi-record editors never fall back to standalone saved history', t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    for (const record of [{ id: -1 }, { id: 0 }, { id: 42, mode: 'create' }, { id: 42, ids: [42, 43] }]) {
+        const conversation = f.editorChat({ ...chatAssistants[0], persistentChat: true }, '', {},
+            { url: '/admin/rest/web-pages', ...record });
+        assert.equal(conversation.host, undefined);
+        assert.equal(conversation.chat.options.persistent, undefined);
+    }
+    assert.equal(f.requests.length, 0);
+});
+
+for (const provider of ['openai', 'gemini']) {
+    test(`Page chat with ${provider} sends selected files with editor context and retains them for a retry`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+        const { chat, values } = f.editorChat({ ...chatAssistants[0], provider });
+        const file = new File(['Document content'], 'notes.txt', { type: 'text/plain' });
+        const attach = chat.element.querySelector('.btn-ai-chat-attach');
+        assert.equal(attach.disabled, false);
+        const fileInput = chat.element.querySelector('input[type="file"]');
+        Object.defineProperty(fileInput, 'files', { configurable: true, value: [file] });
+        fileInput.dispatchEvent(new fileInput.ownerDocument.defaultView.Event('change', { bubbles: true }));
+        assert.match(chat.$attachments.text(), /notes.txt/);
+        assert.equal(chat.$send.prop('disabled'), false, 'A file alone can be sent.');
+        chat.state.conversationId = 'previous-turn';
+
+        const sending = chat.send('');
+        const request = f.chatRequests[0];
+        assert.match(request.inputData.userPrompt, /attachmentPrompt/);
+        assert.equal(request.inputData.files[0], file);
+        assert.equal(request.inputData.inputValue, '<p>Existing page</p>');
+        assert.equal(request.inputData.conversationId, 'previous-turn');
+        assert.equal(request.inputData.persistentChat, undefined, 'Editor uploads must retain the editor request path.');
+        assert.equal(chat.state.attachments.length, 0);
+        assert.equal(attach.disabled, true, 'Do not accept files while sending.');
+        chat._addAttachments([new File(['Not accepted'], 'pending.txt')]);
+        assert.equal(chat.state.attachments.length, 0);
+        request.resolve({ success: false, errorText: 'Temporary failure', retryable: true });
+        await sending;
+        assert.equal(attach.disabled, false);
+
+        values.data = '<p>Edited after the failed request</p>';
+        const failed = chat.state.messages.at(-1);
+        const retrying = chat.send(failed.userPrompt, failed);
+        assert.equal(f.chatRequests[1].inputData.files[0], file);
+        assert.equal(f.chatRequests[1].inputData.inputValue, '<p>Existing page</p>', 'Retry the original page context.');
+        assert.equal(f.chatRequests[1].inputData.conversationId, 'previous-turn');
+        f.chatRequests[1].resolve({ success: true, response: 'Suggested content', conversationId: 'next-turn' });
+        await retrying;
+
+        const following = chat.send('Continue editing');
+        assert.equal(f.chatRequests[2].inputData.files, undefined, 'A new turn must not silently re-upload previous files.');
+        assert.equal(f.chatRequests[2].inputData.inputValue, values.data);
+        assert.equal(f.chatRequests[2].inputData.conversationId, 'next-turn');
+        f.chatRequests[2].resolve({ success: true, response: 'Follow-up content' });
+        await following;
+    });
+}
+
+test('Page chat rejects uploads for unsupported providers and image fields', t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+    for (const [provider, renderFormat] of [['browser', ''], ['local', ''], ['openai', 'dt-format-image'], ['gemini', 'dt-format-image']]) {
+        const { chat } = f.editorChat({ ...chatAssistants[0], provider }, '/images/photo.png', { renderFormat });
+        assert.equal(chat.element.querySelector('.btn-ai-chat-attach').disabled, true);
+        chat._addAttachments([new File(['Document content'], 'notes.txt')]);
+        assert.equal(chat.state.attachments.length, 0);
+        assert.equal(chat.$send.prop('disabled'), true);
+    }
+    assert.equal(f.chatRequests.length, 0);
+});
+
+for (const draft of ['', 'A separate follow-up draft']) {
+    test(`Page chat restart ${draft ? 'preserves a separate draft' : 'restores failed attachments'} after an expired continuation`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+        const { chat } = f.editorChat(chatAssistants[0]);
+        const file = new File(['Document content'], 'notes.txt', { type: 'text/plain' });
+        chat._addAttachments([file]);
+        chat.state.conversationId = 'expired-turn';
+        const sending = chat.send('Update the page using this document');
+        if (draft) typeChat(chat.$input[0], draft);
+        f.chatRequests[0].resolve({ success: false, errorText: 'Expired continuation', errorCategory: 'INVALID_CONTINUATION' });
+        await sending;
+        assert.equal(chat.state.needsNewChat, true);
+        chat.element.querySelector('[data-ai-action="restart"]').click();
+
+        assert.equal(chat.state.needsNewChat, false);
+        assert.equal(chat.state.conversationId, null);
+        assert.equal(chat.$input.val(), draft || 'Update the page using this document');
+        assert.equal(f.chatRequests.length, 1, 'Restarting restores the composer without sending it.');
+        assert.deepEqual(Array.from(chat.state.attachments, item => item.file), draft ? [] : [file]);
+
+        const restarted = chat.send(chat.state.draft);
+        assert.equal(f.chatRequests[1].inputData.conversationId, undefined);
+        assert.equal(f.chatRequests[1].inputData.files?.[0], draft ? undefined : file);
+        f.chatRequests[1].resolve({ success: true, response: 'Fresh conversation answer' });
+        await restarted;
+    });
+}
+
+test('Persistent assistant switching preserves an unsent draft and its original attachment', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    const file = new File(['Private draft attachment'], 'notes.txt', { type: 'text/plain' });
+    typeChat(input, 'First unsent draft');
+    host.chat._addAttachments([file]);
+
+    selectChatAssistant(host, 8);
+    assert.equal(host.chat.$input.val(), '');
+    typeChat(host.chat.$input[0], 'Second unsent draft');
+    selectChatAssistant(host, 7);
+
+    assert.equal(host.chat.$input.val(), 'First unsent draft');
+    assert.match(host.chat.$attachments.text(), /notes.txt/);
+    assert.equal(f.chatRequests.length, 0, 'Switching assistants must not submit either draft.');
+    sendChat(host.chat.$input[0]);
+    assert.equal(f.chatRequests[0].inputData.userPrompt, 'First unsent draft');
+    assert.equal(f.chatRequests[0].inputData.files[0], file);
+    selectChatAssistant(host, 8);
+    assert.equal(host.chat.$input.val(), 'Second unsent draft');
+});
+
+test('Persistent New chat starts empty and assistant switching resumes the new draft', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    typeChat(input, 'Previous draft');
+    host.chat._addAttachments([new File(['Previous attachment'], 'previous.txt', { type: 'text/plain' })]);
+    host.chat.element.querySelector('[data-ai-action="new"]').click();
+
+    assert.equal(host.chat.$input.val(), '');
+    assert.equal(host.chat.$attachments.text(), '');
+    assert.equal(host.chat.element.querySelector('.ai-chat-message'), null);
+    typeChat(host.chat.$input[0], 'New conversation draft');
+    selectChatAssistant(host, 8);
+    selectChatAssistant(host, 7);
+
+    assert.equal(host.chat.$input.val(), 'New conversation draft');
+    assert.equal(host.chat.$attachments.text(), '');
+    sendChat(host.chat.$input[0]);
+    assert.equal(f.chatRequests[0].inputData.userPrompt, 'New conversation draft');
+    assert.equal(f.chatRequests[0].inputData.files, undefined);
+});
+
+test('Persistent assistant switching resumes the last selected saved thread even when it was created earlier', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    await openSavedChat(f, 'older-thread', 'Older saved answer');
+    typeChat(host.chat.$input[0], 'Older thread draft');
+    await openSavedChat(f, 'newer-thread', 'Newer saved answer');
+    typeChat(host.chat.$input[0], 'Newer thread draft');
+    await openSavedChat(f, 'older-thread', 'Older saved answer');
+
+    selectChatAssistant(host, 8);
+    selectChatAssistant(host, 7);
+
+    assert.equal(host.chat.$input.val(), 'Older thread draft');
+    assert.match(host.chat.element.textContent, /Older saved answer/);
+    assert.doesNotMatch(host.chat.element.textContent, /Newer saved answer/);
+});
+
+test('Returning to a busy persistent thread refreshes its completed response and retains the draft', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    const opening = host.openThread('busy-thread');
+    const detail = {
+        thread: { id: 'busy-thread', assistantId: 7, canContinue: true, busy: true, revision: 1 },
+        messages: [
+            { id: 'question', role: 'user', text: 'Saved question', status: 'complete' },
+            { id: 'answer', turnId: 'question', role: 'assistant', text: 'Partial answer', status: 'pending' }
+        ]
+    };
+    await f.respond(f.requests.at(-1), detail);
+    await opening;
+    typeChat(host.chat.$input[0], 'Keep this follow-up draft');
+    assert.equal(host.chat.$send.prop('disabled'), true);
+    selectChatAssistant(host, 8);
+    const requestsBeforeReturn = f.requests.length;
+    f.advance(1500);
+    assert.equal(f.requests.length, requestsBeforeReturn, 'An inactive thread does not keep polling.');
+
+    selectChatAssistant(host, 7);
+    assert.equal(f.requests.length, requestsBeforeReturn + 1, 'Returning must refresh the cached busy state.');
+    assert.equal(f.requests.at(-1).url.pathname, '/admin/rest/ai/chat/threads/busy-thread');
+    await f.respond(f.requests.at(-1), {
+        thread: { ...detail.thread, busy: false },
+        messages: [detail.messages[0], { ...detail.messages[1], text: 'Completed answer', status: 'complete' }]
+    });
+
+    assert.equal(host.chat.$input.val(), 'Keep this follow-up draft');
+    assert.equal(host.chat.$send.prop('disabled'), false);
+    assert.match(host.chat.element.textContent, /Completed answer/);
+});
+
+for (const [reload, revision] of [['refresh', 1], ['open', 1], ['open', 2]]) {
+    test(`A completed turn survives delayed ${reload} history at revision ${revision}`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true });
+        await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+        await openSavedChat(f, 'saved-thread', 'Saved answer');
+        const host = f.controller.chat;
+        const chat = host.chat;
+        const detail = { thread: { ...chat.threadInfo }, messages: [...chat.state.messages] };
+        if (reload === 'open') host.openThread('saved-thread');
+        else host.refreshConversation(chat);
+        const olderRefresh = f.requests.at(-1);
+        const requestsBeforeCompletion = f.requests.length;
+
+        typeChat(chat.$input[0], 'Second question');
+        sendChat(chat.$input[0]);
+        const turn = f.chatRequests.at(-1);
+        turn.callbacks.onMetadata({ threadId: detail.thread.id, revision: 2,
+            messageId: 'second-answer', userMessageId: 'second-question' });
+        if (revision === 2) {
+            detail.thread = { ...detail.thread, revision: 2, busy: true };
+            detail.messages = chat.state.messages.map(message => ({ ...message, requestId: turn.inputData.requestId }));
+        }
+        turn.resolve({ success: true, persisted: true, response: 'Second answer' });
+        await tick();
+        assert.equal(f.requests.length, requestsBeforeCompletion + 1, 'A completed turn immediately requests fresh history.');
+        assert.equal(olderRefresh.signal.aborted, true, 'The old history read must be cancelled.');
+        const freshRefresh = f.requests.at(-1);
+        await f.respond(olderRefresh, detail);
+
+        assert.equal(chat.state.revision, 2);
+        assert.equal(Boolean(chat.state.serverBusy), false);
+        assert.equal(chat.state.messages.at(-1).status, 'complete');
+        assert.deepEqual(Array.from(chat.state.messages, message => message.text),
+            ['Saved question', 'Saved answer', 'Second question', 'Second answer']);
+        assert.equal(chat.$input.val(), '');
+        assert.equal(f.requests.length, requestsBeforeCompletion + 1, 'A stale completion must not start another history request.');
+        assert.equal(freshRefresh.url.pathname, olderRefresh.url.pathname);
+        await f.respond(freshRefresh, {
+            thread: { ...detail.thread, revision: 2, busy: false },
+            messages: chat.state.messages.map(message => ({ ...message, requestId: turn.inputData.requestId }))
+        });
+        assert.equal(chat.state.messages.at(-1).text, 'Second answer');
+        assert.equal(chat.state.serverBusy, false);
+    });
+}
+
+test('Opening cached history selects immediately and preserves later assistant selection', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    await openSavedChat(f, 'saved-thread', 'Saved answer');
+    const host = f.controller.chat;
+    const saved = host.chat;
+    selectChatAssistant(host, 8);
+    const other = host.chat;
+
+    host.openThread('saved-thread');
+    const refresh = f.requests.at(-1);
+    assert.equal(host.chat, saved);
+    selectChatAssistant(host, 8);
+    await f.respond(refresh, {
+        thread: saved.threadInfo,
+        messages: [{ id: 'answer', role: 'assistant', text: 'Refreshed answer', status: 'complete' }]
+    });
+    assert.equal(host.chat, other);
+    assert.equal(saved.state.messages[0].text, 'Refreshed answer');
+});
+
+test('Persistent assistant switching starts a usable chat after its last selected thread is removed', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    await openSavedChat(f, 'removed-thread', 'Removed saved answer');
+    typeChat(host.chat.$input[0], 'Removed thread draft');
+    selectChatAssistant(host, 8);
+    typeChat(host.chat.$input[0], 'Keep second assistant draft');
+    host.removeChat('removed-thread');
+
+    assert.equal(host.chat.$input.val(), 'Keep second assistant draft');
+    selectChatAssistant(host, 7);
+    const input = f.controller.chatPanel.querySelector('.ai-chat-input');
+    assert.ok(input, 'The removed conversation must not leave an empty chat panel.');
+    assert.equal(input.disabled, false);
+    assert.equal(input.value, '');
+    assert.doesNotMatch(host.chat.element.textContent, /Removed saved answer/);
+    typeChat(input, 'A new usable draft');
+    selectChatAssistant(host, 8);
+    selectChatAssistant(host, 7);
+    assert.equal(host.chat.$input.val(), 'A new usable draft');
+});
+
+test('Removing an older saved thread preserves the newer selection for the same persistent assistant', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    await openSavedChat(f, 'older-thread', 'Older saved answer');
+    await openSavedChat(f, 'newer-thread', 'Newer saved answer');
+    typeChat(host.chat.$input[0], 'Keep newer thread draft');
+    selectChatAssistant(host, 8);
+    host.removeChat('older-thread');
+    selectChatAssistant(host, 7);
+
+    assert.equal(host.chat.$input.val(), 'Keep newer thread draft');
+    assert.match(host.chat.element.textContent, /Newer saved answer/);
+    assert.doesNotMatch(host.chat.element.textContent, /Older saved answer/);
+});
+
+test('History New chat resets only the selected conversation and returns focus to its composer', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const firstInput = await openChat(f);
+    typeChat(firstInput, 'First question');
+    sendChat(firstInput);
+    f.chatRequests[0].resolve({ success: true, response: 'First reply', conversationId: 'first-conversation' });
+    await tick();
+    typeChat(firstInput, 'First draft');
+
+    const host = f.controller.chat;
+    host.select.value = '8';
+    host.select.dispatchEvent(new firstInput.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    const secondInput = host.chat.$input[0];
+    typeChat(secondInput, 'Second question');
+    sendChat(secondInput);
+    f.chatRequests[1].resolve({ success: true, response: 'Second reply', conversationId: 'second-conversation' });
+    await tick();
+    typeChat(secondInput, 'Second draft');
+    host.toggleHistory(true);
+    host.newChatButton.click();
+
+    assert.equal(host.chat.state.messages.length, 0);
+    assert.equal(secondInput.value, '');
+    assert.equal(secondInput.ownerDocument.activeElement, secondInput);
+    assert.ok(host.select.closest('.ai-chat-composer-actions'));
+    assert.equal(host.chat.$toolbar.find('select').length, 0);
+    host.select.value = '7';
+    host.select.dispatchEvent(new firstInput.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    assert.equal(host.chat.$input.val(), 'First draft');
+    assert.match(host.chat.element.textContent, /First reply/);
+});
+
+test('Composer Stop cancels only the selected assistant and preserves partial replies and drafts', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f);
+    typeChat(input, 'First question');
+    sendChat(input);
+    const first = f.chatRequests[0];
+    const selector = f.controller.chatPanel.querySelector('select');
+    selector.value = '8';
+    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    const secondInput = f.controller.chatPanel.querySelector('.ai-chat-input');
+    typeChat(secondInput, 'Second question');
+    f.controller.chatPanel.querySelector('.btn-ai-chat-send').click();
+    const second = f.chatRequests[1];
+    second.callbacks.onUpdate('Partial reply');
+    typeChat(secondInput, 'My next question');
+    const stop = f.controller.chatPanel.querySelector('.btn-ai-chat-stop');
+    assert.notEqual(stop.style.display, 'none');
+    assert.equal(f.controller.chatPanel.querySelector('.btn-ai-chat-send').style.display, 'none');
+    stop.click();
+    second.callbacks.onUpdate('Late reply that must be ignored');
+    await tick();
+
+    assert.equal(second.cancellations, 1);
+    assert.equal(first.cancellations, 0);
+    assert.match(f.controller.chatPanel.textContent, /Partial reply/);
+    assert.doesNotMatch(f.controller.chatPanel.textContent, /Late reply/);
+    assert.equal(secondInput.value, 'My next question');
+    assert.equal(secondInput.ownerDocument.activeElement, secondInput);
+    assert.equal(stop.style.display, 'none');
+    assert.equal(f.controller.chatPanel.querySelector('.btn-ai-chat-send').disabled, false);
+    const attachment = f.controller.chatPanel.querySelector('.btn-ai-chat-attach');
+    assert.equal(attachment.disabled, true, 'Unsaved chats cannot upload attachments.');
+
+    selector.value = '7';
+    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
+    const firstStop = f.controller.chatPanel.querySelector('.btn-ai-chat-stop');
+    assert.notEqual(firstStop.style.display, 'none');
+    firstStop.click();
+    await tick();
+    assert.equal(first.cancellations, 1);
+});
+
+test('Chat assistant loading errors can be retried and an empty catalogue stays usable', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    f.controller.chips.get('aiChat').click();
+    await f.respond(f.requests[0], {}, 503);
+    assert.match(f.controller.chatPanel.textContent, /chatUnavailable.js/);
+    const retry = [...f.controller.chatPanel.querySelectorAll('button')].find(button => /retry.js/.test(button.textContent));
+    assert.ok(retry);
+    retry.click();
+    assert.equal(f.requests.length, 2);
+    await f.respond(f.requests[1], []);
+    assert.match(f.controller.chatPanel.textContent, /chatEmpty.js/);
+    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input'), null);
+    f.controller.chips.get('all').click();
+    assert.equal(f.controller.results.hidden, false);
+    assert.equal(f.chatRequests.length, 0);
 });
