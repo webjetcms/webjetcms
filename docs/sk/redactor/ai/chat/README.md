@@ -40,7 +40,9 @@ Pri ostatných nastaveniach rozhranie upozorní, že rozhovor sa neukladá. Tak�
 
 ### História chatov
 
-Panel **História chatov** otvoríte ikonou bočného panela vľavo v hlavičke rozhovoru. Kliknutím na názov otvoríte uložený chat. Vybraný rozhovor označuje farebné pozadie a fialový pásik.
+Panel **História chatov** je predvolene zobrazený. Ikonou bočného panela vľavo v hlavičke ho môžete skryť alebo znova zobraziť. Táto voľba sa ukladá do používateľských nastavení administrácie a zachová sa aj po obnovení stránky či opätovnom prihlásení; platí aj pre chat pri poli a v editore stránky. Automatické zatvorenie panela na úzkej obrazovke uloženú voľbu nemení.
+
+Kliknutím na názov otvoríte uložený chat. Vybraný rozhovor označuje farebné pozadie a fialový pásik.
 
 V poli **Hľadať v histórii…** môžete hľadať podľa názvu, textu správ, asistenta alebo poskytovateľa. Vyhľadávanie zahŕňa aj staršie rozhovory, ktoré ešte nie sú načítané v zozname, a nerozlišuje veľké písmená ani diakritiku. Vymazaním výrazu obnovíte celý zoznam.
 

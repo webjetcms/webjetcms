@@ -5,6 +5,7 @@ import { setChatTooltip, initChatTooltips, disposeChatTooltips } from './chat-to
 
 const text = key => WJ.translate(`admin.quickSearch.${key}.js`);
 const filesText = key => WJ.translate(`components.ai_assistants.chat.files.${key}.js`);
+const HISTORY_OPEN_SETTING = 'aiChatHistoryOpen';
 
 /** Hosts saved conversations, optionally scoped to an editor field with insertion actions. */
 export class QuickSearchChat {
@@ -13,7 +14,8 @@ export class QuickSearchChat {
         const idPrefix = options.context ? `ai-field-chat-${chatRequestId()}` : 'admin-ai-chat';
         this.conversations = new Set();
         this.lastConversationByAssistant = new Map();
-        this.historyOpen = options.historyOpen === true;
+        const savedHistoryOpen = WJ.getAdminSetting(HISTORY_OPEN_SETTING);
+        this.historyOpen = savedHistoryOpen == null ? options.historyOpen !== false : savedHistoryOpen !== 'false';
         this.filesOpen = false;
         this.historyItems = [];
         this.historyPage = 0;
@@ -48,7 +50,7 @@ export class QuickSearchChat {
         heading.append(node('strong', '', historyText('title')), this.closeHistory);
         this.newChatButton = this.button(WJ.translate('components.ai_assistants.chat.new.js'), () => {
             this.chat?.newChat();
-            if (this.element.clientWidth < 768) this.toggleHistory(false);
+            if (this.element.clientWidth < 768) this.toggleHistory(false, false);
             this.focus();
         }, 'btn btn-primary md-quick-search__chat-new');
         this.newChatButton.prepend(icon('ti-plus'));
@@ -282,9 +284,11 @@ export class QuickSearchChat {
         return actions;
     }
 
-    toggleHistory(open = !this.historyOpen) {
+    /** Updates the history panel, persisting explicit choices but not automatic mobile closures. */
+    toggleHistory(open = !this.historyOpen, persist = true) {
         if (open && this.filesOpen && this.element.clientWidth < 768) this.toggleFiles(false);
         this.historyOpen = open;
+        if (persist) WJ.setAdminSetting(HISTORY_OPEN_SETTING, String(open));
         this.historyPanel.hidden = !open;
         if (open) initChatTooltips(this.historyPanel);
         else disposeChatTooltips(this.historyPanel);
@@ -300,7 +304,7 @@ export class QuickSearchChat {
     }
 
     toggleFiles(open = !this.filesOpen) {
-        if (open && this.historyOpen && this.element.clientWidth < 768) this.toggleHistory(false);
+        if (open && this.historyOpen && this.element.clientWidth < 768) this.toggleHistory(false, false);
         this.filesOpen = open;
         this.filesPanel.hidden = !open;
         if (open) initChatTooltips(this.filesPanel);
@@ -453,7 +457,7 @@ export class QuickSearchChat {
             }
             if (selection !== this.selectionVersion || this.disposed) return;
             this.showChat(chat);
-            if (this.element.clientWidth < 768) this.toggleHistory(false);
+            if (this.element.clientWidth < 768) this.toggleHistory(false, false);
             this.focus();
         } catch (error) {
             if (this.disposed) return;
