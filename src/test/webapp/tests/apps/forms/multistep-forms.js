@@ -143,15 +143,7 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
 });
 
 Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Apps }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
-
-    // Set new multistep form as form for the page
-    DTE.waitForEditor();
-    Apps.openAppEditor();
-    DTE.selectOption("formName", newMultistepFormName);
-    I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok');
-    DTE.save();
+    insertMultistepForm(I, DTE, Apps, newMultistepFormName);
 
     I.say("Test visual of step one");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
@@ -1091,6 +1083,18 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
         );
 }
 
+/** Replaces the test page content so insertion does not depend on an earlier run's component. */
+function insertMultistepForm(I, DTE, Apps, formName) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    Apps.clearPageContent();
+    Apps.openAppForInsert('Formulár', '#multistep_form-title');
+    DTE.selectOption("formName", formName);
+    DTE.selectOption("cssTemplate", "Bez šablóny");
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+    DTE.save();
+}
+
 async function getFormSettingsCount(I, formName) {
     return I.executeScript(async (name) => {
         const response = await fetch("/admin/rest/form-settings/search/findByColumns?searchFormName=" + encodeURIComponent("^" + name + "$"), {
@@ -1457,15 +1461,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     DTE.fillQuill("header", "autotest confirmation");
     DTE.save();
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
-
-    // Set new multistep form as form for the page
-    DTE.waitForEditor();
-    Apps.openAppEditor();
-    DTE.selectOption("formName", specialFormName);
-    I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok');
-    DTE.save();
+    insertMultistepForm(I, DTE, Apps, specialFormName);
 
     I.say("Test of step structure - showed must be labels not values");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
@@ -1601,17 +1597,13 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     compareTwoHtml(I, actualHtml, expectedHtml);
 });
 
-Scenario('Remove form 2 and test it @screenshot', ({ I, DT }) => {
+Scenario('Remove form 2 and test it @screenshot', async ({ I, DT, DTE, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    Apps.clearPageContent();
+    DTE.save();
     I.amOnPage("/apps/form/admin/");
-
-    DT.filterEquals("formName", specialFormName);
-    I.clickCss("td.dt-select-td");
-    I.click("button.buttons-remove");
-    I.waitForElement("div.DTE_Action_Remove");
-    I.waitForText("Naozaj chcete zmazať položku?", 5);
-    I.click("Zmazať", "div.DTE_Action_Remove");
-
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    removeFormDefinition(I, DT, specialFormName);
+    I.assertEqual(await getFormSettingsCount(I, specialFormName), 0, "Deleting the unused form must remove its settings");
 });
 
 function testRadioCheckgroup(I, field, valuePrefix, labelPrefix) {
