@@ -775,16 +775,16 @@ Scenario('Delete all form records and keep form definition', async ({ I, DT }) =
     I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1, "Deleting submissions must preserve form settings");
 });
 
-Scenario('Remove original and duplicated form definitions', async ({ I, DT }) => {
+Scenario('Delete used form data and preserve its definition', async ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
-
+    removeFormDefinition(I, DT, newMultistepFormName, true);
+    I.see("Dáta formulára boli zmazané.");
+    I.see("docId: " + appInsertTestPageId);
+    I.see("dáta formulára sú v archíve");
     I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1);
-    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1);
-    removeFormDefinition(I, DT, newMultistepFormName);
-    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 0, "Deleting a form must remove its settings");
-    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1, "Another form's settings must remain");
-    removeFormDefinition(I, DT, duplicatedMultistepFormName);
-    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 0, "Deleting a duplicate must remove its settings");
+
+    I.amOnPage("/apps/multistep-formular/app-insert-test.html");
+    I.waitForElement(".multistep-form-app input#f1-emailova-adresa-1", 10);
 });
 
 Scenario('Remove archived form data', async ({ I, DT, DTE }) => {
@@ -800,6 +800,21 @@ Scenario('Remove archived form data', async ({ I, DT, DTE }) => {
         DTE.save('formDetailArchivedTable');
     }
     I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailArchivedTable');
+});
+
+Scenario('Remove original and duplicated form definitions', async ({ I, DT, DTE, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    Apps.clearPageContent();
+    DTE.save();
+    I.amOnPage("/apps/form/admin/");
+
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1);
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1);
+    removeFormDefinition(I, DT, newMultistepFormName);
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 0, "Deleting a form must remove its settings");
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1, "Another form's settings must remain");
+    removeFormDefinition(I, DT, duplicatedMultistepFormName);
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 0, "Deleting a duplicate must remove its settings");
 });
 
 Scenario('Insert and test multiple forms in one page - before clear page', ({ I, DTE, Apps }) => {
@@ -1087,7 +1102,7 @@ async function getFormSettingsCount(I, formName) {
     }, formName);
 }
 
-function removeFormDefinition(I, DT, formName) {
+function removeFormDefinition(I, DT, formName, preserve = false) {
     DT.filterEquals("formName", formName);
     I.waitForText(formName, 10, "#formsDataTable");
     I.clickCss("#formsDataTable td.dt-select-td");
@@ -1095,8 +1110,10 @@ function removeFormDefinition(I, DT, formName) {
     I.waitForElement("div.DTE_Action_Remove");
     I.waitForText("Naozaj chcete zmazať položku?", 5);
     I.click("Zmazať", "div.DTE_Action_Remove");
+    I.waitForInvisible("div.DTE_Action_Remove", 10);
     DT.waitForLoader("formsDataTable");
-    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#formsDataTable");
+    if (preserve) I.waitForText(formName, 10, "#formsDataTable");
+    else I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#formsDataTable");
 }
 
 function createAndFillFormItem(I, DT,  DTE, fieldType, required, label, value, tooltip, placeholder, options = {}) {
