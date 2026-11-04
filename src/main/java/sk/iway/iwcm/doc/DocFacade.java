@@ -15,8 +15,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.IntegerRange;
-import org.apache.commons.lang3.Strings;
 
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
@@ -53,7 +53,8 @@ public class DocFacade
 
 		if (isInteger(request.getParameter("page")))
 			currentPage = Math.max(Integer.parseInt(request.getParameter("page")) - 1, 0);
-		sql.append("SELECT * FROM documents WHERE 1 AND group_id IN(");
+		sql.append("SELECT * FROM documents WHERE ");
+		List<Integer> accessibleGroupIds = new ArrayList<>();
 
 		String group_ids = options.get("group_ids").toString();
 		getGroupsFor(group_ids);
@@ -63,10 +64,10 @@ public class DocFacade
 
 			if (group.isInternal() || !canUserAccess(group))
 				continue;
-			sql.append(group.getGroupId()).append(',');
+			accessibleGroupIds.add(group.getGroupId());
 		}
 
-		sql = new StringBuilder(Strings.CS.removeEnd(sql.toString(), ",")).append(')');
+		sql.append(DB.getInCondition("group_id", accessibleGroupIds));
 		if (options.get("where_sql") != null)
 			sql.append(' ').append(options.get("where_sql").toString()).append(' ');
 

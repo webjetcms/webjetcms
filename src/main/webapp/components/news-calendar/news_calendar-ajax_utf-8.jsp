@@ -80,7 +80,7 @@ public List<DocDetails> getEventsForMonth(String groupIds, String perexGroupIds,
 	try
 	{
 		db_conn = DBPool.getConnection();
-		StringBuffer sql = new StringBuffer("SELECT u.title as u_title, u.first_name, u.last_name, u.email, "+D_DOCUMENT_FIELDS+" FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE available="+sk.iway.iwcm.DB.getBooleanSql(true)+"  AND group_id IN ("+groupIds+") AND html_data IS NOT NULL AND (publish_start IS NOT null AND publish_start >= ? AND publish_start <= ?) AND (password_protected IS null OR password_protected='')");
+		StringBuffer sql = new StringBuffer("SELECT u.title as u_title, u.first_name, u.last_name, u.email, "+D_DOCUMENT_FIELDS+" FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE available="+sk.iway.iwcm.DB.getBooleanSql(true)+"  AND " + DB.getInCondition("group_id", groupIds) + " AND html_data IS NOT NULL AND (publish_start IS NOT null AND publish_start >= ? AND publish_start <= ?) AND (password_protected IS null OR password_protected='')");
 		if(Tools.isNotEmpty(perexGroupIds))
 		{
 			String[] perexGroupIdsArray = Tools.getTokens(perexGroupIds, ",");
