@@ -257,7 +257,7 @@ public class AssistantController {
         return column;
     }
 
-    /** Returns configured chat assistants for the current domain without binding them to an editor field. */
+    /** Returns configured assistants explicitly bound to global chat in the current domain. */
     @GetMapping("/chat-assistants/")
     public List<DataTableAi> getChatAssistants(HttpServletRequest request) {
         return aiService.getChatAssistants(assistantRepo, sk.iway.iwcm.i18n.Prop.getInstance(request));

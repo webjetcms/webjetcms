@@ -89,7 +89,7 @@ public class AiChatService implements DisposableBean {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalidInput");
         }
         AssistantDefinitionEntity assistant = assistants.findByIdAndDomainId(input.assistantId(), scope.domainId()).orElse(null);
-        if (!eligible(assistant)) throw new ResponseStatusException(HttpStatus.CONFLICT, "assistantChanged");
+        if (!eligible(assistant, input.context())) throw new ResponseStatusException(HttpStatus.CONFLICT, "assistantChanged");
         String providerScope = configuration.chatScope(configuration.resolveForDomain(provider(assistant.getProvider()), scope.domainName()));
         return new Prepared(store.begin(input, scope, assistant, providerScope, uploads), assistant, scope);
     }
@@ -285,7 +285,7 @@ public class AiChatService implements DisposableBean {
 
     private ThreadView view(AiChatThread thread) {
         AssistantDefinitionEntity assistant = assistants.findByIdAndDomainId(thread.getAssistantId(), thread.getDomainId()).orElse(null);
-        boolean available = eligible(assistant) && AiChatStore.sameAssistant(thread, assistant);
+        boolean available = eligible(assistant, thread.getContext()) && AiChatStore.sameAssistant(thread, assistant);
         String reason = available ? null : "assistantChanged";
         if ("EXPIRED".equals(thread.getStatus())) reason = "expired";
         if ("DELETE_PENDING".equals(thread.getStatus())) reason = "deletePending";
@@ -303,9 +303,10 @@ public class AiChatService implements DisposableBean {
                 attachment.size(), "/admin/rest/ai/chat/threads/" + threadId + "/attachments/" + attachment.id())).toList());
     }
 
-    private boolean eligible(AssistantDefinitionEntity assistant) {
+    private boolean eligible(AssistantDefinitionEntity assistant, AiChatContext context) {
         if (assistant == null || Boolean.FALSE.equals(assistant.getActive()) || !Boolean.FALSE.equals(assistant.getUseTemporal())
             || !"live_chat".equals(assistant.getAction()) || !List.of("openai", "gemini").contains(assistant.getProvider())) return false;
+        if (context == null && !AiAssistantsService.isGlobalChatAssistant(assistant)) return false;
         return providers.stream().anyMatch(p -> p.getProviderId().equals(assistant.getProvider()) && p.isInit()
             && p instanceof LibrarySupportLogic library && library.supportsPersistentChat(assistant));
     }

@@ -61,18 +61,20 @@ class AiChatServiceTest {
     private final AiProviderConfig config = AiProviderConfig.builder("key").build();
     private AiChatStore.Scope scope;
     private AiChatService service;
+    private AssistantDefinitionEntity assistant;
     private MockedStatic<Adminlog> audit;
     private MockedStatic<Prop> translations;
 
     @BeforeEach
     void configure() throws Exception {
         scope = new AiChatStore.Scope(42, 7, "example.test", root.toRealPath());
-        AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
+        assistant = new AssistantDefinitionEntity();
         assistant.setId(12L);
         assistant.setName("Assistant");
         assistant.setProvider("openai");
         assistant.setModel("model");
         assistant.setAction("live_chat");
+        assistant.setClassName(AiAssistantsService.CHAT_TARGET);
         assistant.setActive(true);
         assistant.setUseTemporal(false);
         var assistants = mock(AssistantDefinitionRepository.class);
@@ -106,6 +108,27 @@ class AiChatServiceTest {
 
     private AssistantResponseDTO execute(AiChatService.Prepared prepared) {
         return service.execute(prepared, text -> { }, false, request);
+    }
+
+    /** Removing CHAT_SEARCH preserves history but prevents new global conversations and continuation. */
+    @Test
+    void removedGlobalBindingMakesHistoryReadOnly() {
+        var first = prepare(null, null);
+        execute(first);
+        String id = first.turn().thread().getId();
+        assistant.setClassName("sk.iway.iwcm.doc.DocDetails");
+
+        var detail = service.detail(id, scope);
+
+        assertFalse(detail.thread().canContinue());
+        assertEquals("assistantChanged", detail.thread().unavailableReason());
+        assertEquals(2, detail.messages().size());
+        assertEquals("Answer", detail.messages().get(1).text());
+        assertEquals(1, service.list(scope, 0, "").items().size());
+        assertThrows(ResponseStatusException.class, () -> prepare(id, 1L));
+        ResponseStatusException error = assertThrows(ResponseStatusException.class, () -> prepare(null, null));
+        assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
+        assertEquals("assistantChanged", error.getReason());
     }
 
     /** Attachments reach the provider unchanged and streamed replies survive a store reload. */
@@ -169,6 +192,7 @@ class AiChatServiceTest {
     /** Retrying a saved field turn uses its original field snapshot and attachments. */
     @Test
     void continuesFieldChatWithCurrentInputAndOriginalRetryContext() throws Exception {
+        assistant.setClassName("sk.iway.iwcm.doc.DocDetails");
         var context = new AiChatContext("/admin/rest/web-pages", "42", "data");
         var files = AiChatAttachments.read(List.of(new MockMultipartFile("files", "notes.txt", "text/plain",
             "Document context".getBytes(StandardCharsets.UTF_8))));
@@ -187,6 +211,7 @@ class AiChatServiceTest {
         execute(retry);
         verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any());
         assertEquals(context, service.detail(id, scope).thread().context());
+        assertTrue(service.detail(id, scope).thread().canContinue());
         assertTrue(service.list(scope, 0, "").items().isEmpty());
         assertEquals(1, service.list(scope, 0, "", context).items().size());
     }

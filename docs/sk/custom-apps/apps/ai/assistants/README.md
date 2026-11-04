@@ -338,7 +338,9 @@ Prehliadačový poskytovateľ zachováva pôvodné nastavenie. Lokálne adaptér
 
 ### Ukladané rozhovory
 
-`QuickSearchChat` používa zdieľaný komponent `AiChat`. Zoznam dostupných asistentov načíta cez `GET /admin/rest/ai/assistant/chat-assistants/`. Metadáta `persistentChat` povoľujú ukladanie iba aktívnym asistentom s akciou `live_chat`, explicitným `useTemporal=false`, poskytovateľom OpenAI alebo Gemini a podporou chatu v adaptéri a modeli. Väzby na entitu a polia sa v samostatnom chate nepoužívajú.
+`QuickSearchChat` používa zdieľaný komponent `AiChat`. Zoznam dostupných asistentov načíta cez `GET /admin/rest/ai/assistant/chat-assistants/`. Globálna ponuka vyžaduje akciu `live_chat` a explicitný token `CHAT_SEARCH` v `className`; token sa ponúka v autocomplete bez registrácie JPA entity. Možno ho kombinovať s inými entitami pomocou čiarky, bodkočiarky alebo nového riadka. Vzory ani `*` nenahrádzajú explicitnú väzbu. Pri samotnom `CHAT_SEARCH` sa prázdne `fieldTo` pri ukladaní doplní na `*`; zdrojové ani cieľové pole sa v globálnom chate nepoužíva.
+
+Metadáta `persistentChat` povoľujú ukladanie iba aktívnym asistentom s akciou `live_chat`, explicitným `useTemporal=false`, poskytovateľom OpenAI alebo Gemini a podporou chatu v adaptéri a modeli. `AiChatService` kontroluje väzbu `CHAT_SEARCH` pri začatí aj pokračovaní globálneho rozhovoru a pri určovaní dostupnosti histórie. Po odstránení väzby zostáva história na čítanie. Rozhovory s kontextom poľa používajú pôvodné pravidlá dostupnosti v editore.
 
 Ukladaný chat obsluhujú `AiChatController`, `AiChatService` a `AiChatStore` v CMS. Endpointy pod `/admin/rest/ai/chat` vyžadujú oprávnenie `cmp_ai_button`, prihláseného vlastníka rozhovoru a správnu doménu:
 

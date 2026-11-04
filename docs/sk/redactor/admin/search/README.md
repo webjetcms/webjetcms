@@ -38,6 +38,8 @@ Po zmene výrazu sa výsledky dokumentácie vymažú a karta znova zobrazí poml
 
 Karta **AI Chat** otvorí samostatný rozhovor s AI asistentom. V poli správy vyberte asistenta, napíšte požiadavku a odošlite ju klávesom **Enter** alebo tlačidlom so šípkou. Obsah otvorenej webovej stránky ani výraz z vyhľadávania sa do rozhovoru neposiela.
 
+Ponuka obsahuje iba aktívnych asistentov s typom požiadavky **Chat** a hodnotou `CHAT_SEARCH` v nastavení **Použiť pre Entitu**. Správca ich nastaví v [AI asistentoch](../../ai/settings/README.md#nastavenie-chatového-asistenta).
+
 Pri ukladaných chatoch OpenAI a Gemini môžete pridávať prílohy, hľadať v histórii a pokračovať v rozhovore aj po obnovení stránky. Ikony v hlavičke otvárajú panely **História chatov** a **Súbory v chate**. Prepnutie asistenta alebo zatvorenie dialógu zachová rozpísanú správu, kým neopustíte aktuálnu stránku administrácie.
 
 ![AI Chat s históriou rozhovorov a odpoveďou vo forme tabuľky](../../ai/chat/chat-history.png)

@@ -379,8 +379,8 @@ public class AiService {
     }
 
     /**
-     * Lists active chat assistants from the current domain whose providers are configured.
-     * Field bindings are deliberately omitted because the conversation has no page context.
+     * Lists active assistants explicitly bound to global chat in the current domain with configured providers.
+     * Source and target fields are omitted because the conversation has no page context.
      *
      * @param assistantRepo repository used by the domain-scoped assistant cache
      * @param prop current administration language
@@ -388,7 +388,7 @@ public class AiService {
      */
     public List<DataTableAi> getChatAssistants(AssistantDefinitionRepository assistantRepo, Prop prop) {
         return AiAssistantsService.getAssistantsFromDB(assistantRepo).stream()
-            .filter(assistant -> SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction()))
+            .filter(AiAssistantsService::isGlobalChatAssistant)
             .filter(assistant -> Tools.isFalse(assistant.getActive()) == false)
             .filter(assistant -> aiInterfaces.stream().anyMatch(provider ->
                 provider.getProviderId().equals(assistant.getProvider()) && provider.isInit()))

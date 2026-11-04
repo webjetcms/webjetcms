@@ -43,7 +43,7 @@ class AiServiceTest {
         assertFalse(AiService.shouldRemoveHtml(assistant, inputData));
     }
 
-    /** Standalone discovery scopes the database lookup and excludes disabled or unavailable assistants. */
+    /** Global discovery requires explicit CHAT_SEARCH binding as well as the current domain and an active provider. */
     @Test
     void standaloneChatUsesCurrentDomainAndOnlyConfiguredActiveChats() {
         AssistantDefinitionRepository repository = mock(AssistantDefinitionRepository.class);
@@ -60,7 +60,13 @@ class AiServiceTest {
         generation.setAction(SupportedActions.GENERATE_TEXT.getAction());
         AssistantDefinitionEntity missing = chat(4L);
         missing.setProvider("missing");
-        when(repository.findAllByDomainId(42)).thenReturn(List.of(chat, disabled, generation, missing));
+        AssistantDefinitionEntity editor = chat(5L);
+        editor.setClassName("sk.iway.iwcm.doc.DocDetails");
+        AssistantDefinitionEntity wildcard = chat(6L);
+        wildcard.setClassName("*");
+        AssistantDefinitionEntity shared = chat(7L);
+        shared.setClassName("sk.iway.iwcm.doc.DocDetails, CHAT_SEARCH");
+        when(repository.findAllByDomainId(42)).thenReturn(List.of(chat, disabled, generation, missing, editor, wildcard, shared));
 
         try (MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class);
                 MockedStatic<Cache> caches = mockStatic(Cache.class)) {
@@ -69,7 +75,7 @@ class AiServiceTest {
 
             List<DataTableAi> result = service.getChatAssistants(repository, mock(Prop.class));
 
-            assertEquals(List.of(1L), result.stream().map(DataTableAi::getAssistantId).toList());
+            assertEquals(List.of(1L, 7L), result.stream().map(DataTableAi::getAssistantId).toList());
             assertNull(result.get(0).getInstructions());
         }
     }
@@ -80,6 +86,7 @@ class AiServiceTest {
         assistant.setProvider("test");
         assistant.setName("Chat " + id);
         assistant.setAction(SupportedActions.LIVE_CHAT.getAction());
+        assistant.setClassName(AiAssistantsService.CHAT_TARGET);
         assistant.setActive(true);
         return assistant;
     }
