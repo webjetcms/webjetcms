@@ -20,6 +20,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Map;
+import java.util.List;
+
+import sk.iway.iwcm.stat.heat_map.HeatMapStorage.WidthCount;
+import static sk.iway.iwcm.stat.heat_map.HeatMapCoordinateMode.DOCUMENT;
+import static sk.iway.iwcm.stat.heat_map.HeatMapCoordinateMode.CONTAINER;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -32,6 +37,26 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 class HeatMapStorageTest extends BaseWebjetTest {
     private static final String EVENT_ID = "0123456789abcdef0123456789abcdef";
 
+    /** Equal numeric widths must not mix document coordinates with container coordinates. */
+    @Test
+    void separatesCoordinateModesWhileCombiningSourceViewports() throws Exception {
+        Connection connection = connectionWithTables("stat_clicks_2026_9");
+        PreparedStatement statement = mock(PreparedStatement.class);
+        ResultSet rows = mock(ResultSet.class);
+        when(connection.prepareStatement(anyString())).thenReturn(statement);
+        when(statement.executeQuery()).thenReturn(rows);
+        when(rows.next()).thenReturn(true, true, true, false);
+        when(rows.getInt(1)).thenReturn(1140, 1140, 1140);
+        when(rows.getInt(2)).thenReturn(1, 1, 0);
+        when(rows.getInt(3)).thenReturn(1223, 1369, 1140);
+        when(rows.getLong(4)).thenReturn(2L, 5L, 3L);
+        try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
+            pool.when(DBPool::getConnection).thenReturn(connection);
+            var widths = HeatMapStorage.getWidths("example.com", 123, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 30));
+            assertEquals(List.of(new WidthCount(1140, CONTAINER, 7, 1369), new WidthCount(1140, DOCUMENT, 3, 1140)), widths);
+        }
+    }
+
     @Test
     void delayedEventKeepsItsOriginalMonthAndDay() {
         long epoch = LocalDate.of(2025, 12, 31).atTime(23, 59).atZone(ZoneId.systemDefault()).toEpochSecond();
@@ -39,8 +64,8 @@ class HeatMapStorageTest extends BaseWebjetTest {
         try (MockedStatic<StatWriteBuffer> buffer = mockStatic(StatWriteBuffer.class)) {
             HeatMapStorage.record(event, "Example.COM");
             buffer.verify(() -> StatWriteBuffer.addIdempotent(
-                    "INSERT INTO stat_clicks_2025_12 (event_id, domain_name, document_id, day_of_month, viewport_width, x, y) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    "stat_clicks", "_2025_12", EVENT_ID, "example.com", 123, 31, 390, 800, 4000));
+                    "INSERT INTO stat_clicks_2025_12 (event_id, domain_name, document_id, day_of_month, viewport_width, x, y, coordinate_mode, source_viewport_width) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "stat_clicks", "_2025_12", EVENT_ID, "example.com", 123, 31, 390, 800, 4000, 0, 390));
         }
     }
 
@@ -77,12 +102,12 @@ class HeatMapStorageTest extends BaseWebjetTest {
     void migratedDesktopClicksUseTheSameDomainScopedWidthQuery() throws Exception {
         Connection connection = connectionWithTables("stat_clicks_2010_6");
         PreparedStatement statement = statementWithCount(1920, 7);
-        String sql = "SELECT viewport_width, COUNT(*) FROM stat_clicks_2010_6"
-                + " WHERE domain_name = ? AND day_of_month BETWEEN ? AND ? AND document_id = ? GROUP BY viewport_width";
+        String sql = "SELECT viewport_width, coordinate_mode, source_viewport_width, COUNT(*) FROM stat_clicks_2010_6"
+                + " WHERE domain_name = ? AND day_of_month BETWEEN ? AND ? AND document_id = ? GROUP BY viewport_width, coordinate_mode, source_viewport_width";
         when(connection.prepareStatement(sql)).thenReturn(statement);
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
-            assertEquals(Map.of(1920, 7L), HeatMapStorage.getWidths("example.com", 123,
+            assertEquals(List.of(new WidthCount(1920, DOCUMENT, 7, 1920)), HeatMapStorage.getWidths("example.com", 123,
                     LocalDate.of(2010, 6, 1), LocalDate.of(2010, 6, 30)));
             verify(statement).setString(1, "example.com");
             verify(statement).setInt(2, 1);
@@ -101,7 +126,7 @@ class HeatMapStorageTest extends BaseWebjetTest {
                 invocation.getArgument(0, String.class).contains("_2025_12") ? december : january);
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
-            assertEquals(Map.of(390, 8L), HeatMapStorage.getWidths("example.com", 123, LocalDate.of(2025, 12, 31), LocalDate.of(2026, 1, 1)));
+            assertEquals(List.of(new WidthCount(390, DOCUMENT, 8, 390)), HeatMapStorage.getWidths("example.com", 123, LocalDate.of(2025, 12, 31), LocalDate.of(2026, 1, 1)));
             verify(december).setInt(2, 31);
             verify(december).setInt(3, 31);
             verify(january).setInt(2, 1);
@@ -123,7 +148,7 @@ class HeatMapStorageTest extends BaseWebjetTest {
         when(connection.prepareStatement(anyString())).thenReturn(statement);
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
-            assertEquals(Map.of(390, 2L), HeatMapStorage.getWidths("example.com", 123, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 14)));
+            assertEquals(List.of(new WidthCount(390, DOCUMENT, 2, 390)), HeatMapStorage.getWidths("example.com", 123, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 14)));
         }
     }
 
@@ -143,7 +168,8 @@ class HeatMapStorageTest extends BaseWebjetTest {
         when(statement.executeQuery()).thenReturn(result);
         when(result.next()).thenReturn(true, false);
         when(result.getInt(1)).thenReturn(width);
-        when(result.getLong(2)).thenReturn(count);
+        when(result.getInt(3)).thenReturn(width);
+        when(result.getLong(4)).thenReturn(count);
         return statement;
     }
 

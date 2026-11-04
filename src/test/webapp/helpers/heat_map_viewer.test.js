@@ -7,6 +7,68 @@ const { chromium } = require("playwright");
 
 const adminPath = path.resolve(__dirname, "../../../main/webapp/apps/stat/admin");
 
+test("container groups restore their offset at the representative viewport and hide mismatched maps", async t => {
+    const browser = await chromium.launch({headless: true});
+    t.after(() => browser.close());
+    const page = await browser.newPage({viewport: {width: 1024, height: 1000}});
+    const markup = fs.readFileSync(path.join(adminPath, "heat-map-details.html"), "utf8").split('<section id="heatMapViewer"')[1];
+    const texts = {loading: "Loading", error: "Error", previewError: "Preview error", clicks: "Clicks",
+        container: "Container", window: "Window", containerMissing: "Missing container {width} px"};
+    let matching = true;
+    let sizing = "max-width:1140px;width:100%";
+    const tiles = [];
+    await page.route("**/*", async route => {
+        const url = new URL(route.request().url());
+        if (url.pathname.endsWith("heat-map-viewer.js")) return route.fulfill({contentType: "text/javascript", body: fs.readFileSync(path.join(adminPath, "heat-map-viewer.js"), "utf8")});
+        if (url.pathname.endsWith("heat-map.css")) return route.fulfill({contentType: "text/css", body: fs.readFileSync(path.join(adminPath, "heat-map.css"), "utf8")});
+        if (url.pathname.endsWith("/widths")) return route.fulfill({json: [
+            {width: 1140, mode: "CONTAINER", clicks: 20, previewWidth: 1369},
+            {width: 1140, mode: "DOCUMENT", clicks: 2, previewWidth: 1140}]});
+        if (url.pathname.endsWith("/metadata")) return route.fulfill({json: {title: "Preview", source: "current", tileSize: 1024,
+            previewWidth: url.searchParams.get("mode") === "CONTAINER" ? 1369 : 1140, containerSelector: ".container"}});
+        if (url.pathname.endsWith("/html/preview")) return route.fulfill({contentType: "text/html", body:
+            '<!doctype html><meta name="webjet-heatmap-preview" content="11"><style>body{margin:0}.container{' + sizing + ';margin:auto;height:3000px}</style><div class="' + (matching ? "container" : "changed") + '">Content</div>'});
+        if (url.pathname.endsWith("/binary/tile")) {
+            tiles.push(url);
+            return route.fulfill({contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"/>'});
+        }
+        return route.fulfill({contentType: "text/html", body: '<!doctype html><style>.d-none{display:none!important}</style><link rel="stylesheet" href="/apps/stat/admin/heat-map.css"><section id="heatMapViewer"'
+            + markup + '<script type="module">import {HeatMapViewer} from "/apps/stat/admin/heat-map-viewer.js";new HeatMapViewer(document.getElementById("heatMapViewer"),'
+            + JSON.stringify(texts) + ').init();</script>'});
+    });
+    await page.goto("https://heatmap.test/view?docId=11");
+    await page.locator("#heatMapTiles img").first().waitFor();
+    assert.deepEqual(await page.locator("#heatMapWidth option").allTextContents(), [
+        "Container 1140 px · Clicks: 20", "Window 1140 px · Clicks: 2"]);
+    const frame = page.frames().find(item => item.url().includes("/html/preview"));
+    assert.equal(await frame.evaluate(() => innerWidth), 1369);
+    assert.equal(await page.locator("#heatMapTiles").evaluate(el => el.style.transform), "translate(114.5px, 0px)");
+    assert.ok(tiles.every(url => url.searchParams.get("mode") === "CONTAINER" && url.searchParams.get("width") === "1140"));
+    await frame.evaluate(() => scrollTo(0, 1400));
+    await page.waitForFunction(() => document.getElementById("heatMapTiles").style.transform === "translate(114.5px, -1400px)");
+    sizing = "width:1140px;max-width:100%";
+    await page.locator("#heatMapReload").click();
+    await page.locator("#heatMapTiles img").first().waitFor();
+    assert.equal(await page.locator("#heatMapTiles").evaluate(el => el.style.transform), "translate(114.5px, 0px)",
+        "Fixed CSS width restores the same container origin without a pixel max-width");
+    sizing = "width:calc(100vw - 229px)";
+    await page.locator("#heatMapReload").click();
+    await page.getByText("Missing container 1140 px", {exact: true}).waitFor();
+    assert.equal(await page.locator("#heatMapOverlay").isVisible(), false,
+        "A fluid container must not match merely because its current width is 1140 pixels");
+    matching = false;
+    sizing = "max-width:1140px;width:100%";
+    await page.locator("#heatMapReload").click();
+    await page.getByText("Missing container 1140 px", {exact: true}).waitFor();
+    assert.equal(await page.locator("#heatMapViewport").isVisible(), true);
+    assert.equal(await page.locator("#heatMapOverlay").isVisible(), false);
+    assert.equal(await page.locator("#heatMapTiles img").count(), 0);
+    await page.selectOption("#heatMapWidth", "1140");
+    await page.locator("#heatMapTiles img").first().waitFor();
+    assert.equal(await page.locator("#heatMapOverlay").isVisible(), true, "Exact-coordinate fallback remains usable without a container");
+    assert.equal(await frame.evaluate(() => innerWidth), 1140);
+});
+
 test("click map keeps CSS coordinates while scrolling, scaling and switching widths", async t => {
     const browser = await chromium.launch({headless: true});
     t.after(() => browser.close());

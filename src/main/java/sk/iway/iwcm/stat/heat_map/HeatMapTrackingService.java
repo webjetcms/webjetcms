@@ -52,6 +52,7 @@ public final class HeatMapTrackingService {
         int docId = Tools.getIntValue(String.valueOf(request.getAttribute("doc_id")), -1);
         return "<script id=\"wj-heatmap-tracker\" defer src=\"/components/stat/heat-map-tracker.js\" data-doc-id=\"" + docId
                 + "\" data-cookie-name=\"" + escapeAttribute(Constants.getString("gdprCookieName"))
+                + "\" data-container-selector=\"" + escapeAttribute(Constants.getString("statHeatMapMainContainerSelector"))
                 + "\" data-allow-all=\"" + Constants.getBoolean("gdprAllowAllCookies")
                 + "\" data-before-consent=\"" + Constants.getBoolean("gdprInsertAllScriptsBeforeAccept")
                 + "\" data-decline-name=\"" + escapeAttribute(Constants.getString("disableCookiesCookieName"))
@@ -70,7 +71,8 @@ public final class HeatMapTrackingService {
         if (name == null || !name.startsWith(COOKIE_PREFIX) || value == null || value.length() > 128) return null;
         String eventId = name.substring(COOKIE_PREFIX.length());
         String[] values = value.split("\\.", -1);
-        if (values.length != 6 || !"v1".equals(values[0])) return null;
+        boolean containerVersion = values.length == 7 && "v2".equals(values[0]);
+        if (!containerVersion && (values.length != 6 || !"v1".equals(values[0]))) return null;
         try {
             for (int i = 1; i < values.length; i++) {
                 if (!values[i].matches("[0-9]{1,10}")) return null;
@@ -81,7 +83,8 @@ public final class HeatMapTrackingService {
             int x = Integer.parseInt(values[4]);
             int y = Integer.parseInt(values[5]);
             if (time < nowSeconds - MAX_AGE_SECONDS || time > nowSeconds + 300) return null;
-            return new HeatMapEvent(eventId, docId, width, time, x, y);
+            int containerWidth = containerVersion ? Integer.parseInt(values[6]) : 0;
+            return new HeatMapEvent(eventId, docId, width, time, x, y, containerWidth);
         } catch (IllegalArgumentException ex) {
             return null;
         }

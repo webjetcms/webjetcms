@@ -23,6 +23,20 @@ class HeatMapTrackingServiceTest {
     private static final String NAME = HeatMapTrackingService.COOKIE_PREFIX + ID;
     private static final long NOW = 1789387200L;
 
+    /** New cookies retain the source viewport and reject impossible normalized coordinates. */
+    @Test
+    void acceptsContainerCoordinatesAlongsidePendingV1Cookies() {
+        HeatMapEvent event = HeatMapTrackingService.parseCookie(NAME, "v2.123.1369." + NOW + ".487.350.1140", NOW);
+        assertNotNull(event);
+        assertEquals(1369, event.viewportWidth());
+        assertEquals(487, event.x());
+        assertEquals(350, event.y());
+        assertNotNull(HeatMapTrackingService.parseCookie(NAME, "v2.123.390." + NOW + ".42.350.0", NOW));
+        assertNotNull(HeatMapTrackingService.parseCookie(NAME, "v1.123.1369." + NOW + ".602.350", NOW));
+        assertNull(HeatMapTrackingService.parseCookie(NAME, "v2.123.390." + NOW + ".42.350.1140", NOW));
+        assertNull(HeatMapTrackingService.parseCookie(NAME, "v2.123.1369." + NOW + ".1141.350.1140", NOW));
+    }
+
     /** Invalid identifiers, coordinates, widths, timestamps, versions and oversized values are rejected. */
     @Test
     void validatesEveryCookieFieldAndAge() {

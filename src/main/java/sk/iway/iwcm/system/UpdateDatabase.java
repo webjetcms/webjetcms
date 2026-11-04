@@ -2051,7 +2051,7 @@ public class UpdateDatabase
 
     /** Adds responsive click tracking to existing monthly tables without replacing legacy data. */
     public static void updateStatClicksColumns() {
-        String note = "16.09.2026 [codex] add responsive tracking columns to stat_clicks";
+        String note = "20.10.2026 [codex] add container coordinates to stat_clicks";
         if (isAllreadyUpdated(note)) return;
         try {
             HeatMapSchema.upgradeExistingTables();

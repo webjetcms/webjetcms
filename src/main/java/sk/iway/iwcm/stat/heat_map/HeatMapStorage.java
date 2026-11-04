@@ -18,6 +18,8 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.HexFormat;
+import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -57,10 +59,12 @@ public final class HeatMapStorage {
         LocalDate date = Instant.ofEpochSecond(event.epochSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
         if (date.getYear() < 2000 || date.getYear() > 9999) throw new IllegalArgumentException("Invalid heatmap event date");
         String suffix = suffix(YearMonth.from(date));
+        HeatMapCoordinateMode mode = event.containerWidth() > 0 ? HeatMapCoordinateMode.CONTAINER : HeatMapCoordinateMode.DOCUMENT;
+        int width = event.containerWidth() > 0 ? event.containerWidth() : event.viewportWidth();
         StatWriteBuffer.addIdempotent("INSERT INTO " + TABLE_NAME + suffix
-                + " (event_id, domain_name, document_id, day_of_month, viewport_width, x, y) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                + " (event_id, domain_name, document_id, day_of_month, viewport_width, x, y, coordinate_mode, source_viewport_width) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 TABLE_NAME, suffix, event.eventId(), normalizeDomain(domain), event.docId(), date.getDayOfMonth(),
-                event.viewportWidth(), event.x(), event.y());
+                width, event.x(), event.y(), mode.databaseValue(), event.viewportWidth());
     }
 
     /** Returns document click totals for an inclusive date range within one domain. */
@@ -71,13 +75,31 @@ public final class HeatMapStorage {
         return counts;
     }
 
-    /** Returns click totals for each exact CSS viewport width of a document. */
-    public static Map<Integer, Long> getWidths(String domain, int docId, LocalDate from, LocalDate to) {
+    /** A coordinate group and its most frequent source viewport, with ties resolved toward the smaller viewport. */
+    public record WidthCount(int width, HeatMapCoordinateMode mode, long clicks, int previewWidth) { }
+
+    private record WidthKey(int width, HeatMapCoordinateMode mode) { }
+
+    /** Combines matching coordinate groups across partitions without losing their representative viewport. */
+    public static List<WidthCount> getWidths(String domain, int docId, LocalDate from, LocalDate to) {
         if (docId <= 0) throw new IllegalArgumentException("Invalid document identifier");
-        Map<Integer, Long> counts = new TreeMap<>();
-        query(domain, from, to, "viewport_width, COUNT(*)", " AND document_id = ?", List.of(docId),
-                " GROUP BY viewport_width", result -> counts.merge(result.getInt(1), result.getLong(2), Long::sum));
-        return counts;
+        Map<WidthKey, Map<Integer, Long>> counts = new HashMap<>();
+        query(domain, from, to, "viewport_width, coordinate_mode, source_viewport_width, COUNT(*)",
+                " AND document_id = ?", List.of(docId),
+                " GROUP BY viewport_width, coordinate_mode, source_viewport_width", result -> {
+                    WidthKey key = new WidthKey(result.getInt(1), HeatMapCoordinateMode.fromDatabase(result.getInt(2)));
+                    int sourceWidth = result.getInt(3);
+                    if (sourceWidth == 0) sourceWidth = key.width();
+                    counts.computeIfAbsent(key, ignored -> new TreeMap<>()).merge(sourceWidth, result.getLong(4), Long::sum);
+                });
+        return counts.entrySet().stream().map(entry -> {
+            int previewWidth = entry.getValue().entrySet().stream()
+                    .sorted(Map.Entry.<Integer, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                    .findFirst().orElseThrow().getKey();
+            long clicks = entry.getValue().values().stream().mapToLong(Long::longValue).sum();
+            return new WidthCount(entry.getKey().width(), entry.getKey().mode(), clicks, previewWidth);
+        }).sorted(Comparator.comparingLong(WidthCount::clicks).reversed().thenComparingInt(WidthCount::width)
+                .thenComparing(WidthCount::mode)).toList();
     }
 
     /**
@@ -86,15 +108,16 @@ public final class HeatMapStorage {
      *
      * @throws IOException if the PNG cannot be encoded or its cache cannot be accessed
      */
-    public static byte[] getTile(String domain, int docId, LocalDate from, LocalDate to, int width, int tileX, int tileY) throws IOException {
+    public static byte[] getTile(String domain, int docId, LocalDate from, LocalDate to, int width,
+            HeatMapCoordinateMode mode, int tileX, int tileY) throws IOException {
         domain = normalizeDomain(domain);
         validateDates(from, to);
-        if (docId <= 0 || width < 1 || width > MAX_VIEWPORT_WIDTH || tileX < 0 || tileY < 0
+        if (docId <= 0 || width < 1 || width > MAX_VIEWPORT_WIDTH || mode == null || tileX < 0 || tileY < 0
                 || tileX > MAX_COORDINATE / TILE_SIZE || tileY > MAX_COORDINATE / TILE_SIZE) {
             throw new IllegalArgumentException("Invalid heatmap tile");
         }
-        String key = String.join("|", "stat_clicks", domain, Integer.toString(docId), from.toString(), to.toString(),
-                Integer.toString(width), Integer.toString(tileX), Integer.toString(tileY));
+        String key = String.join("|", "stat_clicks_v2", domain, Integer.toString(docId), from.toString(), to.toString(),
+                Integer.toString(width), mode.name(), Integer.toString(tileX), Integer.toString(tileY));
         Path folder = Path.of(Tools.getRealPath("/WEB-INF/tmp/heat_map/"));
         Path cached = folder.resolve("tile_" + digest(key) + ".png");
         int timeout = Math.max(0, Constants.getInt("statHeatMapImageTimeout", 300));
@@ -112,9 +135,9 @@ public final class HeatMapStorage {
         HeatMapTileRenderer renderer = new HeatMapTileRenderer(originX, originY, TILE_SIZE, TILE_SIZE);
         String xCell = "FLOOR(x / " + HeatMapTileRenderer.CELL_SIZE + ".0)";
         String yCell = "FLOOR(y / " + HeatMapTileRenderer.CELL_SIZE + ".0)";
-        query(domain, from, to, xCell + ", " + yCell + ", COUNT(*)", " AND document_id = ? AND viewport_width = ?"
+        query(domain, from, to, xCell + ", " + yCell + ", COUNT(*)", " AND document_id = ? AND viewport_width = ? AND coordinate_mode = ?"
                 + " AND x BETWEEN ? AND ? AND y BETWEEN ? AND ?",
-                List.of(docId, width, Math.max(0, originX - overlap), originX + TILE_SIZE + overlap,
+                List.of(docId, width, mode.databaseValue(), Math.max(0, originX - overlap), originX + TILE_SIZE + overlap,
                         Math.max(0, originY - overlap), originY + TILE_SIZE + overlap),
                 " GROUP BY " + xCell + ", " + yCell,
                 result -> renderer.add(result.getInt(1) * HeatMapTileRenderer.CELL_SIZE,

@@ -1,3 +1,39 @@
+/** Uses the same conservative declaration check as the standalone public-page tracker. */
+function hasFixedPixelWidth(container, property, resolvedWidth) {
+    const doc = container.ownerDocument;
+    const view = doc.defaultView;
+    let found = false;
+    function declaration(style) {
+        const value = style.getPropertyValue(property).trim();
+        if (style.getPropertyValue("all")) return false;
+        if (!value) return true;
+        found ||= Math.abs(parseFloat(value) - resolvedWidth) <= 0.5;
+        return /^\d+(?:\.\d+)?px$/.test(value);
+    }
+    function rules(list) {
+        for (const rule of list) {
+            if (rule.media && !view.matchMedia(rule.media.mediaText).matches) continue;
+            if (rule.constructor.name === "CSSSupportsRule" && !view.CSS.supports(rule.conditionText)) continue;
+            if (rule.selectorText && rule.style && (rule.style.getPropertyValue(property) || rule.style.getPropertyValue("all"))) {
+                if (rule.selectorText.includes("&") || (container.matches(rule.selectorText) && !declaration(rule.style))) return false;
+            }
+            if (rule.styleSheet && !rules(rule.styleSheet.cssRules)) return false;
+            if (rule.cssRules && !rules(rule.cssRules)) return false;
+        }
+        return true;
+    }
+    try {
+        if (!declaration(container.style)) return false;
+        for (const sheet of [...doc.styleSheets, ...(doc.adoptedStyleSheets || [])]) {
+            if (sheet.disabled || (sheet.media.mediaText && !view.matchMedia(sheet.media.mediaText).matches)) continue;
+            if (!rules(sheet.cssRules)) return false;
+        }
+        return found;
+    } catch (error) {
+        return false;
+    }
+}
+
 /** Displays click-map tiles over an independently scrolling page preview. */
 export class HeatMapViewer {
     constructor(element, texts) {
@@ -13,6 +49,9 @@ export class HeatMapViewer {
         this.frameReady = false;
         this.height = 800;
         this.width = 0;
+        this.groupWidth = 0;
+        this.mode = "DOCUMENT";
+        this.layoutValid = true;
         this.tileSize = 1024;
         this.nodes = {};
         ["Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Title", "Back"].forEach(name => {
@@ -37,8 +76,8 @@ export class HeatMapViewer {
             this.nodes.Overlay.style.opacity = Number(this.nodes.Opacity.value) / 100;
         });
         this.nodes.Visible.addEventListener("change", () => {
-            this.nodes.Overlay.hidden = !this.nodes.Visible.checked;
-            this.nodes.Opacity.disabled = !this.nodes.Visible.checked;
+            this.nodes.Overlay.hidden = !this.nodes.Visible.checked || !this.layoutValid;
+            this.nodes.Opacity.disabled = !this.nodes.Visible.checked || !this.layoutValid;
             this.scheduleTiles();
         });
         this.nodes.Frame.addEventListener("load", () => this.frameLoaded());
@@ -55,8 +94,11 @@ export class HeatMapViewer {
             const widths = await this.getJson("/widths");
             for (const item of widths) {
                 const option = document.createElement("option");
-                option.value = item.width;
-                option.textContent = item.width + " px · " + this.texts.clicks + ": " + item.clicks.toLocaleString();
+                option.value = item.mode === "CONTAINER" ? "container:" + item.width : String(item.width);
+                option.dataset.width = item.width;
+                option.dataset.mode = item.mode || "DOCUMENT";
+                const label = item.mode === "CONTAINER" ? this.texts.container : this.texts.window;
+                option.textContent = label + " " + item.width + " px · " + this.texts.clicks + ": " + item.clicks.toLocaleString();
                 this.nodes.Width.append(option);
             }
             if (widths.length === 0) {
@@ -64,7 +106,8 @@ export class HeatMapViewer {
                 return;
             }
             const requestedWidth = this.params.get("width");
-            if (widths.some(item => String(item.width) === requestedWidth)) this.nodes.Width.value = requestedWidth;
+            const requestedValue = this.params.get("mode") === "CONTAINER" ? "container:" + requestedWidth : requestedWidth;
+            if ([...this.nodes.Width.options].some(option => option.value === requestedValue)) this.nodes.Width.value = requestedValue;
             this.nodes.Width.disabled = false;
             await this.loadWidth();
         } catch (error) {
@@ -98,16 +141,22 @@ export class HeatMapViewer {
         this.requestController = new AbortController();
         clearTimeout(this.previewTimer);
         this.frameReady = false;
+        this.contentObserver?.disconnect();
         this.nodes.Viewport.classList.add("d-none");
         this.nodes.Reload.disabled = true;
         this.clearTiles();
         this.status(this.texts.loading);
-        this.width = Number(this.nodes.Width.value);
+        const selected = this.nodes.Width.selectedOptions[0];
+        this.groupWidth = Number(selected.dataset.width);
+        this.mode = selected.dataset.mode;
         try {
-            const metadata = await this.getJson("/metadata", {width: this.width});
+            const metadata = await this.getJson("/metadata", {width: this.groupWidth, mode: this.mode});
             if (revision !== this.revision) return;
             this.nodes.Title.textContent = metadata.title;
             this.tileSize = metadata.tileSize;
+            this.width = metadata.previewWidth || this.groupWidth;
+            this.containerSelector = metadata.containerSelector || "";
+            this.layoutValid = true;
             const notes = [];
             if (metadata.historicalUnavailable && metadata.source === "current") notes.push(this.texts.fallback);
             if (metadata.multipleVersions) notes.push(this.texts.multiple);
@@ -123,7 +172,8 @@ export class HeatMapViewer {
             this.previewTimer = setTimeout(() => {
                 if (revision === this.revision && !this.frameReady) this.status(this.texts.previewError, true);
             }, 30000);
-            this.params.set("width", this.width);
+            this.params.set("width", this.groupWidth);
+            this.params.set("mode", this.mode);
             history.replaceState(null, "", "?" + this.params.toString());
         } catch (error) {
             if (revision === this.revision) this.status(this.texts.error, true);
@@ -185,20 +235,59 @@ export class HeatMapViewer {
         });
     }
 
+    /** Finds the common document offset only while the recorded container layout still exists. */
+    containerOffset(frameWindow) {
+        if (this.mode !== "CONTAINER") return 0;
+        if (!this.containerSelector) return null;
+        const doc = frameWindow.document.documentElement;
+        if (doc.scrollWidth > doc.clientWidth) return null;
+        let containers;
+        try { containers = frameWindow.document.querySelectorAll(this.containerSelector); } catch (error) { return null; }
+        for (const container of containers) {
+            const rect = container.getBoundingClientRect();
+            const style = frameWindow.getComputedStyle(container);
+            const left = rect.left + frameWindow.scrollX;
+            if (rect.height <= 0 || Math.round(rect.width) !== this.groupWidth || style.animationName !== "none"
+                    || Math.abs(left - (doc.clientWidth - rect.width) / 2) > 0.5) continue;
+            const extra = style.boxSizing === "border-box" ? 0 : parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+                + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
+            const fixed = ["max-width", "width"].some(property => {
+                const value = style.getPropertyValue(property);
+                return value.endsWith("px") && Math.abs(rect.width - parseFloat(value) - extra) <= 0.5
+                    && hasFixedPixelWidth(container, property, parseFloat(value));
+            });
+            if (fixed) return left;
+        }
+        return null;
+    }
+
     updateTiles() {
-        if (!this.frameReady || !this.nodes.Visible.checked) return;
+        if (!this.frameReady) return;
         const frameWindow = this.nodes.Frame.contentWindow;
+        const offset = this.containerOffset(frameWindow);
+        const wasValid = this.layoutValid;
+        this.layoutValid = offset !== null;
+        this.nodes.Overlay.hidden = !this.nodes.Visible.checked || !this.layoutValid;
+        this.nodes.Opacity.disabled = !this.nodes.Visible.checked || !this.layoutValid;
+        if (!this.layoutValid) {
+            this.clearTiles();
+            this.status(this.texts.containerMissing.replace("{width}", this.groupWidth), true);
+            return;
+        }
+        if (!wasValid) this.status("");
+        if (!this.nodes.Visible.checked) return;
         const doc = frameWindow.document.documentElement;
         const left = frameWindow.scrollX;
         const top = frameWindow.scrollY;
         this.nodes.Overlay.style.width = doc.clientWidth + "px";
         this.nodes.Overlay.style.height = doc.clientHeight + "px";
-        this.nodes.Tiles.style.transform = "translate(" + -left + "px," + -top + "px)";
+        this.nodes.Tiles.style.transform = "translate(" + (offset - left) + "px," + -top + "px)";
         const visible = new Set();
-        const lastX = Math.floor((Math.min(doc.scrollWidth, left + doc.clientWidth) - 1) / this.tileSize);
+        const mapWidth = this.mode === "CONTAINER" ? this.groupWidth : doc.scrollWidth;
+        const lastX = Math.floor((Math.min(mapWidth, left + doc.clientWidth - offset) - 1) / this.tileSize);
         const lastY = Math.floor((Math.min(doc.scrollHeight, top + doc.clientHeight) - 1) / this.tileSize);
         for (let y = Math.floor(top / this.tileSize); y <= lastY; y++) {
-            for (let x = Math.floor(left / this.tileSize); x <= lastX; x++) {
+            for (let x = Math.floor(Math.max(0, left - offset) / this.tileSize); x <= lastX; x++) {
                 const key = x + ":" + y;
                 visible.add(key);
                 if (this.tiles.has(key)) continue;
@@ -213,7 +302,7 @@ export class HeatMapViewer {
                 tile.addEventListener("error", () => {
                     if (revision === this.revision && tile.isConnected) this.status(this.texts.tileError, true);
                 }, {once: true});
-                tile.src = this.endpoint("/binary/tile", {width: this.width, tileX: x, tileY: y});
+                tile.src = this.endpoint("/binary/tile", {width: this.groupWidth, mode: this.mode, tileX: x, tileY: y});
                 this.tiles.set(key, tile);
                 this.nodes.Tiles.append(tile);
             }
@@ -231,7 +320,6 @@ export class HeatMapViewer {
         for (const tile of this.tiles.values()) tile.removeAttribute("src");
         this.nodes.Tiles.replaceChildren();
         this.tiles.clear();
-        this.contentObserver?.disconnect();
     }
 
     destroy() {
@@ -240,6 +328,7 @@ export class HeatMapViewer {
         clearTimeout(this.previewTimer);
         cancelAnimationFrame(this.animationFrame);
         this.resizeObserver.disconnect();
+        this.contentObserver?.disconnect();
         document.removeEventListener("keydown", this.closeOnEscape);
         this.clearTiles();
     }

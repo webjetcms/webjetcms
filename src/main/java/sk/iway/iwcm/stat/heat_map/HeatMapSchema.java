@@ -54,11 +54,15 @@ public final class HeatMapSchema {
                         ? "INT DEFAULT " + DEFAULT_VIEWPORT_WIDTH + " NOT NULL"
                         : "INT NOT NULL DEFAULT " + DEFAULT_VIEWPORT_WIDTH;
                 executeDdl(statement, "ALTER TABLE " + table + " ADD viewport_width " + widthDefinition, databaseType);
+                String coordinateDefinition = databaseType == Constants.DB_ORACLE ? "INT DEFAULT 0 NOT NULL" : "INT NOT NULL DEFAULT 0";
+                executeDdl(statement, "ALTER TABLE " + table + " ADD coordinate_mode " + coordinateDefinition, databaseType);
+                executeDdl(statement, "ALTER TABLE " + table + " ADD source_viewport_width " + coordinateDefinition, databaseType);
 
                 DatabaseMetaData metadata = connection.getMetaData();
                 statement.executeUpdate("UPDATE " + table + " SET domain_name = (SELECT LOWER(LTRIM(RTRIM(g.domain_name)))"
                         + " FROM " + quoteTable(metadata, "documents") + " d JOIN " + quoteTable(metadata, "groups") + " g ON g.group_id = d.group_id"
                         + " WHERE d.doc_id = " + table + ".document_id) WHERE domain_name IS NULL");
+                statement.executeUpdate("UPDATE " + table + " SET source_viewport_width = viewport_width WHERE source_viewport_width = 0");
 
                 executeDdl(statement, uniqueIndexSql(table, suffix, databaseType), databaseType);
                 executeDdl(statement, pageIndexSql(table, suffix, databaseType), databaseType);
@@ -66,6 +70,12 @@ public final class HeatMapSchema {
             }
         }
         Logger.println(HeatMapSchema.class, "Updated stat_clicks columns in " + updated + " tables");
+    }
+
+    /** Supplies the same coordinate columns for all newly created monthly partitions. */
+    public static String coordinateColumnsSql(int databaseType) {
+        String definition = databaseType == Constants.DB_ORACLE ? "INT DEFAULT 0 NOT NULL" : "INT NOT NULL DEFAULT 0";
+        return "coordinate_mode " + definition + ",source_viewport_width " + definition + ",";
     }
 
     /** Returns a unique event index that permits any number of legacy rows without event identifiers. */
@@ -77,8 +87,8 @@ public final class HeatMapSchema {
     /** Returns the lookup index, including support for older MySQL table engines and key-size limits. */
     public static String pageIndexSql(String table, String suffix, int databaseType) {
         String domain = databaseType == Constants.DB_MYSQL ? "domain_name(128)" : "domain_name";
-        return "CREATE INDEX hm_page" + suffix + " ON " + table
-                + "(" + domain + ", document_id, viewport_width, day_of_month)";
+        return "CREATE INDEX hm_page_v2" + suffix + " ON " + table
+                + "(" + domain + ", document_id, coordinate_mode, viewport_width, day_of_month)";
     }
 
     private static void executeDdl(Statement statement, String sql, int databaseType) throws SQLException {

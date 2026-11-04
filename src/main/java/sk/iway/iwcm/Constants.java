@@ -905,8 +905,8 @@ public class Constants {
 		setBoolean("statWebJET7Converted", false, MOD_STAT,
 				"Urcuje, ci uz prebehla konverzia databazy do formatu pre WebJET7");
 
-		setString("statHeatMapMainContainerSelector", "div.mainContainer", MOD_STAT,
-				"jQuery selector pre main container pre ukladanie pozicie Heat Map");
+		setString("statHeatMapMainContainerSelector", ".container", MOD_STAT,
+				"CSS selektor kontajnerov mapy kliknutí. Kliknutia mimo kontajnerov sa ignorujú; prázdna hodnota zaznamenáva celú stránku.");
 
 		setInt("editorTemplateComboWidth", 165, MOD_EDITOR, "Sirka vyberoveho pola sablony v editore");
 

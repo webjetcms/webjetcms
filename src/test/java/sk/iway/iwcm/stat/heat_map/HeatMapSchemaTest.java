@@ -46,6 +46,18 @@ class HeatMapSchemaTest {
         return List.of(Constants.DB_MYSQL, Constants.DB_PGSQL, Constants.DB_MSSQL, Constants.DB_ORACLE);
     }
 
+    /** Sites that already installed the first responsive schema still receive the container columns. */
+    @Test
+    void upgradesSitesWithThePreviousMigrationMarker() throws Exception {
+        try (MockedStatic<UpdateDatabase> updates = mockStatic(UpdateDatabase.class);
+                MockedStatic<HeatMapSchema> schema = mockStatic(HeatMapSchema.class)) {
+            updates.when(UpdateDatabase::updateStatClicksColumns).thenCallRealMethod();
+            updates.when(() -> UpdateDatabase.isAllreadyUpdated("16.09.2026 [codex] add responsive tracking columns to stat_clicks")).thenReturn(true);
+            UpdateDatabase.updateStatClicksColumns();
+            schema.verify(HeatMapSchema::upgradeExistingTables);
+        }
+    }
+
     /** Each database preserves legacy columns and skips duplicate columns and indexes on repeated upgrades. */
     @ParameterizedTest
     @MethodSource("databaseTypes")
@@ -56,9 +68,9 @@ class HeatMapSchemaTest {
         verify(fixture.connection).close();
 
         assertTrue(fixture.columns.containsAll(Set.of("stat_click_id", "document_id", "x", "y", "day_of_month",
-                "event_id", "domain_name", "viewport_width")));
-        assertTrue(fixture.indexes.containsAll(Set.of("to_document__2024_2", "hm_event_2024_2", "hm_page_2024_2")));
-        assertEquals(3, fixture.executed.stream().filter(sql -> sql.startsWith("ALTER TABLE")).count());
+                "event_id", "domain_name", "viewport_width", "coordinate_mode", "source_viewport_width")));
+        assertTrue(fixture.indexes.containsAll(Set.of("to_document__2024_2", "hm_event_2024_2", "hm_page_v2_2024_2")));
+        assertEquals(5, fixture.executed.stream().filter(sql -> sql.startsWith("ALTER TABLE")).count());
         assertEquals(2, fixture.executed.stream().filter(sql -> sql.startsWith("CREATE ")).count());
         assertTrue(fixture.executed.stream().anyMatch(sql -> sql.contains(databaseType == Constants.DB_ORACLE
                 ? "viewport_width INT DEFAULT 1920 NOT NULL" : "viewport_width INT NOT NULL DEFAULT 1920")));
@@ -79,7 +91,8 @@ class HeatMapSchemaTest {
 
         fixture.executed.clear();
         fixture.upgrade();
-        assertEquals(List.of(backfill), fixture.executed, "A repeated upgrade only retries unattributed legacy domains");
+        assertEquals(List.of(backfill, "UPDATE " + TABLE + " SET source_viewport_width = viewport_width WHERE source_viewport_width = 0"),
+                fixture.executed, "A repeated upgrade only retries missing domain and viewport metadata");
     }
 
     /** A failure after some DDL leaves those successful steps reusable on the next startup. */
@@ -92,12 +105,12 @@ class HeatMapSchemaTest {
         verify(fixture.connection).close();
         assertTrue(fixture.columns.contains("viewport_width"));
         assertTrue(fixture.indexes.contains("hm_event_2024_2"));
-        assertFalse(fixture.indexes.contains("hm_page_2024_2"));
+        assertFalse(fixture.indexes.contains("hm_page_v2_2024_2"));
 
         fixture.pageIndexFailure = null;
         fixture.executed.clear();
         fixture.upgrade();
-        assertTrue(fixture.indexes.contains("hm_page_2024_2"));
+        assertTrue(fixture.indexes.contains("hm_page_v2_2024_2"));
         assertFalse(fixture.executed.stream().anyMatch(sql -> sql.startsWith("ALTER TABLE") || sql.startsWith("CREATE UNIQUE INDEX")));
     }
 

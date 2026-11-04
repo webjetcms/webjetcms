@@ -31,18 +31,28 @@ function mockMap(I, options = {}) {
             }
         }
         if (url.pathname.endsWith("/widths")) {
-            return route.fulfill({json: options.empty ? [] : [{width: 1280, clicks: 32}, {width: 390, clicks: 8}]});
+            const widths = options.container
+                ? [{width: 1140, mode: "CONTAINER", clicks: 32, previewWidth: 1369}, {width: 1140, mode: "DOCUMENT", clicks: 8, previewWidth: 1140}]
+                : [{width: 1280, mode: "DOCUMENT", clicks: 32, previewWidth: 1280}, {width: 390, mode: "DOCUMENT", clicks: 8, previewWidth: 390}];
+            return route.fulfill({json: options.empty ? [] : widths});
         }
         if (url.pathname.endsWith("/metadata")) {
             return route.fulfill({json: {
                 title: "autotest click map preview", url: "/autotest-click-map.html",
                 width: Number(url.searchParams.get("width")), clicks: 32, tileSize: 1024,
+                previewWidth: url.searchParams.get("mode") === "CONTAINER" ? 1369 : Number(url.searchParams.get("width")),
+                containerSelector: ".container",
                 historyId: options.fallback ? null : 123, effectiveFrom: 1788213600000,
                 source: options.fallback ? "current" : "history",
                 historicalUnavailable: Boolean(options.fallback), multipleVersions: Boolean(options.multiple)
             }});
         }
         if (url.pathname.endsWith("/html/preview")) {
+            if (options.container) {
+                return route.fulfill({contentType: "text/html", body: '<!doctype html><meta name="webjet-heatmap-preview" content="11">'
+                    + '<style>body{margin:0}.container{width:100%;max-width:1140px;margin:auto;height:3000px}</style>'
+                    + '<main class="' + (options.missingContainer ? "changed" : "container") + '">autotest container preview</main>'});
+            }
             return route.fulfill({contentType: "text/html", body: options.invalidPreview
                 ? "<!doctype html><html><body>autotest unavailable preview</body></html>"
                 : '<!doctype html><html><head><meta name="webjet-heatmap-preview" content="' + url.searchParams.get('docId') + '"><style>body{margin:0}main{height:3500px;min-width:2200px;background:linear-gradient(white,#ddd)}h1{margin:0}</style></head><body><main><h1>autotest page</h1><a href="/autotest-navigation">autotest link</a></main></body></html>'});
@@ -53,6 +63,41 @@ function mockMap(I, options = {}) {
         return route.continue();
     });
 }
+
+Scenario("container map uses a representative viewport and restores the container offset", async ({ I }) => {
+    mockMap(I, {container: true});
+    I.executeScript(url => window.location.assign(url), detailsUrl);
+    I.waitForVisible("#heatMapViewport", 20);
+    I.see("Kontajner 1140 px", "#heatMapWidth");
+    I.see("Okno 1140 px", "#heatMapWidth");
+    I.seeInField("#heatMapWidth", "container:1140");
+    I.waitForFunction(() => {
+        const frame = document.getElementById("heatMapFrame").contentWindow;
+        const left = frame.document.querySelector(".container").getBoundingClientRect().left;
+        return frame.innerWidth === 1369 && document.getElementById("heatMapTiles").style.transform === "translate(" + left + "px, 0px)";
+    }, 10);
+    const parameters = await I.executeScript(() => {
+        const url = new URL(document.querySelector("#heatMapTiles img").src);
+        return {width: url.searchParams.get("width"), mode: url.searchParams.get("mode")};
+    });
+    I.assertEqual(parameters.width, "1140");
+    I.assertEqual(parameters.mode, "CONTAINER");
+    I.selectOption("#heatMapWidth", "1140");
+    I.waitForFunction(() => document.getElementById("heatMapFrame").contentWindow.innerWidth === 1140, 10);
+    I.waitForFunction(() => {
+        const tile = document.querySelector("#heatMapTiles img");
+        return tile && new URL(tile.src).searchParams.get("mode") === "DOCUMENT";
+    }, 10);
+});
+
+Scenario("missing container keeps the preview visible without the click layer", ({ I }) => {
+    mockMap(I, {container: true, missingContainer: true});
+    I.executeScript(url => window.location.assign(url), detailsUrl);
+    I.waitForText("náhľad neobsahuje zodpovedajúci vycentrovaný kontajner so šírkou 1140 px", 20, "#heatMapStatus");
+    I.seeElement("#heatMapViewport");
+    I.dontSeeElement("#heatMapOverlay");
+    I.dontSeeElement("#heatMapTiles img");
+});
 
 /** Wait until the map contains exactly the tiles intersecting the current preview viewport. */
 function waitForVisibleTiles(I) {

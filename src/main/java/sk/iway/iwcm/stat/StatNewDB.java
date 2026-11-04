@@ -437,6 +437,7 @@ public class StatNewDB
 				sql = "CREATE TABLE stat_clicks"+suffix+" ("+
 						"stat_click_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,"+
 						"event_id CHAR(32) NULL,domain_name VARCHAR(255) NULL,viewport_width INT NOT NULL DEFAULT "+HeatMapSchema.DEFAULT_VIEWPORT_WIDTH+","+
+						HeatMapSchema.coordinateColumnsSql(DB_TYPE)+
 						"document_id INT,"+
 						"x INT,"+
 						"y INT,"+
@@ -447,6 +448,7 @@ public class StatNewDB
 				sql = "CREATE TABLE stat_clicks"+suffix+" ("+
 						"stat_click_id INT identity(1,1) NOT NULL,"+
 						"event_id CHAR(32) NULL,domain_name VARCHAR(255) NULL,viewport_width INT NOT NULL DEFAULT "+HeatMapSchema.DEFAULT_VIEWPORT_WIDTH+","+
+						HeatMapSchema.coordinateColumnsSql(DB_TYPE)+
 						"document_id INT,"+
 						"x INT,"+
 						"y INT,"+
@@ -457,6 +459,7 @@ public class StatNewDB
 				sql = "CREATE TABLE stat_clicks"+suffix+" ("+
 							"stat_click_id INT NOT NULL,"+
 							"event_id CHAR(32) NULL,domain_name VARCHAR(255) NULL,viewport_width INT DEFAULT "+HeatMapSchema.DEFAULT_VIEWPORT_WIDTH+" NOT NULL,"+
+							HeatMapSchema.coordinateColumnsSql(DB_TYPE)+
 							"document_id INTEGER,"+
 							"x INTEGER,"+
 							"y INTEGER,"+

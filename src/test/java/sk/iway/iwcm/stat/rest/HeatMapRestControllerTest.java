@@ -27,11 +27,17 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.stat.heat_map.HeatMapAccess;
 import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService;
 import sk.iway.iwcm.stat.heat_map.HeatMapStorage;
+import sk.iway.iwcm.stat.heat_map.HeatMapStorage.WidthCount;
+import static sk.iway.iwcm.stat.heat_map.HeatMapCoordinateMode.DOCUMENT;
+import static sk.iway.iwcm.stat.heat_map.HeatMapCoordinateMode.CONTAINER;
 import sk.iway.iwcm.stat.jpa.HeatMapPageDTO;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
@@ -54,6 +60,35 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
         return controller;
     }
 
+    /** The preview uses its source viewport and the selected public domain's selector. */
+    @Test
+    void containerMetadataKeepsThePublicDomainConfigurationAndViewport() {
+        HeatMapRestController controller = controller();
+        DocDetails document = new DocDetails();
+        document.setTitle("autotest container");
+        when(access.requireDocument(request, 123)).thenReturn(document);
+        when(history.resolve(request, 123, "period")).thenReturn(
+                new HeatMapHistoryService.PreviewSelection(null, null, "current", false, false, document));
+        RequestBean requestBean = new RequestBean();
+        requestBean.setDomain("admin.example");
+        try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class);
+                MockedStatic<DocDB> docs = mockStatic(DocDB.class);
+                MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<SetCharacterEncodingFilter> requests = mockStatic(SetCharacterEncodingFilter.class)) {
+            requests.when(SetCharacterEncodingFilter::getCurrentRequestBean).thenReturn(requestBean);
+            constants.when(() -> Constants.getString("statHeatMapMainContainerSelector")).thenAnswer(invocation ->
+                    "public.example".equals(requestBean.getDomain()) ? ".public-container" : ".admin-container");
+            storage.when(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO)).thenReturn(List.of(
+                    new WidthCount(1140, CONTAINER, 20, 1369), new WidthCount(1140, DOCUMENT, 2, 1140)));
+            Map<String, Object> metadata = controller.metadata(123, "period", 1140, CONTAINER);
+            assertEquals(1369, metadata.get("previewWidth"));
+            assertEquals(20L, metadata.get("clicks"));
+            assertEquals(".public-container", metadata.get("containerSelector"));
+            assertEquals("admin.example", requestBean.getDomain());
+            assertThrows(ResponseStatusException.class, () -> controller.metadata(123, "period", 960, CONTAINER));
+        }
+    }
+
     @ParameterizedTest
     @ValueSource(strings = { "public.example", "" })
     void widthsUseTrustedDomainAndInclusiveDaysAndOrderPopularWidthsFirst(String domain) {
@@ -62,9 +97,9 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
         request.addParameter("domain", "untrusted.example");
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
             storage.when(() -> HeatMapStorage.getWidths(domain, 123, FROM, TO))
-                    .thenReturn(Map.of(1440, 2L, 390, 7L, 1280, 2L));
-            assertEquals(List.of(new HeatMapRestController.WidthCount(390, 7), new HeatMapRestController.WidthCount(1280, 2),
-                    new HeatMapRestController.WidthCount(1440, 2)), controller.widths(123, "period"));
+                    .thenReturn(List.of(new WidthCount(390, DOCUMENT, 7, 390), new WidthCount(1280, DOCUMENT, 2, 1280), new WidthCount(1440, DOCUMENT, 2, 1440)));
+            assertEquals(List.of(new WidthCount(390, DOCUMENT, 7, 390), new WidthCount(1280, DOCUMENT, 2, 1280),
+                    new WidthCount(1440, DOCUMENT, 2, 1440)), controller.widths(123, "period"));
             verify(access).requireDocument(request, 123);
             storage.verify(() -> HeatMapStorage.getWidths(domain, 123, FROM, TO));
         }
@@ -78,9 +113,9 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
             assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
                     () -> controller.widths(456, "period")).getStatusCode());
             assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
-                    () -> controller.metadata(456, "period", 390)).getStatusCode());
+                    () -> controller.metadata(456, "period", 390, DOCUMENT)).getStatusCode());
             assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
-                    () -> controller.tile(456, "period", 390, 0, 0)).getStatusCode());
+                    () -> controller.tile(456, "period", 390, DOCUMENT, 0, 0)).getStatusCode());
             storage.verifyNoInteractions();
         }
     }
@@ -92,13 +127,13 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
         when(access.currentDomain(request)).thenReturn(domain);
         byte[] png = { 1, 2, 3 };
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
-            storage.when(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, 0, 2)).thenReturn(png);
-            var response = controller.tile(123, "period", 390, 0, 2);
+            storage.when(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, DOCUMENT, 0, 2)).thenReturn(png);
+            var response = controller.tile(123, "period", 390, DOCUMENT, 0, 2);
             assertArrayEquals(png, response.getBody());
             assertEquals(MediaType.IMAGE_PNG, response.getHeaders().getContentType());
             assertEquals("no-store", response.getHeaders().getCacheControl());
             verify(access).requireDocument(request, 123);
-            storage.verify(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, 0, 2));
+            storage.verify(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, DOCUMENT, 0, 2));
         }
     }
 
@@ -140,9 +175,9 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
                 () -> controller.deleteItem(new HeatMapPageDTO(), 123)).getStatusCode());
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
             assertEquals(HttpStatus.BAD_REQUEST, assertThrows(ResponseStatusException.class,
-                    () -> controller.tile(123, "period", 390, Integer.MAX_VALUE, 0)).getStatusCode());
+                    () -> controller.tile(123, "period", 390, DOCUMENT, Integer.MAX_VALUE, 0)).getStatusCode());
             assertEquals(HttpStatus.BAD_REQUEST, assertThrows(ResponseStatusException.class,
-                    () -> controller.metadata(123, "period", 0)).getStatusCode());
+                    () -> controller.metadata(123, "period", 0, DOCUMENT)).getStatusCode());
             storage.verifyNoInteractions();
         }
     }

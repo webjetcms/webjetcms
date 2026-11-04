@@ -22,7 +22,19 @@ Definícia zastupuje cookies jednotlivých kliknutí s náhodnou príponou. Cook
 
 ## Výber šírky a náhľad
 
-Nové kliknutia sa evidujú samostatne pre každú presnú šírku okna v CSS pixeloch. Výber šírky uvádza aj počet kliknutí a predvolene zobrazí najpoužívanejšiu šírku. Mobilné a široké zobrazenie sa tak nepremiešajú.
+Konfiguračná premenná `statHeatMapMainContainerSelector` určuje CSS selektor meraných kontajnerov. Predvolená hodnota je `.container`, používaná v Bootstrape. Už uložené vlastné hodnoty zostávajú platné. Prázdna hodnota zapne meranie celej stránky podľa presnej šírky okna.
+
+Pri vyplnenom selektore sa merajú iba kliknutia v najbližšom zodpovedajúcom kontajneri. Kliknutia mimo jeho hraníc sa ignorujú, aj keď ide o obsah vyčnievajúci z kontajnera. Ak selektor na stránke nič nenájde alebo nejde o platný CSS selektor, stránka kliknutia nezaznamenáva. Pôvodné selektory využívajúce rozšírenia jQuery treba nahradiť štandardným CSS selektorom.
+
+Pevné kontajnery vycentrované voči stránke sa zoskupujú podľa nameranej šírky. Napríklad okná široké 1223 a 1369 px s rovnakým kontajnerom širokým 1140 px vytvoria jednu skupinu **Kontajner 1140 px**. Poloha X sa meria od ľavého okraja kontajnera vrátane jeho vnútorného odsadenia; poloha Y zostáva voči začiatku stránky. Pevná šírka sa rozpoznáva podľa dosiahnutej hodnoty CSS `max-width` alebo `width` s deklaráciami v pixeloch.
+
+Ak prehliadač nemôže prečítať niektorý načítaný štýl, napríklad CSS z cudzej domény bez povoleného prístupu, na celej stránke sa použije presná šírka okna. Platí to aj pre samostatný externý štýl s fontmi. Presná šírka okna sa použije aj vtedy, keď sa pre danú vlastnosť kombinujú pixelové a relatívne deklarácie. Rovnako sa nezlučujú šírky odvodené cez `vw`, CSS premenné či výpočty a kontajnery s aktívnou CSS animáciou.
+
+Plynulé kontajnery a kontajnery, ktoré nie sú vycentrované voči stránke, zachovávajú pôvodné súradnice aj presnú šírku okna. Mobilné šírky 390 a 430 px tak zostávajú v samostatných skupinách **Okno 390 px** a **Okno 430 px**. Aj v tomto režime sa pri vyplnenom selektore ignorujú kliknutia mimo kontajnerov.
+
+Výber šírky uvádza počet kliknutí a predvolene zobrazí najpoužívanejšiu skupinu. Kontajnerové súradnice sa nemiešajú s pôvodnými súradnicami stránky, ani keď majú skupiny rovnakú číselnú šírku.
+
+Náhľad kontajnerovej skupiny sa otvorí v najčastejšej skutočne zaznamenanej šírke okna danej skupiny; pri rovnosti počtov sa použije menšia šírka. Tak zostane zachovaný príslušný breakpoint. K polohe X sa pripočíta odsadenie kontajnera v náhľade. Ak náhľad neobsahuje zodpovedajúci pevný vycentrovaný kontajner, stránka sa zobrazí bez vrstvy kliknutí a s upozornením. Uložené údaje zostávajú zachované.
 
 Náhľad má vlastné posúvanie. Ovládač **Zobrazenie** upravuje iba jeho zmenšenie na obrazovke; vnútorná šírka stránky zostáva zachovaná. Krytie mapy môžete meniť alebo mapu dočasne skryť. Obnovte náhľad, ak sa nepodarilo načítať stránku alebo časť mapy.
 
@@ -30,7 +42,7 @@ Pre náhľad sa vyberá dostupná publikovaná verzia obsahu ku koncu obdobia. Z
 
 Čas publikovania sa odvodzuje z dostupných údajov histórie. Pri plánovanom publikovaní ide o približný čas, pretože história neuchováva presný okamih vykonania úlohy.
 
-Šablóna, hlavička, päta, ponuky, aplikácie a obrázky používajú aktuálne dostupné zdroje. Nejde o historickú snímku celého webu. Zmeny obsahu, pohyblivé prvky a odlišná výška okna môžu ovplyvniť presnosť pozícií.
+Šablóna, hlavička, päta, ponuky, aplikácie a obrázky používajú aktuálne dostupné zdroje. Nejde o historickú snímku celého webu. Zmeny obsahu, pohyblivé prvky a odlišná výška okna môžu ovplyvniť presnosť pozícií. Absolútna poloha Y sa neprepočítava: zmena výšky obsahu nad kliknutím môže posunúť mapu aj pri rovnakej šírke kontajnera.
 
 ## Prenos a obmedzenia
 
@@ -45,5 +57,7 @@ Mapa nepredstavuje záznam jednotlivých návštev: nesleduje pohyb myši ani ne
 Existujúce mesačné tabuľky `stat_clicks_YYYY_M` sa rozšíria o nové údaje a používajú sa aj na ďalšie zaznamenávanie kliknutí. Pôvodné záznamy zostanú zachované. Kliknutiam bez evidovanej šírky okna sa priradí desktopová šírka **1920 px**, pod ktorou ich nájdete vo výbere šírky.
 
 Pôvodné súradnice sa nemenia. Mohli byť merané voči obalovému elementu stránky, ktorého polohu už nemožno spätne zistiť. Staré mapy pri šírke 1920 px sú preto orientačné; táto šírka nepredstavuje dodatočne zistenú veľkosť pôvodného okna.
+
+Kliknutia zaznamenané pred zavedením kontajnerových skupín sa spätne neprepočítavajú. Zostanú oddelené od kontajnerových skupín. Nové záznamy uchovávajú režim súradníc v `coordinate_mode`, šírku skupiny v `viewport_width` a skutočnú šírku okna v `source_viewport_width`. Čakajúce cookies staršieho formátu sa počas ich platnosti naďalej spracujú ako súradnice stránky.
 
 Doména starých záznamov sa priradí podľa aktuálnej domény zdrojovej stránky. Ak stránku alebo jej doménu nemožno dohľadať, záznamy zostanú uložené, ale v mape kliknutí sa nezobrazia. Historické zmeny domény sa spätne nerekonštruujú.
