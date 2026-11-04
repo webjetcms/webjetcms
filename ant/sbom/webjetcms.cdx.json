@@ -1,10 +1,10 @@
 {
     "bomFormat": "CycloneDX",
     "specVersion": "1.6",
-    "serialNumber": "urn:uuid:d0234b44-2c87-4010-8f5f-3861ab0c4dda",
+    "serialNumber": "urn:uuid:ffc1608f-3063-4401-8203-45253c94d3ef",
     "version": 1,
     "metadata": {
-        "timestamp": "2026-11-03T13:09:14.191752172Z",
+        "timestamp": "2026-11-04T10:29:10.024399Z",
         "tools": {
             "components": [
                 {
@@ -16,7 +16,7 @@
                 {
                     "type": "application",
                     "name": "npm",
-                    "version": "10.9.9"
+                    "version": "10.9.0"
                 },
                 {
                     "type": "application",
@@ -102,18 +102,14 @@
         },
         "component": {
             "type": "application",
-            "bom-ref": "pkg:maven/com.webjetcms/webjetcms@2026.0-jakarta-SNAPSHOT?project_path=%3A",
+            "bom-ref": "pkg:maven/com.webjetcms/webjetcms@2026.0-jakarta-OSK-SNAPSHOT?project_path=%3A",
             "group": "com.webjetcms",
             "name": "webjetcms",
-            "version": "2026.0-jakarta-SNAPSHOT",
+            "version": "2026.0-jakarta-OSK-SNAPSHOT",
             "description": "WebJET CMS Gradle distribution and administration npm dependency inventory. Includes container-provided APIs; excludes vendored code, postinstall changes, build tools and deployment infrastructure.",
-            "purl": "pkg:maven/com.webjetcms/webjetcms@2026.0-jakarta-SNAPSHOT?project_path=%3A",
+            "purl": "pkg:maven/com.webjetcms/webjetcms@2026.0-jakarta-OSK-SNAPSHOT?project_path=%3A",
             "modified": false,
             "externalReferences": [
-                {
-                    "type": "build-system",
-                    "url": "https://gitlab.in.iway.sk/webjet/webjetcms-github-deploy/-/jobs/108692"
-                },
                 {
                     "type": "vcs",
                     "url": "https://github.com/webjetcms/webjetcms.git"
@@ -123,7 +119,7 @@
         "properties": [
             {
                 "name": "webjet:releaseVersion",
-                "value": "2026.0-jakarta-SNAPSHOT"
+                "value": "2026.0-jakarta-OSK-SNAPSHOT"
             },
             {
                 "name": "webjet:sbom:scope",
@@ -29834,7 +29830,7 @@
             ]
         },
         {
-            "ref": "pkg:maven/com.webjetcms/webjetcms@2026.0-jakarta-SNAPSHOT?project_path=%3A",
+            "ref": "pkg:maven/com.webjetcms/webjetcms@2026.0-jakarta-OSK-SNAPSHOT?project_path=%3A",
             "dependsOn": [
                 "pkg:maven/commons-beanutils/commons-beanutils@1.11.0?type=jar",
                 "pkg:maven/io.github.duckasteroid.cdb/sg-cdb-library@1.0.3?type=jar",
@@ -33889,7 +33885,7 @@
         {
             "aggregate": "incomplete",
             "assemblies": [
-                "pkg:maven/com.webjetcms/webjetcms@2026.0-jakarta-SNAPSHOT?project_path=%3A"
+                "pkg:maven/com.webjetcms/webjetcms@2026.0-jakarta-OSK-SNAPSHOT?project_path=%3A"
             ]
         }
     ]
