@@ -534,10 +534,9 @@ public class DBPool
 
 		//skus to cez Data Source
 		DataSource ds = null;
+		Connection con = null;
 		try
 		{
-			Connection con = null;
-
 			ds = DBPool.getInstance().getDataSource(dbName);
 
 
@@ -552,6 +551,29 @@ public class DBPool
 		}
 		catch (Exception ex)
 		{
+			if (con != null)
+			{
+				try
+				{
+					if (Constants.getBoolean("branchesEnabled"))
+					{
+						HikariDataSource hikari = ds.isWrapperFor(HikariDataSource.class) ? ds.unwrap(HikariDataSource.class) : null;
+						if (hikari != null) hikari.evictConnection(con);
+						else con.abort(Runnable::run);
+					}
+				}
+				catch (Exception cleanupFailure)
+				{
+					ex.addSuppressed(cleanupFailure);
+					try { con.abort(Runnable::run); }
+					catch (Exception abortFailure) { ex.addSuppressed(abortFailure); }
+				}
+				finally
+				{
+					try { con.close(); }
+					catch (Exception cleanupFailure) { ex.addSuppressed(cleanupFailure); }
+				}
+			}
 			Logger.error(DBPool.class,"CHYBA!!: nepodarilo sa ziskat connection do DB.");
 			if(ex.getMessage() != null && ex.getMessage().contains("Cannot get a connection, pool error Timeout waiting for idle object") && ds != null)
 			{
@@ -601,34 +623,51 @@ public class DBPool
 
 	public static void setTransactionIsolationReadCommited(Connection dbConn)
 	{
-		if (Constants.DB_TYPE==Constants.DB_ORACLE) return;
-
-		try
-		{
-			if (dbConn.getTransactionIsolation()!=Connection.TRANSACTION_READ_COMMITTED)
-			{
-				dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-			}
-		}
-		catch (Exception ex)
-		{
-			Logger.error(ex);
-		}
+		setTransactionIsolation(dbConn, Connection.TRANSACTION_READ_COMMITTED);
 	}
 
 	public static void setTransactionIsolationReadUNCommited(Connection dbConn)
 	{
-		if (Constants.DB_TYPE==Constants.DB_ORACLE) return;
+		setTransactionIsolation(dbConn, Connection.TRANSACTION_READ_UNCOMMITTED);
+	}
+
+	/**
+	 * Prevents technical ID reservation rows from entering core reads when branches are enabled.
+	 * The legacy flag-off path retains its best-effort isolation handling.
+	 */
+	private static void setTransactionIsolation(Connection dbConn, int requestedIsolation)
+	{
+		boolean strict = Constants.getBoolean("branchesEnabled");
+		if (!strict && Constants.DB_TYPE==Constants.DB_ORACLE) return;
+		int isolation = strict ? Connection.TRANSACTION_READ_COMMITTED : requestedIsolation;
 
 		try
 		{
-			if (dbConn.getTransactionIsolation()!=Connection.TRANSACTION_READ_UNCOMMITTED)
+			Connection isolationConnection = dbConn;
+			if (strict && dbConn.isWrapperFor(Connection.class))
 			{
-				dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+				isolationConnection = dbConn.unwrap(Connection.class);
+				if (isolationConnection == null) throw new SQLException("Cannot inspect the physical database connection");
+			}
+			if (isolationConnection.getTransactionIsolation()!=isolation)
+			{
+				dbConn.setTransactionIsolation(isolation);
+				if (strict && isolationConnection.getTransactionIsolation()!=isolation)
+				{
+					throw new SQLException("Database connection did not accept READ_COMMITTED isolation");
+				}
 			}
 		}
 		catch (Exception ex)
 		{
+			if (strict)
+			{
+				try { dbConn.abort(Runnable::run); }
+				catch (Exception abortFailure) { ex.addSuppressed(abortFailure); }
+				try { dbConn.close(); }
+				catch (Exception closeFailure) { ex.addSuppressed(closeFailure); }
+				throw new IllegalStateException("Cannot guarantee READ_COMMITTED isolation for branches", ex);
+			}
 			Logger.error(ex);
 		}
 	}

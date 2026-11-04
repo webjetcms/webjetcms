@@ -112,7 +112,7 @@ public class PkeyGenerator
    private synchronized boolean setMaxValue(PkeyBean p, long value)
 	{
    	try{
-   		new SimpleQuery().execute("UPDATE pkey_generator SET value=? WHERE name=?", value, p.getName());
+		new SimpleQuery().execute("UPDATE pkey_generator SET value=? WHERE name=? AND value<?", value, p.getName(), value);
    		return true;
    	}catch (Exception e) {
    		sk.iway.iwcm.Logger.error(e);
@@ -166,16 +166,23 @@ public class PkeyGenerator
     */
    	void allocate(PkeyBean p)
 	{
+		try { allocate(p, false); }
+		catch (SQLException ex) { throw new IllegalStateException("Cannot initialize pkey generator", ex); }
+	}
+
+	private void allocate(PkeyBean p, boolean strict) throws SQLException
+	{
    		int pkeyGenIncrement = Constants.getInt("pkeyGenIncrement");
 
 		//este nebol inicializovany, skus ziskat max hodnotu z DB a opravit tabulku
 		if (p.getMaxValue()==0)
 		{
-			long maxv = getMaxValue(p.getName(), p.getTableName(), p.getTablePkeyName());
+			long maxv = strict ? getMaxValueStrict(p) : getMaxValue(p.getName(), p.getTableName(), p.getTablePkeyName());
 			if (p.getValue() < maxv)
 			{
 				//uloz novu maximalnu hodnotu do databazy
-				setMaxValue(p, maxv);
+				if (strict) setMaxValueStrict(p, maxv);
+				else setMaxValue(p, maxv);
 			}
 		}
 
@@ -332,7 +339,7 @@ public class PkeyGenerator
 			{
 				ps.setLong(1, blockIncrement);
 				ps.setString(2, name);
-				ps.execute();
+				if (ps.executeUpdate() != 1) throw new SQLException("Missing pkey generator row: " + name);
 			}
 			finally { ps.close(); }
 
@@ -417,6 +424,75 @@ public class PkeyGenerator
 		}
 		return(value + INCREMENT_OFFSET);
 	}
+
+    /**
+     * Allocates from the same cached ranges as the legacy API, propagating every
+     * initialization/allocation error. A missing generator is an installation error.
+     * The caller may lose a number when its later transaction fails.
+     */
+    public static synchronized long getNextValueAsLongStrict(String keyName) throws SQLException
+    {
+        // Validate even when a cached range remains: never hide a missing DB row.
+        try (Connection connection = DBPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "SELECT table_name, table_pkey_name FROM pkey_generator WHERE name=?"))
+        {
+            statement.setString(1, keyName);
+            try (ResultSet result = statement.executeQuery())
+            {
+                if (!result.next()) throw new SQLException("Missing pkey generator row: " + keyName);
+                if (!keyName.equals(fixTableName(keyName, result.getString(1)))
+                    || !fixPkeyName(keyName, keyName + "_id").equals(result.getString(2)))
+                    throw new SQLException("Unexpected pkey generator mapping: " + keyName);
+            }
+        }
+        catch (RuntimeException ex) { throw new SQLException("Cannot initialize generator: " + keyName, ex); }
+        try
+        {
+            PkeyGenerator generator = getInstance();
+            PkeyBean bean = generator.getPkeyBean(keyName);
+            if (bean == null) throw new SQLException("Generator is absent from the shared cache: " + keyName);
+            int increment = Constants.getInt("pkeyGenIncrement");
+            int offset = Constants.getInt("pkeyGenOffset");
+            if (increment <= 0 || Constants.getInt("pkeyGenBlockSize") <= 0 || offset < 0)
+                throw new SQLException("Invalid pkey generator configuration");
+            if (bean.getValue() + increment + offset > bean.getMaxValue()) generator.allocate(bean, true);
+            long next = Math.addExact(bean.getValue(), increment);
+            long id = Math.addExact(next, offset);
+            if (id <= 0 || id > Integer.MAX_VALUE) throw new SQLException("Content ID range exhausted: " + keyName);
+            bean.setValue(next);
+            return id;
+        }
+        catch (RuntimeException ex) { throw new SQLException("Cannot reserve ID: " + keyName, ex); }
+    }
+
+    private long getMaxValueStrict(PkeyBean bean) throws SQLException
+    {
+        String table = fixTableName(bean.getName(), bean.getTableName());
+        String key = fixPkeyName(bean.getName(), bean.getTablePkeyName());
+        if (table == null || key == null || !table.matches("[a-zA-Z0-9_]+") || !key.matches("[a-zA-Z0-9_]+"))
+            throw new SQLException("Invalid generator mapping");
+        try (Connection connection = DBPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT MAX(" + key + ") FROM " + table);
+             ResultSet result = statement.executeQuery())
+        {
+            if (!result.next()) throw new SQLException("Cannot read generator maximum");
+            return result.getLong(1);
+        }
+    }
+
+    private void setMaxValueStrict(PkeyBean bean, long minimum) throws SQLException
+    {
+        try (Connection connection = DBPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "UPDATE pkey_generator SET value=? WHERE name=? AND value<?"))
+        {
+            statement.setLong(1, minimum);
+            statement.setString(2, bean.getName());
+            statement.setLong(3, minimum);
+            statement.executeUpdate();
+        }
+    }
 
 	private static void createNewRecord(String keyName)
 	{
