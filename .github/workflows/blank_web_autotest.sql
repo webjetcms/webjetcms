@@ -2170,6 +2170,41 @@ CREATE TABLE `form_attributes` (
 
 
 
+# Dump of table form_items
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `form_items`;
+
+CREATE TABLE `form_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `form_name` varchar(255) NOT NULL,
+  `field_type` varchar(255) NOT NULL,
+  `required` tinyint(1) DEFAULT NULL,
+  `label` text DEFAULT NULL,
+  `value` text DEFAULT NULL,
+  `placeholder` varchar(255) NOT NULL,
+  `tooltip` text DEFAULT NULL,
+  `regex_validation` varchar(255) DEFAULT NULL,
+  `item_form_id` varchar(255) NOT NULL,
+  `step_id` int(11) NOT NULL,
+  `sort_priority` int(11) NOT NULL,
+  `domain_id` int(11) NOT NULL DEFAULT 1,
+  `show_stat` tinyint(1) NOT NULL DEFAULT 1,
+  `top_count` int(11) NOT NULL DEFAULT 5,
+  `show_other_count` tinyint(1) NOT NULL DEFAULT 1,
+  `show_unanswered` tinyint(1) NOT NULL DEFAULT 0,
+  `chart_type` varchar(255) NOT NULL DEFAULT 'bar_horizontal',
+  `compare_insensitive` tinyint(1) NOT NULL DEFAULT 0,
+  `color_scheme` varchar(32) DEFAULT NULL,
+  `error_count` int(11) DEFAULT 0,
+  `custom_error` varchar(255) DEFAULT NULL,
+  `trim_value` tinyint(1) NOT NULL DEFAULT 0,
+  `hint` longtext DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
 # Dump of table form_regular_exp
 # ------------------------------------------------------------
 
