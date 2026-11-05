@@ -129,6 +129,7 @@ class HeatMapTrackingServiceTest {
                 MockedStatic<GroupsDB> groupLookup = mockStatic(GroupsDB.class);
                 MockedStatic<StatisticsMode> modes = mockStatic(StatisticsMode.class);
                 MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
+            constants.when(() -> Constants.getBoolean("multiDomainEnabled")).thenReturn(true);
             constants.when(() -> Constants.getBoolean("gdprAllowAllCookies")).thenReturn(true);
             constants.when(() -> Constants.getBoolean("statEnableClickTracking")).thenReturn(true);
             browsers.when(() -> BrowserDetector.isStatIpAllowedFast(request)).thenReturn(true);
@@ -172,6 +173,20 @@ class HeatMapTrackingServiceTest {
             storage.verify(() -> HeatMapStorage.record(new HeatMapEvent(String.format("%032x", 17), 123, 390,
                     now - 1, 42, 2500), "public.example"));
             assertEquals(18, overflowResponse.getCookies().length, "Only received cookie names are expired");
+
+            storage.clearInvocations();
+            when(group.getDomainName()).thenReturn("");
+            for (boolean multidomainEnabled : new boolean[] { true, false }) {
+                constants.when(() -> Constants.getBoolean("multiDomainEnabled")).thenReturn(multidomainEnabled);
+                MockHttpServletRequest unscoped = new MockHttpServletRequest("GET", "/destination.html");
+                unscoped.setServerName("public.example");
+                unscoped.setCookies(request.getCookies());
+                browsers.when(() -> BrowserDetector.isStatIpAllowedFast(unscoped)).thenReturn(true);
+                HeatMapTrackingService.receiveCookies(unscoped, new MockHttpServletResponse());
+                storage.verify(() -> HeatMapStorage.record(new HeatMapEvent(ID, 123, 390, now, 42, 2500), ""),
+                        times(multidomainEnabled ? 0 : 1));
+            }
+            storage.verifyNoMoreInteractions();
         }
     }
 

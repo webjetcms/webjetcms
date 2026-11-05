@@ -129,7 +129,7 @@ public final class HeatMapTrackingService {
                     bytes += eventBytes;
                     DocDetails doc = DocDB.getInstance().getBasicDocDetails(event.docId(), false);
                     GroupDetails group = doc == null ? null : GroupsDB.getInstance().getGroup(doc.getGroupId());
-                    String domain = Tools.getServerName(request);
+                    String domain = Constants.getBoolean("multiDomainEnabled") ? Tools.getServerName(request) : "";
                     if (group != null && group.getDomainName().equalsIgnoreCase(domain)
                             && doc.isAvailable() && StatisticsMode.forDocument(doc) == StatisticsMode.HEATMAP) {
                         HeatMapStorage.record(event, group.getDomainName().toLowerCase(Locale.ROOT));
