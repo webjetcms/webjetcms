@@ -22,34 +22,36 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 </head>
 
 <script type="text/javascript" >
+// Synchronization must bypass smooth scrolling in the page template: animation
+// steps would otherwise scroll the source frame back through the opposite handler.
 function  syncScroll()
 {
 	if (window.frames["left"].scrollX!=undefined)
 	{
-		parent.frames["right"].scrollTo(parent.frames["left"].scrollX,parent.frames["left"].scrollY);
+		parent.frames["right"].scrollTo({left: parent.frames["left"].scrollX, top: parent.frames["left"].scrollY, behavior: "instant"});
 	}
 	else if (window.frames["left"].document.documentElement)
 	{
-    	window.frames["right"].scrollTo(window.frames["left"].document.documentElement.scrollLeft,window.frames["left"].document.documentElement.scrollTop);
+		window.frames["right"].scrollTo({left: window.frames["left"].document.documentElement.scrollLeft, top: window.frames["left"].document.documentElement.scrollTop, behavior: "instant"});
   	}
 	else
 	{
-		window.frames["right"].scrollTo(parent.window.frames["left"].document.body.scrollLeft,parent.window.frames["left"].document.body.scrollTop);
+		window.frames["right"].scrollTo({left: parent.window.frames["left"].document.body.scrollLeft, top: parent.window.frames["left"].document.body.scrollTop, behavior: "instant"});
 	}
 }
 function  syncScrollRight()
 {
 	if (parent.frames["right"].scrollX!=undefined)
 	{
-		window.frames["left"].scrollTo(parent.frames["right"].scrollX,parent.frames["right"].scrollY);
+		window.frames["left"].scrollTo({left: parent.frames["right"].scrollX, top: parent.frames["right"].scrollY, behavior: "instant"});
 	}
 	else if (window.frames["right"].document.documentElement)
 	{
-		window.frames["left"].scrollTo(window.frames["right"].document.documentElement.scrollLeft,window.frames["right"].document.documentElement.scrollTop);
+		window.frames["left"].scrollTo({left: window.frames["right"].document.documentElement.scrollLeft, top: window.frames["right"].document.documentElement.scrollTop, behavior: "instant"});
   	}
 	else
 	{
-		window.frames["left"].scrollTo(parent.window.frames["right"].document.body.scrollLeft,parent.window.frames["right"].document.body.scrollTop);
+		window.frames["left"].scrollTo({left: parent.window.frames["right"].document.body.scrollLeft, top: parent.window.frames["right"].document.body.scrollTop, behavior: "instant"});
 	}
 }
 function setupScroll()

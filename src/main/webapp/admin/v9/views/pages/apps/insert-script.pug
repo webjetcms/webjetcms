@@ -7,11 +7,7 @@ block content
         var insertScriptTable;
         window.domReady.add(function () {
 
-            var tabs = [
-                { id: 'main', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                { id: 'scriptPerms', title: '[[\#{components.insert_script.perms}]]' },
-                { id: 'scriptBody', title: '[[\#{components.insert_script.body}]]', content: "<div></div>" }
-            ];
+            var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.insertScript.InsertScriptBean')})];
 
             var columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.insertScript.InsertScriptBean")})];
 

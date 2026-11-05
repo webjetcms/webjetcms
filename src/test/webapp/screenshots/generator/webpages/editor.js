@@ -1,5 +1,9 @@
 Feature('webpages.editor');
 
+const fs = require("fs");
+const path = require("path");
+const pixabayImagePath = path.resolve(__dirname, "../../../../../main/webapp/images/test-stavov/manualtestpage/car.jpg");
+
 Before(({ I, login }) => {
     login('admin');
 });
@@ -47,53 +51,78 @@ Scenario('file-archive-read-only-icon', ({ I, DTE, Document, i18n }) => {
 });
 
 Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
+    // Remove the Pixabay image left by a previous run, including another language.
+    fs.rmSync(pixabayImagePath, { force: true });
+
     Document.setConfigValue("ckeditor_svgIcon_path", "");
     Document.setConfigValue('editorFontAwesomeCssPath', "");
+
+    // Show the overflow tools in the mobile Page Builder preview.
+    Document.resetPageBuilderMode();
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForVisible(".wj-cke-toolbar", 20);
+    I.waitForText("Editor:", 10, ".exit-inline-editor");
+    I.click("a[href*=\"pbSetWindowSize('phone')\"]");
+    I.waitForVisible(".wj-cke-toolbar__more:visible", 10);
+    I.click(".wj-cke-toolbar__more:visible");
+    I.waitForVisible(".wj-cke-overflow", 10);
+    I.moveCursorTo(".exit-inline-editor");
+    I.switchTo();
+    Document.screenshotElement("#DTE_Field_data-pageBuilderIframe", "/redactor/webpages/working-in-editor/toolbar-overflow.png");
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.pressKey("Escape");
+    I.click("a[href*=\"pbSetWindowSize('desktop')\"]");
+    I.switchTo();
+    DTE.cancel();
+
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=100605");
     DTE.waitForEditor();
 
-    let settingDialogA = ".cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_menu_panel.cke_ltr";
+    const toolbar = "#cke_data .cke_toolbox";
+    const settingDialogA = ".cke_panel.cke_menu_panel";
 
     Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content','/redactor/webpages/working-in-editor/editor_preview.png')
 
     const selectorsAndPaths = [
-        ['#cke_13', '/redactor/webpages/working-in-editor/paste.png'],
-        ['#cke_14', '/redactor/webpages/working-in-editor/cut.png'],
-        ['#cke_15', '/redactor/webpages/working-in-editor/copy.png'],
-        ['#cke_16', '/redactor/webpages/working-in-editor/paste_text.png'],
-        ['#cke_17', '/redactor/webpages/working-in-editor/paste_from_word.png'],
-        ['#cke_19', '/redactor/webpages/working-in-editor/remove_format.png'],
-        ['#cke_20', '/redactor/webpages/working-in-editor/bold.png'],
-        ['#cke_21', '/redactor/webpages/working-in-editor/italic.png'],
-        ['#cke_22', '/redactor/webpages/working-in-editor/underline.png'],
-        ['#cke_23', '/redactor/webpages/working-in-editor/strike.png'],
-        ['#cke_24', '/redactor/webpages/working-in-editor/subscript.png'],
-        ['#cke_25', '/redactor/webpages/working-in-editor/superscript.png'],
-        ['#cke_26', '/redactor/webpages/working-in-editor/text_color.png'],
-        ['#cke_27', '/redactor/webpages/working-in-editor/bcg_color.png'],
-        ['#cke_29', '/redactor/webpages/working-in-editor/bulleted_list.png'],
-        ['#cke_30', '/redactor/webpages/working-in-editor/numbered_list.png'],
-        ['#cke_31', '/redactor/webpages/working-in-editor/outdent.png'],
-        ['#cke_32', '/redactor/webpages/working-in-editor/indent.png'],
-        ['#cke_38', '/redactor/webpages/working-in-editor/table.png'],
-        ['#cke_40', '/redactor/webpages/working-in-editor/image.png'],
-        ['#cke_41', '/redactor/webpages/working-in-editor/unlink.png'],
-        ['#cke_42', '/redactor/webpages/working-in-editor/specialchar.png'],
-        ['#cke_43', '/redactor/webpages/working-in-editor/tooltip.png'],
-        ['#cke_44', '/redactor/webpages/working-in-editor/link.png'],
-        ['#cke_45', '/redactor/webpages/working-in-editor/wjform.png'],
-        ['#cke_46', '/redactor/webpages/working-in-editor/components.png'],
-        ['#cke_47', '/redactor/apps/htmlbox/htmlbox_icon.png']
+        ['a.cke_button__paste', '/redactor/webpages/working-in-editor/paste.png'],
+        ['a.cke_button__cut', '/redactor/webpages/working-in-editor/cut.png'],
+        ['a.cke_button__copy', '/redactor/webpages/working-in-editor/copy.png'],
+        ['a.cke_button__pastetext', '/redactor/webpages/working-in-editor/paste_text.png'],
+        ['a.cke_button__pastefromword', '/redactor/webpages/working-in-editor/paste_from_word.png'],
+        ['a.cke_button__removeformat', '/redactor/webpages/working-in-editor/remove_format.png'],
+        ['a.cke_button__bold', '/redactor/webpages/working-in-editor/bold.png'],
+        ['a.cke_button__italic', '/redactor/webpages/working-in-editor/italic.png'],
+        ['a.cke_button__underline', '/redactor/webpages/working-in-editor/underline.png'],
+        ['a.cke_button__strike', '/redactor/webpages/working-in-editor/strike.png'],
+        ['a.cke_button__subscript', '/redactor/webpages/working-in-editor/subscript.png'],
+        ['a.cke_button__superscript', '/redactor/webpages/working-in-editor/superscript.png'],
+        ['a.cke_button__textcolor', '/redactor/webpages/working-in-editor/text_color.png'],
+        ['a.cke_button__bgcolor', '/redactor/webpages/working-in-editor/bcg_color.png'],
+        ['a.cke_button__bulletedlist', '/redactor/webpages/working-in-editor/bulleted_list.png'],
+        ['a.cke_button__numberedlist', '/redactor/webpages/working-in-editor/numbered_list.png'],
+        ['a.cke_button__outdent', '/redactor/webpages/working-in-editor/outdent.png'],
+        ['a.cke_button__indent', '/redactor/webpages/working-in-editor/indent.png'],
+        ['a.cke_button__table', '/redactor/webpages/working-in-editor/table.png'],
+        ['a.cke_button__image', '/redactor/webpages/working-in-editor/image.png'],
+        ['a.cke_button__unlink', '/redactor/webpages/working-in-editor/unlink.png'],
+        ['a.cke_button__specialchar', '/redactor/webpages/working-in-editor/specialchar.png'],
+        ['a.cke_button__tooltip', '/redactor/webpages/working-in-editor/tooltip.png'],
+        ['a.cke_button__link', '/redactor/webpages/working-in-editor/link.png'],
+        ['a.cke_button__wjforms', '/redactor/webpages/working-in-editor/wjform.png'],
+        ['a.cke_button__components', '/redactor/webpages/working-in-editor/components.png'],
+        ['a.cke_button__htmlbox', '/redactor/apps/htmlbox/htmlbox_icon.png']
     ];
 
     I.say("DO screens of buttons in TOOLBAR");
     selectorsAndPaths.forEach(item => {
         const [selector, path] = item;
-        Document.screenshotElement(selector, path);
+        Document.screenshotElement(`${toolbar} ${selector}`, path);
     });
 
     I.say("Add link screens");
-        I.clickCss('#cke_44');
+        I.clickCss(`${toolbar} a.cke_button__link`);
         I.waitForVisible( locate(".cke_dialog.cke_browser_webkit.cke_ltr").find("iframe#wjLinkIframe"), 15);
         I.switchTo( locate(".cke_dialog.cke_browser_webkit.cke_ltr").find("iframe#wjLinkIframe") );
         I.waitForVisible("table.urlFormTable");
@@ -122,7 +151,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         I.waitForInvisible( locate(".cke_dialog.cke_browser_webkit.cke_ltr").find("iframe#wjLinkIframe"), 5);
 
     I.say("Add image screens");
-        I.clickCss('#cke_40');
+        I.clickCss(`${toolbar} a.cke_button__image`);
         I.waitForVisible( locate(".cke_dialog.cke_browser_webkit.cke_ltr").find("iframe#wjImageIframeElement"), 15);
         I.switchTo( locate(".cke_dialog.cke_browser_webkit.cke_ltr").find("iframe#wjImageIframeElement") );
         I.waitForVisible("table.urlFormTable");
@@ -130,7 +159,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog.png');
 
         I.say("Image - pixabay");
-            I.click( locate( "div.cke_dialog_tabs" ).find( locate("a").withText("Fotobanka") ) );
+            I.click( locate( "div.cke_dialog_tabs" ).find( locate("a").withText(i18n.get("Photobank") ) ) );
             I.waitForVisible("#wjImagePixabayIframeElement");
             I.switchTo("#wjImagePixabayIframeElement");
             I.fillField("#search", "car");
@@ -154,7 +183,8 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
 
             I.switchTo("#wjImagePixabayIframeElement");
             I.clickCss('button.btn.btn-primary.saveImage');
-            I.waitForInvisible("#imageModal");
+
+            I.waitForInvisible("#imageModal", 10);
             I.switchTo();
             I.wait(1);
             Document.screenshotElement(locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay-save.png');
@@ -167,9 +197,8 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         I.rightClick( locate("#WebJETEditorBody").find("img") );
         I.switchTo();
         I.waitForVisible(locate(settingDialogA).last(), 10);
-        I.switchTo('.cke_wysiwyg_frame.cke_reset');
-        Document.screenshotElement("#WebJETEditorBody", '/redactor/webpages/working-in-editor/image_right_click.png');
-        I.switchTo();
+        // Capture the viewport without scrolling or resizing the iframe and disturbing the context menu.
+        Document.screenshot('/redactor/webpages/working-in-editor/image_right_click.png');
 
     I.say("list - screens");
         I.switchTo('.cke_wysiwyg_frame.cke_reset');
@@ -190,11 +219,11 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
 
     I.say("DO table screens");
         I.say("Table dialog");
-        I.clickCss('#cke_38');
-        Document.screenshotElement(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last(),'/redactor/webpages/working-in-editor/table_preview.png');
-        I.switchTo(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last());
-        I.switchTo();
-        I.switchTo("#cke_645_frame");
+        I.clickCss(`${toolbar} a.cke_button__table`);
+        const tablePanel = locate(".cke_panel:not(.cke_menu_panel)").last();
+        I.waitForVisible(tablePanel, 10);
+        Document.screenshotElement(tablePanel, '/redactor/webpages/working-in-editor/table_preview.png');
+        I.switchTo(tablePanel.find("iframe.cke_panel_frame"));
         I.waitForElement('.cke_colormore', 10);
         I.clickCss('.cke_colormore');
         I.switchTo();
@@ -234,12 +263,12 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         I.clickCss(".cke_dialog_ui_button_cancel");
         I.waitForInvisible(locate(".cke_dialog.cke_browser_webkit.cke_ltr.cke_single_page"), 5);
 
-    I.clickCss('#cke_42');
+    I.clickCss(`${toolbar} a.cke_button__specialchar`);
     I.waitForVisible(locate('.cke_dialog.cke_browser_webkit.cke_ltr.cke_single_page').last(), 5);
     Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr.cke_single_page').last(),'/redactor/webpages/working-in-editor/specialchar_dialog.png');
     I.clickCss(".cke_dialog_ui_button_cancel");
 
-    //I.clickCss('#cke_47');
+    //I.clickCss(`${toolbar} a.cke_button__htmlbox`);
     //Document.screenshot('/redactor/apps/htmlbox/htmlbox_dialog.png');
     //I.clickCss(".cke_dialog_ui_button_cancel");
 });
@@ -322,6 +351,11 @@ Scenario('remove Pixabay image', ({ I, Document, i18n }) => {
     I.waitForElement(".elfinder-dialog-confirm");
     I.click( locate("button.ui-button > span.ui-button-text").withText(i18n.get("Delete")) );
     I.waitForInvisible(`.elfinder-cwd-filename`);
+});
+
+// Keep cleanup after the metadata screenshot; @current also includes it when running only the editor scenario.
+Scenario('working-in-editor cleanup @current', () => {
+    fs.rmSync(pixabayImagePath, { force: true });
 });
 
 Scenario('appstore', ({ I, DTE, Document, i18n }) => {

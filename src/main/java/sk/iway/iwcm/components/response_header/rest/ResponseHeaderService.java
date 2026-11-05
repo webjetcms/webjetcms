@@ -43,7 +43,7 @@ public class ResponseHeaderService {
                 ResponseHeaderRepository rhr = requestBean.getSpringBean("responseHeaderRepository", ResponseHeaderRepository.class);
 
                 //Get DB data
-                headersList = rhr.findByDomainId(domainId);
+                if (rhr != null) headersList = rhr.findByDomainId(domainId);
             }
             if(headersList == null) headersList = new ArrayList<>();
 

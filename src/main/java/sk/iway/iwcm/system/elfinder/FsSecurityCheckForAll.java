@@ -39,6 +39,12 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isReadable(FsService fsService, FsItem fsi)
 	{
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(item.getFile().getVirtualPath())) {
+            String path = item.getFile().getVirtualPath();
+            Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
+            String folder = item.getFile().isDirectory() ? path : path.substring(0, path.lastIndexOf('/') + 1);
+            return user != null && user.isAdmin() && user.isFolderWritable(folder);
+        }
 		return _readable;
 	}
 
@@ -50,6 +56,9 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isWritable(FsService fsService, FsItem fsi)
 	{
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(item.getFile().getVirtualPath())) {
+            return isReadable(fsService, fsi);
+        }
 		if (isFileArchiveReadOnly(fsService, fsi)) return false;
 
 		if (fsi.getVolume() instanceof IwcmActualPageFsVolume)

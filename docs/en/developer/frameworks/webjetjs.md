@@ -501,6 +501,8 @@ If you need to store some user settings, you can use the ```window.localStorage`
 
 An API for both JavaScript and server-side processing is available for use.
 
+For key `jstreeSettings_web-pages-list`, `AdminSettingsService` and object `window.currentUser.adminSettings` provide the default value from configuration `webpagesTreeDefaultSettings` if the user does not have a custom setting saved. The default value is not written to the database or to the settings in the user session when read. Existing JSON is not merged with the configuration. For details, see [tree view settings](../../redactor/webpages/README.md#default-settings-for-users).
+
 !>**Warning**: do not store large objects in the settings, the settings are inserted into the HTML code of the administration and large objects would disproportionately increase the volume of transmitted data.
 
 ### Frontend usage

@@ -173,6 +173,12 @@ The application is inserted into the public website just like any other standard
 !INCLUDE(sk.iway.basecms.contact.ContactApp, country="sk")!
 ```
 
+### Error executing application
+
+If the creation or execution of a Spring application throws an exception, the error message replaces only its `!INCLUDE(...)!` tag. Texts, JSP applications, and other Spring applications on the page are preserved. The error message is not cached in the application, so its execution will be retried the next time the application is loaded.
+
+The message uses the translated name from `@WebjetAppStore.nameKey`. If the application does not have this annotation, the modified class name without the package is used. Exception details are only visible to the logged in administrator, unless the request attribute `writeTagDontShowError` is set.
+
 ### Using application parameters
 
 Each application can contain parameters in the ```!INCLUDE()!``` tag, in our example it is the parameter ```country```. This is automatically transferred to the ```country``` attribute in the ```ContactApp``` class.

@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,7 +43,6 @@ import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
-import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
@@ -58,10 +58,10 @@ import org.jsoup.nodes.Element;
  */
 public class FormHtmlHandler {
 
-    private static final String FORM_START_KEY = "components.mustistep.form.start";
-    private static final String FORM_END_KEY = "components.mustistep.form.end";
-    private static final String FORM_BACK_BUTTON_KEY = "components.mustistep.form.back_button";
-    private static final String FORM_LOADER_KEY = "components.mustistep.form.loader";
+    private static final String FORM_START_KEY = "components.multistep.form.start";
+    private static final String FORM_END_KEY = "components.multistep.form.end";
+    private static final String FORM_BACK_BUTTON_KEY = "components.multistep.form.back_button";
+    private static final String FORM_LOADER_KEY = "components.multistep.form.loader";
 
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
@@ -69,6 +69,8 @@ public class FormHtmlHandler {
 
     //
     private String formName;
+    private FormSettingsEntity formSettings;
+    private Map<String, String> settingsFields;
     private Prop prop;
     private String requiredLabelAdd;
     private boolean rowView;
@@ -119,7 +121,8 @@ public class FormHtmlHandler {
         this.requiredLabelAdd = prop.getText("components.formsimple.requiredLabelAdd");
         this.firstTimeHeadingSet = new HashSet<>();
 
-        FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
+        this.formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
+        this.settingsFields = FormsService.getSettingsReplacementMap(formSettings);
         if (formSettings != null) {
             this.rowView = Tools.isTrue(formSettings.getRowView());
             this.recipients = formSettings.getRecipients();
@@ -127,8 +130,8 @@ public class FormHtmlHandler {
             this.formForceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
             this.publicKey = formSettings.getEncryptKey();
             this.formCss = formSettings.getFormCss();
-            this.emailTextBefore = formSettings.getEmailTextBefore();
-            this.emailTextAfter = formSettings.getEmailTextAfter();
+            this.emailTextBefore = settingsFields.get("settings.emailTextBefore");
+            this.emailTextAfter = settingsFields.get("settings.emailTextAfter");
 
             this.formAddClasses = formSettings.getFormAddClasses();
             if(Tools.isEmpty(this.formAddClasses)) this.formAddClasses = "";
@@ -144,6 +147,17 @@ public class FormHtmlHandler {
      */
     public FormHtmlHandler(String formName, HttpServletRequest request) {
         this(formName, getFormCounter(formName, request), request);
+    }
+
+    /** Renders one source template without reinterpreting values inserted by other templates. */
+    private String renderTemplate(String key, Map<String, String> values, HttpServletRequest request) {
+        Map<String, String> fields = new HashMap<>(settingsFields);
+        fields.put("formname", Tools.getStringValue(formName, ""));
+        fields.put("savedb", Tools.getStringValue(formName, ""));
+        fields.put("recipients", Tools.getStringValue(recipients, ""));
+        fields.putAll(values);
+        String html = FormsService.replaceFields(prop.getText(key), fields);
+        return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
     }
 
     private static int getFormCounter(String formName, HttpServletRequest request) {
@@ -222,11 +236,11 @@ public class FormHtmlHandler {
         for(String css : Tools.getTokens(this.formCss, "\n", true))
             formStartHtml.append("<link rel='stylesheet' type='text/css' href='").append(css).append("' />");
 
-        formStartHtml.append(FormsService.replaceFields(prop.getText(FORM_START_KEY), this.formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop, request));
-
         String newPath = "/rest/multistep-form/save-form?form-name=" + this.formName + "&step-id=" + stepId;
-        Tools.replace(formStartHtml, "${formActionSrc}", newPath);
-        Tools.replace(formStartHtml, "${formAddClasses}", this.formAddClasses);
+        formStartHtml.append(renderTemplate(FORM_START_KEY, Map.of(
+            "formActionSrc", newPath,
+            "formAddClasses", Tools.getStringValue(this.formAddClasses, "")
+        ), request));
         return formStartHtml;
     }
 
@@ -243,11 +257,11 @@ public class FormHtmlHandler {
         // Form step wrapper start
 
         StringBuilder stepWrapperStart = new StringBuilder();
-        stepWrapperStart.append(prop.getText("components.mustistep.step.start"));
+        stepWrapperStart.append(renderTemplate("components.multistep.step.start", Map.of(), request));
 
         if (Tools.isNotEmpty(formStep.getHeader())) {
             // Swap header title
-            stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.header"), "${step-header}", StringEscapeUtils.unescapeHtml4(formStep.getHeader()) ));
+            stepWrapperStart.append(renderTemplate("components.multistep.step.header", Map.of("step-header", StringEscapeUtils.unescapeHtml4(formStep.getHeader())), request));
 
             // Swap user info
             stepWrapperStart = DocTools.updateUserCodes(UsersDB.getCurrentUser(request), stepWrapperStart);
@@ -262,15 +276,15 @@ public class FormHtmlHandler {
 
         formStepHtml.append(stepWrapperStart);
 
-        if (rowView) formStepHtml.append(prop.getText("components.mustistep.rowView.start"));
+        if (rowView) formStepHtml.append(renderTemplate("components.multistep.rowView.start", Map.of(), request));
 
         // Into formStep we must insert step items
         formStepHtml.append( getStepItems(formStep.getId(), request) );
 
-        if (rowView) formStepHtml.append( prop.getText("components.mustistep.rowView.end"));
+        if (rowView) formStepHtml.append( renderTemplate("components.multistep.rowView.end", Map.of(), request));
 
         // Form step wrapper end
-        formStepHtml.append( prop.getText("components.mustistep.step.end") );
+        formStepHtml.append( renderTemplate("components.multistep.step.end", Map.of(), request) );
 
         return formStepHtml;
     }
@@ -306,7 +320,7 @@ public class FormHtmlHandler {
                 item.put("label", prop.getText("components.formsimple.label." + fieldType));
             }
 
-            String itemHtml = FormsService.replaceFields(prop.getText("components.formsimple.input." + fieldType), this.formName, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop, request);
+            String itemHtml = FormsService.replaceFields(prop.getText("components.formsimple.input." + fieldType), this.formName, formSettings, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop, request);
 
             if (isEmailRender == false) {
                 if(itemHtml.contains("!INCLUDE"))
@@ -343,9 +357,10 @@ public class FormHtmlHandler {
         StringBuilder formEndHtml = new StringBuilder();
         FormStepEntity previousStep = MultistepFormsService.getPreviousStep(formName, formStep, formStepsRepository);
         if(isEmailRender == false && previousStep != null) {
-            formEndHtml.append(prop.getText(FORM_BACK_BUTTON_KEY));
-            Tools.replace(formEndHtml, "${previousStepId}", previousStep.getId().toString());
-            Tools.replace(formEndHtml, "${backButtonText}", StringEscapeUtils.escapeHtml4(buttonsLabels.getFirst()));
+            formEndHtml.append(renderTemplate(FORM_BACK_BUTTON_KEY, Map.of(
+                "previousStepId", previousStep.getId().toString(),
+                "backButtonText", StringEscapeUtils.escapeHtml4(buttonsLabels.getFirst())
+            ), request));
         }
         formEndHtml.append(getFormEnd(buttonsLabels.getSecond(), request));
 
@@ -365,8 +380,13 @@ public class FormHtmlHandler {
      * @param prop localized text provider
      */
     static void appendFormLoader(StringBuilder formEndHtml, boolean isEmailRender, Prop prop) {
+        appendFormLoader(formEndHtml, isEmailRender, prop, Map.of());
+    }
+
+    /** Adds the loader after expanding settings in its source template only. */
+    static void appendFormLoader(StringBuilder formEndHtml, boolean isEmailRender, Prop prop, Map<String, String> settingsFields) {
         if(isEmailRender == false) {
-            String loaderHtml = prop.getText(FORM_LOADER_KEY);
+            String loaderHtml = FormsService.replaceFields(prop.getText(FORM_LOADER_KEY), settingsFields);
             if(Tools.isNotEmpty(loaderHtml)) {
                 int closingFormTagIndex = formEndHtml.lastIndexOf("</form>");
                 if(closingFormTagIndex >= 0) formEndHtml.insert(closingFormTagIndex, loaderHtml);
@@ -385,12 +405,10 @@ public class FormHtmlHandler {
     private StringBuilder getFormEnd(String submitButtonString, HttpServletRequest request) {
         StringBuilder formEndHtml = new StringBuilder();
 
-        formEndHtml.append( FormsService.replaceFields(prop.getText(FORM_END_KEY), this.formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop, request) );
-
-        Tools.replace(formEndHtml, "${submitButtonText}", submitButtonString);
+        formEndHtml.append(renderTemplate(FORM_END_KEY, Map.of("submitButtonText", submitButtonString), request));
 
         if(isEmailRender == false) Tools.replace(formEndHtml, "{tech-info}", "");
-        appendFormLoader(formEndHtml, isEmailRender, prop);
+        appendFormLoader(formEndHtml, isEmailRender, prop, settingsFields);
 
         return formEndHtml;
     }
@@ -414,7 +432,7 @@ public class FormHtmlHandler {
 
         StringBuilder formHtml = new StringBuilder("");
 
-        if (Tools.isNotEmpty(emailTextBefore)) formHtml.append(ResponseUtils.filter(emailTextBefore).replaceAll("\\n", "<br/>")).append("<br/>");
+        if (Tools.isNotEmpty(emailTextBefore)) formHtml.append(emailTextBefore.replaceAll("\\n", "<br/>")).append("<br/>");
 
         // This is email render format
         this.isEmailRender = true;
@@ -434,11 +452,11 @@ public class FormHtmlHandler {
         // End form
         formHtml.append( getFormEnd("", request) );
 
-        if (Tools.isNotEmpty(emailTextAfter)) formHtml.append("<br/>").append(ResponseUtils.filter(emailTextAfter).replaceAll("\\n", "<br/>")).append("<br/>");
+        if (Tools.isNotEmpty(emailTextAfter)) formHtml.append("<br/>").append(emailTextAfter.replaceAll("\\n", "<br/>")).append("<br/>");
 
         String techInfo = "";
         if(this.addTechInfo) {
-            techInfo = prop.getText("components.formsimple.techinfo");
+            techInfo = renderTemplate("components.formsimple.techinfo", Map.of(), request);
             techInfo = ShowDoc.updateCodes(null, techInfo, docId, request, Constants.getServletContext());
         }
         formHtml = Tools.replace(formHtml, "{tech-info}", techInfo);
@@ -786,15 +804,15 @@ public class FormHtmlHandler {
 
         String backBtnLabel;
         if(Tools.isNotEmpty(actualStep.getBackStepBtnLabel())) backBtnLabel = actualStep.getBackStepBtnLabel();
-        else backBtnLabel = prop.getText("components.mustistep.form.back_step");
+        else backBtnLabel = prop.getText("components.multistep.form.back_step");
 
         String nextBtnLabel;
         if(Tools.isNotEmpty(actualStep.getNextStepBtnLabel())) nextBtnLabel = actualStep.getNextStepBtnLabel();
         else {
             if(actualStep.isLastStep()) // last step
-                nextBtnLabel = prop.getText("components.mustistep.form.save_form");
+                nextBtnLabel = prop.getText("components.multistep.form.save_form");
             else // not last step
-                nextBtnLabel = prop.getText("components.mustistep.form.next_step");
+                nextBtnLabel = prop.getText("components.multistep.form.next_step");
         }
 
         return new Pair<>(backBtnLabel, nextBtnLabel);

@@ -12,6 +12,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 /**
  * Entity to edit user details for current user without useredit perms (show only limited fields)
@@ -22,6 +24,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_EDIT)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "personalInfo", title = "useredit.personal_info", selected = true),
+    @DataTableTab(id = "contactTab", title = "components.users.contact")
+})
 public class UserDetailsSelfEntity extends UserDetailsBasic {
 
     @NotBlank

@@ -128,6 +128,18 @@ public class Prop
 		return "sk".equals(lng) ? "" : "_"+lng;
 	}
 
+	/**
+	 * Corrects known translation key typos when loading files or database overrides.
+	 *
+	 * @param key translation key, possibly including a domain or template prefix; may be null
+	 * @return corrected key, the original key if no correction applies, or null for null input
+	 */
+	public static String fixKeyTypo(String key)
+	{
+		if (key == null) return null;
+		return key.replace("components.mustistep.", "components.multistep.");
+	}
+
 	private synchronized void loadLanguageProp(String languageKey, String fileLng, boolean loadCustomizedTexts, ServletContext servletContext)
 	{
 		if (Tools.isEmpty(languageKey)) languageKey = "sk";
@@ -139,6 +151,7 @@ public class Prop
 			properties = getDefaulProperties(languageKey, fileLng, servletContext);
 			if (loadCustomizedTexts && InitServlet.isWebjetConfigured())
 			{
+				Set<String> loadedDbKeys = new HashSet<>();
 				new ComplexQuery().
 						setSql("SELECT * FROM " + ConfDB.PROPERTIES_TABLE_NAME + " WHERE lng = ? ORDER BY update_date ASC").
 						setParams(languageKey).
@@ -147,7 +160,14 @@ public class Prop
 							public Void map(ResultSet rs) throws SQLException{
 								String key = DB.getDbString(rs, "prop_key");
 								String value = DB.getDbString(rs, "prop_value");
-								if (key != null) key = key.trim();
+								if (key != null) {
+									key = key.trim();
+									String normalizedKey = fixKeyTypo(key);
+									// Prefer the corrected DB key regardless of update order, matching the migration.
+									if (key.equals(normalizedKey)==false && loadedDbKeys.contains(normalizedKey)) return null;
+									loadedDbKeys.add(key);
+									key = normalizedKey;
+								}
 								properties.setProperty(key, value);
 								return null;
 							}

@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.gallery;
 
+import sk.iway.iwcm.system.datatable.NotifyBean;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -72,6 +74,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             //in ImageEditor we don't get ID, but we get imagePath and imageName, so load entity by these values
             String imagePath = getRequest().getParameter("dir");
             String imageName = getRequest().getParameter("name");
+            checkImageAccess(imagePath);
 
             GalleryEntity entity = new GalleryEntity();
             if(Tools.isNotEmpty(imagePath) && Tools.isNotEmpty(imageName)) {
@@ -184,8 +187,13 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 
         if (rotateAngle!=0) {
             status = ImageTools.rotateImage(imageUrl, rotateAngle);
-            if (isGalleryFolder) {
-                GalleryDB.resizePicture(Tools.getRealPath(imageUrl), entity.getImagePath());
+            if (status == 0 && isGalleryFolder) {
+                status = GalleryDB.resizePicture(Tools.getRealPath(imageUrl), entity.getImagePath());
+            }
+            if (status != 0) {
+                addNotify(new NotifyBean(null, getProp().getText(ImageTools.getErrorKey(status)),
+                    NotifyBean.NotifyType.ERROR));
+                return false;
             }
         }
 
@@ -326,6 +334,20 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         setLastModified(entity.getImagePath()+"/"+entity.getImageName(), now);
         setLastModified(entity.getImagePath()+"/o_"+entity.getImageName(), now);
         setLastModified(entity.getImagePath()+"/s_"+entity.getImageName(), now);
+    }
+
+    private void checkImageAccess(String path) {
+        if (!getUser().isFolderWritable(path)) throw new IllegalArgumentException("Access is denied");
+    }
+
+    @Override
+    public boolean checkItemPerms(GalleryEntity entity, Long id) {
+        if (id != null && id > 0) {
+            GalleryEntity stored = repository.findById(id).orElse(null);
+            if (stored != null) checkImageAccess(stored.getImagePath());
+        }
+        if (entity != null) checkImageAccess(entity.getImagePath());
+        return super.checkItemPerms(entity, id);
     }
 
     private boolean isImageEditor() {

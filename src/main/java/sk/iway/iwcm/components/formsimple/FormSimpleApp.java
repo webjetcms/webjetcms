@@ -56,7 +56,8 @@ import sk.iway.iwcm.users.UsersDB;
 @DataTableTabs(tabs = {
         @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
         @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
-        @DataTableTab(id = "items", title = "components.news.items")
+        @DataTableTab(id = "items", title = "components.news.items"),
+        @DataTableTab(id = "fields", title = "editor.tab.fields")
 })
 @Getter
 @Setter

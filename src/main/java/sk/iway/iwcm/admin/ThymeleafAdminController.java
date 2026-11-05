@@ -77,6 +77,10 @@ public class ThymeleafAdminController {
       // @TODO: nepotrebujeme sem nejaku kontrolu URL parametrov?
       String forward = "admin/v9/dist/views/" + page + "/" + subpage;
 
+      if (FileTools.isFile("/" + forward + ".html") == false) {
+         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+      }
+
       //Logger.debug(ThymeleafAdminController.class, "Thymeleaf forward=" + forward);
 
       removePermissionFromCurrentUser(request);

@@ -1,5 +1,5 @@
 const { resolveVideoPlan } = require("./feature_video_plan.js");
-const { DEFAULT_MODEL_ID, getAudioSettings, getRequiredText } = require("./elevenlabs_client.js");
+const { getAudioSettings, getRequiredText } = require("./elevenlabs_client.js");
 
 // https://elevenlabs.io/docs/overview/models#character-limits
 const MODEL_CHARACTER_LIMITS = {
@@ -27,7 +27,7 @@ function normalizeNarration(text) {
 function resolveAudioPlan(input, options = {}) {
   const settings = getAudioSettings(options);
   const characterLimit = Object.hasOwn(MODEL_CHARACTER_LIMITS, settings.modelId)
-    ? MODEL_CHARACTER_LIMITS[settings.modelId] : MODEL_CHARACTER_LIMITS[DEFAULT_MODEL_ID];
+    ? MODEL_CHARACTER_LIMITS[settings.modelId] : MODEL_CHARACTER_LIMITS.eleven_v3;
   const legacy = typeof input === "string";
   const { language, shots } = legacy
     ? { language: null, shots: [{ id: "narration", narration: normalizeNarration(input) }] }

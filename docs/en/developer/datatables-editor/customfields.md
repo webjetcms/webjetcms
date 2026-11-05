@@ -112,7 +112,7 @@ For functionality, it is necessary that the given bean contains attributes named
 The configuration of optional fields consists of two sources:
 
 1. translation keys (`editor.field_x`, `editor.field_x.type`, ...),
-2. records from table `custom_fields`.
+2. records from table `dt_customfields`.
 
 When generating `fieldsDefinition` in `BaseEditorFields.getFields`, the priority is applied:
 
@@ -123,9 +123,9 @@ When generating `fieldsDefinition` in `BaseEditorFields.getFields`, the priority
 
 A higher level always overrides a lower one for the same field letter (`alphabet`).
 
-## Serialization of settings in `custom_fields.value`
+## Serialization of settings in `dt_customfields.value`
 
-Field type-specific settings are stored in the `custom_fields.value` column.
+Field type-specific settings are stored in the `dt_customfields.value` column.
 
 Formats used:
 
@@ -138,11 +138,11 @@ Formats used:
 - `enumeration_2_string1_string2` or `enumeration_2_string1_string2_null`
 - `json_group` /`json_doc` with optional suffix `_null`
 
-The transformation between the field editor and the internal value is provided by the `CustomFieldsService.toEntity` and `CustomFieldsService.fromEntity` methods.
+The transformation between the field editor and the internal value is provided by the `toEntity` and `fromEntity` methods of the [CustomFieldsService](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/rest/CustomFieldsService.java) class in the `sk.iway.iwcm.system.datatable.settings.customfields.rest` package.
 
 ## JSON Editor
 
-The `jsoneditor` type allows you to directly enter JSON values. In the [custom field settings](../../frontend/webpages/customfields/custom-fields-settings.md) select the **JSON Editor** type, or use translation keys:
+The `jsoneditor` type allows you to directly enter JSON values. In the [custom field settings](../../frontend/datatables/custom-fields-settings.md) select the **JSON Editor** type, or use translation keys:
 
 ```properties
 editor.field_a=JSON data
@@ -202,7 +202,7 @@ Example of supported extended notation:
 
 The extended notation is stored in its original form, including apostrophes and comments, except for the canonicalization of `<` and `>` characters. It is not automatically converted to strict JSON for `JSON.parse` ; the application processing the value must support the syntax used.
 
-For custom REST services derived from `DatatableRestControllerV2`, the translation keys for validation are derived from `@DataTableColumn.title` on attributes `fieldA` to `fieldZ`. The configuration context in table `custom_fields`, such as binding to a parent entity, is determined by an existing hook `getCustomFieldsSearchDto(T entity)`. The hook is based on server data and is evaluated for a specific record being stored.
+For custom REST services derived from `DatatableRestControllerV2`, the translation keys for validation are derived from `@DataTableColumn.title` on attributes `fieldA` to `fieldZ`. The configuration context in table `dt_customfields`, such as binding to a parent entity, is determined by an existing hook `getCustomFieldsSearchDto(T entity)`. The hook is based on server data and is evaluated for a specific record being stored.
 
 ### Database capacity
 
@@ -243,7 +243,7 @@ EDITOR.on('preSubmit', function (e, data, action) {
 });
 ```
 
-For type `autocomplete`, the request is sent to `/admin/FCKeditor/_editor_autocomplete.jsp` with parameters `className` and `objectId`. Therefore, the endpoint can prefer the configuration from `custom_fields` over the generic translation key.
+For type `autocomplete`, the request is sent to `/admin/FCKeditor/_editor_autocomplete.jsp` with parameters `className` and `objectId`. Therefore, the endpoint can prefer the configuration from `dt_customfields` over the generic translation key.
 
 For types `select` and `multiselect`, the format `label:value` is supported. If the value does not contain exactly one colon, the same text is used for both `label` and `value`.
 

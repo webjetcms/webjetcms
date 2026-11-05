@@ -8,7 +8,7 @@ If you are preparing a new website, you can prepare a website tree structure in 
 
 ## Exporting web pages
 
-First, make sure you are in the directory you want to export. Press the ![](import-export-button.png ":no-zoom") button and wait for the window to appear. For a standard content export, select the **Export web pages to ZIP archive (xml)** option in this window and start the export in the selected branch of the site tree with the button with the text **OK**.
+First, make sure you are in the directory you want to export. Open the **More Actions** menu and select **Import/Export**. For a standard content export, select the **Export web pages to ZIP archive (xml)** option in this window and start the export in the selected branch of the site tree with the button with the text **OK**.
 
 The output should look similar to the following image. At the very end of the output, you will see a link to a downloadable ZIP file. You will download the file to your computer. You can then use this file to import it into another CMS WebJET environment.
 
@@ -16,7 +16,7 @@ The output should look similar to the following image. At the very end of the ou
 
 ## Importing websites from a ZIP archive
 
-First, make sure you are in the directory where you want to apply the import. Press the ![](import-export-button.png ":no-zoom") button and wait for the window to appear. In the window, select the **Import website from ZIP archive (xml)** option and press the **OK** button. You will be prompted to upload the ZIP file, which should be in the same state as when it was exported via the **Export website to ZIP archive (xml)** option. Any experimentation with its contents may result in the import not working properly, resulting in damage to the resulting website content.
+First, make sure you are in the directory where you want to apply the import. Open the **More Actions** menu and select **Import/Export**. In the window, select the **Import website from ZIP archive (xml)** option and press the button with the text **OK**. You will be prompted to upload the ZIP file, which should be in the same state as when it was exported via the **Export website to ZIP archive (xml)** option. Any experimentation with its contents may result in the import not working properly, resulting in damage to the resulting website content.
 
 You also have the option to select the value **Synchronize pages by**, which determines which parameter will be used to check whether the page already exists or not.
 You have the following options:
@@ -65,7 +65,7 @@ The images and files used on the website are also exported. If the Banner System
 
 ## Import structure from Excel file
 
-Before importing, make sure you are in the directory where you want to apply the import. Press the ![](import-export-button.png ":no-zoom") button and wait for the window to appear. In the window, select the **Import structure from Excel file** option and press the **OK** button. You will see the import settings, which will prompt you to enter the `XLS` file with the structure. Remember that **the file must be of type XLS**. It cannot be of type `XLSX` or `XLSM`, only XLS. You can download the [sample file](import_struct.xls). Other import options are also available:
+Before importing, make sure you are in the directory where you want to apply the import. Open the **More actions** menu and select **Import/Export**. In the window, select the **Import structure from Excel file** option and press the **OK** button. You will see the import settings, which will prompt you to enter the `XLS` file with the structure. Remember that **the file must be of type XLS**. It cannot be of type `XLSX` or `XLSM`, only XLS. You can download the [sample file](import_struct.xls). Other import options are also available:
 
 - ID of the folder where the files are imported, this option will be preset according to the previously selected folder, but it can still be changed (change the destination folder)
 - Set priority by level - the sorting priority is set according to the nesting in the tree structure, the deeper the page is, the higher the priority number will be. This is important when searching and sorting results by priority, so that pages at a lower level are earlier in the search results - it is assumed that a section page is more important than its sub-page.

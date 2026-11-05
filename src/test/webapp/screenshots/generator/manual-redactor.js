@@ -85,16 +85,25 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.say("zobrazenie poctu zaznamov");
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-page-length");
-    I.waitForElement("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]", 10);
+    const pageLengthDialog = container + " button.buttons-page-length ~ div.dt-button-collection";
+    I.waitForVisible(pageLengthDialog);
 
     Document.screenshot("/redactor/datatables/dt-pagelength.png");
 
-    I.click("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu] button.dt-close-modal")
+    I.clickCss(pageLengthDialog + " button.dt-close-modal");
+    I.waitForInvisible(pageLengthDialog);
 
     I.say("specialne ikony");
     I.click("button.buttons-select-all");
     Document.screenshotElement("button.buttons-history-preview", "/redactor/webpages/icon-preview.png");
     Document.screenshotElement("div.buttons-recursive", "/redactor/webpages/icon-recursive.png");
+
+    I.say("More actions menu");
+    I.clickCss(container + " button.buttons-more-actions");
+    I.waitForVisible(container + " .dt-more-actions-menu");
+    Document.screenshot("/redactor/webpages/more-actions.png");
+    I.pressKey("Escape");
+    I.waitForInvisible(container + " .dt-more-actions-menu");
 
     I.say("specialne ikony");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=263");
@@ -721,6 +730,7 @@ Scenario('jstree-settings', ({ I, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.click("button.buttons-jstree-settings");
     I.waitForElement("#jstreeSettingsModal");
+    I.waitForVisible("#jstree-settings-showid", 10);
     I.checkOption("#jstree-settings-showid");
     I.checkOption("#jstree-settings-showorder");
     I.checkOption("#jstree-settings-showpages");
@@ -734,7 +744,8 @@ Scenario('jstree-settings', ({ I, DTE, Document }) => {
 
     Document.screenshot("/redactor/webpages/jstree-settings.png");
 
-    DTE.cancel();
+    I.click('#jstreeSettingsModal .btn-close-editor');
+    I.waitForInvisible('#jstreeSettingsModal', 10);
 
     I.jstreeReset();
 });

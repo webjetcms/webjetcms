@@ -7,11 +7,14 @@ const news = '.md-dashboard__news';
 const toggle = '.md-dashboard-widget__news-toggle';
 const title = '.md-dashboard-widget__news-title';
 const preferenceRoute = '**/admin/rest/admin-settings/';
+const socialNewsRoute = '**/wjnews.*.json';
 
 Before(async ({ I, login }) => {
     login('admin');
+    await I.stopMockingRoute(preferenceRoute);
+    await I.stopMockingRoute(socialNewsRoute);
     await I.mockRoute(preferenceRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: 'true' }));
-    await I.mockRoute('**/wjnews.*.json', route => route.fulfill({ status: 200, contentType: 'application/json',
+    await I.mockRoute(socialNewsRoute, route => route.fulfill({ status: 200, contentType: 'application/json',
         headers: { 'Access-Control-Allow-Origin': '*' }, body: '{"news":[]}' }));
     await I.amOnPage('/admin/v9/');
     await I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
@@ -167,4 +170,10 @@ Scenario('Expansion acknowledges release news in both dashboard and Help until i
     await I.assertEqual(writes.length, 2);
     await I.assertTrue(JSON.parse(writes[0].value).fingerprint !== JSON.parse(writes[1].value).fingerprint);
     await I.refreshPage();
+});
+
+Scenario('Remove dashboard news mocks', async ({ I }) => {
+    // Routes belong to the shared browser context and otherwise affect later features.
+    await I.stopMockingRoute(socialNewsRoute);
+    await I.stopMockingRoute(preferenceRoute);
 });

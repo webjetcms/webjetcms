@@ -166,6 +166,9 @@ fi
 if [[ "$COPY_LOCAL_FILES" == true ]]; then
     echo "Copying local configuration, plugin and font files, and AI models"
     cp "$LOCAL_FILES_SOURCE"/src/main/resources/*.xml "$WORKTREE_PATH/src/main/resources/"
+    if [[ -f "$LOCAL_FILES_SOURCE/src/main/webapp/localconf.jsp" ]]; then
+        cp "$LOCAL_FILES_SOURCE/src/main/webapp/localconf.jsp" "$WORKTREE_PATH/src/main/webapp/"
+    fi
     cp "$LOCAL_FILES_SOURCE"/src/main/webapp/admin/v9/src/js/plugins/*.zip \
         "$WORKTREE_PATH/src/main/webapp/admin/v9/src/js/plugins/"
     mkdir -p "$WORKTREE_PATH/src/main/webapp/WEB-INF/fonts"
@@ -229,7 +232,6 @@ if (!fs.existsSync(workspaceFile)) {
                     reveal: 'always',
                     focus: false,
                     panel: 'dedicated',
-                    group: 'webjetcms-worktree',
                     echo: false,
                     showReuseMessage: false
                 }

@@ -278,6 +278,7 @@ module.exports = {
             I.clickCss(".btn-close-editor")
 
             Document.switchDomain(switchDomainName);
+            I.waitForVisible("#" + options.id + "_wrapper .dt-scroll-headInner", 30);
             DT.filterContains(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
 
             const itsThereIfFoundByName = await I.grabNumberOfVisibleElements(locate('a').withText( `${testingData[0]}${CHANGE_TEXT}`));
@@ -296,6 +297,8 @@ module.exports = {
 
             I.say("Go back to previous domain");
             Document.switchDomain(previousSelectedDomain);
+            // The processing indicator can be absent while the new page is still initializing.
+            I.waitForVisible("#" + options.id + "_wrapper .dt-scroll-headInner", 30);
 
             I.assertNotContain(response, `${testingData[0]}${CHANGE_TEXT}`, 'Error I found value in REST API call from domain');
 
@@ -380,6 +383,7 @@ module.exports = {
         //pause();
         let rows = await I.getTotalRows();
         I.assertAbove(rows+1, 3, "Nedostatocny pocet audit zaznamov");
+        let expectedUpdateFound = false;
         for (let rowIndex = 1; rowIndex <= rows; rowIndex++){
             const descriptionRow = await I.grabTextFrom(`#datatableInit  tr:nth-child(${rowIndex}) > td.dt-row-edit`);
             I.clickCss(`#datatableInit  tr:nth-child(${rowIndex}) > td.dt-row-edit`);
@@ -395,9 +399,12 @@ module.exports = {
                 I.assertTrue(detailText.includes("UPDATE:"), 'UPDATE záznam neobsahuje úvodný riadok "UPDATE:"');
                 if (detailText.includes("prop_key: ")){
                     I.assertTrue(detailText.includes(description), `UPDATE záznam neobsahuje očakávaný riadok: ${description}`);
+                    expectedUpdateFound = true;
                 } else {
                     const expectedLine = `${description} -> ${description}-chan.ge`;
-                    I.assertTrue(( detailText.includes(expectedLine)), `UPDATE záznam neobsahuje očakávaný riadok: ${expectedLine}`);
+                    // Duplication may also update translation keys; require the rename across the records.
+                    I.assertTrue(detailText.includes(description), `UPDATE záznam neobsahuje očakávaný name: ${description}`);
+                    if (detailText.includes(expectedLine)) expectedUpdateFound = true;
                 }
             } else if (descriptionRow.includes('DELETE:')){
                 I.say("Overujem DELETE záznam...");
@@ -410,6 +417,7 @@ module.exports = {
             }
             DTE.cancel();
         }
+        I.assertTrue(expectedUpdateFound, `Chýba UPDATE záznam pre zmenu: ${description} -> ${description}-chan.ge`);
         I.wjSetDefaultWindowSize();
     },
 

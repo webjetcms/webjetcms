@@ -3,6 +3,20 @@
 
 The [datatables.net](http://datatables.net) library is an advanced table with connections to REST services.
 
+## System settings
+
+Java classes for datatable settings are in the `sk.iway.iwcm.system.datatable.settings` package:
+
+| Subpackage | Database table | Purpose |
+| --- | --- | --- |
+| [`customfields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/) | `dt_customfields` | Configuration and validation of optional fields. |
+| [`fields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/fields/) | `dt_fields` | Field and column property settings. |
+| [`tabs`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/tabs/) | `dt_tabs` | Editor tab settings. |
+
+Each subpackage contains `jpa` for entities and repositories and `rest` for services and REST controllers. When using these classes in your own code or templates, update the imports and full class names to the packages listed.
+
+The original table `custom_fields` will be automatically renamed to `dt_customfields` during the update, preserving the data. Custom SQL queries must use the new table name.
+
 ## Basic initialization in collaboration with Spring REST
 
 The WebJET implementation of datatables is configured using the JSON object columns. This object contains the definition of columns for both the datatable and the datatables editor. The table is then initialized using the WJ.DataTable constructor.
@@ -384,6 +398,27 @@ The following calls can be used in the `init` function:
 - `$.fn.dataTable.Buttons.showIfRowSelected(this, dt);` - ​​button is active only if at least one row is selected
 - `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - ​​button is active only if no row is selected
 - `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - ​​button is active only if exactly one row is selected
+
+## Menu Other events
+
+You can add less common actions to the **More actions** menu using `table.addMoreAction(config)` or the `moreActions` field in the `WJ.DataTable` settings. The menu is created only when the first action is added and appears on the right in settings and data refresh. The implementation is separated in `npm_packages/webjetdatatables/more-actions.js`.
+
+The configuration uses the standard DataTables button properties. Enter the icon in `text`, the translated name that will appear next to the icon in `attr.title`. `action`, `init` and activation by row selection are preserved:
+
+```javascript
+table.addMoreAction({
+    text: '<i class="ti ti-tag-plus" aria-hidden="true"></i>',
+    attr: { title: WJ.translate('my.action.js'), 'data-dtbtn': 'myAction' },
+    init: function(dt) {
+        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+    },
+    action: function() {
+        table.executeAction('myAction');
+    }
+});
+```
+
+Use `table.hideButton('myAction')` and `table.showButton('myAction')` to hide and show items. They also work for a closed menu whose items are not attached to the DOM. The menu will hide when it has no displayed item. Verify permissions before adding an item and again on the server when performing the action.
 
 ## Button for performing a server action
 

@@ -497,6 +497,7 @@ public class AtrDB
                       "FROM documents d, doc_atr_def dad ").append(
                       "LEFT JOIN doc_atr da ON da.atr_id = dad.atr_id ").append(
                       "WHERE d.doc_id=da.doc_id AND d.available="+DB.getBooleanSql(true)+" ");
+         List<Object> groupParameters = new ArrayList<>();
          if (group!=null)
          {
          	if (group.indexOf('%')!=-1)
@@ -507,12 +508,12 @@ public class AtrDB
          	{
          		group = DB.removeSlashes(group);
          		StringTokenizer st = new StringTokenizer(group, ",");
-         		sql.append("AND dad.atr_group IN ('").append(st.nextToken()).append('\'');
+               List<String> groupNames = new ArrayList<>();
          		while (st.hasMoreTokens())
          		{
-         			sql.append(", '").append(st.nextToken()).append('\'');
+                  groupNames.add(st.nextToken());
          		}
-         		sql.append(") ");
+               sql.append("AND ").append(DB.getInCondition("dad.atr_group", groupNames, groupParameters)).append(" ");
          		group = null;
          	}
          	else
@@ -523,7 +524,7 @@ public class AtrDB
 
          if (dirs!=null)
          {
-            sql.append("AND d.group_id IN (").append(dirs).append(") ");
+            sql.append("AND ").append(DB.getInCondition("d.group_id", dirs)).append(" ");
          }
 
          String sqlWhere = (String)request.getAttribute("getAtributesTableSqlWhere");
@@ -543,6 +544,10 @@ public class AtrDB
          if (group!=null)
          {
             ps.setString(1, group);
+         }
+         for (int i = 0; i < groupParameters.size(); i++)
+         {
+            ps.setString(i + 1, (String) groupParameters.get(i));
          }
          rs = ps.executeQuery();
          AtrBean atr = null;

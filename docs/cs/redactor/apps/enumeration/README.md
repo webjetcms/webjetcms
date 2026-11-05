@@ -36,7 +36,7 @@ Strukturu dat si tak můžete definovat pro každý číselník zvlášť. Můž
 
 ### Karta Typy řetězcových polí
 
-Po prvním uložení typu číselníku se zobrazí karta **Typy řetězcových polí**. Umožňuje rozšířit pojmenovaná pole z karty **Řetězce** o nastavení známá z [volitelných polí](../../../frontend/webpages/customfields/custom-fields-settings.md), například o výběrové pole, výběr více možností, automatické doplňování, propojení na jiný číselník nebo výběr obrázku, odkaz.
+Po prvním uložení typu číselníku se zobrazí karta **Typy řetězcových polí**. Umožňuje rozšířit pojmenovaná pole z karty **Řetězce** o nastavení známá z [volitelných polí](../../../frontend/datatables/custom-fields-settings.md), například o výběrové pole, výběr více možností, automatické doplňování, propojení na jiný číselník či výběr obrázku, odkazu, složky.
 
 ![](editor_stringFieldTypes.png)
 
@@ -52,7 +52,7 @@ Pro každé pole lze nastavit:
 
 Bez specifické konfigurace se pojmenované řetězcové pole zobrazí jako běžné textové pole s maximální délkou 1024 znaků. Nepojmenovaná řetězcová pole se v datech číselníku ani v možnostech konfigurace nezobrazí.
 
-!> **Upozornění:** číselníky zatím nejsou rozděleny podle zvolené domény, proto se nastavení volitelných polí (typy řetězcových polí) vždy ukládají do hlavní domény. V sekci [Volitelná pole](../../../frontend/webpages/customfields/custom-fields-settings.md) se tato nastavení zobrazí pouze v hlavní doméně. Doporučujeme je nastavovat a upravovat vždy na kartě **Typy řetězcových polí**.
+!> **Upozornění:** číselníky zatím nejsou rozděleny podle zvolené domény, proto se nastavení volitelných polí (typy řetězcových polí) vždy ukládají do hlavní domény. V sekci [Volitelná pole](../../../frontend/datatables/custom-fields-settings.md) se tato nastavení zobrazí pouze v hlavní doméně. Doporučujeme je nastavovat a upravovat vždy na kartě **Typy řetězcových polí**.
 
 !> **Upozornění na zpětnou kompatibilitu:** datové atributy řetězcových polí se změnily z `string1` až `string12` na `fieldA` až `fieldL`. Ve vlastních nebo starších šablonách aplikace Excel pro import dat číselníku musíte kódové názvy v hlavičce ručně upravit, například `Mesto|string1` na `Mesto|fieldA`. Stejné názvy `fieldA` až `fieldL` používejte iv integracích REST API, které zpracovávají data číselníků. Databázové sloupce `string1` až `string12` zůstávají nezměněny.
 

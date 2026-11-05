@@ -47,6 +47,7 @@ script.
 // Serialize user settings as a JavaScript string so stored text cannot close the script element.
 script(data-th-inline="javascript").
     window.currentUser = JSON.parse(/*[[${layout.userDto}]]*/ "{}");
+    window.webPagesEditorTabs = JSON.parse(/*[[${layout.getDataTableTabs('sk.iway.iwcm.doc.DocDetails')}]]*/ "[]");
     window.adminHelpContext = {
         documentationBaseUrl: /*[[${layout.documentationBaseUrl}]]*/ "",
         announcement: /*[[\#{admin.overview.changelog}]]*/ "",

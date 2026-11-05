@@ -240,9 +240,8 @@ public class SendMail
 		//oprav linky
 		message = SendMail.createAbsolutePath(message, baseHref);
 
-		Properties props = System.getProperties();
+		Properties props = new Properties();
 		props.put("mail.smtp.host", Constants.getString("smtpServer"));
-        props.put("mail.mime.charset", SetCharacterEncodingFilter.getEncoding());
 
 		Session ms = getSession(props);
 
@@ -309,7 +308,7 @@ public class SendMail
 
 			if (Tools.isNotEmpty(senderEmail))
 			{
-				mes.setFrom(new InternetAddress(senderEmail, senderName));
+				mes.setFrom(new InternetAddress(senderEmail, senderName, SetCharacterEncodingFilter.getEncoding()));
 			}
 			else
 			{
@@ -1157,14 +1156,15 @@ public class SendMail
 	/**
 	 * Creates a mail session using the configured SMTP or Amazon SES settings.
 	 *
-	 * The supplied properties are enriched with transport, timeout, security, and
-	 * authentication settings as applicable.
+	 * A copy of the supplied application-local properties is enriched with transport,
+	 * timeout, security, and authentication settings. Each call creates a new session.
 	 *
-	 * @param props base mail properties to configure
+	 * @param props application-local base mail properties, left unchanged
 	 * @return configured mail session
 	 */
 	public static Session getSession(Properties props)
 	{
+		props = (Properties) props.clone();
 		if (Constants.getBoolean("useAmazonSES")==false) {
 			String port = "25";
 			if (Tools.isNotEmpty(Constants.getString("smtpPort")))
@@ -1239,9 +1239,9 @@ public class SendMail
 
 					if(Tools.isNotEmpty(Constants.getString("amazonEmailServiceHost"))) props.put("mail.aws.host", Constants.getString("amazonEmailServiceHost"));
 
-					ms = Session.getDefaultInstance(props,null);
+					ms = Session.getInstance(props,null);
 		} else {
-			ms = Session.getDefaultInstance(props,null);
+			ms = Session.getInstance(props,null);
 		}
 		return ms;
 	}

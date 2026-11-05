@@ -401,7 +401,7 @@ public class InitServlet extends HttpServlet
 				{
 					Logger.println(InitServlet.class,"Verifying license, please wait...");
 					String pDocRoot = URLEncoder.encode(servletContext.getRealPath("/")+";"+dbName+";"+getInitParameter("installName", databaseValues, servletContext), "windows-1250");
-					String urlStr = "http://license.interway.sk/verify.do?id=" + num + "&sdt=" + l_now + "&docRoot=" + pDocRoot;
+					String urlStr = "https://license.interway.sk/verify.do?id=" + num + "&sdt=" + l_now + "&docRoot=" + pDocRoot;
 					//System.out.println(urlStr);
 					URL url = new URL(urlStr);
 

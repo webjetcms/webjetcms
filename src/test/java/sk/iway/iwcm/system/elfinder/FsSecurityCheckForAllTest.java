@@ -8,12 +8,14 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 @Execution(ExecutionMode.SAME_THREAD)
@@ -73,6 +75,26 @@ class FsSecurityCheckForAllTest extends BaseWebjetTest {
         FsSecurityCheckForAll security = new FsSecurityCheckForAll();
         security.setWritable(true);
         return security;
+    }
+
+    /** Planned files and directories share the target folder permissions for reading and writing. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void checksPlannedFolderPermissions(boolean directory) throws Exception {
+        String path = "/files/protected/planned-changes/42/images/products" + (directory ? "" : "/photo.jpg");
+        IwcmFsItem item = item(path);
+        when(item.getFile().isDirectory()).thenReturn(directory);
+        Identity user = new Identity();
+        user.setAdmin(true);
+        user.setWritableFolders("/images/products/");
+        try (var service = mockStatic(FsService.class)) {
+            service.when(FsService::getCurrentUser).thenReturn(user);
+            FsSecurityCheckForAll security = writableSecurity();
+            assertTrue(security.isWritable(fsService(FsService.TYPE_FILES), item));
+            assertTrue(security.isReadable(fsService(FsService.TYPE_FILES), item));
+            user.setWritableFolders("/images/other/");
+            assertFalse(security.isWritable(fsService(FsService.TYPE_FILES), item));
+        }
     }
 
     private FsService fsService(int selectedType) {

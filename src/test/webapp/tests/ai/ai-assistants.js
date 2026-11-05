@@ -355,7 +355,7 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
     I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
     await checkImageOptions(I, {
         count: true,
-        size: ["auto", "1024x1024", "1024x1536", "1536x1024"],
+        size: ["auto", "1024x1024", "1024x1536", "1536x1024", "2048x2048", "2048x1152", "3840x2160", "2160x3840"],
         quality: ["auto", "low", "medium", "high"],
         ratio: false
     });
@@ -368,6 +368,34 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
     checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openAiId, "ti.ti-photo-ai", true);
     waiToEndImage(I, true);
     checkImages(I, 2);
+});
+
+Scenario('Image HTTP errors leave the working state and allow another request', async ({I, DTE}) => {
+    const routePattern = '**/admin/rest/ai/assistant/response-image/';
+    const errorText = 'autotest image gateway failure';
+    let requests = 0;
+    await I.mockRoute(routePattern, route => {
+        requests++;
+        return route.fulfill({ status: 504, contentType: 'application/json', body: JSON.stringify({ error: errorText }) });
+    });
+    try {
+        openPageAndPerexTab(I, DTE);
+        startAssistant(I, "perexImage", "Vytvoriť nový obrázok", geminiId);
+        I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "autotest image");
+        for (let attempt = 0; attempt < 2; attempt++) {
+            I.click(locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")));
+            await I.waitForVisible('#toast-container-ai.ai-status-error', 10);
+            I.assertEqual(requests, attempt + 1, 'Retry must send a new request');
+            I.see(errorText, containerAiContent);
+            I.dontSeeElement('#toast-container-ai.ai-status-working');
+            I.dontSeeElement('#toast-container-ai .btn-ai-stop');
+            I.dontSeeElement('.DTE_Field_Name_perexImage.ai-loading');
+        }
+        I.clickCss('#toast-container-ai .toast-close-button');
+        DTE.cancel();
+    } finally {
+        await I.stopMockingRoute(routePattern);
+    }
 });
 
 Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {

@@ -173,7 +173,8 @@ const videoPlan = {
 
 Scenario("ElevenLabs", ({ I }) => {
     I.generateAudio(videoPlan, {
-        modelId: "eleven_multilingual_v2"
+        modelId: "eleven_multilingual_v2",
+        languageCode: null
     });
 }).tag("@audio");
 

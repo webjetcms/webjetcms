@@ -23,7 +23,8 @@ Scenario('basic-test stranky', async ({I, DT}) => {
     //Try redirect from web-page-list using button
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
     DT.waitForLoader();
-    I.clickCss("#datatableInit_wrapper > div.dt-header-row.clearfix.wp-header > div > div.col-auto > div > button.btn.btn-sm.btn-outline-secondary.buttons-linkcheck");
+    I.clickCss("#datatableInit_wrapper button.buttons-more-actions");
+    I.clickCss("button.buttons-linkcheck");
 
     DT.waitForLoader();
     I.see("/Test stavov/Test linkcheck");

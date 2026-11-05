@@ -6,6 +6,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 import jakarta.persistence.*;
@@ -28,6 +30,10 @@ import java.util.Date;
 @Table(name = "cache")
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_PERSISTENT_CACHE)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "descriptionTab", title = "components.memory_cleanup.persistent_cache_objects.description_tab", selected = true, content = "<div></div>"),
+    @DataTableTab(id = "basicTab", title = "components.memory_cleanup.persistent_cache_objects.basic_tab")
+})
 public class PersistentCacheBean extends ActiveRecordRepository implements Serializable {
     private static final long serialVersionUID = -1L;
 

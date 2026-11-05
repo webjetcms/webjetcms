@@ -55,14 +55,16 @@ public class EditorServiceTest extends BaseWebjetTest {
         doc.setVirtualPath("");
     }
 
+    private String numberedPath(String expectedPath, long count) {
+        if (Constants.getBoolean("virtualPathLastSlash")==false) return Tools.replace(expectedPath, "/test-junit-page", "/test-junit-page-"+count);
+        if ("/".equals(Constants.getString("editorPageExtension"))) return Tools.replace(expectedPath, "/test-junit-page/", "/test-junit-page-"+count+"/");
+        return Tools.replace(expectedPath, ".html", "-"+count+".html");
+    }
+
     private void testAnotherDoc(DocDetails doc, GroupDetails rootGroup, String expectedPath, long count) {
-        String url;
         cleanDoc(doc);
         editorService.setVirtualPath(doc);
-
-        if (Constants.getBoolean("virtualPathLastSlash")==false) url = Tools.replace(expectedPath, "/test-junit-page", "/test-junit-page-"+count);
-        else if ("/".equals(Constants.getString("editorPageExtension"))) url = Tools.replace(expectedPath, "/test-junit-page/", "/test-junit-page-"+count+"/");
-        else url = Tools.replace(expectedPath, ".html", "-"+count+".html");
+        String url = numberedPath(expectedPath, count);
 
         if (count > 990) {
             String now = (""+Tools.getNow());
@@ -82,7 +84,7 @@ public class EditorServiceTest extends BaseWebjetTest {
         docDBForTest.addUrlToInternalCache(doc, rootGroup);
     }
 
-    private void testUrls(int maxCount) {
+    private void testUrls(boolean testConflictLimit) {
         String expectedPath = "/test-stavov/test-junit-page.html";
         String rootPath = "/test-stavov/";
         if (Constants.getBoolean("virtualPathLastSlash")==false) {
@@ -120,9 +122,18 @@ public class EditorServiceTest extends BaseWebjetTest {
         //insert it into docDB
         docDBForTest.addUrlToInternalCache(doc, rootGroup);
 
-        //create another page with the same title
-        for (long i=0; i<maxCount; i++) {
-            testAnotherDoc(doc, rootGroup, expectedPath, i+2);
+        testAnotherDoc(doc, rootGroup, expectedPath, 2);
+        testAnotherDoc(doc, rootGroup, expectedPath, 3);
+
+        if (testConflictLimit) {
+            // Seed intermediate collisions directly to avoid repeating the entire URL search for each page.
+            for (long count=4; count<990; count++) {
+                cleanDoc(doc);
+                doc.setVirtualPath(numberedPath(expectedPath, count));
+                docDBForTest.addUrlToInternalCache(doc, rootGroup);
+            }
+            testAnotherDoc(doc, rootGroup, expectedPath, 990);
+            testAnotherDoc(doc, rootGroup, expectedPath, 991);
         }
 
         rootGroup.setDefaultDocId(defaultDocId);
@@ -136,15 +147,15 @@ public class EditorServiceTest extends BaseWebjetTest {
     @Order(1)
     public void testSetVirtualPath() {
         Constants.setString("editorPageExtension", ".html");
-        testUrls(1500);
+        testUrls(true);
 
         Constants.setString("editorPageExtension", "/");
-        testUrls(2);
+        testUrls(false);
 
         Constants.setString("editorPageExtension", "/");
         Constants.setBoolean("virtualPathLastSlash", false);
 
-        testUrls(2);
+        testUrls(false);
     }
 
     /**

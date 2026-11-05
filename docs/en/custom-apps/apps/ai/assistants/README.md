@@ -308,3 +308,17 @@ Important methods:
 - `getAiImageResponse` – returns an image response
 - `getAiStreamResponse` – streams text response via `BufferedWriter`
 - `getBonusHtml` – returns additional fields supported by the selected image model
+
+### Transferring the ongoing response to the administration
+
+The administration calls `POST /admin/rest/ai/assistant/response-stream/` with the header `Accept: application/x-ndjson`. The server sends separate JSON messages separated by a newline:
+
+```json
+{"type":"delta","text":"Prvá časť odpovede.\n"}
+{"type":"delta","text":"Pokračovanie odpovede."}
+{"type":"result","result":{"response":"Prvá časť odpovede.\nPokračovanie odpovede.","totalTokens":42,"error":null,"tempFiles":[],"generatedFileName":null}}
+```
+
+The `delta` messages contain only the generated text. The final message `result` contains `AssistantResponseDTO` including token consumption and any errors. The client composes incomplete lines between network blocks and also processes multiple messages in one block. The response is considered successful only after the final message is received without errors and the transmission is completed.
+
+Without an explicit requirement for `application/x-ndjson`, the original format `text/plain` remains for older clients. CMS adapters continue to write plain text to `BufferedWriter` ; message separation is provided by `AssistantController`, without changing the library interface `webjet-ai`.

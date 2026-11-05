@@ -112,7 +112,7 @@ test("generates numbered parts sequentially, logs their exact text and reports t
     const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
     const scenario = createAudioTest("/project/video/long.js");
     registerAudioTest(helper, scenario);
-    assert.deepEqual(await helper.generateAudio(plan), expectedPaths);
+    assert.deepEqual(await helper.generateAudio(plan, { modelId: "eleven_v3" }), expectedPaths);
     assert.deepEqual(texts, plan.shots.map(shot => shot["text-sk"]));
     assert.deepEqual(scenario.artifacts, Object.fromEntries(expectedPaths.map((file, index) => [`audio-${index + 1}`, file])));
     assert.deepEqual((await fs.readdir(outputDirectory)).sort(), expectedPaths.map(file => path.basename(file)));
@@ -132,7 +132,7 @@ test("rejects an oversized later shot before any API call or output write", asyn
     global.fetch = async () => { requests++; throw new Error("No API calls expected"); };
     const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
     registerAudioTest(helper, createAudioTest("/project/video/long.js"));
-    await assert.rejects(helper.generateAudio(plan), /Shot third has 5001 characters/);
+    await assert.rejects(helper.generateAudio(plan, { modelId: "eleven_v3" }), /Shot third has 5001 characters/);
     assert.equal(requests, 0);
     assert.deepEqual(await fs.readdir(outputDirectory), []);
   });
@@ -168,7 +168,7 @@ test("stops at a failed part without retrying and preserves completed and previo
       ? successfulResponse("new first part") : new Response("Generation failed", { status: 500 }));
     const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
     registerAudioTest(helper, createAudioTest("/project/video/long.js"));
-    await assert.rejects(helper.generateAudio(createLongPlan()), /Audio part 2\/3 \(long-sk-2\.mp3\).*HTTP 500/);
+    await assert.rejects(helper.generateAudio(createLongPlan(), { modelId: "eleven_v3" }), /Audio part 2\/3 \(long-sk-2\.mp3\).*HTTP 500/);
     assert.equal(requests, 2);
     assert.deepEqual(await Promise.all(paths.map(file => fs.readFile(file, "utf8"))), ["new first part", "previous audio", "previous audio"]);
     assert.deepEqual((await fs.readdir(outputDirectory)).sort(), paths.map(file => path.basename(file)));
@@ -200,7 +200,7 @@ test("generates the default MP3 request and registers the scenario-file artifact
   const lines = [];
   t.mock.method(console, "log", line => lines.push(line));
   await withOutputDirectory(async (outputDirectory) => {
-    assert.equal(DEFAULT_MODEL_ID, "eleven_v3");
+    assert.equal(DEFAULT_MODEL_ID, "eleven_v4");
     process.env.ELEVENLABS_API_KEY = "  test-api-key  ";
     process.env.ELEVENLABS_MODEL_ID = "   ";
     process.env.ELEVENLABS_VOICE_ID = "";
@@ -242,12 +242,14 @@ test("generates the default MP3 request and registers the scenario-file artifact
     assert.ok(requests[0].options.signal instanceof AbortSignal);
     assert.deepEqual(JSON.parse(requests[0].options.body), {
       text: "First line.\nSecond line.",
-      model_id: DEFAULT_MODEL_ID
+      model_id: DEFAULT_MODEL_ID,
+      language_code: "sk",
+      voice_settings: { stability: 0.3, similarity_boost: 0.5 }
     });
     assert.equal(
       Object.hasOwn(JSON.parse(requests[0].options.body), "voice_settings"),
-      false,
-      "The request must leave ElevenLabs voice settings unchanged"
+      true,
+      "The request must include the repository narration defaults"
     );
   });
 });
@@ -319,6 +321,13 @@ test("rejects invalid voice and language overrides before network calls or outpu
     assert.deepEqual(getAudioSettings({ voiceSettings: { stability: 0, similarityBoost: 1 } }).voiceSettings,
       { stability: 0, similarityBoost: 1 });
     assert.deepEqual(getAudioSettings({ voiceSettings: {} }), getAudioSettings());
+    assert.deepEqual(getAudioSettings({ modelId: "eleven_multilingual_v2", languageCode: null, voiceSettings: null }), {
+      modelId: "eleven_multilingual_v2", voiceId: DEFAULT_VOICE_ID
+    });
+    assert.deepEqual(getAudioSettings({ languageCode: "en", voiceSettings: { stability: 0.7 } }), {
+      modelId: "eleven_v4", voiceId: DEFAULT_VOICE_ID, languageCode: "en",
+      voiceSettings: { stability: 0.7, similarityBoost: 0.5 }
+    });
   });
 });
 
@@ -386,7 +395,9 @@ test("prefers helper overrides over environment settings", async () => {
     assert.equal(new URL(request.url).pathname, "/v1/text-to-speech/explicit%2Fvoice");
     assert.deepEqual(JSON.parse(request.options.body), {
       text: "Narration",
-      model_id: "explicit-model"
+      model_id: "explicit-model",
+      language_code: "sk",
+      voice_settings: { stability: 0.3, similarity_boost: 0.5 }
     });
   });
 });
@@ -397,7 +408,9 @@ test("uses non-empty environment settings before defaults", () => {
 
   assert.deepEqual(getAudioSettings(), {
     modelId: "environment-model",
-    voiceId: "environment-voice"
+    voiceId: "environment-voice",
+    languageCode: "sk",
+    voiceSettings: { stability: 0.3, similarityBoost: 0.5 }
   });
   assert.throws(
     () => getAudioSettings({ modelId: " " }),

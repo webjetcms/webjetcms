@@ -161,7 +161,7 @@ Scenario('zobrazenie web stranok-rozbalenie @singlethread', ({ I }) => {
     I.say("cisty stav");
     setSettings(I);
     I.dontSeeElement("#docId-9768_anchor");
-    I.see("Podadresár A", "#SomStromcek");
+    I.waitForText("Podadresár A", 10, "#SomStromcek");
     I.see("Test rozbalenia podadresarov", "#datatableInit");
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit")
 
@@ -171,7 +171,7 @@ Scenario('zobrazenie web stranok-rozbalenie @singlethread', ({ I }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.waitForElement("#docId-9768_anchor");
-    I.see("Podadresár A", "#SomStromcek");
+    I.waitForText("Podadresár A", 10, "#SomStromcek");
     I.see("Test rozbalenia podadresarov", "#datatableInit");
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit")
 });
@@ -397,8 +397,8 @@ Scenario('Slash in group name @singlethread', ({ I, DT, DTE }) => {
 
     I.amOnPage("/test-stavov/lomka-nazve/");
 
-    //there was no other way to do this except by this script, codecept always returns / as unencoded value
-    //$(function() { $("#unescapedTitle").text("!REQUEST(doc_title)!"); });
+    // The fixture uses jQuery.text() to expose the stored entity instead of rendering it as a slash.
+    // Keep it encoded so full-path consumers do not mistake the title's slash for a folder separator.
     I.waitForText("Lomka&#47;v nazve", 10, "#unescapedTitle");
 });
 

@@ -13,7 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,6 +43,8 @@ import sk.iway.iwcm.doc.GroupPublisher;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.DeleteMirrorsService;
+import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -72,13 +76,27 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     private TranslationKeyRepository translationKeyRepository;
     private EditorFacade editorFacade;
     private final ApproveService approveService;
+    private final DeleteMirrorsService deleteMirrorsService;
 
-    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService) {
+    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService, DeleteMirrorsService deleteMirrorsService) {
         super(null);
         this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;
         this.translationKeyRepository = translationKeyRepository;
         this.editorFacade = editorFacade;
         this.approveService = approveService;
+        this.deleteMirrorsService = deleteMirrorsService;
+    }
+
+    /**
+     * Previews additional mirrored folders affected by deleting the selected folders, without deleting data.
+     * Called by {@code bindDeleteMirrors} when the folder delete confirmation opens, before submission is enabled.
+     *
+     * @param ids IDs of the folders selected for deletion
+     * @return unique additional mirrors with accessible paths and a flag indicating any inaccessible mirrors
+     */
+    @PostMapping("/deletion-preview")
+    public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
+        return deleteMirrorsService.getGroupMirrors(ids, getUser());
     }
 
     @Override
@@ -504,13 +522,13 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE domain_name=?", entity.getDomainName(), oldGroupDetails.getDomainName());
             } else {
                 //updatni groups
-                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")",entity.getDomainName());
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE " + DB.getInCondition("group_id", groupIds),entity.getDomainName());
 
                 if (systemGroupIds!=null) {
                     Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
 
                     //updatni groups
-                    new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
+                    new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE " + DB.getInCondition("group_id", systemGroupIds), entity.getDomainName());
                 }
             }
 
@@ -759,6 +777,14 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean deleteItem(GroupDetails entity, long id) {
+        if (getUser().isDisabledItem("deleteDir")) {
+            throwError("admin.delete.deleteDirDisabled.error");
+            return false;
+        }
+        // A previous selected folder may already have deleted this folder through mirroring or as a descendant.
+        // Treat this row as completed instead of validating its new Trash location or deleting it again.
+        if (DeleteRequestContext.isDeleted(GroupDetails.class, (int) id)) return true;
+
         List<String> errors = new ArrayList<>();
         if (!this.canModifyThisGroup(entity, getUser(), "editDir", errors)) {
             throwError(errors);
@@ -941,6 +967,9 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean checkItemPerms(GroupDetails entity, Long id) {
+        // Mirroring or parent deletion may already have processed this selected folder in the same request.
+        // Allow the completed row through; deleteItem will skip it without checking its changed location again.
+        if (id != null && DeleteRequestContext.isDeleted(GroupDetails.class, id.intValue())) return true;
         if (InitServlet.isTypeCloud() && entity.getGroupId()>0) {
             GroupDetails old = GroupsDB.getInstance().getGroup(entity.getGroupId());
             if (old != null && GroupsDB.isGroupEditable(getUser(), old.getGroupId())==false) return false;

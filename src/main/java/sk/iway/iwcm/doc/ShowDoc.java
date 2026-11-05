@@ -543,6 +543,7 @@ private static String combineCss(String cssStyle)
             if (request.getParameter("historyid") != null && request.getParameter("origDocId")==null)
             {
                 historyId = Integer.parseInt(request.getParameter("historyid"));
+                PathFilter.setNoCacheHeaders(response);
                 if (!user.isAdmin() && Constants.getBoolean("docBlockPublicHistory"))
                 {
                     //vynimka pre umoznenia preview. Je potrebne mat ale zadefinovane conf. premenne showDocExceptionIPs a showDocExceptionUserId
@@ -717,6 +718,7 @@ private static String combineCss(String cssStyle)
                 if (historyId > 0)
                 {
                     doc = docDB.getDoc(-1, historyId);
+                    if (doc != null) PlannedAccess.historyPreview(doc, request, response);
                 }
                 else
                 {
@@ -820,8 +822,8 @@ private static String combineCss(String cssStyle)
             }
         }
 
-        //httpS presmerovanie
-        if (Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
+        // Keep the admin inline editor on the same origin by skipping HTTP/HTTPS redirects.
+        if (inlineEditorAdmin == false && Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
         {
             if (doc.isRequireSsl() && !Tools.isSecure(request))
             {
@@ -1018,7 +1020,9 @@ private static String combineCss(String cssStyle)
             Logger.error(ShowDoc.class, ex);
         }
 
-        if (Constants.getBoolean("nginxProxyMode") && !sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request))
+        if (request.getAttribute("isPreview") != null) {
+            PathFilter.setNoCacheHeaders(response);
+        } else if (Constants.getBoolean("nginxProxyMode") && !sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request))
         {
             //setujeme iba ked sa negeneruje nocache cookie
             if (!PathFilter.isNoCacheCookieRequired(request)) {
@@ -1040,6 +1044,9 @@ private static String combineCss(String cssStyle)
         //ak to nie je urcene pre editor a mame nastavene presmerovanie na externu linku
         if (skipExternalLink==false && request.getParameter("approveNoRedirect")==null && request.getParameter("notemp") == null && Tools.isNotEmpty(doc.getExternalLink()))
         {
+            if (user.isAdmin()) {
+                PathFilter.setNoCacheHeaders(response);
+            }
             String externalLink = getExternalLinkRedirectUrl(doc, request);
 
             if (doc.getExternalLink().startsWith("http://") || doc.getExternalLink().startsWith("https://"))
@@ -1350,7 +1357,11 @@ private static String combineCss(String cssStyle)
             updateCodes(request, null, doc_id);
         }
 
-        PathFilter.setXRobotsTagValue("NOT_SEARCHABLE_PAGE", response, doc);
+        if (historyId > 0) {
+            response.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+        } else {
+            PathFilter.setXRobotsTagValue("NOT_SEARCHABLE_PAGE", response, doc);
+        }
 
         String forward = temp.getForward();
         boolean allowAdminForward = false;

@@ -6,6 +6,18 @@ WebJET includes an intelligent web page editor that shows you as faithfully as p
 
 An overview of shortcuts for the text editor and other parts of the administration can be found on the [Keyboard Shortcuts](../../admin/keyboard-shortcuts.md) page. On Mac, **Command (⌘)** is used instead of **Ctrl** when copying, cutting, pasting, and editing links.
 
+## Toolbar in a narrow window
+
+If all the tools don't fit side by side, you can find some of the groups under the **… More tools** button. This way, the bar won't wrap into another strip and the editor and size switcher will remain available. This works in the Standard Editor and in the Page Builder, for example in mobile view. After expanding the window, the groups will return to their original locations.
+
+![More Tools panel in the mobile preview of Page Builder](toolbar-overflow.png)
+
+The panel remains open while formatting text, so you can use multiple tools in a row. You can close it by clicking outside the panel, clicking **…** again, using the cross, or pressing the **Escape** key. It also closes when you move to another block or open a dialog. You can scroll longer contents of the panel.
+
+If a dialog, such as Image, Link, or Applications, does not fit within the width of the preview in Page Builder, it will automatically open to the size of the browser window. When you confirm or close the dialog, the original preview width and page offset will be restored. The **Shrink** button is not displayed during auto-expansion.
+
+**Alt+F10** will take you to the toolbar. **Tab** will switch between available groups and the **…** button will arrow between tools in a group. **…** button will be opened by **Enter**, Spacebar or Down Arrow. If you open a nested menu, such as Colors or Styles, the first **Escape** will close that menu and the next toolbar.
+
 ## Working with text (typing/pasting/copying)
 
 When working with text, you must first be aware of the difference between a paragraph and a text break, i.e. dividing a sentence into the next line. You create individual paragraphs by pressing ```ENTER```, while you create a text break using the key combination ```SHIFT + ENTER```.
@@ -203,7 +215,9 @@ After clicking on the icon, a dialog box for inserting an image will appear:
 
 ![](image_dialog.png)
 
-When navigating through the tree structure, only image or video files are displayed, other files are filtered.
+When navigating through the tree structure, only images, videos, and audio files are displayed. The same restriction applies to uploading, including the **Files** folder. The selection of files on your computer is limited to these types. For example, if you drag a PDF or ZIP file into the dialog, you will see an **Unallowed file type** error before the file is sent. Files whose type the browser does not recognize will be checked by the server before being saved. When uploading multiple files, supported files will be uploaded and a warning will be displayed for the others.
+
+You can upload PDFs and other documents through the insert link dialog, the **Media** tab, or the **Explorer**.
 
 ### Contents tab
 

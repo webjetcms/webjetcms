@@ -27,6 +27,8 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
+import sk.iway.iwcm.components.structuremirroring.MirroringService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocBasic;
@@ -185,8 +187,11 @@ public class EditorService {
 	 * @param editedDoc
 	 * @return historyId alebo hodnotu &lt; 1 ak nastala chyba
 	 */
-	public int saveEditedDoc(DocDetails editedDoc) {
+    public int saveEditedDoc(DocDetails editedDoc) {
 		DebugTimer dt = new DebugTimer("EditorService.saveEditedDoc");
+
+		// Authorize the stored page before events or client-supplied changes can have side effects.
+		checkSavePermissions(currentUser, editedDoc);
 
 		//first update savedate and author, check permissions need this
 		editedDoc.setDateCreated(now);
@@ -211,6 +216,16 @@ public class EditorService {
 
 		//kontrola prav
 		checkPermissions(currentUser, editedDoc, false);
+
+        boolean plannedChange = sk.iway.iwcm.doc.PlannedAccess.enabled() && editedDoc.isPublishAfterStart();
+        // Prevent saving the active planned revision with scheduling disabled; cancellation must be explicit.
+        if (sk.iway.iwcm.doc.PlannedAccess.enabled() && editedDoc.getDocId() > 0) {
+            Long active = sk.iway.iwcm.doc.PlannedChangesService.getInstance().activeHistory(editedDoc.getDocId());
+            if (!plannedChange && active != null && active.intValue() == editedDoc.getHistoryId()) {
+                throw new IllegalArgumentException(prop.getText("planned.schedulingRequired"));
+            }
+        }
+
 
 		if(Constants.getBoolean("editorEscapeInvalidCharacters")) {
 			editedDoc.setTitle(EditorUtils.escapeInvalidCharacters(editedDoc.getTitle(), prop, notify));
@@ -263,7 +278,7 @@ public class EditorService {
 
 		// Load approve hash table data
 		// If current user is approver, set selfApprover = true
-		if (editedDoc.getEditorFields().isRequestPublish() && skipApproving == false) {
+		if ((editedDoc.getEditorFields().isRequestPublish() || plannedChange) && skipApproving == false) {
 			approveService.loadApproveTables(editedDoc.getGroupId());
 
 			//If approver is needed BUT it's not selfApprove (currentUser isn't approver),
@@ -273,7 +288,17 @@ public class EditorService {
 		}
 		dt.diff("after requestPublish");
 
+        if (plannedChange) {
+            sk.iway.iwcm.doc.PlannedChangesService.getInstance().prepareSave(editedDoc, currentUser);
+            // Save to history even when already due; DocPublishService must publish files, rewrite URLs and publish media before completing publication.
+            editedDoc.getEditorFields().setRequestPublish(false);
+        } else if (editedDoc.getEditorFields().isRequestPublish()) {
+            sk.iway.iwcm.doc.PlannedChangesService.rejectPrivateReferences(editedDoc);
+        }
+
 		DocHistory editedHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(editedDoc);
+        // The mapper copies the source revision's ID via setHistoryId(); clear it so every save inserts a new history record instead of overwriting the source revision.
+        editedHistory.setId(null);
 
 		if (isNewPage) {
 			//Save (insert) new webpage
@@ -307,7 +332,7 @@ public class EditorService {
 		// If history is not disabled
 		if (!disableHistory) {
 			// zisti, ci v historii na ten isty datum a cas nema byt nieco vypublikovane
-			if (editedDoc.getPublishStartDate() != null && (editedDoc.getPublishStartDate().getTime()+60000)>Tools.getNow()) {
+			if (!sk.iway.iwcm.doc.PlannedAccess.enabled() && editedDoc.getPublishStartDate() != null && (editedDoc.getPublishStartDate().getTime()+60000)>Tools.getNow()) {
 				Date publishStartDate = editedDoc.getPublishStartDate();
 				// check if there is any other DocHistory with same publishStartDate (+-5 seconds)
 				Date publishStartDateFrom = new Date(publishStartDate.getTime() - 5000L);
@@ -364,7 +389,7 @@ public class EditorService {
 			editedHistory.setIsDelete(false);
 
 			//Save edited history
-			historyRepo.save(editedHistory);
+			editedHistory = historyRepo.saveAndFlush(editedHistory);
 			dt.diff("after dochistory insert");
 
 			//ziskaj history_id
@@ -374,25 +399,33 @@ public class EditorService {
 			RequestBean.addAuditValue("historyId", String.valueOf(historyId));
 
 			//Publishing
-			if(wasApproved) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
+			if(wasApproved && plannedChange==false) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
+
+            if (plannedChange) {
+                sk.iway.iwcm.doc.PlannedChangesService.getInstance().completeSave(editedHistory);
+				// if planed change is now or in past fire the publishing actions
+                docDB.readPagesToPublic();
+            }
 		}
 
 		if(skipApproving == false) {
 			/*Odoslanie schvalovani a notifikacii*/
-			approveService.sendEmails(editedDoc, historyId, docRepo);
+            approveService.sendEmails(editedDoc, historyId, docRepo);
 		}
 
 		dt.diff("after sendApproveNotifyEmail");
 
-		if(isNewPage || wasApproved || disableHistory) {
-			//In case of insert, actions are needed because page was saved, even when isn't approved
-			// !! without this actions, insert page return 404
-			renameVirtualPath(editedDoc, dt);
-			refreshCacheObjects(editedDoc, dt);
-			refreshTemplates(editedDoc, dt);
-		} else if(editedDoc.isPublishAfterStart() || editedDoc.isDisableAfterEnd()) {
-			//reload awaiting pages for DocDB
-			docDB.readPagesToPublic();
+		if (plannedChange == false) {
+			if(isNewPage || wasApproved || disableHistory) {
+				//In case of insert, actions are needed because page was saved, even when isn't approved
+				// !! without this actions, insert page return 404
+				renameVirtualPath(editedDoc, dt);
+				refreshCacheObjects(editedDoc, dt);
+				refreshTemplates(editedDoc, dt);
+			} else if(editedDoc.isPublishAfterStart() || editedDoc.isDisableAfterEnd()) {
+				//reload awaiting pages for DocDB
+				docDB.readPagesToPublic();
+			}
 		}
 
 		/*Ulozenie poznamky*/
@@ -403,7 +436,7 @@ public class EditorService {
 		dt.diff("done");
 
 		//Publikovanie eventov
-		(new WebjetEvent<>(editedDoc, WebjetEventType.AFTER_SAVE)).publishEvent();
+        if (plannedChange==false) (new WebjetEvent<>(editedDoc, WebjetEventType.AFTER_SAVE)).publishEvent();
 
 		return(historyId);
  	}
@@ -551,6 +584,10 @@ public class EditorService {
 			if (slave != null) editedDoc.setVirtualPath(slave.getVirtualPath());
 		}
 
+        if (sk.iway.iwcm.doc.PlannedAccess.enabled()) {
+            editedDoc.getEditorFields().setPlannedMedia(editedDoc.isPublicable());
+            editedDoc.getEditorFields().setPlannedHistoryId(sk.iway.iwcm.doc.PlannedChangesService.getInstance().activeHistory(docId));
+        }
 		return editedDoc;
 	}
 
@@ -601,7 +638,7 @@ public class EditorService {
 	 */
 	private void updateWebpage(DocDetails editedDoc, DebugTimer dt) {
 		//premenovanie Groupy ak je stranka defaultna pre Grupu.
-		if(GroupsService.canSyncTitle(editedDoc.getDocId(), editedDoc.getGroupId())) {
+		if((!sk.iway.iwcm.doc.PlannedAccess.enabled() || !editedDoc.isPublishAfterStart()) && GroupsService.canSyncTitle(editedDoc.getDocId(), editedDoc.getGroupId())) {
 			DocDB.changeGroupTitle(editedDoc.getGroupId(), editedDoc.getDocId(), editedDoc.getTitle());
 			forceReload = true;
 		}
@@ -666,7 +703,7 @@ public class EditorService {
 		historyIds = historyRepo.findOldHistoryIds(editedHistory.getDocId(), Long.valueOf(historyId), false, currentUser.getUserId());
 		dt.diff("after was_approved history_id list");
 
-		if (historyIds.isEmpty()==false) {
+		if (historyIds.isEmpty()==false && !sk.iway.iwcm.doc.PlannedAccess.enabled()) {
 			historyRepo.deleteHistoryOnPublish(historyIds, currentUser.getUserId());
 			dt.diff("after was_approved delete");
 		}
@@ -674,7 +711,11 @@ public class EditorService {
 		//nastav aktualne na actual=false
 		historyIds = historyRepo.findOldHistoryIds(editedDoc.getDocId(), historyId);
 
-		if (historyIds.isEmpty()==false) historyRepo.updateActualHistory(false, "", historyIds);
+		if (sk.iway.iwcm.doc.PlannedAccess.enabled()) {
+            List<Integer> scheduled = historyRepo.findByDocIdAndPublicableTrueOrderByIdDesc(editedDoc.getDocId()).stream().map(DocHistory::getHistoryId).toList();
+            historyIds.removeAll(scheduled);
+        }
+        if (historyIds.isEmpty()==false) historyRepo.updateActualHistory(false, "", historyIds);
 		dt.diff("after was_approved");
 	}
 
@@ -1103,6 +1144,7 @@ public class EditorService {
 	 * @return
 	 */
 	public boolean isPageEditable(Identity user, DocDetails doc, boolean isDelete) {
+		if (user == null || doc == null) return false;
 		if (UsersDB.checkUserPerms(user, Constants.getString("webpagesFunctionsPerms")) == false) return false;
 
 		if (isDelete) {
@@ -1115,7 +1157,19 @@ public class EditorService {
 			return false;
 		}
 
-		if (doc == null) return true;
+		return hasPagePermission(user, doc);
+	}
+
+	/**
+	 * Checks folder, explicit-page, multigroup and access-group permissions for an editor record.
+	 * Operation permissions such as pageSave and deletePage are checked separately by the caller.
+	 *
+	 * @param user current administrator
+	 * @param doc page state whose permissions are being checked
+	 * @return whether the page belongs to the user's editable scope
+	 */
+	public static boolean hasPagePermission(Identity user, DocDetails doc) {
+		if (user == null || doc == null || !UsersDB.checkUserPerms(user, Constants.getString("webpagesFunctionsPerms"))) return false;
 
 		//otestuj, ci mame na tento dokument pristupove prava
 		boolean canAccess = GroupsDB.isGroupEditable(user, doc.getGroupId());
@@ -1156,6 +1210,29 @@ public class EditorService {
 		}
 
 		return canAccess;
+	}
+
+	/**
+	 * Checks the persisted page's permissions and, for creation or a move, the destination folder.
+	 * The uncached JDBC read must not reuse a JPA entity already modified by the caller.
+	 *
+	 * @param user current administrator
+	 * @param doc proposed page state after editor fields and master/slave IDs have been resolved
+	 */
+	public void checkSavePermissions(Identity user, DocDetails doc) {
+		checkPermissions(user, doc, false);
+		DocDetails original = null;
+		if (doc.getDocId() > 0) {
+			original = docDB.getDoc(doc.getDocId(), -1, false);
+			if (original == null) throw new RuntimeException(prop.getText("admin.editPage.error"));
+			checkPermissions(user, original, false);
+		}
+
+		int groupId = doc.getGroupId();
+		if (groupId < 1 || groupsDB.getGroup(groupId) == null ||
+				((original == null || original.getGroupId() != groupId) && !GroupsDB.isGroupEditable(user, groupId))) {
+			throw new RuntimeException(prop.getText("admin.editPage.error"));
+		}
 	}
 
 	/**
@@ -1387,15 +1464,28 @@ public class EditorService {
 	 * @param editedHistory
 	 */
 	public void approveDocHistory(DocHistory editedHistory) {
+        boolean plannedChange = sk.iway.iwcm.doc.PlannedAccess.enabled() && Boolean.TRUE.equals(editedHistory.getPublicable());
 		//Set actual informations
 		editedHistory.setApprovedBy(currentUser.getUserId());
+		editedHistory.setDisapprovedBy(null);
 		editedHistory.setAwaitingApprove(null);
-		editedHistory.setActual(true);
+		editedHistory.setActual(!plannedChange);
 		editedHistory.setAvailable(true);
 		editedHistory.setApproveDate(new Date(now));
 
 		//Create new version of DocDetails from DocHistory
 		DocDetails editedDoc = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(editedHistory);
+
+        if (plannedChange) {
+            checkPermissions(currentUser, editedDoc, false);
+            historyRepo.saveAndFlush(editedHistory);
+            docDB.readPagesToPublic();
+            // Approval after the deadline must also publish files, media and rewritten URLs.
+            if (editedHistory.getPublishStart() > 0 && editedHistory.getPublishStart() <= now) {
+                docDB.publishDocHistory(editedHistory);
+            }
+            return;
+        }
 
 		//Inicialize editorFields
 		DocEditorFields def = new DocEditorFields();
@@ -1494,6 +1584,9 @@ public class EditorService {
 		//If id is -1, try get id from request, if id is still -1 return eeror message
 		if(delDocId == -1) delDocId = Tools.getIntValue(request.getParameter("docid"), -1);
 		if(delDocId == -1) return "There's no provided docId to by used for delete.";
+		// Bulk deletion may reach a page already deleted through its mirror in this request.
+		// Return success without processing it again: a second deletion after moving it to Trash would be permanent.
+		if (DeleteRequestContext.isDeleted(DocDetails.class, delDocId)) return "success";
 
 		//Try get DocDetails object by id, if not present return error message
 		Optional<DocDetails> docDetailsOpt = docRepo.findById(Long.valueOf(delDocId));
@@ -1511,7 +1604,20 @@ public class EditorService {
 			//Doc, do not need approve OR
 			//current user IS self approver, can do delete action
 
-			if (publishEvents) (new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
+			if (publishEvents) {
+				// Check every mirror before ON_DELETE listeners can delete any member of the mirrored set.
+				if (MirroringService.isEnabled(docDetails.getGroupId())
+						&& !"Nový podadresár".equals(docDetails.getTitle()) && !prop.getText("editor.dir.new_dir").equals(docDetails.getTitle())) {
+					int syncId = DocMirroringServiceV9.getSyncId(delDocId);
+					if (syncId > 1) {
+						for (DocDetails mirror : DocMirroringServiceV9.getDocBySyncId(syncId, delDocId)) {
+							// Completed deletions are no-ops in this request; do not recheck permissions against their Trash location.
+							if (!DeleteRequestContext.isDeleted(DocDetails.class, mirror.getDocId())) checkPermissions(currentUser, mirror, true);
+						}
+					}
+				}
+				(new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
+			}
 
 			// zisti ci sme v adresari /System/Trash (kos), ak nie presun, inak vymaz
 			String navbarNoHref = DB.internationalToEnglish(groupsDB.getURLPath(docDetails.getGroupId())).toLowerCase();
@@ -1591,7 +1697,7 @@ public class EditorService {
 				if(buf != null) ids = buf.toString();
 
 				if (ids != null) {
-					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE group_id IN (" + ids + ")", trashGroupDetails.getGroupId());
+					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE " + DB.getInCondition("group_id", ids), trashGroupDetails.getGroupId());
 					GroupsDB.getInstance(true);
 				}
 
@@ -1638,6 +1744,9 @@ public class EditorService {
                 //Admin log stranka bola presunuta do kosa
                 Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID: " + delDocId + "): Stranka bola presunuta do kosa ", delDocId, 0);
             }
+            // Record the completed deletion (including a move to Trash) before notifying listeners.
+            // Later mirror or bulk-selection calls in this request must not delete this page again.
+            DeleteRequestContext.markDeleted(DocDetails.class, delDocId);
             DocDB.getInstance().updateInternalCaches(delDocId);
 
 			if (publishEvents) (new WebjetEvent<DocDetails>(docDetails, WebjetEventType.AFTER_DELETE)).publishEvent();

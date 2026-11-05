@@ -49,7 +49,8 @@ Scenario('prihlasenie zablokovane @singlethread', ({ I }) => {
     login(I, true);
     I.click(".js-logout-toggler");
 
-    I.amOnPage('/admin/');
+    // Logout already opens the login page; wait for its form instead of starting another navigation.
+    I.waitForVisible('#username', 10);
 
     //over zablokovanie na 60 sekund po neuspesnom prihlaseni
     for (var i=2; i<=6; i++) {

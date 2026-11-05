@@ -1,6 +1,6 @@
 # Galerie
 
-Aplikace galerie umožňuje jednoduchým způsobem vytvářet galerii fotografií. Obrázky z digitálního fotoaparátu stačí nahrát do galerie. WebJET fotografie automaticky zmenší na požadovaný formát. Podporovány jsou formáty `JPG`, `JPEG`, `GIF`, `PNG` a `WebP`. Z každé fotky se vytvářejí 3 kopie:
+Aplikace galerie umožňuje jednoduchým způsobem vytvářet galerii fotografií. Obrázky z digitálního fotoaparátu stačí nahrát do galerie. WebJET fotografie automaticky zmenší na požadovaný formát. Podporovány jsou formáty `JPG`, `JPEG`, `GIF`, `PNG`, `WebP` a `AVIF`. Zpracování [obrázků AVIF](../../../frontend/thumb-servlet/README.md#obrázky-avif) vyžaduje ImageMagick s podporou AVIF. Z každé fotky se vytvářejí 3 kopie:
 
 - Náhledový obrázek - fotka v malém rozlišení, cca 160x120 bodů, používá se v seznamu obrázků
 - Obrázek v běžném rozlišení – fotka v rozlišení pro běžný monitor, tedy cca 600x400 bodů – tato fotka se zobrazí po kliknutí na náhledový obrázek

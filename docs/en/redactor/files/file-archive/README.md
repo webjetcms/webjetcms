@@ -8,13 +8,21 @@ In the displayed list, we see all documents that have been uploaded to the manag
 
 On the left side is a **folder tree** (JSTREE) that allows you to browse the archive folders and filter documents by the selected folder. The tree displays folders from the archive root directory set by the configuration variable `fileArchivDefaultDirPath` (default `files/archiv/`). The folder for scheduled uploads from the configuration variable `fileArchivInsertLaterDirPath` is not displayed in the tree.
 
+Folders to which you do not have write access are marked with an icon<i class="ti ti-folder-x"></i> . The label also applies to the root folder of the archive. You can expand such folders and navigate to subfolders to which you have permission.
+
+If, when selecting a destination directory for uploading a document, you do not have write access to the folder currently specified in the field, a warning will be displayed with its path after opening the selection. If a subfolder is enabled in the field, the warning will not be displayed even if the archive root folder is disabled. In the tree, select a folder to which you can write.
+
+Selecting a folder when opened will expand the path to the folder specified in the field and highlight it if you have permission to select it. This also applies to nested subfolders and manually edited paths. Click on the folder to confirm the selection.
+
 When you click on a folder in the tree, only documents belonging to that folder will be displayed in the table. The selected folder will also be used as the target directory for [bulk file uploads](#bulk-file-uploads) and will be automatically pre-filled when creating a new document via the editor.
 
 Above the tree there are buttons:
 
--<i class="ti ti-plus"></i> - **Add** - creates a new subfolder in the currently selected folder. The button is visible to users with `menuFileArchivManagerCategory` rights and creating a folder requires write rights to the selected folder.
+-<i class="ti ti-plus"></i> - **Add** - creates a new subfolder in the currently selected folder. The button is visible to users with the `menuFileArchivManagerCategory` right and is active when you have write access to the selected folder. You can also create a new subfolder in an enabled subfolder of the archive if you do not have write access to the root folder.
 -<i class="ti ti-refresh"></i> - **Restore** - restores the folder tree structure
 -<i class="ti ti-adjustments-horizontal"></i> - **Settings** - allows you to set the width of the tree structure relative to the table
+
+You can choose the width of the tree in terms of the ratio to the table or in pixels. The tree has a minimum width of `200 px` to accommodate the search field and buttons. A smaller ratio will not reduce this limit.
 
 ![](datatable.png)
 
@@ -55,6 +63,25 @@ The card contains basic information for inserting a document.
   - **Upload after** - select the date and time after which the document should be uploaded
   - **Comma-separated emails (notification after upload)** - enter comma-separated emails to which you want to send notification about successful/unsuccessful document upload
 
+#### Validity and downloading of historical versions
+
+The fileArchivCheckHistoryValid configuration variable determines whether the **Valid from and Valid to** dates are checked for already uploaded historical versions. With the default value true, a historical version of a document outside the validity range will not be displayed in the list of older versions in the application on the website and cannot be downloaded. With the value `false`, the dates are ignored, so the version can be displayed and available for download even outside the validity range. Other display conditions and access permissions remain intact. An empty date does not limit the respective validity range.
+
+The in-app display data in the table assumes that the document meets the other application filters. Archive versions are listed only when the **Show archive versions** option is enabled, and templates are listed only when the **Show templates** option is enabled.
+
+| Record type and status | `true` (default value) | `false` |
+| --- | --- | --- |
+| Historical version of the document, **View** enabled, date valid | It will be downloaded and displayed in the app. | It will be downloaded and displayed in the app. |
+| Historical version of the document, **Show** enabled, before **Valid from** or after **Valid to** | Returns a 404 error and does not appear in the application | It will be downloaded and displayed in the app. |
+| Historical version of the pattern, **Show** enabled, date valid | It will download, but it won't appear in the app. | It will download, but it won't appear in the app. |
+| Historical version of the pattern, **Show** enabled, before **Valid from** or after **Valid to** | Returns a 404 error and does not appear in the application | It will download, but it won't appear in the app. |
+| Document or pattern, **Show** off | Returns a 404 error and does not appear in the application | Returns a 404 error and does not appear in the application |
+| Current document or current template, **Show** on, date valid | It will be downloaded and displayed in the app. | It will be downloaded and displayed in the app. |
+| Current document or current template, **Show** on, date invalid | Returns a 404 error and does not appear in the application | Returns a 404 error and does not appear in the application |
+| Version waiting to be uploaded | The pending version will not be displayed, the currently published version remains displayed. | The pending version will not be displayed, the currently published version remains displayed. |
+
+With the value `false`, the dates of historical versions remain stored and displayed in the archive as information about the document's effectiveness. The application lists only their current versions among the templates. With both values, access permissions are still checked. Document indexing settings are preserved.
+
 ### Tab - Advanced
 
 ![](editor_advanced.png)
@@ -72,6 +99,8 @@ The card contains basic information for inserting a document.
   - it can't be a pattern
 - **Note** - the note will appear on the page when linking to the document
 - **Save document even if it already exists** - allows saving a file with the same content as another document already in the manager. For details, see [Duplicate document check](#duplicate-document-check).
+
+When saving and renaming the **Product** and **Category** fields, hard and other Unicode spaces, tabs, and line breaks are converted to regular spaces. Repeated spaces are merged, and spaces at the beginning and end of the name are removed. Remaining control characters and invisible BOM characters, soft hyphens, and word joiners are also removed; zero-width spaces are converted to spaces. The adjustment also applies to bulk uploads of documents, so copying names from other documents does not create different categories just because of these characters.
 
 !>**Note:** The **Product** / **Category** / **Product Code** fields will later be used to filter the display of files on the page
 

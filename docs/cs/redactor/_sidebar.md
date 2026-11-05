@@ -17,6 +17,7 @@
   - [Základní práce](/redactor/webpages/README.md)
   - [Editace web stránky](/redactor/webpages/editor/README.md)
   - [Práce v editoru](/redactor/webpages/working-in-editor/README.md)
+  - [Plánované publikování s chráněnými soubory](/redactor/webpages/planned-publishing.md)
   - [Složka webové stránky](/redactor/webpages/group.md)
   - [Historie](/redactor/webpages/history.md)
   - [Obnovení z koše](/redactor/webpages/recover.md)
@@ -81,6 +82,7 @@
   - Formuláře
     - [Seznam formulářů](/redactor/apps/form/README.md)
     - [Položky formuláře](/redactor/apps/multistep-form/README.md)
+    - [Šifrování formulářů](/redactor/apps/form/encryption.md)
     - [Statistiky formuláře](/redactor/apps/multistep-form/stat.md)
     - [Regulární výrazy](/redactor/apps/form/regexps.md)
   - Fórum/Diskuse

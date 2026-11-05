@@ -57,13 +57,20 @@ public class GetProtectedFileServlet extends HttpServlet
       if (ContextFilter.isRunning(request)) url = ContextFilter.removeContextPath(request.getContextPath(), url);
       //Logger.println(this,"RequestServlet: url="+url);
 
-      request.getSession().setAttribute("afterLogonRedirect", url);
+      if (PlannedAccess.isPathAccessible(url, request, response)==false) return;
+
+      boolean plannedPath = PlannedAssetPaths.containsPlannedPath(url);
+      EditForm ef = null;
+      if (plannedPath) {
+          url = PlannedAssetPaths.localPath(url);
+      } else {
+          request.getSession().setAttribute("afterLogonRedirect", url);
+          ef = PathFilter.isPasswordProtected(url, request);
+      }
 
       //Logger.println(this,"-->GetProtectedFileServlet: " + url);
 
-      EditForm ef = PathFilter.isPasswordProtected(url, request);
-
-      if (url.startsWith(DIR_NAME))
+      if (plannedPath || url.startsWith(DIR_NAME))
       {
       	Logger.println(this,"mam dir name, url="+url);
          //ziskaj identitu
@@ -147,6 +154,12 @@ public class GetProtectedFileServlet extends HttpServlet
          }
 
          Logger.println(this,"testujem: " + realPath);
+
+         if (plannedPath && (inFile == null || inFile.isFile()==false))
+         {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+         }
 
          if (inFile != null && inFile.exists())
          {

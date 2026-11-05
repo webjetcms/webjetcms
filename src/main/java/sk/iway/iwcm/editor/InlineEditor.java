@@ -228,6 +228,8 @@ public class InlineEditor
 			if (user != null && user.isAdmin()) {
 				inlineEditingEnabled = true;
 				isHeatmapEnabled = false;
+				// History previews still need the editor toolbar to render the Page Builder body.
+				isPreview = false;
 			}
 		}
 

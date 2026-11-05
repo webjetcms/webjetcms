@@ -715,12 +715,9 @@
         restore_workbench_focus: function() {
             if (!this.ui) return;
             var ui = this.ui, bookmark = ui.bookmarks;
-            ui.restoringFocus = true;
             if (bookmark && bookmark.editor.status === 'ready' && bookmark.editor.element.$.isConnected) {
-                bookmark.editor.focus();
-                bookmark.editor.getSelection().selectBookmarks(bookmark.marks);
+                this.focus_ckeditor_without_scrolling(bookmark.editor, bookmark.marks);
             }
-            ui.restoringFocus = false;
             ui.bookmarks = null;
             this.refresh_workbench_selection();
             var button = ui.bar.find('[data-pb-action="'+ui.returnAction+'"]:visible');
@@ -1277,6 +1274,23 @@
             return $(this.$wrapper).clone(true);
         },
 
+        /** Removes nested controls before CKEditor formats them into whitespace in the exported HTML. */
+        configure_editor_output: function(editor) {
+            if (editor._.pageBuilderOutputFilter) return;
+            var temporaryClasses = [this.tag.toolbar, this.tag._plus_button, this.tag._highlighter,
+                this.tag.dimmer, this.tag.empty_placeholder, this.tag.connection_button,
+                this.tag.size_changer, this.options.prefix+'-insert-space'];
+            editor.dataProcessor.htmlFilter.addRules({
+                elements: {
+                    aside: function(element) {
+                        var classes = (element.attributes['class'] || '').split(/\s+/);
+                        if (temporaryClasses.some(function(name) { return classes.indexOf(name) !== -1; })) return false;
+                    }
+                }
+            }, { applyToAll: true });
+            editor._.pageBuilderOutputFilter = true;
+        },
+
         /** Removes CKEditor caret paragraphs from application-only content, preserving any additional authored content. */
         get_application_editor_data: function(editor) {
             var html = editor.getData(), pattern = /!INCLUDE\((.*?)\)!/gi;
@@ -1284,11 +1298,39 @@
             return remainder.length ? html : (html.match(pattern) || []).join('');
         },
 
+        /**
+         * Collapses old blank lines in a copy, using the live DOM to respect inherited white-space styles.
+         * Run before changing the clone's structure so both text walkers visit corresponding nodes.
+         * @param {Element} source Live element with the template's computed styles.
+         * @param {Element} clone Unmodified clone whose whitespace may be normalized.
+         */
+        clean_cloned_whitespace: function(source, clone) {
+            var sourceWalker = document.createTreeWalker(source, NodeFilter.SHOW_TEXT);
+            var cloneWalker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
+            var text;
+            while ((text = sourceWalker.nextNode())) {
+                var copy = cloneWalker.nextNode(), value = text.nodeValue;
+                // Only ASCII whitespace is formatting; NBSP and text content must remain untouched.
+                if (!/^[\t\n\f\r ]*$/.test(value) || !/\n[\t\n\f\r ]*\n/.test(value)) continue;
+                var parent = text.parentElement;
+                if (parent.closest('pre, code, textarea, script, style, template, xmp, plaintext, listing')) continue;
+                var whiteSpace = window.getComputedStyle(parent).whiteSpace;
+                if (whiteSpace !== 'normal' && whiteSpace !== 'nowrap') continue;
+                // Keep one newline as a separator between inline elements, including the final indentation.
+                copy.nodeValue = value.replace(/\n(?:[\t \r\f]*\n)+/g, '\n');
+            }
+        },
+
         /** Serializes editor content before removing temporary decorations from a detached clone. */
         getSaveNode: function(element) {
-            var me = this, node = element ? $('<div>').append($(element).clone()) : me.getClone();
+            var me = this, source = element ? $(element) : me.$wrapper;
+            var node = element ? $('<div>').append(source.clone()) : me.getClone();
+            source.each(function(index) {
+                me.clean_cloned_whitespace(this, element ? node.children()[index] : node[index]);
+            });
             node.find('[data-ckeditor-instance]').each(function() {
                 var editor = CKEDITOR.instances[$(this).attr('data-ckeditor-instance')];
+                me.configure_editor_output(editor);
                 var html = $(this).hasClass(me.tag.temp_wrapper) ? me.get_application_editor_data(editor) : editor.getData();
                 $(this).html(html);
             });
@@ -2813,6 +2855,21 @@
             return next.length ? next : editors.last();
         },
 
+        /** Restores an editor and optional caret bookmarks without native or CSS-smooth canvas scrolling. */
+        focus_ckeditor_without_scrolling: function(editor, bookmarks) {
+            var x = window.scrollX, y = window.scrollY, ui = this.ui;
+            var restoringFocus = ui && ui.restoringFocus;
+            if (ui) ui.restoringFocus = true;
+            try {
+                editor.editable().$.focus({ preventScroll: true });
+                editor.focus();
+                if (bookmarks) editor.getSelection().selectBookmarks(bookmarks);
+            } finally {
+                if (ui) ui.restoringFocus = restoringFocus;
+                window.scrollTo({ left: x, top: y, behavior: 'instant' });
+            }
+        },
+
         /** Restores the shared toolbar without changing the structural selection or scrolling the canvas. */
         focus_ckeditor_element: function(el) {
             if (typeof CKEDITOR === 'undefined') return;
@@ -2824,11 +2881,7 @@
             var focus = function() {
                 if (editor.status !== 'ready' || !me.$wrapper[0].contains(node[0]) ||
                     (ui && (me.ui !== ui || ui.selected !== selected))) return;
-                var x = window.scrollX, y = window.scrollY;
-                if (ui) ui.restoringFocus = true;
-                editor.focus();
-                if (ui) ui.restoringFocus = false;
-                window.scrollTo(x, y);
+                me.focus_ckeditor_without_scrolling(editor);
                 me.schedule_workbench();
             };
             if (editor.status === 'ready') focus();
@@ -3228,8 +3281,7 @@
         insert_content_into_ckeditor_at_cursor: function(html) {
             var oEditor = this.library_editor_bookmark ? this.library_editor_bookmark.editor : window.getCkEditorInstance();
             if (this.library_editor_bookmark) {
-                oEditor.focus();
-                oEditor.getSelection().selectBookmarks(this.library_editor_bookmark.marks);
+                this.focus_ckeditor_without_scrolling(oEditor, this.library_editor_bookmark.marks);
             }
             if (html.indexOf("<span") == 0) {
                 oEditor.insertHtml(html)
@@ -4023,22 +4075,14 @@
                     this.select_workbench_element($(inserted)[0], true);
                     this.focus_ckeditor_element($(inserted)[0]);
                 } else {
-                    window.scrollTo(ui.insertScroll.x, ui.insertScroll.y);
+                    window.scrollTo({ left: ui.insertScroll.x, top: ui.insertScroll.y, behavior: 'instant' });
                     this.position_workbench_insertion(ui.bar[0].getBoundingClientRect().bottom);
                     var destination = ui.insertPoints.find(item => item.source[0] === point.source[0]);
                     (destination ? destination.button : ui.bar.find('[data-pb-action=insert]'))[0].focus({ preventScroll: true });
                 }
             } else if (!inserted) {
                 if (bookmark && bookmark.editor.status === 'ready') {
-                    var x = window.scrollX, y = window.scrollY;
-                    if (ui) ui.restoringFocus = true;
-                    try {
-                        bookmark.editor.focus();
-                        bookmark.editor.getSelection().selectBookmarks(bookmark.marks);
-                    } finally {
-                        if (ui) ui.restoringFocus = false;
-                        window.scrollTo(x, y);
-                    }
+                    this.focus_ckeditor_without_scrolling(bookmark.editor, bookmark.marks);
                 } else {
                     var target = returnFocus && returnFocus.isConnected && $(returnFocus).is(':visible') ? returnFocus : this.clicked_button[0];
                     if (target && target.isConnected) target.focus({ preventScroll: true });

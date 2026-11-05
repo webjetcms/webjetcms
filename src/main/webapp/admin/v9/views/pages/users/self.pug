@@ -10,10 +10,7 @@ block content
     script.
         window.helpLink = "/admin/users/README";
 
-        var tabs = [
-            {id: "personalInfo", title: "[[\#{useredit.personal_info}]]", selected: true},
-            {id: "contactTab", title: "[[\#{components.users.contact}]]", selected: false}
-        ];
+        var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.users.userdetail.UserDetailsSelfEntity')})];
 
         var usersDatatable = null;
         var eventsBinded = false;

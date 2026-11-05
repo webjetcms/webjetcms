@@ -20,6 +20,7 @@ import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.form.FormFileRestriction;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /**
  * Prepares form settings for administration and bridges persisted settings with legacy attribute maps.
@@ -128,6 +129,46 @@ public class FormSettingsService {
     }
 
     /**
+     * Skips public nodes and otherwise attempts to increment the view counter without affecting form
+     * rendering when statistics persistence is unavailable.
+     *
+     * @param formName logical form name
+     * @param domainId current domain ID
+     * @param formSettingsRepository repository used to update the counter
+     */
+    public static void tryIncrementFormViewCount(String formName, int domainId, FormSettingsRepository formSettingsRepository) {
+        if (ClusterDB.isPublicNode()) return;
+
+        try {
+            formSettingsRepository.incrementFormViewCount(formName, domainId);
+        } catch (RuntimeException exception) {
+            Logger.warn(FormSettingsService.class,
+                "Unable to increment form view count for formName=" + formName + ", domainId=" + domainId,
+                exception);
+        }
+    }
+
+    /**
+     * Skips public nodes and otherwise attempts to increment the submission-attempt counter without
+     * affecting form submission when statistics persistence is unavailable.
+     *
+     * @param formName logical form name
+     * @param domainId current domain ID
+     * @param formSettingsRepository repository used to update the counter
+     */
+    public static void tryIncrementResponseAttempts(String formName, int domainId, FormSettingsRepository formSettingsRepository) {
+        if (ClusterDB.isPublicNode()) return;
+
+        try {
+            formSettingsRepository.incrementResponseAttempts(formName, domainId);
+        } catch (RuntimeException exception) {
+            Logger.warn(FormSettingsService.class,
+                "Unable to increment form response attempts for formName=" + formName + ", domainId=" + domainId,
+                exception);
+        }
+    }
+
+    /**
      * Finds registered processor class names matching a case-insensitive substring.
      *
      * @param term search text; {@code null}, blank, or {@code %} includes all registered processors
@@ -155,13 +196,19 @@ public class FormSettingsService {
      * @return attributes with nullable string values, or an empty map when the repository or settings are unavailable
      */
     public static Map<String, String> load(String formName) {
+        return toAttributeMap(loadEntity(formName));
+    }
+
+    /**
+     * Loads form settings in the current domain without converting them to legacy attributes.
+     *
+     * @param formName logical form name
+     * @return settings, or {@code null} when the repository or settings are unavailable
+     */
+    public static FormSettingsEntity loadEntity(String formName) {
         FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
-        if(formSettingsRepository == null) return new HashMap<>();
-
-        FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
-        if(formSettings == null) return new HashMap<>();
-
-        return toAttributeMap(formSettings);
+        if(formSettingsRepository == null) return null;
+        return formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
     }
 
     /**
