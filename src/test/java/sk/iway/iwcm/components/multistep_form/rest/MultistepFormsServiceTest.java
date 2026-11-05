@@ -156,21 +156,43 @@ class MultistepFormsServiceTest {
     }
 
     /**
-     * Verifies that item form IDs remain unique across fields with different types.
+     * Verifies that item form IDs use the label text and remain unique across field types.
      */
-    @Test
-    void generatesUniqueItemFormIdAcrossFieldTypes() {
+    @ParameterizedTest
+    @ValueSource(strings = {"Kontakt", "<strong>Kontakt</strong>", "<p><a href=\"/contact\">Kontakt</a></p>"})
+    void generatesUniqueItemFormIdAcrossFieldTypes(String label) {
         FormItemsRepository formItemsRepository = mock(FormItemsRepository.class);
         MultistepFormsService service = new MultistepFormsService(null, null, formItemsRepository, null, null);
         FormItemEntity emailField = new FormItemEntity();
         emailField.setFormName("contact-form");
         emailField.setFieldType("email");
-        emailField.setLabel("Kontakt");
+        emailField.setLabel(label);
 
         when(formItemsRepository.getItemFormIds("contact-form", 1)).thenReturn(List.of("kontakt-1"));
 
         assertEquals("kontakt-2", service.getValidItemFormId(emailField));
+        assertEquals(label, emailField.getLabel());
         verify(formItemsRepository).getItemFormIds("contact-form", 1);
+    }
+
+    /**
+     * Verifies that label formatting does not split radio buttons into different groups.
+     */
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void groupsRadioFieldsByPlainTextLabel(boolean required) {
+        MultistepFormsService service = new MultistepFormsService(null, null, null, null, null);
+        FormItemEntity radioField = new FormItemEntity();
+        radioField.setFieldType("radio");
+        radioField.setRequired(required);
+        radioField.setLabel("Kontakt");
+
+        String expectedId = "kontakt-" + required;
+        assertEquals(expectedId, service.getValidItemFormId(radioField));
+
+        radioField.setLabel("<strong>Kontakt</strong>");
+        assertEquals(expectedId, service.getValidItemFormId(radioField));
+        assertEquals("<strong>Kontakt</strong>", radioField.getLabel());
     }
 
     /**

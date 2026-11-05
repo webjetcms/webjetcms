@@ -819,6 +819,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         fields.put("stepId", stepId);
         fields.put("label", Tools.getStringValue(label, ""));
         fields.put("labelSanitized", Tools.getStringValue(labelSanitized, ""));
+        fields.put("hint", item == null ? "" : item.optString("hint", ""));
         fields.put("value", safeValue);
         fields.put("valueSanitized", DocTools.removeChars(safeValue, true));
         fields.put("placeholder", ResponseUtils.filter(Jsoup.parse(Tools.getStringValue(placeholder, "")).text()));

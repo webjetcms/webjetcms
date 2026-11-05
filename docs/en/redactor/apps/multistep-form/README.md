@@ -70,6 +70,8 @@ The second column contains form items (or form step items) that are only visible
 
 ![](form-item-editor.png)
 
+The **Field title** field uses a single-line editor. You can emphasize text, change its color, or add a link. Headings, lists, and line breaks are not allowed. When you paste multiline text or edit the HTML, lines are joined with spaces and block formatting is removed.
+
 ### Copy fields between forms
 
 You can use a configured field in another form or step without re-filling its settings:
@@ -93,8 +95,9 @@ The editor for adding and editing items is special in that it changes its conten
 - **Required field** - whether the item is required to be filled out.
 - **Allowed value** - for advanced user input validation, you can select any number of regular expressions that must be met for the input to be valid. Each option uses the format **code - name**, for example **alphabetLowercase - only lowercase characters allowed**. The name is displayed in the administration language. You can search by both name and code. The code corresponds to the **Code** column in the [Regular expressions] section (../form/regexps.md).
 - **Trim spaces** - if selected, leading and trailing spaces will be removed from the value before validation and saving. The setting is available for supported text fields; it is not used for select fields and formatted text fields.
-- **Field name** - the name that will be displayed to the user. If not specified, the name matching the field type will be used.
-- **Item identifier in the form** - the technical identifier is automatically created from the item name and supplemented with a distinctive suffix so that it is unique in the form. It is only displayed when editing a saved item and cannot be changed. It is used in conditions, saved data, and [item value tags](#item-value-tags).
+- **Field title** - the name that will be displayed to the user. If not specified, the name matching the field type will be used.
+- **Hint** - optional multiline formatted text displayed below the field label in the form. The editor supports paragraphs, lists, links, and longer HTML content. The field is available for all item types, directly below the field title, and is included when copying an item. Custom HTML field templates can insert the hint using the `${hint}` tag.
+- **Item identifier in the form** - the technical identifier is automatically created from the item name without HTML tags and supplemented with a distinctive suffix so that it is unique in the form. It is only displayed when editing a saved item and cannot be changed. It is used in conditions, saved data, and [item value tags](#item-value-tags).
 
 In the **Advanced** tab, you can set additional optional parameters such as:
 
