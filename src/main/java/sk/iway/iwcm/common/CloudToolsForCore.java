@@ -22,6 +22,7 @@ import cvu.html.HTMLTokenizer;
 import cvu.html.TagToken;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
@@ -759,7 +760,7 @@ public class CloudToolsForCore {
 		if (hasShop != null) return hasShop.booleanValue();
 
 		//vyhladajme stranky pre nas web v ktorom sa nachadza include products.jsp
-		String sqlQuery = "SELECT count(doc_id) FROM documents WHERE doc_id>0 AND root_group_l1 IN ("+GroupsDB.getInstance().expandRootGroupL1(rootGroupId)+") AND (data LIKE '%/components/basket/%' OR data LIKE '%/components/eshop/%')";
+		String sqlQuery = "SELECT count(doc_id) FROM documents WHERE doc_id>0 AND " + DB.getInCondition("root_group_l1", GroupsDB.getInstance().expandRootGroupL1(rootGroupId)) + " AND (data LIKE '%/components/basket/%' OR data LIKE '%/components/eshop/%')";
 		//System.out.println("---------------> " + CloudToolsForCore.getRootGroupId(request));
 		//System.out.println(sqlQuery);
 		int records = (new SimpleQuery()).forInt(sqlQuery);

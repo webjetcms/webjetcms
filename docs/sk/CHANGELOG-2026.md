@@ -360,6 +360,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Webové stránky - editor JSON prijíma aj polia a jednoduché hodnoty s komentármi. Opravené rozdelenie stĺpcov a posúvanie v Page Builderi a zatváranie tooltipu pri úprave z histórie (#346).
 - Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
 - Formuláre - opravené archivovanie formulárov (#305).
+- Formuláre - oddelené mazanie odoslaných dát od nastavení a položiek. Ak formulár používa zobrazovaná stránka alebo má dáta v archíve, definícia zostane zachovaná a notifikácia uvedie dôvod aj docId stránok. Pri úplnom odstránení sa zmažú aj kroky, položky a ich podmienky (#393).
 - Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opravené pridávanie prázdneho `P` elementu na koniec stránky (#58317-13).
 - Webové stránky - opravené načítanie hodnoty `ckeditor_button_sizes` pre tlačidlo typu `A` (#OSK674).
@@ -729,6 +730,9 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Databáza - opravené generovanie SQL podmienok `IN` a `NOT IN` s veľkým počtom hodnôt rozdelením zoznamov na menšie časti. Odstránené chyby pri prekročení limitu 1000 hodnôt v Oracle databáze, napríklad pri načítaní histórie stránky alebo práci s rozsiahlym stromom priečinkov. Maximálny počet hodnôt v jednej časti určuje konfiguračná premenná `dbInClauseMaxItems` (predvolene 1000, v Oracle najviac 1000).
+- Webové stránky - opravené obmedzenie hľadania a nahrádzania v názvoch priečinkov na vybraný strom priečinkov a nastavenie rodiča pri oprave chybne zmazaných priečinkov počas presunu stránky do koša (#390).
+- Kalendár udalostí - opravené filtrovanie podľa viacerých perex skupín pri nastavení `perexGroupUseJoin=true` bez duplicitných udalostí. Upravené obmedzenie počtu výsledkov aj pre Oracle a Microsoft SQL (#390).
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
 - Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
 - Redis - zlepšený prenos informácie o nahrávanom súbore v session (#342).

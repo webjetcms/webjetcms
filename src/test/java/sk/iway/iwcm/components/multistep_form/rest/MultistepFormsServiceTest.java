@@ -40,11 +40,15 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.forms.FormsController;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
-import sk.iway.iwcm.components.forms.FormsService;
+import sk.iway.iwcm.components.forms.FormsDeletionService;
+import sk.iway.iwcm.components.forms.archive.FormsArchiveRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
+import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
@@ -147,9 +151,11 @@ class MultistepFormsServiceTest {
                 form.setDomainId(field.getDomainId());
                 FormsRepository forms = mock(FormsRepository.class);
                 FormStepsRepository steps = mock(FormStepsRepository.class);
+                FormSettingsRepository settings = mock(FormSettingsRepository.class);
                 when(forms.findFirstByIdAndDomainId(form.getId(), field.getDomainId())).thenReturn(Optional.of(form));
-                FormsService<FormsRepository, FormsEntity> formsService = new FormsService<>(forms, null, steps, items);
-                assertTrue(formsService.deleteItem(form, form.getId(), steps, items, null));
+                FormsDeletionService deletionService = new FormsDeletionService(forms, mock(FormsArchiveRepository.class),
+                    settings, steps, items, mock(FormItemsConditionsRepository.class), mock(DocDetailsRepository.class));
+                assertTrue(deletionService.delete(form.getId(), false).deleted());
             }
             default -> throw new IllegalArgumentException("Unknown cache invalidation operation: " + operation);
         }

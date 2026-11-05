@@ -1697,7 +1697,7 @@ public class EditorService {
 				if(buf != null) ids = buf.toString();
 
 				if (ids != null) {
-					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE group_id IN (" + ids + ")", trashGroupDetails.getGroupId());
+					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE " + DB.getInCondition("group_id", ids), trashGroupDetails.getGroupId());
 					GroupsDB.getInstance(true);
 				}
 

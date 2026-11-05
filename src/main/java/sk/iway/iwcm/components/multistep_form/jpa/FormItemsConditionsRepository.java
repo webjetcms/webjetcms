@@ -5,11 +5,16 @@ import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
 @Repository
 public interface FormItemsConditionsRepository extends DomainIdRepository<FormItemsConditionEntity, Long> {
+
+    /** Deletes visibility and requirement conditions when their form definition is removed. */
+    @Transactional
+    void deleteAllByFormNameAndDomainId(String formName, Integer domainId);
 
     List<FormItemsConditionEntity> findAllByFormItemIdAndDomainIdOrderBySortPriorityAsc(Long formItemId, Integer domainId);
 

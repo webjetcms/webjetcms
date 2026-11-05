@@ -21,6 +21,7 @@ import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
+import sk.iway.iwcm.system.jpa.JpaTools;
 
 /**
  * Search service to search term in ADMIN
@@ -77,7 +78,7 @@ public class SearchService {
         if(searchAllGroups || InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true)
         {
             Integer[] rootGroupIds = Tools.getTokensInteger(CloudToolsForCore.getRootGroupIds(), ",");
-            predicates.add(root.get("rootGroupL1").in((Object[])rootGroupIds));
+            predicates.add(JpaTools.in(root.get("rootGroupL1"), Arrays.asList(rootGroupIds), builder));
         }
 
         // Groups and Pages permissions check ONLY for docs filtering (files cant be changes anyway)
@@ -89,13 +90,13 @@ public class SearchService {
                 Integer[] groupsTreeIds = searchAllGroups
                     ? Arrays.stream(groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(true), ","), true)).boxed().toArray(Integer[]::new)
                     : groupsDB.getGroupsTree(rootGroupId, true, true).stream().map(GroupDetails::getGroupId).toArray(Integer[]::new);
-                Predicate groupsPredicate = groupsTreeIds.length == 0 ? builder.disjunction() : root.get("groupId").in((Object[]) groupsTreeIds);
+                Predicate groupsPredicate = groupsTreeIds.length == 0 ? builder.disjunction() : JpaTools.in(root.get("groupId"), Arrays.asList(groupsTreeIds), builder);
 
                 if(editablePagesIds.length > 0) {
                     // Right for pages in whole tree from given id + right for pages in editablePages
                     predicates.add(builder.or(
                         groupsPredicate,
-                        root.get("id").in((Object[]) editablePagesIds)
+                        JpaTools.in(root.get("id"), Arrays.asList(editablePagesIds), builder)
                     ));
                 } else {
                     // Right for pages in whole tree from given id
@@ -103,7 +104,7 @@ public class SearchService {
                 }
             } else if(editablePagesIds.length > 0) {
                 // Right for pages in editablePages
-                predicates.add(root.get("id").in((Object[]) editablePagesIds));
+                predicates.add(JpaTools.in(root.get("id"), Arrays.asList(editablePagesIds), builder));
             }
         }
 

@@ -360,6 +360,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Web pages - JSON editor now accepts fields and simple values ​​with comments. Fixed column splitting and scrolling in Page Builder and closing tooltip when editing from history (#346).
 - Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
+- Forms - separate deletion of submitted data from settings and items. If a form is used by a displayed page or has data in the archive, the definition will be preserved and the notification will indicate the reason and the docId of the pages. When completely deleted, steps, items and their conditions will also be deleted (#393).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
 - Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
