@@ -16,6 +16,7 @@
 - Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
 - Galéria - metóda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vracia namiesto `void` výsledok spracovania typu `int`: `0` pri úspechu, inak kód chyby. Po aktualizácii je potrebné prekompilovať závislý Java kód aj JSP súbory, napríklad vyčistením pracovného priečinka konkrétnej aplikácie v Tomcat (#371).
 - Viackrokové formuláre - metódy `validateStep` a `runStepInterceptor` rozhrania [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) dostávajú za `formName` nový parameter `FormSettingsEntity formSettings`. Ak používate vlastnú Java triedu na spracovanie formulárov je potrebné ju upraviť a znova skompilovať. Nastavenia už nemusia načítavať podľa mena formulára, ale dostanete ho priamo (#364).
+- Viackrokové formuláre - identifikátor polí sa už generuje z názvu s odstráneným HTML kódom (použije sa len text). Ak máte v názve poľa použité HTM formátovanie pre rádio skupiny, tak znovu uložte **všetky jej možnosti**. Aktualizujte aj podmienky a odkazy na zmenené identifikátory (#396).
 
 ### Úvodná obrazovka
 
