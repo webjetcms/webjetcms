@@ -330,6 +330,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
+- Page Builder - inserted cards will receive their own ID even when copied before initialization is complete, so that their links do not link to the original block.
+- Data tables - entering the ID will open the record even after previous filtering without results.
 - Websites - fixed [export to ZIP archive](redactor/webpages/import-export.md) for images inserted via `/thumb/` that were not originally added to the export (#389).
 - Web pages - the insert image dialog limits file selection to images, videos, and audio files, even in the Files folder. Unsupported types recognized by the browser will be rejected before submission. Additionally, the server will validate the extension before saving (#375).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the page is opened (#372).
@@ -727,6 +730,9 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Database - fixed generation of SQL conditions `IN` and `NOT IN` with a large number of values ​​by dividing the lists into smaller parts. Fixed errors when exceeding the limit of 1000 values ​​in the Oracle database, for example when loading the page history or working with an extensive folder tree. The maximum number of values ​​in one part is determined by the configuration variable `dbInClauseMaxItems` (default 1000, in Oracle no more than 1000).
+- Web pages - fixed limiting search and replace in folder names to the selected folder tree and setting the parent when fixing erroneously deleted folders during moving a page to the trash (#390).
+- Event Calendar - fixed filtering by multiple perex groups when setting `perexGroupUseJoin=true` without duplicate events. Fixed limit on number of results also for Oracle and Microsoft SQL (#390).
 - Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
 - Cluster - optimized writing of changes in the cluster when starting a new node (#337).
 - Redis - improved transfer of information about the uploaded file in the session (#342).

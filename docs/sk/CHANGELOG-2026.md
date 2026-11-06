@@ -330,6 +330,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Viackrokové formuláre - pravidlá **Povolená hodnota** už neodmietnu prázdne nepovinné pole. Pri povinnom poli sa regulárne výrazy kontrolujú aj pre prázdnu hodnotu; pri odoslaní kroku sa zohľadňujú aj podmienky povinnosti (#394).
 - Page Builder - vložené karty dostanú vlastné ID aj pri kopírovaní pred dokončením inicializácie, aby sa ich odkazy neprepájali s pôvodným blokom.
 - Dátové tabuľky - zadanie ID otvorí záznam aj po predchádzajúcom filtrovaní bez výsledkov.
 - Webové stránky - opravený [export do ZIP archívu](redactor/webpages/import-export.md) pre obrázky vložené cez `/thumb/`, ktoré sa pôvodne do exportu nepridali (#389).
