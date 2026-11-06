@@ -330,6 +330,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Multi-step forms - when an item, step, or form is deleted, the corresponding display conditions and obligations are also deleted. Conditions for already deleted items do not block the deletion of the fields they referenced (#395).
 - Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
 - Page Builder - inserted cards will receive their own ID even when copied before initialization is complete, so that their links do not link to the original block.
 - Data tables - entering the ID will open the record even after previous filtering without results.

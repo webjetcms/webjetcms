@@ -255,6 +255,7 @@ Každá podmínka obsahuje tyto parametry:
 
 - Podmínka nemůže odkazovat sama na sebe. Jedná se o nepovolený stav a podmínka nebude možné uložit.
 - Položku, která je použita v podmínkách jiných položek, nelze odstranit.
+- Při odstranění položky se odstraní i její podmínky zobrazení a povinnosti. Pole, na která tyto podmínky odkazovaly, pak můžete odstranit, pokud je nepoužívá podmínka další existující položky. Podmínky se odstraní i při smazání celého kroku nebo formuláře.
 - Při úpravě takové položky editor zobrazí upozornění na závislé položky. Uložení můžete povolit v kartě **Pokročilé** volbou **Uložit iu existujících závislých položek**.
 
 Při pokusu o úpravu nebo odstranění položky, která je použita v podmínce jiné položky, se zobrazí chyba i notifikace se seznamem závislých položek.

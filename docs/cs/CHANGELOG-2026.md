@@ -330,6 +330,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Vícekrokové formuláře - při smazání položky, kroku nebo formuláře se odstraní i příslušné podmínky zobrazení a povinnosti. Podmínky již smazaných položek neblokují odstranění polí, na která odkazovaly (#395).
 - Vícekrokové formuláře - pravidla **Povolená hodnota** již neodmítnou prázdné nepovinné pole. U povinného pole se regulární výrazy kontrolují i ​​pro prázdnou hodnotu; při odeslání kroku se zohledňují i ​​podmínky povinnosti (#394).
 - Page Builder - vložené karty dostanou vlastní ID i při kopírování před dokončením inicializace, aby se jejich odkazy nepropojovaly s původním blokem.
 - Datové tabulky - zadání ID otevře záznam i po předchozím filtrování bez výsledků.
