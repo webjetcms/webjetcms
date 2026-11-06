@@ -255,6 +255,7 @@ Each condition contains the following parameters:
 
 - A condition cannot refer to itself. This is an illegal state and the condition will not be saved.
 - An item that is used in the conditions of other items cannot be deleted.
+- When you delete an item, its display conditions and obligations are also deleted. You can then delete the fields that these conditions referenced, unless they are used by a condition on another existing item. Conditions are also deleted when you delete an entire step or form.
 - When editing such an item, the editor will display a warning about dependent items. You can enable saving in the **Advanced** tab by selecting **Save even with existing dependent items**.
 
 When you try to edit or delete an item that is used in a condition of another item, an error and a notification with a list of dependent items will appear.
