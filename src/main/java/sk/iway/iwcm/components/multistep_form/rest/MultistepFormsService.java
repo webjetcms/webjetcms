@@ -1019,6 +1019,8 @@ public class MultistepFormsService {
      * @return identifier safe for storage and queries, unique for non-radio fields
      */
     public final String getValidItemFormId(FormItemEntity entity) {
+        String label = entity.getLabel();
+        if (Tools.isNotEmpty(label)) label = new Html2Text(label).getText();
 
         // type radio use placeholder or label as itemFormId, so we can join them - here same id is wanted outcome
         String fieldType = entity.getFieldType();
@@ -1028,7 +1030,6 @@ public class MultistepFormsService {
             baseFormId = StringEscapeUtils.unescapeHtml4(baseFormId);
 
             String itemFormId = "";
-            String label = entity.getLabel();
             if (Tools.isNotEmpty(label)) {
                 label = ResponseUtils.filter(label);
                 baseFormId = DB.prepareString(label, 200);
@@ -1041,7 +1042,6 @@ public class MultistepFormsService {
 
         // Try set field ID from user filled label value
         String itemFormId = "";
-        String label = entity.getLabel();
         if (Tools.isNotEmpty(label)) {
             label = ResponseUtils.filter(label);
             itemFormId = DB.prepareString(label, 200);

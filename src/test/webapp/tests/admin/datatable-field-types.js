@@ -4,6 +4,66 @@ Before(({ I, login }) => {
      login('admin');
 });
 
+/** Verifies single-line labels across typing, pasting, source editing and reopening editor values. */
+Scenario('type-quill-oneline', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/form-steps/?formName=Multistepform_1');
+    DT.waitForLoader('formStepsDataTable');
+    I.waitForElement('#formStepsDataTable tbody tr.selected', 10);
+    DT.waitForLoader('formItemsDataTable');
+    I.clickCss('#formItemsDataTable_wrapper button.buttons-create');
+    DTE.waitForEditor('formItemsDataTable');
+    DTE.selectOption('fieldType', 'Popiska (info text)');
+
+    const field = '#formItemsDataTable_modal #DTE_Field_label';
+    const editor = field + ' .ql-editor';
+    for (const control of ['ql-header', 'ql-align', 'ql-list', 'ql-indent']) {
+        I.dontSeeElement(field + ' .' + control);
+    }
+    I.seeAttributesOnElements(editor, { 'aria-multiline': 'false' });
+    DTE.fillQuill('label', 'Single-line autotest');
+    I.pressKey('Enter');
+    I.pressKey(['Shift', 'Enter']);
+    I.type(' continued');
+    I.seeTextEquals('Single-line autotest continued', editor);
+    I.assertEqual(await I.executeScript(selector => document.querySelector(selector).innerHTML, editor), '<p>Single-line autotest continued</p>');
+
+    for (const [format, content] of [
+        ['text/plain', 'First autotest\nSecond\nThird'],
+        ['text/html', '<h2>First autotest</h2><p><strong>Second</strong><br>Third</p>']
+    ]) {
+        I.clickCss(editor);
+        I.pressKey(['CommandOrControl', 'A']);
+        I.executeScript(({ selector, format, content }) => {
+            const clipboardData = new DataTransfer();
+            clipboardData.setData(format, content);
+            document.querySelector(selector).dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }));
+        }, { selector: editor, format, content });
+        I.seeTextEquals('First autotest Second Third', editor);
+        I.assertEqual(await I.grabNumberOfVisibleElements(editor + ' p'), 1);
+        I.dontSeeElement(editor + ' h2');
+        I.dontSeeElement(editor + ' br');
+    }
+
+    I.clickCss(field + ' button:has(.ti-code)');
+    I.waitForVisible('.ql-html-textArea', 5);
+    I.fillField('.ql-html-textArea', '<h1>Heading autotest</h1><ul><li><strong>Bold</strong></li><li><em>Italic</em></li></ul><p><a href="https://example.com">Link</a> <span style="color: #ff0000">Red</span><br>End</p>');
+    I.clickCss('button.ql-html-buttonOk');
+    I.seeTextEquals('Heading autotest Bold Italic Link Red End', editor);
+    I.see('Bold', editor + ' strong');
+    I.see('Italic', editor + ' em');
+    I.seeAttributesOnElements(editor + ' a', { href: 'https://example.com' });
+    I.assertEqual(await I.grabCssPropertyFrom(editor + ' span', 'color'), 'rgb(255, 0, 0)');
+    I.assertEqual(await I.grabNumberOfVisibleElements(editor + ' p'), 1);
+    for (const tag of ['h1', 'ul', 'li', 'br']) I.dontSeeElement(editor + ' ' + tag);
+
+    const savedValue = await I.executeScript(() => formItemsDataTable.EDITOR.field('label').val());
+    I.assertNotContain(savedValue, '<p>');
+    I.executeScript(value => formItemsDataTable.EDITOR.field('label').val(value), savedValue);
+    I.assertEqual(await I.executeScript(() => formItemsDataTable.EDITOR.field('label').val()), savedValue);
+    I.saveScreenshot('quill-oneline-autotest.png');
+    DTE.cancel('formItemsDataTable');
+});
+
 /** Verifies that toolbar menus remain clickable beyond a short modal body and in a short viewport. */
 Scenario('type-quill-pickers-in-short-modal', async ({ I, DT, DTE }) => {
     I.amOnPage('/apps/form/admin/form-steps/?formName=Multistepform_1');
@@ -11,14 +71,13 @@ Scenario('type-quill-pickers-in-short-modal', async ({ I, DT, DTE }) => {
     I.waitForElement('#formStepsDataTable tbody tr.selected', 10);
     DT.waitForLoader('formItemsDataTable');
 
-    const field = '#formItemsDataTable_modal #DTE_Field_label';
+    const field = '#formStepsDataTable_modal #DTE_Field_header';
     const heading = field + ' .ql-header';
     for (const [width, height, toolbarOffset] of [[1440, 900, 0], [1024, 768, 0], [600, 650, 0], [600, 400, 40], [600, 400, 80]]) {
         I.resizeWindow(width, height);
-        I.clickCss('#formItemsDataTable_wrapper button.buttons-create');
-        DTE.waitForEditor('formItemsDataTable');
-        DTE.selectOption('fieldType', 'Popiska (info text)');
-        DTE.fillQuill('label', 'Quill picker autotest');
+        I.clickCss('#formStepsDataTable_wrapper button.buttons-create');
+        DTE.waitForEditor('formStepsDataTable');
+        DTE.fillQuill('header', 'Quill picker autotest');
 
         // Place the toolbar where neither side has room for the full menu in a short viewport.
         I.executeScript(({ selector, offset }) => {
@@ -53,7 +112,7 @@ Scenario('type-quill-pickers-in-short-modal', async ({ I, DT, DTE }) => {
         I.executeScript(selector => {
             document.querySelector(selector).closest('.DTE_Field').style.removeProperty('margin-top');
         }, field);
-        DTE.cancel('formItemsDataTable');
+        DTE.cancel('formStepsDataTable');
     }
     I.wjSetDefaultWindowSize();
 });

@@ -70,6 +70,8 @@ Druhý stĺpec obsahuje položky formuláru (alebo položky kroku formuláru), k
 
 ![](form-item-editor.png)
 
+Pole **Názov poľa** používa jednoriadkový editor. Text môžete zvýrazniť, zmeniť jeho farbu alebo pridať odkaz. Nadpisy, zoznamy a zalomenia riadkov nie sú povolené. Pri vložení viacriadkového textu alebo úprave HTML sa riadky spoja medzerami a blokové formátovanie sa odstráni.
+
 ### Kopírovanie polí medzi formulármi
 
 Nastavené pole môžete použiť v inom formulári alebo kroku bez opätovného vypĺňania jeho nastavení:
@@ -94,7 +96,8 @@ Editor pre pridávanie a úpravu položiek je špeciálny tým, že mení svoj o
 - **Povolená hodnota** - pre pokročilú validáciu vstupu používateľa viete zvoliť ľubovoľný počet regulárnych výrazov, ktoré musia byť splnené, aby bol vstup platný. Každá možnosť používa formát **kód - názov**, napríklad **alphabetLowercase - povolené len malé znaky**. Názov sa zobrazuje v jazyku administrácie. Podľa názvu aj kódu môžete vyhľadávať. Kód zodpovedá stĺpcu **Kód** v sekcii [Regulárne výrazy](../form/regexps.md).
 - **Orezať medzery** - ak je zvolené, úvodné a koncové medzery sa z hodnoty odstránia ešte pred validáciou a uložením. Nastavenie je dostupné pre podporované textové polia; nepoužíva sa pre výberové polia a formátované textové pole.
 - **Názov poľa** - názov, ktorý sa zobrazí používateľovi. Ak nie je zadaný použije sa názov zhodný s typom poľa.
-- **Identifikátor položky vo formulári** - technický identifikátor sa automaticky vytvorí z názvu položky a doplní sa rozlišujúcou príponou tak, aby bol vo formulári jedinečný. Zobrazuje sa až pri úprave uloženej položky a nie je možné ho meniť. Používa sa v podmienkach, uložených dátach a v [značkách hodnôt položiek](#značky-hodnôt-položiek).
+- **Nápoveda** - voliteľný viacriadkový formátovaný text, ktorý sa vo formulári zobrazuje za názvom poľa. Editor podporuje odseky, zoznamy, odkazy a rozsiahlejší HTML obsah. Pole je dostupné pre všetky typy položiek hneď za názvom poľa a prenáša sa aj pri kopírovaní položky. Vlastné HTML šablóny polí môžu nápovedu vložiť značkou `${hint}`.
+- **Identifikátor položky vo formulári** - technický identifikátor sa automaticky vytvorí z názvu položky bez HTML značiek a doplní sa rozlišujúcou príponou tak, aby bol vo formulári jedinečný. Zobrazuje sa až pri úprave uloženej položky a nie je možné ho meniť. Používa sa v podmienkach, uložených dátach a v [značkách hodnôt položiek](#značky-hodnôt-položiek).
 
 Pravidlá **Povolená hodnota** sa pri povinnom poli kontrolujú aj pre prázdnu hodnotu. Pri nepovinnom poli sa kontrolujú iba vtedy, keď je pole vyplnené. Pri odoslaní kroku sa povinnosť určí podľa karty **Povinnosť**, ak obsahuje podmienky, inak podľa prepínača **Povinné pole**.
 
