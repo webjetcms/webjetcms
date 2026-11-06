@@ -330,6 +330,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
+- Page Builder - inserted cards will receive their own ID even when copied before initialization is complete, so that their links do not link to the original block.
+- Data tables - entering the ID will open the record even after previous filtering without results.
 - Websites - fixed [export to ZIP archive](redactor/webpages/import-export.md) for images inserted via `/thumb/` that were not originally added to the export (#389).
 - Web pages - the insert image dialog limits file selection to images, videos, and audio files, even in the Files folder. Unsupported types recognized by the browser will be rejected before submission. Additionally, the server will validate the extension before saving (#375).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the page is opened (#372).
@@ -357,6 +360,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Web pages - JSON editor now accepts fields and simple values ​​with comments. Fixed column splitting and scrolling in Page Builder and closing tooltip when editing from history (#346).
 - Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
+- Forms - separate deletion of submitted data from settings and items. If a form is used by a displayed page or has data in the archive, the definition will be preserved and the notification will indicate the reason and the docId of the pages. When completely deleted, steps, items and their conditions will also be deleted (#393).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
 - Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
@@ -726,6 +730,9 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Database - fixed generation of SQL conditions `IN` and `NOT IN` with a large number of values ​​by dividing the lists into smaller parts. Fixed errors when exceeding the limit of 1000 values ​​in the Oracle database, for example when loading the page history or working with an extensive folder tree. The maximum number of values ​​in one part is determined by the configuration variable `dbInClauseMaxItems` (default 1000, in Oracle no more than 1000).
+- Web pages - fixed limiting search and replace in folder names to the selected folder tree and setting the parent when fixing erroneously deleted folders during moving a page to the trash (#390).
+- Event Calendar - fixed filtering by multiple perex groups when setting `perexGroupUseJoin=true` without duplicate events. Fixed limit on number of results also for Oracle and Microsoft SQL (#390).
 - Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
 - Cluster - optimized writing of changes in the cluster when starting a new node (#337).
 - Redis - improved transfer of information about the uploaded file in the session (#342).

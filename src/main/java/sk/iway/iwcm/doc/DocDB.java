@@ -1180,8 +1180,7 @@ public class DocDB extends DB
 		int publishType = DocDB.PUBLISH_NO_PEREX_CHECK_NEW;
 		int pageSize = docIds.size();
 
-		String docIdsStr = docIds.size() > 0 ? Tools.join(docIds) : "null";
-		String whereSql = " AND doc_id IN ( " + docIdsStr + ") ";
+		String whereSql = " AND " + DB.getInCondition("doc_id", docIds) + " ";
 		String oldWhereSql = (String) request.getAttribute("whereSql");
 		request.setAttribute("whereSql", (Tools.isEmpty(oldWhereSql) ? "" : oldWhereSql) + whereSql);
 
@@ -1436,10 +1435,10 @@ public class DocDB extends DB
 						if (pgb != null) pid = pgb.getPerexGroupId();
 					}
 
-					if(pid > 0) groupNamesIn.append(gn).append(",");
+					if(pid > 0) groupNamesIn.append(pid).append(",");
 				}
 
-				if(Tools.isNotEmpty(groupNamesIn)) whereSql.append(" AND p.perex_group_id IN ("+(groupNamesIn.toString().endsWith(",") ? groupNamesIn.substring(0, groupNamesIn.length()-1) : groupNamesIn)+") ");
+				if(Tools.isNotEmpty(groupNamesIn)) whereSql.append(" AND ").append(DB.getInCondition("p.perex_group_id", groupNamesIn.substring(0, groupNamesIn.length()-1))).append(" ");
 			}
 			else
 			{
@@ -1813,7 +1812,7 @@ public class DocDB extends DB
 		whereSql = whereSql.replace(';', ' ');
 
 		if(Tools.isNotEmpty(docIdsNotIn))
-			whereSql += " AND d.doc_id NOT IN ("+docIdsNotIn+")";
+			whereSql += " AND " + DB.getNotInCondition("d.doc_id", docIdsNotIn);
 
 		List<DocDetails> ret = new ArrayList<>();
 
@@ -1968,7 +1967,7 @@ public class DocDB extends DB
 				if (groupIds!=null && groupIds.length()>0)
 				{
 					if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-					else sql.append(" AND group_id IN (" ).append( getOnlyNumbersIn(groupIds) ).append( ") ");
+					else sql.append(" AND ").append(DB.getInCondition("group_id", getOnlyNumbersIn(groupIds))).append(" ");
 				}
 				sql.append(" " ).append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order);
 			}
@@ -1984,7 +1983,7 @@ public class DocDB extends DB
 				if (groupIds!=null && groupIds.length()>0)
 				{
 					if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-					else sql.append(" AND group_id IN (" ).append( getOnlyNumbersIn(groupIds) ).append( ") ");
+					else sql.append(" AND ").append(DB.getInCondition("group_id", getOnlyNumbersIn(groupIds))).append(" ");
 				}
 				sql.append(' ').append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order);
 			}
@@ -2008,7 +2007,7 @@ public class DocDB extends DB
 				if (groupIds!=null && groupIds.length()>0)
 				{
 					if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-					else sql.append(" AND group_id IN (" ).append( getOnlyNumbersIn(groupIds) ).append( ") ");
+					else sql.append(" AND ").append(DB.getInCondition("group_id", getOnlyNumbersIn(groupIds))).append(" ");
 				}
 				sql.append(' ').append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order ).append( limit);
 			}
@@ -2125,7 +2124,7 @@ public class DocDB extends DB
 		whereSql = whereSql.replace(';', ' ');
 
 		if(Tools.isNotEmpty(docIdsNotIn))
-			whereSql += " AND d.doc_id NOT IN ("+docIdsNotIn+")";
+			whereSql += " AND " + DB.getNotInCondition("d.doc_id", docIdsNotIn);
 
 		int ret = 0;
 
@@ -2168,7 +2167,7 @@ public class DocDB extends DB
 			if (groupIds!=null && groupIds.length()>0)
 			{
 				if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-				else sql.append(" AND group_id IN (" ).append( groupIds ).append( ") ");
+				else sql.append(" AND ").append(DB.getInCondition("group_id", groupIds)).append(" ");
 			}
 
 			if (checkPerex) sql.append(" AND html_data IS NOT null ");
@@ -3847,7 +3846,7 @@ public class DocDB extends DB
 
 			if (searchGroups != null)
 			{
-				sql.append(" WHERE group_id IN (").append(getOnlyNumbersIn(searchGroups.toString(),true)).append(')');
+				sql.append(" WHERE ").append(DB.getInCondition("group_id", getOnlyNumbersIn(searchGroups.toString(), true)));
 			}
 
 

@@ -85,7 +85,7 @@ Scenario('stranky-overenie prav na tlacidla', async ({ I, DT, DTE }) => {
 
     // The preview guard must not be the only protection against a direct delete request.
     const docId = await I.grabAttributeFrom(locate('#datatableInit tbody tr').withText('Nedá sa zmazať'), 'id');
-    const session = await I.grabCookie('JSESSIONID');
+    const session = await I.grabCookieForCurrentUrl('JSESSIONID');
     const response = await I.sendPostRequest('/admin/rest/web-pages/editor', {
         action: 'remove', data: { [docId]: { docId: Number(docId) } }
     }, {
@@ -93,6 +93,7 @@ Scenario('stranky-overenie prav na tlacidla', async ({ I, DT, DTE }) => {
         'X-CSRF-Token': await I.grabValueFrom('form[name="adminLogoffForm"] input[name="__token"]'),
         Referer: await I.grabCurrentUrl()
     });
+    I.assertEqual(response.status, 200, 'The delete request must reach the Editor permission check');
     I.assertContain(response.data.error || '', 'nemáte právo na zmazanie web stránky');
 
     // Reload the page to verify that the rejected preview left the existing content intact.

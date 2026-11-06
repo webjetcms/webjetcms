@@ -96,6 +96,8 @@ The editor for adding and editing items is special in that it changes its conten
 - **Field name** - the name that will be displayed to the user. If not specified, the name matching the field type will be used.
 - **Item identifier in the form** - the technical identifier is automatically created from the item name and supplemented with a distinctive suffix so that it is unique in the form. It is only displayed when editing a saved item and cannot be changed. It is used in conditions, saved data, and [item value tags](#item-value-tags).
 
+**Allowed Value** rules are checked for a mandatory field even if it is empty. For an optional field, they are checked only if the field is filled in. When submitting a step, the obligation is determined by the **Requirement** card, if it contains conditions, otherwise by the **Required Field** radio button.
+
 In the **Advanced** tab, you can set additional optional parameters such as:
 
 - **Form Step** - the step the item belongs to, so you can easily move the item to another step.

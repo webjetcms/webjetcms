@@ -128,7 +128,7 @@ public class OfflineService {
 		if (groupId == -1 || searchGroups == null)
 			query = "SELECT doc_id, title, virtual_path FROM documents WHERE available=? ORDER BY doc_id";
 		else
-			query = "SELECT doc_id, title, virtual_path FROM documents WHERE available=? AND group_id IN ("+ searchGroups.toString() +") ORDER BY doc_id";
+			query = "SELECT doc_id, title, virtual_path FROM documents WHERE available=? AND " + DB.getInCondition("group_id", searchGroups.toString()) + " ORDER BY doc_id";
 		try
 		{
 			db_conn = DBPool.getConnection();

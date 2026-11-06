@@ -500,6 +500,7 @@ test('Recent pages retain six server-filtered rows safely in every supported siz
     const signal = new AbortController().signal;
     assert.deepEqual(Array.from(widget.sizes), ['2x3', '3x2', '3x3']);
     assert.equal(widget.defaultSize, '3x2');
+    assert.equal(widget.headerLink.href, '/admin/v9/webpages/web-pages-list/#pills-changes');
     for (const size of widget.sizes) {
         container.replaceChildren();
         await widget.render({ container, context, signal, instance: { size } });

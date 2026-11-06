@@ -40,6 +40,7 @@ import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.forms.archive.FormsArchiveRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
@@ -652,46 +653,18 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Deletes one submission or all records and structure belonging to a form definition.
+     * Deletes form data through the deletion service, preserving definitions still in use.
      *
-     * Deleting a management record, identified by a missing creation date, removes all submissions,
-     * steps, items, and conditions with the same form name. Form settings are intentionally preserved.
-     *
-     * @param entity  entity carrying the form name to delete
-     * @param id  database identifier of the record initiating the deletion
-     * @param formStepsRepository  repository used to remove multistep form steps
-     * @param formItemsRepository  repository used to remove multistep form items
-     * @param formSettingsRepository  settings repository retained for deletion workflow compatibility
-     * @return {@code true} when deletion succeeds; {@code false} for another domain or on failure
+     * @param entity submitted record retained for API compatibility; only the stored ID is used
+     * @param id database identifier of the record initiating the deletion
+     * @param formStepsRepository retained for API compatibility
+     * @param formItemsRepository retained for API compatibility
+     * @param formSettingsRepository retained for API compatibility
+     * @return whether the record was deleted in the current domain
      */
     public boolean deleteItem(E entity, long id, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, FormSettingsRepository formSettingsRepository) {
-        try {
-            String formName = entity.getFormName();
-            E entityDb = getById(id);
-
-            int domainId = CloudToolsForCore.getDomainId();
-            if (domainId != entityDb.getDomainId()) return false;
-
-            if (entityDb.getCreateDate() == null) {
-                FormConditionsHandler.deleteFormConditions(formName, domainId);
-                //zmaz vsetky podla mena formu, ak su uz len 2 zaznamy (cize riadiaci + jeden form) zmaz tiez vsetko
-                formsRepository.deleteByFormNameAndDomainId(formName, domainId);
-                // Ak ma, zmaz aj steps/items (multistep forms)
-                formStepsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
-                formItemsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
-                MultistepFormsService.clearValidationFieldsCache(formName, domainId);
-                // DO NOT DELETE maybe form is still in webpage and we just deleted form records
-                // formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
-            } else {
-                // remove form filled record
-                formsRepository.deleteById(id);
-            }
-
-            return true;
-        } catch (Exception e) {
-            Logger.error(getClass(), e);
-        }
-        return false;
+        FormsDeletionService deletionService = Tools.getSpringBean("formsDeletionService", FormsDeletionService.class);
+        return deletionService.delete(id, formsRepository instanceof FormsArchiveRepository).deleted();
     }
 
     /**
