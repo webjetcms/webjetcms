@@ -99,6 +99,8 @@ Editor pro přidávání a úpravu položek je speciální tím, že mění svů
 - **Nápověda** - volitelný víceřádkový formátovaný text, který se ve formuláři zobrazuje pod názvem pole. Editor podporuje odstavce, seznamy, odkazy a rozsáhlejší HTML obsah. Pole je dostupné pro všechny typy položek hned pod názvem pole a přenáší se i při kopírování položky. Vlastní HTML šablony polí mohou nápovědu vložit značkou `${hint}`.
 - **Identifikátor položky ve formuláři** - technický identifikátor se automaticky vytvoří z názvu položky bez HTML značek a doplní se rozlišující příponou tak, aby byl ve formuláři jedinečný. Zobrazuje se až při úpravě uložené položky a nelze jej měnit. Používá se v podmínkách, uložených datech a v [značkách hodnot položek](#značky-hodnot-položek).
 
+Pravidla **Povolená hodnota** se u povinného pole kontrolují i ​​pro prázdnou hodnotu. U nepovinného pole se kontrolují pouze tehdy, když je pole vyplněno. Při odeslání kroku se povinnost určí podle karty **Povinnost**, pokud obsahuje podmínky, jinak podle přepínače **Povinné pole**.
+
 V kartě **Pokročilé** můžete nastavit další volitelné parametry jako:
 
 - **Krok formuláře** - krok, ke kterému položka patří, můžete tak snadno položku přesunout do jiného kroku.
@@ -256,6 +258,7 @@ Každá podmínka obsahuje tyto parametry:
 
 - Podmínka nemůže odkazovat sama na sebe. Jedná se o nepovolený stav a podmínka nebude možné uložit.
 - Položku, která je použita v podmínkách jiných položek, nelze odstranit.
+- Při odstranění položky se odstraní i její podmínky zobrazení a povinnosti. Pole, na která tyto podmínky odkazovaly, pak můžete odstranit, pokud je nepoužívá podmínka další existující položky. Podmínky se odstraní i při smazání celého kroku nebo formuláře.
 - Při úpravě takové položky editor zobrazí upozornění na závislé položky. Uložení můžete povolit v kartě **Pokročilé** volbou **Uložit iu existujících závislých položek**.
 
 Při pokusu o úpravu nebo odstranění položky, která je použita v podmínce jiné položky, se zobrazí chyba i notifikace se seznamem závislých položek.

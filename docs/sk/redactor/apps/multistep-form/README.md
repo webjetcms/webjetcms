@@ -99,6 +99,8 @@ Editor pre pridávanie a úpravu položiek je špeciálny tým, že mení svoj o
 - **Nápoveda** - voliteľný viacriadkový formátovaný text, ktorý sa vo formulári zobrazuje za názvom poľa. Editor podporuje odseky, zoznamy, odkazy a rozsiahlejší HTML obsah. Pole je dostupné pre všetky typy položiek hneď za názvom poľa a prenáša sa aj pri kopírovaní položky. Vlastné HTML šablóny polí môžu nápovedu vložiť značkou `${hint}`.
 - **Identifikátor položky vo formulári** - technický identifikátor sa automaticky vytvorí z názvu položky bez HTML značiek a doplní sa rozlišujúcou príponou tak, aby bol vo formulári jedinečný. Zobrazuje sa až pri úprave uloženej položky a nie je možné ho meniť. Používa sa v podmienkach, uložených dátach a v [značkách hodnôt položiek](#značky-hodnôt-položiek).
 
+Pravidlá **Povolená hodnota** sa pri povinnom poli kontrolujú aj pre prázdnu hodnotu. Pri nepovinnom poli sa kontrolujú iba vtedy, keď je pole vyplnené. Pri odoslaní kroku sa povinnosť určí podľa karty **Povinnosť**, ak obsahuje podmienky, inak podľa prepínača **Povinné pole**.
+
 V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:
 
 - **Krok formuláru** - krok, ku ktorému položka patrí, môžete tak ľahko položku presunúť do iného kroku.
@@ -256,6 +258,7 @@ Každá podmienka obsahuje tieto parametre:
 
 - Podmienka nemôže odkazovať sama na seba. Ide o nepovolený stav a podmienka sa nebude dať uložiť.
 - Položku, ktorá je použitá v podmienkach iných položiek, nie je možné odstrániť.
+- Pri odstránení položky sa odstránia aj jej podmienky zobrazenia a povinnosti. Polia, na ktoré tieto podmienky odkazovali, potom môžete odstrániť, ak ich nepoužíva podmienka ďalšej existujúcej položky. Podmienky sa odstránia aj pri zmazaní celého kroku alebo formulára.
 - Pri úprave takejto položky editor zobrazí upozornenie na závislé položky. Uloženie môžete povoliť v karte **Pokročilé** voľbou **Uložiť aj pri existujúcich závislých položkách**.
 
 Pri pokuse o úpravu alebo odstránenie položky, ktorá je použitá v podmienke inej položky, sa zobrazí chyba aj notifikácia so zoznamom závislých položiek.

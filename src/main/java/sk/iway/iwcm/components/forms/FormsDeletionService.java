@@ -20,6 +20,7 @@ import sk.iway.iwcm.components.forms.archive.FormsArchiveRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.rest.FormConditionsHandler;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
@@ -93,7 +94,7 @@ public class FormsDeletionService {
         try {
             if (!preserve) {
                 try {
-                    conditions.deleteAllByFormNameAndDomainId(formName, domainId);
+                    FormConditionsHandler.deleteFormConditions(formName, domainId, conditions);
                     items.deleteAllByFormNameAndDomainId(formName, domainId);
                     steps.deleteAllByFormNameAndDomainId(formName, domainId);
                     settings.deleteByFormNameAndDomainId(formName, domainId);

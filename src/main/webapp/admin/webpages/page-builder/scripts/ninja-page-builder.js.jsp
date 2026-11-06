@@ -553,15 +553,16 @@
         /** Remaps colliding authored IDs and local references while keeping generated tabs stable. */
         prepare_workbench_paste_ids: function(root) {
             var elements = root.find('*').addBack(), ids = new Map(), suffix = this.user_style.counter();
-            elements.filter('[id]').each(function(index) {
+            elements.filter('[id], .tab-pane').each(function(index) {
                 var oldId = this.id;
-                if (!oldId) return;
-                if (document.getElementById(oldId)) {
+                var isTab = $(this).is('.tab-pane');
+                if (!oldId && !isTab) return;
+                if (!oldId || document.getElementById(oldId)) {
                     this.id = 'pb-paste-'+suffix+'-'+index;
-                    ids.set(oldId, this.id);
+                    if (oldId) ids.set(oldId, this.id);
                 }
                 // The tab generator derives IDs from data-title again on every grid change.
-                if ($(this).is('.tab-pane')) $(this).attr('data-title', this.id);
+                if (isTab) $(this).attr('data-title', this.id);
             });
             elements.each(function() {
                 var element = this;

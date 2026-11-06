@@ -99,6 +99,8 @@ The editor for adding and editing items is special in that it changes its conten
 - **Hint** - optional multiline formatted text displayed below the field label in the form. The editor supports paragraphs, lists, links, and longer HTML content. The field is available for all item types, directly below the field title, and is included when copying an item. Custom HTML field templates can insert the hint using the `${hint}` tag.
 - **Item identifier in the form** - the technical identifier is automatically created from the item name without HTML tags and supplemented with a distinctive suffix so that it is unique in the form. It is only displayed when editing a saved item and cannot be changed. It is used in conditions, saved data, and [item value tags](#item-value-tags).
 
+**Allowed Value** rules are checked for a mandatory field even if it is empty. For an optional field, they are checked only if the field is filled in. When submitting a step, the obligation is determined by the **Requirement** card, if it contains conditions, otherwise by the **Required Field** radio button.
+
 In the **Advanced** tab, you can set additional optional parameters such as:
 
 - **Form Step** - the step the item belongs to, so you can easily move the item to another step.
@@ -256,6 +258,7 @@ Each condition contains the following parameters:
 
 - A condition cannot refer to itself. This is an illegal state and the condition will not be saved.
 - An item that is used in the conditions of other items cannot be deleted.
+- When you delete an item, its display conditions and obligations are also deleted. You can then delete the fields that these conditions referenced, unless they are used by a condition on another existing item. Conditions are also deleted when you delete an entire step or form.
 - When editing such an item, the editor will display a warning about dependent items. You can enable saving in the **Advanced** tab by selecting **Save even with existing dependent items**.
 
 When you try to edit or delete an item that is used in a condition of another item, an error and a notification with a list of dependent items will appear.
