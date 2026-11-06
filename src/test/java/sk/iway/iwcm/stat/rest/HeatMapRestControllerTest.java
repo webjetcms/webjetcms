@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +34,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.stat.heat_map.HeatMapAccess;
@@ -88,13 +90,44 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
                     "public.example".equals(requestBean.getDomain()) ? ".public-container" : ".admin-container");
             storage.when(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO)).thenReturn(List.of(
                     new WidthCount(1140, CONTAINER, 20, 1369), new WidthCount(1140, DOCUMENT, 2, 1140)));
+            assertEquals(2, controller.widths(123, "period", null).size());
             Map<String, Object> metadata = controller.metadata(123, "period", 1140, CONTAINER, null);
             assertEquals(RANGE, metadata.get("clickRange"));
             assertEquals(1369, metadata.get("previewWidth"));
             assertEquals(20L, metadata.get("clicks"));
             assertEquals(".public-container", metadata.get("containerSelector"));
             assertEquals("admin.example", requestBean.getDomain());
+            assertEquals(2L, controller.metadata(123, "period", 1140, DOCUMENT, null).get("clicks"));
             assertThrows(ResponseStatusException.class, () -> controller.metadata(123, "period", 960, CONTAINER, null));
+            storage.verify(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO), times(1));
+        }
+    }
+
+    /** A cached result belongs to one domain, page and effective day range, and expires after 30 seconds. */
+    @Test
+    void scopesWidthCountsAndRefreshesExpiredReports() {
+        HeatMapRestController controller = controller();
+        when(history.versionRange(123, DATES, 7)).thenReturn(new ReportRange(RANGE.from(), RANGE.from() + 1000));
+        List<WidthCount> updated = List.of(new WidthCount(390, DOCUMENT, 1, 390));
+        try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class);
+                MockedStatic<Tools> time = mockStatic(Tools.class)) {
+            time.when(Tools::getNow).thenReturn(1000L);
+            storage.when(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO)).thenReturn(List.of(), updated);
+            assertEquals(List.of(), controller.widths(123, "period", null));
+            controller.widths(123, "period", 7);
+            controller.widths(456, "period", null);
+            when(access.currentDomain(request)).thenReturn("other.example");
+            controller.widths(123, "period", null);
+            storage.verify(() -> HeatMapStorage.getWidths("public.example", 123, FROM, FROM));
+            storage.verify(() -> HeatMapStorage.getWidths("public.example", 456, FROM, TO));
+            storage.verify(() -> HeatMapStorage.getWidths("other.example", 123, FROM, TO));
+
+            when(access.currentDomain(request)).thenReturn("public.example");
+            time.when(Tools::getNow).thenReturn(30_999L);
+            assertEquals(List.of(), controller.widths(123, "period", null));
+            time.when(Tools::getNow).thenReturn(31_000L);
+            assertEquals(updated, controller.widths(123, "period", null));
+            storage.verify(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO), times(2));
         }
     }
 

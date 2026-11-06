@@ -12,7 +12,7 @@ Click recording respects the statistical cookie consent settings. Without permis
 
 ## Preview
 
-New clicks are recorded separately for each exact window width in CSS pixels. The width selector shows click counts and defaults to the most popular width. The preview scrolls independently. Scaling the preview keeps its internal page width unchanged. You can adjust map opacity, hide the map, and reload the preview.
+New clicks are recorded separately for each exact window width in CSS pixels. The width selector shows click counts and defaults to the most popular width. Reloading the preview within 30 seconds can show the same counts while new clicks arrive. The preview scrolls independently. Scaling the preview keeps its internal page width unchanged. You can adjust map opacity, hide the map, and reload the preview.
 
 The preview opens on the published page version at the end of the selected period. If the history is incomplete, a notice explains whether the preview uses current content or is unavailable.
 

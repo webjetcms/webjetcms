@@ -12,7 +12,7 @@ Mapa respektuje nastavení souhlasu se statistickými cookies. Bez povolení se 
 
 ## Náhled
 
-Nová kliknutí se evidují samostatně pro každou přesnou šířku okna v CSS pixelech. Výběr šířky uvádí i počet kliknutí a předvolí nejpoužívanější šířku. Náhled má vlastní posouvání. Zmenšení náhledu zachovává vnitřní šířku stránky. Krytí mapy lze měnit, mapu skrýt a náhled obnovit.
+Nová kliknutí se evidují samostatně pro každou přesnou šířku okna v CSS pixelech. Výběr šířky uvádí i počet kliknutí a předvolí nejpoužívanější šířku. Při obnovení náhledu se až 30 sekund mohou zobrazit počty z předchozího načtení. Náhled má vlastní posouvání. Zmenšení náhledu zachovává vnitřní šířku stránky. Krytí mapy lze měnit, mapu skrýt a náhled obnovit.
 
 Náhled ve výchozím nastavení zobrazí publikovanou verzi stránky ke konci vybraného období. Pokud ji nelze určit, zobrazí se upozornění na použití aktuálního obsahu nebo na nedostupný náhled.
 

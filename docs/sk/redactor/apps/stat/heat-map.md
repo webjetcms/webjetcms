@@ -32,7 +32,7 @@ Ak prehliadač nemôže prečítať niektorý načítaný štýl, napríklad CSS
 
 Plynulé kontajnery a kontajnery, ktoré nie sú vycentrované voči stránke, zachovávajú pôvodné súradnice aj presnú šírku okna. Mobilné šírky 390 a 430 px tak zostávajú v samostatných skupinách **Okno 390 px** a **Okno 430 px**. Aj v tomto režime sa pri vyplnenom selektore ignorujú kliknutia mimo kontajnerov.
 
-Výber šírky uvádza počet kliknutí a predvolene zobrazí najpoužívanejšiu skupinu. Kontajnerové súradnice sa nemiešajú s pôvodnými súradnicami stránky, ani keď majú skupiny rovnakú číselnú šírku.
+Výber šírky uvádza počet kliknutí a predvolene zobrazí najpoužívanejšiu skupinu. Pri obnovení náhľadu sa až 30 sekúnd môžu zobraziť počty z predchádzajúceho načítania. Kontajnerové súradnice sa nemiešajú s pôvodnými súradnicami stránky, ani keď majú skupiny rovnakú číselnú šírku.
 
 Náhľad kontajnerovej skupiny sa otvorí v najčastejšej skutočne zaznamenanej šírke okna danej skupiny; pri rovnosti počtov sa použije menšia šírka. Tak zostane zachovaný príslušný breakpoint. K polohe X sa pripočíta odsadenie kontajnera v náhľade. Ak náhľad neobsahuje zodpovedajúci pevný vycentrovaný kontajner, stránka sa zobrazí bez vrstvy kliknutí a s upozornením. Uložené údaje zostávajú zachované.
 

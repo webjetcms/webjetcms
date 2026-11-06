@@ -23,11 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -42,8 +38,6 @@ public final class HeatMapStorage {
     public static final int MAX_VIEWPORT_WIDTH = 16384;
     public static final int MAX_COORDINATE = 1_000_000;
     public static final String TABLE_NAME = "stat_clicks";
-
-    private static final Pattern PARTITION = Pattern.compile("stat_clicks_([0-9]{4})_([1-9]|1[0-2])");
 
     private HeatMapStorage() {
     }
@@ -166,10 +160,12 @@ public final class HeatMapStorage {
             List<Integer> parameters, String groupBy, RowConsumer consumer) {
         domain = normalizeDomain(domain);
         validateDates(from, to);
+        YearMonth firstMonth = YearMonth.from(from);
+        YearMonth lastMonth = YearMonth.from(to);
         try (Connection connection = DBPool.getConnection()) {
-            for (YearMonth month : partitions(connection, from, to)) {
-                int startDay = month.equals(YearMonth.from(from)) ? from.getDayOfMonth() : 1;
-                int endDay = month.equals(YearMonth.from(to)) ? to.getDayOfMonth() : month.lengthOfMonth();
+            for (YearMonth month = firstMonth; !month.isAfter(lastMonth); month = month.plusMonths(1)) {
+                int startDay = month.equals(firstMonth) ? from.getDayOfMonth() : 1;
+                int endDay = month.equals(lastMonth) ? to.getDayOfMonth() : month.lengthOfMonth();
                 String sql = "SELECT " + columns + " FROM " + TABLE_NAME + suffix(month)
                         + " WHERE domain_name = ? AND day_of_month BETWEEN ? AND ?" + filter + groupBy;
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -187,27 +183,6 @@ public final class HeatMapStorage {
         } catch (SQLException exception) {
             throw new IllegalStateException("Cannot read heatmap statistics", exception);
         }
-    }
-
-    private static SortedSet<YearMonth> partitions(Connection connection, LocalDate from, LocalDate to) throws SQLException {
-        SortedSet<YearMonth> found = new TreeSet<>();
-        String schema = null;
-        try {
-            schema = connection.getSchema();
-        } catch (java.sql.SQLFeatureNotSupportedException ignored) {
-            // Older JDBC drivers use their default schema for metadata lookups.
-        } catch (AbstractMethodError ignored) {
-            // Older JDBC drivers use their default schema for metadata lookups.
-        }
-        try (ResultSet tables = connection.getMetaData().getTables(connection.getCatalog(), schema, "%", new String[] { "TABLE" })) {
-            while (tables.next()) {
-                Matcher matcher = PARTITION.matcher(tables.getString("TABLE_NAME").toLowerCase(Locale.ROOT));
-                if (!matcher.matches()) continue;
-                YearMonth month = YearMonth.of(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)));
-                if (!month.isBefore(YearMonth.from(from)) && !month.isAfter(YearMonth.from(to))) found.add(month);
-            }
-        }
-        return found;
     }
 
     static boolean isMissingTable(SQLException exception) {

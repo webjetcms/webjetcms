@@ -89,7 +89,8 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                     record(5, 10, 390, 100, 0, "autotest.example");
                     record(6, 10, 1369, 487, 1140, "other.example");
                     StatWriteBuffer.main(new String[0]);
-                    LocalDate from = LocalDate.of(2026, 9, 1);
+                    // The report starts before the first monthly table exists.
+                    LocalDate from = LocalDate.of(2026, 8, 1);
                     LocalDate to = LocalDate.of(2026, 10, 31);
                     assertEquals(List.of(new HeatMapStorage.WidthCount(1140, CONTAINER, 3, 1369),
                             new HeatMapStorage.WidthCount(1140, DOCUMENT, 2, 1140),

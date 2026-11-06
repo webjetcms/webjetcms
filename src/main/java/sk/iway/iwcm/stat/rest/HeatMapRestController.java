@@ -1,13 +1,16 @@
 package sk.iway.iwcm.stat.rest;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.CacheControl;
@@ -46,9 +49,27 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @Datatable
 public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPageDTO, Long> {
     private static final int MAX_VISIBLE_VERSIONS = 100;
+    private static final long WIDTH_CACHE_MILLIS = 30_000;
 
     private final HeatMapAccess access;
     private final HeatMapHistoryService historyService;
+    private final Map<WidthReportKey, CachedWidths> widthReports = Collections.synchronizedMap(new LRUMap<>(64));
+
+    private record WidthReportKey(String domain, int docId, LocalDate from, LocalDate to) { }
+
+    private static final class CachedWidths {
+        private List<WidthCount> counts;
+        private long expiresAt;
+
+        // Only requests for the same report wait for its database query.
+        synchronized List<WidthCount> get(WidthReportKey key) {
+            if (counts == null || Tools.getNow() >= expiresAt) {
+                counts = HeatMapStorage.getWidths(key.domain(), key.docId(), key.from(), key.to());
+                expiresAt = Tools.getNow() + WIDTH_CACHE_MILLIS;
+            }
+            return counts;
+        }
+    }
 
     public HeatMapRestController(HeatMapAccess access, HeatMapHistoryService historyService) {
         super(null);
@@ -97,7 +118,12 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
             @RequestParam(value = "versionId", required = false) Integer versionId) {
         access.requireDocument(getRequest(), docId);
         ReportRange range = clickRange(docId, dateRange, versionId);
-        return HeatMapStorage.getWidths(access.currentDomain(getRequest()), docId, range.firstDay(), range.lastDay());
+        return reportWidths(access.currentDomain(getRequest()), docId, range);
+    }
+
+    private List<WidthCount> reportWidths(String domain, int docId, ReportRange range) {
+        WidthReportKey key = new WidthReportKey(domain, docId, range.firstDay(), range.lastDay());
+        return widthReports.computeIfAbsent(key, ignored -> new CachedWidths()).get(key);
     }
 
     @GetMapping("/metadata")
@@ -113,13 +139,14 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
         result.put("url", DocDB.getURLFromDocId(docId, getRequest()));
         result.put("width", width);
         ReportRange range = selection.clickRange();
-        WidthCount group = HeatMapStorage.getWidths(access.currentDomain(getRequest()), docId, range.firstDay(), range.lastDay()).stream()
+        String domain = access.currentDomain(getRequest());
+        WidthCount group = reportWidths(domain, docId, range).stream()
                 .filter(item -> item.width() == width && item.mode() == mode).findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         result.put("mode", mode);
         result.put("clicks", group.clicks());
         result.put("previewWidth", group.previewWidth());
-        result.put("containerSelector", containerSelector(access.currentDomain(getRequest())));
+        result.put("containerSelector", containerSelector(domain));
         result.put("tileSize", HeatMapStorage.TILE_SIZE);
         result.put("historyId", selection.historyId());
         result.put("effectiveFrom", selection.effectiveFrom());

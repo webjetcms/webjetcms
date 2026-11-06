@@ -2,17 +2,17 @@ package sk.iway.iwcm.stat.heat_map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,7 +40,7 @@ class HeatMapStorageTest extends BaseWebjetTest {
     /** Equal numeric widths must not mix document coordinates with container coordinates. */
     @Test
     void separatesCoordinateModesWhileCombiningSourceViewports() throws Exception {
-        Connection connection = connectionWithTables("stat_clicks_2026_9");
+        Connection connection = mock(Connection.class);
         PreparedStatement statement = mock(PreparedStatement.class);
         ResultSet rows = mock(ResultSet.class);
         when(connection.prepareStatement(anyString())).thenReturn(statement);
@@ -80,7 +80,7 @@ class HeatMapStorageTest extends BaseWebjetTest {
 
     @Test
     void sameMonthQueryAppliesBothDaysAndCanonicalDomain() throws Exception {
-        Connection connection = connectionWithTables("stat_clicks_2026_9");
+        Connection connection = mock(Connection.class);
         PreparedStatement statement = mock(PreparedStatement.class);
         when(connection.prepareStatement(anyString())).thenReturn(statement);
         ResultSet result = mock(ResultSet.class);
@@ -100,7 +100,7 @@ class HeatMapStorageTest extends BaseWebjetTest {
     /** Migrated clicks remain visible at their assigned width even without an event identifier. */
     @Test
     void migratedDesktopClicksUseTheSameDomainScopedWidthQuery() throws Exception {
-        Connection connection = connectionWithTables("stat_clicks_2010_6");
+        Connection connection = mock(Connection.class);
         PreparedStatement statement = statementWithCount(1920, 7);
         String sql = "SELECT viewport_width, coordinate_mode, source_viewport_width, COUNT(*) FROM stat_clicks_2010_6"
                 + " WHERE domain_name = ? AND day_of_month BETWEEN ? AND ? AND document_id = ? GROUP BY viewport_width, coordinate_mode, source_viewport_width";
@@ -118,12 +118,11 @@ class HeatMapStorageTest extends BaseWebjetTest {
 
     @Test
     void yearBoundaryAddsWidthsFromExistingPartitionsOnly() throws Exception {
-        Connection connection = connectionWithTables("stat_clicks_2026_1", "stat_clicks_2025_12", "stat_clicks_2026_1",
-                "stat_views_2026_1", "stat_clicks_2026_2");
+        Connection connection = mock(Connection.class);
         PreparedStatement december = statementWithCount(390, 3);
         PreparedStatement january = statementWithCount(390, 5);
-        when(connection.prepareStatement(anyString())).thenAnswer(invocation ->
-                invocation.getArgument(0, String.class).contains("_2025_12") ? december : january);
+        when(connection.prepareStatement(contains("FROM stat_clicks_2025_12 "))).thenReturn(december);
+        when(connection.prepareStatement(contains("FROM stat_clicks_2026_1 "))).thenReturn(january);
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
             assertEquals(List.of(new WidthCount(390, DOCUMENT, 8, 390)), HeatMapStorage.getWidths("example.com", 123, LocalDate.of(2025, 12, 31), LocalDate.of(2026, 1, 1)));
@@ -141,20 +140,24 @@ class HeatMapStorageTest extends BaseWebjetTest {
     }
 
     @Test
-    void legacyMssqlDriverWithoutGetSchemaStillDiscoversPartitions() throws Exception {
-        Connection connection = connectionWithTables("STAT_CLICKS_2026_9");
-        when(connection.getSchema()).thenThrow(new AbstractMethodError("JDBC getSchema is not implemented"));
+    void skipsMissingMonthsWithoutListingTables() throws Exception {
+        Connection connection = mock(Connection.class);
+        when(connection.prepareStatement(contains("FROM stat_clicks_2026_8 ")))
+                .thenThrow(new SQLException("Table does not exist", "42S02"));
         PreparedStatement statement = statementWithCount(390, 2);
-        when(connection.prepareStatement(anyString())).thenReturn(statement);
+        when(connection.prepareStatement(contains("FROM stat_clicks_2026_9 "))).thenReturn(statement);
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
-            assertEquals(List.of(new WidthCount(390, DOCUMENT, 2, 390)), HeatMapStorage.getWidths("example.com", 123, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 14)));
+            assertEquals(List.of(new WidthCount(390, DOCUMENT, 2, 390)), HeatMapStorage.getWidths("example.com", 123,
+                    LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 14)));
+            verify(connection, never()).getMetaData();
+            verify(connection, times(2)).prepareStatement(anyString());
         }
     }
 
     @Test
     void databaseFailureIsNotReportedAsAnEmptyHeatmap() throws Exception {
-        Connection connection = connectionWithTables("stat_clicks_2026_9");
+        Connection connection = mock(Connection.class);
         when(connection.prepareStatement(anyString())).thenThrow(new SQLException("permission denied", "42501"));
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
             pool.when(DBPool::getConnection).thenReturn(connection);
@@ -171,17 +174,5 @@ class HeatMapStorageTest extends BaseWebjetTest {
         when(result.getInt(3)).thenReturn(width);
         when(result.getLong(4)).thenReturn(count);
         return statement;
-    }
-
-    private static Connection connectionWithTables(String... names) throws SQLException {
-        Connection connection = mock(Connection.class);
-        DatabaseMetaData metadata = mock(DatabaseMetaData.class);
-        ResultSet tables = mock(ResultSet.class);
-        when(connection.getMetaData()).thenReturn(metadata);
-        when(metadata.getTables(any(), any(), any(), any())).thenReturn(tables);
-        int[] index = { -1 };
-        when(tables.next()).thenAnswer(invocation -> ++index[0] < names.length);
-        when(tables.getString("TABLE_NAME")).thenAnswer(invocation -> names[index[0]]);
-        return connection;
     }
 }
