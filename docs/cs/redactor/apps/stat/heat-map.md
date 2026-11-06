@@ -16,7 +16,7 @@ Nová kliknutí se evidují samostatně pro každou přesnou šířku okna v CSS
 
 Náhled ve výchozím nastavení zobrazí publikovanou verzi stránky ke konci vybraného období. Pokud ji nelze určit, zobrazí se upozornění na použití aktuálního obsahu nebo na nedostupný náhled.
 
-Pokud se stránka během období měnila, je v poli **Verze stránky** vybrána možnost **Všechny verze**. Filtr můžete použít i tehdy, když jediná dostupná verze platila jen po část vybraného období. Vyberte verzi podle čísla a času publikování. Náhled zobrazí její obsah. Mapa i počty u jednotlivých šířek zahrnují všechna kliknutí ze dnů, kdy byla verze ve vybraném období zveřejněna. Pokud nová verze vyšla v poledne, obě verze zobrazí všechna kliknutí z tohoto dne. V zobrazení **Všechny verze** se každé kliknutí započítá jednou.
+Pokud se stránka během období měnila, je v poli **Verze stránky** vybrána možnost **Všechny verze**. Filtr můžete použít i tehdy, když jediná dostupná verze platila jen po část vybraného období. Filtr nabízí nejvýše 100 nejnovějších publikovaných verzí za vybrané období. Pokud hledáte starší verzi, vyberte dřívější období. Vyberte verzi podle čísla a času publikování. Náhled zobrazí její obsah. Mapa i počty u jednotlivých šířek zahrnují všechna kliknutí ze dnů, kdy byla verze ve vybraném období zveřejněna. Pokud nová verze vyšla v poledne, obě verze zobrazí všechna kliknutí z tohoto dne. V zobrazení **Všechny verze** se každé kliknutí započítá jednou.
 
 Pokud v těchto dnech nebyla zaznamenána žádná kliknutí, její uložený obsah si můžete prohlédnout v každé šířce zaznamenané v daném období. U každé šířky se zobrazí nula kliknutí.
 

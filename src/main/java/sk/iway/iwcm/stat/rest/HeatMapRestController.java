@@ -45,6 +45,8 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_stat')")
 @Datatable
 public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPageDTO, Long> {
+    private static final int MAX_VISIBLE_VERSIONS = 100;
+
     private final HeatMapAccess access;
     private final HeatMapHistoryService historyService;
 
@@ -124,7 +126,7 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
         result.put("source", selection.source());
         result.put("historicalUnavailable", selection.historicalUnavailable());
         result.put("clickRange", selection.clickRange());
-        result.put("versions", selection.versions());
+        result.put("versions", selection.versions().stream().limit(MAX_VISIBLE_VERSIONS).toList());
         result.put("multipleVersions", versionId == null && selection.versions().size() > 1);
         return result;
     }

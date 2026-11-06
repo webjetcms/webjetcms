@@ -17,6 +17,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,6 +40,7 @@ import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService;
 import sk.iway.iwcm.stat.heat_map.HeatMapStorage;
 import sk.iway.iwcm.stat.heat_map.HeatMapStorage.WidthCount;
 import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.ReportRange;
+import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.VersionPeriod;
 import static sk.iway.iwcm.stat.heat_map.HeatMapCoordinateMode.DOCUMENT;
 import static sk.iway.iwcm.stat.heat_map.HeatMapCoordinateMode.CONTAINER;
 import sk.iway.iwcm.stat.jpa.HeatMapPageDTO;
@@ -93,6 +95,29 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
             assertEquals(".public-container", metadata.get("containerSelector"));
             assertEquals("admin.example", requestBean.getDomain());
             assertThrows(ResponseStatusException.class, () -> controller.metadata(123, "period", 960, CONTAINER, null));
+        }
+    }
+
+    /** The version picker shows up to 100 newest versions while the report includes clicks from the full period. */
+    @ParameterizedTest
+    @ValueSource(ints = { 99, 100, 101 })
+    void limitsVersionsShownInHeatMapMetadata(int versionCount) {
+        HeatMapRestController controller = controller();
+        DocDetails document = new DocDetails();
+        when(access.requireDocument(request, 123)).thenReturn(document);
+        List<VersionPeriod> versions = IntStream.iterate(versionCount, id -> id > 0, id -> id - 1)
+                .mapToObj(id -> new VersionPeriod(id, RANGE.from() + id, new ReportRange(RANGE.from() + id, RANGE.from() + id + 1)))
+                .toList();
+        when(history.resolve(request, 123, "period", null)).thenReturn(
+                new HeatMapHistoryService.PreviewSelection(versionCount, versions.get(0).effectiveFrom(), "history", false, versions, RANGE, document));
+        try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class);
+                MockedStatic<DocDB> docs = mockStatic(DocDB.class)) {
+            storage.when(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO))
+                    .thenReturn(List.of(new WidthCount(390, DOCUMENT, 250, 390)));
+            Map<String, Object> metadata = controller.metadata(123, "period", 390, DOCUMENT, null);
+            assertEquals(versions.subList(0, Math.min(versionCount, 100)), metadata.get("versions"));
+            assertEquals(RANGE, metadata.get("clickRange"));
+            assertEquals(250L, metadata.get("clicks"));
         }
     }
 

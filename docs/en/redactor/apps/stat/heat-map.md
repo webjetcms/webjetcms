@@ -16,7 +16,7 @@ New clicks are recorded separately for each exact window width in CSS pixels. Th
 
 The preview opens on the published page version at the end of the selected period. If the history is incomplete, a notice explains whether the preview uses current content or is unavailable.
 
-When the page changed during the period, **Page version** defaults to **All versions**. You can also use this filter when the only available version covers part of the selected period. Select a version by its ID and publication time to see its content. The map and the counts for each width include all clicks on the days that version was live within the selected period. If a new version went live at noon, both versions show all clicks for that day. **All versions** counts each click once.
+When the page changed during the period, **Page version** defaults to **All versions**. You can also use this filter when the only available version covers part of the selected period. The filter lists up to 100 of the most recent published versions in the selected period. To see an older version, select an earlier date range. Select a version by its ID and publication time to see its content. The map and the counts for each width include all clicks on the days that version was live within the selected period. If a new version went live at noon, both versions show all clicks for that day. **All versions** counts each click once.
 
 If no clicks were recorded on those days, you can still preview its saved content at any width recorded in that period. Each width shows zero clicks.
 
