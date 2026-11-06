@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 import org.springframework.data.jpa.domain.Specification;
 
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -144,6 +145,37 @@ class FormsDeletionServiceTest {
         cache.verify(() -> MultistepFormsService.clearValidationFieldsCache(NAME, DOMAIN));
         Prop prop = mock(Prop.class);
         assertEquals("success", result.notification(prop).getType());
+    }
+
+    /** Condition owner IDs are read before deletion so both condition caches can be evicted, including orphan owners. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void clearsConditionCachesBeforeRemovingFormStructure(boolean archived) {
+        if (archived) archiveHeader();
+        when(conditions.findConditionOwnerIds(NAME, DOMAIN)).thenReturn(List.of(101L, 102L));
+        doAnswer(call -> {
+            when(conditions.findConditionOwnerIds(NAME, DOMAIN)).thenReturn(List.of());
+            return null;
+        }).when(conditions).deleteAllByFormNameAndDomainId(NAME, DOMAIN);
+        Cache conditionCache = mock(Cache.class);
+        try (MockedStatic<Cache> caches = mockStatic(Cache.class)) {
+            caches.when(Cache::getInstance).thenReturn(conditionCache);
+
+            DeletionResult result = service.delete(archived ? 20L : 10L, archived);
+
+            assertTrue(result.settingsDeleted());
+            assertFalse(result.cleanupFailed());
+            var order = inOrder(conditions, conditionCache, items, steps);
+            order.verify(conditions).findConditionOwnerIds(NAME, DOMAIN);
+            order.verify(conditions).deleteAllByFormNameAndDomainId(NAME, DOMAIN);
+            for (long ownerId : List.of(101L, 102L)) {
+                order.verify(conditionCache).removeObject("multistep_form.conditions." + DOMAIN + "." + ownerId + ".VISIBILITY", true);
+                order.verify(conditionCache).removeObject("multistep_form.conditions." + DOMAIN + "." + ownerId + ".REQUIREMENT", true);
+            }
+            order.verify(items).deleteAllByFormNameAndDomainId(NAME, DOMAIN);
+            order.verify(steps).deleteAllByFormNameAndDomainId(NAME, DOMAIN);
+            verifyNoMoreInteractions(conditions, conditionCache);
+        }
     }
 
     /** Deleting an archive never removes the settings or structure of an existing active form. */

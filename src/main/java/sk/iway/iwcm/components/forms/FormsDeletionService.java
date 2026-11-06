@@ -94,10 +94,9 @@ public class FormsDeletionService {
         try {
             if (!preserve) {
                 try {
-                    conditions.deleteAllByFormNameAndDomainId(formName, domainId);
+                    FormConditionsHandler.deleteFormConditions(formName, domainId, conditions);
                     items.deleteAllByFormNameAndDomainId(formName, domainId);
                     steps.deleteAllByFormNameAndDomainId(formName, domainId);
-                    FormConditionsHandler.deleteFormConditions(formName, domainId);
                     settings.deleteByFormNameAndDomainId(formName, domainId);
                     settingsDeleted = true;
                 } finally {

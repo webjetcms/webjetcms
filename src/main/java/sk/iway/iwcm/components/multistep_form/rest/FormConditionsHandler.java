@@ -73,7 +73,17 @@ public class FormConditionsHandler {
      * @param domainId domain owning the form
      */
     public static void deleteFormConditions(String formName, Integer domainId) {
-        FormItemsConditionsRepository repository = getConditionsRepository();
+        deleteFormConditions(formName, domainId, getConditionsRepository());
+    }
+
+    /**
+     * Deletes form conditions and evicts their caches using the caller's repository.
+     *
+     * @param formName name of the removed form
+     * @param domainId domain owning the form
+     * @param repository repository used to find condition owners and delete their conditions
+     */
+    public static void deleteFormConditions(String formName, Integer domainId, FormItemsConditionsRepository repository) {
         List<Long> formItemIds = repository.findConditionOwnerIds(formName, domainId);
         repository.deleteAllByFormNameAndDomainId(formName, domainId);
         for (Long formItemId : formItemIds) clearConditionsCache(formItemId, domainId);
