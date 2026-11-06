@@ -331,6 +331,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ### Oprava chyb
 
 - Vícekrokové formuláře - pravidla **Povolená hodnota** již neodmítnou prázdné nepovinné pole. U povinného pole se regulární výrazy kontrolují i ​​pro prázdnou hodnotu; při odeslání kroku se zohledňují i ​​podmínky povinnosti (#394).
+- Page Builder - vložené karty dostanou vlastní ID i při kopírování před dokončením inicializace, aby se jejich odkazy nepropojovaly s původním blokem.
+- Datové tabulky - zadání ID otevře záznam i po předchozím filtrování bez výsledků.
 - Webové stránky - opraven [export do ZIP archivu](redactor/webpages/import-export.md) pro obrázky vložené přes `/thumb/`, které se původně do exportu nepřidaly (#389).
 - Webové stránky - dialog pro vložení obrázku omezuje výběr souborů na obrázky, videa a zvukové soubory i ve složce Soubory. Nepodporované typy rozpoznané prohlížečem odmítne ještě před odesláním. Server navíc ověří příponu před uložením (#375).
 - Webové stránky - přesměrování stránky se přihlášenému administrátorovi neukládá do cache prohlížeče, aby se jeho změna nebo zrušení projevily při dalším otevření stránky (#372).

@@ -331,6 +331,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ### Bug fixes
 
 - Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
+- Page Builder - inserted cards will receive their own ID even when copied before initialization is complete, so that their links do not link to the original block.
+- Data tables - entering the ID will open the record even after previous filtering without results.
 - Websites - fixed [export to ZIP archive](redactor/webpages/import-export.md) for images inserted via `/thumb/` that were not originally added to the export (#389).
 - Web pages - the insert image dialog limits file selection to images, videos, and audio files, even in the Files folder. Unsupported types recognized by the browser will be rejected before submission. Additionally, the server will validate the extension before saving (#375).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the page is opened (#372).
