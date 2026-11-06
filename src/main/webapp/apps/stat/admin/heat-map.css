@@ -23,7 +23,8 @@
 }
 .pg-heatmap-control-group { display: flex; align-items: end; gap: 15px; min-width: 0; }
 .pg-heatmap-controls label { display: block; margin-bottom: 4px; font-size: 14px; }
-.pg-heatmap-display { flex: 1; }
+.pg-heatmap-display { flex: 1 1 360px; }
+.pg-heatmap-version { max-width: 100%; }
 .pg-heatmap-width { width: 225px; min-width: 0; }
 .pg-heatmap-scale { width: 180px; min-width: 0; }
 .pg-heatmap-controls .form-switch {

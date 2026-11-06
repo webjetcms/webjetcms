@@ -14,7 +14,11 @@ Mapa respektuje nastavení souhlasu se statistickými cookies. Bez povolení se 
 
 Nová kliknutí se evidují samostatně pro každou přesnou šířku okna v CSS pixelech. Výběr šířky uvádí i počet kliknutí a předvolí nejpoužívanější šířku. Náhled má vlastní posouvání. Zmenšení náhledu zachovává vnitřní šířku stránky. Krytí mapy lze měnit, mapu skrýt a náhled obnovit.
 
-Pro náhled se vybírá dostupná publikovaná verze obsahu ke konci období. Rozhraní zobrazí datum verze, upozorní na použití aktuálního obsahu, pokud historii nelze určit, nebo oznámí nedostupnost náhledu. Pokud se obsah v období měnil, zobrazí upozornění na kombinaci kliknutí z více verzí.
+Náhled ve výchozím nastavení zobrazí publikovanou verzi stránky ke konci vybraného období. Pokud ji nelze určit, zobrazí se upozornění na použití aktuálního obsahu nebo na nedostupný náhled.
+
+Pokud se stránka během období měnila, je v poli **Verze stránky** vybrána možnost **Všechny verze**. Filtr můžete použít i tehdy, když jediná dostupná verze platila jen po část vybraného období. Vyberte verzi podle čísla a času publikování. Náhled zobrazí její obsah. Mapa i počty u jednotlivých šířek zahrnují všechna kliknutí ze dnů, kdy byla verze ve vybraném období zveřejněna. Pokud nová verze vyšla v poledne, obě verze zobrazí všechna kliknutí z tohoto dne. V zobrazení **Všechny verze** se každé kliknutí započítá jednou.
+
+Pokud v těchto dnech nebyla zaznamenána žádná kliknutí, její uložený obsah si můžete prohlédnout v každé šířce zaznamenané v daném období. U každé šířky se zobrazí nula kliknutí.
 
 Čas publikování se odvozuje z dostupných údajů historie. U plánovaného publikování jde o přibližný čas, protože historie neuchovává přesný okamžik provedení úlohy.
 

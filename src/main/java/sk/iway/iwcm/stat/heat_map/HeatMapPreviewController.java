@@ -36,10 +36,11 @@ public class HeatMapPreviewController {
     @GetMapping(HeatMapPreviewRequest.PREVIEW_PATH)
     public void preview(@RequestParam("docId") int docId,
             @RequestParam(value = "dateRange", required = false) String dateRange,
+            @RequestParam(value = "versionId", required = false) Integer versionId,
             HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         response.setHeader("Cache-Control", "no-store");
         response.setHeader("Pragma", "no-cache");
-        HeatMapHistoryService.PreviewSelection selection = historyService.resolve(request, docId, dateRange);
+        HeatMapHistoryService.PreviewSelection selection = historyService.resolve(request, docId, dateRange, versionId);
         DocDetails document = selection.document();
         if (document == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 

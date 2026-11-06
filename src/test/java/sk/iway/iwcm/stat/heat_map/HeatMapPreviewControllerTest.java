@@ -10,6 +10,8 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
@@ -59,8 +61,8 @@ class HeatMapPreviewControllerTest {
         DocDetails document = mock(DocDetails.class);
         when(document.getVirtualPath()).thenReturn("/historical-page.html");
         when(document.getGroupId()).thenReturn(5);
-        when(history.resolve(request, 123, "period")).thenReturn(
-                new PreviewSelection(7, 100L, "history", false, false, document));
+        when(history.resolve(request, 123, "period", null)).thenReturn(
+                new PreviewSelection(7, 100L, "history", false, List.of(), new HeatMapHistoryService.ReportRange(1, 101), document));
         RequestBean requestBean = new RequestBean();
         requestBean.setDomain("public.example");
 
@@ -69,7 +71,7 @@ class HeatMapPreviewControllerTest {
             templates.when(TemplatesDB::getInstance).thenReturn(mock(TemplatesDB.class));
             context.when(SetCharacterEncodingFilter::getCurrentRequestBean).thenReturn(requestBean);
 
-            controller.preview(123, "period", request, response);
+            controller.preview(123, "period", null, request, response);
         }
 
         ArgumentCaptor<ServletRequest> forwarded = ArgumentCaptor.forClass(ServletRequest.class);
@@ -96,7 +98,7 @@ class HeatMapPreviewControllerTest {
         assertSame(editorDraft, session.getAttribute("ShowdocAction.showDocData"));
         assertEquals("public.example", session.getAttribute("preview.editorDomainName"));
         assertNull(session.getAttribute("NO_WJTOOLBAR"));
-        verify(history).resolve(request, 123, "period");
+        verify(history).resolve(request, 123, "period", null);
     }
 
     /** A known unavailable revision returns a non-cacheable 404 without activating a preview. */
@@ -105,11 +107,11 @@ class HeatMapPreviewControllerTest {
         HeatMapHistoryService history = mock(HeatMapHistoryService.class);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(history.resolve(request, 123, "period")).thenReturn(
-                new PreviewSelection(7, 100L, "unavailable", false, false, null));
+        when(history.resolve(request, 123, "period", null)).thenReturn(
+                new PreviewSelection(7, 100L, "unavailable", false, List.of(), new HeatMapHistoryService.ReportRange(1, 101), null));
 
         ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> new HeatMapPreviewController(history).preview(123, "period", request, response));
+                () -> new HeatMapPreviewController(history).preview(123, "period", null, request, response));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
         assertEquals("no-store", response.getHeader("Cache-Control"));

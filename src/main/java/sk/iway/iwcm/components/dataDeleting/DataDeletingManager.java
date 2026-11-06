@@ -26,6 +26,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService;
 import sk.iway.iwcm.system.ConfDB;
 
 /**
@@ -158,6 +159,7 @@ public class DataDeletingManager
 			try
 			{
 				retValue = ps.executeUpdate();
+				if (retValue > 0 && "documents_history".equals(table)) HeatMapHistoryService.historyDeleted(null);
 
 				if (
 						(

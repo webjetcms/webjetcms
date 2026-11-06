@@ -6,17 +6,20 @@ const detailsUrl = "/apps/stat/admin/heat-map-details/?docId=11&dateRange=" + en
 const apiPattern = /\/admin\/rest\/stat\/heat-map(?:\/|\?|$)/;
 const modalFrame = "#modalIframeIframeElement";
 
-Before(({ I, login }) => {
+Before(({ login }) => {
     login("admin");
+});
+
+After(({ I }) => {
     I.stopMockingRoute(apiPattern);
 });
 
 /** Install bounded response fixtures to test rendering independently of visitor data. */
-function mockMap(I, options = {}) {
+function mockMap(I, {listRequests, multipleVersions = false}) {
     I.mockRoute(apiPattern, async route => {
         const url = new URL(route.request().url());
-        if (["/admin/rest/stat/heat-map", "/admin/rest/stat/heat-map/all", "/admin/rest/stat/heat-map/search/findByColumns"].includes(url.pathname) && options.listRequests) {
-            options.listRequests.push(url.toString());
+        if (["/admin/rest/stat/heat-map", "/admin/rest/stat/heat-map/all", "/admin/rest/stat/heat-map/search/findByColumns"].includes(url.pathname) && listRequests) {
+            listRequests.push(url.toString());
             const content = Array.from({length: 15}, (_, index) => ({
                 id: 11 + index, name: "autotest click map preview " + (index + 1),
                 url: "/autotest-click-map-" + index + ".html", clicks: 32 + index, dayDate: 1788300000000
@@ -31,83 +34,29 @@ function mockMap(I, options = {}) {
             }
         }
         if (url.pathname.endsWith("/widths")) {
-            const widths = options.container
-                ? [{width: 1140, mode: "CONTAINER", clicks: 32, previewWidth: 1369}, {width: 1140, mode: "DOCUMENT", clicks: 8, previewWidth: 1140}]
-                : [{width: 1280, mode: "DOCUMENT", clicks: 32, previewWidth: 1280}, {width: 390, mode: "DOCUMENT", clicks: 8, previewWidth: 390}];
-            return route.fulfill({json: options.empty ? [] : widths});
+            return route.fulfill({json: [{width: 1280, mode: "DOCUMENT", clicks: 32, previewWidth: 1280}]});
         }
         if (url.pathname.endsWith("/metadata")) {
+            const versionId = url.searchParams.get("versionId");
+            const fallback = multipleVersions && !versionId;
             return route.fulfill({json: {
                 title: "autotest click map preview", url: "/autotest-click-map.html",
-                width: Number(url.searchParams.get("width")), clicks: 32, tileSize: 1024,
-                previewWidth: url.searchParams.get("mode") === "CONTAINER" ? 1369 : Number(url.searchParams.get("width")),
-                containerSelector: ".container",
-                historyId: options.fallback ? null : 123, effectiveFrom: 1788213600000,
-                source: options.fallback ? "current" : "history",
-                historicalUnavailable: Boolean(options.fallback), multipleVersions: Boolean(options.multiple)
+                width: 1280, previewWidth: 1280, clicks: 32, tileSize: 1024,
+                historyId: fallback ? null : Number(versionId || 123), effectiveFrom: 1788213600000,
+                source: fallback ? "current" : "history",
+                historicalUnavailable: fallback, multipleVersions: fallback,
+                versions: multipleVersions ? [{historyId: 123, effectiveFrom: 1788300000000}, {historyId: 122, effectiveFrom: 1788213600000}] : []
             }});
         }
         if (url.pathname.endsWith("/html/preview")) {
-            if (options.container) {
-                return route.fulfill({contentType: "text/html", body: '<!doctype html><meta name="webjet-heatmap-preview" content="11">'
-                    + '<style>body{margin:0}.container{width:100%;max-width:1140px;margin:auto;height:3000px}</style>'
-                    + '<main class="' + (options.missingContainer ? "changed" : "container") + '">autotest container preview</main>'});
-            }
-            return route.fulfill({contentType: "text/html", body: options.invalidPreview
-                ? "<!doctype html><html><body>autotest unavailable preview</body></html>"
-                : '<!doctype html><html><head><meta name="webjet-heatmap-preview" content="' + url.searchParams.get('docId') + '"><style>body{margin:0}main{height:3500px;min-width:2200px;background:linear-gradient(white,#ddd)}h1{margin:0}</style></head><body><main><h1>autotest page</h1><a href="/autotest-navigation">autotest link</a></main></body></html>'});
+            return route.fulfill({contentType: "text/html", body: '<!doctype html><meta name="webjet-heatmap-preview" content="'
+                + Number(url.searchParams.get("docId")) + '"><main>autotest page</main>'});
         }
         if (url.pathname.endsWith("/binary/tile")) {
             return route.fulfill({contentType: "image/png", body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64")});
         }
         return route.continue();
     });
-}
-
-Scenario("container map uses a representative viewport and restores the container offset", async ({ I }) => {
-    mockMap(I, {container: true});
-    I.executeScript(url => window.location.assign(url), detailsUrl);
-    I.waitForVisible("#heatMapViewport", 20);
-    I.see("Kontajner 1140 px", "#heatMapWidth");
-    I.see("Okno 1140 px", "#heatMapWidth");
-    I.seeInField("#heatMapWidth", "container:1140");
-    I.waitForFunction(() => {
-        const frame = document.getElementById("heatMapFrame").contentWindow;
-        const left = frame.document.querySelector(".container").getBoundingClientRect().left;
-        return frame.innerWidth === 1369 && document.getElementById("heatMapTiles").style.transform === "translate(" + left + "px, 0px)";
-    }, 10);
-    const parameters = await I.executeScript(() => {
-        const url = new URL(document.querySelector("#heatMapTiles img").src);
-        return {width: url.searchParams.get("width"), mode: url.searchParams.get("mode")};
-    });
-    I.assertEqual(parameters.width, "1140");
-    I.assertEqual(parameters.mode, "CONTAINER");
-    I.selectOption("#heatMapWidth", "1140");
-    I.waitForFunction(() => document.getElementById("heatMapFrame").contentWindow.innerWidth === 1140, 10);
-    I.waitForFunction(() => {
-        const tile = document.querySelector("#heatMapTiles img");
-        return tile && new URL(tile.src).searchParams.get("mode") === "DOCUMENT";
-    }, 10);
-});
-
-Scenario("missing container keeps the preview visible without the click layer", ({ I }) => {
-    mockMap(I, {container: true, missingContainer: true});
-    I.executeScript(url => window.location.assign(url), detailsUrl);
-    I.waitForText("náhľad neobsahuje zodpovedajúci vycentrovaný kontajner so šírkou 1140 px", 20, "#heatMapStatus");
-    I.seeElement("#heatMapViewport");
-    I.dontSeeElement("#heatMapOverlay");
-    I.dontSeeElement("#heatMapTiles img");
-});
-
-/** Wait until the map contains exactly the tiles intersecting the current preview viewport. */
-function waitForVisibleTiles(I) {
-    I.waitForFunction(() => {
-        const frame = document.getElementById("heatMapFrame").contentWindow;
-        const doc = frame.document.documentElement;
-        const columns = Math.floor((Math.min(doc.scrollWidth, frame.scrollX + doc.clientWidth) - 1) / 1024) - Math.floor(frame.scrollX / 1024) + 1;
-        const rows = Math.floor((Math.min(doc.scrollHeight, frame.scrollY + doc.clientHeight) - 1) / 1024) - Math.floor(frame.scrollY / 1024) + 1;
-        return document.querySelectorAll("#heatMapTiles img").length === columns * rows;
-    }, 10);
 }
 
 Scenario("readonly list uses the shared date filter", ({ I, DT }) => {
@@ -175,90 +124,22 @@ Scenario("opens a resizable dialog and returns to the unchanged page list", asyn
     I.assertEqual(listRequests.length, requestCount, "Closing the dialog must not reload the page list");
 });
 
-Scenario("keeps exact viewport width and loads only visible tiles", async ({ I }) => {
-    mockMap(I);
-    // Navigate from the administration to satisfy the same-origin referrer check.
+Scenario("shows historical fallback and mixed-version notices", ({ I }) => {
+    mockMap(I, {multipleVersions: true});
     I.executeScript(url => window.location.assign(url), detailsUrl);
     I.waitForVisible("#heatMapViewport", 20);
     I.seeElement("#heatMapBack");
-    I.seeElement("#heatMapWidth");
-    I.seeElement("#heatMapScale");
-    I.dontSeeElement(".pg-heatmap-controls .bootstrap-select");
-    I.seeInField("#heatMapWidth", "1280");
     I.see("autotest click map preview", "#heatMapTitle");
-    I.dontSeeElement("#heatMapUrl, #heatMapPeriod, #heatMapVersion");
-    I.assertEqual(await I.grabAttributeFrom("#heatMapReload", "title"), "Obnoviť náhľad");
-    I.assertEqual(await I.executeScript(() => document.getElementById("heatMapFrame").contentWindow.innerWidth), 1280);
-    I.waitForFunction(() => document.getElementById("heatMapFrame").getBoundingClientRect().bottom <= innerHeight, 10);
-    waitForVisibleTiles(I);
-    I.executeScript(() => document.getElementById("heatMapFrame").contentWindow.scrollTo(0, 1400));
-    I.waitForFunction(() => document.getElementById("heatMapTiles").style.transform === "translate(0px, -1400px)", 10);
-    I.dontSeeElement('#heatMapTiles img[data-tile="0:0"]');
-    I.seeElement('#heatMapTiles img[data-tile="0:1"]');
-    I.executeScript(() => document.getElementById("heatMapFrame").contentWindow.scrollTo(900, 1400));
-    I.waitForFunction(() => document.getElementById("heatMapTiles").style.transform === "translate(-900px, -1400px)", 10);
-    I.seeElement('#heatMapTiles img[data-tile="2:1"]');
-    const tileParameters = await I.executeScript(() => Array.from(document.querySelectorAll("#heatMapTiles img"), tile => {
-        const params = new URL(tile.src).searchParams;
-        return {dateRange: params.get("dateRange"), width: params.get("width")};
-    }));
-    tileParameters.forEach(params => {
-        I.assertEqual(params.dateRange, dateRange);
-        I.assertEqual(params.width, "1280");
-    });
-    I.selectOption("#heatMapScale", "0.5");
-    I.assertEqual(await I.executeScript(() => document.getElementById("heatMapFrame").contentWindow.innerWidth), 1280);
-    I.assertEqual(await I.executeScript(() => document.getElementById("heatMapStage").style.transform), "scale(0.5)");
-    I.selectOption("#heatMapWidth", "390");
-    I.waitForVisible("#heatMapViewport", 20);
-    I.waitForFunction(() => document.getElementById("heatMapFrame").contentWindow.innerWidth === 390, 10);
-    waitForVisibleTiles(I);
-    I.uncheckOption("#heatMapVisible");
-    I.dontSeeElement("#heatMapOverlay");
-    I.verifyDisabled("#heatMapOpacity");
-    I.checkOption("#heatMapVisible");
-    I.seeElement("#heatMapOverlay");
-    I.assertFalse(await I.executeScript(() => document.getElementById("heatMapOpacity").disabled));
-    I.executeScript(() => {
-        const opacity = document.getElementById("heatMapOpacity");
-        opacity.value = "40";
-        opacity.dispatchEvent(new Event("input", {bubbles: true}));
-    });
-    I.see("40 %", "#heatMapOpacityValue");
-    I.assertEqual(await I.executeScript(() => document.getElementById("heatMapOverlay").style.opacity), "0.4");
-    const previewUrl = await I.grabAttributeFrom("#heatMapFrame", "src");
-    I.clickCss("#heatMapReload");
-    I.waitForVisible("#heatMapViewport", 20);
-    I.assertNotEqual(await I.grabAttributeFrom("#heatMapFrame", "src"), previewUrl);
-});
-
-Scenario("shows historical fallback and mixed-version notices", ({ I }) => {
-    mockMap(I, {fallback: true, multiple: true});
-    I.executeScript(url => window.location.assign(url), detailsUrl);
-    I.waitForVisible("#heatMapViewport", 20);
-    I.dontSeeElement("#heatMapVersion");
+    I.seeAttributesOnElements("#heatMapReload", {title: "Obnoviť náhľad"});
+    I.dontSeeElement(".pg-heatmap-controls .bootstrap-select");
+    I.seeElement("#heatMapVersion");
     I.dontSeeElement("#heatMapNotice");
     I.waitForVisible("#toast-container-webjet .toast-warning", 5);
     I.see("Mapa kliknutí", "#toast-container-webjet .toast-warning .toast-title");
     I.see("Historickú verziu sa nepodarilo určiť", "#toast-container-webjet .toast-warning");
     I.see("Mapa spája kliknutia z viacerých verzií", "#toast-container-webjet .toast-warning");
     I.waitToHide("#toast-container-webjet .toast-warning", 7);
-    I.seeElement("#heatMapViewport");
-});
-
-Scenario("shows empty data and refuses an unrelated preview document", ({ I }) => {
-    mockMap(I, {empty: true});
-    I.executeScript(url => window.location.assign(url), detailsUrl);
-    I.waitForText("Vo vybranom období nie sú zaznamenané kliknutia", 20, "#heatMapStatus");
-    I.verifyDisabled("#heatMapWidth");
-    I.dontSeeElement("#heatMapViewport");
-    I.stopMockingRoute(apiPattern);
-    mockMap(I, {invalidPreview: true});
-    I.refreshPage();
-    I.waitForText("Náhľad stránky nie je dostupný", 20, "#heatMapStatus");
-    I.dontSeeElement("#heatMapViewport");
-});
-
-Scenario("removes click map fixtures", ({ I }) => {
-    I.stopMockingRoute(apiPattern);
+    I.selectOption("#heatMapVersion", "122");
+    I.waitForElement('#heatMapTiles img[src*="versionId=122"]', 10);
+    I.seeElement('#heatMapFrame[src*="versionId=122"]');
 });

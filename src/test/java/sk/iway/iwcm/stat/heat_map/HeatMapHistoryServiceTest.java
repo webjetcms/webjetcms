@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -26,9 +28,12 @@ import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.HistoryMatch;
+import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.VersionPeriod;
+import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.ReportRange;
+import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Verifies historical heat-map selection across publication and approval transitions. */
-class HeatMapHistoryServiceTest {
+class HeatMapHistoryServiceTest extends BaseWebjetTest {
 
     private static final int DOC_ID = 123;
 
@@ -45,18 +50,26 @@ class HeatMapHistoryServiceTest {
         return history;
     }
 
-    /** A version predating the range remains the correct baseline even after actual is cleared. */
+    /** Only a published revision owned by the page can replace the baseline from before the range. */
     @Test
-    void selectsOlderPublishedBaselineAndIgnoresDrafts() {
+    void keepsPublishedBaselineWhenNewerRevisionsAreIneligible() {
         DocHistory baseline = published(1, 100);
         DocHistory draft = published(2, 250);
         draft.setApprovedBy(-1);
+        DocHistory rejected = published(3, 250);
+        rejected.setDisapprovedBy(7);
+        DocHistory awaiting = published(4, 250);
+        awaiting.setAwaitingApprove(",7,");
+        DocHistory deletion = published(5, 250);
+        deletion.setIsDelete(true);
+        DocHistory foreign = published(6, 250);
+        foreign.setDocId(456);
 
-        HistoryMatch match = HeatMapHistoryService.selectHistory(List.of(baseline, draft), DOC_ID, 200, 300);
+        HistoryMatch match = HeatMapHistoryService.selectHistory(
+                List.of(baseline, draft, rejected, awaiting, deletion, foreign), DOC_ID, 200, 300);
 
         assertEquals(1, match.history().getHistoryId());
-        assertEquals(100, match.effectiveFrom());
-        assertFalse(match.multipleVersions());
+        assertEquals(List.of(new VersionPeriod(1, 100, new ReportRange(200, 301))), match.versions());
     }
 
     /** Approval, rather than the earlier save, determines when an approved draft became visible. */
@@ -71,35 +84,28 @@ class HeatMapHistoryServiceTest {
                 .history().getHistoryId());
         HistoryMatch afterApproval = HeatMapHistoryService.selectHistory(List.of(lateApproval, newerSave), DOC_ID, 0, 250);
         assertEquals(1, afterApproval.history().getHistoryId());
-        assertEquals(250, afterApproval.effectiveFrom());
+        assertEquals(250, afterApproval.versions().get(0).effectiveFrom());
     }
 
     /** Completed scheduling respects both the publication date and a possibly later approval. */
     @Test
     void respectsScheduledPublicationAndLateApproval() {
         DocHistory scheduled = published(1, 100);
-        scheduled.setPublishAfterStart(true);
         scheduled.setPublishStartDate(new Date(300));
+        assertEquals(100, HeatMapHistoryService.selectHistory(List.of(scheduled), DOC_ID, 0, 200).versions().get(0).effectiveFrom());
+
+        scheduled.setPublishAfterStart(true);
         scheduled.setApproveDate(new Date(200));
 
-        assertNull(HeatMapHistoryService.selectHistory(List.of(scheduled), DOC_ID, 0, 299));
-        assertEquals(300, HeatMapHistoryService.selectHistory(List.of(scheduled), DOC_ID, 0, 300).effectiveFrom());
+        assertNull(HeatMapHistoryService.selectHistory(List.of(scheduled), DOC_ID, 0, 299).history());
+        assertEquals(300, HeatMapHistoryService.selectHistory(List.of(scheduled), DOC_ID, 0, 300).versions().get(0).effectiveFrom());
 
         scheduled.setApproveDate(new Date(350));
-        assertNull(HeatMapHistoryService.selectHistory(List.of(scheduled), DOC_ID, 0, 349));
-        assertEquals(350, HeatMapHistoryService.selectHistory(List.of(scheduled), DOC_ID, 0, 350).effectiveFrom());
+        assertNull(HeatMapHistoryService.selectHistory(List.of(scheduled), DOC_ID, 0, 349).history());
+        assertEquals(350, HeatMapHistoryService.selectHistory(List.of(scheduled), DOC_ID, 0, 350).versions().get(0).effectiveFrom());
     }
 
-    /** A perex start date alone must not be mistaken for a scheduled publication date. */
-    @Test
-    void ignoresPublishStartWithoutSchedulingFlag() {
-        DocHistory history = published(1, 100);
-        history.setPublishStartDate(new Date(1000));
-
-        assertEquals(100, HeatMapHistoryService.selectHistory(List.of(history), DOC_ID, 0, 200).effectiveFrom());
-    }
-
-    /** Approval and actual flags must not allow queued or canceled schedules into the preview. */
+    /** A synced revision remains visible while later scheduled revisions are pending or canceled. */
     @Test
     void excludesPendingAndCanceledSchedules() {
         DocHistory pending = published(1, 100);
@@ -114,63 +120,27 @@ class HeatMapHistoryServiceTest {
         canceled.setPublishStartDate(new Date(250));
         canceled.setSyncStatus(2);
 
-        assertNull(HeatMapHistoryService.selectHistory(List.of(pending, canceled), DOC_ID, 0, 500));
+        DocHistory synced = published(3, 50);
+        synced.setSyncStatus(2);
+        assertSame(synced, HeatMapHistoryService.selectHistory(List.of(synced, pending, canceled), DOC_ID, 0, 500).history());
     }
 
-    /** Sync status two denotes a canceled schedule only when the revision was scheduled. */
+    /** Disabled, redirected and remapped revisions each prevent a preview of the older content. */
     @Test
-    void acceptsOrdinarySyncedRevisionWithStatusTwo() {
-        DocHistory history = published(1, 100);
-        history.setSyncStatus(2);
-
-        assertEquals(1, HeatMapHistoryService.selectHistory(List.of(history), DOC_ID, 0, 500).history().getHistoryId());
-    }
-
-    /** Rejections, incomplete approvals, and delete requests are not renderable content versions. */
-    @Test
-    void excludesRejectedPendingDeleteAndUnownedVersions() {
-        DocHistory rejected = published(1, 100);
-        rejected.setDisapprovedBy(7);
-        DocHistory awaiting = published(2, 100);
-        awaiting.setAwaitingApprove(",7,");
-        DocHistory deletion = published(3, 100);
-        deletion.setIsDelete(true);
-        DocHistory foreign = published(4, 100);
-        foreign.setDocId(456);
-        DocHistory unknown = published(5, 100);
-        unknown.setApprovedBy(null);
-
-        assertNull(HeatMapHistoryService.selectHistory(List.of(rejected, awaiting, deletion, foreign, unknown), DOC_ID, 0, 500));
-    }
-
-    /** A disabled latest revision must not resurrect an older available revision. */
-    @Test
-    void retainsLatestDisabledRevision() {
+    void keepsUnavailableLatestRevision() {
         DocHistory older = published(1, 100);
         DocHistory disabled = published(2, 200);
         disabled.setAvailable(false);
-
-        HistoryMatch match = HeatMapHistoryService.selectHistory(List.of(older, disabled), DOC_ID, 0, 300);
-
-        assertEquals(2, match.history().getHistoryId());
-        assertFalse(match.available());
-    }
-
-    /** Redirects and content remapping must not render a different page beneath an old click map. */
-    @Test
-    void marksRedirectedOrRemappedLatestRevisionUnavailable() {
-        DocHistory older = published(1, 100);
-        DocHistory redirected = published(2, 200);
+        DocHistory redirected = published(3, 200);
         redirected.setExternalLink("https://external.example/new-page");
-        HistoryMatch redirect = HeatMapHistoryService.selectHistory(List.of(older, redirected), DOC_ID, 0, 300);
-        assertEquals(2, redirect.history().getHistoryId());
-        assertFalse(redirect.available());
-
-        DocHistory remapped = published(3, 250);
+        DocHistory remapped = published(4, 200);
         remapped.setData("<p>!REMAP_PAGE(456)!</p>");
-        HistoryMatch remap = HeatMapHistoryService.selectHistory(List.of(older, remapped), DOC_ID, 0, 300);
-        assertEquals(3, remap.history().getHistoryId());
-        assertFalse(remap.available());
+
+        for (DocHistory latest : List.of(disabled, redirected, remapped)) {
+            HistoryMatch match = HeatMapHistoryService.selectHistory(List.of(older, latest), DOC_ID, 0, 300);
+            assertSame(latest, match.history());
+            assertFalse(match.available(), "History ID " + latest.getHistoryId());
+        }
     }
 
     /** Expiration deactivates a revision only when its automatic deactivation flag is set. */
@@ -192,18 +162,25 @@ class HeatMapHistoryServiceTest {
         DocHistory newer = published(2, 200);
         List<DocHistory> history = List.of(older, newer);
 
-        assertTrue(HeatMapHistoryService.selectHistory(history, DOC_ID, 150, 300).multipleVersions());
-        assertFalse(HeatMapHistoryService.selectHistory(history, DOC_ID, 200, 300).multipleVersions());
-        assertFalse(HeatMapHistoryService.selectHistory(history, DOC_ID, 250, 300).multipleVersions());
+        assertEquals(2, HeatMapHistoryService.selectHistory(history, DOC_ID, 150, 300).versions().size());
+        assertEquals(1, HeatMapHistoryService.selectHistory(history, DOC_ID, 200, 300).versions().size());
+        assertEquals(1, HeatMapHistoryService.selectHistory(history, DOC_ID, 250, 300).versions().size());
     }
 
-    /** Equal publication times resolve deterministically without implying an extra layout interval. */
+    /** The baseline and latest intervals are clipped, and ambiguity and expiry leave gaps. */
     @Test
-    void breaksPublicationTimeTiesByHistoryId() {
-        HistoryMatch match = HeatMapHistoryService.selectHistory(List.of(published(2, 100), published(1, 100)), DOC_ID, 0, 100);
-
-        assertEquals(2, match.history().getHistoryId());
-        assertFalse(match.multipleVersions());
+    void limitsVersionChoicesToTheirPublishedIntervals() {
+        DocHistory ambiguous = published(3, 200);
+        ambiguous.setApprovedBy(null);
+        DocHistory expired = published(5, 300);
+        expired.setDisableAfterEnd(true);
+        expired.setPublishEndDate(new Date(350));
+        var history = List.of(published(1, 50), published(2, 100), ambiguous, published(4, 300),
+                expired, published(6, 400), published(7, 600));
+        var match = HeatMapHistoryService.selectHistory(history, DOC_ID, 150, 499);
+        assertEquals(List.of(new VersionPeriod(6, 400, new ReportRange(400, 500)),
+                new VersionPeriod(5, 300, new ReportRange(300, 350)),
+                new VersionPeriod(2, 100, new ReportRange(150, 200))), match.versions());
     }
 
     /** A newer incomplete historical row must not silently resurrect an earlier accepted version. */
@@ -218,7 +195,9 @@ class HeatMapHistoryServiceTest {
         missingEnd.setDisableAfterEnd(true);
 
         for (DocHistory ambiguous : List.of(unknownApproval, missingStart, missingEnd)) {
-            assertNull(HeatMapHistoryService.selectHistory(List.of(baseline, ambiguous), DOC_ID, 0, 300));
+            HistoryMatch match = HeatMapHistoryService.selectHistory(List.of(baseline, ambiguous), DOC_ID, 0, 300);
+            assertNull(match.history());
+            assertEquals(List.of(new VersionPeriod(1, 100, new ReportRange(100, 200))), match.versions());
             assertEquals(5, HeatMapHistoryService.selectHistory(List.of(ambiguous, published(5, 250)), DOC_ID, 0, 300)
                     .history().getHistoryId());
         }
@@ -230,7 +209,7 @@ class HeatMapHistoryServiceTest {
         DocHistory ambiguous = published(2, 100);
         ambiguous.setApprovedBy(null);
 
-        assertNull(HeatMapHistoryService.selectHistory(List.of(ambiguous, published(1, 100)), DOC_ID, 0, 300));
+        assertNull(HeatMapHistoryService.selectHistory(List.of(ambiguous, published(1, 100)), DOC_ID, 0, 300).history());
         assertEquals(3, HeatMapHistoryService.selectHistory(List.of(ambiguous, published(3, 100)), DOC_ID, 0, 300)
                 .history().getHistoryId());
     }
@@ -250,7 +229,9 @@ class HeatMapHistoryServiceTest {
         when(access.dateRange("period")).thenReturn(new Date[] { new Date(0), new Date(500) });
         DocHistory history = published(7, 100);
         history.setDocId(42);
-        doReturn(List.of(history)).when(service).loadHistory(42, 500);
+        DocHistory later = published(8, 300);
+        later.setDocId(42);
+        doReturn(List.of(history, later)).when(service).loadHistory(42, 500);
         when(repository.findById(7L)).thenReturn(Optional.of(history));
         DocDetails historicalContent = new DocDetails();
         historicalContent.setDocId(42);
@@ -264,16 +245,22 @@ class HeatMapHistoryServiceTest {
             mappings.when(() -> MultigroupMappingDB.getMasterDocId(DOC_ID, true)).thenReturn(42);
             lookup.when(DocDB::getInstance).thenReturn(docs);
 
-            HeatMapHistoryService.PreviewSelection selection = service.resolve(request, DOC_ID, "period");
+            HeatMapHistoryService.PreviewSelection selection = service.resolve(request, DOC_ID, "period", 7);
 
             assertEquals("history", selection.source());
             assertEquals(7, selection.historyId());
+            assertEquals(new ReportRange(100, 300), selection.clickRange());
             assertSame(historicalContent, selection.document());
             assertEquals(DOC_ID, selection.document().getDocId());
             assertEquals(5, selection.document().getGroupId());
             assertEquals("/slave-page.html", selection.document().getVirtualPath());
             verify(docs).getDoc(-1, 7, false);
             verify(access).requireDocument(request, DOC_ID);
+            assertEquals(selection.clickRange(), service.versionRange(DOC_ID, access.dateRange("period"), 7));
+            assertThrows(ResponseStatusException.class, () -> service.resolve(request, DOC_ID, "period", 9));
+            verify(service).loadHistory(42, 500);
+        } finally {
+            HeatMapHistoryService.historyDeleted(42);
         }
     }
 
@@ -303,7 +290,7 @@ class HeatMapHistoryServiceTest {
             mappings.when(() -> MultigroupMappingDB.getMasterDocId(DOC_ID, true)).thenReturn(DOC_ID);
             lookup.when(DocDB::getInstance).thenReturn(docs);
 
-            HeatMapHistoryService.PreviewSelection selection = service.resolve(request, DOC_ID, "period");
+            HeatMapHistoryService.PreviewSelection selection = service.resolve(request, DOC_ID, "period", null);
 
             assertEquals("current", selection.source());
             assertTrue(selection.historicalUnavailable());

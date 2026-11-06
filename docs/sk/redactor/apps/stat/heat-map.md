@@ -38,7 +38,11 @@ Náhľad kontajnerovej skupiny sa otvorí v najčastejšej skutočne zaznamenane
 
 Náhľad má vlastné posúvanie. Keď obsah prejde pod pripnutú hlavičku, hlavička zakryje aj značky kliknutí na tomto obsahu. Ovládač **Zobrazenie** upravuje iba jeho zmenšenie na obrazovke; vnútorná šírka stránky zostáva zachovaná. Krytie mapy môžete meniť alebo mapu dočasne skryť. Obnovte náhľad, ak sa nepodarilo načítať stránku alebo časť mapy.
 
-Pre náhľad sa vyberá dostupná publikovaná verzia obsahu ku koncu obdobia. Zobrazený je dátum verzie. Ak verziu nemožno spoľahlivo určiť, rozhranie upozorní na použitie aktuálneho obsahu alebo na nedostupný náhľad. Ak sa obsah v období menil, mapa spája kliknutia z viacerých verzií a zobrazí upozornenie.
+Náhľad predvolene zobrazuje publikovanú verziu stránky ku koncu vybraného obdobia. Ak ju nemožno určiť, zobrazí sa upozornenie na použitie aktuálneho obsahu alebo na nedostupný náhľad.
+
+Ak sa stránka počas obdobia menila, v poli **Verzia stránky** je vybraná možnosť **Všetky verzie**. Filter môžete použiť aj vtedy, keď jediná dostupná verzia platila iba časť vybraného obdobia. Vyberte verziu podľa čísla a času publikovania. Náhľad zobrazí jej obsah. Mapa aj počty pri jednotlivých šírkach zahŕňajú všetky kliknutia z dní, keď bola verzia vo vybranom období zverejnená. Ak nová verzia vyšla na obed, obe verzie zobrazia všetky kliknutia z tohto dňa. V zobrazení **Všetky verzie** sa každé kliknutie započíta raz.
+
+Ak sa v týchto dňoch nezaznamenali žiadne kliknutia, jej uložený obsah si môžete pozrieť v každej šírke zaznamenanej v danom období. Pri každej šírke sa zobrazí nula kliknutí.
 
 Čas publikovania sa odvodzuje z dostupných údajov histórie. Pri plánovanom publikovaní ide o približný čas, pretože história neuchováva presný okamih vykonania úlohy.
 

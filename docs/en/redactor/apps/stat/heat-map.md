@@ -14,7 +14,11 @@ Click recording respects the statistical cookie consent settings. Without permis
 
 New clicks are recorded separately for each exact window width in CSS pixels. The width selector shows click counts and defaults to the most popular width. The preview scrolls independently. Scaling the preview keeps its internal page width unchanged. You can adjust map opacity, hide the map, and reload the preview.
 
-The preview selects an available published content version as of the end of the period and shows its date. When a historical version cannot be established, the interface explains that current content is shown, or that the preview is unavailable. When the content changed during the period, a notice explains that clicks from multiple versions are combined.
+The preview opens on the published page version at the end of the selected period. If the history is incomplete, a notice explains whether the preview uses current content or is unavailable.
+
+When the page changed during the period, **Page version** defaults to **All versions**. You can also use this filter when the only available version covers part of the selected period. Select a version by its ID and publication time to see its content. The map and the counts for each width include all clicks on the days that version was live within the selected period. If a new version went live at noon, both versions show all clicks for that day. **All versions** counts each click once.
+
+If no clicks were recorded on those days, you can still preview its saved content at any width recorded in that period. Each width shows zero clicks.
 
 Publication times are derived from the available history metadata. Scheduled publication times are approximate because history does not retain the exact time the publishing task ran.
 

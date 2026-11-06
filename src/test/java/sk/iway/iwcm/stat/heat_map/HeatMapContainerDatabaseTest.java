@@ -9,9 +9,12 @@ import static sk.iway.iwcm.stat.heat_map.HeatMapCoordinateMode.*;
 import java.io.ByteArrayInputStream;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,12 +23,19 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stat.StatWriteBuffer;
+import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.ReportRange;
+import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Exercises migration, buffered persistence, cross-month grouping and PNG isolation on an isolated MariaDB schema. */
@@ -66,6 +76,7 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                 try (MockedStatic<DBPool> pool = mockStatic(DBPool.class);
                         MockedStatic<StatNewDB> partitions = mockStatic(StatNewDB.class)) {
                     pool.when(DBPool::getConnection).thenReturn(borrowed);
+                    pool.when(() -> DBPool.getConnection("iwcm")).thenReturn(borrowed);
                     partitions.when(() -> StatNewDB.getTableSuffix(eq("stat_clicks"), anyLong(), anyLong()))
                             .thenReturn(new String[] {"_2026_9", "_2026_10"});
                     HeatMapSchema.upgradeExistingTables();
@@ -92,7 +103,9 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                         assertEquals(0, ImageIO.read(new ByteArrayInputStream(document)).getRGB(487, 350) >>> 24);
                         assertTrue((ImageIO.read(new ByteArrayInputStream(document)).getRGB(900, 350) >>> 24) > 0);
                         assertArrayEquals(container, HeatMapStorage.getTile("autotest.example", 11, from, to, 1140, CONTAINER, 0, 0));
+                        verifySharedPublicationDay(database);
                     }
+                    verifyHistoryProjectionAndCache(database);
                 }
             } finally {
                 Constants.DB_TYPE = originalType;
@@ -101,6 +114,88 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                     sql.execute("DROP DATABASE " + catalog);
                 }
             }
+        }
+    }
+
+    /** Exercises the production history query, including remaps, and refreshes cached intervals after history changes. */
+    private static void verifyHistoryProjectionAndCache(Connection database) throws Exception {
+        int docId = 41;
+        long start = LocalDate.of(2026, 10, 1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        Date[] period = { new Date(start), new Date(start + 59999) };
+        try (Statement sql = database.createStatement()) {
+            sql.execute("CREATE TABLE documents_history (history_id INT, doc_id INT, save_date DATETIME, data LONGTEXT,"
+                    + " approve_date DATETIME, approved_by INT DEFAULT 0, disapproved_by INT, awaiting_approve VARCHAR(16),"
+                    + " publicable BOOLEAN, is_delete BOOLEAN, sync_status INT, available BOOLEAN DEFAULT 1,"
+                    + " external_link VARCHAR(255), publish_after_start BOOLEAN, publish_start DATETIME,"
+                    + " disable_after_end BOOLEAN, publish_end DATETIME)");
+        }
+        HeatMapHistoryService service = spy(new HeatMapHistoryService(null, null));
+        DocDetails page = new DocDetails();
+        page.setDocId(docId);
+        var published = new WebjetEvent<>(new DocumentPublishEvent(page), WebjetEventType.ON_PUBLISH);
+        service.pagePublished(published);
+        try (PreparedStatement insert = database.prepareStatement(
+                "INSERT INTO documents_history (doc_id, history_id, save_date, data) VALUES (?, ?, ?, ?)");
+                MockedStatic<MultigroupMappingDB> mappings = mockStatic(MultigroupMappingDB.class)) {
+            mappings.when(() -> MultigroupMappingDB.getMasterDocId(docId, true)).thenReturn(docId);
+            insert.setInt(1, docId);
+            insert.setInt(2, 1);
+            insert.setTimestamp(3, new Timestamp(start));
+            insert.setString(4, "Literal examples: !remap_page(2)! and !REMAPxPAGE(2)!");
+            insert.executeUpdate();
+
+            var full = ReportRange.of(period);
+            assertEquals(full, service.versionRange(docId, period, 1));
+            assertEquals(full, service.versionRange(docId, period, 1));
+            verify(service, times(1)).loadHistory(docId, period[1].getTime());
+
+            insert.setInt(2, 2);
+            insert.setTimestamp(3, new Timestamp(start + 10000));
+            insert.setString(4, "x".repeat(9000) + "!REMAP_PAGE(42)!");
+            insert.executeUpdate();
+            service.pagePublished(published);
+            assertEquals(new ReportRange(start, start + 10000), service.versionRange(docId, period, 1));
+            assertThrows(ResponseStatusException.class, () -> service.versionRange(docId, period, 2));
+
+            try (Statement sql = database.createStatement()) {
+                sql.executeUpdate("DELETE FROM documents_history WHERE history_id=2");
+            }
+            HeatMapHistoryService.historyDeleted(docId);
+            assertEquals(full, service.versionRange(docId, period, 1));
+            verify(service, times(3)).loadHistory(docId, period[1].getTime());
+        } finally {
+            service.pagePublished(published);
+        }
+    }
+
+    /** Both versions include every click on a shared publication day, while the full report counts each row once. */
+    private static void verifySharedPublicationDay(Connection database) throws Exception {
+        LocalDate day = LocalDate.of(2026, 10, 1);
+        long start = day.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
+        long boundary = start + 43200;
+        for (int i = 0; i < 2; i++) {
+            HeatMapStorage.record(new HeatMapEvent(String.format("%032x", 20 + i), 22, 800,
+                    boundary - 1 + i, 150 + 400 * i, 150), "autotest.example");
+        }
+        StatWriteBuffer.main(new String[0]);
+        try (Statement sql = database.createStatement()) {
+            String columns = " (domain_name,document_id,day_of_month,viewport_width,x,y) VALUES ";
+            sql.execute("INSERT INTO stat_clicks_2026_9" + columns + "('autotest.example',22,30,800,700,150)");
+            sql.execute("INSERT INTO stat_clicks_2026_10" + columns
+                    + "('autotest.example',22,1,800,700,150), ('autotest.example',22,2,800,700,150)");
+        }
+        LocalDate first = day.minusDays(1);
+        LocalDate last = day.plusDays(1);
+        assertEquals(5, HeatMapStorage.getWidths("autotest.example", 22, first, last).get(0).clicks());
+        var before = new ReportRange(first.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(), boundary * 1000);
+        var after = new ReportRange(boundary * 1000, last.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        for (var version : List.of(before, after)) {
+            assertEquals(4, HeatMapStorage.getWidths("autotest.example", 22, version.firstDay(), version.lastDay()).get(0).clicks());
+            byte[] png = HeatMapStorage.getTile("autotest.example", 22, version.firstDay(), version.lastDay(), 800, DOCUMENT, 0, 0);
+            var tile = ImageIO.read(new ByteArrayInputStream(png));
+            assertTrue((tile.getRGB(150, 150) >>> 24) > 0);
+            assertTrue((tile.getRGB(550, 150) >>> 24) > 0);
+            assertTrue((tile.getRGB(700, 150) >>> 24) > 0);
         }
     }
 

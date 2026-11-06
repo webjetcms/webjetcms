@@ -5,6 +5,7 @@
         title: /*[[#{stat_menu.heat_map}]]*/ "Click map",
         loading: /*[[#{components.stat.heatmap.loading}]]*/ "Loading…",
         empty: /*[[#{components.stat.heatmap.empty}]]*/ "No clicks in this period.",
+        emptyVersion: /*[[#{components.stat.heatmap.emptyVersion}]]*/ "No clicks were recorded on the days this version was live in the selected period.",
         error: /*[[#{components.stat.heatmap.error}]]*/ "The click map could not be loaded.",
         previewError: /*[[#{components.stat.heatmap.previewError}]]*/ "The page preview is unavailable.",
         tileError: /*[[#{components.stat.heatmap.tileError}]]*/ "Some map tiles could not be loaded. Reload the preview.",
@@ -13,7 +14,7 @@
         window: /*[[#{components.stat.heatmap.window}]]*/ "Window",
         containerMissing: /*[[#{components.stat.heatmap.containerMissing}]]*/ "The click map cannot be displayed: the preview has no matching centered container of width {width} px.",
         fallback: /*[[#{components.stat.heatmap.fallback}]]*/ "A historical version could not be identified. Current content is shown.",
-        multiple: /*[[#{components.stat.heatmap.multiple}]]*/ "The content changed during this period. Clicks from multiple versions are combined.",
+        multiple: /*[[#{components.stat.heatmap.multiple}]]*/ "The content changed during this period. Clicks from multiple versions are combined. Versions that were live on the same day share that day’s clicks.",
         unavailable: /*[[#{components.stat.heatmap.unavailable}]]*/ "No page content is available for this preview."
     };
 </script>
@@ -38,6 +39,12 @@
         <h2 id="heatMapTitle" class="h5 mb-0" data-th-text="#{stat_menu.heat_map}"></h2>
     </div>
     <div class="pg-heatmap-controls">
+        <div class="pg-heatmap-version" hidden>
+            <label for="heatMapVersion" data-th-text="#{components.stat.heatmap.version}"></label>
+            <select id="heatMapVersion" class="form-select form-select-sm no-picker">
+                <option value="" data-th-text="#{components.stat.heatmap.allVersions}"></option>
+            </select>
+        </div>
         <div class="pg-heatmap-control-group pg-heatmap-display">
             <div class="pg-heatmap-width">
                 <label for="heatMapWidth" data-th-text="#{components.stat.heatmap.width}"></label>

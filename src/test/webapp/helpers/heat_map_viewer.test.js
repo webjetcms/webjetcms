@@ -44,6 +44,7 @@ test("container groups restore their offset at the representative viewport and h
     assert.deepEqual(await page.locator("#heatMapWidth option").allTextContents(), [
         "Container 1140 px · Clicks: 20", "Window 1140 px · Clicks: 2"]);
     const frame = page.frames().find(item => item.url().includes("/html/preview"));
+    assert.equal(await page.locator("#heatMapVersion").isVisible(), false);
     assert.equal(await frame.evaluate(() => innerWidth), 1369);
     assert.equal(await page.locator("#heatMapTiles").evaluate(el => el.style.transform), "translate(114.5px, 0px)");
     assert.ok(tiles.every(url => url.searchParams.get("mode") === "CONTAINER" && url.searchParams.get("width") === "1140"));
@@ -100,9 +101,9 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     const errors = [];
     page.on("pageerror", error => errors.push(error.message));
     const markup = fs.readFileSync(path.join(adminPath, "heat-map-details.html"), "utf8").split('<section id="heatMapViewer"')[1];
-    const texts = {title: "Click map", loading: "Loading", empty: "Empty", error: "Error", previewError: "Preview error", tileError: "Tile error", clicks: "Clicks", historical: "Historic", current: "Current", fallback: "Fallback", multiple: "Multiple", unavailable: "Unavailable"};
+    const texts = {title: "Click map", loading: "Loading", empty: "Empty", emptyVersion: "No clicks assigned to this version", error: "Error", previewError: "Preview error", tileError: "Tile error", clicks: "Clicks", historical: "Historic", current: "Current", fallback: "Fallback", multiple: "Multiple", unavailable: "Unavailable"};
     const html = '<!doctype html><html><head><style>.d-none{display:none!important}body{margin:20px}</style><link rel="stylesheet" href="/apps/stat/admin/heat-map.css"></head><body><section id="heatMapViewer"'
-        + markup + '<script>window.notifications=[];window.WJ={formatDate:v=>new Date(v).toISOString(),formatDateTime:v=>new Date(v).toISOString(),notifyWarning:(...args)=>window.notifications.push(args)};</script><script type="module">import {HeatMapViewer} from "/apps/stat/admin/heat-map-viewer.js";new HeatMapViewer(document.getElementById("heatMapViewer"),'
+        + markup + '<script>window.notifications=[];window.WJ={formatDate:v=>new Date(v).toISOString(),formatDateTimeSeconds:v=>new Date(v).toISOString(),notifyWarning:(...args)=>window.notifications.push(args)};</script><script type="module">import {HeatMapViewer} from "/apps/stat/admin/heat-map-viewer.js";new HeatMapViewer(document.getElementById("heatMapViewer"),'
         + JSON.stringify(texts) + ').init();</script></body></html>';
     let mode = "normal";
     let metadataPaused;
@@ -120,7 +121,9 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
         if (url.pathname.endsWith("heat-map.css")) return route.fulfill({contentType: "text/css", body: fs.readFileSync(path.join(adminPath, "heat-map.css"), "utf8")});
         if (url.pathname.endsWith("/widths")) {
             if (mode === "widths-error") return route.fulfill({status: 403, body: "Forbidden"});
-            return route.fulfill({json: mode === "empty" ? [] : [{width: 1280, clicks: 32}, {width: 390, clicks: 8}]});
+            const version = url.searchParams.get("versionId");
+            if (version === "122") return route.fulfill({json: [{width: 390, clicks: 3}]});
+            return route.fulfill({json: mode === "empty" || version === "121" ? [] : [{width: 1280, clicks: 32}, {width: 390, clicks: 8}]});
         }
         if (url.pathname.endsWith("/metadata")) {
             if (mode === "metadata-error") return route.fulfill({status: 500, body: "Unavailable"});
@@ -130,15 +133,23 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
                     metadataPaused();
                 });
             }
+            const clickRange = {from: 1788213600000, until: 1789509600000};
+            let versions = [{historyId: 123, effectiveFrom: 1789380000000}, {historyId: 122, effectiveFrom: 1788313600000},
+                {historyId: 121, effectiveFrom: 1788213600000}];
+            if (mode.startsWith("single-")) {
+                const from = mode === "single-full" ? clickRange.from : clickRange.from + 43200000;
+                versions = [{historyId: 122, effectiveFrom: from, range: {from, until: clickRange.until}}];
+            }
             return route.fulfill({json: {
                 title: "autotest preview " + url.searchParams.get("width"), url: "/autotest.html", width: Number(url.searchParams.get("width")),
                 clicks: 32, tileSize: 1024, historyId: 123, effectiveFrom: 1788213600000,
-                source: mode === "unavailable" ? "unavailable" : "history", historicalUnavailable: false, multipleVersions: true
+                source: mode === "unavailable" ? "unavailable" : "history", historicalUnavailable: false,
+                multipleVersions: versions.length > 1 && !url.searchParams.has("versionId"), clickRange, versions
             }});
         }
         if (url.pathname.endsWith("/html/preview")) return route.fulfill({contentType: "text/html", body: mode === "invalid"
             ? "<!doctype html><html><body>Login</body></html>"
-            : '<!doctype html><html><head><meta name="webjet-heatmap-preview" content="11"><style>body{margin:0}main{height:3500px;min-width:2200px;background:linear-gradient(white,#ddd)}</style></head><body><main><h1>autotest preview</h1><a href="/leave">Link</a></main></body></html>'});
+            : '<!doctype html><html><head><meta name="webjet-heatmap-preview" content="11"><style>body{margin:0}main{height:3500px;min-width:2200px;background:linear-gradient(white,#ddd)}</style></head><body><main><h1>autotest preview ' + (Number(url.searchParams.get("versionId")) || 123) + '</h1><a href="/leave">Link</a></main></body></html>'});
         if (url.pathname.endsWith("/binary/tile")) return route.fulfill({contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><circle cx="150" cy="100" r="50" fill="red" opacity=".6"/></svg>'});
         return route.fulfill({contentType: "text/html", body: html});
     });
@@ -188,7 +199,44 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     await page.locator("#heatMapOpacity").fill("40");
     assert.equal(await page.locator("#heatMapOpacityValue").textContent(), "40 %");
     assert.equal(await page.locator("#heatMapOverlay").evaluate(node => node.style.opacity), "0.4");
-    assert.equal(await page.locator("#heatMapUrl, #heatMapPeriod, #heatMapVersion").count(), 0);
+    assert.equal(await page.locator("#heatMapUrl, #heatMapPeriod").count(), 0);
+    assert.equal(await page.locator("#heatMapVersion").inputValue(), "");
+    const warnings = await page.evaluate(() => window.notifications.length);
+    await page.selectOption("#heatMapVersion", "122");
+    await page.locator('#heatMapTiles img[src*="versionId=122"]').first().waitFor();
+    assert.equal(await page.locator("#heatMapWidth option").count(), 1);
+    assert.match(await page.locator("#heatMapWidth option").textContent(), /390 px · Clicks: 3/);
+    const filtered = requests.filter(url => url.searchParams.get("versionId") === "122");
+    assert.deepEqual(new Set(filtered.map(url => url.pathname.split("/").pop())), new Set(["widths", "metadata", "preview", "tile"]));
+    assert.ok(filtered.every(url => url.searchParams.get("dateRange") === dateRange));
+    assert.equal(await page.evaluate(() => window.notifications.length), warnings);
+    await page.selectOption("#heatMapVersion", "121");
+    await page.getByText(texts.emptyVersion, {exact: true}).waitFor();
+    await page.frameLocator("#heatMapFrame").getByRole("heading", {name: "autotest preview 121"}).waitFor();
+    assert.equal(await page.locator("#heatMapViewport").isVisible(), true);
+    assert.equal(await page.locator("#heatMapWidth").isVisible(), true);
+    assert.equal(await page.locator("#heatMapWidth").isEnabled(), true);
+    const emptyWidths = await page.locator("#heatMapWidth option").allTextContents();
+    assert.equal(emptyWidths.length, 2);
+    assert.ok(emptyWidths.every(label => label.endsWith("Clicks: 0")));
+    await page.selectOption("#heatMapWidth", "1280");
+    await page.getByText(texts.emptyVersion, {exact: true}).waitFor();
+    assert.equal(await frame.evaluate(() => innerWidth), 1280);
+    assert.equal(await page.locator("#heatMapVisible").isVisible(), true);
+    assert.equal(await page.locator("#heatMapVisible").isDisabled(), true);
+    assert.equal(await page.locator("#heatMapOpacity").isVisible(), true);
+    assert.equal(await page.locator("#heatMapOpacity").isDisabled(), true);
+    assert.equal(await page.locator("#heatMapOverlay").isVisible(), false);
+    assert.equal(await page.locator("#heatMapTiles img").count(), 0);
+    assert.ok(!requests.some(url => url.pathname.endsWith("/binary/tile") && url.searchParams.get("versionId") === "121"));
+    await page.selectOption("#heatMapVersion", "");
+    await page.locator("#heatMapTiles img").first().waitFor();
+    assert.equal(await page.locator("#heatMapWidth").isVisible(), true);
+    assert.equal(await page.locator("#heatMapWidth option").count(), 2);
+    assert.equal(await page.locator("#heatMapWidth").inputValue(), "390");
+    assert.equal(await page.locator("#heatMapVisible").isEnabled(), true);
+    assert.equal(await page.locator("#heatMapOpacity").isEnabled(), true);
+    assert.ok(!(await page.locator("#heatMapFrame").getAttribute("src")).includes("versionId"));
     mode = "delayed";
     await page.selectOption("#heatMapWidth", "1280");
     await page.locator("#heatMapViewport:not(.d-none)").waitFor();
@@ -202,6 +250,15 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     await page.locator("#heatMapViewport:not(.d-none)").waitFor();
     assert.equal(await page.locator("#heatMapTitle").textContent(), "autotest preview 1280");
     assert.equal(await page.locator("#heatMapStatus").isVisible(), false);
+    mode = "single-partial";
+    await page.reload();
+    await page.selectOption("#heatMapVersion", "122");
+    await page.locator('#heatMapTiles img[src*="versionId=122"]').first().waitFor();
+    assert.match(await page.locator("#heatMapWidth option").textContent(), /Clicks: 3/);
+    mode = "single-full";
+    await page.reload();
+    await page.locator("#heatMapTiles img").first().waitFor();
+    assert.equal(await page.locator("#heatMapVersion").isVisible(), false);
     mode = "empty";
     await page.reload();
     await page.waitForFunction(() => document.getElementById("heatMapStatus").textContent === "Empty");

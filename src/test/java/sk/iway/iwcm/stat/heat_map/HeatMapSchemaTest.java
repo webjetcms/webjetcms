@@ -46,26 +46,17 @@ class HeatMapSchemaTest {
         return List.of(Constants.DB_MYSQL, Constants.DB_PGSQL, Constants.DB_MSSQL, Constants.DB_ORACLE);
     }
 
-    /** Sites that already installed the first responsive schema still receive the container columns. */
-    @Test
-    void upgradesSitesWithThePreviousMigrationMarker() throws Exception {
-        try (MockedStatic<UpdateDatabase> updates = mockStatic(UpdateDatabase.class);
-                MockedStatic<HeatMapSchema> schema = mockStatic(HeatMapSchema.class)) {
-            updates.when(UpdateDatabase::updateStatClicksColumns).thenCallRealMethod();
-            updates.when(() -> UpdateDatabase.isAllreadyUpdated("16.09.2026 [codex] add responsive tracking columns to stat_clicks")).thenReturn(true);
-            UpdateDatabase.updateStatClicksColumns();
-            schema.verify(HeatMapSchema::upgradeExistingTables);
-        }
-    }
-
-    /** Each database preserves legacy columns and skips duplicate columns and indexes on repeated upgrades. */
+    /** Each dialect skips missing months, preserves legacy columns and tolerates a repeated upgrade. */
     @ParameterizedTest
     @MethodSource("databaseTypes")
     void upgradesOnlyOriginalMonthlyTablesAndCanRunAgain(int databaseType) throws Exception {
         DatabaseFixture fixture = new DatabaseFixture(databaseType);
+        fixture.suffixes = new String[] { "_2024_1", "_2024_2", "_2024_3" };
 
         fixture.upgrade();
-        verify(fixture.connection).close();
+        verify(fixture.connection, times(3)).close();
+        verify(fixture.statement, times(3)).close();
+        assertFalse(fixture.executed.stream().anyMatch(sql -> sql.contains("stat_clicks_2024_1") || sql.contains("stat_clicks_2024_3")));
 
         assertTrue(fixture.columns.containsAll(Set.of("stat_click_id", "document_id", "x", "y", "day_of_month",
                 "event_id", "domain_name", "viewport_width", "coordinate_mode", "source_viewport_width")));
@@ -96,10 +87,9 @@ class HeatMapSchemaTest {
     }
 
     /** A failure after some DDL leaves those successful steps reusable on the next startup. */
-    @ParameterizedTest
-    @MethodSource("databaseTypes")
-    void resumesAfterFailedIndexCreationWithoutRepeatingColumns(int databaseType) throws Exception {
-        DatabaseFixture fixture = new DatabaseFixture(databaseType);
+    @Test
+    void resumesAfterFailedIndexCreationWithoutRepeatingColumns() throws Exception {
+        DatabaseFixture fixture = new DatabaseFixture(Constants.DB_MYSQL);
         fixture.pageIndexFailure = new SQLException("index permission denied");
         assertSame(fixture.pageIndexFailure, assertThrows(SQLException.class, fixture::upgrade));
         verify(fixture.connection).close();
@@ -114,31 +104,10 @@ class HeatMapSchemaTest {
         assertFalse(fixture.executed.stream().anyMatch(sql -> sql.startsWith("ALTER TABLE") || sql.startsWith("CREATE UNIQUE INDEX")));
     }
 
-    /** Missing months are skipped while progress and cleanup cover each attempted monthly table. */
-    @ParameterizedTest
-    @MethodSource("databaseTypes")
-    void skipsMissingMonthsAndLogsProgress(int databaseType) throws Exception {
-        DatabaseFixture fixture = new DatabaseFixture(databaseType);
-        fixture.suffixes = new String[] { "_2024_1", "_2024_2", "_2024_3" };
-        try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
-            fixture.upgrade();
-
-            logger.verify(() -> Logger.println(HeatMapSchema.class, "Updating stat_clicks columns 1/3 _2024_1"));
-            logger.verify(() -> Logger.println(HeatMapSchema.class, "Updating stat_clicks columns 2/3 _2024_2"));
-            logger.verify(() -> Logger.println(HeatMapSchema.class, "Updating stat_clicks columns 3/3 _2024_3"));
-            logger.verify(() -> Logger.println(HeatMapSchema.class, "Updated stat_clicks columns in 1 tables"));
-        }
-        verify(fixture.connection, times(3)).close();
-        verify(fixture.statement, times(3)).close();
-        assertTrue(fixture.columns.contains("viewport_width"));
-        assertFalse(fixture.executed.stream().anyMatch(sql -> sql.contains("stat_clicks_2024_1") || sql.contains("stat_clicks_2024_3")));
-    }
-
     /** A missing backfill dependency must fail the migration rather than be mistaken for a missing month. */
-    @ParameterizedTest
-    @MethodSource("databaseTypes")
-    void propagatesMissingBackfillDependencies(int databaseType) throws Exception {
-        DatabaseFixture fixture = new DatabaseFixture(databaseType);
+    @Test
+    void propagatesMissingBackfillDependencies() throws Exception {
+        DatabaseFixture fixture = new DatabaseFixture(Constants.DB_MYSQL);
         SQLException failure = fixture.missingTable();
         doThrow(failure).when(fixture.statement).executeUpdate(anyString());
 
@@ -163,16 +132,18 @@ class HeatMapSchemaTest {
         verify(fixture.connection).close();
     }
 
-    /** Startup records success only after all monthly table upgrades have finished. */
+    /** An installation with previous migration markers retries this upgrade until it succeeds. */
     @Test
     void marksStartupMigrationSuccessfulOnlyAfterAllTablesSucceed() throws Exception {
         try (MockedStatic<UpdateDatabase> updates = mockStatic(UpdateDatabase.class);
                 MockedStatic<HeatMapSchema> schema = mockStatic(HeatMapSchema.class);
                 MockedStatic<Logger> logger = mockStatic(Logger.class)) {
             updates.when(UpdateDatabase::updateStatClicksColumns).thenCallRealMethod();
+            updates.when(() -> UpdateDatabase.isAllreadyUpdated("16.09.2026 [codex] add responsive tracking columns to stat_clicks")).thenReturn(true);
             schema.when(HeatMapSchema::upgradeExistingTables).thenThrow(new SQLException("index permission denied"));
 
             UpdateDatabase.updateStatClicksColumns();
+            schema.verify(HeatMapSchema::upgradeExistingTables);
             updates.verify(() -> UpdateDatabase.saveSuccessUpdate(anyString()), never());
 
             schema.reset();

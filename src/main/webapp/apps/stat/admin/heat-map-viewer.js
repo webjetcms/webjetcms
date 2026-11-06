@@ -47,6 +47,8 @@ export class HeatMapViewer {
         this.revision = 0;
         this.requestController = new AbortController();
         this.frameReady = false;
+        this.previewOnly = false;
+        this.reportWidths = [];
         this.height = 800;
         this.width = 0;
         this.groupWidth = 0;
@@ -54,7 +56,7 @@ export class HeatMapViewer {
         this.layoutValid = true;
         this.tileSize = 1024;
         this.nodes = {};
-        ["Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Title", "Back"].forEach(name => {
+        ["Version", "Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Title", "Back"].forEach(name => {
             this.nodes[name] = element.querySelector("#heatMap" + name);
         });
         this.closeOnEscape = event => {
@@ -68,8 +70,9 @@ export class HeatMapViewer {
     async init() {
         this.nodes.Back.href += "?dateRange=" + encodeURIComponent(this.dateRange);
         document.addEventListener("keydown", this.closeOnEscape);
+        this.nodes.Version.addEventListener("change", () => this.loadWidth(true));
         this.nodes.Width.addEventListener("change", () => this.loadWidth());
-        this.nodes.Reload.addEventListener("click", () => this.loadWidth());
+        this.nodes.Reload.addEventListener("click", () => this.loadWidth(true));
         this.nodes.Scale.addEventListener("change", () => this.resize());
         this.nodes.Opacity.addEventListener("input", () => {
             this.nodes.OpacityValue.textContent = this.nodes.Opacity.value + " %";
@@ -90,33 +93,46 @@ export class HeatMapViewer {
             this.status(this.texts.error, true);
             return;
         }
-        try {
-            const widths = await this.getJson("/widths");
-            for (const item of widths) {
-                const option = document.createElement("option");
-                option.value = item.mode === "CONTAINER" ? "container:" + item.width : String(item.width);
-                option.dataset.width = item.width;
-                option.dataset.mode = item.mode || "DOCUMENT";
-                const label = item.mode === "CONTAINER" ? this.texts.container : this.texts.window;
-                option.textContent = label + " " + item.width + " px · " + this.texts.clicks + ": " + item.clicks.toLocaleString();
-                this.nodes.Width.append(option);
-            }
-            if (widths.length === 0) {
-                this.status(this.texts.empty);
-                return;
-            }
-            const requestedWidth = this.params.get("width");
-            const requestedValue = this.params.get("mode") === "CONTAINER" ? "container:" + requestedWidth : requestedWidth;
-            if ([...this.nodes.Width.options].some(option => option.value === requestedValue)) this.nodes.Width.value = requestedValue;
-            this.nodes.Width.disabled = false;
-            await this.loadWidth();
-        } catch (error) {
-            if (error.name !== "AbortError") this.status(this.texts.error, true);
+        await this.loadWidth(true);
+    }
+
+    setWidths(widths) {
+        const reportWidth = this.params.get("width");
+        const reportGroup = this.params.get("mode") === "CONTAINER" ? "container:" + reportWidth : reportWidth;
+        const requestedValue = (this.nodes.Version.value && this.nodes.Width.value) || reportGroup;
+        this.nodes.Width.replaceChildren();
+        for (const item of widths) {
+            const option = document.createElement("option");
+            option.value = item.mode === "CONTAINER" ? "container:" + item.width : String(item.width);
+            option.dataset.width = item.width;
+            option.dataset.previewWidth = item.previewWidth || item.width;
+            option.dataset.mode = item.mode || "DOCUMENT";
+            const label = item.mode === "CONTAINER" ? this.texts.container : this.texts.window;
+            const clicks = this.previewOnly ? 0 : item.clicks;
+            option.textContent = label + " " + item.width + " px · " + this.texts.clicks + ": " + clicks.toLocaleString();
+            this.nodes.Width.append(option);
         }
+        if ([...this.nodes.Width.options].some(option => option.value === requestedValue)) this.nodes.Width.value = requestedValue;
+        this.nodes.Width.disabled = widths.length === 0;
+    }
+
+    setVersions(metadata) {
+        const versions = metadata.versions || [];
+        const select = this.nodes.Version;
+        const selectedId = select.value;
+        select.replaceChildren(select.options[0]);
+        for (const version of versions) {
+            select.add(new Option("#" + version.historyId + " · " + WJ.formatDateTimeSeconds(version.effectiveFrom), version.historyId));
+        }
+        select.value = selectedId;
+        const onlyRange = versions.length === 1 ? versions[0].range : null;
+        const coversReport = onlyRange && onlyRange.from === metadata.clickRange?.from && onlyRange.until === metadata.clickRange?.until;
+        select.parentElement.hidden = !selectedId && (versions.length === 0 || (metadata.source === "history" && coversReport));
     }
 
     endpoint(path, extra = {}) {
         const params = new URLSearchParams({docId: this.docId, dateRange: this.dateRange, ...extra});
+        if (this.nodes.Version.value) params.set("versionId", this.nodes.Version.value);
         return this.api + path + "?" + params.toString();
     }
 
@@ -135,7 +151,7 @@ export class HeatMapViewer {
         this.element.setAttribute("aria-busy", String(message === this.texts.loading));
     }
 
-    async loadWidth() {
+    async loadWidth(refreshWidths = false) {
         const revision = ++this.revision;
         this.requestController.abort();
         this.requestController = new AbortController();
@@ -146,12 +162,36 @@ export class HeatMapViewer {
         this.nodes.Reload.disabled = true;
         this.clearTiles();
         this.status(this.texts.loading);
-        const selected = this.nodes.Width.selectedOptions[0];
-        this.groupWidth = Number(selected.dataset.width);
-        this.mode = selected.dataset.mode;
         try {
+            if (refreshWidths) {
+                this.nodes.Width.disabled = true;
+                const widths = await this.getJson("/widths");
+                if (revision !== this.revision) return;
+                if (!this.nodes.Version.value) this.reportWidths = widths;
+                this.previewOnly = Boolean(this.nodes.Version.value) && widths.length === 0;
+                const availableWidths = this.previewOnly ? this.reportWidths : widths;
+                this.setWidths(availableWidths);
+                if (availableWidths.length === 0) {
+                    this.status(this.texts.empty);
+                    return;
+                }
+            }
+            const selected = this.nodes.Width.selectedOptions[0];
+            this.groupWidth = Number(selected.dataset.width);
+            this.mode = selected.dataset.mode;
+            if (this.previewOnly) {
+                this.width = Number(selected.dataset.previewWidth);
+                this.openPreview(revision);
+                return;
+            }
+            if (!this.nodes.Version.value) {
+                this.params.set("width", this.groupWidth);
+                this.params.set("mode", this.mode);
+                history.replaceState(null, "", "?" + this.params.toString());
+            }
             const metadata = await this.getJson("/metadata", {width: this.groupWidth, mode: this.mode});
             if (revision !== this.revision) return;
+            this.setVersions(metadata);
             this.nodes.Title.textContent = metadata.title;
             this.tileSize = metadata.tileSize;
             this.width = metadata.previewWidth || this.groupWidth;
@@ -165,21 +205,25 @@ export class HeatMapViewer {
                 this.status(this.texts.unavailable, true);
                 return;
             }
-            this.nodes.Frame.style.width = this.width + "px";
-            this.nodes.Stage.style.width = this.width + "px";
-            this.nodes.Stage.style.height = this.height + "px";
-            this.nodes.Frame.src = this.endpoint("/html/preview", {previewRevision: revision});
-            this.previewTimer = setTimeout(() => {
-                if (revision === this.revision && !this.frameReady) this.status(this.texts.previewError, true);
-            }, 30000);
-            this.params.set("width", this.groupWidth);
-            this.params.set("mode", this.mode);
-            history.replaceState(null, "", "?" + this.params.toString());
+            this.openPreview(revision);
         } catch (error) {
             if (revision === this.revision) this.status(this.texts.error, true);
         } finally {
             if (revision === this.revision) this.nodes.Reload.disabled = false;
         }
+    }
+
+    openPreview(revision) {
+        this.nodes.Visible.disabled = this.previewOnly;
+        this.nodes.Opacity.disabled = this.previewOnly || !this.nodes.Visible.checked;
+        this.nodes.Overlay.hidden = this.previewOnly || !this.nodes.Visible.checked;
+        this.nodes.Frame.style.width = this.width + "px";
+        this.nodes.Stage.style.width = this.width + "px";
+        this.nodes.Stage.style.height = this.height + "px";
+        this.nodes.Frame.src = this.endpoint("/html/preview", {previewRevision: revision});
+        this.previewTimer = setTimeout(() => {
+            if (revision === this.revision && !this.frameReady) this.status(this.texts.previewError, true);
+        }, 30000);
     }
 
     frameLoaded() {
@@ -195,7 +239,7 @@ export class HeatMapViewer {
             }
             this.frameReady = true;
             this.nodes.Viewport.classList.remove("d-none");
-            this.status("");
+            this.status(this.previewOnly ? this.texts.emptyVersion : "");
             frameWindow.addEventListener("scroll", () => this.scheduleTiles(), {passive: true});
             frameWindow.addEventListener("resize", () => this.scheduleTiles());
             // A header can finish sliding into place after the last scroll or resize event.
@@ -291,7 +335,7 @@ export class HeatMapViewer {
     }
 
     updateTiles() {
-        if (!this.frameReady) return;
+        if (!this.frameReady || this.previewOnly) return;
         const frameWindow = this.nodes.Frame.contentWindow;
         const offset = this.containerOffset(frameWindow);
         const wasValid = this.layoutValid;

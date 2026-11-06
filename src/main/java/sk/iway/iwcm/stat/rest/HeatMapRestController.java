@@ -1,8 +1,6 @@
 package sk.iway.iwcm.stat.rest;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -35,6 +33,7 @@ import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService;
 import sk.iway.iwcm.stat.heat_map.HeatMapStorage;
 import sk.iway.iwcm.stat.heat_map.HeatMapCoordinateMode;
 import sk.iway.iwcm.stat.heat_map.HeatMapStorage.WidthCount;
+import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.ReportRange;
 import sk.iway.iwcm.stat.jpa.HeatMapPageDTO;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -71,10 +70,10 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
         if (Tools.isEmpty(dateRange)) dateRange = getRequest().getParameter("fixed_dateRange");
         if (Tools.isEmpty(dateRange)) dateRange = getRequest().getParameter("searchDayDate");
         if (Tools.isEmpty(dateRange)) dateRange = getRequest().getParameter("searchdayDate");
-        LocalDate[] range = localRange(dateRange);
+        ReportRange range = ReportRange.of(access.dateRange(dateRange));
         int rootGroup = Tools.getIntValue(getRequest().getParameter("searchRootDir"), -1);
         List<HeatMapPageDTO> rows = new ArrayList<>();
-        for (Map.Entry<Integer, Long> entry : HeatMapStorage.getPageCounts(domain, range[0], range[1]).entrySet()) {
+        for (Map.Entry<Integer, Long> entry : HeatMapStorage.getPageCounts(domain, range.firstDay(), range.lastDay()).entrySet()) {
             DocDetails doc = DocDB.getInstance().getBasicDocDetails(entry.getKey(), false);
             if (!access.canViewDocument(getUser(), domain, doc)) continue;
             if (rootGroup > 0 && doc.getGroupId() != rootGroup
@@ -92,25 +91,27 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
 
     @GetMapping("/widths")
     public List<WidthCount> widths(@RequestParam("docId") int docId,
-            @RequestParam(value = "dateRange", required = false) String dateRange) {
+            @RequestParam(value = "dateRange", required = false) String dateRange,
+            @RequestParam(value = "versionId", required = false) Integer versionId) {
         access.requireDocument(getRequest(), docId);
-        LocalDate[] range = localRange(dateRange);
-        return HeatMapStorage.getWidths(access.currentDomain(getRequest()), docId, range[0], range[1]);
+        ReportRange range = clickRange(docId, dateRange, versionId);
+        return HeatMapStorage.getWidths(access.currentDomain(getRequest()), docId, range.firstDay(), range.lastDay());
     }
 
     @GetMapping("/metadata")
     public Map<String, Object> metadata(@RequestParam("docId") int docId,
             @RequestParam(value = "dateRange", required = false) String dateRange, @RequestParam("width") int width,
-            @RequestParam(value = "mode", defaultValue = "DOCUMENT") HeatMapCoordinateMode mode) {
+            @RequestParam(value = "mode", defaultValue = "DOCUMENT") HeatMapCoordinateMode mode,
+            @RequestParam(value = "versionId", required = false) Integer versionId) {
         checkWidth(width);
         DocDetails doc = access.requireDocument(getRequest(), docId);
-        LocalDate[] range = localRange(dateRange);
-        HeatMapHistoryService.PreviewSelection selection = historyService.resolve(getRequest(), docId, dateRange);
+        HeatMapHistoryService.PreviewSelection selection = historyService.resolve(getRequest(), docId, dateRange, versionId);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("title", doc.getTitle());
         result.put("url", DocDB.getURLFromDocId(docId, getRequest()));
         result.put("width", width);
-        WidthCount group = HeatMapStorage.getWidths(access.currentDomain(getRequest()), docId, range[0], range[1]).stream()
+        ReportRange range = selection.clickRange();
+        WidthCount group = HeatMapStorage.getWidths(access.currentDomain(getRequest()), docId, range.firstDay(), range.lastDay()).stream()
                 .filter(item -> item.width() == width && item.mode() == mode).findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         result.put("mode", mode);
@@ -122,7 +123,9 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
         result.put("effectiveFrom", selection.effectiveFrom());
         result.put("source", selection.source());
         result.put("historicalUnavailable", selection.historicalUnavailable());
-        result.put("multipleVersions", selection.multipleVersions());
+        result.put("clickRange", selection.clickRange());
+        result.put("versions", selection.versions());
+        result.put("multipleVersions", versionId == null && selection.versions().size() > 1);
         return result;
     }
 
@@ -130,20 +133,21 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
     public ResponseEntity<byte[]> tile(@RequestParam("docId") int docId,
             @RequestParam(value = "dateRange", required = false) String dateRange, @RequestParam("width") int width,
             @RequestParam(value = "mode", defaultValue = "DOCUMENT") HeatMapCoordinateMode mode,
-            @RequestParam("tileX") int tileX, @RequestParam("tileY") int tileY) throws IOException {
+            @RequestParam("tileX") int tileX, @RequestParam("tileY") int tileY,
+            @RequestParam(value = "versionId", required = false) Integer versionId) throws IOException {
         checkWidth(width);
         if (tileX < 0 || tileY < 0 || tileX > HeatMapStorage.MAX_COORDINATE / HeatMapStorage.TILE_SIZE
                 || tileY > HeatMapStorage.MAX_COORDINATE / HeatMapStorage.TILE_SIZE) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         access.requireDocument(getRequest(), docId);
-        LocalDate[] range = localRange(dateRange);
+        ReportRange range = clickRange(docId, dateRange, versionId);
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.IMAGE_PNG)
-                .body(HeatMapStorage.getTile(access.currentDomain(getRequest()), docId, range[0], range[1], width, mode, tileX, tileY));
+                .body(HeatMapStorage.getTile(access.currentDomain(getRequest()), docId, range.firstDay(), range.lastDay(), width, mode, tileX, tileY));
     }
 
-    private LocalDate[] localRange(String value) {
+    private ReportRange clickRange(int docId, String value, Integer versionId) {
         Date[] dates = access.dateRange(value);
-        ZoneId zone = ZoneId.systemDefault();
-        return new LocalDate[] { dates[0].toInstant().atZone(zone).toLocalDate(), dates[1].toInstant().atZone(zone).toLocalDate() };
+        if (versionId != null) return historyService.versionRange(docId, dates, versionId);
+        return ReportRange.of(dates);
     }
 
     private void checkWidth(int width) {
