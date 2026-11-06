@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const { chromium } = require("playwright");
+const { PNG } = require("pngjs");
 
 const adminPath = path.resolve(__dirname, "../../../main/webapp/apps/stat/admin");
 
@@ -27,10 +28,12 @@ test("container groups restore their offset at the representative viewport and h
         if (url.pathname.endsWith("/metadata")) return route.fulfill({json: {title: "Preview", source: "current", tileSize: 1024,
             previewWidth: url.searchParams.get("mode") === "CONTAINER" ? 1369 : 1140, containerSelector: ".container"}});
         if (url.pathname.endsWith("/html/preview")) return route.fulfill({contentType: "text/html", body:
-            '<!doctype html><meta name="webjet-heatmap-preview" content="11"><style>body{margin:0}.container{' + sizing + ';margin:auto;height:3000px}</style><div class="' + (matching ? "container" : "changed") + '">Content</div>'});
+            '<!doctype html><meta name="webjet-heatmap-preview" content="11"><style>body{margin:0;background:white}header,nav{top:0;height:64px;background:white}'
+            + 'header{position:fixed;left:20%;width:20%}nav{position:sticky;margin-left:60%;width:20%}.container{' + sizing + ';margin:auto;height:3000px}</style>'
+            + '<header></header><nav></nav><div class="' + (matching ? "container" : "changed") + '">Content</div>'});
         if (url.pathname.endsWith("/binary/tile")) {
             tiles.push(url);
-            return route.fulfill({contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"/>'});
+            return route.fulfill({contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><rect width="100%" height="100%" fill="red"/></svg>'});
         }
         return route.fulfill({contentType: "text/html", body: '<!doctype html><style>.d-none{display:none!important}</style><link rel="stylesheet" href="/apps/stat/admin/heat-map.css"><section id="heatMapViewer"'
             + markup + '<script type="module">import {HeatMapViewer} from "/apps/stat/admin/heat-map-viewer.js";new HeatMapViewer(document.getElementById("heatMapViewer"),'
@@ -46,6 +49,25 @@ test("container groups restore their offset at the representative viewport and h
     assert.ok(tiles.every(url => url.searchParams.get("mode") === "CONTAINER" && url.searchParams.get("width") === "1140"));
     await frame.evaluate(() => scrollTo(0, 1400));
     await page.waitForFunction(() => document.getElementById("heatMapTiles").style.transform === "translate(114.5px, -1400px)");
+    await t.test("scrolled marks disappear behind pinned headers and remain visible beside and below them", async () => {
+        await page.locator('#heatMapTiles img[data-tile="0:1"]').evaluate(tile => tile.decode());
+        const preview = page.locator("#heatMapFrame");
+        const screenshot = PNG.sync.read(await preview.screenshot());
+        // Sample the red tile against the white page in the scaled preview.
+        function hasMark(image, xFraction, y) {
+            const row = Math.round(y * image.width / 1369);
+            const pixel = (row * image.width + Math.round(image.width * xFraction)) * 4;
+            return image.data[pixel + 1] < 200;
+        }
+        assert.equal(hasMark(screenshot, 0.3, 32), false, "Fixed header");
+        assert.equal(hasMark(screenshot, 0.7, 32), false, "Sticky navigation");
+        assert.equal(hasMark(screenshot, 0.5, 32), true, "Gap between headers");
+        assert.equal(hasMark(screenshot, 0.3, 80), true, "Content below the header");
+
+        await frame.evaluate(() => scrollTo(0, 0));
+        await page.locator('#heatMapTiles img[data-tile="0:0"]').evaluate(tile => tile.decode());
+        assert.equal(hasMark(PNG.sync.read(await preview.screenshot()), 0.3, 32), true, "Original header position");
+    });
     sizing = "width:1140px;max-width:100%";
     await page.locator("#heatMapReload").click();
     await page.locator("#heatMapTiles img").first().waitFor();

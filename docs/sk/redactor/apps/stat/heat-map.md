@@ -36,7 +36,7 @@ Výber šírky uvádza počet kliknutí a predvolene zobrazí najpoužívanejši
 
 Náhľad kontajnerovej skupiny sa otvorí v najčastejšej skutočne zaznamenanej šírke okna danej skupiny; pri rovnosti počtov sa použije menšia šírka. Tak zostane zachovaný príslušný breakpoint. K polohe X sa pripočíta odsadenie kontajnera v náhľade. Ak náhľad neobsahuje zodpovedajúci pevný vycentrovaný kontajner, stránka sa zobrazí bez vrstvy kliknutí a s upozornením. Uložené údaje zostávajú zachované.
 
-Náhľad má vlastné posúvanie. Ovládač **Zobrazenie** upravuje iba jeho zmenšenie na obrazovke; vnútorná šírka stránky zostáva zachovaná. Krytie mapy môžete meniť alebo mapu dočasne skryť. Obnovte náhľad, ak sa nepodarilo načítať stránku alebo časť mapy.
+Náhľad má vlastné posúvanie. Keď obsah prejde pod pripnutú hlavičku, hlavička zakryje aj značky kliknutí na tomto obsahu. Ovládač **Zobrazenie** upravuje iba jeho zmenšenie na obrazovke; vnútorná šírka stránky zostáva zachovaná. Krytie mapy môžete meniť alebo mapu dočasne skryť. Obnovte náhľad, ak sa nepodarilo načítať stránku alebo časť mapy.
 
 Pre náhľad sa vyberá dostupná publikovaná verzia obsahu ku koncu obdobia. Zobrazený je dátum verzie. Ak verziu nemožno spoľahlivo určiť, rozhranie upozorní na použitie aktuálneho obsahu alebo na nedostupný náhľad. Ak sa obsah v období menil, mapa spája kliknutia z viacerých verzií a zobrazí upozornenie.
 

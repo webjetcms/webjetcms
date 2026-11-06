@@ -198,6 +198,9 @@ export class HeatMapViewer {
             this.status("");
             frameWindow.addEventListener("scroll", () => this.scheduleTiles(), {passive: true});
             frameWindow.addEventListener("resize", () => this.scheduleTiles());
+            // A header can finish sliding into place after the last scroll or resize event.
+            doc.addEventListener("transitionend", () => this.scheduleTiles());
+            doc.addEventListener("animationend", () => this.scheduleTiles());
             doc.addEventListener("click", event => event.preventDefault(), true);
             doc.addEventListener("submit", event => event.preventDefault(), true);
             doc.addEventListener("keydown", this.closeOnEscape);
@@ -261,6 +264,32 @@ export class HeatMapViewer {
         return null;
     }
 
+    /** Cuts pinned header rectangles out of the overlay in unscaled iframe viewport coordinates. */
+    headerMask(frameWindow) {
+        if (frameWindow.scrollY === 0) return "";
+        const doc = frameWindow.document;
+        const headers = [...doc.querySelectorAll('header, nav, [role="banner"], [role="navigation"]')];
+        // A template can also pin an unlabelled wrapper at the top of the page.
+        headers.push(doc.elementFromPoint(doc.documentElement.clientWidth / 2, 0));
+
+        const candidates = new Set();
+        for (const header of headers) {
+            for (let element = header; element && !candidates.has(element); element = element.parentElement) {
+                candidates.add(element);
+            }
+        }
+        const cutouts = [];
+        for (const element of candidates) {
+            const style = frameWindow.getComputedStyle(element);
+            if (style.position !== "fixed" && style.position !== "sticky") continue;
+            const rect = element.getBoundingClientRect();
+            if (style.position === "sticky" && (style.top === "auto" || rect.top > parseFloat(style.top) + 0.5)) continue;
+            if (style.visibility !== "visible" || style.opacity === "0" || !rect.width || !rect.height) continue;
+            cutouts.push(`linear-gradient(black, black) ${rect.left}px ${rect.top}px / ${rect.width}px ${rect.height}px no-repeat`);
+        }
+        return cutouts.length ? "linear-gradient(black, black) subtract, " + cutouts.join(", ") : "";
+    }
+
     updateTiles() {
         if (!this.frameReady) return;
         const frameWindow = this.nodes.Frame.contentWindow;
@@ -281,6 +310,7 @@ export class HeatMapViewer {
         const top = frameWindow.scrollY;
         this.nodes.Overlay.style.width = doc.clientWidth + "px";
         this.nodes.Overlay.style.height = doc.clientHeight + "px";
+        this.nodes.Overlay.style.mask = this.headerMask(frameWindow);
         this.nodes.Tiles.style.transform = "translate(" + (offset - left) + "px," + -top + "px)";
         const visible = new Set();
         const mapWidth = this.mode === "CONTAINER" ? this.groupWidth : doc.scrollWidth;
