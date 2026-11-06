@@ -330,6 +330,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Page Builder - vložené karty dostanú vlastné ID aj pri kopírovaní pred dokončením inicializácie, aby sa ich odkazy neprepájali s pôvodným blokom.
+- Dátové tabuľky - zadanie ID otvorí záznam aj po predchádzajúcom filtrovaní bez výsledkov.
 - Webové stránky - opravený [export do ZIP archívu](redactor/webpages/import-export.md) pre obrázky vložené cez `/thumb/`, ktoré sa pôvodne do exportu nepridali (#389).
 - Webové stránky - dialóg na vloženie obrázka obmedzuje výber súborov na obrázky, videá a zvukové súbory aj v priečinku Súbory. Nepodporované typy rozpoznané prehliadačom odmietne ešte pred odoslaním. Server navyše overí príponu pred uložením (#375).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránky (#372).
