@@ -292,9 +292,9 @@ dependencies {
         // https://mvnrepository.com/artifact/org.htmlunit/neko-htmlunit
         implementation 'org.htmlunit:neko-htmlunit:4.5.0'
 
-    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.0.0'
-    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.1'
-    providedCompile 'jakarta.el:jakarta.el-api:5.0.1'
+    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:4.0.0'
+    providedCompile 'jakarta.el:jakarta.el-api:6.0.0'
 
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
