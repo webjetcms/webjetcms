@@ -1,3 +1,67 @@
+/* A collapsed menu must not intercept article clicks or expose invisible links. */
+@media screen and (max-width: 992px) {
+    #menuBox {
+        visibility: hidden;
+        pointer-events: none;
+    }
+    #menuBox.active {
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+.hm-demo {
+    --hm-ink: #17394a;
+    --hm-accent: #086c78;
+    margin: 2rem 0 3rem;
+    color: var(--hm-ink);
+    scroll-margin-top: 6rem;
+}
+.hm-demo [id] { scroll-margin-top: 6rem; }
+.hm-demo .hm-intro {
+    padding: clamp(1.25rem, 3vw, 3rem);
+    background: #eaf3f1;
+    border-left: 5px solid var(--hm-accent);
+}
+.hm-demo .hm-kicker {
+    margin: 0 0 .5rem;
+    padding: 0;
+    color: var(--hm-accent);
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.hm-demo h2, .hm-demo h3 { margin: 0 0 .75rem; padding: 0; color: var(--hm-ink); text-transform: none; }
+.hm-demo h2 { font-size: clamp(1.5rem, 2vw, 2.3rem); }
+.hm-demo h3 { font-size: 1.25rem; }
+.hm-demo p { padding: 0; margin: 0 0 .8rem; }
+.hm-demo .hm-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 0; }
+.hm-demo .hm-button, .hm-demo .hm-note-toggle {
+    display: inline-flex; align-items: center; min-height: 44px;
+    padding: .6rem 1rem; border: 1px solid var(--hm-accent); border-radius: .35rem;
+    background: var(--hm-accent); color: white; font: inherit; font-weight: 600; text-decoration: none;
+}
+.hm-demo .hm-note-toggle, .hm-demo .hm-button-secondary { background: white; color: var(--hm-accent); }
+.hm-demo .hm-button:hover, .hm-demo .hm-note-toggle:hover { background: var(--hm-ink); color: white; }
+.hm-demo :is(a, button, summary):focus-visible { outline: 3px solid #aa6100; outline-offset: 3px; }
+.hm-demo .hm-note { max-width: 38rem; margin-top: .8rem; }
+.hm-demo .hm-cards { row-gap: 1.25rem; }
+.hm-demo .hm-card { height: 100%; background: white; border: 1px solid #cfdddd; border-radius: .55rem; overflow: hidden; }
+.hm-demo .hm-card .hm-image { display: block; }
+.hm-demo .hm-card img { display: block; width: 100%; height: auto; aspect-ratio: 2.4; object-fit: cover; }
+.hm-demo .hm-card .hm-copy { padding: 1rem 1.15rem 1.25rem; }
+.hm-demo .hm-card a:not(.hm-button) { color: var(--hm-accent); }
+.hm-demo .hm-card summary { cursor: pointer; font-weight: 600; color: var(--hm-accent); }
+.hm-demo .hm-card details { margin: .75rem 0; }
+.hm-demo .hm-card details p { margin: .5rem 0; }
+@media (min-width: 1800px) {
+    article.ly-content > .container:has(.hm-demo) { max-width: 1560px; }
+}
+@media (min-width: 2200px) {
+    article.ly-content > .container:has(.hm-demo) { max-width: 1760px; }
+}
+
 ul.navbar-nav.other-languages {
     flex-direction: row;
 }

@@ -15,11 +15,20 @@ class UpdateInsertSqlPair
 {
 	String firstSql;
 	String followingSql;
+	String partitionSuffix;
+	boolean ignoreDuplicateKeys;
 	
 	UpdateInsertSqlPair(String firstSql, String followingSql)
 	{
 		this.firstSql = firstSql;
 		this.followingSql = followingSql;
+	}
+
+	UpdateInsertSqlPair(String sql, String partitionSuffix, boolean ignoreDuplicateKeys)
+	{
+		this(null, sql);
+		this.partitionSuffix = partitionSuffix;
+		this.ignoreDuplicateKeys = ignoreDuplicateKeys;
 	}
 
 	@Override
@@ -29,6 +38,8 @@ class UpdateInsertSqlPair
 		int result = 1;
 		result = prime * result + ((followingSql == null) ? 0 : followingSql.hashCode());
 		result = prime * result + ((firstSql == null) ? 0 : firstSql.hashCode());
+		result = prime * result + java.util.Objects.hashCode(partitionSuffix);
+		result = prime * result + Boolean.hashCode(ignoreDuplicateKeys);
 		return result;
 	}
 
@@ -42,6 +53,7 @@ class UpdateInsertSqlPair
 		if (getClass() != obj.getClass())
 			return false;
 		UpdateInsertSqlPair other = (UpdateInsertSqlPair) obj;
+		if (ignoreDuplicateKeys != other.ignoreDuplicateKeys || !java.util.Objects.equals(partitionSuffix, other.partitionSuffix)) return false;
 		if (followingSql == null)
 		{
 			if (other.followingSql != null)

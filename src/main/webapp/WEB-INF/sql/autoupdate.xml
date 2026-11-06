@@ -6540,6 +6540,7 @@
 
                  INSERT INTO cookies VALUES(14,0,-1,null,'id',null,null,null,null,'http','marketingove');
                  INSERT INTO cookies VALUES(15,0,-1,null,'drt',null,null,null,null,'http','marketingove');
+                 INSERT INTO cookies VALUES(16,0,-1,null,'wj_hm_*',null,null,null,null,'http','statisticke');
              </string>
              </void>
              <void property="mssql">
@@ -6561,6 +6562,7 @@
 
                      INSERT INTO cookies VALUES(14,0,-1,null,'id',null,null,null,null,'http','marketingove');
                      INSERT INTO cookies VALUES(15,0,-1,null,'drt',null,null,null,null,'http','marketingove');
+                     INSERT INTO cookies VALUES(16,0,-1,null,'wj_hm_*',null,null,null,null,'http','statisticke');
                  </string>
              </void>
              <void property="oracle">
@@ -6582,6 +6584,7 @@
 
                      INSERT INTO cookies VALUES(14,0,-1,null,'id',null,null,null,null,'http','marketingove');
                      INSERT INTO cookies VALUES(15,0,-1,null,'_drt_',null,null,null,null,'http','marketingove');
+                     INSERT INTO cookies VALUES(16,0,-1,null,'wj_hm_*',null,null,null,null,'http','statisticke');
                  </string>
              </void>
          </object>

@@ -75,6 +75,7 @@ import sk.iway.iwcm.rag.vectorstore.VectorStoreType;
 import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver;
 import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver.Resolution;
 import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.heat_map.HeatMapSchema;
 import sk.iway.iwcm.stripes.SyncDirAction;
 import sk.iway.iwcm.sync.WarningListener;
 import sk.iway.iwcm.system.cluster.ClusterDB;
@@ -135,6 +136,7 @@ public class UpdateDatabase
 
 		updateStatViewsColumns();
 		updateStatErrorColumns();
+		updateStatClicksColumns();
 
 		updateStopwords();
 
@@ -2109,6 +2111,18 @@ public class UpdateDatabase
 		}
 	}
 
+
+    /** Adds responsive click tracking to existing monthly tables without replacing legacy data. */
+    public static void updateStatClicksColumns() {
+        String note = "20.10.2026 [codex] add container coordinates to stat_clicks";
+        if (isAllreadyUpdated(note)) return;
+        try {
+            HeatMapSchema.upgradeExistingTables();
+            saveSuccessUpdate(note);
+        } catch (SQLException exception) {
+            Logger.error(UpdateDatabase.class, "Cannot upgrade click statistics; the migration will retry on next startup: " + exception.getMessage());
+        }
+    }
 
 	public static void updateStatViewsColumns()
 	{
