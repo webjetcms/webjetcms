@@ -45,7 +45,6 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
-import sk.iway.iwcm.components.multistep_form.rest.FormConditionsHandler;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
