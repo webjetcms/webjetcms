@@ -148,8 +148,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
-- Multi-step forms - an optional **Help** field has been added to the editor of each item after the field name. It supports multi-line formatted text and more extensive HTML content. It is displayed after the field name in the form via the `${hint}` tag and is also transferred when copying the item.
-- Easy form and multi-step forms - single-line field name and legend editor does not allow headings, lists, or line breaks. Inserted text and HTML are converted to a single line, preserving highlighting, colors, and links.
+- Multi-step forms - an optional **Help** field has been added to the editor of each item after the field name. It supports multi-line formatted text and more extensive HTML content. It is displayed after the field name in the form via the `${hint}` tag and is also transferred when copying the item (#396).
+- Easy form and multi-step forms - single-line field name and explanation editor does not allow headings, lists, or line breaks. Inserted text and HTML are converted to a single line, preserving highlighting, colors, and links (#396).
 - Form Settings - added **Optional Fields** tab with fields A–F. Fields are also available in the Form Simple editor and via `FormSettingsEntity`. In the HTML of the translation keys, you can use [`${settings.*}`](redactor/apps/formsimple/README.md#fields-from-form-settings) tags for A–F, email settings, redirects, file limits, and appearance. They are also supported by the preview and email appearance of multi-step forms. A–F and the text before and after the email are enabled by HTML (#364).
 - Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.multistep.form.back_button` (#osk782).
 - Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
@@ -333,7 +333,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
-- Multi-step forms - the item identifier is generated from the text of the field name without HTML tags so that the name formatting does not affect the identifier.
+- Multi-step forms - the item identifier is generated from the field name text without HTML tags so that name formatting does not affect the identifier (#396).
 - Multi-step forms - when an item, step, or form is deleted, the corresponding display conditions and obligations are also deleted. Conditions for already deleted items do not block the deletion of the fields they referenced (#395).
 - Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
 - Page Builder - inserted cards will receive their own ID even when copied before initialization is complete, so that their links do not link to the original block.

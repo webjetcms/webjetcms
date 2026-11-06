@@ -148,8 +148,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
-- Viackrokové formuláre - v editore každej položky pribudlo za názvom poľa voliteľné pole **Nápoveda**. Podporuje viacriadkový formátovaný text a rozsiahlejší HTML obsah. Zobrazuje sa za názvom poľa vo formulári cez značku `${hint}` a prenáša sa aj pri kopírovaní položky.
-- Formulár ľahko a viackrokové formuláre - jednoriadkový editor názvu poľa a vysvetlivky nepovoľuje nadpisy, zoznamy ani zalomenia riadkov. Vložený text a HTML sa prevedú na jeden riadok so zachovaním zvýraznenia, farieb a odkazov.
+- Viackrokové formuláre - v editore každej položky pribudlo za názvom poľa voliteľné pole **Nápoveda**. Podporuje viacriadkový formátovaný text a rozsiahlejší HTML obsah. Zobrazuje sa za názvom poľa vo formulári cez značku `${hint}` a prenáša sa aj pri kopírovaní položky (#396).
+- Formulár ľahko a viackrokové formuláre - jednoriadkový editor názvu poľa a vysvetlivky nepovoľuje nadpisy, zoznamy ani zalomenia riadkov. Vložený text a HTML sa prevedú na jeden riadok so zachovaním zvýraznenia, farieb a odkazov (#396).
 - Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#364).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.multistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
@@ -333,7 +333,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
-- Viackrokové formuláre - identifikátor položky sa generuje z textu názvu poľa bez HTML značiek, aby formátovanie názvu neovplyvňovalo identifikátor.
+- Viackrokové formuláre - identifikátor položky sa generuje z textu názvu poľa bez HTML značiek, aby formátovanie názvu neovplyvňovalo identifikátor  (#396).
 - Viackrokové formuláre - pri zmazaní položky, kroku alebo formulára sa odstránia aj príslušné podmienky zobrazenia a povinnosti. Podmienky už zmazaných položiek neblokujú odstránenie polí, na ktoré odkazovali (#395).
 - Viackrokové formuláre - pravidlá **Povolená hodnota** už neodmietnu prázdne nepovinné pole. Pri povinnom poli sa regulárne výrazy kontrolujú aj pre prázdnu hodnotu; pri odoslaní kroku sa zohľadňujú aj podmienky povinnosti (#394).
 - Page Builder - vložené karty dostanú vlastné ID aj pri kopírovaní pred dokončením inicializácie, aby sa ich odkazy neprepájali s pôvodným blokom.
