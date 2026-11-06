@@ -333,26 +333,28 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
     I.say("Test validations");
         I.clickCss("input#f1-radiogroup-2-1[value='two']");
         waitForVisible(I, "input#f1-telefon-1", 5);
+        // Empty optional values are valid; use a non-empty value that fails the phone regex.
+        I.fillField("input#f1-telefon-1", "invalid");
         I.clickCss("button[type='submit']");
-        I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
+        I.waitForText("Hodnota (invalid) pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
         I.fillField("input#f1-menopriezvisko-1", "Tester_1");
         waitForVisible(I, "input#f1-adresa-1", 5);
         I.clickCss("button[type='submit']");
-        I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
+        I.waitForText("Hodnota (invalid) pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
         I.fillField("input#f1-menopriezvisko-1", "Tester_2");
         waitForVisible(I, "input#f1-adresa-1", 5);
         I.clickCss("button[type='submit']");
-        I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
+        I.waitForText("Hodnota (invalid) pre pole Telefónne číslo je neplatná", 5);
         I.waitForText("Adresa - povinné pole", 5);
 
         I.fillField("input#f1-telefon-1", "0123456789");
         I.clickCss("button[type='submit']");
         I.waitForText("Adresa - povinné pole", 5);
-        I.dontSee("Hodnota () pre pole Telefónne číslo je neplatná");
+        I.dontSee("Hodnota (invalid) pre pole Telefónne číslo je neplatná");
 
         I.fillField("input#f1-menopriezvisko-1", "Tester_X");
         waitForInvisible(I, "input#f1-adresa-1", 5);

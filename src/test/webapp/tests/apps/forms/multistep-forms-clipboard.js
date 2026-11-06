@@ -185,6 +185,12 @@ Scenario('Copy a saved field, cancel and save independent repeated copies', asyn
 
 Scenario('Edit and clear a hint without changing the label, tooltip or other copies', async ({ I, DT, DTE }) => {
     openForm(I, DT, targetForm);
+    // The previous scenario deletes one copy while verifying condition cleanup.
+    I.waitForEnabled(pasteButton, 10);
+    I.clickCss(pasteButton);
+    DTE.waitForEditor('formItemsDataTable');
+    DTE.save();
+    openForm(I, DT, targetForm);
     const records = await I.executeScript(() => formItemsDataTable.rows().data().toArray());
     I.assertEqual(records.length, 2);
     const field = records[0];
