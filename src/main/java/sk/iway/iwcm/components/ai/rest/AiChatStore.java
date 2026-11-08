@@ -109,12 +109,14 @@ public class AiChatStore {
 
     public Turn begin(AiChatRequest input, Scope scope, AssistantDefinitionEntity assistant, String providerScope, List<Upload> uploads) {
         requireUuid(input.requestId());
+        // A new thread uses the request ID so resending its first message finds the same conversation.
         String id = input.threadId() == null ? input.requestId() : input.threadId();
         requireUuid(id);
         return locked(scope, directory -> {
             Path path = threadPath(directory, id);
             AiChatDocument document = read(path, scope, input.threadId() != null);
             if (document == null) {
+                // Capture the owner, assistant version and provider account used by all subsequent turns.
                 document = new AiChatDocument();
                 AiChatThread thread = new AiChatThread();
                 thread.setId(id);
@@ -137,6 +139,7 @@ public class AiChatStore {
             AiChatThread thread = document.getThread();
             if (!Objects.equals(thread.getContext(), input.context())) throw conflict("requestChanged");
             boolean recovered = recover(document);
+            // Check duplicate delivery before revision/busy checks: the original request already advanced them.
             AiChatEntry duplicate = document.getMessages().stream()
                 .filter(m -> input.requestId().equals(m.getRequestId()) && "assistant".equals(m.getRole())).findFirst().orElse(null);
             if (duplicate != null) {
@@ -151,6 +154,7 @@ public class AiChatStore {
                 if (recovered) AiChatFiles.write(path, document);
                 return new Turn(thread, question, duplicate, true);
             }
+            // A genuinely new attempt must still match the configuration and revision the client last read.
             if ("EXPIRED".equals(thread.getStatus())) throw conflict("expired");
             if (!"ACTIVE".equals(thread.getStatus())) throw conflict("deletePending");
             if (thread.getActiveMessageId() != null) throw conflict("busy");
@@ -162,6 +166,7 @@ public class AiChatStore {
                 document.getMessages().stream().flatMap(message -> message.getAttachments().stream()).toList(), uploads);
             AiChatEntry question;
             if (input.retryMessageId() != null) {
+                // An explicit retry creates another answer to the original question, field snapshot and attachments.
                 if (!uploads.isEmpty()) throw conflict("requestChanged");
                 List<AiChatEntry> history = ordered(document);
                 AiChatEntry last = history.isEmpty() ? null : history.get(history.size() - 1);
@@ -177,6 +182,7 @@ public class AiChatStore {
                 question.setStatus("complete");
                 question.setAttachments(storedUploads.stream().map(Upload::attachment).toList());
             }
+            // Reserve the answer before provider execution so another request cannot start a competing turn.
             AiChatEntry answer = message(document, input.requestId(), "assistant", question.getId());
             answer.setStatus("pending");
             thread.setRevision(thread.getRevision() + 1);
@@ -186,6 +192,7 @@ public class AiChatStore {
             thread.setUpdated(new Date());
             List<Path> written = new ArrayList<>();
             try {
+                // Publish JSON last so a saved message only references uploads that were written successfully.
                 AiChatFiles.directory(path.getParent());
                 for (Upload upload : storedUploads) {
                     Path attachmentPath = AiChatAttachments.path(directory, id, upload.attachment().id());
@@ -298,6 +305,7 @@ public class AiChatStore {
             message.setProviderStatus(providerStatus);
             message.setRetryable(retryable);
             message.setUpdated(new Date());
+            // Failed/stopped attempts remain in history and cleanup tracking, but never become continuation points.
             if (!stopped && "complete".equals(status)) thread.setLastResponseId(message.getProviderResponseId());
             if (!stopped && "INVALID_CONTINUATION".equals(category)) thread.setStatus("EXPIRED");
             thread.setActiveMessageId(null);
@@ -482,6 +490,7 @@ public class AiChatStore {
     private static boolean recover(AiChatDocument document) {
         AiChatThread thread = document.getThread();
         if (thread.getActiveMessageId() == null || (thread.getLeaseUntil() != null && thread.getLeaseUntil().after(new Date()))) return false;
+        // A worker no longer renews this attempt. Keep its partial text and remote-resource facts for later cleanup.
         AiChatEntry message = entry(document, thread.getActiveMessageId());
         message.setStatus("stopped");
         message.setErrorCategory("CANCELLED");

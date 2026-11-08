@@ -3,6 +3,7 @@
  * A successful response requires a terminal result and a complete stream.
  * @param {Response} response HTTP response containing delta and result records.
  * @param {function(string): void} onDelta Receives generated text as it arrives.
+ * @param {function(object): void} [onMetadata] Receives saved thread/message IDs and the thread revision before text arrives.
  * @returns {Promise<object>} Final assistant response, including usage and any provider error.
  */
 export async function readAiStream(response, onDelta, onMetadata = () => {}) {
@@ -43,6 +44,7 @@ export async function readAiStream(response, onDelta, onMetadata = () => {}) {
         while (!finished) {
             const { value, done } = await reader.read();
             finished = done;
+            // UTF-8 characters and JSON records can both span chunks; retain the unfinished line for the next read.
             buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
             let newline;
             while ((newline = buffer.indexOf("\n")) !== -1) {

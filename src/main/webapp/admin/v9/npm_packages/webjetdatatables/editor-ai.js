@@ -300,6 +300,7 @@ export class EditorAi {
     /** Returns a reusable chat with editor-specific insertion callbacks for this field. */
     getChatConversation(button, column, aiCol) {
         const context = this._getChatContext(aiCol.to || column.name);
+        // A saved field shares one host across assistants; an unsaved field keeps a separate transient chat per assistant.
         const key = JSON.stringify([context, aiCol.to || column.name, context ? null : aiCol.assistantId]);
         let conversation = this.chatConversations.get(key);
         if (conversation == null) {
@@ -443,6 +444,7 @@ export class EditorAi {
         try {
             const fieldOptions = typeof this.EDITOR.field === "function" ? this.EDITOR.field(target)?.s?.opts : null;
             await fieldOptions?.wjeditorReadyPromise;
+            // Editor initialization is asynchronous: reject an insertion if the user switched chats or closed the editor.
             if (conversation.chat.state.disposed || conversation.revision !== revision) return;
             if (selection != null && !this._isChatSelectionValid(selection)) {
                 conversation.chat.state.notice = WJ.translate("components.ai_assistants.chat.selectionStale.js");
@@ -451,6 +453,7 @@ export class EditorAi {
             const content = parseAiResponse(message.text).html;
             if (typeof content !== "string" || !content.trim()) return;
             const wjeditor = fieldOptions?.wjeditor;
+            // Capture undo at insertion time, then use the selected editor, PageBuilder or ordinary field write path.
             const undo = { target, value: this.EDITOR.get(target), wjeditor: wjeditor?.editingMode === "pageBuilder" ? wjeditor : null };
             if (wjeditor != null && typeof undo.value !== "string") throw new Error("Editor content is unavailable.");
             if (selection != null) {

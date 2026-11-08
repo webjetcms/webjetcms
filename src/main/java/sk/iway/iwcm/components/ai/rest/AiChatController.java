@@ -120,14 +120,17 @@ public class AiChatController {
         AssistantStreamWriter writer = new AssistantStreamWriter(new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8));
         AtomicBoolean writable = new AtomicBoolean(true);
         try {
+            // Publish saved IDs before generation so the client can reload this attempt after a disconnect.
             writer.writeMetadata(service.metadata(prepared));
         } catch (IOException exception) {
+            // prepare() has already reserved a turn, but execute() has not yet taken responsibility for finishing it.
             if (!prepared.turn().duplicate()) store.finish(prepared.scope(), prepared.turn().thread().getId(), prepared.turn().message().getId(),
                 "", "stopped", 0, "CANCELLED", null);
             throw exception;
         }
         try {
             AssistantResponseDTO result = service.execute(prepared, text -> {
+                // Provider callbacks run on a worker; cancellation can let this request close the writer first.
                 synchronized (writer) {
                     if (!writable.get()) throw new CancellationException();
                     try {

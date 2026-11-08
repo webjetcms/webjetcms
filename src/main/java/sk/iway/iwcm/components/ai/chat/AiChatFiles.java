@@ -33,6 +33,8 @@ public final class AiChatFiles {
     public static <T> T locked(Path root, int userId, Operation<T> operation) throws IOException {
         if (userId < 1) throw new IllegalArgumentException("Invalid chat owner");
         Path directory = root.resolve(Integer.toString(userId));
+        // Serialize callers in this JVM before acquiring the OS lock shared with other processes.
+        // FileChannel.lock() alone can reject overlapping locks from threads in the same JVM.
         ReentrantLock local = LOCKS[Math.floorMod(directory.hashCode(), LOCKS.length)];
         local.lock();
         try {
@@ -75,6 +77,7 @@ public final class AiChatFiles {
                 while (bytes.hasRemaining()) output.write(bytes);
                 output.force(true);
             }
+            // Readers must see either the previous complete transcript or the new one, never partially written JSON.
             Files.move(temporary, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } finally {
             Files.deleteIfExists(temporary);

@@ -29,6 +29,7 @@ export class AiChatHost {
         this.mounted = false;
         this.disposed = false;
         this.scrollController = new AbortController();
+        // The host owns one assistant selector, moved into the composer of whichever conversation is mounted.
         this.element = node('div', 'ai-chat-host');
         this.element.classList.toggle('ai-chat-host--history-open', this.historyOpen);
         this.assistantRow = node('div', 'ai-chat-host__assistant');
@@ -44,6 +45,7 @@ export class AiChatHost {
         this.content = node('div', 'ai-chat-host__content');
         this.main = node('div', 'ai-chat-host__main');
         this.main.append(this.status, this.content);
+        // History belongs to the host context, so switching assistants keeps the same search and pagination.
         this.historyPanel = node('aside', 'ai-chat-host__history');
         this.historyPanel.id = `${idPrefix}-history`;
         this.historyPanel.hidden = !this.historyOpen;
@@ -79,6 +81,7 @@ export class AiChatHost {
             }
         });
         containNativeScroll(this.historyList, this.scrollController.signal);
+        // The files panel uses the selected transcript; it does not fetch a separate attachment catalogue.
         this.filesPanel = node('aside', 'ai-chat-host__files');
         this.filesPanel.id = `${idPrefix}-files`;
         this.filesPanel.hidden = true;
@@ -474,12 +477,14 @@ export class AiChatHost {
     applyDetail(chat, detail) {
         if (chat.state.pending || chat.state.disposed) return;
         if (!this.matchesContext(detail.thread.context)) throw new Error(historyText('requestChanged'));
+        // A rejected request is absent from server history. Restore its prompt/files without replacing a newer draft.
         const unsaved = chat.state.messages.at(-1);
         const rejected = unsaved?.inputData?.requestId && !detail.messages.some(message => message.requestId === unsaved.inputData.requestId);
         if (rejected && !chat.state.draft.trim()) chat.state.draft = unsaved.userPrompt || '';
         if (rejected && !chat.state.attachments.length) {
             chat.state.attachments = (unsaved.inputData.files || []).map(file => ({ file, name: file.name, size: file.size, mediaType: file.type }));
         }
+        // Replace optimistic local messages with the server transcript and its continuation/retry permissions.
         chat.threadInfo = detail.thread;
         chat.state.threadId = detail.thread.id;
         chat.state.revision = detail.thread.revision;
@@ -496,6 +501,7 @@ export class AiChatHost {
         chat.refresh();
         if (this.chat === chat) this.renderFiles();
         clearTimeout(chat.historyRefreshTimer);
+        // A stopped stream can settle before the server worker finishes; poll while that work or deletion remains active.
         if (detail.thread.busy || ((detail.thread.status === 'DELETE_PENDING' || chat.deletionRequested) && !detail.thread.deletionError)) {
             chat.historyRefreshTimer = setTimeout(() => {
                 if (this.mounted && this.chat === chat) this.refreshConversation(chat);

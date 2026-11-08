@@ -8,6 +8,8 @@ import { historyText, checkAiResponse } from './chat-history-api';
  * @param {boolean} [options.streaming=false] Requests newline-delimited streaming responses.
  * @param {AbortSignal} [options.signal] Cancels the browser's HTTP request.
  * @param {function(string): void} [options.onDelta] Receives raw text fragments as they arrive.
+ * @param {string} [options.endpoint] Overrides the assistant endpoint for saved chat requests.
+ * @param {function(object): void} [options.onMetadata] Receives saved thread/message IDs and the thread revision.
  * @returns {Promise<object>} CMS response containing text, usage, continuation and error metadata.
  */
 export async function requestAiText(inputData, { streaming = false, signal, onDelta = () => {}, endpoint, onMetadata = () => {} } = {}) {

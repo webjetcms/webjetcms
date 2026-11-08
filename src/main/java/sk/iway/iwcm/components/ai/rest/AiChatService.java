@@ -104,6 +104,7 @@ public class AiChatService implements DisposableBean {
         Turn turn = prepared.turn();
         AssistantResponseDTO result;
         if (turn.duplicate()) {
+            // Repeated HTTP delivery replays the saved attempt; it must not call the provider again.
             result = savedResult(turn.message(), request);
         } else {
             InputDataDTO input = new InputDataDTO();
@@ -148,6 +149,7 @@ public class AiChatService implements DisposableBean {
         Boolean retryable = null;
         AiRequestLifecycle lifecycle = AiRequestLifecycle.unknown();
         boolean submitted = false;
+        // Keep this attempt alive while provider work runs outside the file lock. A stop or lost lease cancels it.
         var renewal = heartbeat.scheduleWithFixedDelay(() -> {
             try {
                 if (!store.heartbeat(prepared.scope(), threadId, messageId)) input.getCancellationToken().cancel();
@@ -161,6 +163,7 @@ public class AiChatService implements DisposableBean {
             if (!configuration.chatScope(providerConfig).equals(prepared.turn().thread().getProviderScope())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "providerChanged");
             }
+            // Save partial text at most once per second, but forward every delta to the connected client.
             Consumer<String> onText = delta -> {
                 text.append(delta);
                 if (System.currentTimeMillis() - checkpoint[0] >= 1000) {
@@ -170,6 +173,7 @@ public class AiChatService implements DisposableBean {
                 output.accept(delta);
             };
             if (input.getCancellationToken().isCancelled()) throw new CancellationException();
+            // Strip HTML only from the saved field snapshot; document attachments retain their literal content.
             if (AiService.shouldRemoveHtml(prepared.assistant(), input)) {
                 input.removeHtml();
             }
@@ -190,11 +194,14 @@ public class AiChatService implements DisposableBean {
                 if (context.length() > AiChatAttachments.MAX_TEXT) throw new AiChatAttachments.UnreadableException();
             }
             input.setInputValue(input.getInputValue() + context);
+            // Once submitted, a remote response may exist even if the connection fails before its ID arrives.
+            // Record any observed ID immediately so deletion can clean up unsuccessful attempts too.
             store.submitted(prepared.scope(), threadId, messageId);
             submitted = true;
             AiResponse response = provider.getPersistentChatResponse(prepared.assistant(), input, onText, streaming, providerConfig,
                 responseId -> store.lifecycle(prepared.scope(), threadId, messageId, new AiRequestLifecycle(State.RESPONSE_OBSERVED, responseId)));
             if (input.getCancellationToken().isCancelled()) throw new CancellationException();
+            // The completed provider response is authoritative; streamed text may contain only a partial answer.
             text.setLength(0);
             text.append(response.text());
             tokens += (int)Math.min(Integer.MAX_VALUE - tokens, response.usage().totalTokens());
@@ -227,9 +234,11 @@ public class AiChatService implements DisposableBean {
             return failure(category, providerStatus, request);
         } finally {
             renewal.cancel(false);
+            // Cancellation interrupts the worker. Temporarily clear the flag so final filesystem writes can run.
             boolean interrupted = Thread.interrupted();
             try {
                 try {
+                    // Remote cleanup facts and successful continuation are separate: finish advances only the latter.
                     store.lifecycle(prepared.scope(), threadId, messageId, lifecycle);
                 } finally {
                     store.finish(prepared.scope(), threadId, messageId, text.toString(), status, tokens, category, providerStatus, retryable);
@@ -254,6 +263,7 @@ public class AiChatService implements DisposableBean {
     }
 
     private Deletion cleanup(String id, Scope scope) {
+        // Claim deletion under the store lock, then release it before making remote calls.
         String claim;
         try {
             claim = store.claimDeletion(id, scope);
@@ -273,9 +283,11 @@ public class AiChatService implements DisposableBean {
             for (AiChatEntry message : transcript.messages()) {
                 if (message.getProviderResponseId() != null && !message.isProviderDeleted()) {
                     aiClient.deleteResponse(provider.getProviderId(), message.getProviderResponseId(), config);
+                    // Persist each success so retrying deletion skips resources that are already gone.
                     store.deletedResponse(scope, id, claim, message.getId());
                 }
             }
+            // The store refuses removal while an attempt may still own an unknown remote response.
             store.remove(scope, id, claim);
             audit(id, "deleted", null);
             return new Deletion(true, null);

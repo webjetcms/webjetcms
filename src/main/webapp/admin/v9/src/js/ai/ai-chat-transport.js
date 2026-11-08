@@ -49,6 +49,7 @@ export class AiChatTransport {
             const operation = assistant.provider === "browser"
                 ? this._executeBrowser(assistant, inputData, request, current, update, callbacks)
                 : this._executeRest(assistant, inputData, request, update, callbacks);
+            // Release the UI immediately on cancellation, even while a browser model or confirmation is still pending.
             const result = await Promise.race([operation, request.cancellation]);
             if (!current()) return { ...executionResult, response: request.text, stopped: true };
             return { ...executionResult, ...result };
@@ -140,6 +141,7 @@ export class AiChatTransport {
         if (request.browser != null) {
             this._destroyBrowser(request);
         } else if (request.threadId) {
+            // Aborting fetch closes the connection; the separate stop request also cancels queued/server-side work.
             fetch(`/admin/rest/ai/chat/threads/${encodeURIComponent(request.threadId)}/stop`, {
                 method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }, keepalive: true
             }).catch(() => {});

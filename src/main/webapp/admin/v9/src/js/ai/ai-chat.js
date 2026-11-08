@@ -206,6 +206,7 @@ export class AiChat {
         if (!prompt.trim()) prompt = this._text('attachmentPrompt');
         if (retryMessage != null && (state.messages.at(-1) !== retryMessage || !this._canRetry(retryMessage))) return;
 
+        // Capture editor input once. Retrying a local attempt must reuse what was sent, even if the field changed.
         let inputData;
         try {
             inputData = retryMessage?.inputData ? { ...retryMessage.inputData } : {
@@ -221,6 +222,8 @@ export class AiChat {
         if (state.conversationId) inputData.conversationId = state.conversationId;
         else delete inputData.conversationId;
         if (this.options.persistent) {
+            // An unconfirmed delivery keeps its request ID for deduplication. Retrying a saved failure uses a new ID
+            // and refers to the previous answer; the server restores that question's original input and attachments.
             inputData = retryMessage?.inputData?.persistentChat && !retryMessage.confirmed
                 ? { ...retryMessage.inputData }
                 : { persistentChat: true, threadId: state.threadId, revision: state.revision,
@@ -230,6 +233,7 @@ export class AiChat {
             state.threadId ||= inputData.requestId;
         }
 
+        // Keep saved attempts visible; reuse the local answer placeholder only while delivery is unconfirmed.
         let message = retryMessage;
         if (message && this.options.persistent && message.confirmed) {
             message = { role: 'assistant', userPrompt: prompt };
@@ -253,6 +257,7 @@ export class AiChat {
 
         const request = { message, transport: null };
         state.pending = request;
+        // Late callbacks from a stopped or replaced request must not overwrite the current conversation state.
         const current = () => !state.disposed && state.pending === request;
         this._changed();
         if (!current()) return;
@@ -286,6 +291,7 @@ export class AiChat {
             });
             if (!current()) return;
             message.confirmed = result.persisted === true;
+            // Only a completed reply advances session continuation. Errors and stops retain the last good response.
             state.notice = null;
             message.errorCategory = result.errorCategory;
             message.providerStatusCode = result.providerStatusCode;
@@ -646,11 +652,13 @@ export class AiChat {
         const template = document.createElement('template');
         template.innerHTML = WJ.parseMarkdown(`\n${text}\n\n`, { imgSrcPrefix: null, removeLastBr: true });
         const content = document.createDocumentFragment();
+        // Rebuild allowed formatting from scratch instead of copying provider-controlled elements or attributes.
         const tags = new Set(['B', 'I', 'BR', 'H1', 'H2', 'H3', 'BLOCKQUOTE', 'UL', 'LI', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD', 'A']);
         const append = (parent, source) => {
             if (source.nodeType === 3) { parent.append(document.createTextNode(source.textContent)); return; }
             if (source.nodeType !== 1 || source.namespaceURI !== 'http://www.w3.org/1999/xhtml') return;
             if (source.tagName === 'IMG') { parent.append(document.createTextNode(source.getAttribute('alt') || '')); return; }
+            // WebJET Markdown represents code with DIV/SPAN classes; convert it to inert PRE/CODE text.
             if (['DIV', 'SPAN'].includes(source.tagName) && (source.classList.contains('code') || source.classList.contains('code-inline'))) {
                 source.querySelectorAll('br').forEach(lineBreak => lineBreak.replaceWith('\n'));
                 const code = document.createElement('code');
