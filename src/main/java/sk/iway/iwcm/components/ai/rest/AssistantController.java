@@ -176,7 +176,7 @@ public class AssistantController {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<Map<String, String>> tooLarge() {
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
             .contentType(MediaType.APPLICATION_JSON)
             .body(Map.of("error", "attachmentLimit"));
     }

@@ -100,7 +100,9 @@ public class AiChatController {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<Map<String, String>> tooLarge() {
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of("error", "attachmentLimit"));
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of("error", "attachmentLimit"));
     }
 
     private void send(AiChatService.Prepared prepared, HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -150,7 +152,9 @@ public class AiChatController {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, String>> error(ResponseStatusException exception) {
-        return ResponseEntity.status(exception.getStatusCode()).body(Map.of("error", exception.getReason() == null ? "generationFailed" : exception.getReason()));
+        return ResponseEntity.status(exception.getStatusCode())
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(Map.of("error", exception.getReason() == null ? "generationFailed" : exception.getReason()));
     }
 
     private static Scope scope(HttpServletRequest request) {
