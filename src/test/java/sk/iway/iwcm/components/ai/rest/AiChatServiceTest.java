@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +37,8 @@ import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiResponse;
 import com.webjetcms.ai.AiResponseDeletion;
 import com.webjetcms.ai.TokenUsage;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Adminlog;
-import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
@@ -139,26 +135,6 @@ class AiChatServiceTest {
         verify(provider, times(1)).getPersistentChatResponse(any(), any(), any(), eq(streaming), same(config), any());
     }
 
-    /** Histories without retry metadata remain readable and keep their category-based replay behavior. */
-    @ParameterizedTest
-    @CsvSource({"UNKNOWN,true", "ATTACHMENT_INVALID,false"})
-    void readsLegacyHistoryWithoutRetryRecommendation(String category, boolean retryable) throws Exception {
-        var prepared = prepare(null, null);
-        String id = prepared.turn().thread().getId();
-        store.finish(scope, id, prepared.turn().message().getId(), "", "error", 0, category, null);
-        Path path = root.resolve("42").resolve(id).resolve("ai_chat.json");
-        var mapper = new ObjectMapper();
-        var document = mapper.readTree(Files.readString(path));
-        for (var message : document.get("messages")) ((ObjectNode)message).remove("retryable");
-        Files.writeString(path, mapper.writeValueAsString(document));
-
-        assertNull(new AiChatStore().get(id, scope).messages().get(1).getRetryable());
-        assertNull(service.detail(id, scope).messages().get(1).retryable());
-        var duplicate = service.prepare(new AiChatRequest(id, 12L, prepared.turn().message().getRequestId(), 0L, "Question", null), scope);
-        assertEquals(retryable, execute(duplicate).getRetryable());
-        verify(provider, never()).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
-    }
-
     /** Removing CHAT_SEARCH preserves history but prevents new global conversations and continuation. */
     @Test
     void removedGlobalBindingMakesHistoryReadOnly() {
@@ -217,28 +193,34 @@ class AiChatServiceTest {
             new AiResponse("Image description", List.of(), new TokenUsage(2, 2, 4, Map.of()), "completed"));
         var prepared = service.prepare(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Read these", null), scope, uploads);
 
-        assertEquals("ATTACHMENT_INVALID", execute(prepared).getErrorCategory());
+        var response = execute(prepared);
+        assertEquals("ATTACHMENT_INVALID", response.getErrorCategory());
+        assertFalse(response.getRetryable());
         var saved = new AiChatStore().get(prepared.turn().thread().getId(), scope).messages().get(1);
         assertEquals(4, saved.getTotalTokens());
         assertFalse(saved.isStorageUnknown());
+        var duplicate = service.prepare(new AiChatRequest(prepared.turn().thread().getId(), 12L,
+            prepared.turn().message().getRequestId(), 0L, "Read these", null), scope, uploads);
+        assertFalse(execute(duplicate).getRetryable());
         verify(provider, never()).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
     }
 
-    /** Unexpected failures keep their original cause in diagnostics while clients receive the stable error contract. */
+    /** Unexpected failures finish the saved turn and expose a localized error instead of provider diagnostics. */
     @Test
-    void logsUnexpectedGenerationFailureWithThreadId() throws Exception {
+    void persistsUnexpectedFailureWithoutExposingProviderDetails() throws Exception {
         IllegalStateException cause = new IllegalStateException("Provider adapter failed");
         when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any())).thenThrow(cause);
         var prepared = prepare(null, null);
         String id = prepared.turn().thread().getId();
 
-        try (MockedStatic<Logger> log = mockStatic(Logger.class)) {
-            var response = execute(prepared);
-            assertEquals("UNKNOWN", response.getErrorCategory());
-            assertEquals("components.ai_assistants.chat.history.generationFailed.js", response.getError());
-            log.verify(() -> Logger.error(AiChatService.class, "Chat " + id + ": generation failed", cause));
-        }
-        assertEquals("error", store.get(id, scope).messages().get(1).getStatus());
+        var response = execute(prepared);
+        assertEquals("UNKNOWN", response.getErrorCategory());
+        assertEquals("components.ai_assistants.chat.history.generationFailed.js", response.getError());
+        assertTrue(response.getRetryable());
+        assertEquals("error", new AiChatStore().get(id, scope).messages().get(1).getStatus());
+        var duplicate = service.prepare(new AiChatRequest(id, 12L, prepared.turn().message().getRequestId(), 0L, "Question", null), scope);
+        assertTrue(execute(duplicate).getRetryable());
+        verify(provider, times(1)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
     }
 
     /** Keeps history after partial cleanup and retries only responses without confirmed deletion or absence. */

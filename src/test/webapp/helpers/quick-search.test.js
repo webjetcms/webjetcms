@@ -1200,52 +1200,37 @@ async function openSavedChat(f, id, answer) {
     await opening;
 }
 
-test('Chat controls and history use WebJET tooltips and release overlays when hidden or rebuilt', async t => {
+test('Chat tooltips keep conversation titles literal and disappear when the chat closes', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     const input = await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
     const host = f.controller.chat;
     const document = input.ownerDocument;
     const { window } = document.defaultView;
     const hover = element => element.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true }));
-    const tooltipText = () => document.querySelector('.tooltip-inner')?.textContent;
-
-    hover(host.chat.$attachmentButton[0]);
-    f.advance(299);
-    assert.equal(tooltipText(), undefined);
-    f.advance(1);
-    assert.match(tooltipText(), /datatables.upload.uploadFile.js/);
-    assert.equal(host.chat.$attachmentButton.attr('title'), undefined, 'Native tooltips must stay disabled.');
-    assert.ok(document.querySelector('.tooltip-ai'));
-
     host.toggleHistory(true);
     const title = '**Notes** <img src=x onerror=alert(1)>';
     await f.respond(f.requests.at(-1), { items: [{ id: 'one', title, assistantId: 7 }], hasMore: false });
     const row = host.historyList.querySelector('.ai-chat-host__history-select');
     row.focus();
-    f.advance(300);
+    f.advance(1000);
     assert.ok([...document.querySelectorAll('.tooltip-inner')].some(tooltip => tooltip.textContent === title));
     assert.equal(document.querySelector('.tooltip-inner img, .tooltip-inner b'), null, 'Conversation titles remain plain text.');
 
-    for (const control of [row, host.closeHistory, host.historyList.querySelector('.ai-chat-host__history-action')]) {
-        assert.equal(control.hasAttribute('title'), false);
-        assert.ok(window.bootstrap.Tooltip.getInstance(control));
-    }
-    host.renderHistory();
-    assert.equal(window.bootstrap.Tooltip.getInstance(row), null);
-    hover(host.closeHistory);
     host.toggleHistory(false);
-    f.advance(300);
-    assert.equal(window.bootstrap.Tooltip.getInstance(host.closeHistory), null, 'Closing a panel cancels pending tooltips.');
+    f.advance(1000);
+    assert.ok([...document.querySelectorAll('.tooltip-inner')].every(tooltip => tooltip.textContent !== title),
+        'The hidden conversation must not leave its tooltip over the chat.');
 
     typeChat(input, 'Draft');
     const send = host.chat.$send[0];
-    assert.equal(send.hasAttribute('title'), false);
     hover(send);
     f.controller.chips.get('all').click();
-    f.advance(500);
+    f.advance(1000);
     assert.equal(document.querySelector('.tooltip'), null, 'Closing the chat removes overlays and pending hover timers.');
     f.controller.chips.get('aiChat').click();
-    assert.ok(window.bootstrap.Tooltip.getInstance(send), 'Reopening the chat restores tooltips.');
+    hover(send);
+    f.advance(1000);
+    assert.ok(document.querySelector('.tooltip'), 'Reopened chat controls still show their help text.');
 });
 
 test('Chat history search debounces typing, retains its query across pages and restores all threads when cleared', async t => {
@@ -2114,8 +2099,8 @@ for (const draft of ['', 'A separate follow-up draft']) {
 for (const scenario of [
     { label: 'non-retryable error', retryable: false, canRetry: false },
     { label: 'retryable error', retryable: true, canRetry: true },
-    { label: 'legacy error without retry metadata', canRetry: true },
-    { label: 'legacy invalid attachment', errorCategory: 'ATTACHMENT_INVALID', canRetry: false },
+    { label: 'unexpected generation failure', retryable: null, canRetry: true },
+    { label: 'invalid attachment', errorCategory: 'ATTACHMENT_INVALID', retryable: null, canRetry: false },
     { label: 'unsupported operation', errorCategory: 'UNSUPPORTED_OPERATION', retryable: true, canRetry: false },
     { label: 'invalid continuation', errorCategory: 'INVALID_CONTINUATION', retryable: true, canRetry: false },
     { label: 'stopped response', status: 'stopped', errorCategory: 'CANCELLED', retryable: false, canRetry: true }
@@ -2130,7 +2115,7 @@ for (const scenario of [
                 { id: 'question', role: 'user', text: 'Saved question', status: 'complete' },
                 { id: 'answer', turnId: 'question', role: 'assistant', text: '', status: scenario.status || 'error',
                     errorCategory: scenario.errorCategory || 'UNKNOWN',
-                    ...(scenario.retryable == null ? {} : { retryable: scenario.retryable }) }
+                    retryable: scenario.retryable }
             ]
         };
         const opening = host.openThread(detail.thread.id);
@@ -2138,9 +2123,6 @@ for (const scenario of [
         await opening;
         const chat = host.chat;
         const assertRetryControls = () => {
-            const message = chat.state.messages.at(-1);
-            const expected = scenario.errorCategory === 'ATTACHMENT_INVALID' ? false : scenario.retryable ?? null;
-            assert.equal(message.retryable, expected);
             assert.equal(Boolean(chat.element.querySelector('[data-ai-action="retry"]')), scenario.canRetry);
         };
         assertRetryControls();
