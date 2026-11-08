@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.ai.rest;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +43,16 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 public class AiChatStore {
     public record Scope(int userId, int domainId, String domainName, Path root) {
         public Scope(int userId, int domainId, String domainName) {
-            this(userId, domainId, domainName, Path.of(Tools.getRealPath(AiChatPaths.ROOT)).toAbsolutePath().normalize());
+            this(userId, domainId, domainName, storageRoot());
+        }
+
+        /** Resolves trusted deployment links even before the chat storage directory exists. */
+        private static Path storageRoot() {
+            try {
+                return new File(Tools.getRealPath(AiChatPaths.ROOT)).getCanonicalFile().toPath();
+            } catch (IOException exception) {
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "storageUnavailable", exception);
+            }
         }
     }
     public record Turn(AiChatThread thread, AiChatEntry question, AiChatEntry message, boolean duplicate) { }

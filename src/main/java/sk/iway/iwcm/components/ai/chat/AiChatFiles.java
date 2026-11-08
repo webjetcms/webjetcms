@@ -90,7 +90,7 @@ public final class AiChatFiles {
         }
     }
 
-    /** Creates a private storage directory and rejects symbolic links in its resolved path. */
+    /** Creates a private storage directory and rejects a symbolic link at that directory. */
     public static void directory(Path path) throws IOException {
         if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
             Path parent = path.getParent();
@@ -105,6 +105,5 @@ public final class AiChatFiles {
             }
         }
         if (!Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) throw new IOException("Invalid chat storage directory");
-        if (!path.toRealPath().equals(path.toAbsolutePath().normalize())) throw new IOException("Symbolic chat storage path");
     }
 }
