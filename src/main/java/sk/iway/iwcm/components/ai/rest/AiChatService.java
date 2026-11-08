@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -21,11 +22,11 @@ import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiRequestLifecycle;
 import com.webjetcms.ai.AiRequestLifecycle.State;
 import com.webjetcms.ai.AiResponse;
-import com.webjetcms.ai.BinaryContent;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.components.ai.chat.AiChatEntry;
 import sk.iway.iwcm.components.ai.chat.AiChatThread;
 import sk.iway.iwcm.components.ai.dto.*;
@@ -107,13 +108,7 @@ public class AiChatService implements DisposableBean {
             // Repeated HTTP delivery replays the saved attempt; it must not call the provider again.
             result = savedResult(turn.message(), request);
         } else {
-            InputDataDTO input = new InputDataDTO();
-            input.setAssistantId(prepared.assistant().getId());
-            input.setInputValue(turn.question().getInputValue() == null ? "" : turn.question().getInputValue());
-            input.setInputValueType(InputDataDTO.InputValueType.TEXT);
-            input.setOutputValueType(InputDataDTO.InputValueType.TEXT);
-            input.setUserPrompt(turn.question().getText());
-            input.setPreviousResponseId(turn.thread().getLastResponseId());
+            InputDataDTO input = turnInput(prepared);
             AtomicBoolean started = new AtomicBoolean();
             try {
                 result = tasks.runChatTask(turn.thread().getId(), prepared.scope(), () -> {
@@ -121,6 +116,7 @@ public class AiChatService implements DisposableBean {
                     return generate(prepared, input, output, streaming, request);
                 }, input);
             } catch (Exception exception) {
+                Logger.error(AiChatService.class, "Chat " + turn.thread().getId() + ": execution failed", exception);
                 result = failure("UNKNOWN", null, request);
             } finally {
                 if (!started.get()) {
@@ -141,7 +137,6 @@ public class AiChatService implements DisposableBean {
         String threadId = prepared.turn().thread().getId();
         String messageId = prepared.turn().message().getId();
         StringBuilder text = new StringBuilder();
-        long[] checkpoint = {0};
         int tokens = 0;
         String status = "error";
         String category = "UNKNOWN";
@@ -149,29 +144,14 @@ public class AiChatService implements DisposableBean {
         Boolean retryable = null;
         AiRequestLifecycle lifecycle = AiRequestLifecycle.unknown();
         boolean submitted = false;
-        // Keep this attempt alive while provider work runs outside the file lock. A stop or lost lease cancels it.
-        var renewal = heartbeat.scheduleWithFixedDelay(() -> {
-            try {
-                if (!store.heartbeat(prepared.scope(), threadId, messageId)) input.getCancellationToken().cancel();
-            } catch (RuntimeException exception) {
-                input.getCancellationToken().cancel();
-            }
-        }, 0, 10, TimeUnit.SECONDS);
+        var renewal = renewLease(prepared, input);
         try {
             LibrarySupportLogic provider = provider(prepared.assistant().getProvider());
             var providerConfig = configuration.resolveForDomain(provider, prepared.scope().domainName());
             if (!configuration.chatScope(providerConfig).equals(prepared.turn().thread().getProviderScope())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "providerChanged");
             }
-            // Save partial text at most once per second, but forward every delta to the connected client.
-            Consumer<String> onText = delta -> {
-                text.append(delta);
-                if (System.currentTimeMillis() - checkpoint[0] >= 1000) {
-                    if (!store.progress(prepared.scope(), threadId, messageId, text.toString())) throw new CancellationException();
-                    checkpoint[0] = System.currentTimeMillis();
-                }
-                output.accept(delta);
-            };
+            Consumer<String> onText = streamProgress(prepared, text, output);
             if (input.getCancellationToken().isCancelled()) throw new CancellationException();
             // Strip HTML only from the saved field snapshot; document attachments retain their literal content.
             if (AiService.shouldRemoveHtml(prepared.assistant(), input)) {
@@ -181,17 +161,11 @@ public class AiChatService implements DisposableBean {
             for (var attachment : prepared.turn().question().getAttachments()) {
                 if (input.getCancellationToken().isCancelled()) throw new CancellationException();
                 byte[] bytes = store.attachment(threadId, attachment.id(), prepared.scope()).bytes();
-                String content;
-                if (attachment.mediaType().startsWith("image/")) {
-                    AiResponse description = provider.describeChatImage(new BinaryContent(bytes, attachment.mediaType(), attachment.name()),
-                        prepared.assistant(), input, providerConfig);
-                    content = description.text();
-                    tokens += (int)Math.min(Integer.MAX_VALUE - tokens, description.usage().totalTokens());
-                } else {
-                    content = AiChatAttachments.documentText(attachment, bytes);
-                }
-                context.append("\nAttachment: ").append(attachment.name()).append('\n').append(content).append('\n');
-                if (context.length() > AiChatAttachments.MAX_TEXT) throw new AiChatAttachments.UnreadableException();
+                var preparedAttachment = provider.prepareChatAttachment(prepared.assistant(), input, providerConfig,
+                    new AiChatAttachments.Upload(attachment, bytes));
+                // Keep already incurred image costs even when a later attachment is unreadable.
+                tokens += (int)Math.min(Integer.MAX_VALUE - tokens, preparedAttachment.usage().totalTokens());
+                preparedAttachment.appendTo(context);
             }
             input.setInputValue(input.getInputValue() + context);
             // Once submitted, a remote response may exist even if the connection fails before its ID arrives.
@@ -207,15 +181,8 @@ public class AiChatService implements DisposableBean {
             tokens += (int)Math.min(Integer.MAX_VALUE - tokens, response.usage().totalTokens());
             status = "complete";
             category = null;
-            AssistantResponseDTO result = new AssistantResponseDTO();
-            result.setResponse(text.toString());
-            result.setTotalTokens(tokens);
-            try {
-                AiStatService.addRecord(prepared.assistant().getId(), tokens, statistics, request, prepared.scope().domainId());
-            } catch (RuntimeException exception) {
-                audit(threadId, "statistics_failed", null);
-            }
-            return result;
+            recordUsage(prepared, tokens, request);
+            return completedResponse(text.toString(), tokens);
         } catch (AiChatAttachments.UnreadableException exception) {
             category = "ATTACHMENT_INVALID";
             return failure(category, null, request);
@@ -230,6 +197,8 @@ public class AiChatService implements DisposableBean {
             if (input.getCancellationToken().isCancelled() || exception instanceof CancellationException) {
                 category = "CANCELLED";
                 status = "stopped";
+            } else {
+                Logger.error(AiChatService.class, "Chat " + threadId + ": generation failed", exception);
             }
             return failure(category, providerStatus, request);
         } finally {
@@ -248,6 +217,58 @@ public class AiChatService implements DisposableBean {
             } finally {
                 if (interrupted) Thread.currentThread().interrupt();
             }
+        }
+    }
+
+    /** Builds provider input from the saved question, including the original snapshot on retries. */
+    private static InputDataDTO turnInput(Prepared prepared) {
+        Turn turn = prepared.turn();
+        InputDataDTO input = new InputDataDTO();
+        input.setAssistantId(prepared.assistant().getId());
+        input.setInputValue(turn.question().getInputValue() == null ? "" : turn.question().getInputValue());
+        input.setInputValueType(InputDataDTO.InputValueType.TEXT);
+        input.setOutputValueType(InputDataDTO.InputValueType.TEXT);
+        input.setUserPrompt(turn.question().getText());
+        input.setPreviousResponseId(turn.thread().getLastResponseId());
+        return input;
+    }
+
+    /** Keeps the attempt alive between provider callbacks and observes stops from other cluster nodes. */
+    private ScheduledFuture<?> renewLease(Prepared prepared, InputDataDTO input) {
+        String threadId = prepared.turn().thread().getId();
+        String messageId = prepared.turn().message().getId();
+        return heartbeat.scheduleWithFixedDelay(() -> {
+            try {
+                if (!store.heartbeat(prepared.scope(), threadId, messageId)) input.getCancellationToken().cancel();
+            } catch (RuntimeException exception) {
+                Logger.error(AiChatService.class, "Chat " + threadId + ": lease renewal failed", exception);
+                input.getCancellationToken().cancel();
+            }
+        }, 0, 10, TimeUnit.SECONDS);
+    }
+
+    /** Saves partial text at most once per second while forwarding every delta to the client. */
+    private Consumer<String> streamProgress(Prepared prepared, StringBuilder text, Consumer<String> output) {
+        long[] checkpoint = {0};
+        return delta -> {
+            text.append(delta);
+            if (System.currentTimeMillis() - checkpoint[0] >= 1000) {
+                if (!store.progress(prepared.scope(), prepared.turn().thread().getId(), prepared.turn().message().getId(), text.toString())) {
+                    throw new CancellationException();
+                }
+                checkpoint[0] = System.currentTimeMillis();
+            }
+            output.accept(delta);
+        };
+    }
+
+    private void recordUsage(Prepared prepared, int tokens, HttpServletRequest request) {
+        try {
+            AiStatService.addRecord(prepared.assistant().getId(), tokens, statistics, request, prepared.scope().domainId());
+        } catch (RuntimeException exception) {
+            String threadId = prepared.turn().thread().getId();
+            Logger.error(AiChatService.class, "Chat " + threadId + ": statistics failed", exception);
+            audit(threadId, "statistics_failed", null);
         }
     }
 
@@ -294,6 +315,7 @@ public class AiChatService implements DisposableBean {
         } catch (Exception exception) {
             String error = exception instanceof ResponseStatusException failure && "cleanupUnknown".equals(failure.getReason())
                 ? "cleanupUnknown" : "deleteFailed";
+            if ("deleteFailed".equals(error)) Logger.error(AiChatService.class, "Chat " + id + ": deletion failed", exception);
             store.deletionFailed(scope, id, claim, error);
             audit(id, "delete_failed", null);
             return new Deletion(false, error);
@@ -339,9 +361,13 @@ public class AiChatService implements DisposableBean {
             return failure(message.getErrorCategory() == null ? "PENDING" : message.getErrorCategory(), message.getProviderStatus(),
                 message.getRetryable(), request);
         }
+        return completedResponse(message.getText(), message.getTotalTokens());
+    }
+
+    private static AssistantResponseDTO completedResponse(String text, int tokens) {
         AssistantResponseDTO result = new AssistantResponseDTO();
-        result.setResponse(message.getText());
-        result.setTotalTokens(message.getTotalTokens());
+        result.setResponse(text);
+        result.setTotalTokens(tokens);
         return result;
     }
 
@@ -351,9 +377,14 @@ public class AiChatService implements DisposableBean {
 
     private static AssistantResponseDTO failure(String category, Integer status, Boolean retryable, HttpServletRequest request) {
         AssistantResponseDTO result = new AssistantResponseDTO();
-        result.setError(Prop.getInstance(request).getText("components.ai_assistants.chat.history."
-            + ("ATTACHMENT_INVALID".equals(category) ? "attachmentUnreadable" : "INVALID_CONTINUATION".equals(category) ? "expired"
-                : "CANCELLED".equals(category) ? "stopped" : "PENDING".equals(category) ? "busy" : "generationFailed") + ".js"));
+        String messageKey = switch (category) {
+            case "ATTACHMENT_INVALID" -> "attachmentUnreadable";
+            case "INVALID_CONTINUATION" -> "expired";
+            case "CANCELLED" -> "stopped";
+            case "PENDING" -> "busy";
+            default -> "generationFailed";
+        };
+        result.setError(Prop.getInstance(request).getText("components.ai_assistants.chat.history." + messageKey + ".js"));
         result.setErrorCategory(category);
         result.setProviderStatusCode(status);
         if (retryable == null) {

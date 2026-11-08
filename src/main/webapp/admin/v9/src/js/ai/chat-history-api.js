@@ -29,7 +29,7 @@ export async function chatHistoryRequest(path, { method = 'GET', signal } = {}) 
 
 /** Accepts only owner-scoped attachment URLs returned by saved chat history. */
 export function chatAttachmentUrl(attachment) {
-    return /^\/admin\/rest\/ai\/chat\/threads\/[a-f0-9-]{36}\/attachments\/(?:[1-9][0-9]*\.[a-z]+|[a-f0-9-]{36})$/.test(attachment.url || '')
+    return /^\/admin\/rest\/ai\/chat\/threads\/[a-f0-9-]{36}\/attachments\/[1-9][0-9]*\.[a-z]+$/.test(attachment.url || '')
         ? attachment.url : null;
 }
 

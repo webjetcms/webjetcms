@@ -57,6 +57,17 @@ class AiChatAttachmentsTest {
         }
     }
 
+    /** Only numbered attachment IDs with supported extensions resolve inside a thread directory. */
+    @Test
+    void rejectsInvalidAndDevelopmentAttachmentPaths() {
+        String threadId = UUID.randomUUID().toString();
+        for (String id : List.of("../1.txt", "1/2.txt", "0.txt", "1.jsp", UUID.randomUUID().toString())) {
+            assertEquals(HttpStatus.BAD_REQUEST,
+                assertThrows(ResponseStatusException.class, () -> AiChatAttachments.path(root, threadId, id)).getStatusCode());
+        }
+        assertEquals(root.resolve(threadId).resolve("2.png"), AiChatAttachments.path(root, threadId, "2.png"));
+    }
+
     @Test
     void extractsPdfText() throws Exception {
         try (var document = new PDDocument(); var output = new ByteArrayOutputStream()) {

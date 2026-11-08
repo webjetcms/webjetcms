@@ -104,12 +104,11 @@ public final class AiChatAttachments {
         return List.copyOf(numbered);
     }
 
-    /** Resolves numbered files with their original extensions and legacy UUID-based binary files. */
+    /** Resolves numbered files with their original extensions inside the conversation directory. */
     public static Path path(Path directory, String threadId, String attachmentId) {
         AiChatStore.requireUuid(threadId);
-        if (sequence(attachmentId) > 0) return directory.resolve(threadId).resolve(attachmentId);
-        AiChatStore.requireUuid(attachmentId);
-        return directory.resolve(threadId).resolve(attachmentId + ".bin");
+        if (sequence(attachmentId) <= 0) throw invalid("invalidId");
+        return directory.resolve(threadId).resolve(attachmentId);
     }
 
     private static long sequence(String id) {

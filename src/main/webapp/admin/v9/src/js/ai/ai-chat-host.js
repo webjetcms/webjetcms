@@ -475,30 +475,8 @@ export class AiChatHost {
     }
 
     applyDetail(chat, detail) {
-        if (chat.state.pending || chat.state.disposed) return;
         if (!this.matchesContext(detail.thread.context)) throw new Error(historyText('requestChanged'));
-        // A rejected request is absent from server history. Restore its prompt/files without replacing a newer draft.
-        const unsaved = chat.state.messages.at(-1);
-        const rejected = unsaved?.inputData?.requestId && !detail.messages.some(message => message.requestId === unsaved.inputData.requestId);
-        if (rejected && !chat.state.draft.trim()) chat.state.draft = unsaved.userPrompt || '';
-        if (rejected && !chat.state.attachments.length) {
-            chat.state.attachments = (unsaved.inputData.files || []).map(file => ({ file, name: file.name, size: file.size, mediaType: file.type }));
-        }
-        // Replace optimistic local messages with the server transcript and its continuation/retry permissions.
-        chat.threadInfo = detail.thread;
-        chat.state.threadId = detail.thread.id;
-        chat.state.revision = detail.thread.revision;
-        chat.state.serverBusy = detail.thread.busy;
-        chat.state.readOnlyReason = chat.deletionRequested ? historyText('deletePending')
-            : detail.thread.canContinue ? null : historyText(detail.thread.unavailableReason);
-        chat.state.notice = detail.thread.deletionError ? historyText(detail.thread.deletionError) : rejected ? unsaved.error : null;
-        const questions = new Map(detail.messages.filter(message => message.role === 'user').map(message => [message.id, message.text]));
-        chat.state.messages = detail.messages.map(message => ({ ...message, confirmed: true,
-            userPrompt: questions.get(message.turnId),
-            error: message.status === 'error' ? historyText(message.errorCategory === 'ATTACHMENT_INVALID' ? 'attachmentUnreadable' : 'generationFailed') : null,
-            retryable: message.retryable ?? (message.errorCategory === 'ATTACHMENT_INVALID' ? false : null)
-        }));
-        chat.refresh();
+        if (!chat.restoreHistory(detail)) return;
         if (this.chat === chat) this.renderFiles();
         clearTimeout(chat.historyRefreshTimer);
         // A stopped stream can settle before the server worker finishes; poll while that work or deletion remains active.

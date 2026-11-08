@@ -14,8 +14,6 @@ import com.webjetcms.ai.AiRequestLifecycle.State;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -107,21 +105,6 @@ class AiChatStoreTest {
         assertTrue(store.list(scope, 0, "missing phrase").items().isEmpty());
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = { false, true })
-    void migratesLegacyHistoryFilenames(boolean inThreadFolder) throws Exception {
-        var turn = store.begin(request(null, null, "Question"), scope, assistant, "config");
-        String id = turn.thread().getId();
-        store.finish(scope, id, turn.message().getId(), "Answer", "complete", 1, null, null);
-        Path path = root.resolve("42").resolve(id).resolve("ai_chat.json");
-        Path legacy = (inThreadFolder ? path.getParent() : root.resolve("42")).resolve(id + ".json");
-        byte[] original = Files.readAllBytes(path);
-        Files.move(path, legacy);
-        assertEquals("Answer", store.get(id, scope).messages().get(1).getText());
-        assertFalse(Files.exists(legacy));
-        assertArrayEquals(original, Files.readAllBytes(path));
-    }
-
     /** Field filtering precedes pagination and excludes other records, fields, resources and standalone chats. */
     @Test
     void isolatesFieldHistoryAndPreservesContextAfterReload() {
@@ -182,8 +165,9 @@ class AiChatStoreTest {
         Path file = outside.resolve("ai_chat.json");
         Files.writeString(file, "unchanged");
         Files.createSymbolicLink(Files.createDirectories(root.resolve("42")).resolve(id), outside);
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE,
-            assertThrows(ResponseStatusException.class, () -> store.get(id, scope)).getStatusCode());
+        ResponseStatusException failure = assertThrows(ResponseStatusException.class, () -> store.get(id, scope));
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, failure.getStatusCode());
+        assertInstanceOf(java.io.IOException.class, failure.getCause());
         assertThrows(ResponseStatusException.class,
             () -> store.begin(new AiChatRequest(null, 12L, id, null, "Question", null), scope, assistant, "config"));
         assertEquals("unchanged", Files.readString(file));

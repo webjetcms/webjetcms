@@ -42,6 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
@@ -85,6 +86,7 @@ class AiChatServiceTest {
         when(provider.getProviderId()).thenReturn("openai");
         when(provider.isInit()).thenReturn(true);
         when(provider.supportsPersistentChat(assistant)).thenReturn(true);
+        doCallRealMethod().when(provider).prepareChatAttachment(any(), any(), any(), any());
         var configuration = mock(WebjetAiConfigurationService.class);
         when(configuration.resolveForDomain(provider, scope.domainName())).thenReturn(config);
         when(configuration.chatScope(config)).thenReturn("scope");
@@ -203,6 +205,40 @@ class AiChatServiceTest {
         var saved = new AiChatStore().get(prepared.turn().thread().getId(), scope).messages();
         assertEquals(text, saved.get(1).getText());
         assertEquals(2, saved.get(0).getAttachments().size());
+    }
+
+    /** A later unreadable document does not discard the cost of an image already described for this attempt. */
+    @Test
+    void retainsImageUsageWhenFollowingAttachmentFails() throws Exception {
+        var uploads = AiChatAttachments.read(List.of(
+            new MockMultipartFile("files", "image.png", "image/png", new byte[] {(byte)137, 80, 78, 71, 13, 10, 26, 10}),
+            new MockMultipartFile("files", "broken.pdf", "application/pdf", "%PDF-broken".getBytes(StandardCharsets.UTF_8))));
+        when(provider.describeChatImage(any(), any(), any(), same(config))).thenReturn(
+            new AiResponse("Image description", List.of(), new TokenUsage(2, 2, 4, Map.of()), "completed"));
+        var prepared = service.prepare(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Read these", null), scope, uploads);
+
+        assertEquals("ATTACHMENT_INVALID", execute(prepared).getErrorCategory());
+        var saved = new AiChatStore().get(prepared.turn().thread().getId(), scope).messages().get(1);
+        assertEquals(4, saved.getTotalTokens());
+        assertFalse(saved.isStorageUnknown());
+        verify(provider, never()).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
+    }
+
+    /** Unexpected failures keep their original cause in diagnostics while clients receive the stable error contract. */
+    @Test
+    void logsUnexpectedGenerationFailureWithThreadId() throws Exception {
+        IllegalStateException cause = new IllegalStateException("Provider adapter failed");
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any())).thenThrow(cause);
+        var prepared = prepare(null, null);
+        String id = prepared.turn().thread().getId();
+
+        try (MockedStatic<Logger> log = mockStatic(Logger.class)) {
+            var response = execute(prepared);
+            assertEquals("UNKNOWN", response.getErrorCategory());
+            assertEquals("components.ai_assistants.chat.history.generationFailed.js", response.getError());
+            log.verify(() -> Logger.error(AiChatService.class, "Chat " + id + ": generation failed", cause));
+        }
+        assertEquals("error", store.get(id, scope).messages().get(1).getStatus());
     }
 
     /** Keeps history after partial cleanup and retries only responses without confirmed deletion or absence. */

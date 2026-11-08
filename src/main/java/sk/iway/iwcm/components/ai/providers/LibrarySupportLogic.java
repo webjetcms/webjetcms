@@ -334,23 +334,50 @@ public abstract class LibrarySupportLogic implements AiInterface {
         if (input.getChatAttachments() == null || input.getChatAttachments().isEmpty()) return usage;
         StringBuilder context = new StringBuilder();
         for (var upload : input.getChatAttachments()) {
-            checkCancellation(input);
-            var attachment = upload.attachment();
-            String content;
-            if (attachment.mediaType().startsWith("image/")) {
-                AiResponse description = describeChatImage(new BinaryContent(upload.bytes(), attachment.mediaType(), attachment.name()),
-                    assistant, input, config);
-                content = description.text();
-                usage = usage.plus(description.usage());
-            } else {
-                content = AiChatAttachments.documentText(attachment, upload.bytes());
-            }
-            context.append("\nAttachment: ").append(attachment.name()).append('\n').append(content).append('\n');
-            if (context.length() > AiChatAttachments.MAX_TEXT) throw new AiChatAttachments.UnreadableException();
+            ChatAttachmentContext attachment = prepareChatAttachment(assistant, input, config, upload);
+            usage = usage.plus(attachment.usage());
+            attachment.appendTo(context);
         }
         checkCancellation(input);
         input.setChatAttachmentContext(context.toString());
         return usage;
+    }
+
+    /**
+     * Converts one validated upload to literal chat context for both saved and session-only conversations.
+     *
+     * @param assistant assistant whose model describes images
+     * @param input current prompt and cancellation token
+     * @param config provider configuration used for image descriptions
+     * @param upload validated attachment metadata and bytes
+     * @return named document text or image description, together with its token usage
+     * @throws IOException if document text cannot be extracted
+     * @throws AiProviderException if the image description fails
+     */
+    public ChatAttachmentContext prepareChatAttachment(AssistantDefinitionEntity assistant, InputDataDTO input,
+        AiProviderConfig config, AiChatAttachments.Upload upload) throws IOException, AiProviderException {
+        checkCancellation(input);
+        var attachment = upload.attachment();
+        String content;
+        TokenUsage usage = TokenUsage.EMPTY;
+        if (attachment.mediaType().startsWith("image/")) {
+            AiResponse description = describeChatImage(new BinaryContent(upload.bytes(), attachment.mediaType(), attachment.name()),
+                assistant, input, config);
+            content = description.text();
+            usage = description.usage();
+        } else {
+            content = AiChatAttachments.documentText(attachment, upload.bytes());
+        }
+        return new ChatAttachmentContext("\nAttachment: " + attachment.name() + '\n' + content + '\n', usage);
+    }
+
+    /** Prepared attachment text and its cost, retained separately from the caller's page context. */
+    public record ChatAttachmentContext(String text, TokenUsage usage) {
+        /** Appends literal content while enforcing the combined text limit across all attachments. */
+        public void appendTo(StringBuilder context) throws AiChatAttachments.UnreadableException {
+            context.append(text);
+            if (context.length() > AiChatAttachments.MAX_TEXT) throw new AiChatAttachments.UnreadableException();
+        }
     }
 
     private static AssistantResponseDTO unreadableAttachment(AssistantDefinitionEntity assistant, Prop prop) {

@@ -1707,51 +1707,50 @@ test('Narrow chat panels replace each other and Escape closes files without clos
     assert.equal(host.historySearch.ownerDocument.activeElement, host.historySearch);
 });
 
-for (const numbered of [false, true]) {
-    test(`Reopened history fetches ${numbered ? 'numbered' : 'legacy'} downloads and image previews with the required CSRF header`, async t => {
-        const f = fixture(t, deniedRestPermissions, { aiChat: true });
-        await openChat(f);
-        const threadId = '15d5965c-cbc8-481a-a18f-82185dd86417';
-        const attachments = [
-            { id: numbered ? '1.txt' : 'eb995413-51d3-4188-9dbd-f96b78407270', name: 'notes.txt', mediaType: 'text/plain' },
-            { id: numbered ? '2.png' : 'e4fac213-a054-4914-a177-09da3584f843', name: 'obrázok.png', mediaType: 'image/png' }
-        ].map(attachment => ({ ...attachment, url: `/admin/rest/ai/chat/threads/${threadId}/attachments/${attachment.id}` }));
-        const opening = f.controller.chat.openThread(threadId);
-        await f.respond(f.requests.find(request => request.url.pathname.endsWith('/threads/' + threadId)), {
-            thread: { id: threadId, assistantId: 7, canContinue: false, unavailableReason: 'expired', revision: 1 },
-            messages: [{ id: 'question', role: 'user', text: 'Saved attachments', attachments }]
-        });
-        await opening;
-        const buttons = [...f.controller.chatPanel.querySelectorAll('.ai-chat-attachment-download')];
-        assert.equal(buttons.length, 2);
-        assert.equal(f.controller.chatPanel.querySelector('a[href*="/attachments/"]'), null);
-        const preview = f.requests.find(request => request.url.pathname === attachments[1].url);
-        assert.equal(preview.options.headers['X-CSRF-Token'], 'private-admin-csrf-token');
-        assert.equal(preview.options.credentials, 'same-origin');
-        preview.resolve(new Response('image bytes', { headers: { 'Content-Type': 'image/png' } }));
-        await tick();
-        const imageUrl = f.controller.chatPanel.querySelector('img').getAttribute('src');
-        assert.match(imageUrl, /^blob:/);
-        buttons[1].click();
-        await tick();
-        assert.deepEqual(f.downloads[0], { name: 'obrázok.png', url: imageUrl });
-        f.controller.chatPanel.querySelector('.ai-chat-attachment-link').click();
-        const file = f.requests.find(request => request.url.pathname === attachments[0].url);
-        assert.equal(file.options.headers['X-CSRF-Token'], 'private-admin-csrf-token');
-        file.resolve(new Response('Saved document bytes', { headers: { 'Content-Type': 'text/plain' } }));
-        await tick();
-        assert.equal(f.downloads[1].name, 'notes.txt');
-        assert.equal(await f.blobs.get(f.downloads[1].url).text(), 'Saved document bytes');
-        buttons[0].click();
-        await tick();
-        assert.equal(f.downloads.length, 3, 'Both the filename and download icon must save the file.');
-        assert.equal(f.requests.filter(request => request.url.pathname === attachments[0].url).length, 1);
-        assert.equal(f.chatRequests.length, 0, 'Downloads must remain available without sending a new provider request.');
-        f.controller.chat.chat.destroy();
-        assert.equal(f.blobs.size, 0, 'Destroying the conversation must release its attachment blobs.');
-        assert.ok(f.revokedUrls.includes(imageUrl));
+test('Reopened history fetches numbered downloads and image previews with the required CSRF header', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f);
+    const threadId = '15d5965c-cbc8-481a-a18f-82185dd86417';
+    const attachments = [
+        { id: '1.txt', name: 'notes.txt', mediaType: 'text/plain' },
+        { id: '2.png', name: 'obrázok.png', mediaType: 'image/png' }
+    ].map(attachment => ({ ...attachment, url: `/admin/rest/ai/chat/threads/${threadId}/attachments/${attachment.id}` }));
+    const opening = f.controller.chat.openThread(threadId);
+    await f.respond(f.requests.find(request => request.url.pathname.endsWith('/threads/' + threadId)), {
+        thread: { id: threadId, assistantId: 7, canContinue: false, unavailableReason: 'expired', revision: 1 },
+        messages: [{ id: 'question', role: 'user', text: 'Saved attachments', attachments }]
     });
-}
+    await opening;
+    const buttons = [...f.controller.chatPanel.querySelectorAll('.ai-chat-attachment-download')];
+    assert.equal(buttons.length, 2);
+    assert.equal(f.controller.chatPanel.querySelector('a[href*="/attachments/"]'), null);
+    const preview = f.requests.find(request => request.url.pathname === attachments[1].url);
+    assert.equal(preview.options.headers['X-CSRF-Token'], 'private-admin-csrf-token');
+    assert.equal(preview.options.credentials, 'same-origin');
+    preview.resolve(new Response('image bytes', { headers: { 'Content-Type': 'image/png' } }));
+    await tick();
+    const imageUrl = f.controller.chatPanel.querySelector('img').getAttribute('src');
+    assert.match(imageUrl, /^blob:/);
+    buttons[1].click();
+    await tick();
+    assert.deepEqual(f.downloads[0], { name: 'obrázok.png', url: imageUrl });
+    f.controller.chatPanel.querySelector('.ai-chat-attachment-link').click();
+    const file = f.requests.find(request => request.url.pathname === attachments[0].url);
+    assert.equal(file.options.headers['X-CSRF-Token'], 'private-admin-csrf-token');
+    file.resolve(new Response('Saved document bytes', { headers: { 'Content-Type': 'text/plain' } }));
+    await tick();
+    assert.equal(f.downloads[1].name, 'notes.txt');
+    assert.equal(await f.blobs.get(f.downloads[1].url).text(), 'Saved document bytes');
+    buttons[0].click();
+    await tick();
+    assert.equal(f.downloads.length, 3, 'Both the filename and download icon must save the file.');
+    assert.equal(f.requests.filter(request => request.url.pathname === attachments[0].url).length, 1);
+    assert.equal(f.chatRequests.length, 0, 'Downloads must remain available without sending a new provider request.');
+    f.controller.chat.chat.destroy();
+    assert.equal(f.blobs.size, 0, 'Destroying the conversation must release its attachment blobs.');
+    assert.ok(f.revokedUrls.includes(imageUrl));
+});
+
 
 test('Attachment failures stay in chat without navigating to an access-denied page', async t => {
     for (const status of [401, 403, 404, 200]) {
@@ -1759,7 +1758,7 @@ test('Attachment failures stay in chat without navigating to an access-denied pa
             const f = fixture(t, deniedRestPermissions, { aiChat: true });
             await openChat(f);
             const attachment = { name: 'notes.txt', mediaType: 'text/plain',
-                url: '/admin/rest/ai/chat/threads/15d5965c-cbc8-481a-a18f-82185dd86417/attachments/eb995413-51d3-4188-9dbd-f96b78407270' };
+                url: '/admin/rest/ai/chat/threads/15d5965c-cbc8-481a-a18f-82185dd86417/attachments/1.txt' };
             const chat = f.controller.chat.chat;
             chat.state.messages = [{ role: 'user', text: 'File', attachments: [attachment] }];
             chat.refresh();
@@ -2151,6 +2150,40 @@ for (const scenario of [
         await refreshing;
         assertRetryControls();
         assert.equal(f.chatRequests.length, 0, 'Opening or refreshing history must never submit another generation.');
+    });
+}
+
+for (const newerDraft of [false, true]) {
+    test(`Reloading rejected delivery ${newerDraft ? 'preserves a newer draft and files' : 'restores the original prompt and files'}`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true });
+        await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+        await openSavedChat(f, 'saved-thread', 'Saved answer');
+        const chat = f.controller.chat.chat;
+        const originalFile = new File(['Original attachment'], 'original.txt', { type: 'text/plain' });
+        const newerFile = new File(['New attachment'], 'newer.txt', { type: 'text/plain' });
+        chat._addAttachments([originalFile]);
+        const sending = chat.send('Rejected question');
+        f.chatRequests.at(-1).resolve({ success: false, persisted: false, errorText: 'Rejected by server' });
+        await sending;
+        if (newerDraft) {
+            typeChat(chat.$input[0], 'Newer draft');
+            chat._addAttachments([newerFile]);
+        }
+
+        await f.respond(f.requests.at(-1), {
+            thread: { id: 'saved-thread', assistantId: 7, canContinue: true, busy: false, revision: 1 },
+            messages: [
+                { id: 'question', role: 'user', text: 'Saved question', status: 'complete' },
+                { id: 'answer', turnId: 'question', role: 'assistant', text: 'Saved answer', status: 'complete' }
+            ]
+        });
+
+        assert.equal(chat.$input.val(), newerDraft ? 'Newer draft' : 'Rejected question');
+        assert.deepEqual(Array.from(chat.state.attachments, attachment => attachment.file), [newerDraft ? newerFile : originalFile]);
+        assert.equal(chat.state.messages.length, 2);
+        assert.equal(chat.state.messages.at(-1).text, 'Saved answer');
+        assert.equal(chat.state.notice, 'Rejected by server');
+        assert.equal(f.chatRequests.length, 1, 'Restoring history must not resend the rejected request.');
     });
 }
 

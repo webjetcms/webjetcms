@@ -11,6 +11,7 @@ import sk.iway.iwcm.Tools;
 
 /** Keeps private chat files out of generic download and file-management routes. */
 public final class AiChatPaths {
+    // /files is shared through NFS in clustered installations; generic file routes must not expose this subtree.
     public static final String ROOT = "/files/protected/ai-chat";
 
     private AiChatPaths() { }

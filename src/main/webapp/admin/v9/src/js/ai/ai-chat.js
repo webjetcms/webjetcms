@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { AiChatTransport } from './ai-chat-transport';
 import { splitChatResponse } from './ai-response-parser';
-import { chatRequestId, chatAttachmentUrl, fetchChatAttachment } from './chat-history-api';
+import { chatRequestId, chatAttachmentUrl, fetchChatAttachment, historyText } from './chat-history-api';
 import { setChatTooltip, initChatTooltips, disposeChatTooltips } from './chat-tooltips';
 
 /**
@@ -98,6 +98,45 @@ export class AiChat {
 
     isPending() {
         return this.state.pending != null;
+    }
+
+    /**
+     * Restores saved messages while preserving a newer draft and files from a rejected delivery.
+     * The host validates the field context before passing history to this conversation.
+     * @param {object} detail Server thread metadata and ordered messages.
+     * @returns {boolean} Whether history was applied; an active or disposed conversation is left unchanged.
+     */
+    restoreHistory(detail) {
+        const state = this.state;
+        if (state.pending || state.disposed) return false;
+
+        // A rejected request is absent from server history. Keep its input available for correction or resending.
+        const unsaved = state.messages.at(-1);
+        const rejected = unsaved?.inputData?.requestId && !detail.messages.some(message => message.requestId === unsaved.inputData.requestId);
+        if (rejected && !state.draft.trim()) state.draft = unsaved.userPrompt || '';
+        if (rejected && !state.attachments.length) {
+            state.attachments = (unsaved.inputData.files || []).map(file => ({ file, name: file.name, size: file.size, mediaType: file.type }));
+        }
+
+        this.threadInfo = detail.thread;
+        state.threadId = detail.thread.id;
+        state.revision = detail.thread.revision;
+        state.serverBusy = detail.thread.busy;
+        state.readOnlyReason = null;
+        if (this.deletionRequested) state.readOnlyReason = historyText('deletePending');
+        else if (!detail.thread.canContinue) state.readOnlyReason = historyText(detail.thread.unavailableReason);
+        state.notice = rejected ? unsaved.error : null;
+        if (detail.thread.deletionError) state.notice = historyText(detail.thread.deletionError);
+
+        // Saved attempts use server IDs and retry metadata; local request snapshots are no longer needed.
+        const questions = new Map(detail.messages.filter(message => message.role === 'user').map(message => [message.id, message.text]));
+        state.messages = detail.messages.map(message => ({ ...message, confirmed: true,
+            userPrompt: questions.get(message.turnId),
+            error: message.status === 'error' ? historyText(message.errorCategory === 'ATTACHMENT_INVALID' ? 'attachmentUnreadable' : 'generationFailed') : null,
+            retryable: message.retryable ?? (message.errorCategory === 'ATTACHMENT_INVALID' ? false : null)
+        }));
+        this.refresh();
+        return true;
     }
 
     /** Mounts this conversation in a host element and restores its draft and scroll position. */
