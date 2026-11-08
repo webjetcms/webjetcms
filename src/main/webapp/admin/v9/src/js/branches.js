@@ -2,28 +2,32 @@ import $ from 'jquery';
 
 // The server embeds the context of this screen; never refresh it silently from another tab.
 const screen = window.branchScreen;
-if (screen?.enabled) {
-    const nativeFetch = window.fetch.bind(window);
-    window.fetch = (input, init) => {
-        const request = new Request(input, init);
+window.bindBranchContext = (target, context) => {
+    if (!context?.enabled) return;
+    target.branchScreen = Object.freeze({ ...context });
+    const nativeFetch = target.fetch.bind(target);
+    target.fetch = (input, init) => {
+        const request = new Request(typeof input === 'string' ? new URL(input, target.location.href) : input, init);
         const url = new URL(request.url);
-        if (url.origin === location.origin && url.pathname.includes('/admin/')) {
+        if (url.origin === target.location.origin && url.pathname.includes('/admin/')) {
             const headers = new Headers(request.headers);
-            if (!headers.has('X-WebJET-Branch')) headers.set('X-WebJET-Branch', String(screen.branchId));
-            if (!headers.has('X-WebJET-Branch-Domain')) headers.set('X-WebJET-Branch-Domain', screen.domainName);
-            if (!headers.has('X-CSRF-Token')) headers.set('X-CSRF-Token', window.csrfToken);
+            if (!headers.has('X-WebJET-Branch')) headers.set('X-WebJET-Branch', String(context.branchId));
+            if (!headers.has('X-WebJET-Branch-Domain')) headers.set('X-WebJET-Branch-Domain', context.domainName);
+            if (!headers.has('X-CSRF-Token')) headers.set('X-CSRF-Token', target.csrfToken || window.csrfToken);
             return nativeFetch(new Request(request, { headers }));
         }
         return nativeFetch(request);
     };
-    $.ajaxPrefilter((options, original, xhr) => {
-        const url = new URL(options.url, window.location.href);
-        if (url.origin === location.origin && url.pathname.includes('/admin/')) {
-            xhr.setRequestHeader('X-WebJET-Branch', String(screen.branchId));
-            xhr.setRequestHeader('X-WebJET-Branch-Domain', screen.domainName);
+    const jquery = target === window ? $ : (target.jQuery || target.$);
+    jquery.ajaxPrefilter((options, original, xhr) => {
+        const url = new URL(options.url, target.location.href);
+        if (url.origin === target.location.origin && url.pathname.includes('/admin/')) {
+            xhr.setRequestHeader('X-WebJET-Branch', String(context.branchId));
+            xhr.setRequestHeader('X-WebJET-Branch-Domain', context.domainName);
         }
     });
-}
+};
+window.bindBranchContext(window, screen);
 
 async function api(path, body) {
     const response = await fetch(`/admin/rest/branches${path}`, {
@@ -48,7 +52,7 @@ $(async () => {
         selector.add(new Option('Spravovať pracovné verzie', 'manage'));
         selector.value = String(screen.branchId);
         const active = branches.find(branch => branch.id === screen.branchId);
-        label.textContent = active ? `Pracovná verzia: ${active.name} · iba čítanie` : 'Produkcia';
+        label.textContent = active ? `Pracovná verzia: ${active.name}${active.state === 'DRAFT' ? '' : ' · iba čítanie'}` : 'Produkcia';
         label.title = label.textContent;
         if (active) {
             try {
@@ -56,6 +60,37 @@ $(async () => {
                 const preview = document.getElementById('branch-preview-link');
                 if (preview) { preview.href = link.url; preview.classList.remove('d-none'); }
             } catch (error) { label.title += ' · Doména nemá dostupnú predvolenú stránku náhľadu.'; }
+        }
+
+        if (active) {
+            const changesButton = document.createElement('button');
+            changesButton.type = 'button'; changesButton.className = 'btn btn-sm btn-outline-secondary';
+            changesButton.textContent = WJ.translate('branches.changes.js');
+            selector.parentElement.append(changesButton);
+            changesButton.onclick = async () => {
+                try {
+                    const response = await fetch('/admin/rest/branch-content');
+                    if (!response.ok) throw new Error(await response.text());
+                    const changes = await response.json();
+                    const modal = document.createElement('dialog'); modal.className = 'p-4 border rounded';
+                    const title = document.createElement('h2'); title.textContent = WJ.translate('branches.changes.js'); modal.append(title);
+                    const note = document.createElement('p'); note.textContent = WJ.translate('branches.revert.note.js'); modal.append(note);
+                    for (const change of changes) {
+                        const row = document.createElement('p'); row.textContent = `${change.type} #${change.id} · ${change.title} · ${change.operation} `;
+                        const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-sm btn-outline-secondary'; button.textContent = WJ.translate('branches.revert.js');
+                        button.onclick = async () => {
+                            try {
+                                const result = await fetch('/admin/rest/branch-content/revert', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({type:change.type,id:change.id,hash:change.hash}) });
+                                if (!result.ok) throw new Error(await result.text());
+                                location.reload();
+                            } catch (error) { showError(error); }
+                        };
+                        row.append(button); modal.append(row);
+                    }
+                    const close = document.createElement('button'); close.type = 'button'; close.className = 'btn btn-primary'; close.textContent = WJ.translate('button.close'); close.onclick = () => modal.close(); modal.append(close);
+                    modal.onclose = () => modal.remove(); document.body.append(modal); modal.showModal();
+                } catch (error) { showError(error); }
+            };
         }
 
         async function activate(id) {
@@ -71,7 +106,7 @@ $(async () => {
             const modal = document.createElement('dialog');
             modal.className = 'p-4 border rounded';
             modal.setAttribute('aria-labelledby', 'branch-dialog-title');
-            modal.innerHTML = '<h2 id="branch-dialog-title">Pracovné verzie</h2><p class="branch-domain"></p><div class="branch-list"></div><form><label class="form-label">Názov <input name="name" class="form-control" required maxlength="255"></label><br><label class="form-label">Poznámka <textarea name="description" class="form-control"></textarea></label><p>Nezmenený obsah sa preberá z aktuálnej produkcie. Pracovná verzia je zatiaľ iba na čítanie.</p><button class="btn btn-primary" type="submit">Vytvoriť</button> <button class="btn btn-outline-secondary branch-close" type="button">Zavrieť</button><p class="branch-result" role="status"></p></form>';
+            modal.innerHTML = '<h2 id="branch-dialog-title">Pracovné verzie</h2><p class="branch-domain"></p><div class="branch-list"></div><form><label class="form-label">Názov <input name="name" class="form-control" required maxlength="255"></label><br><label class="form-label">Poznámka <textarea name="description" class="form-control"></textarea></label><p>Nezmenený obsah sa preberá z aktuálnej produkcie. Stránky a priečinky sa ukladajú do pracovnej verzie.</p><button class="btn btn-primary" type="submit">Vytvoriť</button> <button class="btn btn-outline-secondary branch-close" type="button">Zavrieť</button><p class="branch-result" role="status"></p></form>';
             modal.querySelector('.branch-domain').textContent = `Doména: ${screen.domainName}`;
             const list = modal.querySelector('.branch-list');
             if (!create) branches.forEach(branch => {
@@ -109,3 +144,57 @@ $(async () => {
         selector.disabled = false;
     } catch (error) { showError(error); }
 });
+
+/** Limits the existing editor to the supported P04 fields. The server enforces the same boundary. */
+window.applyBranchEditor = (table, group = false) => {
+    if (!screen?.enabled) return;
+    table.EDITOR.on('submitError.branch', (event, xhr) => {
+        if (xhr.status === 409) table.EDITOR.error(WJ.translate('branches.stale.js'));
+    });
+    if (!screen.branchId) return;
+    for (const name of ['duplicate', 'import', 'export', 'celledit', 'editPages', 'addPerexGroup', 'removePerexGroup', 'addUserGroup', 'removeUserGroup']) table.hideButton(name);
+    table.EDITOR.on('preSubmit.branch', (event, data, action) => {
+        if (action === 'remove') return;
+        const reason = table.EDITOR.currentJson.editorFields?.branchReadOnlyReason;
+        if (reason) { table.EDITOR.error(reason); return false; }
+        // Disabled widgets omit values. Submit the version displayed in this form, never a fresh LIVE read.
+        const original = table.EDITOR.currentJson;
+        const readonly = group ? ['domainName', 'syncId', 'syncStatus', 'installName']
+            : ['publishStartDate', 'publishEndDate', 'syncId', 'syncStatus', 'publishAfterStart', 'disableAfterEnd'];
+        Object.values(data.data).forEach(record => {
+            readonly.forEach(name => { if (Object.hasOwn(original, name)) record[name] = original[name]; });
+            record.editorFields ||= {};
+            record.editorFields.branchHash = original.editorFields.branchHash;
+            if (!group) {
+                record.editorFields.publishAfterStart = original.editorFields.publishAfterStart;
+                record.editorFields.disableAfterEnd = original.editorFields.disableAfterEnd;
+            }
+        });
+    });
+    let readonlyFields = [];
+    table.EDITOR.on('close.branch', () => {
+        readonlyFields.forEach(name => table.EDITOR.field(name).enable());
+        readonlyFields = [];
+    });
+    table.EDITOR.on('open', () => {
+        const editor = table.EDITOR;
+        const reason = editor.currentJson?.editorFields?.branchReadOnlyReason;
+        const modal = $('#'+table.DATA.id+'_modal');
+        modal.find('.branch-readonly-reason').remove();
+        if (reason) {
+            modal.find('.DTE_Footer button.btn-primary').prop('disabled', true);
+            readonlyFields = editor.fields().filter(name => editor.field(name).enabled());
+            readonlyFields.forEach(name => editor.field(name).disable());
+            $('<p class="branch-readonly-reason alert alert-warning m-3">').text(reason).prependTo(modal.find('.DTE_Body'));
+        }
+        const names = group ? ['internal','domainName','syncId','syncStatus','editorFields.publishPlan','editorFields.publishDate','editorFields.forceDomainNameChange','editorFields.forcePriorityRecalculation','editorFields.forceTemplateToSubgroupsAndPages','editorFields.forceNewPageDocIdTemplateSubFolders','editorFields.passwordProtectedSubFolders','editorFields.forceMenuTypeSubfolders','editorFields.forceLoggedMenuTypeSubfolders','editorFields.forceNavbarSubfolders','editorFields.forceSitemapSubfolders','editorFields.forceLoggedNavbarSubfolders','editorFields.forceLoggedSitemapSubfolders','editorFields.forceLngToSubFolders']
+            : ['publishStartDate','publishEndDate','syncId','syncStatus','editorFields.publishAfterStart','editorFields.disableAfterEnd','editorFields.requestPublish','editorFields.groupCopyDetails','editorFields.redactorNote','editorFields.attrs'];
+        names.forEach(name => { if (editor.fields().includes(name)) editor.field(name).disable(); });
+        if (!group) ['editorFields.groupCopyDetails', 'editorFields.redactorNote', 'editorFields.attrs'].forEach(name => { if (editor.fields().includes(name)) editor.field(name).hide(); });
+        ['history','publishing', ...(group ? [] : ['media','attributes'])].forEach(tab => {
+            $('#'+table.DATA.id+'_modal').find(`[id$="-${tab}-tab"]`).closest('li').hide();
+        });
+        const container = $('#'+table.DATA.id+'_modal');
+        if (!container.find('.branch-editor-note').length) $('<p class="branch-editor-note alert alert-info m-3">').text(WJ.translate('branches.editor.note.js')).prependTo(container.find('.DTE_Body'));
+    });
+};

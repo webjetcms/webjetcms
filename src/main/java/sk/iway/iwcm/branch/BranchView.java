@@ -43,74 +43,92 @@ public final class BranchView {
     }
 
     private void load() throws SQLException {
-        try (Connection connection = DBPool.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement("SELECT state,publish_at,name FROM branches WHERE id=? AND domain_name=?")) {
-                statement.setLong(1, context.branchId()); statement.setString(2, context.domainName());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (!result.next()) throw new IllegalStateException("Branch is absent in the verified domain");
-                    Timestamp date = result.getTimestamp(2);
-                    name = result.getString(3);
-                    if ("SCHEDULED".equals(result.getString(1)) && date != null && date.getTime() > previewAt) previewAt = date.getTime();
-                }
-            }
-            for (Map<String, Object> row : read(connection, "SELECT * FROM `groups`", false)) liveGroups.put(id(row,"group_id"), row);
-            groupRows.putAll(liveGroups);
-            for (BranchType type : BranchType.values()) {
-                work.put(type, read(connection, "SELECT * FROM `" + type.workTable() + "` WHERE branch_id=? ORDER BY row_id", true));
-                selected.put(type, new LinkedHashSet<>());
-            }
-            for (Map<String, Object> row : workRows(BranchType.GROUP)) {
-                int id = id(row,"group_id");
-                Map<String, Object> live = liveGroups.get(id);
-                BranchSnapshot snapshot = live == null ? BranchSnapshot.absent() : BranchGroupMapper.snapshot(live,
-                    inTrash(id, liveGroups) ? BranchSnapshot.State.TRASH : BranchSnapshot.State.ACTIVE);
-                if (!select(BranchType.GROUP,row,snapshot)) continue;
-                if ("DELETE".equals(row.get("operation"))) groupRows.remove(id);
-                else groupRows.put(id, BranchGroupMapper.project(row,live,BranchGroupMapper.initialValues(id,context.domainName())));
-            }
-            for (var entry : new ArrayList<>(groupRows.entrySet())) {
-                if (!visibleGroup(entry.getKey(),new HashSet<>())) groupRows.remove(entry.getKey());
-            }
-            List<Map<String, Object>> ordered = new ArrayList<>(groupRows.values());
-            ordered.sort(Comparator.comparingInt((Map<String,Object> row) -> id(row,"sort_priority"))
-                .thenComparing(row -> Objects.toString(row.get("group_name"),"")));
-            for (Map<String, Object> row : ordered) try (var result = BranchRows.result(row)) {
-                GroupDetails group = GroupsDB.fillFieldsByResultSet(result,false); groups.put(group.getGroupId(),group);
-            }
-            groupsDb = GroupsDB.forBranch(new ArrayList<>(groups.values()));
-            for (Map<String, Object> row : workRows(BranchType.DOCUMENT)) {
-                int id = id(row,"doc_id");
-                Map<String, Object> live = BranchStore.readLive(connection,BranchType.DOCUMENT,id).orElse(null);
-                BranchSnapshot snapshot = live == null ? BranchSnapshot.absent() : BranchDocumentMapper.snapshot(live,
-                    inTrash(id(live,"group_id"), liveGroups) ? BranchSnapshot.State.TRASH : BranchSnapshot.State.ACTIVE);
-                if (!select(BranchType.DOCUMENT,row,snapshot) || "DELETE".equals(row.get("operation"))) continue;
-                if (!groups.containsKey(id(row,"group_id"))) continue;
-                Map<String,Object> initial = row;
-                Map<String,Object> derived = derived(row,live != null && id(live,"group_id") != id(row,"group_id"));
-                Map<String,Object> projection = new LinkedHashMap<>(BranchDocumentMapper.project(row,live,initial,derived));
-                projection.put("virtual_path",derived.get("file_name"));
-                documentRows.add(projection);
-            }
-            // Recompute only metadata of pages below changed ancestors; HTML remains in LIVE SQL.
-            List<Integer> affected = groups.values().stream().map(GroupDetails::getGroupId).filter(this::changedAncestor).toList();
-            if (!affected.isEmpty()) {
-                String ids = affected.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
-                for (Map<String,Object> live : read(connection,"SELECT "+documentColumns("",true)+" FROM documents WHERE group_id IN ("+ids+")",false)) {
-                    int id = id(live,"doc_id");
-                    if (usesWork(BranchType.DOCUMENT,Integer.toString(id))) continue;
-                    Map<String,Object> calculated = derived(live);
-                    calculated.put("virtual_path",calculated.get("file_name"));
-                    calculated.remove("data_asc");
-                    derivedDocuments.put(id,calculated);
-                }
-            }
-            // Resolve generated navigation links only after the complete page/tree relation exists.
-            metadata();
-            for (GroupDetails group:groups.values()) {
-                if (metadata.containsKey(group.getDefaultDocId())) group.setDefaultDocId(group.getDefaultDocId());
+        try (Connection connection = DBPool.getConnection()) { load(connection); }
+    }
+
+    static void invalidate() { RequestBean.setAttribute(ATTRIBUTE, null); }
+
+    static BranchView reload(Connection connection) throws SQLException {
+        BranchView view = new BranchView(BranchContexts.current());
+        RequestBean.setAttribute(ATTRIBUTE, view);
+        view.load(connection);
+        return view;
+    }
+
+    private void load(Connection connection) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT state,publish_at,name FROM branches WHERE id=? AND domain_name=?")) {
+            statement.setLong(1, context.branchId()); statement.setString(2, context.domainName());
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next()) throw new IllegalStateException("Branch is absent in the verified domain");
+                Timestamp date = result.getTimestamp(2);
+                name = result.getString(3);
+                if ("SCHEDULED".equals(result.getString(1)) && date != null && date.getTime() > previewAt) previewAt = date.getTime();
             }
         }
+        for (Map<String, Object> row : read(connection, "SELECT * FROM `groups`", false)) liveGroups.put(id(row,"group_id"), row);
+        groupRows.putAll(liveGroups);
+        for (BranchType type : BranchType.values()) {
+            work.put(type, read(connection, "SELECT * FROM `" + type.workTable() + "` WHERE branch_id=? ORDER BY row_id", true));
+            selected.put(type, new LinkedHashSet<>());
+        }
+        for (Map<String, Object> row : workRows(BranchType.GROUP)) {
+            int id = id(row,"group_id");
+            Map<String, Object> live = liveGroups.get(id);
+            BranchSnapshot snapshot = live == null ? BranchSnapshot.absent() : BranchGroupMapper.snapshot(live,
+                inTrash(id, liveGroups) ? BranchSnapshot.State.TRASH : BranchSnapshot.State.ACTIVE);
+            if (!select(BranchType.GROUP,row,snapshot)) continue;
+            if ("DELETE".equals(row.get("operation"))) groupRows.remove(id);
+            else groupRows.put(id, BranchGroupMapper.project(row,live,BranchGroupMapper.initialValues(id,context.domainName())));
+        }
+        for (var entry : new ArrayList<>(groupRows.entrySet())) {
+            if (!visibleGroup(entry.getKey(),new HashSet<>())) groupRows.remove(entry.getKey());
+        }
+        List<Map<String, Object>> ordered = new ArrayList<>(groupRows.values());
+        ordered.sort(Comparator.comparingInt((Map<String,Object> row) -> id(row,"sort_priority"))
+            .thenComparing(row -> Objects.toString(row.get("group_name"),"")));
+        for (Map<String, Object> row : ordered) try (var result = BranchRows.result(row)) {
+            GroupDetails group = GroupsDB.fillFieldsByResultSet(result,false);
+            if (context.mode()==BranchContext.Mode.ADMIN) {
+                GroupEditorField fields=new GroupEditorField();
+                fields.setBranchHash(BranchGroupMapper.snapshot(row).hash());
+                group.setEditorFields(fields);
+            }
+            groups.put(group.getGroupId(),group);
+        }
+        groupsDb = GroupsDB.forBranch(new ArrayList<>(groups.values()));
+        for (Map<String, Object> row : workRows(BranchType.DOCUMENT)) {
+            int id = id(row,"doc_id");
+            Map<String, Object> live = BranchStore.readLive(connection,BranchType.DOCUMENT,id).orElse(null);
+            BranchSnapshot snapshot = live == null ? BranchSnapshot.absent() : BranchDocumentMapper.snapshot(live,
+                inTrash(id(live,"group_id"), liveGroups) ? BranchSnapshot.State.TRASH : BranchSnapshot.State.ACTIVE);
+            if (!select(BranchType.DOCUMENT,row,snapshot) || "DELETE".equals(row.get("operation"))) continue;
+            if (!groups.containsKey(id(row,"group_id"))) continue;
+            Map<String,Object> initial = row;
+            Map<String,Object> derived = derived(row,live != null && id(live,"group_id") != id(row,"group_id"));
+            Map<String,Object> projection = new LinkedHashMap<>(BranchDocumentMapper.project(row,live,initial,derived));
+            projection.put("virtual_path",derived.get("file_name"));
+            documentRows.add(projection);
+        }
+        // Recompute only metadata of pages below changed ancestors; HTML remains in LIVE SQL.
+        List<Integer> affected = groups.values().stream().map(GroupDetails::getGroupId).filter(this::changedAncestor).toList();
+        if (!affected.isEmpty()) {
+            String ids = affected.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+            for (Map<String,Object> live : read(connection,"SELECT "+documentColumns("",true)+" FROM documents WHERE group_id IN ("+ids+")",false)) {
+                int id = id(live,"doc_id");
+                if (usesWork(BranchType.DOCUMENT,Integer.toString(id))) continue;
+                Map<String,Object> calculated = derived(live);
+                calculated.put("virtual_path",calculated.get("file_name"));
+                calculated.remove("data_asc");
+                derivedDocuments.put(id,calculated);
+            }
+        }
+        // Resolve generated navigation links only after the complete page/tree relation exists.
+        metadata();
+        for (GroupDetails group:groups.values()) {
+            if (metadata.containsKey(group.getDefaultDocId())) group.setDefaultDocId(group.getDefaultDocId());
+        }
     }
+
 
     private boolean changedAncestor(int groupId) {
         Set<Integer> visited = new HashSet<>();
@@ -192,14 +210,37 @@ public final class BranchView {
     public DocDetails document(int id, boolean noData) {
         if (id <= 0) return null;
         BranchSql.Fragment source = BranchSql.documentSource("d");
+        boolean editor=context.mode()==BranchContext.Mode.ADMIN;
+        String rawColumns=editor ? BranchFields.DOCUMENT.supported().stream().map(column -> ",raw.`"+column+"` AS branch_raw_"+column).collect(java.util.stream.Collectors.joining()) : "";
         try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(
-            "SELECT "+documentColumns("d",noData)+",u.title AS u_title,u.first_name,u.last_name,u.email,u.photo FROM "+source.sql()+" LEFT JOIN users u ON u.user_id=d.author_id WHERE d.doc_id=?")) {
+            "SELECT "+documentColumns("d",noData)+rawColumns+",u.title AS u_title,u.first_name,u.last_name,u.email,u.photo FROM "+source.sql()+" LEFT JOIN users u ON u.user_id=d.author_id"+(editor?" LEFT JOIN documents raw ON raw.doc_id=d.doc_id":"")+" WHERE d.doc_id=?")) {
             int index = source.bind(statement,1); statement.setInt(index,id);
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next()) return null;
-                DocDetails doc = DocDB.getDocDetails(result,noData); normalizeUrl(doc); return doc;
+                DocDetails doc = DocDB.getDocDetails(result,noData); editorHash(doc,result); normalizeUrl(doc); return doc;
             }
         } catch (SQLException ex) { throw new IllegalStateException("Cannot load branch document",ex); }
+    }
+
+    /** Hash the actual row behind the displayed fields, never a later, independently fetched version. */
+    private void editorHash(DocDetails doc,ResultSet result) throws SQLException {
+        if(context.mode()!=BranchContext.Mode.ADMIN) return;
+        Map<String,Object> row=workRows(BranchType.DOCUMENT).stream()
+            .filter(workRow -> id(workRow,"doc_id")==doc.getDocId()).findFirst().orElse(null);
+        if(row==null) {
+            row=new LinkedHashMap<>();
+            // Direct LIVE columns keep their physical JDBC types; UNION parameters can coerce them.
+            for(String column:BranchFields.DOCUMENT.supported()) row.put(column,BranchStore.readColumn(result,result.findColumn("branch_raw_"+column),column));
+        }
+        DocEditorFields fields=new DocEditorFields();
+        fields.setBranchHash(BranchDocumentMapper.snapshot(row).hash());
+        doc.setEditorFields(fields);
+    }
+
+    String groupHash(int id) {
+        Map<String,Object> row=groupRows.get(id);
+        if(row==null) throw new IllegalStateException("Folder is absent from the displayed tree");
+        return BranchGroupMapper.snapshot(row).hash();
     }
 
     public List<DocDetails> documents() { return documents(false); }

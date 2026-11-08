@@ -816,6 +816,7 @@ public class WebpagesService {
 			boolean loadSubQueries = ProcessItemAction.GETONE.equals(action);
 			def.fromDocDetails(entity, loadSubQueries, addFields);
 			entity.setEditorFields(def);
+            if (entity instanceof DocDetails details) sk.iway.iwcm.branch.BranchEditor.attachHash(details);
         }
         return entity;
     }
@@ -1248,15 +1249,8 @@ public class WebpagesService {
     }
 
 	public static DocDetails getOneItem(long id, int groupId, int historyId, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository, List<NotifyBean> notifyList, HttpServletRequest request) {
-        // The legacy editor loader can read history and initialize LIVE editing state. P03 returns
-        // only the permitted effective detail; creating/saving a branch page is deferred to P04.
-        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
-            if(historyId>0||id<=0) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"History/new editor is unavailable in a publishing branch in P03");
-            DocDetails branchDoc=sk.iway.iwcm.branch.BranchReadService.getDoc((int)id);
-            if(branchDoc==null)throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND);
-            if(!EditorDB.isPageEditable(UsersDB.getCurrentUser(request),branchDoc.getDocId()))throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN);
-            return (DocDetails)processFromEntity(branchDoc,ProcessItemAction.GETONE,request,true);
-        }
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return editorFacade.getDocForEditor((int)id,historyId,groupId);
+
 		if (groupId == Constants.getInt("systemPagesDocsToApprove")) {
             //pre tento pripad mame otocene docid a historyid, ale principialne dostavame v id hodnotu historyid, takze to potrebujeme takto nacitat
             historyId = (int)id;

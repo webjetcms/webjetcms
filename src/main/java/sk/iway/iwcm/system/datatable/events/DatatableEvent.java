@@ -82,6 +82,9 @@ public class DatatableEvent<T> extends ApplicationEvent {
     * Publish this event to Spring ApplicationContext
     */
    public void publishEvent() {
+      // WORK edits must not trigger customer production listeners through the generic CRUD envelope.
+      if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()
+            && (source instanceof sk.iway.iwcm.doc.DocBasic || source instanceof sk.iway.iwcm.doc.GroupDetails)) return;
       WebjetEventPublisher.publishEvent(this);
    }
 

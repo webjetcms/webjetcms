@@ -176,6 +176,14 @@ export class Tools {
      * @static
      */
     static updateUrlQuery(queryKey, queryValue, excludeKeys = []) {
+        if (window.branchScreen?.enabled && window.branchScreen.branchId && typeof queryKey === 'string') {
+            // INCLUDE can contain encoded quotes and equals signs. Keep the frozen iframe context intact.
+            const url = new URL(window.location.href);
+            excludeKeys.forEach(key => url.searchParams.delete(key));
+            if (queryValue != null && queryValue !== '') url.searchParams.set(queryKey, queryValue);
+            window.history.pushState({path: url.href}, '', url.href);
+            return;
+        }
         if (this.empty(window?.history?.pushState, queryKey) || !this.isString(queryKey)) {
             if (this.empty(window?.history?.pushState)) {
                 this.log('warn', '[updateUrlQuery]', 'window.history.pushState', 'Not found.');

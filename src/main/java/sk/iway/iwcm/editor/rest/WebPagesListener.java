@@ -107,7 +107,8 @@ public class WebPagesListener {
 
                 if (docId > 0 && EditorDB.isPageEditable(user, docId)) {
                     //DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
-                    Optional<DocDetails> doc = docRepo.findById(Long.valueOf(docId));
+                    Optional<DocDetails> doc = sk.iway.iwcm.branch.BranchContexts.current().isBranch()
+                        ? Optional.ofNullable(DocDB.getInstance().getBasicDocDetails(docId,false)) : docRepo.findById(Long.valueOf(docId));
                     if (doc.isPresent()) {
                         //ak je zadane docId prepiseme groupId aj keby bolo zadane
                         groupId = doc.get().getGroupId();

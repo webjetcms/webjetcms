@@ -20,14 +20,19 @@ public final class BranchFilter implements Filter {
         if(preview) {response.setHeader("Cache-Control","private, no-store, max-age=0");response.setHeader("X-Robots-Tag","noindex, nofollow, noarchive");}
         if(!Constants.getBoolean("branchesEnabled")) {
             Object selected=request.getSession(false)==null?null:request.getSession(false).getAttribute(BranchSelection.SESSION_KEY);
-            boolean staleBranch=(selected instanceof BranchSelection.Selected value&&value.branchId()>0)
+            boolean frameContext=request.getParameter("branchId")!=null && ("true".equals(request.getParameter("inlineEditorAdmin")) || path.startsWith("/apps/news/admin/") || path.startsWith("/admin/v9/webpages/component/"));
+            boolean staleBranch=(frameContext && !"0".equals(request.getParameter("branchId")))
+                ||(selected instanceof BranchSelection.Selected value&&value.branchId()>0)
                 ||(request.getHeader(BranchSelection.ID_HEADER)!=null&&!"0".equals(request.getHeader(BranchSelection.ID_HEADER)));
             boolean authenticationPath=path.equals("/logoff.do")||path.startsWith("/admin/logoff")||path.startsWith("/admin/logon/");
             if(preview)response.sendError(404);
-            else if(staleBranch && !authenticationPath && (path.startsWith("/admin/rest/")||path.matches("(?i).*\\.(jsp|action|do)$")||path.equals("/XhrFileUpload")||!Set.of("GET","HEAD").contains(request.getMethod())))response.sendError(409,"Branches are disabled; sign in again before editing production");
+            else if(staleBranch && !authenticationPath && (frameContext || path.startsWith("/admin/rest/")||path.matches("(?i).*\\.(jsp|action|do)$")||path.equals("/XhrFileUpload")||!Set.of("GET","HEAD").contains(request.getMethod())))response.sendError(409,"Branches are disabled; sign in again before editing production");
             else chain.doFilter(input,output);return;
         }
-        if(!preview && !path.startsWith("/admin/") && !path.contains("/admin/")) {
+        if (!preview && "true".equals(request.getParameter("inlineEditorAdmin")) && request.getParameter("branchId")!=null) {
+            inlineEditor(request,response,chain,path); return;
+        }
+        if(!preview && !path.startsWith("/admin/") && !path.contains("/admin/") && !path.equals("/components/_common/javascript/page_functions.js.jsp")) {
             Object selection=request.getSession(false)==null?null:request.getSession(false).getAttribute(BranchSelection.SESSION_KEY);
             Identity user=sk.iway.iwcm.users.UsersDB.getCurrentUser(request);
             if(selection instanceof BranchSelection.Selected selected && selected.branchId()>0 && user!=null && user.isAdmin()) {
@@ -41,7 +46,7 @@ public final class BranchFilter implements Filter {
             chain.doFilter(input,output);return;
         }
         // Login and static administration resources remain available even after a package closes.
-        boolean resource=Set.of("GET","HEAD").contains(request.getMethod()) && (path.startsWith("/admin/v9/dist/")||path.startsWith("/admin/skins/")||path.startsWith("/admin/scripts/")||path.startsWith("/admin/css/")||path.startsWith("/admin/images/"))
+        boolean resource=Set.of("GET","HEAD").contains(request.getMethod()) && (path.startsWith("/admin/v9/dist/")||path.startsWith("/admin/skins/")||path.startsWith("/admin/scripts/")||path.startsWith("/admin/css/")||path.startsWith("/admin/images/")||path.startsWith("/admin/webpages/page-builder/")||path.startsWith("/components/_common/admin/"))
             && path.matches("(?i).*\\.(css|js|png|jpg|gif|svg|woff2?|ttf|ico|map)$");
         if(!preview && (resource || path.startsWith("/admin/logon/") || path.startsWith("/admin/logoff"))) {chain.doFilter(input,output);return;}
         RequestBean bean=SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -70,9 +75,12 @@ public final class BranchFilter implements Filter {
                 context=new BranchContext(id,domain,user.getUserId(),BranchContext.Mode.PREVIEW);
             } else {
                 String domain=access.requireDomain(request,user);
-                boolean management=path.startsWith("/admin/rest/branches")||path.equals("/admin/rest/refresher");
+                boolean management=(path.equals("/admin/rest/branches")||path.equals("/admin/rest/branches/context")||path.matches("/admin/rest/branches/[0-9]+/preview-link"))||path.equals("/admin/rest/refresher");
                 context=management?BranchContext.live(domain,user.getUserId()):BranchSelection.selected(request,user,domain);
                 String explicit=request.getHeader(BranchSelection.ID_HEADER),expectedDomain=request.getHeader(BranchSelection.DOMAIN_HEADER);
+                if (explicit==null && request.getParameter("branchId")!=null) {
+                    explicit=request.getParameter("branchId"); expectedDomain=request.getParameter("branchDomain");
+                }
                 if(!management && (explicit!=null || expectedDomain!=null)) {
                     try {BranchContexts.requireSameSelection(context,Long.parseLong(explicit),expectedDomain);}
                     catch(RuntimeException ex) {response.sendError(409,"Branch context changed; reload the screen");return;}
@@ -82,8 +90,11 @@ public final class BranchFilter implements Filter {
                 if(context.isBranch()) {
                     access.requireUser(request);
                     boolean readPost="POST".equals(request.getMethod()) && Set.of("/admin/rest/groups/tree/tree","/admin/rest/news/news-list/tree","/admin/rest/news/news-list/convertIdsToNamePair").contains(path);
-                    if(!Set.of("GET","HEAD").contains(request.getMethod())&&!readPost) {response.sendError(409,"Content editing is not supported in this preview");return;}
-                    if(!readOnlyAdminPath(path)) {response.sendError(409,"This function is unavailable in a publishing branch; select production");return;}
+                    if(!Set.of("GET","HEAD").contains(request.getMethod())&&!readPost&&!supportedPost(path)) {response.sendError(409,"This write is unavailable in a publishing branch");return;}
+                    if (path.equals("/admin/scripts/combine.jsp") && !Set.of("adminStandardJs","adminStandardCss","adminStandardCssWj9","adminJqueryJs","adminJqueryJs2","adminInlineJs","adminInlineCss").contains(java.util.Objects.toString(request.getParameter("set"),""))) {
+                        response.sendError(409,"This script set is unavailable in a publishing branch"); return;
+                    }
+                    if(!isSupportedBranchAdminPath(path)) {response.sendError(409,"This function is unavailable in a publishing branch; select production");return;}
                 }
             }
             try(BranchContexts.Scope ignored=BranchContexts.open(request,context)) {
@@ -112,10 +123,55 @@ public final class BranchFilter implements Filter {
         }
     }
 
-    private static boolean readOnlyAdminPath(String path) {
+    /** The ordinary Page Builder frame reads WORK; it never falls through to a production frame. */
+    private void inlineEditor(HttpServletRequest request,HttpServletResponse response,FilterChain chain,String path) throws IOException,ServletException {
+        RequestBean bean=SetCharacterEncodingFilter.getCurrentRequestBean();
+        String oldDomain=bean==null?null:bean.getDomain();
+        Object oldPreview=request.getAttribute("isPreview");
+        response.setHeader("Cache-Control","private, no-store, max-age=0");
+        response.setHeader("X-Robots-Tag","noindex, nofollow, noarchive");
+        try {
+            Identity user=access.requireUser(request);
+            String domain=access.requireDomain(request,user);
+            BranchContext selected=BranchSelection.selected(request,user,domain);
+            try { BranchContexts.requireSameSelection(selected,Long.parseLong(request.getParameter("branchId")),request.getParameter("branchDomain")); }
+            catch(RuntimeException ex) { response.sendError(409,"Branch context changed; reload the editor"); return; }
+            if (!selected.isBranch() || !Set.of("GET","HEAD").contains(request.getMethod()) || !BranchPreviewUrls.allowed(path)) { response.sendError(409); return; }
+            if (request.getParameter("historyid")!=null || request.getParameter("historyId")!=null || request.getParameter("forward")!=null) { response.sendError(409); return; }
+            try(BranchContexts.Scope ignored=BranchContexts.open(request,selected)) {
+                if(bean!=null) bean.setDomain(domain);
+                var doc=BranchView.current().document(BranchView.current().docIdFromUrl(path),false);
+                if(doc==null) {response.sendError(404);return;}
+                if(!sk.iway.iwcm.editor.service.EditorService.hasPagePermission(user,doc)) {response.sendError(403);return;}
+                request.setAttribute("isPreview",Boolean.TRUE);
+                chain.doFilter(request,response);
+            }
+        } catch(ResponseStatusException ex) { response.sendError(ex.getStatusCode().value(),ex.getReason()); }
+        finally {
+            if(bean!=null) bean.setDomain(oldDomain);
+            if(oldPreview==null) request.removeAttribute("isPreview");else request.setAttribute("isPreview",oldPreview);
+        }
+    }
+
+    private static boolean supportedPost(String path) {
+        return Set.of("/admin/rest/web-pages/editor","/admin/rest/groups/editor","/admin/rest/news/news-list/editor",
+            "/admin/v9/webpages/component/","/admin/rest/components","/admin/rest/branch-content/revert",
+            "/admin/rest/web-pages/deletion-preview","/admin/rest/groups/deletion-preview","/admin/rest/web-pages/http-headers",
+            "/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp").contains(path);
+    }
+
+    private static boolean isSupportedBranchAdminPath(String path) {
         return path.startsWith("/admin/v9/webpages/")||path.startsWith("/apps/news/admin/")
             ||path.startsWith("/admin/rest/web-pages")||path.startsWith("/admin/rest/groups/tree")
-            ||path.startsWith("/admin/rest/groups/parents/")
+            ||path.startsWith("/admin/rest/groups/parents/")||path.equals("/admin/rest/groups")||path.equals("/admin/rest/groups/editor")||path.matches("/admin/rest/groups/(-?[0-9]+|all|search/findByColumns)")||path.equals("/admin/rest/groups/deletion-preview")
+            ||path.startsWith("/admin/rest/branch-content")||path.equals("/admin/rest/components")
+            ||path.equals("/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp")
+            ||path.equals("/admin/skins/webjet8/ckeditor/config.jsp")||path.equals("/admin/skins/webjet8/ckeditor/editor_magicline.jsp")
+            ||path.equals("/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp")
+            ||path.equals("/admin/scripts/combine.jsp")||path.equals("/admin/scripts/common.jsp")
+            ||path.equals("/components/_common/javascript/page_functions.js.jsp")
+            ||path.equals("/admin/webpages/webpages.js.jsp")||path.equals("/admin/webpages/page-builder/scripts/ninja-page-builder.js.jsp")
+            ||path.equals("/admin/iframe_blank.jsp")||path.equals("/admin/rest/forms-list/regexps")
             ||path.startsWith("/admin/rest/news")||path.startsWith("/admin/rest/branches")
             ||path.equals("/admin/v9/")||path.startsWith("/admin/layout/");
     }

@@ -4120,6 +4120,8 @@ public class DocDB extends DB
 	 * @return
 	 */
 	public static int getMaxSortPriorityInGroup(int groupId) {
+        sk.iway.iwcm.branch.BranchView branch=sk.iway.iwcm.branch.BranchView.current();
+        if (branch!=null) return branch.documents(true).stream().filter(doc -> doc.getGroupId()==groupId).mapToInt(DocDetails::getSortPriority).max().orElse(0);
 		int maxP = 0;
 		Connection db_conn = null;
 		PreparedStatement ps = null;

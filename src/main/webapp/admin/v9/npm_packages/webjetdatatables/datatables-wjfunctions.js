@@ -87,6 +87,8 @@ export function getOptionsTableImport(DATA) {
  * @param {*} EDITOR
  */
 export function bindEditorLocking(EDITOR) {
+    // The legacy presence key is shared with production and has no branch identity.
+    if (window.branchScreen?.enabled && window.branchScreen.branchId > 0) return;
     EDITOR.lockingEntityId = -1;
     EDITOR.lockingCallInterval = null;
 

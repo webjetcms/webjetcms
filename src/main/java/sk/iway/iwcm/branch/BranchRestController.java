@@ -92,8 +92,9 @@ public class BranchRestController {
     }
 
     private ContextInfo contextInfo(BranchContext context) {
-        return context.isBranch()?new ContextInfo(context.branchId(),context.domainName(),BranchSelection.requireBranch(context.branchId(),context.domainName()).getName(),false)
-            :new ContextInfo(0,context.domainName(),"Produkcia",false);
+        if (!context.isBranch()) return new ContextInfo(0,context.domainName(),"Produkcia",false);
+        BranchEntity branch=BranchSelection.requireBranch(context.branchId(),context.domainName());
+        return new ContextInfo(context.branchId(),context.domainName(),branch.getName(),"DRAFT".equals(branch.getState()));
     }
     public record Selection(long branchId,String expectedDomainName) { }
     public record ContextInfo(long branchId,String domainName,String name,boolean editable) { }

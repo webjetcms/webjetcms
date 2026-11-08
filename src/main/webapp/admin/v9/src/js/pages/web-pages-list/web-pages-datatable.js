@@ -84,6 +84,7 @@ export class WebPagesDatatable {
         this.#updateColumns(this.options.columns);
         this.webpagesDatatable = window.WJ.DataTable(this.options);
         this.#bindAll();
+        window.applyBranchEditor?.(this.webpagesDatatable);
 
         //spravanie tlacidla nahlad
         let preview = new EditorPreview({

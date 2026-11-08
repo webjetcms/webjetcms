@@ -29,43 +29,47 @@ public final class BranchStore {
     /** Reserves the native LIVE identity and persists WORK before returning it. */
     Map<String, Object> create(BranchContext context, BranchType type, Map<String, ?> values) throws SQLException {
         if (type == BranchType.FILE) throw new IllegalArgumentException("Use putFile for file identities");
-        return write(context, connection -> {
-            int id = type == BranchType.MEDIA ? Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media")) : reserveNative(connection, type);
-            Map<String, Object> row = new LinkedHashMap<>(values);
-            row.put(type.idColumn(), id);
-            if (type == BranchType.MEDIA && !"documents".equals(row.get("media_fk_table_name")))
-                throw new IllegalArgumentException("Only document-owned media are supported");
-            BranchSnapshot snapshot = snapshot(type, row);
-            insertWork(connection, context, type, row, BranchSnapshot.absent(), snapshot, "UPSERT");
-            return readWork(connection, context.branchId(), type, id).orElseThrow();
-        });
+        return write(context, connection -> create(connection, context, type, values));
+    }
+
+    Map<String,Object> create(Connection connection, BranchContext context, BranchType type, Map<String,?> values) throws SQLException {
+        int id = type == BranchType.MEDIA ? Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media")) : reserveNative(connection, type);
+        Map<String, Object> row = new LinkedHashMap<>(values);
+        row.put(type.idColumn(), id);
+        if (type == BranchType.MEDIA && !"documents".equals(row.get("media_fk_table_name")))
+            throw new IllegalArgumentException("Only document-owned media are supported");
+        BranchSnapshot snapshot = snapshot(type, row);
+        insertWork(connection, context, type, row, BranchSnapshot.absent(), snapshot, "UPSERT");
+        return readWork(connection, context.branchId(), type, id).orElseThrow();
     }
 
     /** Captures BASE once, rejects a stale first edit, and preserves BASE on subsequent edits. */
     Map<String, Object> put(BranchContext context, BranchType type, int id, Map<String, ?> values,
             String expectedHash, boolean delete) throws SQLException {
         if (type == BranchType.FILE || id <= 0) throw new IllegalArgumentException("Invalid content identity");
-        return write(context, connection -> {
-            Optional<Map<String, Object>> existing = readWork(connection, context.branchId(), type, id);
-            BranchSnapshot base;
-            if (existing.isPresent()) {
-                Map<String, Object> old = existing.get();
-                BranchSnapshot oldWork = "DELETE".equals(old.get("operation")) ? deletedSnapshot(type, old) : snapshot(type, old);
-                if (!oldWork.hash().equals(expectedHash)) throw new IllegalStateException("WORK changed; reload the object");
-                base = BranchSnapshot.fromJson((String)old.get("base_snapshot"));
-            } else {
-                Map<String, Object> live = readLive(connection, type, id).orElseThrow(() -> new IllegalStateException("LIVE object is absent"));
-                base = snapshot(type, live);
-                if (!base.hash().equals(expectedHash)) throw new IllegalStateException("LIVE changed; reload the object");
-            }
-            Map<String, Object> row = new LinkedHashMap<>(values);
-            row.put(type.idColumn(), id);
-            if (delete && base.state() == BranchSnapshot.State.ABSENT)
-                throw new IllegalArgumentException("Remove a new working item instead of storing a DELETE over ABSENT");
-            BranchSnapshot work = delete ? deletedSnapshot(type,row) : snapshot(type,row);
-            insertWork(connection, context, type, row, base, work, delete ? "DELETE" : "UPSERT");
-            return readWork(connection,context.branchId(),type,id).orElseThrow();
-        });
+        return write(context, connection -> put(connection, context, type, id, values, expectedHash, delete));
+    }
+
+    Map<String,Object> put(Connection connection, BranchContext context, BranchType type, int id, Map<String,?> values, String expectedHash, boolean delete) throws SQLException {
+        Optional<Map<String, Object>> existing = readWork(connection, context.branchId(), type, id);
+        BranchSnapshot base;
+        if (existing.isPresent()) {
+            Map<String, Object> old = existing.get();
+            BranchSnapshot oldWork = "DELETE".equals(old.get("operation")) ? deletedSnapshot(type, old) : snapshot(type, old);
+            if (!oldWork.hash().equals(expectedHash)) throw new IllegalStateException("WORK changed; reload the object");
+            base = BranchSnapshot.fromJson((String)old.get("base_snapshot"));
+        } else {
+            Map<String, Object> live = readLive(connection, type, id).orElseThrow(() -> new IllegalStateException("LIVE object is absent"));
+            base = snapshot(type, live);
+            if (!base.hash().equals(expectedHash)) throw new IllegalStateException("LIVE changed; reload the object");
+        }
+        Map<String, Object> row = new LinkedHashMap<>(values);
+        row.put(type.idColumn(), id);
+        if (delete && base.state() == BranchSnapshot.State.ABSENT)
+            throw new IllegalArgumentException("Remove a new working item instead of storing a DELETE over ABSENT");
+        BranchSnapshot work = delete ? deletedSnapshot(type,row) : snapshot(type,row);
+        insertWork(connection, context, type, row, base, work, delete ? "DELETE" : "UPSERT");
+        return readWork(connection,context.branchId(),type,id).orElseThrow();
     }
 
     /** Persists fixture/service file metadata; P05 adds staging bytes and editor authorization. */
@@ -102,7 +106,15 @@ public final class BranchStore {
         });
     }
 
-    private <T> T write(BranchContext context, Work<T> work) throws SQLException {
+    void remove(Connection connection, BranchContext context, BranchType type, int id, String expectedHash) throws SQLException {
+        Map<String,Object> row = readWork(connection,context.branchId(),type,id).orElseThrow(() -> new IllegalStateException("No working change"));
+        if (!change(type,row).work().hash().equals(expectedHash)) throw new IllegalStateException("WORK changed; reload the object");
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM `"+type.workTable()+"` WHERE branch_id=? AND "+type.idColumn()+"=?")) {
+            statement.setLong(1,context.branchId()); statement.setInt(2,id); statement.executeUpdate();
+        }
+    }
+
+    <T> T write(BranchContext context, Work<T> work) throws SQLException {
         if (context.mode() != BranchContext.Mode.ADMIN || context.branchId() <= 0 || context.userId() <= 0)
             throw new IllegalArgumentException("An explicit ADMIN branch context is required");
         try (Connection connection = connections.open()) {
@@ -135,7 +147,7 @@ public final class BranchStore {
         }
     }
 
-    @FunctionalInterface private interface Work<T> { T apply(Connection connection) throws SQLException; }
+    @FunctionalInterface interface Work<T> { T apply(Connection connection) throws SQLException; }
 
     static int reserveNative(Connection connection, BranchType type) throws SQLException {
         if (connection.getAutoCommit()) throw new SQLException("Reservation requires a transaction");
@@ -225,7 +237,10 @@ public final class BranchStore {
 
     /** MariaDB TINYINT(1) enum values such as -1 must not become Boolean true. */
     static Object readColumn(ResultSet result,int index)throws SQLException {
-        String name=result.getMetaData().getColumnName(index);
+        return readColumn(result,index,result.getMetaData().getColumnName(index));
+    }
+
+    static Object readColumn(ResultSet result,int index,String name)throws SQLException {
         if(java.util.Set.of("menu_type","logged_menu_type","follow_links","show_in_navbar","show_in_sitemap","logged_show_in_navbar","logged_show_in_sitemap").contains(name)) {
             int value=result.getInt(index);return result.wasNull()?null:value;
         }

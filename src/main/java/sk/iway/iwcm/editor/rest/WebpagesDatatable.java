@@ -77,6 +77,16 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     }
 
     @Override
+    public org.springframework.http.ResponseEntity<sk.iway.iwcm.system.datatable.DatatableResponse<DocDetails>> handleEditor(
+            HttpServletRequest request, @org.springframework.web.bind.annotation.RequestBody sk.iway.iwcm.system.datatable.DatatableRequest<Long,DocDetails> input) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()
+                && (!java.util.Set.of("create","edit","remove").contains(java.util.Objects.toString(input.getAction(),""))
+                    || input.getImportedColumns()!=null || input.getImportMode()!=null || input.getUpdateByColumn()!=null || input.isDeleteOldData()))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Imports and bulk operations are unavailable in a publishing branch");
+        return super.handleEditor(request,input);
+    }
+
+    @Override
     public Page<DocDetails> getAllItems(Pageable pageable) {
         GetAllItemsDocOptions options = getDefaultOptions(pageable, true);
 
@@ -237,6 +247,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public void afterSave(DocDetails entity, DocDetails saved) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return;
         setPreviewObject(saved, getRequest());
     }
 

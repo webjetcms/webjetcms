@@ -12,7 +12,7 @@
 - Doplnenie N4: povinný `menu_ul_li.jsp`/`MenuULLI` podľa [03b](03b-menu.md), vrátane editoru parametrov `MenuApp`, rekurzie, aktívnej cesty, perex/HTML, premenných a cache. T03 je rozpracované na M01–M11 v P01/P03/P04/P06/P08. Overené zdrojové integračné body a existujúce testy; bez runtime skúšok.
 - Doplnenie N5: záväzná [priorita jednoduchého čitateľného POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc). Konkrétne služby bez povinného handler/DI registra, bez hypotetických frameworkov a zriedkavých prevádzkových scenárov. Prvé overenie na jednom reálnom DB profile/inštancii; ďalšie profily až pred deklarovaním podpory. Ručný POC míľnik po P06, dohodnuté plánovanie zostáva P07. Obnova koša sa runtime overí v P06. Izolácia, ID, oprávnenia a náhľad sa nemenia.
 - Návod na spustenie: [orchestrácia](ORCHESTRACIA.md) doplnená o modely/roly, etapový postup a pokračovanie po prerušení. Odporúčanie GPT-6.1 Sol / High nemení aktuálne nastavenie klienta; skutočné modely zaznamená implementačný agent. Hlavný agent môže použiť najviac dvoch pomocníkov naraz, bez vlastného agentového frameworku. Žiadna etapa sa týmto doplnením nespustila.
-- Implementácia: P01/P02 sú uzavreté v nižšie uvedenom rozsahu. Používateľ 4. novembra zadal iba P03 a následne výslovne požiadal o bezpečné prerušenie; po pokyne pokračovať sa P03 obnovilo a dokončilo na uvedenom POC profile. P04–P08 nie sú zadané.
+- Implementácia: P01–P04 sú uzavreté v nižšie uvedenom rozsahu na zvolenom POC profile. P04 používateľ samostatne zadal 8. novembra; nadväzuje na commitnutý P03 `849e7adb3`. P05–P08 nie sú zadané a nezačali sa.
 - P01: **DONE ako technický experiment na jednorazovom InnoDB profile**. Dokázané ID/reštart, SQL, core izolácia a minimálny reálny JSP/thumbnail gateway; zvlášť LIVE browser regresia pracovného webu. Nejde o hotovú editáciu/náhľad z P02/P03. Pracovná DB s MyISAM zatiaľ nie je vhodná na rezervácie.
 - Pred P01 prešlo dokumentačné overenie pôvodných 18 Markdown dokumentov. Aktuálne výsledky, skúšobné Java testy a medzery overenia sú evidované nižšie a v [P01-vysledky.md](P01-vysledky.md). Zmeny zostávajú bez commitov.
 
@@ -23,7 +23,7 @@
 | P01 | DONE | ID/SQL/core izolácia a minimálny JSP/thumbnail gateway vrátane reálneho admin-host prekliku prešli na uvedenom InnoDB profile. |
 | P02 | DONE | Päť tabuliek, stabilné ID vrátane médií/reštartu, explicitné mapovanie/B-L-W, request kontext a create/list API; flag-off administrácia overená. |
 | P03 | DONE | Účinné čítanie a reálny preklikateľný náhľad vrátane N01–N08/M01–M09; po pokračovaní 85/85 Java a 3/3 browser na izolovanom MariaDB/InnoDB profile. |
-| P04 | NOT_STARTED | — |
+| P04 | DONE | WORK CRUD/revert cez bežný editor, stabilné ID, News/Menu iframe a reálny render; 103/103 Java, 5/5 P04 UI + 3/3 P03 regresia, obsahová izolácia prešla na profile 33316. |
 | P05 | NOT_STARTED | — |
 | P06 | NOT_STARTED | — |
 | P07 | NOT_STARTED | — |
@@ -32,6 +32,20 @@
 Prípustné evidenčné stavy krokov: `NOT_STARTED`, `IN_PROGRESS`, `PARTIAL`, `DONE`, `BLOCKED`. Ide iba o stav práce agentov, nie o databázové stavy publikačnej vetvy. Pri BLOCKED sa zapíše konkrétna prekážka a čo ju odstráni.
 
 ## Výsledky krokov
+
+### P04 — DONE (8. november 2026, iba zvolený POC profil)
+
+- **Vetva/východisko:** `feature/58858-publishing-packages`, `849e7adb3`, vstupný strom čistý. Zmeny zostávajú necommitnuté, bez STAGE a bez produkčného nasadenia. P05–P08 NOT_STARTED.
+- **Výsledok:** bežný editor a formulár priečinka zapisujú autorizované WORK create/edit/rename/move/delete/revert. Nové objekty majú rezervované konečné ID; presun/premenovanie materializuje viditeľné závislosti. Default stránky sa upravia v tej istej transakcii. Hash zobrazenej verzie je aj v údajoch stromu pre mazanie bez otvorenia formulára.
+- **Hranice zápisu:** práva pôvodného/cieľového umiestnenia, doména, cykly, URL kolízie, referencie a defaulty sa kontrolujú serverovo. System/multigroup obsah je na čítanie s dôvodom. Import/bulk, starý stromový zápis, rekurzívne nastavenia, plánovanie, história, atribúty, médiá/upload a nepodporované app editory sú blokované. LIVE ukladanie a jeho pôvodná normalizácia zostávajú zachované; WORK nevolá produkčné udalosti, históriu ani fulltext hooky.
+- **Povinné UI:** novinka s dostupnosťou/perexom/existujúcou kategóriou sa vytvorila cez editor, prešla filtrom skutočných Noviniek a v LIVE detaile má 404. Perex sa uložil aj z vnoreného NewsApp editora. Sken WORK INCLUDE objavil nový koreň. MenuApp vybral nový pracovný priečinok, zachoval ho po SAVE/reopen INCLUDE a reálne MenuULLI reagovalo na pridanie, presun stránky, premenovanie/presun priečinka a zmazanie oboch. Prekliky a zaniknuté URL overené. Starý formulár aj iframe po prepnutí kontextu odmietnuté; formulár zachoval text.
+- **Overenie:** spoločná Java sada **103/103**, 0 chýb/preskočení; P04 CodeceptJS/Playwright **5/5**, pôvodná P03 browser regresia **3/3**. Frontend build prešiel (2 existujúce size warnings). Overené aj PB HTML a nevykonanie INCLUDE počas WORK save, stale LIVE/WORK hash, práva, cudzia doména, System/multigroup, defaulty a vrátenie zmazaného podstromu.
+- **Izolácia:** integračné fingerprinty ôsmich LIVE tabuliek bez zmeny; UI dump siedmich obsahových/vedľajších tabuliek pred/po je bajtovo zhodný. SHA-256 `45e844bffa24a7fc84b23896c8de6d8633d16c2cb4c1c53c427e2221e3d382c3`. Nezmenilo sa 13 existujúcich Lucene súborov. Pracovná novinka #1940896 a priečinok #1940781 nemajú LIVE riadok.
+- **Profil:** MariaDB 12.2.2/InnoDB, Connector/J 3.5.10, Java 17.0.18, jedna inštancia `127.0.0.1:33316/webjet_p01`, datadir `/tmp/webjet-p03-review-db/data`, šablóna `aceintegration/jet/blank.jsp`. Oba datasources `poolman-local-p01.xml` smerujú na 33316. Pracovná DB 3306 a jej profil sa nemenili; zdrojové flagy predvolene vypnuté.
+- **Dôkazy/odovzdanie:** [P04-vysledky.md](P04-vysledky.md) obsahuje testy, API, obmedzenia, štart/stop a konkrétne URL/postupy oboch scenárov. Reporty `build/test-results/p04/{java-final,browser-final}/`, dumpy/indexové mapy/profil v `build/test-results/p04/`. Server 8086/8446 a izolovaná DB zostávajú spustené na ručné review; demo vetva **autotest P04 redakcia (#481)**.
+- **Neoverené:** plný vizuálny PageBuilder tok na samostatnej PB šablóne, iné DB/topológie/Redis deployment, úplné legacy produkčné workflow. Časti T02 médiá/upload patria P05, vykonanie merge T08/T13 patrí P06. Tieto časti sa nevykazujú ako hotové. POC rozsah P04 je splnený; po tomto kroku sa končí.
+- **Modely/kontrola:** jeden agent bez delegovania, presný identifikátor modelu/reasoning v klientovi neoverený. Lokálny diff skontrolovaný; samostatná nezávislá kontrola druhým agentom/človekom sa nevykazuje.
+- **Doplnenie po review — mapovanie editora:** `BranchEditorRows` číta podporované stĺpce dynamicky podľa `BranchFields`, zdedených JPA `@Column` a pomenovacej konvencie. Ostávajú iba legacy aliasy/perex/dátum. Chýbajúce alebo nejednoznačné mapovanie zlyhá; druhý ručný zoznam polí bol odstránený. Cielená regresia **18/18** na DB 33316 a opakovaný P04 UI beh **5/5**; LIVE dump nezmenený. Dôkazy `build/test-results/p04/rows-refactor/`. Pôvodný staged obsah bol zachovaný.
 
 ### P03 — DONE (4. november 2026, iba zvolený POC profil)
 

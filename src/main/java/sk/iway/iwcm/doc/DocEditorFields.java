@@ -30,6 +30,13 @@ import sk.iway.spirit.model.Media;
 @Setter
 public class DocEditorFields extends BaseEditorFields {
 
+    /** Hash of the content actually displayed, carried back unchanged on save/delete. */
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
+    private String branchHash;
+
+    private String branchReadOnlyReason;
+
+
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "webpages.icons.title",
         hiddenEditor = true, hidden = false, visible = true, sortAfter = "id", className = "allow-html", orderable = false
     )
@@ -217,6 +224,7 @@ public class DocEditorFields extends BaseEditorFields {
         //pridaj odkaz na zobrazenie stranky
         Prop prop = Prop.getInstance();
         String link = "/showdoc.do?docid="+doc.getDocId();
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) link = sk.iway.iwcm.branch.BranchPreviewUrls.PREFIX+sk.iway.iwcm.branch.BranchContexts.current().branchId()+doc.getVirtualPath();
         if (doc instanceof DocHistory) {
             //v history je otocene docid a historyid
             link = "/showdoc.do?docid="+doc.getId()+"&historyId="+doc.getDocId();
@@ -230,7 +238,7 @@ public class DocEditorFields extends BaseEditorFields {
         permisions = splitPermsEmails.get(0);
         emails = splitPermsEmails.get(1);
 
-        if (loadSubQueries) {
+        if (loadSubQueries && !sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
             List<Integer> slaves = MultigroupMappingDB.getSlaveDocIds(doc.getDocId());
             if (slaves != null && slaves.size()>0) {
                 groupCopyDetails = new ArrayList<>();
@@ -248,10 +256,9 @@ public class DocEditorFields extends BaseEditorFields {
             DocNoteBean note = DocNoteDB.getInstance().getDocNote(doc.getDocId(), -1);
             if (note != null && Tools.isNotEmpty(note.getNote())) redactorNote = note.getNote();
 
-            if (doc instanceof DocDetails) {
-                styleComboList = EditorService.getCssListJson(doc);
-            }
         }
+
+        if (loadSubQueries && doc instanceof DocDetails) styleComboList = EditorService.getCssListJson(doc);
 
         if(addFields == true) {
             //definicia volnych poli
@@ -349,6 +356,10 @@ public class DocEditorFields extends BaseEditorFields {
 
             if (Tools.isNotEmpty(editingModeLink)) {
                 editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, "inlineEditorAdmin", "true");
+                if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+                    editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink,"branchId",String.valueOf(sk.iway.iwcm.branch.BranchContexts.current().branchId()));
+                    editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink,"branchDomain",sk.iway.iwcm.branch.BranchContexts.current().domainName());
+                }
                 if (doc instanceof DocDetails) {
                     DocDetails docDocDetails = (DocDetails)doc;
                     if (docDocDetails.getHistoryId()>0) {

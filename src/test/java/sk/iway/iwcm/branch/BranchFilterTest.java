@@ -42,6 +42,44 @@ class BranchFilterTest {
     }
     @AfterEach void cleanBoundary(){selection.close();groups.close();constants.close();SetCharacterEncodingFilter.setCurrentRequestBean(null);}
 
+    @Test void permitsOnlyOrdinaryEditorPostsAndRejectsLegacyImportActions() throws Exception {
+        selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);
+        request.setMethod("POST"); request.addHeader(BranchSelection.ID_HEADER,"42"); request.addHeader(BranchSelection.DOMAIN_HEADER,DOMAIN);
+        for(String path:List.of("/admin/rest/web-pages/editor","/admin/rest/groups/editor","/admin/rest/news/news-list/editor")) {
+            request.setRequestURI(path); response=new MockHttpServletResponse();
+            filter.doFilter(request,response,(in,out)->assertEquals(branch,BranchContexts.current())); assertEquals(200,response.getStatus());
+        }
+        for(String path:List.of("/admin/rest/web-pages/add","/admin/rest/web-pages/action/saveAsAbTest","/admin/rest/groups/tree/save","/admin/rest/media/editor","/admin/rest/groups/row-reorder")) {
+            request.setRequestURI(path); response=new MockHttpServletResponse();
+            filter.doFilter(request,response,(in,out)->fail("Unsupported write dispatched: "+path)); assertEquals(409,response.getStatus());
+        }
+    }
+
+    @Test void nestedIframeBootstrapChecksBothFrozenContextValues() throws Exception {
+        selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);
+        request.setRequestURI("/apps/news/admin/"); request.setParameter("branchId","42"); request.setParameter("branchDomain",DOMAIN);
+        filter.doFilter(request,response,(in,out)->assertEquals(branch,BranchContexts.current())); assertEquals(200,response.getStatus());
+        response=new MockHttpServletResponse(); request.setParameter("branchDomain","b.example");
+        filter.doFilter(request,response,(in,out)->fail("Foreign iframe domain dispatched")); assertEquals(409,response.getStatus());
+        response=new MockHttpServletResponse(); request.setParameter("branchDomain",DOMAIN);
+        selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(BranchContext.live(DOMAIN,1));
+        filter.doFilter(request,response,(in,out)->fail("Stale branch iframe fell back to LIVE")); assertEquals(409,response.getStatus());
+    }
+
+    @Test void inlineEditorFrameReadsWorkAndNeverFallsThroughAfterSelectionChanges() throws Exception {
+        selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);
+        request.setRequestURI("/p04-frame.html"); request.setParameter("inlineEditorAdmin","true"); request.setParameter("branchId","42"); request.setParameter("branchDomain",DOMAIN);
+        var view=mock(BranchView.class); var doc=new sk.iway.iwcm.doc.DocDetails(); doc.setDocId(123);
+        try(var views=mockStatic(BranchView.class);var editor=mockStatic(sk.iway.iwcm.editor.service.EditorService.class)) {
+            views.when(BranchView::current).thenReturn(view); when(view.docIdFromUrl("/p04-frame.html")).thenReturn(123); when(view.document(123,false)).thenReturn(doc);
+            editor.when(()->sk.iway.iwcm.editor.service.EditorService.hasPagePermission(admin,doc)).thenReturn(true);
+            filter.doFilter(request,response,(in,out)->{assertEquals(branch,BranchContexts.current());assertEquals(Boolean.TRUE,request.getAttribute("isPreview"));});
+            assertEquals(200,response.getStatus()); assertTrue(response.getHeader("Cache-Control").contains("no-store")); assertEquals("old.example",bean.getDomain());
+            response=new MockHttpServletResponse();selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(BranchContext.live(DOMAIN,1));
+            filter.doFilter(request,response,(in,out)->fail("Old editor frame fell back to production")); assertEquals(409,response.getStatus());
+        }
+    }
+
     @Test void flagOffAndGuestPreviewArePrivateAndNeverDispatch()throws Exception {
         request.setRequestURI("/__branch-preview/42/images/a.png");constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(false);
         filter.doFilter(request,response,(in,out)->fail("Disabled preview dispatched"));assertEquals(404,response.getStatus());assertTrue(response.getHeader("Cache-Control").contains("no-store"));
