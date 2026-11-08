@@ -279,6 +279,12 @@ public class AiChatStore {
 
     public void finish(Scope scope, String threadId, String messageId, String text, String status, int tokens,
         String category, Integer providerStatus) {
+        finish(scope, threadId, messageId, text, status, tokens, category, providerStatus, null);
+    }
+
+    /** Persists turn completion together with the provider's optional retry recommendation. */
+    public void finish(Scope scope, String threadId, String messageId, String text, String status, int tokens,
+        String category, Integer providerStatus, Boolean retryable) {
         update(threadId, scope, false, document -> {
             if (document == null) return null;
             AiChatThread thread = document.getThread();
@@ -290,6 +296,7 @@ public class AiChatStore {
             message.setTotalTokens(tokens);
             message.setErrorCategory(stopped ? "CANCELLED" : category);
             message.setProviderStatus(providerStatus);
+            message.setRetryable(retryable);
             message.setUpdated(new Date());
             if (!stopped && "complete".equals(status)) thread.setLastResponseId(message.getProviderResponseId());
             if (!stopped && "INVALID_CONTINUATION".equals(category)) thread.setStatus("EXPIRED");

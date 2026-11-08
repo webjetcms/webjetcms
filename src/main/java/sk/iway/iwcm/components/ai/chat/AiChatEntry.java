@@ -22,6 +22,7 @@ public class AiChatEntry {
     private int totalTokens;
     private String errorCategory;
     private Integer providerStatus;
+    private Boolean retryable;
     private String providerResponseId;
     private boolean storageUnknown;
     private boolean providerDeleted;

@@ -59,7 +59,7 @@ public class AiChatService implements DisposableBean {
         Date created, Date updated, String status, long revision, boolean busy, boolean canContinue,
         String unavailableReason, String deletionError, AiChatContext context) { }
     public record MessageView(String id, String turnId, String requestId, String role, String text, String status,
-        Date created, int totalTokens, String errorCategory, Integer providerStatusCode, List<AttachmentView> attachments) { }
+        Date created, int totalTokens, String errorCategory, Integer providerStatusCode, Boolean retryable, List<AttachmentView> attachments) { }
     public record AttachmentView(String id, String name, String mediaType, long size, String url) { }
     public record HistoryPage(List<ThreadView> items, boolean hasMore) { }
     public record Detail(ThreadView thread, List<MessageView> messages) { }
@@ -145,6 +145,7 @@ public class AiChatService implements DisposableBean {
         String status = "error";
         String category = "UNKNOWN";
         Integer providerStatus = null;
+        Boolean retryable = null;
         AiRequestLifecycle lifecycle = AiRequestLifecycle.unknown();
         boolean submitted = false;
         var renewal = heartbeat.scheduleWithFixedDelay(() -> {
@@ -214,9 +215,10 @@ public class AiChatService implements DisposableBean {
         } catch (AiProviderException exception) {
             category = exception.category().name();
             providerStatus = exception.statusCode() > 0 ? exception.statusCode() : null;
+            retryable = exception.retryable();
             if (submitted) lifecycle = exception.lifecycle();
             status = exception.category() == AiErrorCategory.CANCELLED ? "stopped" : "error";
-            return failure(category, providerStatus, request);
+            return failure(category, providerStatus, retryable, request);
         } catch (Exception exception) {
             if (input.getCancellationToken().isCancelled() || exception instanceof CancellationException) {
                 category = "CANCELLED";
@@ -230,7 +232,7 @@ public class AiChatService implements DisposableBean {
                 try {
                     store.lifecycle(prepared.scope(), threadId, messageId, lifecycle);
                 } finally {
-                    store.finish(prepared.scope(), threadId, messageId, text.toString(), status, tokens, category, providerStatus);
+                    store.finish(prepared.scope(), threadId, messageId, text.toString(), status, tokens, category, providerStatus, retryable);
                 }
                 audit(threadId, status, category);
                 cleanup(threadId, prepared.scope());
@@ -302,6 +304,7 @@ public class AiChatService implements DisposableBean {
     private static MessageView view(String threadId, AiChatEntry message) {
         return new MessageView(message.getId(), message.getTurnId(), message.getRequestId(), message.getRole(), message.getText(),
             message.getStatus(), message.getCreated(), message.getTotalTokens(), message.getErrorCategory(), message.getProviderStatus(),
+            message.getRetryable(),
             message.getAttachments().stream().map(attachment -> new AttachmentView(attachment.id(), attachment.name(), attachment.mediaType(),
                 attachment.size(), "/admin/rest/ai/chat/threads/" + threadId + "/attachments/" + attachment.id())).toList());
     }
@@ -321,7 +324,8 @@ public class AiChatService implements DisposableBean {
 
     private static AssistantResponseDTO savedResult(AiChatEntry message, HttpServletRequest request) {
         if (!"complete".equals(message.getStatus())) {
-            return failure(message.getErrorCategory() == null ? "PENDING" : message.getErrorCategory(), message.getProviderStatus(), request);
+            return failure(message.getErrorCategory() == null ? "PENDING" : message.getErrorCategory(), message.getProviderStatus(),
+                message.getRetryable(), request);
         }
         AssistantResponseDTO result = new AssistantResponseDTO();
         result.setResponse(message.getText());
@@ -330,13 +334,20 @@ public class AiChatService implements DisposableBean {
     }
 
     private static AssistantResponseDTO failure(String category, Integer status, HttpServletRequest request) {
+        return failure(category, status, null, request);
+    }
+
+    private static AssistantResponseDTO failure(String category, Integer status, Boolean retryable, HttpServletRequest request) {
         AssistantResponseDTO result = new AssistantResponseDTO();
         result.setError(Prop.getInstance(request).getText("components.ai_assistants.chat.history."
             + ("ATTACHMENT_INVALID".equals(category) ? "attachmentUnreadable" : "INVALID_CONTINUATION".equals(category) ? "expired"
                 : "CANCELLED".equals(category) ? "stopped" : "PENDING".equals(category) ? "busy" : "generationFailed") + ".js"));
         result.setErrorCategory(category);
         result.setProviderStatusCode(status);
-        result.setRetryable(!List.of("PENDING", "INVALID_CONTINUATION", "UNSUPPORTED_OPERATION", "ATTACHMENT_INVALID").contains(category));
+        if (retryable == null) {
+            retryable = !List.of("PENDING", "INVALID_CONTINUATION", "UNSUPPORTED_OPERATION", "ATTACHMENT_INVALID").contains(category);
+        }
+        result.setRetryable(retryable);
         return result;
     }
 

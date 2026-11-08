@@ -335,6 +335,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- AI Chat - pri chybe, ktorú poskytovateľ označí ako neopakovateľnú, sa neponúkne opakovanie rovnakej požiadavky. Táto informácia sa zachová aj po obnovení histórie rozhovoru (#386).
 - AI asistenti - uloženie vygenerovaného obrázka odstráni iba dočasné súbory z rovnakého generovania. Obrázky z iných požiadaviek a od ostatných používateľov zostanú zachované (#58850).
 - Webové stránky - opravený [export do ZIP archívu](redactor/webpages/import-export.md) pre obrázky vložené cez `/thumb/`, ktoré sa pôvodne do exportu nepridali (#389).
 - Webové stránky - dialóg na vloženie obrázka obmedzuje výber súborov na obrázky, videá a zvukové súbory aj v priečinku Súbory. Nepodporované typy rozpoznané prehliadačom odmietne ešte pred odoslaním. Server navyše overí príponu pred uložením (#375).

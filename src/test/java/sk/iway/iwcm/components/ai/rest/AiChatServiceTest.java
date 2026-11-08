@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,8 @@ import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiResponse;
 import com.webjetcms.ai.AiResponseDeletion;
 import com.webjetcms.ai.TokenUsage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
@@ -50,7 +53,7 @@ import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 
-/** Verifies cleanup of observed responses and continuation from completed turns only. */
+/** Verifies saved chat cleanup, retry metadata and continuation from completed turns only. */
 class AiChatServiceTest {
     @TempDir Path root;
     private final AiChatStore store = new AiChatStore();
@@ -108,6 +111,50 @@ class AiChatServiceTest {
 
     private AssistantResponseDTO execute(AiChatService.Prepared prepared) {
         return service.execute(prepared, text -> { }, false, request);
+    }
+
+    /** Provider retry recommendations survive both transports, a store reload and an idempotent result replay. */
+    @ParameterizedTest
+    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+    void preservesProviderRetryRecommendation(boolean retryable, boolean streaming) throws Exception {
+        var failure = new AiProviderException("openai", 400, "Rejected", null, retryable)
+            .withLifecycle(new AiRequestLifecycle(State.REJECTED, null));
+        when(provider.getPersistentChatResponse(any(), any(), any(), eq(streaming), same(config), any())).thenThrow(failure);
+        var prepared = prepare(null, null);
+
+        var response = service.execute(prepared, text -> { }, streaming, request);
+        assertEquals(retryable, response.getRetryable());
+        assertEquals("UNKNOWN", response.getErrorCategory());
+        assertEquals(400, response.getProviderStatusCode());
+
+        String id = prepared.turn().thread().getId();
+        var saved = new AiChatStore().get(id, scope).messages().get(1);
+        assertEquals(retryable, saved.getRetryable());
+        assertEquals(retryable, service.detail(id, scope).messages().get(1).retryable());
+        var duplicate = service.prepare(new AiChatRequest(id, 12L, prepared.turn().message().getRequestId(), 0L, "Question", null), scope);
+        assertTrue(duplicate.turn().duplicate());
+        assertEquals(retryable, service.execute(duplicate, text -> { }, streaming, request).getRetryable());
+        verify(provider, times(1)).getPersistentChatResponse(any(), any(), any(), eq(streaming), same(config), any());
+    }
+
+    /** Histories without retry metadata remain readable and keep their category-based replay behavior. */
+    @ParameterizedTest
+    @CsvSource({"UNKNOWN,true", "ATTACHMENT_INVALID,false"})
+    void readsLegacyHistoryWithoutRetryRecommendation(String category, boolean retryable) throws Exception {
+        var prepared = prepare(null, null);
+        String id = prepared.turn().thread().getId();
+        store.finish(scope, id, prepared.turn().message().getId(), "", "error", 0, category, null);
+        Path path = root.resolve("42").resolve(id).resolve("ai_chat.json");
+        var mapper = new ObjectMapper();
+        var document = mapper.readTree(Files.readString(path));
+        for (var message : document.get("messages")) ((ObjectNode)message).remove("retryable");
+        Files.writeString(path, mapper.writeValueAsString(document));
+
+        assertNull(new AiChatStore().get(id, scope).messages().get(1).getRetryable());
+        assertNull(service.detail(id, scope).messages().get(1).retryable());
+        var duplicate = service.prepare(new AiChatRequest(id, 12L, prepared.turn().message().getRequestId(), 0L, "Question", null), scope);
+        assertEquals(retryable, execute(duplicate).getRetryable());
+        verify(provider, never()).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
     }
 
     /** Removing CHAT_SEARCH preserves history but prevents new global conversations and continuation. */

@@ -491,7 +491,7 @@ export class AiChatHost {
         chat.state.messages = detail.messages.map(message => ({ ...message, confirmed: true,
             userPrompt: questions.get(message.turnId),
             error: message.status === 'error' ? historyText(message.errorCategory === 'ATTACHMENT_INVALID' ? 'attachmentUnreadable' : 'generationFailed') : null,
-            retryable: message.errorCategory === 'ATTACHMENT_INVALID' ? false : null
+            retryable: message.retryable ?? (message.errorCategory === 'ATTACHMENT_INVALID' ? false : null)
         }));
         chat.refresh();
         if (this.chat === chat) this.renderFiles();

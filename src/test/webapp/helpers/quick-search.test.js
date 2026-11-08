@@ -2112,6 +2112,48 @@ for (const draft of ['', 'A separate follow-up draft']) {
     });
 }
 
+for (const scenario of [
+    { label: 'non-retryable error', retryable: false, canRetry: false },
+    { label: 'retryable error', retryable: true, canRetry: true },
+    { label: 'legacy error without retry metadata', canRetry: true },
+    { label: 'legacy invalid attachment', errorCategory: 'ATTACHMENT_INVALID', canRetry: false },
+    { label: 'unsupported operation', errorCategory: 'UNSUPPORTED_OPERATION', retryable: true, canRetry: false },
+    { label: 'invalid continuation', errorCategory: 'INVALID_CONTINUATION', retryable: true, canRetry: false },
+    { label: 'stopped response', status: 'stopped', errorCategory: 'CANCELLED', retryable: false, canRetry: true }
+]) {
+    test(`Saved chat restores retry controls for a ${scenario.label}`, async t => {
+        const f = fixture(t, deniedRestPermissions, { aiChat: true });
+        await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+        const host = f.controller.chat;
+        const detail = {
+            thread: { id: 'failed-thread', assistantId: 7, canContinue: true, busy: false, revision: 1 },
+            messages: [
+                { id: 'question', role: 'user', text: 'Saved question', status: 'complete' },
+                { id: 'answer', turnId: 'question', role: 'assistant', text: '', status: scenario.status || 'error',
+                    errorCategory: scenario.errorCategory || 'UNKNOWN',
+                    ...(scenario.retryable == null ? {} : { retryable: scenario.retryable }) }
+            ]
+        };
+        const opening = host.openThread(detail.thread.id);
+        await f.respond(f.requests.at(-1), detail);
+        await opening;
+        const chat = host.chat;
+        const assertRetryControls = () => {
+            const message = chat.state.messages.at(-1);
+            const expected = scenario.errorCategory === 'ATTACHMENT_INVALID' ? false : scenario.retryable ?? null;
+            assert.equal(message.retryable, expected);
+            assert.equal(Boolean(chat.element.querySelector('[data-ai-action="retry"]')), scenario.canRetry);
+        };
+        assertRetryControls();
+
+        const refreshing = host.refreshConversation(chat);
+        await f.respond(f.requests.at(-1), detail);
+        await refreshing;
+        assertRetryControls();
+        assert.equal(f.chatRequests.length, 0, 'Opening or refreshing history must never submit another generation.');
+    });
+}
+
 test('Persistent assistant switching preserves an unsent draft and its original attachment', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     const input = await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
