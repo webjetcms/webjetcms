@@ -169,6 +169,9 @@ public class AiChatService implements DisposableBean {
                 output.accept(delta);
             };
             if (input.getCancellationToken().isCancelled()) throw new CancellationException();
+            if (AiService.shouldRemoveHtml(prepared.assistant(), input)) {
+                input.removeHtml();
+            }
             StringBuilder context = new StringBuilder();
             for (var attachment : prepared.turn().question().getAttachments()) {
                 if (input.getCancellationToken().isCancelled()) throw new CancellationException();

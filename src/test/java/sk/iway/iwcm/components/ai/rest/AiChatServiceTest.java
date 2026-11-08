@@ -189,27 +189,38 @@ class AiChatServiceTest {
         assertTrue(store.list(scope, 0).items().isEmpty());
     }
 
-    /** Retrying a saved field turn uses its original field snapshot and attachments. */
-    @Test
-    void continuesFieldChatWithCurrentInputAndOriginalRetryContext() throws Exception {
+    /** Field chats honor the HTML preference on retries while preserving literal attachments and the original field snapshot. */
+    @ParameterizedTest
+    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+    void fieldChatHonorsHtmlPreferenceAndPreservesRetryContext(boolean keepHtml, boolean streaming) throws Exception {
         assistant.setClassName("sk.iway.iwcm.doc.DocDetails");
+        assistant.setKeepHtml(keepHtml);
         var context = new AiChatContext("/admin/rest/web-pages", "42", "data");
+        String originalPage = "<p>Original page</p>!INCLUDE(/components/page.jsp)!";
+        String document = "<p>Document context</p>!INCLUDE(/components/attachment.jsp)!";
         var files = AiChatAttachments.read(List.of(new MockMultipartFile("files", "notes.txt", "text/plain",
-            "Document context".getBytes(StandardCharsets.UTF_8))));
+            document.getBytes(StandardCharsets.UTF_8))));
         var first = service.prepare(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null,
-            context, "<p>Original page</p>"), scope, files);
-        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenAnswer(call -> {
-            InputDataDTO input = call.getArgument(1);
-            assertTrue(input.getInputValue().startsWith("<p>Original page</p>"));
-            assertTrue(input.getInputValue().contains("Document context"));
-            throw new AiProviderException("openai", 503, "Try again", null, true);
-        });
-        execute(first);
+            context, originalPage), scope, files);
+        when(provider.getPersistentChatResponse(any(), any(), any(), eq(streaming), same(config), any()))
+            .thenThrow(new AiProviderException("openai", 503, "Try again", null, true));
+        assertNotNull(service.execute(first, text -> { }, streaming, request).getError());
         String id = first.turn().thread().getId();
         var retry = service.prepare(new AiChatRequest(id, 12L, UUID.randomUUID().toString(), 1L, "Question", first.turn().message().getId(),
             context, "<p>Changed page</p>"), scope);
-        execute(retry);
-        verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any());
+        assertNotNull(service.execute(retry, text -> { }, streaming, request).getError());
+
+        var inputs = org.mockito.ArgumentCaptor.forClass(InputDataDTO.class);
+        verify(provider, times(2)).getPersistentChatResponse(any(), inputs.capture(), any(), eq(streaming), same(config), any());
+        String attachmentContext = "\nAttachment: notes.txt\n" + document + "\n";
+        for (InputDataDTO input : inputs.getAllValues()) {
+            assertTrue(input.getInputValue().endsWith(attachmentContext));
+            String pageContext = input.getInputValue().substring(0, input.getInputValue().length() - attachmentContext.length());
+            assertEquals(keepHtml ? originalPage : "Original page", pageContext.strip());
+        }
+        var savedQuestion = new AiChatStore().get(id, scope).messages().get(0);
+        assertEquals(originalPage, savedQuestion.getInputValue());
+        assertEquals(files.get(0).attachment().sha256(), savedQuestion.getAttachments().get(0).sha256());
         assertEquals(context, service.detail(id, scope).thread().context());
         assertTrue(service.detail(id, scope).thread().canContinue());
         assertTrue(service.list(scope, 0, "").items().isEmpty());
