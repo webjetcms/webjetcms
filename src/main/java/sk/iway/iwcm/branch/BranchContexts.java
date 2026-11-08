@@ -42,12 +42,16 @@ public final class BranchContexts {
         private final HttpServletRequest request;
         private final Object requestValue;
         private final Object beanValue;
+        private final Object viewValue;
         private boolean closed;
 
         private Scope(HttpServletRequest request, BranchContext context) {
             this.request = request;
             requestValue = request == null ? null : request.getAttribute(ATTRIBUTE);
             beanValue = RequestBean.getAttribute(ATTRIBUTE);
+            viewValue = RequestBean.getAttribute(BranchView.class.getName());
+            // A nested technical LIVE/preview scope must not reuse its caller's effective rows or Q16 decisions.
+            if (!context.equals(beanValue)) RequestBean.setAttribute(BranchView.class.getName(), null);
             if (request != null) request.setAttribute(ATTRIBUTE, context);
             RequestBean.setAttribute(ATTRIBUTE, context);
         }
@@ -61,6 +65,7 @@ public final class BranchContexts {
                 else request.setAttribute(ATTRIBUTE, requestValue);
             }
             RequestBean.setAttribute(ATTRIBUTE, beanValue);
+            RequestBean.setAttribute(BranchView.class.getName(), viewValue);
         }
     }
 }

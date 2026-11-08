@@ -215,7 +215,10 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
         //add SetCharacterEncodingFilter for setting RequestBean and other system stuff, must be after ApiTokenAuthFilter because it needs logged user
         http.addFilterAfter(new SetCharacterEncodingFilter(), ApiTokenAuthFilter.class);
 
+        // Branch authorization needs the authenticated user and RequestBean before PathFilter resolves/caches content.
+        http.addFilterAfter(new sk.iway.iwcm.branch.BranchFilter(), SetCharacterEncodingFilter.class);
+
         // filter for setting non filter header for files "X-Robots-Tag","noindex, nofollow"
-        http.addFilterAfter(new FileArchivFilter(), SetCharacterEncodingFilter.class);
+        http.addFilterAfter(new FileArchivFilter(), sk.iway.iwcm.branch.BranchFilter.class);
     }
 }

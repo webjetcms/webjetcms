@@ -54,7 +54,9 @@ public record BranchFields(Set<String> supported, Set<String> derived,
         for (String column : fields.supported()) {
             if (!source.containsKey(column)) throw new IllegalArgumentException("Incomplete content: " + column);
             Object value = source.get(column);
-            if (BOOLEAN_COLUMNS.contains(column) && value instanceof Number number) value = number.intValue() != 0;
+            // GROUP navigation fields are enums (0..3), while DOCUMENT fields with the same names are booleans.
+            boolean groupMenuEnum = fields == GROUP && GROUP_MENU_COLUMNS.contains(column);
+            if (BOOLEAN_COLUMNS.contains(column) && !groupMenuEnum && value instanceof Number number) value = number.intValue() != 0;
             result.put(column, value);
         }
         return result;
@@ -102,6 +104,7 @@ public record BranchFields(Set<String> supported, Set<String> derived,
     }
 
     private static final Set<String> BOOLEAN_COLUMNS = fields("available searchable cacheable require_ssl generate_url_from_title url_inherit_group show_in_menu show_in_navbar show_in_sitemap logged_show_in_menu logged_show_in_navbar logged_show_in_sitemap internal hidden_in_admin force_group_template");
+    private static final Set<String> GROUP_MENU_COLUMNS = fields("show_in_navbar show_in_sitemap logged_show_in_navbar logged_show_in_sitemap");
 
     private static Set<String> immutable(Set<String> fields) {
         return Collections.unmodifiableSet(new LinkedHashSet<>(fields));

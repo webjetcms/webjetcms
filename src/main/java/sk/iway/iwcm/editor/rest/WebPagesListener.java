@@ -83,7 +83,10 @@ public class WebPagesListener {
             GroupsDB groupsDB = GroupsDB.getInstance();
 
             GroupDetails system = GroupsService.getSystemGroupDetails();
-            GroupDetails trash = GroupsService.getTrashGroupDetails();
+            // Branch views exclude trash; reading the screen must not create its LIVE folder.
+            GroupDetails trash = sk.iway.iwcm.branch.BranchContexts.current().isBranch() ? null : GroupsService.getTrashGroupDetails();
+            hasSystemTab = system != null;
+            hasTrashTab = trash != null;
 
             String showTab = "pills-folders-tab";
 
@@ -132,12 +135,12 @@ public class WebPagesListener {
 
                 int rootGroupId = 0;
                 if (lastGroup != null && lastGroup.getFullPath().contains("/System")) {
-                    if (lastGroup.getFullPath().contains(trash.getFullPath())) {
+                    if (trash != null && lastGroup.getFullPath().contains(trash.getFullPath())) {
                         //it's a trash folder
                         rootGroupId = trash.getGroupId();
                         showTab = "pills-trash-tab";
                         click = "dt-tree-group-trash";
-                    } else {
+                    } else if (system != null) {
                         rootGroupId = system.getGroupId();
                         showTab = "pills-system-tab";
                         click = "dt-tree-group-system";
@@ -149,7 +152,7 @@ public class WebPagesListener {
                 if ("pills-system-tab".equals(showTab)) {
                     rootGroups = rootGroups.stream().filter(g->{
                         if (g instanceof GroupsJsTreeItem gjs) {
-                            if (gjs.getGroup().getFullPath().startsWith(trash.getFullPath())) return false;
+                            if (trash != null && gjs.getGroup().getFullPath().startsWith(trash.getFullPath())) return false;
                         }
                         return true;
                     }).collect(Collectors.toList()); //NOSONAR
@@ -223,15 +226,15 @@ public class WebPagesListener {
             }
 
             if (Tools.isNotEmpty(user.getEditableGroups())) {
-                if (GroupsDB.isGroupEditable(user, system.getGroupId()) || GroupsDB.isGroupViewable(user, system.getGroupId())) hasSystemTab = true;
-                if (GroupsDB.isGroupEditable(user, trash.getGroupId()) || GroupsDB.isGroupViewable(user, trash.getGroupId())) hasTrashTab = true;
+                if (system != null && (GroupsDB.isGroupEditable(user, system.getGroupId()) || GroupsDB.isGroupViewable(user, system.getGroupId()))) hasSystemTab = true;
+                if (trash != null && (GroupsDB.isGroupEditable(user, trash.getGroupId()) || GroupsDB.isGroupViewable(user, trash.getGroupId()))) hasTrashTab = true;
             }
             if (Tools.isNotEmpty(user.getEditablePages())) {
                     //prejdi zoznam web stranok a over, ci tam nie je System alebo Kos
                     List<DocDetails> docs = UserTools.getEditablePages(user.getEditablePages());
             		for (DocDetails doc : docs) {
-                        if (hasSystemTab==false && (","+groupsDB.getParents(doc.getGroupId())+",").contains(","+system.getGroupId()+",")) hasSystemTab = true;
-                        if (hasTrashTab==false && (","+groupsDB.getParents(doc.getGroupId())+",").contains(","+trash.getGroupId()+",")) hasTrashTab = true;
+                        if (system != null && hasSystemTab==false && (","+groupsDB.getParents(doc.getGroupId())+",").contains(","+system.getGroupId()+",")) hasSystemTab = true;
+                        if (trash != null && hasTrashTab==false && (","+groupsDB.getParents(doc.getGroupId())+",").contains(","+trash.getGroupId()+",")) hasTrashTab = true;
                     }
             }
 

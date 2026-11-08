@@ -53,6 +53,27 @@ class BranchAccessTest {
     }
 
     @Test
+    void bootstrapsOnlyMissingSelectionFromPermittedDomainsOnSeparateAdminHost() {
+        Identity user = mock(Identity.class);
+        GroupsDB groups = mock(GroupsDB.class);
+        request.setServerName("cms.example.sk");
+        try (var db = mockStatic(GroupsDB.class)) {
+            db.when(GroupsDB::getInstance).thenReturn(groups);
+            when(groups.getUserRootDomainNames(user)).thenReturn(List.of("a.example.sk", "b.example.sk"));
+            assertEquals("a.example.sk", access.requireDomain(request, user));
+            assertEquals("a.example.sk", request.getSession().getAttribute("preview.editorDomainName"));
+            request.getSession().removeAttribute("preview.editorDomainName");
+            request.setServerName("b.example.sk");
+            assertEquals("b.example.sk", access.requireDomain(request, user));
+            request.getSession().setAttribute("preview.editorDomainName", "foreign.example.sk");
+            assertStatus(HttpStatus.FORBIDDEN, () -> access.requireDomain(request, user));
+            request.getSession().removeAttribute("preview.editorDomainName");
+            when(groups.getUserRootDomainNames(user)).thenReturn(List.of());
+            assertStatus(HttpStatus.FORBIDDEN, () -> access.requireDomain(request, user));
+        }
+    }
+
+    @Test
     void csrfRequiresExistingTokenUnlessExistingApiTokenFilterExemptsRequest() {
         assertStatus(HttpStatus.FORBIDDEN, () -> access.requireCsrf(request));
         request.getSession();

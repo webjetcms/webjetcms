@@ -948,7 +948,8 @@ public class PathFilter implements Filter
 			//files adresar musime nechat povoleny kvoli linkam z fulltext indexu (/files/subor.xls.html) a presmerovaniu na subor.xls
 			if (path.startsWith("/images")==false && path.startsWith("/css")==false && path.startsWith("/jscripts")==false && path.startsWith("/templates")==false)
 			{
-				if (Constants.getBoolean("ABTesting")==true)
+				// A/B selection uses LIVE variants; branch URLs must resolve only through the selected effective view.
+				if (Constants.getBoolean("ABTesting")==true && !sk.iway.iwcm.branch.BranchContexts.current(req).isBranch())
 				{
 					accessDocId = ABTesting.getVirtualPathDocId(path, domain, req, res);
 				}
@@ -962,7 +963,8 @@ public class PathFilter implements Filter
 			if (accessDocId > 0)
 			{
 				//kontrola spravnosti domeny
-				if (!checkDomain(req))
+				// BranchFilter already authorized the logical domain; this legacy check compares the admin transport host.
+				if (!sk.iway.iwcm.branch.BranchContexts.current(req).isBranch() && !checkDomain(req))
 				{
 					Logger.debug(PathFilter.class, "checkDomain=false, forwarding to 404.jsp");
 					res.setStatus(HttpServletResponse.SC_NOT_FOUND);

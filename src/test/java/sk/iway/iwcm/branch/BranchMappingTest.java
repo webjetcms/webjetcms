@@ -18,6 +18,14 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.spirit.model.Media;
 
 class BranchMappingTest {
+    @Test void groupNavigationUsesEnumsWhileDocumentNavigationUsesBooleans() {
+        Map<String,Object> group=new HashMap<>(BranchGroupMapper.initialValues(20,"example.sk"));
+        for(String column:java.util.List.of("show_in_navbar","show_in_sitemap","logged_show_in_navbar","logged_show_in_sitemap"))group.put(column,2);
+        BranchSnapshot two=BranchGroupMapper.snapshot(group);
+        assertEquals(new BigDecimal("2"),two.fields().get("show_in_navbar"));
+        group.put("show_in_navbar",3);assertNotEquals(two.hash(),BranchGroupMapper.snapshot(group).hash());
+        var doc=new HashMap<>(BranchDocumentMapper.initialValues(9,1,Instant.now(),false));doc.put("show_in_navbar",1);assertEquals(true,BranchDocumentMapper.snapshot(doc).fields().get("show_in_navbar"));
+    }
     @Test
     void everyJpaPersistentColumnHasExplicitClassification() {
         for (Class<?> entity : java.util.List.of(DocBasic.class, DocDetails.class)) {

@@ -10,6 +10,8 @@ div.ly-container.container
         include ./environment
 
         .header-title(role="heading" aria-level="1")
+        span#branch-active-label.badge.text-bg-light(data-th-if="${layout.branchScreen.allowed}" role="status" tabindex="0") Produkcia
+        a#branch-preview-link.btn.btn-sm.btn-outline-secondary.d-none(data-th-if="${layout.branchScreen.allowed}" target="_blank" rel="noopener") Náhľad
 
     div.header-link-wrapper
 

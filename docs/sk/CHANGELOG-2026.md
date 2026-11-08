@@ -401,6 +401,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- Pracovné verzie - pridaný experimentálny náhľad pripravených stránok, menu, Noviniek a súborov na admin hostiteľovi. Funkcia je predvolene vypnutá a zatiaľ overená iba na samostatnom MariaDB 12.2/InnoDB POC profile; redakčné ukladanie ani publikovanie balíka ešte nie sú dostupné.
+
 - Publikačné balíky - pridaný vypnutý POC základ úložiska, kontextu, stabilných ID a porovnávania zmien. Podporený testovací profil a hranice ďalších etáp sú v [technických výsledkoch P02](../research/publish-packages/P02-vysledky.md).
 
 - Datatabuľky - tabuľky nastavení majú spoločný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Existujúca tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje so zachovaním údajov; vlastné SQL dotazy treba upraviť na `dt_customfields` (#58830).

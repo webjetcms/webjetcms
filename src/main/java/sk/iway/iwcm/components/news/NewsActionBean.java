@@ -50,6 +50,8 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.branch.BranchContexts;
+import sk.iway.iwcm.branch.BranchView;
 import sk.iway.iwcm.components.news.NewsQuery.OrderEnum;
 import sk.iway.iwcm.components.news.NewsQuery.SortEnum;
 import sk.iway.iwcm.components.news.criteria.Criteria;
@@ -156,6 +158,9 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		//Cache c = Cache.getInstance();
 
 		doc = new RequestHelper(getRequest()).getDocument();
+		// RequestHelper may hold LIVE metadata; component parameters must come from the effective document.
+		if (BranchContexts.current().isBranch() && doc != null)
+			doc = DocDB.getInstance().getDoc(doc.getDocId());
 		user = getCurrentUser();
 
 		if (user!=null && user.isAdmin() && Constants.getBoolean("cacheStaticContentForAdmin")==false)
@@ -441,16 +446,20 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		if (groupIds == null && doc != null) {
 			GroupDetails group = doc.getGroup();
 			groupIds = new ArrayList<>();
-			groupIds.add(group);
-			defaultDocs.add(group.getDefaultDocId());
+			if (group != null) groupIds.add(group);
 		}
 
+		// Missing/deleted WORK roots must yield no results, not expand the query to the entire LIVE website.
+		if (groupIds == null && BranchContexts.current().isBranch()) groupIds = new ArrayList<>();
 		if (groupIds != null)
 		{
 			groupIdsExpanded = new LinkedList<>();
 			GroupsDB gdb = GroupsDB.getInstance();
-			for (GroupDetails group : groupIds)
+			for (GroupDetails selectedGroup : groupIds)
 			{
+				if (selectedGroup == null) continue;
+				GroupDetails group = gdb.getGroup(selectedGroup.getGroupId());
+				if (group == null) continue;
 				groupIdsExpanded.add(group.getGroupId());
 				defaultDocs.add(group.getDefaultDocId());
 				if (alsoSubGroups)
@@ -595,6 +604,9 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	}
 
 	private void addPublishType() {
+		// All date predicates and News components share one preview instant, including list/count boundaries.
+		BranchView view = BranchView.current();
+		Timestamp now = new Timestamp(view == null ? Tools.getNow() : view.previewAt());
 		// typ noviniek
 		PublishType publishTypeEnum = PublishType.fromString(publishType);
 		if(publishTypeEnum == null) return;
@@ -605,11 +617,11 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 						and(
 								or(
 										isNull(PUBLISH_START),
-										lessEqual(PUBLISH_START, new Timestamp(Tools.getNow()))
+										lessEqual(PUBLISH_START, now)
 								),
 								or(
 										isNull(PUBLISH_END),
-										greaterEqual(PUBLISH_END, new Timestamp(Tools.getNow()))
+										greaterEqual(PUBLISH_END, now)
 								)
 						)
 				);
@@ -619,11 +631,11 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 						and(
 								and(
 										isNotNull(PUBLISH_START),
-										lessEqual(PUBLISH_START, new Timestamp(Tools.getNow()))
+										lessEqual(PUBLISH_START, now)
 								),
 								or(
 										isNull(PUBLISH_END),
-										greaterEqual(PUBLISH_END, new Timestamp(Tools.getNow()))
+										greaterEqual(PUBLISH_END, now)
 								)
 						)
 				);
@@ -633,12 +645,12 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 						or(
 								and(
 										isNotNull(PUBLISH_END),
-										greaterEqual(PUBLISH_END, new Timestamp(Tools.getNow()))
+										greaterEqual(PUBLISH_END, now)
 								),
 								and(
 										isNull(PUBLISH_END),
 										isNotNull(PUBLISH_START),
-										greaterEqual(PUBLISH_START, new Timestamp(Tools.getNow()))
+										greaterEqual(PUBLISH_START, now)
 								)
 						)
 				);
@@ -647,7 +659,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 				newsQuery.addCriteria(
 						and(
 								isNotNull(PUBLISH_END),
-								lessEqual(PUBLISH_END, new Timestamp(Tools.getNow()))
+								lessEqual(PUBLISH_END, now)
 						)
 				);
 				break;
@@ -734,9 +746,12 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 				{
 					for (String clazzName : contextClassesList)
 					{
-						//uz pridavame implicitne
+						// Core facades are already adapted to the effective branch view.
 						if ("sk.iway.iwcm.doc.DocDB".equals(clazzName)) continue;
 						if ("sk.iway.iwcm.doc.GroupsDB".equals(clazzName)) continue;
+						// Arbitrary context classes can run their own LIVE SQL; require an explicit adapter before previewing them.
+						if (BranchContexts.current().isBranch())
+							throw new IllegalStateException("Custom News contextClasses require a branch preview adapter: " + clazzName);
 
 						try
 						{

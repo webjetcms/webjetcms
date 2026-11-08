@@ -42,6 +42,16 @@ public class LayoutBean {
     private String customAdminCss = null;
     private String customAdminJavascript = null;
 
+    /** Captures the screen context before any asynchronous content requests are issued. */
+    public java.util.Map<String,Object> getBranchScreen() {
+        var context=sk.iway.iwcm.branch.BranchContexts.current();
+        boolean enabled=Constants.getBoolean("branchesEnabled");
+        boolean allowed=enabled&&user!=null&&user.isAdmin()&&user.isEnabledItem("menuBranches");
+        // WebPagesListener can select a different LIVE domain while building this screen; use its final header value.
+        return java.util.Map.of("enabled",enabled,"allowed",allowed,"branchId",context.branchId(),
+            "domainName",context.isBranch()?context.domainName():header.getCurrentDomain());
+    }
+
     public String getDocumentationBaseUrl() {
         return DocumentationTools.getBaseUrl();
     }

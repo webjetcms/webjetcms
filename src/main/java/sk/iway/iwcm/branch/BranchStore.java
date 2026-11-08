@@ -217,10 +217,19 @@ public final class BranchStore {
             try (ResultSet result=statement.executeQuery()) {
                 if (!result.next()) return Optional.empty();
                 Map<String, Object> row=new LinkedHashMap<>();
-                for (int i=1;i<=result.getMetaData().getColumnCount();i++) row.put(result.getMetaData().getColumnName(i),result.getObject(i));
+                for (int i=1;i<=result.getMetaData().getColumnCount();i++) row.put(result.getMetaData().getColumnName(i),readColumn(result,i));
                 return Optional.of(row);
             }
         }
+    }
+
+    /** MariaDB TINYINT(1) enum values such as -1 must not become Boolean true. */
+    static Object readColumn(ResultSet result,int index)throws SQLException {
+        String name=result.getMetaData().getColumnName(index);
+        if(java.util.Set.of("menu_type","logged_menu_type","follow_links","show_in_navbar","show_in_sitemap","logged_show_in_navbar","logged_show_in_sitemap").contains(name)) {
+            int value=result.getInt(index);return result.wasNull()?null:value;
+        }
+        return result.getObject(index);
     }
 
     /** Converts a typed row to the common comparison envelope without a handler registry. */

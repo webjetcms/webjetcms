@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +18,8 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.branch.BranchContexts;
+import sk.iway.iwcm.branch.BranchSql;
 import sk.iway.iwcm.components.news.criteria.Criteria;
 import sk.iway.iwcm.components.news.criteria.DatabaseCriteria;
 import sk.iway.iwcm.components.news.criteria.DatabaseCriteria.CriteriaType;
@@ -61,6 +63,7 @@ public class NewsQuery
 	private boolean useAtributeSearch = false;
 
 	private boolean returnDocdetailsWithAtributes = false;
+	private BranchSql.Fragment documentSource;
 
 	/**
 	 * vygeneruje DB dotaz na zaklade kriterii
@@ -70,66 +73,38 @@ public class NewsQuery
 	 */
 	private String getSelectSql(boolean count, boolean noData)
 	{
-		StringBuilder sql = new StringBuilder();
-
-		sql.append("SELECT ");
-		if (count)
-			sql.append("count(d.doc_id) ");
+		// Custom post-query filters can read LIVE data and change paging/count; no safe generic adapter exists.
+		if (BranchContexts.current().isBranch() && !resultCriteriaList.isEmpty())
+			throw new IllegalStateException("Custom ResultCriteria require a branch preview adapter");
+		arguments.clear();
+		documentSource = BranchSql.documentSource("d");
+		StringBuilder sql = new StringBuilder("SELECT ");
+		if (count) sql.append("count(d.doc_id) ");
 		else
 		{
-
-			String docFields = FieldEnum.getFields();
-			if (noData) docFields = FieldEnum.getFieldsNoData();
-			//TODO: zatial, neskor treba dorobit
-			//perexGroupUseJoin = false;//Constants.getBoolean("perexGroupUseJoin") && Tools.isNotEmpty(whereSql) && whereSql.contains("p.perex_group_id");
-
-			sql.append("u.title as u_title, u.first_name, u.last_name, u.email, u.photo, ")
-			.append(docFields);
-
+			String docFields = noData ? FieldEnum.getFieldsNoData() : FieldEnum.getFields();
+			sql.append("u.title as u_title, u.first_name, u.last_name, u.email, u.photo, ").append(docFields);
 			String[] additionalFields = DataAccessHelper.getDocFields();
-			if (additionalFields!=null && additionalFields.length>0) {
-				for (String field : additionalFields) {
-					sql.append(", d.").append(field);
-				}
-			}
-
-			if (useAtributeSearch)
-			{
-				sql.append(", dad.*, da.value_string, da.value_int, da.value_bool ");
-			}
+			if (additionalFields != null)
+				for (String field : additionalFields) sql.append(", d.").append(field);
 		}
-		sql.append(" FROM documents d ");
-
+		sql.append(" FROM ").append(documentSource.sql()).append(" ");
 		sql.append("LEFT JOIN users u ON d.author_id=u.user_id ");
 
-		if (Constants.getBoolean("perexGroupUseJoin"))
-		{
-			sql.append("LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id ");
-		}
-
+		// Match attribute rows in an ID subquery before ordering and paging full HTML.
 		if (useAtributeSearch)
 		{
-			sql.append("LEFT JOIN doc_atr da ON da.doc_id = d.doc_id LEFT JOIN doc_atr_def dad ON dad.atr_id = da.atr_id ");
+			sql.append("WHERE d.doc_id IN (SELECT d.doc_id FROM ").append(documentSource.sql())
+				.append(" LEFT JOIN doc_atr da ON da.doc_id=d.doc_id LEFT JOIN doc_atr_def dad ON dad.atr_id=da.atr_id ");
 		}
-
-
 		boolean addAnd = false;
-		if (databaseCriteriaList.size()>0)
+		for (DatabaseCriteria criteria : databaseCriteriaList)
 		{
-			for (DatabaseCriteria criteria : databaseCriteriaList)
-			{
-				if (!addAnd)
-				{
-					sql.append("WHERE ");
-				}
-				else
-				{
-					sql.append("AND ");
-				}
-				appendCriteria(criteria, sql);
-				addAnd = true;
-			}
+			sql.append(addAnd ? "AND " : "WHERE ");
+			appendCriteria(criteria, sql);
+			addAnd = true;
 		}
+		if (useAtributeSearch) sql.append("GROUP BY d.doc_id) ");
 
 		if (!count) {
 			setOrdering(sql, "d", false);
@@ -305,6 +280,7 @@ public class NewsQuery
 		else if (c.getType()==CriteriaType.IN)
 		{
 			List<Object> objectList = (List<Object>)c.getValue();
+			if (objectList.isEmpty()) return sql.append("1=0 ");
 			sql.append(c.getProperty().getDbName()).append(" IN ( ");
 			boolean addComma = false;
 			for (Object obj : objectList)
@@ -323,6 +299,7 @@ public class NewsQuery
 		else if (c.getType()==CriteriaType.NOT_IN)
 		{
 			List<Object> objectList = (List<Object>)c.getValue();
+			if (objectList.isEmpty()) return sql.append("1=1 ");
 			sql.append(c.getProperty().getDbName()).append(" NOT IN ( ");
 			boolean addComma = false;
 			for (Object obj : objectList)
@@ -401,6 +378,8 @@ public class NewsQuery
 			sql.append(OrderEnum.TITLE.getOrderName(prefix))
 			.append(/* ak je true, zoradi to cele naopak */reverse?SortEnum.ASC.getReverse():SortEnum.ASC);
 		}
+		if (orderings.stream().noneMatch(ordering -> ordering.first == OrderEnum.ID))
+			sql.append(", ").append(OrderEnum.ID.getOrderName(prefix)).append(reverse ? SortEnum.DESC : SortEnum.ASC);
 	}
 
 	/**
@@ -411,9 +390,10 @@ public class NewsQuery
 	private void setArguments(PreparedStatement ps) throws SQLException
 	{
 		StringBuilder sb = new StringBuilder();
+		int index = documentSource.bind(ps, 1);
+		if (useAtributeSearch) index = documentSource.bind(ps, index);
 		if (!arguments.isEmpty())
 		{
-			int index=1;
 
 			for (Object argument : arguments)
 			{
@@ -563,10 +543,10 @@ public class NewsQuery
 			rs = null;
 			ps = null;
 
-			if (returnDocdetailsWithAtributes && result!=null)
+			if (returnDocdetailsWithAtributes && !result.isEmpty())
 			{
 				//List<Integer> ids = new LinkedList<Integer>();
-				Map<Integer, AtrDocBean> docMap = new HashMap<Integer, AtrDocBean>();
+				Map<Integer, AtrDocBean> docMap = new LinkedHashMap<Integer, AtrDocBean>();
 				for (DocDetails d : result)
 				{
 					docMap.put(d.getDocId(), (AtrDocBean)d);
@@ -612,6 +592,8 @@ public class NewsQuery
 		{
 			Logger.debug(getClass(), "Nastala chyba:"+e.getMessage());
 			sk.iway.iwcm.Logger.error(e);
+			// Never turn a failed effective query into an apparently valid empty preview or zero count.
+			if (BranchContexts.current().isBranch()) throw new IllegalStateException("Unable to load branch News", e);
 		}
 		finally
 		{
@@ -705,6 +687,8 @@ public class NewsQuery
 		{
 			Logger.debug(getClass(), "Nastala chyba:"+e.getMessage());
 			sk.iway.iwcm.Logger.error(e);
+			// Never turn a failed effective query into an apparently valid empty preview or zero count.
+			if (BranchContexts.current().isBranch()) throw new IllegalStateException("Unable to load branch News", e);
 		}
 		finally
 		{
@@ -727,7 +711,7 @@ public class NewsQuery
 		{
 			result = result - initialOffset;
 		}
-		return result;
+		return Math.max(0, result);
 	}
 
 	/**
@@ -745,6 +729,9 @@ public class NewsQuery
 		}
 		else if (criteria instanceof ResultCriteria)
 		{
+			// A post-query custom filter cannot guarantee effective reads or consistent count/paging.
+			if (BranchContexts.current().isBranch())
+				throw new IllegalStateException("Custom ResultCriteria require a branch preview adapter");
 			ResultCriteria c = (ResultCriteria)criteria;
 			this.resultCriteriaList.add(c);
 		}

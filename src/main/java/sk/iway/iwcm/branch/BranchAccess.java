@@ -30,9 +30,15 @@ public class BranchAccess {
     public String requireDomain(HttpServletRequest request, Identity user) {
         HttpSession session = request.getSession(false);
         Object selected = session == null ? null : session.getAttribute("preview.editorDomainName");
-        String domain = selected instanceof String value && !value.isBlank() ? value : Tools.getServerName(request);
-        if (domain == null || domain.isBlank()
-                || !GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain))
+        java.util.List<String> domains = GroupsDB.getInstance().getUserRootDomainNames(user);
+        String domain = selected instanceof String value && !value.isBlank() ? value : null;
+        if (domain == null) {
+            // A separate admin host has no content root; bootstrap the same permitted default as the layout.
+            String host = Tools.getServerName(request);
+            domain = domains.contains(host) ? host : domains.stream().filter(value -> value != null && !value.isBlank()).findFirst().orElse(null);
+            if (domain != null) request.getSession().setAttribute("preview.editorDomainName", domain);
+        }
+        if (domain == null || !domains.contains(domain))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No access to the selected domain");
         return domain;
     }

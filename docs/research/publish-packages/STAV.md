@@ -2,7 +2,7 @@
 
 ## Návrh
 
-- Dátum vzniku: 1. november 2026. Posledné doplnenie: 4. november 2026.
+- Dátum vzniku: 1. november 2026. Posledné doplnenie: 8. november 2026.
 - Produktové rozhodnutia Q1–Q19: uzatvorené; Q10/Q13 používateľ delegoval podľa jednoduchosti implementácie. Pri poslednej kontrole potvrdil náhľad zvoleného výsledku, vytvorenie súborového adresára bez rekurzívnych operácií, galériu iba na čítanie a náhľad na admin hostiteľovi.
 - Technický návrh: po opakovanej kontrole a realizácii technického kroku **P01**, bez ďalšej otvorenej produktovej otázky. [Výsledok kontroly](09-kontrola-pripravenosti.md) eviduje opravené medzery a predpoklady, ktoré musí dokázať reálna implementácia. Pripravenosť dokumentácie neznamená vykonané DB/browser testy ani automatické povolenie P02–P08.
 - Doplnenie N1: povinné `NewsApp`/`NewsActionBean`, podrobný návrh [03a](03a-novinky.md), perex skupiny existujúcich definícií, čas náhľadu a porovnanie s výsledkom po merge. Aktualizované etapy a test T16/N01–N12. Vykonaná nezávislá kontrola voči zdrojom; nepredstavuje runtime overenie.
@@ -12,7 +12,7 @@
 - Doplnenie N4: povinný `menu_ul_li.jsp`/`MenuULLI` podľa [03b](03b-menu.md), vrátane editoru parametrov `MenuApp`, rekurzie, aktívnej cesty, perex/HTML, premenných a cache. T03 je rozpracované na M01–M11 v P01/P03/P04/P06/P08. Overené zdrojové integračné body a existujúce testy; bez runtime skúšok.
 - Doplnenie N5: záväzná [priorita jednoduchého čitateľného POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc). Konkrétne služby bez povinného handler/DI registra, bez hypotetických frameworkov a zriedkavých prevádzkových scenárov. Prvé overenie na jednom reálnom DB profile/inštancii; ďalšie profily až pred deklarovaním podpory. Ručný POC míľnik po P06, dohodnuté plánovanie zostáva P07. Obnova koša sa runtime overí v P06. Izolácia, ID, oprávnenia a náhľad sa nemenia.
 - Návod na spustenie: [orchestrácia](ORCHESTRACIA.md) doplnená o modely/roly, etapový postup a pokračovanie po prerušení. Odporúčanie GPT-6.1 Sol / High nemení aktuálne nastavenie klienta; skutočné modely zaznamená implementačný agent. Hlavný agent môže použiť najviac dvoch pomocníkov naraz, bez vlastného agentového frameworku. Žiadna etapa sa týmto doplnením nespustila.
-- Implementácia: používateľ 3. novembra 2026 zadal iba P01 a 4. novembra **iba P02**. Obe etapy sú uzavreté v nižšie uvedenom rozsahu. P03–P08 nie sú povolené.
+- Implementácia: P01/P02 sú uzavreté v nižšie uvedenom rozsahu. Používateľ 4. novembra zadal iba P03 a následne výslovne požiadal o bezpečné prerušenie; po pokyne pokračovať sa P03 obnovilo a dokončilo na uvedenom POC profile. P04–P08 nie sú zadané.
 - P01: **DONE ako technický experiment na jednorazovom InnoDB profile**. Dokázané ID/reštart, SQL, core izolácia a minimálny reálny JSP/thumbnail gateway; zvlášť LIVE browser regresia pracovného webu. Nejde o hotovú editáciu/náhľad z P02/P03. Pracovná DB s MyISAM zatiaľ nie je vhodná na rezervácie.
 - Pred P01 prešlo dokumentačné overenie pôvodných 18 Markdown dokumentov. Aktuálne výsledky, skúšobné Java testy a medzery overenia sú evidované nižšie a v [P01-vysledky.md](P01-vysledky.md). Zmeny zostávajú bez commitov.
 
@@ -22,7 +22,7 @@
 | --- | --- | --- |
 | P01 | DONE | ID/SQL/core izolácia a minimálny JSP/thumbnail gateway vrátane reálneho admin-host prekliku prešli na uvedenom InnoDB profile. |
 | P02 | DONE | Päť tabuliek, stabilné ID vrátane médií/reštartu, explicitné mapovanie/B-L-W, request kontext a create/list API; flag-off administrácia overená. |
-| P03 | NOT_STARTED | — |
+| P03 | DONE | Účinné čítanie a reálny preklikateľný náhľad vrátane N01–N08/M01–M09; po pokračovaní 85/85 Java a 3/3 browser na izolovanom MariaDB/InnoDB profile. |
 | P04 | NOT_STARTED | — |
 | P05 | NOT_STARTED | — |
 | P06 | NOT_STARTED | — |
@@ -32,6 +32,20 @@
 Prípustné evidenčné stavy krokov: `NOT_STARTED`, `IN_PROGRESS`, `PARTIAL`, `DONE`, `BLOCKED`. Ide iba o stav práce agentov, nie o databázové stavy publikačnej vetvy. Pri BLOCKED sa zapíše konkrétna prekážka a čo ju odstráni.
 
 ## Výsledky krokov
+
+### P03 — DONE (4. november 2026, iba zvolený POC profil)
+
+- **Vetva/východisko:** `feature/58858-publishing-packages`, `6ef23d343`. Existujúce zmeny zachované, bez Git commitov a produkčného nasadenia. P04–P08 NOT_STARTED.
+- **Výsledok:** použité P02 mapovanie/B-L-W/context/storage v účinnom DocDB/GroupsDB, strome, URL a admin SQL zoznamoch. Overený filter a admin-host gateway, reálne News/Menu JSP, oddelené cache, médiá/súbory/perex varianty/thumbnaily, create/selection/indikátor. ADMIN číta WORK, PREVIEW rešpektuje Q16; nepodporované zápisy sú odmietnuté.
+- **Prerušenie a obnova:** už bežiaci mediálny test pri odchode dobehol 1/1; žiadny test nezostal nedokončený. Dáta aj konzistentný dump sa zachovali v `build/test-results/p03/pause-2026-11-04/`. Po pokračovaní sa overili aktuálny kód/procesy/profil a obnovili iba POC DB/server; manuálna fixture sa nevytvárala znova.
+- **Finálna kontrola:** opravený jednostranný admin rozsah iba Od/Do a prvotný bootstrap povolenej obsahovej domény na samostatnom admin hoste. Explicitná cudzia doména naďalej 403, starý kontext 409. Číselné GROUP enumy z P02 zostávajú číselné; matica aktualizovaná. Pomocníci vykonali read-only kontrolu oddelených súborov, opravy prevzal/overil hlavný agent; žiadny potvrdený blocker nezostal.
+- **Overenie aktuálneho stavu:** spoločná Java sada **85/85**, 0 chýb/preskočení; plný Codecept browser **3/3** vrátane posledných mediálnych/SSL zmien a odlišného transportného hosta 127.0.0.1. Reálny NewsActionBean/SQL/Velocity N01–N08 a menu_ul_li.jsp M01–M09, nested forward, Q16 aj súborový DELETE/stale choice, doména/session/conditional no-store. Predošlé 84/84 a 2/2 archívy zostali odlíšené; frontend build platný (2 existujúce warnings). Finálny diff a lokálne Markdown odkazy overené.
+- **Review používateľa (8. november):** opravy sú iba mimo STAGE; index zostal nezmenený. Preklady presunuté do SK/EN/CZ webjet9 bundles, JDBC používa psCounter++, odstránené nepoužité IwcmFile a doplnené dôvody branch výnimiek. Cielená DB/JSP regresia 12/12; report `build/test-results/p03/review-2026-11-08/final/`. Pôvodný dočasný datadir mal neúplné systémové tabuľky; overený dump sa obnovil do nového `/tmp/webjet-p03-review-db/data` na 33316. Pôvodné dáta zachované, nová DB po testoch vypnutá, app server sa nespúšťal. Aktuálne štart/stop príkazy sú v P03 výsledkoch.
+- **Dôkazy:** `build/test-results/p03/completion-final/` (XML/HTML/log), `completion-browser/` (log/screenshoty), `range-regression/`, reálne HTML/obrázky `build/test-results/p03-gateway/`; logy `/tmp/webjet-p03-completion-{final,browser,server}.log`. Podrobné API, príkazy, URL, inventár a hranice v [P03-vysledky.md](P03-vysledky.md).
+- **Profil:** MariaDB 12.2.2/InnoDB, Connector/J 3.5.10, Java 17.0.18, jediná POC inštancia `127.0.0.1:33316/webjet_p01`, ignorovaný `poolman-local-p01.xml`, lokálny filesystem. Pracovná MyISAM DB 3306 sa nemenila, neaktivovala ani nekonvertovala. Predvolené zdrojové flagy zostávajú vypnuté.
+- **Aktuálne procesy/dáta:** POC MariaDB 33316 a WebJET 8086/8446 sa po následnom pokyne používateľa kvôli batérii korektne zastavili; PID 57005 patril tomuto POC serveru. Zachované private bajty `/tmp/webjet-p03-private`, manifest `/tmp/webjet-p03-manual.properties`, tajný login `/tmp/webjet-p03-login.properties` (600), vetvy 128/129, group 1940095/home 1940123/detail 1940124. Označené prázdne browser drafty sa zachovali. Štart/stop a obnova pri strate /tmp sú vo výsledkoch.
+- **Hranice/ďalší krok:** overená reprezentatívna `aceintegration/jet/blank.jsp` cez WriteTag a core News/menu; iné DB/topológie, IwcmFsDB, CDN, zákaznícke SQL/dynamické komponenty a pokročilé thumb parametre nie sú deklarované ako podporené. Editácia/SAVE a upload patria P04/P05, rozhodovacie UI/merge P06. Teraz skončiť a čakať na zadanie ďalšej etapy.
+- **Modely:** hlavný agent a najviac dvaja pomocníci s rovnakým zdedeným modelom/reasoning; presný identifikátor neoverený. Pomocníci sú dokončení, Goal mode nie je aktívny.
 
 ### P02 — DONE (4. november 2026, iba zvolený POC profil)
 

@@ -92,6 +92,8 @@ Počiatočné hodnoty pripravujú riadok pred redakčnou validáciou. Názov, re
 
 ## Priečinky
 
+Spresnenie P03 po reálnom renderi: `menu_type`, `logged_menu_type`, `show_in_navbar`, `show_in_sitemap`, `logged_show_in_navbar` a `logged_show_in_sitemap` sú číselné menu enumy. JDBC ich číta cez `getInt`, aby MariaDB TINYINT(1) nestratilo hodnoty -1/2/3 prevodom na Boolean. Rovnaké navbar/sitemap názvy v dokumentoch sú nullable Boolean; kanonizácia rozlišuje typ objektu.
+
 31 fyzických stĺpcov.
 
 | Stĺpec | Kategória | Nový objekt / zdroj |

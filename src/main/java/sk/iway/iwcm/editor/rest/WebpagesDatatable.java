@@ -181,6 +181,9 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public Page<DocDetails> findByColumns(@RequestParam Map<String, String> params, Pageable pageable, DocDetails search) {
+        // The default JPA specification reads only LIVE documents. Branch filtering/count/paging must
+        // run on the combined LIVE/WORK SQL source in WebpagesService -> BranchDocumentQuery instead.
+        if(sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return WebpagesService.getAllItems(getDefaultOptions(pageable,true));
 
         int groupId = getGroupIdParam();
 

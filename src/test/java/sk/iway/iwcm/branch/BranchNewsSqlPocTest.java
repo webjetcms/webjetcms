@@ -34,8 +34,9 @@ import sk.iway.iwcm.doc.DataAccessHelper;
 
 /**
  * Executes the P01 effective-source experiment using the real NewsQuery predicate
- * builder and full document projection. No production query or migration is changed.
- * The CTE and SQL assembly below are a MariaDB-only test seam, not the final BranchSql API.
+ * builder and full document projection. P03's real query assembler also supplies
+ * unique attribute membership, ordering and paging. The CTE only replaces the
+ * source with MariaDB scratch tables; production preview uses BranchSql instead.
  */
 @EnabledIfEnvironmentVariable(named = "WEBJET_P01_JDBC_URL", matches = ".+")
 class BranchNewsSqlPocTest
@@ -126,7 +127,7 @@ class BranchNewsSqlPocTest
         assertEquals(List.of(1), ids(plan(false, true, true, 1, 1), false));
         assertEquals(2, count(plan(true, true, true, 0, 1)));
         assertEquals(List.of(2, 1), ids(plan(false, true, true, 0, 20), false));
-        // Demonstrates that the fixture really exercises row multiplication in today's SQL.
+        // Demonstrates that a raw attribute join really multiplies this fixture.
         assertTrue(scalar("SELECT COUNT(*) FROM p01_news_live d JOIN p01_news_atr a ON a.doc_id=d.doc_id WHERE d.doc_id=1") > 1);
     }
 
@@ -145,26 +146,18 @@ class BranchNewsSqlPocTest
             .addCriteria(DatabaseCriteria.tokenizedIds(FieldEnum.PEREX_GROUP, 1));
         if (attributes) query.addCriteria(DatabaseCriteria.or(
             DatabaseCriteria.Atribute.equal("colour", "red"), DatabaseCriteria.Atribute.equal("size", "large")));
-        query.addOrder(OrderEnum.PRIORITY, SortEnum.ASC).addOrder(OrderEnum.ID, SortEnum.ASC);
+        query.addOrder(OrderEnum.PRIORITY, SortEnum.ASC).addOrder(OrderEnum.ID, SortEnum.ASC)
+            .setOffset(offset).setLimit(limit);
         Method build = NewsQuery.class.getDeclaredMethod("getSelectSql", boolean.class, boolean.class);
         build.setAccessible(true);
-        String generated = (String) build.invoke(query, false, noData);
+        String generated = (String) build.invoke(query, count, noData);
         Field args = NewsQuery.class.getDeclaredField("arguments");
         args.setAccessible(true);
-        int from = generated.indexOf(" FROM documents d ");
-        int order = generated.indexOf("ORDER BY ");
-        assertTrue(from > 0 && order > from, "Update the P01 seam if NewsQuery changes");
-        String membership = "SELECT d.doc_id" + generated.substring(from, order)
-            .replace(" FROM documents d ", " FROM p01_effective d ")
-            .replace("LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id ", "")
-            .replace("doc_atr da", "p01_news_atr da").replace("doc_atr_def dad", "p01_news_atr_def dad")
-            + " GROUP BY d.doc_id";
-        String projection = generated.substring(0, from)
-            .replace(", dad.*, da.value_string, da.value_int, da.value_bool ", " ");
-        String sql = effectiveSource() + (count ? "SELECT COUNT(*)" : projection)
-            + " FROM p01_effective d LEFT JOIN users u ON u.user_id=d.author_id "
-            + "WHERE d.doc_id IN (" + membership + ") "
-            + (count ? "" : generated.substring(order) + " LIMIT " + limit + " OFFSET " + offset);
+        assertTrue(generated.contains(" FROM documents d "), "Update the P01 source seam if NewsQuery changes");
+        // P03 now owns unique attribute membership and ordering/paging in NewsQuery itself.
+        // This historical experiment only replaces its source with the P01 scratch relation.
+        String sql = effectiveSource() + generated.replace(" FROM documents d ", " FROM p01_effective d ")
+            .replace("doc_atr da", "p01_news_atr da").replace("doc_atr_def dad", "p01_news_atr_def dad");
         List<Object> parameters = new ArrayList<>(List.of(branch, branch));
         parameters.addAll((List<Object>) args.get(query));
         return new Plan(sql, parameters);
