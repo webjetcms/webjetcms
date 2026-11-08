@@ -289,9 +289,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
         }
         AiChatSession.Continuation continuation = AiChatSession.resolve(inputData.getConversationId(), assistant, request);
         inputData.setPreviousResponseId(continuation.responseId());
-        if (Tools.isEmpty(assistant.getFieldFrom())) {
-            inputData.setInputValue("");
-        }
         return continuation;
     }
 

@@ -86,7 +86,7 @@ Prílohu stiahnete aj kliknutím na jej názov alebo ikonu sťahovania priamo pr
 
 ## Chat pri poli a v editore stránky
 
-Pri textovom poli alebo v paneli nástrojov editora kliknite na ikonu AI a vyberte asistenta s typom požiadavky **Chat**. Napíšte zadanie a odošlite ho. Zdrojový obsah určuje nastavenie asistenta; pri označenom texte v podporovanom editore sa použije tento výber.
+Pri textovom poli alebo v paneli nástrojov editora kliknite na ikonu AI a vyberte asistenta s typom požiadavky **Chat**. Napíšte zadanie a odošlite ho. Označený text v podporovanom editore má prednosť pred obsahom nastaveného **Zdrojového poľa**. Ak text neoznačíte, použije sa zdrojové pole. Ak ani to nie je nastavené, obsah poľa ani stránky sa neposiela. Rovnaké pravidlo platí pre uložené aj nové záznamy a hromadnú úpravu.
 
 Okno chatu môžete presunúť ťahaním za hornú lištu, aby nezakrývalo text stránky. Po zameraní lišty klávesom **Tab** ho môžete posúvať aj šípkami; so **Shift** sa posúva väčším krokom. Obsah editora môžete upravovať aj pri otvorenom chate.
 

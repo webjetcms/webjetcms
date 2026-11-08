@@ -314,12 +314,19 @@ export class EditorAi {
                 showAttachment: true,
                 allowAttachments: ['openai', 'gemini'].includes(assistant.provider)
                     && this._getColumnType(column, assistant.from) === 'text',
-                getInputData: () => ({
-                    inputValue: this._isChatSelectionValid(conversation.selection)
-                        ? conversation.selection.inputValue : this.EDITOR.get(assistant.from || assistant.to || column.name),
-                    inputValueType: this._getColumnType(conversation.column, assistant.from),
-                    outputValueType: "text"
-                }),
+                getInputData: () => {
+                    let inputValue = "";
+                    if (this._isChatSelectionValid(conversation.selection)) {
+                        inputValue = conversation.selection.inputValue;
+                    } else if (assistant.from) {
+                        inputValue = this.EDITOR.get(assistant.from);
+                    }
+                    return {
+                        inputValue,
+                        inputValueType: this._getColumnType(conversation.column, assistant.from),
+                        outputValueType: "text"
+                    };
+                },
                 getAnswerActions: message => this._getChatAnswerActions(conversation, message),
                 getToolbarActions: toolbarActions,
                 onChange: () => this._updateChatLoader(conversation),

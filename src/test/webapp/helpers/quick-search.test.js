@@ -137,7 +137,7 @@ function fixture(t, denied = [], options = {}) {
             aiUserInterface: { _showLoader() {}, _hideLoader() {}, setCurrentStatus() {} }
         });
         const conversation = editor.getChatConversation(window.document.querySelector('#trigger'),
-            { name: 'data', type: 'textarea', ...columnOptions }, { ...assistant, from: 'data', to: 'data' });
+            { name: 'data', type: 'textarea', ...columnOptions }, { from: 'data', to: 'data', ...assistant });
         conversation.view.mount(window.document.body);
         t.after(() => conversation.view.destroy());
         return Object.assign(conversation, { values, editor });
@@ -2008,6 +2008,52 @@ test('Unsaved and multi-record editors never fall back to standalone saved histo
     }
     assert.equal(f.requests.length, 0);
 });
+
+for (const record of [
+    { label: 'saved record', id: 42 },
+    { label: 'new record', id: -1, mode: 'create' },
+    { label: 'multiple records', id: 42, ids: [42, 43] }
+]) {
+    for (const scenario of [
+        { label: 'empty source', from: '', expected: '' },
+        { label: 'null source', from: null, expected: '' },
+        { label: 'missing source', from: undefined, expected: '' },
+        { label: 'configured source', from: 'title', expected: 'Source title' },
+        { label: 'selection without a source', from: '', selection: true, expected: '<p>Selected paragraph</p>' },
+        { label: 'selection overrides the source', from: 'title', selection: true, expected: '<p>Selected paragraph</p>' },
+        { label: 'stale selection without a source', from: '', selection: true, stale: true, expected: '' },
+        { label: 'stale selection with a source', from: 'title', selection: true, stale: true, expected: 'Source title' }
+    ]) {
+        test(`Editor chat sends the intended content for ${record.label}: ${scenario.label}`, async t => {
+            const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true });
+            const target = '<p>Unselected introduction</p><p>Selected paragraph</p><p>Unselected ending</p>';
+            const conversation = f.editorChat({ ...chatAssistants[0], persistentChat: true, from: scenario.from }, target, {},
+                { url: '/admin/rest/web-pages', ...record });
+            const { chat, values } = conversation;
+            values.title = 'Source title';
+            if (scenario.selection) {
+                const editable = chat.element.ownerDocument.createElement('div');
+                editable.innerHTML = target;
+                chat.element.ownerDocument.body.append(editable);
+                const selected = editable.children[1];
+                conversation.selection = {
+                    editor: { status: 'ready', getData: () => values.data, editable: () => ({ $: editable }) },
+                    ranges: [{ startContainer: { $: selected.firstChild }, endContainer: { $: selected.firstChild } }],
+                    value: target, inputValue: selected.outerHTML
+                };
+                if (scenario.stale) values.data = '<p>Changed after selection</p>';
+            }
+
+            const sending = chat.send('Prepare a short paragraph');
+            const request = f.chatRequests[0];
+            assert.equal(request.inputData.inputValue, scenario.expected);
+            assert.equal(request.inputData.userPrompt, 'Prepare a short paragraph');
+            assert.equal(Boolean(request.inputData.persistentChat), record.label === 'saved record');
+            request.resolve({ success: true, response: 'Suggested paragraph' });
+            await sending;
+        });
+    }
+}
 
 for (const provider of ['openai', 'gemini']) {
     test(`Page chat with ${provider} sends selected files with editor context and retains them for a retry`, async t => {
