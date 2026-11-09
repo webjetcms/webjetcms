@@ -12,6 +12,7 @@ import jakarta.persistence.Query;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -517,6 +518,7 @@ public class Logger
 
 	public static void error(Throwable t) {
 		Class<?> c = Util.getCallingClass();
+		if (logMissingStatisticsTable(c, t)) return;
 		getLogger(c).error(getMessageColorWrapped(t.getMessage(), "ERROR"), t);
 	}
 
@@ -526,19 +528,59 @@ public class Logger
 	}
 
 	public static void error(Class<?> c, Exception e) {
+		if (logMissingStatisticsTable(c, e)) return;
 		getLogger(c).error(getMessageColorWrapped(e.getMessage(), "ERROR"), e);
 	}
 
 	public static void error(Class<?> c, Exception e, String message, Object... params) {
+		if (logMissingStatisticsTable(c, e)) return;
 		getLogger(c).error(getMessageColorWrapped(message, "ERROR"), e, params);
 	}
 
 	public static void error(Class<?> c, String message, Throwable t) {
+		if (logMissingStatisticsTable(c, t)) return;
 		getLogger(c).error(getMessageColorWrapped(message, "ERROR"), t);
 	}
 
 	public static void error(Class<?> c, String message, Throwable t, Object... params) {
+		if (logMissingStatisticsTable(c, t)) return;
 		getLogger(c).error(getMessageColorWrapped(message, "ERROR"), t, params);
+	}
+
+	/**
+	 * Logs missing tables in statistics as a single-line error without a stack trace.
+	 * Checks the cause chain and SQL call stack to include shared database helpers.
+	 *
+	 * @param source class reporting the error
+	 * @param exception reported error, possibly wrapping a JDBC exception
+	 * @return whether the error was handled as a missing statistics table
+	 */
+	public static boolean logMissingStatisticsTable(Class<?> source, Throwable exception) {
+		for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+			if (cause instanceof SQLException sqlException
+				&& ("42S02".equals(sqlException.getSQLState()) || "42P01".equals(sqlException.getSQLState())
+					|| sqlException.getErrorCode() == 1146 || sqlException.getErrorCode() == 942 || sqlException.getErrorCode() == 208)) {
+				boolean statistics = source != null && isStatisticsClass(source.getName());
+				if (statistics == false) {
+					for (StackTraceElement frame : sqlException.getStackTrace()) {
+						if (isStatisticsClass(frame.getClassName())) {
+							statistics = true;
+							break;
+						}
+					}
+				}
+				if (statistics) {
+					String message = sqlException.getMessage();
+					error(source, "Statistics table is missing" + (message == null ? "." : ": " + message.replace('\r', ' ').replace('\n', ' ')));
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean isStatisticsClass(String className) {
+		return className.startsWith("sk.iway.iwcm.stat.") || className.startsWith("sk.iway.iwcm.components.stat.");
 	}
 
 	public static void error(Object o, String message) {
