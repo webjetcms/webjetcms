@@ -22,6 +22,7 @@ import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiRequestLifecycle;
 import com.webjetcms.ai.AiRequestLifecycle.State;
 import com.webjetcms.ai.AiResponse;
+import com.webjetcms.ai.TokenUsage;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ import sk.iway.iwcm.components.ai.rest.AiChatStore.Turn;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.utils.Pair;
 
 /** Coordinates durable chat history with provider execution and explicit remote deletion. */
 @Service
@@ -137,6 +139,9 @@ public class AiChatService implements DisposableBean {
         String threadId = prepared.turn().thread().getId();
         String messageId = prepared.turn().message().getId();
         StringBuilder text = new StringBuilder();
+        Pair<String, String> inputPair = new Pair<>(input.getInputValue(), input.getUserPrompt());
+        TokenUsage usage = TokenUsage.EMPTY;
+        AssistantResponseDTO result = new AssistantResponseDTO();
         int tokens = 0;
         String status = "error";
         String category = "UNKNOWN";
@@ -164,7 +169,8 @@ public class AiChatService implements DisposableBean {
                 var preparedAttachment = provider.prepareChatAttachment(prepared.assistant(), input, providerConfig,
                     new AiChatAttachments.Upload(attachment, bytes));
                 // Keep already incurred image costs even when a later attachment is unreadable.
-                tokens += (int)Math.min(Integer.MAX_VALUE - tokens, preparedAttachment.usage().totalTokens());
+                usage = usage.plus(preparedAttachment.usage());
+                tokens = (int)Math.min(Integer.MAX_VALUE, usage.totalTokens());
                 preparedAttachment.appendTo(context);
             }
             input.setInputValue(input.getInputValue() + context);
@@ -174,25 +180,28 @@ public class AiChatService implements DisposableBean {
             submitted = true;
             AiResponse response = provider.getPersistentChatResponse(prepared.assistant(), input, onText, streaming, providerConfig,
                 responseId -> store.lifecycle(prepared.scope(), threadId, messageId, new AiRequestLifecycle(State.RESPONSE_OBSERVED, responseId)));
+            usage = usage.plus(response.usage());
+            tokens = (int)Math.min(Integer.MAX_VALUE, usage.totalTokens());
             if (input.getCancellationToken().isCancelled()) throw new CancellationException();
             // The completed provider response is authoritative; streamed text may contain only a partial answer.
             text.setLength(0);
             text.append(response.text());
-            tokens += (int)Math.min(Integer.MAX_VALUE - tokens, response.usage().totalTokens());
             status = "complete";
             category = null;
-            recordUsage(prepared, tokens, request);
-            return completedResponse(text.toString(), tokens);
+            result = completedResponse(text.toString(), tokens);
+            return result;
         } catch (AiChatAttachments.UnreadableException exception) {
             category = "ATTACHMENT_INVALID";
-            return failure(category, null, request);
+            result = failure(category, null, request);
+            return result;
         } catch (AiProviderException exception) {
             category = exception.category().name();
             providerStatus = exception.statusCode() > 0 ? exception.statusCode() : null;
             retryable = exception.retryable();
             if (submitted) lifecycle = exception.lifecycle();
             status = exception.category() == AiErrorCategory.CANCELLED ? "stopped" : "error";
-            return failure(category, providerStatus, retryable, request);
+            result = failure(category, providerStatus, retryable, request);
+            return result;
         } catch (Exception exception) {
             if (input.getCancellationToken().isCancelled() || exception instanceof CancellationException) {
                 category = "CANCELLED";
@@ -200,19 +209,22 @@ public class AiChatService implements DisposableBean {
             } else {
                 Logger.error(AiChatService.class, "Chat " + threadId + ": generation failed", exception);
             }
-            return failure(category, providerStatus, request);
+            result = failure(category, providerStatus, request);
+            return result;
         } finally {
             renewal.cancel(false);
             // Cancellation interrupts the worker. Temporarily clear the flag so final filesystem writes can run.
             boolean interrupted = Thread.interrupted();
             try {
+                // Account for completed calls even if a later attachment or the main generation failed.
+                if ("complete".equals(status) || tokens > 0) recordUsage(prepared, tokens, request);
+                auditResponse(prepared, inputPair, streaming, result, text.toString(), usage);
                 try {
                     // Remote cleanup facts and successful continuation are separate: finish advances only the latter.
                     store.lifecycle(prepared.scope(), threadId, messageId, lifecycle);
                 } finally {
                     store.finish(prepared.scope(), threadId, messageId, text.toString(), status, tokens, category, providerStatus, retryable);
                 }
-                audit(threadId, status, category);
                 cleanup(threadId, prepared.scope());
             } finally {
                 if (interrupted) Thread.currentThread().interrupt();
@@ -269,6 +281,28 @@ public class AiChatService implements DisposableBean {
             String threadId = prepared.turn().thread().getId();
             Logger.error(AiChatService.class, "Chat " + threadId + ": statistics failed", exception);
             audit(threadId, "statistics_failed", null);
+        }
+    }
+
+    /** Uses the assistant audit format while retaining saved-conversation identifiers and failure details. */
+    private void auditResponse(Prepared prepared, Pair<String, String> input, boolean streaming,
+        AssistantResponseDTO result, String text, TokenUsage usage) {
+        try {
+            String status = result.getError() == null ? "SUCCESS" : "ERROR";
+            if ("CANCELLED".equals(result.getErrorCategory())) status = "CANCELLED";
+            String method = streaming ? "getPersistentChatStreamResponse" : "getPersistentChatResponse";
+            StringBuilder audit = AiAuditLog.create(status, prepared.assistant(), method);
+            audit.append("\nThread ID: ").append(prepared.turn().thread().getId());
+            audit.append("\nMessage ID: ").append(prepared.turn().message().getId()).append('\n');
+            AiAuditLog.appendUsage(audit, usage);
+            int totalTokens = (int)Math.min(Integer.MAX_VALUE, usage.totalTokens());
+            if (result.getError() != null) audit.append("\nError message:\n").append(result.getError());
+            if (result.getErrorCategory() != null) audit.append("\nError category: ").append(result.getErrorCategory());
+            if (result.getProviderStatusCode() != null) audit.append("\nProvider status: ").append(result.getProviderStatusCode());
+            AiAuditLog.appendResponse(audit, input, text, configuration.auditMaxLength());
+            Adminlog.add(Adminlog.TYPE_AI, audit.toString(), totalTokens, -1);
+        } catch (RuntimeException exception) {
+            Logger.error(AiChatService.class, "Chat " + prepared.turn().thread().getId() + ": audit failed", exception);
         }
     }
 

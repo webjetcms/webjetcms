@@ -1047,24 +1047,10 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AiStatRepository statRepo,
         HttpServletRequest request
     ) {
-        StringBuilder audit = new StringBuilder("SUCCESS: ");
-        audit.append(assistant.getName()).append(" (").append(assistant.getProvider()).append(") ");
-        audit.append(methodName).append('\n');
-        appendAssistantInfo(assistant, audit);
-
-        audit.append("\nAction cost:\n");
-        int totalTokens = appendUsageAndReturnTotal(audit, usage);
-
-        int auditMaxLength = configurationService.auditMaxLength();
-        if (auditMaxLength > 0) {
-            StringBuilder details = new StringBuilder("\nInput value:\n");
-            details.append(Tools.isEmpty(inputPair.getFirst()) ? " - " : inputPair.getFirst());
-            if (Tools.isNotEmpty(inputPair.getSecond())) {
-                details.append("\nUser prompt:\n").append(inputPair.getSecond());
-            }
-            details.append("\nAI response:\n").append(textResponse);
-            audit.append(DB.prepareString(details.toString(), auditMaxLength));
-        }
+        StringBuilder audit = AiAuditLog.create("SUCCESS", assistant, methodName);
+        AiAuditLog.appendUsage(audit, usage);
+        int totalTokens = Tools.safeLongToInt(safeUsage(usage).totalTokens());
+        AiAuditLog.appendResponse(audit, inputPair, textResponse, configurationService.auditMaxLength());
 
         try {
             Adminlog.add(Adminlog.TYPE_AI, audit.toString(), totalTokens, -1);
@@ -1073,17 +1059,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
             Logger.error(LibrarySupportLogic.class, "Error processing adminlog " + exception.getMessage());
         }
         responseDto.setTotalTokens(totalTokens);
-    }
-
-    private int appendUsageAndReturnTotal(StringBuilder audit, TokenUsage usage) {
-        TokenUsage normalizedUsage = safeUsage(usage);
-        audit.append("\t input_tokens: ").append(normalizedUsage.inputTokens()).append('\n');
-        audit.append("\t output_tokens: ").append(normalizedUsage.outputTokens()).append('\n');
-        for (Map.Entry<String, Long> detail : normalizedUsage.details().entrySet()) {
-            audit.append("\t ").append(detail.getKey()).append(": ").append(detail.getValue()).append('\n');
-        }
-        audit.append("\t total_tokens: ").append(normalizedUsage.totalTokens()).append('\n');
-        return Tools.safeLongToInt(normalizedUsage.totalTokens());
     }
 
     private void errorAdminLog(
@@ -1100,10 +1075,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             message = providerErrorMessage(cause, prop);
             rawResponse = cause.rawResponse();
         }
-        StringBuilder audit = new StringBuilder("ERROR: ");
-        audit.append(assistant.getName()).append(" (").append(assistant.getProvider()).append(") ");
-        audit.append(methodName).append('\n');
-        appendAssistantInfo(assistant, audit);
+        StringBuilder audit = AiAuditLog.create("ERROR", assistant, methodName);
         audit.append("\nError message:\n").append(message);
         audit.append("\nInput value:\n").append(auditValue(inputPair.getFirst()));
         if (Tools.isNotEmpty(inputPair.getSecond())) {
@@ -1112,15 +1084,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
         audit.append("\nFull response:\n").append(auditValue(rawResponse));
         Adminlog.add(Adminlog.TYPE_AI, audit.toString(), -1, -1);
         throw new ProviderCallException(message, cause);
-    }
-
-    private void appendAssistantInfo(AssistantDefinitionEntity assistant, StringBuilder audit) {
-        audit.append("\nAssistant ID: ").append(assistant.getId()).append('\n');
-        if (Tools.isNotEmpty(assistant.getName())) audit.append("Assistant name: ").append(assistant.getName()).append('\n');
-        if (Tools.isNotEmpty(assistant.getProvider())) audit.append("Provider: ").append(assistant.getProvider()).append('\n');
-        if (Tools.isNotEmpty(assistant.getModel())) audit.append("Model: ").append(assistant.getModel()).append('\n');
-        if (Tools.isNotEmpty(assistant.getFieldFrom())) audit.append("Field from: ").append(assistant.getFieldFrom()).append('\n');
-        if (Tools.isNotEmpty(assistant.getFieldTo())) audit.append("Field to: ").append(assistant.getFieldTo());
     }
 
     private String providerErrorMessage(AiProviderException exception, Prop prop) {

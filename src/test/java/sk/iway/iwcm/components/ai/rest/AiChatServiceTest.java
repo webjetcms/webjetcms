@@ -21,6 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -48,6 +49,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
 import sk.iway.iwcm.i18n.Prop;
 
 /** Verifies saved chat cleanup, retry metadata and continuation from completed turns only. */
@@ -57,6 +59,8 @@ class AiChatServiceTest {
     private final LibrarySupportLogic provider = mock(LibrarySupportLogic.class);
     private final AiClient aiClient = mock(AiClient.class);
     private final AiTaskRegistry tasks = mock(AiTaskRegistry.class);
+    private final AiStatRepository statistics = mock(AiStatRepository.class);
+    private final WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final AiProviderConfig config = AiProviderConfig.builder("key").build();
     private AiChatStore.Scope scope;
@@ -83,12 +87,12 @@ class AiChatServiceTest {
         when(provider.isInit()).thenReturn(true);
         when(provider.supportsPersistentChat(assistant)).thenReturn(true);
         doCallRealMethod().when(provider).prepareChatAttachment(any(), any(), any(), any());
-        var configuration = mock(WebjetAiConfigurationService.class);
         when(configuration.resolveForDomain(provider, scope.domainName())).thenReturn(config);
         when(configuration.chatScope(config)).thenReturn("scope");
+        when(configuration.auditMaxLength()).thenReturn(2000);
         when(tasks.runChatTask(anyString(), same(scope), any(), any())).thenAnswer(call ->
             call.<Callable<AssistantResponseDTO>>getArgument(2).call());
-        service = new AiChatService(store, assistants, List.of(provider), tasks, aiClient, configuration, mock(AiStatRepository.class));
+        service = new AiChatService(store, assistants, List.of(provider), tasks, aiClient, configuration, statistics);
         audit = mockStatic(Adminlog.class);
         translations = mockStatic(Prop.class);
         Prop prop = mock(Prop.class);
@@ -96,7 +100,7 @@ class AiChatServiceTest {
         translations.when(() -> Prop.getInstance(request)).thenReturn(prop);
         when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenAnswer(call -> {
             call.<AiLifecycleListener>getArgument(5).onResponseId("response-one");
-            return new AiResponse("Answer", List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", "response-one");
+            return new AiResponse("Answer", List.of(), new TokenUsage(1, 2, 3, Map.of("cached_tokens", 1L)), "completed", "response-one");
         });
     }
 
@@ -109,6 +113,117 @@ class AiChatServiceTest {
 
     private AssistantResponseDTO execute(AiChatService.Prepared prepared) {
         return service.execute(prepared, text -> { }, false, request);
+    }
+
+    /** Saved turns use the standard AI audit and record consumption once, including after a replay. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void auditsAssistantInputAndUsage(boolean streaming) {
+        assistant.setClassName("sk.iway.iwcm.doc.DocDetails");
+        assistant.setFieldFrom("data");
+        assistant.setFieldTo("data");
+        assistant.setKeepHtml(true);
+        var context = new AiChatContext("/admin/rest/web-pages", "42", "data");
+        String requestId = UUID.randomUUID().toString();
+        var prepared = service.prepare(new AiChatRequest(null, 12L, requestId, null, "Question", null,
+            context, "<p>Original page</p>"), scope);
+
+        var response = service.execute(prepared, text -> { }, streaming, request);
+        assertEquals(3, response.getTotalTokens());
+        var duplicate = service.prepare(new AiChatRequest(prepared.turn().thread().getId(), 12L, requestId, 0L,
+            "Question", null, context, "<p>Original page</p>"), scope);
+        service.execute(duplicate, text -> { }, streaming, request);
+
+        audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), argThat(value ->
+            value.startsWith("SUCCESS: Assistant (openai)")
+                && value.contains("Assistant ID: 12") && value.contains("Assistant name: Assistant")
+                && value.contains("Provider: openai") && value.contains("Model: model")
+                && value.contains("Field from: data") && value.contains("Field to: data")
+                && value.contains("Thread ID: " + prepared.turn().thread().getId())
+                && value.contains("Action cost:") && value.contains("input_tokens: 1")
+                && value.contains("output_tokens: 2") && value.contains("total_tokens: 3")
+                && value.contains("cached_tokens: 1")
+                && value.contains("Input value:\n<p>Original page</p>")
+                && value.contains("User prompt:\nQuestion") && value.contains("AI response:\nAnswer")), eq(3), eq(-1)), times(1));
+        var records = org.mockito.ArgumentCaptor.forClass(AiStatEntity.class);
+        verify(statistics, times(1)).save(records.capture());
+        assertEquals(12L, records.getValue().getAssistantId());
+        assertEquals(7, records.getValue().getDomainId());
+        assertEquals(3, records.getValue().getUsedTokens());
+    }
+
+    /** Failed and cancelled calls retain the same assistant, question and provider status metadata. */
+    @ParameterizedTest
+    @CsvSource({"UNKNOWN,503,ERROR", "CANCELLED,0,CANCELLED"})
+    void auditsFailedAndCancelledTurns(AiErrorCategory category, int providerStatus, String auditStatus) throws Exception {
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any())).thenThrow(
+            new AiProviderException("openai", providerStatus, "Provider failure", null, false).withCategory(category));
+        var prepared = prepare(null, null);
+
+        assertEquals(category.name(), execute(prepared).getErrorCategory());
+
+        audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), argThat(value ->
+            value.startsWith(auditStatus + ": Assistant (openai) getPersistentChatResponse")
+                && value.contains("Assistant ID: 12") && value.contains("Model: model")
+                && value.contains("Thread ID: " + prepared.turn().thread().getId())
+                && value.contains("User prompt:\nQuestion") && value.contains("Error message:")
+                && value.contains("Error category: " + category)
+                && (providerStatus == 0 || value.contains("Provider status: " + providerStatus))), eq(0), eq(-1)));
+        verifyNoInteractions(statistics);
+    }
+
+    /** Disabling or truncating audit content preserves assistant metadata, thread IDs and consumption. */
+    @ParameterizedTest
+    @ValueSource(ints = {0, 40})
+    void respectsAuditContentLimit(int maxLength) {
+        when(configuration.auditMaxLength()).thenReturn(maxLength);
+        var prepared = prepare(null, null);
+        execute(prepared);
+
+        var description = org.mockito.ArgumentCaptor.forClass(String.class);
+        audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), description.capture(), eq(3), eq(-1)));
+        String value = description.getValue();
+        assertTrue(value.contains("Assistant ID: 12"));
+        assertTrue(value.contains("Thread ID: " + prepared.turn().thread().getId()));
+        assertTrue(value.contains("total_tokens: 3"));
+        if (maxLength == 0) {
+            assertFalse(value.contains("Input value:"));
+            assertFalse(value.contains("User prompt:"));
+            assertFalse(value.contains("AI response:"));
+        } else {
+            int contentStart = value.indexOf("\nInput value:\n");
+            assertTrue(contentStart > 0);
+            assertTrue(value.length() - contentStart <= maxLength);
+        }
+    }
+
+    /** Audit storage errors cannot turn a completed answer into a failure or prevent saving its history. */
+    @Test
+    void auditFailurePreservesAnswerAndStatistics() {
+        audit.when(() -> Adminlog.add(eq(Adminlog.TYPE_AI), anyString(), eq(3), eq(-1)))
+            .thenThrow(new IllegalStateException("Audit unavailable"));
+        var prepared = prepare(null, null);
+
+        assertEquals("Answer", execute(prepared).getResponse());
+        assertEquals("complete", store.get(prepared.turn().thread().getId(), scope).messages().get(1).getStatus());
+        verify(statistics).save(any(AiStatEntity.class));
+    }
+
+    /** A completed provider response still incurs cost when a stop arrives before its answer is accepted. */
+    @Test
+    void recordsReportedUsageWhenStoppedAfterProviderResponse() throws Exception {
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any())).thenAnswer(call -> {
+            call.<InputDataDTO>getArgument(1).getCancellationToken().cancel();
+            return new AiResponse("Late answer", List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed");
+        });
+        var prepared = prepare(null, null);
+
+        assertEquals("CANCELLED", execute(prepared).getErrorCategory());
+        var records = org.mockito.ArgumentCaptor.forClass(AiStatEntity.class);
+        verify(statistics).save(records.capture());
+        assertEquals(3, records.getValue().getUsedTokens());
+        audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), startsWith("CANCELLED: Assistant (openai)"), eq(3), eq(-1)));
+        assertEquals(3, store.get(prepared.turn().thread().getId(), scope).messages().get(1).getTotalTokens());
     }
 
     /** Provider retry recommendations survive both transports, a store reload and an idempotent result replay. */
@@ -181,6 +296,13 @@ class AiChatServiceTest {
         var saved = new AiChatStore().get(prepared.turn().thread().getId(), scope).messages();
         assertEquals(text, saved.get(1).getText());
         assertEquals(2, saved.get(0).getAttachments().size());
+        var records = org.mockito.ArgumentCaptor.forClass(AiStatEntity.class);
+        verify(statistics).save(records.capture());
+        assertEquals(7, records.getValue().getUsedTokens());
+        audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), argThat(value ->
+            value.startsWith("SUCCESS: Assistant (openai) getPersistentChatStreamResponse")
+                && value.contains("input_tokens: 3") && value.contains("output_tokens: 4")
+                && value.contains("total_tokens: 7")), eq(7), eq(-1)));
     }
 
     /** A later unreadable document does not discard the cost of an image already described for this attempt. */
@@ -203,6 +325,13 @@ class AiChatServiceTest {
             prepared.turn().message().getRequestId(), 0L, "Read these", null), scope, uploads);
         assertFalse(execute(duplicate).getRetryable());
         verify(provider, never()).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
+        var records = org.mockito.ArgumentCaptor.forClass(AiStatEntity.class);
+        verify(statistics, times(1)).save(records.capture());
+        assertEquals(4, records.getValue().getUsedTokens());
+        audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), argThat(value ->
+            value.startsWith("ERROR: Assistant (openai)") && value.contains("Error category: ATTACHMENT_INVALID")
+                && value.contains("input_tokens: 2") && value.contains("output_tokens: 2")
+                && value.contains("total_tokens: 4")), eq(4), eq(-1)), times(1));
     }
 
     /** Unexpected failures finish the saved turn and expose a localized error instead of provider diagnostics. */
