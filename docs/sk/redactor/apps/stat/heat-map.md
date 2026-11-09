@@ -48,6 +48,16 @@ Ak sa v týchto dňoch nezaznamenali žiadne kliknutia, jej uložený obsah si m
 
 Šablóna, hlavička, päta, ponuky, aplikácie a obrázky používajú aktuálne dostupné zdroje. Nejde o historickú snímku celého webu. Zmeny obsahu, pohyblivé prvky a odlišná výška okna môžu ovplyvniť presnosť pozícií. Absolútna poloha Y sa neprepočítava: zmena výšky obsahu nad kliknutím môže posunúť mapu aj pri rovnakej šírke kontajnera.
 
+## Porovnanie dvoch verzií
+
+Ak sú vo vybranom období dostupné aspoň dve publikované verzie stránky, tlačidlo **Porovnať verzie** otvorí dva náhľady. V poliach **Verzia A** a **Verzia B** v hlavičkách náhľadov vyberte odlišné verzie tej istej stránky. Na úzkej obrazovke sa náhľady zobrazia pod sebou.
+
+Oba náhľady majú spoločnú **Šírku mapy**, **Zobrazenie**, **Krytie mapy** a prepínač **Zobraziť mapu**. Aj pri prispôsobení priestoru používajú rovnakú mierku. Pri kontajnerových skupinách sa pre oba náhľady použije rovnaká skutočná šírka okna, vybraná zo záznamov za celé obdobie. Náhľady možno posúvať samostatne. Pri zmene verzie sa načíta iba príslušný náhľad; druhý si zachová mapu aj pozíciu posunu.
+
+Pod každým náhľadom sa zobrazuje jeho počet kliknutí. Ak verzia nemá kliknutia pre vybranú šírku, zobrazí sa jej obsah s nulovým počtom a bez farebnej vrstvy. Farebná škála je pre oba náhľady rovnaká. Počty sa neprepočítavajú podľa dĺžky platnosti verzie ani návštevnosti; verzie publikované v rovnaký deň môžu zahŕňať tie isté denné kliknutia.
+
+Opätovným stlačením **Porovnať verzie** sa vrátite k jednému náhľadu a pôvodnému výberu verzie.
+
 ## Prenos a obmedzenia
 
 Kliknutia sa dočasne ukladajú do cookie a odošlú pri ďalšej bežnej požiadavke na server. Každé kliknutie nevyvoláva samostatnú požiadavku. Posledné kliknutia pred odchodom z webu môžu zostať neodoslané. Stránky obslúžené výhradne z vyrovnávacej pamäte pred serverom nemusia cookie odovzdať na spracovanie.

@@ -15,7 +15,13 @@ After(({ I }) => {
 });
 
 /** Install bounded response fixtures to test rendering independently of visitor data. */
-function mockMap(I, {listRequests, multipleVersions = false}) {
+function mockMap(I, {listRequests, mapRequests, multipleVersions = false, comparison = false, comparisonFailure = false}) {
+    const comparisonWidths = {
+        "": [{width: 1280, mode: "DOCUMENT", clicks: 32}, {width: 1024, mode: "DOCUMENT", clicks: 5}, {width: 960, mode: "CONTAINER", clicks: 40, previewWidth: 1440}],
+        "123": [{width: 1280, mode: "DOCUMENT", clicks: 20}, {width: 960, mode: "CONTAINER", clicks: 18, previewWidth: 1366}],
+        "122": [{width: 1280, mode: "DOCUMENT", clicks: 12}, {width: 1024, mode: "DOCUMENT", clicks: 5}, {width: 960, mode: "CONTAINER", clicks: 22, previewWidth: 1600}],
+        "121": []
+    };
     I.mockRoute(apiPattern, async route => {
         const url = new URL(route.request().url());
         if (["/admin/rest/stat/heat-map", "/admin/rest/stat/heat-map/all", "/admin/rest/stat/heat-map/search/findByColumns"].includes(url.pathname) && listRequests) {
@@ -27,6 +33,7 @@ function mockMap(I, {listRequests, multipleVersions = false}) {
             return route.fulfill({json: {content, totalElements: content.length, numberOfElements: content.length, size: content.length, number: 0, totalPages: 1, empty: false}});
         }
         if (!url.pathname.startsWith("/admin/rest/stat/heat-map/")) return route.continue();
+        if (mapRequests) mapRequests.push(url);
         if (!url.pathname.includes("/html/") && !url.pathname.includes("/binary/")) {
             const csrfToken = await route.request().frame().evaluate(() => window.csrfToken);
             if (!csrfToken || route.request().headers()["x-csrf-token"] !== csrfToken) {
@@ -34,14 +41,32 @@ function mockMap(I, {listRequests, multipleVersions = false}) {
             }
         }
         if (url.pathname.endsWith("/widths")) {
-            return route.fulfill({json: [{width: 1280, mode: "DOCUMENT", clicks: 32, previewWidth: 1280}]});
+            if (comparison) return route.fulfill({json: comparisonWidths[url.searchParams.get("versionId") || ""]});
+            if (url.searchParams.get("versionId") === "123") return route.fulfill({json: []});
+            const clicks = url.searchParams.get("versionId") === "122" ? 10 : 32;
+            return route.fulfill({json: [
+                {width: 1280, mode: "DOCUMENT", clicks, previewWidth: 1280},
+                {width: 1024, mode: "DOCUMENT", clicks: 5, previewWidth: 1024}
+            ]});
         }
         if (url.pathname.endsWith("/metadata")) {
             const versionId = url.searchParams.get("versionId");
+            if (comparison) {
+                if (comparisonFailure && versionId === "122") return route.fulfill({status: 500, body: "autotest metadata failure"});
+                const group = comparisonWidths[versionId || ""].find(item => item.width === Number(url.searchParams.get("width")) && item.mode === url.searchParams.get("mode"));
+                if (!group) return route.fulfill({status: 404, body: "No clicks at this width"});
+                return route.fulfill({json: {
+                    ...group, title: "autotest comparison", tileSize: 1024, source: "history", containerSelector: ".container",
+                    versions: [123, 122, 121].map((historyId, index) => ({historyId, effectiveFrom: 1788300000000 - index * 86400000}))
+                }});
+            }
             const fallback = multipleVersions && !versionId;
+            const width = Number(url.searchParams.get("width"));
+            let clicks = versionId === "122" ? 10 : 32;
+            if (width === 1024) clicks = 5;
             return route.fulfill({json: {
                 title: "autotest click map preview", url: "/autotest-click-map.html",
-                width: 1280, previewWidth: 1280, clicks: 32, tileSize: 1024,
+                width, previewWidth: width, clicks, tileSize: 1024,
                 historyId: fallback ? null : Number(versionId || 123), effectiveFrom: 1788213600000,
                 source: fallback ? "current" : "history",
                 historicalUnavailable: fallback, multipleVersions: fallback,
@@ -50,7 +75,7 @@ function mockMap(I, {listRequests, multipleVersions = false}) {
         }
         if (url.pathname.endsWith("/html/preview")) {
             return route.fulfill({contentType: "text/html", body: '<!doctype html><meta name="webjet-heatmap-preview" content="'
-                + Number(url.searchParams.get("docId")) + '"><main>autotest page</main>'});
+                + Number(url.searchParams.get("docId")) + '"><style>body{margin:0}.container{max-width:960px;margin:auto;min-height:3500px}</style><main class="container">autotest page</main>'});
         }
         if (url.pathname.endsWith("/binary/tile")) {
             return route.fulfill({contentType: "image/png", body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64")});
@@ -100,9 +125,20 @@ Scenario("opens a resizable dialog and returns to the unchanged page list", asyn
     I.waitForVisible("#heatMapViewport", 20);
     I.dontSeeElement("#heatMapBack");
     I.dontSeeElement("#heatMapTitle");
+    I.verifyDisabled("#heatMapCompare");
     I.dontSeeElement("#heatMapUrl, #heatMapPeriod, #heatMapVersion");
     I.dontSeeElement('#heatMapViewer > p[data-th-text*="previewHelp"]');
+    I.see("Kliknutia: 32", "#heatMapTotalClicks");
+    I.see("Prispôsobiť priestoru", "#heatMapScaleSummary");
+    I.see("Menej", ".pg-heatmap-legend");
+    I.see("Viac kliknutí", ".pg-heatmap-legend");
+    I.selectOption("#heatMapWidth", "1024");
+    I.waitForText("Kliknutia: 5", 10, "#heatMapTotalClicks");
+    I.selectOption("#heatMapWidth", "1280");
+    I.waitForText("Kliknutia: 32", 10, "#heatMapTotalClicks");
+    I.waitForVisible("#heatMapViewport", 10);
     I.selectOption("#heatMapScale", "0.5");
+    I.see("50 %", "#heatMapScaleSummary");
     const originalHeight = await I.executeScript(() => document.getElementById("heatMapFrame").contentWindow.innerHeight);
     I.switchTo();
     I.clickCss("#modalIframe .dialog-buttons .maximize");
@@ -142,4 +178,206 @@ Scenario("shows historical fallback and mixed-version notices", ({ I }) => {
     I.selectOption("#heatMapVersion", "122");
     I.waitForElement('#heatMapTiles img[src*="versionId=122"]', 10);
     I.seeElement('#heatMapFrame[src*="versionId=122"]');
+    I.see("Kliknutia: 10", "#heatMapTotalClicks");
+    I.selectOption("#heatMapVersion", "123");
+    I.waitForVisible("#heatMapViewport", 10);
+    I.waitForText("Kliknutia: 0", 10, "#heatMapTotalClicks");
+    I.see("sa nezaznamenali žiadne kliknutia", "#heatMapStatus");
+    I.dontSeeElement("#heatMapTiles img");
+});
+
+/** Waits for the shared fit scale after responsive layout and iframe resizing. */
+async function checkComparisonGeometry(I, width) {
+    // Frame dimensions and CSS transforms settle asynchronously through ResizeObserver.
+    I.waitForFunction(([width]) => {
+        const prefixes = ["heatMap", "heatMapCompare"];
+        const expectedScale = Math.min(1, ...prefixes.map(prefix => Math.max(1, document.getElementById(prefix + "Viewport").clientWidth - 10) / width));
+        return prefixes.every(prefix => document.getElementById(prefix + "Frame").contentWindow.innerWidth === width
+            && Math.abs(new DOMMatrix(getComputedStyle(document.getElementById(prefix + "Stage")).transform).a - expectedScale) < 0.00001);
+    }, [width], 10);
+    const panes = await I.executeScript(() => ["heatMap", "heatMapCompare"].map(prefix => {
+        const frame = document.getElementById(prefix + "Frame");
+        const url = new URL(frame.src);
+        return {docId: url.searchParams.get("docId"), dateRange: url.searchParams.get("dateRange"), versionId: url.searchParams.get("versionId"),
+            width: frame.contentWindow.innerWidth, height: frame.contentWindow.innerHeight,
+            transform: getComputedStyle(document.getElementById(prefix + "Stage")).transform};
+    }));
+    I.assertEqual(panes[0].docId, "11");
+    I.assertEqual(panes[1].docId, panes[0].docId);
+    I.assertEqual(panes[0].dateRange, dateRange);
+    I.assertEqual(panes[1].dateRange, panes[0].dateRange);
+    I.assertNotEqual(panes[0].versionId, panes[1].versionId);
+    I.assertEqual(panes[0].height, panes[1].height);
+    I.assertEqual(panes[0].transform, panes[1].transform);
+}
+
+Scenario("compares versions of one page at the same width and scale", async ({ I }) => {
+    mockMap(I, {comparison: true});
+    I.resizeWindow(1440, 1000);
+    I.executeScript(url => window.location.assign(url), detailsUrl);
+    I.waitForVisible("#heatMapViewport", 20);
+    I.clickCss("#heatMapCompare");
+    I.waitForVisible("#heatMapCompareViewport", 10);
+    I.waitForVisible("#heatMapViewport", 10);
+    I.see("Verzia A", "#heatMapPaneLabel");
+    I.see("Verzia B", "#heatMapComparePaneLabel");
+    I.seeElement("#heatMapPaneLabel #heatMapVersion");
+    I.seeElement("#heatMapComparePaneLabel #heatMapCompareVersion");
+    I.clickCss("#heatMapVersionLabel");
+    I.seeElement("#heatMapVersion:focus");
+    I.pressKey("Escape");
+    I.clickCss("#heatMapCompareVersionLabel");
+    I.seeElement("#heatMapCompareVersion:focus");
+    I.pressKey("Escape");
+    I.see("Kliknutia: 20", "#heatMapTotalClicks");
+    I.see("Kliknutia: 12", "#heatMapCompareTotalClicks");
+    I.seeElement('#heatMapTiles img[src*="versionId=123"][src*="width=1280"]');
+    I.seeElement('#heatMapCompareTiles img[src*="versionId=122"][src*="width=1280"]');
+    I.seeElementInDOM('#heatMapVersion option[value="122"]:disabled');
+    I.seeElementInDOM('#heatMapCompareVersion option[value="123"]:disabled');
+    for (const screenWidth of [1440, 1100, 700]) {
+        I.resizeWindow(screenWidth, 1000);
+        await checkComparisonGeometry(I, 1280);
+        const controlsFit = await I.executeScript(() => ["heatMap", "heatMapCompare"].every(prefix => {
+            const header = document.getElementById(prefix + "PaneLabel").getBoundingClientRect();
+            const select = document.getElementById(prefix + "Version").getBoundingClientRect();
+            return select.left >= header.left && select.right <= header.right && select.top >= header.top && select.bottom <= header.bottom;
+        }));
+        I.assertTrue(controlsFit, "Each version picker must fit inside its own pane header");
+    }
+    I.saveScreenshot("heatmap-comparison-narrow.png");
+    I.resizeWindow(1440, 1000);
+    I.selectOption("#heatMapScale", "0.5");
+    I.see("50 %", "#heatMapScaleSummary");
+    I.see("50 %", "#heatMapCompareScaleSummary");
+    const scales = await I.executeScript(() => ["heatMapStage", "heatMapCompareStage"].map(id => new DOMMatrix(getComputedStyle(document.getElementById(id)).transform).a));
+    I.assertDeepEqual(scales, [0.5, 0.5]);
+    I.clickCss("#heatMapVisible");
+    I.dontSeeElement("#heatMapOverlay");
+    I.dontSeeElement("#heatMapCompareOverlay");
+    I.clickCss("#heatMapVisible");
+    I.seeElement("#heatMapOverlay");
+    I.seeElement("#heatMapCompareOverlay");
+    I.selectOption("#heatMapScale", "fit");
+    I.selectOption("#heatMapWidth", "1024");
+    I.waitForText("Kliknutia: 0", 10, "#heatMapTotalClicks");
+    I.waitForText("Kliknutia: 5", 10, "#heatMapCompareTotalClicks");
+    I.waitForVisible("#heatMapCompareViewport", 10);
+    I.waitForVisible("#heatMapViewport", 10);
+    await checkComparisonGeometry(I, 1024);
+    I.see("Pre túto verziu a vybranú šírku nie sú zaznamenané kliknutia.", "#heatMapStatus");
+    I.dontSeeElement("#heatMapOverlay");
+    I.seeElement("#heatMapCompareOverlay");
+    I.selectOption("#heatMapWidth", "container:960");
+    I.waitForElement('#heatMapTiles img[src*="mode=CONTAINER"]', 10);
+    I.waitForElement('#heatMapCompareTiles img[src*="mode=CONTAINER"]', 10);
+    await checkComparisonGeometry(I, 1440);
+    I.see("Kliknutia: 18", "#heatMapTotalClicks");
+    I.see("Kliknutia: 22", "#heatMapCompareTotalClicks");
+    I.saveScreenshot("heatmap-comparison-desktop.png");
+    I.selectOption("#heatMapVersion", "121");
+    I.waitForText("Kliknutia: 0", 10, "#heatMapTotalClicks");
+    I.waitForVisible("#heatMapViewport", 10);
+    I.waitForVisible("#heatMapCompareViewport", 10);
+    await checkComparisonGeometry(I, 1440);
+    I.see("Kliknutia: 22", "#heatMapCompareTotalClicks");
+    I.clickCss("#heatMapCompare");
+    I.waitForVisible("#heatMapViewport", 10);
+    I.dontSeeElement("#heatMapComparePane");
+    I.dontSeeElement("#heatMapCompareVersion");
+    I.seeElement("#heatMapPaneLabel #heatMapVersion");
+    I.see("Verzia stránky", "#heatMapVersionLabel");
+    I.see("Kliknutia: 40", "#heatMapTotalClicks");
+    I.seeInField("#heatMapVersion", "");
+});
+
+Scenario("reloads only the changed comparison version and preserves the other pane", async ({ I }) => {
+    const mapRequests = [];
+    mockMap(I, {comparison: true, mapRequests});
+    I.resizeWindow(1440, 1000);
+    I.executeScript(url => window.location.assign(url), detailsUrl);
+    I.waitForVisible("#heatMapViewport", 20);
+    I.clickCss("#heatMapCompare");
+    I.waitForVisible("#heatMapViewport", 10);
+    I.waitForVisible("#heatMapCompareViewport", 10);
+    I.selectOption("#heatMapScale", "0.5");
+
+    for (const change of [
+        {changed: "heatMap", unchanged: "heatMapCompare", version: "121", clicks: 0},
+        {changed: "heatMapCompare", unchanged: "heatMap", version: "123", clicks: 20},
+        {changed: "heatMap", unchanged: "heatMapCompare", version: "122", clicks: 12}
+    ]) {
+        await I.executeScript(async prefix => {
+            const frame = document.getElementById(prefix + "Frame");
+            frame.contentWindow.scrollTo(0, 400);
+            // Let scroll-driven tile updates finish before retaining their DOM references.
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            window.autotestUnchangedHeatMap = {
+                doc: frame.contentDocument, src: frame.src, scrollY: frame.contentWindow.scrollY,
+                tiles: [...document.querySelectorAll("#" + prefix + "Tiles img")],
+                summary: document.getElementById(prefix + "TotalClicks").textContent
+            };
+        }, change.unchanged);
+        mapRequests.length = 0;
+        I.selectOption("#" + change.changed + "Version", change.version);
+        I.waitForText("Kliknutia: " + change.clicks, 10, "#" + change.changed + "TotalClicks");
+        await I.waitForVisible("#" + change.changed + "Viewport", 10);
+        const preserved = await I.executeScript(prefix => {
+            const frame = document.getElementById(prefix + "Frame");
+            const previous = window.autotestUnchangedHeatMap;
+            return {
+                document: frame.contentDocument === previous.doc, source: frame.src === previous.src,
+                scroll: frame.contentWindow.scrollY === previous.scrollY && previous.scrollY === 400,
+                tiles: previous.tiles.every(tile => tile.isConnected),
+                summary: document.getElementById(prefix + "TotalClicks").textContent === previous.summary
+            };
+        }, change.unchanged);
+        I.assertDeepEqual(preserved, {document: true, source: true, scroll: true, tiles: true, summary: true});
+        I.assertDeepEqual([...new Set(mapRequests.map(url => url.searchParams.get("versionId")))], [change.version]);
+        I.seeInField("#heatMapWidth", "1280");
+        I.seeInField("#heatMapScale", "0.5");
+    }
+
+    // Both version changes start in one browser task, before either width response arrives.
+    I.executeScript(() => {
+        for (const [id, version] of [["heatMapVersion", "121"], ["heatMapCompareVersion", "122"]]) {
+            const select = document.getElementById(id);
+            select.value = version;
+            select.dispatchEvent(new Event("change", {bubbles: true}));
+        }
+    });
+    I.waitForText("Kliknutia: 0", 10, "#heatMapTotalClicks");
+    I.waitForText("Kliknutia: 12", 10, "#heatMapCompareTotalClicks");
+    I.waitForVisible("#heatMapViewport", 10);
+    I.waitForVisible("#heatMapCompareViewport", 10);
+    I.seeElement('#heatMapCompareTiles img[src*="versionId=122"]');
+
+    // A shared width change must use the new version even while its widths are loading.
+    I.executeScript(() => {
+        const version = document.getElementById("heatMapVersion");
+        version.value = "123";
+        version.dispatchEvent(new Event("change", {bubbles: true}));
+        const width = document.getElementById("heatMapWidth");
+        width.value = "container:960";
+        width.dispatchEvent(new Event("change", {bubbles: true}));
+    });
+    I.waitForText("Kliknutia: 18", 10, "#heatMapTotalClicks");
+    I.waitForText("Kliknutia: 22", 10, "#heatMapCompareTotalClicks");
+    I.waitForElement('#heatMapTiles img[src*="versionId=123"][src*="mode=CONTAINER"]', 10);
+    I.waitForElement('#heatMapCompareTiles img[src*="versionId=122"][src*="mode=CONTAINER"]', 10);
+});
+
+Scenario("keeps one comparison usable when the other version fails", ({ I }) => {
+    mockMap(I, {comparison: true, comparisonFailure: true});
+    I.executeScript(url => window.location.assign(url), detailsUrl);
+    I.waitForVisible("#heatMapViewport", 20);
+    I.clickCss("#heatMapCompare");
+    I.waitForText("Mapu kliknutí sa nepodarilo načítať.", 10, "#heatMapCompareStatus");
+    I.waitForVisible("#heatMapViewport", 10);
+    I.see("Kliknutia: 20", "#heatMapTotalClicks");
+    I.dontSeeElement("#heatMapCompareSummary");
+    I.dontSeeElement("#heatMapCompareViewport");
+    I.clickCss("#heatMapCompare");
+    I.waitForVisible("#heatMapViewport", 10);
+    I.see("Kliknutia: 32", "#heatMapTotalClicks");
 });
