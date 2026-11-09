@@ -13,6 +13,7 @@ import org.springframework.web.context.WebApplicationContext;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.Modules;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -105,7 +106,7 @@ public class WebjetSecurityService {
         if(permission.contains("|")) {
             StringTokenizer st = new StringTokenizer(permission, "|");
             while (st.hasMoreTokens()) {
-                if (hasAuthority("ROLE_Permission_" + normalizeUserGroupName(st.nextToken().trim()))) return true;
+                if (hasPermissionAuthority(st.nextToken().trim())) return true;
             }
 
             return false;
@@ -115,14 +116,19 @@ public class WebjetSecurityService {
         if(permission.contains("&")) {
             StringTokenizer st = new StringTokenizer(permission, "&");
             while (st.hasMoreTokens()) {
-                if (hasAuthority("ROLE_Permission_" + normalizeUserGroupName(st.nextToken().trim())) == false) return false;
+                if (hasPermissionAuthority(st.nextToken().trim()) == false) return false;
             }
 
             return true;
         }
 
         //Just need this one permission
-        return hasAuthority("ROLE_Permission_" + normalizeUserGroupName(permission.trim()));
+        return hasPermissionAuthority(permission.trim());
+    }
+
+    private boolean hasPermissionAuthority(String permission) {
+        return hasAuthority("ROLE_Permission_" + normalizeUserGroupName(permission))
+            && Modules.getInstance().isAllowedForDomain(permission);
     }
 
     public boolean isInUserGroup(String group) {

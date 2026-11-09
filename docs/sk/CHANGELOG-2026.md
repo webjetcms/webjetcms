@@ -10,6 +10,7 @@
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
 - Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
 - Redis - zlepšený prenos informácie o nahrávanom súbore v session (#342).
+- Aplikácie - opravené rešpektovanie nastavenia `domainName` v súbore `modinfo.properties` pri zobrazení ľavého menu a overovaní prístupu k modulu vrátane REST API. V nastavení práv sa moduly filtrujú podľa domény iba pri oddelení používateľov podľa domén (MultiWeb alebo `usersSplitByDomain=true`), pri spoločných používateľoch sa zobrazujú práva modulov zo všetkých domén.
 - Bezpečnosť - aktualizovaná knižnica `FreeMarker` z verzie `2.3.34` na `2.3.35`.
 - Bezpečnosť - aktualizovaná knižnica `Hibernate Validator` z verzie `6.2.5.Final` na `6.2.6.Final` s opravou `CVE-2026-93879`. Zachovaná kompatibilita s `javax.validation`.
 - Bezpečnosť - aktualizované závislosti zostavenia administrácie `PostCSS` z verzie `8.5.12` na `8.5.23` a `source-map-js` z verzie `1.2.1` na `1.2.2` s opravami `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` a `CVE-2026-93749`.
