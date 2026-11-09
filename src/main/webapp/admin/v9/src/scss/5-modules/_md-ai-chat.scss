@@ -201,6 +201,7 @@
         a { text-decoration: underline; }
         blockquote { padding-left: 10px; border-left: 3px solid var(--wj-nice-gray-200); color: var(--wj-gray-text); }
         pre { padding: 8px; border-radius: var(--wj-border-radius); background: var(--wj-nice-gray); white-space: pre-wrap; }
+        .ai-chat-html-response > pre { border-top-left-radius: 0; border-top-right-radius: 0; }
         code { color: var(--bs-body-color); }
         :not(pre) > code { padding: 1px 3px; border-radius: 3px; background: var(--wj-nice-gray); white-space: pre-wrap; }
         table {
@@ -264,13 +265,34 @@
             flex-wrap: wrap;
             align-items: center;
             gap: 6px;
-            padding: 8px;
+            padding: 0 8px;
             border-top: 1px solid var(--wj-nice-gray-100);
             background: var(--bs-body-bg);
         }
-        .ai-chat-html-tabs, .ai-chat-html-devices { display: flex; gap: 4px; }
-        .ai-chat-html-tabs { margin-right: auto; }
-        .ai-chat-html-tabs button[aria-selected="true"], .ai-chat-html-devices button[aria-pressed="true"] {
+        .ai-chat-html-tabs {
+            display: flex;
+            gap: 16px;
+            margin-right: auto;
+
+            button {
+                padding: 6px 0;
+                border: 0;
+                border-bottom: 2px solid transparent;
+                border-radius: 0;
+                background: transparent;
+                color: var(--wj-gray-text);
+                font-size: 15px;
+                line-height: 1.5;
+
+                &:hover { color: var(--wj-primary); }
+                &[aria-selected="true"] {
+                    color: var(--wj-primary);
+                    border-bottom-color: var(--wj-primary);
+                }
+            }
+        }
+        .ai-chat-html-devices { display: flex; gap: 4px; }
+        .ai-chat-html-devices button[aria-pressed="true"] {
             color: var(--wj-ai-color-dark);
             border-color: var(--wj-ai-color);
             background: var(--wj-ai-color-hover);
