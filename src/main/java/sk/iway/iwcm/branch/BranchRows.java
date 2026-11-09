@@ -27,7 +27,11 @@ final class BranchRows {
         row.moveToInsertRow(); index = 1;
         for (Object value : values.values()) {
             if (value == null) row.updateNull(index++);
-            else row.updateObject(index++, value instanceof Boolean bool ? (bool ? 1 : 0) : value);
+            else {
+                Object jdbcValue=value instanceof Boolean bool ? (bool ? 1 : 0) : value;
+                if(jdbcValue instanceof java.math.BigDecimal decimal && decimal.scale()<=0) jdbcValue=decimal.longValueExact();
+                row.updateObject(index++,jdbcValue);
+            }
         }
         row.insertRow(); row.moveToCurrentRow(); row.beforeFirst(); row.next();
         return row;

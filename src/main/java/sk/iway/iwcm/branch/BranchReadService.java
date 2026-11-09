@@ -16,6 +16,7 @@ public final class BranchReadService {
         return DocDB.getInstance().getDocIdFromURLImpl(path,BranchContexts.current().domainName());
     }
     public static String docLink(int id) {
+        if(id<1) return "javascript:void(0)";
         BranchView view=BranchView.current();
         DocDetails doc=view==null?getDoc(id):view.metadataDocument(id); if (doc==null) return "#nopage";
         return sk.iway.iwcm.Tools.isNotEmpty(doc.getExternalLink())?doc.getExternalLink():doc.getVirtualPath();

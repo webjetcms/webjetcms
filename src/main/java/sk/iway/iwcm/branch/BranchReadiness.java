@@ -13,7 +13,6 @@ import java.util.Set;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.system.ConfDB;
 
 /** Fail-closed prerequisites for the single-writer MariaDB POC. No engine conversion. */
 public final class BranchReadiness {
@@ -34,10 +33,8 @@ public final class BranchReadiness {
             throw new SQLException("Only the verified MariaDB 12.2 single-writer POC profile is supported");
         if (connection.isReadOnly() || connection.getTransactionIsolation() < Connection.TRANSACTION_READ_COMMITTED)
             throw new SQLException("Branches require a writable connection at READ_COMMITTED or stronger");
-        String audit = ConfDB.ADMINLOG_TABLE_NAME;
-        if (audit == null || !audit.matches("[a-zA-Z0-9_]+")) throw new SQLException("Invalid configured audit table");
         Set<String> tables = new LinkedHashSet<>(List.of("documents", "groups", "media", "pkey_generator",
-            "media_group_to_media", "documents_history", "groups_scheduler", "perex_group_doc", audit,
+            "media_group_to_media", "documents_history", "groups_scheduler",
             "branches", "branch_documents", "branch_groups", "branch_media", "branch_files"));
         for (String table : tables) {
             try (PreparedStatement statement = connection.prepareStatement(
@@ -121,7 +118,7 @@ public final class BranchReadiness {
             }
         }
         for (String table : List.of("documents", "groups", "pkey_generator", "media", "media_group_to_media", "documents_history", "groups_scheduler",
-                "perex_group_doc", ConfDB.ADMINLOG_TABLE_NAME, "branches", "branch_documents", "branch_groups", "branch_media", "branch_files")) {
+                "perex_group_doc", "branches", "branch_documents", "branch_groups", "branch_media", "branch_files")) {
             String column;
             try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM `" + table + "` WHERE 1=0");
                  ResultSet result = statement.executeQuery()) { column = result.getMetaData().getColumnName(1); }

@@ -1,0 +1,47 @@
+.pg-branch-merge {
+    width: min(1440px, calc(100vw - 48px));
+    max-width: none;
+    max-height: calc(100dvh - 48px);
+    padding: 0;
+    border: 1px solid $nice-gray-100;
+    border-radius: 6px;
+    color: $secondary;
+
+    &::backdrop { background: rgba($secondary, .45); }
+
+    &__header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: $white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 24px;
+        border-bottom: 1px solid $nice-gray-100;
+        h2 { overflow-wrap: anywhere; }
+    }
+
+    &__content { padding: 20px 24px; }
+    &__table td { overflow-wrap: anywhere; }
+    &__versions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    &__version { min-width: 0; padding: 16px; border: 1px solid $nice-gray-100; border-radius: 6px; }
+    &__version dd { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+    &__changed { border-left: 3px solid $primary; padding-left: 8px; background: $nice-gray; }
+    &__text { color: inherit; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 28rem; overflow: auto; }
+    &__image { display: block; max-width: 100%; max-height: 160px; object-fit: contain; margin-bottom: 12px; }
+
+    @media (max-width: 1199.98px) {
+        width: calc(100vw - 24px);
+        max-height: calc(100dvh - 24px);
+        &__header, &__content { padding: 16px; }
+        &__versions { gap: 8px; }
+        &__version { padding: 12px; }
+    }
+    @media (max-width: 767.98px) {
+        &__versions { grid-template-columns: minmax(0, 1fr); }
+        &__table { min-width: 620px; }
+        &__header { align-items: flex-start; }
+    }
+}

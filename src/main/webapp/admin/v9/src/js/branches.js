@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import {openBranchMerge} from './branch-merge';
 
 // The server embeds the context of this screen; never refresh it silently from another tab.
 const screen = window.branchScreen;
@@ -74,7 +75,11 @@ async function api(path, body) {
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken },
         body: body ? JSON.stringify(body) : undefined,
     });
-    if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
+    if (!response.ok) {
+        let message = await response.text();
+        try { const error = JSON.parse(message); message = error.detail || error.message || message; } catch (ignored) { /* Keep a plain server response. */ }
+        throw new Error(`${response.status}: ${message}`);
+    }
     return response.json();
 }
 
@@ -101,7 +106,7 @@ $(async () => {
                 warning.textContent = WJ.translate('branches.files.shared.js');
                 document.querySelector('main, .ly-content, #main-content')?.prepend(warning);
             }
-            try {
+            if (active.state === 'DRAFT') try {
                 const link = await api(`/${active.id}/preview-link`);
                 const preview = document.getElementById('branch-preview-link');
                 if (preview) { preview.href = link.url; preview.classList.remove('d-none'); }
@@ -113,31 +118,11 @@ $(async () => {
             changesButton.type = 'button'; changesButton.className = 'btn btn-sm btn-outline-secondary';
             changesButton.textContent = WJ.translate('branches.changes.js');
             selector.parentElement.append(changesButton);
-            changesButton.onclick = async () => {
-                try {
-                    const response = await fetch('/admin/rest/branch-content');
-                    if (!response.ok) throw new Error(await response.text());
-                    const changes = await response.json();
-                    const modal = document.createElement('dialog'); modal.className = 'p-4 border rounded';
-                    const title = document.createElement('h2'); title.textContent = WJ.translate('branches.changes.js'); modal.append(title);
-                    const note = document.createElement('p'); note.textContent = WJ.translate('branches.revert.note.js'); modal.append(note);
-                    for (const change of changes) {
-                        const row = document.createElement('p'); row.textContent = `${change.type} #${change.id} · ${change.title} · ${change.operation} `;
-                        const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-sm btn-outline-secondary'; button.textContent = WJ.translate('branches.revert.js');
-                        button.onclick = async () => {
-                            try {
-                                const result = await fetch('/admin/rest/branch-content/revert', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({type:change.type,id:change.id,hash:change.hash}) });
-                                if (!result.ok) throw new Error(await result.text());
-                                location.reload();
-                            } catch (error) { showError(error); }
-                        };
-                        row.append(button); modal.append(row);
-                    }
-                    const close = document.createElement('button'); close.type = 'button'; close.className = 'btn btn-primary'; close.textContent = WJ.translate('button.close'); close.onclick = () => modal.close(); modal.append(close);
-                    modal.onclose = () => modal.remove(); document.body.append(modal); modal.showModal();
-                } catch (error) { showError(error); }
-            };
+            changesButton.onclick = () => openBranchMerge(active.id, api, screen, changesButton);
         }
+
+        const compareId = new URLSearchParams(location.hash.substring(1)).get('branchCompare') || new URLSearchParams(location.search).get('branchCompare');
+        if (compareId && /^[1-9][0-9]*$/.test(compareId)) openBranchMerge(Number(compareId), api, screen, selector);
 
         async function activate(id) {
             const editorOpen = $('div.modal.DTED.show:visible').length > 0;
@@ -148,18 +133,30 @@ $(async () => {
             window.location.href = '/admin/v9/webpages/web-pages-list/';
         }
 
-        function dialog(create) {
+        async function dialog(create) {
+            const listedBranches = create ? branches : await api('?includeClosed=true');
             const modal = document.createElement('dialog');
             modal.className = 'p-4 border rounded';
             modal.setAttribute('aria-labelledby', 'branch-dialog-title');
             modal.innerHTML = '<h2 id="branch-dialog-title">Pracovné verzie</h2><p class="branch-domain"></p><div class="branch-list"></div><form><label class="form-label">Názov <input name="name" class="form-control" required maxlength="255"></label><br><label class="form-label">Poznámka <textarea name="description" class="form-control"></textarea></label><p>Nezmenený obsah sa preberá z aktuálnej produkcie. Stránky a priečinky sa ukladajú do pracovnej verzie.</p><button class="btn btn-primary" type="submit">Vytvoriť</button> <button class="btn btn-outline-secondary branch-close" type="button">Zavrieť</button><p class="branch-result" role="status"></p></form>';
             modal.querySelector('.branch-domain').textContent = `Doména: ${screen.domainName}`;
             const list = modal.querySelector('.branch-list');
-            if (!create) branches.forEach(branch => {
-                const button = document.createElement('button');
-                button.type = 'button'; button.className = 'btn btn-outline-secondary d-block mb-2';
-                button.textContent = `${branch.name} · ${branch.state} — Upravovať web`;
-                button.onclick = () => activate(branch.id).catch(showError); list.append(button);
+            if (!create) listedBranches.forEach(branch => {
+                const row = document.createElement('p');
+                row.className = 'd-flex flex-wrap gap-2 align-items-center';
+                row.append(document.createTextNode(`${branch.name} · ${branch.state} `));
+                const detail = document.createElement('button');
+                detail.type = 'button'; detail.className = 'btn btn-outline-secondary';
+                detail.textContent = WJ.translate('branches.merge.compare.js');
+                detail.onclick = () => { modal.close(); openBranchMerge(branch.id, api, screen, selector); };
+                row.append(detail);
+                if (branch.state === 'DRAFT') {
+                    const edit = document.createElement('button');
+                    edit.type = 'button'; edit.className = 'btn btn-outline-secondary';
+                    edit.textContent = WJ.translate('branches.merge.editWeb.js');
+                    edit.onclick = () => activate(branch.id).catch(showError); row.append(edit);
+                }
+                list.append(row);
             });
             modal.querySelector('.branch-close').onclick = () => modal.close();
             modal.onclose = () => { modal.remove(); selector.focus(); };
@@ -184,7 +181,7 @@ $(async () => {
         }
         selector.onchange = async () => {
             const value = selector.value; selector.value = String(screen.branchId);
-            if (value === 'create' || value === 'manage') dialog(value === 'create');
+            if (value === 'create' || value === 'manage') dialog(value === 'create').catch(showError);
             else try { await activate(value); } catch (error) { showError(error); }
         };
         selector.disabled = false;

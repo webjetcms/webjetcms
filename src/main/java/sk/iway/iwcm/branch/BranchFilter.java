@@ -78,7 +78,7 @@ public final class BranchFilter implements Filter {
                 context=new BranchContext(id,domain,user.getUserId(),BranchContext.Mode.PREVIEW);
             } else {
                 String domain=access.requireDomain(request,user);
-                boolean management=(path.equals("/admin/rest/branches")||path.equals("/admin/rest/branches/context")||path.matches("/admin/rest/branches/[0-9]+/preview-link"))||path.equals("/admin/rest/refresher");
+                boolean management=(path.equals("/admin/rest/branches")||path.equals("/admin/rest/branches/context")||path.matches("/admin/rest/branches/[0-9]+(?:/(?:preview-link|prepare|resolve|merge|resume|progress|file-version))?"))||path.equals("/admin/rest/refresher");
                 context=management?BranchContext.live(domain,user.getUserId()):BranchSelection.selected(request,user,domain);
                 String explicit=request.getHeader(BranchSelection.ID_HEADER),expectedDomain=request.getHeader(BranchSelection.DOMAIN_HEADER);
                 if (explicit==null && request.getParameter("branchId")!=null) {

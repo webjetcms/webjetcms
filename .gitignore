@@ -101,3 +101,6 @@ src/main/webapp/admin/v9/src/js/plugins/Editor-*.zip
 
 # Local model bundles
 **/WEB-INF/local-ai-models
+
+# Local P06 publishing-package review assets
+/src/main/webapp/files/branch-p06-autotest/
