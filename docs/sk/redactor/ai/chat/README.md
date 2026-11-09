@@ -20,7 +20,14 @@ Ak má asistent zapnuté postupné načítanie, odpoveď pribúda po častiach. 
 
 Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy, pod odpoveďou údaj **Použité tokeny**. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
 
-Ak asistent vráti HTML kód, napríklad pri tvorbe PageBuilder stránky, zobrazí sa zbalený riadok s ikonou a označením **HTML odpoveď**. Kliknutím alebo klávesom **Enter** či **medzerník** zobrazíte zdrojový kód; opätovným aktivovaním ho zbalíte. Vysvetlenie mimo HTML bloku zostáva viditeľné. Kopírovanie aj vloženie odpovede do stránky používajú pôvodný obsah bez ohľadu na rozbalenie.
+Ak asistent vráti HTML kód, napríklad pri tvorbe PageBuilder stránky, zobrazí sa karta **Návrh obsahu**. Po dokončení odpovede sa automaticky otvorí jej **Náhľad** a starší návrh sa zbalí. Vysvetlenie mimo HTML bloku zostáva viditeľné.
+
+- **Náhľad** zobrazí výsledný vzhľad. V editore stránky používa CSS štýly a obalové triedy načítané v klasickom editore alebo PageBuilderi. V samostatnom čete bez kontextu stránky používa základné formátovanie.
+- Ikony **Desktop**, **Tablet** a **Mobil** prepnú šírku vykresľovania na 1280, 768 a 375 pixelov. Širší návrh sa zmenší tak, aby sa zmestil do okna četu.
+- Ikona **Maximalizovať okno** otvorí návrh na celú plochu četu. Ikona **Zmenšiť okno** alebo kláves **Esc** ho vráti do odpovede.
+- **HTML kód** zobrazí zdrojový kód. Celú odpoveď skopírujete ikonou **Kopírovať** pod správou.
+
+Prezeranie návrhu nemení obsah poľa ani stránky. Vložíte ho až tlačidlom pod odpoveďou. Náhľad nespúšťa skripty ani vložené iframe, preto napríklad mapa alebo dynamická aplikácia nemusí zobraziť svoj konečný obsah. Kopírovanie celej odpovede aj vloženie do stránky naďalej používajú pôvodný obsah.
 
 ![Rozhovor s tabuľkou programu školenia a otvorenou históriou četov](chat-history.png)
 

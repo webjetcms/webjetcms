@@ -5,6 +5,7 @@ import { AiExecutionResult } from "./ai/ai-execution-result";
 import { AiChat } from "../../src/js/ai/ai-chat";
 import { AiChatHost } from "../../src/js/ai/ai-chat-host";
 import { parseAiResponse } from "../../src/js/ai/ai-response-parser";
+import { editorPreviewContext } from "../../src/js/ai/html-preview";
 
 /**
  * Main class for AI integration in Datatables Editor - binds buttons, handles events, shows UI, executes actions
@@ -328,6 +329,7 @@ export class EditorAi {
                     };
                 },
                 getAnswerActions: message => this._getChatAnswerActions(conversation, message),
+                getPreviewContext: () => editorPreviewContext(this.EDITOR.field(conversation.aiCol.to)?.s?.opts?.wjeditor),
                 getToolbarActions: toolbarActions,
                 onChange: () => this._updateChatLoader(conversation),
                 onReset: () => { conversation.revision++; conversation.undo = null; }

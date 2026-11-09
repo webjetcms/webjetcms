@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import { AiChatTransport } from './ai-chat-transport';
 import { splitChatResponse } from './ai-response-parser';
+import { HtmlPreview } from './html-preview';
 import { chatRequestId, chatAttachmentUrl, fetchChatAttachment, historyText } from './chat-history-api';
 import { setChatTooltip, initChatTooltips, disposeChatTooltips } from './chat-tooltips';
 
@@ -181,6 +182,7 @@ export class AiChat {
 
     /** Removes only this component's view; an unfinished response continues into its state. */
     unmount() {
+        for (const view of this.messageViews.values()) view.parts.forEach(part => part.preview?.suspend());
         if (this.mounted) {
             this.state.draft = this.$input.val();
             this._saveScroll();
@@ -214,6 +216,7 @@ export class AiChat {
         this.$empty.toggle(state.messages.length === 0);
         for (const [message, view] of this.messageViews) {
             if (!state.messages.includes(message)) {
+                view.parts.forEach(part => part.preview?.destroy());
                 disposeChatTooltips(view.$article);
                 view.$article.remove();
                 this.messageViews.delete(message);
@@ -228,11 +231,13 @@ export class AiChat {
             }
             view.$label.text(message.role === "user" ? this._text("you") : this.assistant?.providerTitle || this.assistant?.description || "");
             this._updateMessageTime(message, view);
-            if (view.text !== message.text) {
-                if (message.role === "assistant") this._renderResponse(view, message.text || "");
+            if (view.text !== message.text || view.status !== message.status) {
+                if (message.role === "assistant") this._renderResponse(view, message.text || "", message.status);
                 else view.$text.text(message.text || "");
                 view.text = message.text;
+                view.status = message.status;
             }
+            view.parts.forEach(part => part.preview?.resume());
             this._renderAttachments(view.$attachments, message.attachments || [], false);
             if (message.role === "assistant") this._updateAssistant(message, view, message === lastMessage);
         }
@@ -430,6 +435,7 @@ export class AiChat {
         this.state.disposed = true;
         this.stop();
         this.unmount();
+        for (const view of this.messageViews.values()) view.parts.forEach(part => part.preview?.destroy());
         this.$root.remove();
         this.messageViews.clear();
         Object.assign(this.state, this._initialState(), { disposed: true });
@@ -678,28 +684,38 @@ export class AiChat {
         this.state.followLatest = history.scrollHeight - history.scrollTop - history.clientHeight <= 40;
     }
 
-    /** Keeps HTML source collapsed by default and preserves open disclosures and focus during streaming. */
-    _renderResponse(view, text) {
+    /** Separates explanations from lazy HTML previews without rebuilding their controls while streaming. */
+    _renderResponse(view, text, status) {
         const parts = splitChatResponse(text);
-        const removeParts = index => view.parts.splice(index).forEach(part => part.$element.remove());
+        view.$article.toggleClass('ai-chat-assistant--html', parts.some(part => part.html));
+        const removeParts = index => view.parts.splice(index).forEach(part => {
+            part.preview?.destroy();
+            part.$element.remove();
+        });
         parts.forEach((part, index) => {
             if (view.parts[index]?.html !== part.html) removeParts(index);
             let rendered = view.parts[index];
             if (!rendered) {
-                const $element = part.html ? $('<details class="ai-chat-html-response"></details>') : $('<div class="ai-chat-markdown"></div>');
-                let $code;
+                let preview;
+                let $element;
                 if (part.html) {
-                    const $summary = $('<summary><i class="ti ti-file-type-html" aria-hidden="true"></i></summary>')
-                        .append($('<span></span>').text(this._text('htmlResponse')))
-                        .append('<i class="ti ti-chevron-down ai-chat-html-chevron" aria-hidden="true"></i>');
-                    $code = $('<code></code>');
-                    $element.append($summary, $('<pre></pre>').append($code));
-                }
-                rendered = { html: part.html, $element, $code };
+                    preview = new HtmlPreview({ root: this.element, getContext: this.options.getPreviewContext,
+                        onOpen: selected => {
+                            if (this.activePreview && this.activePreview !== selected) {
+                                this.activePreview.setExpanded(false, false);
+                                this.activePreview.element.open = false;
+                                this.activePreview.removeFrame();
+                            }
+                            this.activePreview = selected;
+                        }
+                    });
+                    $element = $(preview.element);
+                } else $element = $('<div class="ai-chat-markdown"></div>');
+                rendered = { html: part.html, $element, preview };
                 view.parts.push(rendered);
                 view.$text.append($element);
             }
-            if (part.html) rendered.$code.text(part.text);
+            if (part.html) rendered.preview.update(part.text, status === 'complete');
             else this._renderMarkdown(rendered.$element, part.text);
         });
         removeParts(parts.length);

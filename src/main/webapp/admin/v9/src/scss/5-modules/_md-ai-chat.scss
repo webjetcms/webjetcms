@@ -147,6 +147,8 @@
         padding-left: 48px;
     }
 
+    .ai-chat-assistant--html { width: 100%; }
+
     .ai-chat-avatar {
         position: absolute;
         top: 0;
@@ -254,6 +256,64 @@
 
         &[open] .ai-chat-html-chevron { transform: rotate(180deg); }
         pre { max-height: 320px; margin: 0; overflow: auto; }
+        [hidden] { display: none !important; }
+        > pre { padding: 12px; border-top: 1px solid var(--wj-nice-gray-100); }
+
+        .ai-chat-html-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            padding: 8px;
+            border-top: 1px solid var(--wj-nice-gray-100);
+            background: var(--bs-body-bg);
+        }
+        .ai-chat-html-tabs, .ai-chat-html-devices { display: flex; gap: 4px; }
+        .ai-chat-html-tabs { margin-right: auto; }
+        .ai-chat-html-tabs button[aria-selected="true"], .ai-chat-html-devices button[aria-pressed="true"] {
+            color: var(--wj-ai-color-dark);
+            border-color: var(--wj-ai-color);
+            background: var(--wj-ai-color-hover);
+        }
+        .ai-chat-html-notice { padding: 12px; color: var(--wj-gray-text); }
+        .ai-chat-html-preview {
+            position: relative;
+            height: 260px;
+            overflow: hidden;
+            background: var(--wj-nice-gray);
+            border-top: 1px solid var(--wj-nice-gray-100);
+
+            iframe {
+                position: absolute;
+                top: 0;
+                border: 0;
+                transform-origin: top left;
+                background: white;
+            }
+        }
+    }
+
+    .ai-chat-html-expanded {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        padding: 12px;
+        background: var(--bs-body-bg);
+
+        .ai-chat-html-response {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            margin: 0;
+        }
+        .ai-chat-html-preview, .ai-chat-html-response > pre {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none;
+        }
     }
 
     .ai-chat-message-actions {
