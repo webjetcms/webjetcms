@@ -79,6 +79,8 @@ class HeatMapAggregationDatabaseTest extends BaseWebjetTest {
                     HeatMapAggregationCronJob.aggregate(db, OCTOBER, NOW);
                     assertEquals(1, scalar(db, "SELECT COUNT(*) FROM " + TABLE));
                     assertEquals(3, scalar(db, "SELECT SUM(count) FROM " + TABLE));
+                    assertEquals(new HeatMapStorage.AreaCount(3, 3), HeatMapStorage.getAreaCount("a", 11,
+                            OCTOBER.atDay(1), OCTOBER.atEndOfMonth(), 800, HeatMapCoordinateMode.CONTAINER, 100, 200, 110, 210));
                 }
             } finally {
                 if (!db.getAutoCommit()) db.rollback();

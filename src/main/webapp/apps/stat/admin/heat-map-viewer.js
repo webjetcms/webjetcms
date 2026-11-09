@@ -1,3 +1,5 @@
+import { HeatMapArea } from "./heat-map-area.js";
+
 /** Uses the same conservative declaration check as the standalone public-page tracker. */
 function hasFixedPixelWidth(container, property, resolvedWidth) {
     const doc = container.ownerDocument;
@@ -47,6 +49,8 @@ export class HeatMapViewer {
         this.requestController = new AbortController();
         this.reportWidths = [];
         this.comparing = false;
+        this.selectingArea = false;
+        this.overlayVisible = true;
         const firstPane = element.querySelector("#heatMapPane");
         const secondPane = firstPane.cloneNode(true);
         secondPane.id = "heatMapComparePane";
@@ -55,12 +59,26 @@ export class HeatMapViewer {
         secondPane.hidden = true;
         element.querySelector("#heatMapPreviews").append(secondPane);
         this.nodes = {};
-        ["Version", "CompareVersion", "Compare", "Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Title", "Back"].forEach(name => {
+        ["Version", "CompareVersion", "Compare", "Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Title", "Back", "SelectArea"].forEach(name => {
             this.nodes[name] = element.querySelector("#heatMap" + name);
         });
         this.previews = [new HeatMapPreview(this, firstPane, "heatMap"), new HeatMapPreview(this, secondPane, "heatMapCompare")];
         this.closeOnEscape = event => {
-            if (event.key === "Escape" && window !== window.parent) {
+            if (event.key !== "Escape") return;
+            const tooltips = $(this.element).find('.pg-heatmap-icon[aria-describedby]').filter((index, node) =>
+                document.getElementById(node.getAttribute("aria-describedby"))?.classList.contains("show"));
+            if (tooltips.length) {
+                event.preventDefault();
+                tooltips.tooltip("hide");
+                return;
+            }
+            if (this.selectingArea) {
+                event.preventDefault();
+                this.setAreaSelection(false);
+                WJ.focusWithoutTooltip(this.nodes.SelectArea);
+                return;
+            }
+            if (window !== window.parent) {
                 event.preventDefault();
                 window.parent.WJ.closeIframeModal();
             }
@@ -69,6 +87,10 @@ export class HeatMapViewer {
 
     async init() {
         this.nodes.Back.href += "?dateRange=" + encodeURIComponent(this.dateRange);
+        const iconButtons = $(this.element).find(".pg-heatmap-icon");
+        WJ.initTooltip(iconButtons);
+        // Let Escape dismiss a visible tooltip before cancelling selection or closing the dialog.
+        iconButtons.off("keydown.wjTooltipA11y");
         document.addEventListener("keydown", this.closeOnEscape);
         [this.nodes.Version, this.nodes.CompareVersion].forEach((select, index) => {
             select.addEventListener("change", () => {
@@ -82,6 +104,7 @@ export class HeatMapViewer {
             });
         });
         this.nodes.Compare.addEventListener("click", () => this.setComparison(!this.comparing));
+        this.nodes.SelectArea.addEventListener("click", () => this.setAreaSelection(!this.selectingArea));
         this.nodes.Width.addEventListener("change", () => this.loadWidth());
         this.nodes.Reload.addEventListener("click", () => this.loadWidth(true));
         this.nodes.Scale.addEventListener("change", () => this.resize());
@@ -89,7 +112,8 @@ export class HeatMapViewer {
             this.nodes.OpacityValue.textContent = this.nodes.Opacity.value + " %";
             this.updateLayers();
         });
-        this.nodes.Visible.addEventListener("change", () => {
+        this.nodes.Visible.addEventListener("click", () => {
+            this.overlayVisible = !this.overlayVisible;
             this.updateLayers();
             this.activePreviews().forEach(preview => preview.scheduleTiles());
         });
@@ -112,9 +136,19 @@ export class HeatMapViewer {
         return this.comparing ? this.previews : [this.previews[0]];
     }
 
+    setAreaSelection(enabled) {
+        this.selectingArea = enabled;
+        this.nodes.SelectArea.setAttribute("aria-pressed", String(enabled));
+        this.nodes.SelectArea.classList.toggle("btn-primary", enabled);
+        this.nodes.SelectArea.classList.toggle("btn-outline-secondary", !enabled);
+        if (!enabled) this.previews.forEach(preview => preview.area.clear());
+        this.updateLayers();
+    }
+
     setComparison(enabled) {
         if (enabled && this.nodes.CompareVersion.options.length < 2) return;
         this.comparing = enabled;
+        if (enabled) this.setAreaSelection(false);
         this.nodes.Compare.setAttribute("aria-pressed", String(enabled));
         this.nodes.Compare.classList.toggle("btn-primary", enabled);
         this.nodes.Compare.classList.toggle("btn-outline-secondary", !enabled);
@@ -311,10 +345,17 @@ export class HeatMapViewer {
         const previews = this.activePreviews();
         const available = previews.some(preview => preview.frameReady && !preview.previewOnly && preview.layoutValid);
         this.nodes.Visible.disabled = !available;
-        this.nodes.Opacity.disabled = !available || !this.nodes.Visible.checked;
+        this.nodes.Visible.setAttribute("aria-pressed", String(this.overlayVisible));
+        this.nodes.Visible.classList.toggle("btn-primary", this.overlayVisible);
+        this.nodes.Visible.classList.toggle("btn-outline-secondary", !this.overlayVisible);
+        this.nodes.Visible.querySelector(".ti").classList.toggle("ti-eye", this.overlayVisible);
+        this.nodes.Visible.querySelector(".ti").classList.toggle("ti-eye-off", !this.overlayVisible);
+        this.nodes.SelectArea.disabled = this.comparing || (!available && !this.selectingArea);
+        this.nodes.Opacity.disabled = !available || !this.overlayVisible;
         for (const preview of previews) {
-            preview.nodes.Overlay.hidden = !preview.frameReady || preview.previewOnly || !this.nodes.Visible.checked || !preview.layoutValid;
+            preview.nodes.Overlay.hidden = !preview.frameReady || preview.previewOnly || !this.overlayVisible || !preview.layoutValid;
             preview.nodes.Overlay.style.opacity = Number(this.nodes.Opacity.value) / 100;
+            preview.area.render();
         }
     }
 
@@ -336,6 +377,7 @@ export class HeatMapViewer {
         this.requestController.abort();
         this.resizeObserver.disconnect();
         document.removeEventListener("keydown", this.closeOnEscape);
+        $(this.element).find(".pg-heatmap-icon").tooltip("dispose");
         this.previews.forEach(preview => preview.reset(""));
     }
 }
@@ -354,12 +396,15 @@ class HeatMapPreview {
         this.revision = 0;
         this.requestController = new AbortController();
         this.nodes = {};
-        ["PaneLabel", "VersionLabel", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Summary", "TotalClicks", "ScaleSummary"].forEach(name => {
+        ["PaneLabel", "VersionLabel", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Summary", "TotalClicks", "ScaleSummary",
+            "AreaLayer", "AreaBox", "AreaResult", "AreaCount", "ClearArea"].forEach(name => {
             this.nodes[name] = element.querySelector("#" + prefix + name);
         });
+        this.area = new HeatMapArea(this);
     }
 
     reset(versionId) {
+        this.area.clear();
         this.revision++;
         this.requestController.abort();
         this.requestController = new AbortController();
@@ -441,6 +486,7 @@ class HeatMapPreview {
     }
 
     resize(scale, height) {
+        this.scale = scale;
         this.height = height;
         this.nodes.Frame.style.height = height + "px";
         this.nodes.Stage.style.height = height + "px";
@@ -484,9 +530,9 @@ class HeatMapPreview {
         return null;
     }
 
-    /** Cuts pinned header rectangles out of the overlay in unscaled iframe viewport coordinates. */
-    headerMask(frameWindow) {
-        if (frameWindow.scrollY === 0) return "";
+    /** Finds pinned header rectangles in unscaled iframe viewport coordinates. */
+    headerRectangles(frameWindow) {
+        if (frameWindow.scrollY === 0) return [];
         const doc = frameWindow.document;
         const headers = [...doc.querySelectorAll('header, nav, [role="banner"], [role="navigation"]')];
         // A template can also pin an unlabelled wrapper at the top of the page.
@@ -505,8 +551,15 @@ class HeatMapPreview {
             const rect = element.getBoundingClientRect();
             if (style.position === "sticky" && (style.top === "auto" || rect.top > parseFloat(style.top) + 0.5)) continue;
             if (style.visibility !== "visible" || style.opacity === "0" || !rect.width || !rect.height) continue;
-            cutouts.push(`linear-gradient(black, black) ${rect.left}px ${rect.top}px / ${rect.width}px ${rect.height}px no-repeat`);
+            cutouts.push(rect);
         }
+        return cutouts;
+    }
+
+    /** Cuts pinned headers out of the heat overlay without counting the covered document as visible content. */
+    headerMask(frameWindow) {
+        const cutouts = this.headerRectangles(frameWindow).map(rect =>
+            `linear-gradient(black, black) ${rect.left}px ${rect.top}px / ${rect.width}px ${rect.height}px no-repeat`);
         return cutouts.length ? "linear-gradient(black, black) subtract, " + cutouts.join(", ") : "";
     }
 
@@ -523,7 +576,7 @@ class HeatMapPreview {
             return;
         }
         if (!wasValid) this.status("");
-        if (!this.viewer.nodes.Visible.checked) return;
+        if (!this.viewer.overlayVisible) return;
         const doc = frameWindow.document.documentElement;
         const left = frameWindow.scrollX;
         const top = frameWindow.scrollY;

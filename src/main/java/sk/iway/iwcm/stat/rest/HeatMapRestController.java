@@ -158,6 +158,24 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
         return result;
     }
 
+    @GetMapping("/area")
+    public ResponseEntity<HeatMapStorage.AreaCount> area(@RequestParam("docId") int docId,
+            @RequestParam(value = "dateRange", required = false) String dateRange, @RequestParam("width") int width,
+            @RequestParam(value = "mode", defaultValue = "DOCUMENT") HeatMapCoordinateMode mode,
+            @RequestParam("x1") int x1, @RequestParam("y1") int y1,
+            @RequestParam("x2") int x2, @RequestParam("y2") int y2,
+            @RequestParam(value = "versionId", required = false) Integer versionId) {
+        checkWidth(width);
+        if (x1 < 0 || y1 < 0 || x2 <= x1 || y2 <= y1
+                || x2 > HeatMapStorage.MAX_COORDINATE + 1 || y2 > HeatMapStorage.MAX_COORDINATE + 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+        access.requireDocument(getRequest(), docId);
+        ReportRange range = clickRange(docId, dateRange, versionId);
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(HeatMapStorage.getAreaCount(
+                access.currentDomain(getRequest()), docId, range.firstDay(), range.lastDay(), width, mode, x1, y1, x2, y2));
+    }
+
     @GetMapping(value = "/binary/tile", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> tile(@RequestParam("docId") int docId,
             @RequestParam(value = "dateRange", required = false) String dateRange, @RequestParam("width") int width,
@@ -169,8 +187,10 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
                 || tileY > HeatMapStorage.MAX_COORDINATE / HeatMapStorage.TILE_SIZE) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         access.requireDocument(getRequest(), docId);
         ReportRange range = clickRange(docId, dateRange, versionId);
+        String domain = access.currentDomain(getRequest());
+        double maximumDensity = HeatMapStorage.getMaximumDensity(domain, docId, range.firstDay(), range.lastDay(), width, mode);
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.IMAGE_PNG)
-                .body(HeatMapStorage.getTile(access.currentDomain(getRequest()), docId, range.firstDay(), range.lastDay(), width, mode, tileX, tileY));
+                .body(HeatMapStorage.getTile(domain, docId, range.firstDay(), range.lastDay(), width, mode, tileX, tileY, maximumDensity));
     }
 
     private ReportRange clickRange(int docId, String value, Integer versionId) {

@@ -18,14 +18,20 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.HexFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
+
+import org.apache.commons.collections4.map.LRUMap;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
@@ -41,6 +47,25 @@ public final class HeatMapStorage {
 
     // SQL Server sums INT columns as INT. DECIMAL also supports Oracle.
     static final String SUM_CLICKS = "SUM(CAST(count AS DECIMAL(19,0)))";
+    private static final Map<DensityKey, CachedDensity> DENSITY_SCALES = Collections.synchronizedMap(new LRUMap<>(64));
+
+    private record DensityKey(String domain, int docId, LocalDate from, LocalDate to, int width,
+            HeatMapCoordinateMode mode, int cellSize) { }
+    private record TilePosition(int x, int y) { }
+    private record WeightedPoint(int x, int y, long count) { }
+
+    private static final class CachedDensity {
+        private double maximum;
+        private long expiresAt;
+
+        synchronized double get(DensityKey key) {
+            if (maximum == 0 || System.currentTimeMillis() >= expiresAt) {
+                maximum = readMaximumDensity(key);
+                expiresAt = System.currentTimeMillis() + Math.max(0, Constants.getInt("statHeatMapImageTimeout", 300)) * 1000L;
+            }
+            return maximum;
+        }
+    }
 
     /** Returns the current cell size in CSS pixels, falling back to four outside the supported range. */
     static int cellSize() {
@@ -101,6 +126,42 @@ public final class HeatMapStorage {
 
     private record WidthKey(int width, HeatMapCoordinateMode mode) { }
 
+    /** Recorded click weights inside a rectangle and across its complete map group. */
+    public record AreaCount(long clicks, long totalClicks) { }
+
+    /**
+     * Counts an area using stored coordinates and weights, including compacted historical clicks.
+     * Rectangle starts are inclusive and ends are exclusive. Both totals use the same query per month.
+     *
+     * @param domain authorized reporting domain
+     * @param docId authorized page
+     * @param from first included day
+     * @param to last included day
+     * @param width coordinate group width
+     * @param mode document or container coordinates
+     * @param x1 inclusive left edge
+     * @param y1 inclusive top edge
+     * @param x2 exclusive right edge
+     * @param y2 exclusive bottom edge
+     * @return selected and total recorded click counts
+     */
+    public static AreaCount getAreaCount(String domain, int docId, LocalDate from, LocalDate to, int width,
+            HeatMapCoordinateMode mode, int x1, int y1, int x2, int y2) {
+        if (docId <= 0 || width < 1 || width > MAX_VIEWPORT_WIDTH || mode == null
+                || x1 < 0 || y1 < 0 || x2 <= x1 || y2 <= y1 || x2 > MAX_COORDINATE + 1 || y2 > MAX_COORDINATE + 1) {
+            throw new IllegalArgumentException("Invalid heatmap area");
+        }
+        long[] counts = new long[2];
+        query(domain, from, to,
+                "SUM(CASE WHEN x >= ? AND x < ? AND y >= ? AND y < ? THEN CAST(count AS DECIMAL(19,0)) ELSE 0 END), " + SUM_CLICKS,
+                List.of(x1, x2, y1, y2), " AND document_id = ? AND viewport_width = ? AND coordinate_mode = ?",
+                List.of(docId, width, mode.databaseValue()), "", result -> {
+                    counts[0] += result.getLong(1);
+                    counts[1] += result.getLong(2);
+                });
+        return new AreaCount(counts[0], counts[1]);
+    }
+
     /**
      * Groups clicks by coordinate mode and width and selects the most frequent source viewport for each group.
      *
@@ -147,15 +208,38 @@ public final class HeatMapStorage {
      */
     public static byte[] getTile(String domain, int docId, LocalDate from, LocalDate to, int width,
             HeatMapCoordinateMode mode, int tileX, int tileY) throws IOException {
+        return getTile(domain, docId, from, to, width, mode, tileX, tileY,
+                getMaximumDensity(domain, docId, from, to, width, mode));
+    }
+
+    /**
+     * Renders a tile using the peak for its page, selected version interval and coordinate group.
+     *
+     * @param domain authorized reporting domain
+     * @param docId authorized page
+     * @param from first day whose clicks are rendered
+     * @param to last day whose clicks are rendered
+     * @param width coordinate group width
+     * @param mode document or container coordinates
+     * @param tileX horizontal tile index
+     * @param tileY vertical tile index
+     * @param maximumDensity peak smoothed density for the same page, day range, width and mode as the tile
+     * @return transparent PNG tile
+     * @throws IOException if the PNG or its cache cannot be written
+     */
+    public static byte[] getTile(String domain, int docId, LocalDate from, LocalDate to, int width,
+            HeatMapCoordinateMode mode, int tileX, int tileY, double maximumDensity) throws IOException {
         domain = normalizeDomain(domain);
         validateDates(from, to);
         if (docId <= 0 || width < 1 || width > MAX_VIEWPORT_WIDTH || mode == null || tileX < 0 || tileY < 0
-                || tileX > MAX_COORDINATE / TILE_SIZE || tileY > MAX_COORDINATE / TILE_SIZE) {
+                || tileX > MAX_COORDINATE / TILE_SIZE || tileY > MAX_COORDINATE / TILE_SIZE
+                || !Double.isFinite(maximumDensity) || maximumDensity <= 0) {
             throw new IllegalArgumentException("Invalid heatmap tile");
         }
         int cellSize = cellSize();
-        String key = String.join("|", "stat_clicks_v2", domain, Integer.toString(docId), from.toString(), to.toString(),
-                Integer.toString(width), mode.name(), Integer.toString(tileX), Integer.toString(tileY), Integer.toString(cellSize));
+        String key = String.join("|", "stat_clicks_v3", domain, Integer.toString(docId), from.toString(), to.toString(),
+                Integer.toString(width), mode.name(), Integer.toString(tileX), Integer.toString(tileY), Integer.toString(cellSize),
+                Double.toString(maximumDensity));
         Path folder = Path.of(Tools.getRealPath("/WEB-INF/tmp/heat_map/"));
         Path cached = folder.resolve("tile_" + digest(key) + ".png");
         int timeout = Math.max(0, Constants.getInt("statHeatMapImageTimeout", 300));
@@ -180,7 +264,7 @@ public final class HeatMapStorage {
                 " GROUP BY " + xCell + ", " + yCell,
                 result -> renderer.add(result.getInt(1) * cellSize, result.getInt(2) * cellSize, result.getLong(3)));
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ImageIO.write(renderer.render(), "png", output);
+        ImageIO.write(renderer.render(maximumDensity), "png", output);
         byte[] png = output.toByteArray();
         if (timeout > 0) {
             Files.createDirectories(folder);
@@ -199,8 +283,67 @@ public final class HeatMapStorage {
         return png;
     }
 
+    /**
+     * Returns a cached peak after smoothing all clicks in the selected interval on the same grid used by its tiles.
+     * Each comparison pane supplies its own version interval so its strongest concentration reaches red.
+     *
+     * @param domain authorized reporting domain
+     * @param docId authorized page
+     * @param from first day included for the selected version, or the report start when all versions are selected
+     * @param to last day included for the selected version, or the report end when all versions are selected
+     * @param width coordinate group width
+     * @param mode document or container coordinates
+     * @return positive reference density, or one for an empty report
+     */
+    public static double getMaximumDensity(String domain, int docId, LocalDate from, LocalDate to, int width, HeatMapCoordinateMode mode) {
+        validateDates(from, to);
+        if (docId <= 0 || width < 1 || width > MAX_VIEWPORT_WIDTH || mode == null) throw new IllegalArgumentException("Invalid heatmap group");
+        DensityKey key = new DensityKey(normalizeDomain(domain), docId, from, to, width, mode, cellSize());
+        return DENSITY_SCALES.computeIfAbsent(key, ignored -> new CachedDensity()).get(key);
+    }
+
+    /** Keeps the sparse click cells in memory and smooths only one bounded tile at a time. */
+    private static double readMaximumDensity(DensityKey key) {
+        Map<TilePosition, List<WeightedPoint>> points = new HashMap<>();
+        Set<TilePosition> tiles = new HashSet<>();
+        String xCell = cellSql("x", key.cellSize());
+        String yCell = cellSql("y", key.cellSize());
+        query(key.domain(), key.from(), key.to(), xCell + ", " + yCell + ", " + SUM_CLICKS,
+                " AND document_id = ? AND viewport_width = ? AND coordinate_mode = ? AND x BETWEEN 0 AND " + MAX_COORDINATE
+                        + " AND y BETWEEN 0 AND " + MAX_COORDINATE,
+                List.of(key.docId(), key.width(), key.mode().databaseValue()), " GROUP BY " + xCell + ", " + yCell, result -> {
+                    int x = result.getInt(1) * key.cellSize();
+                    int y = result.getInt(2) * key.cellSize();
+                    TilePosition tile = new TilePosition(x / TILE_SIZE, y / TILE_SIZE);
+                    points.computeIfAbsent(tile, ignored -> new ArrayList<>()).add(new WeightedPoint(x, y, result.getLong(3)));
+                    // The peak may fall across an edge, including in a neighboring tile with no click cells.
+                    int overlap = ((HeatMapTileRenderer.RADIUS + key.cellSize() - 1) / key.cellSize() + 1) * key.cellSize();
+                    for (int ty = Math.max(0, y - overlap) / TILE_SIZE; ty <= (y + overlap) / TILE_SIZE; ty++) {
+                        for (int tx = Math.max(0, x - overlap) / TILE_SIZE; tx <= (x + overlap) / TILE_SIZE; tx++) tiles.add(new TilePosition(tx, ty));
+                    }
+                });
+        double maximum = 1;
+        for (TilePosition tile : tiles) {
+            HeatMapTileRenderer renderer = new HeatMapTileRenderer(tile.x() * TILE_SIZE, tile.y() * TILE_SIZE, TILE_SIZE, TILE_SIZE, key.cellSize());
+            // Large configurable cells can extend the interpolation halo across two tiles.
+            int reach = (HeatMapTileRenderer.RADIUS + 2 * key.cellSize() + TILE_SIZE - 1) / TILE_SIZE;
+            for (int y = tile.y() - reach; y <= tile.y() + reach; y++) {
+                for (int x = tile.x() - reach; x <= tile.x() + reach; x++) {
+                    for (WeightedPoint point : points.getOrDefault(new TilePosition(x, y), List.of())) renderer.add(point.x(), point.y(), point.count());
+                }
+            }
+            maximum = Math.max(maximum, renderer.maximumDensity());
+        }
+        return maximum;
+    }
+
     private static void query(String domain, LocalDate from, LocalDate to, String columns, String filter,
             List<Integer> parameters, String groupBy, RowConsumer consumer) {
+        query(domain, from, to, columns, List.of(), filter, parameters, groupBy, consumer);
+    }
+
+    private static void query(String domain, LocalDate from, LocalDate to, String columns, List<Integer> columnParameters,
+            String filter, List<Integer> parameters, String groupBy, RowConsumer consumer) {
         domain = normalizeDomain(domain);
         validateDates(from, to);
         YearMonth firstMonth = YearMonth.from(from);
@@ -212,10 +355,12 @@ public final class HeatMapStorage {
                 String sql = "SELECT " + columns + " FROM " + TABLE_NAME + suffix(month)
                         + " WHERE domain_name = ? AND day_of_month BETWEEN ? AND ?" + filter + groupBy;
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setString(1, domain);
-                    statement.setInt(2, startDay);
-                    statement.setInt(3, endDay);
-                    for (int i = 0; i < parameters.size(); i++) statement.setInt(i + 4, parameters.get(i));
+                    int parameter = 1;
+                    for (int value : columnParameters) statement.setInt(parameter++, value);
+                    statement.setString(parameter++, domain);
+                    statement.setInt(parameter++, startDay);
+                    statement.setInt(parameter++, endDay);
+                    for (int value : parameters) statement.setInt(parameter++, value);
                     try (ResultSet result = statement.executeQuery()) {
                         while (result.next()) consumer.accept(result);
                     }

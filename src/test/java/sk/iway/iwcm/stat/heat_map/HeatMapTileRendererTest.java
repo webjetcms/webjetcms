@@ -3,6 +3,7 @@ package sk.iway.iwcm.stat.heat_map;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -17,7 +18,7 @@ class HeatMapTileRendererTest {
     private static BufferedImage render(List<Point> points, int originX, int originY, int width, int height, int cellSize) {
         HeatMapTileRenderer renderer = new HeatMapTileRenderer(originX, originY, width, height, cellSize);
         points.forEach(point -> renderer.add(point.x(), point.y(), point.count()));
-        return renderer.render();
+        return renderer.render(100);
     }
 
     @Test
@@ -52,5 +53,31 @@ class HeatMapTileRendererTest {
         assertEquals(0, empty.getRGB(32, 32));
         assertNotEquals(0, single.getRGB(32, 32));
         assertNotEquals(single.getRGB(32, 32), many.getRGB(32, 32));
+    }
+
+    /** Low and high click concentrations remain blue and red instead of both saturating. */
+    @Test
+    void distinguishesSmallAndLargeSharesOnTheSameReportScale() {
+        HeatMapTileRenderer renderer = new HeatMapTileRenderer(0, 0, 256, 128, 4);
+        renderer.add(64, 64, 5026);
+        renderer.add(192, 64, 276310);
+        assertEquals(276310, renderer.maximumDensity());
+        BufferedImage image = renderer.render(renderer.maximumDensity());
+        int quiet = image.getRGB(64, 64);
+        int busy = image.getRGB(192, 64);
+        assertTrue((quiet & 255) > (quiet >> 16 & 255), "The small concentration must stay blue");
+        assertEquals(0xb20000, busy & 0xffffff, "Only the report peak reaches red");
+        assertTrue((quiet >>> 24) > 0, "Smaller concentrations must remain visible");
+    }
+
+    /** The reference includes nearby weighted cells, even when their combined peak lies between them. */
+    @Test
+    void measuresTheSmoothedPeakRatherThanTheLargestIndividualCell() {
+        HeatMapTileRenderer renderer = new HeatMapTileRenderer(0, 0, 128, 128, 4);
+        renderer.add(56, 64, 100);
+        renderer.add(72, 64, 100);
+        assertTrue(renderer.maximumDensity() > 150);
+        BufferedImage image = renderer.render(renderer.maximumDensity());
+        assertEquals(0xb20000, image.getRGB(64, 64) & 0xffffff);
     }
 }

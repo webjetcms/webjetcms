@@ -73,6 +73,9 @@ function mockMap(I, {listRequests, mapRequests, multipleVersions = false, compar
                 versions: multipleVersions ? [{historyId: 123, effectiveFrom: 1788300000000}, {historyId: 122, effectiveFrom: 1788213600000}] : []
             }});
         }
+        if (url.pathname.endsWith("/area")) {
+            return route.fulfill({json: {clicks: 8, totalClicks: 32}});
+        }
         if (url.pathname.endsWith("/html/preview")) {
             return route.fulfill({contentType: "text/html", body: '<!doctype html><meta name="webjet-heatmap-preview" content="'
                 + Number(url.searchParams.get("docId")) + '"><style>body{margin:0}.container{max-width:960px;margin:auto;min-height:3500px}</style><main class="container">autotest page</main>'});
@@ -93,6 +96,44 @@ Scenario("readonly list uses the shared date filter", ({ I, DT }) => {
     DT.setDates("01.09.2026", "14.09.2026", "#heatMapDataTable_extfilter");
     DT.waitForLoader("heatMapDataTable");
     DT.checkExtfilterDates("01.09.2026", "14.09.2026");
+});
+
+Scenario("allows area selection only in a single preview", async ({ I }) => {
+    mockMap(I, {comparison: true});
+    I.executeScript(url => window.location.assign(url), detailsUrl);
+    I.waitForVisible("#heatMapViewport", 20);
+    const originalPreview = await I.grabElementBoundingRect("#heatMapViewport");
+    I.clickCss("#heatMapSelectArea");
+    I.waitForVisible("#heatMapAreaLayer", 10);
+    I.dontSeeElement("#toast-container-heatmap .toast-info");
+    I.assertDeepEqual(await I.grabElementBoundingRect("#heatMapViewport"), originalPreview,
+        "Activating area selection must not move or resize the map");
+    I.moveCursorTo("#heatMapSelectArea");
+    I.waitForVisible(".tooltip.show", 5);
+    I.see("Vybrať oblasť", ".tooltip.show");
+    I.pressKey("Escape");
+    I.waitToHide(".tooltip.show", 5);
+    I.seeElement("#heatMapAreaLayer");
+    I.pressKey("Escape");
+    I.dontSeeElement("#heatMapAreaLayer");
+    I.seeElement("#heatMapSelectArea:focus");
+    I.pressKey("Enter");
+    I.waitForVisible("#heatMapAreaLayer", 10);
+    I.dragAndDrop("#heatMapAreaLayer", "#heatMapAreaLayer", {
+        sourcePosition: {x: 20, y: 20},
+        targetPosition: {x: 120, y: 80}
+    });
+    I.waitForText("Oblasť:", 10, "#heatMapAreaCount");
+    I.clickCss("#heatMapCompare");
+    I.waitForVisible("#heatMapCompareViewport", 10);
+    I.verifyDisabled("#heatMapSelectArea");
+    I.seeAttributesOnElements("#heatMapSelectArea", {"aria-pressed": "false"});
+    I.dontSeeElement("#heatMapAreaLayer, #heatMapCompareAreaLayer, #heatMapAreaResult, #heatMapCompareAreaResult");
+    I.clickCss("#heatMapCompare");
+    I.waitForElement("#heatMapSelectArea:enabled", 10);
+    I.clickCss("#heatMapSelectArea");
+    I.waitForVisible("#heatMapAreaLayer", 10);
+    I.dontSeeElement("#toast-container-heatmap .toast-info");
 });
 
 Scenario("enforces statistics permission", ({ DT }) => {
@@ -166,7 +207,7 @@ Scenario("shows historical fallback and mixed-version notices", ({ I }) => {
     I.waitForVisible("#heatMapViewport", 20);
     I.seeElement("#heatMapBack");
     I.see("autotest click map preview", "#heatMapTitle");
-    I.seeAttributesOnElements("#heatMapReload", {title: "Obnoviť náhľad"});
+    I.seeAttributesOnElements("#heatMapReload", {"data-bs-original-title": "Obnoviť náhľad"});
     I.dontSeeElement(".pg-heatmap-controls .bootstrap-select");
     I.seeElement("#heatMapVersion");
     I.dontSeeElement("#heatMapNotice");
@@ -235,7 +276,7 @@ Scenario("compares versions of one page at the same width and scale", async ({ I
     I.seeElement('#heatMapCompareTiles img[src*="versionId=122"][src*="width=1280"]');
     I.seeElementInDOM('#heatMapVersion option[value="122"]:disabled');
     I.seeElementInDOM('#heatMapCompareVersion option[value="123"]:disabled');
-    for (const screenWidth of [1440, 1100, 700]) {
+    for (const screenWidth of [1440, 1100, 700, 390]) {
         I.resizeWindow(screenWidth, 1000);
         await checkComparisonGeometry(I, 1280);
         const controlsFit = await I.executeScript(() => ["heatMap", "heatMapCompare"].every(prefix => {
@@ -244,6 +285,14 @@ Scenario("compares versions of one page at the same width and scale", async ({ I
             return select.left >= header.left && select.right <= header.right && select.top >= header.top && select.bottom <= header.bottom;
         }));
         I.assertTrue(controlsFit, "Each version picker must fit inside its own pane header");
+        const toolbarFits = await I.executeScript(() => {
+            const toolbar = document.querySelector(".pg-heatmap-controls").getBoundingClientRect();
+            return [...document.querySelectorAll(".pg-heatmap-controls button, .pg-heatmap-controls select, .pg-heatmap-controls input")].every(control => {
+                const rect = control.getBoundingClientRect();
+                return rect.left >= toolbar.left && rect.right <= toolbar.right && rect.top >= toolbar.top && rect.bottom <= toolbar.bottom;
+            });
+        });
+        I.assertTrue(toolbarFits, "Heatmap controls must stay inside the toolbar at narrow widths");
     }
     I.saveScreenshot("heatmap-comparison-narrow.png");
     I.resizeWindow(1440, 1000);
@@ -253,9 +302,13 @@ Scenario("compares versions of one page at the same width and scale", async ({ I
     const scales = await I.executeScript(() => ["heatMapStage", "heatMapCompareStage"].map(id => new DOMMatrix(getComputedStyle(document.getElementById(id)).transform).a));
     I.assertDeepEqual(scales, [0.5, 0.5]);
     I.clickCss("#heatMapVisible");
+    I.seeAttributesOnElements("#heatMapVisible", {"aria-pressed": "false"});
+    I.verifyDisabled("#heatMapOpacity");
     I.dontSeeElement("#heatMapOverlay");
     I.dontSeeElement("#heatMapCompareOverlay");
     I.clickCss("#heatMapVisible");
+    I.seeAttributesOnElements("#heatMapVisible", {"aria-pressed": "true"});
+    I.seeElement("#heatMapOpacity:enabled");
     I.seeElement("#heatMapOverlay");
     I.seeElement("#heatMapCompareOverlay");
     I.selectOption("#heatMapScale", "fit");

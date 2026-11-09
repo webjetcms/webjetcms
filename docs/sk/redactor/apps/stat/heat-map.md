@@ -38,6 +38,10 @@ Náhľad kontajnerovej skupiny sa otvorí v najčastejšej skutočne zaznamenane
 
 Náhľad má vlastné posúvanie. Keď obsah prejde pod pripnutú hlavičku, hlavička zakryje aj značky kliknutí na tomto obsahu. Ovládač **Zobrazenie** upravuje iba jeho zmenšenie na obrazovke; vnútorná šírka stránky zostáva zachovaná. Krytie mapy môžete meniť alebo mapu dočasne skryť. Obnovte náhľad, ak sa nepodarilo načítať stránku alebo časť mapy.
 
+Farba vyjadruje miestnu hustotu kliknutí. Kliknutia v okolí sa sčítajú s plynulo klesajúcou váhou do vzdialenosti približne 32 pixelov. Najvyššia hustota v celej mape pre vybranú stránku, verziu, obdobie, šírku a súradnicový režim určuje červený koniec škály. Ostatné miesta používajú pomernú intenzitu od modrej po červenú. Pri výbere konkrétnej verzie sa škála vypočíta iba z jej kliknutí v zadanom období, takže aj menej navštevovaná verzia zvýrazní svoje najvyťaženejšie miesta. Možnosť **Všetky verzie** použije kliknutia za celé vybrané obdobie. Posúvanie náhľadu škálu nemení. Referenčná hustota sa ukladá do vyrovnávacej pamäte na čas `statHeatMapImageTimeout`, rovnako ako obrázky mapy.
+
+Percento vybranej oblasti je podiel všetkých zaznamenaných kliknutí v obdĺžniku. Farba nevyjadruje toto percento: malá oblasť s tesne sústredenými kliknutiami môže byť teplejšia než väčšia oblasť s vyšším počtom rozptýlených kliknutí.
+
 Náhľad predvolene zobrazuje publikovanú verziu stránky ku koncu vybraného obdobia. Ak ju nemožno určiť, zobrazí sa upozornenie na použitie aktuálneho obsahu alebo na nedostupný náhľad.
 
 Ak sa stránka počas obdobia menila, v poli **Verzia stránky** je vybraná možnosť **Všetky verzie**. Filter môžete použiť aj vtedy, keď jediná dostupná verzia platila iba časť vybraného obdobia. Filter ponúka najviac 100 najnovších publikovaných verzií za vybrané obdobie. Ak hľadáte staršiu verziu, vyberte skoršie obdobie. Vyberte verziu podľa čísla a času publikovania. Náhľad zobrazí jej obsah. Mapa aj počty pri jednotlivých šírkach zahŕňajú všetky kliknutia z dní, keď bola verzia vo vybranom období zverejnená. Ak nová verzia vyšla na obed, obe verzie zobrazia všetky kliknutia z tohto dňa. V zobrazení **Všetky verzie** sa každé kliknutie započíta raz.
@@ -54,9 +58,15 @@ Ak sú vo vybranom období dostupné aspoň dve publikované verzie stránky, tl
 
 Oba náhľady majú spoločnú **Šírku mapy**, **Zobrazenie**, **Krytie mapy** a prepínač **Zobraziť mapu**. Aj pri prispôsobení priestoru používajú rovnakú mierku. Pri kontajnerových skupinách sa pre oba náhľady použije rovnaká skutočná šírka okna, vybraná zo záznamov za celé obdobie. Náhľady možno posúvať samostatne. Pri zmene verzie sa načíta iba príslušný náhľad; druhý si zachová mapu aj pozíciu posunu.
 
-Pod každým náhľadom sa zobrazuje jeho počet kliknutí. Ak verzia nemá kliknutia pre vybranú šírku, zobrazí sa jej obsah s nulovým počtom a bez farebnej vrstvy. Farebná škála je pre oba náhľady rovnaká. Počty sa neprepočítavajú podľa dĺžky platnosti verzie ani návštevnosti; verzie publikované v rovnaký deň môžu zahŕňať tie isté denné kliknutia.
+Pod každým náhľadom sa zobrazuje jeho počet kliknutí. Ak verzia nemá kliknutia pre vybranú šírku, zobrazí sa jej obsah s nulovým počtom a bez farebnej vrstvy. Každý náhľad má vlastnú škálu podľa najvyššej hustoty kliknutí svojej verzie. Rovnaká farba preto označuje podobne vyťažené miesto v rámci danej verzie, nie rovnaký počet kliknutí v oboch náhľadoch. Počty sa neprepočítavajú podľa dĺžky platnosti verzie ani návštevnosti; verzie publikované v rovnaký deň môžu zahŕňať tie isté denné kliknutia.
 
 Opätovným stlačením **Porovnať verzie** sa vrátite k jednému náhľadu a pôvodnému výberu verzie.
+
+## Počet kliknutí v oblasti
+
+Zapnutie výberu oblasti nemení polohu ani veľkosť náhľadu. Počas výberu môžete stránku posúvať kolieskom myši.
+
+Kliknite na **Vybrať oblasť** a potiahnutím myši označte obdĺžnik v náhľade. Pod náhľadom sa zobrazí počet kliknutí v oblasti a ich percentuálny podiel pre zvolené obdobie, verziu a šírku mapy. Pri porovnaní verzií má každý náhľad vlastnú oblasť a výsledok. Výber odstránite vypnutím **Vybrať oblasť** alebo tlačidlom **Zrušiť oblasť**; zruší sa aj pri zmene verzie, šírky alebo obnovení náhľadu.
 
 ## Prenos a obmedzenia
 

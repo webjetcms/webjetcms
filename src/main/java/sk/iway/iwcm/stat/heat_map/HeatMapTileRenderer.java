@@ -17,6 +17,7 @@ final class HeatMapTileRenderer {
     private final int columns;
     private final int rows;
     private final float[] density;
+    private boolean smoothed;
 
     HeatMapTileRenderer(int originX, int originY, int width, int height, int cellSize) {
         this.originX = originX;
@@ -36,7 +37,9 @@ final class HeatMapTileRenderer {
         if (x >= 0 && x < columns && y >= 0 && y < rows) density[y * columns + x] += count;
     }
 
-    BufferedImage render() {
+    private void smooth() {
+        if (smoothed) return;
+        smoothed = true;
         float[] kernel = new float[2 * halo + 1];
         for (int i = -halo; i <= halo; i++) {
             double distance = (double) i * cellSize;
@@ -61,6 +64,22 @@ final class HeatMapTileRenderer {
                 density[y * columns + x] = value;
             }
         }
+    }
+
+    /** Returns the peak on this tile's grid, including interpolation samples at its edges. */
+    double maximumDensity() {
+        smooth();
+        double maximum = 0;
+        for (int y = halo; y < rows - halo; y++) {
+            for (int x = halo; x < columns - halo; x++) maximum = Math.max(maximum, density[y * columns + x]);
+        }
+        return maximum;
+    }
+
+    /** Uses one peak for the selected page version so clipping and scrolling cannot rescale the colors. */
+    BufferedImage render(double maximumDensity) {
+        if (!Double.isFinite(maximumDensity) || maximumDensity <= 0) throw new IllegalArgumentException("Invalid heatmap density scale");
+        smooth();
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         int offsetX = Math.floorMod(originX, cellSize);
         int offsetY = Math.floorMod(originY, cellSize);
@@ -72,15 +91,16 @@ final class HeatMapTileRenderer {
                 float fractionX = ((offsetX + x) % cellSize) / (float) cellSize;
                 float upper = density[row * columns + column] * (1 - fractionX) + density[row * columns + column + 1] * fractionX;
                 float lower = density[(row + 1) * columns + column] * (1 - fractionX) + density[(row + 1) * columns + column + 1] * fractionX;
-                image.setRGB(x, y, color(upper * (1 - fractionY) + lower * fractionY));
+                image.setRGB(x, y, color((upper * (1 - fractionY) + lower * fractionY) / maximumDensity));
             }
         }
         return image;
     }
 
-    private static int color(float density) {
-        if (density < 0.01f) return 0;
-        float scale = density / (density + 2) * (COLORS.length - 1);
+    private static int color(double relativeDensity) {
+        if (relativeDensity <= 0) return 0;
+        double normalized = Math.min(1, relativeDensity);
+        float scale = (float) (normalized * (COLORS.length - 1));
         int lower = Math.min(COLORS.length - 2, (int) scale);
         float fraction = scale - lower;
         int first = COLORS[lower];
@@ -88,7 +108,7 @@ final class HeatMapTileRenderer {
         int red = Math.round((first >> 16 & 255) * (1 - fraction) + (second >> 16 & 255) * fraction);
         int green = Math.round((first >> 8 & 255) * (1 - fraction) + (second >> 8 & 255) * fraction);
         int blue = Math.round((first & 255) * (1 - fraction) + (second & 255) * fraction);
-        int alpha = Math.round(210 * Math.min(1, density));
+        int alpha = (int) Math.round(210 * Math.min(1, 2 * Math.sqrt(normalized)));
         return alpha << 24 | red << 16 | green << 8 | blue;
     }
 }

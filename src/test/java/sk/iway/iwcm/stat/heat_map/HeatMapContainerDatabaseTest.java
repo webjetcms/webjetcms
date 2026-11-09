@@ -117,8 +117,26 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                             new HeatMapStorage.WidthCount(1140, DOCUMENT, 2, 1140),
                             new HeatMapStorage.WidthCount(390, DOCUMENT, 1, 390)),
                             HeatMapStorage.getWidths("autotest.example", 11, from, to));
+                    assertEquals(new HeatMapStorage.AreaCount(3, 3),
+                            HeatMapStorage.getAreaCount("autotest.example", 11, from, to, 1140, CONTAINER, 487, 350, 488, 351));
+                    assertEquals(new HeatMapStorage.AreaCount(0, 3),
+                            HeatMapStorage.getAreaCount("autotest.example", 11, from, to, 1140, CONTAINER, 488, 350, 500, 351));
+                    assertEquals(new HeatMapStorage.AreaCount(0, 3),
+                            HeatMapStorage.getAreaCount("autotest.example", 11, from, to, 1140, CONTAINER, 480, 340, 487, 350));
+                    assertEquals(new HeatMapStorage.AreaCount(0, 2),
+                            HeatMapStorage.getAreaCount("autotest.example", 11, from, to, 1140, DOCUMENT, 487, 350, 488, 351));
+                    assertEquals(new HeatMapStorage.AreaCount(1, 1),
+                            HeatMapStorage.getAreaCount("other.example", 11, from, to, 1140, CONTAINER, 487, 350, 488, 351));
+                    assertEquals(new HeatMapStorage.AreaCount(0, 0),
+                            HeatMapStorage.getAreaCount("autotest.example", 12, from, to, 1140, CONTAINER, 487, 350, 488, 351));
+                    assertEquals(new HeatMapStorage.AreaCount(1, 1),
+                            HeatMapStorage.getAreaCount("autotest.example", 11, from, LocalDate.of(2026, 9, 30), 1140, CONTAINER, 487, 350, 488, 351));
                     try (MockedStatic<Tools> paths = mockStatic(Tools.class)) {
                         paths.when(() -> Tools.getRealPath("/WEB-INF/tmp/heat_map/")).thenReturn(cache.toString());
+                        assertEquals(3, HeatMapStorage.getMaximumDensity("autotest.example", 11, from, to, 1140, CONTAINER));
+                        assertEquals(2, HeatMapStorage.getMaximumDensity("autotest.example", 11, from, to, 1140, DOCUMENT));
+                        assertEquals(1, HeatMapStorage.getMaximumDensity("other.example", 11, from, to, 1140, CONTAINER));
+                        assertEquals(1, HeatMapStorage.getMaximumDensity("autotest.example", 11, from, LocalDate.of(2026, 9, 30), 1140, CONTAINER));
                         byte[] container = HeatMapStorage.getTile("autotest.example", 11, from, to, 1140, CONTAINER, 0, 0);
                         byte[] document = HeatMapStorage.getTile("autotest.example", 11, from, to, 1140, DOCUMENT, 0, 0);
                         assertTrue((ImageIO.read(new ByteArrayInputStream(container)).getRGB(487, 350) >>> 24) > 0);
@@ -126,6 +144,7 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                         assertTrue((ImageIO.read(new ByteArrayInputStream(document)).getRGB(900, 350) >>> 24) > 0);
                         assertArrayEquals(container, HeatMapStorage.getTile("autotest.example", 11, from, to, 1140, CONTAINER, 0, 0));
                         verifySharedPublicationDay(database);
+                        verifyVersionDensity(database);
                     }
                     verifyHistoryProjectionAndCache(database);
                 }
@@ -219,6 +238,25 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
             assertTrue((tile.getRGB(550, 150) >>> 24) > 0);
             assertTrue((tile.getRGB(700, 150) >>> 24) > 0);
         }
+    }
+
+    /** A quiet version reaches red on its own scale, independently of a busier version and cached aggregate tiles. */
+    private static void verifyVersionDensity(Connection database) throws Exception {
+        try (Statement sql = database.createStatement()) {
+            String columns = " (domain_name,document_id,day_of_month,viewport_width,x,y,count) VALUES ";
+            sql.execute("INSERT INTO stat_clicks_2026_9" + columns + "('autotest.example',23,1,800,100,100,50)");
+            sql.execute("INSERT INTO stat_clicks_2026_10" + columns + "('autotest.example',23,1,800,500,100,5000)");
+        }
+        LocalDate from = LocalDate.of(2026, 9, 1);
+        LocalDate versionEnd = from.withDayOfMonth(30);
+        LocalDate to = LocalDate.of(2026, 10, 31);
+        assertEquals(5000, HeatMapStorage.getMaximumDensity("autotest.example", 23, from, to, 800, DOCUMENT));
+        assertEquals(50, HeatMapStorage.getMaximumDensity("autotest.example", 23, from, versionEnd, 800, DOCUMENT));
+        var aggregate = ImageIO.read(new ByteArrayInputStream(HeatMapStorage.getTile("autotest.example", 23, from, to, 800, DOCUMENT, 0, 0)));
+        var version = ImageIO.read(new ByteArrayInputStream(HeatMapStorage.getTile("autotest.example", 23, from, versionEnd, 800, DOCUMENT, 0, 0)));
+        assertNotEquals(0xb20000, aggregate.getRGB(100, 100) & 0xffffff);
+        assertEquals(0xb20000, version.getRGB(100, 100) & 0xffffff);
+        assertEquals(0, version.getRGB(500, 100));
     }
 
     private static void record(int id, int month, int viewport, int x, int container, String domain) {

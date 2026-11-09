@@ -170,17 +170,30 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
         }
     }
 
-    /** Both click resources use the same server-selected version interval within the report. */
+    /** Counts, tiles and their color reference use each version's interval, with one scale across its tiles. */
     @Test
-    void appliesVersionRangeToCountsAndTiles() throws Exception {
+    void appliesVersionRangeToCountsTilesAndDensity() throws Exception {
         HeatMapRestController controller = controller();
         ReportRange version = new ReportRange(RANGE.from() + 1000, RANGE.from() + 2000);
+        ReportRange otherVersion = new ReportRange(RANGE.from() + 86400000, RANGE.until());
         when(history.versionRange(eq(123), any(Date[].class), eq(7))).thenReturn(version);
+        when(history.versionRange(eq(123), any(Date[].class), eq(8))).thenReturn(otherVersion);
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
+            storage.when(() -> HeatMapStorage.getMaximumDensity("public.example", 123, FROM, TO, 390, DOCUMENT)).thenReturn(5000.0);
+            storage.when(() -> HeatMapStorage.getMaximumDensity("public.example", 123, FROM, FROM, 390, DOCUMENT)).thenReturn(50.0);
+            storage.when(() -> HeatMapStorage.getMaximumDensity("public.example", 123, FROM.plusDays(1), TO, 390, DOCUMENT)).thenReturn(200.0);
             controller.widths(123, "period", 7);
             controller.tile(123, "period", 390, DOCUMENT, 0, 0, 7);
+            controller.tile(123, "period", 390, DOCUMENT, 0, 1, 7);
+            controller.tile(123, "period", 390, DOCUMENT, 0, 0, 8);
+            controller.tile(123, "period", 390, DOCUMENT, 0, 0, null);
+            controller.area(123, "period", 390, DOCUMENT, 10, 20, 110, 220, 7);
             storage.verify(() -> HeatMapStorage.getWidths("public.example", 123, FROM, FROM));
-            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, FROM, 390, DOCUMENT, 0, 0));
+            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, FROM, 390, DOCUMENT, 0, 0, 50.0));
+            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, FROM, 390, DOCUMENT, 0, 1, 50.0));
+            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM.plusDays(1), TO, 390, DOCUMENT, 0, 0, 200.0));
+            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, TO, 390, DOCUMENT, 0, 0, 5000.0));
+            storage.verify(() -> HeatMapStorage.getAreaCount("public.example", 123, FROM, FROM, 390, DOCUMENT, 10, 20, 110, 220));
         }
     }
 
@@ -195,24 +208,50 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
                     () -> controller.metadata(456, "period", 390, DOCUMENT, null)).getStatusCode());
             assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
                     () -> controller.tile(456, "period", 390, DOCUMENT, 0, 0, null)).getStatusCode());
+            assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
+                    () -> controller.area(456, "period", 390, DOCUMENT, 10, 20, 110, 220, null)).getStatusCode());
             storage.verifyNoInteractions();
         }
     }
 
+    /** Area counts and tiles retain trusted domains, large click weights and browser cache protection. */
     @ParameterizedTest
     @ValueSource(strings = { "public.example", "" })
-    void authorizedTileUsesTheSameScopeAndIsNeverCachedByTheBrowser(String domain) throws Exception {
+    void authorizedAreaAndTileUseTheSameScopeAndAreNeverCachedByTheBrowser(String domain) throws Exception {
         HeatMapRestController controller = controller();
         when(access.currentDomain(request)).thenReturn(domain);
-        byte[] png = { 1, 2, 3 };
+        request.addParameter("domain", "untrusted.example");
+        var counts = new HeatMapStorage.AreaCount(3_000_000_000L, 4_000_000_000L);
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
-            storage.when(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, DOCUMENT, 0, 2)).thenReturn(png);
-            var response = controller.tile(123, "period", 390, DOCUMENT, 0, 2, null);
-            assertArrayEquals(png, response.getBody());
-            assertEquals(MediaType.IMAGE_PNG, response.getHeaders().getContentType());
+            storage.when(() -> HeatMapStorage.getAreaCount(domain, 123, FROM, TO, 960, CONTAINER, 10, 20, 110, 220)).thenReturn(counts);
+            var response = controller.area(123, "period", 960, CONTAINER, 10, 20, 110, 220, null);
+            assertEquals(counts, response.getBody());
             assertEquals("no-store", response.getHeaders().getCacheControl());
             verify(access).requireDocument(request, 123);
-            storage.verify(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, DOCUMENT, 0, 2));
+
+            byte[] png = { 1, 2, 3 };
+            storage.when(() -> HeatMapStorage.getMaximumDensity(domain, 123, FROM, TO, 390, DOCUMENT)).thenReturn(100.0);
+            storage.when(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, DOCUMENT, 0, 2, 100.0)).thenReturn(png);
+            var tile = controller.tile(123, "period", 390, DOCUMENT, 0, 2, null);
+            assertArrayEquals(png, tile.getBody());
+            assertEquals(MediaType.IMAGE_PNG, tile.getHeaders().getContentType());
+            assertEquals("no-store", tile.getHeaders().getCacheControl());
+            verify(access, times(2)).requireDocument(request, 123);
+        }
+    }
+
+    /** Rejects empty, reversed, negative and out-of-range rectangles before reading click data. */
+    @Test
+    void rejectsInvalidAreas() {
+        HeatMapRestController controller = controller();
+        try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
+            for (int[] bounds : List.of(new int[] {-1, 0, 20, 20}, new int[] {0, -1, 20, 20},
+                    new int[] {20, 0, 20, 20}, new int[] {0, 20, 20, 10},
+                    new int[] {0, 0, 1_000_002, 20}, new int[] {0, 0, 20, 1_000_002})) {
+                assertEquals(HttpStatus.BAD_REQUEST, assertThrows(ResponseStatusException.class,
+                        () -> controller.area(123, "period", 960, CONTAINER, bounds[0], bounds[1], bounds[2], bounds[3], null)).getStatusCode());
+            }
+            storage.verifyNoInteractions();
         }
     }
 
