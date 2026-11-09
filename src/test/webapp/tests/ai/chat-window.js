@@ -4,6 +4,7 @@ const container = '#toast-container-ai';
 const dialog = `${container} .toast.toast-info`;
 const input = `${container} .ai-chat-input`;
 const minimize = `${container} .ai-chat-minimize`;
+const maximize = `${container} .ai-chat-maximize`;
 const restore = `${container} .ai-chat-restore`;
 const field = '#DTE_Field_htmlData';
 
@@ -90,6 +91,52 @@ Scenario('Move, minimize and restore preserve the conversation and release the e
     DTE.cancel();
     I.waitForInvisible(container, 5);
     I.dontSeeElement(restore);
+    I.wjSetDefaultWindowSize();
+});
+
+Scenario('Maximize and shrink preserve the window position, draft and minimized state', async ({ I, DTE }) => {
+    openChat(I, DTE);
+    I.resizeWindow(1440, 1000);
+    I.fillField(input, 'Maximized draft autotest');
+    I.executeScript(() => document.querySelector('#toast-container-ai .toast-title').focus());
+    I.pressKey('ArrowLeft');
+    I.pressKey('ArrowUp');
+    const normal = await I.executeScript(windowBounds);
+
+    I.moveCursorTo(maximize);
+    I.waitForText('Maximalizovať okno', 5, '.tooltip.show');
+    I.clickCss(maximize);
+    I.seeElement(`${maximize} .ti-arrows-minimize`);
+    I.assertEqual(await I.grabAttributeFrom(maximize, 'aria-label'), 'Zmenšiť okno');
+    I.assertEqual(await I.grabAttributeFrom(maximize, 'aria-pressed'), 'true');
+    I.assertDeepEqual(await I.executeScript(windowBounds), { left: 0, top: 0, right: 1440, bottom: 1000 });
+    I.seeInField(input, 'Maximized draft autotest');
+
+    I.clickCss(minimize);
+    I.waitForInvisible(dialog, 5);
+    I.fillField(field, 'Editing while maximized chat is hidden autotest');
+    I.clickCss(restore);
+    I.waitForVisible(dialog, 5);
+    I.assertDeepEqual(await I.executeScript(windowBounds), { left: 0, top: 0, right: 1440, bottom: 1000 });
+    I.moveCursorTo(maximize);
+    I.waitForText('Zmenšiť okno', 5, '.tooltip.show');
+
+    for (const [width, height] of [[1100, 800], [600, 700]]) {
+        I.resizeWindow(width, height);
+        I.assertDeepEqual(await I.executeScript(windowBounds), { left: 0, top: 0, right: width, bottom: height });
+        I.seeElement(maximize);
+        I.seeElement(`${container} .toast-close-button`);
+        I.seeInField(input, 'Maximized draft autotest');
+    }
+    I.resizeWindow(1440, 1000);
+    I.clickCss(maximize);
+    I.seeElement(`${maximize} .ti-arrows-maximize`);
+    I.assertEqual(await I.grabAttributeFrom(maximize, 'aria-label'), 'Maximalizovať okno');
+    I.assertEqual(await I.grabAttributeFrom(maximize, 'aria-pressed'), 'false');
+    I.assertDeepEqual(await I.executeScript(windowBounds), normal);
+    I.seeInField(input, 'Maximized draft autotest');
+    I.clickCss(`${container} .toast-close-button`);
+    DTE.cancel();
     I.wjSetDefaultWindowSize();
 });
 

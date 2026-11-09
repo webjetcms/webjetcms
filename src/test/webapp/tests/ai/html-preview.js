@@ -86,6 +86,15 @@ Scenario('A styled HTML response has an isolated preview, source and expansion',
     I.assertTrue(state.unchanged, 'Opening a preview must not apply the answer to the editor.');
     I.assertEqual(state.width, 1280);
     I.saveScreenshot('ai-html-preview.png');
+    I.clickCss(`${container} .ai-chat-maximize`);
+    I.waitForVisible(`${container} .ai-chat-maximized`, 5);
+    I.assertTrue((await I.executeScript(previewState)).unchanged);
+    I.saveScreenshot('ai-html-preview-window-maximized.png');
+    I.clickCss(`${card} button[aria-label="Maximalizovať okno"]`);
+    I.waitForVisible(`${container} .ai-chat-html-expanded`, 5);
+    I.clickCss(`${card} button[aria-label="Zmenšiť okno"]`);
+    I.waitForInvisible(`${container} .ai-chat-html-expanded`, 5);
+    I.clickCss(`${container} .ai-chat-maximize`);
     I.moveCursorTo(`${card} button[aria-label="Desktop"]`);
     I.waitForText('Desktop', 5, '.tooltip.show');
     I.clickCss(`${card} button[aria-label="Tablet"]`);
