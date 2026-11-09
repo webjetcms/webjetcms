@@ -54,7 +54,8 @@ class HeatMapAggregationDatabaseTest extends BaseWebjetTest {
                 try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
                     pool.when(DBPool::getConnection).thenReturn(borrowed);
                     StatNewDB.createStatTable("stat_clicks", "_2025_10");
-                    sql.executeUpdate("ALTER TABLE " + TABLE + " DROP COLUMN count, ENGINE=MyISAM");
+                    sql.executeUpdate("ALTER TABLE " + TABLE
+                            + " DROP INDEX hm_width_2025_10, DROP INDEX hm_tile_2025_10, DROP COLUMN count, ENGINE=MyISAM");
                     sql.executeUpdate("INSERT INTO " + TABLE
                             + " (domain_name,document_id,day_of_month,coordinate_mode,viewport_width,source_viewport_width,x,y) VALUES"
                             + " ('a',11,1,1,800,1200,100,200), ('a',11,1,1,800,1200,104,204), ('a',11,1,1,800,1200,105,200)");

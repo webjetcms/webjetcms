@@ -49,6 +49,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Štatistika - zrýchlené načítanie veľkých máp kliknutí pomocou indexov pre súčty podľa šírky a viditeľné časti mapy. Indexy sa doplnia aj do existujúcich mesačných tabuliek pri štarte po aktualizácii; počty a presnosť kliknutí sa nemenia. (#318)
 - Štatistika - obnovená [Mapa kliknutí](redactor/apps/stat/heat-map.md) s podporou rôznych šírok okna, pevných kontajnerov a náhľadom historických verzií stránky. Meranie sa zapína v šablóne alebo skupine šablón a rešpektuje súhlas so štatistickými cookies; existujúce inštalácie musia podľa návodu doplniť definíciu `wj_hm_*`. Historické kliknutia možno zlučovať za vybraný mesiac alebo všetky ukončené mesiace. Veľkosť bunky určuje `statHeatMapCellSize` (predvolene 5 × 5 CSS pixely). Mesačné tabuľky kliknutí s úložiskom MyISAM sa pri aktualizácii prevedú na InnoDB. (#318)
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 

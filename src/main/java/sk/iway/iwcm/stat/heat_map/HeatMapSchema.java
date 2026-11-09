@@ -106,6 +106,37 @@ public final class HeatMapSchema {
     }
 
     /**
+     * Adds covering report indexes after the count and InnoDB migrations have completed.
+     * Converts legacy InnoDB row formats to support full utf8mb4 domain indexes.
+     * Existing indexes are retained for short date ranges and legacy queries.
+     *
+     * @throws SQLException if an index cannot be created on a visible monthly table
+     */
+    public static void upgradeReportIndexes() throws SQLException {
+        try (Connection connection = DBPool.getConnection(); Statement statement = connection.createStatement()) {
+            for (YearMonth month : existingMonths(connection)) {
+                String suffix = HeatMapStorage.suffix(month);
+                String table = HeatMapStorage.TABLE_NAME + suffix;
+                if (Constants.DB_TYPE == Constants.DB_MYSQL) {
+                    boolean legacyRowFormat;
+                    try (ResultSet rows = statement.executeQuery("SELECT row_format FROM information_schema.tables"
+                            + " WHERE table_schema=DATABASE() AND table_name='" + table + "' AND engine='InnoDB'")) {
+                        legacyRowFormat = rows.next() && ("Compact".equalsIgnoreCase(rows.getString(1))
+                                || "Redundant".equalsIgnoreCase(rows.getString(1)));
+                    }
+                    if (legacyRowFormat) {
+                        Logger.println(HeatMapSchema.class, "Converting " + table + " to DYNAMIC row format");
+                        statement.executeUpdate("ALTER TABLE " + table + " ROW_FORMAT=DYNAMIC");
+                    }
+                }
+                Logger.println(HeatMapSchema.class, "Adding heatmap report indexes to " + table);
+                executeDdl(statement, widthIndexSql(table, suffix), Constants.DB_TYPE);
+                executeDdl(statement, tileIndexSql(table, suffix), Constants.DB_TYPE);
+            }
+        }
+    }
+
+    /**
      * Finds monthly click tables that heatmap queries can reference without a schema qualifier.
      *
      * @param connection connection whose metadata identifies the tables
@@ -171,6 +202,32 @@ public final class HeatMapSchema {
         String domain = databaseType == Constants.DB_MYSQL ? "domain_name(128)" : "domain_name";
         return "CREATE INDEX hm_page_v2" + suffix + " ON " + table
                 + "(" + domain + ", document_id, coordinate_mode, viewport_width, day_of_month)";
+    }
+
+    /**
+     * Covers width totals in grouping order without loading each click row or sorting the groups.
+     * Full domain values are required for covering scans; MySQL tables must already use InnoDB.
+     *
+     * @param table trusted monthly click table name
+     * @param suffix trusted monthly suffix used to make the index name unique
+     * @return portable index DDL
+     */
+    public static String widthIndexSql(String table, String suffix) {
+        return "CREATE INDEX hm_width" + suffix + " ON " + table
+                + "(domain_name, document_id, viewport_width, coordinate_mode, source_viewport_width, day_of_month, count)";
+    }
+
+    /**
+     * Restricts tile reads to their vertical band and covers all remaining filters and cell weights.
+     * The Y range follows the equality columns so clicks elsewhere on a long page can be skipped.
+     *
+     * @param table trusted monthly click table name
+     * @param suffix trusted monthly suffix used to make the index name unique
+     * @return portable index DDL
+     */
+    public static String tileIndexSql(String table, String suffix) {
+        return "CREATE INDEX hm_tile" + suffix + " ON " + table
+                + "(domain_name, document_id, coordinate_mode, viewport_width, y, day_of_month, x, count)";
     }
 
     private static void executeDdl(Statement statement, String sql, int databaseType) throws SQLException {

@@ -443,7 +443,7 @@ public class StatNewDB
 						"document_id INT,"+
 						"x INT,"+
 						"y INT,"+
-						"day_of_month INT) ENGINE=InnoDB;";
+						"day_of_month INT) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;";
 			}
 			else if (DB_TYPE == Constants.DB_MSSQL || DB_TYPE == Constants.DB_PGSQL)
 			{
@@ -482,6 +482,8 @@ public class StatNewDB
 			sql += "CREATE INDEX to_document_"+suffix+" ON stat_clicks"+suffix+"(document_id);";
 			sql += HeatMapSchema.uniqueIndexSql("stat_clicks"+suffix, suffix, DB_TYPE)+";";
 			sql += HeatMapSchema.pageIndexSql("stat_clicks"+suffix, suffix, DB_TYPE)+";";
+			sql += HeatMapSchema.widthIndexSql("stat_clicks"+suffix, suffix)+";";
+			sql += HeatMapSchema.tileIndexSql("stat_clicks"+suffix, suffix)+";";
 		}
 		if (DB_TYPE == Constants.DB_PGSQL && sql != null) {
 			int i = sql.indexOf("ENGINE=");

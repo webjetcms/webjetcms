@@ -138,6 +138,7 @@ public class UpdateDatabase
 		updateStatErrorColumns();
 		updateStatClicksColumns();
 		updateStatClickCounts();
+		updateStatClickReportIndexes();
 
 		updateStopwords();
 
@@ -2122,6 +2123,18 @@ public class UpdateDatabase
             saveSuccessUpdate(note);
         } catch (SQLException exception) {
             Logger.error(UpdateDatabase.class, "Cannot upgrade click statistics; the migration will retry on next startup: " + exception.getMessage());
+        }
+    }
+
+    /** Retries report index creation on startup until every visible monthly table is indexed. */
+    public static void updateStatClickReportIndexes() {
+        String note = "09.11.2026 [codex] add covering width and tile indexes to stat_clicks";
+        if (isAllreadyUpdated(note)) return;
+        try {
+            HeatMapSchema.upgradeReportIndexes();
+            saveSuccessUpdate(note);
+        } catch (SQLException exception) {
+            Logger.error(UpdateDatabase.class, exception);
         }
     }
 

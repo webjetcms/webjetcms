@@ -10,12 +10,15 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
@@ -69,9 +72,11 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                     sql.execute("INSERT INTO documents VALUES (11, 1)");
                     sql.execute("INSERT INTO `groups` VALUES (1, 'autotest.example')");
                     for (String suffix : List.of("_2026_9", "_2026_10")) {
+                        String rowFormat = "_2026_9".equals(suffix) ? "COMPACT" : "REDUNDANT";
                         sql.execute("CREATE TABLE stat_clicks" + suffix + " (stat_click_id INT AUTO_INCREMENT PRIMARY KEY,"
                                 + "event_id CHAR(32),domain_name VARCHAR(255),viewport_width INT NOT NULL DEFAULT 1920,"
-                                + "document_id INT,day_of_month INT,x INT,y INT)");
+                                + "document_id INT,day_of_month INT,x INT,y INT) ENGINE=InnoDB ROW_FORMAT="
+                                + rowFormat + " DEFAULT CHARSET=utf8mb4");
                     }
                     sql.execute("INSERT INTO stat_clicks_2026_9 (document_id,day_of_month,viewport_width,x,y) VALUES (11,1,1140,900,350)");
                 }
@@ -95,6 +100,16 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                     record(5, 10, 390, 100, 0, "autotest.example");
                     record(6, 10, 1369, 487, 1140, "other.example");
                     StatWriteBuffer.main(new String[0]);
+                    HeatMapSchema.upgradeReportIndexes();
+                    HeatMapSchema.upgradeReportIndexes();
+                    for (String suffix : List.of("_2026_9", "_2026_10")) {
+                        Set<String> indexes = new HashSet<>();
+                        try (ResultSet rows = database.getMetaData().getIndexInfo(
+                                database.getCatalog(), null, "stat_clicks" + suffix, false, false)) {
+                            while (rows.next()) indexes.add(rows.getString("INDEX_NAME"));
+                        }
+                        assertTrue(indexes.containsAll(List.of("hm_width" + suffix, "hm_tile" + suffix, "hm_page_v2" + suffix)));
+                    }
                     // The report starts before the first monthly table exists.
                     LocalDate from = LocalDate.of(2026, 8, 1);
                     LocalDate to = LocalDate.of(2026, 10, 31);

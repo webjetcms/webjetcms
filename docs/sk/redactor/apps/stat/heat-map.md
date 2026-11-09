@@ -56,6 +56,8 @@ V prehliadači čaká najviac 16 cookies kliknutí s celkovou veľkosťou do 2 K
 
 Veľkosť bunky pre vykresľovanie aj zlučovanie určuje `statHeatMapCellSize` (predvolene `5`, teda 5 × 5 CSS pixely). Hodnotou `4` nastavíte 4 × 4 a hodnotou `10` nastavíte 10 × 10. Väčšie bunky znižujú presnosť polohy; neskoršie zmenšenie neobnoví súradnice už zlúčených kliknutí.
 
+Pri aktualizácii sa do mesačných tabuliek doplnia indexy na rýchlejšie načítanie počtov podľa šírky a viditeľnej časti mapy. V MySQL/MariaDB sa pred vytvorením indexov prevedú staršie InnoDB formáty riadkov `COMPACT` a `REDUNDANT` na `DYNAMIC`, ktorý podporuje indexovanie celej domény v kódovaní `utf8mb4`. Na dlhých stránkach tak databáza pri načítaní časti mapy nemusí prechádzať kliknutia z celej výšky stránky. Nové mesačné tabuľky ich obsahujú automaticky. Indexy nemenia počty ani presnosť kliknutí; zaberajú ďalšie miesto v databáze a aktualizujú sa pri zápise kliknutí. Ich prvé vytvorenie môže pri veľkých tabuľkách predĺžiť štart po aktualizácii.
+
 Mapa nepredstavuje záznam jednotlivých návštev: nesleduje pohyb myši ani nevytvára záznam relácie.
 
 ## Pôvodné údaje
