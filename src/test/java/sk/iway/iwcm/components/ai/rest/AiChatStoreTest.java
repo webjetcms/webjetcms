@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.ai.rest;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.i18n.Prop;
 
 /** Covers persistent conversation lifecycle, isolation and history lookup. */
 class AiChatStoreTest {
@@ -40,6 +42,22 @@ class AiChatStoreTest {
 
     private AiChatRequest request(String id, Long revision, String prompt) {
         return new AiChatRequest(id, 12L, UUID.randomUUID().toString(), revision, prompt, null);
+    }
+
+    /** History persists the resolved user-visible name and supports searching by the configured model. */
+    @Test
+    void persistsResolvedAssistantNameInHistory() {
+        assistant.setDescription("Čet {model}");
+        assistant.setModel("gpt-6.1-sol");
+        Prop prop = mock(Prop.class);
+        when(prop.getText("Čet {model}", false)).thenReturn("Čet {model}");
+        when(prop.getText("Čet", false)).thenReturn("Čet");
+        try (var translations = mockStatic(Prop.class)) {
+            translations.when(Prop::getInstance).thenReturn(prop);
+            var turn = store.begin(request(null, null, "Question"), scope, assistant, "config");
+            assertEquals("Čet gpt-6.1-sol", new AiChatStore().get(turn.thread().getId(), scope).thread().getAssistantName());
+            assertEquals(1, store.list(scope, 0, "gpt-6.1-sol").items().size());
+        }
     }
 
     @Test

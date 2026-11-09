@@ -129,7 +129,11 @@ export class AiChatHost {
             option.value = assistant.assistantId;
             return option;
         }));
-        if (selectedId != null) this.select.value = String(selectedId);
+        const savedId = this.options.assistantSettingKey ? WJ.getAdminSetting(this.options.assistantSettingKey) : null;
+        const preferredId = selectedId ?? savedId;
+        if (assistants.some(assistant => String(assistant.assistantId) === String(preferredId))) {
+            this.select.value = String(preferredId);
+        }
     }
 
     /** Includes background conversations when the user switches assistants. */
@@ -269,6 +273,11 @@ export class AiChatHost {
         this.newChatButton.disabled = false;
         const id = String(chat.assistant.assistantId);
         this.lastConversationByAssistant.set(id, chat);
+        const settingKey = this.options.assistantSettingKey;
+        if (settingKey && this.assistants?.some(assistant => String(assistant.assistantId) === id)
+            && WJ.getAdminSetting(settingKey) !== id) {
+            WJ.setAdminSetting(settingKey, id);
+        }
         if (![...this.select.options].some(option => option.value === id)) {
             const option = node('option', '', chat.assistant.description || chat.assistant.providerTitle);
             option.value = id;

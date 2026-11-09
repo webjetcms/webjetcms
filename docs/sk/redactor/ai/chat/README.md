@@ -26,7 +26,9 @@ Ak asistent vráti HTML kód, napríklad pri tvorbe PageBuilder stránky, zobraz
 
 ## Nový čet a návrat k rozhovoru
 
-**Nový čet** začne samostatný rozhovor so zvoleným asistentom. Ak sa ešte generuje odpoveď, zastaví ju. Uložený rozhovor tým nevymažete: zostáva v histórii.
+**Nový čet** začne samostatný rozhovor so zvoleným asistentom. Posledný výber asistenta na karte **AI Čet** sa ukladá do používateľských nastavení administrácie a obnoví sa aj po obnovení stránky alebo opätovnom prihlásení. Ak už asistent nie je dostupný, vyberie sa prvý z aktuálnej ponuky. Čet pri poli používa asistenta vybraného v editore.
+
+Ak sa ešte generuje odpoveď, **Nový čet** ju zastaví. Uložený rozhovor tým nevymažete: zostáva v histórii.
 
 Prepnutie asistenta obnoví jeho naposledy otvorený rozhovor vrátane rozpísanej správy a neodoslaných príloh. Rovnaké údaje sa zachovajú pri prepnutí karty a zatvorení a opätovnom otvorení dialógu, kým neopustíte aktuálnu stránku administrácie. Rozpísané správy a neodoslané prílohy sa na server neukladajú.
 

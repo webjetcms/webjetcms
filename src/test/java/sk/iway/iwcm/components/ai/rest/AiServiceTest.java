@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
 import java.util.List;
 
@@ -19,6 +21,7 @@ import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEditorFields;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
@@ -54,6 +57,8 @@ class AiServiceTest {
 
         AssistantDefinitionEntity chat = chat(1L);
         chat.setInstructions("Server-only instructions");
+        chat.setDescription("{model}");
+        chat.setModel("gpt-6.1-sol");
         AssistantDefinitionEntity disabled = chat(2L);
         disabled.setActive(false);
         AssistantDefinitionEntity generation = chat(3L);
@@ -73,11 +78,44 @@ class AiServiceTest {
             domains.when(CloudToolsForCore::getDomainId).thenReturn(42);
             caches.when(Cache::getInstance).thenReturn(mock(Cache.class));
 
-            List<DataTableAi> result = service.getChatAssistants(repository, mock(Prop.class));
+            Prop prop = mock(Prop.class);
+            when(prop.getText("{model}", false)).thenReturn("{model}");
+            List<DataTableAi> result = service.getChatAssistants(repository, prop);
 
             assertEquals(List.of(1L, 7L), result.stream().map(DataTableAi::getAssistantId).toList());
+            assertEquals("gpt-6.1-sol", result.get(0).getDescription());
             assertNull(result.get(0).getInstructions());
         }
+    }
+
+    /** Model names support literal prefixes, translated prefixes and placeholders inside translated values. */
+    @Test
+    void resolvesAssistantModelNamesWithoutChangingStoredConfiguration() {
+        Prop prop = mock(Prop.class);
+        when(prop.getText(anyString(), eq(false))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(prop.getText("chat.prefix", false)).thenReturn("Čet");
+        when(prop.getText("chat.full", false)).thenReturn("Čet {model}");
+        when(prop.getText("chat.original", false)).thenReturn("Pôvodný asistent");
+        AssistantDefinitionEntity assistant = chat(1L);
+        assistant.setModel("gpt-6.1-sol");
+
+        for (String description : List.of("{model}", "Čet {model}", "chat.prefix {model}", "chat.full", "chat.original")) {
+            assistant.setDescription(description);
+            String expected = "Čet gpt-6.1-sol";
+            if ("{model}".equals(description)) expected = "gpt-6.1-sol";
+            if ("chat.original".equals(description)) expected = "Pôvodný asistent";
+            assertEquals(expected, assistant.getDisplayName(prop), description);
+            AssistantDefinitionEditorFields fields = new AssistantDefinitionEditorFields();
+            fields.fromAssistantDefinition(assistant, true, prop);
+            assertEquals(expected, fields.getTranslatedDescription(), description);
+            assertEquals(description, assistant.getDescription());
+        }
+
+        assistant.setDescription("{model}");
+        assistant.setModel("gemini-3.8-flash");
+        assertEquals("gemini-3.8-flash", assistant.getDisplayName(prop));
+        assistant.setDescription("");
+        assertEquals("Chat 1", assistant.getDisplayName(prop));
     }
 
     private static AssistantDefinitionEntity chat(Long id) {

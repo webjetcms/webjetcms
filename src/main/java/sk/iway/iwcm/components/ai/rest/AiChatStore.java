@@ -37,6 +37,7 @@ import sk.iway.iwcm.components.ai.rest.AiChatAttachments.Upload;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.i18n.Prop;
 
 /** Private JSON conversations. Provider calls never hold filesystem locks. */
 @Service
@@ -170,6 +171,9 @@ public class AiChatStore {
         thread.setDomainName(scope.domainName());
         thread.setAssistantId(assistant.getId());
         thread.setAssistantName(assistant.getName());
+        if (Tools.isNotEmpty(assistant.getDescription())) {
+            thread.setAssistantName(assistant.getDisplayName(Prop.getInstance()));
+        }
         thread.setProvider(assistant.getProvider());
         thread.setProviderScope(providerScope);
         thread.setModel(assistant.getModel());

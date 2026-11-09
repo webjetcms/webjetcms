@@ -1913,6 +1913,39 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');
 });
 
+test('Global chat restores the last selected assistant after reload and keeps it for New chat', async t => {
+    const first = fixture(t, deniedRestPermissions, { aiChat: true });
+    const assistants = chatAssistants.map(assistant => ({ ...assistant, persistentChat: true }));
+    await openChat(first, assistants);
+    selectChatAssistant(first.controller.chat, 8);
+    first.controller.chat.newChatButton.click();
+    assert.equal(first.controller.chat.select.value, '8');
+
+    const reloaded = fixture(t, deniedRestPermissions, { aiChat: true,
+        adminSettings: Object.fromEntries(first.adminSettings) });
+    await openChat(reloaded, assistants);
+    assert.equal(reloaded.controller.chat.select.value, '8', 'Reload must restore the last chosen assistant instead of the first option.');
+    reloaded.controller.chat.newChatButton.click();
+    assert.equal(reloaded.controller.chat.chat.assistant.assistantId, 8);
+    assert.equal(reloaded.chatRequests.length, 0);
+});
+
+test('An unavailable saved assistant falls back to the first available global chat assistant', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, adminSettings: { aiChatAssistantId: '999' } });
+    await openChat(f);
+    assert.equal(f.controller.chat.select.value, '7');
+    assert.equal(f.controller.chat.chat.assistant.assistantId, 7);
+});
+
+test('Field chat keeps its explicit assistant without overwriting the global assistant preference', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true,
+        adminSettings: { aiChatAssistantId: '8', aiChatHistoryOpen: 'false' } });
+    await openChat(f);
+    const field = f.editorChat(chatAssistants[0], '', {}, { url: '/admin/rest/web-pages', id: 42 });
+    assert.equal(field.host.select.value, '7');
+    assert.equal(f.adminSettings.get('aiChatAssistantId'), '8');
+});
+
 test('Global and field chat hosts share the history preference without sharing assistant catalogues', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true, editorChat: true, adminSettings: {} });
     await openChat(f);

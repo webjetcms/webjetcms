@@ -401,8 +401,7 @@ public class AiService {
     private static DataTableAi toClientAssistant(AssistantDefinitionEntity assistant, Prop prop, AiService aiService) {
         DataTableAi ai = new DataTableAi();
         ai.setAssistantId(assistant.getId());
-        if (Tools.isEmpty(assistant.getDescription())) ai.setDescription(assistant.getName());
-        else ai.setDescription(prop.getText(assistant.getDescription(), false));
+        ai.setDescription(assistant.getDisplayName(prop));
         ai.setProvider(assistant.getProvider());
 
         String providerTitleKey = "components.ai_assistants.provider." + assistant.getProvider() + ".title";

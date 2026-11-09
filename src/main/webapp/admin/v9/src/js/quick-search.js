@@ -230,6 +230,7 @@ class QuickSearch {
         this.render();
         if (scope === 'aiChat' && previousScope !== 'aiChat') {
             this.chat ||= new AiChatHost({
+                assistantSettingKey: 'aiChatAssistantId',
                 loadAssistants: signal => fetchJson('/admin/rest/ai/assistant/chat-assistants/', signal)
             });
             this.chat.mount(this.chatPanel);

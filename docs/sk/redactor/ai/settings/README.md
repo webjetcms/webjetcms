@@ -22,6 +22,9 @@ Táto karta obsahuje základné informácie o asistentovi ako názov, ikona aleb
 
 - **Názov asistenta** – interný identifikátor asistenta (používateľ ho nevidí). Musí byť unikátny v kombinácii s hodnotou **Poskytovateľ** (t. j. rovnaký názov môžete použiť pre viacerých asistentov, ale každý musí mať iného poskytovateľa).
 - **Názov pre používateľa** – zobrazený názov v rozhraní. Nemusí byť unikátny. Ak nie je vyplnený, použije sa hodnota z poľa **Názov asistenta**. Môžete zadať aj prekladový kľúč (hodnota kľúča sa zobrazí v poli pod ním).
+
+  Značka `{model}` sa pri zobrazení nahradí aktuálnou hodnotou poľa **Model**. Napríklad `{model}` zobrazí `gpt-6.1-sol` a `Čet {model}` zobrazí `Čet gpt-6.1-sol`. Pred značkou môže byť aj prekladový kľúč: `components.ai_assistants.groups.00-chat {model}` zobrazí preložený názov skupiny a model. Značku môžete použiť aj priamo v hodnote prekladového kľúča. Náhľad pod poľom sa aktualizuje pri zmene názvu alebo modelu.
+
 - **Ikona** – názov ikony zo stránky https://tabler.io/icons. Zobrazuje sa spolu s poľom **Názov pre používateľa**. Zadajte len identifikátor ikony (bez URL).
 - **Skupina** – logické alebo vizuálne zoskupenie asistentov v rozhraní. Nemá vplyv na spracovanie ani výsledok.
 - **Vytvorené** – systémom generovaný dátum vytvorenia. Nedá sa upraviť a zobrazí sa len pri editácii existujúceho asistenta.
@@ -94,6 +97,19 @@ Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré u
 ![](datatable-advanced-tab.png)
 
 ## Nastavenie četového asistenta
+
+Aktualizácia pridá do predvolenej domény štyroch univerzálnych asistentov v skupine **Čet**:
+
+| Názov asistenta | Poskytovateľ | Model |
+| --- | --- | --- |
+| `CHAT-gpt-6.1-sol` | OpenAI | `gpt-6.1-sol` |
+| `CHAT-gpt-6-astra` | OpenAI | `gpt-6-astra` |
+| `CHAT-gemini-3.8-flash` | Gemini | `gemini-3.8-flash` |
+| `CHAT-gemini-4-argon` | Gemini | `gemini-4-argon` |
+
+Majú nastavenú entitu `CHAT_SEARCH`, zobrazovaný názov `{model}`, postupné načítanie odpovede a ukladanie rozhovorov. Spoločné inštrukcie určujú stručné odpovede v jazyku používateľa, formátovanie Markdown, nadväzovanie na predchádzajúce správy a odkaz na dokumentáciu WebJET CMS. V ponuke sa zobrazia po nakonfigurovaní príslušného poskytovateľa. Model aj inštrukcie môžete upraviť v nastaveniach asistenta.
+
+Vlastného četového asistenta nastavíte takto:
 
 1. V **Nastavenia → AI asistenti** vytvorte alebo upravte asistenta a zapnite **Povoliť používanie**.
 2. Na karte **Akcia** vyberte **Typ požiadavky → Čet**.
