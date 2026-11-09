@@ -9,7 +9,17 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('AI Chat documentation screenshots', ({ I, Document }) => {
+/** Opens history regardless of the user's saved sidebar preference. */
+async function openHistory(I) {
+    await I.waitForElement('#admin-ai-chat-history', 20);
+    if (await I.grabNumberOfVisibleElements('#admin-ai-chat-history') === 0) {
+        await I.waitForVisible(historyButton, 20);
+        await I.clickCss(historyButton);
+    }
+    await I.waitForVisible('#admin-ai-chat-history-search', 20);
+}
+
+Scenario('AI Chat documentation screenshots', async ({ I, Document }) => {
     I.amOnPage('/admin/v9/');
     I.resizeWindow(1440, 1000);
     I.clickCss('button.js-search-toggler');
@@ -30,7 +40,7 @@ Scenario('AI Chat documentation screenshots', ({ I, Document }) => {
     I.waitForInvisible(`${modal} .btn-ai-chat-stop`, 120);
     I.waitForVisible(`${modal} .ai-chat-assistant .ai-chat-message-actions button`, 10);
 
-    I.clickCss(historyButton);
+    await openHistory(I);
     I.fillField('#admin-ai-chat-history-search', chatTitle);
     I.waitForText(chatTitle, 20, '.ai-chat-host__history-item');
     I.clickCss(`${modal} .md-quick-search__input-row`);
@@ -71,8 +81,7 @@ Scenario('Cleanup AI Chat documentation conversation', async ({ I }) => {
     I.clickCss('button.js-search-toggler');
     I.waitForVisible(modal, 10);
     I.clickCss(`${modal} [data-scope="aiChat"]`);
-    I.waitForVisible(historyButton, 20);
-    I.clickCss(historyButton);
+    await openHistory(I);
     I.fillField('#admin-ai-chat-history-search', chatTitle);
     I.waitForResponse(response => response.url().includes('/admin/rest/ai/chat/threads?')
         && response.url().includes('query=') && response.status() === 200, 20);
