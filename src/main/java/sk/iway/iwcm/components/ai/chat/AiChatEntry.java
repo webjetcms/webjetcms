@@ -16,6 +16,8 @@ public class AiChatEntry {
     private String role;
     private String text;
     private String inputValue;
+    /** Indicates that the input is a selected rich-text fragment rather than a complete page. */
+    private boolean inputIsSelectedTextInEditor;
     private String status;
     private Date created;
     private Date updated;

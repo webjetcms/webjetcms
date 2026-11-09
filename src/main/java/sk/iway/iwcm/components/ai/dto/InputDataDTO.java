@@ -77,6 +77,8 @@ public class InputDataDTO {
     private AiCancellationToken cancellationToken = new AiCancellationToken();
 
     String inputValue = null;
+    /** Indicates that the input is a selected rich-text fragment rather than a complete page. */
+    boolean inputIsSelectedTextInEditor;
     InputValueType inputValueType;
     InputValueType outputValueType;
 

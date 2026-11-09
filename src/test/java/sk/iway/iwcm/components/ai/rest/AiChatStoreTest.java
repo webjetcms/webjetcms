@@ -160,7 +160,7 @@ class AiChatStoreTest {
     @Test
     void rejectsChangingThreadContextAndReusesOriginalInputForRetry() {
         var context = new AiChatContext("/admin/rest/web-pages", "42", "data");
-        var input = new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null, context, "Original HTML");
+        var input = new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null, context, "Original HTML", true);
         var turn = store.begin(input, scope, assistant, "config");
         String id = turn.thread().getId();
         store.finish(scope, id, turn.message().getId(), "", "error", 0, "UNKNOWN", null);
@@ -170,9 +170,12 @@ class AiChatStoreTest {
         }
         assertEquals("requestChanged", assertThrows(ResponseStatusException.class, () -> store.begin(
             new AiChatRequest(id, 12L, input.requestId(), 1L, "Question", null, context, "Changed HTML"), scope, assistant, "config")).getReason());
+        assertEquals("requestChanged", assertThrows(ResponseStatusException.class, () -> store.begin(
+            new AiChatRequest(id, 12L, input.requestId(), 1L, "Question", null, context, "Original HTML", false), scope, assistant, "config")).getReason());
         var retry = store.begin(new AiChatRequest(id, 12L, UUID.randomUUID().toString(), 1L, "Question", turn.message().getId(),
             context, "Changed HTML"), scope, assistant, "config");
         assertEquals("Original HTML", retry.question().getInputValue());
+        assertTrue(retry.question().isInputIsSelectedTextInEditor());
         assertThrows(ResponseStatusException.class, () -> AiChatContext.from(context.entityType(), null, context.fieldName()));
     }
 

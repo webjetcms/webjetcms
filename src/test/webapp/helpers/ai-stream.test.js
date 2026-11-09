@@ -37,9 +37,9 @@ for (const [persistentChat, streaming] of [[true, true], [true, false], [false, 
         const file = new File(['Private attachment'], 'notes.txt', { type: 'text/plain' });
         const payload = { response: 'Answer', totalTokens: 7, conversationId: 'next-turn' };
         const accept = streaming ? 'application/x-ndjson' : 'application/json';
-        const input = persistentChat ? { requestId: 'request', inputValue: '<p>Existing page</p>',
+        const input = persistentChat ? { requestId: 'request', inputValue: '<p>Existing page</p>', inputIsSelectedTextInEditor: true,
             context: { entityType: '/admin/rest/web-pages', entityId: '42', fieldName: 'data' } } : {
-            inputValue: '<p>Existing page</p>', inputValueType: 'text', outputValueType: 'text', conversationId: 'previous-turn'
+            inputValue: '<p>Existing page</p>', inputIsSelectedTextInEditor: true, inputValueType: 'text', outputValueType: 'text', conversationId: 'previous-turn'
         };
         const { AiChatTransport } = loadTransport(async (url, options) => {
             request = { url, ...options };

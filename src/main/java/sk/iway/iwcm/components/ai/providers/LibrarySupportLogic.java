@@ -793,6 +793,20 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AiPromptTemplate.ExpansionResult expansion
     ) throws IOException {
         String instructions = expansion.instructions();
+        if (inputData.isInputIsSelectedTextInEditor() && SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())) {
+            instructions += """
+
+                [HTML_SELECTION_EDIT]
+                The editor field snapshot is only the selected HTML fragment, not a complete page.
+                For this turn, these fragment-editing rules take precedence over the page-generation and layout rules and examples above.
+                Apply the user's requested change only to the selected fragment. Return only its replacement HTML, without Markdown or explanations.
+                Preserve the fragment's existing structure, attributes, language and content except where the requested change requires editing them.
+                Do not add PageBuilder or other layout wrappers (sections, containers, rows or columns), regardless of their tag names or CSS classes.
+                If the selection is inline text, return inline HTML only; do not add a paragraph or any block container.
+                Do not invent headings or other content that the user did not request.
+                [/HTML_SELECTION_EDIT]
+                """;
+        }
         if (includesHandler != null && includesHandler.hasIncludes()) {
             instructions = instructions + "\n" + includesHandler.preservationInstructions();
         }

@@ -197,6 +197,7 @@ public class AiChatStore {
         AiChatEntry question = entry(document, answer.getTurnId());
         if (!Objects.equals(question.getText(), input.userPrompt())) throw conflict("requestChanged");
         if (input.retryMessageId() == null && (!Objects.equals(question.getInputValue(), input.inputValue())
+            || question.isInputIsSelectedTextInEditor() != input.inputIsSelectedTextInEditor()
             || !sameAttachments(question.getAttachments(), uploads))) throw conflict("requestChanged");
         return new Turn(document.getThread(), question, answer, true);
     }
@@ -217,6 +218,7 @@ public class AiChatStore {
         question.setTurnId(question.getId());
         question.setText(input.userPrompt());
         question.setInputValue(input.inputValue());
+        question.setInputIsSelectedTextInEditor(input.inputIsSelectedTextInEditor());
         question.setStatus("complete");
         question.setAttachments(uploads.stream().map(Upload::attachment).toList());
         return question;

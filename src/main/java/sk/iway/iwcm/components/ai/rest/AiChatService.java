@@ -238,6 +238,7 @@ public class AiChatService implements DisposableBean {
         InputDataDTO input = new InputDataDTO();
         input.setAssistantId(prepared.assistant().getId());
         input.setInputValue(turn.question().getInputValue() == null ? "" : turn.question().getInputValue());
+        input.setInputIsSelectedTextInEditor(turn.question().isInputIsSelectedTextInEditor());
         input.setInputValueType(InputDataDTO.InputValueType.TEXT);
         input.setOutputValueType(InputDataDTO.InputValueType.TEXT);
         input.setUserPrompt(turn.question().getText());

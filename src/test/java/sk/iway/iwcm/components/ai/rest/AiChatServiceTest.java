@@ -385,8 +385,9 @@ class AiChatServiceTest {
 
     /** Field chats honor the HTML preference on retries while preserving literal attachments and the original field snapshot. */
     @ParameterizedTest
-    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
-    void fieldChatHonorsHtmlPreferenceAndPreservesRetryContext(boolean keepHtml, boolean streaming) throws Exception {
+    @CsvSource({"false,false,false", "false,true,false", "true,false,false", "true,true,false",
+        "false,false,true", "false,true,true", "true,false,true", "true,true,true"})
+    void fieldChatHonorsHtmlPreferenceAndPreservesRetryContext(boolean keepHtml, boolean streaming, boolean inputIsSelectedTextInEditor) throws Exception {
         assistant.setClassName("sk.iway.iwcm.doc.DocDetails");
         assistant.setKeepHtml(keepHtml);
         var context = new AiChatContext("/admin/rest/web-pages", "42", "data");
@@ -395,7 +396,7 @@ class AiChatServiceTest {
         var files = AiChatAttachments.read(List.of(new MockMultipartFile("files", "notes.txt", "text/plain",
             document.getBytes(StandardCharsets.UTF_8))));
         var first = service.prepare(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null,
-            context, originalPage), scope, files);
+            context, originalPage, inputIsSelectedTextInEditor), scope, files);
         when(provider.getPersistentChatResponse(any(), any(), any(), eq(streaming), same(config), any()))
             .thenThrow(new AiProviderException("openai", 503, "Try again", null, true));
         assertNotNull(service.execute(first, text -> { }, streaming, request).getError());
@@ -408,12 +409,14 @@ class AiChatServiceTest {
         verify(provider, times(2)).getPersistentChatResponse(any(), inputs.capture(), any(), eq(streaming), same(config), any());
         String attachmentContext = "\nAttachment: notes.txt\n" + document + "\n";
         for (InputDataDTO input : inputs.getAllValues()) {
+            assertEquals(inputIsSelectedTextInEditor, input.isInputIsSelectedTextInEditor());
             assertTrue(input.getInputValue().endsWith(attachmentContext));
             String pageContext = input.getInputValue().substring(0, input.getInputValue().length() - attachmentContext.length());
             assertEquals(keepHtml ? originalPage : "Original page", pageContext.strip());
         }
         var savedQuestion = new AiChatStore().get(id, scope).messages().get(0);
         assertEquals(originalPage, savedQuestion.getInputValue());
+        assertEquals(inputIsSelectedTextInEditor, savedQuestion.isInputIsSelectedTextInEditor());
         assertEquals(files.get(0).attachment().sha256(), savedQuestion.getAttachments().get(0).sha256());
         assertEquals(context, service.detail(id, scope).thread().context());
         assertTrue(service.detail(id, scope).thread().canContinue());

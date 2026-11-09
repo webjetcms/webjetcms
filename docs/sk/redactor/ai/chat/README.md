@@ -95,6 +95,8 @@ Prílohu stiahnete aj kliknutím na jej názov alebo ikonu sťahovania priamo pr
 
 Pri textovom poli alebo v paneli nástrojov editora kliknite na ikonu AI a vyberte asistenta s typom požiadavky **Čet**. Napíšte zadanie a odošlite ho. Označený text v podporovanom editore má prednosť pred obsahom nastaveného **Zdrojového poľa**. Ak text neoznačíte, použije sa zdrojové pole. Ak ani to nie je nastavené, obsah poľa ani stránky sa neposiela. Rovnaké pravidlo platí pre uložené aj nové záznamy a hromadnú úpravu.
 
+Pri označenom texte v editore dostane asistent aj pokyn vrátiť iba upravený HTML fragment so zachovaním jeho štruktúry. Napríklad pri požiadavke na tučné písmo má doplniť značky `<strong>` priamo do textu bez pridania nadpisu či obalov PageBuildera. Tento pokyn má pri úprave výberu prednosť pred pravidlami asistenta pre tvorbu celej stránky a nezávisí od nastavených CSS tried obalov. Platí pre dočasné aj ukladané čety spracované serverovým poskytovateľom.
+
 Okno četu môžete presunúť ťahaním za hornú lištu, aby nezakrývalo text stránky. Po zameraní lišty klávesom **Tab** ho môžete posúvať aj šípkami; so **Shift** sa posúva väčším krokom. Obsah editora môžete upravovať aj pri otvorenom čete.
 
 Tlačidlo **Minimalizovať čet** (mínus) vpravo hore skryje okno do AI ikony v pravom dolnom rohu. Kliknutím na **Obnoviť čet** sa vrátite k rovnakému rozhovoru, rozpísanej správe, neodoslaným prílohám a otvoreným panelom. Zachová sa aj pozícia okna; prebiehajúca odpoveď pokračuje počas minimalizovania. Pri zmenšení prehliadača sa presunuté okno prispôsobí tak, aby zostalo dostupné. Minimalizovaný čet obnovíte aj pôvodným tlačidlom AI pri rovnakom poli, ktoré je dostupné klávesom **Tab**. Zatvorenie editora odstráni aj minimalizovanú ikonu.

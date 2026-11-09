@@ -69,6 +69,33 @@ class LibrarySupportLogicTest {
     @TempDir
     Path tempDirectory;
 
+    /** Selection edits override the default Website Builder layout rules for both stored and temporary chats. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void selectedHtmlOverridesWebsiteBuilderLayout(boolean persistent) throws Exception {
+        AssistantDefinitionEntity assistant = assistant();
+        assistant.setAction(SupportedActions.LIVE_CHAT.getAction());
+        assistant.setInstructions("Each content is divided into blocks with the structure: <section> → container → row → col-*. "
+            + "Titles: exactly one <h1> per page. Source: {inputText}. Request: {userPrompt}");
+        InputDataDTO input = new InputDataDTO();
+        input.setInputValueType(InputDataDTO.InputValueType.TEXT);
+        input.setInputValue("Intenzívny šesťhodinový kurz v&nbsp;marketingu.");
+        input.setUserPrompt("Daj na hlavné výrazy tučné písmo.");
+        AiOperation operation = persistent ? AiOperation.CHAT : AiOperation.TEXT;
+        AiRequest wholePage = LibrarySupportLogic.prepareRequest(operation, assistant, input, null);
+        assertFalse(wholePage.instructions().contains("[HTML_SELECTION_EDIT]"));
+
+        input.setInputIsSelectedTextInEditor(true);
+        AiRequest selection = LibrarySupportLogic.prepareRequest(operation, assistant, input, null);
+        assertTrue(selection.instructions().contains("[HTML_SELECTION_EDIT]"));
+        assertTrue(selection.instructions().contains("Do not add PageBuilder or other layout wrappers"));
+        assertTrue(selection.instructions().contains("Do not invent headings"));
+        assertTrue(selection.instructions().indexOf("[HTML_SELECTION_EDIT]")
+            > selection.instructions().indexOf("Titles: exactly one <h1>"));
+        assertEquals("Intenzívny šesťhodinový kurz v&nbsp;marketingu.", input.getInputValue());
+        assertEquals("Daj na hlavné výrazy tučné písmo.", input.getUserPrompt());
+    }
+
     @Test
     void mapsTextInputWithoutMedia() throws Exception {
         AssistantDefinitionEntity assistant = assistant();

@@ -290,7 +290,8 @@ export class AiChat {
                 ? { ...retryMessage.inputData }
                 : { persistentChat: true, threadId: state.threadId, revision: state.revision,
                     requestId: chatRequestId(), userPrompt: prompt, retryMessageId: retryMessage?.id || null,
-                    ...(this.options.context ? { context: this.options.context, inputValue: inputData.inputValue } : {}),
+                    ...(this.options.context ? { context: this.options.context, inputValue: inputData.inputValue,
+                        inputIsSelectedTextInEditor: inputData.inputIsSelectedTextInEditor === true } : {}),
                     ...(retryMessage == null && state.attachments.length ? { files: state.attachments.map(item => item.file) } : {}) };
             state.threadId ||= inputData.requestId;
         }

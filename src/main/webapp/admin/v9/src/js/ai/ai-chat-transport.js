@@ -67,7 +67,8 @@ export class AiChatTransport {
         const data = persistent ? {
             assistantId: request.assistantId, threadId: inputData.threadId, revision: inputData.revision,
             requestId: inputData.requestId, retryMessageId: inputData.retryMessageId, userPrompt: inputData.userPrompt,
-            ...(inputData.context ? { context: inputData.context, inputValue: inputData.inputValue } : {}),
+            ...(inputData.context ? { context: inputData.context, inputValue: inputData.inputValue,
+                inputIsSelectedTextInEditor: inputData.inputIsSelectedTextInEditor === true } : {}),
             ...(inputData.files?.length ? { files: inputData.files } : {})
         } : { ...inputData, assistantId: request.assistantId, timestamp: request.timestamp };
         if (persistent) request.threadId = data.threadId || data.requestId;

@@ -317,13 +317,15 @@ export class EditorAi {
                     && this._getColumnType(column, assistant.from) === 'text',
                 getInputData: () => {
                     let inputValue = "";
-                    if (this._isChatSelectionValid(conversation.selection)) {
+                    const inputIsSelectedTextInEditor = this._isChatSelectionValid(conversation.selection) === true;
+                    if (inputIsSelectedTextInEditor) {
                         inputValue = conversation.selection.inputValue;
                     } else if (assistant.from) {
                         inputValue = this.EDITOR.get(assistant.from);
                     }
                     return {
                         inputValue,
+                        inputIsSelectedTextInEditor,
                         inputValueType: this._getColumnType(conversation.column, assistant.from),
                         outputValueType: "text"
                     };
