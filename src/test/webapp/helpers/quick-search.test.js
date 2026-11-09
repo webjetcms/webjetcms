@@ -1401,10 +1401,14 @@ test('Dialog window controls restore the default size without interrupting a cha
     const input = await openChat(f);
     const { dialog, root } = f.controller;
     const control = root.querySelector('.md-quick-search__window-control');
+    const close = root.querySelector('.md-quick-search__close');
     assert.equal(root.querySelectorAll('.md-quick-search__window-control').length, 1);
     assert.equal(control.getAttribute('aria-label'), 'datatables.modal.maximize.js');
-    assert.equal(control.title, control.getAttribute('aria-label'));
+    assert.equal(control.hasAttribute('title'), false, 'The control must use the standard tooltip instead of a native title.');
     assert.ok(control.querySelector('.ti-arrows-maximize'));
+    assert.equal(close.getAttribute('aria-label'), 'datatables.modal.close.js');
+    assert.equal(close.getAttribute('aria-keyshortcuts'), 'Escape');
+    assert.equal(close.hasAttribute('title'), false);
     typeChat(input, 'First question');
     sendChat(input);
     typeChat(input, 'An unsent follow-up');
@@ -1414,10 +1418,14 @@ test('Dialog window controls restore the default size without interrupting a cha
     dialog.style.width = '1000px';
     dialog.style.height = '750px';
     control.focus();
+    f.advance(1000);
+    assert.equal(root.querySelector('.tooltip-inner')?.textContent, 'datatables.modal.maximize.js');
+    assert.ok(root.querySelector('.tooltip.wj-tooltip-hoverable'));
     control.click();
     assert.equal(root.classList.contains('md-quick-search--maximized'), true);
     assert.equal(control.getAttribute('aria-label'), 'datatables.modal.minimize.js');
-    assert.equal(control.title, control.getAttribute('aria-label'));
+    f.advance(1000);
+    assert.equal(root.querySelector('.tooltip-inner')?.textContent, 'datatables.modal.minimize.js');
     assert.ok(control.querySelector('.ti-arrows-minimize'));
     assert.equal(root.ownerDocument.activeElement, control, 'Changing the icon must preserve keyboard focus.');
     assert.equal(dialog.style.width, '');
@@ -1430,7 +1438,8 @@ test('Dialog window controls restore the default size without interrupting a cha
     control.click();
     assert.equal(root.classList.contains('md-quick-search--maximized'), false);
     assert.equal(control.getAttribute('aria-label'), 'datatables.modal.maximize.js');
-    assert.equal(control.title, control.getAttribute('aria-label'));
+    f.advance(1000);
+    assert.equal(root.querySelector('.tooltip-inner')?.textContent, 'datatables.modal.maximize.js');
     assert.ok(control.querySelector('.ti-arrows-maximize'));
     assert.match(f.controller.chatPanel.textContent, /First reply/);
     assert.equal(input.value, 'An unsent follow-up');
@@ -1445,6 +1454,30 @@ test('Dialog window controls restore the default size without interrupting a cha
     control.click();
     assert.equal(root.classList.contains('md-quick-search--maximized'), false);
     assert.equal(f.chatRequests.length, 1);
+
+    f.controller.modal.hide();
+    f.advance(1000);
+    assert.equal(root.ownerDocument.querySelector('.tooltip'), null, 'Closing the dialog must remove the tooltip.');
+    f.controller.open();
+    control.focus();
+    f.advance(1000);
+    assert.equal(root.querySelector('.tooltip-inner')?.textContent, 'datatables.modal.maximize.js');
+
+    control.blur();
+    f.advance(1000);
+    control.focus();
+    f.controller.modal.hide();
+    f.advance(1000);
+    assert.equal(root.ownerDocument.querySelector('.tooltip'), null, 'A pending focus tooltip must not appear over a closed dialog.');
+
+    f.controller.open();
+    close.focus();
+    f.advance(1000);
+    assert.equal(root.querySelector('.tooltip-inner')?.textContent, 'datatables.modal.close.js');
+    close.click();
+    f.advance(1000);
+    assert.equal(root.classList.contains('show'), false);
+    assert.equal(root.ownerDocument.querySelector('.tooltip'), null, 'The close button must dismiss both the dialog and its tooltip.');
 });
 
 test('AI Chat requires permission and ordinary searches never load or send a chat', t => {

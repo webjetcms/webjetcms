@@ -84,13 +84,17 @@ class QuickSearch {
         this.input.setAttribute('aria-describedby', 'admin-quick-search-hint');
         this.input.setAttribute('aria-controls', 'admin-quick-search-results');
         this.clear = button(text('clear'), 'btn-link md-quick-search__clear', () => { this.input.value = ''; this.changed(); this.input.focus(); });
-        const close = button('', 'md-quick-search__close', () => this.modal.hide());
-        close.setAttribute('aria-label', text('close'));
+        const close = button('', 'btn-outline-secondary md-quick-search__close', () => this.modal.hide());
+        const closeLabel = WJ.translate('datatables.modal.close.js');
+        close.setAttribute('aria-label', closeLabel);
+        close.setAttribute('data-bs-title', closeLabel);
+        close.setAttribute('data-bs-container', '#admin-quick-search');
         close.setAttribute('aria-keyshortcuts', 'Escape');
         close.append(node('kbd', '', 'Esc'));
         const windowControls = node('div', 'md-quick-search__window-controls');
-        this.windowControl = button('', 'md-quick-search__window-control',
+        this.windowControl = button('', 'btn-outline-secondary md-quick-search__window-control',
             () => this.setMaximized(!this.root.classList.contains('md-quick-search--maximized')));
+        this.windowControl.setAttribute('data-bs-container', '#admin-quick-search');
         this.windowSymbol = node('span', 'md-quick-search__window-symbol');
         this.windowControl.append(this.windowSymbol);
         this.setMaximized(false);
@@ -127,6 +131,7 @@ class QuickSearch {
         this.dialog.append(content);
         this.root.append(this.dialog);
         document.body.append(this.root);
+        WJ.initTooltip(window.jQuery([this.windowControl, close]));
         const documentationChip = this.chips.get('documentation');
         if (documentationChip) {
             documentationChip.setAttribute('aria-label', text('documentation'));
@@ -179,8 +184,12 @@ class QuickSearch {
         this.dialog.style.removeProperty('height');
         this.root.classList.toggle('md-quick-search--maximized', maximized);
         const action = maximized ? 'minimize' : 'maximize';
-        this.windowControl.title = WJ.translate(`datatables.modal.${action}.js`);
-        this.windowControl.setAttribute('aria-label', this.windowControl.title);
+        const label = WJ.translate(`datatables.modal.${action}.js`);
+        this.windowControl.setAttribute('aria-label', label);
+        this.windowControl.setAttribute('data-bs-title', label);
+        if (this.windowControl.isConnected) {
+            window.bootstrap.Tooltip.getInstance(this.windowControl)?.setContent({ '.tooltip-inner': label });
+        }
         this.windowSymbol.replaceChildren(icon(`ti-arrows-${action}`));
     }
 
