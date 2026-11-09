@@ -101,6 +101,30 @@ class AiChatStoreTest {
             () -> store.begin(next, scope, assistant, "config")).getReason());
     }
 
+    /** The same user and request ID can have independent conversations in different domains. */
+    @Test
+    void storesConversationsInSeparateDomainDirectories() {
+        var other = new AiChatStore.Scope(scope.userId(), 8, "other.test", root);
+        var input = request(null, null, "Question");
+        var first = store.begin(input, scope, assistant, "config");
+        var second = store.begin(input, other, assistant, "config");
+        String id = first.thread().getId();
+        store.finish(scope, id, first.message().getId(), "First domain", "complete", 1, null, null);
+        store.finish(other, id, second.message().getId(), "Second domain", "complete", 1, null, null);
+
+        var reloaded = new AiChatStore();
+        assertTrue(Files.exists(root.resolve("7/42").resolve(id).resolve("ai_chat.json")));
+        assertTrue(Files.exists(root.resolve("8/42").resolve(id).resolve("ai_chat.json")));
+        assertEquals("First domain", reloaded.get(id, scope).messages().get(1).getText());
+        assertEquals("Second domain", reloaded.get(id, other).messages().get(1).getText());
+        assertEquals(1, reloaded.list(scope, 0).items().size());
+        assertEquals(1, reloaded.list(other, 0).items().size());
+        store.stop(id, scope, true);
+        store.remove(scope, id, store.claimDeletion(id, scope));
+        assertTrue(reloaded.list(scope, 0).items().isEmpty());
+        assertEquals("Second domain", reloaded.get(id, other).messages().get(1).getText());
+    }
+
     @Test
     void searchesFullTextIgnoringCaseAndAccentsBeforePagination() {
         var matchingIds = new HashSet<String>();
@@ -185,7 +209,7 @@ class AiChatStoreTest {
         Path outside = Files.createDirectory(root.resolve("outside"));
         Path file = outside.resolve("ai_chat.json");
         Files.writeString(file, "unchanged");
-        Files.createSymbolicLink(Files.createDirectories(root.resolve("42")).resolve(id), outside);
+        Files.createSymbolicLink(Files.createDirectories(root.resolve("7/42")).resolve(id), outside);
         ResponseStatusException failure = assertThrows(ResponseStatusException.class, () -> store.get(id, scope));
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, failure.getStatusCode());
         assertInstanceOf(java.io.IOException.class, failure.getCause());

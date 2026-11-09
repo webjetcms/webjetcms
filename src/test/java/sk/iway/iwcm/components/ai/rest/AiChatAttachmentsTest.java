@@ -122,7 +122,7 @@ class AiChatAttachmentsTest {
         store.finish(scope, id, next.message().getId(), "Done", "complete", 1, null, null);
         store.stop(id, scope, true);
         store.remove(scope, id, store.claimDeletion(id, scope));
-        assertFalse(Files.exists(root.resolve("42").resolve(id)));
+        assertFalse(Files.exists(root.resolve("7/42").resolve(id)));
         assertArrayEquals(uploads.get(0).bytes(), store.attachment(other.thread().getId(), "1.png", scope).bytes());
     }
 }

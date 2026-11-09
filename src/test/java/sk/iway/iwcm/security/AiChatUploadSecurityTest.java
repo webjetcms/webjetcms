@@ -48,7 +48,7 @@ class AiChatUploadSecurityTest {
     /** Rejects private overwrites, preserves history, and closes only inputs owned by the writer. */
     @Test
     void rejectsPrivateUploadAndPreservesInputOwnership() throws IOException {
-        Path history = root.resolve("files/protected/ai-chat/42/934be8ec-6b59-4cbe-9575-a1a69f943dea/ai_chat.json");
+        Path history = root.resolve("files/protected/ai-chat/7/42/934be8ec-6b59-4cbe-9575-a1a69f943dea/ai_chat.json");
         Files.createDirectories(history.getParent());
         Files.writeString(history, "private history");
 

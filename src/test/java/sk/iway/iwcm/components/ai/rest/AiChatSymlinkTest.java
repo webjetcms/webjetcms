@@ -61,7 +61,7 @@ class AiChatSymlinkTest {
     @ParameterizedTest
     @ValueSource(booleans = { false, true })
     void persistsChatsThroughSymbolicFilesRoot(boolean existingStorage) throws Exception {
-        if (existingStorage) Files.createDirectories(storage.resolve("protected/ai-chat/42"));
+        if (existingStorage) Files.createDirectories(storage.resolve("protected/ai-chat/7/42"));
         var scope = new AiChatStore.Scope(42, 7, "example.test");
         assertTrue(store.list(scope, 0).items().isEmpty());
         var assistant = new AssistantDefinitionEntity();
@@ -78,7 +78,7 @@ class AiChatSymlinkTest {
         assertEquals(id, reloaded.list(reloadedScope, 0).items().get(0).getId());
         assertEquals("Answer", reloaded.get(id, reloadedScope).messages().get(1).getText());
         assertArrayEquals(content, reloaded.attachment(id, "1.txt", reloadedScope).bytes());
-        assertTrue(Files.exists(storage.resolve("protected/ai-chat/42/" + id + "/ai_chat.json")));
+        assertTrue(Files.exists(storage.resolve("protected/ai-chat/7/42/" + id + "/ai_chat.json")));
 
         for (var other : List.of(new AiChatStore.Scope(43, 7, "example.test"),
                 new AiChatStore.Scope(42, 8, "example.test"), new AiChatStore.Scope(42, 7, "other.test"))) {

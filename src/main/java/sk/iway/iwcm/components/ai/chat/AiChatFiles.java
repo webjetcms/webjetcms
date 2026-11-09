@@ -30,15 +30,17 @@ public final class AiChatFiles {
     @FunctionalInterface
     public interface Operation<T> { T apply(Path directory) throws IOException; }
 
-    public static <T> T locked(Path root, int userId, Operation<T> operation) throws IOException {
+    public static <T> T locked(Path root, int domainId, int userId, Operation<T> operation) throws IOException {
         if (userId < 1) throw new IllegalArgumentException("Invalid chat owner");
-        Path directory = root.resolve(Integer.toString(userId));
+        Path domain = root.resolve(Integer.toString(domainId));
+        Path directory = domain.resolve(Integer.toString(userId));
         // Serialize callers in this JVM before acquiring the OS lock shared with other processes.
         // FileChannel.lock() alone can reject overlapping locks from threads in the same JVM.
         ReentrantLock local = LOCKS[Math.floorMod(directory.hashCode(), LOCKS.length)];
         local.lock();
         try {
             directory(root);
+            directory(domain);
             directory(directory);
             Path lockPath = directory.resolve(".lock");
             try (FileChannel channel = FileChannel.open(lockPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);

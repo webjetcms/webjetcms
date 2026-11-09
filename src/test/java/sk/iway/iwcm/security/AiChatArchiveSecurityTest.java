@@ -32,7 +32,7 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 class AiChatArchiveSecurityTest {
 
     private static final String CHAT_ROOT = "/files/protected/ai-chat";
-    private static final String THREAD = CHAT_ROOT + "/42/934be8ec-6b59-4cbe-9575-a1a69f943dea";
+    private static final String THREAD = CHAT_ROOT + "/7/42/934be8ec-6b59-4cbe-9575-a1a69f943dea";
     private static final String MARKER = "export-test-marker.txt";
 
     @TempDir

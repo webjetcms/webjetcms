@@ -439,7 +439,7 @@ public class AiChatStore {
 
     private <T> T locked(Scope scope, AiChatFiles.Operation<T> action) {
         try {
-            return AiChatFiles.locked(scope.root(), scope.userId(), action);
+            return AiChatFiles.locked(scope.root(), scope.domainId(), scope.userId(), action);
         } catch (IOException exception) {
             Logger.error(AiChatStore.class, "Chat storage failed for user " + scope.userId()
                 + " in domain " + scope.domainName(), exception);

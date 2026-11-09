@@ -32,7 +32,7 @@ import sk.iway.iwcm.filebrowser.FbrowserController;
 class AiChatRenameSecurityTest {
 
     private static final String CHAT_ROOT = "/files/protected/ai-chat";
-    private static final String HISTORY = CHAT_ROOT + "/42/934be8ec-6b59-4cbe-9575-a1a69f943dea/ai_chat.json";
+    private static final String HISTORY = CHAT_ROOT + "/7/42/934be8ec-6b59-4cbe-9575-a1a69f943dea/ai_chat.json";
 
     @TempDir
     Path root;
