@@ -87,23 +87,37 @@ public final class BranchStore {
             throw new IllegalArgumentException("File BASE must belong to the same normalized path");
         if (delete && "DIRECTORY".equals(base.fields().get("entry_kind")))
             throw new IllegalArgumentException("Directory deletion is not supported");
-        BranchSnapshot work = delete ? BranchSnapshot.absent() : BranchSnapshot.file(BranchSnapshot.State.ACTIVE,path,kind,workContentHash);
-        return write(context, connection -> {
-            String galleryPath = "DIRECTORY".equals(kind) ? path : path.substring(0,path.lastIndexOf('/'));
-            if (sk.iway.iwcm.gallery.GalleryDB.isGalleryFolder(galleryPath))
-                throw new IllegalArgumentException("Gallery paths are read-only");
-            Optional<Map<String, Object>> old = readWork(connection,context.branchId(),BranchType.FILE,path);
-            if (old.isPresent()) throw new IllegalStateException("P02 file fixture is create-only; editing is added in P05");
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("branch_id",context.branchId()); row.put("operation",delete ? "DELETE" : "UPSERT");
-            row.put("base_exists",base.state()!=BranchSnapshot.State.ABSENT); row.put("base_snapshot",base.json()); row.put("base_hash",base.hash());
-            row.put("updated_by",context.userId());row.put("updated_at",Timestamp.from(Instant.now()));row.put("apply_state","PENDING");
-            row.put("logical_path",path);row.put("entry_kind",kind);row.put("path_key",BranchFilePaths.key(path));
-            row.put("base_content_hash",base.fields().get("content_hash"));row.put("work_content_hash",delete ? null : workContentHash);
-            row.put("size_bytes",sizeBytes);row.put("mime_type",mimeType);
-            insert(connection,"branch_files",row);
-            return readWork(connection,context.branchId(),BranchType.FILE,path).orElseThrow();
-        });
+        return write(context, connection -> putFile(connection,context,path,kind,base,workContentHash,sizeBytes,mimeType,delete));
+    }
+
+    /** Updates one logical file while retaining the original BASE and internal identity. */
+    Map<String,Object> putFile(Connection connection, BranchContext context, String path, String kind,
+            BranchSnapshot base, String workContentHash, Long sizeBytes, String mimeType, boolean delete) throws SQLException {
+        String galleryPath = "DIRECTORY".equals(kind) ? path : path.substring(0,path.lastIndexOf('/'));
+        if (sk.iway.iwcm.gallery.GalleryDB.isGalleryFolder(galleryPath))
+            throw new IllegalArgumentException("Gallery paths are read-only");
+        Optional<Map<String,Object>> old=readWork(connection,context.branchId(),BranchType.FILE,path);
+        if(old.isPresent()) base=BranchSnapshot.fromJson((String)old.get().get("base_snapshot"));
+        if("DIRECTORY".equals(kind) && ("FILE".equals(base.fields().get("entry_kind"))
+                ||old.isPresent()&&"FILE".equals(old.get().get("entry_kind"))))
+            throw new IllegalArgumentException("A file identity cannot be replaced with a directory marker");
+        Map<String,Object> row=new LinkedHashMap<>();
+        row.put("branch_id",context.branchId()); row.put("operation",delete ? "DELETE" : "UPSERT");
+        row.put("base_exists",base.state()!=BranchSnapshot.State.ABSENT); row.put("base_snapshot",base.json()); row.put("base_hash",base.hash());
+        row.put("updated_by",context.userId());row.put("updated_at",Timestamp.from(Instant.now()));row.put("apply_state","PENDING");
+        row.put("logical_path",path);row.put("entry_kind",kind);row.put("path_key",BranchFilePaths.key(path));
+        row.put("base_content_hash",base.fields().get("content_hash"));row.put("work_content_hash",delete ? null : workContentHash);
+        row.put("size_bytes",sizeBytes);row.put("mime_type",mimeType);
+        if(old.isEmpty()) insert(connection,"branch_files",row);
+        else {
+            for(String decision:List.of("resolved_snapshot","resolved_choice","resolved_live_hash","resolved_work_hash","apply_phase","applied_hash","apply_error")) row.put(decision,null);
+            String assignments=String.join(",",row.keySet().stream().map(name->"`"+name+"`=?").toList());
+            try(PreparedStatement statement=connection.prepareStatement("UPDATE branch_files SET "+assignments+" WHERE row_id=?")) {
+                int index=1;for(Object value:row.values())statement.setObject(index++,value);
+                statement.setLong(index,((Number)old.get().get("row_id")).longValue());statement.executeUpdate();
+            }
+        }
+        return readWork(connection,context.branchId(),BranchType.FILE,path).orElseThrow();
     }
 
     void remove(Connection connection, BranchContext context, BranchType type, int id, String expectedHash) throws SQLException {

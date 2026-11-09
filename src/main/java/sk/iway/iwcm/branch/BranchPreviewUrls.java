@@ -8,7 +8,7 @@ import org.jsoup.nodes.Element;
 
 /** Converts logical content URLs at the transport boundary without changing stored content. */
 public final class BranchPreviewUrls {
-    public static final String PREFIX = "/__branch-preview/";
+    public static final String PREFIX = "/admin/webpages/branch-preview/";
     public static final String LOGICAL_PATH = BranchPreviewUrls.class.getName()+".path";
     private BranchPreviewUrls() { }
 

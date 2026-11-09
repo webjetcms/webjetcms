@@ -60,7 +60,7 @@ class BranchManualFixtureTest extends BaseWebjetTest {
         Path credentials=Path.of("/tmp/webjet-p03-login.properties");Files.writeString(credentials,"login=tester-p03\npassword="+password+"\n");Files.setPosixFilePermissions(credentials,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
         for(var setting:Map.of("branchesEnabled","true","branchSingleWriterConfirmed","true","branchStorageRoot",privateRoot.toString(),"multiDomainEnabled","true").entrySet())
             try(Connection connection=DBPool.getConnection();PreparedStatement statement=connection.prepareStatement("INSERT INTO _conf_(name,value) VALUES (?,?) ON DUPLICATE KEY UPDATE value=VALUES(value)")){statement.setString(1,setting.getKey());statement.setString(2,setting.getValue());statement.executeUpdate();}
-        Files.writeString(Path.of("/tmp/webjet-p03-manual.properties"),"branchA="+a.branchId()+"\nbranchB="+b.branchId()+"\ngroupId="+group+"\nhomeId="+home+"\ndetailId="+detail+"\nurl=http://iwcm.interway.sk:8086/__branch-preview/"+a.branchId()+"/p03-manual/\n");
+        Files.writeString(Path.of("/tmp/webjet-p03-manual.properties"),"branchA="+a.branchId()+"\nbranchB="+b.branchId()+"\ngroupId="+group+"\nhomeId="+home+"\ndetailId="+detail+"\nurl=http://iwcm.interway.sk:8086/admin/webpages/branch-preview/"+a.branchId()+"/p03-manual/\n");
         Constants.setBoolean("branchesEnabled",false);
     }
     /** Refreshes only this fixture's retained attachment with a valid, viewable PDF. */

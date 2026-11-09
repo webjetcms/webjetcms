@@ -46,7 +46,7 @@ public final class BranchFilter implements Filter {
             chain.doFilter(input,output);return;
         }
         // Login and static administration resources remain available even after a package closes.
-        boolean resource=Set.of("GET","HEAD").contains(request.getMethod()) && (path.startsWith("/admin/v9/dist/")||path.startsWith("/admin/skins/")||path.startsWith("/admin/scripts/")||path.startsWith("/admin/css/")||path.startsWith("/admin/images/")||path.startsWith("/admin/webpages/page-builder/")||path.startsWith("/components/_common/admin/"))
+        boolean resource=Set.of("GET","HEAD").contains(request.getMethod()) && (path.startsWith("/admin/v9/dist/")||path.startsWith("/admin/skins/")||path.startsWith("/admin/scripts/")||path.startsWith("/admin/css/")||path.startsWith("/admin/images/")||path.startsWith("/admin/elFinder/")||path.startsWith("/admin/codemirror/")||path.startsWith("/admin/webpages/page-builder/")||path.startsWith("/components/_common/admin/"))
             && path.matches("(?i).*\\.(css|js|png|jpg|gif|svg|woff2?|ttf|ico|map)$");
         if(!preview && (resource || path.startsWith("/admin/logon/") || path.startsWith("/admin/logoff"))) {chain.doFilter(input,output);return;}
         RequestBean bean=SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -54,7 +54,10 @@ public final class BranchFilter implements Filter {
         Object oldPreview=request.getAttribute("isPreview");
         try {
             Identity user;
-            if(preview) user=access.requireUser(request);
+            if(preview) {
+                if(!PathFilter.checkAdminRequest(request,response))return;
+                user=access.requireUser(request);
+            }
             else {
                 user=sk.iway.iwcm.users.UsersDB.getCurrentUser(request);
                 if(user==null||!user.isAdmin()) {chain.doFilter(input,output);return;}
@@ -84,12 +87,14 @@ public final class BranchFilter implements Filter {
                 if(!management && (explicit!=null || expectedDomain!=null)) {
                     try {BranchContexts.requireSameSelection(context,Long.parseLong(explicit),expectedDomain);}
                     catch(RuntimeException ex) {response.sendError(409,"Branch context changed; reload the screen");return;}
-                } else if(!management && path.startsWith("/admin/rest/") && (context.isBranch() || !Set.of("GET","HEAD").contains(request.getMethod()))) {
+                } else if(!management && (path.startsWith("/admin/rest/") || path.startsWith("/admin/upload/")
+                        || path.equals("/admin/web-pages/upload/") || path.equals("/admin/elfinder-connector/"))
+                        && (context.isBranch() || !Set.of("GET","HEAD").contains(request.getMethod()))) {
                     response.sendError(409,"Missing screen branch context; reload the screen");return;
                 }
                 if(context.isBranch()) {
                     access.requireUser(request);
-                    boolean readPost="POST".equals(request.getMethod()) && Set.of("/admin/rest/groups/tree/tree","/admin/rest/news/news-list/tree","/admin/rest/news/news-list/convertIdsToNamePair").contains(path);
+                    boolean readPost="POST".equals(request.getMethod()) && Set.of("/admin/rest/groups/tree/tree","/admin/rest/news/news-list/tree","/admin/rest/news/news-list/convertIdsToNamePair","/admin/elFinder/gethash.jsp").contains(path);
                     if(!Set.of("GET","HEAD").contains(request.getMethod())&&!readPost&&!supportedPost(path)) {response.sendError(409,"This write is unavailable in a publishing branch");return;}
                     if (path.equals("/admin/scripts/combine.jsp") && !Set.of("adminStandardJs","adminStandardCss","adminStandardCssWj9","adminJqueryJs","adminJqueryJs2","adminInlineJs","adminInlineCss").contains(java.util.Objects.toString(request.getParameter("set"),""))) {
                         response.sendError(409,"This script set is unavailable in a publishing branch"); return;
@@ -155,6 +160,8 @@ public final class BranchFilter implements Filter {
 
     private static boolean supportedPost(String path) {
         return Set.of("/admin/rest/web-pages/editor","/admin/rest/groups/editor","/admin/rest/news/news-list/editor",
+            "/admin/rest/media/editor","/admin/upload/chunk","/admin/upload/overwrite","/admin/upload/keepboth","/admin/upload/skipkey",
+            "/admin/web-pages/upload/","/admin/elfinder-connector/",
             "/admin/v9/webpages/component/","/admin/rest/components","/admin/rest/branch-content/revert",
             "/admin/rest/web-pages/deletion-preview","/admin/rest/groups/deletion-preview","/admin/rest/web-pages/http-headers",
             "/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp").contains(path);
@@ -162,6 +169,9 @@ public final class BranchFilter implements Filter {
 
     private static boolean isSupportedBranchAdminPath(String path) {
         return path.startsWith("/admin/v9/webpages/")||path.startsWith("/apps/news/admin/")
+            ||path.startsWith("/admin/rest/media")||path.startsWith("/admin/v9/files/")||path.equals("/admin/elfinder-connector/")
+            ||path.equals("/admin/upload/chunk")||path.equals("/admin/upload/overwrite")||path.equals("/admin/upload/keepboth")||path.equals("/admin/upload/skipkey")
+            ||path.equals("/admin/web-pages/upload/")||path.equals("/admin/elFinder/gethash.jsp")
             ||path.startsWith("/admin/rest/web-pages")||path.startsWith("/admin/rest/groups/tree")
             ||path.startsWith("/admin/rest/groups/parents/")||path.equals("/admin/rest/groups")||path.equals("/admin/rest/groups/editor")||path.matches("/admin/rest/groups/(-?[0-9]+|all|search/findByColumns)")||path.equals("/admin/rest/groups/deletion-preview")
             ||path.startsWith("/admin/rest/branch-content")||path.equals("/admin/rest/components")

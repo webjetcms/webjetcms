@@ -139,11 +139,35 @@ export class DatatablesCkEditor {
 			fileLoader.uploadUrl = "/admin/web-pages/upload/?__sfu=0&groupId="+e.editor.element.$.form.groupId.value+"&docId="+e.editor.element.$.form.docId.value+"&title="+encodeURIComponent($("#DTE_Field_title").val());
 
 			fileLoader.xhr.open( 'POST', fileLoader.uploadUrl, true );
+			if (window.branchScreen?.enabled) {
+				fileLoader.xhr.setRequestHeader('X-WebJET-Branch', String(window.branchScreen.branchId));
+				fileLoader.xhr.setRequestHeader('X-WebJET-Branch-Domain', window.branchScreen.domainName);
+				fileLoader.xhr.setRequestHeader('X-CSRF-Token', window.csrfToken);
+			}
 			formData.append( 'uploadFile', fileLoader.file, fileLoader.fileName );
 			fileLoader.xhr.send( formData );
 
 			e.stop();
 		}, null, null, 4);
+
+		if (window.branchScreen?.enabled && window.branchScreen.branchId) {
+			// Display the selected bytes, then serialize final logical URLs back to the page.
+			const rewriteAssets = (element, rewrite) => {
+				for (const attribute of ['src', 'href', 'data-cke-saved-src', 'data-cke-saved-href']) {
+					if (element.attributes?.[attribute]) element.attributes[attribute] = rewrite(element.attributes[attribute]);
+				}
+				return element;
+			};
+			const configureAssets = editor => {
+				editor.dataProcessor.dataFilter.addRules({elements: {$: element => rewriteAssets(element, window.branchAssetUrl)}});
+				editor.dataProcessor.htmlFilter.addRules({elements: {$: element => rewriteAssets(element, window.branchLogicalAssetUrl)}});
+			};
+			if (this.ckEditorInstance.status === 'ready') configureAssets(this.ckEditorInstance);
+			else this.ckEditorInstance.on('instanceReady', event => configureAssets(event.editor));
+			this.ckEditorInstance.on('fileUploadResponse', event => {
+				if (event.data.url) event.data.url = window.branchAssetUrl(event.data.url);
+			}, null, null, 20);
+		}
 
 		//zachytenie CTRL+S/CMD+S
 		var editor = this.ckEditorInstance;
@@ -595,7 +619,7 @@ export class DatatablesCkEditor {
 						{
 							type: 'html',
 							id: 'wjImageIframe',
-							html: '<div><iframe id="wjImageIframeElement" title="' + that.translate('images') + '" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image/" border="0"/></div>'
+							html: '<div><iframe id="wjImageIframeElement" title="' + that.translate('images') + '" style="width: 800px; height: 463px;" src="' + window.branchFileDialogUrl('/admin/v9/files/wj_image/') + '" border="0"/></div>'
 						}
 						]
 					}, 'info');
@@ -1176,7 +1200,7 @@ export class DatatablesCkEditor {
 						{
 							//console.log("Creating iframe");
 							var iframeElement = new that.ckEditorObject.dom.element("IFRAME");
-							iframeElement.setAttribute("src", "/admin/v9/files/wj_link/");
+							iframeElement.setAttribute("src", window.branchFileDialogUrl('/admin/v9/files/wj_link/'));
 							iframeElement.setAttribute("id", "wjLinkIframe");
 							//iframeElement.setAttribute("width", 580);
 							iframeElement.setStyle("width", 800+"px");

@@ -26,6 +26,16 @@ public class ConnectorController
 	{
 		String cmd = request.getParameter("cmd");
 		CommandExecutor ce = _commandExecutorFactory.get(cmd);
+        if(sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            response.setHeader("Cache-Control","private, no-store, max-age=0");
+            if(BranchFileCommands.WRITES.contains(cmd)) ce=new BranchFileCommands();
+            else if(!BranchFileCommands.READS.contains(cmd)) {
+                response.setContentType("application/json; charset=UTF-8");
+                response.getWriter().write(new org.json.JSONObject().put("error","This file operation is unavailable in a publishing branch").toString());
+                return;
+            }
+        }
+
 
 		if (ce == null)
 		{

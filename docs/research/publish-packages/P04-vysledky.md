@@ -56,8 +56,8 @@ Server a izolovaná DB zostanú po odovzdaní spustené. Prihlásiť sa na [admi
 - [Pracovný priečinok](http://iwcm.interway.sk:8086/admin/v9/webpages/web-pages-list/?groupid=1940781)
 - [Editor novinky #1940896](http://iwcm.interway.sk:8086/admin/v9/webpages/web-pages-list/?docid=1940896)
 - [Editor rozcestníka s Menu/News INCLUDE](http://iwcm.interway.sk:8086/admin/v9/webpages/web-pages-list/?docid=1940123)
-- [Pracovný náhľad rozcestníka](http://iwcm.interway.sk:8086/__branch-preview/481/p03-manual/)
-- [Detail novej novinky](http://iwcm.interway.sk:8086/__branch-preview/481/p03-manual/autotest-p04/)
+- [Pracovný náhľad rozcestníka](http://iwcm.interway.sk:8086/admin/webpages/branch-preview/481/p03-manual/)
+- [Detail novej novinky](http://iwcm.interway.sk:8086/admin/webpages/branch-preview/481/p03-manual/autotest-p04/)
 - [Produkčný rozcestník na porovnanie](http://iwcm.interway.sk:8086/p03-manual/)
 
 **News:** Otvoriť pracovný priečinok, vytvoriť ďalšiu stránku, zapnúť dostupnosť a v Perexe vyplniť perex a zvoliť `autotest P04 category`. Uložiť a otvoriť pracovný rozcestník; novinka pribudne do filtrovaného zoznamu. Rovnaká stránka bez kategórie v ňom nebude. V editore rozcestníka na karte Obsah otvoriť druhú vloženú aplikáciu (Novinky), kartu Novinky a novinku upraviť v iframe. Po uložení znovu otvoriť náhľad a vedľa LIVE rozcestník.
@@ -123,4 +123,4 @@ Cielená regresia `BranchEditorRowsTest`, `BranchEditorTest`, `BranchMappingTest
 
 Zoznam MenuApp/NewsApp sa presunul do `BranchApps.SUPPORTED_APPS` ako nemenná mapa triedy na JSP renderer. Oba vstupy editora volajú `BranchApps.checkEditorSupport`; component preview overuje jeden podporovaný INCLUDE cez tú istú mapu. Odstránil sa aj samostatný regex s názvami podporovaných JSP. LIVE výber aplikácií ostáva bez tohto obmedzenia.
 
-Cielené `BranchAppsTest` a `BranchFilterTest`: **14/14**, 0 chýb/preskočení. Overená podpora editorov v ADMIN/PREVIEW, odmietnutie inej/prázdnej triedy, zachovanie LIVE výberu a povolenie/odmietnutie úplných INCLUDE. Dôkazy: `build/test-results/p04/apps-refactor/`.
+Cielené `BranchAppsTest` a `BranchFilterTest`: **14/14**, 0 chýb/preskočení. Overená podpora editorov v ADMIN/PREVIEW, odmietnutie inej/prázdnej triedy, zachovanie LIVE výberu a povolenie/odmietnutie úplných INCLUDE. Reálny browser beh **2/2**: Menu/News parametre vrátane vnoreného iframe a podporovaný/odmietnutý JSP náhľad. Dôkazy: `build/test-results/p04/apps-refactor/`.

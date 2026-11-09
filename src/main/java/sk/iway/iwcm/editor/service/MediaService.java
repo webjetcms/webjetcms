@@ -39,6 +39,7 @@ public class MediaService {
      * @param docId
      */
 	public void assignDocIdToMedia(int docId) {
+		if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return;
 		if (docId > 0) {
 			//find media with media_fk_table_name = "documents_temp" and media_fk_id = userId
 			MediaDB mediaDB = new MediaDB();
@@ -62,6 +63,7 @@ public class MediaService {
      * Zmaze v databaze docasne media (ulozene ako -user_id) ak novo vytvorena stranka nebola ulozena
      */
 	public void deleteTempMedia(){
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return;
         try {
             MediaDB mediaDB = new MediaDB();
             List<Media> mediaList = MediaDB.getMedia(request.getSession(), "documents_temp", user.getUserId(), null, 0, false);
@@ -85,6 +87,7 @@ public class MediaService {
      * @param domain
      */
     public void updateMediaLink(String oldLinkURL, String newLinkURL, String domain) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) throw new IllegalStateException("Bulk media link replacement is unavailable in a publishing branch");
         DocDB docDB = DocDB.getInstance();
         if(domain != null) {
             List<Long> mediasIdsAll = mediaRepo.findMediaIds(oldLinkURL, "documents");
@@ -107,6 +110,10 @@ public class MediaService {
     }
 
     public List<Media> getAllMedia(Integer mediaFkId, String mediaFkTableName) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            if (!"documents".equals(mediaFkTableName)) throw new IllegalStateException("Only document media are supported in a publishing branch");
+            return sk.iway.iwcm.branch.BranchMedia.list(mediaFkId,null);
+        }
         return mediaRepo.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(mediaFkId, mediaFkTableName, CloudToolsForCore.getDomainId());
     }
 }

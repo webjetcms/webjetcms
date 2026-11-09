@@ -52,7 +52,7 @@ Podľa Q19 náhľad používa vlastnú cestu **na hostiteľovi administrácie**,
 
 ```text
 Produkcia: https://www.example.sk/kampan/ponuka.html
-Náhľad:    https://admin.example.sk/__branch-preview/42/kampan/ponuka.html
+Náhľad:    https://admin.example.sk/admin/webpages/branch-preview/42/kampan/ponuka.html
 ```
 
 ID vetvy v URL nie je prihlasovací token. Server pri každom requeste overí riadne prihláseného administrátora, oprávnenie na náhľad a prístup k doméne uloženej vo vetve. Doménu obsahu nepreberá z voľného query parametra ani aktuálneho výberu v admin session. Prihlásenie a bezpečný návrat na preview URL prebehnú na hostiteľovi administrácie; cookie sa medzi doménami neprenáša. Ak admin aj verejný web používajú rovnaký host, zostáva postup rovnaký. Anonymné zdieľanie nie je súčasťou prvej verzie.
@@ -60,6 +60,8 @@ ID vetvy v URL nie je prihlasovací token. Server pri každom requeste overí ri
 Toto rozdelenie rešpektuje [AdminLogonController.showForm](../../../src/main/java/sk/iway/iwcm/logon/AdminLogonController.java): pri nastavení `multiDomainAdminHost` dnešné prihlasovanie na inom hostiteľovi vracia 404 alebo presmeruje na admin host. Zapnutie branch preto nevyžaduje povoľovať administrátorské prihlasovanie na každej verejnej doméne.
 
 Preview cesta je nezávislá od výberu v administrácii. Používateľ môže mať vedľa seba produkciu a náhľad dvoch vetiev; náhľad vetvy 42 zostane vetvou 42 aj po prepnutí editora na inú vetvu. Bežná produkčná URL nikdy nezíska vetvový obsah iba podľa session.
+
+Od 9. novembra 2026 je gateway pod `/admin/webpages/branch-preview/`. Pred odstránením prefixu volá `PathFilter.checkAdminRequest` nad pôvodnou požiadavkou: existujúce kontroly typu uzla a `adminEnableIPs`, vynútenie `adminRequireSSL`, prístupu do administrácie a Referera. Až potom overí vetvu/doménu a spracuje logickú cestu. Samotné umiestnenie URL pod `/admin/` tieto kontroly nenahrádza, pretože gateway beží pred bežným `PathFilter`. Predchádzajúci koreňový prefix nemá kompatibilný alias.
 
 ## 3. Filter a životnosť requestu
 
@@ -79,7 +81,7 @@ Registráciu treba overiť integračným testom reálneho filter chainu. Samotn�
 
 `BranchFilter` vykoná tieto kroky:
 
-1. Rozpozná produkčný request, podporovanú admin obrazovku alebo `/__branch-preview/{id}/...`.
+1. Rozpozná produkčný request, podporovanú admin obrazovku alebo `/admin/webpages/branch-preview/{id}/...`.
 2. Pre vetvu načíta jej stav a doménu, overí používateľa a požadovaný režim. Pri chybe skončí bez fallbacku na produkciu.
 3. Uloží nemenný `BranchContext` do request atribútu aj do existujúceho `RequestBean` cez jeho `setAttribute/getAttribute`. Rovnakým spôsobom sprístupní jedno view. Nespolieha sa na `RequestBean.getRequest()`: dnešný encoding filter tento odkaz nastavuje iba pre vybrané elFinder URL. Nevzniká druhý globálny register requestov.
 4. Pri preview vytvorí request wrapper s logickou cestou bez gateway prefixu; zosúladí `getRequestURI`, `getServletPath`, `getPathInfo` a používané forward/include údaje. Vonkajšiu URL ponechá v samostatnom atribúte. Hostiteľ, TLS, cookie a autentifikačná session ostanú transportom administrácie; wrapper nepredstiera prihlásenie na verejnom hostiteľovi.
@@ -260,7 +262,7 @@ Pri výstupe zoznamu zachovať `DATA_NOT_LOADED`. Detail na uloženie sa musí v
 
 ## 8. Klikateľný preview gateway
 
-Vo vnútri renderovania sa používa logická cesta `/kampan/ponuka.html`. Až výstup sa preloží na `/__branch-preview/42/kampan/ponuka.html`. Uložené HTML, `virtual_path`, `media_link` ani parametre komponentov sa týmto prefixom nemenia.
+Vo vnútri renderovania sa používa logická cesta `/kampan/ponuka.html`. Až výstup sa preloží na `/admin/webpages/branch-preview/42/kampan/ponuka.html`. Uložené HTML, `virtual_path`, `media_link` ani parametre komponentov sa týmto prefixom nemenia.
 
 `BranchPreviewUrls` vykoná jeden spoločný prevod:
 
@@ -297,7 +299,7 @@ Rozsah súborov sa určí existujúcim mapovaním domény na úložisko a dnešn
 
 Nemenné CSS/JS šablóny môžu byť v preview obslúžené ako povolené produkčné zdroje. Ich definície sa vo vetve nemenia. Cesta gateway zabezpečuje odlišnú browser URL od produkcie; `no-store` bráni používaniu starého pracovného obsahu po ďalšej úprave.
 
-Reverse proxy/CDN na admin hostiteľovi musí cestu `/__branch-preview/` posielať aplikácii bez verejnej cache a bez priameho servovania `/images` či `/files` podľa prípony. Táto konfigurácia je súčasťou zapnutia preview na konkrétnom nasadení. Bežné produkčné pravidlá sa nemenia.
+Reverse proxy/CDN na admin hostiteľovi musí cestu `/admin/webpages/branch-preview/` posielať aplikácii bez verejnej cache a bez priameho servovania `/images` či `/files` podľa prípony. Táto konfigurácia je súčasťou zapnutia preview na konkrétnom nasadení. Bežné produkčné pravidlá sa nemenia.
 
 ### Hranica CSS a dynamického JavaScriptu
 
@@ -353,7 +355,7 @@ Presné endpointy zoznamu balíkov a merge patria do príslušných dokumentov. 
 | `GET /admin/rest/branches/context` | Produkcia alebo zvolená vetva pre aktuálnu doménu, názov a aktuálne oprávnenia. |
 | `POST /admin/rest/branches/context` s `{ "branchId": 42, "expectedDomainName": "www.firma.sk" }` | Overenie domény otvorenej obrazovky a zmena výberu v administrácii; `0` vyberie produkciu. Nesúlad domény vráti `409` aj pri voľbe `0`. Existujúca CSRF ochrana zostáva. |
 | `GET /admin/rest/branches/42/preview-link?docId=123` | Overená URL na výslednú stránku vetvy; pri zmazanej/nedostupnej položke vysvetlená chyba. |
-| `GET /__branch-preview/42/...` | Chránený náhľad stránky alebo podporovaného assetu. |
+| `GET /admin/webpages/branch-preview/42/...` | Chránený náhľad stránky alebo podporovaného assetu. |
 
 Server odpovedá `403` pri nedostatočnom oprávnení, `404` pri neexistujúcom zdroji v príslušnom kontexte a `409` pri neplatnom stave alebo nesúlade administračnej obrazovky s výberom. Chyby používať v existujúcom štýle REST/DataTables, bez nového všeobecného API obalu.
 

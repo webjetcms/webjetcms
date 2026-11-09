@@ -27,6 +27,8 @@ src/main/webapp/files/protected/backup/
 node_modules/
 
 #local files
+/src/main/webapp/images/branch-p05-autotest/
+/src/main/webapp/files/branch-p05-autotest/
 localconf*.jsp
 scratchpad*.jsp
 /target

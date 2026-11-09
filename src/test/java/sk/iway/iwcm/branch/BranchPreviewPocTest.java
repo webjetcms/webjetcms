@@ -94,13 +94,13 @@ class BranchPreviewPocTest extends BaseWebjetTest
             Constants.setBoolean("disableWebJETToolbar", true);
             String origin = "http://127.0.0.1:" + server.getConnector().getLocalPort();
             HttpClient guest = HttpClient.newHttpClient();
-            assertEquals(403, get(guest, origin + "/__branch-preview/42/home.html").statusCode());
+            assertEquals(403, get(guest, origin + "/admin/webpages/branch-preview/42/home.html").statusCode());
             CookieManager cookies = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
             HttpClient editor = HttpClient.newBuilder().cookieHandler(cookies).build();
             assertEquals(204, get(editor, origin + "/_p01_login?token=" + loginToken).statusCode());
             String live = html(editor, origin + "/home.html");
-            String branch42 = html(editor, origin + "/__branch-preview/42/home.html");
-            String branch43 = html(editor, origin + "/__branch-preview/43/home.html");
+            String branch42 = html(editor, origin + "/admin/webpages/branch-preview/42/home.html");
+            String branch43 = html(editor, origin + "/admin/webpages/branch-preview/43/home.html");
             assertTrue(live.contains("P01 LIVE body"));
             assertFalse(live.contains("P01 NEW section"));
             assertTrue(branch42.contains("P01 WORK 42 body"));
@@ -115,16 +115,16 @@ class BranchPreviewPocTest extends BaseWebjetTest
             assertNotNull(newItem.selectFirst("li.group" + movedGroup), "The renamed existing folder must move under the new one");
             assertNotNull(Jsoup.parse(live).selectFirst("li.group" + movedGroup));
             var newLink = newItem.selectFirst("a[href]");
-            assertEquals("/__branch-preview/42/new.html", newLink.attr("href"));
+            assertEquals("/admin/webpages/branch-preview/42/new.html", newLink.attr("href"));
             String clicked = html(editor, origin + newLink.attr("href"));
             assertTrue(clicked.contains("P01 NEW default body 42"));
             assertTrue(clicked.contains("menuULDirOpen group" + NEW_GROUP));
             assertEquals(live, html(editor, origin + "/home.html"), "Warming two branches must not alter LIVE rendering");
-            assertEquals(branch42, html(editor, origin + "/__branch-preview/42/home.html"));
+            assertEquals(branch42, html(editor, origin + "/admin/webpages/branch-preview/42/home.html"));
             byte[] liveImage = get(editor, origin + "/images/p01.png").body();
-            byte[] workImage = get(editor, origin + "/__branch-preview/42/images/p01.png").body();
+            byte[] workImage = get(editor, origin + "/admin/webpages/branch-preview/42/images/p01.png").body();
             assertFalse(Arrays.equals(liveImage, workImage));
-            var thumb = get(editor, origin + "/__branch-preview/42/thumb/images/p01.png?w=16&h=16");
+            var thumb = get(editor, origin + "/admin/webpages/branch-preview/42/thumb/images/p01.png?w=16&h=16");
             assertEquals(200, thumb.statusCode(), new String(thumb.body(), StandardCharsets.UTF_8));
             assertTrue(thumb.headers().firstValue("cache-control").orElse("").contains("no-store"));
             BufferedImage scaled = ImageIO.read(new ByteArrayInputStream(thumb.body()));
@@ -133,16 +133,16 @@ class BranchPreviewPocTest extends BaseWebjetTest
             assertEquals(16, scaled.getHeight());
             assertEquals(Color.BLUE.getRGB() & 0xffffff, scaled.getRGB(8, 8) & 0xffffff);
             assertEquals(Color.RED.getRGB() & 0xffffff, ImageIO.read(new ByteArrayInputStream(liveImage)).getRGB(8, 8) & 0xffffff);
-            String css = html(editor, origin + "/__branch-preview/42/templates/p01/probe.css");
-            String js = html(editor, origin + "/__branch-preview/42/templates/p01/probe.js");
-            assertTrue(css.contains("url('/__branch-preview/42/images/p01.png')"));
-            assertTrue(js.contains("fetch('/__branch-preview/42/images/p01.png')"));
-            assertTrue(branch42.contains("src=\"/__branch-preview/42/templates/p01/probe.js\""));
+            String css = html(editor, origin + "/admin/webpages/branch-preview/42/templates/p01/probe.css");
+            String js = html(editor, origin + "/admin/webpages/branch-preview/42/templates/p01/probe.js");
+            assertTrue(css.contains("url('/admin/webpages/branch-preview/42/images/p01.png')"));
+            assertTrue(js.contains("fetch('/admin/webpages/branch-preview/42/images/p01.png')"));
+            assertTrue(branch42.contains("src=\"/admin/webpages/branch-preview/42/templates/p01/probe.js\""));
             for (String path : List.of("admin/logon/", "WEB-INF/iwcm.tld", "components/menu/menu_ul_li.jsp", "%2e%2e/admin/"))
-                assertTrue(get(editor, origin + "/__branch-preview/42/" + path).statusCode() >= 400);
-            assertEquals(404, get(editor, origin + "/__branch-preview/99/home.html").statusCode());
-            assertEquals(400, get(editor, origin + "/__branch-preview/42/home.html?historyid=1").statusCode());
-            assertEquals(405, editor.send(HttpRequest.newBuilder(URI.create(origin + "/__branch-preview/42/home.html"))
+                assertTrue(get(editor, origin + "/admin/webpages/branch-preview/42/" + path).statusCode() >= 400);
+            assertEquals(404, get(editor, origin + "/admin/webpages/branch-preview/99/home.html").statusCode());
+            assertEquals(400, get(editor, origin + "/admin/webpages/branch-preview/42/home.html?historyid=1").statusCode());
+            assertEquals(405, editor.send(HttpRequest.newBuilder(URI.create(origin + "/admin/webpages/branch-preview/42/home.html"))
                 .POST(HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofByteArray()).statusCode());
             Path evidence = Path.of("build/test-results/p01-preview");
             Files.createDirectories(evidence);
@@ -342,11 +342,11 @@ class BranchPreviewPocTest extends BaseWebjetTest
                     request.getSession().setAttribute(Constants.USER_KEY, admin); response.setStatus(204); return;
                 }
                 int branch = 0;
-                if (path.startsWith("/__branch-preview/"))
+                if (path.startsWith("/admin/webpages/branch-preview/"))
                 {
                     Identity user = sk.iway.iwcm.users.UsersDB.getCurrentUser(request);
                     if (user == null || !user.isAdmin()) { response.setStatus(403); return; }
-                    String[] parts = path.substring("/__branch-preview/".length()).split("/", 2);
+                    String[] parts = path.substring("/admin/webpages/branch-preview/".length()).split("/", 2);
                     if (parts.length != 2 || !Set.of("42", "43").contains(parts[0])) { response.setStatus(404); return; }
                     branch = Integer.parseInt(parts[0]); path = "/" + parts[1];
                 }
@@ -438,7 +438,7 @@ class BranchPreviewPocTest extends BaseWebjetTest
     }
 
     private Path image(int branch) { return root.resolve("images/source-" + branch + "/p01.png"); }
-    private static String prefix(int branch) { return "/__branch-preview/" + branch; }
+    private static String prefix(int branch) { return "/admin/webpages/branch-preview/" + branch; }
     private static String value(Element parent, String name) { return parent.getElementsByTagName(name).item(0).getTextContent().trim(); }
     private static GroupDetails group(int id, String name, int defaultDoc)
     {

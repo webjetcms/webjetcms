@@ -57,7 +57,7 @@ Menu dnes nepoužíva `publish_start`/`publish_end` ani časové filtre Noviniek
 
 ## Odkazy, premenné a cache
 
-`getDocLink` vracia logickú adresu zo zvoleného výsledku; `BranchPreviewUrls` a výstupný wrapper z dokumentu 03 ju preložia na admin host a prefix `/__branch-preview/{id}/...` práve raz. Platí to pre odkazy na stránky aj default stránky priečinkov, `!ROOT_GROUP_LINK!`, výpis cez `!UL_LI_MENU!` a obsah `menuInfoDirName`. Absolútny odkaz tej istej logickej domény zostane v preview; odkaz na inú doménu zostane externý. Fragmenty a query parametre sa zachovajú. Uložený navbar, HTML a parametre aplikácie sa prefixom nemenia.
+`getDocLink` vracia logickú adresu zo zvoleného výsledku; `BranchPreviewUrls` a výstupný wrapper z dokumentu 03 ju preložia na admin host a prefix `/admin/webpages/branch-preview/{id}/...` práve raz. Platí to pre odkazy na stránky aj default stránky priečinkov, `!ROOT_GROUP_LINK!`, výpis cez `!UL_LI_MENU!` a obsah `menuInfoDirName`. Absolútny odkaz tej istej logickej domény zostane v preview; odkaz na inú doménu zostane externý. Fragmenty a query parametre sa zachovajú. Uložený navbar, HTML a parametre aplikácie sa prefixom nemenia.
 
 Samotná `MenuULLI` nepotrebuje novú cache. Preview obchádza už navrhnuté HTML/component cache vrátane obalenia menu cez `WriteTag`/`CacheTag`. Pomocné výsledky menu patria jednému requestu a jednej invokácii; nesmú skončiť v produkčnom singletone alebo session. Test musí najskôr zahriať produkčnú cache, potom otvoriť dve vetvy a produkciu vedľa seba.
 

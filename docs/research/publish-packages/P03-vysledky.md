@@ -43,7 +43,7 @@ Historický checkpoint je na konci dokumentu a opisuje stav pri odchode; aktuál
 | Menu | Pôvodný `menu_ul_li.jsp`/`MenuULLI`, účinné fasády, aktuálna stránka z requestu aj bez query docid, korene/rekurzia/default odkazy, perex/HTML a ROOT premenné. Chyba branch čítania neznamená LIVE fallback. |
 | Admin zoznamy | `BranchDocumentQuery` pred filtrami/count/paging; `WebpagesDatatable` a `WebpagesService`, vrátane News override. Povolené obsahové stĺpce, rozsahy, autor, kategórie, dostupnosť/status a korene vrátane rekurzie; neznámy filter sa odmietne. Zoznam zachová `DATA_NOT_LOADED`, detail načíta HTML. História/schvaľovacie/špeciálne zoznamy sú explicitne mimo pracovného zoznamu. |
 | Session/hranica | `BranchSelection.Selected(branchId,domainName)`, hlavičky **X-WebJET-Branch** a **X-WebJET-Branch-Domain**. `BranchFilter` po autentifikácii a RequestBean, pred PathFilter. Kontrola domény platí aj pre LIVE 0; hlavičky jQuery aj fetch nesú kontext načítanej obrazovky. |
-| Gateway | `/__branch-preview/{id}/...` na admin hostiteľovi. Doména z DB + doménové oprávnenia, vlastná URL nezávislá od admin výberu, logická cesta vo wrapperi, obnovený RequestBean v finally. Povolené iba existujúce stránky a podporované immutable assety; interné cesty a historické/forward parametre sa odmietnu. |
+| Gateway | `/admin/webpages/branch-preview/{id}/...` na admin hostiteľovi. Doména z DB + doménové oprávnenia, vlastná URL nezávislá od admin výberu, logická cesta vo wrapperi, obnovený RequestBean v finally. Povolené iba existujúce stránky a podporované immutable assety; interné cesty a historické/forward parametre sa odmietnu. |
 | Výstup | `BranchPreviewUrls` a response wrapper: parser HTML, URL/redirect/srcset/lazy/base/inline CSS, no-store aj pri chybách/conditional/static výstupe. CacheTag/WriteTag bez branch cache; ShowDoc bez zápisu návštevnosti. Formuláre sú disabled a lokálny action je v gateway, ktorá odmieta POST. |
 | Súbory | `BranchFiles.read/exists/serve/thumbnail/liveSnapshot`, `workPath(branchId,rowId)` → private root/branchId/rowId/content. Overenie hashov a hranice private úložiska, pracovný DELETE nepadá späť do LIVE. Rovnaké Q16 rozhodnutie ako ostatné typy. |
 | Médiá | Oddelené `BranchMedia` objekty a `MediaDB` vetvová čítacia cesta. WORK členstvo kategórií z P02 snapshotu, marker z výsledného dátumu vlastníka iba pri zmenenom WORK; LIVE/no-op marker zachovaný. Existencia pracovných PDF pred renderom aj varianty perex obrázkov cez GalleryToolsForCore. |
@@ -124,8 +124,8 @@ Existujúca pripravená fixture:
 - Lokálny účet `tester-p03`; jeho náhodné heslo je iba v `/tmp/webjet-p03-login.properties` s právami 600. Nie je v repozitári ani v tomto dokumente.
 - Strom/zoznam: `http://iwcm.interway.sk:8086/admin/v9/webpages/web-pages-list/?groupid=1940095`.
 - Produkcia: `http://iwcm.interway.sk:8086/p03-manual/`.
-- Vetva A: `http://iwcm.interway.sk:8086/__branch-preview/128/p03-manual/`.
-- Vetva B: `http://iwcm.interway.sk:8086/__branch-preview/129/p03-manual/`.
+- Vetva A: `http://iwcm.interway.sk:8086/admin/webpages/branch-preview/128/p03-manual/`.
+- Vetva B: `http://iwcm.interway.sk:8086/admin/webpages/branch-preview/129/p03-manual/`.
 - Manifest konkrétnych ID je `/tmp/webjet-p03-manual.properties`; po novej čistej fixture budú ID iné.
 
 Po prihlásení vybrať v prepínači `P03 manual A`, overiť názov v hlavičke a pracovné novinky v zozname. Otvoriť Náhľad, prekliknúť menu/detail, ďalšiu stranu Noviniek, obrázok, thumbnail a PDF. Vedľa otvoriť produkciu a druhú vetvu. Bežné editovanie/upload sa v P03 serverovo odmietnu; pracovné dáta vytvorila fixture.
@@ -262,6 +262,6 @@ WEBJET_P03_BROWSER=true CODECEPT_URL=http://iwcm.interway.sk:8086 CODECEPT_SHOW=
   npx codeceptjs run tests/webpages/branch-p03.js --steps
 ```
 
-Náhľady po štarte: `http://iwcm.interway.sk:8086/__branch-preview/128/p03-manual/` a `/__branch-preview/129/p03-manual/`; prihlásenie `/admin/logon/`, zoznam `/admin/v9/webpages/web-pages-list/?groupid=1940095`. Lokálne URL teraz nebežia, pretože procesy boli korektne zastavené. Potom urobiť poslednú kontrolu diffu a pravdivo doplniť stav; stále iba P03, bez commitov a deployu.
+Náhľady po štarte: `http://iwcm.interway.sk:8086/admin/webpages/branch-preview/128/p03-manual/` a `/admin/webpages/branch-preview/129/p03-manual/`; prihlásenie `/admin/logon/`, zoznam `/admin/v9/webpages/web-pages-list/?groupid=1940095`. Lokálne URL teraz nebežia, pretože procesy boli korektne zastavené. Potom urobiť poslednú kontrolu diffu a pravdivo doplniť stav; stále iba P03, bez commitov a deployu.
 
 

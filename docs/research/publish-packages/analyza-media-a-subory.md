@@ -124,7 +124,7 @@ Do stránok a médií je vhodné ukladať logické výsledné URL. Fyzická prac
 
 ### Zvolený transport náhľadu: prefix na admin hostiteľovi
 
-Návrh používa `/__branch-preview/{branchId}/...` na hostiteľovi administrácie podľa Q19. Proxy ju vždy posiela Java aplikácii. Logická doména obsahu pochádza z overenej vetvy; prihlásenie používa existujúcu admin session podľa Q8. Samotné číslo branch v URL neudeľuje prístup. Konkrétny filter a prepis absolútnych odkazov určuje dokument `03`.
+Návrh používa `/admin/webpages/branch-preview/{branchId}/...` na hostiteľovi administrácie podľa Q19. Proxy ju vždy posiela Java aplikácii. Logická doména obsahu pochádza z overenej vetvy; prihlásenie používa existujúcu admin session podľa Q8. Samotné číslo branch v URL neudeľuje prístup. Konkrétny filter a prepis absolútnych odkazov určuje dokument `03`.
 
 - Brána z prefixu zistí branch a logickú cestu, pre renderovanie nastaví overený kontext a po requeste ho uvoľní. Zostávajúca cesta určuje stránku, asset alebo thumbnail.
 - V odpovedi sa interné odkazy, obrázky, `srcset`, lokálne formulárové ciele a ďalšie podporované URL prevedú na tento preview prefix. Obsah uložený v databáze sa tým nemení. `Location` pri internom presmerovaní tiež zachová branch.

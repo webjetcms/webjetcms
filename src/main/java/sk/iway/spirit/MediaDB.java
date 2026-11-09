@@ -580,6 +580,10 @@ public class MediaDB extends JpaDB<Media>
 	 * @return najvyssi sortOrder medii v stranke
 	 */
 	public static int getLastOrder(int mediaFkId, String mediaFkTableName){
+		if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+			if (!"documents".equals(mediaFkTableName)) throw new IllegalStateException("Save the page in this branch before adding media");
+			return sk.iway.iwcm.branch.BranchMedia.list(mediaFkId,null).stream().mapToInt(Media::getMediaSortOrder).max().orElse(0);
+		}
 		int sortOrder = 0;
 		if(mediaFkId == -1) return  sortOrder;
 

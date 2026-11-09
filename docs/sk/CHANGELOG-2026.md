@@ -49,6 +49,8 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Pracovné verzie (POC) - doplnené médiá stránok a izolované nahrávanie, nahradenie, presun a zmazanie jednotlivých súborov vrátane prázdnych adresárov. Náhľad používa administrátorskú cestu `/admin/webpages/branch-preview/` s kontrolami prístupu do administrácie. Galérie zostávajú iba na čítanie; funkcia je predvolene vypnutá.
+
 - Pracovné verzie - pridaná experimentálna editácia, presun, mazanie a vrátenie pracovných zmien stránok a priečinkov so stabilnými ID. Náhľad Noviniek a menu používa pracovný obsah. Funkcia zostáva predvolene vypnutá; publikovanie balíka zatiaľ nie je súčasťou tejto etapy (#58858).
 
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).

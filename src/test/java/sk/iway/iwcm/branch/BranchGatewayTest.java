@@ -105,14 +105,14 @@ class BranchGatewayTest extends BaseWebjetTest {
             String detail=parsed.selectFirst("ol.news li a[href]").attr("href");assertTrue(detail.startsWith(prefix(a)),detail);assertEquals(200,get(editor,origin+detail).statusCode());
             byte[] liveImage=get(editor,origin+"/images/p03.png").body(),aImage=get(editor,origin+prefix(a)+"/images/p03.png").body(),bImage=get(editor,origin+prefix(b)+"/images/p03.png").body();assertFalse(Arrays.equals(liveImage,aImage));assertFalse(Arrays.equals(aImage,bImage));
             var conditional=editor.send(HttpRequest.newBuilder(URI.create(origin+prefix(a)+"/images/p03.png"))
-                .header("If-None-Match","\"p03-old\"").header("If-Modified-Since","Wed, 04 Nov 2026 10:00:00 GMT").GET().build(),HttpResponse.BodyHandlers.ofByteArray());
+                .header("Referer",origin+"/admin/").header("If-None-Match","\"p03-old\"").header("If-Modified-Since","Wed, 04 Nov 2026 10:00:00 GMT").GET().build(),HttpResponse.BodyHandlers.ofByteArray());
             assertEquals(200,conditional.statusCode());assertArrayEquals(aImage,conditional.body());assertTrue(conditional.headers().firstValue("cache-control").orElse("").contains("no-store"));
             long galleryBefore=count("SELECT COUNT(*) FROM gallery");
             var thumb=get(editor,origin+prefix(a)+"/thumb/images/p03.png?w=16&h=16");assertEquals(200,thumb.statusCode());BufferedImage image=ImageIO.read(new ByteArrayInputStream(thumb.body()));assertEquals(16,image.getWidth());assertEquals(16,image.getHeight());assertEquals(galleryBefore,count("SELECT COUNT(*) FROM gallery"));
             assertEquals("WORK A PDF",new String(get(editor,origin+prefix(a)+"/files/p03.pdf").body(),StandardCharsets.UTF_8));
             verifyFileSelections(editor,origin);
             var css=get(editor,origin+prefix(a)+"/templates/p03/probe.css");assertEquals(200,css.statusCode());assertTrue(new String(css.body(),StandardCharsets.UTF_8).contains(prefix(a)+"/images/p03.png"));assertEquals(200,get(editor,origin+prefix(a)+"/templates/p03/probe.js").statusCode());
-            assertEquals(405,editor.send(HttpRequest.newBuilder(URI.create(origin+prefix(a)+"/home.html")).POST(HttpRequest.BodyPublishers.noBody()).build(),HttpResponse.BodyHandlers.ofByteArray()).statusCode());
+            assertEquals(405,editor.send(HttpRequest.newBuilder(URI.create(origin+prefix(a)+"/home.html")).header("Referer",origin+"/admin/").POST(HttpRequest.BodyPublishers.noBody()).build(),HttpResponse.BodyHandlers.ofByteArray()).statusCode());
             assertEquals(404,get(editor,origin+prefix(a)+"/admin/private.jsp").statusCode());
             var invalid=get(editor,origin+prefix(a)+"/home.html?historyid=1");assertEquals(400,invalid.statusCode());assertTrue(invalid.headers().firstValue("cache-control").orElse("").contains("no-store"));
             String variables=html(editor,origin+prefix(a)+"/home.html?menuVariables=true",true);assertTrue(variables.contains("data-store-preserved=\"true\""),variables);assertTrue(variables.contains("data-invalid-root-cleared=\"true\""),variables);assertTrue(variables.contains("data-store-cleared=\"true\""),variables);
@@ -235,8 +235,8 @@ class BranchGatewayTest extends BaseWebjetTest {
     private static void image(Path file,Color color)throws IOException{BufferedImage image=new BufferedImage(64,64,BufferedImage.TYPE_INT_RGB);var graphics=image.createGraphics();graphics.setColor(color);graphics.fillRect(0,0,64,64);graphics.dispose();ImageIO.write(image,"png",file.toFile());}
     private static void addFilter(Context context,String name,Filter filter){FilterDef def=new FilterDef();def.setFilterName(name);def.setFilter(filter);context.addFilterDef(def);FilterMap mapping=new FilterMap();mapping.setFilterName(name);mapping.addURLPattern("/*");mapping.setDispatcher("REQUEST");context.addFilterMap(mapping);}
     private static String withoutBanner(String html){var document=Jsoup.parse(html);document.select("#branch-preview-status").remove();return document.outerHtml();}
-    private static String prefix(BranchContext branch){return "/__branch-preview/"+branch.branchId();}
-    private static HttpResponse<byte[]> get(HttpClient client,String url)throws Exception{return client.send(HttpRequest.newBuilder(URI.create(url)).GET().build(),HttpResponse.BodyHandlers.ofByteArray());}
+    private static String prefix(BranchContext branch){return "/admin/webpages/branch-preview/"+branch.branchId();}
+    private static HttpResponse<byte[]> get(HttpClient client,String url)throws Exception{return client.send(HttpRequest.newBuilder(URI.create(url)).header("Referer",URI.create(url).resolve("/admin/").toString()).GET().build(),HttpResponse.BodyHandlers.ofByteArray());}
     private static String html(HttpClient client,String url,boolean preview)throws Exception{var response=get(client,url);String body=new String(response.body(),StandardCharsets.UTF_8);assertEquals(200,response.statusCode(),body);if(preview)assertTrue(response.headers().firstValue("cache-control").orElse("").contains("no-store"));return body;}
 
     private final class Lifecycle implements Filter {

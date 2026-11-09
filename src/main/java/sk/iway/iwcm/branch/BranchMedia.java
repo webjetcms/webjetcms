@@ -9,14 +9,27 @@ import sk.iway.spirit.model.*;
 /** Detached document media over the same whole-object selection used by pages and files. */
 public final class BranchMedia {
     private BranchMedia() { }
+    public static List<MediaGroupBean> categories(int folder) {
+        try(Connection connection=DBPool.getConnection()) {
+            List<MediaGroupBean> groups=sk.iway.spirit.MediaDB.filterDomainId(new ArrayList<>(definitions(connection).values()),true);
+            if(folder<1) return groups;
+            Set<Integer> ancestors=new HashSet<>();
+            for(sk.iway.iwcm.doc.GroupDetails group=BranchView.current().group(folder);group!=null&&ancestors.add(group.getGroupId());group=BranchView.current().group(group.getParentGroupId())) { }
+            return groups.stream().filter(group->group.getAvailableGroups()==null||group.getAvailableGroups().isBlank()||BranchFields.normalizedIds(group.getAvailableGroups()).stream().anyMatch(ancestors::contains)).toList();
+        } catch(SQLException ex) {throw new IllegalStateException("Cannot read media categories",ex);}
+    }
+    private static Map<Integer,MediaGroupBean> definitions(Connection connection)throws SQLException {
+        Map<Integer,MediaGroupBean> definitions=new LinkedHashMap<>();
+        try(PreparedStatement statement=connection.prepareStatement("SELECT media_group_id,media_group_name,available_groups,related_pages FROM media_groups");ResultSet result=statement.executeQuery()) {
+            while(result.next()) {MediaGroupBean group=new MediaGroupBean();group.setMediaGroupId(result.getInt(1));group.setMediaGroupName(result.getString(2));group.setAvailableGroups(result.getString(3));group.setRelatedPages(result.getString(4));definitions.put(group.getMediaGroupId(),group);}
+        }
+        return definitions;
+    }
     public static List<Media> list(int owner,List<MediaGroupBean> categories) {
         BranchView view=BranchView.current();
         Map<Integer,Map<String,Object>> rows=new LinkedHashMap<>();
         try(Connection connection=DBPool.getConnection()) {
-            Map<Integer,MediaGroupBean> definitions=new LinkedHashMap<>();
-            try(PreparedStatement statement=connection.prepareStatement("SELECT media_group_id,media_group_name,available_groups,related_pages FROM media_groups");ResultSet result=statement.executeQuery()) {
-                while(result.next()) {MediaGroupBean group=new MediaGroupBean();group.setMediaGroupId(result.getInt(1));group.setMediaGroupName(result.getString(2));group.setAvailableGroups(result.getString(3));group.setRelatedPages(result.getString(4));definitions.put(group.getMediaGroupId(),group);}
-            }
+            Map<Integer,MediaGroupBean> definitions=definitions(connection);
             try(PreparedStatement statement=connection.prepareStatement("SELECT media_id FROM media WHERE media_fk_table_name='documents'")) {
                 try(ResultSet result=statement.executeQuery()) {while(result.next()) {
                     int id=result.getInt(1);rows.put(id,BranchStore.readLive(connection,BranchType.MEDIA,id).orElseThrow());
@@ -29,6 +42,8 @@ public final class BranchMedia {
                 if("DELETE".equals(work.get("operation"))) {rows.remove(id);continue;}
                 DocDetails page=view.document(number(work,"media_fk_id"),true);
                 if(page==null) {rows.remove(id);continue;}
+                // A no-op must retain LIVE's unpublished-media cutoff.
+                if(live!=null && BranchStore.snapshot(BranchType.MEDIA,work).equals(snapshot)) continue;
                 Map<String,Object> projected=new LinkedHashMap<>(BranchMediaMapper.project(work,live,BranchMediaMapper.initialValues(id,page.getDocId(),number(work,"domain_id")),java.time.Instant.ofEpochMilli(page.getDateCreated())));
                 projected.put("group_ids_snapshot",work.get("group_ids_snapshot"));rows.put(id,projected);
             }
@@ -54,6 +69,11 @@ public final class BranchMedia {
         media.setMediaInfoSk(text(row,"media_info_sk"));media.setMediaInfoCz(text(row,"media_info_cz"));media.setMediaInfoEn(text(row,"media_info_en"));media.setMediaInfoDe(text(row,"media_info_de"));
         media.setFieldA(text(row,"field_a"));media.setFieldB(text(row,"field_b"));media.setFieldC(text(row,"field_c"));media.setFieldD(text(row,"field_d"));media.setFieldE(text(row,"field_e"));media.setFieldF(text(row,"field_f"));
         media.setLastUpdate((java.util.Date)row.get("last_update"));
+        if(BranchContexts.current().mode()==BranchContext.Mode.ADMIN) {
+            MediaEditorFields fields=new MediaEditorFields();
+            fields.setBranchHash(BranchMediaMapper.snapshot(row,ids).hash());
+            media.setEditorFields(fields);
+        }
         List<MediaGroupBean> groups=new ArrayList<>();for(int id:ids){MediaGroupBean group=definitions.get(id);if(group==null)throw new IllegalStateException("Missing media category: "+id);groups.add(group);}media.setGroups(groups);
         return media;
     }

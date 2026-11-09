@@ -1489,7 +1489,29 @@ public class PathFilter implements Filter
 		return (ret);
 	}
 
-	private boolean checkAccessToAdmin(String path, HttpServletRequest request, HttpServletResponse response)
+    /**
+     * Applies the existing administration checks before an early gateway consumes or rewrites the URL.
+     * @return true when processing may continue; false when the response has already been handled
+     */
+    public static boolean checkAdminRequest(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        if (!checkAdmin(request)) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return false;
+        }
+        if (Constants.getBoolean("adminRequireSSL") && !Tools.isSecure(request)) {
+            response.sendRedirect(getHttpsRedirectUrl(request));
+            return false;
+        }
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        if (!checkAccessToAdmin(path, request, response)) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return false;
+        }
+        return true;
+    }
+
+	private static boolean checkAccessToAdmin(String path, HttpServletRequest request, HttpServletResponse response)
 	{
 		boolean isAdminUrlAccessible = true;
         Identity user = UsersDB.getCurrentUser(request.getSession());
@@ -2728,6 +2750,7 @@ public class PathFilter implements Filter
 	public static String getHttpsRedirectUrl(HttpServletRequest request)
 	{
 		String path = PathFilter.getOrigPath(request);
+        if (path == null || path.isBlank()) path = request.getRequestURI();
 		String qs = request.getQueryString();
 		StringBuilder url = new StringBuilder("https://").append(Tools.getServerName(request)).append(path);
 		if (Tools.isNotEmpty(qs)) url.append('?').append(qs);

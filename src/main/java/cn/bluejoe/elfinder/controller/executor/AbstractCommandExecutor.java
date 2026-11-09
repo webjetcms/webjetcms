@@ -231,6 +231,11 @@ public abstract class AbstractCommandExecutor implements CommandExecutor
 		}
 		if (ContextFilter.isRunning(request)) map.put("tmbUrl", request.getContextPath() + "/thumb");
 		else map.put("tmbUrl", "/thumb");
+        if(sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            map.put("tmbUrl",sk.iway.iwcm.branch.BranchPreviewUrls.PREFIX+sk.iway.iwcm.branch.BranchContexts.current().branchId()+"/thumb");
+            map.put("disabled",new String[]{"archive","extract","duplicate","resize","mkfile","edit","chmod","copy","wjfileprops","wjdirprops","wjmetadata","wjeditswitch","wjedit","wjfileupdate"});
+        }
+
 
 		return map;
 	}

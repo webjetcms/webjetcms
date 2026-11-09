@@ -10,6 +10,7 @@ import jakarta.persistence.Column;
 import org.springframework.beans.BeanUtils;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.spirit.model.Media;
 
 /** Reads only classified WORK fields; operational and scheduling values stay in the server row. */
 final class BranchEditorRows {
@@ -17,6 +18,7 @@ final class BranchEditorRows {
         Map.of("perex_group","perexGroupIdsString"));
     private static final Map<String,Method> GROUP_READERS = readers(GroupDetails.class,BranchFields.GROUP.supported(),
         Map.of("navbar","navbarName", "new_page_docid_template","newPageDocIdTemplate", "force_group_template","forceTheUseOfGroupTemplate"));
+    private static final Map<String,Method> MEDIA_READERS = readers(Media.class,BranchFields.MEDIA.supported(),Map.of());
 
     private BranchEditorRows() { }
 
@@ -29,6 +31,10 @@ final class BranchEditorRows {
 
     static Map<String,Object> group(GroupDetails bean, Map<String,?> stored) {
         return read(bean,stored,GROUP_READERS);
+    }
+
+    static Map<String,Object> media(Media bean, Map<String,?> stored) {
+        return read(bean,stored,MEDIA_READERS);
     }
 
     private static Map<String,Object> read(Object bean, Map<String,?> stored, Map<String,Method> readers) {

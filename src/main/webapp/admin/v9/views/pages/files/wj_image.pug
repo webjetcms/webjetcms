@@ -172,12 +172,13 @@ block content
 
             elFinderInstance = $('#finder').elfinder({
                 url: '/admin/elfinder-connector/',
+                customHeaders: {'X-CSRF-Token': window.csrfToken, ...(window.branchScreen?.enabled ? {'X-WebJET-Branch': String(window.branchScreen.branchId), 'X-WebJET-Branch-Domain': window.branchScreen.domainName} : {})},
                 enableByMouseOver: false,
                 width: '100%',
                 resizable: false,
                 rememberLastDir: false,
                 requestType: 'post',
-                customData: customData,
+                customData: {...customData, ...(window.branchScreen?.enabled ? {branchId: window.branchScreen.branchId, branchDomain: window.branchScreen.domainName} : {})},
                 getFileCallback: function(files, fm)
                 {
                     //must be there otherwise getfile event will not be called

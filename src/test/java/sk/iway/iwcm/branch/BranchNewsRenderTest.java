@@ -208,7 +208,7 @@ class BranchNewsRenderTest extends BaseWebjetTest {
         assertEquals(ids,Jsoup.parse(action.getHtmlOut()).select("li[data-id]").stream().map(e->Integer.parseInt(e.attr("data-id"))).toList(),action.getHtmlOut());
     }
     private void open(BranchContext value) {
-        if(scope!=null)scope.close();request=new MockHttpServletRequest(Constants.getServletContext());request.setServerName("admin.example");request.setRequestURI("/__branch-preview/"+value.branchId()+"/news.html");request.setAttribute("docDetails",new DocDetails());request.setAttribute("lng","sk");
+        if(scope!=null)scope.close();request=new MockHttpServletRequest(Constants.getServletContext());request.setServerName("admin.example");request.setRequestURI("/admin/webpages/branch-preview/"+value.branchId()+"/news.html");request.setAttribute("docDetails",new DocDetails());request.setAttribute("lng","sk");
         RequestBean bean=new RequestBean();bean.setRequest(request);bean.setDomain(DOMAIN);bean.setLng("sk");SetCharacterEncodingFilter.setCurrentRequestBean(bean);scope=BranchContexts.open(request,value);
     }
     private BranchContext adminBranch(){return new BranchContext(branch.branchId(),DOMAIN,1,BranchContext.Mode.ADMIN);}

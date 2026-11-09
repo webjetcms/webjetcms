@@ -15,13 +15,13 @@ Identity admin = UsersDB.getCurrentUser(request);
 if (admin == null || !admin.isAdmin()) { response.setStatus(403); return; }
 if (!Set.of("GET", "HEAD").contains(request.getMethod())) { response.setStatus(405); return; }
 String target = request.getParameter("target");
-if (target == null || !target.matches("/__branch-preview/(42|43)/.*")
+if (target == null || !target.matches("/admin/webpages/branch-preview/(42|43)/.*")
     || target.contains("..") || target.contains("%") || target.contains("\\")) {
     response.setStatus(400); return;
 }
 URI route;
 try { route = URI.create(target); } catch (IllegalArgumentException invalid) { response.setStatus(400); return; }
-String branchRoot = target.startsWith("/__branch-preview/42/") ? "/__branch-preview/42" : "/__branch-preview/43";
+String branchRoot = target.startsWith("/admin/webpages/branch-preview/42/") ? "/admin/webpages/branch-preview/42" : "/admin/webpages/branch-preview/43";
 String logicalPath = route.getPath().substring(branchRoot.length());
 if (!Set.of("/home.html", "/new.html", "/existing.html", "/target.html", "/images/p01.png",
         "/thumb/images/p01.png", "/templates/p01/probe.css", "/templates/p01/probe.js").contains(logicalPath)
@@ -56,7 +56,7 @@ if (type.startsWith("text/html")) {
     var html = Jsoup.parse(new String(upstream.body(), StandardCharsets.UTF_8));
     for (var element : html.select("[href],[src]")) {
         for (String attribute : List.of("href", "src")) {
-            if (element.hasAttr(attribute) && element.attr(attribute).startsWith("/__branch-preview/"))
+            if (element.hasAttr(attribute) && element.attr(attribute).startsWith("/admin/webpages/branch-preview/"))
                 element.attr(attribute, p01AdminUrl(request.getContextPath(), element.attr(attribute)));
         }
     }
@@ -66,7 +66,7 @@ if (type.startsWith("text/html")) {
     out.print(html.outerHtml());
 } else if (type.startsWith("text/css") || type.startsWith("text/javascript")) {
     String text = new String(upstream.body(), StandardCharsets.UTF_8);
-    Matcher urls = Pattern.compile("(['\"])(/__branch-preview/(?:42|43)/[^'\"\\s]+)\\1").matcher(text);
+    Matcher urls = Pattern.compile("(['\"])(/admin/webpages/branch-preview/(?:42|43)/[^'\"\\s]+)\\1").matcher(text);
     StringBuffer rewritten = new StringBuffer();
     while (urls.find()) urls.appendReplacement(rewritten, Matcher.quoteReplacement(urls.group(1)
         + p01AdminUrl(request.getContextPath(), urls.group(2)) + urls.group(1)));

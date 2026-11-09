@@ -12,7 +12,7 @@
 - Doplnenie N4: povinný `menu_ul_li.jsp`/`MenuULLI` podľa [03b](03b-menu.md), vrátane editoru parametrov `MenuApp`, rekurzie, aktívnej cesty, perex/HTML, premenných a cache. T03 je rozpracované na M01–M11 v P01/P03/P04/P06/P08. Overené zdrojové integračné body a existujúce testy; bez runtime skúšok.
 - Doplnenie N5: záväzná [priorita jednoduchého čitateľného POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc). Konkrétne služby bez povinného handler/DI registra, bez hypotetických frameworkov a zriedkavých prevádzkových scenárov. Prvé overenie na jednom reálnom DB profile/inštancii; ďalšie profily až pred deklarovaním podpory. Ručný POC míľnik po P06, dohodnuté plánovanie zostáva P07. Obnova koša sa runtime overí v P06. Izolácia, ID, oprávnenia a náhľad sa nemenia.
 - Návod na spustenie: [orchestrácia](ORCHESTRACIA.md) doplnená o modely/roly, etapový postup a pokračovanie po prerušení. Odporúčanie GPT-6.1 Sol / High nemení aktuálne nastavenie klienta; skutočné modely zaznamená implementačný agent. Hlavný agent môže použiť najviac dvoch pomocníkov naraz, bez vlastného agentového frameworku. Žiadna etapa sa týmto doplnením nespustila.
-- Implementácia: P01–P04 sú uzavreté v nižšie uvedenom rozsahu na zvolenom POC profile. P04 používateľ samostatne zadal 8. novembra; nadväzuje na commitnutý P03 `849e7adb3`. P05–P08 nie sú zadané a nezačali sa.
+- Implementácia: P01–P05 sú uzavreté v nižšie uvedenom rozsahu na zvolenom POC profile. P05 používateľ samostatne zadal 8. novembra nad `9b65884d6`. P06–P08 sa nezačali.
 - P01: **DONE ako technický experiment na jednorazovom InnoDB profile**. Dokázané ID/reštart, SQL, core izolácia a minimálny reálny JSP/thumbnail gateway; zvlášť LIVE browser regresia pracovného webu. Nejde o hotovú editáciu/náhľad z P02/P03. Pracovná DB s MyISAM zatiaľ nie je vhodná na rezervácie.
 - Pred P01 prešlo dokumentačné overenie pôvodných 18 Markdown dokumentov. Aktuálne výsledky, skúšobné Java testy a medzery overenia sú evidované nižšie a v [P01-vysledky.md](P01-vysledky.md). Zmeny zostávajú bez commitov.
 
@@ -24,7 +24,7 @@
 | P02 | DONE | Päť tabuliek, stabilné ID vrátane médií/reštartu, explicitné mapovanie/B-L-W, request kontext a create/list API; flag-off administrácia overená. |
 | P03 | DONE | Účinné čítanie a reálny preklikateľný náhľad vrátane N01–N08/M01–M09; po pokračovaní 85/85 Java a 3/3 browser na izolovanom MariaDB/InnoDB profile. |
 | P04 | DONE | WORK CRUD/revert cez bežný editor, stabilné ID, News/Menu iframe a reálny render; 103/103 Java, 5/5 P04 UI + 3/3 P03 regresia, obsahová izolácia prešla na profile 33316. |
-| P05 | NOT_STARTED | — |
+| P05 | DONE | WORK médiá a súbory, oba uploady a elFinder; 123 úspešných Java testov a 7/7 reálnych UI scenárov, A/B/LIVE bajty a thumbnaily, obsahová izolácia na 33316. |
 | P06 | NOT_STARTED | — |
 | P07 | NOT_STARTED | — |
 | P08 | NOT_STARTED | — |
@@ -32,6 +32,20 @@
 Prípustné evidenčné stavy krokov: `NOT_STARTED`, `IN_PROGRESS`, `PARTIAL`, `DONE`, `BLOCKED`. Ide iba o stav práce agentov, nie o databázové stavy publikačnej vetvy. Pri BLOCKED sa zapíše konkrétna prekážka a čo ju odstráni.
 
 ## Výsledky krokov
+
+### P05 — DONE (8. november 2026, iba zvolený POC profil)
+
+- **Doplnenie 9. novembra 2026:** preview URL presunutá pod `/admin/webpages/branch-preview/{id}/...`. Gateway pred prepisom cesty používa existujúce admin kontroly typu uzla/IP, HTTPS, prihlásenia a Referera. Uložené URL zostávajú logické; starý prefix bez aliasu. Cielená Java regresia **20/20 PASS**, skutočné UI **3/3 PASS**, frontend build úspešný; samostatné výsledky v `P05-vysledky.md` a `build/test-results/p05/admin-preview/`. P06 sa nezačal.
+
+- **Vetva/východisko:** `feature/58858-publishing-packages`, `9b65884d6`. Existujúce lokálne zmeny P04 výsledkov a STAV zachované. Bez STAGE, commitov, produkčného nasadenia a P06.
+- **Výsledok:** `BranchFiles` zapisuje súkromné bajty a trvalé adresárové markery do existujúceho modelu, zachováva BASE/hash aj binárny podklad konfliktu. Moderný upload, CKEditor a elFinder podporujú jednotlivé súbory; galérie/varianty, archív a nepodporované operácie server odmieta pred vedľajšími hookmi. Práva, CSRF, typ/veľkosť a nemenný kontext zostali kontrolované. UI upozorňuje na dosah spoločného úložiska.
+- **Médiá:** CRUD aj na WORK-only stránke, konečné ID a existujúce kategórie, filter pred count/paging. Úprava média starej stránky sa prejavila v reálnom News náhľade bez SAVE vlastníka. Jeho autor/dátum aj produkčné mediálne väzby zostali rovnaké; budúci LIVE cutoff/no-op je zachovaný.
+- **Overenie:** Java **135 celkom / 123 PASS / 0 chýb / 12 zámerných skipov**, všetkých 7 súborových a 4 mediálne integračné testy prešlo. CodeceptJS/Playwright **7/7 PASS v spoločnom finálnom behu**: oba uploady, elFinder mkdir/reopen/rename/move/delete, nová PDF a mediálny CRUD, A/B/LIVE originály/thumbnail, A DELETE 404 bez fallbacku, serverové zákazy a stale 409. Frontend build prešiel s 2 existujúcimi size warnings. Po záverečnej ochrane starého per-page úložiska opäť prešla celá Java sada a cielený serverový UI test 1/1.
+- **Izolácia:** obsah 11 LIVE tabuliek pred/po zhodný (`7a49269afbff8c36b98f089fde79ef557a48292909968256eff9eec797029df3`), 13 Lucene súborov aj fyzické LIVE PNG/PDF bez zmeny. Stará stránka #1941626 má 0 WORK riadkov, autora 1 a pôvodný SAVE_DATE. Obsah štyroch pracovných tabuliek demo P04 **#481** zostal zhodný. DB 3306 nedotknutá.
+- **Profil/dôkazy:** MariaDB 12.2.2/InnoDB, Connector/J 3.5.10, Java 17.0.18, jedna inštancia `127.0.0.1:33316/webjet_p01`, lokálny filesystem a šablóna `aceintegration/jet/blank.jsp` so skutočnými Novinkami. [P05-vysledky.md](P05-vysledky.md), reporty `build/test-results/p05/`. POC DB/server 33316 a 8086/8446 zostávajú spustené; vlastné vetvy **A #841 / B #842**, účet `tester-p05`, lokálne heslo iba v `/tmp/webjet-p05-login.properties`.
+- **Odovzdanie P06:** pripravené tri konflikty content/new/delete v A, `conflicts.properties`, rezolúcia ani merge sa nevykonali. Obrázok A je na review obnovený na červený, B/LIVE modré. Výsledky obsahujú konkrétne URL a návod na nahradenie obrázka aj media-only edit.
+- **Hranice:** samostatný modul Súbory nebol v OSS profile dostupný; skutočné UI overené cez štandardný picker editora s rovnakým elFinderom/moderným uploadom. Legacy elFinder prijíma jeden nechunkovaný súbor, veľké/chunkované uploady používajú moderný vstup. Iné DB/topológie, IwcmFsDB/CDN, ďalšie šablóny a post-merge výsledok nie sú týmto overené. Zdrojové flagy ostávajú vypnuté.
+- **Modely/kontrola:** hlavný agent a dvaja pomocníci, rovnaké zdedené nastavenie; presný model/reasoning neoverený. Nezávislý review súborovej časti aj vlastný diff skontrolovaný; regresie zachytávajú FILE→DIRECTORY kolíziu vrátane DELETE. Po P05 sa končí.
 
 ### P04 — DONE (8. november 2026, iba zvolený POC profil)
 
@@ -46,6 +60,7 @@ Prípustné evidenčné stavy krokov: `NOT_STARTED`, `IN_PROGRESS`, `PARTIAL`, `
 - **Neoverené:** plný vizuálny PageBuilder tok na samostatnej PB šablóne, iné DB/topológie/Redis deployment, úplné legacy produkčné workflow. Časti T02 médiá/upload patria P05, vykonanie merge T08/T13 patrí P06. Tieto časti sa nevykazujú ako hotové. POC rozsah P04 je splnený; po tomto kroku sa končí.
 - **Modely/kontrola:** jeden agent bez delegovania, presný identifikátor modelu/reasoning v klientovi neoverený. Lokálny diff skontrolovaný; samostatná nezávislá kontrola druhým agentom/človekom sa nevykazuje.
 - **Doplnenie po review — mapovanie editora:** `BranchEditorRows` číta podporované stĺpce dynamicky podľa `BranchFields`, zdedených JPA `@Column` a pomenovacej konvencie. Ostávajú iba legacy aliasy/perex/dátum. Chýbajúce alebo nejednoznačné mapovanie zlyhá; druhý ručný zoznam polí bol odstránený. Cielená regresia **18/18** na DB 33316 a opakovaný P04 UI beh **5/5**; LIVE dump nezmenený. Dôkazy `build/test-results/p04/rows-refactor/`. Pôvodný staged obsah bol zachovaný.
+- **Doplnenie po review — podpora aplikácií:** jediná nemenná mapa `BranchApps.SUPPORTED_APPS` spája triedu aplikácie s rendererom. Používajú ju oba vstupy editora aj JSP preview; druhý zoznam/regex bol odstránený. Cielené Java testy **14/14**, reálne Menu/News a hranica náhľadu **2/2**. Dôkazy `build/test-results/p04/apps-refactor/`.
 
 ### P03 — DONE (4. november 2026, iba zvolený POC profil)
 

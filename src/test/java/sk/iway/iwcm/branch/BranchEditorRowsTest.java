@@ -14,7 +14,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 /** Verifies complete WORK mapping, legacy aliases and preservation of server-owned values. */
 class BranchEditorRowsTest {
     @Test void perexMappingUsesIdsAndKeepsUnsupportedValuesFromTheServer() {
-        DocDetails doc=new DocDetails(); doc.setPerexGroups(new Integer[]{17,3,17}); doc.setDateCreated(1000);
+        DocDetails doc=new DocDetails(); doc.setTitle("autotest mapper"); doc.setPerexGroups(new Integer[]{17,3,17}); doc.setDateCreated(1000);
         doc.setSyncId(999); doc.setPublishStartDate(new java.util.Date(9000));
         var stored=new LinkedHashMap<>(BranchDocumentMapper.initialValues(1,1,Instant.EPOCH,false));
         stored.put("sync_id",7); stored.put("views_total",123); stored.put("publish_start",new java.sql.Timestamp(2000));
@@ -28,7 +28,7 @@ class BranchEditorRowsTest {
     }
 
     @Test void everySupportedDocumentAndFolderColumnIsReadWithoutAStoredFallback() {
-        DocDetails doc=new DocDetails(); doc.setEditorVirtualPath("article.html"); doc.setEventDateDate(new java.util.Date(3000));
+        DocDetails doc=new DocDetails(); doc.setTitle("autotest mapper"); doc.setEditorVirtualPath("article.html"); doc.setEventDateDate(new java.util.Date(3000));
         var document=BranchEditorRows.document(doc,Map.of());
         assertEquals(BranchFields.DOCUMENT.supported(),document.keySet());
         assertEquals("article.html",document.get("editor_virtual_path"));

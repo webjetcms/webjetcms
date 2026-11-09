@@ -76,6 +76,7 @@ public class UploadFileAction {
 		String realPath = null;
 		String fileName = null;
 		long fileSize = multipartFile.getSize();
+		boolean branch = sk.iway.iwcm.branch.BranchContexts.current().isBranch();
 
 		//Check file size for upload, upload type id fix ckeditor, we dont use this method for other upload type's
 		if (!isFileAllowed("ckeditor", multipartFile, user, request, fileSize)) return FILE_NOT_ALLOWED;
@@ -104,7 +105,7 @@ public class UploadFileAction {
 
 				if (fileName.equals("image.png") || fileName.equals("image.jpg")) {
 					//jedna sa o pasted grafiku z nejakeho programu
-					fileName = "image-" + PkeyGenerator.getNextValue("ckeditor_upload_counter") + "." + extension;
+					fileName = "image-" + (branch ? java.util.UUID.randomUUID() : PkeyGenerator.getNextValue("ckeditor_upload_counter")) + "." + extension;
 				}
 
 				//adresar odvodime podla posledne editovanej stranky
@@ -115,31 +116,39 @@ public class UploadFileAction {
 					subDir = ContextFilter.removeContextPath(request.getContextPath(), subDir);
 
 				IwcmFile f = IwcmFile.fromVirtualPath(Constants.getString("imagesRootDir") + subDir, fileName);
-				if(f.exists())
-					fileName = PkeyGenerator.getNextValue("ckeditor_upload_counter")+"_"+fileName;
+				if(branch ? sk.iway.iwcm.branch.BranchFiles.exists(Constants.getString("imagesRootDir") + subDir + "/" + fileName) : f.exists())
+					fileName = (branch ? java.util.UUID.randomUUID() : PkeyGenerator.getNextValue("ckeditor_upload_counter"))+"_"+fileName;
 
 				realPath = Tools.getRealPath(Constants.getString("imagesRootDir") + subDir) + File.separatorChar + fileName;
 				fileURL = Constants.getString("imagesRootDir") + subDir + "/" + fileName;
 
 				if (realPath != null && fileSize > 0) {
+					if (branch) {
+						java.nio.file.Path source=java.nio.file.Files.createTempFile("branch-editor-upload-", ".tmp");
+						try {
+							try (var input=multipartFile.getInputStream()) {java.nio.file.Files.copy(input,source,java.nio.file.StandardCopyOption.REPLACE_EXISTING);}
+							sk.iway.iwcm.branch.BranchFiles.put(fileURL,source,request,"ckeditor");
+						} finally {java.nio.file.Files.deleteIfExists(source);}
+					} else {
 					IwcmFile f2 = new IwcmFile(realPath);
 
 					//Save main file
 					IwcmFsDB.writeFiletoDest(multipartFile.getInputStream(), new File(f2.getPath()), (int)fileSize);
 
 					Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "file upload: " + realPath, -1, -1);
+					}
 				}
 
-				if (GalleryDB.isGalleryFolder(Constants.getString("imagesRootDir") + subDir)) {
+				if (!branch && GalleryDB.isGalleryFolder(Constants.getString("imagesRootDir") + subDir)) {
 					//v realpath mas cestu k obrazku kde jeOriginal
 					//ten nechas ako je
 					//ale vytvoris jeho novu kopiu
 					GalleryDB.resizePicture(realPath, Constants.getString("imagesRootDir") + subDir);
-				} else if (Constants.getBoolean("imageAlwaysCreateGalleryBean")) {
+				} else if (!branch && Constants.getBoolean("imageAlwaysCreateGalleryBean")) {
 					GalleryDB.setImage(Constants.getString("imagesRootDir") + subDir, fileName);
 				}
 
-				UploadFileAction.reflectionLoader(request, user, fileURL);
+				if (!branch) UploadFileAction.reflectionLoader(request, user, fileURL);
 			}
 
 			if (fileURL != null && fileName != null) {

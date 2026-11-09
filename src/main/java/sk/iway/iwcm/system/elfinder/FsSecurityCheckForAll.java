@@ -56,6 +56,18 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isWritable(FsService fsService, FsItem fsi)
 	{
+        if(sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            if(!(fsi.getVolume() instanceof BranchFsVolume) || !(fsi instanceof IwcmFsItem item)) return false;
+            String path=item.getFile().getVirtualPath();
+            if(sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(path+"/")) return false;
+            if(!(path.startsWith("/images/")||path.startsWith("/files/")) && !path.equals("/images")&&!path.equals("/files")) return false;
+            String folder=fsi.getVolume().isFolder(fsi)?path:path.substring(0,path.lastIndexOf('/'));
+            String archive=FileArchivSupportMethodsService.normalizePath(FileArchivatorKit.getArchivPath());
+            if(Tools.isNotEmpty(archive)&&(path+"/").toLowerCase(Locale.ROOT).startsWith(archive.toLowerCase(Locale.ROOT))) return false;
+            Identity user=sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
+            return user!=null&&user.isFolderWritable(folder)&&!sk.iway.iwcm.gallery.GalleryDB.isGalleryFolder(folder);
+        }
+
         if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(item.getFile().getVirtualPath())) {
             return isReadable(fsService, fsi);
         }

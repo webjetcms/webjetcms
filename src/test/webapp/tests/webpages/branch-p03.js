@@ -35,16 +35,16 @@ if (process.env.WEBJET_P03_BROWSER === 'true') {
         }, { group: fixture.groupId, branch: fixture.branchA });
         I.assertEqual(statuses.write, 409); I.assertEqual(statuses.stale, 409); I.assertEqual(statuses.selected, Number(fixture.branchA));
 
-        I.amOnPage(`/__branch-preview/${fixture.branchA}/p03-manual/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchA}/p03-manual/`);
         I.waitForText('P03 WORK A', 20);
         I.seeElement('#branch-preview-status');
-        I.seeElement('ol.news a[href*="/__branch-preview/"]');
+        I.seeElement('ol.news a[href*="/admin/webpages/branch-preview/"]');
         // Decoded dimensions prove that protected image requests succeeded, beyond DOM presence.
         I.waitForFunction(() => [...document.images].some(image => image.complete && image.naturalWidth === 16), 20);
         I.saveScreenshot('branch-p03-preview-a.png');
         const paging = await I.grabAttributeFrom('nav a[href*="page=2"]', 'href');
-        I.amOnPage(paging); I.waitForElement('ol.news', 20); I.seeInCurrentUrl(`/__branch-preview/${fixture.branchA}/`);
-        I.amOnPage(`/__branch-preview/${fixture.branchB}/p03-manual/`); I.waitForText('P03 WORK B', 20); I.dontSee('P03 WORK A');
+        I.amOnPage(paging); I.waitForElement('ol.news', 20); I.seeInCurrentUrl(`/admin/webpages/branch-preview/${fixture.branchA}/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchB}/p03-manual/`); I.waitForText('P03 WORK B', 20); I.dontSee('P03 WORK A');
         I.saveScreenshot('branch-p03-preview-b.png');
         I.amOnPage('/p03-manual/'); I.waitForText('P03 LIVE home', 20); I.dontSee('P03 WORK A');
     });
@@ -85,9 +85,9 @@ if (process.env.WEBJET_P03_BROWSER === 'true') {
         I.assertEqual(context.branchId, 0);
         I.selectOption('#branch-selection', fixture.branchA);
         I.waitForText('P03 manual A', 20, '#branch-active-label');
-        I.amOnPage(`http://127.0.0.1:8086/__branch-preview/${fixture.branchA}/p03-manual/`);
+        I.amOnPage(`http://127.0.0.1:8086/admin/webpages/branch-preview/${fixture.branchA}/p03-manual/`);
         I.waitForText('P03 WORK A', 20);
-        I.seeInCurrentUrl('http://127.0.0.1:8086/__branch-preview/');
+        I.seeInCurrentUrl('http://127.0.0.1:8086/admin/webpages/branch-preview/');
         // The decoded thumbnail also checks authenticated asset requests on this transport host.
         I.waitForFunction(() => [...document.images].some(image => image.complete && image.naturalWidth === 16), 20);
         I.saveScreenshot('branch-p03-admin-host.png');

@@ -34,7 +34,7 @@ if (process.env.WEBJET_P01_ADMIN_HOST === 'true') {
             link.textContent = 'P01 preview';
             link.style.cssText = 'position:fixed;top:100px;left:20px;z-index:999999;background:white;padding:12px';
             document.body.append(link);
-        }, route + encodeURIComponent('/__branch-preview/42/home.html'));
+        }, route + encodeURIComponent('/admin/webpages/branch-preview/42/home.html'));
         I.forceClick('#p01-preview-start');
         I.waitForElement('#p01-menu', 20);
         I.see('P01 WORK 42 body');

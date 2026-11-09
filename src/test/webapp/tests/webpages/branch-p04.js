@@ -100,21 +100,21 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         await DTE.fillCkeditor(`<h1>autotest P04 pracovný rozcestník</h1><p>${menu}</p><p>${news}</p>`);
         DTE.save();
         DTE.waitForModalClose();
-        I.amOnPage(`/__branch-preview/${fixture.branchId}/p03-manual/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchId}/p03-manual/`);
         I.waitForText('autotest P04 pracovný rozcestník', 20);
         I.see('autotest P04 dostupná novinka', 'ol.news');
         I.see('autotest P04 perex novinky', 'ol.news');
         const detail = await I.grabAttributeFrom('ol.news a', 'href');
         I.amOnPage(detail);
         I.waitForText('autotest P04 obsah novej novinky', 20);
-        I.seeInCurrentUrl(`/__branch-preview/${fixture.branchId}/`);
+        I.seeInCurrentUrl(`/admin/webpages/branch-preview/${fixture.branchId}/`);
         fixture.newsUrl = new URL(detail, 'http://iwcm.interway.sk:8086').pathname;
         saveFixture();
         I.amOnPage('/p03-manual/');
         I.waitForText('P03 LIVE home', 20);
         I.dontSee('autotest P04 pracovný rozcestník');
         I.dontSee('autotest P04 dostupná novinka');
-        I.assertEqual(await I.executeScript(async path => (await fetch(path)).status, fixture.newsUrl.replace(`/__branch-preview/${fixture.branchId}`, '')), 404);
+        I.assertEqual(await I.executeScript(async path => (await fetch(path)).status, fixture.newsUrl.replace(`/admin/webpages/branch-preview/${fixture.branchId}`, '')), 404);
 
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${p03.homeId}`);
         DTE.waitForEditor();
@@ -185,7 +185,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.switchTo();
         I.clickCss('.cke_dialog_ui_button_cancel');
         DTE.cancel();
-        I.amOnPage(`/__branch-preview/${fixture.branchId}/p03-manual/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchId}/p03-manual/`);
         I.waitForText('autotest P04 dostupná novinka', 20, 'ol.news');
         I.see('autotest P04 perex novinky upravený cez NewsApp', 'ol.news');
         I.saveScreenshot('branch-p04-preview.png');
@@ -240,7 +240,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.click(`webjet-dte-jstree .open-custom-modal [id="${p03.groupId}"] > .jstree-ocl`);
         I.click(`webjet-dte-jstree .open-custom-modal [id="${fixture.groupId}"] > .jstree-anchor`);
         DTE.save(undefined, true);
-        I.amOnPage(`/__branch-preview/${fixture.branchId}/p03-manual/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchId}/p03-manual/`);
         I.waitForText('autotest P04 menu pridanie', 20, 'ul');
         I.dontSee('autotest P04 menu pridanie', 'ol.news');
         const oldLink = await I.grabAttributeFrom(locate('ul a').withText('autotest P04 menu pridanie'), 'href');
@@ -254,7 +254,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.waitForText('autotest P04 cieľ presunu', 20, 'webjet-dte-jstree .open-custom-modal');
         I.click(locate('webjet-dte-jstree .open-custom-modal .jstree-anchor').withText('autotest P04 cieľ presunu'));
         DTE.save(undefined, true);
-        I.amOnPage(`/__branch-preview/${fixture.branchId}/p03-manual/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchId}/p03-manual/`);
         I.waitForText('autotest P04 cieľ presunu', 20, 'ul');
         const movedLink = await I.grabAttributeFrom(locate('ul a').withText('autotest P04 cieľ presunu'), 'href');
         I.assertContain(movedLink, '/presuny/');
@@ -269,7 +269,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.fillField('#DTE_Field_navbarName', 'autotest P04 premenovaný priečinok');
         I.fillField('#DTE_Field_urlDirName', 'premenovany');
         DTE.save('groups-datatable', true);
-        I.amOnPage(`/__branch-preview/${fixture.branchId}/p03-manual/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchId}/p03-manual/`);
         I.waitForText('autotest P04 premenovaný priečinok', 20, 'ul');
         const renamedLink = await I.grabAttributeFrom(locate('ul a').withText('autotest P04 premenovaný priečinok'), 'href');
         I.assertContain(renamedLink, '/premenovany/');
@@ -284,7 +284,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.click('#editorAppDTE_Field_editorFields-parentGroupDetails .btn-webjet-jstree-item-edit');
         I.click(`webjet-dte-jstree .open-custom-modal [id="${p03.groupId}"] > .jstree-anchor`);
         DTE.save('groups-datatable', true);
-        I.amOnPage(`/__branch-preview/${fixture.branchId}/p03-manual/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchId}/p03-manual/`);
         I.waitForText('autotest P04 pracovný rozcestník', 20);
         I.dontSee('autotest P04 premenovaný priečinok');
         I.assertEqual(await I.executeScript(async url => (await fetch(url)).status, renamedLink), 404);
@@ -306,7 +306,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         DTE.save(undefined, true);
         await I.executeScript(() => true);
         delete fixture.moveDocId; saveFixture();
-        I.amOnPage(`/__branch-preview/${fixture.branchId}/p03-manual/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchId}/p03-manual/`);
         I.waitForText('autotest P04 pracovný rozcestník', 20);
         I.dontSee('autotest P04 menu pridanie', 'ul');
         I.assertEqual(await I.grabAttributeFrom(locate('ul a').withText('autotest P04 premenovaný priečinok'), 'href'), '#nopage');
@@ -319,7 +319,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         DTE.save('groups-datatable', true);
         await I.executeScript(() => true);
         delete fixture.moveGroupId; saveFixture();
-        I.amOnPage(`/__branch-preview/${fixture.branchId}/p03-manual/`);
+        I.amOnPage(`/admin/webpages/branch-preview/${fixture.branchId}/p03-manual/`);
         I.waitForText('autotest P04 pracovný rozcestník', 20);
         I.dontSee('autotest P04 premenovaný priečinok');
     });

@@ -2,6 +2,45 @@ import $ from 'jquery';
 
 // The server embeds the context of this screen; never refresh it silently from another tab.
 const screen = window.branchScreen;
+window.branchAssetUrl = value => {
+    if (!screen?.enabled || !screen.branchId || typeof value !== 'string') return value;
+    return /^\/(?:images|files|thumb\/(?:images|files))\//.test(value) ? `/admin/webpages/branch-preview/${screen.branchId}${value}` : value;
+};
+window.branchLogicalAssetUrl = value => {
+    const prefix = `/admin/webpages/branch-preview/${screen?.branchId}`;
+    return screen?.branchId && typeof value === 'string' && value.startsWith(prefix+'/') ? value.substring(prefix.length) : value;
+};
+window.branchFileDialogUrl = path => screen?.enabled ? WJ.urlAddParam(WJ.urlAddParam(path, 'branchId', screen.branchId), 'branchDomain', screen.domainName) : path;
+window.initBranchFileUpload = finder => {
+    if (!screen?.enabled || !screen.branchId) return;
+    const picker = new URLSearchParams(window.location.search).get('volumes');
+    const uploader = window.AdminUpload({element: '#dt-upload', uploadType: picker === 'images' ? 'image' : 'file', writeDirectlyToDestination: true});
+    window.branchAdminUpload = uploader;
+    const button = document.getElementById('branch-upload-button');
+    if (!document.getElementById('branch-file-warning')) {
+        const warning = document.createElement('p');
+        warning.id = 'branch-file-warning';
+        warning.className = 'alert alert-warning small m-2 p-2';
+        warning.textContent = WJ.translate('branches.files.shared.js');
+        button.before(warning);
+    }
+    button.classList.remove('d-none');
+    const updateDestination = (folder = finder.cwd()) => {
+        uploader.setDestinationFolder(folder.virtualPath || '');
+        const types = finder.option('uploadMime')?.allow;
+        uploader.options.acceptedFiles = Array.isArray(types) && !types.includes('all') ? types.map(type => type.endsWith('/') ? type+'*' : type).join(',') : null;
+        const disabled = !folder.write || !/^\/(images|files)(\/|$)/.test(folder.virtualPath || '');
+        uploader.setFileSelectionDisabled(disabled);
+        button.disabled = disabled;
+    };
+    finder.bind('open', event => updateDestination(event.data.cwd));
+    finder.bind('lazydone', () => updateDestination());
+    button.addEventListener('click', () => { updateDestination(); uploader.hiddenFileInput.click(); });
+    uploader.on('addedfile', file => {
+        file.wjAdminUploadRequestParams = {destinationFolder: finder.cwd().virtualPath};
+    });
+    window.addEventListener('WJ.AdminUpload.success', () => finder.exec('reload'));
+};
 window.bindBranchContext = (target, context) => {
     if (!context?.enabled) return;
     target.branchScreen = Object.freeze({ ...context });
@@ -55,6 +94,13 @@ $(async () => {
         label.textContent = active ? `Pracovná verzia: ${active.name}${active.state === 'DRAFT' ? '' : ' · iba čítanie'}` : 'Produkcia';
         label.title = label.textContent;
         if (active) {
+            if (!document.getElementById('branch-file-warning')) {
+                const warning = document.createElement('p');
+                warning.id = 'branch-file-warning';
+                warning.className = 'alert alert-warning m-3';
+                warning.textContent = WJ.translate('branches.files.shared.js');
+                document.querySelector('main, .ly-content, #main-content')?.prepend(warning);
+            }
             try {
                 const link = await api(`/${active.id}/preview-link`);
                 const preview = document.getElementById('branch-preview-link');
@@ -191,7 +237,7 @@ window.applyBranchEditor = (table, group = false) => {
             : ['publishStartDate','publishEndDate','syncId','syncStatus','editorFields.publishAfterStart','editorFields.disableAfterEnd','editorFields.requestPublish','editorFields.groupCopyDetails','editorFields.redactorNote','editorFields.attrs'];
         names.forEach(name => { if (editor.fields().includes(name)) editor.field(name).disable(); });
         if (!group) ['editorFields.groupCopyDetails', 'editorFields.redactorNote', 'editorFields.attrs'].forEach(name => { if (editor.fields().includes(name)) editor.field(name).hide(); });
-        ['history','publishing', ...(group ? [] : ['media','attributes'])].forEach(tab => {
+        ['history','publishing', ...(group ? [] : ['attributes'])].forEach(tab => {
             $('#'+table.DATA.id+'_modal').find(`[id$="-${tab}-tab"]`).closest('li').hide();
         });
         const container = $('#'+table.DATA.id+'_modal');

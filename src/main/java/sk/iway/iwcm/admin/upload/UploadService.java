@@ -76,6 +76,8 @@ public class UploadService {
      */
     public void process()
     {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch())
+            throw new IllegalStateException("Production upload processing is unavailable in a publishing branch");
         IwcmFile uploadedFile = new IwcmFile(Tools.getRealPath(virtualPath));
         if (uploadedFile.exists()==false) return;
 
