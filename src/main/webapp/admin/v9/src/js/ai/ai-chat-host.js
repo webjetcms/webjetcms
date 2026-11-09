@@ -34,7 +34,7 @@ export class AiChatHost {
         this.element.classList.toggle('ai-chat-host--history-open', this.historyOpen);
         this.assistantRow = node('div', 'ai-chat-host__assistant');
         const label = node('label', 'visually-hidden', text('chatAssistant'));
-        this.select = node('select', 'form-control');
+        this.select = node('select', 'form-control ai-chat-assistant-picker');
         this.select.id = options.context ? `${idPrefix}-assistant` : 'admin-quick-search-chat-assistant';
         label.htmlFor = this.select.id;
         this.select.addEventListener('change', () => this.selectAssistant(this.select.value));

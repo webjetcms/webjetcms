@@ -1,3 +1,8 @@
+.bs-container.ai-chat-assistant-picker {
+    // The menu is mounted in body, above the editor assistant toast (999999).
+    z-index: 1000000;
+}
+
 .ai-chat {
     display: flex;
     flex: 1 1 auto;
