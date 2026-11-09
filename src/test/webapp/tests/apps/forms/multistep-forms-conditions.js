@@ -371,7 +371,7 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
 
     const expectedHtml = `
         <form action="/rest/multistep-form/save-form?form-name=multistep_condition_test&amp;step-id=-1" method="post" name="formMailForm-multistep_condition_test"><div><div><p>This is step one.</p></div><div>
-        <label for="radiogroup-1">Radiogroup</label><div class="form-hint"></div>
+        <label for="radiogroup-1">Radiogroup</label>
         <div>
         <span>[X]</span> <label for="radiogroup-1-0">valA</label>
         </div>
@@ -382,9 +382,9 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
         <span>[&nbsp;]</span> <label for="radiogroup-1-2">valC</label>
         </div>
         </div><div>
-        <label for="priezvisko-1">Priezvisko</label><div class="form-hint"></div> <span>test</span>
+        <label for="priezvisko-1">Priezvisko</label> <span>test</span>
         </div><div>
-        <label for="checkboxgroup-1">Checkgroup</label><div class="form-hint"></div>
+        <label for="checkboxgroup-1">Checkgroup</label>
         <div>
         <span>[&nbsp;]</span> <label for="checkboxgroup-1-0">auto</label>
         </div>
@@ -395,22 +395,22 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
         <span>[X]</span> <label for="checkboxgroup-1-2">lietadlo</label>
         </div>
         </div><div>
-        <label for="email-1">Email</label><div class="form-hint"></div> <span>wjmultistep.conditions.user@fexpost.com</span>
+        <label for="email-1">Email</label> <span>${baseUserMail}${TempMail.getTempMailDomain()}</span>
         </div><div>
         <label>Pohlavie</label>
         </div>
         <div>
-        <span>[&nbsp;]</span> <label for="pohlavie-false-muz">MUZ</label><div class="form-hint"></div>
+        <span>[&nbsp;]</span> <label for="pohlavie-false-muz">MUZ</label>
         </div><div>
-        <span>[&nbsp;]</span> <label for="pohlavie-false-zena">ZENA</label><div class="form-hint"></div>
+        <span>[&nbsp;]</span> <label for="pohlavie-false-zena">ZENA</label>
         </div><div>
-        <span>[X]</span> <label for="pohlavie-false-ine">ine</label><div class="form-hint"></div>
+        <span>[X]</span> <label for="pohlavie-false-ine">ine</label>
         </div><div>
-        <label for="poznamka-1">Poznamka<span>&nbsp;*</span></label><div class="form-hint"></div> <span style="height: auto;">Test poznamka</span>
+        <label for="poznamka-1">Poznamka<span>&nbsp;*</span></label> <span style="height: auto;">Test poznamka</span>
         </div></div><hr><div><div><p>This is step two.</p></div><div>
-        <label for="menopriezvisko-1">Meno a priezvisko</label><div class="form-hint"></div> <span>Tester_X</span>
+        <label for="menopriezvisko-1">Meno a priezvisko</label> <span>Tester_X</span>
         </div><div>
-        <label for="radiogroup-2">Skupina výberových polí</label><div class="form-hint"></div>
+        <label for="radiogroup-2">Skupina výberových polí</label>
         <div>
         <span>[&nbsp;]</span> <label for="radiogroup-2-0">one</label>
         </div>
@@ -421,7 +421,7 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
         <span>[&nbsp;]</span> <label for="radiogroup-2-2">three</label>
         </div>
         </div><div>
-        <label for="telefon-1">Telefónne číslo</label><div class="form-hint"></div> <span>0123456789</span>
+        <label for="telefon-1">Telefónne číslo</label> <span>0123456789</span>
         </div></div>  </form>
     `;
 
@@ -457,6 +457,8 @@ function checkEmailWithForm(I, expectedHtml) {
 function compareTwoHtml(I, actualHtml, expectedHtml) {
     const normalize = html =>
         html
+            // Empty hint containers carry no answer. Keep hints that have content.
+            .replace(/<div class="form-hint">\s*<\/div>/g, '')
             .replace(/\s*<br>\s*/gi, '<br>')
             // Remove all HTML attributes from opening tags: <tag attr="x"> -> <tag>
             .replace(/<([a-zA-Z][\w:-]*)(\s[^>]*?)?(\/?)>/g, '<$1$3>')

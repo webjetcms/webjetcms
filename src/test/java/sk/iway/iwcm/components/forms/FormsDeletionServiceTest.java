@@ -68,6 +68,7 @@ class FormsDeletionServiceTest {
         cloud = mockStatic(CloudToolsForCore.class);
         cloud.when(CloudToolsForCore::getDomainId).thenReturn(DOMAIN);
         constants = mockStatic(Constants.class);
+        constants.when(() -> Constants.getString("DocTools.removeCharsDir")).thenReturn("[^a-zA-Z/_0-9.=\\-]");
         init = mockStatic(InitServlet.class);
         cache = mockStatic(MultistepFormsService.class);
         FormsEntity header = new FormsEntity();
@@ -341,6 +342,17 @@ class FormsDeletionServiceTest {
         assertFalse(FormsDeletionService.usesForm("!INCLUDE(other.Component, formName=autotest-form)!", NAME));
         assertFalse(FormsDeletionService.usesForm("<p>autotest-form</p>", NAME));
         assertFalse(FormsDeletionService.usesForm(null, NAME));
+    }
+
+    /** FormSimple stores the normalized display name as the key for both supported include formats. */
+    @ParameterizedTest
+    @ValueSource(strings = {"/components/formsimple/form.jsp", "sk.iway.iwcm.components.formsimple.FormSimpleApp"})
+    void preservesSimpleFormReferencedByDisplayName(String component) {
+        assertTrue(FormsDeletionService.usesForm("!INCLUDE(" + component + ", formName=Formulár ľahko)!", "formular-lahko"));
+        String include = "!INCLUDE(" + component + ", formName=&quot;Formulár ľahko&quot;)!";
+        assertTrue(FormsDeletionService.usesForm(include, "formular-lahko"));
+        assertFalse(FormsDeletionService.usesForm(include, "formular-lahko-2"));
+        assertTrue(FormsDeletionService.usesForm("!INCLUDE(" + component + ", formName=&quot;&quot;)!", "form-simple"));
     }
 
     private void verifyResponseResult(DeletionResult result) {

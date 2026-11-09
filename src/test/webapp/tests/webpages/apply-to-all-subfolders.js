@@ -20,8 +20,10 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   var close_button = '.btn.btn-outline-secondary.btn-close-editor';
   // upravit priecinok name-autotest
   I.say('Testujem ' + nameOfTest.toUpperCase() + ' s hodnotou ' + selectValue.toUpperCase());
+  I.jstreeClick(auto_name, true);
   I.click(edit_button);
   DTE.waitForEditor("groups-datatable");
+  I.seeInField('#DTE_Field_groupName', auto_name);
 
   // podla nazvu nameOfTest vyberie zalozku,selectValue pre vsetky podpriecinky a ulozi zmeny
   I.say('Vyberam hodnotu ' + selectValue.toUpperCase() + ' pre vsetky podpriecinky priecinka name-autotest');
@@ -51,91 +53,29 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
     DTE.selectOption('loggedMenuType', selectValue);
     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-forceLoggedMenuTypeSubfolders_0').find('.form-check-label'));
   }
-  DTE.save();
-  I.wait(5);
+  DTE.save("groups-datatable", true);
   I.amOnPage('/admin/v9/webpages/web-pages-list/');
   DT.waitForLoader();
   I.waitForText(auto_name, 20);
 
-  // kontrola priecinok name-autotest
-  I.say('kontrolujem priecinok name-autotest');
-  I.click(auto_name);
-  I.click(edit_button);
-  DTE.waitForEditor("groups-datatable");
-  I.waitForText(auto_name, 5);
-  if (nameOfTest === 'webPage') {
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    I.waitForText('Šablóna pre web stránky', 10);
-  } else if (nameOfTest === 'language') {
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    I.waitForText('Jazyk', 10);
-  } else if (nameOfTest === 'htmlCode') {
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    I.waitForText('HTML kód novej stránky', 10);
-  } else if (nameOfTest === 'unloggedUser') {
-    I.clickCss('#pills-dt-groups-datatable-menu-tab');
-    I.waitForText('Zobrazenie odkazu neprihlásenému používateľovi', 10);
-  } else if (nameOfTest === 'loggedUser') {
-    I.clickCss('#pills-dt-groups-datatable-menu-tab');
-    I.waitForText('Zobrazenie odkazu prihlásenému používateľovi', 10);
+  const field = {
+    webPage: 'tempId',
+    language: 'lng',
+    htmlCode: 'newPageDocIdTemplate',
+    unloggedUser: 'menuType',
+    loggedUser: 'loggedMenuType'
+  }[nameOfTest];
+  const tab = ['loggedUser', 'unloggedUser'].includes(nameOfTest) ? 'menu' : 'template';
+  for (const folder of [auto_name, auto_folder_one, auto_folder_two]) {
+    I.jstreeClick(folder, true);
+    I.click(edit_button);
+    DTE.waitForEditor("groups-datatable");
+    I.seeInField('#DTE_Field_groupName', folder);
+    I.clickCss('#pills-dt-groups-datatable-' + tab + '-tab');
+    I.seeTextEquals(selectValue, '#groups-datatable_modal .DTE_Field_Name_' + field + ' .filter-option-inner-inner');
+    I.click(close_button);
+    DTE.waitForModalClose('groups-datatable_modal');
   }
-  I.waitForElement(locate('.dropdown-toggle.btn.btn-outline-secondary').withText(selectValue), 5);
-  I.click(close_button);
-  I.waitForText('Webové stránky', 10);
-
-  // kontrola podpriecinok folder_one
-  I.say('kontrolujem podpriecinok folder_one');
-  I.jstreeClick(auto_folder_one);
-  DT.waitForLoader();
-  I.click(edit_button);
-  DTE.waitForEditor("groups-datatable");
-  I.waitForText(auto_folder_one, 5);
-  if (nameOfTest === 'webPage') {
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    I.waitForText('Šablóna pre web stránky', 10);
-  } else if (nameOfTest === 'language') {
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    I.waitForText('Jazyk', 10);
-  } else if (nameOfTest === 'htmlCode') {
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    I.waitForText('HTML kód novej stránky', 10);
-  } else if (nameOfTest === 'unloggedUser') {
-    I.clickCss('#pills-dt-groups-datatable-menu-tab');
-    I.waitForText('Zobrazenie odkazu neprihlásenému používateľovi', 10);
-  } else if (nameOfTest === 'loggedUser') {
-    I.clickCss('#pills-dt-groups-datatable-menu-tab');
-    I.waitForText('Zobrazenie odkazu prihlásenému používateľovi', 10);
-  }
-  I.waitForElement(locate('.dropdown-toggle.btn.btn-outline-secondary').withText(selectValue), 5);
-  I.click(close_button);
-  I.waitForText('Webové stránky', 10);
-
-  // kontrola podpriecinok folder2
-  I.say('kontrolujem podpriecinok folder_two');
-  I.jstreeClick(auto_folder_two);
-  DT.waitForLoader();
-  I.click(edit_button);
-  DTE.waitForEditor("groups-datatable");
-  I.waitForText(auto_folder_two, 5);
-  if (nameOfTest === 'webPage') {
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    I.waitForText('Šablóna pre web stránky', 10);
-  } else if (nameOfTest === 'language') {
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    I.waitForText('Jazyk', 10);
-  } else if (nameOfTest === 'htmlCode') {
-    I.clickCss('#pills-dt-groups-datatable-template-tab');
-    I.waitForText('HTML kód novej stránky', 10);
-  } else if (nameOfTest === 'unloggedUser') {
-    I.clickCss('#pills-dt-groups-datatable-menu-tab');
-    I.waitForText('Zobrazenie odkazu neprihlásenému používateľovi', 10);
-  } else if (nameOfTest === 'loggedUser') {
-    I.clickCss('#pills-dt-groups-datatable-menu-tab');
-    I.waitForText('Zobrazenie odkazu prihlásenému používateľovi', 10);
-  }
-  I.waitForElement(locate('.dropdown-toggle.btn.btn-outline-secondary').withText(selectValue), 5);
-  I.click(close_button);
-  I.waitForText('Webové stránky', 10);
 };
 
 Scenario('1. Sablona pre web stranky - webPage', ({ I, DT, DTE }) => {

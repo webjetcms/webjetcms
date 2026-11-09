@@ -55,6 +55,7 @@ Scenario('Mirroring 1 - Structure prepare', async ({I, DT, DTE, Document}) => {
     I.say("Create subgroup of sk folder");
     I.jstreeNavigate([sk_mirroring]);
     addFolder(I, DT, DTE, sk_mirroring_child_A, false);
+    I.jstreeNavigate([sk_mirroring]);
     addFolder(I, DT, DTE, sk_mirroring_child_B, false);
 
     I.say("Check in mirroring that folders are not there");
@@ -280,8 +281,8 @@ Scenario('Mirroring 8 - test delete logic', ({I, DT, DTE}) => {
 
     DT.filterEquals("fieldA", getAsPath([sk_mirroring]) + " " + getAsPath([sk_mirroring_copy]), groupsWrapperSelector);
 
-    I.clickCss("td.sorting_1");
-    I.clickCss("button.buttons-remove");
+    I.clickCss("#groupsMirroringTable tbody td.sorting_1");
+    I.clickCss(groupsWrapperSelector + " button.buttons-remove");
     DTE.waitForEditor(groupTable);
     I.click("Zmazať", "div.DTE_Action_Remove");
 
@@ -293,10 +294,10 @@ Scenario('Mirroring 8 - test delete logic', ({I, DT, DTE}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario('Mirroring 9 - DELETE structure', ({I, DT, DTE}) => {
-    deleteGroup(I, DT, DTE, sk_mirroring, sk_mirroring_id);
-    deleteGroup(I, DT, DTE, cz_mirroring, cz_mirroring_id);
-    deleteGroup(I, DT, DTE, sk_mirroring_copy, sk_mirroring_copy_id);
+Scenario('Mirroring 9 - DELETE structure', async ({I, DT, DTE}) => {
+    await deleteGroup(I, DT, DTE, sk_mirroring);
+    await deleteGroup(I, DT, DTE, cz_mirroring);
+    await deleteGroup(I, DT, DTE, sk_mirroring_copy);
 });
 
 Scenario('odhlasenie', ({ I }) => {
@@ -304,12 +305,14 @@ Scenario('odhlasenie', ({ I }) => {
     I.logout();
 });
 
-function deleteGroup(I, DT, DTE, groupName, groupId) {
+async function deleteGroup(I, DT, DTE, groupName) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
 
     I.say("Select group to delete");
-    I.waitForElement(locate("a.jstree-anchor").withText(groupName), 10);
-    I.jstreeClick(groupName);
+    const groupNode = locate("#SomStromcek > ul > li").withChild(locate("a.jstree-anchor").withTextEquals(groupName));
+    I.waitForVisible(groupNode, 10);
+    const groupId = await I.grabAttributeFrom(groupNode, "id");
+    I.jstreeClick(groupName, true);
 
     I.say("Perform soft delete");
     I.click(DT.btn.tree_delete_button);
@@ -334,6 +337,7 @@ function deleteGroup(I, DT, DTE, groupName, groupId) {
     I.say("Perform hard delete");
     I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
+    I.see(groupName, "#groups-datatable_modal div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DT.waitForLoader();
 }
@@ -405,7 +409,11 @@ function addFolder(I, DT, DTE, name, isRoot, language = null) {
         DTE.selectOption('lng', language);
     }
 
-    DTE.save();
+    DTE.save("groups-datatable", true);
+    if (isRoot) {
+        // The tree refresh is scheduled after the editor finishes saving.
+        I.waitForVisible(locate("#SomStromcek > ul > li > a.jstree-anchor").withText(name), 20);
+    }
 }
 
 function checkTablesVisibility(I, groups, docs, conf) {

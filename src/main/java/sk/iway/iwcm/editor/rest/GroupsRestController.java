@@ -438,6 +438,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         if (entity.getEditorFields().isForceTemplateToSubgroupsAndPages()) {
+            // Use the committed hierarchy even if a cluster cache refresh is still pending.
+            groupsDB = GroupsDB.getInstance(true);
             groupsDB.setTemplateToSubgroups(groupId, groupDetails.getTempId());
             groupsDB.setTemplateToSubpages(groupId, groupDetails.getTempId());
             refreshGroupsDB = true;

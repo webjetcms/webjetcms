@@ -15,6 +15,7 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.archive.FormsArchiveRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
@@ -136,8 +137,13 @@ public class FormsDeletionService {
         while (matcher.find()) {
             String parameters = StringEscapeUtils.unescapeHtml4(matcher.group(2)).replace("\r", "").replace("\n", "");
             PageParams params = new PageParams(parameters);
-            String defaultName = matcher.group(1).contains("formsimple") ? "form-simple" : "";
-            if (formName.equals(params.getValue("formName", defaultName))) return true;
+            String name = params.getValue("formName", "");
+            if (matcher.group(1).contains("formsimple")) {
+                // Match the identifier used by the public FormSimple renderer.
+                name = DocTools.removeChars(name, true);
+                if (name.isEmpty()) name = "form-simple";
+            }
+            if (formName.equals(name)) return true;
         }
         for (Element input : Jsoup.parse(html).select("input[name=savedb]")) {
             if (formName.equals(input.val())) return true;
