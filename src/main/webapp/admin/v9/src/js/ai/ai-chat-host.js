@@ -51,8 +51,11 @@ export class AiChatHost {
         this.historyPanel.hidden = !this.historyOpen;
         this.historyPanel.setAttribute('aria-label', historyText('title'));
         const heading = node('div', 'ai-chat-host__history-heading');
+        const headingActions = node('div', 'ai-chat-host__history-actions');
+        this.historySearchToggle = this.iconButton(historyText('search'), 'search', () => this.toggleHistorySearch());
         this.closeHistory = this.iconButton(historyText('close'), 'layout-sidebar', () => this.toggleHistory(false));
-        heading.append(node('strong', '', historyText('title')), this.closeHistory);
+        headingActions.append(this.historySearchToggle, this.closeHistory);
+        heading.append(node('strong', '', historyText('title')), headingActions);
         this.newChatButton = this.button(WJ.translate('components.ai_assistants.chat.new.js'), () => {
             this.chat?.newChat();
             if (this.element.clientWidth < 768) this.toggleHistory(false, false);
@@ -60,7 +63,11 @@ export class AiChatHost {
         }, 'btn btn-primary ai-chat-host__new');
         this.newChatButton.prepend(icon('ti-plus'));
         this.newChatButton.disabled = true;
-        const search = node('div', 'ai-chat-host__history-search');
+        this.historySearchRow = node('div', 'ai-chat-host__history-search');
+        this.historySearchRow.id = `${idPrefix}-history-filter`;
+        this.historySearchRow.hidden = true;
+        this.historySearchToggle.setAttribute('aria-controls', this.historySearchRow.id);
+        this.historySearchToggle.setAttribute('aria-expanded', 'false');
         const searchLabel = node('label', 'visually-hidden', historyText('search'));
         this.historySearch = node('input', 'form-control form-control-sm');
         this.historySearch.id = `${idPrefix}-history-search`;
@@ -69,17 +76,18 @@ export class AiChatHost {
         this.historySearch.autocomplete = 'off';
         searchLabel.htmlFor = this.historySearch.id;
         this.historySearch.addEventListener('input', () => this.searchHistory());
-        search.append(searchLabel, icon('ti-search'), this.historySearch);
+        this.historySearchRow.append(searchLabel, icon('ti-search'), this.historySearch);
         this.historyList = node('div', 'ai-chat-host__history-list');
         this.historyList.setAttribute('aria-live', 'polite');
-        this.historyPanel.append(heading, this.newChatButton, search, this.historyList);
+        this.historyPanel.append(heading, this.historySearchRow, this.newChatButton, this.historyList);
         this.historyPanel.addEventListener('keydown', event => {
             if (event.key === 'Escape') {
                 event.preventDefault();
                 event.stopPropagation();
-                this.toggleHistory(false);
+                if (!this.historySearchRow.hidden) this.toggleHistorySearch(false);
+                else this.toggleHistory(false);
             }
-        });
+        }, true);
         containNativeScroll(this.historyList, this.scrollController.signal);
         // The files panel uses the selected transcript; it does not fetch a separate attachment catalogue.
         this.filesPanel = node('aside', 'ai-chat-host__files');
@@ -321,9 +329,21 @@ export class AiChatHost {
         this.status.querySelector('[aria-controls]')?.setAttribute('aria-expanded', String(open));
         if (open) {
             this.loadHistory();
-            this.historySearch.focus();
+            (this.historySearchRow.hidden ? this.historySearchToggle : this.historySearch).focus();
         } else {
             this.main.querySelector(`[aria-controls="${this.historyPanel.id}"]`)?.focus();
+        }
+    }
+
+    /** Expands the history filter and clears its query when collapsed. */
+    toggleHistorySearch(open = this.historySearchRow.hidden) {
+        this.historySearchRow.hidden = !open;
+        this.historySearchToggle.setAttribute('aria-expanded', String(open));
+        if (open) this.historySearch.focus();
+        else {
+            this.historySearch.value = '';
+            this.searchHistory();
+            this.historySearchToggle.focus();
         }
     }
 

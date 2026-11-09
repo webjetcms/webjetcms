@@ -155,17 +155,17 @@ Nemusíte upravovať celý obsah stránky. Asistent pracujúci s `PageBuilder` p
 
 ![](page_builder-selection.png)
 
-## Režim chat
+## Režim čet
 
-Asistent s typom požiadavky **Chat** otvorí rozhovor, v ktorom môžete zadanie postupne spresňovať. Dostupný je pri textových poliach, v editore stránky aj v PageBuilderi podľa nastavenia asistenta. Odpoveď sa zobrazí v chate a obsah editora zmeníte až vlastným potvrdením.
+Asistent s typom požiadavky **Čet** otvorí rozhovor, v ktorom môžete zadanie postupne spresňovať. Dostupný je pri textových poliach, v editore stránky aj v PageBuilderi podľa nastavenia asistenta. Odpoveď sa zobrazí v čete a obsah editora zmeníte až vlastným potvrdením.
 
 Pod dokončenou odpoveďou nájdete ikony **Pridať**, **Nahradiť obsah** a **Kopírovať**. Pri označenom texte sa namiesto nahradenia celého obsahu ponúkne **Nahradiť označený text**. Názov tlačidla sa zobrazí v bubline po prejdení myšou alebo zameraní klávesnicou. Po vložení môžete použiť **Zrušiť vloženie**, pokiaľ ste obsah medzitým ďalej neupravili.
 
-![Chat pri textovom poli s tlačidlami na vloženie odpovede](../chat/chat-editor.png)
+![Čet pri textovom poli s tlačidlami na vloženie odpovede](../chat/chat-editor.png)
 
-V PageBuilderi môže asistent pripraviť aj HTML bloky. Vložíte ich rovnakými tlačidlami pod odpoveďou a ďalšie úpravy zadáte novou správou. Zatvorenie okna AI zachová rozhovor, zatvorenie samotného editora ho ukončí. Chat pri poli sa neukladá do histórie rýchleho vyhľadávania.
+V PageBuilderi môže asistent pripraviť aj HTML bloky. Vložíte ich rovnakými tlačidlami pod odpoveďou a ďalšie úpravy zadáte novou správou. Zatvorenie okna AI zachová rozhovor, zatvorenie samotného editora ho ukončí. Čet pri poli sa neukladá do histórie rýchleho vyhľadávania.
 
-Podrobnosti práce s výberom, kontextom a ukladaním sú v kapitole [Chat pri poli a v editore stránky](../chat/README.md#chat-pri-poli-a-v-editore-stránky). Na samostatný rozhovor s prílohami použite kartu [AI Chat v rýchlom vyhľadávaní](../chat/README.md#začatie-rozhovoru).
+Podrobnosti práce s výberom, kontextom a ukladaním sú v kapitole [Čet pri poli a v editore stránky](../chat/README.md#čet-pri-poli-a-v-editore-stránky). Na samostatný rozhovor s prílohami použite kartu [AI Čet v rýchlom vyhľadávaní](../chat/README.md#začatie-rozhovoru).
 
 ## Obrázky v stránke
 

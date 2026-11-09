@@ -505,6 +505,11 @@
         padding: 12px 16px;
         font-size: 14px;
     }
+    &__history-actions {
+        display: flex;
+        flex-shrink: 0;
+        gap: 4px;
+    }
     &__history-action {
         display: inline-flex;
         flex: 0 0 28px;
@@ -518,6 +523,7 @@
 
         .ti { margin: 0; font-size: 18px; }
         &:hover { background: var(--wj-nice-gray-100); }
+        &[aria-expanded="true"] { background: var(--wj-ai-color-hover); color: var(--wj-ai-color-dark); }
     }
     &__new {
         display: flex;

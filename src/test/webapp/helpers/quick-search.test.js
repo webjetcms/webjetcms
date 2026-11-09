@@ -1242,6 +1242,11 @@ test('Chat history search debounces typing, retains its query across pages and r
     const host = f.controller.chat;
     host.toggleHistory(true);
     const search = host.historyPanel.querySelector('input[type="search"]');
+    assert.equal(host.historySearchRow.hidden, true);
+    assert.equal(search.ownerDocument.activeElement, host.historySearchToggle);
+    host.historySearchToggle.click();
+    assert.equal(host.historySearchRow.hidden, false);
+    assert.equal(host.historySearchToggle.getAttribute('aria-expanded'), 'true');
     assert.equal(search.ownerDocument.activeElement, search);
     assert.equal(host.historyPanel.querySelector(`label[for="${search.id}"]`).textContent, search.placeholder);
     const historyRequests = () => f.requests.filter(request => request.url.pathname === '/admin/rest/ai/chat/threads');
@@ -1264,14 +1269,26 @@ test('Chat history search debounces typing, retains its query across pages and r
     assert.equal(next.url.searchParams.get('query'), 'otázka & odpoveď?');
     await f.respond(next, { items: [{ id: 'older', title: 'Older match' }], hasMore: false });
     assert.equal(host.historyList.querySelectorAll('li').length, 2);
-    typeChat(search, '');
+    host.historySearchToggle.click();
+    assert.equal(search.value, '');
+    assert.equal(host.historySearchRow.hidden, true);
+    assert.equal(host.historySearchToggle.getAttribute('aria-expanded'), 'false');
+    assert.equal(search.ownerDocument.activeElement, host.historySearchToggle);
     f.advance(300);
     const cleared = historyRequests().at(-1);
     assert.equal(cleared.url.searchParams.get('page'), '0');
     assert.equal(cleared.url.searchParams.has('query'), false);
     await f.respond(cleared, { items: [{ id: 'old', title: 'Old conversation' }], hasMore: false });
     assert.match(host.historyList.textContent, /Old conversation/);
-    assert.equal(search.ownerDocument.activeElement, search, 'Updating results must preserve search focus.');
+    host.historySearchToggle.click();
+    assert.equal(search.ownerDocument.activeElement, search, 'Reopening search must return focus to its input.');
+    const { KeyboardEvent } = search.ownerDocument.defaultView;
+    search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    assert.equal(host.historySearchRow.hidden, true);
+    assert.equal(host.historyPanel.hidden, false, 'The first Escape closes only history search.');
+    assert.equal(search.ownerDocument.activeElement, host.historySearchToggle);
+    host.historySearchToggle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    assert.equal(host.historyPanel.hidden, true, 'A second Escape closes the history panel.');
     assert.equal(f.chatRequests.length, 0);
 });
 
@@ -1282,6 +1299,7 @@ test('Chat history ignores stale search responses and distinguishes no matches f
     const host = f.controller.chat;
     host.toggleHistory(true);
     const initial = f.requests.at(-1);
+    host.historySearchToggle.click();
     const search = host.historySearch;
     typeChat(search, 'first');
     assert.equal(initial.signal.aborted, true);
@@ -1721,7 +1739,7 @@ test('Narrow chat panels replace each other and Escape closes files without clos
     host.toggleHistory(true);
     assert.equal(host.filesPanel.hidden, true);
     assert.equal(host.historyPanel.hidden, false);
-    assert.equal(host.historySearch.ownerDocument.activeElement, host.historySearch);
+    assert.equal(host.historySearch.ownerDocument.activeElement, host.historySearchToggle);
 });
 
 test('Reopened history fetches numbered downloads and image previews with the required CSRF header', async t => {

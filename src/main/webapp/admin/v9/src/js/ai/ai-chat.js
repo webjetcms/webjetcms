@@ -71,7 +71,7 @@ export class AiChat {
                     this._addAttachments(this.$fileInput[0].files);
                     this.$fileInput.val('');
                 });
-            this.$attachmentButton = this._iconButton(WJ.translate("datatables.upload.uploadFile.js"), "paperclip", "btn-ai-chat-attach")
+            this.$attachmentButton = this._iconButton(WJ.translate("datatables.upload.uploadFile.js"), "plus", "btn-ai-chat-attach")
                 .on('click', () => this.$fileInput[0].click());
             $composerActions.append(this.$attachmentButton, this.$fileInput);
             this.$input.on('paste', event => {

@@ -202,7 +202,7 @@ V inštrukciách sú pred použitím nahradené špeciálne značky, tie môžet
 
 ## Generovanie PageBuilder blokov
 
-Nasledovná inštrukcia umožňuje generovať [PageBuilder bloky pre editor](../datatables/README.md#režim-chat), je potrebné ju nastaviť ako typ požiadavky `Chat`, v takom prípade sa korektne vyplní aj `{inputText}` pri editácii.
+Nasledovná inštrukcia umožňuje generovať [PageBuilder bloky pre editor](../datatables/README.md#režim-čet), je potrebné ju nastaviť ako typ požiadavky **Čet**, v takom prípade sa korektne vyplní aj `{inputText}` pri editácii.
 
 Pre nastavenie odporúčame model `gemini-2.5-pro`, v akcii nastavte entitu `sk.iway.iwcm.doc.DocDetails`, zdrojové a cieľové pole nastavte na `data`. V pokročilé je potrebné zapnúť možnosť Zachovať HTML kód a Požadovať vstup od používateľa.
 

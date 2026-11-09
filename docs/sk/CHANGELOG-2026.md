@@ -26,7 +26,7 @@
 </div>
 
 - [Rýchle vyhľadávanie](redactor/admin/search/README.md) je dostupné z hlavičky celej administrácie tlačidlom **Hľadať…** alebo skratkou **Ctrl+K / ⌘K**. Ponúka návrhy stránok podľa názvu a URL, výsledky z obsahu stránok, súborov, používateľov, textových kľúčov a položiek menu. Vybraný výraz môžete preniesť do príslušnej sekcie s ďalšími filtrami (#348).
-- Nová karta [AI Chat](redactor/admin/search/README.md#ai-chat) v rýchlom vyhľadávaní umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Podporuje výber asistenta, priebežné zobrazovanie a zastavenie odpovedí, Markdown s tabuľkami a kopírovanie textu. Pri ukladaných rozhovoroch OpenAI a Gemini môžete pridávať obrázky a dokumenty pretiahnutím kamkoľvek do plochy chatu, vyhľadávať v histórii a sťahovať prílohy z panela **Súbory v chate**. História a prílohy sú dostupné iba vlastníkovi rozhovoru v príslušnej doméne. Prepínanie asistentov zachová rozpísané správy aj neodoslané prílohy; okno môžete zväčšiť alebo maximalizovať (#386).
+- Nová karta [AI Čet](redactor/admin/search/README.md#ai-čet) v rýchlom vyhľadávaní umožňuje rozhovor s AI asistentom bez väzby na otvorenú webovú stránku. Podporuje výber asistenta, priebežné zobrazovanie a zastavenie odpovedí, Markdown s tabuľkami a kopírovanie textu. Pri ukladaných rozhovoroch OpenAI a Gemini môžete pridávať obrázky a dokumenty pretiahnutím kamkoľvek do plochy četu, vyhľadávať v histórii a sťahovať prílohy z panela **Súbory v čete**. História a prílohy sú dostupné iba vlastníkovi rozhovoru v príslušnej doméne. Prepínanie asistentov zachová rozpísané správy aj neodoslané prílohy; okno môžete zväčšiť alebo maximalizovať. Lupa v hlavičke histórie zobrazí vyhľadávanie rozhovorov; prílohy pridáte ikonou plus. Slovenské rozhranie a dokumentácia používajú označenie „čet“ (#386).
 
 ![](redactor/admin/search/quick-search.png)
 
@@ -50,9 +50,9 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
-- AI Chat pri poli - pridaná ukladaná história filtrovaná podľa rovnakého poľa a záznamu. Starší rozhovor môžete vyhľadať, otvoriť a pokračovať v ňom aj po zatvorení editora; odpovede zostávajú dostupné na vloženie do poľa.
+- AI Čet pri poli - pridaná ukladaná história filtrovaná podľa rovnakého poľa a záznamu. Starší rozhovor môžete vyhľadať, otvoriť a pokračovať v ňom aj po zatvorení editora; odpovede zostávajú dostupné na vloženie do poľa.
 
-- AI Chat pri poli a v editore stránky - pridané nahrávanie obrázkov a dokumentov pre asistentov OpenAI a Gemini. Súbory môžete vybrať sponkou, pretiahnuť do správy alebo vložiť obrázok zo schránky; asistent ich spracuje spolu s obsahom stránky. Pri neplatnej alebo príliš veľkej prílohe sa dôvod odmietnutia zobrazí aj pri priebežnom zobrazovaní odpovede.
+- AI Čet pri poli a v editore stránky - pridané nahrávanie obrázkov a dokumentov pre asistentov OpenAI a Gemini. Súbory môžete vybrať ikonou plus, pretiahnuť do správy alebo vložiť obrázok zo schránky; asistent ich spracuje spolu s obsahom stránky. Pri neplatnej alebo príliš veľkej prílohe sa dôvod odmietnutia zobrazí aj pri priebežnom zobrazovaní odpovede.
 
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
@@ -335,7 +335,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
-- AI Chat - pri chybe, ktorú poskytovateľ označí ako neopakovateľnú, sa neponúkne opakovanie rovnakej požiadavky. Táto informácia sa zachová aj po obnovení histórie rozhovoru (#386).
+- AI Čet - pri chybe, ktorú poskytovateľ označí ako neopakovateľnú, sa neponúkne opakovanie rovnakej požiadavky. Táto informácia sa zachová aj po obnovení histórie rozhovoru (#386).
 - AI asistenti - uloženie vygenerovaného obrázka odstráni iba dočasné súbory z rovnakého generovania. Obrázky z iných požiadaviek a od ostatných používateľov zostanú zachované (#58850).
 - Webové stránky - opravený [export do ZIP archívu](redactor/webpages/import-export.md) pre obrázky vložené cez `/thumb/`, ktoré sa pôvodne do exportu nepridali (#389).
 - Webové stránky - dialóg na vloženie obrázka obmedzuje výber súborov na obrázky, videá a zvukové súbory aj v priečinku Súbory. Nepodporované typy rozpoznané prehliadačom odmietne ešte pred odoslaním. Server navyše overí príponu pred uložením (#375).

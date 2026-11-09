@@ -10,7 +10,7 @@ Pred zadaním výrazu uvidíte posledné hľadania a odkazy na dostupné sekcie.
 
 Rozsah **Všetko** zobrazuje najviac tri výsledky z každej oblasti. Kliknutím na rozsah alebo odkaz **Všetky** zobrazíte výsledky iba z vybratej oblasti. Ponuka sa riadi vašimi oprávneniami:
 
-- **AI Chat** – rozhovor s AI asistentom bez väzby na obsah otvorenej webovej stránky. Karta je hneď za rozsahom **Všetko** a je dostupná používateľom s oprávnením na používanie AI asistentov.
+- **AI Čet** – rozhovor s AI asistentom bez väzby na obsah otvorenej webovej stránky. Karta je hneď za rozsahom **Všetko** a je dostupná používateľom s oprávnením na používanie AI asistentov.
 - **Web stránky** – návrhy podľa názvu alebo URL stránky a hľadanie v obsahu. Návrh stránky otvorí jej editor.
 - **Súbory** – hľadanie v názvoch a indexovanom obsahu súborov.
 - **Administrácia** – odkazy na dostupné položky menu vrátane ich kariet.
@@ -30,17 +30,17 @@ Po zmene výrazu sa výsledky dokumentácie vymažú a karta znova zobrazí poml
 
 ![Výsledky hľadania výrazu bannerový systém v dokumentácii s odpoveďou AI](quick-search-documentation.png)
 
-### AI Chat
+### AI Čet
 
-Karta **AI Chat** otvorí samostatný rozhovor s AI asistentom. V poli správy vyberte asistenta, napíšte požiadavku a odošlite ju klávesom **Enter** alebo tlačidlom so šípkou. Obsah otvorenej webovej stránky ani výraz z vyhľadávania sa do rozhovoru neposiela.
+Karta **AI Čet** otvorí samostatný rozhovor s AI asistentom. V poli správy vyberte asistenta, napíšte požiadavku a odošlite ju klávesom **Enter** alebo tlačidlom so šípkou. Obsah otvorenej webovej stránky ani výraz z vyhľadávania sa do rozhovoru neposiela.
 
-Ponuka obsahuje iba aktívnych asistentov s typom požiadavky **Chat** a hodnotou `CHAT_SEARCH` v nastavení **Použiť pre Entitu**. Správca ich nastaví v [AI asistentoch](../../ai/settings/README.md#nastavenie-chatového-asistenta).
+Ponuka obsahuje iba aktívnych asistentov s typom požiadavky **Čet** a hodnotou `CHAT_SEARCH` v nastavení **Použiť pre Entitu**. Správca ich nastaví v [AI asistentoch](../../ai/settings/README.md#nastavenie-četového-asistenta).
 
-Pri ukladaných chatoch OpenAI a Gemini môžete pridávať prílohy, hľadať v histórii a pokračovať v rozhovore aj po obnovení stránky. Ikony v hlavičke otvárajú panely **História chatov** a **Súbory v chate**. Prepnutie asistenta alebo zatvorenie dialógu zachová rozpísanú správu, kým neopustíte aktuálnu stránku administrácie.
+Pri ukladaných četoch OpenAI a Gemini môžete pridávať prílohy, hľadať v histórii a pokračovať v rozhovore aj po obnovení stránky. Ikony v hlavičke otvárajú panely **História četov** a **Súbory v čete**. Prepnutie asistenta alebo zatvorenie dialógu zachová rozpísanú správu, kým neopustíte aktuálnu stránku administrácie.
 
-![AI Chat s históriou rozhovorov a odpoveďou vo forme tabuľky](../../ai/chat/chat-history.png)
+![AI Čet s históriou rozhovorov a odpoveďou vo forme tabuľky](../../ai/chat/chat-history.png)
 
-Podrobný postup, rozdiel medzi ukladanými a dočasnými rozhovormi, podporované prílohy a prácu s odpoveďami nájdete v kapitole [AI Chat](../../ai/chat/README.md).
+Podrobný postup, rozdiel medzi ukladanými a dočasnými rozhovormi, podporované prílohy a prácu s odpoveďami nájdete v kapitole [AI Čet](../../ai/chat/README.md).
 
 ### Nastavenie vyhľadávania v dokumentácii
 
