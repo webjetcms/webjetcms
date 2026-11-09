@@ -1,10 +1,10 @@
 {
     "bomFormat": "CycloneDX",
     "specVersion": "1.6",
-    "serialNumber": "urn:uuid:da2ec254-66dc-46b6-b985-78c4296b7a95",
+    "serialNumber": "urn:uuid:6877424e-fd41-4b5a-831d-6f84a6bc0b1d",
     "version": 1,
     "metadata": {
-        "timestamp": "2026-11-09T12:56:11.284071312Z",
+        "timestamp": "2026-11-09T13:34:13.390726265Z",
         "tools": {
             "components": [
                 {
@@ -112,7 +112,7 @@
             "externalReferences": [
                 {
                     "type": "build-system",
-                    "url": "https://gitlab.in.iway.sk/webjet/webjetcms-github-deploy/-/jobs/108839"
+                    "url": "https://gitlab.in.iway.sk/webjet/webjetcms-github-deploy/-/jobs/108840"
                 },
                 {
                     "type": "vcs",
