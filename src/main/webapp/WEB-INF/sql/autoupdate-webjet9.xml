@@ -4430,5 +4430,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>09.11.2026</string></void>
+                <void property="desc"><string>Statistics - register heatmap tracking cookies</string></void>
+                <void property="mysql"><string>INSERT INTO cookies (cookie_id, domain_id, user_id, cookie_name, type, classification) SELECT 16, 1, -1, 'wj_hm_*', 'http', 'statisticke' WHERE NOT EXISTS (SELECT 1 FROM cookies WHERE cookie_id = 16);</string></void>
+                <void property="mssql"><string>INSERT INTO cookies (cookie_id, domain_id, user_id, cookie_name, type, classification) SELECT 16, 1, -1, 'wj_hm_*', 'http', 'statisticke' WHERE NOT EXISTS (SELECT 1 FROM cookies WHERE cookie_id = 16);</string></void>
+                <void property="oracle"><string>INSERT INTO cookies (cookie_id, domain_id, user_id, cookie_name, type, classification) SELECT 16, 1, -1, 'wj_hm_*', 'http', 'statisticke' FROM dual WHERE NOT EXISTS (SELECT 1 FROM cookies WHERE cookie_id = 16);</string></void>
+                <void property="pgsql"><string>INSERT INTO cookies (cookie_id, domain_id, user_id, cookie_name, type, classification) SELECT 16, 1, -1, 'wj_hm_*', 'http', 'statisticke' WHERE NOT EXISTS (SELECT 1 FROM cookies WHERE cookie_id = 16);</string></void>
+            </object>
+        </void>
+
     </object>
 </java>
