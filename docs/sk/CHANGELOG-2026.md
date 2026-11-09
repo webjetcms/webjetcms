@@ -49,9 +49,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
-- Štatistika - pri otvorení mapy kliknutí a prepínaní šírok používa náhľad 30 sekúnd tie isté počty kliknutí pre zvolenú stránku a obdobie. Pri ročnom prehľade sa tak vyhne opakovanému sčítaniu údajov z mesačných tabuliek. (#318)
-- Štatistika - opravené ukladanie kliknutí do mapy kliknutí pri vypnutom režime viacerých domén. Kliknutia na stránkach s prázdnou doménou sa uložia pod rovnakou doménou, akú používa prehľad v administrácii. (osk#318)
-- Štatistika - obnovená [Mapa kliknutí](redactor/apps/stat/heat-map.md) so zlučovaním kliknutí v pevných vycentrovaných kontajneroch a náhľadom historického obsahu podľa konca obdobia. Filter ponúka najviac 100 najnovších publikovaných verzií stránky za vybrané obdobie. Po výbere verzie stránky sa mapa aj počty kliknutí obmedzia na dni, keď bola verzia vo vybranom období zverejnená. Pri zmene verzie počas dňa obe verzie zobrazia všetky kliknutia z daného dňa. Selektor kontajnerov sa nastavuje cez `statHeatMapMainContainerSelector` (predvolene `.container`); pri plynulom rozložení sa zachovajú presné šírky okna. Náhľad použije najčastejšiu zaznamenanú šírku okna skupiny a pri chýbajúcom kontajneri zobrazí upozornenie bez vrstvy kliknutí. Meranie sa zapína v šablóne alebo skupine šablón a rešpektuje súhlas so štatistickými cookies. Pri existujúcich inštaláciách treba podľa návodu pridať definíciu `wj_hm_*` do kategórie Štatistické; nové inštalácie ju obsahujú predvolene. Pôvodné mesačné tabuľky sa rozšíria; staré kliknutia zostávajú dostupné s predvolenou šírkou 1920 px. (#318)
+- Štatistika - obnovená [Mapa kliknutí](redactor/apps/stat/heat-map.md) s podporou rôznych šírok okna, pevných kontajnerov a náhľadom historických verzií stránky. Meranie sa zapína v šablóne alebo skupine šablón a rešpektuje súhlas so štatistickými cookies; existujúce inštalácie musia podľa návodu doplniť definíciu `wj_hm_*`. Historické kliknutia možno zlučovať za vybraný mesiac alebo všetky ukončené mesiace. Veľkosť bunky určuje `statHeatMapCellSize` (predvolene 5 × 5 CSS pixely). Mesačné tabuľky kliknutí s úložiskom MyISAM sa pri aktualizácii prevedú na InnoDB. (#318)
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">
@@ -332,6 +330,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Proxy - [výnimky `proxyHostsException`](install/config/README.md#httphttps-proxy) podporujú zástupné vzory ako `*.firma.sk` a `127.*`, oddeľovače čiarka aj `|` a porovnávanie bez rozlišovania veľkosti písmen. Rovnaký normalizovaný zoznam sa používa pre HTTP/HTTPS aj JVM nastavenie `http.nonProxyHosts`. Zmena konfigurácie vyžaduje reštart (#361).
 
 ### Oprava chýb
+
+- Štatistika - pri chýbajúcej tabuľke sa v celej sekcii zapisuje stručná chybová správa bez výpisu zásobníka výnimky. Ostatné databázové chyby si zachovávajú podrobný výpis (#318).
 
 - Webové stránky - opravený [export do ZIP archívu](redactor/webpages/import-export.md) pre obrázky vložené cez `/thumb/`, ktoré sa pôvodne do exportu nepridali (#389).
 - Webové stránky - dialóg na vloženie obrázka obmedzuje výber súborov na obrázky, videá a zvukové súbory aj v priečinku Súbory. Nepodporované typy rozpoznané prehliadačom odmietne ešte pred odoslaním. Server navyše overí príponu pred uložením (#375).

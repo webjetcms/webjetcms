@@ -52,13 +52,15 @@ Ak sa v týchto dňoch nezaznamenali žiadne kliknutia, jej uložený obsah si m
 
 Kliknutia sa dočasne ukladajú do cookie a odošlú pri ďalšej bežnej požiadavke na server. Každé kliknutie nevyvoláva samostatnú požiadavku. Posledné kliknutia pred odchodom z webu môžu zostať neodoslané. Stránky obslúžené výhradne z vyrovnávacej pamäte pred serverom nemusia cookie odovzdať na spracovanie.
 
-V prehliadači čaká najviac 16 cookies kliknutí s celkovou veľkosťou do 2 KiB a platnosťou 24 hodín. Pri prekročení limitu sa najstaršie neodoslané kliknutia zahodia. Údaje uložené v mesačných databázových tabuľkách sa automaticky nemažú; odstrániť ich môžete existujúcim nástrojom na čistenie databázy.
+V prehliadači čaká najviac 16 cookies kliknutí s celkovou veľkosťou do 2 KiB a platnosťou 24 hodín. Pri prekročení limitu sa najstaršie neodoslané kliknutia zahodia. Správca môže po skončení mesiaca zmenšiť mesačné tabuľky [automatizovanou úlohou na zlučovanie kliknutí](../../../admin/settings/cronjob/README.md#zlučovanie-historických-kliknutí). Úloha zapíše súčet kliknutí v skupine do riadka s najnižším ID a zachová jeho súradnice. Na odstránenie údajov za zvolené obdobie slúži nástroj na čistenie databázy.
+
+Veľkosť bunky pre vykresľovanie aj zlučovanie určuje `statHeatMapCellSize` (predvolene `5`, teda 5 × 5 CSS pixely). Hodnotou `4` nastavíte 4 × 4 a hodnotou `10` nastavíte 10 × 10. Väčšie bunky znižujú presnosť polohy; neskoršie zmenšenie neobnoví súradnice už zlúčených kliknutí.
 
 Mapa nepredstavuje záznam jednotlivých návštev: nesleduje pohyb myši ani nevytvára záznam relácie.
 
 ## Pôvodné údaje
 
-Existujúce mesačné tabuľky `stat_clicks_YYYY_M` sa rozšíria o nové údaje a používajú sa aj na ďalšie zaznamenávanie kliknutí. Pôvodné záznamy zostanú zachované. Kliknutiam bez evidovanej šírky okna sa priradí desktopová šírka **1920 px**, pod ktorou ich nájdete vo výbere šírky.
+Existujúce mesačné tabuľky `stat_clicks_YYYY_M` sa rozšíria o nové údaje a používajú sa aj na ďalšie zaznamenávanie kliknutí. Rozšírenie tabuľky zachová pôvodné záznamy. Kliknutiam bez evidovanej šírky okna sa priradí desktopová šírka **1920 px**, pod ktorou ich nájdete vo výbere šírky.
 
 Pôvodné súradnice sa nemenia. Mohli byť merané voči obalovému elementu stránky, ktorého polohu už nemožno spätne zistiť. Staré mapy pri šírke 1920 px sú preto orientačné; táto šírka nepredstavuje dodatočne zistenú veľkosť pôvodného okna.
 

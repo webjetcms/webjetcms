@@ -43,7 +43,11 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
     @TempDir
     Path cache;
 
-    /** Original rows survive migration and container groups never share document-coordinate tiles. */
+    /**
+     * Verifies that repeated schema upgrades preserve legacy clicks and keep container and document tiles separate.
+     *
+     * @throws Exception if fixture setup, event persistence or rendering fails
+     */
     @Test
     void persistsAndRendersContainerGroupsWithoutMixingLegacyClicks() throws Exception {
         assumeTrue(StatWriteBuffer.size() == 0, "This database fixture needs an empty statistics buffer");
@@ -81,6 +85,8 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                             .thenReturn(new String[] {"_2026_9", "_2026_10"});
                     HeatMapSchema.upgradeExistingTables();
                     HeatMapSchema.upgradeExistingTables();
+                    HeatMapSchema.upgradeClickCounts();
+                    HeatMapSchema.upgradeClickCounts();
                     record(1, 9, 1223, 487, 1140, "autotest.example");
                     record(2, 10, 1369, 487, 1140, "autotest.example");
                     record(3, 10, 1369, 487, 1140, "autotest.example");

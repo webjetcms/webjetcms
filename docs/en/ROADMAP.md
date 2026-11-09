@@ -81,7 +81,7 @@ The filter only takes the first value. So add the `IN` option to allow multiple 
 - [ ] Migration of the most used applications to the Spring version using Thymeleaf templates.
 - [x] Discontinue `Apache Struts` framework, replace `logic:present,logic:iterate,bean:write` with either `JSTL` variant, or implement similar functionality into `iwcm:present,iwcm:iterate,iwcm:beanrwite` (#57789).
 - [ ] Moving JSP files, Java classes and JavaScript libraries of the old version 8 to the `obsolete` jar archive, which will not be a standard part of WebJET CMS. It can be used on old projects where all customer applications have not yet been updated to the `Spring` version, but without support and updates from WebJET CMS.
-- [ ] Statistics - click map - functionality restored, responsiveness problem resolved (separate records based on window width).
+- [x] Statistics - click map - restored functionality, grouping of fixed-width centered containers and separate recording of exact window widths for fluid layouts (#318).
 - [x] Statistics - ability to filter bots for error page statistics (#58053).
 - [ ] Log files - filter by installation name.
 - [ ] `quill` - ​​add the ability to set menu items including colors.

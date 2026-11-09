@@ -39,6 +39,26 @@ public final class HeatMapStorage {
     public static final int MAX_COORDINATE = 1_000_000;
     public static final String TABLE_NAME = "stat_clicks";
 
+    // SQL Server sums INT columns as INT. DECIMAL also supports Oracle.
+    static final String SUM_CLICKS = "SUM(CAST(count AS DECIMAL(19,0)))";
+
+    /** Returns the current cell size in CSS pixels, falling back to four outside the supported range. */
+    static int cellSize() {
+        int size = Constants.getInt("statHeatMapCellSize", 4);
+        return size >= 1 && size <= TILE_SIZE ? size : 4;
+    }
+
+    /**
+     * Maps a pixel coordinate to the same grid cell for aggregation and tile rendering.
+     *
+     * @param coordinate trusted SQL column or qualified column name
+     * @param cellSize cell size captured for the current aggregation run or tile request
+     * @return SQL expression for the zero-based cell index
+     */
+    static String cellSql(String coordinate, int cellSize) {
+        return "FLOOR(" + coordinate + " / " + cellSize + ".0)";
+    }
+
     private HeatMapStorage() {
     }
 
@@ -61,10 +81,17 @@ public final class HeatMapStorage {
                 width, event.x(), event.y(), mode.databaseValue(), event.viewportWidth());
     }
 
-    /** Returns document click totals for an inclusive date range within one domain. */
+    /**
+     * Sums click weights by document across the monthly tables in the date range.
+     *
+     * @param domain domain whose clicks are included
+     * @param from first day to include
+     * @param to last day to include
+     * @return click totals keyed by document ID
+     */
     public static Map<Integer, Long> getPageCounts(String domain, LocalDate from, LocalDate to) {
         Map<Integer, Long> counts = new TreeMap<>();
-        query(domain, from, to, "document_id, COUNT(*)", "", List.of(), " GROUP BY document_id",
+        query(domain, from, to, "document_id, " + SUM_CLICKS, "", List.of(), " GROUP BY document_id",
                 result -> counts.merge(result.getInt(1), result.getLong(2), Long::sum));
         return counts;
     }
@@ -74,11 +101,19 @@ public final class HeatMapStorage {
 
     private record WidthKey(int width, HeatMapCoordinateMode mode) { }
 
-    /** Combines matching coordinate groups across partitions without losing their representative viewport. */
+    /**
+     * Groups clicks by coordinate mode and width and selects the most frequent source viewport for each group.
+     *
+     * @param domain domain whose clicks are included
+     * @param docId source document ID
+     * @param from first day to include
+     * @param to last day to include
+     * @return groups ordered by descending click total, then by width and mode
+     */
     public static List<WidthCount> getWidths(String domain, int docId, LocalDate from, LocalDate to) {
         if (docId <= 0) throw new IllegalArgumentException("Invalid document identifier");
         Map<WidthKey, Map<Integer, Long>> counts = new HashMap<>();
-        query(domain, from, to, "viewport_width, coordinate_mode, source_viewport_width, COUNT(*)",
+        query(domain, from, to, "viewport_width, coordinate_mode, source_viewport_width, " + SUM_CLICKS,
                 " AND document_id = ?", List.of(docId),
                 " GROUP BY viewport_width, coordinate_mode, source_viewport_width", result -> {
                     WidthKey key = new WidthKey(result.getInt(1), HeatMapCoordinateMode.fromDatabase(result.getInt(2)));
@@ -97,9 +132,17 @@ public final class HeatMapStorage {
     }
 
     /**
-     * Returns a transparent PNG tile with a fixed intensity scale shared by every tile.
-     * Tile indices are multiplied by {@link #TILE_SIZE}; neighboring clicks contribute across tile edges.
+     * Renders or reads a cached PNG tile, including contributions from clicks just outside its edges.
      *
+     * @param domain domain whose clicks are included
+     * @param docId source document ID
+     * @param from first day to include
+     * @param to last day to include
+     * @param width width of the coordinate group in pixels
+     * @param mode coordinate system used when recording the clicks
+     * @param tileX zero-based horizontal tile index
+     * @param tileY zero-based vertical tile index
+     * @return transparent PNG tile with the shared heatmap intensity scale
      * @throws IOException if the PNG cannot be encoded or its cache cannot be accessed
      */
     public static byte[] getTile(String domain, int docId, LocalDate from, LocalDate to, int width,
@@ -110,8 +153,9 @@ public final class HeatMapStorage {
                 || tileX > MAX_COORDINATE / TILE_SIZE || tileY > MAX_COORDINATE / TILE_SIZE) {
             throw new IllegalArgumentException("Invalid heatmap tile");
         }
+        int cellSize = cellSize();
         String key = String.join("|", "stat_clicks_v2", domain, Integer.toString(docId), from.toString(), to.toString(),
-                Integer.toString(width), mode.name(), Integer.toString(tileX), Integer.toString(tileY));
+                Integer.toString(width), mode.name(), Integer.toString(tileX), Integer.toString(tileY), Integer.toString(cellSize));
         Path folder = Path.of(Tools.getRealPath("/WEB-INF/tmp/heat_map/"));
         Path cached = folder.resolve("tile_" + digest(key) + ".png");
         int timeout = Math.max(0, Constants.getInt("statHeatMapImageTimeout", 300));
@@ -125,17 +169,16 @@ public final class HeatMapStorage {
         }
         int originX = tileX * TILE_SIZE;
         int originY = tileY * TILE_SIZE;
-        int overlap = HeatMapTileRenderer.RADIUS + HeatMapTileRenderer.CELL_SIZE;
-        HeatMapTileRenderer renderer = new HeatMapTileRenderer(originX, originY, TILE_SIZE, TILE_SIZE);
-        String xCell = "FLOOR(x / " + HeatMapTileRenderer.CELL_SIZE + ".0)";
-        String yCell = "FLOOR(y / " + HeatMapTileRenderer.CELL_SIZE + ".0)";
-        query(domain, from, to, xCell + ", " + yCell + ", COUNT(*)", " AND document_id = ? AND viewport_width = ? AND coordinate_mode = ?"
+        int overlap = ((HeatMapTileRenderer.RADIUS + cellSize - 1) / cellSize + 1) * cellSize;
+        HeatMapTileRenderer renderer = new HeatMapTileRenderer(originX, originY, TILE_SIZE, TILE_SIZE, cellSize);
+        String xCell = cellSql("x", cellSize);
+        String yCell = cellSql("y", cellSize);
+        query(domain, from, to, xCell + ", " + yCell + ", " + SUM_CLICKS, " AND document_id = ? AND viewport_width = ? AND coordinate_mode = ?"
                 + " AND x BETWEEN ? AND ? AND y BETWEEN ? AND ?",
                 List.of(docId, width, mode.databaseValue(), Math.max(0, originX - overlap), originX + TILE_SIZE + overlap,
                         Math.max(0, originY - overlap), originY + TILE_SIZE + overlap),
                 " GROUP BY " + xCell + ", " + yCell,
-                result -> renderer.add(result.getInt(1) * HeatMapTileRenderer.CELL_SIZE,
-                        result.getInt(2) * HeatMapTileRenderer.CELL_SIZE, result.getLong(3)));
+                result -> renderer.add(result.getInt(1) * cellSize, result.getInt(2) * cellSize, result.getLong(3)));
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         ImageIO.write(renderer.render(), "png", output);
         byte[] png = output.toByteArray();

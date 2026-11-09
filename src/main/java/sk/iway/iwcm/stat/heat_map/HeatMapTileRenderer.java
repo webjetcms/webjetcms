@@ -4,44 +4,50 @@ import java.awt.image.BufferedImage;
 
 /** Renders bounded regions of one globally aligned density grid. */
 final class HeatMapTileRenderer {
-    static final int CELL_SIZE = 4;
     static final int RADIUS = 32;
-    private static final int HALO = RADIUS / CELL_SIZE;
+    private static final double SIGMA = 12;
     private static final int[] COLORS = { 0x0000cc, 0x00ffff, 0x008000, 0xffff00, 0xffa500, 0xb20000 };
 
     private final int originX;
     private final int originY;
     private final int width;
     private final int height;
+    private final int cellSize;
+    private final int halo;
     private final int columns;
     private final int rows;
     private final float[] density;
 
-    HeatMapTileRenderer(int originX, int originY, int width, int height) {
+    HeatMapTileRenderer(int originX, int originY, int width, int height, int cellSize) {
         this.originX = originX;
         this.originY = originY;
         this.width = width;
         this.height = height;
-        columns = (width + CELL_SIZE - 1) / CELL_SIZE + 2 * HALO + 1;
-        rows = (height + CELL_SIZE - 1) / CELL_SIZE + 2 * HALO + 1;
+        this.cellSize = cellSize;
+        halo = (RADIUS + cellSize - 1) / cellSize;
+        columns = (Math.floorMod(originX, cellSize) + width + cellSize - 1) / cellSize + 2 * halo + 1;
+        rows = (Math.floorMod(originY, cellSize) + height + cellSize - 1) / cellSize + 2 * halo + 1;
         density = new float[columns * rows];
     }
 
     void add(int documentX, int documentY, long count) {
-        int x = Math.floorDiv(documentX, CELL_SIZE) - originX / CELL_SIZE + HALO;
-        int y = Math.floorDiv(documentY, CELL_SIZE) - originY / CELL_SIZE + HALO;
+        int x = Math.floorDiv(documentX, cellSize) - Math.floorDiv(originX, cellSize) + halo;
+        int y = Math.floorDiv(documentY, cellSize) - Math.floorDiv(originY, cellSize) + halo;
         if (x >= 0 && x < columns && y >= 0 && y < rows) density[y * columns + x] += count;
     }
 
     BufferedImage render() {
-        float[] kernel = new float[2 * HALO + 1];
-        for (int i = -HALO; i <= HALO; i++) kernel[i + HALO] = (float) Math.exp(-i * i / 18.0);
+        float[] kernel = new float[2 * halo + 1];
+        for (int i = -halo; i <= halo; i++) {
+            double distance = (double) i * cellSize;
+            kernel[i + halo] = (float) Math.exp(-distance * distance / (2 * SIGMA * SIGMA));
+        }
         float[] horizontal = new float[density.length];
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < columns; x++) {
                 float value = 0;
-                for (int offset = -HALO; offset <= HALO; offset++) {
-                    if (x + offset >= 0 && x + offset < columns) value += density[y * columns + x + offset] * kernel[offset + HALO];
+                for (int offset = -halo; offset <= halo; offset++) {
+                    if (x + offset >= 0 && x + offset < columns) value += density[y * columns + x + offset] * kernel[offset + halo];
                 }
                 horizontal[y * columns + x] = value;
             }
@@ -49,19 +55,21 @@ final class HeatMapTileRenderer {
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < columns; x++) {
                 float value = 0;
-                for (int offset = -HALO; offset <= HALO; offset++) {
-                    if (y + offset >= 0 && y + offset < rows) value += horizontal[(y + offset) * columns + x] * kernel[offset + HALO];
+                for (int offset = -halo; offset <= halo; offset++) {
+                    if (y + offset >= 0 && y + offset < rows) value += horizontal[(y + offset) * columns + x] * kernel[offset + halo];
                 }
                 density[y * columns + x] = value;
             }
         }
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        int offsetX = Math.floorMod(originX, cellSize);
+        int offsetY = Math.floorMod(originY, cellSize);
         for (int y = 0; y < height; y++) {
-            int row = y / CELL_SIZE + HALO;
-            float fractionY = (y % CELL_SIZE) / (float) CELL_SIZE;
+            int row = (offsetY + y) / cellSize + halo;
+            float fractionY = ((offsetY + y) % cellSize) / (float) cellSize;
             for (int x = 0; x < width; x++) {
-                int column = x / CELL_SIZE + HALO;
-                float fractionX = (x % CELL_SIZE) / (float) CELL_SIZE;
+                int column = (offsetX + x) / cellSize + halo;
+                float fractionX = ((offsetX + x) % cellSize) / (float) cellSize;
                 float upper = density[row * columns + column] * (1 - fractionX) + density[row * columns + column + 1] * fractionX;
                 float lower = density[(row + 1) * columns + column] * (1 - fractionX) + density[(row + 1) * columns + column + 1] * fractionX;
                 image.setRGB(x, y, color(upper * (1 - fractionY) + lower * fractionY));

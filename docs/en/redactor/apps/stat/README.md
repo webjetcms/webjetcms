@@ -1,6 +1,6 @@
 # Statistics
 
-[Click map](./heat-map.md) shows click positions on pages separately for each window width.
+[Click map](./heat-map.md) shows click positions grouped by fixed container width or exact window width.
 
 The Statistics application allows you to view statistical information about your website visitors. It is available in the Overview section of the left menu as the Statistics item.
 

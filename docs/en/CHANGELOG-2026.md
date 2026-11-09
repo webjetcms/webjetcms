@@ -49,6 +49,7 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 
 ### Websites
 
+- Statistics - restored the [Click map](redactor/apps/stat/heat-map.md) with support for different window widths, fixed-width containers and previews of historical page versions. Measurement is enabled in the template or template group and respects statistical cookie consent; existing installations must add the `wj_hm_*` definition as described in the guide. Historical clicks can be aggregated for a selected month or all completed months. The cell size is controlled by `statHeatMapCellSize` (default 5 × 5 CSS pixels). Monthly click tables using MyISAM are converted to InnoDB during the update. (#318)
 - Page editor - new menu [Styles](redactor/webpages/working-in-editor/README.md#working-with-styles-and-text-formatting). It displays active styles with the option to remove them and allows you to select the edited paragraph, column or entire section. For proper functionality, it is necessary to have correctly set [CSS selectors](frontend/page-builder/blocks.md#structure-selectors) and created [additional comments](frontend/examples/template-bare/README.md#searching-and-style-groups) in the CSS file of the website. (#356).
 
 <div class="video-container">

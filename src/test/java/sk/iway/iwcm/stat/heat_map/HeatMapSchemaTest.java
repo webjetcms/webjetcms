@@ -152,6 +152,33 @@ class HeatMapSchemaTest {
         }
     }
 
+    /** Previously migrated MySQL installations retry engine conversion and record success only after it completes. */
+    @Test
+    void retriesEngineMigrationDespiteExistingCountMarker() throws Exception {
+        int originalType = Constants.DB_TYPE;
+        SQLException failure = new SQLException("engine conversion failed");
+        try (MockedStatic<UpdateDatabase> updates = mockStatic(UpdateDatabase.class);
+                MockedStatic<HeatMapSchema> schema = mockStatic(HeatMapSchema.class);
+                MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            Constants.DB_TYPE = Constants.DB_MYSQL;
+            updates.when(UpdateDatabase::updateStatClickCounts).thenCallRealMethod();
+            updates.when(() -> UpdateDatabase.isAllreadyUpdated("06.11.2026 [sivan] add count to monthly stat_clicks tables"))
+                    .thenReturn(true);
+            schema.when(HeatMapSchema::upgradeClickCounts).thenThrow(failure);
+
+            UpdateDatabase.updateStatClickCounts();
+            logger.verify(() -> Logger.error(UpdateDatabase.class, failure));
+            updates.verify(() -> UpdateDatabase.saveSuccessUpdate(anyString()), never());
+
+            schema.reset();
+            UpdateDatabase.updateStatClickCounts();
+            schema.verify(HeatMapSchema::upgradeClickCounts);
+            updates.verify(() -> UpdateDatabase.saveSuccessUpdate("09.11.2026 [sivan] add count and convert monthly stat_clicks tables to InnoDB"));
+        } finally {
+            Constants.DB_TYPE = originalType;
+        }
+    }
+
     private static final class DatabaseFixture {
         private final int databaseType;
         private final Connection connection = mock(Connection.class);

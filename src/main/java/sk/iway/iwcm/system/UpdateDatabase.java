@@ -87,14 +87,14 @@ import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
 /**
- *  Aktualizuje databazu
+ * Runs schema and data migrations during WebJET startup.
  *
  *@Title        WebJET
  *@Company      Interway s.r.o. (www.interway.sk)
  *@Copyright    Interway s.r.o. (c) 2001-2002
  *@author       $Author: jeeff $
  *@version      $Revision: 1.4 $
- *@created      Nedele, 2004, marec 7
+ *@created      March 7, 2004
  *@modified     $Date: 2004/03/14 20:23:31 $
  */
 @SuppressWarnings({"java:S6912", "java:S6905", "java:S2077"})
@@ -105,7 +105,7 @@ public class UpdateDatabase
 	}
 
 	/**
-	 *  This method is called during startup to update database
+	 * Applies database updates and data migrations during startup.
 	 */
 	public static void update()
 	{
@@ -137,6 +137,7 @@ public class UpdateDatabase
 		updateStatViewsColumns();
 		updateStatErrorColumns();
 		updateStatClicksColumns();
+		updateStatClickCounts();
 
 		updateStopwords();
 
@@ -2121,6 +2122,22 @@ public class UpdateDatabase
             saveSuccessUpdate(note);
         } catch (SQLException exception) {
             Logger.error(UpdateDatabase.class, "Cannot upgrade click statistics; the migration will retry on next startup: " + exception.getMessage());
+        }
+    }
+
+    /** Retries the click-count and MyISAM migration on startup until every existing monthly table is upgraded. */
+    public static void updateStatClickCounts() {
+        String note = switch (Constants.DB_TYPE) {
+            case Constants.DB_MYSQL -> "09.11.2026 [sivan] add count and convert monthly stat_clicks tables to InnoDB";
+            case Constants.DB_PGSQL, Constants.DB_MSSQL -> "06.11.2026 [sivan] add count to visible monthly stat_clicks tables";
+            default -> "06.11.2026 [sivan] add count to monthly stat_clicks tables";
+        };
+        if (isAllreadyUpdated(note)) return;
+        try {
+            HeatMapSchema.upgradeClickCounts();
+            saveSuccessUpdate(note);
+        } catch (SQLException exception) {
+            Logger.error(UpdateDatabase.class, exception);
         }
     }
 

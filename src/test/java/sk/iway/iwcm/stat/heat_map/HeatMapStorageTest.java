@@ -97,12 +97,16 @@ class HeatMapStorageTest extends BaseWebjetTest {
         }
     }
 
-    /** Migrated clicks remain visible at their assigned width even without an event identifier. */
+    /**
+     * Checks that a legacy width group reports the sum of stored click weights for its domain.
+     *
+     * @throws Exception if the simulated partition query cannot be prepared or read
+     */
     @Test
     void migratedDesktopClicksUseTheSameDomainScopedWidthQuery() throws Exception {
         Connection connection = mock(Connection.class);
         PreparedStatement statement = statementWithCount(1920, 7);
-        String sql = "SELECT viewport_width, coordinate_mode, source_viewport_width, COUNT(*) FROM stat_clicks_2010_6"
+        String sql = "SELECT viewport_width, coordinate_mode, source_viewport_width, SUM(CAST(count AS DECIMAL(19,0))) FROM stat_clicks_2010_6"
                 + " WHERE domain_name = ? AND day_of_month BETWEEN ? AND ? AND document_id = ? GROUP BY viewport_width, coordinate_mode, source_viewport_width";
         when(connection.prepareStatement(sql)).thenReturn(statement);
         try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {

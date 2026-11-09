@@ -1,5 +1,7 @@
 # Štatistika
 
+[Mapa kliknutí](./heat-map.md) zobrazuje miesta kliknutí podľa šírky pevného kontajnera alebo presnej šírky okna.
+
 Aplikácia štatistika vám umožňuje zobraziť štatistické informácie o návštevníkoch vášho web sídla. Je dostupná v sekcii Prehľad ľavom menu ako položka Štatistiky.
 
 V aplikácii sa používajú nasledovné výrazy:
