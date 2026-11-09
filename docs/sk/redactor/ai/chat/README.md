@@ -24,8 +24,6 @@ Ak asistent vráti HTML kód, napríklad pri tvorbe PageBuilder stránky, zobraz
 
 ![Rozhovor s tabuľkou programu školenia a otvorenou históriou chatov](chat-history.png)
 
-Veľkosť dialógu zmeníte ťahaním za pravý dolný roh. Tlačidlami v hlavičke ho môžete maximalizovať alebo obnoviť pôvodnú veľkosť. **Esc** zatvorí dialóg; ak je fokus v otvorenom bočnom paneli, najskôr zatvorí tento panel.
-
 ## Nový chat a návrat k rozhovoru
 
 **Nový chat** začne samostatný rozhovor so zvoleným asistentom. Ak sa ešte generuje odpoveď, zastaví ju. Uložený rozhovor tým nevymažete: zostáva v histórii.
@@ -58,7 +56,7 @@ Ak poskytovateľ vymazanie nepotvrdí, rozhovor zostane označený na vymazanie.
 
 Prílohy sú dostupné v ukladaných rozhovoroch na karte **AI Chat** aj v chate pri poli a v editore stránky s asistentom **OpenAI** alebo **Gemini**. Môžete napríklad priložiť program školenia a požiadať asistenta, aby z neho vytvoril tabuľku alebo pozvánku.
 
-1. Kliknite na ikonu kancelárskej sponky **Nahrať súbor**, pretiahnite súbory kamkoľvek do plochy chatu alebo vložte obrázok zo schránky do poľa správy.
+1. Kliknite na ikonu kancelárskej sponky **Nahrať súbor**, pretiahnite súbory kamkoľvek do plochy chatu alebo vložte obrázok zo schránky do poľa správy. Súbor môžete aj pretiahnuť zo svojho počítača.
 2. Skontrolujte názvy súborov a náhľady obrázkov. Nechcenú prílohu pred odoslaním odstráňte tlačidlom **×**.
 3. Doplňte požiadavku a odošlite správu. Odoslať môžete aj samotné prílohy bez textu.
 

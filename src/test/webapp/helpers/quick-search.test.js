@@ -32,7 +32,7 @@ const documentationResult = {
 /** Runs the production search, DOM rendering and request parsing with a deterministic clock. */
 function fixture(t, denied = [], options = {}) {
     const dom = new JSDOM('<!doctype html><button id="trigger">Search</button>', {
-        url: 'http://localhost/admin/v9/', runScripts: 'outside-only'
+        url: 'http://localhost/admin/v9/', runScripts: 'outside-only', pretendToBeVisual: options.aiChat === true
     });
     const { window } = dom;
     window.adminSearchContext = options.adminSearchContext;
@@ -59,6 +59,7 @@ function fixture(t, denied = [], options = {}) {
         window.setTimeout = setTimeout;
         window.clearTimeout = clearTimeout;
         window.eval(fs.readFileSync(require.resolve('bootstrap/dist/js/bootstrap.bundle.js'), 'utf8'));
+        window.eval(fs.readFileSync(require.resolve('bootstrap-select/dist/js/bootstrap-select.js'), 'utf8'));
         window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
     }
     const context = vm.createContext({
@@ -107,6 +108,7 @@ function fixture(t, denied = [], options = {}) {
     vm.runInContext(readAdmin('admin-menu.js'), context);
     vm.runInContext(`{ ${readAdmin('documentation-search.js')}; Object.assign(this, { documentationUrl, documentationMarkdown }); }`, context);
     if (options.aiChat) {
+        vm.runInContext(`${readAdmin('select-picker.js')}\nWJ.initSelectPicker = initSelectPicker;`, context);
         const tooltipStart = webjet.indexOf('    function initTooltip(');
         vm.runInContext(`${webjet.slice(tooltipStart, webjet.indexOf('\n    /**', tooltipStart))}\nWJ.initTooltip = initTooltip;`, context);
         vm.runInContext(readAdmin('ai/chat-history-api.js'), context);
@@ -1380,9 +1382,11 @@ test('Dialog window controls restore the default size without interrupting a cha
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     const input = await openChat(f);
     const { dialog, root } = f.controller;
-    const restore = root.querySelector('[aria-label="datatables.modal.minimize.js"]');
-    const maximize = root.querySelector('[aria-label="datatables.modal.maximize.js"]');
-    assert.ok(restore && maximize, 'Both window controls must have accessible names.');
+    const control = root.querySelector('.md-quick-search__window-control');
+    assert.equal(root.querySelectorAll('.md-quick-search__window-control').length, 1);
+    assert.equal(control.getAttribute('aria-label'), 'datatables.modal.maximize.js');
+    assert.equal(control.title, control.getAttribute('aria-label'));
+    assert.ok(control.querySelector('.ti-arrows-maximize'));
     typeChat(input, 'First question');
     sendChat(input);
     typeChat(input, 'An unsent follow-up');
@@ -1391,8 +1395,13 @@ test('Dialog window controls restore the default size without interrupting a cha
 
     dialog.style.width = '1000px';
     dialog.style.height = '750px';
-    maximize.click();
+    control.focus();
+    control.click();
     assert.equal(root.classList.contains('md-quick-search--maximized'), true);
+    assert.equal(control.getAttribute('aria-label'), 'datatables.modal.minimize.js');
+    assert.equal(control.title, control.getAttribute('aria-label'));
+    assert.ok(control.querySelector('.ti-arrows-minimize'));
+    assert.equal(root.ownerDocument.activeElement, control, 'Changing the icon must preserve keyboard focus.');
     assert.equal(dialog.style.width, '');
     assert.equal(dialog.style.height, '');
     assert.equal(chat.state.pending, pending, 'Resizing must preserve the in-flight request.');
@@ -1400,17 +1409,23 @@ test('Dialog window controls restore the default size without interrupting a cha
 
     f.chatRequests[0].resolve({ success: true, response: 'First reply', conversationId: 'conversation' });
     await tick();
-    restore.click();
+    control.click();
     assert.equal(root.classList.contains('md-quick-search--maximized'), false);
+    assert.equal(control.getAttribute('aria-label'), 'datatables.modal.maximize.js');
+    assert.equal(control.title, control.getAttribute('aria-label'));
+    assert.ok(control.querySelector('.ti-arrows-maximize'));
     assert.match(f.controller.chatPanel.textContent, /First reply/);
     assert.equal(input.value, 'An unsent follow-up');
     assert.equal(chat.state.conversationId, 'conversation');
 
     dialog.style.width = '920px';
     dialog.style.height = '720px';
-    restore.click();
+    control.click();
     assert.equal(dialog.style.width, '');
     assert.equal(dialog.style.height, '');
+    assert.equal(root.classList.contains('md-quick-search--maximized'), true);
+    control.click();
+    assert.equal(root.classList.contains('md-quick-search--maximized'), false);
     assert.equal(f.chatRequests.length, 1);
 });
 
@@ -1613,6 +1628,7 @@ test('Chat files collects all turns, searches filenames and downloads assistant 
     const toggle = host.chat.element.querySelector('.ai-chat-toolbar-end-actions [data-ai-action="files"]');
     toggle.click();
     assert.equal(toggle.getAttribute('aria-controls'), host.filesPanel.id);
+    assert.equal(host.chat.element.querySelector('[data-ai-action="files"]'), null, 'The opener must disappear while the files panel is open.');
     assert.equal(host.filesSearch.ownerDocument.activeElement, host.filesSearch);
     assert.equal(host.filesList.querySelectorAll('li').length, 3, 'Distinct same-name uploads remain separate; repeated attachment references appear once.');
     assert.match(host.filesList.textContent, /files.uploaded.js/);
@@ -1636,6 +1652,7 @@ test('Chat files collects all turns, searches filenames and downloads assistant 
     typeChat(host.filesSearch, '');
     assert.equal(host.filesList.querySelectorAll('li').length, 3);
     host.selectAssistant('8');
+    assert.equal(host.chat.element.querySelector('[data-ai-action="files"]'), null, 'Switching conversations must keep the opener hidden while the panel is open.');
     assert.equal(host.filesList.querySelectorAll('li').length, 0, 'Switching conversations must not expose the previous chat files.');
     assert.match(host.filesList.textContent, /files.empty.js/);
 });
@@ -1669,13 +1686,27 @@ test('Chat files excludes unsent drafts, downloads local uploads and updates whe
 
 test('Narrow chat panels replace each other and Escape closes files without closing the chat', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const labels = new Map([
+        ['components.ai_assistants.chat.history.close.js', 'Close'],
+        ['components.ai_assistants.chat.files.title.js', 'Chat files']
+    ]);
+    f.controller.root.ownerDocument.defaultView.webjetTranslationService.translate = key => labels.get(key) || key;
     await openChat(f);
     const host = f.controller.chat;
     Object.defineProperty(host.element, 'clientWidth', { value: 1000, configurable: true });
     host.toggleHistory(true);
-    host.toggleFiles(true);
+    const opener = () => host.chat.element.querySelector('[data-ai-action="files"]');
+    opener().click();
     assert.equal(host.historyPanel.hidden, false);
     assert.equal(host.filesPanel.hidden, false);
+    assert.equal(opener(), null);
+    const close = host.filesPanel.querySelector('button');
+    assert.equal(close.getAttribute('aria-label'), 'Close: Chat files');
+    close.click();
+    assert.equal(host.filesPanel.hidden, true);
+    assert.equal(host.filesSearch.ownerDocument.activeElement, opener(), 'Closing from the panel must restore focus to the recreated opener.');
+    opener().click();
+    assert.equal(host.filesSearch.ownerDocument.activeElement, host.filesSearch);
     Object.defineProperty(host.element, 'clientWidth', { value: 500, configurable: true });
     host.toggleFiles(true);
     assert.equal(host.historyPanel.hidden, true);
@@ -1683,6 +1714,7 @@ test('Narrow chat panels replace each other and Escape closes files without clos
     host.filesSearch.dispatchEvent(escape);
     assert.equal(escape.defaultPrevented, true);
     assert.equal(host.filesPanel.hidden, true);
+    assert.ok(opener(), 'Escape must restore the files opener.');
     assert.equal(host.filesSearch.ownerDocument.activeElement.getAttribute('aria-controls'), host.filesPanel.id);
     assert.equal(f.controller.root.classList.contains('show'), true);
     host.toggleFiles(true);
@@ -1783,10 +1815,17 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     await tick();
     typeChat(input, 'First draft');
     const selector = f.controller.chatPanel.querySelector('select');
+    const $selector = selector.ownerDocument.defaultView.jQuery(selector);
+    const picker = $selector.data('selectpicker');
+    assert.ok(picker, 'The assistant selector must use the shared Bootstrap picker.');
+    assert.equal(picker.$menu.find('.bs-searchbox').length, 0, 'The assistant picker must omit its search field.');
+    assert.match(picker.$button.text(), /First assistant/);
     assert.ok(selector.closest('.ai-chat-composer-actions'), 'Assistant selection belongs inside the composer.');
     selector.value = '8';
     selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
     let current = f.controller.chatPanel.querySelector('.ai-chat-input');
+    assert.equal($selector.data('selectpicker'), picker, 'Switching conversations must reuse the picker.');
+    assert.match(picker.$button.text(), /Second assistant/);
     assert.equal(current.value, '');
     assert.doesNotMatch(f.controller.chatPanel.textContent, /First reply/);
     typeChat(current, 'Second draft');
@@ -1795,14 +1834,29 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
     assert.equal(f.controller.chatPanel.querySelector('select'), selector, 'Switching conversations must retain the live selector.');
     assert.match(f.controller.chatPanel.textContent, /First reply/);
+    assert.match(picker.$button.text(), /First assistant/);
+    $selector.selectpicker('toggle');
+    assert.equal(selector.ownerDocument.querySelectorAll('.bs-container').length, 1);
+    const escape = new selector.ownerDocument.defaultView.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    picker.$menuInner[0].dispatchEvent(escape);
+    assert.equal(escape.defaultPrevented, true);
+    assert.equal(selector.ownerDocument.querySelector('.bs-container'), null, 'Escape must close the picker without closing the chat.');
+    assert.equal(f.controller.root.classList.contains('show'), true);
+    assert.equal(selector.ownerDocument.activeElement, picker.$button[0]);
+    $selector.selectpicker('toggle');
     f.controller.chips.get('admin').click();
+    assert.equal($selector.data('selectpicker'), undefined);
+    assert.equal(selector.ownerDocument.querySelector('.bs-container'), null, 'Hiding the chat must remove its detached dropdown.');
     f.controller.chips.get('aiChat').click();
+    assert.ok($selector.data('selectpicker'));
+    assert.equal(f.controller.chatPanel.querySelectorAll('.ai-chat-host__assistant > .bootstrap-select').length, 1);
     assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
     f.controller.modal.hide();
     f.controller.open();
     f.controller.chips.get('aiChat').click();
     current = f.controller.chatPanel.querySelector('.ai-chat-input');
     assert.equal(current.value, 'First draft');
+    assert.match($selector.data('selectpicker').$button.text(), /First assistant/);
     sendChat(current);
     assert.equal(f.chatRequests[1].inputData.conversationId, 'first-conversation');
     assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');

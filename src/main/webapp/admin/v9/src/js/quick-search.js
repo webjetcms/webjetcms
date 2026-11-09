@@ -89,16 +89,12 @@ class QuickSearch {
         close.setAttribute('aria-keyshortcuts', 'Escape');
         close.append(node('kbd', '', 'Esc'));
         const windowControls = node('div', 'md-quick-search__window-controls');
-        for (const [action, maximized] of [['minimize', false], ['maximize', true]]) {
-            const control = button('', 'md-quick-search__window-control', () => this.setMaximized(maximized));
-            control.title = WJ.translate(`datatables.modal.${action}.js`);
-            control.setAttribute('aria-label', control.title);
-            const symbol = node('span', 'md-quick-search__window-symbol');
-            symbol.append(icon(`ti-arrows-${action}`));
-            control.append(symbol);
-            windowControls.append(control);
-        }
-        windowControls.append(close);
+        this.windowControl = button('', 'md-quick-search__window-control',
+            () => this.setMaximized(!this.root.classList.contains('md-quick-search--maximized')));
+        this.windowSymbol = node('span', 'md-quick-search__window-symbol');
+        this.windowControl.append(this.windowSymbol);
+        this.setMaximized(false);
+        windowControls.append(this.windowControl, close);
         this.searchIcon = icon('ti-search');
         this.chatTitle = node('span', 'md-quick-search__chat-title', text('aiChat'));
         this.chatTitle.hidden = true;
@@ -182,6 +178,10 @@ class QuickSearch {
         this.dialog.style.removeProperty('width');
         this.dialog.style.removeProperty('height');
         this.root.classList.toggle('md-quick-search--maximized', maximized);
+        const action = maximized ? 'minimize' : 'maximize';
+        this.windowControl.title = WJ.translate(`datatables.modal.${action}.js`);
+        this.windowControl.setAttribute('aria-label', this.windowControl.title);
+        this.windowSymbol.replaceChildren(icon(`ti-arrows-${action}`));
     }
 
     cancel() {

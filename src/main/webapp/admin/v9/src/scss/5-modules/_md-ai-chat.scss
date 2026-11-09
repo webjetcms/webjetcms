@@ -274,6 +274,7 @@
     }
 
     .ai-chat-composer-panel {
+        position: relative;
         padding: 12px 12px 8px;
         border: 1px solid var(--wj-nice-gray-100);
         border-radius: 8px;
@@ -284,6 +285,25 @@
             border-color: var(--wj-ai-color);
             box-shadow: 0 0 0 2px rgba($ai-color, .12);
         }
+    }
+
+    .ai-chat-drop-overlay {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        align-items: center;
+        justify-content: center;
+        border-radius: inherit;
+        background-color: rgba($black, .5);
+        color: var(--bs-gray-800);
+        font-size: 64px;
+        line-height: 1;
+        pointer-events: none;
+    }
+
+    &.ai-chat-drop-active .ai-chat-drop-overlay {
+        display: flex;
     }
 
     .ai-chat-input {
@@ -606,24 +626,8 @@
         min-width: 0;
         max-width: 100%;
 
-        .form-select {
-            field-sizing: content;
-            width: auto;
+        > .bootstrap-select {
             max-width: min(100%, 280px);
-            min-height: 32px;
-            padding: 4px 28px 4px 8px;
-            border: 1px solid var(--wj-nice-gray-100);
-            border-radius: var(--wj-border-radius);
-            background-color: $white;
-            background-position: right 6px center;
-            color: var(--bs-body-color);
-            font-size: 13px;
-            text-overflow: ellipsis;
-            cursor: pointer;
-
-            &:hover { background-color: var(--wj-nice-gray); }
-            &:focus { box-shadow: none; }
-            &:focus-visible { outline: 2px solid var(--wj-ai-color); outline-offset: -2px; }
         }
     }
     &__status { padding: 24px 16px; color: var(--wj-gray-text); font-size: 14px; text-align: center; }

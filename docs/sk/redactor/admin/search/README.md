@@ -24,10 +24,6 @@ Na úvodnej stránke sa predvolí **Všetko**. Pri otvorení z podporovanej sekc
 
 Odkaz **Otvoriť výsledky v sekcii…** prenesie hľadaný výraz do príslušnej sekcie, kde môžete použiť ďalšie filtre. Ak sa nič nenašlo, pri zúženom rozsahu môžete zvoliť **Hľadať všade**. Chyba spojenia zobrazí správu **Vyhľadávanie je dočasne nedostupné** a tlačidlo **Skúsiť znova**.
 
-Dialóg zavriete klávesom **Esc**, tlačidlom zatvorenia alebo kliknutím mimo neho. Fokus sa vráti na tlačidlo v hlavičke; hľadaný výraz sa do tlačidla neprepisuje.
-
-Veľkosť dialógu môžete meniť ťahaním za pravý dolný roh. Tlačidlo **Maximalizovať okno** v hlavičke zväčší dialóg na dostupnú plochu prehliadača. Tlačidlo **Zmenšiť okno** obnoví pôvodnú veľkosť aj po ručnom zväčšení. Zmena veľkosti zachová výsledky vyhľadávania, rozhovor aj rozpísanú správu v AI Chate.
-
 Dokumentácia sa predvolene neprehľadáva automaticky. Karta zobrazuje pomlčku, ktorá znamená **zatiaľ neprehľadané**, nie nulový počet výsledkov. V rozsahu **Všetko** nájdete vysvetlenie, na ktorý server sa výraz odošle, a odkaz **Načítať výsledky aj z externej dokumentácie**. Kliknutie na tento odkaz alebo na kartu **Dokumentácia** vyhľadá už zadaný výraz a zobrazí výsledky v dialógu. Tooltip karty vysvetľuje odoslanie výrazu na externý server. Klávesová skratka **Ctrl+Enter** vo Windows/Linux alebo **⌘+Enter** na Macu načíta výsledky dokumentácie v ľubovoľnom rozsahu otvoreného dialógu. Príslušná skratka sa zobrazuje pri odkaze.
 
 Po zmene výrazu sa výsledky dokumentácie vymažú a karta znova zobrazí pomlčku. Nové vyhľadávanie spustíte kliknutím na kartu alebo odkaz, prípadne klávesom **Enter** v rozsahu **Dokumentácia**. Enter v rozsahu **Všetko** predvolene prehľadáva iba interné zdroje. Prepínanie rozsahov pomocou **Alt+šípka** samo externý dotaz neodošle.

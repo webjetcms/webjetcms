@@ -92,6 +92,9 @@ export class AiChat {
             });
         $composerActions.append(this.$composerControls, this.$stop, this.$send);
         $composerPanel.append(this.$attachments, this.$input, $composerActions);
+        if (this.options.showAttachment) {
+            $composerPanel.append('<div class="ai-chat-drop-overlay" aria-hidden="true"><i class="ti ti-upload"></i></div>');
+        }
         $composer.append(this.$notice, this.$confirmation, $composerPanel);
         this.$root.append(this.$toolbar, this.$history, $composer);
     }
@@ -148,10 +151,24 @@ export class AiChat {
         if (this.options.composerControls) this.$composerControls.append(this.options.composerControls);
         this.mounted = true;
         if (this.options.showAttachment) {
+            let dragDepth = 0;
+            const resetDrag = () => {
+                dragDepth = 0;
+                this.$root.removeClass('ai-chat-drop-active');
+            };
             this.$dropTarget = $(this.options.dropTarget || this.element);
-            this.$dropTarget.on('dragover.aiChatAttachments', event => {
-                if (this._canAttach() && Array.from(event.originalEvent?.dataTransfer?.types || []).includes('Files')) event.preventDefault();
-            }).on('drop.aiChatAttachments', event => {
+            this.$dropTarget.on('dragenter.aiChatAttachments dragover.aiChatAttachments', event => {
+                const transfer = event.originalEvent?.dataTransfer;
+                if (!this._canAttach() || !Array.from(transfer?.types || []).includes('Files')) return;
+                event.preventDefault();
+                transfer.dropEffect = 'copy';
+                if (event.type === 'dragenter') dragDepth++;
+                this.$root.addClass('ai-chat-drop-active');
+            }).on('dragleave.aiChatAttachments', () => {
+                dragDepth = Math.max(0, dragDepth - 1);
+                if (dragDepth === 0) resetDrag();
+            }).on('dragend.aiChatAttachments', resetDrag).on('drop.aiChatAttachments', event => {
+                resetDrag();
                 if (!event.originalEvent?.dataTransfer?.files?.length) return;
                 event.preventDefault();
                 this._addAttachments(event.originalEvent.dataTransfer.files);
@@ -171,6 +188,7 @@ export class AiChat {
         this.mounted = false;
         this.$dropTarget?.off('.aiChatAttachments');
         this.$dropTarget = null;
+        this.$root.removeClass('ai-chat-drop-active');
         disposeChatTooltips(this.element);
         this.$root.detach();
     }
@@ -474,6 +492,7 @@ export class AiChat {
     }
 
     _updateSendButton() {
+        if (!this._canAttach()) this.$root.removeClass('ai-chat-drop-active');
         this.$send.prop("disabled", this.state.pending != null || this.state.serverBusy || this.state.readOnlyReason
             || this.state.needsNewChat || (!this.state.draft.trim() && !this.state.attachments.length)).toggle(this.state.pending == null);
         this.$stop.toggle(this.state.pending != null);

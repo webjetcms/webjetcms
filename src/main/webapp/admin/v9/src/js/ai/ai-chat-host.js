@@ -34,7 +34,7 @@ export class AiChatHost {
         this.element.classList.toggle('ai-chat-host--history-open', this.historyOpen);
         this.assistantRow = node('div', 'ai-chat-host__assistant');
         const label = node('label', 'visually-hidden', text('chatAssistant'));
-        this.select = node('select', 'form-select');
+        this.select = node('select', 'form-control');
         this.select.id = options.context ? `${idPrefix}-assistant` : 'admin-quick-search-chat-assistant';
         label.htmlFor = this.select.id;
         this.select.addEventListener('change', () => this.selectAssistant(this.select.value));
@@ -88,7 +88,7 @@ export class AiChatHost {
         this.filesPanel.setAttribute('aria-label', filesText('title'));
         const filesHeading = node('div', 'ai-chat-host__history-heading');
         filesHeading.append(node('strong', '', filesText('title')),
-            this.iconButton(historyText('close'), 'layout-sidebar-right', () => this.toggleFiles(false)));
+            this.iconButton(`${historyText('close')}: ${filesText('title')}`, 'layout-sidebar-right', () => this.toggleFiles(false)));
         const filesSearch = node('div', 'ai-chat-host__history-search');
         const filesSearchLabel = node('label', 'visually-hidden', filesText('search'));
         this.filesSearch = node('input', 'form-control form-control-sm');
@@ -145,6 +145,8 @@ export class AiChatHost {
 
     /** Keeps conversation state and pending responses while the host is hidden. */
     unmount() {
+        const $select = window.jQuery(this.select);
+        if ($select.data('selectpicker')) $select.selectpicker('destroy');
         this.chat?.unmount();
         disposeChatTooltips(this.element);
         this.element.remove();
@@ -267,16 +269,30 @@ export class AiChatHost {
         this.select.value = id;
         this.status.hidden = true;
         this.content.hidden = false;
-        if (this.mounted) chat.mount(this.content);
+        if (this.mounted) {
+            chat.mount(this.content);
+            WJ.initSelectPicker(this.assistantRow, { width: 'fit', liveSearch: false });
+            const $select = window.jQuery(this.select);
+            const picker = $select.data('selectpicker');
+            picker.$button.add(picker.$menu).off('keydown.aiChatAssistant').on('keydown.aiChatAssistant', event => {
+                if (event.key !== 'Escape' || picker.$button.attr('aria-expanded') !== 'true') return;
+                event.preventDefault();
+                event.stopPropagation();
+                $select.selectpicker('toggle');
+                picker.$button.trigger('focus');
+            });
+        }
         this.renderHistory();
         this.renderFiles();
     }
 
     toolbarActions(chat) {
         const actions = [{ id: 'history', label: historyText('title'), icon: 'layout-sidebar', iconOnly: true, position: 'start',
-            controls: this.historyPanel.id, expanded: this.historyOpen, run: () => this.toggleHistory() },
-            { id: 'files', label: filesText('title'), icon: 'files', iconOnly: true, position: 'end',
-                controls: this.filesPanel.id, expanded: this.filesOpen, run: () => this.toggleFiles() }];
+            controls: this.historyPanel.id, expanded: this.historyOpen, run: () => this.toggleHistory() }];
+        if (!this.filesOpen) {
+            actions.push({ id: 'files', label: filesText('title'), icon: 'files', iconOnly: true, position: 'end',
+                controls: this.filesPanel.id, expanded: false, run: () => this.toggleFiles(true) });
+        }
         if (chat.state.serverBusy && !chat.state.pending) {
             actions.push({ id: 'server-stop', label: historyText('stop'), icon: 'player-stop', run: async () => {
                 try {
@@ -596,6 +612,7 @@ export class AiChatHost {
         clearTimeout(this.historySearchTimer);
         this.historyController?.abort();
         this.scrollController.abort();
+        this.unmount();
         for (const chat of this.conversations) {
             clearTimeout(chat.historyRefreshTimer);
             chat.historyController?.abort();
@@ -603,6 +620,5 @@ export class AiChatHost {
         }
         this.conversations.clear();
         this.lastConversationByAssistant.clear();
-        this.unmount();
     }
 }
