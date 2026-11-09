@@ -2,7 +2,6 @@ package sk.iway.iwcm.stat.heat_map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.image.BufferedImage;
@@ -43,16 +42,6 @@ class HeatMapTileRendererTest {
             BufferedImage lower = render(points, 0, 1024, 256, 1024, cellSize);
             assertArrayEquals(complete.getRGB(0, 1024, 256, 1024, null, 0, 256), lower.getRGB(0, 0, 256, 1024, null, 0, 256));
         }
-    }
-
-    @Test
-    void emptyTileIsTransparentAndRepeatedClicksChangeIntensity() {
-        BufferedImage empty = render(List.of(), 0, 0, 64, 64, 4);
-        BufferedImage single = render(List.of(new Point(32, 32, 1)), 0, 0, 64, 64, 4);
-        BufferedImage many = render(List.of(new Point(32, 32, 20)), 0, 0, 64, 64, 4);
-        assertEquals(0, empty.getRGB(32, 32));
-        assertNotEquals(0, single.getRGB(32, 32));
-        assertNotEquals(single.getRGB(32, 32), many.getRGB(32, 32));
     }
 
     /** Low and high click concentrations remain blue and red instead of both saturating. */

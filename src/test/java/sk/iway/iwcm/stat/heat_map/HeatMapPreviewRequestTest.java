@@ -1,15 +1,12 @@
 package sk.iway.iwcm.stat.heat_map;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -24,27 +21,6 @@ import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies normalized preview parameters and separate requests initiated by preview JavaScript. */
 class HeatMapPreviewRequestTest {
-
-    /** Untrusted rendering and action parameters cannot replace the server-selected page. */
-    @Test
-    void exposesOnlyTheSelectedDocumentParameter() {
-        MockHttpServletRequest original = new MockHttpServletRequest();
-        original.addParameter("docid", "999");
-        original.addParameter("historyid", "888");
-        original.addParameter("doShowdocAction", "/editor.do");
-        original.addParameter("NO_WJTOOLBAR", "false");
-        HeatMapPreviewRequest request = new HeatMapPreviewRequest(original, 123);
-
-        assertEquals("123", request.getParameter("docid"));
-        assertArrayEquals(new String[] { "123" }, request.getParameterValues("docid"));
-        assertEquals(List.of("docid"), Collections.list(request.getParameterNames()));
-        assertEquals(1, request.getParameterMap().size());
-        assertNull(request.getParameter("historyid"));
-        assertNull(request.getParameterValues("doShowdocAction"));
-        assertNull(request.getParameter("NO_WJTOOLBAR"));
-        assertEquals("docid=123", request.getQueryString());
-        assertEquals("999", original.getParameter("docid"));
-    }
 
     /** A preview uses the standard domain selected in the administration session. */
     @Test

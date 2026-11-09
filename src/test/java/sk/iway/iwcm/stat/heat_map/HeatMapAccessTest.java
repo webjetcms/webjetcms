@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -74,55 +73,7 @@ class HeatMapAccessTest {
         }
     }
 
-    /** Viewing every statistics folder must not grant access to another domain or the trash. */
-    @Test
-    void keepsDomainAndTrashBoundariesForUsersWithAllGroupsPermission() {
-        Identity user = statisticsUser();
-        when(user.isEnabledItem("cmp_stat_seeallgroups")).thenReturn(true);
-        DocDetails document = mock(DocDetails.class);
-        when(document.getGroupId()).thenReturn(5);
-        GroupDetails group = mock(GroupDetails.class);
-        when(group.getGroupId()).thenReturn(5);
-        when(group.getDomainName()).thenReturn("public.example");
-        GroupsDB groups = mock(GroupsDB.class);
-        when(groups.getGroup(5)).thenReturn(group);
-
-        try (MockedStatic<GroupsDB> groupLookup = mockStatic(GroupsDB.class)) {
-            groupLookup.when(GroupsDB::getInstance).thenReturn(groups);
-
-            assertTrue(access.canViewDocument(user, "PUBLIC.EXAMPLE", document));
-            assertFalse(access.canViewDocument(user, "other.example", document));
-            when(groups.isInTrash(5)).thenReturn(true);
-            assertFalse(access.canViewDocument(user, "public.example", document));
-            when(groups.getGroup(5)).thenReturn(null);
-            assertFalse(access.canViewDocument(user, "public.example", document));
-        }
-    }
-
-    /** Limited users need editable-folder access, but a currently disabled page may have valid history. */
-    @Test
-    void checksFolderAccessWithoutRequiringCurrentPublication() {
-        Identity user = statisticsUser();
-        DocDetails document = mock(DocDetails.class);
-        when(document.getGroupId()).thenReturn(5);
-        when(document.isAvailable()).thenReturn(false);
-        GroupDetails group = mock(GroupDetails.class);
-        when(group.getGroupId()).thenReturn(5);
-        when(group.getDomainName()).thenReturn("public.example");
-        GroupsDB groups = mock(GroupsDB.class);
-        when(groups.getGroup(5)).thenReturn(group);
-
-        try (MockedStatic<GroupsDB> groupLookup = mockStatic(GroupsDB.class)) {
-            groupLookup.when(GroupsDB::getInstance).thenReturn(groups);
-
-            assertFalse(access.canViewDocument(user, "public.example", document));
-            groupLookup.when(() -> GroupsDB.isGroupEditable(user, 5)).thenReturn(true);
-            assertTrue(access.canViewDocument(user, "public.example", document));
-            assertFalse(access.canViewDocument(user, "public.example", null));
-        }
-    }
-
-    /** Document lookup uses the trusted current domain and never a request-supplied domain. */
+    /** Document access respects the trusted domain, trash and folder rights, including single-domain sites. */
     @Test
     void validatesRequestedDocumentAgainstTrustedDomain() {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -158,54 +109,22 @@ class HeatMapAccessTest {
             domains.when(CloudToolsForCore::getDomainName).thenReturn("other.example");
             assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
                     () -> access.requireDocument(request, 123)).getStatusCode());
-        }
-    }
-
-    /** Single-domain installations use the same empty domain for the list and all detail requests. */
-    @Test
-    void acceptsLegacyPagesWithoutADomainWhenMultidomainIsDisabled() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        Identity user = statisticsUser();
-        when(user.isEnabledItem("cmp_stat_seeallgroups")).thenReturn(true);
-        DocDetails document = mock(DocDetails.class);
-        when(document.getGroupId()).thenReturn(5);
-        GroupDetails group = mock(GroupDetails.class);
-        when(group.getGroupId()).thenReturn(5);
-        when(group.getDomainName()).thenReturn("");
-        GroupsDB groups = mock(GroupsDB.class);
-        when(groups.getGroup(5)).thenReturn(group);
-        DocDB docs = mock(DocDB.class);
-        when(docs.getBasicDocDetails(2788, false)).thenReturn(document);
-
-        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
-                MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
-                MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class);
-                MockedStatic<DocDB> docLookup = mockStatic(DocDB.class);
-                MockedStatic<GroupsDB> groupLookup = mockStatic(GroupsDB.class)) {
-            constants.when(() -> Constants.getBoolean("multiDomainEnabled")).thenReturn(false);
-            domains.when(CloudToolsForCore::getDomainName).thenReturn("admin.example");
-            users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
-            docLookup.when(DocDB::getInstance).thenReturn(docs);
-            groupLookup.when(GroupsDB::getInstance).thenReturn(groups);
-
-            assertEquals("", access.currentDomain(request));
-            assertTrue(access.canViewDocument(user, access.currentDomain(request), document));
-            assertSame(document, access.requireDocument(request, 2788));
+            domains.when(CloudToolsForCore::getDomainName).thenReturn("public.example");
             when(groups.isInTrash(5)).thenReturn(true);
-            assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
-                    () -> access.requireDocument(request, 2788)).getStatusCode());
-        }
-    }
+            assertFalse(access.canViewDocument(user, "public.example", document));
+            when(groups.isInTrash(5)).thenReturn(false);
+            when(user.isEnabledItem("cmp_stat_seeallgroups")).thenReturn(false);
+            assertFalse(access.canViewDocument(user, "public.example", document));
+            groupLookup.when(() -> GroupsDB.isGroupEditable(user, 5)).thenReturn(true);
+            assertSame(document, access.requireDocument(request, 123));
 
-    /** An unresolved domain must not silently broaden a statistics query to all tenants. */
-    @Test
-    void rejectsAnUnknownDomain() {
-        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
-                MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class)) {
-            constants.when(() -> Constants.getBoolean("multiDomainEnabled")).thenReturn(true);
             domains.when(CloudToolsForCore::getDomainName).thenReturn("unknown");
             assertEquals(HttpStatus.FORBIDDEN, assertThrows(ResponseStatusException.class,
-                    () -> access.currentDomain(new MockHttpServletRequest())).getStatusCode());
+                    () -> access.currentDomain(request)).getStatusCode());
+            constants.when(() -> Constants.getBoolean("multiDomainEnabled")).thenReturn(false);
+            when(group.getDomainName()).thenReturn("");
+            assertEquals("", access.currentDomain(request));
+            assertSame(document, access.requireDocument(request, 123));
         }
     }
 }

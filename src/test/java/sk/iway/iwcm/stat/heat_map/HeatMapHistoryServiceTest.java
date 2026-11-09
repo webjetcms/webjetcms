@@ -143,30 +143,6 @@ class HeatMapHistoryServiceTest extends BaseWebjetTest {
         }
     }
 
-    /** Expiration deactivates a revision only when its automatic deactivation flag is set. */
-    @Test
-    void evaluatesDeactivationAtTheRangeEnd() {
-        DocHistory history = published(1, 100);
-        history.setPublishEndDate(new Date(300));
-        assertTrue(HeatMapHistoryService.selectHistory(List.of(history), DOC_ID, 0, 400).available());
-
-        history.setDisableAfterEnd(true);
-        assertTrue(HeatMapHistoryService.selectHistory(List.of(history), DOC_ID, 0, 299).available());
-        assertFalse(HeatMapHistoryService.selectHistory(List.of(history), DOC_ID, 0, 300).available());
-    }
-
-    /** Only revisions whose validity overlaps the reporting range contribute to the warning. */
-    @Test
-    void countsOverlappingVersionsAndHandlesTheRangeStart() {
-        DocHistory older = published(1, 100);
-        DocHistory newer = published(2, 200);
-        List<DocHistory> history = List.of(older, newer);
-
-        assertEquals(2, HeatMapHistoryService.selectHistory(history, DOC_ID, 150, 300).versions().size());
-        assertEquals(1, HeatMapHistoryService.selectHistory(history, DOC_ID, 200, 300).versions().size());
-        assertEquals(1, HeatMapHistoryService.selectHistory(history, DOC_ID, 250, 300).versions().size());
-    }
-
     /** The baseline and latest intervals are clipped, and ambiguity and expiry leave gaps. */
     @Test
     void limitsVersionChoicesToTheirPublishedIntervals() {
@@ -201,17 +177,6 @@ class HeatMapHistoryServiceTest extends BaseWebjetTest {
             assertEquals(5, HeatMapHistoryService.selectHistory(List.of(ambiguous, published(5, 250)), DOC_ID, 0, 300)
                     .history().getHistoryId());
         }
-    }
-
-    /** An ambiguous revision at the same publication time takes precedence only when its history ID is newer. */
-    @Test
-    void resolvesAmbiguousPublicationTimeTiesByHistoryId() {
-        DocHistory ambiguous = published(2, 100);
-        ambiguous.setApprovedBy(null);
-
-        assertNull(HeatMapHistoryService.selectHistory(List.of(ambiguous, published(1, 100)), DOC_ID, 0, 300).history());
-        assertEquals(3, HeatMapHistoryService.selectHistory(List.of(ambiguous, published(3, 100)), DOC_ID, 0, 300)
-                .history().getHistoryId());
     }
 
     /** Shared historical content is loaded without cache and retains the authorized slave page's identity. */

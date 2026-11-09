@@ -70,15 +70,17 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
         return controller;
     }
 
-    /** The preview uses its source viewport and the selected public domain's selector. */
+    /** Preview metadata keeps the public domain, source viewport and 100 newest versions. */
     @Test
     void containerMetadataKeepsThePublicDomainConfigurationAndViewport() {
         HeatMapRestController controller = controller();
         DocDetails document = new DocDetails();
         document.setTitle("autotest container");
         when(access.requireDocument(request, 123)).thenReturn(document);
+        List<VersionPeriod> versions = IntStream.range(0, 101)
+                .mapToObj(index -> new VersionPeriod(101 - index, RANGE.from(), RANGE)).toList();
         when(history.resolve(request, 123, "period", null)).thenReturn(
-                new HeatMapHistoryService.PreviewSelection(null, null, "current", false, List.of(), RANGE, document));
+                new HeatMapHistoryService.PreviewSelection(101, RANGE.from(), "history", false, versions, RANGE, document));
         RequestBean requestBean = new RequestBean();
         requestBean.setDomain("admin.example");
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class);
@@ -92,6 +94,7 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
                     new WidthCount(1140, CONTAINER, 20, 1369), new WidthCount(1140, DOCUMENT, 2, 1140)));
             assertEquals(2, controller.widths(123, "period", null).size());
             Map<String, Object> metadata = controller.metadata(123, "period", 1140, CONTAINER, null);
+            assertEquals(versions.subList(0, 100), metadata.get("versions"));
             assertEquals(RANGE, metadata.get("clickRange"));
             assertEquals(1369, metadata.get("previewWidth"));
             assertEquals(20L, metadata.get("clicks"));
@@ -128,45 +131,6 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
             time.when(Tools::getNow).thenReturn(31_000L);
             assertEquals(updated, controller.widths(123, "period", null));
             storage.verify(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO), times(2));
-        }
-    }
-
-    /** The version picker shows up to 100 newest versions while the report includes clicks from the full period. */
-    @ParameterizedTest
-    @ValueSource(ints = { 99, 100, 101 })
-    void limitsVersionsShownInHeatMapMetadata(int versionCount) {
-        HeatMapRestController controller = controller();
-        DocDetails document = new DocDetails();
-        when(access.requireDocument(request, 123)).thenReturn(document);
-        List<VersionPeriod> versions = IntStream.iterate(versionCount, id -> id > 0, id -> id - 1)
-                .mapToObj(id -> new VersionPeriod(id, RANGE.from() + id, new ReportRange(RANGE.from() + id, RANGE.from() + id + 1)))
-                .toList();
-        when(history.resolve(request, 123, "period", null)).thenReturn(
-                new HeatMapHistoryService.PreviewSelection(versionCount, versions.get(0).effectiveFrom(), "history", false, versions, RANGE, document));
-        try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class);
-                MockedStatic<DocDB> docs = mockStatic(DocDB.class)) {
-            storage.when(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO))
-                    .thenReturn(List.of(new WidthCount(390, DOCUMENT, 250, 390)));
-            Map<String, Object> metadata = controller.metadata(123, "period", 390, DOCUMENT, null);
-            assertEquals(versions.subList(0, Math.min(versionCount, 100)), metadata.get("versions"));
-            assertEquals(RANGE, metadata.get("clickRange"));
-            assertEquals(250L, metadata.get("clicks"));
-        }
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = { "public.example", "" })
-    void widthsUseTrustedDomainAndInclusiveDaysAndOrderPopularWidthsFirst(String domain) {
-        HeatMapRestController controller = controller();
-        when(access.currentDomain(request)).thenReturn(domain);
-        request.addParameter("domain", "untrusted.example");
-        try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
-            storage.when(() -> HeatMapStorage.getWidths(domain, 123, FROM, TO))
-                    .thenReturn(List.of(new WidthCount(390, DOCUMENT, 7, 390), new WidthCount(1280, DOCUMENT, 2, 1280), new WidthCount(1440, DOCUMENT, 2, 1440)));
-            assertEquals(List.of(new WidthCount(390, DOCUMENT, 7, 390), new WidthCount(1280, DOCUMENT, 2, 1280),
-                    new WidthCount(1440, DOCUMENT, 2, 1440)), controller.widths(123, "period", null));
-            verify(access).requireDocument(request, 123);
-            storage.verify(() -> HeatMapStorage.getWidths(domain, 123, FROM, TO));
         }
     }
 

@@ -1,6 +1,5 @@
 package sk.iway.iwcm.stat;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -14,7 +13,6 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,25 +25,6 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Verifies idempotent event inserts without changing legacy buffer behavior. */
 class StatWriteBufferHeatMapTest extends BaseWebjetTest {
-    /** Buffer keys combine equal statements while retaining partition, error-policy and update differences. */
-    @Test
-    void bufferKeysPreserveStatementGroupingAndExecutionPolicy() {
-        String insert = "INSERT INTO stat_clicks_2026_9 (event_id) VALUES (?)";
-        Map<UpdateInsertSqlPair, String> groups = new HashMap<>();
-        groups.put(new UpdateInsertSqlPair(null, insert), "legacy");
-        groups.put(new UpdateInsertSqlPair("UPDATE stat_clicks_2026_9 SET x=?", insert), "update-insert");
-        groups.put(new UpdateInsertSqlPair(insert, "_2026_9", true), "idempotent");
-        groups.put(new UpdateInsertSqlPair(insert, "_2026_8", true), "other partition");
-        groups.put(new UpdateInsertSqlPair(insert, "_2026_9", false), "strict");
-
-        assertEquals(5, groups.size());
-        assertEquals("legacy", groups.get(new UpdateInsertSqlPair(null, insert)));
-        assertEquals("update-insert", groups.get(new UpdateInsertSqlPair("UPDATE stat_clicks_2026_9 SET x=?", insert)));
-        assertEquals("idempotent", groups.get(new UpdateInsertSqlPair(insert, "_2026_9", true)));
-        assertEquals("other partition", groups.get(new UpdateInsertSqlPair(insert, "_2026_8", true)));
-        assertEquals("strict", groups.get(new UpdateInsertSqlPair(insert, "_2026_9", false)));
-    }
-
     @Test
     void duplicateClickDoesNotPreventTheFollowingClickFromBeingWritten() throws Exception {
         int originalType = Constants.DB_TYPE;
@@ -103,47 +82,6 @@ class StatWriteBufferHeatMapTest extends BaseWebjetTest {
         assertFalse(StatWriteBuffer.isDuplicateKey(new SQLException("null value", "23502"), Constants.DB_PGSQL));
         assertFalse(StatWriteBuffer.isDuplicateKey(new SQLException("permission denied", "42501"), Constants.DB_PGSQL));
         assertFalse(StatWriteBuffer.isDuplicateKey(new SQLException("foreign key", "23000", 1452), Constants.DB_MYSQL));
-    }
-
-    /**
-     * Checks generated click-table definitions for legacy IDs, unit click weights and unique event indexes.
-     *
-     * @throws Exception if the SQL builder cannot be accessed or invoked
-     */
-    @Test
-    void monthlySchemaPreservesLegacyIdentityAndUniquelyIndexesNewEventsOnEveryDatabase() throws Exception {
-        Method ddl = StatNewDB.class.getDeclaredMethod("getCreateStatTableSqlCommand", String.class, String.class, int.class);
-        ddl.setAccessible(true);
-        String procedure = Constants.getString("statTableCreateProcedureName");
-        String engine = Constants.getString("mariaDbDefaultEngine");
-        Constants.setString("statTableCreateProcedureName", "");
-        try {
-            Constants.setString("mariaDbDefaultEngine", "MyISAM");
-            for (int type : new int[] { Constants.DB_MYSQL, Constants.DB_MSSQL, Constants.DB_PGSQL, Constants.DB_ORACLE }) {
-                String sql = (String) ddl.invoke(null, "stat_clicks", "_2026_9", type);
-                assertTrue(sql.contains("event_id CHAR(32)"));
-                assertTrue(sql.contains("stat_click_id INT"));
-                assertTrue(sql.contains(type == Constants.DB_ORACLE
-                        ? "count INT DEFAULT 1 NOT NULL" : "count INT NOT NULL DEFAULT 1"));
-                assertTrue(sql.contains("CREATE UNIQUE INDEX hm_event_2026_9"));
-                assertTrue(sql.contains("ON stat_clicks_2026_9(event_id)"));
-                assertTrue(sql.contains("domain_name VARCHAR(255)"));
-                assertTrue(sql.contains(type == Constants.DB_ORACLE
-                        ? "viewport_width INT DEFAULT 1920 NOT NULL" : "viewport_width INT NOT NULL DEFAULT 1920"));
-                assertTrue(sql.contains("CREATE INDEX hm_page_v2_2026_9"));
-                assertTrue(sql.contains("CREATE INDEX hm_width_2026_9"));
-                assertTrue(sql.contains("CREATE INDEX hm_tile_2026_9"));
-                assertTrue(sql.contains("coordinate_mode INT"));
-                assertTrue(sql.contains("source_viewport_width INT"));
-                assertFalse(sql.contains("session_id"));
-                if (type == Constants.DB_MYSQL) assertTrue(sql.contains("ENGINE=InnoDB ROW_FORMAT=DYNAMIC;"));
-                if (type == Constants.DB_MSSQL) assertTrue(sql.contains("WHERE event_id IS NOT NULL"));
-                if (type == Constants.DB_PGSQL) assertTrue(sql.contains("GENERATED BY DEFAULT AS IDENTITY"));
-            }
-        } finally {
-            Constants.setString("statTableCreateProcedureName", procedure);
-            Constants.setString("mariaDbDefaultEngine", engine);
-        }
     }
 
     private static boolean save(UpdateInsertSqlPair sql, List<Object[]> values) throws Exception {

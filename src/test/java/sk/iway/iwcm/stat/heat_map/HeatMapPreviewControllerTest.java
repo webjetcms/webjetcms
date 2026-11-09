@@ -1,5 +1,6 @@
 package sk.iway.iwcm.stat.heat_map;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 
 import jakarta.servlet.RequestDispatcher;
@@ -78,6 +80,9 @@ class HeatMapPreviewControllerTest {
         verify(dispatcher).forward(forwarded.capture(), org.mockito.ArgumentMatchers.same(response));
         HttpServletRequest preview = (HttpServletRequest) forwarded.getValue();
         assertEquals("123", preview.getParameter("docid"));
+        assertEquals(List.of("docid"), Collections.list(preview.getParameterNames()));
+        assertEquals(1, preview.getParameterMap().size());
+        assertArrayEquals(new String[] {"123"}, preview.getParameterValues("docid"));
         assertNull(preview.getParameter("historyid"));
         assertNull(preview.getParameter("inlineEditorAdmin"));
         assertNull(preview.getParameter("NO_WJTOOLBAR"));
