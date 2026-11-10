@@ -193,6 +193,8 @@ class BranchMergeTest extends BaseWebjetTest {
     @Test void choiceImmediatelyChangesPreviewAndStaleChoiceRequiresRecomparison()throws Exception {
         int id=f.pages.get(0);sql("UPDATE documents SET title='autotest P06 concurrent LIVE' WHERE doc_id="+id);
         var report=detail();var item=item(report,BranchType.DOCUMENT,Integer.toString(id));assertTrue(item.conflict());
+        assertFalse(report.ready());
+        assertTrue(report.errors().isEmpty(), report.errors().toString());
         report=service.resolve(f.branch,DOMAIN,user,report.revision(),BranchType.DOCUMENT,Integer.toString(id),BranchDecision.Source.LIVE,item.liveHash(),item.workHash());
         try(var scope=BranchContexts.open(null,new BranchContext(f.branch,DOMAIN,1,BranchContext.Mode.PREVIEW))){assertEquals("autotest P06 concurrent LIVE",BranchView.current().document(id,false).getTitle());}
         sql("UPDATE documents SET title='autotest P06 newer LIVE' WHERE doc_id="+id);

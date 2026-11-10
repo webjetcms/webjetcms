@@ -113,21 +113,12 @@ $(async () => {
         });
         label.title = label.textContent;
         if (active) {
-            if (!document.getElementById('branch-file-warning')) {
-                const warning = document.createElement('p');
-                warning.id = 'branch-file-warning';
-                warning.className = 'alert alert-warning m-3';
-                warning.textContent = WJ.translate('branches.files.shared.js');
-                document.querySelector('main, .ly-content, #main-content')?.prepend(warning);
-            }
             if (['DRAFT', 'SCHEDULED', 'NEEDS_ATTENTION'].includes(active.state)) try {
                 const link = await api(`/${active.id}/preview-link`);
                 const preview = document.getElementById('branch-preview-link');
                 if (preview) { preview.href = link.url; preview.classList.remove('d-none'); }
             } catch (error) { label.title += ` · ${branchText('previewUnavailable')}`; }
-        }
 
-        if (active) {
             const changesButton = document.createElement('button');
             changesButton.type = 'button'; changesButton.className = 'btn btn-sm btn-outline-secondary';
             changesButton.textContent = WJ.translate('branches.changes.js');

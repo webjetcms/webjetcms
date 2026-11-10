@@ -25,7 +25,7 @@ class BranchFilterTest {
     private final BranchFilter filter=new BranchFilter();
     private final MockHttpServletRequest request=new MockHttpServletRequest();
     private MockHttpServletResponse response=new MockHttpServletResponse();
-    private final Identity admin=new Identity();
+    private final Identity admin=spy(new Identity());
     private final RequestBean bean=new RequestBean();
     private final BranchContext branch=new BranchContext(42,DOMAIN,1,BranchContext.Mode.ADMIN);
     private MockedStatic<Constants> constants;
@@ -40,6 +40,7 @@ class BranchFilterTest {
         constants.when(Constants::getInstallName).thenReturn("test");
         groups=mockStatic(GroupsDB.class);GroupsDB permissions=mock(GroupsDB.class);groups.when(GroupsDB::getInstance).thenReturn(permissions);
         admin.setAdmin(true);admin.setUserId(1);when(permissions.getUserRootDomainNames(admin)).thenReturn(List.of(DOMAIN,"b.example"));
+        doReturn(true).when(admin).isEnabledItem(BranchAccess.PERMISSION);
         request.setMethod("GET");request.setServerName("admin.example");request.getSession().setAttribute(Constants.USER_KEY,admin);request.getSession().setAttribute("preview.editorDomainName",DOMAIN);
         selection=mockStatic(BranchSelection.class);selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(BranchContext.live(DOMAIN,1));
         bean.setRequest(request);bean.setDomain("old.example");bean.setUrl("/old.html");SetCharacterEncodingFilter.setCurrentRequestBean(bean);
@@ -167,6 +168,33 @@ class BranchFilterTest {
         response=new MockHttpServletResponse();headers(41,DOMAIN);filter.doFilter(request,response,(in,out)->fail("Old branch screen dispatched"));assertEquals(409,response.getStatus());
         response=new MockHttpServletResponse();headers(42,DOMAIN);request.setMethod("POST");filter.doFilter(request,response,(in,out)->fail("P03 content write dispatched"));assertEquals(409,response.getStatus());
         response=new MockHttpServletResponse();request.setMethod("GET");request.setRequestURI("/admin/restart.jsp");filter.doFilter(request,response,(in,out)->fail("Unsupported admin GET dispatched"));assertEquals(409,response.getStatus());
+    }
+
+    @Test void publicPageLinkReadsLiveWhileAPackageIsSelected() throws Exception {
+        selected();
+        request.setRequestURI("/showdoc.do");
+        request.setParameter("docid", "123");
+        for (String method : List.of("GET", "HEAD")) {
+            request.setMethod(method);
+            response = new MockHttpServletResponse();
+            AtomicBoolean dispatched = new AtomicBoolean();
+            filter.doFilter(request, response, (in, out) -> {
+                dispatched.set(true);
+                assertFalse(BranchContexts.current().isBranch());
+            });
+            assertTrue(dispatched.get(), method + " returned " + response.getStatus());
+        }
+
+        request.setMethod("POST");
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (in, out) -> fail("Dispatched a public POST"));
+        assertEquals(409, response.getStatus());
+
+        request.setMethod("GET");
+        request.setParameter("historyid", "456");
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (in, out) -> fail("Dispatched a history request"));
+        assertEquals(409, response.getStatus());
     }
 
     @Test void legacyAdminSaveAndUploadCannotBypassTheAdminPathGuard()throws Exception {

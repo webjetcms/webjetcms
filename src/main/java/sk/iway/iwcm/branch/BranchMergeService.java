@@ -108,7 +108,8 @@ public final class BranchMergeService {
                 Map<String,Object> branch=branch(c,id,domain,revision,true);
                 if(!Set.of("DRAFT","SCHEDULED").contains(branch.get("state"))) throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
                 Plan plan=plan(c,id,domain,user,revision);
-                if(!plan.errors.isEmpty()||plan.entries.stream().anyMatch(Entry::conflict)) throw conflict(String.join("; ",plan.errors));
+                if(!plan.errors.isEmpty()) throw conflict(String.join("; ",plan.errors));
+                if(plan.entries.stream().anyMatch(Entry::conflict)) throw conflict(Prop.getInstance().getText("branches.schedule.conflict"));
                 if(!Objects.equals(hash,plan.hash)) throw conflict("Podklad porovnania sa zmenil. Znova overte balík.");
                 try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='SCHEDULED',publish_at=?,scheduled_by=?,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,last_error=NULL WHERE id=? AND revision=?")) {
                     s.setTimestamp(1,new Timestamp(publishAt));s.setInt(2,user.getUserId());s.setInt(3,user.getUserId());s.setLong(4,id);s.setLong(5,revision);
@@ -183,7 +184,6 @@ public final class BranchMergeService {
             Entry e=new Entry(type,row,change,live,target,conflict,write,error);entries.add(e);
             fingerprint.append('|').append(change.identity()).append(':').append(live.hash()).append(':').append(change.work().hash()).append(':').append(target.hash()).append(':').append(row.get("apply_state")).append(':').append(row.get("apply_phase"));
             if(error!=null) errors.add(change.identity()+": "+error);
-            else if(conflict) errors.add(change.identity()+": "+Prop.getInstance().getText("branches.schedule.conflict"));
         }
         if(!frozen && !entries.isEmpty() && entries.stream().noneMatch(e->e.error!=null)) {
             try(BranchContexts.Scope ignored=BranchContexts.open(null,new BranchContext(id,domain,user.getUserId(),BranchContext.Mode.PREVIEW))) {

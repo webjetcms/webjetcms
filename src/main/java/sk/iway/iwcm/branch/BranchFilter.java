@@ -38,7 +38,7 @@ public final class BranchFilter implements Filter {
             if(selection instanceof BranchSelection.Selected selected && selected.branchId()>0 && user!=null && user.isAdmin()) {
                 Object domain=request.getSession(false).getAttribute("preview.editorDomainName");
                 boolean sameDomain=domain==null||selected.domainName().equals(domain);
-                boolean legacy=path.matches("(?i).*\\.(jsp|action|do)$")||path.equals("/XhrFileUpload");
+                boolean legacy=(path.matches("(?i).*\\.(jsp|action|do)$")||path.equals("/XhrFileUpload")) && !isPublicPageLink(path,request);
                 if(sameDomain && !path.equals("/logoff.do") && (legacy||!Set.of("GET","HEAD").contains(request.getMethod()))) {
                     response.sendError(409,"This write path is unavailable in a publishing branch; select production");return;
                 }
@@ -126,6 +126,12 @@ public final class BranchFilter implements Filter {
             if(oldPreview==null)request.removeAttribute("isPreview");else request.setAttribute("isPreview",oldPreview);
             request.removeAttribute(BranchPreviewUrls.LOGICAL_PATH);
         }
+    }
+
+    private static boolean isPublicPageLink(String path, HttpServletRequest request) {
+        if (!"/showdoc.do".equals(path) || !Set.of("GET", "HEAD").contains(request.getMethod())) return false;
+        String[] ids = request.getParameterValues("docid");
+        return request.getParameterMap().size() == 1 && ids != null && ids.length == 1 && ids[0].matches("[1-9][0-9]*");
     }
 
     /** The ordinary Page Builder frame reads WORK; it never falls through to a production frame. */
