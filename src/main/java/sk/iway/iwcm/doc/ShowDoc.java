@@ -822,8 +822,9 @@ private static String combineCss(String cssStyle)
             }
         }
 
-        // Keep the admin inline editor on the same origin by skipping HTTP/HTTPS redirects.
-        if (inlineEditorAdmin == false && Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
+        // Keep the admin inline editor and heat-map previews on the same origin by skipping HTTP/HTTPS redirects.
+        if (inlineEditorAdmin == false && !sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request)
+                && Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
         {
             if (doc.isRequireSsl() && !Tools.isSecure(request))
             {
@@ -942,6 +943,12 @@ private static String combineCss(String cssStyle)
 
             if (!canAccess)
             {
+                if (sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request)) {
+                    // The pinned preview document must not be reused for a login or error-page forward.
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+
                 Logger.debug(ShowDoc.class, "canAccess == false logonDocid="+doc.getLogonPageDocId()+" docId="+doc.getDocId());
                 UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();
                 request.setAttribute("password_protected", userGroupsDB.convertIdsToNames(doc.getPasswordProtected()));

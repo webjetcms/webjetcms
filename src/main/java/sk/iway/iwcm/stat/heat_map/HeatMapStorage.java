@@ -370,6 +370,9 @@ public final class HeatMapStorage {
     private static void query(String domain, LocalDate from, LocalDate to, String columns, List<Integer> columnParameters,
             String filter, List<Integer> parameters, String groupBy, RowConsumer consumer) {
         domain = normalizeDomain(domain);
+        // Oracle stores the empty single-domain key as SQL NULL.
+        boolean oracleEmptyDomain = Constants.DB_TYPE == Constants.DB_ORACLE && domain.isEmpty();
+        String domainCondition = oracleEmptyDomain ? "domain_name IS NULL" : "domain_name = ?";
         validateDates(from, to);
         YearMonth firstMonth = YearMonth.from(from);
         YearMonth lastMonth = YearMonth.from(to);
@@ -378,11 +381,11 @@ public final class HeatMapStorage {
                 int startDay = month.equals(firstMonth) ? from.getDayOfMonth() : 1;
                 int endDay = month.equals(lastMonth) ? to.getDayOfMonth() : month.lengthOfMonth();
                 String sql = "SELECT " + columns + " FROM " + TABLE_NAME + suffix(month)
-                        + " WHERE domain_name = ? AND day_of_month BETWEEN ? AND ?" + filter + groupBy;
+                        + " WHERE " + domainCondition + " AND day_of_month BETWEEN ? AND ?" + filter + groupBy;
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
                     int parameter = 1;
                     for (int value : columnParameters) statement.setInt(parameter++, value);
-                    statement.setString(parameter++, domain);
+                    if (!oracleEmptyDomain) statement.setString(parameter++, domain);
                     statement.setInt(parameter++, startDay);
                     statement.setInt(parameter++, endDay);
                     for (int value : parameters) statement.setInt(parameter++, value);
