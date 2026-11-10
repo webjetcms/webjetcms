@@ -58,7 +58,7 @@ ext {
     allureVersion = "2.32.0";
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
-    webjetAiVersion = '2.0.4';
+    webjetAiVersion = '2.1.0';
 }
 
 lombok {
@@ -145,7 +145,7 @@ configurations {
 
 dependencies {
 
-    implementation "com.webjetcms:webjet-ai:2.1.0-SNAPSHOT"
+    implementation "com.webjetcms:webjet-ai:${webjetAiVersion}"
     localAi "com.webjetcms:webjet-ai-local:${webjetAiVersion}"
 
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
