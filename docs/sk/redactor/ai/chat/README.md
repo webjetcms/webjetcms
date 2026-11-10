@@ -12,7 +12,7 @@ V AI Čete môžete postupne spresňovať zadanie, pýtať sa na obsah priložen
 ## Začatie rozhovoru
 
 1. V hlavičke administrácie kliknite na **Hľadať…** alebo stlačte **Ctrl+K / ⌘K** a vyberte kartu **AI Čet**.
-2. V pravom dolnom rohu poľa na správu vyberte asistenta. Ponuka obsahuje iba četových asistentov s nastavením **Použiť pre Entitu → CHAT_SEARCH**.
+2. V pravom dolnom rohu poľa na správu vyberte asistenta. Rovnakého univerzálneho asistenta môžete vybrať aj cez tlačidlo AI pri textovom poli.
 3. Napíšte požiadavku a odošlite ju tlačidlom so šípkou nahor alebo klávesom **Enter**. **Shift+Enter** vloží nový riadok.
 4. Ďalšiu požiadavku napíšte do rovnakého poľa. Napríklad po návrhu programu školenia môžete požiadať o jeho skrátenie alebo doplnenie prestávky.
 
@@ -129,7 +129,7 @@ Zatvorenie okna AI zachová rozpísanú správu a neodoslané prílohy, kým zos
 ## Dostupnosť a riešenie problémov
 
 - **Karta AI Čet sa nezobrazuje:** používateľ potrebuje oprávnenie na používanie AI asistentov.
-- **Nie je dostupný žiadny asistent:** správca musí povoliť asistenta s typom požiadavky **Čet**, pridať `CHAT_SEARCH` do **Použiť pre Entitu** a nakonfigurovať jeho poskytovateľa. Postup je v [nastavení četového asistenta](../settings/README.md#nastavenie-četového-asistenta).
+- **Nie je dostupný žiadny asistent:** správca musí povoliť asistenta s typom požiadavky **Čet**, nakonfigurovať jeho poskytovateľa a pridať `top-search-field` medzi cieľové polia alebo `CHAT_SEARCH` medzi entity. Postup je v [nastavení četového asistenta](../settings/README.md#nastavenie-četového-asistenta).
 - **Tlačidlo na pridanie príloh je neaktívne:** asistent nepodporuje prílohy, čet práve spracúva požiadavku alebo je dostupný iba na čítanie. Na karte AI Čet v rýchlom vyhľadávaní musí byť navyše zapnuté ukladanie rozhovoru.
 - **Prílohu nemožno spracovať:** overte formát, veľkosť a čitateľnosť textu; pri obrázku aj podporu obrazového vstupu modelom.
 - **Odpoveď sa nepodarilo dokončiť:** čet zobrazí dôvod a podľa typu chyby ponúkne opakovanie požiadavky alebo nový čet. Požiadavky sa automaticky neopakujú.

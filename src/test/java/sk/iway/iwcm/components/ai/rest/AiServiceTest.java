@@ -46,7 +46,7 @@ class AiServiceTest {
         assertFalse(AiService.shouldRemoveHtml(assistant, inputData));
     }
 
-    /** Global discovery requires explicit CHAT_SEARCH binding as well as the current domain and an active provider. */
+    /** Global discovery accepts either exact binding and requires the current domain and an active provider. */
     @Test
     void standaloneChatUsesCurrentDomainAndOnlyConfiguredActiveChats() {
         AssistantDefinitionRepository repository = mock(AssistantDefinitionRepository.class);
@@ -62,16 +62,24 @@ class AiServiceTest {
         AssistantDefinitionEntity disabled = chat(2L);
         disabled.setActive(false);
         AssistantDefinitionEntity generation = chat(3L);
+        generation.setClassName("*");
+        generation.setFieldTo("top-search-field");
         generation.setAction(SupportedActions.GENERATE_TEXT.getAction());
         AssistantDefinitionEntity missing = chat(4L);
         missing.setProvider("missing");
         AssistantDefinitionEntity editor = chat(5L);
         editor.setClassName("sk.iway.iwcm.doc.DocDetails");
+        editor.setFieldFrom("top-search-field");
+        editor.setFieldTo("dt-format-text,%top-search-field");
         AssistantDefinitionEntity wildcard = chat(6L);
         wildcard.setClassName("*");
+        wildcard.setFieldTo("*");
         AssistantDefinitionEntity shared = chat(7L);
         shared.setClassName("sk.iway.iwcm.doc.DocDetails, CHAT_SEARCH");
-        when(repository.findAllByDomainId(42)).thenReturn(List.of(chat, disabled, generation, missing, editor, wildcard, shared));
+        AssistantDefinitionEntity universal = chat(8L);
+        universal.setClassName("*");
+        universal.setFieldTo("dt-format-text,dt-format-text-wrap,dt-format-wysiwyg, top-search-field ");
+        when(repository.findAllByDomainId(42)).thenReturn(List.of(chat, disabled, generation, missing, editor, wildcard, shared, universal));
 
         try (MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class);
                 MockedStatic<Cache> caches = mockStatic(Cache.class)) {
@@ -82,7 +90,7 @@ class AiServiceTest {
             when(prop.getText("{model}", false)).thenReturn("{model}");
             List<DataTableAi> result = service.getChatAssistants(repository, prop);
 
-            assertEquals(List.of(1L, 7L), result.stream().map(DataTableAi::getAssistantId).toList());
+            assertEquals(List.of(1L, 7L, 8L), result.stream().map(DataTableAi::getAssistantId).toList());
             assertEquals("gpt-6.1-sol", result.get(0).getDescription());
             assertNull(result.get(0).getInstructions());
         }

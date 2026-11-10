@@ -250,13 +250,17 @@ class AiChatServiceTest {
         verify(provider, times(1)).getPersistentChatResponse(any(), any(), any(), eq(streaming), same(config), any());
     }
 
-    /** Removing CHAT_SEARCH preserves history but prevents new global conversations and continuation. */
-    @Test
-    void removedGlobalBindingMakesHistoryReadOnly() {
+    /** Removing the global binding preserves history but prevents new global conversations and continuation. */
+    @ParameterizedTest
+    @CsvSource({"CHAT_SEARCH,*", "*,dt-format-text;top-search-field"})
+    void removedGlobalBindingMakesHistoryReadOnly(String entity, String fields) {
+        assistant.setClassName(entity);
+        assistant.setFieldTo(fields);
         var first = prepare(null, null);
         execute(first);
         String id = first.turn().thread().getId();
-        assistant.setClassName("sk.iway.iwcm.doc.DocDetails");
+        assistant.setClassName("*");
+        assistant.setFieldTo("dt-format-text");
 
         var detail = service.detail(id, scope);
 

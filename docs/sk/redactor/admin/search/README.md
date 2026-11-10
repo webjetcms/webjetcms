@@ -34,7 +34,7 @@ Po zmene výrazu sa výsledky dokumentácie vymažú a karta znova zobrazí poml
 
 Karta **AI Čet** otvorí samostatný rozhovor s AI asistentom. V poli správy vyberte asistenta, napíšte požiadavku a odošlite ju klávesom **Enter** alebo tlačidlom so šípkou. Obsah otvorenej webovej stránky ani výraz z vyhľadávania sa do rozhovoru neposiela.
 
-Ponuka obsahuje iba aktívnych asistentov s typom požiadavky **Čet** a hodnotou `CHAT_SEARCH` v nastavení **Použiť pre Entitu**. Správca ich nastaví v [AI asistentoch](../../ai/settings/README.md#nastavenie-četového-asistenta).
+Ponuka obsahuje aktívnych asistentov s typom požiadavky **Čet**, ktorí majú v **Cieľovom poli** hodnotu `top-search-field` alebo v **Použiť pre Entitu** hodnotu `CHAT_SEARCH`. Správca ich nastaví v [AI asistentoch](../../ai/settings/README.md#nastavenie-četového-asistenta).
 
 Pri ukladaných četoch OpenAI a Gemini môžete pridávať prílohy, hľadať v histórii a pokračovať v rozhovore aj po obnovení stránky. Ikony v hlavičke otvárajú panely **História četov** a **Súbory v čete**. Prepnutie asistenta alebo zatvorenie dialógu zachová rozpísanú správu, kým neopustíte aktuálnu stránku administrácie.
 

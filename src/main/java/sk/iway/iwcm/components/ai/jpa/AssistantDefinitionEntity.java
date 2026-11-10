@@ -138,7 +138,7 @@ public class AssistantDefinitionEntity implements Serializable {
 					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-field"),
 					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
 					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
-                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className")
+                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className,#DTE_Field_action")
 				}
 			)
 		}

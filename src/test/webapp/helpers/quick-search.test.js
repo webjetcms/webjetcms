@@ -65,6 +65,7 @@ function fixture(t, denied = [], options = {}) {
     const context = vm.createContext({
         window, document: window.document, navigator: { platform: options.platform || 'Win32', clipboard: options.clipboard }, URL: ChatURL, URLSearchParams, AbortController, setTimeout, clearTimeout,
         crypto: require('node:crypto').webcrypto,
+        ResizeObserver: class { observe() {} disconnect() {} },
         $: window.jQuery,
         moment: value => moment(value).locale(options.language === 'cz' ? 'cs' : options.language || 'sk'),
         AiChatTransport: class {
@@ -114,6 +115,7 @@ function fixture(t, denied = [], options = {}) {
         vm.runInContext(readAdmin('ai/chat-history-api.js'), context);
         vm.runInContext(readAdmin('ai/chat-tooltips.js'), context);
         vm.runInContext(readAdmin('ai/ai-response-parser.js'), context);
+        vm.runInContext(`{ ${readAdmin('ai/html-preview.js')}; Object.assign(this, { HtmlPreview, editorPreviewContext }); }`, context);
         vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
         vm.runInContext(`{ ${readAdmin('ai/ai-chat-host.js')}; Object.assign(this, { AiChatHost }); }`, context);
         if (options.editorChat) {
@@ -1508,7 +1510,7 @@ test('AI Chat sends no webpage context and completed responses expose only Copy'
     await tick();
     const message = f.controller.chatPanel.querySelector('.ai-chat-assistant');
     assert.equal(message.querySelector('details code').textContent, reply);
-    assert.equal(message.querySelector('details').open, false);
+    assert.equal(message.querySelector('details').open, true);
     assert.equal(message.querySelector('.ai-chat-message-text p'), null, 'Raw HTML must remain inert text.');
     const actions = message.querySelectorAll('.ai-chat-message-actions button');
     assert.equal(actions.length, 1);
@@ -2063,7 +2065,7 @@ for (const pageBuilder of [false, true]) {
             const { editor, values, chat } = conversation;
             const original = values.data;
             const wjeditor = pageBuilder ? {
-                editingMode: 'pageBuilder', getData: () => values.data,
+                editingMode: 'pageBuilder', options: { fieldid: 'data' }, getData: () => values.data,
                 pbInsertContent: (content, action) => { values.data = (action === 'append' ? values.data : '') + content; }
             } : null;
             editor.EDITOR.field = () => ({ s: { opts: { wjeditor } } });

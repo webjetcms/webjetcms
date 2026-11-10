@@ -4,9 +4,11 @@ const modal = '#admin-quick-search';
 const chatTitle = 'Školenie – autotest';
 const historyButton = `${modal} button[aria-controls="admin-ai-chat-history"]`;
 const filesButton = `${modal} button[aria-controls="admin-ai-chat-files"]`;
+const chatModel = "gpt-6.1-sol";
 
-Before(({ login }) => {
-    login('admin');
+Before(({ I }) => {
+    //use tester3 for AI Chat tests because there will not be history for this user
+    I.relogin('tester3');
 });
 
 /** Opens history regardless of the user's saved sidebar preference. */
@@ -16,6 +18,8 @@ async function openHistory(I) {
         await I.waitForVisible(historyButton, 20);
         await I.clickCss(historyButton);
     }
+    await I.waitForVisible('button.ai-chat-host__history-action', 20);
+    I.click('button.ai-chat-host__history-action');
     await I.waitForVisible('#admin-ai-chat-history-search', 20);
 }
 
@@ -26,7 +30,7 @@ Scenario('AI Chat documentation screenshots', async ({ I, Document }) => {
     I.waitForVisible(modal, 10);
     I.clickCss(`${modal} [data-scope="aiChat"]`);
     I.waitForVisible('#admin-quick-search-chat-assistant', 20);
-    I.selectOption('#admin-quick-search-chat-assistant', 'Gemini Chat');
+    I.selectOption('#admin-quick-search-chat-assistant', chatModel);
     I.waitForEnabled(`${modal} .btn-ai-chat-attach`, 10);
 
     I.fillField(`${modal} .ai-chat-input`, `${chatTitle}: z prílohy vytvor tabuľku Čas, Téma, Trvanie.`);
@@ -63,14 +67,14 @@ Scenario('AI Chat editor documentation screenshots', ({ I, DTE, Document }) => {
     I.fillField('#DTE_Field_htmlData', 'Školenie WebJET CMS pre redaktorov: úprava stránok, obrázky a AI asistenti.');
     I.clickCss('div.DTE_Field_Name_htmlData button.btn-ai');
     I.waitForVisible('#toast-container-ai', 10);
-    I.click(locate('button.btn-ai-action').withText('Gemini Chat'));
+    I.click(locate('button.btn-ai-action').withText(chatModel));
     I.waitForVisible('#toast-container-ai .ai-chat-input', 10);
     I.fillField('#toast-container-ai .ai-chat-input', 'Napíš dvojvetovú pozvánku na školenie WebJET CMS: úprava stránok, obrázky a AI asistenti (autotest). Bez HTML a bez úvodu.');
     I.clickCss('#toast-container-ai .btn-ai-chat-send');
     I.waitForVisible('#toast-container-ai .ai-chat-assistant .ai-chat-message-actions button', 120);
     I.waitForInvisible('#toast-container-ai .btn-ai-chat-stop', 120);
     I.moveCursorTo('#toast-container-ai .ai-chat-toolbar');
-    Document.screenshotElement('#toast-container-ai .toast', '/redactor/ai/chat/chat-editor.png');
+    Document.screenshot('/redactor/ai/chat/chat-editor.png');
     I.clickCss('#toast-container-ai .toast-close-button');
     DTE.cancel();
     I.wjSetDefaultWindowSize();
@@ -98,4 +102,8 @@ Scenario('Cleanup AI Chat documentation conversation', async ({ I }) => {
         if (label.startsWith('Vymazať:')) I.acceptPopup();
         I.waitForFunction(([expected]) => document.querySelectorAll('.ai-chat-host__history-item').length === expected, [items - index - 1], 30);
     }
+});
+
+Scenario('logout', async ({ I }) => {
+    I.logout();
 });

@@ -43,7 +43,7 @@ Na tejto karte nastavujete, akú akciu má AI asistent vykonávať, odkiaľ bude
   - Čet
 - **Použiť pre Entitu** – vyberáte entitu (tabuľku), v ktorej bude asistent dostupný. Pri písaní sa automaticky zobrazia všetky podporované entity aj hodnota `CHAT_SEARCH` pre samostatný AI Čet v rýchlom vyhľadávaní.
 - **Zdrojové pole** – určujete pole z vybranej entity, z ktorého má asistent čerpať dáta pri vykonávaní akcie. Toto pole nie je povinné; vyberte ho len v prípade, že sú potrebné vstupné dáta. Zobrazia sa všetky polia danej entity.
-- **Cieľové pole** – vyberáte pole v entite, kde sa uloží výsledok akcie asistenta alebo kde bude asistent dostupný. Opäť sa zobrazia všetky polia danej entity. Ak má četový asistent v **Použiť pre Entitu** iba `CHAT_SEARCH`, cieľové pole môžete nechať prázdne; pri uložení sa doplní `*`.
+- **Cieľové pole** – vyberáte pole v entite, pri ktorom bude asistent dostupný. Pri type **Čet** môžete pridať aj `top-search-field` pre kartu **AI Čet** v rýchlom vyhľadávaní. Ak je jedinou entitou `CHAT_SEARCH`, pri uložení četového asistenta sa prázdne cieľové pole doplní na `*`.
 
 ![](datatable-action-tab.png)
 
@@ -107,20 +107,20 @@ Aktualizácia pridá do predvolenej domény štyroch univerzálnych asistentov v
 | `CHAT-gemini-3.8-flash` | Gemini | `gemini-3.8-flash` |
 | `CHAT-gemini-4-argon` | Gemini | `gemini-4-argon` |
 
-Majú nastavenú entitu `CHAT_SEARCH`, zobrazovaný názov `{model}`, postupné načítanie odpovede a ukladanie rozhovorov. Spoločné inštrukcie určujú stručné odpovede v jazyku používateľa, formátovanie Markdown, nadväzovanie na predchádzajúce správy a odkaz na dokumentáciu WebJET CMS. V ponuke sa zobrazia po nakonfigurovaní príslušného poskytovateľa. Model aj inštrukcie môžete upraviť v nastaveniach asistenta.
+Po nakonfigurovaní poskytovateľa sa títo asistenti ponúknu v rýchlom vyhľadávaní aj pri textových poliach vrátane WYSIWYG editora. V nastavení **Použiť pre Entitu** majú `*` a v nastavení **Cieľové pole** majú `dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field`.
+
+V ponuke sa zobrazí názov modelu (`{model}`). Asistenti majú zapnuté postupné načítanie odpovede a ukladanie rozhovorov. Spoločné inštrukcie určujú stručné odpovede v jazyku používateľa, formátovanie Markdown, nadväzovanie na predchádzajúce správy a odkaz na dokumentáciu WebJET CMS. Model aj inštrukcie môžete upraviť v nastaveniach asistenta.
 
 Vlastného četového asistenta nastavíte takto:
 
 1. V **Nastavenia → AI asistenti** vytvorte alebo upravte asistenta a zapnite **Povoliť používanie**.
 2. Na karte **Akcia** vyberte **Typ požiadavky → Čet**.
-3. Pre zobrazenie v rýchlom vyhľadávaní nastavte **Použiť pre Entitu → CHAT_SEARCH**. Hodnota sa ponúkne po napísaní `chat`. Ak má byť asistent dostupný aj pri poli, pridajte ju k pôvodnej entite, napríklad `sk.iway.iwcm.doc.DocDetails,CHAT_SEARCH`, a ponechajte nastavenie cieľového poľa.
+3. Pre zobrazenie v rýchlom vyhľadávaní pridajte do **Cieľového poľa** hodnotu `top-search-field`. Ďalšie cieľové polia oddeľte čiarkou. Napríklad pre entitu `sk.iway.iwcm.doc.DocDetails` a cieľ `title,top-search-field` bude asistent dostupný pri názve stránky aj v rýchlom vyhľadávaní. Ak má byť dostupný iba v rýchlom vyhľadávaní, stačí nastaviť **Použiť pre Entitu** na `CHAT_SEARCH`.
 4. Na karte **Poskytovateľ** vyberte nakonfigurovaného poskytovateľa a model podporujúci požadovaný spôsob práce.
 5. V **Inštrukciách** určite úlohu asistenta, jazyk a požadovaný formát odpovedí.
 6. Pre ukladané rozhovory s prílohami na karte **AI Čet** použite OpenAI alebo Gemini, model s podporou četu a vypnite **Zapnúť dočasný čet**. Pre priebežné zobrazovanie odpovede zapnite **Využiť postupné načítanie**, ak ho model podporuje.
 
-V rýchlom vyhľadávaní sa ponúkajú iba aktívni četoví asistenti aktuálnej domény s nakonfigurovaným poskytovateľom a výslovne uvedenou hodnotou `CHAT_SEARCH`. Samotná hodnota `*`, vzor ani väzba na inú entitu asistenta do tejto ponuky nezaradí. Pri existujúcich asistentoch, ktorých chcete používať v rýchlom vyhľadávaní, doplňte `CHAT_SEARCH` ručne.
-
-Hodnota `CHAT_SEARCH` je označenie pre globálny čet a nevyžaduje databázovú tabuľku. **Zdrojové pole** a **Cieľové pole** sa v ňom nepoužívajú a obsah otvorenej stránky sa neposiela. Po odstránení väzby `CHAT_SEARCH` zostanú uložené globálne rozhovory dostupné na čítanie, ale nemožno v nich pokračovať.
+Rýchle vyhľadávanie ponúka aktívnych četových asistentov aktuálnej domény s nakonfigurovaným poskytovateľom. Vyžaduje presnú hodnotu `top-search-field` v zozname cieľových polí alebo `CHAT_SEARCH` v zozname entít. Rozhovor otvorený z rýchleho vyhľadávania sa začína bez obsahu otvorenej stránky. Ak asistentovi odstránite poslednú väzbu na rýchle vyhľadávanie, jeho uložené rozhovory v tejto ponuke zostanú dostupné iba na čítanie.
 
 Používateľ potrebuje oprávnenie na používanie AI asistentov (`cmp_ai_button`). Ak zmeníte model, asistenta alebo konfiguráciu poskytovateľa, starší uložený rozhovor môže zostať dostupný iba na čítanie. Postup práce s rozhovormi je v kapitole [AI Čet](../chat/README.md).
 
