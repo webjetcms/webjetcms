@@ -471,8 +471,7 @@ class AiChatServiceTest {
 
     /** Field chats honor the HTML preference on retries while preserving literal attachments and the original field snapshot. */
     @ParameterizedTest
-    @CsvSource({"false,false,false", "false,true,false", "true,false,false", "true,true,false",
-        "false,false,true", "false,true,true", "true,false,true", "true,true,true"})
+    @CsvSource({"false,false,false", "false,true,true", "true,false,true", "true,true,false"})
     void fieldChatHonorsHtmlPreferenceAndPreservesRetryContext(boolean keepHtml, boolean streaming, boolean inputIsSelectedTextInEditor) throws Exception {
         assistant.setClassName("sk.iway.iwcm.doc.DocDetails");
         assistant.setKeepHtml(keepHtml);

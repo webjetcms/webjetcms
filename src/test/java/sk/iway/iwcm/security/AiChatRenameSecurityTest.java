@@ -2,7 +2,6 @@ package sk.iway.iwcm.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockStatic;
 
 import java.io.IOException;
@@ -25,14 +24,13 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.filebrowser.FbrowserController;
 import sk.iway.iwcm.system.elfinder.FilePropertiesDTO;
 import sk.iway.iwcm.system.elfinder.FilePropertiesRestController;
 
-/** Verifies generic renames and the private-path restriction at the file-properties endpoint. */
+/** Verifies that both file-properties endpoints protect private chat files. */
 class AiChatRenameSecurityTest {
 
     private static final String CHAT_ROOT = "/files/protected/ai-chat";
@@ -60,27 +58,6 @@ class AiChatRenameSecurityTest {
     @AfterEach
     void tearDown() {
         Constants.setServletContext(originalContext);
-    }
-
-    /** Internal rename operations can work with chat files without feature-specific restrictions. */
-    @Test
-    void genericRenameCanTargetChatStorage() throws IOException {
-        Path source = path("/files/protected/document.txt");
-        Files.writeString(source, "ordinary file");
-        assertTrue(Tools.renameFile(source.toString(), path(HISTORY).toString()));
-        assertFalse(Files.exists(source));
-        assertEquals("ordinary file", Files.readString(path(HISTORY)));
-    }
-
-    /** Keeps ordinary sibling files renameable. */
-    @Test
-    void renamesOrdinaryFiles() throws IOException {
-        Path file = path("/files/protected/document.txt");
-        Path renamedFile = path("/files/protected/renamed.txt");
-        Files.writeString(file, "ordinary file");
-        assertTrue(Tools.renameFile(file.toString(), renamedFile.toString()));
-        assertFalse(Files.exists(file));
-        assertEquals("ordinary file", Files.readString(renamedFile));
     }
 
     /** Rejects a directly submitted chat filename before audit or metadata updates. */

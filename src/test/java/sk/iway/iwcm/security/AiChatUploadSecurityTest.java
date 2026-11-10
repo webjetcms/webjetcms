@@ -1,12 +1,16 @@
 package sk.iway.iwcm.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 import jakarta.servlet.ServletContext;
 
@@ -14,12 +18,19 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 
 import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.filebrowser.MultipleFileUploadAction;
+import sk.iway.upload.DiskMultiPartRequestHandler;
+import sk.iway.upload.UploadedFile;
 
-/** Verifies that the shared writer supports internal chat-file updates and preserves stream ownership. */
+/** Verifies that the legacy file-manager upload cannot overwrite private chat history. */
 class AiChatUploadSecurityTest {
 
     @TempDir
@@ -44,44 +55,36 @@ class AiChatUploadSecurityTest {
         Constants.setServletContext(originalContext);
     }
 
-    /** Internal writes can replace chat files and close only inputs owned by the writer. */
     @Test
-    void writesChatFilesAndPreservesInputOwnership() throws IOException {
-        Path history = root.resolve("files/protected/ai-chat/7/42/934be8ec-6b59-4cbe-9575-a1a69f943dea/ai_chat.json");
+    void rejectsPrivateDestinationBeforeProcessingTheUpload() throws Exception {
+        String directory = "/files/protected/ai-chat/7/42/934be8ec-6b59-4cbe-9575-a1a69f943dea";
+        Path history = root.resolve(directory.substring(1)).resolve("ai_chat.json");
         Files.createDirectories(history.getParent());
         Files.writeString(history, "private history");
 
-        for (boolean closeInput : new boolean[] { true, false }) {
-            TrackingInput input = new TrackingInput("replacement");
-            IwcmFsDB.writeFiletoDest(input, history.toFile(), input.available(), closeInput);
-            assertEquals("replacement", Files.readString(history));
-            assertEquals(closeInput, input.closed);
-        }
-    }
+        var request = new MockHttpServletRequest("POST", "/admin/multiplefileupload.do");
+        var response = new MockHttpServletResponse();
+        var admin = new Identity();
+        admin.setAdmin(true);
+        request.getSession().setAttribute(Constants.USER_KEY, admin);
+        request.setParameter("dir", directory);
 
-    /** Keeps ordinary uploads working and leaves caller-owned inputs open. */
-    @Test
-    void writesOrdinaryUploadAndPreservesInputOwnership() throws IOException {
-        Path destination = root.resolve("files/protected/document.txt");
-
-        for (boolean closeInput : new boolean[] { true, false }) {
-            TrackingInput input = new TrackingInput("ordinary upload");
-            IwcmFsDB.writeFiletoDest(input, destination.toFile(), input.available(), closeInput);
-            assertEquals("ordinary upload", Files.readString(destination));
-            assertEquals(closeInput, input.closed);
-        }
-    }
-
-    private static final class TrackingInput extends ByteArrayInputStream {
-        private boolean closed;
-
-        private TrackingInput(String content) {
-            super(content.getBytes(StandardCharsets.UTF_8));
+        var upload = mock(UploadedFile.class);
+        when(upload.getFileName()).thenReturn("ai_chat.json");
+        when(upload.getFileSize()).thenReturn(10);
+        RequestBean original = SetCharacterEncodingFilter.getCurrentRequestBean();
+        try (var multipart = mockConstruction(DiskMultiPartRequestHandler.class, (handler, context) -> {
+            when(handler.handleRequest(request)).thenReturn(request);
+            when(handler.getFileElements()).thenReturn(Map.of("file", upload));
+        })) {
+            SetCharacterEncodingFilter.setCurrentRequestBean(new RequestBean());
+            new MultipleFileUploadAction().execute(request, response);
+        } finally {
+            SetCharacterEncodingFilter.setCurrentRequestBean(original);
         }
 
-        @Override
-        public void close() {
-            closed = true;
-        }
+        assertEquals("Upload error", response.getContentAsString().trim());
+        assertEquals("private history", Files.readString(history));
+        verify(upload, never()).getInputStream();
     }
 }

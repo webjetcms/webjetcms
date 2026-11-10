@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,14 +24,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Adminlog;
-import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.common.MultipartFileSender;
 import sk.iway.iwcm.io.IwcmFile;
-import sk.iway.iwcm.io.IwcmInputStream;
-import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.system.elfinder.FsService;
 import sk.iway.iwcm.system.elfinder.FsSecurityCheckForAll;
 import sk.iway.iwcm.system.elfinder.IwcmFsItem;
@@ -40,7 +36,7 @@ import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.system.elfinder.UnusedFilesService;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
-/** Keeps generic filesystem cleanup usable while file-manager entry points protect private chats. */
+/** Verifies how file-management and download entry points handle private chat files. */
 class AiChatDeletionSecurityTest extends BaseWebjetTest {
     private static final String THREAD = "/files/protected/ai-chat/7/42/934be8ec-6b59-4cbe-9575-a1a69f943dea";
     @TempDir Path root;
@@ -56,11 +52,10 @@ class AiChatDeletionSecurityTest extends BaseWebjetTest {
                 return root.resolve(path.substring(1)).toString();
             }
         });
-        for (String name : new String[] {THREAD + "/ai_chat.json", THREAD + "/1.txt", "/files/old.txt"}) {
+        for (String name : new String[] {THREAD + "/ai_chat.json", THREAD + "/1.txt"}) {
             Path path = path(name);
             Files.createDirectories(path.getParent());
             Files.writeString(path, "old content");
-            Files.setLastModifiedTime(path, FileTime.fromMillis(1000));
         }
         Files.writeString(path("/files/protected/recent.txt"), "recent content");
     }
@@ -68,24 +63,6 @@ class AiChatDeletionSecurityTest extends BaseWebjetTest {
     @AfterEach
     void restoreContext() {
         Constants.setServletContext(originalContext);
-    }
-
-    /** Age-based internal cleanup traverses the entire tree and preserves newer files. */
-    @Test
-    void genericCleanupCanIncludePrivateFilesAndTheirAncestors() {
-        try (var indexer = mockStatic(FileIndexerTools.class)) {
-            assertFalse(FileTools.deleteDirTree(file("/files"), 86_400_000L));
-            assertFalse(Files.exists(path(THREAD)));
-            assertFalse(Files.exists(path("/files/old.txt")));
-            assertTrue(Files.exists(path("/files/protected/recent.txt")));
-        }
-    }
-
-    /** Direct internal file deletion no longer contains feature-specific authorization. */
-    @Test
-    void genericFileDeletionCanRemovePrivateFiles() {
-        assertTrue(file(THREAD + "/1.txt").delete());
-        assertFalse(Files.exists(path(THREAD + "/1.txt")));
     }
 
     /** File-manager deletion still rejects directly selected private files and folders. */
@@ -120,23 +97,6 @@ class AiChatDeletionSecurityTest extends BaseWebjetTest {
         assertFalse(Files.exists(path("/files/protected")));
     }
 
-    /** Internal creation, streams, copying and renaming work normally within chat storage. */
-    @Test
-    void internalFileOperationsDoNotEnforceChatAuthorization() throws Exception {
-        IwcmFile created = file(THREAD + "/created.txt");
-        assertTrue(created.createNewFile());
-        try (var output = new IwcmOutputStream(created)) {
-            output.write("content".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        }
-        try (var input = new IwcmInputStream(created)) {
-            assertEquals("content", new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
-        }
-        IwcmFile copied = file(THREAD + "/copied.txt");
-        assertTrue(FileTools.copyFile(path(THREAD + "/created.txt").toFile(), path(THREAD + "/copied.txt").toFile()));
-        assertTrue(copied.renameTo(file(THREAD + "/renamed.txt")));
-        assertEquals("content", Files.readString(path(THREAD + "/renamed.txt")));
-    }
-
     /** The shared HTTP sender protects chat files for direct calls and the FilePathTools wrapper. */
     @Test
     void publicDownloadsStillRequireTheChatEndpoint() throws Exception {
@@ -150,11 +110,10 @@ class AiChatDeletionSecurityTest extends BaseWebjetTest {
         assertEquals(404, wrapped.getStatus());
     }
 
-    /** Generic listing includes private storage, while elFinder hides it and rejects direct listing. */
+    /** elFinder hides private storage and rejects direct listing. */
     @Test
     void fileManagerFiltersPrivateListingsAtTheEntryPoint() {
         var volume = new IwcmFsVolume("files", file("/"));
-        assertEquals(2, file("/files/protected").listFiles().length);
         assertEquals(0, volume.listChildren(new IwcmFsItem(volume, file(THREAD))).length);
         Identity user = new Identity();
         user.setAdmin(true);

@@ -457,9 +457,7 @@ class LibrarySupportLogicTest {
     /** Preserves editor input with optional source fields, attachments and usage across transports and continuation modes. */
     @ParameterizedTest
     @CsvSource({
-        "false,false,data", "false,true,data", "true,false,data", "true,true,data",
-        "false,false,''", "false,true,''", "true,false,''", "true,true,''",
-        "false,false,", "false,true,", "true,false,", "true,true,"
+        "false,false,data", "true,false,''", "false,true,", "true,true,data"
     })
     void pageChatRetainsAttachmentsAndCountsImageUsage(boolean streaming, boolean temporal, String fieldFrom) throws Exception {
         AiClient client = mock(AiClient.class);

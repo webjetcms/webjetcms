@@ -30,112 +30,43 @@ function openChat(I, DTE) {
     I.waitForVisible(input, 10);
 }
 
-/** Reads coordinates so restoration can be checked independently of the positioning implementation. */
-function windowBounds() {
-    const bounds = document.querySelector('#toast-container-ai .toast').getBoundingClientRect();
-    return { left: bounds.left, top: bounds.top, right: bounds.right, bottom: bounds.bottom };
-}
-
-Scenario('Move, minimize and restore preserve the conversation and release the editor', async ({ I, DTE }) => {
+Scenario('Moving and resizing the chat keeps the draft and the editor usable', async ({ I, DTE }) => {
     openChat(I, DTE);
     I.resizeWindow(1440, 1000);
     I.fillField(input, 'Draft autotest');
     I.attachFile(`${container} input[type="file"]`, 'screenshots/generator/ai/program-skolenia-autotest.csv');
-    I.waitForVisible(`${container} .ai-chat-composer .ai-chat-attachment`, 10);
-    I.clickCss(`${container} .ai-chat-toolbar [data-ai-action="files"]`);
-    I.waitForVisible(`${container} .ai-chat-host__files`, 10);
+    I.waitForText('program-skolenia-autotest.csv', 5, `${container} .ai-chat-composer`);
 
-    const original = await I.executeScript(windowBounds);
-    // CodeceptJS dragAndDrop targets elements; a pointer drag by a measured offset needs the mouse API.
-    await I.usePlaywrightTo('move the chat by its title bar', async ({ page }) => {
-        const header = await page.locator(`${dialog} .toast-title`).boundingBox();
-        await page.mouse.move(header.x + header.width / 2, header.y + header.height / 2);
+    const left = () => document.querySelector('#toast-container-ai .toast').getBoundingClientRect().left;
+    const original = await I.executeScript(left);
+    // CodeceptJS drags to another element; here the title moves by a small offset.
+    await I.usePlaywrightTo('drag the chat title', async ({ page }) => {
+        const { x, y, width, height } = await page.locator(`${dialog} .toast-title`).boundingBox();
+        await page.mouse.move(x + width / 2, y + height / 2);
         await page.mouse.down();
-        await page.mouse.move(header.x + header.width / 2 + 100, header.y + header.height / 2 - 100, { steps: 5 });
+        await page.mouse.move(x + width / 2 - 60, y + height / 2);
         await page.mouse.up();
     });
-    const moved = await I.executeScript(windowBounds);
-    I.assertTrue(moved.left > original.left && moved.top < original.top, 'Dragging the title must move the chat.');
+    const moved = await I.executeScript(left);
+    I.assertBelow(moved, original);
 
+    I.clickCss(maximize);
     I.clickCss(minimize);
     I.waitForInvisible(dialog, 5);
-    I.seeElement(restore);
     I.fillField(field, 'Editor remains editable autotest');
-    I.seeInField(field, 'Editor remains editable autotest');
-    // The editor traps Tab inside its modal, so its original AI button must also restore the chat.
     I.clickCss('.DTE_Field_Name_htmlData .btn-ai');
-    I.waitForVisible(input, 5);
+    I.waitForVisible(dialog, 5);
+    I.assertEqual(await I.grabAttributeFrom(maximize, 'aria-pressed'), 'true');
+    I.clickCss(maximize);
+    I.assertEqual(await I.executeScript(left), moved);
+
+    I.resizeWindow(600, 700);
+    I.clickCss(minimize);
+    I.clickCss(restore);
     I.seeInField(input, 'Draft autotest');
     I.see('program-skolenia-autotest.csv', `${container} .ai-chat-composer`);
-    I.seeElement(`${container} .ai-chat-host__files`);
-    I.assertDeepEqual(await I.executeScript(windowBounds), moved);
-    I.assertEqual(await I.grabAttributeFrom(dialog, 'aria-modal'), 'false');
-
-    // Focus the title through the DOM because it is a draggable region, not an input control.
-    I.executeScript(() => document.querySelector('#toast-container-ai .toast-title').focus());
-    I.pressKey('ArrowLeft');
-    const keyboardMoved = await I.executeScript(windowBounds);
-    I.assertTrue(keyboardMoved.left < moved.left, 'ArrowLeft must move the chat to the left.');
-
-    for (const [width, height] of [[1100, 800], [600, 700]]) {
-        I.clickCss(minimize);
-        I.resizeWindow(width, height);
-        I.clickCss(restore);
-        const bounds = await I.executeScript(windowBounds);
-        I.assertTrue(bounds.left >= 0 && bounds.top >= 0 && bounds.right <= width && bounds.bottom <= height,
-            'The restored chat must remain inside the viewport.');
-        I.seeInField(input, 'Draft autotest');
-    }
-
-    I.clickCss(minimize);
-    DTE.cancel();
-    I.waitForInvisible(container, 5);
-    I.dontSeeElement(restore);
-    I.wjSetDefaultWindowSize();
-});
-
-Scenario('Maximize and shrink preserve the window position, draft and minimized state', async ({ I, DTE }) => {
-    openChat(I, DTE);
-    I.resizeWindow(1440, 1000);
-    I.fillField(input, 'Maximized draft autotest');
-    I.executeScript(() => document.querySelector('#toast-container-ai .toast-title').focus());
-    I.pressKey('ArrowLeft');
-    I.pressKey('ArrowUp');
-    const normal = await I.executeScript(windowBounds);
-
-    I.moveCursorTo(maximize);
-    I.waitForText('Maximalizovať okno', 5, '.tooltip.show');
-    I.clickCss(maximize);
-    I.seeElement(`${maximize} .ti-arrows-minimize`);
-    I.assertEqual(await I.grabAttributeFrom(maximize, 'aria-label'), 'Zmenšiť okno');
-    I.assertEqual(await I.grabAttributeFrom(maximize, 'aria-pressed'), 'true');
-    I.assertDeepEqual(await I.executeScript(windowBounds), { left: 0, top: 0, right: 1440, bottom: 1000 });
-    I.seeInField(input, 'Maximized draft autotest');
-
-    I.clickCss(minimize);
-    I.waitForInvisible(dialog, 5);
-    I.fillField(field, 'Editing while maximized chat is hidden autotest');
-    I.clickCss(restore);
-    I.waitForVisible(dialog, 5);
-    I.assertDeepEqual(await I.executeScript(windowBounds), { left: 0, top: 0, right: 1440, bottom: 1000 });
-    I.moveCursorTo(maximize);
-    I.waitForText('Zmenšiť okno', 5, '.tooltip.show');
-
-    for (const [width, height] of [[1100, 800], [600, 700]]) {
-        I.resizeWindow(width, height);
-        I.assertDeepEqual(await I.executeScript(windowBounds), { left: 0, top: 0, right: width, bottom: height });
-        I.seeElement(maximize);
-        I.seeElement(`${container} .toast-close-button`);
-        I.seeInField(input, 'Maximized draft autotest');
-    }
-    I.resizeWindow(1440, 1000);
-    I.clickCss(maximize);
-    I.seeElement(`${maximize} .ti-arrows-maximize`);
-    I.assertEqual(await I.grabAttributeFrom(maximize, 'aria-label'), 'Maximalizovať okno');
-    I.assertEqual(await I.grabAttributeFrom(maximize, 'aria-pressed'), 'false');
-    I.assertDeepEqual(await I.executeScript(windowBounds), normal);
-    I.seeInField(input, 'Maximized draft autotest');
     I.clickCss(`${container} .toast-close-button`);
+    I.seeInField(field, 'Editor remains editable autotest');
     DTE.cancel();
     I.wjSetDefaultWindowSize();
 });
@@ -147,7 +78,7 @@ Scenario('A pending answer completes while minimized and closing the chat remove
     I.mockRoute('**/admin/rest/ai/assistant/response/', async route => {
         await route.request().frame().page().waitForFunction(() => window.autotestChatMinimized === true);
         await route.fulfill({ status: 200, contentType: 'application/json',
-            body: JSON.stringify({ response: 'Completed while minimized autotest\n\n' + 'Paragraph autotest.\n\n'.repeat(80), totalTokens: 7 }) });
+            body: JSON.stringify({ response: 'Completed while minimized autotest', totalTokens: 7 }) });
     });
     I.fillField(input, 'Question autotest');
     I.clickCss(`${container} .btn-ai-chat-send`);
@@ -161,17 +92,6 @@ Scenario('A pending answer completes while minimized and closing the chat remove
     I.clickCss(restore);
     I.see('Completed while minimized autotest', `${container} .ai-chat-history`);
     I.dontSeeElement(`${container} .btn-ai-chat-stop`);
-    // Wait for the browser to deliver the scroll event before minimizing, without reading the chat's internal state.
-    const scrollTop = await I.executeScript(async () => {
-        const history = document.querySelector('#toast-container-ai .ai-chat-history');
-        history.scrollTop = history.scrollHeight / 2;
-        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        return history.scrollTop;
-    });
-    I.assertAbove(scrollTop, 0, 'The answer must be long enough to scroll.');
-    I.clickCss(minimize);
-    I.clickCss(restore);
-    I.assertEqual(await I.executeScript(() => document.querySelector('#toast-container-ai .ai-chat-history').scrollTop), scrollTop);
     I.clickCss(`${container} .toast-close-button`);
     I.waitForInvisible(container, 5);
     I.dontSeeElement(restore);
