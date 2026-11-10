@@ -52,13 +52,95 @@
         '/': '/_404.md'
       },
       relativePath: false, //otherwise history routing will not work
-      // Forward Docsify lifecycle events to the asynchronously loaded search.
-      plugins: [function (hook) {
+      plugins: [function (hook, vm) {
+        let firstRender = true;
+        let cancelPosition = function () {};
+
+        hook.beforeEach(function (content) {
+          cancelPosition();
+          return content;
+        });
         hook.mounted(function () {
           document.dispatchEvent(new Event('documentation-mounted'));
         });
         hook.doneEach(function () {
+          // Forward lifecycle events to the asynchronously loaded search.
           document.dispatchEvent(new Event('documentation-rendered'));
+
+          const revealSidebar = firstRender;
+          firstRender = false;
+          const id = vm.route.query.id;
+          const section = id ? document.getElementById(id) : null;
+          if (!section && !revealSidebar) return;
+
+          const controller = new AbortController();
+          const options = { signal: controller.signal, passive: true };
+          let frame;
+          let settled = false;
+          let animationFinished = false;
+          const route = window.location.href;
+          cancelPosition = function () {
+            controller.abort();
+            clearTimeout(timer);
+            cancelAnimationFrame(frame);
+          };
+
+          // Stop restoring as soon as the reader interacts or changes the route.
+          ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach(function (event) {
+            document.addEventListener(event, cancelPosition, options);
+          });
+          window.addEventListener('popstate', cancelPosition, options);
+          window.addEventListener('hashchange', cancelPosition, options);
+
+          function restorePosition() {
+            if (!animationFinished || controller.signal.aborted) return;
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(function () {
+              if (window.location.href !== route) return cancelPosition();
+              if (section && section.isConnected) {
+                const top = section.getBoundingClientRect().top + window.scrollY;
+                window.scrollTo({ top: top - (Number(vm.config.topMargin) || 0), behavior: 'instant' });
+              }
+              if (revealSidebar) {
+                const sidebar = document.querySelector('.sidebar');
+                const links = sidebar ? Array.from(sidebar.querySelectorAll('.sidebar-nav a')) : [];
+                const current = new URL(route);
+                const active = links.find(function (link) {
+                  const url = new URL(link.href);
+                  return url.pathname === current.pathname && url.searchParams.get('id') === (id || null);
+                }) || (sidebar && sidebar.querySelector('li.active > a'));
+                if (active) {
+                  const bounds = sidebar.getBoundingClientRect();
+                  const item = active.getBoundingClientRect();
+                  sidebar.scrollTop += item.top - bounds.top - (sidebar.clientHeight - item.height) / 2;
+                }
+              }
+              if (settled) cancelPosition();
+            });
+          }
+
+          // Docsify's anchor animation lasts 500 ms and uses the pre-image offset.
+          const timer = setTimeout(function () {
+            animationFinished = true;
+            restorePosition();
+          }, 550);
+          const images = section ? Array.from(document.querySelectorAll('.markdown-section img')).filter(function (image) {
+            return !image.complete && (image.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING);
+          }) : [];
+          const loaded = images.map(function (image) {
+            return new Promise(function (resolve) {
+              function complete() {
+                restorePosition();
+                resolve();
+              }
+              image.addEventListener('load', complete, { signal: controller.signal, once: true });
+              image.addEventListener('error', complete, { signal: controller.signal, once: true });
+            });
+          });
+          Promise.all(loaded.concat(document.fonts.ready)).then(function () {
+            settled = true;
+            restorePosition();
+          });
         });
       }],
       tabs: {

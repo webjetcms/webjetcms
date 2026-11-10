@@ -202,7 +202,7 @@ The instructions have special markers replaced before use, you can use them to i
 
 ## Generating PageBuilder blocks
 
-The following instruction allows you to generate [PageBuilder blocks for the editor](../datatables/README.md#chat-mode), it must be set as a request type `Chat`, in which case `{inputText}` will also be correctly filled in when editing.
+The following instruction allows you to generate [PageBuilder blocks for the editor](../datatables/README.md#mode-chat), it must be set as the request type **Chat**, in which case `{inputText}` will also be correctly filled in when editing.
 
 For setup, we recommend the model `gemini-2.5-pro`, in the action set the entity `sk.iway.iwcm.doc.DocDetails`, set the source and target fields to `data`. In the advanced settings, you need to enable the Preserve HTML code and Require user input options.
 

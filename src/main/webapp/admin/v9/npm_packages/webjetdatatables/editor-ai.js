@@ -477,13 +477,15 @@ export class EditorAi {
                 conversation.selection = null;
             } else if (undo.wjeditor != null) {
                 undo.value = undo.wjeditor.getData();
-                undo.wjeditor.pbInsertContent(content, mode, true);
+                // The field getter serializes each inline CKEditor and needs its data processor to be ready.
+                await undo.wjeditor.pbInsertContent(content, mode, true);
             } else {
                 this.EDITOR.set(target, mode === "append" ? (undo.value ?? "") + content : content);
                 await fieldOptions?.wjeditorReadyPromise;
             }
             if (conversation.chat.state.disposed || conversation.revision !== revision) return;
             undo.appliedValue = this.EDITOR.get(target);
+            if (wjeditor != null && typeof undo.appliedValue !== "string") throw new Error("Editor content is unavailable.");
             // An older field snapshot must never overwrite a later insertion from another chat.
             for (const other of this.chatConversations.values()) {
                 if (other.aiCol.to === target) other.undo = null;
@@ -512,7 +514,9 @@ export class EditorAi {
             const fieldOptions = typeof this.EDITOR.field === "function" ? this.EDITOR.field(undo.target)?.s?.opts : null;
             await fieldOptions?.wjeditorReadyPromise;
             if (conversation.chat.state.disposed || conversation.revision !== revision) return;
-            if (this.EDITOR.get(undo.target) !== undo.appliedValue) {
+            const currentValue = this.EDITOR.get(undo.target);
+            if (fieldOptions?.wjeditor && typeof currentValue !== "string") throw new Error("Editor content is unavailable.");
+            if (currentValue !== undo.appliedValue) {
                 conversation.undo = null;
                 conversation.chat.state.notice = WJ.translate("components.ai_assistants.chat.undoStale.js");
                 return;
@@ -533,7 +537,7 @@ export class EditorAi {
                         reject(error);
                     }
                 });
-            } else if (undo.wjeditor != null) undo.wjeditor.pbInsertContent(undo.value, "replace", true);
+            } else if (undo.wjeditor != null) await undo.wjeditor.pbInsertContent(undo.value, "replace", true);
             else {
                 this.EDITOR.set(undo.target, undo.value);
                 await fieldOptions?.wjeditorReadyPromise;

@@ -29,6 +29,10 @@
 
 ![](redactor/admin/search/quick-search.png)
 
+- The new [AI Chat] tab (redactor/admin/search/README.md#ai-chat) in the quick search allows you to chat with an AI assistant without being tied to an open web page. It supports assistant selection, continuous display and pausing of replies, Markdown with tables, and text copying. For saved OpenAI and Gemini conversations, you can add images and documents by dragging anywhere to the chat area, search the history, and download attachments from the **Chat Files** panel. History and attachments are only available to the chat owner in the respective domain. Switching assistants preserves written messages and unsent attachments; you can enlarge or maximize the window. The magnifying glass in the history header displays a search for conversations; you add attachments with the plus icon. The Slovak interface and documentation use the "chat" label (#386).
+
+![](redactor/ai/chat/chat-history.png)
+
 - The [What's New] panel (redactor/admin/welcome.md#What-is-new) supplements the news of the installed version with videos and posts from YouTube and Facebook of WebJET CMS. The **New** label is hidden after expanding the panel and again notifies about new content (#358).
 
 ### Account login and protection
@@ -48,6 +52,10 @@
 Device tracking can be disabled by setting the configuration variable `adminNewDeviceDetectionEnabled` to false. When logging in, the [approximate location](admin/setup/configuration/dashboard.md#login-approximate-location) is also determined by the IP address, which can be disabled by setting `adminLoginLocationApiKey` to the value `DISABLED`.
 
 ### Websites
+
+- AI Chat by field - added saved history filtered by the same field and record. You can search, open and continue an older conversation even after closing the editor; replies remain available for insertion into the field.
+
+- AI Chat in the field and in the page editor - added image and document upload for OpenAI and Gemini assistants. You can select files with the plus icon, drag and drop into the message, or insert an image from the clipboard; the assistant will process them along with the page content. In case of an invalid or too large attachment, the reason for rejection will also be displayed while the response is being displayed.
 
 - Page editor - new menu [Styles](redactor/webpages/working-in-editor/README.md#working-with-styles-and-text-formatting). It displays active styles with the option to remove them and allows you to select the edited paragraph, column or entire section. For proper functionality, it is necessary to have correctly set [CSS selectors](frontend/page-builder/blocks.md#structure-selectors) and created [additional comments](frontend/examples/template-bare/README.md#searching-and-style-groups) in the CSS file of the website. (#356).
 
@@ -330,6 +338,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- AI Chat - if an error is marked as non-repeatable by the provider, the same request will not be offered to be repeated. This information will be preserved even after restoring the chat history (#386).
+- AI assistants - saving a generated image will only delete temporary files from the same generation. Images from other requests and from other users will be preserved (#58850).
 - Websites - fixed [export to ZIP archive](redactor/webpages/import-export.md) for images inserted via `/thumb/` that were not originally added to the export (#389).
 - Web pages - the insert image dialog limits file selection to images, videos, and audio files, even in the Files folder. Unsupported types recognized by the browser will be rejected before submission. Additionally, the server will validate the extension before saving (#375).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the page is opened (#372).
@@ -374,6 +384,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- AI assistants - search in statistics and usage graphs only show records and assistants of the current domain (#58850).
+- AI assistants - downloading and saving temporary images only accepts the name of an existing file in the AI ​​folder. Absolute paths, paths to other folders, and symbolic links are rejected (#58850).
 - Websites - deletion checks permissions for all mirrored pages and also requires `deleteDir` for folders. [Unmirroring](redactor/apps/clone-structure/README.md#unmirroring) checks permissions for the entire subtree including configured domain and user group restrictions (#370).
 - Dependency Check - updated libraries `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` with fix `CVE-2026-110879` and `undici 6.28.1 → 6.29.1` with fix `CVE-2026-109383`. Jackson update tightens type checking during polymorphic deserialization; custom integrations using Java class names in JSON need to be verified (#385).
 - Dependency Check - exceptions for `CVE-2026-116802`, `CVE-2026-116803` and `CVE-2026-116804` in `DOMPurify 3.4.16` have been verified and constrained to the exact hash of the supplied `Swagger UI 5.34.0` bundle. The integration handles HTML strings without XHTML mode, `IN_PLACE`, `SAFE_FOR_TEMPLATES` and DOM returns; its hook does not remove nodes. The exceptions confirm the non-use of the affected modes, not a fix for the DOMPurify library (#385).

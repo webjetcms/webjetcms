@@ -22,6 +22,9 @@ This tab contains basic information about the assistant, such as its name, icon,
 
 - **Assistant Name** – internal identifier of the assistant (not visible to the user). It must be unique in combination with the **Provider** value (i.e. you can use the same name for multiple assistants, but each must have a different provider).
 - **User Name** – the name displayed in the interface. It does not have to be unique. If it is not filled in, the value from the **Assistant Name** field will be used. You can also enter a translation key (the key value will be displayed in the field below it).
+
+  The `{model}` tag is replaced with the current value of the **Model** field when displayed. For example, `{model}` displays `gpt-6.1-sol` and `Čet {model}` displays `Čet gpt-6.1-sol`. The tag can also be preceded by a translation key: `components.ai_assistants.groups.00-chat {model}` displays the translated group name and model. You can also use the tag directly in the translation key value. The preview below the field updates when the name or model changes.
+
 - **Icon** – the name of the icon from https://tabler.io/icons. It is displayed together with the **User Name** field. Enter only the icon identifier (without the URL).
 - **Group** – a logical or visual grouping of assistants in the interface. It has no effect on processing or result.
 - **Created** – system-generated creation date. Cannot be edited and only appears when editing an existing assistant.
@@ -38,9 +41,9 @@ On this tab, you set what action the AI ​​assistant should perform, where it
   - Generate image
   - Edit image
   - Chat
-- **Use for Entity** – you select the entity (table) in which the assistant will be available. All supported entities will automatically appear as you type.
+- **Use for Entity** – you select the entity (table) in which the assistant will be available. As you type, all supported entities and the value `CHAT_SEARCH` for a standalone AI Chat will automatically appear in the quick search.
 - **Source Field** – you specify the field from the selected entity from which the assistant should draw data when performing the action. This field is not required; select it only if input data is required. All fields of the given entity will be displayed.
-- **Target Field** – you select the field in the entity where the result of the assistant action will be stored or where the assistant will be available. All fields of the given entity will be displayed again.
+- **Target Field** – you select the field in the entity where the assistant will be available. For the **Chat** type, you can also add `top-search-field` for the **AI Chat** card in the quick search. If the only entity is `CHAT_SEARCH`, when saving the chat assistant, the empty target field will be filled in with `*`.
 
 ![](datatable-action-tab.png)
 
@@ -87,11 +90,39 @@ This tab provides advanced configuration options for the Assistant, allowing you
 
 - **Preserve HTML code** - if enabled, HTML tags from the source field will not be stripped and will be sent to the provider as is. Enable only if the model needs to work with structured HTML (e.g. parsing or editing content). Otherwise, leave disabled for cleaner input.
 - **Use progressive loading** – the answer will be displayed in parts (streaming) instead of in one block. Suitable for longer generated texts so that the user has immediate feedback. Works only for text outputs.
-- **Enable temporary chat** - Context and message exchange are not saved after the session ends. Use for sensitive or one-time requests. History will not be available for future continuation.
+- **Enable temporary chat** – disables saving the conversation to the AI ​​Chat history. Displayed messages remain only on the current administration page and attachments are not available. For saved history on the AI ​​Chat tab, disable this option and use a supported OpenAI or Gemini model. The setting does not replace the provider's data processing and retention policies.
 - **Require user input** – Before running the assistant, the user must provide their own input (e.g., entering a topic, additional instructions, or keywords). If disabled, the assistant runs without additional input.
 - **Request Description** – a short hint displayed next to the input field (makes it easier for the user to understand what to type). A translation key can also be entered; its evaluated value will be displayed in the field below it.
 
 ![](datatable-advanced-tab.png)
+
+## Chat Assistant Settings
+
+The update adds four universal assistants to the default domain in the **Chat** group:
+
+| Assistant name | Provider | Model |
+| --- | --- | --- |
+| `CHAT-gpt-6.1-sol` | OpenAI | `gpt-6.1-sol` |
+| `CHAT-gpt-6-astra` | OpenAI | `gpt-6-astra` |
+| `CHAT-gemini-3.8-flash` | Gemini | `gemini-3.8-flash` |
+| `CHAT-gemini-4-argon` | Gemini | `gemini-4-argon` |
+
+Once the provider is configured, these assistants will be offered in quick search and text fields, including the WYSIWYG editor. In the **Use for Entity** setting, they have `*` and in the **Target Field** setting, they have `dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field`.
+
+The menu displays the model name (`{model}`). Assistants have response loading and conversation saving enabled. Common instructions specify short responses in the user's language, Markdown formatting, linking to previous messages, and a link to WebJET CMS documentation. You can edit both the model and instructions in the assistant settings.
+
+To set up your own chat assistant:
+
+1. In **Settings → AI Assistants**, create or edit an assistant and turn on **Allow use**.
+2. On the **Action** tab, select **Request Type → Chat**.
+3. To display in quick search, add the value `top-search-field` to the **Target Field**. Separate additional target fields with a comma. For example, for an entity `sk.iway.iwcm.doc.DocDetails` and a target `title,top-search-field`, the assistant will be available in the page title and in quick search. If it should be available only in quick search, just set **Use for Entity** to `CHAT_SEARCH`.
+4. On the **Provider** tab, select the configured provider and model supporting the desired way of working.
+5. In **Instructions**, specify the assistant's role, language, and desired response format.
+6. For saved conversations with attachments in the **AI Chat** tab, use OpenAI or Gemini, a chat-enabled model, and turn off **Enable temporary chat**. To display the response continuously, turn on **Use progressive loading**, if the model supports it.
+
+Quick search offers active chat assistants of the current domain with the configured provider. Requires the exact value `top-search-field` in the target field list or `CHAT_SEARCH` in the entity list. A conversation opened from quick search starts with no content on the open page. If you remove the last quick search binding for an assistant, its saved conversations in this menu will remain read-only.
+
+The user needs permission to use AI assistants (`cmp_ai_button`). If you change the model, assistant, or provider configuration, older saved chats may remain read-only. For instructions on how to work with chats, see the [AI Chat](../chat/README.md) chapter.
 
 ## Providers
 

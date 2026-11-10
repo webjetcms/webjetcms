@@ -22,6 +22,9 @@ Tato karta obsahuje základní informace o asistentovi jako název, ikona nebo d
 
 - **Název asistenta** – interní identifikátor asistenta (uživatel ho nevidí). Musí být unikátní v kombinaci s hodnotou **Poskytovatel** (tj. stejný název můžete použít pro více asistentů, ale každý musí mít jiného poskytovatele).
 - **Název pro uživatele** – zobrazený název v rozhraní. Nemusí být unikátní. Pokud není vyplněn, použije se hodnota z pole **Název asistenta**. Můžete také zadat překladový klíč (hodnota klíče se zobrazí v poli pod ním).
+
+  Značka `{model}` se při zobrazení nahradí aktuální hodnotou pole **Model**. Například `{model}` zobrazí `gpt-6.1-sol` a `Čet {model}` zobrazí `Čet gpt-6.1-sol`. Před značkou může být také překladový klíč: `components.ai_assistants.groups.00-chat {model}` zobrazí přeložený název skupiny a model. Značku můžete použít také přímo v hodnotě překladového klíče. Náhled pod polem se aktualizuje při změně názvu nebo modelu.
+
 - **Ikona** – název ikony ze stránky https://tabler.io/icons. Zobrazuje se spolu s polem **Název pro uživatele**. Zadejte pouze identifikátor ikony (bez URL).
 - **Skupina** – logické nebo vizuální seskupení asistentů v rozhraní. Nemá vliv na zpracování ani výsledek.
 - **Vytvořeno** – systémem generované datum vytvoření. Nelze upravit a zobrazí se pouze při editaci stávajícího asistenta.
@@ -37,10 +40,10 @@ Na této kartě nastavujete, jakou akci má AI asistent provádět, odkud bude z
   - Vygenerovat text
   - Vygenerovat obrázek
   - Upravit obrázek
-  - Chat
-- **Použít pro Entitu** – vybíráte entitu (tabulku), ve které bude asistent dostupný. Při psaní se automaticky zobrazí všechny podporované entity.
+  - Čet
+- **Použít pro Entitu** – vybíráte entitu (tabulku), ve které bude asistent dostupný. Při psaní se automaticky zobrazí všechny podporované entity i hodnota `CHAT_SEARCH` pro samostatný AI Čet v rychlém vyhledávání.
 - **Zdrojové pole** – určujete pole z vybrané entity, ze kterého má asistent čerpat data při provádění akce. Toto pole není povinné; vyberte jej pouze v případě, že jsou potřebná vstupní data. Zobrazí se všechna pole dané entity.
-- **Cílové pole** – vybíráte pole v entitě, kde se uloží výsledek akce asistenta nebo kde bude asistent dostupný. Opět se zobrazí všechna pole dané entity.
+- **Cílové pole** – vybíráte pole v entitě, u kterého bude asistent dostupný. U typu **Čet** můžete přidat i `top-search-field` pro kartu **AI Čet** v rychlém vyhledávání. Pokud je jedinou entitou `CHAT_SEARCH`, při uložení četového asistenta se prázdné cílové pole doplní na `*`.
 
 ![](datatable-action-tab.png)
 
@@ -87,11 +90,39 @@ Na této kartě naleznete rozšířené možnosti konfigurace asistenta, které 
 
 - **Zachovat HTML kód** – je-li zapnuto, HTML značky ze zdrojového pole se neodstraní a odešlou se poskytovateli tak, jak jsou. Zapněte pouze v případě, že model potřebuje pracovat se strukturovaným HTML (např. analýza nebo úprava obsahu). Jinak ponechte vypnuto kvůli čistšímu vstupu.
 - **Využít postupné načítání** – odpověď se bude zobrazovat po částech (streamování) namísto jednoho bloku. Vhodné u delších generovaných textů, aby měl uživatel okamžitou zpětnou vazbu. Funguje pouze pro textové výstupy.
-- **Zapnout dočasný chat** – kontext a výměna zpráv se po ukončení relace neukládají. Použijte při citlivé nebo jednorázové poptávce. Historie nebude k dispozici pro další pokračování.
+- **Zapnout dočasný čet** – vypne ukládání rozhovoru do historie AI Četu. Zobrazené zprávy zůstávají pouze na aktuální stránce administrace a přílohy nejsou dostupné. Pro uloženou historii na kartě AI Čet tuto volbu vypněte a použijte podporovaný model OpenAI nebo Gemini. Nastavení nenahrazuje pravidla zpracování a uchovávání údajů u poskytovatele.
 - **Požadovat vstup od uživatele** – před spuštěním asistenta musí uživatel zadat vlastní vstup (např. zadání tématu, doplňující instrukce nebo klíčových slov). Pokud je vypnuto, asistent běží bez dodatečného vstupu.
 - **Popis požadavku** – krátká nápověda zobrazovaná u pole pro zadání vstupu (usnadňuje uživateli pochopit, co má napsat). Může být zadán i překladový klíč; jeho vyhodnocená hodnota se zobrazí v poli pod ním.
 
 ![](datatable-advanced-tab.png)
+
+## Nastavení četového asistenta
+
+Aktualizace přidá do výchozí domény čtyři univerzální asistenty ve skupině **Čet**:
+
+| Název asistenta | Poskytovatel | Model |
+| --- | --- | --- |
+| `CHAT-gpt-6.1-sol` | OpenAI | `gpt-6.1-sol` |
+| `CHAT-gpt-6-astra` | OpenAI | `gpt-6-astra` |
+| `CHAT-gemini-3.8-flash` | Gemini | `gemini-3.8-flash` |
+| `CHAT-gemini-4-argon` | Gemini | `gemini-4-argon` |
+
+Po nakonfigurování poskytovatele se tito asistenti nabídnou v rychlém vyhledávání iu textových polí včetně WYSIWYG editoru. V nastavení **Použít pro Entitu** mají `*` av nastavení **Cílové pole** mají `dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field`.
+
+V nabídce se zobrazí název modelu (`{model}`). Asistenti mají zapnuté postupné načítání odpovědi a ukládání rozhovorů. Společné instrukce určují stručné odpovědi v jazyce uživatele, formátování Markdown, navazování na předchozí zprávy a odkaz na dokumentaci WebJET CMS. Model i instrukce můžete upravit v nastaveních asistenta.
+
+Vlastního četového asistenta nastavíte takto:
+
+1. V **Nastavení → AI asistenti** vytvořte nebo upravte asistenta a zapněte **Povolit používání**.
+2. Na kartě **Akce** vyberte **Typ požadavku → Čet**.
+3. Pro zobrazení v rychlém vyhledávání přidejte do **Cílového pole** hodnotu `top-search-field`. Další cílová pole oddělte čárkou. Například pro entitu `sk.iway.iwcm.doc.DocDetails` a cíl `title,top-search-field` bude asistent dostupný při názvu stránky iv rychlém vyhledávání. Pokud má být dostupný pouze v rychlém vyhledávání, stačí nastavit **Použít pro Entitu** na `CHAT_SEARCH`.
+4. Na kartě **Poskytovatel** vyberte nakonfigurovaného poskytovatele a model podporující požadovaný způsob práce.
+5. V **Instrukcích** určete úlohu asistenta, jazyk a požadovaný formát odpovědí.
+6. Pro ukládané rozhovory s přílohami na kartě **AI Čet** použijte OpenAI nebo Gemini, model s podporou četu a vypněte **Zapnout dočasný čet**. Pro průběžné zobrazování odpovědi zapněte **Využít postupné načítání**, pokud jej model podporuje.
+
+Rychlé vyhledávání nabízí aktivní četové asistenty aktuální domény s nakonfigurovaným poskytovatelem. Vyžaduje přesnou hodnotu `top-search-field` v seznamu cílových polí nebo `CHAT_SEARCH` v seznamu entit. Rozhovor otevřený z rychlého vyhledávání začíná bez obsahu otevřené stránky. Pokud asistentovi odstraníte poslední vazbu na rychlé vyhledávání, jeho uložené rozhovory v této nabídce zůstanou dostupné pouze pro čtení.
+
+Uživatel potřebuje oprávnění k používání AI asistentů (`cmp_ai_button`). Pokud změníte model, asistenta nebo konfiguraci poskytovatele, starší uložený rozhovor může zůstat dostupný pouze pro čtení. Postup práce s rozhovory je v kapitole [AI Čet](../chat/README.md).
 
 ## Poskytovatelé
 

@@ -68,6 +68,7 @@ The filter only takes the first value. So add the `IN` option to allow multiple 
 - [x] +Websites - before deleting a page or folder, show a warning with a list of mirrored items that will be deleted along with the selection (#58846).
 - [x] +Add support for AVIF images and animations (#371).
 - [x] + Possibility to change the order of fields in the datatables editor, the tab in which the field is located, or even create a new tab in which the fields are inserted. That is, to configure the values ​​that are currently set for annotations (#366).
+- [ ] +In the window of pre-prepared blocks, add the option to edit a block that is loaded from a web page (open the editor with the block's docid in a new tab) (#NNCZ-4456).
 
 ## 2025
 
