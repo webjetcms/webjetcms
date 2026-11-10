@@ -366,6 +366,7 @@ public class IwcmFsVolume implements FsVolume
 		List<FsItem> list = new ArrayList<>();
 
 		IwcmFile fsiFile = asFile(fsi);
+		//prevents to list ai-chats private folder
 		if (FileBrowserTools.hasForbiddenSymbol(fsiFile.getVirtualPath())) return new FsItem[0];
 
 		Logger.debug(IwcmFsVolume.class, "listChildrens, virtualPath="+fsiFile.getVirtualPath()+" realPath="+fsiFile.getAbsolutePath());
