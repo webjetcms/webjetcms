@@ -1,6 +1,6 @@
 # P08 — Regresia a pilot
 
-**Stav: PARTIAL**, 10. november 2026. Pilot a nové regresie prešli; chýba úspešný pôvodný `apps/news.js` a úplná LIVE regresia schvaľovania/zrkadlenia/multigroup. Vetva `feature/58858-publishing-packages`, východisko `a3951964f` (P07 vrátane review cronu z 10. novembra). Rozsah končí P08; bez commitov a produkčného zapnutia.
+**Stav: DONE na uvedenom POC profile**, 10. november 2026. T13 aj T16 sú doložené vrátane celého pôvodného `apps/news.js`, LIVE off/on a opakovania po štarte s true. Vetva `feature/58858-publishing-packages`, pôvodné východisko `a3951964f` (P07 vrátane review cronu z 10. novembra), doplnenie od `6fb0a30c9`. Rozsah končí P08; bez commitov a produkčného zapnutia.
 
 ## Prostredie a platnosť dôkazov
 
@@ -30,10 +30,10 @@ Staršie výsledky sú konkrétne historické dôkazy, nie tvrdenie o novom spus
 | T10 | PASS | P03/P08 `BranchNewsRenderTest.n01n02OverlayCategoriesAndPaging` v oboch JOIN režimoch, `n05FiltersOrderLoadDataAndOffsets`, `BranchViewTest.legacySqlListsCountAndPagingUseEffectiveSource`; nové/zmazané riadky pred count/LIMIT. |
 | T11 | PASS | P04 CRUD/presun/revert; P06 UI obnova podstromu; P08 opäť `subtreeTrashKeepsNestingAndMandatorySnapshotsWhenHistoryDisabled`, preflight potomkov/URL a odvodená LIVE voľba. Pôvodná obnova cez UI zachovala všetky ID aj vnorenie. |
 | T12 | PASS | [P07 vrátane cron review](P07-vysledky.md#úprava-po-review-admin-cron-bez-presného-mena-uzla-10-november-2026), skutočný cron po odhlásení; P08 11 `p07*` DB testov, 3 scheduler hranice a 8 existujúcich cron/cluster testov. Individuálne plány sa pri kolízii nerušia. |
-| T13 | PARTIAL | P04/P08 odmietnutie multigroup/System/foreign zápisov, P06/P08 preflight schvaľovania a explicitné publikovanie bez zrkadlenia PASS. Úplný pôvodný LIVE schvaľovací/zrkadliaci/multigroup tok s off/on na reprezentatívnych fixture ešte nemá P08 dôkaz. |
+| T13 | PASS | P04/P08 odmietnutie nepodporovaných branch zápisov a P06/P08 preflight/explicitný merge zostávajú PASS. Doplnenie: LIVE stránky/priečinky, skutočné schválenie/zamietnutie a propagácia do kópií **5/5 pri false + 5/5 pri true + 5/5 po štarte s true**; celé pôvodné `mirroring.js` **10/10** a `multigroup.js` **4/4** pri oboch flagoch, priame SQL dôkazy. [Výsledky](#t13--live-schvaľovanie-a-kópie). |
 | T14 | PASS | P02 reálne odmietnutie engine/oprávnení/storage; P08 `BranchStorageTest` a `BranchFlagScopeTest`; verejné HTML/Menu/News pri off/on presne zhodné. Iné DB sú serverom odmietané a nie sú deklarované ako podporované. |
 | T15 | PASS | P06 skutočný nový proces + UI resume a obnova koša; P08 opäť checkpoint rollback, audit po commite, perex API, file replace pred checkpointom, finálne účinky, stale LIVE a čiastočný P07 merge. Opakovanie nevytvára ďalšiu históriu ani ID. |
-| T16 | PARTIAL | N01–N12 nižšie majú reálny SQL/render/editor/merge dôkaz; P08 pridáva off/on a anonymný výsledok. Pôvodný `apps/news.js` bol spustený, ale jeho `Test editor logic` zastavila chýbajúca fixture `Jet portal 4`; plná pôvodná sada nie je PASS. |
+| T16 | PASS | N01–N12 nižšie majú SQL/render/editor/merge dôkaz. Pokračovanie nad `6fb0a30c9`: celý pôvodný `apps/news.js` **12/12 PASS**, nezmenený súbor aj asercie, úplný lokálny referenčný dump v samostatnej schéme; [inventár a scenáre](#doplnenie-t16-a-t13-nad-6fb0a30c9). |
 
 | Prípad | Stav | Konkrétny dôkaz / výsledok |
 | --- | --- | --- |
@@ -76,6 +76,61 @@ Pred publikovaním anonymné HTML vracalo **200**, News 19 pôvodných položiek
 
 P07 404 bolo reprodukované aj s novou fixture na hostiteľovi `iwcm.interway.sk`. Príčinou je existujúci lokálny `domain_redirects` alias na `demo.webjetcms.sk`, zatiaľ čo obsah bol v doméne iwcm. Menili sa iba vlastné P08 riadky na `127.0.0.1`; alias ani P05/P06/P07 dáta sa nemenili. Po obnovení doménovej cache verejné HTML vracia 200. Nešlo o opravu produkčného routovania.
 
+## Doplnenie T16 a T13 nad 6fb0a30c9
+
+Celé pôvodné súbory `apps/news.js` (512 riadkov), `approve-logic.js`, `group-approve-logic.js`, `mirroring.js` a `multigroup.js` boli prečítané pred ďalším behom. Pôvodné súbory ani ich asercie sa nemenili (`git diff 6fb0a30c9 --` týchto päť súborov je prázdny). [Inventár scenárov a pevných ID](../../../build/test-results/p08/followup/source-inventory.json), [hash news.js](../../../build/test-results/p08/followup/news-source-sha256.txt).
+
+### Referenčná sada a izolácia
+
+Na disku bol dostupný úplný dump `/Users/jeeff/Downloads/webjetcms_autotest_web_2026-10-09.sql`, **941 076 795 bajtov**, SHA-256 `65d7e3c4b6eafd9a6cd35382cdbeee2c26dbe94d9ee8162f134cef4002bd78d8`. Menší dump zo 6. októbra ani stará workspace sada neobsahujú novšie fixture Noviniek a skupinového schvaľovania. Použitý dump nemá príkazy na výber/prepis inej databázy alebo vytváranie používateľov.
+
+Obnova smerovala výhradne do novej jednorazovej schémy **`127.0.0.1:33316/webjet_p08_t13t16`**, 457 tabuliek. Explicitný ignorovaný profil `poolman-local-p08-regression.xml`, Java 17.0.18, MariaDB 12.2.2, Connector/J 3.5.10, jedna inštancia, lokálny filesystem. Testovacia URL **`http://iwcm.interway.sk:8086`**, lokálny alias na `demo.webjetcms.sk`. `webjet_p01` nebola importovaná ani pracovná DB 3306 použitá.
+
+V jednorazovej schéme boli nosné tabuľky `documents`, `groups`, `media`, `pkey_generator`, `documents_history`, `perex_group_doc`, `groups_approve`, `multigroup_mapping` prevedené na InnoDB; `groups_scheduler` a väzby médií už InnoDB boli. Importované cron úlohy sú vypnuté; štartovacie migrácie pridali iba štandardné `DeviceCleanup` a `BranchScheduler` (bez balíkov v tejto schéme). E-maily sa ukladajú ako lokálne EML pod `WEB-INF/tmp`, bez doručovania. Pre účty `tester`, `tester2`, `tester3`, `jtester` vzniklo nové náhodné lokálne heslo; roly, oprávnenia a schvaľovacie väzby zostali z referenčnej sady. Heslo je iba v `/tmp/webjet-p08-reference-login.properties` (600). [Lokálna príprava bez hesiel](../../../build/test-results/p08/followup/setup-local.sql).
+
+### T16 — celý pôvodný news.js
+
+Očakávané fixture: `Jet portal 4` (#1), `Newsletter` (#27), `Zo sveta financií` (#24), `Produktová stránka` (#25), `Aplikácie/Novinky`, `English/News`; stránky **#10, #146543, #150415** s vloženou aplikáciou News, novinky `Novinka 2025-01`, `Novinka 2025Q2-01`, priečinky `2025 folder`/`2025Q2 folder`, perex `Novinky main page perex`. Kategórie #1 investícia, #2 podnikanie, #3 ďalšia perex skupina, #625 PerexWithGroup_A, #626 PerexWithGroup_B, #794 kalendar-udalost; šablóna `news01`. Účty: `tester` plný prístup, `tester2` obmedzený strom, `jtester` bez dostupného News koreňa. Fyzické šablóny `/templates/aceintegration/jet/article.jsp` a `sub-page.jsp` boli lokálne prítomné. Všetky tieto dáta obsahoval úplný dump; ručné náhrady News fixture neboli potrebné.
+
+| Pôvodný scenár | Výsledok |
+| --- | --- |
+| Test editor logic | PASS |
+| zoznam noviniek | PASS |
+| logoff | PASS |
+| set groupIds parameter in webpage | PASS |
+| News tree permissions and empty state | PASS |
+| News tree shared parents | PASS |
+| News tree navigation, search, recursion and creation defaults | PASS |
+| News tree responsive layout and keyboard navigation | PASS |
+| logout | PASS |
+| docMode and subGroupsDepth | PASS |
+| BUG: news from other folders and docMode | PASS |
+| logout2 | PASS |
+
+Výsledok **12/12 PASS**, celý súbor v jednom behu, `branchesEnabled=false`. [Úplný log](../../../build/test-results/p08/followup/news-original-run1.log), [Allure výsledky](../../../build/test-results/p08/followup/allure-results/). Wrapper dopĺňa iba čerstvé lokálne heslo, explicitnú URL/doménu a adresár reportov; nemení login roly, testy ani asercie. Off/on render News a zhoda preview/merge zostávajú doložené pilotom a Java sadou vyššie.
+
+### T13 — LIVE schvaľovanie a kópie
+
+Súhrn finálnych T13/T16 behov: **55/55 PASS**, bez zmeny pôvodných testovacích súborov. Syntax nového JS, lokálne Markdown odkazy a `git diff --check` prešli. [Výsledok každého scenára v HTML](../../../build/test-results/p08/followup/scenario-results.html), [JSON s cestami na jednotlivé Allure výsledky](../../../build/test-results/p08/followup/scenario-results.json). Neúspešné prípravné pokusy sú nižšie odlíšené od finálnych behov.
+
+[branch-p08-live.js](../../../src/test/webapp/tests/webpages/branch-p08-live.js) používa rovnaké redakčné formuláre a schvaľovacie stránky ako `approve-logic.js` a `group-approve-logic.js`. Autor `tester2` žiada o schválenie, `tester` schvaľuje/zamieta. Referenčné priečinky sú #5343 a #114389; multigroup #70837 → #70838 v #57591/#57592; zrkadlenie používa existujúce viazané korene #113666/#113667 a vlastné nové `autotest-p08-live-*` dáta.
+
+Overenie stránok porovnáva anonymnú virtuálnu URL pred schválením, po schválení, po zamietnutí úpravy a po novej schválenej úprave. Pri priečinku kontroluje `internal=true → false`, zverejnenie skutočnej úvodnej stránky a pole A: čakajúca/zamietnutá hodnota zostane mimo LIVE, schválená sa uloží. Multigroup kontroluje nový obsah na oboch verejných URL. Zrkadlenie kontroluje vznik skutočného cieľového priečinka/stránky, rovnaké `syncId`, nový obsah a poradie 845 v zdroji aj kópii.
+
+| Sada | `branchesEnabled=false` | `branchesEnabled=true` |
+| --- | --- | --- |
+| Nová LIVE sada (serverový kontext, stránky, priečinky, multigroup obsah, zrkadlenie) | [5/5 PASS](../../../build/test-results/p08/followup/live-false-complete.log) | [5/5 PASS](../../../build/test-results/p08/followup/live-true-complete.log) |
+| Celý pôvodný `mirroring.js` | [10/10 PASS](../../../build/test-results/p08/followup/mirroring-false.log) | [10/10 PASS](../../../build/test-results/p08/followup/mirroring-true-complete.log) |
+| Celý pôvodný `multigroup.js` | [4/4 PASS](../../../build/test-results/p08/followup/multigroup-false.log) | [4/4 PASS](../../../build/test-results/p08/followup/multigroup-true-complete.log) |
+
+Rovnaká nová LIVE sada po reštarte referenčného servera s `branchesEnabled=true` už v DB pri štarte: **[5/5 PASS](../../../build/test-results/p08/followup/live-true-startup.log)**. [Štartovacia konfigurácia](../../../build/test-results/p08/followup/startup-true-config.tsv), [uložené výsledky false](../../../build/test-results/p08/followup/live-false.json), [výsledky true po štarte](../../../build/test-results/p08/followup/live-true.json).
+
+Priamy [SQL dôkaz](../../../build/test-results/p08/followup/final-reference.tsv) potvrdzuje pri false stránku **#175526**, priečinok **#121499** a zrkadlené stránky **#175528/#175529**; pri true po štarte stránku **#175538**, priečinok **#121508** a kópie **#175540/#175541**. Stránky sú `available=1`, obsahujú `approved-edit`, neobsahujú zamietnutý obsah; história má schválenia aj zamietnutie používateľom #18. Skupinové požiadavky majú konečné `approved_by`/`disapproved_by`, žiadnu čakajúcu žiadosť. Každý zrkadlený pár má rovnaké `sync_id`, poradie 845 a rovnaký SHA-256 uloženého HTML. Väzba multigroup #70838 → #70837 zostala zachovaná.
+
+Neoveruje sa externé doručovanie pošty ani kvalita automatického prekladu. Notifikácie sa ukladajú lokálne; prekladový engine je počas testu vypnutý a obsah s `autotest` sa podľa existujúceho správania neprekladá. Toto sú hranice lokálneho profilu, nie náhrada kontroly uloženého obsahu. Pôvodné schvaľovacie súbory závislé od TempMail neoznačujeme za celé spustené sady. Relevantné tabuľky uvedené v [DB profile](../../../build/test-results/p08/followup/db-profile.tsv) sú InnoDB; ostatné importované pomocné legacy tabuľky sa hromadne nekonvertovali.
+
+Pri príprave nového testu boli opravené jeho kontrolné GET requesty (CSRF token vyžadovaný aj pre GET), URL `/toapprove/all` a čakanie na prihlásenie. Referenčná chybová stránka vracia pri existujúcej nedostupnej stránke HTTP 200 s HTML „Chyba 404 - požadovaná stránka neexistuje“; test kontroluje rovnaký obsah ako pôvodný `approve-logic.js`. Prvé neúspešné pokusy nie sú PASS a zostávajú v `followup/live-false-run1..4.log`. Pôvodné asercie sa nemenili. Úvodná kontrola bola spresnená na serverové `branchScreen.enabled` a `branchId=0`: dostupnosť selektora balíkov závisí aj od samostatného práva/modulu, ktoré pôvodným účtom nepridávame. Prvý true pokus preto obsahuje 4 úspešné LIVE prípady a neúspešnú úvodnú aserciu selektora; za finálnu celú sadu sa nepočíta. Prvý rýchly beh pôvodného `mirroring.js` pri true uložil tretí koreň do DB, ale klikol skôr, než sa objavil v jsTree. Závislý beh bol prerušený (exit 130); celý súbor po štarte s true prešiel v štandardnom repozitárovom režime `CODECEPT_AUTODELAY=true`, bez zmeny asercií alebo fixture názvov. Log prvého pokusu zostal `followup/mirroring-true.log`.
+
 ## Vykonané behy
 
 - Spoločná Java sada: **149 XML invokácií, 132 PASS, 0 failures/errors, 17 podmienených skipov**, `build/test-results/p08/java-regression/`, súhrn `java-regression-summary.json`, log `/tmp/webjet-p08-java.log`. Preskočené boli opt-in P01 experimenty/reštartové fázy a jednorazové fixture; ich staršie dôkazy sú vyššie.
@@ -83,7 +138,7 @@ P07 404 bolo reprodukované aj s novou fixture na hostiteľovi `iwcm.interway.sk
 - Finálna doplnková Java sada: **41/41 PASS, 0 skipov**, `java-final/`, `java-final-summary.json`, `/tmp/webjet-p08-java-final.log`. Dva nové skutočné NewsActionBean/SQL/Velocity off/on prípady, štyri typy so spoločným DONE, reálne pooled/JPA čítanie počas nepotvrdenej rezervácie, pôvodný off/on izolačný probe, DBPoolIsolation a existujúce NewsRestController/NewsTreeService testy. Java zapisovacie testy vždy pri zastavenom POC serveri.
 - Browser príprava/off/on/tri účty: **6 PASS** v prípravnom behu. Prvý pokus o LIVE konflikt nesprávne použil `I.selectOption(..., '0')`: tento helper najprv hľadá text obsahujúci `0`, čím vybral P08. Nevykonal sa merge a LIVE ostal pôvodný. Test teraz vyberá **Produkcia** podľa názvu a overí serverom vložený kontext `branchId=0`. Pracovný titulok bol obnovený cez editor.
 - Dotknuté finálne browser scenáre: **2/2 PASS**, `/tmp/webjet-p08-browser-final.log`, `browser-publication.log`. Pilot sa znova nezakladal ani nepublikoval opakovane. Doklady jednotlivých účtov a celých komponentov sú v `browser/editor-{a,b,c}.json`, `public-{off,on}.json`, `before-merge.json`, `published.json`, `public-after.json`; screenshoty `build/test/branch-p08-{comparison,public-result}.png`.
-- Pôvodný `tests/apps/news.js`, scenár **Test editor logic**: **FAIL pre chýbajúcu fixture `Jet portal 4`**, nie PASS. Prešiel vstup do NewsApp a kontrola jeho kariet; zastavil sa pri výbere pomenovaného priečinka. Žiadna stránka sa neuložila. Log `/tmp/webjet-p08-existing-news.log`, screenshot `build/test/Test_editor_logic.failed.png`. Lokálny wrapper menil iba auto-login na existujúci POC účet; pôvodný scenár sa neupravoval.
+- Prvý P08 pokus pred `6fb0a30c9`: pôvodný `tests/apps/news.js`, scenár **Test editor logic**: **FAIL pre chýbajúcu fixture `Jet portal 4`**, nie PASS. Prešiel vstup do NewsApp a kontrola jeho kariet; zastavil sa pri výbere pomenovaného priečinka. Žiadna stránka sa neuložila. Log `/tmp/webjet-p08-existing-news.log`, screenshot `build/test/Test_editor_logic.failed.png`. Lokálny wrapper menil iba auto-login na existujúci POC účet; pôvodný scenár sa neupravoval.
 - Nový `branch-p08-regression.js`: všetkých **10 scenárov má finálny PASS v nadväzujúcich behoch**. Spoločný beh overil prípravu, obnovenie flagu, práva a meranie; dva individuálne plány potrebovali opravu čakania testu. Finálne dotknuté produkčné scenáre + cleanup **4/4 PASS** (`/tmp/webjet-p08-production-final.log`), spresnený test platného neoprávneného payloadu **1/1 PASS** (`/tmp/webjet-p08-permissions-final.log`). Nejde o tvrdenie 10/10 v jednom neprerušenom behu.
 
 ## Produkčná regresia a načítanie off/on
@@ -97,6 +152,12 @@ Práva: konto A má editáciu iba pilotného koreňa. Existujúce LIVE DataTable
 Meranie bežného anonymného HTML renderu rovnakej kampane: 3 zahrievacie requesty + **20 sekvenčných requestov** pre každú hodnotu, bez cookies a bez browser cache. Každá odpoveď mala 200 a skutočné News/menu. Off medián **18,1 ms** (15,0–22,0 ms), on **17,9 ms** (14,9–25,1 ms). Rozdiel −0,2 ms je v šume lokálneho merania; výkonový prínos ani produkčnú kapacitu z toho nevyvodzujeme. Ide o HTML/SQL render, nie sťahovanie všetkých statických assetov, súbeh či záťažový test. Surové vzorky `regression/load-{false,true}.json`.
 
 Preservácia: metadata a všetky WORK riadky P05 **#841/#842**, P06 **#1315** a P07 **#1789** sú pred/po bajtovo zhodné, SHA-256 **`8bd5c436e5f7d892aead2dc247d45fc3c0205be4f7b1352b73f736832d6154c6`**. Všetkých **12** aktívnych súkromných súborov má hash zhodný s WORK metadátami. `preserved-{before,after}.sql`, `preserved-summary.json`, `preserved-binaries.json`. Demá zostávajú DRAFT; P06 má revíziu 25. POC DB aj WebJET zostávajú spustené na review.
+
+### Zachovanie pilota a návrat POC servera
+
+Referenčný server bol zastavený a obnovený pôvodný `poolman-local-p01.xml` na 8086/8446; [overený JDBC profil](../../../build/test-results/p08/followup/restored-profile.json) smeruje výhradne na **127.0.0.1:33316/webjet_p01**. Anonymný pôvodný pilotný scenár bol spustený samostatne bez opakovania vytvorenia alebo merge: **[1/1 PASS](../../../build/test-results/p08/followup/pilot-restored.log)**. Verejný výsledok vracia 200, celé menu/Novinky sa zhodujú s uloženým náhľadom, prekliky na detaily fungujú; príloha má presné publikované WORK bajty a anonymný náhľad vracia 403.
+
+[Porovnanie pred/po](../../../build/test-results/p08/followup/preserved-summary.json) zahŕňa metadata a všetky štyri WORK tabuľky pre **#841, #842, #1315, #1789 aj #1913**. Po návrate POC servera sú bajtovo zhodné, SHA-256 **`985958e010c4fdd6baf057975951dd80855008a48727257f386dcc51a9b1456b`**. [Všetkých 13 súkromných súborov](../../../build/test-results/p08/followup/preserved-binaries.json) zodpovedá pôvodným hashom. [Konečné stavy](../../../build/test-results/p08/followup/preserved-state.tsv): štyri demá DRAFT, pilot MERGED/revízia 56. Nové P08 referenčné dáta zostávajú iba v samostatnej schéme; nič sa neimportovalo do `webjet_p01` a 3306 sa nepoužila.
 
 ## Návody a release podklady
 
@@ -128,7 +189,20 @@ WEBJET_P08_BROWSER=true CODECEPT_URL=http://127.0.0.1:8086 CODECEPT_SHOW=false \
   npx codeceptjs run tests/webpages/branch-p08-regression.js --steps
 ```
 
-Celý pilotný `branch-p08.js` je jednorazový príbeh nad DRAFT fixture; nad už MERGED #1913 ho **neopakovať**. Publikovaný výsledok možno bez zápisu overiť cez `--grep 'P08 anonymous'`. Nový celý pilot potrebuje nové fixture/manifest a nové účty; staré demá sa nesmú regenerovať. Lokálny auto-login wrapper pôvodného News scenára bol po odovzdaní odstránený; na jeho dokončenie treba pripraviť ekvivalentné pomenované fixture a testovací login, nie smerovať runner na pracovný web.
+Celý pilotný `branch-p08.js` je jednorazový príbeh nad DRAFT fixture; nad už MERGED #1913 ho **neopakovať**. Publikovaný výsledok možno bez zápisu overiť cez `--grep 'P08 anonymous'`. Nový celý pilot potrebuje nové fixture/manifest a nové účty; staré demá sa nesmú regenerovať. Pôvodný neúspešný News pokus bol v pokračovaní nahradený celým behom na úplnej referenčnej sade v oddelenej schéme. Lokálny wrapper `_tmp_codecept-p08-reference.js` používa čerstvé heslo z `/tmp/webjet-p08-reference-login.properties`, explicitnú URL a vlastné reporty. Je ignorovaný spolu s lokálnym Poolman profilom; nepatrí do produkčného nasadenia.
+
+Referenčné T13/T16 sa spúšťajú **iba po prepnutí servera na `poolman-local-p08-regression.xml`**, nikdy proti `webjet_p01` alebo 3306. Lokálny wrapper je už pripravený v tomto worktree:
+
+```sh
+# From src/test/webapp, with the disposable reference server running on 8086:
+CODECEPT_URL=http://iwcm.interway.sk:8086 CODECEPT_SHOW=false P08_RUN=news-repeat \
+  npx codeceptjs run tests/apps/news.js -c _tmp_codecept-p08-reference.js
+WEBJET_P08_REFERENCE=true WEBJET_BRANCHES_ENABLED=true \
+CODECEPT_URL=http://iwcm.interway.sk:8086 CODECEPT_SHOW=false P08_RUN=live-repeat \
+  npx codeceptjs run tests/webpages/branch-p08-live.js -c _tmp_codecept-p08-reference.js
+```
+
+Pre false použiť `WEBJET_BRANCHES_ENABLED=false`. Celé pôvodné true sady používali štandardné `CODECEPT_AUTODELAY=true`. Pôvodné `mirroring.js` a `multigroup.js` bežia rovnakým wrapperom, bez úprav súborov. Test nastaví globálny runtime flag, vytvára vlastné `autotest` dáta a predpokladá výhradne jednorazovú schému. Prepnutie servera: zastaviť existujúci proces cez `appStop`, spustiť `webjetDbname=/poolman-local-p08-regression.xml ./gradlew --offline -PhttpPort=8086 -PhttpsPort=8446 -PdebugPort=5008 appStart` s Java 17. Po overení vrátiť profil `/poolman-local-p01.xml`.
 
 ## Ako si výsledok preklikať
 
@@ -141,9 +215,9 @@ Server používa verejnú aj admin doménu **127.0.0.1**, port **8086**. Login `
 
 Štart/stop POC DB a WebJETu je v [P04 návode](P04-vysledky.md#opakovanie-testov-a-štart). Vždy použiť `poolman-local-p01.xml` a port 33316, nikdy pracovnú DB 3306.
 
-## Zostávajúce povinné dôkazy a hranice
+## Hranice overenia
 
-Zostáva dokončiť pôvodnú regresiu `apps/news.js` na ekvivalentných testovacích dátach a doložiť úplné LIVE schvaľovanie/zrkadlenie/multigroup pri off/on. Chýbajúce pomenované fixture sa neprehlasujú za výsledok POC pilotu. Stav P08 sa bez týchto dôkazov nesmie zmeniť na DONE.
+Povinné T13/T16 sú doložené vyššie; na zadanom POC profile nezostáva otvorená položka P08. Nové dôkazy pokrývajú požadované LIVE operácie cez pôvodné UI a uložené výsledky; nepredstavujú spustenie externých TempMail/prekladových služieb.
 
 Iné DB/topológie, externé súbory/CDN, SQL Server READ_COMMITTED dopad a kompletná obnova produkčnej zálohy nie sú overené. Na jedinom zadanom profile tieto iné prostredia neblokujú POC, ale nesmú sa aktivovať na základe jeho výsledku. Návod obnovy nie je vykonaný disaster-recovery drill. Publikovanie zostáva postupné, bez globálneho rollbacku alebo automatického failover.
 

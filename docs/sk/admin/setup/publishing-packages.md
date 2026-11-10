@@ -7,6 +7,7 @@ Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Overený 
 | Overená časť | Rozsah |
 | --- | --- |
 | Šablóna `/templates/aceintegration/jet/blank.jsp` | Skutočný JSP layout, menu a Novinky, verejný HTML render a náhľad. Lokálna integračná šablóna; nejde o potvrdenie všetkých zákazníckych šablón. |
+| Šablóny `/templates/aceintegration/jet/article.jsp`, `sub-page.jsp` | Pôvodná LIVE sada Noviniek (T16) a schvaľovanie pri off/on (T13) na úplných referenčných dátach. |
 | `MenuApp`, `menu_ul_li.jsp`, `MenuULLI` | Parametre v editore, účinný strom, odkazy, aktívna cesta, HTML/perex, premenné a porovnanie po merge. |
 | `NewsApp`, `NewsActionBean`, `news-velocity.jsp` | SQL pred count/paging, existujúce perex kategórie, štandardné filtre/radenia, Velocity, čas náhľadu a výsledok po merge. |
 | Editor, médiá, upload | Stránky/priečinky, mediálne väzby a kategórie; moderný upload, CKEditor, jednotlivé súborové operácie elFinder. |
