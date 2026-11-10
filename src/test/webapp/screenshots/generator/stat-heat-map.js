@@ -55,15 +55,17 @@ function openPreview(I, DT, docId) {
     I.waitForVisible("#heatMapHotspotList button", 20);
 }
 
-/** Captures the modal, including its title and controls, without the dimmed page behind it. */
-function capturePreview(I, Document, name) {
+/** Captures the modal with temporary highlights in the preview iframe and, optionally, its outer header. */
+function capturePreview(I, Document, name, selectorsToHighlight = [], modalSelectorToHighlight) {
     I.clickCss("#heatMapScaleSummary");
     I.waitToHide(".tooltip", 10);
+    for (const selector of selectorsToHighlight) Document.highlightElement(selector);
     I.switchTo();
     I.clickCss("#modalIframe .modal-title");
     I.waitToHide(".tooltip", 10);
-    Document.screenshotElement("#modalIframe .modal-content", imagePath + name + ".png");
+    Document.screenshotElement("#modalIframe .modal-content", imagePath + name + ".png", null, null, modalSelectorToHighlight);
     I.switchTo(modalFrame);
+    for (const selector of selectorsToHighlight) Document.unhighlightElement(selector);
 }
 
 /** Selects by label because CodeceptJS first searches option text even when given a value. */
@@ -102,7 +104,7 @@ Scenario("heatmap documentation - list @heatmap-doc @screenshot", async ({ I, DT
     I.resizeWindow(1440, 620);
     openList(I, DT);
     I.assertEqual(await I.grabNumberOfVisibleElements("#heatMapDataTable tbody a"), 3);
-    Document.screenshot(imagePath + "list.png");
+    Document.screenshot(imagePath + "list.png", null, null, "#heatMapDataTable_extfilter");
 });
 
 Scenario("heatmap documentation - preview controls @heatmap-doc @screenshot", async ({ I, DT, Document }) => {
@@ -112,13 +114,13 @@ Scenario("heatmap documentation - preview controls @heatmap-doc @screenshot", as
     await selectPreviewOption(I, "#heatMapWidth", "container:1760");
     waitForPreview(I);
     I.seeInField("#heatMapWidth", "container:1760");
-    capturePreview(I, Document, "width");
+    capturePreview(I, Document, "width", [".pg-heatmap-width"]);
 
     await selectPreviewOption(I, "#heatMapWidth", "container:1140");
     waitForPreview(I);
     await selectPreviewOption(I, "#heatMapScale", "0.5");
     I.see("50 %", "#heatMapScaleSummary");
-    capturePreview(I, Document, "scale");
+    capturePreview(I, Document, "scale", [".pg-heatmap-scale", "#heatMapScaleSummary"]);
 
     await selectPreviewOption(I, "#heatMapScale", "fit");
     scrollPreview(I);
@@ -131,12 +133,12 @@ Scenario("heatmap documentation - preview controls @heatmap-doc @screenshot", as
     I.pressKey("Home");
     for (let step = 0; step < 5; step++) I.pressKey("ArrowRight");
     I.see("25 %", "#heatMapOpacityValue");
-    capturePreview(I, Document, "opacity");
+    capturePreview(I, Document, "opacity", [".pg-heatmap-opacity"]);
 
     I.clickCss("#heatMapVisible");
     I.seeAttributesOnElements("#heatMapVisible", {"aria-pressed": "false"});
     I.dontSeeElement("#heatMapOverlay");
-    capturePreview(I, Document, "hidden");
+    capturePreview(I, Document, "hidden", ["#heatMapVisible"]);
     I.clickCss("#heatMapVisible");
     I.clickCss("#heatMapOpacity");
     I.pressKey("End");
@@ -146,16 +148,14 @@ Scenario("heatmap documentation - preview controls @heatmap-doc @screenshot", as
     I.clickCss("#heatMapReload");
     waitForPreview(I);
     I.seeAttributesOnElements("#heatMapVisible", {"aria-pressed": "true"});
-    Document.highlightElement("#heatMapReload");
-    capturePreview(I, Document, "reload");
-    Document.unhighlightElement("#heatMapReload");
+    capturePreview(I, Document, "reload", ["#heatMapReload"]);
 
     I.switchTo();
     I.clickCss("#modalIframe .dialog-buttons .maximize");
     I.waitForVisible("#modalIframe .modal-dialog.modal-fullscreen", 10);
     I.switchTo(modalFrame);
     waitForPreview(I);
-    capturePreview(I, Document, "fullscreen");
+    capturePreview(I, Document, "fullscreen", [], "#modalIframe .dialog-buttons .minimize");
 });
 
 Scenario("heatmap documentation - hotspots and area selection @heatmap-doc @screenshot", async ({ I, DT, Document }) => {
@@ -164,11 +164,11 @@ Scenario("heatmap documentation - hotspots and area selection @heatmap-doc @scre
     I.waitForVisible("#heatMapHotspotBox", 10);
     I.waitForVisible("#heatMapHotspotResult", 10);
     waitForPreview(I);
-    capturePreview(I, Document, "hotspots");
+    capturePreview(I, Document, "hotspots", ["#heatMapHotspots", "#heatMapHotspotList li:first-child", "#heatMapHotspotResult"]);
 
     I.clickCss("#heatMapHotspots");
     I.dontSeeElement("#heatMapHotspotPanel");
-    capturePreview(I, Document, "hotspots-hidden");
+    capturePreview(I, Document, "hotspots-hidden", ["#heatMapHotspots"]);
     I.clickCss("#heatMapHotspots");
     I.waitForVisible("#heatMapHotspotList button", 10);
     I.clickCss("#heatMapHotspotList li:first-child button");
@@ -196,11 +196,11 @@ Scenario("heatmap documentation - hotspots and area selection @heatmap-doc @scre
     I.waitForText("Oblasť:", 15, "#heatMapAreaCount");
     const [areaCount] = await I.grabTextFromAll("#heatMapAreaCount");
     I.assertAbove(Number(areaCount.match(/\d+/)?.[0]), 0, "The selected area must contain recorded clicks.");
-    capturePreview(I, Document, "area");
+    capturePreview(I, Document, "area", ["#heatMapSelectArea", "#heatMapAreaResult"]);
     I.clickCss("#heatMapClearArea");
     I.dontSeeElement("#heatMapAreaResult");
     I.dontSeeElement("#heatMapAreaBox");
-    capturePreview(I, Document, "area-cleared");
+    capturePreview(I, Document, "area-cleared", ["#heatMapSelectArea"]);
 });
 
 Scenario("heatmap documentation - versions and comparison @heatmap-doc @screenshot", async ({ I, DT, Document }) => {
@@ -211,13 +211,13 @@ Scenario("heatmap documentation - versions and comparison @heatmap-doc @screensh
     await selectPreviewOption(I, "#heatMapVersion", historyIds[0]);
     waitForPreview(I);
     I.seeElement(`#heatMapFrame[src*="versionId=${historyIds[0]}"]`);
-    capturePreview(I, Document, "version");
+    capturePreview(I, Document, "version", ["#heatMapVersion"]);
 
     I.clickCss("#heatMapCompare");
     waitForPreview(I, ["heatMap", "heatMapCompare"]);
     I.seeAttributesOnElements("#heatMapCompare", {"aria-pressed": "true"});
     I.assertNotEqual(await I.grabValueFrom("#heatMapVersion"), await I.grabValueFrom("#heatMapCompareVersion"));
-    capturePreview(I, Document, "comparison");
+    capturePreview(I, Document, "comparison", ["#heatMapCompare", "#heatMapVersion", "#heatMapCompareVersion"]);
 
     scrollPreview(I);
     I.switchTo("#heatMapCompareFrame");
@@ -230,5 +230,5 @@ Scenario("heatmap documentation - versions and comparison @heatmap-doc @screensh
     waitForPreview(I);
     I.dontSeeElement("#heatMapComparePane");
     I.seeInField("#heatMapVersion", historyIds[0]);
-    capturePreview(I, Document, "comparison-closed");
+    capturePreview(I, Document, "comparison-closed", ["#heatMapCompare", "#heatMapVersion"]);
 });
