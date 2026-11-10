@@ -3,6 +3,7 @@ import {openBranchMerge} from './branch-merge';
 
 // The server embeds the context of this screen; never refresh it silently from another tab.
 const screen = window.branchScreen;
+const selectedBranchId = screen?.selectedBranchId ?? screen?.branchId;
 const branchText = (key, ...args) => WJ.translate(`branches.${key}.js`, ...args);
 const stateText = state => WJ.translate(`branches.merge.state.${state}.js`);
 window.branchAssetUrl = value => {
@@ -71,6 +72,47 @@ window.bindBranchContext = (target, context) => {
 };
 window.bindBranchContext(window, screen);
 
+// Ordinary menu clicks keep the current screen behind the same dialog that also handles direct URLs.
+if (selectedBranchId) {
+    let loadingDialog = false;
+    document.addEventListener('click', async event => {
+        const link = event.target.closest?.('a[data-production-dialog]');
+        if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey ||
+            event.shiftKey || event.altKey || link.target && link.target !== '_self') return;
+        const url = new URL(link.href);
+        if (url.origin !== location.origin) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (loadingDialog) return;
+        loadingDialog = true;
+        try {
+            const response = await fetch(url, {headers: {
+                'X-WebJET-Production-Navigation': 'dialog',
+                'X-WebJET-Branch': String(selectedBranchId),
+                'X-WebJET-Branch-Domain': screen.domainName
+            }});
+            if (!response.ok) throw new Error(WJ.translate('branches.stale.js'));
+            const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+            const prompt = page.querySelector('#branch-section-dialog');
+            if (!prompt) { location.assign(url.href); return; }
+            const dialog = document.importNode(prompt, true);
+            dialog.removeAttribute('open');
+            dialog.style.width = 'min(30rem, calc(100vw - 2rem))';
+            const proceed = dialog.querySelector('[data-continue]');
+            proceed.onclick = () => location.assign(new URL(proceed.dataset.continue + url.hash, url).href);
+            const back = dialog.querySelector('.btn-outline-secondary');
+            if (screen.branchId) back.onclick = event => { event.preventDefault(); dialog.close(); };
+            dialog.addEventListener('close', () => dialog.remove(), {once: true});
+            document.body.append(dialog);
+            dialog.showModal();
+        } catch (error) {
+            WJ.notifyError(error.message);
+        } finally {
+            loadingDialog = false;
+        }
+    }, true);
+}
+
 async function api(path, body) {
     const response = await fetch(`/admin/rest/branches${path}`, {
         method: body ? 'POST' : 'GET',
@@ -96,8 +138,8 @@ $(async () => {
         branches.forEach(branch => selector.add(new Option(`${branch.name} · ${stateText(branch.state)} (#${branch.id})`, branch.id)));
         selector.add(new Option(branchText('new'), 'create'));
         selector.add(new Option(branchText('manage'), 'manage'));
-        selector.value = String(screen.branchId);
-        const active = branches.find(branch => branch.id === screen.branchId);
+        selector.value = String(selectedBranchId);
+        const active = branches.find(branch => branch.id === selectedBranchId);
         const updateLabel = branch => {
             label.textContent = branch ? `${selector.labels[0].textContent}: ${branch.name}${branch.state === 'DRAFT' ? '' : ` · ${branchText('readonly')}`}` : selector.options[0].text;
             label.title = label.textContent;
@@ -109,7 +151,7 @@ $(async () => {
             if (branch) Object.assign(branch, updated);
             const option = Array.from(selector.options).find(item => item.value === String(updated.id));
             if (option) option.text = `${updated.name} · ${stateText(updated.state)} (#${updated.id})`;
-            if (Number(screen.branchId) === Number(updated.id)) updateLabel(updated);
+            if (Number(selectedBranchId) === Number(updated.id)) updateLabel(updated);
         });
         label.title = label.textContent;
         if (active) {
@@ -123,7 +165,7 @@ $(async () => {
             changesButton.type = 'button'; changesButton.className = 'btn btn-sm btn-outline-secondary';
             changesButton.textContent = WJ.translate('branches.changes.js');
             selector.parentElement.append(changesButton);
-            changesButton.onclick = () => openBranchMerge(active.id, api, screen, changesButton);
+            changesButton.onclick = () => openBranchMerge(active.id, api, {...screen, branchId: selectedBranchId}, changesButton);
         }
 
         const compareId = new URLSearchParams(location.hash.substring(1)).get('branchCompare') || new URLSearchParams(location.search).get('branchCompare');
@@ -193,7 +235,7 @@ $(async () => {
             document.body.append(modal); modal.showModal();
         }
         selector.onchange = async () => {
-            const value = selector.value; selector.value = String(screen.branchId);
+            const value = selector.value; selector.value = String(selectedBranchId);
             if (value === 'create' || value === 'manage') dialog(value === 'create').catch(showError);
             else try { await activate(value); } catch (error) { showError(error); }
         };

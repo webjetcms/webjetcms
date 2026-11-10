@@ -75,7 +75,10 @@ public class BranchRestController {
         access.requireExpectedDomain(domain,input.expectedDomainName());
         if(input.branchId()<0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         if(input.branchId()>0) BranchSelection.requireBranch(input.branchId(),domain);
-        request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(input.branchId(),domain));
+        synchronized (request.getSession()) {
+            request.getSession().removeAttribute(BranchProductionSection.ATTRIBUTE);
+            request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(input.branchId(),domain));
+        }
         return contextInfo(BranchSelection.selected(request,user,domain));
     }
 

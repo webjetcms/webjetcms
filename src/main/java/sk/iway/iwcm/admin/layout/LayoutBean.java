@@ -11,6 +11,8 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.admin.DocumentationTools;
+import sk.iway.iwcm.branch.BranchContexts;
+import sk.iway.iwcm.branch.BranchProductionSection;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 import sk.iway.iwcm.system.stripes.CSRF;
@@ -44,12 +46,18 @@ public class LayoutBean {
 
     /** Captures the screen context before any asynchronous content requests are issued. */
     public java.util.Map<String,Object> getBranchScreen() {
-        var context=sk.iway.iwcm.branch.BranchContexts.current();
+        var context = BranchContexts.current();
+        var selection = BranchProductionSection.currentSelection();
         boolean enabled=Constants.getBoolean("branchesEnabled");
         boolean allowed=enabled&&user!=null&&user.isAdmin()&&user.isEnabledItem("menuBranches");
-        // WebPagesListener can select a different LIVE domain while building this screen; use its final header value.
         return java.util.Map.of("enabled",enabled,"allowed",allowed,"branchId",context.branchId(),
-            "domainName",context.isBranch()?context.domainName():header.getCurrentDomain());
+            "selectedBranchId",selection == null ? context.branchId() : selection.branchId(),
+            "domainName",selection != null ? selection.domainName() : context.isBranch() ? context.domainName() : header.getCurrentDomain());
+    }
+
+    public boolean confirmProductionLink(String href) {
+        return (BranchContexts.current().isBranch() || BranchProductionSection.currentSelection() != null)
+            && BranchProductionSection.needsConfirmation(href);
     }
 
     public String getDocumentationBaseUrl() {

@@ -30,6 +30,19 @@ Publikovanie prebieha po položkách. Pri chybe už dokončené položky môžu 
 
 ## Čo v POC pripraviť mimo balíka
 
+Vo vybranej pracovnej verzii môžete otvoriť každú časť administrácie, na ktorú máte oprávnenie. V tabuľke sú adresy, ktoré podporujú prácu s balíkom.
+
+| Obrazovka | URL |
+| --- | --- |
+| Prehľad administrácie a výber balíka | `/admin/v9/` |
+| Webové stránky a ich editor | `/admin/v9/webpages/web-pages-list/` |
+| Médiá | `/admin/v9/webpages/media/` |
+| Editor komponentu stránky | `/admin/v9/webpages/component/` |
+| Novinky | `/apps/news/admin/` |
+| Súbory a výber súboru, odkazu alebo obrázka | `/admin/v9/files/index/`, `/admin/v9/files/dialog/`, `/admin/v9/files/wj_link/`, `/admin/v9/files/wj_image/` |
+
+Pri otvorení inej obrazovky, napríklad šablón stránok alebo konfigurácie, sa zobrazí dialóg s názvom pracovnej verzie. Tlačidlom **Pokračovať v produkcii** otvoríte obrazovku s produkčnými údajmi. Uložené zmeny sa prejavia v produkcii bez publikovania balíka. Po návrate na Webové stránky pokračujete v pôvodnom balíku.
+
 Definície kategórií, atribúty, multigroup väzby, galériu a jej varianty, archív súborov, nastavenia adresárov, šablóny, CSS/JS a zdroje aplikácií pripravuje správca mimo pracovnej verzie. Spoločné System stránky sú iba na čítanie. Jazykové stránky tím pripraví explicitne; balík nevytvára skryté preklady ani zrkadlené kópie. Zmena URL nevytvorí automatické presmerovanie.
 
 Overený rozsah šablón/aplikácií, konfigurácia a obnova sú v [návode pre správcu](../../admin/setup/publishing-packages.md). Pred použitím na ďalšom webe treba overiť jeho vlastné komponenty.

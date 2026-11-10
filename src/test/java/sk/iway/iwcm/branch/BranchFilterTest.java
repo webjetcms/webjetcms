@@ -47,6 +47,101 @@ class BranchFilterTest {
     }
     @AfterEach void cleanBoundary(){selection.close();groups.close();constants.close();SetCharacterEncodingFilter.setCurrentRequestBean(null);}
 
+    @Test void everyNonBranchAdminDocumentRequiresConsentBeforeDispatch() throws Exception {
+        selected();
+        var pkg = new BranchEntity();
+        pkg.setName("Autumn");
+        selection.when(() -> BranchSelection.requireBranch(42, DOMAIN)).thenReturn(pkg);
+        request.addHeader("Sec-Fetch-Dest", "document");
+        for (String path : List.of("/admin/v9/templates/temps-list/", "/admin/v9/files/folder_prop/",
+                "/admin/v9/future-section/", "/apps/contact/admin/", "/components/news/admin_save.jsp")) {
+            request.setRequestURI(path);
+            request.setQueryString("id=7&view=edit");
+            response = new MockHttpServletResponse();
+            filter.doFilter(request, response, (in, out) -> fail("Dispatched before confirmation"));
+            assertEquals("/WEB-INF/branch-production.jsp", response.getForwardedUrl());
+            assertEquals("Autumn", request.getAttribute("productionBranchName"));
+            String continuation = (String) request.getAttribute("productionContinuation");
+            assertTrue(continuation.startsWith("?id=7&view=edit&"));
+            request.setQueryString(continuation.substring(1));
+            AtomicBoolean opened = new AtomicBoolean();
+            filter.doFilter(request, new MockHttpServletResponse(), (in, out) -> {
+                opened.set(true);
+                assertFalse(BranchContexts.current().isBranch());
+                assertEquals(branch, BranchProductionSection.currentSelection());
+            });
+            assertTrue(opened.get());
+            assertNull(BranchProductionSection.currentSelection());
+            response = new MockHttpServletResponse();
+            filter.doFilter(request, response, (in, out) -> fail("Reload skipped the dialog"));
+            assertEquals("/WEB-INF/branch-production.jsp", response.getForwardedUrl());
+        }
+        request.setQueryString(null);
+        for (String path : List.of("/admin/v9/webpages/web-pages-list/", "/admin/v9/files/index/", "/apps/news/admin/")) {
+            request.setRequestURI(path);
+            AtomicBoolean dispatched = new AtomicBoolean();
+            filter.doFilter(request, new MockHttpServletResponse(), (in, out) -> {
+                dispatched.set(true);
+                assertEquals(branch, BranchContexts.current());
+            });
+            assertTrue(dispatched.get());
+        }
+    }
+
+    @Test void confirmedScreenUsesProductionForRestFormsAndFramesOnlyInItsOriginalSelection() throws Exception {
+        selected();
+        request.setRequestURI("/admin/v9/templates/temps-list/");
+        String continuation = BranchProductionSection.continuation(request, branch);
+        request.setQueryString(continuation.substring(1));
+        request.addHeader("Sec-Fetch-Dest", "document");
+        filter.doFilter(request, response, (in, out) -> assertFalse(BranchContexts.current().isBranch()));
+        request.removeHeader("Sec-Fetch-Dest");
+        request.setQueryString(null);
+        String referrer = request.getRequestURL() + continuation;
+        request.addHeader("Referer", referrer);
+        request.addHeader("Sec-Fetch-Dest", "empty");
+        request.setMethod("POST");
+        request.setRequestURI("/admin/rest/templates/editor");
+        filter.doFilter(request, response, (in, out) -> fail("Missing CSRF"));
+        assertEquals(403, response.getStatus());
+        request.getSession().setAttribute("webjet-csrf-tokens-list", List.of("test-token"));
+        request.addHeader("X-CSRF-Token", "test-token");
+        for (String path : List.of("/admin/rest/templates/editor", "/admin/conf_import.jsp", "/XhrFileUpload")) {
+            request.setRequestURI(path);
+            response = new MockHttpServletResponse();
+            AtomicBoolean dispatched = new AtomicBoolean();
+            filter.doFilter(request, response, (in, out) -> {
+                dispatched.set(true);
+                assertFalse(BranchContexts.current().isBranch());
+            });
+            assertTrue(dispatched.get());
+        }
+        request.setRequestURI("/admin/v9/files/dialog/");
+        request.setMethod("GET");
+        request.removeHeader("Sec-Fetch-Dest");
+        request.addHeader("Sec-Fetch-Dest", "iframe");
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (in, out) -> fail("Frame must first inherit the production context"));
+        assertEquals(307, response.getStatus());
+        request.setQueryString(response.getHeader("Location").substring(1));
+        filter.doFilter(request, new MockHttpServletResponse(), (in, out) -> assertFalse(BranchContexts.current().isBranch()));
+
+        request.setQueryString(null);
+        request.setRequestURI("/admin/rest/templates/editor");
+        request.setMethod("POST");
+        selection.when(() -> BranchSelection.selected(request,admin,DOMAIN)).thenReturn(BranchContext.live(DOMAIN, 1));
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (in, out) -> fail("Stale production page wrote after a selection change"));
+        assertEquals(409, response.getStatus());
+
+        selected();
+        request.removeHeader("Referer");
+        request.addHeader("Referer", "http://outside.example/admin/v9/templates/temps-list/" + continuation);
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (in, out) -> fail("External referrer authorised a write"));
+        assertEquals(409, response.getStatus());
+    }
+
     @Test void schedulingActionsUseTechnicalLiveContextEvenWhenEditorHasASelection() throws Exception {
         selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);
         request.setMethod("POST");

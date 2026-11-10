@@ -18,10 +18,42 @@ public final class BranchFilter implements Filter {
         String path=request.getRequestURI().substring(request.getContextPath().length());
         boolean preview=path.startsWith(BranchPreviewUrls.PREFIX);
         if(preview) {response.setHeader("Cache-Control","private, no-store, max-age=0");response.setHeader("X-Robots-Tag","noindex, nofollow, noarchive");}
+        var document = BranchProductionSection.document(request);
+        var source = BranchProductionSection.referrer(request);
+        boolean navigation = isDocumentNavigation(request);
+        String destination = request.getHeader("Sec-Fetch-Dest");
+        boolean frame = "iframe".equals(destination) || "frame".equals(destination);
+        boolean frameScreen = frame && "GET".equals(request.getMethod())
+            && (!isSupportedBranchAdminPath(path) || path.startsWith("/admin/v9/") || path.startsWith("/apps/"));
+        boolean adminScreen = (navigation || frameScreen) && BranchProductionSection.adminDocumentPath(path);
+        // Fresh top-level navigation chooses its own mode. Embedded dialogs inherit their calling screen.
+        if (navigation && !"0".equals(request.getParameter("branchId"))) source = null;
+        boolean productionRequest = document != null || source != null;
+        // A menu click requests just the dialog so the current page stays visible underneath it.
+        if ("dialog".equals(request.getHeader("X-WebJET-Production-Navigation"))) {
+            try {
+                if (!"GET".equals(request.getMethod()) || !BranchProductionSection.needsConfirmation(path)) {
+                    response.sendError(400);
+                    return;
+                }
+                Identity user = access.requireUser(request);
+                String domain = access.requireDomain(request, user);
+                BranchContext selection = BranchSelection.selected(request, user, domain);
+                if (!selection.isBranch() || !Long.toString(selection.branchId()).equals(request.getHeader(BranchSelection.ID_HEADER))
+                    || !domain.equals(request.getHeader(BranchSelection.DOMAIN_HEADER))) {
+                    response.sendError(409);
+                    return;
+                }
+                showProductionDialog(request, response, selection);
+            } catch (ResponseStatusException ex) {
+                response.sendError(ex.getStatusCode().value(), ex.getReason());
+            }
+            return;
+        }
         if(!Constants.getBoolean("branchesEnabled")) {
             Object selected=request.getSession(false)==null?null:request.getSession(false).getAttribute(BranchSelection.SESSION_KEY);
             boolean frameContext=request.getParameter("branchId")!=null && ("true".equals(request.getParameter("inlineEditorAdmin")) || path.startsWith("/apps/news/admin/") || path.startsWith("/admin/v9/webpages/component/"));
-            boolean staleBranch=(frameContext && !"0".equals(request.getParameter("branchId")))
+            boolean staleBranch=productionRequest || (frameContext && !"0".equals(request.getParameter("branchId")))
                 ||(selected instanceof BranchSelection.Selected value&&value.branchId()>0)
                 ||(request.getHeader(BranchSelection.ID_HEADER)!=null&&!"0".equals(request.getHeader(BranchSelection.ID_HEADER)));
             boolean authenticationPath=path.equals("/logoff.do")||path.startsWith("/admin/logoff")||path.startsWith("/admin/logon/");
@@ -29,10 +61,10 @@ public final class BranchFilter implements Filter {
             else if(staleBranch && !authenticationPath && (frameContext || path.startsWith("/admin/rest/")||path.matches("(?i).*\\.(jsp|action|do)$")||path.equals("/XhrFileUpload")||!Set.of("GET","HEAD").contains(request.getMethod())))response.sendError(409,"Branches are disabled; sign in again before editing production");
             else chain.doFilter(input,output);return;
         }
-        if (!preview && "true".equals(request.getParameter("inlineEditorAdmin")) && request.getParameter("branchId")!=null) {
+        if (!preview && !productionRequest && "true".equals(request.getParameter("inlineEditorAdmin")) && request.getParameter("branchId")!=null) {
             inlineEditor(request,response,chain,path); return;
         }
-        if(!preview && !path.startsWith("/admin/") && !path.contains("/admin/") && !path.equals("/components/_common/javascript/page_functions.js.jsp")) {
+        if(!preview && !adminScreen && !productionRequest && !path.startsWith("/admin/") && !path.contains("/admin/") && !path.equals("/components/_common/javascript/page_functions.js.jsp")) {
             Object selection=request.getSession(false)==null?null:request.getSession(false).getAttribute(BranchSelection.SESSION_KEY);
             Identity user=sk.iway.iwcm.users.UsersDB.getCurrentUser(request);
             if(selection instanceof BranchSelection.Selected selected && selected.branchId()>0 && user!=null && user.isAdmin()) {
@@ -52,6 +84,7 @@ public final class BranchFilter implements Filter {
         RequestBean bean=SetCharacterEncodingFilter.getCurrentRequestBean();
         String oldDomain=bean==null?null:bean.getDomain(),oldUrl=bean==null?null:bean.getUrl();
         Object oldPreview=request.getAttribute("isPreview");
+        var previousPage = BranchProductionSection.currentSelection();
         try {
             Identity user;
             if(preview) {
@@ -78,16 +111,58 @@ public final class BranchFilter implements Filter {
                 context=new BranchContext(id,domain,user.getUserId(),BranchContext.Mode.PREVIEW);
             } else {
                 String domain=access.requireDomain(request,user);
-                boolean management=(path.equals("/admin/rest/branches")||path.equals("/admin/rest/branches/context")||path.matches("/admin/rest/branches/[0-9]+(?:/(?:preview-link|prepare|resolve|merge|resume|schedule|unschedule|reopen|progress|file-version))?"))||path.equals("/admin/rest/refresher");
+                boolean management=(path.equals("/admin/rest/branches")||path.equals("/admin/rest/branches/context")||path.matches("/admin/rest/branches/[0-9]+(?:/(?:preview-link|prepare|resolve|merge|resume|schedule|unschedule|reopen|progress|file-version))?"))||path.equals("/admin/rest/refresher")
+                    || ("GET".equals(request.getMethod()) && path.matches("/admin/rest/properties/[a-zA-Z_-]+/"));
                 context=management?BranchContext.live(domain,user.getUserId()):BranchSelection.selected(request,user,domain);
                 String explicit=request.getHeader(BranchSelection.ID_HEADER),expectedDomain=request.getHeader(BranchSelection.DOMAIN_HEADER);
                 if (explicit==null && request.getParameter("branchId")!=null) {
                     explicit=request.getParameter("branchId"); expectedDomain=request.getParameter("branchDomain");
                 }
+                if (!management && (productionRequest || adminScreen && context.isBranch())) {
+                    boolean confirmed = document != null && document.authorize(request, context, true);
+                    boolean inherited = source != null && source.authorize(request, context, false);
+                    boolean branchScreen = adminScreen && BranchProductionSection.supportsBranch(path)
+                        && !confirmed && !(inherited && (frame || "0".equals(explicit)));
+                    if (!branchScreen && (confirmed || inherited)) {
+                        access.requireUser(request);
+                        if (explicit != null && (!domain.equals(expectedDomain)
+                                || !("0".equals(explicit) || Long.toString(context.branchId()).equals(explicit)))) {
+                            response.sendError(409, "Screen context changed; reload the screen");
+                            return;
+                        }
+                        // Editor popup URLs can carry the selected branch. Their verified data context is now LIVE.
+                        if (explicit != null) explicit = "0";
+                        // Give child documents their own URL so subsequent native requests retain the same context.
+                        if (!confirmed && (frame || isHtmlDocument(request)) && BranchProductionSection.adminDocumentPath(path)) {
+                            response.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
+                            response.setHeader("Location", BranchProductionSection.continuation(request, context));
+                            response.setHeader("Cache-Control", "private, no-store");
+                            return;
+                        }
+                        response.setHeader("Referrer-Policy", "same-origin");
+                        response.setHeader("Cache-Control", "private, no-store");
+                        if (path.startsWith("/admin/rest/") && !Set.of("GET", "HEAD").contains(request.getMethod()))
+                            access.requireCsrf(request);
+                        RequestBean.setAttribute(BranchProductionSection.ATTRIBUTE, context);
+                        context = BranchContext.live(domain, user.getUserId());
+                    } else if (!branchScreen && adminScreen && context.isBranch()) {
+                        access.requireUser(request);
+                        showProductionDialog(request, response, context);
+                        return;
+                    } else if (document != null && adminScreen && !context.isBranch()) {
+                        // A copied/bookmarked URL also opens normally when the user is already in production.
+                        String query = BranchProductionSection.originalQuery(request);
+                        response.sendRedirect(request.getRequestURI() + (query.isEmpty() ? "" : "?" + query));
+                        return;
+                    } else if (!branchScreen && productionRequest) {
+                        response.sendError(409, "Production confirmation expired; reopen the screen");
+                        return;
+                    }
+                }
                 if(!management && (explicit!=null || expectedDomain!=null)) {
                     try {BranchContexts.requireSameSelection(context,Long.parseLong(explicit),expectedDomain);}
                     catch(RuntimeException ex) {response.sendError(409,"Branch context changed; reload the screen");return;}
-                } else if(!management && (path.startsWith("/admin/rest/") || path.startsWith("/admin/upload/")
+                } else if(!management && BranchProductionSection.currentSelection() == null && (path.startsWith("/admin/rest/") || path.startsWith("/admin/upload/")
                         || path.equals("/admin/web-pages/upload/") || path.equals("/admin/elfinder-connector/"))
                         && (context.isBranch() || !Set.of("GET","HEAD").contains(request.getMethod()))) {
                     response.sendError(409,"Missing screen branch context; reload the screen");return;
@@ -122,10 +197,31 @@ public final class BranchFilter implements Filter {
           catch(BranchDecision.StaleChoiceException ex) {if(!response.isCommitted())response.sendError(409,"Preview choice is stale; compare again");}
           catch(NumberFormatException ex) {response.sendError(404);}
         finally {
+            RequestBean.setAttribute(BranchProductionSection.ATTRIBUTE, previousPage);
             if(bean!=null){bean.setDomain(oldDomain);bean.setUrl(oldUrl);}
             if(oldPreview==null)request.removeAttribute("isPreview");else request.setAttribute("isPreview",oldPreview);
             request.removeAttribute(BranchPreviewUrls.LOGICAL_PATH);
         }
+    }
+
+    private static void showProductionDialog(HttpServletRequest request, HttpServletResponse response, BranchContext selection)
+            throws ServletException, IOException {
+        request.setAttribute("productionBranchName", BranchSelection.requireBranch(selection.branchId(), selection.domainName()).getName());
+        request.setAttribute("productionContinuation", BranchProductionSection.continuation(request, selection));
+        response.setHeader("Cache-Control", "private, no-store");
+        response.setHeader("Referrer-Policy", "same-origin");
+        request.getRequestDispatcher("/WEB-INF/branch-production.jsp").forward(request, response);
+    }
+
+    private static boolean isDocumentNavigation(HttpServletRequest request) {
+        return "GET".equals(request.getMethod()) && isHtmlDocument(request);
+    }
+
+    private static boolean isHtmlDocument(HttpServletRequest request) {
+        String destination = request.getHeader("Sec-Fetch-Dest");
+        if (destination != null) return "document".equals(destination);
+        String accept = request.getHeader("Accept");
+        return request.getHeader("X-Requested-With") == null && accept != null && accept.contains("text/html");
     }
 
     private static boolean isPublicPageLink(String path, HttpServletRequest request) {
