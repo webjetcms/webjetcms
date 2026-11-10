@@ -37,6 +37,20 @@ Požadavek na vzdálené spuštění se přenáší přes cluster a provede se n
 
 Změny pro časování úloh se aplikují okamžitě, ale již odstartované úlohy zůstanou běžet dokud neskončí.
 
+### Slučování historických kliknutí
+
+V části **Nastavení → Automatizované úlohy** přidejte úlohu s třídou `sk.iway.iwcm.stat.heat_map.HeatMapAggregationCronJob`. Pokud chcete zpracovat pouze říjen 2025, do pole **Parametry úlohy** zadejte `year=2025|month=10` (případně `2025_10` nebo `2025|10`). Uložte úlohu, označte ji v seznamu a spusťte ji tlačítkem přehrávání na aktuálním uzlu.
+
+Bez parametrů úloha vybere všechny ukončené měsíce. Plánovač takto zpracuje i pole obsahující pouze mezery nebo oddělovače `|`. Úloha zpracuje měsíc nejdříve 24 hodin po jeho skončení, aby prohlížeče stihly odeslat poslední kliknutí. Pro pravidelné zpracování nastavte den v měsíci na `3`, hodinu na `2`, minutu a sekundu na `0` a ostatní časová pole na `*`.
+
+Úloha sečte kliknutí ze stejného dne, domény a stránky v jedné buňce mapy. Velikost buňky určuje konfigurační proměnná `statHeatMapCellSize`: výchozí hodnota `5` znamená 5 × 5 CSS pixely, `4` znamená 4 × 4 a `10` znamená 10 × 10. Platné hodnoty jsou 1 až 1024; při neplatné hodnotě se použije 4. Stejnou velikost používá i vykreslování mapy. Změna se použije při dalším spuštění úlohy a načtení mapy bez restartu serveru. Již spuštěná úloha dokončí zpracování s původní velikostí.
+
+Úloha zachová členění podle režimu souřadnic, šířky rozložení a skutečné šířky okna. Počet řádků v databázi se tím sníží a mapa nadále zobrazuje všechna započítaná kliknutí. Větší buňka umožní sloučit více řádků, ale sníží přesnost polohy. Zmenšení buňky neobnoví souřadnice již sloučených kliknutí. Výsledek pro každou zpracovanou tabulku najdete v protokolu serveru.
+
+Při aktualizaci WebJET se existující měsíční tabulky kliknutí v MySQL/MariaDB s úložištěm MyISAM převedou na InnoDB. Slučování tak může používat transakce i u starších tabulek. Úloha podporu transakcí předem nekontroluje; případnou databázovou chybu zapíše do protokolu serveru.
+
+Pokud používáte `statTableCreateProcedureName`, upravte vlastní proceduru tak, aby v nových měsíčních tabulkách vytvořila sloupec `count` s výchozí hodnotou jedna. Podívejte se na [příklad procedury pro Oracle](../../../install/config/ro-user.md#oracle).
+
 ## Standardní úkoly
 
 [cs.iway.iwcm.system.cron.Echo](../../../../../src/main/java/sk/iway/iwcm/system/cron/Echo.java) - Diagnostická úloha - svůj první parametr vypíše do konzole.

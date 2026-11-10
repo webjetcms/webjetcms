@@ -50,6 +50,7 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 
 ### Webové stránky
 
+- Statistika - obnovená [Mapa kliknutí](redactor/apps/stat/heat-map.md) s podporou různých šířek okna, pevných kontejnerů a náhledem historických verzí stránky. Měření se zapíná v šabloně nebo skupině šablon a respektuje souhlas se statistickými cookies (#318).
 - Editor stránek - nová nabídka [Styly](redactor/webpages/working-in-editor/README.md#práce-se-styly-a-formátování-textu). Zobrazuje aktivní styly s možností jejich odebrání a umožňuje vybrat upravovaný odstavec, sloupec či celou sekci. Pro správnou funkčnost je třeba mít správně nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-struktury) a vytvořené [doplňkové komentáře](frontend/examples/template-bare/README.md#vyhledávání-a-skupiny-stylů) v CSS soubor (#356).
 
 <div class="video-container">

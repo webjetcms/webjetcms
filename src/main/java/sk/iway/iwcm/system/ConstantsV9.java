@@ -351,6 +351,9 @@ public class ConstantsV9 {
 		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_GDPR, "Koľko dní staré priečinky a stránky, ktoré sú v koši, sa majú vymazať (POZOR, nie ako dlho sú v koši).");
 
 		Constants.setBoolean("fileArchivCheckHistoryValid", true, Constants.MOD_FILE_ARCHIV, "Ak je true, historické verzie dokumentov možno stiahnuť iba v rozsahu Platnosť od a Platnosť do. Pri false sa oba dátumy historických verzií ignorujú; viditeľnosť a prístupové oprávnenia sa naďalej kontrolujú.");
+
+		Constants.setInt("statHeatMapCellSize", 5, Constants.MOD_STAT,
+				"Veľkosť štvorcovej bunky mapy kliknutí v CSS pixeloch pre zlučovanie aj vykresľovanie. Hodnota 5 znamená 5 × 5 px, hodnota 10 znamená 10 × 10 px. Rozsah 1 až 1024; neplatná hodnota použije 4. Zmenšenie bunky neobnoví súradnice už zlúčených kliknutí.");
 	}
 
 	/**

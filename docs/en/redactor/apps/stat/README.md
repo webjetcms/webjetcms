@@ -115,3 +115,9 @@ The list of current sessions on the website also includes a list of non-logged-i
  Click on a user name to view detailed login statistics for the selected user.
 
 ![](logon-current-page.png)
+
+## Click map
+
+The click map shows where visitors click, grouped by fixed container width or exact window width. It lets you compare page versions and count clicks within a selected area.
+
+See the separate [Click map documentation](./heat-map.md) for instructions on enabling measurement and using the map.

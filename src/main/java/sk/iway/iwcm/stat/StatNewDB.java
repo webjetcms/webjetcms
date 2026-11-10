@@ -34,11 +34,12 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.heat_map.HeatMapSchema;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
- *  StatNewDB.java
+ * Creates statistics partitions and queries them for traffic reports.
  *
  *@Title        WebJET
  *@Company      Interway s.r.o. (www.interway.sk)
@@ -210,10 +211,12 @@ public class StatNewDB
 	}
 
 	/**
-	 * Vrati SQL prikaz pre vytvorenie danej tabulky
-	 * @param tableName
-	 * @param suffix
-	 * @return
+	 * Builds the SQL for a statistics partition, using the configured creation procedure when present.
+	 *
+	 * @param tableName base statistics table name
+	 * @param suffix partition suffix appended to the table name
+	 * @param DB_TYPE WebJET database type used to select the SQL dialect
+	 * @return creation SQL, or {@code null} if no definition is available
 	 */
 	private static String getCreateStatTableSqlCommand(String tableName, String suffix, int DB_TYPE)
 	{
@@ -435,15 +438,19 @@ public class StatNewDB
 			{
 				sql = "CREATE TABLE stat_clicks"+suffix+" ("+
 						"stat_click_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,"+
+						"event_id CHAR(32) NULL,domain_name VARCHAR(255) NULL,viewport_width INT NOT NULL DEFAULT "+HeatMapSchema.DEFAULT_VIEWPORT_WIDTH+","+
+						HeatMapSchema.coordinateColumnsSql(DB_TYPE)+HeatMapSchema.countColumnSql(DB_TYPE)+","+
 						"document_id INT,"+
 						"x INT,"+
 						"y INT,"+
-						"day_of_month INT) ENGINE="+Constants.getString("mariaDbDefaultEngine")+";";
+						"day_of_month INT) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;";
 			}
 			else if (DB_TYPE == Constants.DB_MSSQL || DB_TYPE == Constants.DB_PGSQL)
 			{
 				sql = "CREATE TABLE stat_clicks"+suffix+" ("+
 						"stat_click_id INT identity(1,1) NOT NULL,"+
+						"event_id CHAR(32) NULL,domain_name VARCHAR(255) NULL,viewport_width INT NOT NULL DEFAULT "+HeatMapSchema.DEFAULT_VIEWPORT_WIDTH+","+
+						HeatMapSchema.coordinateColumnsSql(DB_TYPE)+HeatMapSchema.countColumnSql(DB_TYPE)+","+
 						"document_id INT,"+
 						"x INT,"+
 						"y INT,"+
@@ -453,6 +460,8 @@ public class StatNewDB
 			{
 				sql = "CREATE TABLE stat_clicks"+suffix+" ("+
 							"stat_click_id INT NOT NULL,"+
+							"event_id CHAR(32) NULL,domain_name VARCHAR(255) NULL,viewport_width INT DEFAULT "+HeatMapSchema.DEFAULT_VIEWPORT_WIDTH+" NOT NULL,"+
+							HeatMapSchema.coordinateColumnsSql(DB_TYPE)+HeatMapSchema.countColumnSql(DB_TYPE)+","+
 							"document_id INTEGER,"+
 							"x INTEGER,"+
 							"y INTEGER,"+
@@ -471,6 +480,10 @@ public class StatNewDB
 						"			END|;";
 			}
 			sql += "CREATE INDEX to_document_"+suffix+" ON stat_clicks"+suffix+"(document_id);";
+			sql += HeatMapSchema.uniqueIndexSql("stat_clicks"+suffix, suffix, DB_TYPE)+";";
+			sql += HeatMapSchema.pageIndexSql("stat_clicks"+suffix, suffix, DB_TYPE)+";";
+			sql += HeatMapSchema.widthIndexSql("stat_clicks"+suffix, suffix)+";";
+			sql += HeatMapSchema.tileIndexSql("stat_clicks"+suffix, suffix)+";";
 		}
 		if (DB_TYPE == Constants.DB_PGSQL && sql != null) {
 			int i = sql.indexOf("ENGINE=");
@@ -3040,5 +3053,3 @@ public class StatNewDB
 		return result;
 	}
 }
-
-

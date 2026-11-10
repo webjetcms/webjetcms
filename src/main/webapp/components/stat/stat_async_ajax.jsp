@@ -13,6 +13,9 @@ response.setHeader("Pragma","No-Cache");
 response.setDateHeader("Expires",0);
 response.setHeader("Cache-Control","no-Cache");
 
+if (sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request)
+        || sk.iway.iwcm.stat.heat_map.HeatMapPreviewRequest.isPreviewReferrer(request)) return;
+
 //ochrana pred zahltenim statistiky
 String userIP = Tools.getRemoteIP(request);
 Cache c = Cache.getInstance();

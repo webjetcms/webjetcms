@@ -362,7 +362,7 @@ public class WriteTag extends BodyTagSupport
 		if ("true".equals(request.getParameter("_writePerfStat"))) writePerfStat = true;
 		boolean disableCache = false;
 		if (request.getAttribute("isPreview") != null) disableCache = true;
-		if ("true".equals(request.getParameter("_disableCache"))) disableCache = true;
+		if ("true".equals(request.getParameter("_disableCache")) || Boolean.TRUE.equals(request.getAttribute("heatMapPreview"))) disableCache = true;
 
 		buff = WriteTagToolsForCore.fixXhtml(buff, request);
 		buff = WriteTagToolsForCore.preventSpam(buff, request);

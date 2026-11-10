@@ -81,7 +81,7 @@ filtr bere pouze první hodnotu. Dodělat tedy možnost `IN` pro možnost zadán
 - [ ] Přechod nejpoužívanějších aplikací do Spring verze s využitím Thymeleaf šablon.
 - [x] Zrušení `Apache Struts` framework, nahrazení `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, nebo implementace podobné funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite` (#57789).
 - [ ] Přesun JSP souborů, Java tříd a JavaScript knihoven staré verze 8 do `obsolete` jaře archivu, který nebude standardní součástí WebJET CMS. Může být použit na starých projektech, kde zatím není provedena aktualizace všech zákaznických aplikací na `Spring` verze, ale bez podpory a aktualizací ze strany WebJET CMS.
-- [ ] Statistika - mapa kliknutí - obnovení funkcionality, vyřešení problému responzivnosti (samostatná evidence dle šířky okna).
+- [x] Statistika - mapa kliknutí - obnovení funkcionality, slučování pevných vycentrovaných kontejnerů a samostatná evidence přesných šířek okna při plynulém rozložení (#318).
 - [x] Statistika - možnost filtrovat botů pro statistiku vadných stránek (#58053).
 - [ ] Log soubory - filtrovat podle jména instalace.
 - [ ] `quill` - ​​přidat možnost nastavit položky menu včetně barev.

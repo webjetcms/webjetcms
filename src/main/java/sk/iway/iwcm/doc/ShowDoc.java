@@ -409,7 +409,9 @@ private static String combineCss(String cssStyle)
                 return;
             }
         }
-        Tools.sessionSetAttribute(session, "license_checked", "true");
+        if (!sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request)) {
+            Tools.sessionSetAttribute(session, "license_checked", "true");
+        }
 
         Identity user = UsersDB.getCurrentUser(session);
         if (user == null)
@@ -419,7 +421,8 @@ private static String combineCss(String cssStyle)
 
         try
         {
-            if (Tools.sessionGetAttribute(session, "setCookie") != null)
+            if (!sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request)
+                    && Tools.sessionGetAttribute(session, "setCookie") != null)
             {
                 Cookie myCookie = (Cookie) Tools.sessionGetAttribute(session, "setCookie");
                 Logger.println(this,"setting cookie: " + myCookie.getName());
@@ -743,6 +746,8 @@ private static String combineCss(String cssStyle)
             return;
         }
 
+        if (sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request)) doc_id = doc.getDocId();
+
         //	premapovanie web stranky na iny dokument
         int remapStart = doc.getData().indexOf(REMAP_STRING_START);
         if (remapStart!=-1)
@@ -817,8 +822,9 @@ private static String combineCss(String cssStyle)
             }
         }
 
-        // Keep the admin inline editor on the same origin by skipping HTTP/HTTPS redirects.
-        if (inlineEditorAdmin == false && Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
+        // Keep the admin inline editor and heat-map previews on the same origin by skipping HTTP/HTTPS redirects.
+        if (inlineEditorAdmin == false && !sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request)
+                && Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
         {
             if (doc.isRequireSsl() && !Tools.isSecure(request))
             {
@@ -937,6 +943,12 @@ private static String combineCss(String cssStyle)
 
             if (!canAccess)
             {
+                if (sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request)) {
+                    // The pinned preview document must not be reused for a login or error-page forward.
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+
                 Logger.debug(ShowDoc.class, "canAccess == false logonDocid="+doc.getLogonPageDocId()+" docId="+doc.getDocId());
                 UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();
                 request.setAttribute("password_protected", userGroupsDB.convertIdsToNames(doc.getPasswordProtected()));
@@ -995,7 +1007,7 @@ private static String combineCss(String cssStyle)
         //tento parameter tam nastavuje login dialog pre priame stiahnutie suboru
         //vtedy neupdatujem last_doc_id, pretoze sa prepise na hodnotu login dialogu
         //pozri PathFilter.java
-        if (request.getParameter("dontUpdateLastDocId")==null)
+        if (request.getParameter("dontUpdateLastDocId")==null && !sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request))
         {
             Tools.sessionSetAttribute(session, "last_doc_id", doc_id);
         }
@@ -1003,7 +1015,7 @@ private static String combineCss(String cssStyle)
         //NOVA STATISTIKA
         try
         {
-            if (!Constants.getBoolean("nginxProxyMode"))
+            if (!Constants.getBoolean("nginxProxyMode") && !sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request))
             {
                 //statistika to potrebuje
                 request.setAttribute("group_id", Integer.toString(doc.getGroupId()));
@@ -1017,7 +1029,7 @@ private static String combineCss(String cssStyle)
 
         if (request.getAttribute("isPreview") != null) {
             PathFilter.setNoCacheHeaders(response);
-        } else if (Constants.getBoolean("nginxProxyMode"))
+        } else if (Constants.getBoolean("nginxProxyMode") && !sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request))
         {
             //setujeme iba ked sa negeneruje nocache cookie
             if (!PathFilter.isNoCacheCookieRequired(request)) {
@@ -1030,7 +1042,7 @@ private static String combineCss(String cssStyle)
             }
         }
 
-        boolean skipExternalLink = false;
+        boolean skipExternalLink = sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request);
         if (inlineEditorAdmin) {
             //ak editujeme stranku v inline nevykonaj presmerovanie
             skipExternalLink = true;
@@ -1175,7 +1187,7 @@ private static String combineCss(String cssStyle)
 
         Logger.debug(this,"normal temp="+temp.getTempId()+" "+temp.getTempName());
 
-        if (temp.getTempName().startsWith("nochange"))
+        if (temp.getTempName().startsWith("nochange") && !sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request))
         {
             try
             {
@@ -1205,7 +1217,7 @@ private static String combineCss(String cssStyle)
         else
         {
             //popup okno si nepamatame...
-            if (!temp.getTempName().startsWith("popup"))
+            if (!temp.getTempName().startsWith("popup") && !sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request))
             {
                 Tools.sessionSetAttribute(session, "last_temp_id", temp.getTempId());
             }
@@ -1737,7 +1749,9 @@ private static String combineCss(String cssStyle)
         String cspNonce = SetCharacterEncodingFilter.getCurrentRequestBean() != null
                 ? SetCharacterEncodingFilter.getCurrentRequestBean().getCspNonce()
                 : null;
-        boolean needsProcessing = needsStyleProcessing || Tools.isNotEmpty(cspNonce);
+        boolean heatMapPreview = sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request);
+        boolean needsHeatMap = sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isEnabledForRequest(request);
+        boolean needsProcessing = needsStyleProcessing || Tools.isNotEmpty(cspNonce) || needsHeatMap || heatMapPreview;
 
         if (needsProcessing == false) {
             // No body processing needed, use standard forward
@@ -1753,6 +1767,11 @@ private static String combineCss(String cssStyle)
 
         // Flush any buffered content
         responseWrapper.flushBuffer();
+
+        if (heatMapPreview) {
+            response.setHeader("Cache-Control", "no-store");
+            response.setHeader("Pragma", "no-cache");
+        }
 
         //set content type from wrapper to original response
         if (responseWrapper.getContentType() != null) response.setContentType(responseWrapper.getContentType());
@@ -1786,6 +1805,31 @@ private static String combineCss(String cssStyle)
 
             // Write processed content to original response
             capturedContent = processedHtml;
+        }
+
+        if (Tools.isNotEmpty(capturedContent) && (responseWrapper.getContentType() == null
+                || responseWrapper.getContentType().toLowerCase(java.util.Locale.ROOT).contains("text/html"))) {
+            if (heatMapPreview) {
+                int headEnd = capturedContent.toLowerCase(java.util.Locale.ROOT).lastIndexOf("</head>");
+                if (headEnd >= 0) {
+                    String marker = "<meta name=\"webjet-heatmap-preview\" content=\""
+                            + request.getAttribute("doc_id") + "\">";
+                    capturedContent = capturedContent.substring(0, headEnd) + marker + capturedContent.substring(headEnd);
+                }
+                if (request.getAttribute("heatMapPreviewBasePath") instanceof String basePath
+                        && !java.util.regex.Pattern.compile("<base(?:\\s|>)", java.util.regex.Pattern.CASE_INSENSITIVE)
+                                .matcher(capturedContent).find()) {
+                    java.util.regex.Matcher head = java.util.regex.Pattern.compile("<head(?:\\s[^>]*)?>",
+                            java.util.regex.Pattern.CASE_INSENSITIVE).matcher(capturedContent);
+                    if (head.find()) {
+                        String base = "<base href=\"" + org.apache.commons.text.StringEscapeUtils.escapeHtml4(basePath) + "\">";
+                        capturedContent = capturedContent.substring(0, head.end()) + base + capturedContent.substring(head.end());
+                    }
+                }
+            } else if (needsHeatMap) {
+                capturedContent = sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.insertBeforeBodyEnd(capturedContent,
+                        sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.bootstrap(request));
+            }
         }
 
         // Inject CSP nonce into <script>, <style>, and <link> tags

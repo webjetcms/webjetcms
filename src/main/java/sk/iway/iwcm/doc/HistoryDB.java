@@ -5,6 +5,7 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -382,12 +383,13 @@ public class HistoryDB extends DB
 			db_conn = DBPool.getConnection();
 			ps = db_conn.prepareStatement("DELETE FROM documents_history WHERE history_id=?");
 			ps.setInt(1, historyId);
-			ps.execute();
+			int deleted = ps.executeUpdate();
 			ps.close();
 			db_conn.close();
 			ps = null;
 			db_conn = null;
 
+			if (deleted > 0) HeatMapHistoryService.historyDeleted(null);
 			return true;
 		} catch(Exception e) {
 			sk.iway.iwcm.Logger.error(e);
