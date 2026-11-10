@@ -29,7 +29,9 @@ async function exportCatalog(root, mappings, tracked, excluded, revision) {
     if (!tracked.has(CATALOG)) throw new Error(`Required file is not tracked: ${CATALOG}`);
     const document = await readFile(join(root, CATALOG), 'utf8');
     const lines = catalogBlock(document, CATALOG).content.split(/\r?\n/);
-    if (lines[0] !== '| Skill | What is it for and when to use it? | Example of chat entry |' || lines[1] !== '| --- | --- | --- |') {
+    // Translations may rephrase descriptive column titles without changing the table structure.
+    const header = lines[0].match(/^\| Skill \| ([^|]+) \| ([^|]+) \|$/);
+    if (!header || !header[1].trim() || !header[2].trim() || lines[1] !== '| --- | --- | --- |') {
         throw new Error(`Invalid skill catalog table header: ${CATALOG}`);
     }
     const names = new Set();
