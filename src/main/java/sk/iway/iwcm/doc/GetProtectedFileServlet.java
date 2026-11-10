@@ -55,6 +55,11 @@ public class GetProtectedFileServlet extends HttpServlet
    {
       String url = request.getRequestURI();
       if (ContextFilter.isRunning(request)) url = ContextFilter.removeContextPath(request.getContextPath(), url);
+      if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(url)) {
+          response.setHeader("Cache-Control", "no-store");
+          response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+          return;
+      }
       //Logger.println(this,"RequestServlet: url="+url);
 
       if (PlannedAccess.isPathAccessible(url, request, response)==false) return;

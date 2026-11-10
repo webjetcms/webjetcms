@@ -2,15 +2,14 @@ package sk.iway.iwcm.components.ai.providers;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.HexFormat;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 
 import com.webjetcms.ai.AiProviderConfig;
@@ -81,7 +80,7 @@ public class WebjetAiConfigurationService {
         String providerId = provider.getProviderId();
         AiProviderConfig config = resolve(provider, request);
         String scope = CloudToolsForCore.getDomainId() + ":" + trustedReferer(request) + ":" + providerId;
-        String fingerprint = fingerprint(config);
+        String fingerprint = fingerprint(config, config.trustedHeaders());
         VersionedConfiguration version = versions.compute(scope, (key, current) -> {
             if (current != null && current.fingerprint().equals(fingerprint)) return current;
             return new VersionedConfiguration(fingerprint, revisionSequence.incrementAndGet());
@@ -163,16 +162,16 @@ public class WebjetAiConfigurationService {
         return Duration.ofMillis(millis);
     }
 
-    private String fingerprint(AiProviderConfig config) {
-        String value = String.valueOf(config.apiKey()) + '\u0000' + config.baseUri() + '\u0000'
-            + config.trustedHeaders();
-        try {
-            byte[] digest = MessageDigest.getInstance("SHA-256")
-                .digest(value.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(digest);
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 is not available", exception);
-        }
+    /** Identifies the provider account/endpoint without persisting credentials or request-specific Referer headers. */
+    public String chatScope(AiProviderConfig config) {
+        Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        headers.putAll(config.trustedHeaders());
+        headers.remove("Referer");
+        return fingerprint(config, headers);
+    }
+
+    private String fingerprint(AiProviderConfig config, Map<String, String> headers) {
+        return DigestUtils.sha256Hex(String.valueOf(config.apiKey()) + '\u0000' + config.baseUri() + '\u0000' + headers);
     }
 
     private record VersionedConfiguration(String fingerprint, long revision) { }

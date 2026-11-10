@@ -41,6 +41,7 @@
 - AI asistent
   - [AI asistent](/redactor/ai/README.md)
   - [Používání AI asistentů](/redactor/ai/datatables/README.md)
+  - [AI Čet](/redactor/ai/chat/README.md)
   - [Nastavení](/redactor/ai/settings/README.md)
   - [Psaní instrukcí](/redactor/ai/instructions/README.md)
   - [Statistika](/redactor/ai/stat/README.md)

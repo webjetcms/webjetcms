@@ -68,6 +68,7 @@ filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadan
 - [x] +Webové stránky - pred zmazaním stránky alebo priečinka zobraziť upozornenie so zoznamom zrkadlených položiek, ktoré sa zmažú spolu s výberom (#58846).
 - [x] +Pridať podporu obrázkov a animácií typu AVIF (#371).
 - [x] +Možnosť zmeniť poradie polí v datatables editore, kartu v ktorej sa pole nachádza, prípadne aj vytvoriť novú kartu do ktorej sa polia vložia. Teda konfiguračne upraviť hodnoty čo sa dnes nastavujú cea anotácie (#366).
+- [ ] +V okne pred pripravených blokov pridať možnosť editovať blok, ktorý sa načíta z web stránok (otvoriť v novej karte editor s docid bloku) (#NNCZ-4456).
 
 ## 2025
 

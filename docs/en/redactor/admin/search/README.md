@@ -10,6 +10,7 @@ Before you enter a term, you will see recent searches and links to available sec
 
 The **All** range shows up to three results from each area. Clicking the **All** range or link will display results from the selected area only. The menu is governed by your permissions:
 
+- **AI Chat** – a conversation with an AI assistant without any connection to the content of the open web page. The tab is right after the **All** scope and is available to users with permission to use AI assistants.
 - **Websites** – suggestions by page name or URL and search in content. The page design will open in its editor.
 - **Files** – search in file names and indexed content.
 - **Administration** – links to available menu items including their tabs.
@@ -23,13 +24,23 @@ The **All** range shows up to three results from each area. Clicking the **All**
 
 The **Open results in section…** link will take your search term to the appropriate section, where you can apply additional filters. If nothing is found, you can select **Search everywhere** to narrow down your search. A connection error will display the message **Search is temporarily unavailable** and a **Try again** button.
 
-To close the dialog, press the **Esc** key, the close button, or click outside the dialog. The focus returns to the button in the header; the search term is not written to the button.
-
 The documentation is not automatically searched by default. The tab displays a dash, which means **not searched yet**, not zero results. In the **All** scope, you will find an explanation of which server the expression will be sent to, and a link **Load results from external documentation as well**. Clicking this link or the **Documentation** tab will search for the expression you have already entered and display the results in the dialog. The tab's tooltip explains sending the expression to an external server. The keyboard shortcut **Ctrl+Enter** on Windows/Linux or **⌘+Enter** on Mac will load the documentation results in any scope of the open dialog. The corresponding shortcut is displayed next to the link.
 
 After changing the expression, the documentation results are cleared and the tab displays a dash again. To start a new search, click the tab or link, or press **Enter** in the **Documentation** scope. Enter in the **All** scope searches only internal sources by default. Switching scopes with **Alt+arrow** does not send an external query by itself.
 
 ![Search results for banner system in AI response documentation](quick-search-documentation.png)
+
+### AI Chat
+
+The **AI Chat** tab opens a separate conversation with an AI assistant. In the message field, select the assistant, type your request, and send it with the **Enter** key or the arrow key. The content of the open web page or search term is not sent to the conversation.
+
+The menu contains active assistants with the request type **Chat**, which have the value `top-search-field` in the **Target field** or the value `CHAT_SEARCH` in the **Use for Entity**. The administrator sets them in [AI assistants](../../ai/settings/README.md#chat-assistant-settings).
+
+With saved OpenAI and Gemini chats, you can add attachments, search history, and continue the conversation even after refreshing the page. The icons in the header open the **Chat History** and **Chat Files** panels. Switching assistants or closing the dialog will preserve the drafted message until you leave the current administration page.
+
+![AI Chat with chat history and response in table form](../../ai/chat/chat-history.png)
+
+For detailed instructions, the difference between saved and temporary chats, supported attachments, and working with replies, see the [AI Chat] chapter (../../ai/chat/README.md).
 
 ### Setting up documentation search
 

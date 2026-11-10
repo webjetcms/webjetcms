@@ -44,6 +44,11 @@ class AssistantStreamWriter extends Writer {
         output.flush();
     }
 
+    void writeMetadata(Map<String, ?> metadata) throws IOException {
+        writeMessage(Map.of("type", "metadata", "metadata", metadata));
+        output.flush();
+    }
+
     @Override
     public void close() throws IOException {
         flush();

@@ -220,6 +220,11 @@ public class PathFilter implements Filter
 				path = path.substring(req.getContextPath().length());
 			}
             if (sk.iway.iwcm.doc.PlannedAccess.isPathAccessible(path, req, res)==false) return;
+            if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(path)) {
+                res.setHeader("Cache-Control", "no-store");
+                res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
 			if (path.contains("//"))
 			{
 				path = Tools.replace(path, "/////", "/");

@@ -260,12 +260,14 @@ public class AiStatService {
     }
 
     private static Specification<AiStatEntity> getSpecification(String action, String provider, String groupName, Date[] dateCreated, String userName, Pageable pageable) {
+        int domainId = CloudToolsForCore.getDomainId();
         return (root, query, cb) -> {
             var sub = query.subquery(Long.class);
             var ade = sub.from(AssistantDefinitionEntity.class);
 
             List<Predicate> predicates = new java.util.ArrayList<>();
             predicates.add(cb.equal(ade.get("id"), root.get("assistantId")));
+            predicates.add(cb.equal(ade.get("domainId"), domainId));
 
             if (Tools.isEmpty(action) == false) {
                 predicates.add(cb.equal(ade.get("action"), action));
@@ -312,7 +314,7 @@ public class AiStatService {
                 }
             }
 
-            return cb.exists(sub);
+            return cb.and(cb.equal(root.get("domainId"), domainId), cb.exists(sub));
         };
     }
 

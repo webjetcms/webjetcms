@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
@@ -106,6 +107,7 @@ class FsSecurityCheckForAllTest extends BaseWebjetTest {
     private IwcmFsItem item(String virtualPath) {
         IwcmFile file = mock(IwcmFile.class);
         when(file.getVirtualPath()).thenReturn(virtualPath);
+        when(file.getPath()).thenReturn(Tools.getRealPath(virtualPath));
         return new IwcmFsItem(mock(IwcmFsVolume.class), file);
     }
 }

@@ -332,6 +332,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     }
 
     function markPbElements(wjAppField) {
+        const ready = [];
         $("[data-wjapp='pageBuilder']").each(function(index)
         {
             if (wjAppField != $(this).data("wjappfield")) return;
@@ -345,8 +346,9 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
             pageBuilderInstance.mark_grid_elements();
 
-            initPageBuilderEditors($(this));
+            ready.push(initPageBuilderEditors($(this)));
         });
+        return Promise.all(ready);
     }
 
     /**

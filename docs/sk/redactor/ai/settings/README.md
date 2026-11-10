@@ -22,6 +22,9 @@ Táto karta obsahuje základné informácie o asistentovi ako názov, ikona aleb
 
 - **Názov asistenta** – interný identifikátor asistenta (používateľ ho nevidí). Musí byť unikátny v kombinácii s hodnotou **Poskytovateľ** (t. j. rovnaký názov môžete použiť pre viacerých asistentov, ale každý musí mať iného poskytovateľa).
 - **Názov pre používateľa** – zobrazený názov v rozhraní. Nemusí byť unikátny. Ak nie je vyplnený, použije sa hodnota z poľa **Názov asistenta**. Môžete zadať aj prekladový kľúč (hodnota kľúča sa zobrazí v poli pod ním).
+
+  Značka `{model}` sa pri zobrazení nahradí aktuálnou hodnotou poľa **Model**. Napríklad `{model}` zobrazí `gpt-6.1-sol` a `Čet {model}` zobrazí `Čet gpt-6.1-sol`. Pred značkou môže byť aj prekladový kľúč: `components.ai_assistants.groups.00-chat {model}` zobrazí preložený názov skupiny a model. Značku môžete použiť aj priamo v hodnote prekladového kľúča. Náhľad pod poľom sa aktualizuje pri zmene názvu alebo modelu.
+
 - **Ikona** – názov ikony zo stránky https://tabler.io/icons. Zobrazuje sa spolu s poľom **Názov pre používateľa**. Zadajte len identifikátor ikony (bez URL).
 - **Skupina** – logické alebo vizuálne zoskupenie asistentov v rozhraní. Nemá vplyv na spracovanie ani výsledok.
 - **Vytvorené** – systémom generovaný dátum vytvorenia. Nedá sa upraviť a zobrazí sa len pri editácii existujúceho asistenta.
@@ -37,10 +40,10 @@ Na tejto karte nastavujete, akú akciu má AI asistent vykonávať, odkiaľ bude
   - Vygenerovať text
   - Vygenerovať obrázok
   - Upraviť obrázok
-  - Chat
-- **Použiť pre Entitu** – vyberáte entitu (tabuľku), v ktorej bude asistent dostupný. Pri písaní sa automaticky zobrazia všetky podporované entity.
+  - Čet
+- **Použiť pre Entitu** – vyberáte entitu (tabuľku), v ktorej bude asistent dostupný. Pri písaní sa automaticky zobrazia všetky podporované entity aj hodnota `CHAT_SEARCH` pre samostatný AI Čet v rýchlom vyhľadávaní.
 - **Zdrojové pole** – určujete pole z vybranej entity, z ktorého má asistent čerpať dáta pri vykonávaní akcie. Toto pole nie je povinné; vyberte ho len v prípade, že sú potrebné vstupné dáta. Zobrazia sa všetky polia danej entity.
-- **Cieľové pole** – vyberáte pole v entite, kde sa uloží výsledok akcie asistenta alebo kde bude asistent dostupný. Opäť sa zobrazia všetky polia danej entity.
+- **Cieľové pole** – vyberáte pole v entite, pri ktorom bude asistent dostupný. Pri type **Čet** môžete pridať aj `top-search-field` pre kartu **AI Čet** v rýchlom vyhľadávaní. Ak je jedinou entitou `CHAT_SEARCH`, pri uložení četového asistenta sa prázdne cieľové pole doplní na `*`.
 
 ![](datatable-action-tab.png)
 
@@ -87,11 +90,39 @@ Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré u
 
 - **Zachovať HTML kód** – ak je zapnuté, HTML značky zo zdrojového poľa sa neodstránia a odošlú sa poskytovateľovi tak, ako sú. Zapnite iba v prípade, že model potrebuje pracovať so štruktúrovaným HTML (napr. analýza alebo úprava obsahu). Inak ponechajte vypnuté kvôli čistejšiemu vstupu.
 - **Využiť postupné načítanie** – odpoveď sa bude zobrazovať po častiach (streamovanie) namiesto jedného bloku. Vhodné pri dlhších generovaných textoch, aby mal používateľ okamžitú spätnú väzbu. Funguje iba pre textové výstupy.
-- **Zapnúť dočasný chat** – kontext a výmena správ sa po ukončení relácie neukladajú. Použite pri citlivom alebo jednorazovom dopyte. História nebude k dispozícii pre ďalšie pokračovanie.
+- **Zapnúť dočasný čet** – vypne ukladanie rozhovoru do histórie AI Četu. Zobrazené správy zostávajú iba na aktuálnej stránke administrácie a prílohy nie sú dostupné. Pre uloženú históriu na karte AI Čet túto voľbu vypnite a použite podporovaný model OpenAI alebo Gemini. Nastavenie nenahrádza pravidlá spracovania a uchovávania údajov u poskytovateľa.
 - **Požadovať vstup od používateľa** – pred spustením asistenta musí používateľ zadať vlastný vstup (napr. zadanie témy, doplňujúcej inštrukcie alebo kľúčových slov). Ak je vypnuté, asistent beží bez dodatočného vstupu.
 - **Popis požiadavky** – krátka nápoveda zobrazovaná pri poli na zadanie vstupu (uľahčuje používateľovi pochopiť, čo má napísať). Môže byť zadaný aj prekladový kľúč; jeho vyhodnotená hodnota sa zobrazí v poli pod ním.
 
 ![](datatable-advanced-tab.png)
+
+## Nastavenie četového asistenta
+
+Aktualizácia pridá do predvolenej domény štyroch univerzálnych asistentov v skupine **Čet**:
+
+| Názov asistenta | Poskytovateľ | Model |
+| --- | --- | --- |
+| `CHAT-gpt-6.1-sol` | OpenAI | `gpt-6.1-sol` |
+| `CHAT-gpt-6-astra` | OpenAI | `gpt-6-astra` |
+| `CHAT-gemini-3.8-flash` | Gemini | `gemini-3.8-flash` |
+| `CHAT-gemini-4-argon` | Gemini | `gemini-4-argon` |
+
+Po nakonfigurovaní poskytovateľa sa títo asistenti ponúknu v rýchlom vyhľadávaní aj pri textových poliach vrátane WYSIWYG editora. V nastavení **Použiť pre Entitu** majú `*` a v nastavení **Cieľové pole** majú `dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field`.
+
+V ponuke sa zobrazí názov modelu (`{model}`). Asistenti majú zapnuté postupné načítanie odpovede a ukladanie rozhovorov. Spoločné inštrukcie určujú stručné odpovede v jazyku používateľa, formátovanie Markdown, nadväzovanie na predchádzajúce správy a odkaz na dokumentáciu WebJET CMS. Model aj inštrukcie môžete upraviť v nastaveniach asistenta.
+
+Vlastného četového asistenta nastavíte takto:
+
+1. V **Nastavenia → AI asistenti** vytvorte alebo upravte asistenta a zapnite **Povoliť používanie**.
+2. Na karte **Akcia** vyberte **Typ požiadavky → Čet**.
+3. Pre zobrazenie v rýchlom vyhľadávaní pridajte do **Cieľového poľa** hodnotu `top-search-field`. Ďalšie cieľové polia oddeľte čiarkou. Napríklad pre entitu `sk.iway.iwcm.doc.DocDetails` a cieľ `title,top-search-field` bude asistent dostupný pri názve stránky aj v rýchlom vyhľadávaní. Ak má byť dostupný iba v rýchlom vyhľadávaní, stačí nastaviť **Použiť pre Entitu** na `CHAT_SEARCH`.
+4. Na karte **Poskytovateľ** vyberte nakonfigurovaného poskytovateľa a model podporujúci požadovaný spôsob práce.
+5. V **Inštrukciách** určite úlohu asistenta, jazyk a požadovaný formát odpovedí.
+6. Pre ukladané rozhovory s prílohami na karte **AI Čet** použite OpenAI alebo Gemini, model s podporou četu a vypnite **Zapnúť dočasný čet**. Pre priebežné zobrazovanie odpovede zapnite **Využiť postupné načítanie**, ak ho model podporuje.
+
+Rýchle vyhľadávanie ponúka aktívnych četových asistentov aktuálnej domény s nakonfigurovaným poskytovateľom. Vyžaduje presnú hodnotu `top-search-field` v zozname cieľových polí alebo `CHAT_SEARCH` v zozname entít. Rozhovor otvorený z rýchleho vyhľadávania sa začína bez obsahu otvorenej stránky. Ak asistentovi odstránite poslednú väzbu na rýchle vyhľadávanie, jeho uložené rozhovory v tejto ponuke zostanú dostupné iba na čítanie.
+
+Používateľ potrebuje oprávnenie na používanie AI asistentov (`cmp_ai_button`). Ak zmeníte model, asistenta alebo konfiguráciu poskytovateľa, starší uložený rozhovor môže zostať dostupný iba na čítanie. Postup práce s rozhovormi je v kapitole [AI Čet](../chat/README.md).
 
 ## Poskytovatelia
 
@@ -248,22 +279,55 @@ Nezabudnite nastaviť aj [úlohu na pozadí](../../apps/semantic-search/README.m
 
 ### Prehliadač
 
-AI priamo v prehliadači je aktuálne [pripravovaný štandard](https://developer.chrome.com/docs/ai/get-started) vytvorený spoločnosťou Google. Aktuálne je podporovaný v prehliadači Google Chrome za použitia zabezpečeného (HTTPS) spojenia. Po štandardizácii API sa predpokladá, že bude dostupný aj v iných prehliadačoch. Dostupnosť AI v prehliadači môžete vypnúť nastavením konfiguračnej premennej `ai_browserAiEnabled` na hodnotu `false`, kedy sa možnosti prestanú zobrazovať.
+Poskytovateľ **Prehliadač** používa [zabudované AI rozhrania Google Chrome](https://developer.chrome.com/docs/ai/get-started). Modely sa sťahujú do počítača používateľa a požiadavky sa vykonávajú v prehliadači. Dostupnosť tohto poskytovateľa môžete vypnúť nastavením konfiguračnej premennej `ai_browserAiEnabled` na hodnotu `false`.
 
 Pre spustenie AI v prehliadači je potrebné splniť:
 
 - [HW požiadavky](https://developer.chrome.com/docs/ai/get-started#hardware) počítača.
 - Spojenie do WebJET CMS musí byť zabezpečené (použitý protokol HTTPS).
 
-Ak spĺňate požiadavky, odporúčame najskôr vyskúšať asistenta na preklad a následne na sumarizáciu textu – to sú najjednoduchšie služby, ktoré AI v prehliadači podporuje. Tým overíte stiahnutie a inštaláciu modelu na váš počítač a jeho funkčnosť v prehliadači.
+#### Zapnutie potrebných API
 
-Niektoré rozhrania sú [zatiaľ v experimentálnom režime](https://developer.chrome.com/docs/ai/built-in-apis#api_status). Pre ich použitie je potrebné otvoriť v prehliadači stránku Experimenty zadaním adresy `chrome://flags/#prompt-api-for-gemini-nano` a nastaviť hodnotu `Enabled` pre položky `Prompt API for Gemini Nano`, `Summarization API for Gemini Nano`, `Writer API for Gemini Nano`, `Rewriter API for Gemini Nano`. Následne kliknite na Znova spustiť pre reštart prehliadača. Odporúčame na stránke v hornej časti zadať výraz `gemini` pre filtrovanie možností a ich jednoduchšie nájdenie. Bez povolenia týchto možností bude dostupné len API pre preklad a sumarizáciu.
+Dostupnosť jednotlivých API závisí od verzie Chrome; niektoré sú [stále experimentálne](https://developer.chrome.com/docs/ai/built-in-apis#api_status). Ak požadované API nie je dostupné, otvorte `chrome://flags/`, vyhľadajte konkrétnu položku a nastavte ju na **Enabled**:
 
-![](chrome-ai-settings.png)
+| API | Použitie vo WebJET CMS | Adresa nastavenia |
+| --- | --- | --- |
+| **Prompt API** | Vlastné zadania pre `LanguageModel` | `chrome://flags/#prompt-api` |
+| **Summarizer API** | Sumarizácia textu | `chrome://flags/#summarizer-api` |
+| **Writer API** | Vytvorenie nového textu | `chrome://flags/#writer-api` |
+| **Rewriter API** | Prepísanie textu, napríklad do neformálnej podoby | `chrome://flags/#rewriter-api` |
 
-Overiť stav AI modelov môžete zadaním nasledujúcej adresy do riadku prehliadača: `chrome://on-device-internals/`.
+Názvy sa môžu medzi verziami Chrome líšiť; staršie verzie používali aj označenie **for Gemini Nano**. Po zmene kliknite na **Znova spustiť**. Pred reštartom uložte rozpracované úpravy vo WebJET CMS.
 
-Niektoré API zatiaľ nepodporujú prácu vo všetkých jazykoch, preto môže po použití dôjsť k automatickému prekladu. Prekladač je však pri prvom použití potrebné tiež stiahnuť, preto odporúčame ako prvé vyskúšať AI nástroj pre preklad, aby sa prekladač nainštaloval. Následne sa už bude dať použiť aj po vykonaní iných AI asistentov na preklad výstupného textu.
+**Nezapínajte všetky experimenty súvisiace s AI.** Pre bežné používanie asistentov ponechajte tieto voľby na **Default**:
+
+| Experiment | Adresa nastavenia |
+| --- | --- |
+| **Gemma 4 for Built-in AI** | `chrome://flags/#gemma4-for-built-in-ai` |
+| **Speculative Decoding for Built-in AI** | `chrome://flags/#on-device-model-speculative-decoding` |
+| **Prompt API Tool Use** | `chrome://flags/#prompt-api-tool-use` |
+
+Tieto experimenty môžu vynútiť iný model alebo spôsob jeho spúšťania aj pre ostatné AI API. Pri testovaní v **Chrome 157.0.8103.50 na macOS** Rewriter opakovane zlyhával so zapnutou kombináciou týchto troch experimentov. Po návrate všetkých troch na **Default** a reštarte Chrome začal fungovať. Test potvrdil tento postup riešenia; neurčil, ktorý experiment alebo ich kombinácia spôsobovali pád.
+
+#### Sťahovanie a overenie funkčnosti
+
+Pri prvom spustení asistenta môže Chrome vyžiadať stiahnutie modelu s veľkosťou niekoľkých GB. Po dokončení sťahovania sa zobrazenie priebehu zmení na prípravu modelu; počkajte na dokončenie požiadavky. Stav modelov môžete overiť na `chrome://on-device-internals/`, na karte **Broker State**. Nainštalované modely majú stav **Ready** a priebeh **100 %**. Nie je potrebné mať nainštalované všetky modely v zozname.
+
+Ako prvý môžete vyskúšať preklad, ktorý stiahne potrebný prekladový model. **Úspešný preklad nepotvrdzuje funkčnosť Rewriteru ani ostatných generatívnych API**, pretože používajú odlišné modely. Samostatne preto vyskúšajte aj požadovanú akciu, napríklad **Prepísať text do neformálnej podoby** na krátkom texte.
+
+Niektoré API nepodporujú všetky jazyky, preto WebJET CMS môže výstup následne preložiť. Aj tento preklad môže pri prvom použití vyžadovať stiahnutie prekladového modelu.
+
+#### Chyby pri spúšťaní modelu
+
+Hlásenie `The device is unable to create a session to run the model. Please check the result of availability() first.` znamená, že Chrome nedokázal vytvoriť reláciu modelu. Môže sa objaviť aj vtedy, keď je model stiahnutý a `availability()` vracia `available`; samotný stav dostupnosti nepotvrdzuje úspešné spustenie.
+
+Hlásenie `The model process crashed too many times for this version` znamená, že Chrome po opakovaných pádoch zablokoval modelový proces. Postupujte takto:
+
+1. Skontrolujte uvedené tri experimenty a prípadné **Enabled** zmeňte na **Default**.
+2. Otvorte `chrome://on-device-internals/`. Ak Chrome hlási, že interné diagnostické stránky sú vypnuté, povoľte ich cez `chrome://chrome-urls/` a potom sa vráťte do diagnostiky.
+3. Na karte **Broker State** skontrolujte **Model crash count (current/maximum)**. Hodnota napríklad `6 / 3` znamená prekročený limit pádov. Tlačidlo **Reset** vynuluje iba toto počítadlo, nainštalované modely zostanú zachované.
+4. Uložte rozpracované úpravy a Chrome úplne ukončite a znovu spustite. Samotný reštart nemusí vynulovať počítadlo a samotný **Reset** nemusí hneď odstrániť blokovanie z bežiaceho prehliadača.
+5. Vyskúšajte jednu krátku požiadavku. Ak počítadlo znovu rastie, modelový proces opäť padá. Ďalšie údaje hľadajte na karte **Event Logs** a na `chrome://crashes/`; opakované spúšťanie asistenta tento stav nevyrieši.
 
 ## Pripojenie
 

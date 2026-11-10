@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -15,12 +16,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.webjetcms.ai.AiCancellationToken;
 
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.SearchTools;
+import sk.iway.iwcm.components.ai.chat.AiChatPaths;
+import sk.iway.iwcm.components.ai.rest.AiChatAttachments;
 import sk.iway.iwcm.i18n.Prop;
 
 import org.apache.http.entity.ContentType;
@@ -53,7 +57,28 @@ public class InputDataDTO {
     Long assistantId;
     String userPrompt = null;
 
+    /** Session-owned continuation returned by the last successful chat turn. */
+    String conversationId;
+
+    /** Validated multipart attachments, retained only for this assistant request. */
+    @JsonIgnore
+    List<AiChatAttachments.Upload> chatAttachments = List.of();
+
+    /** Extracted attachment content, kept separate from page context and trusted prompt macros. */
+    @JsonIgnore
+    String chatAttachmentContext;
+
+    /** Provider continuation resolved on the server, never accepted from JSON. */
+    @JsonIgnore
+    String previousResponseId;
+
+    /** Server-owned cancellation signal shared by provider calls belonging to this task. */
+    @JsonIgnore
+    private AiCancellationToken cancellationToken = new AiCancellationToken();
+
     String inputValue = null;
+    /** Indicates that the input is a selected rich-text fragment rather than a complete page. */
+    boolean inputIsSelectedTextInEditor;
     InputValueType inputValueType;
     InputValueType outputValueType;
 
@@ -103,6 +128,7 @@ public class InputDataDTO {
         this.outputValueType = InputValueType.from( data.get("outputValueType") );
         this.timestamp = Tools.getLongValue(data.get("timestamp"), -1L);
         this.userPrompt = data.get("userPrompt");
+        this.conversationId = data.get("conversationId");
     }
 
     public void prepareData(HttpServletRequest request) throws IllegalStateException {
@@ -119,6 +145,7 @@ public class InputDataDTO {
 
             String realPath = Tools.getRealPath(inputValue);
             File fileImage = new File(realPath);
+            AiChatPaths.requireGenericAccess(fileImage);
 
             if (fileImage.isFile() == false) throw new IllegalStateException(prop.getText("components.ai_assistants.not_image.err"));
 

@@ -156,8 +156,9 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     }
 
     @GetMapping("/autocomplete-field")
-    public List<String> getAutocompleteField(@RequestParam String term, @RequestParam("DTE_Field_className") String className) {
-        return aiAssistantsService.getFieldOptions(term, className);
+    public List<String> getAutocompleteField(@RequestParam String term, @RequestParam("DTE_Field_className") String className,
+            @RequestParam(name = "DTE_Field_action", required = false) String targetAction) {
+        return aiAssistantsService.getFieldOptions(term, className, targetAction);
     }
 
     @GetMapping("/autocomplete-model")
@@ -171,7 +172,13 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     }
 
     @GetMapping(value = "/translate-key", produces = "text/plain; charset=UTF-8")
-    public String getTranslatedKey(@RequestParam(name = "key") String key) {
-        return getProp().getText(key);
+    public String getTranslatedKey(@RequestParam(name = "key") String key,
+        @RequestParam(name = "model", required = false) String model) {
+        if (model == null) return getProp().getText(key);
+
+        AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
+        assistant.setDescription(key);
+        assistant.setModel(model);
+        return assistant.getDisplayName(getProp());
     }
 }

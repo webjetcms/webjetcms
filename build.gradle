@@ -58,7 +58,7 @@ ext {
     allureVersion = "2.32.0";
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
-    webjetAiVersion = '2.0.4';
+    webjetAiVersion = '2.1.0';
 }
 
 lombok {
@@ -385,6 +385,8 @@ war {
     exclude('templates/firma/**')
 
     rootSpec.exclude('**/poolman-*.xml')
+    // Private chat history and attachments are runtime data.
+    rootSpec.exclude('files/protected/ai-chat/**')
     // Generated docs-server feeds, thumbnails and private cache are runtime data.
     rootSpec.exclude('json/wjnews.*.json', 'json/social-media/**', 'WEB-INF/social-media/**')
 }

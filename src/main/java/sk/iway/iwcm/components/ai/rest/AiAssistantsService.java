@@ -2,8 +2,10 @@ package sk.iway.iwcm.components.ai.rest;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import jakarta.persistence.Entity;
@@ -26,6 +28,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
@@ -42,6 +45,9 @@ public class AiAssistantsService {
 
     private static final String CLASS_FIELD_MAP_KEY = "AiAssistantsService_classFieldsMap";
     public static final String EMPTY_VALUE = "EMPTY_VALUE";
+    /** Virtual entity binding for assistants offered in the global AI Chat. */
+    public static final String CHAT_TARGET = "CHAT_SEARCH";
+    private static final String TOP_SEARCH_FIELD = "top-search-field";
     private static final String CACHE_KEY_PREFIX = "AiAssistantsService.assistants-";
 
     private final List<AiAssitantsInterface> aiAssitantsInterfaces;
@@ -129,6 +135,7 @@ public class AiAssistantsService {
                 if (isMatchingClass) {
                     String[] toFields = Tools.getTokens(aiAssistant.getFieldTo(), "\n,;", true);
                     for (String field : toFields) {
+                        if (TOP_SEARCH_FIELD.equals(field)) continue;
                         if (strictBinding) {
                             if (field.equals(fieldTo)) {
                                 addAssistant = true;
@@ -164,15 +171,24 @@ public class AiAssistantsService {
     }
 
     public List<String> getFieldOptions(String term, String className) {
+        return getFieldOptions(term, className, null);
+    }
+
+    public List<String> getFieldOptions(String term, String className, String targetAction) {
         List<String> ac = new ArrayList<>();
         if(Tools.isEmpty(term) || Tools.isEmpty(className)) return ac;
 
-        List<String> fieldNames = getClassFieldMap().get(className);
-        if(fieldNames == null) return ac;
+        // The editor replaces the entire input when a suggestion is selected.
+        int start = 1 + Math.max(term.lastIndexOf(','), Math.max(term.lastIndexOf(';'), term.lastIndexOf('\n')));
+        String prefix = term.substring(0, start);
+        String search = term.substring(start).trim().toLowerCase(Locale.ROOT);
+        if (SupportedActions.LIVE_CHAT.getAction().equals(targetAction) && TOP_SEARCH_FIELD.contains(search)) {
+            ac.add(prefix + TOP_SEARCH_FIELD);
+        }
 
-        for(String fieldName : fieldNames) {
-            if(fieldName.toLowerCase().contains( term.toLowerCase() ))
-                ac.add(fieldName);
+        for(String fieldName : getClassFieldMap().getOrDefault(className, List.of())) {
+            if(fieldName.toLowerCase(Locale.ROOT).contains(search))
+                ac.add(prefix + fieldName);
         }
 
         return ac;
@@ -184,6 +200,9 @@ public class AiAssistantsService {
         List<String> ac = new ArrayList<>();
         if(Tools.isEmpty(term)) return ac;
 
+        if(CHAT_TARGET.toLowerCase(Locale.ROOT).contains(term.toLowerCase(Locale.ROOT))) {
+            ac.add(CHAT_TARGET);
+        }
         for(String className : getClassFieldMap().keySet()) {
             if(className.toLowerCase().contains( term.toLowerCase() ))
                 ac.add(className);
@@ -192,7 +211,19 @@ public class AiAssistantsService {
         return ac;
     }
 
+    /** Matches explicit global chat bindings in the entity list or the target field list. */
+    public static boolean isGlobalChatAssistant(AssistantDefinitionEntity assistant) {
+        return assistant != null && SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())
+            && (Arrays.asList(Tools.getTokens(assistant.getClassName(), "\n,;", true)).contains(CHAT_TARGET)
+                || Arrays.asList(Tools.getTokens(assistant.getFieldTo(), "\n,;", true)).contains(TOP_SEARCH_FIELD));
+    }
+
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity, Prop prop) {
+        if (Tools.isEmpty(assistantEnity.getFieldTo()) && isGlobalChatAssistant(assistantEnity)
+            && CHAT_TARGET.equals(assistantEnity.getClassName().trim())) {
+            // Keep the required field binding valid without inventing an editor field for global chat.
+            assistantEnity.setFieldTo("*");
+        }
         for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
             if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(assistantEnity.getProvider())) {
                 assistantInterface.prepareBeforeSave(assistantEnity);
