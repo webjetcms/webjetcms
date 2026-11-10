@@ -457,6 +457,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         if (entity.getEditorFields().isForceTemplateToSubgroupsAndPages()) {
+            // Use the committed hierarchy even if a cluster cache refresh is still pending.
+            groupsDB = GroupsDB.getInstance(true);
             groupsDB.setTemplateToSubgroups(groupId, groupDetails.getTempId());
             groupsDB.setTemplateToSubpages(groupId, groupDetails.getTempId());
             refreshGroupsDB = true;
@@ -541,13 +543,13 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE domain_name=?", entity.getDomainName(), oldGroupDetails.getDomainName());
             } else {
                 //updatni groups
-                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")",entity.getDomainName());
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE " + DB.getInCondition("group_id", groupIds),entity.getDomainName());
 
                 if (systemGroupIds!=null) {
                     Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
 
                     //updatni groups
-                    new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
+                    new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE " + DB.getInCondition("group_id", systemGroupIds), entity.getDomainName());
                 }
             }
 

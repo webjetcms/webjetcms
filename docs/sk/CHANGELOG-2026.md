@@ -16,6 +16,7 @@
 - Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
 - Galéria - metóda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vracia namiesto `void` výsledok spracovania typu `int`: `0` pri úspechu, inak kód chyby. Po aktualizácii je potrebné prekompilovať závislý Java kód aj JSP súbory, napríklad vyčistením pracovného priečinka konkrétnej aplikácie v Tomcat (#371).
 - Viackrokové formuláre - metódy `validateStep` a `runStepInterceptor` rozhrania [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) dostávajú za `formName` nový parameter `FormSettingsEntity formSettings`. Ak používate vlastnú Java triedu na spracovanie formulárov je potrebné ju upraviť a znova skompilovať. Nastavenia už nemusia načítavať podľa mena formulára, ale dostanete ho priamo (#364).
+- Viackrokové formuláre - identifikátor polí sa už generuje z názvu s odstráneným HTML kódom (použije sa len text). Ak máte v názve poľa použité HTM formátovanie pre rádio skupiny, tak znovu uložte **všetky jej možnosti**. Aktualizujte aj podmienky a odkazy na zmenené identifikátory (#396).
 
 ### Úvodná obrazovka
 
@@ -149,6 +150,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Viackrokové formuláre - v editore každej položky pribudlo za názvom poľa voliteľné pole **Nápoveda**. Podporuje viacriadkový formátovaný text a rozsiahlejší HTML obsah. Zobrazuje sa za názvom poľa vo formulári cez značku `${hint}` a prenáša sa aj pri kopírovaní položky (#396).
+- Formulár ľahko a viackrokové formuláre - jednoriadkový editor názvu poľa a vysvetlivky nepovoľuje nadpisy, zoznamy ani zalomenia riadkov. Vložený text a HTML sa prevedú na jeden riadok so zachovaním zvýraznenia, farieb a odkazov (#396).
 - Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#364).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.multistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
@@ -332,6 +335,11 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Viackrokové formuláre - identifikátor položky sa generuje z textu názvu poľa bez HTML značiek, aby formátovanie názvu neovplyvňovalo identifikátor  (#396).
+- Viackrokové formuláre - pri zmazaní položky, kroku alebo formulára sa odstránia aj príslušné podmienky zobrazenia a povinnosti. Podmienky už zmazaných položiek neblokujú odstránenie polí, na ktoré odkazovali (#395).
+- Viackrokové formuláre - pravidlá **Povolená hodnota** už neodmietnu prázdne nepovinné pole. Pri povinnom poli sa regulárne výrazy kontrolujú aj pre prázdnu hodnotu; pri odoslaní kroku sa zohľadňujú aj podmienky povinnosti (#394).
+- Page Builder - vložené karty dostanú vlastné ID aj pri kopírovaní pred dokončením inicializácie, aby sa ich odkazy neprepájali s pôvodným blokom.
+- Dátové tabuľky - zadanie ID otvorí záznam aj po predchádzajúcom filtrovaní bez výsledkov.
 - Webové stránky - opravený [export do ZIP archívu](redactor/webpages/import-export.md) pre obrázky vložené cez `/thumb/`, ktoré sa pôvodne do exportu nepridali (#389).
 - Webové stránky - dialóg na vloženie obrázka obmedzuje výber súborov na obrázky, videá a zvukové súbory aj v priečinku Súbory. Nepodporované typy rozpoznané prehliadačom odmietne ešte pred odoslaním. Server navyše overí príponu pred uložením (#375).
 - Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránky (#372).
@@ -359,6 +367,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Webové stránky - editor JSON prijíma aj polia a jednoduché hodnoty s komentármi. Opravené rozdelenie stĺpcov a posúvanie v Page Builderi a zatváranie tooltipu pri úprave z histórie (#346).
 - Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
 - Formuláre - opravené archivovanie formulárov (#305).
+- Formuláre - oddelené mazanie odoslaných dát od nastavení a položiek. Ak formulár používa zobrazovaná stránka alebo má dáta v archíve, definícia zostane zachovaná a notifikácia uvedie dôvod aj docId stránok. Pri úplnom odstránení sa zmažú aj kroky, položky a ich podmienky (#393).
 - Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opravené pridávanie prázdneho `P` elementu na koniec stránky (#58317-13).
 - Webové stránky - opravené načítanie hodnoty `ckeditor_button_sizes` pre tlačidlo typu `A` (#OSK674).
@@ -732,9 +741,13 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Databáza - opravené generovanie SQL podmienok `IN` a `NOT IN` s veľkým počtom hodnôt rozdelením zoznamov na menšie časti. Odstránené chyby pri prekročení limitu 1000 hodnôt v Oracle databáze, napríklad pri načítaní histórie stránky alebo práci s rozsiahlym stromom priečinkov. Maximálny počet hodnôt v jednej časti určuje konfiguračná premenná `dbInClauseMaxItems` (predvolene 1000, v Oracle najviac 1000).
+- Webové stránky - opravené obmedzenie hľadania a nahrádzania v názvoch priečinkov na vybraný strom priečinkov a nastavenie rodiča pri oprave chybne zmazaných priečinkov počas presunu stránky do koša (#390).
+- Kalendár udalostí - opravené filtrovanie podľa viacerých perex skupín pri nastavení `perexGroupUseJoin=true` bez duplicitných udalostí. Upravené obmedzenie počtu výsledkov aj pre Oracle a Microsoft SQL (#390).
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
 - Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
 - Redis - zlepšený prenos informácie o nahrávanom súbore v session (#342).
+- Aplikácie - opravené rešpektovanie nastavenia `domainName` v súbore `modinfo.properties` pri zobrazení ľavého menu a overovaní prístupu k modulu vrátane REST API. V nastavení práv sa moduly filtrujú podľa domény iba pri oddelení používateľov podľa domén (MultiWeb alebo `usersSplitByDomain=true`), pri spoločných používateľoch sa zobrazujú práva modulov zo všetkých domén.
 - Bezpečnosť - aktualizovaná knižnica `FreeMarker` z verzie `2.3.34` na `2.3.35`.
 - Bezpečnosť - aktualizovaná knižnica `Hibernate Validator` z verzie `6.2.5.Final` na `6.2.6.Final` s opravou `CVE-2026-93879`. Zachovaná kompatibilita s `javax.validation`.
 - Bezpečnosť - aktualizované závislosti zostavenia administrácie `PostCSS` z verzie `8.5.12` na `8.5.23` a `source-map-js` z verzie `1.2.1` na `1.2.2` s opravami `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` a `CVE-2026-93749`.

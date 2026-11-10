@@ -967,9 +967,11 @@ block content
                     }
                 });
 
-                // Open the approval queue from the dashboard after both tables exist.
+                // Open linked tabs after both tables exist so their click handlers also load the correct data.
                 window.domReady.add(function () {
-                    if (WJ.urlGetParam("show") === "toapprove" && (hasPagesToApprove || hasGroupsToApprove)) {
+                    if (window.location.hash === "#pills-changes") {
+                        $('#pills-pages #pills-changes-tab').trigger('click');
+                    } else if ((window.location.hash === "#pills-waiting" || WJ.urlGetParam("show") === "toapprove") && (hasPagesToApprove || hasGroupsToApprove)) {
                         $('#pills-pages #pills-waiting-tab').trigger('click');
                         if (!hasPagesToApprove && hasGroupsToApprove) {
                             // Wait for headerSubTabs to update the subtab IDs after the parent click.

@@ -279,40 +279,11 @@ public class NewsQuery
 		}
 		else if (c.getType()==CriteriaType.IN)
 		{
-			List<Object> objectList = (List<Object>)c.getValue();
-			if (objectList.isEmpty()) return sql.append("1=0 ");
-			sql.append(c.getProperty().getDbName()).append(" IN ( ");
-			boolean addComma = false;
-			for (Object obj : objectList)
-			{
-				if (addComma)
-				{
-					sql.append(", ");
-				}
-				addComma = true;
-				//appendCriteria(andCriteria, sql);
-				sql.append("?");
-				arguments.add(obj);
-			}
-			sql.append(") ");
+			sql.append(DB.getInCondition(c.getProperty().getDbName(), (List<?>)c.getValue(), arguments)).append(" ");
 		}
 		else if (c.getType()==CriteriaType.NOT_IN)
 		{
-			List<Object> objectList = (List<Object>)c.getValue();
-			if (objectList.isEmpty()) return sql.append("1=1 ");
-			sql.append(c.getProperty().getDbName()).append(" NOT IN ( ");
-			boolean addComma = false;
-			for (Object obj : objectList)
-			{
-				if (addComma)
-				{
-					sql.append(", ");
-				}
-				addComma = true;
-				sql.append("?");
-				arguments.add(obj);
-			}
-			sql.append(") ");
+			sql.append(DB.getNotInCondition(c.getProperty().getDbName(), (List<?>)c.getValue(), arguments)).append(" ");
 		}
 		else if (c.getType()==CriteriaType.LIKE)
 		{

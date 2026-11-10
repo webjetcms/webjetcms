@@ -85,7 +85,7 @@ function confirmDelete(I, DTE, modal) {
 }
 
 async function requestHeaders(I) {
-    const session = await I.grabCookie('JSESSIONID');
+    const session = await I.grabCookieForCurrentUrl('JSESSIONID');
     return {
         'x-auth-token': '', Cookie: 'JSESSIONID=' + session.value,
         'X-CSRF-Token': await I.grabValueFrom('form[name="adminLogoffForm"] input[name="__token"]'),
@@ -402,8 +402,12 @@ Scenario('Reject folder deletion without deleteDir while editing remains allowed
     DTE.cancel('groups-datatable');
     // The hidden delete button must not be the only protection against a forged remove request.
     const headers = await requestHeaders(I);
-    const folder = (await I.sendGetRequest('/admin/rest/groups/' + folders.sk.id, headers)).data;
+    const source = await I.sendGetRequest('/admin/rest/groups/' + folders.sk.id, headers);
+    I.assertEqual(source.status, 200, 'Loading the source folder must succeed before checking delete permissions');
+    I.assertEqual(source.data.groupId, Number(folders.sk.id));
+    const folder = source.data;
     const response = await I.sendPostRequest('/admin/rest/groups/editor', { action: 'remove', data: { [folders.sk.id]: folder } }, headers);
+    I.assertEqual(response.status, 200, 'The delete request must reach the Editor permission check');
     I.assertContain(response.data.error || '', 'nemáte právo na zmazanie adresáru');
     for (const folder of Object.values(folders)) {
         openFolder(I, DT, folder);
@@ -518,7 +522,12 @@ Scenario('Preview and bulk-delete mirrors without permanently deleting selected 
     I.assertDeepEqual(preview.data.items.map(item => item.id).sort((a, b) => a - b),
         [folders.cz.docId, folders['duplicate-sk'].docId].map(Number).sort((a, b) => a - b));
     const data = {};
-    for (const id of selected) data[id] = (await I.sendGetRequest('/admin/rest/web-pages/' + id, headers)).data;
+    for (const id of selected) {
+        const source = await I.sendGetRequest('/admin/rest/web-pages/' + id, headers);
+        I.assertEqual(source.status, 200, 'Loading a selected page must succeed before bulk deletion');
+        I.assertEqual(source.data.docId, Number(id));
+        data[id] = source.data;
+    }
     const deleted = await I.sendPostRequest('/admin/rest/web-pages/editor', { action: 'remove', data }, headers);
     I.assertEqual(deleted.status, 200);
     I.assertEmpty(deleted.data.error || '');
@@ -538,7 +547,7 @@ Scenario('Preview and bulk-delete mirrors without permanently deleting selected 
     }
     // Select a descendant as well as two mirrored parents to exercise request-wide deletion deduplication.
     for (const folder of [folders.en, descendants[0]]) {
-        I.click(node(folder) + ' > a', null, { modifiers: ['Meta'] });
+        I.click(node(folder) + ' > a', null, { modifiers: ['ControlOrMeta'] });
         DT.waitForLoader();
     }
     for (const folder of [folders.sk, folders.en, descendants[0]]) I.seeElement(node(folder) + ' > a.jstree-clicked');

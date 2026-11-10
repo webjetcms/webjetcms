@@ -16,6 +16,7 @@
 - Formulář snadno a vícekrokové formuláře - upravené zobrazení `tooltip` z původního `i` elementu na standardní `button`. Je tak splněn požadavek na přístupnost - tooltip je dostupný myší i klávesnicí (#306).
 - Galerie - metoda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vrací místo `void` výsledek zpracování typu `int`: `0` při úspěchu, jinak kód chyby. Po aktualizaci je třeba překompilovat závislý Java kód i JSP soubory, například vyčištěním pracovní složky konkrétní aplikace v Tomcat (#371).
 - Vícekrokové formuláře - metody `validateStep` a `runStepInterceptor` rozhraní [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhraní-formprocessorinterface) dostávají za `formName` nový parametr `FormSettingsEntity formSettings`. Pokud používáte vlastní Java třídu pro zpracování formulářů je třeba ji upravit a znovu zkompilovat. Nastavení již nemusí načítat podle jména formuláře, ale dostanete jej přímo (#364).
+- Vícekrokové formuláře - identifikátor polí se již generuje z názvu s odstraněným HTML kódem (použije se pouze text). Pokud máte v názvu pole použité HTM formátování pro rádio skupiny, tak znovu uložte **všechny její možnosti**. Aktualizujte také podmínky a odkazy na změněné identifikátory (#396).
 
 ### Úvodní obrazovka
 
@@ -147,6 +148,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
+- Vícekrokové formuláře - v editoru každé položky přibylo za názvem pole volitelné pole **Nápověda**. Podporuje víceřádkový formátovaný text a rozsáhlejší HTML obsah. Zobrazuje se za názvem pole ve formuláři přes značku `${hint}` a přenáší se i při kopírování položky (#396).
+- Formulář snadno a vícekrokové formuláře - jednořádkový editor názvu pole a vysvětlivky nepovoluje nadpisy, seznamy ani zalomení řádků. Vložený text a HTML se převedou na jeden řádek se zachováním zvýraznění, barev a odkazů (#396).
 - Nastavení formulářů - přidaná karta **Volitelná pole** s poli A–F. Pole jsou dostupná také v editoru aplikace Formulář snadno a přes `FormSettingsEntity`. V HTML překladových klíčů lze použít [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláře) pro A–F, emailová nastavení, přesměrování, limity souborů a vzhled. Podporuje je i náhled a emailová podoba vícekrokových formulářů. A–F i text před a za emailem umožňují HTML (#364).
 - Vícekrokové formuláře - přidána možnost upravit [HTML tlačítka na předchozí krok](redactor/apps/formsimple/README.md#html-kód-tlačítek) přes překladový klíč `components.multistep.form.back_button` (#osk782).
 - Vícekrokové formuláře - po neúspěšném přechodu na další krok nebo odeslání se stránka posune na první viditelné chybové hlášení i při opakovaném pokusu (#58794).
@@ -330,6 +333,11 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Vícekrokové formuláře - identifikátor položky se generuje z textu názvu pole bez HTML značek, aby formátování názvu neovlivňovalo identifikátor (#396).
+- Vícekrokové formuláře - při smazání položky, kroku nebo formuláře se odstraní i příslušné podmínky zobrazení a povinnosti. Podmínky již smazaných položek neblokují odstranění polí, na která odkazovaly (#395).
+- Vícekrokové formuláře - pravidla **Povolená hodnota** již neodmítnou prázdné nepovinné pole. U povinného pole se regulární výrazy kontrolují i ​​pro prázdnou hodnotu; při odeslání kroku se zohledňují i ​​podmínky povinnosti (#394).
+- Page Builder - vložené karty dostanou vlastní ID i při kopírování před dokončením inicializace, aby se jejich odkazy nepropojovaly s původním blokem.
+- Datové tabulky - zadání ID otevře záznam i po předchozím filtrování bez výsledků.
 - Webové stránky - opraven [export do ZIP archivu](redactor/webpages/import-export.md) pro obrázky vložené přes `/thumb/`, které se původně do exportu nepřidaly (#389).
 - Webové stránky - dialog pro vložení obrázku omezuje výběr souborů na obrázky, videa a zvukové soubory i ve složce Soubory. Nepodporované typy rozpoznané prohlížečem odmítne ještě před odesláním. Server navíc ověří příponu před uložením (#375).
 - Webové stránky - přesměrování stránky se přihlášenému administrátorovi neukládá do cache prohlížeče, aby se jeho změna nebo zrušení projevily při dalším otevření stránky (#372).
@@ -357,6 +365,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Webové stránky - editor JSON přijímá také pole a jednoduché hodnoty s komentáři. Opraveno rozdělení sloupců a posouvání v Page Builderu a zavírání tooltipu při úpravě z historie (#346).
 - Vícekrokové formuláře - opravena validace polí s řetězenými podmínkami viditelnosti (#58794).
 - Formuláře - opraveno archivování formulářů (#305).
+- Formuláře - oddělené mazání odeslaných dat od nastavení a položek. Pokud formulář používá zobrazovaná stránka nebo má data v archivu, definice zůstane zachována a notifikace uvede důvod i docId stránek. Při úplném odstranění se smažou i kroky, položky a jejich podmínky (#393).
 - Průzkumník - upravené porovnávání souborů s diakritikou při kontrole existence souboru při jeho přepsání - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opraveno přidávání prázdného `P` elementu na konec stránky (#58317-13).
 - Webové stránky - opraveno načtení hodnoty `ckeditor_button_sizes` pro tlačítko typu `A` (#OSK674).
@@ -726,6 +735,9 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- Databáze - opraveno generování SQL podmínek `IN` a `NOT IN` s velkým počtem hodnot rozdělením seznamů na menší části. Odstraněny chyby při překročení limitu 1000 hodnot v Oracle databázi, například při načítání historie stránky nebo práci s rozsáhlým stromem složek. Maximální počet hodnot v jedné části určuje konfigurační proměnná `dbInClauseMaxItems` (výchozí 1000, v Oracle nejvýše 1000).
+- Webové stránky - opraveno omezení hledání a nahrazování v názvech složek na vybraný strom složek a nastavení rodiče při opravě chybně smazaných složek během přesunu stránky do koše (#390).
+- Kalendář událostí - opraveno filtrování podle více perex skupin při nastavení `perexGroupUseJoin=true` bez duplicitních událostí. Upraveno omezení počtu výsledků i pro Oracle a Microsoft SQL (#390).
 - Webové stránky - opraveno zacyklení inicializace složek a kontroly plánovaného publikování při pomalém připojení k databázi (#337).
 - Cluster - optimalizované zapisování změny v clusteru při startu nového uzlu (#337).
 - Redis - zlepšený přenos informace o nahrávaném souboru v session (#342).

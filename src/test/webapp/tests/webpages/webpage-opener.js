@@ -19,6 +19,39 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+for (const tab of ['changes', 'waiting']) {
+    /** Checks direct navigation and reload, including the table data source and tree visibility. */
+    Scenario(`Open and reload the ${tab} tab from a URL hash`, async ({ I, DT }) => {
+        const documentRoute = '**/admin/v9/webpages/web-pages-list/';
+        // Make the approval tab available without creating approval requests in the database.
+        if (tab === 'waiting') {
+            await I.mockRoute(documentRoute, async route => {
+                const response = await route.fetch();
+                const body = (await response.text()).replace(/\blet hasPagesToApprove\s*=\s*(?:true|false)\s*;/,
+                    'let hasPagesToApprove = true;');
+                await route.fulfill({ response, body });
+            });
+        }
+        try {
+            I.amOnPage(`/admin/v9/webpages/web-pages-list/#pills-${tab}`);
+            for (let load = 0; load < 2; load++) {
+                I.waitForElement(`#pills-pages #pills-${tab}-tab.active`, 20);
+                DT.waitForLoader();
+                I.dontSeeElement('.tree-col');
+                const source = await I.executeScript(() => ({
+                    url: webpagesDatatable.getAjaxUrl(), recentGroup: String(changesId)
+                }));
+                if (tab === 'changes') I.assertContain(source.url, `groupId=${source.recentGroup}`);
+                else I.assertContain(source.url, '/admin/rest/webpages/toapprove');
+                I.seeInCurrentUrl(`#pills-${tab}`);
+                if (load === 0) I.refreshPage();
+            }
+        } finally {
+            if (tab === 'waiting') await I.stopMockingRoute(documentRoute);
+        }
+    });
+}
+
 Scenario('Expand trash subfolders after opening a group URL', async ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     DT.waitForLoader();
