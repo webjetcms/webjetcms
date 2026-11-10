@@ -10,7 +10,7 @@ import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.UsersDB;
 
-/** Whole-object comparison, complete preflight and atomic claim of a manual publishing package. */
+/** Whole-object comparison, complete preflight and atomic claim of a publishing package. */
 public final class BranchMergeService {
     public record Version(String state, Map<String,Object> fields, String hash) {
         static Version of(BranchSnapshot value) { return new Version(value.state().name(),value.fields(),value.hash()); }
@@ -19,7 +19,7 @@ public final class BranchMergeService {
             String liveHash,String workHash,String choice,boolean conflict,boolean writeRequired,
             String applyState,String applyPhase,String error,boolean editable,boolean resolvable) { }
     public record Report(long id,String name,String domainName,String state,long revision,String preparationHash,
-            boolean ready,List<String> errors,List<Item> items,String lastError,Map<String,Map<String,String>> fieldLabels) { }
+            boolean ready,List<String> errors,List<Item> items,String lastError,Map<String,Map<String,String>> fieldLabels,Long publishAt,Integer scheduledBy,String timeZone) { }
     private record Entry(BranchType type,Map<String,Object> row,BranchChange change,BranchSnapshot live,
             BranchSnapshot target,boolean conflict,boolean write,String error) { }
     private record Plan(Map<String,Object> branch,List<Entry> entries,List<String> errors,String hash) { }
@@ -60,12 +60,25 @@ public final class BranchMergeService {
 
     /** Persists the complete reviewed plan together with the conditional state transition. */
     public Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume) {
+        return claim(id,domain,user,revision,hash,resume,false);
+    }
+
+    Report claimScheduled(long id,String domain,Identity user,long revision,String hash) {
+        return claim(id,domain,user,revision,hash,false,true);
+    }
+
+    private Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume,boolean scheduled) {
         try(Connection c=DBPool.getConnection()) {
             c.setAutoCommit(false);
             try {
                 Map<String,Object> branch=branch(c,id,domain,revision,true);
                 String state=Objects.toString(branch.get("state"));
-                if(resume?!Set.of("MERGE_FAILED","MERGING").contains(state):!"DRAFT".equals(state)) throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
+                Set<String> allowed=Set.of("DRAFT");
+                if(scheduled)allowed=Set.of("SCHEDULED");
+                else if(resume)allowed=Set.of("MERGE_FAILED","MERGING");
+                if(!allowed.contains(state)) throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
+                if(scheduled && (!(branch.get("publish_at") instanceof java.util.Date at) || at.getTime()>System.currentTimeMillis()
+                        || !Objects.equals(branch.get("scheduled_by"),user.getUserId()))) throw conflict("Termín alebo publikujúci sa zmenil.");
                 if("MERGING".equals(state) && BranchPublishService.isRunning(id)) throw conflict("Publikovanie už prebieha.");
                 Plan plan=plan(c,id,domain,user,revision);
                 if(!plan.errors.isEmpty()||plan.entries.stream().anyMatch(Entry::conflict)) throw conflict(String.join("; ",plan.errors)+" Obnovte porovnanie a vyriešte konflikty.");
@@ -86,6 +99,53 @@ public final class BranchMergeService {
         return detail(id,domain,user);
     }
 
+    /** Scheduling and moving a term use one locked package update; individual plans are untouched. */
+    public Report schedule(long id,String domain,Identity user,long revision,String hash,long publishAt) {
+        if(publishAt<=System.currentTimeMillis()) throw conflict(Prop.getInstance().getText("branches.schedule.future"));
+        try(Connection c=DBPool.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                Map<String,Object> branch=branch(c,id,domain,revision,true);
+                if(!Set.of("DRAFT","SCHEDULED").contains(branch.get("state"))) throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
+                Plan plan=plan(c,id,domain,user,revision);
+                if(!plan.errors.isEmpty()||plan.entries.stream().anyMatch(Entry::conflict)) throw conflict(String.join("; ",plan.errors));
+                if(!Objects.equals(hash,plan.hash)) throw conflict("Podklad porovnania sa zmenil. Znova overte balík.");
+                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='SCHEDULED',publish_at=?,scheduled_by=?,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,last_error=NULL WHERE id=? AND revision=?")) {
+                    s.setTimestamp(1,new Timestamp(publishAt));s.setInt(2,user.getUserId());s.setInt(3,user.getUserId());s.setLong(4,id);s.setLong(5,revision);
+                    if(s.executeUpdate()!=1)throw conflict("Balík sa zmenil. Obnovte porovnanie.");
+                }
+                c.commit();
+            }catch(SQLException|RuntimeException ex){c.rollback();throw ex;}
+        }catch(SQLException ex){throw failure(ex);}
+        BranchView.invalidate();return detail(id,domain,user);
+    }
+
+    public Report unschedule(long id,String domain,Identity user,long revision) {return returnToDraft(id,domain,user,revision,"SCHEDULED");}
+    public Report reopen(long id,String domain,Identity user,long revision) {return returnToDraft(id,domain,user,revision,"NEEDS_ATTENTION");}
+
+    private Report returnToDraft(long id,String domain,Identity user,long revision,String state) {
+        try(Connection c=DBPool.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                Map<String,Object> branch=branch(c,id,domain,revision,true);
+                if(!state.equals(branch.get("state")))throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
+                for(BranchType type:BranchType.values())for(Map<String,Object> row:BranchPublishRows.rows(c,id,type)) {
+                    authorize(c,type,row,user,domain,false);
+                    if(row.get("applied_hash")!=null && !"NOOP".equals(row.get("apply_phase")))throw conflict("Balík už obsahuje produkčný zápis.");
+                    try(PreparedStatement s=c.prepareStatement("UPDATE `"+type.workTable()+"` SET apply_state='PENDING',apply_phase=NULL,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
+                        s.setObject(1,row.get("row_id"));s.setLong(2,id);s.executeUpdate();
+                    }
+                }
+                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='DRAFT',publish_at=NULL,scheduled_by=NULL,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=NULL,last_error=NULL WHERE id=? AND revision=? AND state=?")) {
+                    s.setInt(1,user.getUserId());s.setLong(2,id);s.setLong(3,revision);s.setString(4,state);
+                    if(s.executeUpdate()!=1)throw conflict("Balík sa zmenil. Obnovte porovnanie.");
+                }
+                c.commit();
+            }catch(SQLException|RuntimeException ex){c.rollback();throw ex;}
+        }catch(SQLException ex){throw failure(ex);}
+        BranchView.invalidate();return detail(id,domain,user);
+    }
+
     static void validatePublisher(long id,String domain,Identity user) {
         Report report=new BranchMergeService().detail(id,domain,user);
         if(!report.errors().isEmpty() || report.items().stream().anyMatch(Item::conflict))
@@ -95,11 +155,14 @@ public final class BranchMergeService {
     private Plan plan(Connection c,long id,String domain,Identity user,long revision)throws SQLException {
         BranchReadiness.verify(c);
         Map<String,Object> branch=branch(c,id,domain,revision,false);
-        boolean frozen=!"DRAFT".equals(branch.get("state"));
+        if(user==null || !GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,Prop.getInstance().getText("branches.schedule.permission"));
+        boolean frozen=!Set.of("DRAFT","SCHEDULED","NEEDS_ATTENTION").contains(branch.get("state"));
         List<Entry> entries=new ArrayList<>();List<String> errors=new ArrayList<>();
         StringBuilder fingerprint=new StringBuilder(id+":"+branch.get("revision")+":"+branch.get("state"));
         for(BranchType type:BranchType.values()) for(Map<String,Object> row:BranchPublishRows.rows(c,id,type)) {
-            authorize(c,type,row,user,domain,false);
+            try {authorize(c,type,row,user,domain,false);}
+            catch(ResponseStatusException ex) {throw new ResponseStatusException(ex.getStatusCode(),type+":"+row.get(type.idColumn())+": "+Objects.toString(ex.getReason(),Prop.getInstance().getText("branches.schedule.permission")));}
             BranchChange change=BranchStore.change(type,row);BranchSnapshot live=BranchPublishRows.liveSnapshot(c,type,row);
             BranchSnapshot target;boolean conflict=false,write=false;String error=null;
             if(frozen && row.get("resolved_snapshot")!=null) {
@@ -120,6 +183,7 @@ public final class BranchMergeService {
             Entry e=new Entry(type,row,change,live,target,conflict,write,error);entries.add(e);
             fingerprint.append('|').append(change.identity()).append(':').append(live.hash()).append(':').append(change.work().hash()).append(':').append(target.hash()).append(':').append(row.get("apply_state")).append(':').append(row.get("apply_phase"));
             if(error!=null) errors.add(change.identity()+": "+error);
+            else if(conflict) errors.add(change.identity()+": "+Prop.getInstance().getText("branches.schedule.conflict"));
         }
         if(!frozen && !entries.isEmpty() && entries.stream().noneMatch(e->e.error!=null)) {
             try(BranchContexts.Scope ignored=BranchContexts.open(null,new BranchContext(id,domain,user.getUserId(),BranchContext.Mode.PREVIEW))) {
@@ -157,7 +221,7 @@ public final class BranchMergeService {
 
     private Report report(Plan p) {
         List<Item> items=p.entries.stream().map(e->new Item(e.type.name(),e.change.objectKey(),label(e),e.change.operation().name(),Version.of(e.change.base()),Version.of(e.live),Version.of(e.change.work()),e.live.hash(),e.change.work().hash(),Objects.toString(e.row.get("resolved_choice"),null),e.conflict,e.write,Objects.toString(e.row.get("apply_state"),"PENDING"),Objects.toString(e.row.get("apply_phase"),null),e.error!=null?e.error:Objects.toString(e.row.get("apply_error"),null),"DRAFT".equals(p.branch.get("state")),"DRAFT".equals(p.branch.get("state")) || "MERGE_FAILED".equals(p.branch.get("state")) && e.row.get("applied_hash")==null && Set.of("PENDING","ERROR").contains(e.row.get("apply_state")))).toList();
-        return new Report(((Number)p.branch.get("id")).longValue(),Objects.toString(p.branch.get("name")),Objects.toString(p.branch.get("domain_name")),Objects.toString(p.branch.get("state")),((Number)p.branch.get("revision")).longValue(),p.hash,p.errors.isEmpty()&&items.stream().noneMatch(Item::conflict),p.errors,items,Objects.toString(p.branch.get("last_error"),null),BranchMergeLabels.translate(Prop.getInstance()));
+        return new Report(((Number)p.branch.get("id")).longValue(),Objects.toString(p.branch.get("name")),Objects.toString(p.branch.get("domain_name")),Objects.toString(p.branch.get("state")),((Number)p.branch.get("revision")).longValue(),p.hash,p.errors.isEmpty()&&items.stream().noneMatch(Item::conflict),p.errors,items,Objects.toString(p.branch.get("last_error"),null),BranchMergeLabels.translate(Prop.getInstance()),p.branch.get("publish_at") instanceof java.util.Date at?at.getTime():null,(Integer)p.branch.get("scheduled_by"),java.time.ZoneId.systemDefault().getId());
     }
 
     private static BranchSnapshot derivedFields(Map<String,Object> row,Set<String> projected) {

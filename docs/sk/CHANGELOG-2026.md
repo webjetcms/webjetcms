@@ -49,6 +49,8 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Pracovné verzie (POC) - balík možno naplánovať jedným termínom, posunúť alebo odplánovať. Existujúci cron znovu overí práva a konflikty; pri probléme ukáže dôvod zastavenia. Náhľad Noviniek zohľadňuje termín balíka. Funkcia zostáva predvolene vypnutá.
+
 - Pracovné verzie (POC) - pridané porovnanie pôvodnej, produkčnej a pracovnej verzie, výber výsledku konfliktu a ručné publikovanie celého balíka so zachovaním ID. Priebeh ukáže dokončené položky a umožní bezpečné pokračovanie po chybe. Funkcia zostáva predvolene vypnutá; plánovanie termínu patrí do ďalšej etapy.
 
 - Pracovné verzie (POC) - doplnené médiá stránok a izolované nahrávanie, nahradenie, presun a zmazanie jednotlivých súborov vrátane prázdnych adresárov. Náhľad používa administrátorskú cestu `/admin/webpages/branch-preview/` s kontrolami prístupu do administrácie. Galérie zostávajú iba na čítanie; funkcia je predvolene vypnutá.

@@ -152,6 +152,44 @@ class BranchNewsRenderTest extends BaseWebjetTest {
         }
     }
 
+    /** N12: refreshing after a term change updates News filters and the visible preview clock. */
+    @Test void n12MovedCancelledAndStoppedScheduleUsesOneRequestTime() throws Exception {
+        long first=System.currentTimeMillis()/1000*1000+86_400_000;
+        long second=first+86_400_000;
+        update("UPDATE documents SET publish_start=?,publish_end=NULL WHERE doc_id=?",new Timestamp(first+3_600_000),A);
+        update("UPDATE branches SET state='SCHEDULED',publish_at=? WHERE id=?",new Timestamp(first),branch.branchId());
+        open(branch);
+        BranchView initial=BranchView.current();
+        assertEquals(first,initial.previewAt());assertTrue(initial.scheduledPreview());
+        assertIds(render(a->a.setPublishType("new")),B,fresh);
+        String firstBanner=Jsoup.parse(BranchPreviewUrls.rewriteHtml("<html><body></body></html>",request)).selectFirst("#branch-preview-status").text();
+        assertTrue(firstBanner.contains(Prop.getInstance("sk").getText("components.branches.preview.newsPrediction")),firstBanner);
+        assertTrue(firstBanner.contains(java.time.ZoneId.systemDefault().getId()),firstBanner);
+
+        update("UPDATE branches SET publish_at=? WHERE id=?",new Timestamp(second),branch.branchId());
+        // A page with several News components retains one instant until the next request.
+        assertSame(initial,BranchView.current());assertEquals(first,BranchView.current().previewAt());
+        assertIds(render(a->a.setPublishType("new")),B,fresh);
+        open(branch);
+        assertEquals(second,BranchView.current().previewAt());
+        assertIds(render(a->a.setPublishType("new")),A,B,fresh);
+        String secondBanner=Jsoup.parse(BranchPreviewUrls.rewriteHtml("<html><body></body></html>",request)).selectFirst("#branch-preview-status").text();
+        assertNotEquals(firstBanner,secondBanner);
+
+        for(String state:List.of("DRAFT","NEEDS_ATTENTION")) {
+            update("UPDATE branches SET state=?,publish_at=? WHERE id=?",state,"DRAFT".equals(state)?null:new Timestamp(second),branch.branchId());
+            long before=System.currentTimeMillis();open(branch);
+            BranchView current=BranchView.current();
+            assertFalse(current.scheduledPreview());assertTrue(current.previewAt()>=before);assertTrue(current.previewAt()<=System.currentTimeMillis());
+            assertIds(render(a->a.setPublishType("new")),B,fresh);
+            String banner=Jsoup.parse(BranchPreviewUrls.rewriteHtml("<html><body></body></html>",request)).selectFirst("#branch-preview-status").text();
+            assertFalse(banner.contains(Prop.getInstance("sk").getText("components.branches.preview.newsPrediction")),banner);
+        }
+        update("UPDATE branches SET state='SCHEDULED',publish_at=? WHERE id=?",new Timestamp(first-172_800_000),branch.branchId());
+        long before=System.currentTimeMillis();open(branch);
+        assertFalse(BranchView.current().scheduledPreview());assertTrue(BranchView.current().previewAt()>=before);
+    }
+
     /** N05: all order fields, loaded data, offsets and repeated text values use real SQL. */
     @Test void n05FiltersOrderLoadDataAndOffsets() {
         for(NewsQuery.OrderEnum order:NewsQuery.OrderEnum.values()) {

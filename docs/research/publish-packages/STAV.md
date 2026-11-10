@@ -2,7 +2,7 @@
 
 ## Návrh
 
-- Dátum vzniku: 1. november 2026. Posledné doplnenie: 9. november 2026.
+- Dátum vzniku: 1. november 2026. Posledné doplnenie: 10. november 2026.
 - Produktové rozhodnutia Q1–Q19: uzatvorené; Q10/Q13 používateľ delegoval podľa jednoduchosti implementácie. Pri poslednej kontrole potvrdil náhľad zvoleného výsledku, vytvorenie súborového adresára bez rekurzívnych operácií, galériu iba na čítanie a náhľad na admin hostiteľovi.
 - Technický návrh: po opakovanej kontrole a realizácii technického kroku **P01**, bez ďalšej otvorenej produktovej otázky. [Výsledok kontroly](09-kontrola-pripravenosti.md) eviduje opravené medzery a predpoklady, ktoré musí dokázať reálna implementácia. Pripravenosť dokumentácie neznamená vykonané DB/browser testy ani automatické povolenie P02–P08.
 - Doplnenie N1: povinné `NewsApp`/`NewsActionBean`, podrobný návrh [03a](03a-novinky.md), perex skupiny existujúcich definícií, čas náhľadu a porovnanie s výsledkom po merge. Aktualizované etapy a test T16/N01–N12. Vykonaná nezávislá kontrola voči zdrojom; nepredstavuje runtime overenie.
@@ -12,7 +12,7 @@
 - Doplnenie N4: povinný `menu_ul_li.jsp`/`MenuULLI` podľa [03b](03b-menu.md), vrátane editoru parametrov `MenuApp`, rekurzie, aktívnej cesty, perex/HTML, premenných a cache. T03 je rozpracované na M01–M11 v P01/P03/P04/P06/P08. Overené zdrojové integračné body a existujúce testy; bez runtime skúšok.
 - Doplnenie N5: záväzná [priorita jednoduchého čitateľného POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc). Konkrétne služby bez povinného handler/DI registra, bez hypotetických frameworkov a zriedkavých prevádzkových scenárov. Prvé overenie na jednom reálnom DB profile/inštancii; ďalšie profily až pred deklarovaním podpory. Ručný POC míľnik po P06, dohodnuté plánovanie zostáva P07. Obnova koša sa runtime overí v P06. Izolácia, ID, oprávnenia a náhľad sa nemenia.
 - Návod na spustenie: [orchestrácia](ORCHESTRACIA.md) doplnená o modely/roly, etapový postup a pokračovanie po prerušení. Odporúčanie GPT-6.1 Sol / High nemení aktuálne nastavenie klienta; skutočné modely zaznamená implementačný agent. Hlavný agent môže použiť najviac dvoch pomocníkov naraz, bez vlastného agentového frameworku. Žiadna etapa sa týmto doplnením nespustila.
-- Implementácia: P01–P06 sú uzavreté v nižšie uvedenom rozsahu na zvolenom POC profile. P05 používateľ samostatne zadal 8. novembra nad `9b65884d6`. P06 používateľ zadal 9. novembra nad `3c1dbdb7b`; výsledok je nižšie. P07–P08 sa nezačali.
+- Implementácia: P01–P07 sú uzavreté v nižšie uvedenom rozsahu na zvolenom POC profile. P05 používateľ samostatne zadal 8. novembra nad `9b65884d6`. P06 používateľ zadal 9. novembra nad `3c1dbdb7b`; výsledok je nižšie. P07 používateľ zadal 9. novembra nad `bf9cdf633`; výsledok je nižšie. P08 sa nezačal.
 - P01: **DONE ako technický experiment na jednorazovom InnoDB profile**. Dokázané ID/reštart, SQL, core izolácia a minimálny reálny JSP/thumbnail gateway; zvlášť LIVE browser regresia pracovného webu. Nejde o hotovú editáciu/náhľad z P02/P03. Pracovná DB s MyISAM zatiaľ nie je vhodná na rezervácie.
 - Pred P01 prešlo dokumentačné overenie pôvodných 18 Markdown dokumentov. Aktuálne výsledky, skúšobné Java testy a medzery overenia sú evidované nižšie a v [P01-vysledky.md](P01-vysledky.md). Zmeny zostávajú bez commitov.
 
@@ -26,12 +26,28 @@
 | P04 | DONE | WORK CRUD/revert cez bežný editor, stabilné ID, News/Menu iframe a reálny render; 103/103 Java, 5/5 P04 UI + 3/3 P03 regresia, obsahová izolácia prešla na profile 33316. |
 | P05 | DONE | WORK médiá a súbory, oba uploady a elFinder; 123 úspešných Java testov a 7/7 reálnych UI scenárov, A/B/LIVE bajty a thumbnaily, obsahová izolácia na 33316. |
 | P06 | DONE | BASE/LIVE/WORK, celkový preflight a ručný merge/checkpointy; 139 Java PASS a 5/5 skutočných UI scenárov vrátane News/menu, koša a pokračovania po novom procese. |
-| P07 | NOT_STARTED | — |
+| P07 | DONE | Spoločný termín/posun/zrušenie, skutočný cron po odhlásení, konkrétne zastavenie a News previewAt; Java 59 PASS + finálna P07 sada 10/10, finálne UI 2/2 na 33316. |
 | P08 | NOT_STARTED | — |
 
 Prípustné evidenčné stavy krokov: `NOT_STARTED`, `IN_PROGRESS`, `PARTIAL`, `DONE`, `BLOCKED`. Ide iba o stav práce agentov, nie o databázové stavy publikačnej vetvy. Pri BLOCKED sa zapíše konkrétna prekážka a čo ju odstráni.
 
 ## Výsledky krokov
+
+### P07 — DONE (9. november 2026, iba zvolený POC profil)
+
+- **Vetva/východisko:** `feature/58858-publishing-packages`, `bf9cdf633` (P06), vstupný strom čistý. Všetky zmeny necommitnuté, bez STAGE, produkčného nasadenia a P08.
+- **Profil:** MariaDB 12.2.2/InnoDB, Connector/J 3.5.10, Java 17.0.18, jedna inštancia `127.0.0.1:33316/webjet_p01`, lokálny filesystem a `aceintegration/jet/blank.jsp`. Pred začatím overené DB PID 76342 / WebJET PID 28347; Java testy pri zastavenom serveri. Pri pôvodnom odovzdaní bežal WebJET PID 38836 na 8086/8446; pri review 10. novembra už boli server/DB vypnuté a po testoch zostávajú vypnuté. Pracovná DB 3306 nedotknutá.
+- **Výsledok/API:** `/schedule` v DRAFT/SCHEDULED (posun jednou operáciou), `/unschedule`, `/reopen`, revízia a preparationHash, termín/aktér/pásmo v reporte. Naplánovaná vetva uzavretá pre editáciu. Zrušenie zachová WORK aj rozhodnutia. `BranchScheduler` používa existujúci WebJET cron každú minútu a rovnaké `BranchMergeService`/`BranchPublishService`; žiadny druhý publisher. V cron úlohe sa nastavuje `CronTask.clusterNode=all-admin` (alebo konkrétny stabilný admin uzol); presné meno sa nevyžaduje. Public uzly sú odmietnuté aj v službe, admin behy začínajú s náhodným oneskorením 0–10 sekúnd a duplicitnému vykonaniu bráni transakčné prevzatie v DB. Zdrojové flagy ostávajú vypnuté, MariaDB migrácia pridala cron úlohu #14.
+- **Práva/chyby:** čerstvý `scheduled_by` z DB, explicitný doménový kontext bez HTTP session a kompletný preflight pri spustení. Revízia a P06 ochrana prevzatia zachované. Nový konflikt, právo alebo individuálny plán pred zápisom → NEEDS_ATTENTION s dôvodom; po čiastočnom zápise → MERGE_FAILED a P06 pokračovanie. Individuálne plány sa nemenia.
+- **Overenie:** spoločná Java sada **59 PASS / 0 chýb / 4 fixture skipy**; finálnych **10/10 P07 PASS**, vrátane neprázdneho DATE, autora/SAVE_DATE, aktuálneho DB vypnutia používateľa/odobratia práva či doménového prístupu pri súborovom balíku, nového konfliktu/plánu a pokračovania. Skutočné News SQL/Velocity N12, T12/T13/T15 v rozsahu P07. Frontend production build úspešný (2 existujúce size warnings), syntax/XML/diff skontrolované a nezávislá read-only backend kontrola bez blockera.
+- **Reálny cron:** #1786 cez UI termín **14:42 → 14:44 Europe/Bratislava**. V pôvodnom čase SCHEDULED, 0 aplikovaných položiek, verejný súbor BASE. Cron dokončil **14:44:01** po odhlásení, 25/25 DONE. #1787 publikovaný ručne; každý predmerge náhľad a jeho následný LIVE News/menu sa presne zhodujú, ručný a časovaný výsledok sú ekvivalentné. #1788 po naplánovaní a skutočnej LIVE editácii zastavený o 14:42, dôvod `document:1947975` / `group:1943721`, 25 PENDING bez zápisu a súbor BASE.
+- **UI:** finálny overovací beh **2/2 PASS**, s pokračovaním už vykonaného cron behu. Plánovanie/posun/zrušenie, mobil 390×844 aj 700×900, klávesnica/fokus a konkrétny dôvod. SK/CZ/EN hlásenia. Posun mení reálny News zoznam a čas lišty, zrušenie/NEEDS_ATTENTION vracajú aktuálny čas. Testovacie transportné opravy a fázy behu sú rozlíšené vo výsledkoch.
+- **Zachované dáta:** P05 #841/#842 a P06 demo **#1315 DRAFT/revízia 25** bajtovo zhodné pred/po, SHA-256 `09f01fa48a1256ac1733022b602a4c191316192eaa070fdbd188534dfc4464c9`. Na review zostáva samostatné DRAFT demo **#1789**, News hranica **1.12.2026 09:00**; žiadny jeho plán nezostal aktívny.
+- **Návod/dôkazy:** [P07-vysledky.md](P07-vysledky.md), `build/test-results/p07/`; [otvoriť P07 demo](http://127.0.0.1:8086/admin/v9/webpages/web-pages-list/?groupid=1943724#branchCompare=1789). Login `tester-p05`, heslo iba `/tmp/webjet-p05-login.properties`.
+- **Hranice:** iba uvedený profil/uzol/šablóna. Iné DB/topológie a externé storage/CDN neoverené. Anonymná HTML URL POC fixture vracala 404 už pred publikovaním; P07 ju nemení. Beh po odhlásení dokazuje skutočný cron, DB priebeh a verejné bajty súboru; kompletný LIVE render sa porovnal po opätovnom prihlásení s identitou náhľadu. Neoznačuje sa za overenie anonymného HTML renderu. Publikovanie zostáva postupné, bez automatického rollbacku/failover. Presný opis a opakovanie v P07 výsledkoch.
+- **Modely:** hlavný agent + najviac dvaja pomocníci so zdedeným nastavením, presný model/reasoning neoverený. Po P07 sa končí.
+
+- **Review cronu (10. november):** výber uzlov iba cez `CronTask.clusterNode=all-admin` alebo konkrétny stabilný admin uzol. Presné meno nie je podmienkou plánovania; public uzol odmietne aj scheduler. Náhodné oneskorenie 0–10 s podľa `FileArchivatorInsertLater` rozloží admin behy, ochrana pred duplicitou zostáva v transakčnom DB prevzatí. **22/22 PASS**: 11 P07 DB vrátane súbežného prevzatia cez dve spojenia, 3 hranice scheduleru a 8 existujúcich cron/cluster testov. POC cron #14 nastavený na `all-admin`, DB 33316 iba dočasne spustená na testy; 3306 nedotknutá. Report `build/test-results/p07/cron-review/`; Kubernetes ako celok sa runtime neoveroval. Bez commitov a P08.
 
 ### P06 — DONE (9. november 2026, iba zvolený POC profil)
 

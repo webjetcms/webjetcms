@@ -7,8 +7,10 @@ import java.sql.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.context.support.GenericApplicationContext;
@@ -25,8 +27,9 @@ import sk.iway.iwcm.users.UsersDB;
 import sk.iway.webjet.v9.V9JpaDBConfig;
 
 /** Real MariaDB manual publication, stale-input checks and checkpoint recovery on isolated P06 data. */
-@EnabledIfEnvironmentVariable(named="WEBJET_P06_DB",matches="true")
+@EnabledIf("databaseEnabled")
 class BranchMergeTest extends BaseWebjetTest {
+    static boolean databaseEnabled() {return "true".equals(System.getenv("WEBJET_P06_DB")) || "true".equals(System.getenv("WEBJET_P07_DB"));}
     static final String DOMAIN="iwcm.interway.sk";
     final BranchMergeService service=new BranchMergeService();
     final BranchStore store=new BranchStore();
@@ -70,12 +73,13 @@ class BranchMergeTest extends BaseWebjetTest {
 
     @BeforeEach void setup()throws Exception {
         try(Connection c=DBPool.getConnection()) {assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));}
-        for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","fulltextExecuteApps","fulltextDataAscMethod","perexGroupUseJoin","editorDisableHistory","iwfs_useVersioning"))original.put(key,Constants.getString(key));
+        for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","fulltextExecuteApps","fulltextDataAscMethod","perexGroupUseJoin","editorDisableHistory","iwfs_useVersioning","clusterMyNodeType"))original.put(key,Constants.getString(key));
         Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setString("branchStorageRoot","/tmp/webjet-p03-private");Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fulltextExecuteApps",false);Constants.setString("fulltextDataAscMethod","");Constants.setBoolean("perexGroupUseJoin",true);
         Files.createDirectories(Path.of("/tmp/webjet-p03-private"));sk.iway.iwcm.system.Modules.getInstance(null,true);user=new Identity(UsersDB.getUser("tester-p05"));
         assertTrue(user.isAdmin(),"fresh admin");assertTrue(user.isAuthorized(),"fresh authorized");assertTrue(user.isEnabledItem("menuBranches"),"menuBranches enabled");
         RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(bean);
-        f=create("test-"+UUID.randomUUID().toString().substring(0,8),true);
+        Constants.setString("clusterMyNodeType","admin");
+        f=create(("true".equals(System.getenv("WEBJET_P07_DB"))?"p07-":"")+"test-"+UUID.randomUUID().toString().substring(0,8),true);
     }
     @AfterEach void cleanup()throws Exception {
         if(f!=null)try(Connection c=DBPool.getConnection();Statement s=c.createStatement()) {
@@ -327,6 +331,201 @@ class BranchMergeTest extends BaseWebjetTest {
         PerexGroupsService.savePerexGroupsDoc(first,new int[]{f.perex});
         assertEquals(membership,((Number)query("SELECT id FROM perex_group_doc WHERE doc_id="+first)).longValue());
         assertEquals("autotest P06 restored category",query("SELECT perex_group_name FROM perex_groups WHERE perex_group_id="+f.perex));
+    }
+
+    /** T12: one term is versioned atomically and returning to draft preserves every WORK input. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07ScheduleMoveCancelAndRejectStaleInputs()throws Exception {
+        var initial=ready();Map<String,String> work=workInputs();Map<String,String> live=productionInputs();
+        long first=System.currentTimeMillis()/1000*1000+120_000;
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,initial.revision(),initial.preparationHash(),System.currentTimeMillis()-1));
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,initial.revision(),"stale",first));
+        var scheduled=service.schedule(f.branch,DOMAIN,user,initial.revision(),initial.preparationHash(),first);
+        assertEquals("SCHEDULED",scheduled.state());assertEquals(first,scheduled.publishAt().longValue());assertEquals(user.getUserId(),scheduled.scheduledBy().intValue());
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,initial.revision(),initial.preparationHash(),first+60_000));
+        int page=f.pages.get(0);var input=live(BranchType.DOCUMENT,page);
+        assertThrows(IllegalStateException.class,()->store.put(admin(),BranchType.DOCUMENT,page,input,BranchStore.snapshot(BranchType.DOCUMENT,input).hash(),false));
+        assertThrows(ResponseStatusException.class,()->service.claimScheduled(f.branch,DOMAIN,user,scheduled.revision(),scheduled.preparationHash()));
+        var moved=service.schedule(f.branch,DOMAIN,user,scheduled.revision(),scheduled.preparationHash(),first+120_000);
+        assertEquals(first+120_000,moved.publishAt().longValue());assertEquals(scheduled.revision()+1,moved.revision());
+        assertEquals(work,workInputs());assertEquals(live,productionInputs());
+        assertThrows(ResponseStatusException.class,()->service.unschedule(f.branch,DOMAIN,user,scheduled.revision()));
+        var draft=service.unschedule(f.branch,DOMAIN,user,moved.revision());
+        assertEquals("DRAFT",draft.state());assertNull(draft.publishAt());assertNull(draft.scheduledBy());assertEquals(work,workInputs());assertEquals(live,productionInputs());
+        var stale=ready();sql("UPDATE documents SET title='autotest P07 late LIVE' WHERE doc_id="+page);
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,stale.revision(),stale.preparationHash(),first));
+    }
+
+    /** T12/T13: the same publisher applies scheduled targets with stable IDs, author and save dates. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07ScheduledClaimPublishesSameTargetsAndRejectsSecondClaim()throws Exception {
+        sql("UPDATE documents SET publish_start='2021-02-03 10:00:00' WHERE doc_id="+f.pages.get(0));
+        Object publicationDate=live(BranchType.DOCUMENT,f.pages.get(0)).get("publish_start");
+        Map<String,String> targets=workInputs();String home=live(BranchType.DOCUMENT,f.home).toString();
+        scheduleDue();var due=ready();
+        service.claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash());
+        assertThrows(ResponseStatusException.class,()->service.claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash()));
+        assertThrows(ResponseStatusException.class,()->service.unschedule(f.branch,DOMAIN,user,due.revision()));
+        new BranchPublishService().run(f.branch,user.getUserId());
+        var merged=detail();assertEquals("MERGED",merged.state(),merged.lastError());assertEquals(targets,workInputs());assertEquals(home,live(BranchType.DOCUMENT,f.home).toString());
+        assertEquals(f.destination,((Number)live(BranchType.GROUP,f.section).get("parent_group_id")).intValue());
+        for(int i=0;i<f.pages.size();i++) {
+            var row=live(BranchType.DOCUMENT,f.pages.get(i));assertEquals("autotest P06 WORK "+i,row.get("title"));
+            assertEquals(1,((Number)row.get("author_id")).intValue());assertEquals(Instant.parse("2020-01-01T12:00:00Z").toEpochMilli(),((java.util.Date)row.get("date_created")).getTime());
+            assertEquals(1,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(i)));
+        }
+        assertEquals(publicationDate,live(BranchType.DOCUMENT,f.pages.get(0)).get("publish_start"),"DATE must not restart when the package publishes");
+        assertEquals(20,count("SELECT COUNT(*) FROM perex_group_doc WHERE perex_group_id="+f.perex));
+        assertEquals("autotest P06 WORK media",live(BranchType.MEDIA,f.media).get("media_title_sk"));
+        assertEquals("autotest P06 WORK attachment",Files.readString(Path.of(Tools.getRealPath(f.file))));
+    }
+
+    /** T12: a future term is not claimed and public nodes never run publication. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronRespectsFutureTimeAndSkipsPublicNode()throws Exception {
+        var before=ready();service.schedule(f.branch,DOMAIN,user,before.revision(),before.preparationHash(),System.currentTimeMillis()+120_000);
+        Map<String,String> live=productionInputs();BranchScheduler.main(new String[0]);assertEquals("SCHEDULED",detail().state());assertEquals(live,productionInputs());
+        sql("UPDATE branches SET publish_at=CURRENT_TIMESTAMP-INTERVAL 1 SECOND WHERE id="+f.branch);
+        Constants.setString("clusterMyNodeType","public");
+        BranchScheduler.main(new String[0]);assertEquals("SCHEDULED",detail().state());assertEquals(live,productionInputs());
+    }
+
+    /** Concurrent cron candidates use independent connections and only one can claim the package. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07ConcurrentSchedulersClaimPackageOnce()throws Exception {
+        scheduleDue();var due=ready();CountDownLatch start=new CountDownLatch(1);
+        ExecutorService contenders=Executors.newFixedThreadPool(2);
+        Callable<Boolean> claim=()->{
+            RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(DOMAIN);
+            SetCharacterEncodingFilter.setCurrentRequestBean(bean);
+            try(BranchContexts.Scope ignored=BranchContexts.live(null,DOMAIN,user.getUserId())) {
+                assertTrue(start.await(10,TimeUnit.SECONDS));
+                try {new BranchMergeService().claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash());return true;}
+                catch(ResponseStatusException ex){assertEquals(409,ex.getStatusCode().value());return false;}
+            }finally{SetCharacterEncodingFilter.unRegisterDataContext();}
+        };
+        try {
+            Future<Boolean> first=contenders.submit(claim),second=contenders.submit(claim);start.countDown();
+            int claims=(first.get(30,TimeUnit.SECONDS)?1:0)+(second.get(30,TimeUnit.SECONDS)?1:0);
+            assertEquals(1,claims);assertEquals("MERGING",detail().state());
+        }finally{contenders.shutdownNow();}
+        new BranchPublishService().run(f.branch,user.getUserId());assertEquals("MERGED",detail().state(),detail().lastError());
+        assertEquals(1,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0)));
+    }
+
+    /** T12: cron reloads a disabled administrator from DB without using the retained request identity. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronReloadsDisabledPublisher()throws Exception {
+        scheduleDue();Map<String,String> live=productionInputs();
+        sql("UPDATE users SET authorized=false WHERE user_id="+user.getUserId());
+        try {BranchScheduler.main(new String[0]);assertAttention(live);assertFalse(detail().lastError().isBlank());}
+        finally {sql("UPDATE users SET authorized=true WHERE user_id="+user.getUserId());}
+        var stopped=detail();var reopened=service.reopen(f.branch,DOMAIN,user,stopped.revision());
+        assertEquals("DRAFT",reopened.state());assertNull(reopened.publishAt());assertNull(reopened.lastError());
+    }
+
+    /** T12/T13: current publication rights are rechecked even though the scheduling identity had them. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronReloadsRevokedPublicationRight()throws Exception {
+        scheduleDue();Map<String,String> live=productionInputs();
+        assertEquals(0,count("SELECT COUNT(*) FROM user_disabled_items WHERE user_id="+user.getUserId()+" AND item_name='pageSave'"));
+        sql("INSERT INTO user_disabled_items(user_id,item_name) VALUES ("+user.getUserId()+",'pageSave')");
+        try {BranchScheduler.main(new String[0]);assertAttention(live);assertTrue(detail().lastError().contains("právo"),detail().lastError());}
+        finally {sql("DELETE FROM user_disabled_items WHERE user_id="+user.getUserId()+" AND item_name='pageSave'");}
+    }
+
+    /** T12: file-only packages still require current access to their administration domain. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07FileOnlyPackageStopsWhenPublisherLosesDomainAccess()throws Exception {
+        for(BranchType type:List.of(BranchType.DOCUMENT,BranchType.GROUP,BranchType.MEDIA))sql("DELETE FROM "+type.workTable()+" WHERE branch_id="+f.branch);
+        scheduleDue();Map<String,String> live=productionInputs();
+        String groups=Objects.toString(query("SELECT editable_groups FROM users WHERE user_id="+user.getUserId()),"");
+        String pages=Objects.toString(query("SELECT editable_pages FROM users WHERE user_id="+user.getUserId()),"");
+        String foreign=Objects.toString(query("SELECT group_id FROM `groups` WHERE domain_name='demo.webjetcms.sk' AND parent_group_id=0 LIMIT 1"));
+        try(Connection c=DBPool.getConnection();PreparedStatement edit=c.prepareStatement("UPDATE users SET editable_groups=?,editable_pages=? WHERE user_id=?")) {
+            edit.setString(1,foreign);edit.setString(2,"");edit.setInt(3,user.getUserId());edit.executeUpdate();
+            try {BranchScheduler.main(new String[0]);assertAttention(live);assertFalse(detail().lastError().isBlank());}
+            finally {edit.setString(1,groups);edit.setString(2,pages);edit.executeUpdate();}
+        }
+    }
+
+    /** T12: a new LIVE conflict stops all items and leaves the current production values intact. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronStopsOnNewConflict()throws Exception {
+        scheduleDue();int page=f.pages.get(0);sql("UPDATE documents SET title='autotest P07 new conflict' WHERE doc_id="+page);
+        Map<String,String> live=productionInputs();BranchScheduler.main(new String[0]);assertAttention(live);
+        assertTrue(detail().lastError().contains(Integer.toString(page)),detail().lastError());
+        BranchScheduler.main(new String[0]);assertEquals(live,productionInputs());assertEquals("NEEDS_ATTENTION",detail().state());
+    }
+
+    /** T12: individual publication and unpublication plans remain owned by their original scheduler. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronStopsOnNewIndividualPlanWithoutRemovingIt()throws Exception {
+        scheduleDue();int page=f.pages.get(0);
+        sql("UPDATE documents SET publish_after_start=true,publish_start=CURRENT_TIMESTAMP+INTERVAL 1 DAY WHERE doc_id="+page);
+        Map<String,String> live=productionInputs();BranchScheduler.main(new String[0]);assertAttention(live);
+        assertTrue(detail().lastError().contains(Integer.toString(page)),detail().lastError());
+        assertEquals(1,count("SELECT COUNT(*) FROM documents WHERE doc_id="+page+" AND publish_after_start=true"));
+    }
+
+    /** T12: the last validation between claim and first write retains the stopped schedule for repair. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07PublisherStopsBeforeFirstWriteAndCanReopen()throws Exception {
+        scheduleDue();var due=ready();service.claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash());
+        sql("UPDATE documents SET title='autotest P07 changed after claim' WHERE doc_id="+f.pages.get(0));
+        Map<String,String> live=productionInputs();new BranchPublishService().run(f.branch,user.getUserId());assertAttention(live);
+        var attention=detail();assertEquals("DRAFT",service.reopen(f.branch,DOMAIN,user,attention.revision()).state());
+    }
+
+    /** T15: after any published item, scheduled failure follows P06 checkpoints and resume. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07PartialScheduledFailureUsesExistingResume()throws Exception {
+        scheduleDue();var due=ready();service.claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash());
+        AtomicInteger completed=new AtomicInteger();new BranchPublishService(key->{if(key.startsWith("DOCUMENT:")&&completed.incrementAndGet()==3)throw new IllegalStateException("autotest P07 partial failure");}).run(f.branch,user.getUserId());
+        var failed=detail();assertEquals("MERGE_FAILED",failed.state());assertTrue(failed.items().stream().anyMatch(i->"DONE".equals(i.applyState())));
+        assertThrows(ResponseStatusException.class,()->service.reopen(f.branch,DOMAIN,user,failed.revision()));
+        int first=f.pages.get(0);long history=count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+first);
+        var retry=ready();service.claim(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);new BranchPublishService().run(f.branch,user.getUserId());
+        assertEquals("MERGED",detail().state(),detail().lastError());assertEquals(history,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+first));
+    }
+
+    private void scheduleDue()throws Exception {
+        var report=ready();service.schedule(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),System.currentTimeMillis()+120_000);
+        sql("UPDATE branches SET publish_at=CURRENT_TIMESTAMP-INTERVAL 1 SECOND WHERE id="+f.branch);
+    }
+    private Map<String,String> workInputs()throws Exception {
+        Map<String,String> result=new LinkedHashMap<>();
+        try(Connection c=DBPool.getConnection()){for(BranchType type:BranchType.values())for(var row:BranchPublishRows.rows(c,f.branch,type)){var change=BranchStore.change(type,row);result.put(change.identity(),change.work().hash());}}
+        return result;
+    }
+    private Map<String,String> productionInputs()throws Exception {
+        Map<String,String> result=new LinkedHashMap<>();
+        try(Connection c=DBPool.getConnection()){for(BranchType type:BranchType.values())for(var row:BranchPublishRows.rows(c,f.branch,type)){var change=BranchStore.change(type,row);result.put(change.identity(),BranchPublishRows.liveSnapshot(c,type,row).hash());}}
+        return result;
+    }
+    private void assertAttention(Map<String,String> before)throws Exception {
+        assertEquals("NEEDS_ATTENTION",query("SELECT state FROM branches WHERE id="+f.branch));
+        assertEquals(before,productionInputs());assertNotNull(query("SELECT last_error FROM branches WHERE id="+f.branch));
+        for(BranchType type:BranchType.values())assertEquals(0,count("SELECT COUNT(*) FROM "+type.workTable()+" WHERE branch_id="+f.branch+" AND applied_hash IS NOT NULL"));
+        assertEquals(0,count("SELECT COUNT(*) FROM documents_history WHERE doc_id IN ("+String.join(",",f.pages.stream().map(String::valueOf).toList())+")"));
+    }
+
+    /** Retained P07-only fixtures for real scheduling, a manual comparison, stopping and News time. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_FIXTURE",matches="true") void prepareP07BrowserFixtures()throws Exception {
+        for(String name:List.of("scheduled","manual","attention","preview"))assertFalse(Files.exists(Path.of("/tmp/webjet-p07-"+name+".properties")),"Reuse retained P07 fixtures or explicitly archive their manifests");
+        String suffix=UUID.randomUUID().toString().substring(0,8);
+        Fixture scheduled=f;
+        Fixture manual=create("p07-manual-"+suffix,true),attention=create("p07-attention-"+suffix,true),preview=create("p07-preview-"+suffix,true);
+        for(var entry:Map.of("scheduled",scheduled,"manual",manual,"attention",attention,"preview",preview).entrySet()) {
+            Fixture fixture=entry.getValue();sql("UPDATE branches SET name='autotest P07 "+entry.getKey()+" "+suffix+"',description='P07 isolated scheduling review fixture' WHERE id="+fixture.branch);
+            writeP07Fixture(entry.getKey(),fixture,null);
+        }
+        long cutoff=System.currentTimeMillis()/1000*1000+604_800_000;
+        sql("UPDATE documents SET data=REPLACE(data,'publishType=all','publishType=new') WHERE doc_id="+preview.home);
+        for(String table:List.of("documents","branch_documents")) {
+            try(Connection c=DBPool.getConnection();PreparedStatement s=c.prepareStatement("UPDATE "+table+" SET publish_start=? WHERE doc_id=?"+(table.equals("branch_documents")?" AND branch_id=?":""))) {
+                s.setTimestamp(1,new Timestamp(cutoff));s.setInt(2,preview.pages.get(0));if(table.equals("branch_documents"))s.setLong(3,preview.branch);s.executeUpdate();
+            }
+            try(Connection c=DBPool.getConnection();PreparedStatement s=c.prepareStatement("UPDATE "+table+" SET publish_end=? WHERE doc_id=?"+(table.equals("branch_documents")?" AND branch_id=?":""))) {
+                s.setTimestamp(1,new Timestamp(cutoff));s.setInt(2,preview.pages.get(1));if(table.equals("branch_documents"))s.setLong(3,preview.branch);s.executeUpdate();
+            }
+        }
+        writeP07Fixture("preview",preview,cutoff);f=null;
+    }
+
+    private static void writeP07Fixture(String name,Fixture fixture,Long cutoff)throws Exception {
+        String data="branchId="+fixture.branch+"\ngroupId="+fixture.root+"\nsectionId="+fixture.section+"\nhomeId="+fixture.home+"\npageId="+fixture.pages.get(0)+"\nsecondPageId="+fixture.pages.get(1)+"\nurl="+fixture.url+"/\nfile="+fixture.file+"\npages="+String.join(",",fixture.pages.stream().map(String::valueOf).toList())+"\n"+(cutoff==null?"":"publishCutoff="+cutoff+"\n");
+        Files.writeString(Path.of("/tmp/webjet-p07-"+name+".properties"),data);
+        Files.createDirectories(Path.of("build/test-results/p07"));Files.writeString(Path.of("build/test-results/p07/"+name+".properties"),data);
     }
 
     @Test @EnabledIfEnvironmentVariable(named="WEBJET_P06_DEMO",matches="true") void prepareRetainedDemo()throws Exception {

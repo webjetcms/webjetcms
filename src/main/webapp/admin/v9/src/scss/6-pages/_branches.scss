@@ -30,6 +30,10 @@
     &__version dd { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
     &__changed { border-left: 3px solid $primary; padding-left: 8px; background: $nice-gray; }
     &__text { color: inherit; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 28rem; overflow: auto; }
+    &__schedule { overflow-wrap: anywhere; }
+    &__schedule-fields { display: grid; gap: 8px; max-width: 420px; }
+    &__schedule-fields label { margin: 0; }
+    &__schedule-fields input { min-width: 0; width: 100%; }
     &__image { display: block; max-width: 100%; max-height: 160px; object-fit: contain; margin-bottom: 12px; }
 
     @media (max-width: 1199.98px) {
@@ -43,5 +47,8 @@
         &__versions { grid-template-columns: minmax(0, 1fr); }
         &__table { min-width: 620px; }
         &__header { align-items: flex-start; }
+        &__schedule { padding: 12px; }
+        &__schedule .btn { white-space: normal; }
+        &__schedule-fields { max-width: 100%; }
     }
 }

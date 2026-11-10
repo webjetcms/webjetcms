@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import sk.iway.iwcm.i18n.Prop;
 
 /** Converts logical content URLs at the transport boundary without changing stored content. */
 public final class BranchPreviewUrls {
@@ -67,12 +68,19 @@ public final class BranchPreviewUrls {
         for (Element style:document.select("style")) style.html(rewriteCss(style.html(),request));
         for (Element button:document.select("form button, form input[type=submit], form input[type=image]")) button.attr("disabled","");
         BranchView view=BranchView.current();
+        Prop prop=Prop.getInstance(request);
         document.body().prependElement("aside").attr("role","status").attr("id","branch-preview-status")
-            .text("Pracovná verzia: "+(view==null?BranchContexts.current(request).branchId():view.name())+" · Náhľad iba na čítanie"
-                +(view==null?"":" · Novinky vyhodnotené k "+java.time.Instant.ofEpochMilli(view.previewAt()).atZone(java.time.ZoneId.systemDefault()))
-                +(view!=null&&view.hasConflicts()?" · Nevyriešené konflikty zobrazujú pracovný obsah":""));
+            .text(prop.getText("components.branches.preview.label")+": "+(view==null?BranchContexts.current(request).branchId():view.name())+" · "+prop.getText("components.branches.preview.readonly")
+                +(view==null?"":" · "+prop.getText("components.branches.preview.newsAt",previewTime(view.previewAt())))
+                +(view!=null&&view.scheduledPreview()?" · "+prop.getText("components.branches.preview.newsPrediction"):"")
+                +(view!=null&&view.hasConflicts()?" · "+prop.getText("components.branches.preview.conflicts"):""));
         if(originalPath==null)request.removeAttribute(LOGICAL_PATH);else request.setAttribute(LOGICAL_PATH,originalPath);
         return document.outerHtml();
+    }
+
+    private static String previewTime(long at) {
+        var zone=java.time.ZoneId.systemDefault();
+        return java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss").format(java.time.Instant.ofEpochMilli(at).atZone(zone))+" ("+zone.getId()+")";
     }
 
     public static String rewriteCss(String css, HttpServletRequest request) {

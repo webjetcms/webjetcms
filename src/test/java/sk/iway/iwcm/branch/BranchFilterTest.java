@@ -46,6 +46,16 @@ class BranchFilterTest {
     }
     @AfterEach void cleanBoundary(){selection.close();groups.close();constants.close();SetCharacterEncodingFilter.setCurrentRequestBean(null);}
 
+    @Test void schedulingActionsUseTechnicalLiveContextEvenWhenEditorHasASelection() throws Exception {
+        selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);
+        request.setMethod("POST");
+        for(String action:List.of("schedule","unschedule","reopen")) {
+            request.setRequestURI("/admin/rest/branches/42/"+action);response=new MockHttpServletResponse();
+            filter.doFilter(request,response,(in,out)->assertFalse(BranchContexts.current().isBranch()));
+            assertEquals(200,response.getStatus());
+        }
+    }
+
     @Test void permitsOnlyOrdinaryEditorPostsAndRejectsLegacyImportActions() throws Exception {
         selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);
         request.setMethod("POST"); request.addHeader(BranchSelection.ID_HEADER,"42"); request.addHeader(BranchSelection.DOMAIN_HEADER,DOMAIN);

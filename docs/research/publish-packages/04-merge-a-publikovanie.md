@@ -199,6 +199,8 @@ Existujúce väzby sa zachovajú. Ak by podporovaná zmena na konkrétnom prepoj
 
 ## 10. Jeden termín a existujúce schedulery
 
+Cron úloha `sk.iway.iwcm.branch.BranchScheduler` má v poli **Beží na uzle** (`CronTask.clusterNode`) nastavené **`all-admin`**; pri stabilnej topológii možno zvoliť konkrétny admin uzol. Pre dynamické Kubernetes nody sa presné meno nevyžaduje. Služba odmieta public uzly cez `ClusterDB.isPublicNode()`. Náhodné oneskorenie 0–10 sekúnd rozloží začiatky behov; ochranu pred dvojitým vykonaním zabezpečuje databázové prevzatie podľa stavu a revízie, nie samotné oneskorenie.
+
 Naplánovanie uloží termín, aktuálnu revíziu obsahu a `scheduled_by`. Pracovné položky sa uzavrú do `SCHEDULED`; ich zmena vyžaduje odplánovanie. Zmena termínu je jedna operácia nad vetvou po opätovnej kontrole pripravenosti.
 
 V termíne publisher načíta identitu `scheduled_by` a aktuálne oprávnenia z DB. Používateľ nemusí byť online. Služba vytvorí potrebný doménový/publikačný kontext explicitne; nevyrába prihlasovaciu session a nespolieha sa na request návštevníka, ktorý spustil kontrolu plánov.

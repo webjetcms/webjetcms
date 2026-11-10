@@ -4674,5 +4674,14 @@ CREATE TABLE IF NOT EXISTS branch_files (
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>webjet</string></void>
+                <void property="date"><string>09.11.2026</string></void>
+                <void property="desc"><string>Publishing branches P07 - admin-node cron, gated by branchesEnabled</string></void>
+                <void property="mysql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, businessDays, cluster_node, audit_task, run_at_startup, enable_task) SELECT 'Publishing branches', '0', '*', '*', '*', '*', '*', '*', 'sk.iway.iwcm.branch.BranchScheduler', false, 'all-admin', false, false, true WHERE NOT EXISTS (SELECT 1 FROM crontab WHERE task='sk.iway.iwcm.branch.BranchScheduler')</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

@@ -11,6 +11,7 @@ public final class BranchView {
     private static final String ATTRIBUTE = BranchView.class.getName();
     private final BranchContext context;
     private long previewAt = System.currentTimeMillis();
+    private boolean scheduledPreview;
     private String name;
     private boolean conflicts;
     private final Map<Integer, Map<String, Object>> liveGroups = new LinkedHashMap<>();
@@ -62,7 +63,8 @@ public final class BranchView {
                 if (!result.next()) throw new IllegalStateException("Branch is absent in the verified domain");
                 Timestamp date = result.getTimestamp(2);
                 name = result.getString(3);
-                if ("SCHEDULED".equals(result.getString(1)) && date != null && date.getTime() > previewAt) previewAt = date.getTime();
+                scheduledPreview = "SCHEDULED".equals(result.getString(1)) && date != null && date.getTime() > previewAt;
+                if (scheduledPreview) previewAt = date.getTime();
             }
         }
         for (Map<String, Object> row : read(connection, "SELECT * FROM `groups`", false)) liveGroups.put(id(row,"group_id"), row);
@@ -160,6 +162,7 @@ public final class BranchView {
     public boolean usesWork(BranchType type, String key) { return selected.getOrDefault(type,Set.of()).contains(key); }
     public BranchContext context() { return context; }
     public long previewAt() { return previewAt; }
+    public boolean scheduledPreview() { return scheduledPreview; }
     public String name() { return name; }
     public boolean hasConflicts() { return conflicts; }
     public List<Map<String,Object>> workRows(BranchType type) { return Collections.unmodifiableList(work.get(type)); }

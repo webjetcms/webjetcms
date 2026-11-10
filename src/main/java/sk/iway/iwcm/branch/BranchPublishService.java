@@ -59,7 +59,7 @@ public final class BranchPublishService {
                     }
                 }
                 var details=UsersDB.getUser(actor);
-                if(details==null||!details.isAdmin())throw new IllegalStateException("Publishing administrator no longer exists");
+                if(details==null||!details.isAdmin()||!details.isAuthorized())throw new IllegalStateException("Publishing administrator no longer exists");
                 Identity user=new Identity(details);
                 RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(domain);
                 SetCharacterEncodingFilter.setCurrentRequestBean(bean);
@@ -386,8 +386,15 @@ public final class BranchPublishService {
 
     private static void fail(long id,Exception error) {
         Logger.error(BranchPublishService.class,error);
-        try(Connection connection=DBPool.getConnection();PreparedStatement statement=connection.prepareStatement("UPDATE branches SET state='MERGE_FAILED',revision=revision+1,last_error=?,updated_at=? WHERE id=? AND state='MERGING'")) {
-            statement.setString(1,Objects.toString(error.getMessage(),error.getClass().getSimpleName()));statement.setTimestamp(2,new Timestamp(System.currentTimeMillis()));statement.setLong(3,id);statement.executeUpdate();
+        try(Connection connection=DBPool.getConnection()) {
+            boolean applied=false;
+            for(BranchType type:BranchType.values())try(PreparedStatement check=connection.prepareStatement("SELECT 1 FROM `"+type.workTable()+"` WHERE branch_id=? AND ((applied_hash IS NOT NULL AND COALESCE(apply_phase,'')<>'NOOP') OR apply_phase LIKE 'FILE_%') LIMIT 1")) {
+                check.setLong(1,id);try(ResultSet result=check.executeQuery()){applied|=result.next();}
+            }
+            try(PreparedStatement statement=connection.prepareStatement("UPDATE branches SET state=CASE WHEN scheduled_by IS NOT NULL AND publish_at IS NOT NULL AND ?=false THEN 'NEEDS_ATTENTION' ELSE 'MERGE_FAILED' END,revision=revision+1,last_error=?,updated_at=? WHERE id=? AND state='MERGING'")) {
+                String reason=error instanceof org.springframework.web.server.ResponseStatusException response?Objects.toString(response.getReason(),sk.iway.iwcm.i18n.Prop.getInstance().getText("branches.schedule.permission")):Objects.toString(error.getMessage(),error.getClass().getSimpleName());
+                statement.setBoolean(1,applied);statement.setString(2,reason);statement.setTimestamp(3,new Timestamp(System.currentTimeMillis()));statement.setLong(4,id);statement.executeUpdate();
+            }
         } catch(Exception recording) {Logger.error(BranchPublishService.class,recording);}
     }
 

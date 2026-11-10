@@ -3,6 +3,8 @@ import {openBranchMerge} from './branch-merge';
 
 // The server embeds the context of this screen; never refresh it silently from another tab.
 const screen = window.branchScreen;
+const branchText = (key, ...args) => WJ.translate(`branches.${key}.js`, ...args);
+const stateText = state => WJ.translate(`branches.merge.state.${state}.js`);
 window.branchAssetUrl = value => {
     if (!screen?.enabled || !screen.branchId || typeof value !== 'string') return value;
     return /^\/(?:images|files|thumb\/(?:images|files))\//.test(value) ? `/admin/webpages/branch-preview/${screen.branchId}${value}` : value;
@@ -91,12 +93,24 @@ $(async () => {
     const showError = error => window.WJ?.notifyError ? window.WJ.notifyError(error.message) : window.alert(error.message);
     try {
         const branches = await api('');
-        branches.forEach(branch => selector.add(new Option(`${branch.name} · ${branch.state} (#${branch.id})`, branch.id)));
-        selector.add(new Option('+ Nová pracovná verzia', 'create'));
-        selector.add(new Option('Spravovať pracovné verzie', 'manage'));
+        branches.forEach(branch => selector.add(new Option(`${branch.name} · ${stateText(branch.state)} (#${branch.id})`, branch.id)));
+        selector.add(new Option(branchText('new'), 'create'));
+        selector.add(new Option(branchText('manage'), 'manage'));
         selector.value = String(screen.branchId);
         const active = branches.find(branch => branch.id === screen.branchId);
-        label.textContent = active ? `Pracovná verzia: ${active.name}${active.state === 'DRAFT' ? '' : ' · iba čítanie'}` : 'Produkcia';
+        const updateLabel = branch => {
+            label.textContent = branch ? `${selector.labels[0].textContent}: ${branch.name}${branch.state === 'DRAFT' ? '' : ` · ${branchText('readonly')}`}` : selector.options[0].text;
+            label.title = label.textContent;
+        };
+        updateLabel(active);
+        window.addEventListener('WJ.Branch.updated', event => {
+            const updated = event.detail;
+            const branch = branches.find(item => Number(item.id) === Number(updated.id));
+            if (branch) Object.assign(branch, updated);
+            const option = Array.from(selector.options).find(item => item.value === String(updated.id));
+            if (option) option.text = `${updated.name} · ${stateText(updated.state)} (#${updated.id})`;
+            if (Number(screen.branchId) === Number(updated.id)) updateLabel(updated);
+        });
         label.title = label.textContent;
         if (active) {
             if (!document.getElementById('branch-file-warning')) {
@@ -106,11 +120,11 @@ $(async () => {
                 warning.textContent = WJ.translate('branches.files.shared.js');
                 document.querySelector('main, .ly-content, #main-content')?.prepend(warning);
             }
-            if (active.state === 'DRAFT') try {
+            if (['DRAFT', 'SCHEDULED', 'NEEDS_ATTENTION'].includes(active.state)) try {
                 const link = await api(`/${active.id}/preview-link`);
                 const preview = document.getElementById('branch-preview-link');
                 if (preview) { preview.href = link.url; preview.classList.remove('d-none'); }
-            } catch (error) { label.title += ' · Doména nemá dostupnú predvolenú stránku náhľadu.'; }
+            } catch (error) { label.title += ` · ${branchText('previewUnavailable')}`; }
         }
 
         if (active) {
@@ -126,7 +140,7 @@ $(async () => {
 
         async function activate(id) {
             const editorOpen = $('div.modal.DTED.show:visible').length > 0;
-            if (editorOpen && !window.confirm('Zahodiť neuložené zmeny a prepnúť pracovnú verziu?')) return;
+            if (editorOpen && !window.confirm(branchText('discardConfirm'))) return;
             // Close the explicitly discarded editor before changing the session selection.
             if (editorOpen) $('div.modal.DTED.show:visible').removeClass('show');
             await api('/context', { branchId: Number(id), expectedDomainName: screen.domainName });
@@ -139,12 +153,20 @@ $(async () => {
             modal.className = 'p-4 border rounded';
             modal.setAttribute('aria-labelledby', 'branch-dialog-title');
             modal.innerHTML = '<h2 id="branch-dialog-title">Pracovné verzie</h2><p class="branch-domain"></p><div class="branch-list"></div><form><label class="form-label">Názov <input name="name" class="form-control" required maxlength="255"></label><br><label class="form-label">Poznámka <textarea name="description" class="form-control"></textarea></label><p>Nezmenený obsah sa preberá z aktuálnej produkcie. Stránky a priečinky sa ukladajú do pracovnej verzie.</p><button class="btn btn-primary" type="submit">Vytvoriť</button> <button class="btn btn-outline-secondary branch-close" type="button">Zavrieť</button><p class="branch-result" role="status"></p></form>';
-            modal.querySelector('.branch-domain').textContent = `Doména: ${screen.domainName}`;
+            modal.querySelector('.branch-domain').textContent = branchText('domain', screen.domainName);
+            modal.querySelector('h2').textContent = branchText('versions');
+            const name = modal.querySelector('[name=name]');
+            name.parentElement.firstChild.textContent = branchText('name')+' ';
+            const description = modal.querySelector('[name=description]');
+            description.parentElement.firstChild.textContent = branchText('description')+' ';
+            modal.querySelector('form > p').textContent = branchText('createNote');
+            modal.querySelector('[type=submit]').textContent = branchText('create');
+            modal.querySelector('.branch-close').textContent = WJ.translate('button.close');
             const list = modal.querySelector('.branch-list');
             if (!create) listedBranches.forEach(branch => {
                 const row = document.createElement('p');
                 row.className = 'd-flex flex-wrap gap-2 align-items-center';
-                row.append(document.createTextNode(`${branch.name} · ${branch.state} `));
+                row.append(document.createTextNode(`${branch.name} · ${stateText(branch.state)} `));
                 const detail = document.createElement('button');
                 detail.type = 'button'; detail.className = 'btn btn-outline-secondary';
                 detail.textContent = WJ.translate('branches.merge.compare.js');
@@ -166,14 +188,14 @@ $(async () => {
                 try {
                     const branch = await api('', { name: form.elements.name.value, description: form.elements.description.value, expectedDomainName: screen.domainName });
                     const result = modal.querySelector('.branch-result');
-                    result.textContent = `Vytvorená verzia „${branch.name}“. Výber zostáva nezmenený. `;
-                    const activateButton = document.createElement('button'); activateButton.type = 'button'; activateButton.className = 'btn btn-primary'; activateButton.textContent = 'Upravovať web';
+                    result.textContent = branchText('created', branch.name)+' ';
+                    const activateButton = document.createElement('button'); activateButton.type = 'button'; activateButton.className = 'btn btn-primary'; activateButton.textContent = WJ.translate('branches.merge.editWeb.js');
                     activateButton.onclick = () => activate(branch.id).catch(showError); result.append(activateButton);
                     try {
                         const link = await api(`/${branch.id}/preview-link`);
-                        const preview = document.createElement('a'); preview.href = link.url; preview.target = '_blank'; preview.rel = 'noopener'; preview.className = 'btn btn-outline-secondary'; preview.textContent = 'Otvoriť náhľad'; result.append(preview);
-                    } catch (error) { result.append(document.createTextNode(' Náhľad nie je dostupný: doména nemá dostupnú predvolenú stránku.')); }
-                    branches.unshift(branch); selector.add(new Option(`${branch.name} · ${branch.state} (#${branch.id})`, branch.id), 1);
+                        const preview = document.createElement('a'); preview.href = link.url; preview.target = '_blank'; preview.rel = 'noopener'; preview.className = 'btn btn-outline-secondary'; preview.textContent = WJ.translate('branches.merge.preview.js'); result.append(preview);
+                    } catch (error) { result.append(document.createTextNode(' '+branchText('previewUnavailable'))); }
+                    branches.unshift(branch); selector.add(new Option(`${branch.name} · ${stateText(branch.state)} (#${branch.id})`, branch.id), 1);
                     form.querySelector('[type=submit]').disabled = true;
                 } catch (error) { modal.querySelector('.branch-result').textContent = error.message; }
             };

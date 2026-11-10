@@ -84,13 +84,18 @@ export async function openBranchMerge(id, api, screen, invoker) {
         try {
             report = await api(`/${id}${path}`, body);
             prepared = isPreparation;
+            window.dispatchEvent(new CustomEvent('WJ.Branch.updated', {detail: report}));
         } catch (error) { failure(error); }
         finally {
             busy = false;
             content.removeAttribute('aria-busy');
             if (dialog.open && report) {
                 render();
-                if (activeId) dialog.querySelector(`#${CSS.escape(activeId)}`)?.focus();
+                if (activeId) {
+                    const target = dialog.querySelector(`#${CSS.escape(activeId)}`)
+                        || overview.querySelector('#branch-merge-schedule, #branch-merge-publish, #branch-merge-reopen') || close;
+                    target.focus();
+                }
             }
         }
     }
@@ -147,13 +152,15 @@ export async function openBranchMerge(id, api, screen, invoker) {
         const running = report.state === 'MERGING';
         const failed = report.state === 'MERGE_FAILED';
         const draft = report.state === 'DRAFT';
+        const scheduled = report.state === 'SCHEDULED';
+        const attention = report.state === 'NEEDS_ATTENTION';
         status.textContent = `${report.domainName} · ${tr('items', [items.length])} · ${tr('conflicts', [conflicts])}`;
         const toolbar = element('div', 'd-flex flex-wrap gap-2 my-3');
         toolbar.append(button(tr('compare'), compare));
         if (draft) toolbar.append(button(tr('editWeb'), () => edit({type: 'FILE'})));
         const publicItem = items.find(item => item.type === 'DOCUMENT' && item.live?.state === 'ACTIVE');
         if (publicItem) toolbar.append(link(tr('production'), `/showdoc.do?docid=${encodeURIComponent(publicItem.objectKey)}`));
-        if (draft) {
+        if (draft || scheduled || attention) {
             const target = items.find(item => item.type === 'DOCUMENT' && (item.choice === 'LIVE' || !item.writeRequired && !item.conflict ? item.live : item.work)?.state === 'ACTIVE');
             toolbar.append(button(tr('preview'), () => preview(target?.objectKey, toolbar)));
         }
@@ -163,7 +170,27 @@ export async function openBranchMerge(id, api, screen, invoker) {
             publish.disabled = !prepared || !report.ready || !report.preparationHash || conflicts > 0;
             toolbar.append(publish);
         }
+        if (draft || scheduled) {
+            const schedule = button(tr(scheduled ? 'reschedule' : 'schedule'), () => scheduleForm(items));
+            schedule.id = 'branch-merge-schedule';
+            schedule.disabled = !prepared || !report.ready || !report.preparationHash || conflicts > 0;
+            toolbar.append(schedule);
+        }
+        if (scheduled) {
+            const cancel = button(tr('unschedule'), () => confirmState('unschedule', 'unscheduleNote'));
+            cancel.id = 'branch-merge-unschedule'; toolbar.append(cancel);
+        }
+        if (attention) {
+            const reopen = button(tr('reopen'), () => confirmState('reopen', 'reopenNote'));
+            reopen.id = 'branch-merge-reopen'; toolbar.append(reopen);
+        }
         overview.append(toolbar);
+        if (scheduled) {
+            const plan = element('div', 'alert alert-info'); plan.id = 'branch-merge-scheduled';
+            plan.append(element('p', 'fw-bold mb-1', tr('scheduledAt', [formatTerm(report.publishAt)])));
+            plan.append(element('p', 'mb-0', tr('scheduledNote'))); overview.append(plan);
+        }
+        if (attention) overview.append(element('p', 'alert alert-warning', tr('attentionNote')));
         if (failed || running || report.state === 'MERGED') {
             const progress = element('div', `alert ${failed ? 'alert-warning' : 'alert-info'}`);
             progress.id = 'branch-merge-progress';
@@ -225,6 +252,89 @@ export async function openBranchMerge(id, api, screen, invoker) {
         const current = items.find(item => `${item.type}:${item.objectKey}` === selection);
         if (current) overview.append(detail(current));
         if (running) timer = setTimeout(() => perform('/progress'), 1500);
+        else if (scheduled) timer = setTimeout(() => perform('/progress', undefined, prepared), 5000);
+    }
+
+    function formatTerm(value) {
+        return `${new Date(value).toLocaleString(document.documentElement.lang || undefined, {timeZone: report.timeZone})} (${report.timeZone})`;
+    }
+
+    // Native datetime-local fields contain a wall time without an offset. Resolve it in the publisher's zone.
+    function wallTime(value) {
+        const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: report.timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        }).formatToParts(new Date(value));
+        const part = type => parts.find(item => item.type === type).value;
+        return `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}`;
+    }
+
+    function scheduledInstant(value) {
+        const utc = Date.parse(`${value}:00Z`);
+        if (!Number.isFinite(utc)) return null;
+        let instant = utc;
+        for (let i = 0; i < 3; i++) instant += utc - Date.parse(`${wallTime(instant)}:00Z`);
+        // Repeated or missing local times around a DST change need an unambiguous term.
+        if (wallTime(instant) !== value || [-7200000, -3600000, 3600000, 7200000].some(offset => wallTime(instant + offset) === value)) return null;
+        return instant;
+    }
+
+    function closePanel(panel, focusId) {
+        panel.remove(); render(); overview.querySelector(`#${focusId}`)?.focus();
+    }
+
+    function confirmState(action, note) {
+        clearTimeout(timer);
+        const existing = overview.querySelector('#branch-merge-confirmation');
+        if (existing) { existing.focus(); return; }
+        const panel = element('section', 'alert alert-warning');
+        panel.id = 'branch-merge-confirmation'; panel.tabIndex = -1;
+        panel.append(element('h3', 'h5', tr(action)), element('p', '', tr(note)));
+        panel.append(button(tr('cancel'), () => closePanel(panel, `branch-merge-${action}`)), document.createTextNode(' '));
+        const confirm = button(tr(action), async () => {
+            await perform(`/${action}`, {expectedRevision: report.revision});
+            if (report.state === 'DRAFT') await compare();
+        }, true);
+        confirm.id = `branch-merge-${action}-confirm`; panel.append(confirm);
+        overview.prepend(panel); panel.focus();
+    }
+
+    function scheduleForm(items) {
+        clearTimeout(timer);
+        const existing = overview.querySelector('#branch-merge-schedule-form');
+        if (existing) { existing.querySelector('input').focus(); return; }
+        overview.querySelector('#branch-merge-confirmation')?.remove();
+        const form = element('form', 'pg-branch-merge__schedule alert alert-info');
+        form.id = 'branch-merge-schedule-form';
+        const heading = element('h3', 'h5', tr(report.state === 'SCHEDULED' ? 'reschedule' : 'schedule'));
+        heading.id = 'branch-merge-schedule-title'; form.setAttribute('aria-labelledby', heading.id);
+        const fields = element('div', 'pg-branch-merge__schedule-fields');
+        const label = element('label', 'form-label', tr('publishAt'));
+        const input = element('input', 'form-control'); input.type = 'datetime-local'; input.required = true;
+        input.id = 'branch-merge-publish-at'; input.name = 'publishAt'; input.step = '60'; label.htmlFor = input.id;
+        input.value = wallTime(report.publishAt || Math.ceil((Date.now() + 300000) / 60000) * 60000);
+        const zone = element('p', 'small mb-0', tr('timeZone', [report.timeZone])); zone.id = 'branch-merge-time-zone';
+        input.setAttribute('aria-describedby', `${zone.id} branch-merge-schedule-note`);
+        const feedback = element('p', 'text-danger mb-0'); feedback.id = 'branch-merge-schedule-error'; feedback.setAttribute('role', 'alert');
+        input.addEventListener('input', () => { input.setCustomValidity(''); input.removeAttribute('aria-invalid'); feedback.textContent = ''; });
+        fields.append(label, input, zone);
+        const note = element('p', 'mt-3', tr('scheduleNote', [items.length])); note.id = 'branch-merge-schedule-note';
+        const actions = element('div', 'd-flex flex-wrap gap-2');
+        actions.append(button(tr('cancel'), () => closePanel(form, 'branch-merge-schedule')));
+        const submit = button(tr(report.state === 'SCHEDULED' ? 'reschedule' : 'schedule'), () => {}, true);
+        submit.type = 'submit'; submit.id = 'branch-merge-schedule-confirm'; actions.append(submit);
+        form.append(heading, fields, note, feedback, actions);
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const publishAt = scheduledInstant(input.value);
+            if (publishAt === null || publishAt <= Date.now()) {
+                const message = tr(publishAt === null ? 'invalidWallTime' : 'futureTime');
+                feedback.textContent = message; input.setCustomValidity(message); input.setAttribute('aria-invalid', 'true'); input.reportValidity(); input.focus(); return;
+            }
+            await perform('/schedule', {expectedRevision: report.revision, preparationHash: report.preparationHash, publishAt});
+            if (report.state === 'SCHEDULED') await compare();
+        });
+        overview.prepend(form); input.focus();
     }
 
     function confirmPublish(items, resume) {
@@ -337,7 +447,7 @@ export async function openBranchMerge(id, api, screen, invoker) {
             section.append(actions, element('p', 'small mt-2', tr(item.type === 'GROUP' ? 'editGroupNote' : item.type === 'MEDIA' ? 'editMediaNote' : item.type === 'FILE' ? 'editFileNote' : 'editNote')));
         }
         if (item.type === 'DOCUMENT' && item.live?.state === 'ACTIVE') section.append(link(tr('production'), `/showdoc.do?docid=${encodeURIComponent(item.objectKey)}`));
-        if (report.state === 'DRAFT' && item.type === 'DOCUMENT') section.append(button(tr('preview'), () => preview(item.objectKey, section)));
+        if (['DRAFT', 'SCHEDULED', 'NEEDS_ATTENTION'].includes(report.state) && item.type === 'DOCUMENT') section.append(button(tr('preview'), () => preview(item.objectKey, section)));
         return section;
     }
 
@@ -346,6 +456,6 @@ export async function openBranchMerge(id, api, screen, invoker) {
         report = await api(`/${id}`);
         if (!dialog.open) return;
         render();
-        if (['DRAFT', 'MERGE_FAILED'].includes(report.state)) await compare();
+        if (['DRAFT', 'SCHEDULED', 'MERGE_FAILED'].includes(report.state)) await compare();
     } catch (error) { failure(error); }
 }
