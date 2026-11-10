@@ -340,6 +340,7 @@ Scenario('XSS zranitelnost', ({I, DT, DTE}) => {
     I.say("Overenie v audite");
 
     I.amOnPage("/admin/v9/apps/audit-search/");
+    I.waitForVisible("#datatableInit_wrapper div.dt-filter-logType button.btn-outline-secondary", 20);
     DT.filterSelect("logType", "MEDIA");
     DT.filterContains("description", "^CREATE:");
     DT.waitForLoader();

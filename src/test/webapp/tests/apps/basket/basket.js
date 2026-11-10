@@ -313,9 +313,9 @@ function modifyBasket(I, nameProduct, action, selector = 'td > a.newWindow') {
 }
 
 function checkBasketSmallBox(I, expectedNumOfItems, expectedTotalPrice){
-    I.seeElement('.basketSmallBox')
-    I.waitForText(`${expectedNumOfItems}`,'.basketSmallBox .basketSmallItems > span');
-    I.see(`${expectedTotalPrice}\u00A0€`,'.basketSmallBox .basketSmallPrice > span');
+    I.waitForVisible('.basketSmallBox', 10);
+    I.waitForText(`${expectedNumOfItems}`, 10, '.basketSmallBox .basketSmallItems > span');
+    I.waitForText(`${expectedTotalPrice}\u00A0€`, 10, '.basketSmallBox .basketSmallPrice > span');
 }
 
 async function checkAmountInBasket(I, nameProduct = null, expectedAmount = null){

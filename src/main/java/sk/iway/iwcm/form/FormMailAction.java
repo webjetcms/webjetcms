@@ -226,6 +226,8 @@ public class FormMailAction extends HttpServlet
 			String paramName = entry.getKey();
 			String value = entry.getValue();
 			if (Tools.isEmpty(value)) continue;
+			// An unselected source page must not replace the page ID submitted by the form.
+			if ("useFormDocId".equals(paramName) && Tools.getIntValue(value, -1) < 1) continue;
 			//nastaveny parameter useFormDocId ma prioritu z databazy (lebo WriteTag ho vzdy nastavi podla aktualnej stranky)
 			if (wrapped.hasParameter(paramName)==false || "useFormDocId".equals(paramName))
 			{

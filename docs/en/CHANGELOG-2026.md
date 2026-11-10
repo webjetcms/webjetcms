@@ -16,6 +16,7 @@
 - Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
 - Gallery - method `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` returns processing result of type `int` instead of `void`: `0` on success, otherwise error code. After the update, it is necessary to recompile dependent Java code and JSP files, for example by cleaning the working folder of a specific application in Tomcat (#371).
 - Multi-step forms - methods `validateStep` and `runStepInterceptor` of the [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) interface receive a new parameter `FormSettingsEntity formSettings` instead of `formName`. If you use your own Java class for processing forms, you need to modify it and recompile it. Settings no longer need to be loaded by form name, but you will get it directly (#364).
+- Multi-step forms - field identifier is now generated from the name with HTML code removed (only text is used). If you have HTM formatting used in the field name for radio groups, then re-save **all its options**. Also update the conditions and references to the changed identifiers (#396).
 
 ### Home screen
 
@@ -148,6 +149,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multi-step forms - an optional **Help** field has been added to the editor of each item after the field name. It supports multi-line formatted text and more extensive HTML content. It is displayed after the field name in the form via the `${hint}` tag and is also transferred when copying the item (#396).
+- Easy form and multi-step forms - single-line field name and explanation editor does not allow headings, lists, or line breaks. Inserted text and HTML are converted to a single line, preserving highlighting, colors, and links (#396).
 - Form Settings - added **Optional Fields** tab with fields A–F. Fields are also available in the Form Simple editor and via `FormSettingsEntity`. In the HTML of the translation keys, you can use [`${settings.*}`](redactor/apps/formsimple/README.md#fields-from-form-settings) tags for A–F, email settings, redirects, file limits, and appearance. They are also supported by the preview and email appearance of multi-step forms. A–F and the text before and after the email are enabled by HTML (#364).
 - Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.multistep.form.back_button` (#osk782).
 - Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
@@ -331,6 +334,11 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Multi-step forms - the item identifier is generated from the field name text without HTML tags so that name formatting does not affect the identifier (#396).
+- Multi-step forms - when an item, step, or form is deleted, the corresponding display conditions and obligations are also deleted. Conditions for already deleted items do not block the deletion of the fields they referenced (#395).
+- Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
+- Page Builder - inserted cards will receive their own ID even when copied before initialization is complete, so that their links do not link to the original block.
+- Data tables - entering the ID will open the record even after previous filtering without results.
 - Websites - fixed [export to ZIP archive](redactor/webpages/import-export.md) for images inserted via `/thumb/` that were not originally added to the export (#389).
 - Web pages - the insert image dialog limits file selection to images, videos, and audio files, even in the Files folder. Unsupported types recognized by the browser will be rejected before submission. Additionally, the server will validate the extension before saving (#375).
 - Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the page is opened (#372).
@@ -728,6 +736,9 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Database - fixed generation of SQL conditions `IN` and `NOT IN` with a large number of values ​​by dividing the lists into smaller parts. Fixed errors when exceeding the limit of 1000 values ​​in the Oracle database, for example when loading the page history or working with an extensive folder tree. The maximum number of values ​​in one part is determined by the configuration variable `dbInClauseMaxItems` (default 1000, in Oracle no more than 1000).
+- Web pages - fixed limiting search and replace in folder names to the selected folder tree and setting the parent when fixing erroneously deleted folders during moving a page to the trash (#390).
+- Event Calendar - fixed filtering by multiple perex groups when setting `perexGroupUseJoin=true` without duplicate events. Fixed limit on number of results also for Oracle and Microsoft SQL (#390).
 - Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
 - Cluster - optimized writing of changes in the cluster when starting a new node (#337).
 - Redis - improved transfer of information about the uploaded file in the session (#342).

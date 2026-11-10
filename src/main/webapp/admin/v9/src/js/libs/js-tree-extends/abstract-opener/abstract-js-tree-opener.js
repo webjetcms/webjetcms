@@ -513,8 +513,8 @@ export default class AbstractJsTreeOpener {
             }
 
             //console.log("bindEvents 2, id=", id, "settings=", settings, "aids=", settings?.aIds, "property=", !settings.aIds.hasOwnProperty(id));
-            if (Tools.empty(settings?.aIds) && !settings.aIds.hasOwnProperty(id)) {
-                Tools.log('info', self.selfName(), `Settings aIds empty or settings.aIds.hasOwnProperty(id) false`);
+            if (settings?.aIds == null) {
+                Tools.log('info', self.selfName(), `Settings aIds are not available`);
                 return;
             }
             /**

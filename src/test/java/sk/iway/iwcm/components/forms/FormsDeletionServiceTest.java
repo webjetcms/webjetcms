@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 import org.springframework.data.jpa.domain.Specification;
 
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -67,6 +68,7 @@ class FormsDeletionServiceTest {
         cloud = mockStatic(CloudToolsForCore.class);
         cloud.when(CloudToolsForCore::getDomainId).thenReturn(DOMAIN);
         constants = mockStatic(Constants.class);
+        constants.when(() -> Constants.getString("DocTools.removeCharsDir")).thenReturn("[^a-zA-Z/_0-9.=\\-]");
         init = mockStatic(InitServlet.class);
         cache = mockStatic(MultistepFormsService.class);
         FormsEntity header = new FormsEntity();
@@ -144,6 +146,37 @@ class FormsDeletionServiceTest {
         cache.verify(() -> MultistepFormsService.clearValidationFieldsCache(NAME, DOMAIN));
         Prop prop = mock(Prop.class);
         assertEquals("success", result.notification(prop).getType());
+    }
+
+    /** Condition owner IDs are read before deletion so both condition caches can be evicted, including orphan owners. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void clearsConditionCachesBeforeRemovingFormStructure(boolean archived) {
+        if (archived) archiveHeader();
+        when(conditions.findConditionOwnerIds(NAME, DOMAIN)).thenReturn(List.of(101L, 102L));
+        doAnswer(call -> {
+            when(conditions.findConditionOwnerIds(NAME, DOMAIN)).thenReturn(List.of());
+            return null;
+        }).when(conditions).deleteAllByFormNameAndDomainId(NAME, DOMAIN);
+        Cache conditionCache = mock(Cache.class);
+        try (MockedStatic<Cache> caches = mockStatic(Cache.class)) {
+            caches.when(Cache::getInstance).thenReturn(conditionCache);
+
+            DeletionResult result = service.delete(archived ? 20L : 10L, archived);
+
+            assertTrue(result.settingsDeleted());
+            assertFalse(result.cleanupFailed());
+            var order = inOrder(conditions, conditionCache, items, steps);
+            order.verify(conditions).findConditionOwnerIds(NAME, DOMAIN);
+            order.verify(conditions).deleteAllByFormNameAndDomainId(NAME, DOMAIN);
+            for (long ownerId : List.of(101L, 102L)) {
+                order.verify(conditionCache).removeObject("multistep_form.conditions." + DOMAIN + "." + ownerId + ".VISIBILITY", true);
+                order.verify(conditionCache).removeObject("multistep_form.conditions." + DOMAIN + "." + ownerId + ".REQUIREMENT", true);
+            }
+            order.verify(items).deleteAllByFormNameAndDomainId(NAME, DOMAIN);
+            order.verify(steps).deleteAllByFormNameAndDomainId(NAME, DOMAIN);
+            verifyNoMoreInteractions(conditions, conditionCache);
+        }
     }
 
     /** Deleting an archive never removes the settings or structure of an existing active form. */
@@ -309,6 +342,17 @@ class FormsDeletionServiceTest {
         assertFalse(FormsDeletionService.usesForm("!INCLUDE(other.Component, formName=autotest-form)!", NAME));
         assertFalse(FormsDeletionService.usesForm("<p>autotest-form</p>", NAME));
         assertFalse(FormsDeletionService.usesForm(null, NAME));
+    }
+
+    /** FormSimple stores the normalized display name as the key for both supported include formats. */
+    @ParameterizedTest
+    @ValueSource(strings = {"/components/formsimple/form.jsp", "sk.iway.iwcm.components.formsimple.FormSimpleApp"})
+    void preservesSimpleFormReferencedByDisplayName(String component) {
+        assertTrue(FormsDeletionService.usesForm("!INCLUDE(" + component + ", formName=Formulár ľahko)!", "formular-lahko"));
+        String include = "!INCLUDE(" + component + ", formName=&quot;Formulár ľahko&quot;)!";
+        assertTrue(FormsDeletionService.usesForm(include, "formular-lahko"));
+        assertFalse(FormsDeletionService.usesForm(include, "formular-lahko-2"));
+        assertTrue(FormsDeletionService.usesForm("!INCLUDE(" + component + ", formName=&quot;&quot;)!", "form-simple"));
     }
 
     private void verifyResponseResult(DeletionResult result) {

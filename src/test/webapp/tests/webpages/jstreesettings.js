@@ -146,29 +146,29 @@ Scenario("delete folder structure @singlethread", ({ I }) => {
     I.deleteFolderStructure(randomNumber);
 });
 
-Scenario('zobrazenie web stranok-rozbalenie @singlethread', ({ I }) => {
+Scenario('zobrazenie web stranok-rozbalenie @singlethread', ({ I, Document }) => {
     //single lebo tam moze medzi tym iny test vytvorit priecinok
     //overenie, ze aj defaultne sa nacitaju stranky (ked je rozbalena struktura)
 
     //domenovy selektor
-    I.clickCss("div.js-domain-toggler div.bootstrap-select button");
-    I.wait(1);
-    I.click(locate('.dropdown-item').withText("rozbalenie.tau27.iway.sk"));
-    I.waitForElement("#toast-container-webjet", 10);
-    I.clickCss(".toastr-buttons button.btn-primary");
+    Document.switchDomain("rozbalenie.tau27.iway.sk");
+    I.waitForText("Test rozbalenia podadresarov", 10, "#SomStromcek");
 
     //cisty stav
     I.say("cisty stav");
     setSettings(I);
-    I.dontSeeElement("#docId-9768_anchor");
+    // Auto-expansion runs on the initial root load, with no remembered folder.
+    I.waitForFunction(() => window.jQuery.active === 0, [], 20);
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.waitForText("Podadresár A", 10, "#SomStromcek");
+    I.dontSeeElement("#docId-9768_anchor");
     I.see("Test rozbalenia podadresarov", "#datatableInit");
     I.dontSee("Jet portal 4 - testovacia stranka", "#datatableInit")
 
     //zobrazenie stranok
     I.say("zobrazenie stranok");
     setSettings(I, ["showpages"]);
-
+    I.waitForFunction(() => window.jQuery.active === 0, [], 20);
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.waitForElement("#docId-9768_anchor");
     I.waitForText("Podadresár A", 10, "#SomStromcek");

@@ -333,26 +333,28 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
     I.say("Test validations");
         I.clickCss("input#f1-radiogroup-2-1[value='two']");
         waitForVisible(I, "input#f1-telefon-1", 5);
+        // Empty optional values are valid; use a non-empty value that fails the phone regex.
+        I.fillField("input#f1-telefon-1", "invalid");
         I.clickCss("button[type='submit']");
-        I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
+        I.waitForText("Hodnota (invalid) pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
         I.fillField("input#f1-menopriezvisko-1", "Tester_1");
         waitForVisible(I, "input#f1-adresa-1", 5);
         I.clickCss("button[type='submit']");
-        I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
+        I.waitForText("Hodnota (invalid) pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
         I.fillField("input#f1-menopriezvisko-1", "Tester_2");
         waitForVisible(I, "input#f1-adresa-1", 5);
         I.clickCss("button[type='submit']");
-        I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
+        I.waitForText("Hodnota (invalid) pre pole Telefónne číslo je neplatná", 5);
         I.waitForText("Adresa - povinné pole", 5);
 
         I.fillField("input#f1-telefon-1", "0123456789");
         I.clickCss("button[type='submit']");
         I.waitForText("Adresa - povinné pole", 5);
-        I.dontSee("Hodnota () pre pole Telefónne číslo je neplatná");
+        I.dontSee("Hodnota (invalid) pre pole Telefónne číslo je neplatná");
 
         I.fillField("input#f1-menopriezvisko-1", "Tester_X");
         waitForInvisible(I, "input#f1-adresa-1", 5);
@@ -393,7 +395,7 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
         <span>[X]</span> <label for="checkboxgroup-1-2">lietadlo</label>
         </div>
         </div><div>
-        <label for="email-1">Email</label> <span>wjmultistep.conditions.user@fexpost.com</span>
+        <label for="email-1">Email</label> <span>${baseUserMail}${TempMail.getTempMailDomain()}</span>
         </div><div>
         <label>Pohlavie</label>
         </div>
@@ -423,7 +425,7 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
         </div></div>  </form>
     `;
 
-    checkEmailWithForm(I, expectedHtml);
+    await checkEmailWithForm(I, expectedHtml);
     TempMail.closeEmail();
     await TempMail.destroyInbox(baseAdminMail);
 });
@@ -440,24 +442,26 @@ Scenario('Check user email', async ({ I, DT, DTE, TempMail }) => {
     await TempMail.destroyInbox(baseUserMail);
 });
 
-function checkEmailWithForm(I, expectedHtml) {
-    I.executeScript(() => {
+async function checkEmailWithForm(I, expectedHtml) {
+    const actualHtml = await I.executeScript(() => {
         const selector = "form[name='formMailForm-multistep_condition_test']";
         const form = document.querySelector(selector);
         return form ? form.outerHTML : null;
-    }).then(actualHtml => {
-        I.say("Compare actual vs expected EMAIL form HTML");
-        //I.say("ACTUAL HTML:\n" + actualHtml);
-        compareTwoHtml(I, actualHtml, expectedHtml);
     });
+    I.say("Compare actual vs expected EMAIL form HTML");
+    await compareTwoHtml(I, actualHtml, expectedHtml);
 }
 
 function compareTwoHtml(I, actualHtml, expectedHtml) {
     const normalize = html =>
         html
+            // Empty hint containers carry no answer. Keep hints that have content.
+            .replace(/<div class="form-hint">\s*<\/div>/g, '')
             .replace(/\s*<br>\s*/gi, '<br>')
             // Remove all HTML attributes from opening tags: <tag attr="x"> -> <tag>
             .replace(/<([a-zA-Z][\w:-]*)(\s[^>]*?)?(\/?)>/g, '<$1$3>')
+            // Mail clients may already have removed the class identifying an empty hint.
+            .replace(/<div>\s*<\/div>/g, '')
             .replace(/\s+/g, ' ')
             .replace(/>\s+</g, '><')
             .trim();
@@ -467,7 +471,7 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
         //I.say("ACTUAL:\n" + normalize(actualHtml));
         //I.say("EXPECTED:\n" + normalize(expectedHtml));
 
-        I.assertEqual(
+        return I.assertEqual(
             normalize(actualHtml),
             normalize(expectedHtml),
             'Form HTML does not match exactly'
