@@ -1,8 +1,9 @@
+const { openHistory, deleteHistory } = require('../../../pages/ai-chat-history');
+
 Feature('ai.ai-chat');
 
 const modal = '#admin-quick-search';
 const chatTitle = 'Školenie – autotest';
-const historyButton = `${modal} button[aria-controls="admin-ai-chat-history"]`;
 const filesButton = `${modal} button[aria-controls="admin-ai-chat-files"]`;
 const chatModel = "gpt-6.1-sol";
 
@@ -10,18 +11,6 @@ Before(({ I }) => {
     //use tester3 for AI Chat tests because there will not be history for this user
     I.relogin('tester3');
 });
-
-/** Opens history regardless of the user's saved sidebar preference. */
-async function openHistory(I) {
-    await I.waitForElement('.ai-chat-host__history', 20);
-    if (await I.grabNumberOfVisibleElements('.ai-chat-host__history') === 0) {
-        await I.waitForVisible(historyButton, 20);
-        await I.clickCss(historyButton);
-    }
-    await I.waitForVisible('button.ai-chat-host__history-action', 20);
-    I.click('button.ai-chat-host__history-action');
-    await I.waitForVisible('.ai-chat-host__history-search input.form-control', 20);
-}
 
 Scenario('AI Chat documentation screenshots', async ({ I, Document }) => {
     I.amOnPage('/admin/v9/');
@@ -44,7 +33,7 @@ Scenario('AI Chat documentation screenshots', async ({ I, Document }) => {
     I.waitForInvisible(`${modal} .btn-ai-chat-stop`, 120);
     I.waitForVisible(`${modal} .ai-chat-assistant .ai-chat-message-actions button`, 10);
 
-    await openHistory(I);
+    await openHistory(I, modal);
     I.fillField('#admin-ai-chat-history-search', chatTitle);
     I.waitForText(chatTitle, 20, '.ai-chat-host__history-item');
     I.clickCss(`${modal} .md-quick-search__input-row`);
@@ -76,7 +65,7 @@ Scenario('AI Chat editor documentation screenshots', async ({ I, DTE, Document }
     Document.screenshot('/redactor/ai/chat/chat-editor.png');
 
     //delete this thread after taking the screenshot
-    await deleteHistory(I, "Napíš dvojvetovú");
+    await deleteHistory(I, "Napíš dvojvetovú", '#toast-container-ai');
 
     I.clickCss('#toast-container-ai .toast-close-button');
     DTE.cancel();
@@ -88,28 +77,8 @@ Scenario('Cleanup AI Chat documentation conversation', async ({ I }) => {
     I.clickCss('button.js-search-toggler');
     I.waitForVisible(modal, 10);
     I.clickCss(`${modal} [data-scope="aiChat"]`);
-    await deleteHistory(I, chatTitle);
+    await deleteHistory(I, chatTitle, modal);
 });
-
-async function deleteHistory(I, chatTitle) {
-    await openHistory(I);
-    I.fillField('.ai-chat-host__history-search input.form-control', chatTitle);
-    I.waitForResponse(response => response.url().includes('/admin/rest/ai/chat/threads?')
-        && response.url().includes('query=') && response.status() === 200, 20);
-    I.waitForFunction(([title]) => {
-        const titles = Array.from(document.querySelectorAll('.ai-chat-host__history-item .ai-chat-host__history-title'));
-        return titles.every(item => item.textContent.startsWith(title));
-    }, [chatTitle], 20);
-    const items = await I.grabNumberOfVisibleElements('.ai-chat-host__history-item');
-    for (let index = 0; index < items; index++) {
-        const remove = locate('.ai-chat-host__history-item').withText(chatTitle).find('button[aria-label]').first();
-        const label = await I.grabAttributeFrom(remove, 'aria-label');
-        I.amAcceptingPopups();
-        I.click(remove);
-        if (label.startsWith('Vymazať:')) I.acceptPopup();
-        I.waitForFunction(([expected]) => document.querySelectorAll('.ai-chat-host__history-item').length === expected, [items - index - 1], 30);
-    }
-}
 
 Scenario('logout', async ({ I }) => {
     I.logout();

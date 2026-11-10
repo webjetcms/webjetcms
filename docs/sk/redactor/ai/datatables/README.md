@@ -157,15 +157,31 @@ Nemusíte upravovať celý obsah stránky. Asistent pracujúci s `PageBuilder` p
 
 ## Režim čet
 
-Asistent s typom požiadavky **Čet** otvorí rozhovor, v ktorom môžete zadanie postupne spresňovať. Dostupný je pri textových poliach, v editore stránky aj v PageBuilderi podľa nastavenia asistenta. Odpoveď sa zobrazí v čete a obsah editora zmeníte až vlastným potvrdením.
+V PageBuilderi môžete z podkladov vytvoriť stránku a potom ju upravovať v tom istom rozhovore. Ak chcete rozhovor neskôr otvoriť z histórie, novú stránku najprv uložte a znova otvorte v editore. Pri novej, ešte neuloženej stránke je čet dočasný (neuloží sa do histórie). Odporúčame vám teda novú stránku najskôr uložiť až potom upravovať jej text pre zachovanie histórie.
 
-Pod dokončenou odpoveďou nájdete ikony **Pridať**, **Nahradiť obsah** a **Kopírovať**. Pri označenom texte sa namiesto nahradenia celého obsahu ponúkne **Nahradiť označený text**. Názov tlačidla sa zobrazí v bubline po prejdení myšou alebo zameraní klávesnicou. Po vložení môžete použiť **Zrušiť vloženie**, pokiaľ ste obsah medzitým ďalej neupravili.
+V paneli nástrojov kliknite na ikonu AI a vyberte asistenta **Webový dizajnér (PageBuilder)**. Ikonou plus **Nahrať súbor** priložte podklad. Môže to byť PDF s textovou vrstvou, dokument Word (DOCX) alebo prezentácia PowerPoint (PPTX). Do správy napíšte napríklad „Podľa PDF vytvor stránku kaderníckeho salónu s úvodným blokom, službami a otváracími hodinami.“ Odošlite správu.
 
-![Čet pri textovom poli s tlačidlami na vloženie odpovede](../chat/chat-editor.png)
+![Zadanie pre webového dizajnéra s priloženým PDF salónu](pb-chat-prompt.png)
 
-V PageBuilderi môže asistent pripraviť aj HTML bloky. Vložíte ich rovnakými tlačidlami pod odpoveďou a ďalšie úpravy zadáte novou správou. Zatvorenie okna AI zachová rozhovor, zatvorenie samotného editora ho ukončí. Čet pri poli sa neukladá do histórie rýchleho vyhľadávania.
+Po odoslaní správy asistent pripraví HTML bloky. Keď odpoveď dokončí, na karte **Návrh obsahu** sa automaticky otvorí **Náhľad**. Ikonami **Desktop**, **Tablet** a **Mobil** si skontrolujte, ako sa bloky zobrazia na rôznych obrazovkách. Tlačidlom **Maximalizovať okno** zväčšíte náhľad na celú plochu četu. Klávesom **Esc** sa vrátite k odpovedi.
 
-Podrobnosti práce s výberom, kontextom a ukladaním sú v kapitole [Čet pri poli a v editore stránky](../chat/README.md#čet-pri-poli-a-v-editore-stránky). Na samostatný rozhovor s prílohami použite kartu [AI Čet v rýchlom vyhľadávaní](../chat/README.md#začatie-rozhovoru).
+![Návrh stránky salónu s prepínačmi zariadení a tlačidlami na vloženie blokov](pb-chat-preview.png)
+
+Keď vám návrh vyhovuje, kliknite pod odpoveďou na **Nahradiť obsah**. Až týmto krokom vložíte navrhnuté bloky do stránky. Ak chcete pôvodné bloky ponechať a nové pripojiť na koniec, použite **Pridať**. Tlačidlom **Minimalizovať čet** (mínus vpravo hore) minimalizujete okno četu do malej ikony vpravo dole a môžete pokračovať v práci priamo v stránke.
+
+![Stránka salónu vytvorená z PDF a ikona minimalizovaného četu](pb-chat-success.png)
+
+Kliknutím na ikonu AI v pravom dolnom rohu obnovíte ten istý čet. Prílohu už nemusíte posielať znova. Napíšte napríklad „Zmeň hlavný nadpis na Super Barber Bernolákovo a pridaj blok s tipmi na starostlivosť o vlasy. Vráť celú upravenú stránku.“
+
+![Pokračovanie v čete s požiadavkou na úpravu stránky](pb-chat-edit.png)
+
+Pod novou odpoveďou kliknite na **Nahradiť obsah** a skontrolujte výsledok v PageBuilderi. Ak ste obsah medzitým ručne neupravili, posledný krok môžete vrátiť tlačidlom **Zrušiť vloženie**. Hotovú stránku uložte v editore.
+
+![Upravená stránka s novým nadpisom po druhej správe](pb-chat-edit-success.png)
+
+Pri uloženej stránke a asistentovi OpenAI alebo Gemini s vypnutým dočasným četom nájdete správy aj prílohy cez **História četov** pri tom istom poli stránky. Rozhovor môžete otvoriť aj po zatvorení a opätovnom otvorení editora. Keď ho už nepotrebujete, kliknite pri jeho názve na ikonu koša a potvrďte vymazanie.
+
+Rovnaký režim podporujú aj textové polia a editor stránky podľa nastavenia asistenta. Prácu s výberom textu, prílohami a históriou opisuje kapitola [Čet pri poli a v editore stránky](../chat/README.md#čet-pri-poli-a-v-editore-stránky).
 
 ## Obrázky v stránke
 

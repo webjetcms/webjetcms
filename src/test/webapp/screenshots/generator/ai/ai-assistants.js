@@ -1,3 +1,5 @@
+const { openHistory, deleteHistory } = require('../../../pages/ai-chat-history');
+
 Feature('ai.ai-assistants');
 
 let pageIdText = "16";
@@ -338,37 +340,70 @@ Scenario('ai-assistants empty', async ({ I, DT, DTE, Document }) => {
 
 let originalPageBuilderChatMode;
 
-Scenario('ai-assistants pagebuilder-chat', async ({ I, DT, DTE, Document, i18n }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=34495");
+Scenario('ai-assistants pagebuilder-chat @current', async ({ I, DT, DTE, Document, i18n }) => {
+    const host = '#toast-container-ai';
+    const frame = '#DTE_Field_data-pageBuilderIframe';
+    const input = `${host} .ai-chat-input`;
+    const replace = `${host} .ai-chat-message-actions button[data-ai-action="replace"]`;
+    const chatTitle = 'Salón Línia ' + I.getRandomText();
+    const edit = 'Zmeň hlavný nadpis na Super Barber Bernolákovo a pridaj blok s tipmi na starostlivosť o vlasy. Vráť celú upravenú stránku.';
+
+    // A saved page gives the conversation a persistent history. Discard the editor changes afterwards.
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
     DT.waitForLoader();
     originalPageBuilderChatMode = await I.executeScript(() => WJ.getAdminSetting('editorTypeForced') || '');
-    I.click(DT.btn.add_button);
+    Document.setEditorMode('pageBuilder');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=' + pageIdPageBuilder);
     DTE.waitForEditor();
     I.resizeWindow(1440, 1000);
-    I.clickCss("#pills-dt-datatableInit-content-tab");
-    DTE.waitForCkeditor();
-    I.clickCss('#DTE_Field_data-editorTypeSelector button');
-    I.click(locate('.dropdown-item').withText('Page Builder'));
-    I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 10);
+    I.clickCss('#pills-dt-datatableInit-content-tab');
     DTE.waitForCkeditor();
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
     I.clickCss("span.cke_button_icon.cke_button__aibutton_icon");
     I.switchTo();
     I.waitForVisible("#toast-container-ai > div.toast-info", 10);
     I.click(locate('button.btn-ai-action').withText(i18n.get("Web Designer (PageBuilder)")).withChild(locate('span.provider').withText(gemini)));
-    I.waitForVisible("#toast-container-ai .ai-chat-input", 10);
-    I.fillField("#toast-container-ai .ai-chat-input", "Ukážka autotest: vytvor jednoduchý úvodný PageBuilder blok pre školenie WebJET CMS. Len nadpis a jedna veta, bez obrázkov.");
-    I.clickCss("#toast-container-ai .btn-ai-chat-send");
-    I.waitForVisible('#toast-container-ai .ai-chat-message-actions button[data-ai-action="replace"]', 120);
-    I.clickCss('#toast-container-ai .ai-chat-message-actions button[data-ai-action="replace"]');
-    I.waitForText("Zrušiť vloženie", 10, "#toast-container-ai .ai-chat-toolbar");
-    I.clickCss("#toast-container-ai .toast-close-button");
-    I.waitForInvisible("#toast-container-ai", 10);
-    I.switchTo("#DTE_Field_data-pageBuilderIframe");
-    I.waitForText("WebJET", 10);
+    I.waitForEnabled(`${host} .btn-ai-chat-attach`, 10);
+    I.attachFile(`${host} input[type="file"]`, 'screenshots/generator/ai/salon-linia.pdf');
+    I.waitForText('salon-linia.pdf', 10, `${host} .ai-chat-composer`);
+    I.fillField(input, `${chatTitle}: Podľa PDF vytvor novú stránku salónu s úvodným blokom, službami a otváracími hodinami.`);
+    Document.screenshot('/redactor/ai/datatables/pb-chat-prompt.png');
+
+    I.clickCss(`${host} .btn-ai-chat-send`);
+    I.waitForVisible(replace, 180);
+    I.waitForVisible(`${host} .ai-chat-assistant iframe`, 10);
+    Document.screenshot('/redactor/ai/datatables/pb-chat-preview.png');
+    I.clickCss(replace);
+    I.clickCss(`${host} .ai-chat-minimize`);
+    I.waitForVisible('.ai-chat-restore', 10);
+    I.switchTo(frame);
+    I.waitForText('Línia', 10);
     I.scrollPageToTop();
     I.switchTo();
-    Document.screenshotElement("#datatableInit_modal .modal-content", "/redactor/ai/chat/chat-pagebuilder.png");
+    Document.screenshot('/redactor/ai/datatables/pb-chat-success.png');
+
+    I.clickCss('.ai-chat-restore');
+    I.waitForText('salon-linia.pdf', 10, `${host} .ai-chat-user`);
+    I.fillField(input, edit);
+    Document.screenshot('/redactor/ai/datatables/pb-chat-edit.png');
+    I.clickCss(`${host} .btn-ai-chat-send`);
+    const editedPage = locate(replace).at(2);
+    I.waitForVisible(editedPage, 180);
+    I.click(editedPage);
+    I.clickCss(`${host} .ai-chat-minimize`);
+    I.switchTo(frame);
+    I.waitForText('Super Barber Bernolákovo', 10);
+    I.scrollPageToTop();
+    I.switchTo();
+    Document.screenshot('/redactor/ai/datatables/pb-chat-edit-success.png');
+
+    I.clickCss('.ai-chat-restore');
+    await openHistory(I, host);
+    I.waitForText(chatTitle, 20, `${host} .ai-chat-host__history-item`);
+    I.click(locate(`${host} .ai-chat-host__history-select`).withText(chatTitle));
+    I.waitForText(edit, 20, `${host} .ai-chat-user`);
+    await deleteHistory(I, chatTitle, host);
+    I.clickCss(`${host} .toast-close-button`);
     DTE.cancel();
     I.wjSetDefaultWindowSize();
 });

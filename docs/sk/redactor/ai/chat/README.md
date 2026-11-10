@@ -118,7 +118,7 @@ Po vložení odpovede sa v lište četu zobrazí **Zrušiť vloženie**. Vráti 
 
 V PageBuilderi môže odpoveď obsahovať aj HTML bloky. Ich pridanie alebo nahradenie sa vykoná rovnakými tlačidlami pod odpoveďou. Ďalšie úpravy zadávate novou správou v čete. Zmeny stránky nakoniec uložte obvyklým tlačidlom editora.
 
-![Blok školenia vložený z odpovede asistenta do PageBuildera](chat-pagebuilder.png)
+![Stránka kaderníckeho salónu vložená z odpovede asistenta do PageBuildera](../datatables/pb-chat-success.png)
 
 Pri uloženom zázname otvoríte ikonou **História četov** rozhovory patriace k rovnakému poľu toho istého záznamu. Napríklad história poľa obsahu stránky nezobrazí rozhovory k jej názvu ani k obsahu inej stránky. Zoznam zahŕňa čety rôznych asistentov pre toto pole; môžete v ňom vyhľadávať, otvoriť starší rozhovor a pokračovať v ňom. Aj pri otvorenej staršej odpovedi zostávajú dostupné tlačidlá na vloženie obsahu.
 
