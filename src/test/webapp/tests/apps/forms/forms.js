@@ -333,32 +333,17 @@ Scenario("odhlasenie", ({ I }) => {
 Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
     I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko");
 
-    DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-2-"+randomNumber);
-    I.see(randomNumber);
-    I.see("Záznamy 1 až 1 z 1");
-
-    //oznac zaznam a zmaz ho
-    I.clickCss("#formDetailDataTable tbody tr:nth-child(1) td.dt-select-td");
-    I.click("button.buttons-remove");
-    I.waitForElement("#formDetailDataTable_modal");
-    DTE.save();
-
-    DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-"+randomNumber);
-    I.see(randomNumber);
-
-    I.see("Záznamy 1 až 1 z 1");
-
-    //zmaz cely formular
-    I.amOnPage("/apps/form/admin/");
-    DT.filterEquals("formName", "formular-lahko");
-
-    I.clickCss("#formsDataTable tbody tr:nth-child(1) td.dt-select-td");
-    I.click("button.buttons-remove");
-    I.waitForElement("#formsDataTable_modal");
-    DTE.save();
-
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
-    I.see("Záznamy 0 až 0 z 0");
+    // The EML scenario uses the same published form. Delete only this run's two submissions.
+    for (const suffix of [randomNumber2, randomNumber]) {
+        DT.filterEquals("col_meno-a-priezvisko", "Form-autotest-" + suffix);
+        I.see("Form-autotest-" + suffix, "#formDetailDataTable tbody");
+        I.see("Záznamy 1 až 1 z 1", "#formDetailDataTable_wrapper .dt-info");
+        I.clickCss("#formDetailDataTable tbody td.dt-select-td");
+        I.click("button.buttons-remove", "#formDetailDataTable_wrapper");
+        DTE.waitForEditor("formDetailDataTable");
+        DTE.save("formDetailDataTable", true);
+        I.see("Záznamy 0 až 0 z 0", "#formDetailDataTable_wrapper .dt-info");
+    }
 });
 
 Scenario("domainId overenie zobrazenia zoznamu", ({ I, DT, Document }) => {

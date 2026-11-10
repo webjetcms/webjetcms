@@ -121,7 +121,7 @@ Scenario('Render the complete widget catalogue on desktop and mobile', async ({ 
     I.dontSeeElementInDOM('.md-dashboard__legacy');
     I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
     I.dontSeeElementInDOM('[data-widget-type="sessions"]');
-    I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__title-link[href="/admin/v9/webpages/web-pages-list/"]');
+    I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__title-link[href="/admin/v9/webpages/web-pages-list/#pills-changes"]');
     I.dontSeeElement('[data-widget-type="recent-pages"] .md-dashboard-widget__more');
     I.assertEqual(await I.grabTextFrom('[data-widget-type="traffic"] .md-dashboard-widget__metric-label'),
         await I.executeScript(() => WJ.translate('admin.dashboard.trafficSessions.js', 7)), 'Traffic descriptions must include the selected number of days.');

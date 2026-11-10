@@ -495,6 +495,7 @@ Scenario('Redirect cleaning preview and execution @singlethread @screenshot', as
 
     I.say("Create actionable and ignored redirects");
     I.amOnPage("/admin/v9/settings/redirect/");
+    I.waitForVisible("#redirectTable_wrapper button.buttons-create", 20);
     DT.waitForLoader();
     createRedirect(I, DTE, prefix + "-old", prefix + "-old-first");
     createRedirect(I, DTE, prefix + "-old", prefix + "-old-final");
