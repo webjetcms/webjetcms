@@ -18,6 +18,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -27,8 +29,10 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.filebrowser.FbrowserController;
+import sk.iway.iwcm.system.elfinder.FilePropertiesDTO;
+import sk.iway.iwcm.system.elfinder.FilePropertiesRestController;
 
-/** Verifies that legacy rename operations preserve private chat files and ordinary file management. */
+/** Verifies generic renames and the private-path restriction at the file-properties endpoint. */
 class AiChatRenameSecurityTest {
 
     private static final String CHAT_ROOT = "/files/protected/ai-chat";
@@ -58,14 +62,14 @@ class AiChatRenameSecurityTest {
         Constants.setServletContext(originalContext);
     }
 
-    /** Rejects moving an ordinary file into private storage without changing either file. */
+    /** Internal rename operations can work with chat files without feature-specific restrictions. */
     @Test
-    void rejectsPrivateDestination() throws IOException {
+    void genericRenameCanTargetChatStorage() throws IOException {
         Path source = path("/files/protected/document.txt");
         Files.writeString(source, "ordinary file");
-        assertFalse(Tools.renameFile(source.toString(), path(HISTORY).toString()));
-        assertEquals("ordinary file", Files.readString(source));
-        assertEquals("private history", Files.readString(path(HISTORY)));
+        assertTrue(Tools.renameFile(source.toString(), path(HISTORY).toString()));
+        assertFalse(Files.exists(source));
+        assertEquals("ordinary file", Files.readString(path(HISTORY)));
     }
 
     /** Keeps ordinary sibling files renameable. */
@@ -79,7 +83,7 @@ class AiChatRenameSecurityTest {
         assertEquals("ordinary file", Files.readString(renamedFile));
     }
 
-    /** Rejects renaming a parent of private chats before audit or metadata updates. */
+    /** Rejects a directly submitted chat filename before audit or metadata updates. */
     @Test
     void legacyPropertiesRejectPrivateRenameWithoutSideEffects() throws IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -90,9 +94,9 @@ class AiChatRenameSecurityTest {
         user.setAdmin(true);
         request.getSession().setAttribute(Constants.USER_KEY, user);
         EditForm form = new EditForm();
-        form.setDir("/files");
-        form.setOrigFile("protected");
-        form.setFile("protected-copy");
+        form.setDir(CHAT_ROOT + "/7/42/934be8ec-6b59-4cbe-9575-a1a69f943dea");
+        form.setOrigFile("ai_chat.json");
+        form.setFile("renamed.json");
 
         try (var audit = mockStatic(Adminlog.class); var documents = mockStatic(DocDB.class);
              var database = mockStatic(DBPool.class)) {
@@ -103,10 +107,22 @@ class AiChatRenameSecurityTest {
         }
 
         assertEquals("private history", Files.readString(path(HISTORY)));
-        assertFalse(Files.exists(path("/files/protected-copy")));
+        assertFalse(Files.exists(path(form.getDir() + "/renamed.json")));
     }
 
     private Path path(String virtualPath) {
         return root.resolve(virtualPath.substring(1));
+    }
+
+    /** The modern properties endpoint rejects a directly submitted chat path before saving. */
+    @Test
+    void propertiesEndpointRejectsChatPaths() {
+        FilePropertiesDTO entity = new FilePropertiesDTO();
+        entity.setDirPath(CHAT_ROOT + "/7/42/934be8ec-6b59-4cbe-9575-a1a69f943dea");
+        entity.setOriginalFileName("ai_chat.json");
+        entity.setFileName("renamed.json");
+        var controller = new FilePropertiesRestController(new MockHttpServletResponse());
+        var error = org.junit.jupiter.api.Assertions.assertThrows(ResponseStatusException.class, () -> controller.beforeSave(entity));
+        assertEquals(HttpStatus.FORBIDDEN, error.getStatusCode());
     }
 }

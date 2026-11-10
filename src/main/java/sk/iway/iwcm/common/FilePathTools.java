@@ -172,11 +172,6 @@ public class FilePathTools
 	 */
 	public static boolean writeFileOut(IwcmFile f, HttpServletRequest req, HttpServletResponse res)
 	{
-        if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(new File(f.getPath()))) {
-            res.setHeader("Cache-Control", "no-store");
-            res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return true;
-        }
 		if (f.exists() && f.isFile())
 		{
 			if (f.getName().toLowerCase().endsWith(".jsp") || f.getName().toLowerCase().endsWith(".class"))

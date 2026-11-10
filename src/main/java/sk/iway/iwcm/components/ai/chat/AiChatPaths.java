@@ -7,8 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Locale;
 
-import sk.iway.iwcm.Tools;
-
 /** Keeps private chat files out of generic download and file-management routes. */
 public final class AiChatPaths {
     // /files is shared through NFS in clustered installations; generic file routes must not expose this subtree.
@@ -36,16 +34,6 @@ public final class AiChatPaths {
         if (isPrivate(file.getPath())) return true;
         try {
             return isPrivate(file.getCanonicalPath());
-        } catch (IOException exception) {
-            return true;
-        }
-    }
-
-    public static boolean containsPrivateTree(File file) {
-        if (isPrivate(file)) return true;
-        try {
-            File root = new File(Tools.getRealPath(ROOT));
-            return root.exists() && root.getCanonicalFile().toPath().startsWith(file.getCanonicalFile().toPath());
         } catch (IOException exception) {
             return true;
         }

@@ -5,7 +5,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +42,7 @@ import com.webjetcms.ai.AiResponseDeletion;
 import com.webjetcms.ai.TokenUsage;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.components.ai.chat.AiChatFiles;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
@@ -385,6 +388,85 @@ class AiChatServiceTest {
         verify(aiClient).deleteResponse("openai", "response-one", config);
         verify(aiClient, times(2)).deleteResponse("openai", "response-two", config);
         assertTrue(store.list(scope, 0).items().isEmpty());
+    }
+
+    /** Retention removes whole conversations and attachments, preserving recently used chats. */
+    @Test
+    void retentionUsesConversationActivityAndRetriesProviderFailures() throws Exception {
+        var old = prepare(null, null);
+        execute(old);
+        String id = old.turn().thread().getId();
+        Path directory = root.resolve("7/42").resolve(id);
+        Files.writeString(directory.resolve("1.txt"), "old attachment");
+        ageConversation(id);
+        var recent = prepare(null, null);
+        execute(recent);
+        Path recentAttachment = root.resolve("7/42").resolve(recent.turn().thread().getId()).resolve("1.txt");
+        Files.writeString(recentAttachment, "old attachment in an active conversation");
+        Files.setLastModifiedTime(recentAttachment, java.nio.file.attribute.FileTime.fromMillis(1000));
+        when(aiClient.deleteResponse("openai", "response-one", config))
+            .thenThrow(new AiProviderException("openai", "Unavailable")).thenReturn(AiResponseDeletion.DELETED);
+        Date cutoff = new Date(System.currentTimeMillis() - 86_400_000L);
+
+        assertEquals(0, service.deleteOlderThan(scope, cutoff));
+        assertEquals("DELETE_PENDING", store.get(id, scope).thread().getStatus());
+        assertTrue(Files.exists(directory.resolve("1.txt")));
+        // Pending cleanup is retried even though marking deletion updated the conversation timestamp.
+        assertEquals(1, service.deleteOlderThan(scope, cutoff));
+        assertFalse(Files.exists(directory));
+        assertTrue(Files.exists(recentAttachment));
+        assertEquals(recent.turn().thread().getId(), store.list(scope, 0).items().get(0).getId());
+        verify(aiClient, times(2)).deleteResponse("openai", "response-one", config);
+    }
+
+    /** A live attempt and a conversation updated after candidate selection cannot be removed by retention. */
+    @Test
+    void retentionRechecksActivityAndSkipsActiveAttempts() throws Exception {
+        var busy = prepare(null, null);
+        String id = busy.turn().thread().getId();
+        ageConversation(id);
+        Date cutoff = new Date(System.currentTimeMillis() - 86_400_000L);
+        assertTrue(store.olderThan(scope, cutoff).contains(id));
+        assertEquals(0, service.deleteOlderThan(scope, cutoff));
+        assertNotNull(store.get(id, scope).thread().getActiveMessageId());
+        verifyNoInteractions(aiClient);
+
+        store.finish(scope, id, busy.turn().message().getId(), "Answer", "complete", 0, null, null);
+        assertFalse(store.stopOlderThan(id, scope, cutoff));
+        assertNotEquals("DELETE_PENDING", store.get(id, scope).thread().getStatus());
+    }
+
+    /** Retention includes editor contexts and processes more than one history page without skipping entries. */
+    @Test
+    void retentionIncludesAllContextsAndHistoryPages() throws Exception {
+        var context = new AiChatContext("/admin/rest/web-pages", "42", "data");
+        for (int i = 0; i < 32; i++) {
+            var input = new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null,
+                i % 2 == 0 ? context : null, "Original page");
+            var turn = store.begin(input, scope, assistant, "scope");
+            store.finish(scope, turn.thread().getId(), turn.message().getId(), "Answer", "complete", 0, null, null);
+            ageConversation(turn.thread().getId());
+        }
+        var otherDomain = new AiChatStore.Scope(42, 8, "other.test", root);
+        var other = store.begin(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Other", null),
+            otherDomain, assistant, "scope");
+        var otherHost = new AiChatStore.Scope(42, 7, "other-host.test", root);
+        var otherHostTurn = store.begin(new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Other host", null),
+            otherHost, assistant, "scope");
+        ageConversation(otherHostTurn.thread().getId());
+
+        assertEquals(32, service.deleteOlderThan(scope, new Date(System.currentTimeMillis() - 86_400_000L)));
+        assertTrue(store.list(scope, 0).items().isEmpty());
+        assertTrue(store.list(scope, 0, "", context).items().isEmpty());
+        assertNotNull(store.get(other.thread().getId(), otherDomain));
+        assertNotNull(store.get(otherHostTurn.thread().getId(), otherHost));
+    }
+
+    private void ageConversation(String id) throws Exception {
+        Path path = root.resolve("7/42").resolve(id).resolve("ai_chat.json");
+        var document = AiChatFiles.read(path);
+        document.getThread().setUpdated(new Date(1000));
+        AiChatFiles.write(path, document);
     }
 
     /** Field chats honor the HTML preference on retries while preserving literal attachments and the original field snapshot. */

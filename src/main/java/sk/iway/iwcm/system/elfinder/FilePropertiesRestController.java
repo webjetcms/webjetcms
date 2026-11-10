@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -48,7 +49,9 @@ public class FilePropertiesRestController extends DatatableRestControllerV2<File
 
     @Override
     public void beforeSave(FilePropertiesDTO entity) {
-        if(getUser().isFolderWritable(entity.getDirPath() + "/") == false)
+        if (FileBrowserTools.hasForbiddenSymbol(entity.getDirPath() + "/" + entity.getOriginalFileName())
+            || FileBrowserTools.hasForbiddenSymbol(entity.getDirPath() + "/" + entity.getFileName())
+            || getUser().isFolderWritable(entity.getDirPath() + "/") == false)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 

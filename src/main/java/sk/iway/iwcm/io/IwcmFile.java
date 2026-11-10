@@ -19,7 +19,6 @@ import org.apache.commons.lang3.StringUtils;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
@@ -104,7 +103,6 @@ public class IwcmFile
 
 	public boolean createNewFile() throws IOException
 	{
-        AiChatPaths.requireGenericAccess(new File(fileName));
 		if (isDBStorage)
 		{
 			if (isDirectory())
@@ -159,7 +157,6 @@ public class IwcmFile
 
 	public boolean delete()
 	{
-        if (AiChatPaths.containsPrivateTree(new File(fileName))) return false;
 		if (isDBStorage)
 		{
 			if (Tools.isEmpty(fileName))
@@ -302,7 +299,6 @@ public class IwcmFile
 
 	public IwcmFile[] listFiles(final IwcmFileFilter filter)
 	{
-        if (AiChatPaths.isPrivate(new File(fileName))) return new IwcmFile[0];
 		if (!this.isDirectory())
 			return new IwcmFile[0];
 		if (isDBStorage)
@@ -321,7 +317,7 @@ public class IwcmFile
 					if (slashesInParent +1 != slashesInSubfile)
 						continue;
 					IwcmFile f = new IwcmFile(Tools.getRealPath(s));
-					if (!AiChatPaths.isPrivate(new File(f.getPath())) && filter.accept(f))
+					if (filter.accept(f))
 					{
 						resultList.add(f);
 					}
@@ -334,7 +330,7 @@ public class IwcmFile
 			IwcmFile[] files = JarPackaging.listFiles(virtualPath);
 			List<IwcmFile> resultList = new ArrayList<>();
 			for (IwcmFile f : files) {
-				if (!AiChatPaths.isPrivate(new File(f.getPath())) && filter.accept(f)) resultList.add(f);
+				if (filter.accept(f)) resultList.add(f);
 			}
 
 			return resultList.toArray(new IwcmFile[0]);
@@ -347,7 +343,7 @@ public class IwcmFile
 				@Override
 				public boolean accept(File pathname)
 				{
-				if (!AiChatPaths.isPrivate(pathname) && filter.accept(new IwcmFile(pathname)))
+				if (filter.accept(new IwcmFile(pathname)))
 				{
 					return true;
 				}
@@ -569,7 +565,6 @@ public class IwcmFile
 
 	public boolean renameTo(IwcmFile out)
 	{
-        if (AiChatPaths.containsPrivateTree(new File(fileName)) || AiChatPaths.containsPrivateTree(new File(out.getPath()))) return false;
 		if (isDBStorage)
 		{
 		if (out.isDBStorage)

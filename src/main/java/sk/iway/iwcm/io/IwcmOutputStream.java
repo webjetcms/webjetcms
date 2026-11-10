@@ -11,7 +11,6 @@ import java.util.Date;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /**
@@ -38,7 +37,6 @@ public class IwcmOutputStream extends OutputStream
 	// true do db storage
 	public IwcmOutputStream(File file) throws IOException
 	{
-        AiChatPaths.requireGenericAccess(file);
 		useDBStorage = IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(file.getPath()));
 		if (useDBStorage)
 		{
@@ -65,7 +63,6 @@ public class IwcmOutputStream extends OutputStream
 
 	public IwcmOutputStream(String filename, boolean isVirtualPath) throws IOException
 	{
-        AiChatPaths.requireGenericAccess(new File(isVirtualPath ? Tools.getRealPath(filename) : filename));
 		if (isVirtualPath)
 		{
 			useDBStorage = IwcmFsDB.useDBStorage(filename);

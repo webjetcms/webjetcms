@@ -36,6 +36,7 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.FileIndexerTools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.filebrowser.UnusedFile;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -164,7 +165,7 @@ public class UnusedFilesService implements DisposableBean {
             List<UnusedFileDTO> existingFiles = new ArrayList<>();
             for (UnusedFileDTO file : task.files) {
                 try {
-                    if (FileTools.isFile(file.getFullPath())) {
+                    if (!FileBrowserTools.hasForbiddenSymbol(file.getFullPath()) && FileTools.isFile(file.getFullPath())) {
                         existingFiles.add(file);
                     }
                 } catch (Exception ex) {
@@ -271,6 +272,7 @@ public class UnusedFilesService implements DisposableBean {
                 }
 
                 UnusedFileDTO unusedFileDTO = UnusedFileDTO.fromUnusedFile(Long.valueOf(id), unusedFile);
+                if (FileBrowserTools.hasForbiddenSymbol(unusedFileDTO.getFullPath())) continue;
                 if (FileTools.isFile(unusedFileDTO.getFullPath()) == false) {
                     continue;
                 }

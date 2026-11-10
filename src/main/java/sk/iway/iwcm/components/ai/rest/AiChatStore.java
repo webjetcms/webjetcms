@@ -48,7 +48,7 @@ public class AiChatStore {
         }
 
         /** Resolves trusted deployment links even before the chat storage directory exists. */
-        private static Path storageRoot() {
+        static Path storageRoot() {
             try {
                 return new File(Tools.getRealPath(AiChatPaths.ROOT)).getCanonicalFile().toPath();
             } catch (IOException exception) {
@@ -365,6 +365,46 @@ public class AiChatStore {
             }
             return null;
         });
+    }
+
+    /** Finds retention candidates across all editor contexts without paginating a changing history. */
+    public List<String> olderThan(Scope scope, Date cutoff) {
+        return locked(scope, directory -> {
+            List<String> ids = new ArrayList<>();
+            try (var folders = Files.newDirectoryStream(directory, path -> Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))) {
+                for (Path folder : folders) {
+                    Path path = threadPath(directory, folder.getFileName().toString());
+                    AiChatDocument document = AiChatFiles.read(path);
+                    if (document == null) continue;
+                    validateFile(path, document.getThread());
+                    if (belongsTo(document.getThread(), scope) && retentionCandidate(document.getThread(), cutoff)) {
+                        ids.add(document.getThread().getId());
+                    }
+                }
+            }
+            return ids;
+        });
+    }
+
+    /** Rechecks activity under the owner lock before reserving an inactive conversation for deletion. */
+    public boolean stopOlderThan(String id, Scope scope, Date cutoff) {
+        requireUuid(id);
+        return update(id, scope, false, document -> {
+            if (document == null || !retentionCandidate(document.getThread(), cutoff)) return false;
+            recover(document);
+            AiChatThread thread = document.getThread();
+            if (thread.getActiveMessageId() != null) return false;
+            thread.setStopRequested(true);
+            if (!"DELETE_PENDING".equals(thread.getStatus())) {
+                thread.setStatus("DELETE_PENDING");
+                thread.setUpdated(new Date());
+            }
+            return true;
+        });
+    }
+
+    private static boolean retentionCandidate(AiChatThread thread, Date cutoff) {
+        return "DELETE_PENDING".equals(thread.getStatus()) || thread.getUpdated().before(cutoff);
     }
 
     public String claimDeletion(String id, Scope scope) {

@@ -318,6 +318,21 @@ public class AiChatService implements DisposableBean {
         return cleanup(id, scope);
     }
 
+    /** Removes inactive conversations older than the cutoff and retries pending deletions in this owner scope.
+     * @return number of conversations whose remote responses and local files were removed
+     */
+    public int deleteOlderThan(Scope scope, Date cutoff) {
+        int deleted = 0;
+        for (String id : store.olderThan(scope, cutoff)) {
+            try {
+                if (store.stopOlderThan(id, scope, cutoff) && cleanup(id, scope).deleted()) deleted++;
+            } catch (RuntimeException exception) {
+                Logger.error(AiChatService.class, "Chat " + id + ": retention cleanup failed", exception);
+            }
+        }
+        return deleted;
+    }
+
     private Deletion cleanup(String id, Scope scope) {
         // Claim deletion under the store lock, then release it before making remote calls.
         String claim;

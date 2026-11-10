@@ -1,7 +1,6 @@
 package sk.iway.iwcm.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -20,7 +19,7 @@ import org.springframework.mock.web.MockServletContext;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.io.IwcmFsDB;
 
-/** Verifies private upload protection without changing the shared writer's stream ownership contract. */
+/** Verifies that the shared writer supports internal chat-file updates and preserves stream ownership. */
 class AiChatUploadSecurityTest {
 
     @TempDir
@@ -45,18 +44,17 @@ class AiChatUploadSecurityTest {
         Constants.setServletContext(originalContext);
     }
 
-    /** Rejects private overwrites, preserves history, and closes only inputs owned by the writer. */
+    /** Internal writes can replace chat files and close only inputs owned by the writer. */
     @Test
-    void rejectsPrivateUploadAndPreservesInputOwnership() throws IOException {
+    void writesChatFilesAndPreservesInputOwnership() throws IOException {
         Path history = root.resolve("files/protected/ai-chat/7/42/934be8ec-6b59-4cbe-9575-a1a69f943dea/ai_chat.json");
         Files.createDirectories(history.getParent());
         Files.writeString(history, "private history");
 
         for (boolean closeInput : new boolean[] { true, false }) {
             TrackingInput input = new TrackingInput("replacement");
-            assertThrows(SecurityException.class,
-                () -> IwcmFsDB.writeFiletoDest(input, history.toFile(), input.available(), closeInput));
-            assertEquals("private history", Files.readString(history));
+            IwcmFsDB.writeFiletoDest(input, history.toFile(), input.available(), closeInput);
+            assertEquals("replacement", Files.readString(history));
             assertEquals(closeInput, input.closed);
         }
     }

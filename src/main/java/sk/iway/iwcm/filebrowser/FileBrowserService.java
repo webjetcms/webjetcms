@@ -23,6 +23,7 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.EditorToolsForCore;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -185,6 +186,10 @@ public class FileBrowserService {
 		boolean needRefreshParent = false;
 
 		boolean isProp = "yes".equals(request.getParameter("prop"));
+		if (FileBrowserTools.hasForbiddenSymbol(editForm.getDir() + "/" + editForm.getOrigFile())
+			|| FileBrowserTools.hasForbiddenSymbol(editForm.getDir() + "/" + editForm.getFile())) {
+			return SpringUrlMapping.redirectTo403();
+		}
 
 		//ak treba, presun subor
 		if (editForm.getOrigFile() != null && editForm.getOrigFile().length() > 0 && isProp)
