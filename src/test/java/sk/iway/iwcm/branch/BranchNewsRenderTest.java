@@ -120,6 +120,19 @@ class BranchNewsRenderTest extends BaseWebjetTest {
         open(newBranch("second empty branch"));assertIds(render(a->{}),A,DELETED,MOVED);
     }
 
+    /** P08: the real production renderer remains compatible with the global feature flag off and on. */
+    @ParameterizedTest @ValueSource(booleans={false,true}) void p08ProductionRenderIgnoresUnpublishedBranchRows(boolean enabled) {
+        open(BranchContext.live(DOMAIN,1));
+        Constants.setBoolean("branchesEnabled",enabled);
+        NewsActionBean action=render(a->{a.setPageSize(2);a.setPaging(true);});
+        assertIds(action,A,DELETED);
+        assertEquals(3,action.getPaginator(Prop.getInstance("sk")).get("totalCount"));
+        assertFalse(action.getHtmlOut().contains("Beta WORK"));
+        assertFalse(action.getHtmlOut().contains("Fresh WORK"));
+        assertIds(render(a->{a.setPageSize(2);a.setPaging(true);a.setPage(2);}),MOVED);
+        assertEquals("documents d",BranchSql.documentSource("d").sql());
+    }
+
     /** N03: effective hierarchy and default-page selection are applied before SQL paging. */
     @Test void n03SubgroupsDefaultsAndInvalidRoots() throws Exception {
         Map<String,Object> group=new LinkedHashMap<>(BranchGroupMapper.initialValues(1,DOMAIN));group.put("group_name","New subfolder");group.put("parent_group_id",ROOT);

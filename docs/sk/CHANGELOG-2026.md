@@ -49,13 +49,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
-- Pracovné verzie (POC) - balík možno naplánovať jedným termínom, posunúť alebo odplánovať. Existujúci cron znovu overí práva a konflikty; pri probléme ukáže dôvod zastavenia. Náhľad Noviniek zohľadňuje termín balíka. Funkcia zostáva predvolene vypnutá.
-
-- Pracovné verzie (POC) - pridané porovnanie pôvodnej, produkčnej a pracovnej verzie, výber výsledku konfliktu a ručné publikovanie celého balíka so zachovaním ID. Priebeh ukáže dokončené položky a umožní bezpečné pokračovanie po chybe. Funkcia zostáva predvolene vypnutá; plánovanie termínu patrí do ďalšej etapy.
-
-- Pracovné verzie (POC) - doplnené médiá stránok a izolované nahrávanie, nahradenie, presun a zmazanie jednotlivých súborov vrátane prázdnych adresárov. Náhľad používa administrátorskú cestu `/admin/webpages/branch-preview/` s kontrolami prístupu do administrácie. Galérie zostávajú iba na čítanie; funkcia je predvolene vypnutá.
-
-- Pracovné verzie - pridaná experimentálna editácia, presun, mazanie a vrátenie pracovných zmien stránok a priečinkov so stabilnými ID. Náhľad Noviniek a menu používa pracovný obsah. Funkcia zostáva predvolene vypnutá; publikovanie balíka zatiaľ nie je súčasťou tejto etapy (#58858).
+- [Publikačné balíky (POC)](redactor/webpages/publishing-packages.md) - tím môže pripravovať stránky, priečinky, médiá a súbory v spoločnej pracovnej verzii, skontrolovať menu a Novinky v náhľade, vyriešiť konflikty a publikovať balík ručne alebo v jednom termíne. ID zostávajú zachované; priebeh ukáže zastavenie a umožní overené pokračovanie. Pilot s 20 stránkami a tromi účtami overil aj anonymný verejný výsledok. Funkcia zostáva **predvolene vypnutá** a obmedzená na overený MariaDB/InnoDB profil; úplná legacy regresia má [viditeľné medzery P08](../research/publish-packages/P08-vysledky.md#zostávajúce-povinné-dôkazy-a-hranice). [Návod správcu](admin/setup/publishing-packages.md) opisuje proxy, cron `all-admin`, zapnutie/vypnutie a obnovu rezervovaných ID. Produkčné zapnutie vyžaduje samostatné overenie konkrétneho nasadenia.
 
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 

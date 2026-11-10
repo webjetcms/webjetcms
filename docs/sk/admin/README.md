@@ -2,6 +2,8 @@
 
 Dokumentácia v tejto sekcii je určená pre správcu, ktorý konfiguruje WebJET CMS.
 
+Pre experimentálne [publikačné balíky](setup/publishing-packages.md) je dostupný postup overenia prostredia, konfigurácie proxy/cronu, zapnutia, vypnutia a obnovy zálohy.
+
 ## Dokumentácia na stiahnutie
 
 Túto dokumentáciu si môžete stiahnuť aj v PDF formáte pre možnosť vytlačenia.

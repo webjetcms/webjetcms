@@ -1,6 +1,6 @@
 # Overenie budúcej implementácie
 
-**Aktuálny stav: testovací plán.** Tu uvedené scenáre sa v návrhovej fáze nespúšťali. Overené boli zdrojové integračné body a odkazy dokumentácie, nie fungujúca pracovná vetva.
+Tento dokument zachováva pôvodný testovací plán. Vykonané výsledky T01–T16, N01–N12 a M01–M11, platnosť starších dôkazov a medzery regresie sú v [matici P08](P08-vysledky.md#matica-dôkazov). Samotný riadok plánu nie je dôkazom vykonaného testu.
 
 Použiť reálnu podporovanú databázu, existujúce Java testovacie zázemie a CodeceptJS/Playwright. H2 nie je náhrada za správanie identity, sekvencií, CLOB/UNION alebo transakcií. Čistý merge algoritmus a kanonizáciu možno testovať bez DB.
 

@@ -263,3 +263,7 @@ $(document).ready(function() {
 ```
 
 Takáto inicializácia korektne nastaví počúvanie udalosti stlačenia klávesovej skratky.
+
+## Publikačné balíky
+
+Pri prispôsobovaní šablón a komponentov pre pracovné verzie použite [integračný návod](publishing-packages.md). Obsahuje účinné čítanie, SQL pred count/paging a hranice podporovaných aplikácií.

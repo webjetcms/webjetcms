@@ -29,7 +29,7 @@ import sk.iway.webjet.v9.V9JpaDBConfig;
 /** Real MariaDB manual publication, stale-input checks and checkpoint recovery on isolated P06 data. */
 @EnabledIf("databaseEnabled")
 class BranchMergeTest extends BaseWebjetTest {
-    static boolean databaseEnabled() {return "true".equals(System.getenv("WEBJET_P06_DB")) || "true".equals(System.getenv("WEBJET_P07_DB"));}
+    static boolean databaseEnabled() {return "true".equals(System.getenv("WEBJET_P06_DB")) || "true".equals(System.getenv("WEBJET_P07_DB")) || "true".equals(System.getenv("WEBJET_P08_DB"));}
     static final String DOMAIN="iwcm.interway.sk";
     final BranchMergeService service=new BranchMergeService();
     final BranchStore store=new BranchStore();
@@ -79,7 +79,10 @@ class BranchMergeTest extends BaseWebjetTest {
         assertTrue(user.isAdmin(),"fresh admin");assertTrue(user.isAuthorized(),"fresh authorized");assertTrue(user.isEnabledItem("menuBranches"),"menuBranches enabled");
         RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(bean);
         Constants.setString("clusterMyNodeType","admin");
-        f=create(("true".equals(System.getenv("WEBJET_P07_DB"))?"p07-":"")+"test-"+UUID.randomUUID().toString().substring(0,8),true);
+        String prefix="";
+        if("true".equals(System.getenv("WEBJET_P07_DB")))prefix="p07-";
+        if("true".equals(System.getenv("WEBJET_P08_DB")))prefix="p08-";
+        f=create(prefix+"test-"+UUID.randomUUID().toString().substring(0,8),true);
     }
     @AfterEach void cleanup()throws Exception {
         if(f!=null)try(Connection c=DBPool.getConnection();Statement s=c.createStatement()) {
@@ -99,9 +102,10 @@ class BranchMergeTest extends BaseWebjetTest {
 
     @Test void twentyPagePackagePublishesStableIdsAuthorDatesMediaAndMovedFolder()throws Exception {
         var report=ready();assertEquals(20,report.items().stream().filter(i->i.type().equals("DOCUMENT")).count());
-        assertTrue(report.items().stream().anyMatch(i->i.type().equals("FILE")));
+        assertEquals(Set.of("DOCUMENT","GROUP","MEDIA","FILE"),report.items().stream().map(BranchMergeService.Item::type).collect(java.util.stream.Collectors.toSet()));
         String oldOwner=live(BranchType.DOCUMENT,f.home).toString();
         merge(report,new BranchPublishService());assertEquals("MERGED",detail().state(),detail().lastError());
+        assertTrue(detail().items().stream().allMatch(item->"DONE".equals(item.applyState())),"Every supported type must finish through the shared publication progress");
         assertEquals(oldOwner,live(BranchType.DOCUMENT,f.home).toString(),"Media-only update must not SAVE its older owner");
         assertEquals(f.destination,((Number)live(BranchType.GROUP,f.section).get("parent_group_id")).intValue());
         for(int id:f.pages) {var row=live(BranchType.DOCUMENT,id);assertEquals(1,((Number)row.get("author_id")).intValue());assertEquals(Instant.parse("2020-01-01T12:00:00Z").toEpochMilli(),((java.util.Date)row.get("date_created")).getTime());assertTrue(row.get("title").toString().contains("WORK"));}
@@ -549,6 +553,30 @@ class BranchMergeTest extends BaseWebjetTest {
         merge(ready(),new BranchPublishService(key->{if(key.startsWith("DOCUMENT:")&&completed.incrementAndGet()==10)throw new IllegalStateException("autotest P06 retained halfway for process restart");}));
         var progress=detail();assertEquals("MERGE_FAILED",progress.state());
         Files.writeString(manifest,"branchId="+f.branch+"\ngroupId="+f.root+"\nhomeId="+f.home+"\npageId="+f.pages.get(0)+"\nmediaId="+f.media+"\nnewMediaId="+f.newMedia+"\nfile="+f.file+"\nurl="+f.url+"/\nfirstHistoryCount="+count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0))+"\n");f=null;
+    }
+
+    /** Retains separate pilot data and three scoped editorial identities for the P08 browser walkthrough. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P08_FIXTURE",matches="true") void prepareP08Pilot()throws Exception {
+        Path manifest=Path.of("/tmp/webjet-p08-pilot.properties"),credentials=Path.of("/tmp/webjet-p08-login.properties");
+        assertFalse(Files.exists(manifest),"Reuse the retained P08 pilot; do not replace earlier demos");
+        assertFalse(Files.exists(credentials));
+        // The existing iwcm host is aliased to demo.webjetcms.sk; give this public fixture its own loopback domain.
+        sql("UPDATE branches SET domain_name='127.0.0.1',name='autotest P08 pilot',description='20 pages, three editorial accounts; isolated P08 data' WHERE id="+f.branch);
+        sql("UPDATE `groups` SET domain_name='127.0.0.1' WHERE group_id IN ("+f.root+","+f.section+")");
+        sql("UPDATE branch_groups SET domain_name='127.0.0.1' WHERE branch_id="+f.branch);
+        StringBuilder loginData=new StringBuilder();
+        for(String editor:List.of("a","b","c")) {
+            String login="autotest-p08-"+editor,password=sk.iway.iwcm.users.PasswordSecurity.generatePassword(24),salt=sk.iway.iwcm.users.PasswordSecurity.generateSalt();
+            try(Connection c=DBPool.getConnection();PreparedStatement s=c.prepareStatement("INSERT INTO users(login,password,password_salt,is_admin,authorized,first_name,last_name,email,editable_groups,editable_pages,writable_folders,disabled_items) VALUES (?,?,?,1,1,?,'P08 pilot',?,?, '',?,'')")) {
+                s.setString(1,login);s.setString(2,sk.iway.iwcm.users.PasswordSecurity.calculateHash(password,salt));s.setString(3,salt);
+                s.setString(4,"autotest editor "+editor);s.setString(5,"p08-"+editor+"@example.invalid");s.setString(6,Integer.toString(f.root));s.setString(7,"/files/branch-p06-autotest/*");s.executeUpdate();
+            }
+            loginData.append(editor+".login="+login+"\n"+editor+".password="+password+"\n");
+        }
+        Files.writeString(credentials,loginData);Files.setPosixFilePermissions(credentials,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
+        String data="branchId="+f.branch+"\ngroupId="+f.root+"\nsectionId="+f.section+"\nhomeId="+f.home+"\npageId="+f.pages.get(0)+"\nsecondPageId="+f.pages.get(1)+"\nmediaId="+f.media+"\nnewMediaId="+f.newMedia+"\nurl="+f.url+"/\nfile="+f.file+"\npages="+String.join(",",f.pages.stream().map(String::valueOf).toList())+"\n";
+        Files.writeString(manifest,data);Files.createDirectories(Path.of("build/test-results/p08"));Files.writeString(Path.of("build/test-results/p08/pilot.properties"),data);
+        f=null;
     }
 
     record Fixture(long branch,int root,int section,int destination,int home,List<Integer> pages,int media,int newMedia,int category,int perex,String file,String url) { }
