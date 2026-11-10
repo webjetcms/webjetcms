@@ -210,6 +210,9 @@ export class AiBrowserExecutor {
             //show download confirm dialog
             let availability = await self[apiName].availability(config);
             this._assertActive();
+            if ("unavailable" === availability) {
+                throw new Error("!" + WJ.translate("components.ai_assistants.browser.model_unavailable.js", apiName));
+            }
             //console.log("API", apiName, "availability:", availability, "config=", config);
             if ("downloadable" === availability) {
                 let downloadConfirmed;
@@ -427,8 +430,7 @@ export class AiBrowserExecutor {
         //console.log("Progress: ", progress);
 
         let percent = Math.round(progress.loaded * 100);
-        //skip this values, they are not useful
-        if (percent == 0 || percent == 100) return;
+        if (percent == 0) return;
 
         if (this.editorAiInstance) {
             this.editorAiInstance.setDownloadStatus(percent);

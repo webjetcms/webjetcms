@@ -279,22 +279,55 @@ Don't forget to also set up a [background task](../../apps/semantic-search/READM
 
 ### Browser
 
-AI in the browser is currently a [working standard](https://developer.chrome.com/docs/ai/get-started) created by Google. It is currently supported in Google Chrome using a secure (HTTPS) connection. Once the API is standardized, it is expected to be available in other browsers. You can disable AI in the browser by setting the configuration variable `ai_browserAiEnabled` to `false`, at which point the options will no longer be displayed.
+The **Browser** provider uses [Google Chrome's built-in AI interfaces](https://developer.chrome.com/docs/ai/get-started). Models are downloaded to the user's computer and requests are executed in the browser. You can disable the availability of this provider by setting the configuration variable `ai_browserAiEnabled` to `false`.
 
 To run AI in the browser, you must:
 
 - [HW requirements](https://developer.chrome.com/docs/ai/get-started#hardware) of the computer.
 - The connection to WebJET CMS must be secure (HTTPS protocol used).
 
-If you meet the requirements, we recommend first trying the translation assistant and then the text summarization assistant – these are the simplest services that AI in the browser supports. This will verify the model has been downloaded and installed on your computer and its functionality in the browser.
+#### Enabling the necessary APIs
 
-Some interfaces are [still in experimental mode](https://developer.chrome.com/docs/ai/built-in-apis#api_status). To use them, you need to open the Experiments page in your browser by entering `chrome://flags/#prompt-api-for-gemini-nano` and set the value `Enabled` for items `Prompt API for Gemini Nano`, `Summarization API for Gemini Nano`, `Writer API for Gemini Nano`, `Rewriter API for Gemini Nano`. Then click Restart to restart the browser. We recommend entering the term `gemini` at the top of the page to filter the options and find them easier. Without enabling these options, only the translation and summarization API will be available.
+The availability of individual APIs depends on the version of Chrome; some are [still experimental](https://developer.chrome.com/docs/ai/built-in-apis#api_status). If the API you want is not available, open `chrome://flags/`, find the specific item, and set it to **Enabled**:
 
-![](chrome-ai-settings.png)
+| APIs | Use in WebJET CMS | Setting address |
+| --- | --- | --- |
+| **API Prompt** | Custom assignments for `LanguageModel` | `chrome://flags/#prompt-api` |
+| **Summarizer API** | Text summarization | `chrome://flags/#summarizer-api` |
+| **Writer API** | Creating new text | `chrome://flags/#writer-api` |
+| **Rewriter API** | Rewriting the text, for example into an informal form | `chrome://flags/#rewriter-api` |
 
-You can check the status of AI models by entering the following address into your browser's address bar: `chrome://on-device-internals/`.
+The names may vary between Chrome versions; older versions also used **for Gemini Nano**. After changing, click **Restart**. Save your edits in progress in WebJET CMS before restarting.
 
-Some APIs do not yet support working in all languages, so automatic translation may occur after use. However, the translator also needs to be downloaded when used for the first time, so we recommend that you first try the AI ​​translation tool to install the translator. It can then be used after executing other AI assistants to translate the output text.
+**Do not enable all AI-related experiments.** For normal use of assistants, leave these options at **Default**:
+
+| Experiment | Setting address |
+| --- | --- |
+| **Gemma 4 for Built-in AI** | `chrome://flags/#gemma4-for-built-in-ai` |
+| **Speculative Decoding for Built-in AI** | `chrome://flags/#on-device-model-speculative-decoding` |
+| **Prompt API Tool Usage** | `chrome://flags/#prompt-api-tool-use` |
+
+These experiments may also force a different model or execution pattern for other AI APIs. When tested in **Chrome 157.0.8103.50 on macOS**, Rewriter repeatedly crashed with a combination of these three experiments enabled. After reverting all three to **Default** and restarting Chrome, it started working. The test confirmed this workaround; it did not determine which experiment or combination of experiments was causing the crash.
+
+#### Download and verify functionality
+
+When you first launch the assistant, Chrome may request a model download that is several GB in size. Once the download is complete, the progress view will change to Preparing the model; wait for the request to complete. You can verify the status of the models at `chrome://on-device-internals/`, in the **Broker State** tab. Installed models have a status of **Ready** and a progress of **100%**. It is not necessary to have all the models in the list installed.
+
+You can first try the translation, which will download the required translation model. **Successful translation does not confirm the functionality of Rewriter or other generative APIs**, as they use different models. Therefore, try the desired action separately, for example **Rewrite text to informal form** on a short text.
+
+Some APIs do not support all languages, so WebJET CMS may translate the output afterwards. This translation may also require downloading a translation model on first use.
+
+#### Errors when running the model
+
+The `The device is unable to create a session to run the model. Please check the result of availability() first.` message means that Chrome was unable to establish a session with the model. It can also appear when the model is downloaded and `availability()` returns `available` ; the availability status alone does not confirm a successful launch.
+
+The message `The model process crashed too many times for this version` means that Chrome has blocked the model process after repeated crashes. Follow these steps:
+
+1. Check the three experiments listed and change any **Enabled** to **Default**.
+2. Open `chrome://on-device-internals/`. If Chrome reports that internal diagnostic pages are disabled, enable them via `chrome://chrome-urls/` and then return to diagnostics.
+3. On the **Broker State** tab, check the **Model crash count (current/maximum)**. For example, a value of `6 / 3` means that the crash limit has been exceeded. The **Reset** button will only reset this counter, the installed models will be preserved.
+4. Save your edits and completely quit and restart Chrome. Restarting alone may not reset the counter, and **Reset** alone may not immediately remove the block from the running browser.
+5. Try one short request. If the counter increases again, the model process is crashing again. Look for additional data in the **Event Logs** tab and `chrome://crashes/` ; running the assistant repeatedly will not resolve this condition.
 
 ## Connection
 

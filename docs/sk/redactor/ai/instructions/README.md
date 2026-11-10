@@ -82,6 +82,8 @@ Všimnite si definovanie `output_format`, ktorý definuje vytvorenie 2 sekcií s
 
 ## AI v prehliadači
 
+Pred použitím overte [nastavenie AI v prehliadači](../settings/README.md#prehliadač). Návod uvádza potrebné API, experimenty, ktoré majú zostať na **Default**, aj postup pri zlyhaní modelu.
+
 Písanie inštrukcií pre AI v prehliadači je špecifické podľa [možností dostupného API](https://developer.chrome.com/docs/ai/built-in-apis). Inštrukcia je rozdelená na názov API a následnú konfiguráciu. V odkaze na `MDM` dokumentáciu nájdete podrobné informácie o možnostiach konfigurácie.
 
 Aj keď API podporuje nastavenie jazyka, aktuálne zvyčajne podporuje len anglický jazyk. Do konfigurácie môžete pridať možnosť `"translateOutputLanguage": "autodetect"` pre následné vykonanie prekladu. Hodnota `autodetect` deteguje jazyk pôvodného textu a tento následne použije. Môžete prípadne zadať aj fixnú hodnotu, napr. `sk`, alebo hodnotu `userLng` kde sa jazyk nastaví podľa jazyka aktuálne prihláseného používateľa.

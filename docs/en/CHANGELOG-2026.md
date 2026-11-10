@@ -30,7 +30,7 @@
 
 ![](redactor/admin/search/quick-search.png)
 
-- The new [AI Chat] tab (redactor/admin/search/README.md#ai-chat) in the quick search allows you to chat with an AI assistant without being tied to an open web page. It supports assistant selection, continuous display and pausing of replies, Markdown with tables, and text copying. For saved OpenAI and Gemini conversations, you can add images and documents by dragging anywhere to the chat area, search the history, and download attachments from the **Chat Files** panel. History and attachments are only available to the chat owner in the respective domain. Switching assistants preserves written messages and unsent attachments; you can enlarge or maximize the window. The magnifying glass in the history header displays a search for conversations; you add attachments with the plus icon. The Slovak interface and documentation use the "chat" label (#386).
+- New [AI Chat](redactor/admin/search/README.md#ai-chat) tab in quick search allows you to chat with an AI assistant. It supports assistant selection, continuous display and pausing of replies, Markdown with tables, and text copying. For saved OpenAI and Gemini chats, you can add images and documents by dragging anywhere into the chat area, search the history, and download attachments from the **Chat Files** panel. History and attachments are only available to the chat owner in the respective domain. Switching assistants preserves written messages and unsent attachments; you can zoom in or maximize the window. The magnifying glass in the history header displays chat search; attachments are added with the plus icon. The Slovak interface and documentation use the "chat" label (#386).
 
 ![](redactor/ai/chat/chat-history.png)
 
@@ -53,10 +53,6 @@
 Device tracking can be disabled by setting the configuration variable `adminNewDeviceDetectionEnabled` to false. When logging in, the [approximate location](admin/setup/configuration/dashboard.md#login-approximate-location) is also determined by the IP address, which can be disabled by setting `adminLoginLocationApiKey` to the value `DISABLED`.
 
 ### Websites
-
-- AI Chat by field - added saved history filtered by the same field and record. You can search, open and continue an older conversation even after closing the editor; replies remain available for insertion into the field.
-
-- AI Chat in the field and in the page editor - added image and document upload for OpenAI and Gemini assistants. You can select files with the plus icon, drag and drop into the message, or insert an image from the clipboard; the assistant will process them along with the page content. In case of an invalid or too large attachment, the reason for rejection will also be displayed while the response is being displayed.
 
 - Page editor - new menu [Styles](redactor/webpages/working-in-editor/README.md#working-with-styles-and-text-formatting). It displays active styles with the option to remove them and allows you to select the edited paragraph, column or entire section. For proper functionality, it is necessary to have correctly set [CSS selectors](frontend/page-builder/blocks.md#structure-selectors) and created [additional comments](frontend/examples/template-bare/README.md#searching-and-style-groups) in the CSS file of the website. (#356).
 
@@ -139,6 +135,11 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 - Structure mirroring - the **Show mirroring** option in the tree structure display settings adds [language version links](redactor/webpages/README.md#navigation-between-mirrored-folders) and [warnings about incorrect mappings](redactor/webpages/mirroring/groups.md#warnings-in-tree-structure) to the tree (#370).
 
 ![](redactor/webpages/mirroring/tree-navigation.png)
+
+- AI Chat by field - added saved history filtered by the same field and record. You can search, open and continue an older conversation even after closing the editor; replies remain available for insertion into the field.
+- AI Chat in the field and in the page editor - added image and document upload for assistants with history support. You can select files with the plus icon, drag and drop into the message, or insert an image from the clipboard - the assistant will process them along with the page content (#386).
+
+![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless mode
 
@@ -341,8 +342,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
-- AI Chat - if an error is marked as non-repeatable by the provider, the same request will not be offered to be repeated. This information will be preserved even after restoring the chat history (#386).
-- AI assistants - saving a generated image will only delete temporary files from the same generation. Images from other requests and from other users will be preserved (#58850).
 - Multi-step forms - the item identifier is generated from the field name text without HTML tags so that name formatting does not affect the identifier (#396).
 - Multi-step forms - when an item, step, or form is deleted, the corresponding display conditions and obligations are also deleted. Conditions for already deleted items do not block the deletion of the fields they referenced (#395).
 - Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
@@ -394,7 +393,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ### Safety
 
 - AI assistants - search in statistics and usage graphs only show records and assistants of the current domain (#58850).
-- AI assistants - downloading and saving temporary images only accepts the name of an existing file in the AI ​​folder. Absolute paths, paths to other folders, and symbolic links are rejected (#58850).
 - Websites - deletion checks permissions for all mirrored pages and also requires `deleteDir` for folders. [Unmirroring](redactor/apps/clone-structure/README.md#unmirroring) checks permissions for the entire subtree including configured domain and user group restrictions (#370).
 - Dependency Check - updated libraries `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` with fix `CVE-2026-110879` and `undici 6.28.1 → 6.29.1` with fix `CVE-2026-109383`. Jackson update tightens type checking during polymorphic deserialization; custom integrations using Java class names in JSON need to be verified (#385).
 - Dependency Check - exceptions for `CVE-2026-116802`, `CVE-2026-116803` and `CVE-2026-116804` in `DOMPurify 3.4.16` have been verified and constrained to the exact hash of the supplied `Swagger UI 5.34.0` bundle. The integration handles HTML strings without XHTML mode, `IN_PLACE`, `SAFE_FOR_TEMPLATES` and DOM returns; its hook does not remove nodes. The exceptions confirm the non-use of the affected modes, not a fix for the DOMPurify library (#385).
@@ -753,6 +751,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
 - Cluster - optimized writing of changes in the cluster when starting a new node (#337).
 - Redis - improved transfer of information about the uploaded file in the session (#342).
+- Applications - fixed respecting the `domainName` setting in the `modinfo.properties` file when displaying the left menu and verifying access to the module, including the REST API. In the rights settings, modules are filtered by domain only when separating users by domain (MultiWeb or `usersSplitByDomain=true`), for shared users, module rights from all domains are displayed.
 - Security - updated library `FreeMarker` from version `2.3.34` to `2.3.35`.
 - Security - updated library `Hibernate Validator` from version `6.2.5.Final` to `6.2.6.Final` with fix `CVE-2026-93879`. Maintained compatibility with `javax.validation`.
 - Security - updated administration build dependencies `PostCSS` from version `8.5.12` to `8.5.23` and `source-map-js` from version `1.2.1` to `1.2.2` with fixes `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` and `CVE-2026-93749`.

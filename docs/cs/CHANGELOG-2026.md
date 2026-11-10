@@ -30,7 +30,7 @@
 
 ![](redactor/admin/search/quick-search.png)
 
-- Nová karta [AI Čet](redactor/admin/search/README.md#ai-čet) v rychlém vyhledávání umožňuje rozhovor s AI asistentem bez vazby na otevřenou webovou stránku. Podporuje výběr asistenta, průběžné zobrazování a zastavení odpovědí, Markdown s tabulkami a kopírování textu. Při ukládaných rozhovorech OpenAI a Gemini můžete přidávat obrázky a dokumenty přetažením kamkoli do plochy četu, vyhledávat v historii a stahovat přílohy z panelu **Soubory v četě**. Historie a přílohy jsou dostupné pouze vlastníkovi rozhovoru v příslušné doméně. Přepínání asistentů zachová rozepsané zprávy i neodeslané přílohy; okno můžete zvětšit nebo maximalizovat. Lupa v hlavičce historie zobrazí vyhledávání rozhovorů; přílohy přidáte ikonou plus. Slovenské rozhraní a dokumentace používají označení „čet“ (#386).
+- Nová karta [AI Čet](redactor/admin/search/README.md#ai-čet) v rychlém vyhledávání umožňuje rozhovor s AI asistentem. Podporuje výběr asistenta, průběžné zobrazování a zastavení odpovědí, Markdown s tabulkami a kopírování textu. Při ukládaných rozhovorech OpenAI a Gemini můžete přidávat obrázky a dokumenty přetažením kamkoli do plochy četu, vyhledávat v historii a stahovat přílohy z panelu **Soubory v četě**. Historie a přílohy jsou dostupné pouze vlastníkovi rozhovoru v příslušné doméně. Přepínání asistentů zachová rozepsané zprávy i neodeslané přílohy; okno můžete zvětšit nebo maximalizovat. Lupa v hlavičce historie zobrazí vyhledávání rozhovorů; přílohy přidáte ikonou plus. Slovenské rozhraní a dokumentace používají označení „čet“ (#386).
 
 ![](redactor/ai/chat/chat-history.png)
 
@@ -53,10 +53,6 @@
 Sledování zařízení lze vypnout nastavením konfigurační proměnné `adminNewDeviceDetectionEnabled` na false. Při přihlášení se také zjišťuje [přibližná poloha](admin/setup/configuration/dashboard.md#orientační-poloha-přihlášení) podle IP adresy, vypnout se dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
 
 ### Webové stránky
-
-- AI Čet u pole - přidána ukládaná historie filtrovaná podle stejného pole a záznamu. Starší rozhovor můžete vyhledat, otevřít a pokračovat v něm i po zavření editoru; odpovědi zůstávají dostupné pro vložení do pole.
-
-- AI Čet u pole av editoru stránky - přidáno nahrávání obrázků a dokumentů pro asistenty OpenAI a Gemini. Soubory můžete vybrat ikonou plus, přetáhnout do zprávy nebo vložit obrázek ze schránky; asistent je zpracuje spolu s obsahem stránky. Při neplatné nebo příliš velké příloze se důvod odmítnutí zobrazí i při průběžném zobrazování odpovědi.
 
 - Editor stránek - nová nabídka [Styly](redactor/webpages/working-in-editor/README.md#práce-se-styly-a-formátování-textu). Zobrazuje aktivní styly s možností jejich odebrání a umožňuje vybrat upravovaný odstavec, sloupec či celou sekci. Pro správnou funkčnost je třeba mít správně nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-struktury) a vytvořené [doplňkové komentáře](frontend/examples/template-bare/README.md#vyhledávání-a-skupiny-stylů) v CSS soubor (#356).
 
@@ -139,6 +135,11 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 - Zrcadlení struktury - volba **Zobrazit zrcadlení** v nastavení zobrazení stromové struktury přidává do stromu [odkazy na jazykové verze](redactor/webpages/README.md#prechod-mezi-zrcadlenými-složkami) a [upozornění na chybné mapování](redactor/webpages/mirroring/groups.md#upozornění-ve-stromové-struktuře) (#370).
 
 ![](redactor/webpages/mirroring/tree-navigation.png)
+
+- AI Čet u pole - přidána ukládaná historie filtrovaná podle stejného pole a záznamu. Starší rozhovor můžete vyhledat, otevřít a pokračovat v něm i po zavření editoru; odpovědi zůstávají dostupné pro vložení do pole.
+- AI Čet při poli a v editoru stránky - přidáno nahrávání obrázků a dokumentů pro asistenty s podporou historie. Soubory můžete vybrat ikonou plus, přetáhnout do zprávy nebo vložit obrázek ze schránky - asistent je zpracuje spolu s obsahem stránky (#386).
+
+![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless režim
 
@@ -341,8 +342,6 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
-- AI Čet - při chybě, kterou poskytovatel označí jako neopakovatelnou, se nenabídne opakování stejného požadavku. Tato informace se zachová i po obnovení historie rozhovoru (#386).
-- AI asistenti - uložení vygenerovaného obrázku odstraní pouze dočasné soubory ze stejného generování. Obrázky z jiných požadavků a od ostatních uživatelů zůstanou zachovány (#58850).
 - Vícekrokové formuláře - identifikátor položky se generuje z textu názvu pole bez HTML značek, aby formátování názvu neovlivňovalo identifikátor (#396).
 - Vícekrokové formuláře - při smazání položky, kroku nebo formuláře se odstraní i příslušné podmínky zobrazení a povinnosti. Podmínky již smazaných položek neblokují odstranění polí, na která odkazovaly (#395).
 - Vícekrokové formuláře - pravidla **Povolená hodnota** již neodmítnou prázdné nepovinné pole. U povinného pole se regulární výrazy kontrolují i ​​pro prázdnou hodnotu; při odeslání kroku se zohledňují i ​​podmínky povinnosti (#394).
@@ -394,7 +393,6 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ### Bezpečnost
 
 - AI asistenti - vyhledávání ve statistice a grafy používání zobrazují pouze záznamy a asistenty aktuální domény (#58850).
-- AI asistenti - stahování a uložení dočasných obrázků přijímá pouze název existujícího souboru ve složce AI. Absolutní cesty, přechody do jiných složek a symbolické odkazy jsou odmítnuty (#58850).
 - Webové stránky - mazání ověřuje práva ke všem zrcadleným stránkám au složek vyžaduje i `deleteDir`. [Zrušení zrcadlení](redactor/apps/clone-structure/README.md#zrušení-zrcadlení) kontroluje oprávnění pro celý podstrom včetně nakonfigurovaných omezení domény a uživatelských skupin (#370).
 - Dependency Check - aktualizované knihovny `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizace Jackson zpřísňuje kontrolu typů při polymorfní deserializaci; vlastní integrace používající názvy Java tříd v JSON je třeba ověřit (#385).
 - Dependency Check - výjimky pro `CVE-2026-116802`, `CVE-2026-116803` a `CVE-2026-116804` v `DOMPurify 3.4.16` byly ověřeny a omezeny na přesný hash dodávaného `Swagger UI 5.34.0` bundle. Integrace ošetřuje HTML řetězce bez XHTML režimu, `IN_PLACE`, `SAFE_FOR_TEMPLATES` a zvracení DOM; její hook neodstraňuje uzly. Výjimky potvrzují nepoužití dotčených režimů, nikoli opravu knihovny DOMPurify (#385).
@@ -753,6 +751,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Webové stránky - opraveno zacyklení inicializace složek a kontroly plánovaného publikování při pomalém připojení k databázi (#337).
 - Cluster - optimalizované zapisování změny v clusteru při startu nového uzlu (#337).
 - Redis - zlepšený přenos informace o nahrávaném souboru v session (#342).
+- Aplikace - opraveno respektování nastavení `domainName` v souboru `modinfo.properties` při zobrazení levého menu a ověřování přístupu k modulu včetně REST API. V nastavení práv se moduly filtrují podle domény pouze při oddělení uživatelů podle domén (MultiWeb nebo `usersSplitByDomain=true`), u společných uživatelů se zobrazují práva modulů ze všech domén.
 - Bezpečnost - aktualizovaná knihovna `FreeMarker` z verze `2.3.34` na `2.3.35`.
 - Bezpečnost - aktualizovaná knihovna `Hibernate Validator` z verze `6.2.5.Final` na `6.2.6.Final` s opravou `CVE-2026-93879`. Zachována kompatibilita s `javax.validation`.
 - Bezpečnost - aktualizované závislosti sestavení administrace `PostCSS` z verze `8.5.12` na `8.5.23` a `source-map-js` z verze `1.2.1` na `1.2.2` s opravami `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` a `CVE-2026-93749`.

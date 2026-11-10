@@ -279,22 +279,55 @@ Nezabudnite nastaviť aj [úlohu na pozadí](../../apps/semantic-search/README.m
 
 ### Prehliadač
 
-AI priamo v prehliadači je aktuálne [pripravovaný štandard](https://developer.chrome.com/docs/ai/get-started) vytvorený spoločnosťou Google. Aktuálne je podporovaný v prehliadači Google Chrome za použitia zabezpečeného (HTTPS) spojenia. Po štandardizácii API sa predpokladá, že bude dostupný aj v iných prehliadačoch. Dostupnosť AI v prehliadači môžete vypnúť nastavením konfiguračnej premennej `ai_browserAiEnabled` na hodnotu `false`, kedy sa možnosti prestanú zobrazovať.
+Poskytovateľ **Prehliadač** používa [zabudované AI rozhrania Google Chrome](https://developer.chrome.com/docs/ai/get-started). Modely sa sťahujú do počítača používateľa a požiadavky sa vykonávajú v prehliadači. Dostupnosť tohto poskytovateľa môžete vypnúť nastavením konfiguračnej premennej `ai_browserAiEnabled` na hodnotu `false`.
 
 Pre spustenie AI v prehliadači je potrebné splniť:
 
 - [HW požiadavky](https://developer.chrome.com/docs/ai/get-started#hardware) počítača.
 - Spojenie do WebJET CMS musí byť zabezpečené (použitý protokol HTTPS).
 
-Ak spĺňate požiadavky, odporúčame najskôr vyskúšať asistenta na preklad a následne na sumarizáciu textu – to sú najjednoduchšie služby, ktoré AI v prehliadači podporuje. Tým overíte stiahnutie a inštaláciu modelu na váš počítač a jeho funkčnosť v prehliadači.
+#### Zapnutie potrebných API
 
-Niektoré rozhrania sú [zatiaľ v experimentálnom režime](https://developer.chrome.com/docs/ai/built-in-apis#api_status). Pre ich použitie je potrebné otvoriť v prehliadači stránku Experimenty zadaním adresy `chrome://flags/#prompt-api-for-gemini-nano` a nastaviť hodnotu `Enabled` pre položky `Prompt API for Gemini Nano`, `Summarization API for Gemini Nano`, `Writer API for Gemini Nano`, `Rewriter API for Gemini Nano`. Následne kliknite na Znova spustiť pre reštart prehliadača. Odporúčame na stránke v hornej časti zadať výraz `gemini` pre filtrovanie možností a ich jednoduchšie nájdenie. Bez povolenia týchto možností bude dostupné len API pre preklad a sumarizáciu.
+Dostupnosť jednotlivých API závisí od verzie Chrome; niektoré sú [stále experimentálne](https://developer.chrome.com/docs/ai/built-in-apis#api_status). Ak požadované API nie je dostupné, otvorte `chrome://flags/`, vyhľadajte konkrétnu položku a nastavte ju na **Enabled**:
 
-![](chrome-ai-settings.png)
+| API | Použitie vo WebJET CMS | Adresa nastavenia |
+| --- | --- | --- |
+| **Prompt API** | Vlastné zadania pre `LanguageModel` | `chrome://flags/#prompt-api` |
+| **Summarizer API** | Sumarizácia textu | `chrome://flags/#summarizer-api` |
+| **Writer API** | Vytvorenie nového textu | `chrome://flags/#writer-api` |
+| **Rewriter API** | Prepísanie textu, napríklad do neformálnej podoby | `chrome://flags/#rewriter-api` |
 
-Overiť stav AI modelov môžete zadaním nasledujúcej adresy do riadku prehliadača: `chrome://on-device-internals/`.
+Názvy sa môžu medzi verziami Chrome líšiť; staršie verzie používali aj označenie **for Gemini Nano**. Po zmene kliknite na **Znova spustiť**. Pred reštartom uložte rozpracované úpravy vo WebJET CMS.
 
-Niektoré API zatiaľ nepodporujú prácu vo všetkých jazykoch, preto môže po použití dôjsť k automatickému prekladu. Prekladač je však pri prvom použití potrebné tiež stiahnuť, preto odporúčame ako prvé vyskúšať AI nástroj pre preklad, aby sa prekladač nainštaloval. Následne sa už bude dať použiť aj po vykonaní iných AI asistentov na preklad výstupného textu.
+**Nezapínajte všetky experimenty súvisiace s AI.** Pre bežné používanie asistentov ponechajte tieto voľby na **Default**:
+
+| Experiment | Adresa nastavenia |
+| --- | --- |
+| **Gemma 4 for Built-in AI** | `chrome://flags/#gemma4-for-built-in-ai` |
+| **Speculative Decoding for Built-in AI** | `chrome://flags/#on-device-model-speculative-decoding` |
+| **Prompt API Tool Use** | `chrome://flags/#prompt-api-tool-use` |
+
+Tieto experimenty môžu vynútiť iný model alebo spôsob jeho spúšťania aj pre ostatné AI API. Pri testovaní v **Chrome 157.0.8103.50 na macOS** Rewriter opakovane zlyhával so zapnutou kombináciou týchto troch experimentov. Po návrate všetkých troch na **Default** a reštarte Chrome začal fungovať. Test potvrdil tento postup riešenia; neurčil, ktorý experiment alebo ich kombinácia spôsobovali pád.
+
+#### Sťahovanie a overenie funkčnosti
+
+Pri prvom spustení asistenta môže Chrome vyžiadať stiahnutie modelu s veľkosťou niekoľkých GB. Po dokončení sťahovania sa zobrazenie priebehu zmení na prípravu modelu; počkajte na dokončenie požiadavky. Stav modelov môžete overiť na `chrome://on-device-internals/`, na karte **Broker State**. Nainštalované modely majú stav **Ready** a priebeh **100 %**. Nie je potrebné mať nainštalované všetky modely v zozname.
+
+Ako prvý môžete vyskúšať preklad, ktorý stiahne potrebný prekladový model. **Úspešný preklad nepotvrdzuje funkčnosť Rewriteru ani ostatných generatívnych API**, pretože používajú odlišné modely. Samostatne preto vyskúšajte aj požadovanú akciu, napríklad **Prepísať text do neformálnej podoby** na krátkom texte.
+
+Niektoré API nepodporujú všetky jazyky, preto WebJET CMS môže výstup následne preložiť. Aj tento preklad môže pri prvom použití vyžadovať stiahnutie prekladového modelu.
+
+#### Chyby pri spúšťaní modelu
+
+Hlásenie `The device is unable to create a session to run the model. Please check the result of availability() first.` znamená, že Chrome nedokázal vytvoriť reláciu modelu. Môže sa objaviť aj vtedy, keď je model stiahnutý a `availability()` vracia `available`; samotný stav dostupnosti nepotvrdzuje úspešné spustenie.
+
+Hlásenie `The model process crashed too many times for this version` znamená, že Chrome po opakovaných pádoch zablokoval modelový proces. Postupujte takto:
+
+1. Skontrolujte uvedené tri experimenty a prípadné **Enabled** zmeňte na **Default**.
+2. Otvorte `chrome://on-device-internals/`. Ak Chrome hlási, že interné diagnostické stránky sú vypnuté, povoľte ich cez `chrome://chrome-urls/` a potom sa vráťte do diagnostiky.
+3. Na karte **Broker State** skontrolujte **Model crash count (current/maximum)**. Hodnota napríklad `6 / 3` znamená prekročený limit pádov. Tlačidlo **Reset** vynuluje iba toto počítadlo, nainštalované modely zostanú zachované.
+4. Uložte rozpracované úpravy a Chrome úplne ukončite a znovu spustite. Samotný reštart nemusí vynulovať počítadlo a samotný **Reset** nemusí hneď odstrániť blokovanie z bežiaceho prehliadača.
+5. Vyskúšajte jednu krátku požiadavku. Ak počítadlo znovu rastie, modelový proces opäť padá. Ďalšie údaje hľadajte na karte **Event Logs** a na `chrome://crashes/`; opakované spúšťanie asistenta tento stav nevyrieši.
 
 ## Pripojenie
 
