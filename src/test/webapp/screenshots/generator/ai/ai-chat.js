@@ -13,14 +13,14 @@ Before(({ I }) => {
 
 /** Opens history regardless of the user's saved sidebar preference. */
 async function openHistory(I) {
-    await I.waitForElement('#admin-ai-chat-history', 20);
-    if (await I.grabNumberOfVisibleElements('#admin-ai-chat-history') === 0) {
+    await I.waitForElement('.ai-chat-host__history', 20);
+    if (await I.grabNumberOfVisibleElements('.ai-chat-host__history') === 0) {
         await I.waitForVisible(historyButton, 20);
         await I.clickCss(historyButton);
     }
     await I.waitForVisible('button.ai-chat-host__history-action', 20);
     I.click('button.ai-chat-host__history-action');
-    await I.waitForVisible('#admin-ai-chat-history-search', 20);
+    await I.waitForVisible('.ai-chat-host__history-search input.form-control', 20);
 }
 
 Scenario('AI Chat documentation screenshots', async ({ I, Document }) => {
@@ -59,7 +59,7 @@ Scenario('AI Chat documentation screenshots', async ({ I, Document }) => {
     I.wjSetDefaultWindowSize();
 });
 
-Scenario('AI Chat editor documentation screenshots', ({ I, DTE, Document }) => {
+Scenario('AI Chat editor documentation screenshots', async ({ I, DTE, Document }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=16');
     DTE.waitForEditor();
     I.resizeWindow(1440, 1000);
@@ -73,8 +73,11 @@ Scenario('AI Chat editor documentation screenshots', ({ I, DTE, Document }) => {
     I.clickCss('#toast-container-ai .btn-ai-chat-send');
     I.waitForVisible('#toast-container-ai .ai-chat-assistant .ai-chat-message-actions button', 120);
     I.waitForInvisible('#toast-container-ai .btn-ai-chat-stop', 120);
-    I.moveCursorTo('#toast-container-ai .ai-chat-toolbar');
     Document.screenshot('/redactor/ai/chat/chat-editor.png');
+
+    //delete this thread after taking the screenshot
+    await deleteHistory(I, "Napíš dvojvetovú");
+
     I.clickCss('#toast-container-ai .toast-close-button');
     DTE.cancel();
     I.wjSetDefaultWindowSize();
@@ -85,8 +88,12 @@ Scenario('Cleanup AI Chat documentation conversation', async ({ I }) => {
     I.clickCss('button.js-search-toggler');
     I.waitForVisible(modal, 10);
     I.clickCss(`${modal} [data-scope="aiChat"]`);
+    await deleteHistory(I, chatTitle);
+});
+
+async function deleteHistory(I, chatTitle) {
     await openHistory(I);
-    I.fillField('#admin-ai-chat-history-search', chatTitle);
+    I.fillField('.ai-chat-host__history-search input.form-control', chatTitle);
     I.waitForResponse(response => response.url().includes('/admin/rest/ai/chat/threads?')
         && response.url().includes('query=') && response.status() === 200, 20);
     I.waitForFunction(([title]) => {
@@ -102,7 +109,7 @@ Scenario('Cleanup AI Chat documentation conversation', async ({ I }) => {
         if (label.startsWith('Vymazať:')) I.acceptPopup();
         I.waitForFunction(([expected]) => document.querySelectorAll('.ai-chat-host__history-item').length === expected, [items - index - 1], 30);
     }
-});
+}
 
 Scenario('logout', async ({ I }) => {
     I.logout();
