@@ -425,7 +425,7 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
         </div></div>  </form>
     `;
 
-    checkEmailWithForm(I, expectedHtml);
+    await checkEmailWithForm(I, expectedHtml);
     TempMail.closeEmail();
     await TempMail.destroyInbox(baseAdminMail);
 });
@@ -442,16 +442,14 @@ Scenario('Check user email', async ({ I, DT, DTE, TempMail }) => {
     await TempMail.destroyInbox(baseUserMail);
 });
 
-function checkEmailWithForm(I, expectedHtml) {
-    I.executeScript(() => {
+async function checkEmailWithForm(I, expectedHtml) {
+    const actualHtml = await I.executeScript(() => {
         const selector = "form[name='formMailForm-multistep_condition_test']";
         const form = document.querySelector(selector);
         return form ? form.outerHTML : null;
-    }).then(actualHtml => {
-        I.say("Compare actual vs expected EMAIL form HTML");
-        //I.say("ACTUAL HTML:\n" + actualHtml);
-        compareTwoHtml(I, actualHtml, expectedHtml);
     });
+    I.say("Compare actual vs expected EMAIL form HTML");
+    await compareTwoHtml(I, actualHtml, expectedHtml);
 }
 
 function compareTwoHtml(I, actualHtml, expectedHtml) {
@@ -462,6 +460,8 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
             .replace(/\s*<br>\s*/gi, '<br>')
             // Remove all HTML attributes from opening tags: <tag attr="x"> -> <tag>
             .replace(/<([a-zA-Z][\w:-]*)(\s[^>]*?)?(\/?)>/g, '<$1$3>')
+            // Mail clients may already have removed the class identifying an empty hint.
+            .replace(/<div>\s*<\/div>/g, '')
             .replace(/\s+/g, ' ')
             .replace(/>\s+</g, '><')
             .trim();
@@ -471,7 +471,7 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
         //I.say("ACTUAL:\n" + normalize(actualHtml));
         //I.say("EXPECTED:\n" + normalize(expectedHtml));
 
-        I.assertEqual(
+        return I.assertEqual(
             normalize(actualHtml),
             normalize(expectedHtml),
             'Form HTML does not match exactly'
