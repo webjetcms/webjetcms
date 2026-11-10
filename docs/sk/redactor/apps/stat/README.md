@@ -1,7 +1,5 @@
 # Štatistika
 
-[Mapa kliknutí](./heat-map.md) zobrazuje miesta kliknutí podľa šírky pevného kontajnera alebo presnej šírky okna.
-
 Aplikácia štatistika vám umožňuje zobraziť štatistické informácie o návštevníkoch vášho web sídla. Je dostupná v sekcii Prehľad ľavom menu ako položka Štatistiky.
 
 V aplikácii sa používajú nasledovné výrazy:
@@ -17,8 +15,6 @@ Upozornenie: ukladanie štatistiky je podmienené GDPR súhlasom na ukladanie š
 - krajina je nastavená na neznáma
 
 Sekcia Štatistika využíva externý filter, ktorý je podrobnejšie opísaný tu [Externý filter](./external-filter.md)
-
-[Mapa kliknutí](./heat-map.md) zobrazuje miesta kliknutí na stránkach samostatne podľa šírky okna.
 
 ## Návštevnosť
 
@@ -119,3 +115,9 @@ Zoznam aktuálnych sedení na web stránke, obsahuje aj zoznam neprihlásených 
  Kliknutím na meno používateľa zobrazíte podrobnú štatistiku prihlásení zvoleného používateľa.
 
 ![](logon-current-page.png)
+
+## Mapa kliknutí
+
+Mapa kliknutí zobrazuje miesta, na ktoré návštevníci klikajú, podľa šírky pevného kontajnera alebo presnej šírky okna. Umožňuje porovnať verzie stránky a zistiť počet kliknutí vo vybranej oblasti.
+
+Zapnutie merania a používanie mapy opisuje samostatná dokumentácia [Mapa kliknutí](./heat-map.md).

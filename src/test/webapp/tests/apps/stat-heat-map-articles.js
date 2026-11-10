@@ -1,20 +1,13 @@
 Feature("apps.stat-heat-map-articles");
 
-const groupId = 122825;
-const templateName = "Article-Heatmap";
+const groupId = 123864;
+const templateName = "Article_heatmap";
 const adminUrl = "/apps/stat/admin/heat-map/";
 const contentSelector = "article.ly-content";
 const targetSelector = ["h1", "h2", "h3", "p", "li", "img", "a[href]", ".hm-demo summary", ".hm-demo button.hm-note-toggle"]
     .map(tag => `${contentSelector} ${tag}`).join(", ");
-const widths = [...new Set((process.env.CODECEPT_HEATMAP_WIDTHS || "1280,1366,1440,1536,1920,2560").split(",").map(Number))];
-const visits = Number(process.env.CODECEPT_HEATMAP_VISITS || 5);
-
-if (!widths.length || widths.some(width => !Number.isInteger(width) || width < 360 || width > 2560)) {
-    throw new Error("CODECEPT_HEATMAP_WIDTHS must contain comma-separated integer widths between 360 and 2560.");
-}
-if (!Number.isInteger(visits) || visits < 1 || visits > 100) {
-    throw new Error("CODECEPT_HEATMAP_VISITS must be an integer between 1 and 100 (visits per page at each width).");
-}
+const widths = [1280, 1366, 1440, 1536, 1920, 2560];
+const visits = 5;
 
 Before(({ login }) => {
     login("admin");

@@ -1,7 +1,5 @@
 # Statistika
 
-[Mapa kliknutí](./heat-map.md) zobrazuje místa kliknutí podle šířky pevného kontejneru nebo přesné šířky okna.
-
 Aplikace statistika vám umožňuje zobrazit statistické informace o návštěvnících vašeho web sídla. Je dostupná v sekci Přehled levém menu jako položka Statistiky.
 
 V aplikaci se používají následující výrazy:
@@ -117,3 +115,9 @@ Seznam aktuálních sezení na web stránce, obsahuje také seznam nepřihláše
  Klepnutím na uživatelské jméno zobrazíte podrobnou statistiku přihlášení zvoleného uživatele.
 
 ![](logon-current-page.png)
+
+## Mapa kliknutí
+
+Mapa kliknutí zobrazuje místa, na která návštěvníci klikají, podle šířky pevného kontejneru nebo přesné šířky okna. Umožňuje porovnat verze stránky a zjistit počet kliknutí ve vybrané oblasti.
+
+Zapnutí měření a používání mapy popisuje samostatná dokumentace [Mapa kliknutí](./heat-map.md).
