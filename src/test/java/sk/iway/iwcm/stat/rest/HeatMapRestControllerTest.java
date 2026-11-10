@@ -135,18 +135,15 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
         }
     }
 
-    /** Counts, tiles and their color reference use each version's interval, with one scale across its tiles. */
+    /** Counts, hotspots and tile rendering receive the selected version's interval. */
     @Test
-    void appliesVersionRangeToCountsTilesAndDensity() throws Exception {
+    void appliesVersionRangeToCountsAndTiles() throws Exception {
         HeatMapRestController controller = controller();
         ReportRange version = new ReportRange(RANGE.from() + 1000, RANGE.from() + 2000);
         ReportRange otherVersion = new ReportRange(RANGE.from() + 86400000, RANGE.until());
         when(history.versionRange(eq(123), any(Date[].class), eq(7))).thenReturn(version);
         when(history.versionRange(eq(123), any(Date[].class), eq(8))).thenReturn(otherVersion);
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
-            storage.when(() -> HeatMapStorage.getMaximumDensity("public.example", 123, FROM, TO, 390, DOCUMENT)).thenReturn(5000.0);
-            storage.when(() -> HeatMapStorage.getMaximumDensity("public.example", 123, FROM, FROM, 390, DOCUMENT)).thenReturn(50.0);
-            storage.when(() -> HeatMapStorage.getMaximumDensity("public.example", 123, FROM.plusDays(1), TO, 390, DOCUMENT)).thenReturn(200.0);
             controller.widths(123, "period", 7);
             controller.tile(123, "period", 390, DOCUMENT, 0, 0, 7);
             controller.tile(123, "period", 390, DOCUMENT, 0, 1, 7);
@@ -155,10 +152,10 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
             controller.area(123, "period", 390, DOCUMENT, 10, 20, 110, 220, 7);
             controller.hotspots(123, "period", 390, DOCUMENT, 7);
             storage.verify(() -> HeatMapStorage.getWidths("public.example", 123, FROM, FROM));
-            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, FROM, 390, DOCUMENT, 0, 0, 50.0));
-            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, FROM, 390, DOCUMENT, 0, 1, 50.0));
-            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM.plusDays(1), TO, 390, DOCUMENT, 0, 0, 200.0));
-            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, TO, 390, DOCUMENT, 0, 0, 5000.0));
+            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, FROM, 390, DOCUMENT, 0, 0));
+            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, FROM, 390, DOCUMENT, 0, 1));
+            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM.plusDays(1), TO, 390, DOCUMENT, 0, 0));
+            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, TO, 390, DOCUMENT, 0, 0));
             storage.verify(() -> HeatMapStorage.getAreaCount("public.example", 123, FROM, FROM, 390, DOCUMENT, 10, 20, 110, 220));
             storage.verify(() -> HeatMapStorage.getHotspots("public.example", 123, FROM, FROM, 390, DOCUMENT));
         }
@@ -199,8 +196,7 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
             verify(access).requireDocument(request, 123);
 
             byte[] png = { 1, 2, 3 };
-            storage.when(() -> HeatMapStorage.getMaximumDensity(domain, 123, FROM, TO, 390, DOCUMENT)).thenReturn(100.0);
-            storage.when(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, DOCUMENT, 0, 2, 100.0)).thenReturn(png);
+            storage.when(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, DOCUMENT, 0, 2)).thenReturn(png);
             var tile = controller.tile(123, "period", 390, DOCUMENT, 0, 2, null);
             assertArrayEquals(png, tile.getBody());
             assertEquals(MediaType.IMAGE_PNG, tile.getHeaders().getContentType());

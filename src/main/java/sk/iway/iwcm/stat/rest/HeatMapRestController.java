@@ -202,9 +202,8 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
         access.requireDocument(getRequest(), docId);
         ReportRange range = clickRange(docId, dateRange, versionId);
         String domain = access.currentDomain(getRequest());
-        double maximumDensity = HeatMapStorage.getMaximumDensity(domain, docId, range.firstDay(), range.lastDay(), width, mode);
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.IMAGE_PNG)
-                .body(HeatMapStorage.getTile(domain, docId, range.firstDay(), range.lastDay(), width, mode, tileX, tileY, maximumDensity));
+                .body(HeatMapStorage.getTile(domain, docId, range.firstDay(), range.lastDay(), width, mode, tileX, tileY));
     }
 
     private ReportRange clickRange(int docId, String value, Integer versionId) {

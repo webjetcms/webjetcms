@@ -33,7 +33,6 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
-import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stat.StatWriteBuffer;
 import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.ReportRange;
 import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
@@ -82,12 +81,9 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                 }
                 Connection borrowed = spy(database);
                 doNothing().when(borrowed).close();
-                try (MockedStatic<DBPool> pool = mockStatic(DBPool.class);
-                        MockedStatic<StatNewDB> partitions = mockStatic(StatNewDB.class)) {
+                try (MockedStatic<DBPool> pool = mockStatic(DBPool.class)) {
                     pool.when(DBPool::getConnection).thenReturn(borrowed);
                     pool.when(() -> DBPool.getConnection("iwcm")).thenReturn(borrowed);
-                    partitions.when(() -> StatNewDB.getTableSuffix(eq("stat_clicks"), anyLong(), anyLong()))
-                            .thenReturn(new String[] {"_2026_9", "_2026_10"});
                     HeatMapSchema.upgradeExistingTables();
                     HeatMapSchema.upgradeExistingTables();
                     HeatMapSchema.upgradeClickCounts();

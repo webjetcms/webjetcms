@@ -138,7 +138,7 @@ class HeatMapTrackingServiceTest {
             modes.when(() -> StatisticsMode.forDocument(document)).thenReturn(StatisticsMode.HEATMAP);
             HeatMapTrackingService.receiveCookies(request, response);
             HeatMapTrackingService.receiveCookies(request, response);
-            storage.verify(() -> HeatMapStorage.record(new HeatMapEvent(ID, 123, 390, now, 42, 2500), "public.example"));
+            storage.verify(() -> HeatMapStorage.record(new HeatMapEvent(ID, 123, 390, now, 42, 2500), "PUBLIC.EXAMPLE"));
             assertEquals(1, response.getCookies().length);
             MockHttpServletRequest other = new MockHttpServletRequest("GET", "/untracked.html");
             other.setServerName("other.example");
@@ -167,11 +167,11 @@ class HeatMapTrackingServiceTest {
             browsers.when(() -> BrowserDetector.isStatIpAllowedFast(overflow)).thenReturn(true);
             MockHttpServletResponse overflowResponse = new MockHttpServletResponse();
             HeatMapTrackingService.receiveCookies(overflow, overflowResponse);
-            storage.verify(() -> HeatMapStorage.record(any(HeatMapEvent.class), eq("public.example")), times(16));
+            storage.verify(() -> HeatMapStorage.record(any(HeatMapEvent.class), eq("PUBLIC.EXAMPLE")), times(16));
             storage.verify(() -> HeatMapStorage.record(new HeatMapEvent(String.format("%032x", 0), 123, 390,
-                    now - 18, 42, 2500), "public.example"), never());
+                    now - 18, 42, 2500), "PUBLIC.EXAMPLE"), never());
             storage.verify(() -> HeatMapStorage.record(new HeatMapEvent(String.format("%032x", 17), 123, 390,
-                    now - 1, 42, 2500), "public.example"));
+                    now - 1, 42, 2500), "PUBLIC.EXAMPLE"));
             assertEquals(18, overflowResponse.getCookies().length, "Only received cookie names are expired");
 
             storage.clearInvocations();
@@ -201,12 +201,15 @@ class HeatMapTrackingServiceTest {
                 MockedStatic<Constants> constants = mockStatic(Constants.class)) {
             browsers.when(() -> BrowserDetector.getInstance(request)).thenReturn(browser);
             modes.when(() -> StatisticsMode.forDocument(123)).thenReturn(StatisticsMode.HEATMAP);
+            constants.when(() -> Constants.getString("statHeatMapMainContainerSelector")).thenReturn("[data-name=\"A&B\"]");
             String excludedIpBootstrap = HeatMapTrackingService.bootstrap(request);
             browsers.when(() -> BrowserDetector.isStatIpAllowedFast(request)).thenReturn(true);
             String script = HeatMapTrackingService.bootstrap(request);
             assertEquals(excludedIpBootstrap, script);
             assertTrue(script.contains("src=\"/components/stat/heat-map-tracker.js\""));
             assertTrue(script.contains("data-doc-id=\"123\""));
+            assertTrue(script.contains("type=\"module\""));
+            assertTrue(script.contains("data-container-selector=\"[data-name=&quot;A&amp;B&quot;]\""));
             request.setAttribute(HeatMapTrackingService.PREVIEW_ATTRIBUTE, true);
             assertEquals("", HeatMapTrackingService.bootstrap(request));
             request.removeAttribute(HeatMapTrackingService.PREVIEW_ATTRIBUTE);

@@ -7,14 +7,15 @@ import java.sql.SQLException;
 import java.time.Clock;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.database.SimpleQuery;
 
 /** Compacts completed monthly click tables into the same cells used to render heatmap tiles. */
 public final class HeatMapAggregationCronJob {
@@ -255,12 +256,13 @@ public final class HeatMapAggregationCronJob {
             return 0;
         }
 
-        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        List<Object> parameters = new ArrayList<>();
+        String condition = DB.getInCondition("stat_click_id", ids, parameters);
         try (PreparedStatement update = db.prepareStatement("UPDATE " + table + " SET count=? WHERE stat_click_id=?");
-                PreparedStatement delete = db.prepareStatement("DELETE FROM " + table + " WHERE stat_click_id IN (" + placeholders + ")")) {
+                PreparedStatement delete = db.prepareStatement("DELETE FROM " + table + " WHERE " + condition)) {
             update.setInt(1, (int) weight);
             update.setInt(2, cell.keeper());
-            for (int i = 0; i < ids.size(); i++) delete.setInt(i + 1, ids.get(i));
+            SimpleQuery.bindParameters(delete, parameters.toArray());
             if (update.executeUpdate() != 1 || delete.executeUpdate() != ids.size()) {
                 throw new SQLException("Click rows changed during aggregation of " + table + " at row " + cell.keeper());
             }

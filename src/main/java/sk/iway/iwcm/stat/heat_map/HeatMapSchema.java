@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -16,7 +15,6 @@ import java.util.regex.Pattern;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.stat.StatNewDB;
 
 /** Upgrades existing monthly click tables while preserving their legacy identifiers and inserts. */
 public final class HeatMapSchema {
@@ -34,28 +32,16 @@ public final class HeatMapSchema {
      */
     public static void upgradeExistingTables() throws SQLException {
         Logger.println(HeatMapSchema.class, "Updating stat_clicks columns");
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.YEAR, 1);
-        long to = calendar.getTimeInMillis();
-        calendar.set(Calendar.YEAR, 2000);
-        calendar.set(Calendar.DATE, 1);
-        calendar.set(Calendar.MONTH, Calendar.JANUARY);
-        long from = calendar.getTimeInMillis();
-        String[] suffixes = StatNewDB.getTableSuffix("stat_clicks", from, to);
+        YearMonth lastMonth = YearMonth.now().plusYears(1);
         int databaseType = Constants.DB_TYPE;
         int updated = 0;
 
-        for (int i = 0; i < suffixes.length; i++) {
-            String suffix = suffixes[i];
-            String table = "stat_clicks" + suffix;
-            Logger.println(HeatMapSchema.class, "Updating stat_clicks columns " + (i + 1) + "/" + suffixes.length + " " + suffix);
-            try (Connection connection = DBPool.getConnection(); Statement statement = connection.createStatement()) {
-                try {
-                    statement.executeQuery("SELECT 1 FROM " + table + " WHERE 1=0").close();
-                } catch (SQLException exception) {
-                    if (HeatMapStorage.isMissingTable(exception)) continue;
-                    throw exception;
-                }
+        try (Connection connection = DBPool.getConnection(); Statement statement = connection.createStatement()) {
+            for (YearMonth month : existingMonths(connection)) {
+                if (month.isAfter(lastMonth)) continue;
+                String suffix = HeatMapStorage.suffix(month);
+                String table = HeatMapStorage.TABLE_NAME + suffix;
+                Logger.println(HeatMapSchema.class, "Updating stat_clicks columns " + suffix);
                 executeDdl(statement, "ALTER TABLE " + table + " ADD event_id CHAR(32) NULL", databaseType);
                 executeDdl(statement, "ALTER TABLE " + table + " ADD domain_name VARCHAR(255) NULL", databaseType);
                 String widthDefinition = databaseType == Constants.DB_ORACLE

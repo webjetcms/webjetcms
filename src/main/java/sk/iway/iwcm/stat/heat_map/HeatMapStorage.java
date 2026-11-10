@@ -2,13 +2,10 @@ package sk.iway.iwcm.stat.heat_map;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,7 +14,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.util.HexFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +28,7 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.collections4.map.LRUMap;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
@@ -208,12 +205,12 @@ public final class HeatMapStorage {
                     WidthKey key = new WidthKey(result.getInt(1), HeatMapCoordinateMode.fromDatabase(result.getInt(2)));
                     int sourceWidth = result.getInt(3);
                     if (sourceWidth == 0) sourceWidth = key.width();
-                    counts.computeIfAbsent(key, ignored -> new TreeMap<>()).merge(sourceWidth, result.getLong(4), Long::sum);
+                    counts.computeIfAbsent(key, ignored -> new HashMap<>()).merge(sourceWidth, result.getLong(4), Long::sum);
                 });
         return counts.entrySet().stream().map(entry -> {
             int previewWidth = entry.getValue().entrySet().stream()
-                    .sorted(Map.Entry.<Integer, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
-                    .findFirst().orElseThrow().getKey();
+                    .min(Map.Entry.<Integer, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                    .orElseThrow().getKey();
             long clicks = entry.getValue().values().stream().mapToLong(Long::longValue).sum();
             return new WidthCount(entry.getKey().width(), entry.getKey().mode(), clicks, previewWidth);
         }).sorted(Comparator.comparingLong(WidthCount::clicks).reversed().thenComparingInt(WidthCount::width)
@@ -269,7 +266,7 @@ public final class HeatMapStorage {
                 Integer.toString(width), mode.name(), Integer.toString(tileX), Integer.toString(tileY), Integer.toString(cellSize),
                 Double.toString(maximumDensity));
         Path folder = Path.of(Tools.getRealPath("/WEB-INF/tmp/heat_map/"));
-        Path cached = folder.resolve("tile_" + digest(key) + ".png");
+        Path cached = folder.resolve("tile_" + DigestUtils.sha256Hex(key) + ".png");
         int timeout = Math.max(0, Constants.getInt("statHeatMapImageTimeout", 300));
         try {
             if (timeout > 0 && Files.isRegularFile(cached)
@@ -416,14 +413,6 @@ public final class HeatMapStorage {
 
     private static void validateDates(LocalDate from, LocalDate to) {
         if (from == null || to == null || to.isBefore(from)) throw new IllegalArgumentException("Invalid heatmap date range");
-    }
-
-    private static String digest(String value) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException(exception);
-        }
     }
 
     @FunctionalInterface

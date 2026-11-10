@@ -9,16 +9,18 @@ const { PNG } = require("pngjs");
 const adminPath = path.resolve(__dirname, "../../../main/webapp/apps/stat/admin");
 
 test("container groups restore their offset at the representative viewport and hide mismatched maps", {timeout: 60000}, async t => {
-    const browser = await chromium.launch({headless: true});
+    const browser = await chromium.launch({headless: true, ignoreDefaultArgs: ["--hide-scrollbars"]});
     t.after(() => browser.close());
     const page = await browser.newPage({viewport: {width: 1024, height: 1000}});
     page.setDefaultTimeout(10000);
     const markup = fs.readFileSync(path.join(adminPath, "heat-map-details.html"), "utf8").split('<section id="heatMapViewer"')[1];
     const texts = {loading: "Loading", error: "Error", previewError: "Preview error", clicks: "Clicks",
+        areaLoading: "Counting", areaResult: "Area: {clicks} of {total} clicks", version: "Version", versionA: "Version A", versionB: "Version B",
         container: "Container", window: "Window", containerMissing: "Missing container {width} px",
         empty: "No clicks", emptyWidth: "No clicks at this width", hotspot: "Hotspot {rank}", hotspotsLoading: "Loading hotspots",
         hotspotsError: "Hotspot error", hotspotsTop: "Top {count}: {clicks} clicks · {percent}%",
         hotspotsOther: "Other: {clicks} clicks · {percent}%", hotspotResult: "{name}: {clicks} of {total} clicks · {percent}%"};
+    let versions = [];
     let matching = true;
     let sizing = "max-width:1140px;width:100%";
     const tiles = [];
@@ -28,13 +30,16 @@ test("container groups restore their offset at the representative viewport and h
     await page.route("**/*", async route => {
         const url = new URL(route.request().url());
         if (url.pathname === "/jquery.js") return route.fulfill({contentType: "text/javascript", body: fs.readFileSync(require.resolve("jquery/dist/jquery.min.js"), "utf8")});
+        if (url.pathname === "/components/stat/heat-map-layout.js") return route.fulfill({contentType: "text/javascript",
+            body: fs.readFileSync(path.join(adminPath, "../../../components/stat/heat-map-layout.js"), "utf8")});
         if (/\/heat-map-(viewer|area|hotspots)\.js$/.test(url.pathname)) return route.fulfill({contentType: "text/javascript", body: fs.readFileSync(path.join(adminPath, path.basename(url.pathname)), "utf8")});
         if (url.pathname.endsWith("heat-map.css")) return route.fulfill({contentType: "text/css", body: fs.readFileSync(path.join(adminPath, "heat-map.css"), "utf8")});
         if (url.pathname.endsWith("/widths")) return route.fulfill({json: emptyReport ? [] : [
             {width: 1140, mode: "CONTAINER", clicks: 20, previewWidth: 1369},
             {width: 1140, mode: "DOCUMENT", clicks: 2, previewWidth: 1140}]});
-        if (url.pathname.endsWith("/metadata")) return route.fulfill({json: {title: "Preview", source: "current", tileSize: 1024, clicks: 20,
+        if (url.pathname.endsWith("/metadata")) return route.fulfill({json: {title: "Preview", source: "current", tileSize: 1024, clicks: 20, versions,
             previewWidth: url.searchParams.get("mode") === "CONTAINER" ? 1369 : 1140, containerSelector: ".container"}});
+        if (url.pathname.endsWith("/area")) return route.fulfill({json: {clicks: 5, totalClicks: 20}});
         if (url.pathname.endsWith("/hotspots")) {
             hotspotRequests.push(url);
             if (hotspotFailure) return route.fulfill({status: 500, body: "autotest error"});
@@ -44,7 +49,7 @@ test("container groups restore their offset at the representative viewport and h
             ]}});
         }
         if (url.pathname.endsWith("/html/preview")) return route.fulfill({contentType: "text/html", body:
-            '<!doctype html><meta name="webjet-heatmap-preview" content="11"><style>body{margin:0;background:white}header,nav{top:0;height:64px;background:white}'
+            '<!doctype html><meta name="webjet-heatmap-preview" content="11"><style>html{scrollbar-width:none}body{margin:0;background:white}header,nav{top:0;height:64px;background:white}'
             + 'header{position:fixed;left:20%;width:20%}nav{position:sticky;margin-left:60%;width:20%}.container{' + sizing + ';margin:auto;height:3000px}</style>'
             + '<header></header><nav></nav><div class="' + (matching ? "container" : "changed") + '">Content</div>'});
         if (url.pathname.endsWith("/binary/tile")) {
@@ -52,7 +57,7 @@ test("container groups restore their offset at the representative viewport and h
             return route.fulfill({contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><rect width="100%" height="100%" fill="red"/></svg>'});
         }
         return route.fulfill({contentType: "text/html", body: '<!doctype html><meta charset="UTF-8"><style>.d-none{display:none!important}</style><link rel="stylesheet" href="/apps/stat/admin/heat-map.css"><section id="heatMapViewer"'
-            + markup + '<script src="/jquery.js"></script><script>$.fn.tooltip=function(){return this;};window.WJ={initTooltip(){}};</script>'
+            + markup + '<script src="/jquery.js"></script><script>$.fn.tooltip=function(){return this;};window.WJ={initTooltip(){},formatDateTimeSeconds(value){return String(value);}};</script>'
             + '<script type="module">import {HeatMapViewer} from "/apps/stat/admin/heat-map-viewer.js";new HeatMapViewer(document.getElementById("heatMapViewer"),'
             + JSON.stringify(texts) + ').init();</script>'});
     });

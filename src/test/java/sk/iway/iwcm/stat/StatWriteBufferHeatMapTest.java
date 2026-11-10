@@ -1,6 +1,7 @@
 package sk.iway.iwcm.stat;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -14,6 +15,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,20 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Verifies idempotent event inserts without changing legacy buffer behavior. */
 class StatWriteBufferHeatMapTest extends BaseWebjetTest {
+    /** Buffer keys share equivalent statements while keeping partitions and duplicate policies separate. */
+    @Test
+    void groupsOnlyEquivalentBufferStatements() {
+        Map<UpdateInsertSqlPair, Integer> batches = new HashMap<>();
+        batches.put(new UpdateInsertSqlPair("insert", "_2026_8", true), 1);
+        assertEquals(1, batches.get(new UpdateInsertSqlPair(new String("insert"), "_2026_8", true)));
+        batches.put(new UpdateInsertSqlPair("insert", "_2026_9", true), 2);
+        batches.put(new UpdateInsertSqlPair("insert", "_2026_8", false), 3);
+        batches.put(new UpdateInsertSqlPair(null, "insert"), 4);
+        batches.put(new UpdateInsertSqlPair("update", "insert"), 5);
+        assertEquals(5, batches.size());
+        assertEquals(4, batches.get(new UpdateInsertSqlPair(null, "insert")));
+    }
+
     @Test
     void duplicateClickDoesNotPreventTheFollowingClickFromBeingWritten() throws Exception {
         int originalType = Constants.DB_TYPE;

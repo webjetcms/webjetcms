@@ -30,11 +30,7 @@ export class HeatMapArea {
         });
         layer.addEventListener("pointercancel", () => { this.clear(); this.render(); });
         layer.addEventListener("wheel", event => {
-            if (!this.viewer.selectingArea || event.ctrlKey) return;
-            event.preventDefault();
-            const view = this.preview.nodes.Frame.contentWindow;
-            const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? view.innerHeight : 1;
-            view.scrollBy(event.deltaX * unit, event.deltaY * unit);
+            if (this.viewer.selectingArea) this.preview.scroll(event);
         }, {passive: false});
         this.nodes.ClearArea.addEventListener("click", () => {
             this.clear();

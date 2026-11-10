@@ -19,6 +19,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.stat.BrowserDetector;
 import sk.iway.iwcm.stat.StatisticsMode;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /** Captures immutable click cookies on ordinary requests and supplies a cache-safe tracker bootstrap. */
 public final class HeatMapTrackingService {
@@ -50,7 +51,7 @@ public final class HeatMapTrackingService {
     public static String bootstrap(HttpServletRequest request) {
         if (!isEnabledForRequest(request)) return "";
         int docId = Tools.getIntValue(String.valueOf(request.getAttribute("doc_id")), -1);
-        return "<script id=\"wj-heatmap-tracker\" defer src=\"/components/stat/heat-map-tracker.js\" data-doc-id=\"" + docId
+        return "<script id=\"wj-heatmap-tracker\" type=\"module\" src=\"/components/stat/heat-map-tracker.js\" data-doc-id=\"" + docId
                 + "\" data-cookie-name=\"" + escapeAttribute(Constants.getString("gdprCookieName"))
                 + "\" data-container-selector=\"" + escapeAttribute(Constants.getString("statHeatMapMainContainerSelector"))
                 + "\" data-allow-all=\"" + Constants.getBoolean("gdprAllowAllCookies")
@@ -132,7 +133,7 @@ public final class HeatMapTrackingService {
                     String domain = Constants.getBoolean("multiDomainEnabled") ? Tools.getServerName(request) : "";
                     if (group != null && group.getDomainName().equalsIgnoreCase(domain)
                             && doc.isAvailable() && StatisticsMode.forDocument(doc) == StatisticsMode.HEATMAP) {
-                        HeatMapStorage.record(event, group.getDomainName().toLowerCase(Locale.ROOT));
+                        HeatMapStorage.record(event, group.getDomainName());
                     }
                 }
                 Cookie expired = new Cookie(cookie.getName(), "");
@@ -148,7 +149,6 @@ public final class HeatMapTrackingService {
     }
 
     private static String escapeAttribute(String value) {
-        if (value == null) return "";
-        return value.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;").replace(">", "&gt;");
+        return value == null ? "" : ResponseUtils.filter(value);
     }
 }

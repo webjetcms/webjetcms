@@ -199,9 +199,13 @@ async function checkComparisonGeometry(I, width) {
     // Frame dimensions and CSS transforms settle asynchronously through ResizeObserver.
     I.waitForFunction(([width]) => {
         const prefixes = ["heatMap", "heatMapCompare"];
-        const expectedScale = Math.min(1, ...prefixes.map(prefix => Math.max(1, document.getElementById(prefix + "Viewport").clientWidth - 10) / width));
-        return prefixes.every(prefix => document.getElementById(prefix + "Frame").contentWindow.innerWidth === width
-            && Math.abs(new DOMMatrix(getComputedStyle(document.getElementById(prefix + "Stage")).transform).a - expectedScale) < 0.00001);
+        const fittedWidth = Math.min(width, ...prefixes.map(prefix => document.getElementById(prefix + "Viewport").getBoundingClientRect().width - 10));
+        return prefixes.every(prefix => {
+            const frame = document.getElementById(prefix + "Frame");
+            const renderedWidth = frame.getBoundingClientRect().width;
+            // Fractional pane widths may round down by less than one CSS pixel.
+            return frame.contentWindow.innerWidth === width && renderedWidth <= fittedWidth + 0.01 && renderedWidth >= fittedWidth - 1.01;
+        });
     }, [width], 10);
     const panes = await I.executeScript(() => ["heatMap", "heatMapCompare"].map(prefix => {
         const frame = document.getElementById(prefix + "Frame");

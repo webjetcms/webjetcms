@@ -1,41 +1,7 @@
 import { HeatMapArea } from "./heat-map-area.js";
 import { HeatMapHotspots } from "./heat-map-hotspots.js";
 
-/** Uses the same conservative declaration check as the standalone public-page tracker. */
-function hasFixedPixelWidth(container, property, resolvedWidth) {
-    const doc = container.ownerDocument;
-    const view = doc.defaultView;
-    let found = false;
-    function declaration(style) {
-        const value = style.getPropertyValue(property).trim();
-        if (style.getPropertyValue("all")) return false;
-        if (!value) return true;
-        found ||= Math.abs(parseFloat(value) - resolvedWidth) <= 0.5;
-        return /^\d+(?:\.\d+)?px$/.test(value);
-    }
-    function rules(list) {
-        for (const rule of list) {
-            if (rule.media && !view.matchMedia(rule.media.mediaText).matches) continue;
-            if (rule.constructor.name === "CSSSupportsRule" && !view.CSS.supports(rule.conditionText)) continue;
-            if (rule.selectorText && rule.style && (rule.style.getPropertyValue(property) || rule.style.getPropertyValue("all"))) {
-                if (rule.selectorText.includes("&") || (container.matches(rule.selectorText) && !declaration(rule.style))) return false;
-            }
-            if (rule.styleSheet && !rules(rule.styleSheet.cssRules)) return false;
-            if (rule.cssRules && !rules(rule.cssRules)) return false;
-        }
-        return true;
-    }
-    try {
-        if (!declaration(container.style)) return false;
-        for (const sheet of [...doc.styleSheets, ...(doc.adoptedStyleSheets || [])]) {
-            if (sheet.disabled || (sheet.media.mediaText && !view.matchMedia(sheet.media.mediaText).matches)) continue;
-            if (!rules(sheet.cssRules)) return false;
-        }
-        return found;
-    } catch (error) {
-        return false;
-    }
-}
+import { fixedContainerWidth } from "/components/stat/heat-map-layout.js";
 
 /** Coordinates one or two page previews with shared width, zoom and overlay controls. */
 export class HeatMapViewer {
@@ -110,9 +76,7 @@ export class HeatMapViewer {
         this.nodes.SelectArea.addEventListener("click", () => this.setAreaSelection(!this.selectingArea));
         this.nodes.Hotspots.addEventListener("click", () => {
             this.hotspotsVisible = !this.hotspotsVisible;
-            this.nodes.Hotspots.setAttribute("aria-pressed", String(this.hotspotsVisible));
-            this.nodes.Hotspots.classList.toggle("btn-primary", this.hotspotsVisible);
-            this.nodes.Hotspots.classList.toggle("btn-outline-secondary", !this.hotspotsVisible);
+            this.toggleButton(this.nodes.Hotspots, this.hotspotsVisible);
             this.hotspots.update();
             this.resize();
             this.hotspots.load();
@@ -148,11 +112,15 @@ export class HeatMapViewer {
         return this.comparing ? this.previews : [this.previews[0]];
     }
 
+    toggleButton(button, pressed) {
+        button.setAttribute("aria-pressed", String(pressed));
+        button.classList.toggle("btn-primary", pressed);
+        button.classList.toggle("btn-outline-secondary", !pressed);
+    }
+
     setAreaSelection(enabled) {
         this.selectingArea = enabled;
-        this.nodes.SelectArea.setAttribute("aria-pressed", String(enabled));
-        this.nodes.SelectArea.classList.toggle("btn-primary", enabled);
-        this.nodes.SelectArea.classList.toggle("btn-outline-secondary", !enabled);
+        this.toggleButton(this.nodes.SelectArea, enabled);
         if (!enabled) this.previews.forEach(preview => preview.area.clear());
         this.updateLayers();
     }
@@ -161,9 +129,7 @@ export class HeatMapViewer {
         if (enabled && this.nodes.CompareVersion.options.length < 2) return;
         this.comparing = enabled;
         if (enabled) this.setAreaSelection(false);
-        this.nodes.Compare.setAttribute("aria-pressed", String(enabled));
-        this.nodes.Compare.classList.toggle("btn-primary", enabled);
-        this.nodes.Compare.classList.toggle("btn-outline-secondary", !enabled);
+        this.toggleButton(this.nodes.Compare, enabled);
         this.element.classList.toggle("pg-heatmap-comparing", enabled);
         this.previews[1].element.hidden = !enabled;
         this.previews.forEach((preview, index) => {
@@ -357,9 +323,7 @@ export class HeatMapViewer {
         const previews = this.activePreviews();
         const available = previews.some(preview => preview.frameReady && !preview.previewOnly && preview.layoutValid);
         this.nodes.Visible.disabled = !available;
-        this.nodes.Visible.setAttribute("aria-pressed", String(this.overlayVisible));
-        this.nodes.Visible.classList.toggle("btn-primary", this.overlayVisible);
-        this.nodes.Visible.classList.toggle("btn-outline-secondary", !this.overlayVisible);
+        this.toggleButton(this.nodes.Visible, this.overlayVisible);
         this.nodes.Visible.querySelector(".ti").classList.toggle("ti-eye", this.overlayVisible);
         this.nodes.Visible.querySelector(".ti").classList.toggle("ti-eye-off", !this.overlayVisible);
         this.nodes.SelectArea.disabled = this.comparing || (!available && !this.selectingArea);
@@ -378,8 +342,9 @@ export class HeatMapViewer {
         previews.forEach(preview => { preview.nodes.ScaleSummary.textContent = this.nodes.Scale.selectedOptions[0].textContent; });
         const ready = previews.filter(preview => preview.frameReady);
         if (ready.length === 0) return;
+        // Fit against stable pane bounds; clientWidth changes when scrollbars appear.
         const scale = this.nodes.Scale.value === "fit"
-            ? Math.min(1, ...ready.map(preview => Math.max(1, preview.nodes.Viewport.clientWidth - 10) / preview.width))
+            ? Math.min(1, ...ready.map(preview => Math.max(1, Math.floor(preview.nodes.Viewport.getBoundingClientRect().width) - 10) / preview.width))
             : Number(this.nodes.Scale.value);
         const height = Math.max(1, Math.floor(Math.min(...ready.map(preview => preview.nodes.Viewport.clientHeight - 10)) / scale));
         ready.forEach(preview => preview.resize(scale, height));
@@ -514,6 +479,17 @@ class HeatMapPreview {
         this.scheduleTiles();
     }
 
+    /** Forwards scrolling from interactive overlays to the underlying page. */
+    scroll(event) {
+        if (event.ctrlKey) return;
+        event.preventDefault();
+        const view = this.nodes.Frame.contentWindow;
+        let unit = 1;
+        if (event.deltaMode === 1) unit = 16;
+        else if (event.deltaMode === 2) unit = view.innerHeight;
+        view.scrollBy(event.deltaX * unit, event.deltaY * unit);
+    }
+
     scheduleTiles() {
         if (this.animationFrame) return;
         this.animationFrame = requestAnimationFrame(() => {
@@ -526,24 +502,11 @@ class HeatMapPreview {
     containerOffset(frameWindow) {
         if (this.mode !== "CONTAINER") return 0;
         if (!this.containerSelector) return null;
-        const doc = frameWindow.document.documentElement;
-        if (doc.scrollWidth > doc.clientWidth) return null;
         let containers;
         try { containers = frameWindow.document.querySelectorAll(this.containerSelector); } catch (error) { return null; }
         for (const container of containers) {
             const rect = container.getBoundingClientRect();
-            const style = frameWindow.getComputedStyle(container);
-            const left = rect.left + frameWindow.scrollX;
-            if (rect.height <= 0 || Math.round(rect.width) !== this.groupWidth || style.animationName !== "none"
-                    || Math.abs(left - (doc.clientWidth - rect.width) / 2) > 0.5) continue;
-            const extra = style.boxSizing === "border-box" ? 0 : parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
-                + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
-            const fixed = ["max-width", "width"].some(property => {
-                const value = style.getPropertyValue(property);
-                return value.endsWith("px") && Math.abs(rect.width - parseFloat(value) - extra) <= 0.5
-                    && hasFixedPixelWidth(container, property, parseFloat(value));
-            });
-            if (fixed) return left;
+            if (fixedContainerWidth(container, rect) === this.groupWidth) return rect.left + frameWindow.scrollX;
         }
         return null;
     }

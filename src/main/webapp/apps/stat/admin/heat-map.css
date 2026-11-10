@@ -55,7 +55,8 @@
     background: var(--wj-nice-gray);
     overscroll-behavior: contain;
 }
-.pg-heatmap-stage-size { position: relative; margin: 0 auto; }
+/* Stale overlay bounds must not create scrollbars while the preview resizes. */
+.pg-heatmap-stage-size { position: relative; margin: 0 auto; overflow: hidden; }
 .pg-heatmap-stage { position: relative; transform-origin: top left; background: white; }
 .pg-heatmap-frame { display: block; border: 0; height: 800px; }
 .pg-heatmap-overlay { position: absolute; top: 0; left: 0; overflow: hidden; pointer-events: none; opacity: .65; }
