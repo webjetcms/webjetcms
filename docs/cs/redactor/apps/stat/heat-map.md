@@ -48,6 +48,10 @@ Pokud v těchto dnech nebyla zaznamenána žádná kliknutí, její uložený ob
 
 Šablona, hlavička, patička, nabídky, aplikace a obrázky používají aktuální zdroje. Nejde o historický snímek celého webu. Změny obsahu, pohyblivé prvky a jiná výška okna mohou ovlivnit přesnost pozic. Absolutní poloha Y se nepřepočítává: změna výšky obsahu nad kliknutím může posunout mapu i při stejné šířce kontejneru.
 
+## Nejklikanější oblasti
+
+Tlačítkem <button class="btn btn-sm btn-primary" type="button" title="Oblasti" aria-label="Oblasti"><i class="ti ti-list-numbers" aria-hidden="true"></i></button> zobrazíte nebo skryjete panel s nejvýše pěti nejklikanějšími nepřekrývajícími se oblastmi, jejich počty a podíly kliknutí pro vybranou stránku, období, verzi a šířku mapy. Kliknutím na řádek posunete náhled na oblast a zvýrazníte ji číslovanou značkou. Oblasti se určují podle blízkosti uložených kliknutí. Při porovnávání verzí je panel skrytý.
+
 ## Přenos a omezení
 
 Kliknutí se dočasně ukládají do cookie a odešlou při dalším běžném požadavku na server. Každé kliknutí nevyvolává samostatný požadavek. Poslední kliknutí před odchodem z webu mohou zůstat neodeslaná. Stránky obsloužené výhradně z mezipaměti před serverem nemusí cookie předat ke zpracování.

@@ -68,6 +68,10 @@ Zapnutie výberu oblasti nemení polohu ani veľkosť náhľadu. Počas výberu 
 
 Kliknite na **Vybrať oblasť** a potiahnutím myši označte obdĺžnik v náhľade. Pod náhľadom sa zobrazí počet kliknutí v oblasti a ich percentuálny podiel pre zvolené obdobie, verziu a šírku mapy. Pri porovnaní verzií má každý náhľad vlastnú oblasť a výsledok. Výber odstránite vypnutím **Vybrať oblasť** alebo tlačidlom **Zrušiť oblasť**; zruší sa aj pri zmene verzie, šírky alebo obnovení náhľadu.
 
+## Najklikanejšie oblasti
+
+Tlačidlom <button class="btn btn-sm btn-primary" type="button" title="Oblasti" aria-label="Oblasti"><i class="ti ti-list-numbers" aria-hidden="true"></i></button> zobrazíte alebo skryjete panel s najviac piatimi najklikanejšími neprekrývajúcimi sa oblasťami, ich počtami a podielmi kliknutí pre vybranú stránku, obdobie, verziu a šírku mapy. Kliknutím na riadok posuniete náhľad na oblasť a zvýrazníte ju číslovanou značkou. Oblasti sa určujú podľa blízkosti uložených kliknutí. Pri porovnávaní verzií je panel skrytý.
+
 ## Prenos a obmedzenia
 
 Kliknutia sa dočasne ukladajú do cookie a odošlú pri ďalšej bežnej požiadavke na server. Každé kliknutie nevyvoláva samostatnú požiadavku. Posledné kliknutia pred odchodom z webu môžu zostať neodoslané. Stránky obslúžené výhradne z vyrovnávacej pamäte pred serverom nemusia cookie odovzdať na spracovanie.

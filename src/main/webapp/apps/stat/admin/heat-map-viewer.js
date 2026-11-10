@@ -1,4 +1,5 @@
 import { HeatMapArea } from "./heat-map-area.js";
+import { HeatMapHotspots } from "./heat-map-hotspots.js";
 
 /** Uses the same conservative declaration check as the standalone public-page tracker. */
 function hasFixedPixelWidth(container, property, resolvedWidth) {
@@ -51,6 +52,7 @@ export class HeatMapViewer {
         this.comparing = false;
         this.selectingArea = false;
         this.overlayVisible = true;
+        this.hotspotsVisible = true;
         const firstPane = element.querySelector("#heatMapPane");
         const secondPane = firstPane.cloneNode(true);
         secondPane.id = "heatMapComparePane";
@@ -59,10 +61,11 @@ export class HeatMapViewer {
         secondPane.hidden = true;
         element.querySelector("#heatMapPreviews").append(secondPane);
         this.nodes = {};
-        ["Version", "CompareVersion", "Compare", "Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Title", "Back", "SelectArea"].forEach(name => {
+        ["Version", "CompareVersion", "Compare", "Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Title", "Back", "SelectArea", "Hotspots"].forEach(name => {
             this.nodes[name] = element.querySelector("#heatMap" + name);
         });
         this.previews = [new HeatMapPreview(this, firstPane, "heatMap"), new HeatMapPreview(this, secondPane, "heatMapCompare")];
+        this.hotspots = new HeatMapHotspots(this, this.previews[0]);
         this.closeOnEscape = event => {
             if (event.key !== "Escape") return;
             const tooltips = $(this.element).find('.pg-heatmap-icon[aria-describedby]').filter((index, node) =>
@@ -105,6 +108,15 @@ export class HeatMapViewer {
         });
         this.nodes.Compare.addEventListener("click", () => this.setComparison(!this.comparing));
         this.nodes.SelectArea.addEventListener("click", () => this.setAreaSelection(!this.selectingArea));
+        this.nodes.Hotspots.addEventListener("click", () => {
+            this.hotspotsVisible = !this.hotspotsVisible;
+            this.nodes.Hotspots.setAttribute("aria-pressed", String(this.hotspotsVisible));
+            this.nodes.Hotspots.classList.toggle("btn-primary", this.hotspotsVisible);
+            this.nodes.Hotspots.classList.toggle("btn-outline-secondary", !this.hotspotsVisible);
+            this.hotspots.update();
+            this.resize();
+            this.hotspots.load();
+        });
         this.nodes.Width.addEventListener("change", () => this.loadWidth());
         this.nodes.Reload.addEventListener("click", () => this.loadWidth(true));
         this.nodes.Scale.addEventListener("change", () => this.resize());
@@ -357,6 +369,7 @@ export class HeatMapViewer {
             preview.nodes.Overlay.style.opacity = Number(this.nodes.Opacity.value) / 100;
             preview.area.render();
         }
+        this.hotspots.update();
     }
 
     /** Uses one numeric scale and iframe height for all ready comparison panes. */
@@ -404,6 +417,7 @@ class HeatMapPreview {
     }
 
     reset(versionId) {
+        if (this === this.viewer.previews[0]) this.viewer.hotspots.reset();
         this.area.clear();
         this.revision++;
         this.requestController.abort();
@@ -427,6 +441,9 @@ class HeatMapPreview {
         this.nodes.Status.classList.toggle("d-none", !message);
         this.element.setAttribute("aria-busy", String(message === this.texts.loading));
         this.viewer.element.setAttribute("aria-busy", String(this.viewer.activePreviews().some(preview => preview.element.getAttribute("aria-busy") === "true")));
+        if (this === this.viewer.previews[0] && !this.frameReady && message && message !== this.texts.loading) {
+            this.viewer.hotspots.status(message);
+        }
     }
 
     updateSummary(clicks) {
@@ -476,6 +493,7 @@ class HeatMapPreview {
             this.contentObserver.observe(doc.documentElement);
             this.viewer.resize();
             this.viewer.updateLayers();
+            if (this === this.viewer.previews[0]) this.viewer.hotspots.load();
         } catch (error) {
             clearTimeout(this.previewTimer);
             this.frameReady = false;

@@ -131,6 +131,11 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                             HeatMapStorage.getAreaCount("autotest.example", 12, from, to, 1140, CONTAINER, 487, 350, 488, 351));
                     assertEquals(new HeatMapStorage.AreaCount(1, 1),
                             HeatMapStorage.getAreaCount("autotest.example", 11, from, LocalDate.of(2026, 9, 30), 1140, CONTAINER, 487, 350, 488, 351));
+                    assertEquals(2, HeatMapStorage.getHotspots("autotest.example", 11, from, to, 1140, DOCUMENT).totalClicks());
+                    assertEquals(1, HeatMapStorage.getHotspots("other.example", 11, from, to, 1140, CONTAINER).totalClicks());
+                    assertEquals(1, HeatMapStorage.getHotspots("autotest.example", 11, from,
+                            LocalDate.of(2026, 9, 30), 1140, CONTAINER).totalClicks());
+                    assertEquals(0, HeatMapStorage.getHotspots("autotest.example", 12, from, to, 1140, CONTAINER).totalClicks());
                     try (MockedStatic<Tools> paths = mockStatic(Tools.class)) {
                         paths.when(() -> Tools.getRealPath("/WEB-INF/tmp/heat_map/")).thenReturn(cache.toString());
                         assertEquals(3, HeatMapStorage.getMaximumDensity("autotest.example", 11, from, to, 1140, CONTAINER));
@@ -146,6 +151,13 @@ class HeatMapContainerDatabaseTest extends BaseWebjetTest {
                         verifySharedPublicationDay(database);
                         verifyVersionDensity(database);
                     }
+                    try (Statement sql = database.createStatement()) {
+                        sql.executeUpdate("UPDATE stat_clicks_2026_10 SET count=2000000000 WHERE document_id=11"
+                                + " AND domain_name='autotest.example' AND coordinate_mode=1");
+                    }
+                    assertEquals(new HeatMapHotspots.Report(4_000_000_001L,
+                            List.of(new HeatMapHotspots.Hotspot(440, 280, 560, 400, 487, 350, 4_000_000_001L))),
+                            HeatMapStorage.getHotspots("autotest.example", 11, from, to, 1140, CONTAINER));
                     verifyHistoryProjectionAndCache(database);
                 }
             } finally {

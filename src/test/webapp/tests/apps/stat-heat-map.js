@@ -75,6 +75,12 @@ function mockMap(I, {listRequests, multipleVersions = false, comparison = false,
         if (url.pathname.endsWith("/area")) {
             return route.fulfill({json: {clicks: 8, totalClicks: 32}});
         }
+        if (url.pathname.endsWith("/hotspots")) {
+            return route.fulfill({json: {totalClicks: 32, hotspots: [
+                {x1: 160, y1: 160, x2: 280, y2: 280, x: 220, y: 220, clicks: 20},
+                {x1: 520, y1: 2320, x2: 640, y2: 2440, x: 580, y: 2380, clicks: 8}
+            ]}});
+        }
         if (url.pathname.endsWith("/html/preview")) {
             return route.fulfill({contentType: "text/html", body: '<!doctype html><meta name="webjet-heatmap-preview" content="'
                 + Number(url.searchParams.get("docId")) + '"><style>body{margin:0}.container{max-width:960px;margin:auto;min-height:3500px}</style><main class="container">autotest page</main>'});
@@ -88,6 +94,23 @@ function mockMap(I, {listRequests, multipleVersions = false, comparison = false,
 
 Scenario("enforces statistics permission", ({ DT }) => {
     DT.checkPerms("cmp_stat", listUrl, "heatMapDataTable");
+});
+
+Scenario("shows hotspot totals and toggles the responsive sidebar", ({ I }) => {
+    mockMap(I, {});
+    I.resizeWindow(1440, 1000);
+    I.executeScript(url => window.location.assign(url), detailsUrl);
+    I.waitForVisible("#heatMapHotspotList button", 20);
+    I.see("Top 2: 28 kliknutí · 87,5 %", "#heatMapHotspotTop");
+    I.see("Ostatné oblasti: 4 kliknutí · 12,5 %", "#heatMapHotspotOther");
+    I.clickCss("#heatMapHotspots");
+    I.dontSeeElement("#heatMapHotspotPanel");
+    I.clickCss("#heatMapHotspots");
+    I.seeElement("#heatMapHotspotPanel");
+    I.resizeWindow(740, 900);
+    // The responsive panel must sit below the preview.
+    I.waitForFunction(() => document.getElementById("heatMapHotspotPanel").getBoundingClientRect().top
+        >= document.getElementById("heatMapPreviews").getBoundingClientRect().bottom - 1, 10);
 });
 
 Scenario("opens a resizable dialog and returns to the unchanged page list", async ({ I, DT }) => {
@@ -167,6 +190,8 @@ Scenario("shows historical fallback and mixed-version notices", ({ I }) => {
     I.waitForText("Kliknutia: 0", 10, "#heatMapTotalClicks");
     I.see("sa nezaznamenali žiadne kliknutia", "#heatMapStatus");
     I.dontSeeElement("#heatMapTiles img");
+    I.see("nie sú zaznamenané kliknutia", "#heatMapHotspotStatus");
+    I.dontSeeElement("#heatMapHotspotList button");
 });
 
 /** Waits for the shared fit scale after responsive layout and iframe resizing. */
@@ -209,6 +234,8 @@ Scenario("selects an area and compares versions at the same width and scale", as
     I.waitForVisible("#heatMapCompareViewport", 10);
     I.waitForVisible("#heatMapViewport", 10);
     I.verifyDisabled("#heatMapSelectArea");
+    I.verifyDisabled("#heatMapHotspots");
+    I.dontSeeElement("#heatMapHotspotPanel");
     I.dontSeeElement("#heatMapAreaLayer, #heatMapAreaResult");
     I.see("Kliknutia: 20", "#heatMapTotalClicks");
     I.see("Kliknutia: 12", "#heatMapCompareTotalClicks");
@@ -276,6 +303,7 @@ Scenario("selects an area and compares versions at the same width and scale", as
     I.see("Kliknutia: 40", "#heatMapTotalClicks");
     I.seeInField("#heatMapVersion", "");
     I.seeElement("#heatMapSelectArea:enabled");
+    I.waitForVisible("#heatMapHotspotList button", 10);
 });
 
 Scenario("keeps one comparison usable when the other version fails", ({ I }) => {

@@ -34,6 +34,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.stat.heat_map.HeatMapAccess;
 import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService;
 import sk.iway.iwcm.stat.heat_map.HeatMapStorage;
+import sk.iway.iwcm.stat.heat_map.HeatMapHotspots;
 import sk.iway.iwcm.stat.heat_map.HeatMapCoordinateMode;
 import sk.iway.iwcm.stat.heat_map.HeatMapStorage.WidthCount;
 import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.ReportRange;
@@ -156,6 +157,19 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
         result.put("versions", selection.versions().stream().limit(MAX_VISIBLE_VERSIONS).toList());
         result.put("multipleVersions", versionId == null && selection.versions().size() > 1);
         return result;
+    }
+
+    /** Returns ranked regions only after applying the page permission and selected version interval. */
+    @GetMapping("/hotspots")
+    public ResponseEntity<HeatMapHotspots.Report> hotspots(@RequestParam("docId") int docId,
+            @RequestParam(value = "dateRange", required = false) String dateRange, @RequestParam("width") int width,
+            @RequestParam(value = "mode", defaultValue = "DOCUMENT") HeatMapCoordinateMode mode,
+            @RequestParam(value = "versionId", required = false) Integer versionId) {
+        checkWidth(width);
+        access.requireDocument(getRequest(), docId);
+        ReportRange range = clickRange(docId, dateRange, versionId);
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(HeatMapStorage.getHotspots(
+                access.currentDomain(getRequest()), docId, range.firstDay(), range.lastDay(), width, mode));
     }
 
     @GetMapping("/area")

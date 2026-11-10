@@ -130,6 +130,34 @@ public final class HeatMapStorage {
     public record AreaCount(long clicks, long totalClicks) { }
 
     /**
+     * Ranks the busiest disjoint areas using the same domain, page, date and coordinate group as the map.
+     * Stored click weights are preserved across monthly partitions and historical aggregation.
+     *
+     * @param domain authorized reporting domain
+     * @param docId authorized page
+     * @param from first included day
+     * @param to last included day
+     * @param width coordinate group width
+     * @param mode document or container coordinates
+     * @return up to five ranked regions and the total number of valid recorded clicks
+     */
+    public static HeatMapHotspots.Report getHotspots(String domain, int docId, LocalDate from, LocalDate to, int width,
+            HeatMapCoordinateMode mode) {
+        if (docId <= 0 || width < 1 || width > MAX_VIEWPORT_WIDTH || mode == null) throw new IllegalArgumentException("Invalid heatmap group");
+        int maximumX = mode == HeatMapCoordinateMode.CONTAINER ? width : MAX_COORDINATE;
+        HeatMapHotspots hotspots = new HeatMapHotspots(maximumX);
+        String xCell = cellSql("x", HeatMapHotspots.CELL_SIZE);
+        String yCell = cellSql("y", HeatMapHotspots.CELL_SIZE);
+        query(domain, from, to, xCell + ", " + yCell + ", " + SUM_CLICKS
+                + ", SUM(CAST(x AS DECIMAL(28,0)) * count), SUM(CAST(y AS DECIMAL(28,0)) * count)",
+                " AND document_id = ? AND viewport_width = ? AND coordinate_mode = ? AND x BETWEEN 0 AND ?"
+                        + " AND y BETWEEN 0 AND " + MAX_COORDINATE + " AND count > 0",
+                List.of(docId, width, mode.databaseValue(), maximumX), " GROUP BY " + xCell + ", " + yCell,
+                result -> hotspots.add(result.getInt(1), result.getInt(2), result.getLong(3), result.getDouble(4), result.getDouble(5)));
+        return hotspots.report();
+    }
+
+    /**
      * Counts an area using stored coordinates and weights, including compacted historical clicks.
      * Rectangle starts are inclusive and ends are exclusive. Both totals use the same query per month.
      *

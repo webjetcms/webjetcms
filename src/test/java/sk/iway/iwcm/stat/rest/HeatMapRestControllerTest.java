@@ -40,6 +40,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.stat.heat_map.HeatMapAccess;
 import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService;
 import sk.iway.iwcm.stat.heat_map.HeatMapStorage;
+import sk.iway.iwcm.stat.heat_map.HeatMapHotspots;
 import sk.iway.iwcm.stat.heat_map.HeatMapStorage.WidthCount;
 import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.ReportRange;
 import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.VersionPeriod;
@@ -152,12 +153,14 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
             controller.tile(123, "period", 390, DOCUMENT, 0, 0, 8);
             controller.tile(123, "period", 390, DOCUMENT, 0, 0, null);
             controller.area(123, "period", 390, DOCUMENT, 10, 20, 110, 220, 7);
+            controller.hotspots(123, "period", 390, DOCUMENT, 7);
             storage.verify(() -> HeatMapStorage.getWidths("public.example", 123, FROM, FROM));
             storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, FROM, 390, DOCUMENT, 0, 0, 50.0));
             storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, FROM, 390, DOCUMENT, 0, 1, 50.0));
             storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM.plusDays(1), TO, 390, DOCUMENT, 0, 0, 200.0));
             storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, TO, 390, DOCUMENT, 0, 0, 5000.0));
             storage.verify(() -> HeatMapStorage.getAreaCount("public.example", 123, FROM, FROM, 390, DOCUMENT, 10, 20, 110, 220));
+            storage.verify(() -> HeatMapStorage.getHotspots("public.example", 123, FROM, FROM, 390, DOCUMENT));
         }
     }
 
@@ -174,14 +177,16 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
                     () -> controller.tile(456, "period", 390, DOCUMENT, 0, 0, null)).getStatusCode());
             assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
                     () -> controller.area(456, "period", 390, DOCUMENT, 10, 20, 110, 220, null)).getStatusCode());
+            assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
+                    () -> controller.hotspots(456, "period", 390, DOCUMENT, null)).getStatusCode());
             storage.verifyNoInteractions();
         }
     }
 
-    /** Area counts and tiles retain trusted domains, large click weights and browser cache protection. */
+    /** Area counts, hotspots and tiles retain trusted domains, large weights and browser cache protection. */
     @ParameterizedTest
     @ValueSource(strings = { "public.example", "" })
-    void authorizedAreaAndTileUseTheSameScopeAndAreNeverCachedByTheBrowser(String domain) throws Exception {
+    void authorizedReportsUseTheSameScopeAndAreNeverCachedByTheBrowser(String domain) throws Exception {
         HeatMapRestController controller = controller();
         when(access.currentDomain(request)).thenReturn(domain);
         request.addParameter("domain", "untrusted.example");
@@ -201,6 +206,13 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
             assertEquals(MediaType.IMAGE_PNG, tile.getHeaders().getContentType());
             assertEquals("no-store", tile.getHeaders().getCacheControl());
             verify(access, times(2)).requireDocument(request, 123);
+
+            var report = new HeatMapHotspots.Report(counts.totalClicks(), List.of());
+            storage.when(() -> HeatMapStorage.getHotspots(domain, 123, FROM, TO, 960, CONTAINER)).thenReturn(report);
+            var hotspots = controller.hotspots(123, "period", 960, CONTAINER, null);
+            assertEquals(report, hotspots.getBody());
+            assertEquals("no-store", hotspots.getHeaders().getCacheControl());
+            verify(access, times(3)).requireDocument(request, 123);
         }
     }
 
@@ -260,6 +272,10 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
                     () -> controller.tile(123, "period", 390, DOCUMENT, Integer.MAX_VALUE, 0, null)).getStatusCode());
             assertEquals(HttpStatus.BAD_REQUEST, assertThrows(ResponseStatusException.class,
                     () -> controller.metadata(123, "period", 0, DOCUMENT, null)).getStatusCode());
+            for (int width : List.of(0, -1, HeatMapStorage.MAX_VIEWPORT_WIDTH + 1)) {
+                assertEquals(HttpStatus.BAD_REQUEST, assertThrows(ResponseStatusException.class,
+                        () -> controller.hotspots(123, "period", width, CONTAINER, null)).getStatusCode());
+            }
             storage.verifyNoInteractions();
         }
     }

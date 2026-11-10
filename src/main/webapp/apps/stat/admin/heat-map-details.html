@@ -14,6 +14,12 @@
         areaLoading: /*[[#{components.stat.heatmap.areaLoading}]]*/ "Counting clicks…",
         areaResult: /*[[#{components.stat.heatmap.areaResult}]]*/ "Area: {clicks} of {total} clicks · {percent}%",
         areaError: /*[[#{components.stat.heatmap.areaError}]]*/ "The area count could not be loaded. Select the area again.",
+        hotspot: /*[[#{components.stat.heatmap.hotspot}]]*/ "Hotspot {rank}",
+        hotspotsLoading: /*[[#{components.stat.heatmap.hotspotsLoading}]]*/ "Loading hotspots…",
+        hotspotsError: /*[[#{components.stat.heatmap.hotspotsError}]]*/ "Hotspots could not be loaded. Reload the preview.",
+        hotspotsTop: /*[[#{components.stat.heatmap.hotspotsTop}]]*/ "Top {count}: {clicks} clicks · {percent}%",
+        hotspotsOther: /*[[#{components.stat.heatmap.hotspotsOther}]]*/ "Other areas: {clicks} clicks · {percent}%",
+        hotspotResult: /*[[#{components.stat.heatmap.hotspotResult}]]*/ "{name}: {clicks} of {total} clicks · {percent}%",
         version: /*[[#{components.stat.heatmap.version}]]*/ "Page version",
         versionA: /*[[#{components.stat.heatmap.versionA}]]*/ "Version A",
         versionB: /*[[#{components.stat.heatmap.versionB}]]*/ "Version B",
@@ -77,13 +83,17 @@
             <button id="heatMapCompare" class="btn btn-sm btn-outline-secondary pg-heatmap-icon" type="button" aria-pressed="false" data-th-title="#{components.stat.heatmap.compare}" disabled>
                 <i class="ti ti-layout-columns" aria-hidden="true"></i><span class="visually-hidden" data-th-text="#{components.stat.heatmap.compare}"></span>
             </button>
+            <button id="heatMapHotspots" class="btn btn-sm btn-primary pg-heatmap-icon" type="button" aria-pressed="true" aria-controls="heatMapHotspotPanel" data-th-title="#{components.stat.heatmap.hotspots}">
+                <i class="ti ti-list-numbers" aria-hidden="true"></i><span class="visually-hidden" data-th-text="#{components.stat.heatmap.hotspots}"></span>
+            </button>
             <button id="heatMapReload" class="btn btn-sm btn-outline-secondary pg-heatmap-icon" type="button" data-th-title="#{components.stat.heatmap.reload}" disabled>
                 <i class="ti ti-refresh" aria-hidden="true"></i><span class="visually-hidden" data-th-text="#{components.stat.heatmap.reload}"></span>
             </button>
         </div>
     </div>
     <span id="heatMapAreaHelp" class="visually-hidden" data-th-text="#{components.stat.heatmap.areaHelp}"></span>
-    <div id="heatMapPreviews" class="pg-heatmap-previews">
+    <div class="pg-heatmap-content">
+      <div id="heatMapPreviews" class="pg-heatmap-previews">
         <section id="heatMapPane" class="pg-heatmap-pane">
             <div id="heatMapPaneLabel" class="pg-heatmap-pane-label" hidden>
                 <label id="heatMapVersionLabel" for="heatMapVersion" data-th-text="#{components.stat.heatmap.version}"></label>
@@ -101,6 +111,10 @@
                         </div>
                         <div id="heatMapAreaLayer" class="pg-heatmap-area-layer" hidden role="group" data-th-aria-label="#{components.stat.heatmap.selectArea}" aria-describedby="heatMapAreaHelp">
                             <div id="heatMapAreaBox" class="pg-heatmap-area-box" hidden aria-hidden="true"></div>
+                        </div>
+                        <div id="heatMapHotspotLayer" class="pg-heatmap-hotspot-layer" hidden>
+                            <div id="heatMapHotspotBox" class="pg-heatmap-hotspot-box" hidden aria-hidden="true"></div>
+                            <div id="heatMapHotspotMarkers" class="pg-heatmap-hotspot-markers"></div>
                         </div>
                     </div>
                 </div>
@@ -123,5 +137,34 @@
                 </div>
             </div>
         </section>
+      </div>
+      <aside id="heatMapHotspotPanel" class="pg-heatmap-hotspot-panel" aria-labelledby="heatMapHotspotHeading">
+        <div class="pg-heatmap-hotspot-heading">
+            <h3 id="heatMapHotspotHeading" class="h6 mb-1" data-th-text="#{components.stat.heatmap.hotspotsTitle}"></h3>
+            <p class="mb-0" data-th-text="#{components.stat.heatmap.hotspotsHelp}"></p>
+        </div>
+        <p id="heatMapHotspotStatus" class="pg-heatmap-hotspot-status" role="status" aria-live="polite"></p>
+        <div id="heatMapHotspotColumns" class="pg-heatmap-hotspot-columns" hidden aria-hidden="true">
+            <span data-th-text="#{components.stat.heatmap.hotspotsArea}"></span>
+            <span data-th-text="#{components.stat.heatmap.clicks}"></span>
+            <span data-th-text="#{components.stat.heatmap.hotspotsShare}"></span>
+        </div>
+        <ol id="heatMapHotspotList" class="pg-heatmap-hotspot-list"></ol>
+        <template id="heatMapHotspotRow">
+            <li>
+                <button type="button" class="pg-heatmap-hotspot-row" aria-pressed="false">
+                    <span class="pg-heatmap-hotspot-name"><span class="pg-heatmap-hotspot-number" aria-hidden="true"></span></span>
+                    <strong></strong>
+                    <span class="pg-heatmap-hotspot-share"></span>
+                    <span class="pg-heatmap-hotspot-bar" aria-hidden="true"></span>
+                </button>
+            </li>
+        </template>
+        <div id="heatMapHotspotTotals" class="pg-heatmap-hotspot-totals" hidden>
+            <div id="heatMapHotspotTop"></div>
+            <div id="heatMapHotspotOther"></div>
+        </div>
+        <p id="heatMapHotspotResult" class="pg-heatmap-hotspot-result" hidden role="status" aria-live="polite" aria-atomic="true"></p>
+      </aside>
     </div>
 </section>

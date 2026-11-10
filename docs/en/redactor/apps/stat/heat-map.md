@@ -48,6 +48,10 @@ Publication times are derived from the available history metadata. Scheduled pub
 
 The template, header, footer, menus, applications and images use current resources. This is not a historical snapshot of the entire website. Content changes, moving elements and different window heights can affect coordinate accuracy. The absolute Y coordinate is not recalculated: changing the height of content above a click can shift the map even at the same container width.
 
+## Top hotspots
+
+Use <button class="btn btn-sm btn-primary" type="button" title="Hotspots" aria-label="Hotspots"><i class="ti ti-list-numbers" aria-hidden="true"></i></button> to show or hide up to five of the busiest non-overlapping areas, with click counts and percentages for the selected page, period, version and map width. Click a row to scroll the preview to that area and highlight it with a numbered marker. Areas group nearby recorded clicks. The panel is hidden while comparing versions.
+
 ## Delivery and limitations
 
 Clicks are temporarily stored in a cookie and delivered with the next ordinary server request. Each click does not trigger a separate request. The final clicks before leaving the site may remain undelivered. Pages served entirely by a cache in front of the server may not forward the cookie for processing.
