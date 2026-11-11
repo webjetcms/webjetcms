@@ -23,7 +23,6 @@
 }
 .md-branch-bar, .md-branch-sample {
     --wj-branch-ink: color-mix(in srgb, var(--wj-branch-color, #00707f) 45%, #13151b);
-    border-inline-start: 4px solid var(--wj-branch-color, #00707f);
     color: var(--wj-branch-ink);
     background: color-mix(in srgb, var(--wj-branch-color, #00707f) 11%, white);
     text-align: start;
