@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Query;
@@ -1096,6 +1097,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 							predicates.add(builder.equal(root.get(field), Long.valueOf(value)));
 						} else if (simpleName.equalsIgnoreCase("Double")) {
 							predicates.add(builder.equal(root.get(field), Double.valueOf(value)));
+						} else if (((Class<?>) path.getJavaType()).isAnnotationPresent(Entity.class)) {
+							//relation to another entity (e.g. @ManyToOne) - LIKE/unaccent is not possible, search must be handled in addSpecSearch
+							Logger.debug(DatatableRestControllerV2.class, "Skipping text search for entity field "+field);
 						} else {
 
 							if (value.startsWith("^") && value.endsWith("$")) predicates.add(builder.equal(root.get(field), value.substring(1, value.length()-1)));
