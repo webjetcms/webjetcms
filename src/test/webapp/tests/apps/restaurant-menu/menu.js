@@ -212,8 +212,7 @@ Scenario('testy domainId', ({I, DT, DTE, Document}) => {
     DTE.waitForEditor("menuDataTable");
     I.pressKey("Escape"); //close date dialog
     I.click({ css: "div.modal-dialog div.DTE_Field_Name_editorFields\\.selectedMealId button.dropdown-toggle" });
-    I.waitForElement(locate('div.dropdown-menu.show .dropdown-menu.show'), 5);
-    I.see('Gulášová', 'div.dropdown-menu.show .dropdown-menu.show');
+    I.waitForText('Gulášová', 10, 'div.dropdown-menu.show .dropdown-menu.show');
     I.dontSee('Test23', 'div.dropdown-menu.show .dropdown-menu.show');
     I.pressKey('Escape');
     DTE.cancel();
@@ -232,9 +231,8 @@ Scenario('testy domainId', ({I, DT, DTE, Document}) => {
     DTE.waitForEditor("menuDataTable");
     I.pressKey("Escape"); //close date dialog
     I.click({ css: "div.modal-dialog div.DTE_Field_Name_editorFields\\.selectedMealId button.dropdown-toggle" });
-    I.waitForElement(locate('div.dropdown-menu.show .dropdown-menu.show'), 5);
+    I.waitForText('Test23', 10, 'div.dropdown-menu.show .dropdown-menu.show');
     I.dontSee('Gulášová', 'div.dropdown-menu.show .dropdown-menu.show');
-    I.see('Test23', 'div.dropdown-menu.show .dropdown-menu.show');
     I.pressKey('Escape');
     DTE.cancel();
 

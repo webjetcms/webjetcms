@@ -6,6 +6,8 @@ var randomNumber;
 var newMultistepFormName;
 var duplicatedMultistepFormName;
 var specialFormName;
+var emptyOptionFormName;
+var stepOrderFormName;
 Before(({ I, DT, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {
@@ -13,6 +15,8 @@ Before(({ I, DT, login }) => {
         newMultistepFormName = "multistepform_autotest_" + randomNumber;
         duplicatedMultistepFormName = "multistepform_duplicate_autotest_" + randomNumber;
         specialFormName = "multistep_new_logic_autotest_" + randomNumber;
+        emptyOptionFormName = "multistep_empty_option_autotest_" + randomNumber;
+        stepOrderFormName = "step_order_autotest_" + randomNumber;
     }
 
     DT.addContext("formSteps", "#formStepsDataTable_wrapper");
@@ -35,7 +39,7 @@ Scenario('Check editor tabs', async ({ I, DT, DTE, TempMail }) => {
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-edit");
     DTE.waitForEditor("formsDataTable");
-    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced"]);
+    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced", "fields"]);
 });
 
 Scenario('Base multistep form', ({ I, DT, DTE, TempMail }) => {
@@ -139,15 +143,7 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
 });
 
 Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Apps }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
-
-    // Set new multistep form as form for the page
-    DTE.waitForEditor();
-    Apps.openAppEditor();
-    DTE.selectOption("formName", newMultistepFormName);
-    I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok');
-    DTE.save();
+    insertMultistepForm(I, DTE, Apps, newMultistepFormName);
 
     I.say("Test visual of step one");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
@@ -390,13 +386,13 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
 
     const expectedHtml = `
         <div class="form-step mt-3"><div class="step-header"><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div class="form-group mb-3">
-            <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span></label> <span class="form-control emailInput-text">Tester</span>
+            <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span></label><div class="form-hint"></div> <span class="form-control emailInput-text">Tester</span>
             </div><div class="form-group mb-3">
-            <label for="vase-priezvisko-1">Vase priezvisko</label> <span class="form-control emailInput-text">Playwright</span>
+            <label for="vase-priezvisko-1">Vase priezvisko</label><div class="form-hint"></div> <span class="form-control emailInput-text">Playwright</span>
             </div><div class="form-group mb-3">
-            <label for="emailova-adresa-1">Emailova adresa<span class="text-danger requirement-mark">&nbsp;*</span></label> <span class="form-control emailInput-text">sivan@noopmail.com</span>
+            <label for="emailova-adresa-1">Emailova adresa<span class="text-danger requirement-mark">&nbsp;*</span></label><div class="form-hint"></div> <span class="form-control emailInput-text">sivan@noopmail.com</span>
             </div><div class="form-group mb-3">
-            <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label>
+            <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label><div class="form-hint"></div>
             <div class="form-check">
             <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-0" class="form-check-label">A</label>
             </div>
@@ -407,7 +403,7 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
             <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-2" class="form-check-label">C</label>
             </div>
             </div><div class="form-group mb-3">
-            <label for="radiogroup-1">Skupina výberových polí</label>
+            <label for="radiogroup-1">Skupina výberových polí</label><div class="form-hint"></div>
             <div class="form-check">
             <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-0" class="form-check-label">D</label>
             </div>
@@ -418,11 +414,11 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
             <span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-2" class="form-check-label">F</label>
             </div>
             </div></div><hr><div class="form-step mt-3"><div class="step-header"><p>2 - Druhy krok | Email: sivan@noopmail.com | User: Tester</p></div><div class="form-group mb-3">
-            <label for="pridajte-obrazky-1">Pridajte obrazky</label> <span class="form-control emailInput-text">penguin.jpg</span>
+            <label for="pridajte-obrazky-1">Pridajte obrazky</label><div class="form-hint"></div> <span class="form-control emailInput-text">penguin.jpg</span>
             </div><div class="form-group mb-3">
-            <label for="select-pole-1">Select pole</label><span class="form-control emailInput-select">C</span>
+            <label for="select-pole-1">Select pole</label><div class="form-hint"></div><span class="form-control emailInput-select">C</span>
             </div><div class="form-group mb-3">
-            <label for="wysiwyg-1">WYSIWYG<span class="text-danger requirement-mark">&nbsp;*</span></label> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span>
+            <label for="wysiwyg-1">WYSIWYG<span class="text-danger requirement-mark">&nbsp;*</span></label><div class="form-hint"></div> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span>
         </div></div>
     `;
 
@@ -462,13 +458,13 @@ Scenario('Test send email', async ({ I, TempMail }) => {
 
     const expectedHtml = `
         <form action="/rest/multistep-form/save-form?form-name=${newMultistepFormName}&amp;step-id=-1" method="post" name="formMailForm-${newMultistepFormName}"><div><div><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div>
-            <label for="vase-meno-1">Vase meno<span>&nbsp;*</span></label> <span>Tester</span>
+            <label for="vase-meno-1">Vase meno<span>&nbsp;*</span></label><div class="form-hint"></div> <span>Tester</span>
             </div><div>
-            <label for="vase-priezvisko-1">Vase priezvisko</label> <span>Playwright</span>
+            <label for="vase-priezvisko-1">Vase priezvisko</label><div class="form-hint"></div> <span>Playwright</span>
             </div><div>
-            <label for="emailova-adresa-1">Emailova adresa<span>&nbsp;*</span></label> <span>sivan@noopmail.com</span>
+            <label for="emailova-adresa-1">Emailova adresa<span>&nbsp;*</span></label><div class="form-hint"></div> <span>sivan@noopmail.com</span>
             </div><div>
-            <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label>
+            <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label><div class="form-hint"></div>
             <div>
             <span>[X]</span> <label for="checkboxgroup-1-0">A</label>
             </div>
@@ -479,7 +475,7 @@ Scenario('Test send email', async ({ I, TempMail }) => {
             <span>[&nbsp;]</span> <label for="checkboxgroup-1-2">C</label>
             </div>
             </div><div>
-            <label for="radiogroup-1">Skupina výberových polí</label>
+            <label for="radiogroup-1">Skupina výberových polí</label><div class="form-hint"></div>
             <div>
             <span>[&nbsp;]</span> <label for="radiogroup-1-0">D</label>
             </div>
@@ -490,11 +486,11 @@ Scenario('Test send email', async ({ I, TempMail }) => {
             <span>[X]</span> <label for="radiogroup-1-2">F</label>
             </div>
             </div></div><hr><div><div><p>2 - Druhy krok | Email: sivan@noopmail.com | User: Tester</p></div><div>
-            <label for="pridajte-obrazky-1">Pridajte obrazky</label> <span>penguin.jpg</span>
+            <label for="pridajte-obrazky-1">Pridajte obrazky</label><div class="form-hint"></div> <span>penguin.jpg</span>
             </div><div>
-            <label for="select-pole-1">Select pole</label><span>C</span>
+            <label for="select-pole-1">Select pole</label><div class="form-hint"></div><span>C</span>
             </div><div>
-            <label for="wysiwyg-1">WYSIWYG<span>&nbsp;*</span></label> <span style="height: auto;">happy wysiwyg placeholder</span>
+            <label for="wysiwyg-1">WYSIWYG<span>&nbsp;*</span></label><div class="form-hint"></div> <span style="height: auto;">happy wysiwyg placeholder</span>
             </div></div>  </form>
     `;
 
@@ -521,6 +517,11 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
     I.checkOption("#DTE_Field_formSettings-forceTextPlain_0");
     I.fillField("#DTE_Field_formSettings-emailTextBefore", "START form text");
     I.fillField("#DTE_Field_formSettings-emailTextAfter", "END form text");
+
+    I.clickCss("#pills-dt-formsDataTable-fields-tab");
+    for (const letter of ["A", "B", "C", "D", "E", "F"]) {
+        I.fillField(`#DTE_Field_formSettings-field${letter}`, `${newMultistepFormName}-${letter}`);
+    }
     DTE.save();
 
     I.say("Fill the form again to test changed email settings");
@@ -553,20 +554,30 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
         <br>1 - Primarny nadpis | 1 - Sekundarny nadpis
         <br>
         <br>
-        <br>Vase meno * Tester
+        <br>Vase meno *
         <br>
-        <br>Vase priezvisko Playwright
+        <br>Tester
         <br>
-        <br>Emailova adresa * ${baseUserMail + TempMail.getTempMailDomain()}
+        <br>Vase priezvisko
         <br>
-        <br>Skupina zaškrtávacích polí [X] A
+        <br>Playwright
+        <br>
+        <br>Emailova adresa *
+        <br>
+        <br>${baseUserMail + TempMail.getTempMailDomain()}
+        <br>
+        <br>Skupina zaškrtávacích polí
+        <br>
+        <br>[X] A
         <br>
         <br>[ ] B
         <br>
         <br>[X] C
         <br>
         <br>
-        <br>Skupina výberových polí [ ] D
+        <br>Skupina výberových polí
+        <br>
+        <br>[ ] D
         <br>
         <br>[ ] E
         <br>
@@ -578,11 +589,17 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
         <br>2 - Druhy krok | Email: ${baseUserMail + TempMail.getTempMailDomain()} | User: Tester
         <br>
         <br>
-        <br>Pridajte obrazky penguin.jpg
+        <br>Pridajte obrazky
         <br>
-        <br>Select pole A
+        <br>penguin.jpg
         <br>
-        <br>WYSIWYG * happy wysiwyg placeholder
+        <br>Select pole
+        <br>
+        <br>A
+        <br>
+        <br>WYSIWYG *
+        <br>
+        <br>happy wysiwyg placeholder
         <br>
         <br>
         <br>
@@ -640,6 +657,11 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-edit");
     DTE.waitForEditor("formsDataTable");
+
+    I.clickCss("#pills-dt-formsDataTable-fields-tab");
+    for (const letter of ["A", "B", "C", "D", "E", "F"]) {
+        I.seeInField(`#DTE_Field_formSettings-field${letter}`, `${newMultistepFormName}-${letter}`);
+    }
 
     I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
     I.uncheckOption("#DTE_Field_formSettings-messageAsAttach_0");
@@ -745,7 +767,7 @@ Scenario('Duplicate multistep form', async ({ I, DT, DTE, TempMail }) => {
     I.assertEqual(secondStepItemsCount, 3, "Duplicated second step should contain all form items");
 });
 
-Scenario('Delete all form records and keep form definition', ({ I, DT }) => {
+Scenario('Delete all form records and keep form definition', async ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/detail/?formName=" + newMultistepFormName);
     DT.waitForLoader("formDetailDataTable");
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy", "#formDetailDataTable");
@@ -758,13 +780,19 @@ Scenario('Delete all form records and keep form definition', ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
     DT.filterEquals("formName", newMultistepFormName);
     I.waitForText(newMultistepFormName, 10, "#formsDataTable");
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1, "Deleting submissions must preserve form settings");
 });
 
-Scenario('Remove original and duplicated form definitions', ({ I, DT }) => {
+Scenario('Delete used form data and preserve its definition', async ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
+    removeFormDefinition(I, DT, newMultistepFormName, true);
+    I.see("Dáta formulára boli zmazané.");
+    I.see("docId: " + appInsertTestPageId);
+    I.see("dáta formulára sú v archíve");
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1);
 
-    removeFormDefinition(I, DT, newMultistepFormName);
-    removeFormDefinition(I, DT, duplicatedMultistepFormName);
+    I.amOnPage("/apps/multistep-formular/app-insert-test.html");
+    I.waitForElement(".multistep-form-app input#f1-emailova-adresa-1", 10);
 });
 
 Scenario('Remove archived form data', async ({ I, DT, DTE }) => {
@@ -780,6 +808,21 @@ Scenario('Remove archived form data', async ({ I, DT, DTE }) => {
         DTE.save('formDetailArchivedTable');
     }
     I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailArchivedTable');
+});
+
+Scenario('Remove original and duplicated form definitions', async ({ I, DT, DTE, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    Apps.clearPageContent();
+    DTE.save();
+    I.amOnPage("/apps/form/admin/");
+
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1);
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1);
+    removeFormDefinition(I, DT, newMultistepFormName);
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 0, "Deleting a form must remove its settings");
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1, "Another form's settings must remain");
+    removeFormDefinition(I, DT, duplicatedMultistepFormName);
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 0, "Deleting a duplicate must remove its settings");
 });
 
 Scenario('Insert and test multiple forms in one page - before clear page', ({ I, DTE, Apps }) => {
@@ -947,19 +990,19 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     const expectedHtml = `
         <div class="form-step mt-3"><div class="step-header"><p>Ukážka: viacero polí v jednom riadku</p></div><div class="row"><div class="col">
         <div class="form-group mb-3">
-        <label for="meno-1">Meno</label> <span class="form-control emailInput-text">Vlad</span>
+        <label for="meno-1">Meno</label><div class="form-hint"></div> <span class="form-control emailInput-text">Vlad</span>
         </div>
         </div><div class="col">
         <div class="form-group mb-3">
-        <label for="priezvisko-1">Priezvisko</label> <span class="form-control emailInput-text">Priezvisko-${randomNumber}</span>
+        <label for="priezvisko-1">Priezvisko</label><div class="form-hint"></div> <span class="form-control emailInput-text">Priezvisko-${randomNumber}</span>
         </div>
-        </div></div><div class="row"><div class="col">
+        </div></div><div class="row"><div class="form-hint"></div><div class="col">
         <div class="form-group mb-3">
-        <label for="email-1">Email</label> <span class="form-control emailInput-text">test@balat.sk</span>
+        <label for="email-1">Email</label><div class="form-hint"></div> <span class="form-control emailInput-text">test@balat.sk</span>
         </div>
-        </div><div class="col">&nbsp;</div></div><div class="row"><div class="col">
+        </div><div class="col">&nbsp;<div class="form-hint"></div></div></div><div class="row"><div class="form-hint"></div><div class="col">
         <div class="form-group mb-3">
-        <label for="adresa-1">Adresa</label> <span class="form-control emailInput-text">Askaban</span>
+        <label for="adresa-1">Adresa</label><div class="form-hint"></div> <span class="form-control emailInput-text">Askaban</span>
         </div>
         </div></div></div>
     `;
@@ -1056,7 +1099,30 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
         );
 }
 
-function removeFormDefinition(I, DT, formName) {
+/** Replaces the test page content so insertion does not depend on an earlier run's component. */
+function insertMultistepForm(I, DTE, Apps, formName) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    Apps.clearPageContent();
+    Apps.openAppForInsert('Formulár', '#multistep_form-title');
+    DTE.selectOption("formName", formName);
+    DTE.selectOption("cssTemplate", "Bez šablóny");
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+    DTE.save();
+}
+
+async function getFormSettingsCount(I, formName) {
+    return I.executeScript(async (name) => {
+        const response = await fetch("/admin/rest/form-settings/search/findByColumns?searchFormName=" + encodeURIComponent("^" + name + "$"), {
+            headers: { "X-CSRF-Token": window.csrfToken }
+        });
+        if (response.ok === false) throw new Error("Could not load form settings: " + response.status);
+        const settings = await response.json();
+        return settings.content.length;
+    }, formName);
+}
+
+function removeFormDefinition(I, DT, formName, preserve = false) {
     DT.filterEquals("formName", formName);
     I.waitForText(formName, 10, "#formsDataTable");
     I.clickCss("#formsDataTable td.dt-select-td");
@@ -1064,8 +1130,10 @@ function removeFormDefinition(I, DT, formName) {
     I.waitForElement("div.DTE_Action_Remove");
     I.waitForText("Naozaj chcete zmazať položku?", 5);
     I.click("Zmazať", "div.DTE_Action_Remove");
+    I.waitForInvisible("div.DTE_Action_Remove", 10);
     DT.waitForLoader("formsDataTable");
-    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#formsDataTable");
+    if (preserve) I.waitForText(formName, 10, "#formsDataTable");
+    else I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#formsDataTable");
 }
 
 function createAndFillFormItem(I, DT,  DTE, fieldType, required, label, value, tooltip, placeholder, options = {}) {
@@ -1183,6 +1251,172 @@ Scenario("check special form options behavior", ({ I, DT, DTE }) => {
     I.seeElement("div.DTE_Field_Name_valueAsEnumeration");
 });
 
+Scenario('Field step labels follow drag-and-drop order immediately and after reload', async ({ I, DT, DTE }) => {
+    const fieldLabel = 'Step order field autotest';
+    const steps = '#formStepsDataTable_wrapper #formStepsDataTable';
+    const items = '#formItemsDataTable';
+
+    function editField(stepNumber, stepId) {
+        I.clickIfVisible(locate(items + ' tbody tr:not(.selected)').withText(fieldLabel).find('td:last-child'));
+        I.click(DT.btn.formItems_edit_button);
+        DTE.waitForEditor('formItemsDataTable');
+        I.clickCss('#pills-dt-formItemsDataTable-advanced-tab');
+        I.seeTextEquals('Krok ' + stepNumber, '#DTE_Field_stepId option:checked');
+        I.seeInField('#DTE_Field_stepId', String(stepId));
+    }
+
+    I.amOnPage('/apps/form/admin/');
+    DT.waitForLoader('formsDataTable');
+    I.clickCss('#formsDataTable_wrapper .buttons-create');
+    DTE.waitForEditor('formsDataTable');
+    DTE.fillField('formName', stepOrderFormName);
+    DTE.save();
+    I.waitForElement(steps + ' tbody tr.selected');
+    DT.waitForLoader('formItemsDataTable');
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    DTE.selectOption('fieldType', 'Meno');
+    DTE.fillQuill('label', fieldLabel);
+    DTE.save();
+    I.waitForText(fieldLabel, 10, items);
+    const firstStepId = await I.grabAttributeFrom(steps + ' tbody tr.selected', 'id');
+
+    I.click(DT.btn.formSteps_add_button);
+    DTE.waitForEditor('formStepsDataTable');
+    DTE.save();
+    I.waitForText('Krok 2', 10, steps);
+    const secondStepId = await I.grabAttributeFrom(steps + ' tbody tr:last-child', 'id');
+    editField(1, firstStepId);
+    DTE.cancel();
+
+    I.dragAndDrop(steps + ' tbody tr:last-child .row-reorder-handler', steps + ' tbody tr:first-child .row-reorder-handler', { force: true });
+    I.waitForElement(steps + ' tbody tr:last-child[id="' + firstStepId + '"]');
+    DT.waitForLoader('formStepsDataTable');
+    DT.waitForLoader('formItemsDataTable');
+    I.seeTextEquals('Krok 2', steps + ' tbody tr.selected .text-muted');
+    editField(2, firstStepId);
+    I.seeTextEquals('Krok 1', '#DTE_Field_stepId option[value="' + secondStepId + '"]');
+    DTE.save();
+    I.waitForText(fieldLabel, 10, items);
+
+    I.refreshPage();
+    I.waitForElement(steps + ' tbody tr.selected');
+    I.click(locate(steps + ' tbody tr td').withText('Krok 2'));
+    I.waitForText(fieldLabel, 10, items);
+    editField(2, firstStepId);
+    DTE.cancel();
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    I.clickCss('#pills-dt-formItemsDataTable-advanced-tab');
+    I.seeTextEquals('Krok 2', '#DTE_Field_stepId option:checked');
+    I.seeInField('#DTE_Field_stepId', String(firstStepId));
+    DTE.cancel();
+
+    I.dragAndDrop(steps + ' tbody tr:last-child .row-reorder-handler', steps + ' tbody tr:first-child .row-reorder-handler', { force: true });
+    I.waitForElement(steps + ' tbody tr:first-child[id="' + firstStepId + '"]');
+    DT.waitForLoader('formStepsDataTable');
+    DT.waitForLoader('formItemsDataTable');
+    editField(1, firstStepId);
+    DTE.cancel();
+});
+
+Scenario('Cleanup step order autotest form', ({ I, DT }) => {
+    I.amOnPage('/apps/form/admin/');
+    DT.filterEquals('formName', stepOrderFormName);
+    DT.deleteAll('formsDataTable');
+});
+
+Scenario('Empty option settings by field type', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/');
+    I.clickCss('#formsDataTable_wrapper button.buttons-create');
+    DTE.waitForEditor('formsDataTable');
+    DTE.fillField('formName', emptyOptionFormName);
+    DTE.save();
+    I.waitForVisible('#formStepsDataTable_wrapper');
+    I.waitForFunction(() => {
+        const step = document.querySelector('#formStepsDataTable tbody tr.selected');
+        return step && new URL(formItemsDataTable.getAjaxUrl(), location.origin).searchParams.get('stepId') === step.id;
+    }, [], 10);
+
+    const emptyOption = '#DTE_Field_valueAsOptions input.options-empty-option-btn';
+    const basicTab = '#pills-dt-formItemsDataTable-basic-tab';
+    const advancedTab = '#pills-dt-formItemsDataTable-advanced-tab';
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    selectFieldType(I, 'Výberový zoznam - select');
+    DTE.fillQuill('label', 'Radio empty option autotest');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    DTE.addFieldOptions('valueAsOptions', 'First autotest:one|Second autotest:two');
+    I.checkOption(emptyOption);
+    I.clickCss(basicTab);
+    selectFieldType(I, 'Skupina zaškrtávacích polí');
+    I.clickCss(advancedTab);
+    I.waitForInvisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    I.clickCss(basicTab);
+    selectFieldType(I, 'Skupina výberových polí');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    I.checkOption(emptyOption);
+    DTE.save();
+    I.waitForVisible('div.stepPreview input[type="radio"][value=""]');
+    I.see('Bez zvolenej možnosti', 'div.stepPreview');
+
+    I.click(locate('#formItemsDataTable tbody td').withText('Radio empty option autotest'));
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor('formItemsDataTable');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.seeCheckboxIsChecked(emptyOption);
+    DTE.cancel('formItemsDataTable');
+    I.clickCss('#formItemsDataTable_wrapper .buttons-copy-field');
+    I.waitForEnabled('#formItemsDataTable_wrapper .buttons-paste-field');
+    I.clickCss('#formItemsDataTable_wrapper .buttons-paste-field');
+    DTE.waitForEditor('formItemsDataTable');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.seeCheckboxIsChecked(emptyOption);
+    I.clickCss(basicTab);
+    selectFieldType(I, 'Skupina zaškrtávacích polí');
+    I.clickCss(advancedTab);
+    I.waitForInvisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    DTE.save();
+    I.waitForVisible('div.stepPreview input[type="checkbox"]');
+    I.seeNumberOfElements('div.stepPreview input[type="checkbox"]', 2);
+    I.dontSeeElement('div.stepPreview input[type="checkbox"][value=""]');
+
+    createAndFillFormItem(I, DT, DTE, 'Výberový zoznam - select', false, 'Select empty option autotest', 'First:one|Second:two', null, null, { emptyOption: true });
+    I.waitForElement('div.stepPreview select option[value=""]');
+    createAndFillFormItem(I, DT, DTE, 'Skupina výberových polí', false, 'Radio without empty option autotest', 'First:one|Second:two', null, null);
+    I.seeNumberOfElements('div.stepPreview input[type="radio"][value=""]', 1);
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    selectFieldType(I, 'Automatické dopĺňanie - autocomplete');
+    I.clickCss(advancedTab);
+    I.waitForVisible('#DTE_Field_valueAsOptions');
+    I.dontSeeElement(emptyOption);
+    DTE.cancel('formItemsDataTable');
+});
+
+Scenario('Cleanup empty option autotest form', ({ I, DT }) => {
+    I.amOnPage('/apps/form/admin/');
+    DT.filterEquals('formName', emptyOptionFormName);
+    DT.deleteAll('formsDataTable');
+    I.executeScript(() => {
+        const key = 'webjet.multistepform.clipboard.';
+        Object.keys(localStorage).filter(name => name.startsWith(key)).forEach(name => {
+            if (localStorage.getItem(name).includes('Radio empty option autotest')) localStorage.removeItem(name);
+        });
+    });
+});
+
 Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Apps, Document }) => {
     I.say('Prepare test form');
     I.amOnPage("/apps/form/admin/");
@@ -1243,15 +1477,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     DTE.fillQuill("header", "autotest confirmation");
     DTE.save();
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
-
-    // Set new multistep form as form for the page
-    DTE.waitForEditor();
-    Apps.openAppEditor();
-    DTE.selectOption("formName", specialFormName);
-    I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok');
-    DTE.save();
+    insertMultistepForm(I, DTE, Apps, specialFormName);
 
     I.say("Test of step structure - showed must be labels not values");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
@@ -1290,7 +1516,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     const fileButtonSelector = fileDropzoneSelector + " button.dz-message";
     const uploadedFileName = "archive_file_test.pdf";
 
-    I.see("Please use a PDF file - autotest", "label[for='f1-upload-cv-autotest-1-dropzone'] + div.form-text");
+    I.see("Please use a PDF file - autotest", "label[for='f1-upload-cv-autotest-1-dropzone'] ~ div.form-text");
     I.seeElement(fileDropzoneSelector + "[data-dzmaxfiles='1']");
     I.seeElement(fileButtonSelector + ".border.border-secondary.dz-clickable:not([disabled])");
 
@@ -1341,9 +1567,9 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
 
     const expectedHtml = `
         <div class="form-step mt-3"><div class="form-group mb-3">
-        <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span></label> <span class="form-control emailInput-text">Trim autotest</span>
+        <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span></label><div class="form-hint"></div> <span class="form-control emailInput-text">Trim autotest</span>
         </div><div class="form-group mb-3">
-        <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label>
+        <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label><div class="form-hint"></div>
         <div class="form-check">
         <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-0" class="form-check-label">labelA</label>
         </div>
@@ -1357,7 +1583,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
         <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-3" class="form-check-label">labelD</label>
         </div>
         </div><div class="form-group mb-3">
-        <label for="radiogroup-1">Skupina výberových polí</label>
+        <label for="radiogroup-1">Skupina výberových polí</label><div class="form-hint"></div>
         <div class="form-check">
         <span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-0" class="form-check-label">labelEnumA</label>
         </div>
@@ -1371,11 +1597,11 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
         <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-3" class="form-check-label">labelEnumD</label>
         </div>
         </div><div class="form-group mb-3">
-        <label for="empty-option-autotest-1">Empty option autotest</label><span class="form-control emailInput-select">&nbsp;</span>
+        <label for="empty-option-autotest-1">Empty option autotest</label><div class="form-hint"></div><span class="form-control emailInput-select">&nbsp;</span>
         </div><div class="form-group mb-3">
-        <label for="country-autocomplete-autotest-1">Country autocomplete autotest</label><span class="form-control emailInput-text">CZ</span>
+        <label for="country-autocomplete-autotest-1">Country autocomplete autotest</label><div class="form-hint"></div><span class="form-control emailInput-text">CZ</span>
         </div><div class="form-group mb-3">
-        <label class="form-label" for="upload-cv-autotest-1-dropzone">Upload CV autotest</label>
+        <label class="form-label" for="upload-cv-autotest-1-dropzone">Upload CV autotest</label><div class="form-hint"></div>
         <div class="form-text mb-2">Please use a PDF file - autotest</div><span class="form-control emailInput-text">archive_file_test.pdf</span>
         </div></div>
         <hr><div class="form-step mt-3"><div class="step-header"><p>autotest confirmation</p></div></div>
@@ -1387,17 +1613,13 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     compareTwoHtml(I, actualHtml, expectedHtml);
 });
 
-Scenario('Remove form 2 and test it @screenshot', ({ I, DT }) => {
+Scenario('Remove form 2 and test it @screenshot', async ({ I, DT, DTE, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    Apps.clearPageContent();
+    DTE.save();
     I.amOnPage("/apps/form/admin/");
-
-    DT.filterEquals("formName", specialFormName);
-    I.clickCss("td.dt-select-td");
-    I.click("button.buttons-remove");
-    I.waitForElement("div.DTE_Action_Remove");
-    I.waitForText("Naozaj chcete zmazať položku?", 5);
-    I.click("Zmazať", "div.DTE_Action_Remove");
-
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    removeFormDefinition(I, DT, specialFormName);
+    I.assertEqual(await getFormSettingsCount(I, specialFormName), 0, "Deleting the unused form must remove its settings");
 });
 
 function testRadioCheckgroup(I, field, valuePrefix, labelPrefix) {

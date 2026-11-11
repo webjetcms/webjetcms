@@ -29,7 +29,7 @@ Ak pri pokuse o inštaláciu cez `codex plugin marketplace add` dostanete chybu 
 
 Globálna inštalácia sprístupní skilly používateľovi. Ich nastavenie pre konkrétny repozitár sa robí raz a zdieľa sa cez súbory v Gite. V tomto repozitári je už uložené v `AGENTS.md` a `docs/agents/`; po jeho získaní netreba setup opakovať na každom počítači.
 
-Pri prvotnom nastavení alebo zmene konfigurácie otvorte projekt v Codexe a do **chatu, nie do terminálu**, zadajte:
+Pri prvotnom nastavení alebo zmene konfigurácie otvorte projekt v `Codex` a do **četu, nie do terminálu**, zadajte:
 
 ```text
 Použi skill setup-matt-pocock-skills pre tento repozitár.
@@ -47,6 +47,13 @@ Setup najprv predloží návrh na odsúhlasenie. Po potvrdení doplní sekciu do
 Po nastavení pokračujte návodom [Použitie AI skills](../guidelines/ai-skills.md), ktorý opisuje postup od požiadavky alebo GitHub issue po implementáciu a kontrolu.
 
 ## rspack build JS, CSS a PUG súborov
+
+Použite verziu Node.js uvedenú v `.nvmrc` v koreni projektu. Ak používate `nvm`, pred zostavením spustite z koreňa projektu:
+
+```shell
+nvm install
+nvm use
+```
 
 Súbory pre administráciu sú zostavované cez rspack zo zdrojových ```js/scss/pug``` súborov. Pre prvotnú inštaláciu spustite v novom termináli:
 

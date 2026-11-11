@@ -244,7 +244,7 @@ public class EditorFacade {
 		if (docId < 0 && historyId < 0) {
 			editedDoc = editorService.prepareNewDocForEditor(docId, group);
 		} else {
-			editedDoc = editorService.prepareDocForEditor(docId, historyId, ignoreMultigroupMapping);
+			editedDoc = getExistingDocForEditor(docId, historyId);
 
 			if(editedDoc == null) return null;
 		}
@@ -269,6 +269,18 @@ public class EditorFacade {
 		}
 
         return editedDoc;
+    }
+
+    /**
+     * Loads an existing editor version for merging submitted values, including multigroup mapping.
+     * Unlike opening the editor, this does not delete temporary media or apply new-page defaults.
+     *
+     * @param docId ID of the edited page
+     * @param historyId selected history version, or a non-positive value for the current page
+     * @return the editor version, or {@code null} if it no longer exists
+     */
+    public DocDetails getExistingDocForEditor(int docId, int historyId) {
+        return editorService.prepareDocForEditor(docId, historyId, ignoreMultigroupMapping);
     }
 
 	/**

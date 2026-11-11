@@ -24,6 +24,7 @@ import sk.iway.iwcm.doc.showdoc.StyleToHeadHelper;
 import sk.iway.iwcm.editor.rest.ComponentsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
+import sk.iway.iwcm.tags.WriteTag;
 
 
 @Component
@@ -98,7 +99,11 @@ public class WebjetComponentResolver {
         // vyhlada metodu s anotaciou @Render
         Method method = findHandlerMethod(request, component, pageParams);
         if (method == null) {
-            response.getWriter().println(Prop.getInstance(request).getText("writetag.error_not_exists", null, null, component.getClass().getSimpleName()));
+            response.getWriter().println(WriteTag.getSpringErrorMessage(
+                Prop.getInstance(request),
+                "writetag.error_not_exists",
+                ClassUtils.getUserClass(component).getName()
+            ));
             return;
         }
         HandlerMethod handlerMethod = new HandlerMethod(component, method);

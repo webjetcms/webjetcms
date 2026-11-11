@@ -21,10 +21,11 @@ Názvy Pole A - Pole X lze změnit v konfiguraci v části editace textů. Stač
 - `components.media.field_x` - ​​pro aplikaci Média
 - `components.perex.field_x` - ​​pro aplikaci Značky
 - `components.invoice.field_x` - ​​pro aplikaci Elektronický obchod
+- `components.form_settings.field_x` - ​​pro nastavení Formulářů
 
 Technické informace jsou uvedeny v [dokumentaci pro programátora](../../../developer/datatables-editor/customfields.md).
 
-!>Nastavení lze provádět i přes tabulku [Volitelná pole](custom-fields-settings.md). Pokud pro stejné pole existuje záznam v tabulce, má přednost před konfigurací z překladových klíčů.
+!>Nastavení doporučujeme provádět přes uživatelské rozhraní [Volitelná pole](../../datatables/custom-fields-settings.md). Pokud pro stejné pole existuje záznam v tabulce, má přednost před konfigurací z překladových klíčů.
 
 ## Typy polí
 
@@ -100,11 +101,11 @@ Hodnoty se pak ukládají do pole oddělené pomocí znaku `|`
 
 ### Přepínač
 
-Typ pole `radio` zobrazí seznam možností jako přepínač, uživatel může vybrat právě jednu hodnotu. Možnosti se nastavují v tabulce [Volitelná pole](custom-fields-settings.md) stejně jako u výběrového pole - jako statický seznam hodnot, nebo dynamicky propojením na číselník.
+Typ pole `radio` zobrazí seznam možností jako přepínač, uživatel může vybrat právě jednu hodnotu. Možnosti se nastavují v tabulce [Volitelná pole](../../datatables/custom-fields-settings.md) stejně jako u výběrového pole - jako statický seznam hodnot, nebo dynamicky propojením na číselník.
 
 ### Zaškrtávací pole
 
-Typ pole `checkbox` zobrazí seznam možností jako zaškrtávací pole, uživatel může vybrat více hodnot. Možnosti se nastavují v tabulce [Volitelná pole](custom-fields-settings.md) stejně jako u výběrového pole - jako statický seznam hodnot, nebo dynamicky propojením na číselník.
+Typ pole `checkbox` zobrazí seznam možností jako zaškrtávací pole, uživatel může vybrat více hodnot. Možnosti se nastavují v tabulce [Volitelná pole](../../datatables/custom-fields-settings.md) stejně jako u výběrového pole - jako statický seznam hodnot, nebo dynamicky propojením na číselník.
 
 Vybrané hodnoty se ukládají do pole oddělené pomocí znaku `|`.
 
@@ -234,7 +235,7 @@ Typ pole `color` umožňuje vybrat barvu včetně nastavení průsvitnosti.
 
 ### JSON Editor
 
-Typ pole `jsoneditor` slouží k přímému zadávání a úpravě JSON hodnot. Pro pole nastavte v [nastavení volitelných polí](custom-fields-settings.md) typ **Editor JSON**, nebo použijte překladový klíč:
+Typ pole `jsoneditor` slouží k přímému zadávání a úpravě JSON hodnot. Pro pole nastavte v [nastaveních volitelných polí](../../datatables/custom-fields-settings.md) typ **Editor JSON**, nebo použijte překladový klíč:
 
 ```properties
 editor.field_g.type=jsoneditor

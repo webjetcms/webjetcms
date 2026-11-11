@@ -24,11 +24,20 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 @MappedSuperclass
 @Setter
 @Getter
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "content", title = "components.form_items.navbar_title.js"),
+    @DataTableTab(id = "personalInfo", title = "components.form.personal_info.js"),
+    @DataTableTab(id = "contactTab", title = "components.form.contact.js"),
+    @DataTableTab(id = "freeItems", title = "editor.tab.fields")
+})
 public class FormsEntityBasic {
 
     @Id

@@ -5,6 +5,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
@@ -21,6 +24,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.service.GroupsService;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.system.translation.TranslationService;
@@ -68,7 +72,18 @@ public class GroupMirroringServiceV9 {
                            Logger.debug(GroupMirroringServiceV9.class, "NESEDI PARENT GROUP, syncedGroup="+syncedGroup.toString()+" syncedCorrectParentGroup="+syncedCorrectParentGroup.toString());
                            GroupDetails groupToSave = groupsDB.getGroup(syncedGroup.getGroupId());
                            groupToSave.setParentGroupId(syncedCorrectParentGroup.getGroupId());
-                           groupsDB.setGroup(groupToSave, false);
+                           if (!groupsDB.setGroup(groupToSave, false)) return;
+                           // The SQL-loaded mirror is separate from the cached object; update it before checking for missing copies.
+                           syncedGroup.setParentGroupId(groupToSave.getParentGroupId());
+                           syncedGroup.setFullPath(groupToSave.getFullPath());
+                           // Mirror saves suppress SaveGroupListener, so regenerate inherited URLs explicitly after a move.
+                           if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes requestAttributes) {
+                              try {
+                                 WebpagesService.regenerateUrl(groupToSave.getGroupId(), currentUser, requestAttributes.getRequest(), true);
+                              } catch (Exception ex) {
+                                 Logger.error(GroupMirroringServiceV9.class, ex);
+                              }
+                           }
                            MirroringService.forceReloadTree();
                         }
                      }
@@ -126,7 +141,8 @@ public class GroupMirroringServiceV9 {
                   }
 
                   GroupDetails mirror = groupsDB.getNewGroupDetails(translatedGroupName, mappedGroup.getGroupId());
-                  if (Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);
+                  // Clones preserve source menu visibility without changing the setting for ordinary mirrors.
+                  if (!MirroringService.isCloneAction() && Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);
                   else {
                      mirror.setMenuType(group.getMenuType());
                      mirror.setLoggedMenuType(group.getLoggedMenuType());

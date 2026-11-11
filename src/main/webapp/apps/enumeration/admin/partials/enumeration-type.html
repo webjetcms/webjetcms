@@ -6,14 +6,7 @@
     var isAllSet = false;
     var lastIgnoredId = null;
 
-    var typeTabs = [
-            { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true},
-            { id: 'strings', title: '[[#{enum_type.strings}]]'},
-            { id: 'numbers', title: '[[#{enum_type.numbers}]]'},
-            { id: 'booleans', title: '[[#{enum_type.booleans}]]'},
-            { id: 'dates', title: '[[#{enum_type.dates}]]'},
-            { id: 'stringFieldTypes', title: '[[#{enum_type.string_field_types}]]', hideOnCreate: true},
-        ];
+    var typeTabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean')})];
 
     window.domReady.add(function () {
 

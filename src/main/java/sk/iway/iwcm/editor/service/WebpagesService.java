@@ -89,8 +89,6 @@ public class WebpagesService {
 	private static final String GROUP_ID = "groupId";
 	private static final String ROOT_GROUP_ID = "rootGroupId";
 	private static final String PASSWORD_PROTECTED = "passwordProtected";
-	private static final String DOC_ID = "docId";
-	private static final String TITLE = "title";
 	private static final String USER_GROUP_ID = "userGroupId";
 
 	private static final String MENU_TYPE_SAME_AS_NORMAL = "groupedit.menu_type_same_as_normal";
@@ -295,6 +293,20 @@ public class WebpagesService {
 		if (addFromTemplateAndEmptyToSelect) return addFromTemlateAndEmptyDoc(docs);
 		return docs;
 	}
+
+    /**
+     * Adds page selectors with readable slashes without changing cached or persisted page titles.
+     * Only the slash entity used by full-path storage is decoded; other title markup is preserved.
+     * @param page response receiving the options
+     * @param fields comma-separated editor field names
+     * @param docs pages available for selection
+     */
+    public static void addDocOptions(DatatablePageImpl<?> page, String fields, List<DocDetails> docs) {
+        for (DocDetails doc : docs) {
+            String label = doc.getTitle() == null ? "" : doc.getTitle().replace("&#47;", "/");
+            page.addOption(fields, label, String.valueOf(doc.getDocId()), null);
+        }
+    }
 
 	private List<DocDetails> addFromTemlateAndEmptyDoc(List<DocDetails> list)
 	{
@@ -513,7 +525,7 @@ public class WebpagesService {
         Adminlog.add(Adminlog.TYPE_GROUP, "Force "+DB.removeSlashes(attributeName)+" to subgroups: " + groupIds + " value=" + attributeValue, groupId, -1);
 
         try {
-			ps = db_conn.prepareStatement("UPDATE groups SET " + DB.removeSlashes(attributeName) + "=? WHERE group_id IN (" + groupIds + ")");
+			ps = db_conn.prepareStatement("UPDATE groups SET " + DB.removeSlashes(attributeName) + "=? WHERE " + DB.getInCondition("group_id", groupIds));
 
 			if (attributeValue instanceof String string) ps.setString(1, string);
 			else if (attributeValue instanceof Integer integer) ps.setInt(1, integer);
@@ -702,7 +714,7 @@ public class WebpagesService {
 						groupIds.add(rootGroup.getGroupId());
 					}
 					if (groupIds.isEmpty()==false) {
-						predicates.add(root.get("rootGroupL1").in(groupIds));
+						predicates.add(JpaTools.in(root.get("rootGroupL1"), groupIds, builder));
 					}
 
 					//Vylúč všetky kôš adresáre
@@ -713,10 +725,10 @@ public class WebpagesService {
 						groupIdsTrash.add(group.getGroupId());
 					}
 					if (groupIdsTrash.isEmpty()==false) {
-						predicates.add(builder.not(root.get(GROUP_ID).in(groupIdsTrash)));
+						predicates.add(JpaTools.notIn(root.get(GROUP_ID), groupIdsTrash, builder));
 						predicates.add(builder.or(
 							builder.isNull(root.get("rootGroupL2")),
-							builder.not(root.get("rootGroupL2").in(groupIdsTrash))
+							JpaTools.notIn(root.get("rootGroupL2"), groupIdsTrash, builder)
 						));
 					}
 				}
@@ -745,7 +757,7 @@ public class WebpagesService {
 				//ak sa jedna o posledny uzol daj to ako klasicku where kvoli efektivite
 				predicates.add(builder.equal(root.get(GROUP_ID), groupIds.get(0)));
 			} else if (groupIds.isEmpty()==false) {
-				predicates.add(root.get(GROUP_ID).in(groupIds));
+				predicates.add(JpaTools.in(root.get(GROUP_ID), groupIds, builder));
 			}
 		} else if (groupId>0)  {
 			predicates.add(builder.equal(root.get(GROUP_ID), groupId));
@@ -969,9 +981,9 @@ public class WebpagesService {
 		if (forceGroupId) ws.groupId = options.getGroupId();
 
 		pageImpl.addOptions("tempId", ws.getTemplates(options.isRecursiveSubfolders()), "tempName", "tempId", true);
-        pageImpl.addOptions("menuDocId,rightMenuDocId", ws.getMenuList(true), TITLE, DOC_ID, false);
-        pageImpl.addOptions("headerDocId,footerDocId", ws.getHeaderList(true), TITLE, DOC_ID, false);
-		pageImpl.addOptions("tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId", ws.getHeaderFooterMenuList(true), TITLE, DOC_ID, false);
+        addDocOptions(pageImpl, "menuDocId,rightMenuDocId", ws.getMenuList(true));
+        addDocOptions(pageImpl, "headerDocId,footerDocId", ws.getHeaderList(true));
+        addDocOptions(pageImpl, "tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId", ws.getHeaderFooterMenuList(true));
         pageImpl.addOptions("editorFields.emails", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), "userGroupName", USER_GROUP_ID, false);
         pageImpl.addOptions("editorFields.permisions", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", USER_GROUP_ID, false);
         pageImpl.addOptions("perexGroups", ws.getPerexGroups(options.isRecursiveSubfolders()), "label", "value", false);
@@ -1218,17 +1230,16 @@ public class WebpagesService {
 			if (groupIds.size()==1) {
 				predicates.add(builder.equal(root.get(GROUP_ID), groupIds.get(0)));
 			} else if (groupIds.size()>1) {
-				predicates.add(root.get(GROUP_ID).in(groupIds));
+				predicates.add(JpaTools.in(root.get(GROUP_ID), groupIds, builder));
 			}
 
 			//filter iba hlavnych stranok adresarov
 			String searchStatusIcon = params.get("searchEditorFields.statusIcons");
 			if ("searchDefaultPage".equals(searchStatusIcon) && groupIds.size()>0) {
 				//ziskaj zoznam default_doc_id pre zvolene adresare
-				String ids = groupIds.stream().map(String::valueOf).collect(Collectors.joining(","));
-				List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE group_id IN ("+ids+")");
+				List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE " + DB.getInCondition("group_id", groupIds));
 				//pridaj to ako predikat
-				predicates.add(root.get("id").in(defaultDocIds));
+				predicates.add(JpaTools.in(root.get("id"), defaultDocIds, builder));
 			}
 		}
     }

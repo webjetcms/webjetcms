@@ -46,16 +46,22 @@ Scenario('Header search opens from the dashboard and app pages and restores keyb
     const label = await I.grabTextFrom(`${trigger} .md-quick-search-trigger__label`);
     I.dontSeeElement('[data-widget-type="search"]');
     I.seeElement(`${scopes} [data-scope="all"][aria-pressed="true"]`);
+    // Start at pages so the preceding AI conversation scope does not change the expected input focus.
+    I.clickCss(`${scopes} [data-scope="docs"]`);
     I.pressKey(['Alt', 'ArrowRight']);
-    I.seeElement(`${scopes} [data-scope="docs"][aria-pressed="true"]`);
+    I.seeElement(`${scopes} [data-scope="files"][aria-pressed="true"]`);
     I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 5);
     I.pressKey(['Alt', 'ArrowLeft']);
-    I.seeElement(`${scopes} [data-scope="all"][aria-pressed="true"]`);
+    I.seeElement(`${scopes} [data-scope="docs"][aria-pressed="true"]`);
+    I.clickCss(`${scopes} [data-scope="all"]`);
     // macOS WebKit's default keyboard preference reaches buttons with Option+Tab.
     const macWebKit = process.env.CODECEPT_BROWSER === 'webkit' && await I.executeScript(() => /Mac/i.test(navigator.platform));
     I.pressKey(macWebKit ? ['Alt', 'Tab'] : 'Tab');
     I.waitForFunction(() => document.activeElement.id !== 'admin-quick-search-input'
         && document.querySelector('#admin-quick-search').contains(document.activeElement), 5);
+    I.waitForVisible(`${modal} .tooltip.show`, 5);
+    I.pressKey('Escape');
+    I.waitForInvisible(`${modal} .tooltip.show`, 5);
     I.pressKey('Escape');
     I.waitForInvisible(modal, 10);
     I.waitForFunction(() => document.activeElement.classList.contains('js-search-toggler'), 5);
@@ -378,8 +384,10 @@ Scenario('Documentation formats Markdown and expandable AI answers without horiz
     I.pressKey('Enter');
     I.waitForVisible(`${documentationResult} .md-quick-search__markdown strong`, 10);
     for (const element of ['h2', 'ul', 'pre code']) I.seeElement(`${documentationResult} .md-quick-search__markdown ${element}`);
-    I.see('| Setting | Value |', `${documentationResult} .md-quick-search__markdown`);
-    I.see('| Campaign | autotest |', `${documentationResult} .md-quick-search__markdown`);
+    I.seeTextEquals('Setting', `${documentationResult} .md-quick-search__markdown table thead th:nth-child(1)`);
+    I.seeTextEquals('Value', `${documentationResult} .md-quick-search__markdown table thead th:nth-child(2)`);
+    I.seeTextEquals('Campaign', `${documentationResult} .md-quick-search__markdown table tbody td:nth-child(1)`);
+    I.seeTextEquals('autotest', `${documentationResult} .md-quick-search__markdown table tbody td:nth-child(2)`);
     I.see('Campaign preview', `${documentationResult} .md-quick-search__markdown`);
     I.seeElement(`${documentation} .md-quick-search__answer strong`);
     I.see('Prehľad od AI', `${documentation} .md-quick-search__answer h4`);

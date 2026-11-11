@@ -27,6 +27,8 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
+import sk.iway.iwcm.components.structuremirroring.MirroringService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocBasic;
@@ -187,6 +189,9 @@ public class EditorService {
 	 */
     public int saveEditedDoc(DocDetails editedDoc) {
 		DebugTimer dt = new DebugTimer("EditorService.saveEditedDoc");
+
+		// Authorize the stored page before events or client-supplied changes can have side effects.
+		checkSavePermissions(currentUser, editedDoc);
 
 		//first update savedate and author, check permissions need this
 		editedDoc.setDateCreated(now);
@@ -1139,6 +1144,7 @@ public class EditorService {
 	 * @return
 	 */
 	public boolean isPageEditable(Identity user, DocDetails doc, boolean isDelete) {
+		if (user == null || doc == null) return false;
 		if (UsersDB.checkUserPerms(user, Constants.getString("webpagesFunctionsPerms")) == false) return false;
 
 		if (isDelete) {
@@ -1151,7 +1157,19 @@ public class EditorService {
 			return false;
 		}
 
-		if (doc == null) return true;
+		return hasPagePermission(user, doc);
+	}
+
+	/**
+	 * Checks folder, explicit-page, multigroup and access-group permissions for an editor record.
+	 * Operation permissions such as pageSave and deletePage are checked separately by the caller.
+	 *
+	 * @param user current administrator
+	 * @param doc page state whose permissions are being checked
+	 * @return whether the page belongs to the user's editable scope
+	 */
+	public static boolean hasPagePermission(Identity user, DocDetails doc) {
+		if (user == null || doc == null || !UsersDB.checkUserPerms(user, Constants.getString("webpagesFunctionsPerms"))) return false;
 
 		//otestuj, ci mame na tento dokument pristupove prava
 		boolean canAccess = GroupsDB.isGroupEditable(user, doc.getGroupId());
@@ -1192,6 +1210,29 @@ public class EditorService {
 		}
 
 		return canAccess;
+	}
+
+	/**
+	 * Checks the persisted page's permissions and, for creation or a move, the destination folder.
+	 * The uncached JDBC read must not reuse a JPA entity already modified by the caller.
+	 *
+	 * @param user current administrator
+	 * @param doc proposed page state after editor fields and master/slave IDs have been resolved
+	 */
+	public void checkSavePermissions(Identity user, DocDetails doc) {
+		checkPermissions(user, doc, false);
+		DocDetails original = null;
+		if (doc.getDocId() > 0) {
+			original = docDB.getDoc(doc.getDocId(), -1, false);
+			if (original == null) throw new RuntimeException(prop.getText("admin.editPage.error"));
+			checkPermissions(user, original, false);
+		}
+
+		int groupId = doc.getGroupId();
+		if (groupId < 1 || groupsDB.getGroup(groupId) == null ||
+				((original == null || original.getGroupId() != groupId) && !GroupsDB.isGroupEditable(user, groupId))) {
+			throw new RuntimeException(prop.getText("admin.editPage.error"));
+		}
 	}
 
 	/**
@@ -1543,6 +1584,9 @@ public class EditorService {
 		//If id is -1, try get id from request, if id is still -1 return eeror message
 		if(delDocId == -1) delDocId = Tools.getIntValue(request.getParameter("docid"), -1);
 		if(delDocId == -1) return "There's no provided docId to by used for delete.";
+		// Bulk deletion may reach a page already deleted through its mirror in this request.
+		// Return success without processing it again: a second deletion after moving it to Trash would be permanent.
+		if (DeleteRequestContext.isDeleted(DocDetails.class, delDocId)) return "success";
 
 		//Try get DocDetails object by id, if not present return error message
 		Optional<DocDetails> docDetailsOpt = docRepo.findById(Long.valueOf(delDocId));
@@ -1560,7 +1604,20 @@ public class EditorService {
 			//Doc, do not need approve OR
 			//current user IS self approver, can do delete action
 
-			if (publishEvents) (new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
+			if (publishEvents) {
+				// Check every mirror before ON_DELETE listeners can delete any member of the mirrored set.
+				if (MirroringService.isEnabled(docDetails.getGroupId())
+						&& !"Nový podadresár".equals(docDetails.getTitle()) && !prop.getText("editor.dir.new_dir").equals(docDetails.getTitle())) {
+					int syncId = DocMirroringServiceV9.getSyncId(delDocId);
+					if (syncId > 1) {
+						for (DocDetails mirror : DocMirroringServiceV9.getDocBySyncId(syncId, delDocId)) {
+							// Completed deletions are no-ops in this request; do not recheck permissions against their Trash location.
+							if (!DeleteRequestContext.isDeleted(DocDetails.class, mirror.getDocId())) checkPermissions(currentUser, mirror, true);
+						}
+					}
+				}
+				(new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
+			}
 
 			// zisti ci sme v adresari /System/Trash (kos), ak nie presun, inak vymaz
 			String navbarNoHref = DB.internationalToEnglish(groupsDB.getURLPath(docDetails.getGroupId())).toLowerCase();
@@ -1640,7 +1697,7 @@ public class EditorService {
 				if(buf != null) ids = buf.toString();
 
 				if (ids != null) {
-					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE group_id IN (" + ids + ")", trashGroupDetails.getGroupId());
+					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE " + DB.getInCondition("group_id", ids), trashGroupDetails.getGroupId());
 					GroupsDB.getInstance(true);
 				}
 
@@ -1687,6 +1744,9 @@ public class EditorService {
                 //Admin log stranka bola presunuta do kosa
                 Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID: " + delDocId + "): Stranka bola presunuta do kosa ", delDocId, 0);
             }
+            // Record the completed deletion (including a move to Trash) before notifying listeners.
+            // Later mirror or bulk-selection calls in this request must not delete this page again.
+            DeleteRequestContext.markDeleted(DocDetails.class, delDocId);
             DocDB.getInstance().updateInternalCaches(delDocId);
 
 			if (publishEvents) (new WebjetEvent<DocDetails>(docDetails, WebjetEventType.AFTER_DELETE)).publishEvent();

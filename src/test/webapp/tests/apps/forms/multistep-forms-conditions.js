@@ -68,6 +68,46 @@ Scenario('Requirement conditions', ({ I, DT, DTE }) => {
     testFields(I, DT, DTE, requirementConditions, requirementModal, requirementId);
 });
 
+Scenario('Condition choices preserve saved values and switch to text', async ({ I, DT, DTE }) => {
+    for (const condition of ["visibilityConditions", "requirementConditions"]) {
+        I.amOnPage("/apps/form/admin/form-steps/?formName=" + formName);
+        DT.waitForLoader();
+        const fieldName = condition === "visibilityConditions" ? "Meno" : "Email";
+        I.click(locate("#formItemsDataTable tbody tr").withText(fieldName).find("td.sorting_1"));
+        I.click(DT.btn.formItems_edit_button);
+        DTE.waitForEditor("formItemsDataTable");
+        const id = "datatableFieldDTE_Field_" + condition;
+        const modal = "#" + id + "_modal";
+        I.clickCss("#pills-dt-formItemsDataTable-" + condition + "-tab");
+        DT.waitForLoader(id);
+        const saved = await I.executeScript(condition => {
+            const table = condition === "visibilityConditions" ? visibilityConditionsDataTable : requirementConditionsDataTable;
+            return table.rows().data().toArray().find(row => row.value && table.DATA.jsonOptions.itemFormId.some(
+                source => source.value === row.itemFormId && Array.isArray(source.original)
+            ));
+        }, condition);
+        I.assertEqual(Boolean(saved), true, "The fixture must contain a saved condition on a choice field");
+        I.clickCss("#" + id + " tbody tr[id='" + saved.id + "'] td.sorting_1");
+        I.clickCss("#" + id + "_wrapper button.buttons-edit");
+        DTE.waitForEditor(id);
+        I.assertEqual(await I.grabValueFrom(modal + " select#DTE_Field_value"), saved.value);
+        I.assertEqual(await I.executeScript(condition => {
+            const table = condition === "visibilityConditions" ? visibilityConditionsDataTable : requirementConditionsDataTable;
+            return table.EDITOR.field("value").val();
+        }, condition), saved.value);
+        I.dontSeeElement(modal + " .DTE_Field_Name_caseInsensitive");
+
+        DTE.selectOption("itemFormId", "(Krok 1) Checkgroup");
+        I.assertDeepEqual(await I.grabAttributeFromAll(modal + " select#DTE_Field_value option", "value"), ["", "auto", "autobus", "lietadlo"]);
+        I.assertEqual(await I.grabValueFrom(modal + " select#DTE_Field_value"), "");
+        DTE.selectOption("itemFormId", "(Krok 1) Poznamka");
+        I.seeElement(modal + " input#DTE_Field_value");
+        I.seeElement(modal + " .DTE_Field_Name_caseInsensitive");
+        DTE.cancel(id, true);
+        DTE.cancel("formItemsDataTable");
+    }
+});
+
 function testFields(I, DT, DTE, tab, modal, id) {
     const editor = "#pills-dt-editor-formItemsDataTable-Content";
 
@@ -84,18 +124,24 @@ function testFields(I, DT, DTE, tab, modal, id) {
         I.clickCss(editor + " button.buttons-create");
         DTE.waitForEditor(id);
 
-        testFieldOptionsVisibililty(I, modal, ["(Krok 1) Pohlavie", "(Krok 1) Email", "(Krok 1) Poznamka"], ["(Krok 2) Adresa", "(Krok 2) Telefónne číslo"], "(Krok 1) Meno");
+        testFieldOptionsVisibililty(I, modal, ["(Krok 1) Pohlavie", "(Krok 1) Email", "(Krok 1) Poznamka"], ["(Krok 1) Meno", "(Krok 2) Adresa", "(Krok 2) Telefónne číslo"], "(Krok 1) Pohlavie");
 
     I.say("When I select operator that do not use value - like is_empty - I do not see all params to set");
         I.seeElement(".DTE_Field_Name_value");
-        I.seeElement(".DTE_Field_Name_caseInsensitive");
+        I.dontSeeElement(".DTE_Field_Name_caseInsensitive");
 
         DTE.selectOption("operator", "je prázdne");
 
         I.dontSeeElement(".DTE_Field_Name_value");
         I.dontSeeElement(".DTE_Field_Name_caseInsensitive");
 
-    I.say("Cant select in condition myself fields");
+    I.say("Server rejects a self-reference even when injected into the select");
+        I.executeScript((modal) => {
+            const ownFieldId = formItemsDataTable.EDITOR.currentJson.itemFormId;
+            const table = modal.includes("visibilityConditions") ? visibilityConditionsDataTable : requirementConditionsDataTable;
+            table.EDITOR.field("itemFormId").update([{ label: ownFieldId, value: ownFieldId }]);
+            table.EDITOR.field("itemFormId").val(ownFieldId);
+        }, modal);
         DTE.save(id);
         I.waitForText("Podmienka nemôže odkazovať sama na seba.", 5);
         I.clickCss(modal + " button.btn-close-editor");
@@ -127,7 +173,7 @@ function testFields(I, DT, DTE, tab, modal, id) {
         I.clickCss(editor + " button.buttons-create");
         DTE.waitForEditor(id);
 
-        testFieldOptionsVisibililty(I, modal, ["(Krok 1) Pohlavie", "(Krok 1) Email", "(Krok 1) Poznamka", "(Krok 2) Adresa", "(Krok 2) Telefónne číslo"], [], "(Krok 2) Meno a priezvisko");
+        testFieldOptionsVisibililty(I, modal, ["(Krok 1) Pohlavie", "(Krok 1) Email", "(Krok 1) Poznamka", "(Krok 2) Adresa", "(Krok 2) Telefónne číslo"], ["(Krok 2) Meno a priezvisko"], "(Krok 2) Adresa");
 }
 
 function testFieldOptionsVisibililty(I, modal, seeArr = [], dontSeeArr = [], selectStep = null) {
@@ -287,26 +333,28 @@ Scenario('TETS CONDITIONS in form', async ({ I, DT, DTE, TempMail }) => {
     I.say("Test validations");
         I.clickCss("input#f1-radiogroup-2-1[value='two']");
         waitForVisible(I, "input#f1-telefon-1", 5);
+        // Empty optional values are valid; use a non-empty value that fails the phone regex.
+        I.fillField("input#f1-telefon-1", "invalid");
         I.clickCss("button[type='submit']");
-        I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
+        I.waitForText("Hodnota (invalid) pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
         I.fillField("input#f1-menopriezvisko-1", "Tester_1");
         waitForVisible(I, "input#f1-adresa-1", 5);
         I.clickCss("button[type='submit']");
-        I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
+        I.waitForText("Hodnota (invalid) pre pole Telefónne číslo je neplatná", 5);
         I.dontSee("Adresa - povinné pole");
 
         I.fillField("input#f1-menopriezvisko-1", "Tester_2");
         waitForVisible(I, "input#f1-adresa-1", 5);
         I.clickCss("button[type='submit']");
-        I.waitForText("Hodnota () pre pole Telefónne číslo je neplatná", 5);
+        I.waitForText("Hodnota (invalid) pre pole Telefónne číslo je neplatná", 5);
         I.waitForText("Adresa - povinné pole", 5);
 
         I.fillField("input#f1-telefon-1", "0123456789");
         I.clickCss("button[type='submit']");
         I.waitForText("Adresa - povinné pole", 5);
-        I.dontSee("Hodnota () pre pole Telefónne číslo je neplatná");
+        I.dontSee("Hodnota (invalid) pre pole Telefónne číslo je neplatná");
 
         I.fillField("input#f1-menopriezvisko-1", "Tester_X");
         waitForInvisible(I, "input#f1-adresa-1", 5);
@@ -347,7 +395,7 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
         <span>[X]</span> <label for="checkboxgroup-1-2">lietadlo</label>
         </div>
         </div><div>
-        <label for="email-1">Email</label> <span>wjmultistep.conditions.user@fexpost.com</span>
+        <label for="email-1">Email</label> <span>${baseUserMail}${TempMail.getTempMailDomain()}</span>
         </div><div>
         <label>Pohlavie</label>
         </div>
@@ -377,7 +425,7 @@ Scenario('Check admin email', async ({ I, DT, DTE, TempMail }) => {
         </div></div>  </form>
     `;
 
-    checkEmailWithForm(I, expectedHtml);
+    await checkEmailWithForm(I, expectedHtml);
     TempMail.closeEmail();
     await TempMail.destroyInbox(baseAdminMail);
 });
@@ -394,24 +442,26 @@ Scenario('Check user email', async ({ I, DT, DTE, TempMail }) => {
     await TempMail.destroyInbox(baseUserMail);
 });
 
-function checkEmailWithForm(I, expectedHtml) {
-    I.executeScript(() => {
+async function checkEmailWithForm(I, expectedHtml) {
+    const actualHtml = await I.executeScript(() => {
         const selector = "form[name='formMailForm-multistep_condition_test']";
         const form = document.querySelector(selector);
         return form ? form.outerHTML : null;
-    }).then(actualHtml => {
-        I.say("Compare actual vs expected EMAIL form HTML");
-        //I.say("ACTUAL HTML:\n" + actualHtml);
-        compareTwoHtml(I, actualHtml, expectedHtml);
     });
+    I.say("Compare actual vs expected EMAIL form HTML");
+    await compareTwoHtml(I, actualHtml, expectedHtml);
 }
 
 function compareTwoHtml(I, actualHtml, expectedHtml) {
     const normalize = html =>
         html
+            // Empty hint containers carry no answer. Keep hints that have content.
+            .replace(/<div class="form-hint">\s*<\/div>/g, '')
             .replace(/\s*<br>\s*/gi, '<br>')
             // Remove all HTML attributes from opening tags: <tag attr="x"> -> <tag>
             .replace(/<([a-zA-Z][\w:-]*)(\s[^>]*?)?(\/?)>/g, '<$1$3>')
+            // Mail clients may already have removed the class identifying an empty hint.
+            .replace(/<div>\s*<\/div>/g, '')
             .replace(/\s+/g, ' ')
             .replace(/>\s+</g, '><')
             .trim();
@@ -421,7 +471,7 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
         //I.say("ACTUAL:\n" + normalize(actualHtml));
         //I.say("EXPECTED:\n" + normalize(expectedHtml));
 
-        I.assertEqual(
+        return I.assertEqual(
             normalize(actualHtml),
             normalize(expectedHtml),
             'Form HTML does not match exactly'

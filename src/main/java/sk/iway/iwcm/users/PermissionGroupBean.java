@@ -33,6 +33,8 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.JpaTools;
 
 /**
@@ -44,6 +46,11 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_PERM_GROUP_UPDATE)
+@DataTableTabs(tabs = {
+	@DataTableTab(id = "basicInfo", title = "user.permgroups.tabs.basicInfo", selected = true),
+	@DataTableTab(id = "dirs", title = "user.permgroups.tabs.dirs"),
+	@DataTableTab(id = "perms", title = "user.permgroups.tabs.perms")
+})
 public class PermissionGroupBean extends ActiveRecordRepository implements Serializable
 {
 	private static final long serialVersionUID = -1L;

@@ -176,8 +176,8 @@ public class AdminUploadController {
                 output.put("virtualPath", uploadService.getVirtualPath());
 
                 uploadService.process();
-
-                success = true;
+                errorKey = uploadService.getErrorKey();
+                success = errorKey == null;
             }
             catch (Exception ex) {
                 Logger.error(AdminUploadController.class, ex);

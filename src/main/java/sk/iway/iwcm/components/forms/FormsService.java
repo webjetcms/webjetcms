@@ -39,6 +39,8 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.forms.archive.FormsArchiveRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
@@ -650,45 +652,18 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Deletes one submission or all records and structure belonging to a form definition.
+     * Deletes form data through the deletion service, preserving definitions still in use.
      *
-     * Deleting a management record, identified by a missing creation date, removes all submissions,
-     * steps, and items with the same form name. Form settings are intentionally preserved.
-     *
-     * @param entity  entity carrying the form name to delete
-     * @param id  database identifier of the record initiating the deletion
-     * @param formStepsRepository  repository used to remove multistep form steps
-     * @param formItemsRepository  repository used to remove multistep form items
-     * @param formSettingsRepository  settings repository retained for deletion workflow compatibility
-     * @return {@code true} when deletion succeeds; {@code false} for another domain or on failure
+     * @param entity submitted record retained for API compatibility; only the stored ID is used
+     * @param id database identifier of the record initiating the deletion
+     * @param formStepsRepository retained for API compatibility
+     * @param formItemsRepository retained for API compatibility
+     * @param formSettingsRepository retained for API compatibility
+     * @return whether the record was deleted in the current domain
      */
     public boolean deleteItem(E entity, long id, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, FormSettingsRepository formSettingsRepository) {
-        try {
-            String formName = entity.getFormName();
-            E entityDb = getById(id);
-
-            int domainId = CloudToolsForCore.getDomainId();
-            if (domainId != entityDb.getDomainId()) return false;
-
-            if (entityDb.getCreateDate() == null) {
-                //zmaz vsetky podla mena formu, ak su uz len 2 zaznamy (cize riadiaci + jeden form) zmaz tiez vsetko
-                formsRepository.deleteByFormNameAndDomainId(formName, domainId);
-                // Ak ma, zmaz aj steps/items (multistep forms)
-                formStepsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
-                formItemsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
-                MultistepFormsService.clearValidationFieldsCache(formName, domainId);
-                // DO NOT DELETE maybe form is still in webpage and we just deleted form records
-                // formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
-            } else {
-                // remove form filled record
-                formsRepository.deleteById(id);
-            }
-
-            return true;
-        } catch (Exception e) {
-            Logger.error(getClass(), e);
-        }
-        return false;
+        FormsDeletionService deletionService = Tools.getSpringBean("formsDeletionService", FormsDeletionService.class);
+        return deletionService.delete(id, formsRepository instanceof FormsArchiveRepository).deleted();
     }
 
     /**
@@ -818,12 +793,55 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         fields.put("stepId", stepId);
         fields.put("label", Tools.getStringValue(label, ""));
         fields.put("labelSanitized", Tools.getStringValue(labelSanitized, ""));
+        fields.put("hint", item == null ? "" : item.optString("hint", ""));
         fields.put("value", safeValue);
         fields.put("valueSanitized", DocTools.removeChars(safeValue, true));
         fields.put("placeholder", ResponseUtils.filter(Jsoup.parse(Tools.getStringValue(placeholder, "")).text()));
         fields.put("classes", Tools.getStringValue(classes, ""));
         fields.put("tooltip", Tools.getStringValue(tooltip, ""));
         return fields;
+    }
+
+    /**
+     * Creates the explicitly supported settings placeholders for HTML templates.
+     * Custom fields and email introduction/conclusion allow HTML; other settings are escaped
+     * for HTML text and quoted attributes. Entity HTML escaping is normalized once.
+     *
+     * @param formSettings settings for the current form and domain, or {@code null}
+     * @return mutable map with all supported settings keys, using empty strings for missing values
+     */
+    public static Map<String, String> getSettingsReplacementMap(FormSettingsEntity formSettings) {
+        FormSettingsEntity settings = formSettings == null ? new FormSettingsEntity() : formSettings;
+        Map<String, String> fields = new HashMap<>();
+        putSetting(fields, "fieldA", settings.getFieldA(), true);
+        putSetting(fields, "fieldB", settings.getFieldB(), true);
+        putSetting(fields, "fieldC", settings.getFieldC(), true);
+        putSetting(fields, "fieldD", settings.getFieldD(), true);
+        putSetting(fields, "fieldE", settings.getFieldE(), true);
+        putSetting(fields, "fieldF", settings.getFieldF(), true);
+        putSetting(fields, "emailTextBefore", settings.getEmailTextBefore(), true);
+        putSetting(fields, "emailTextAfter", settings.getEmailTextAfter(), true);
+        putSetting(fields, "formName", settings.getFormName(), false);
+        putSetting(fields, "recipients", settings.getRecipients(), false);
+        putSetting(fields, "ccEmails", settings.getCcEmails(), false);
+        putSetting(fields, "bccEmails", settings.getBccEmails(), false);
+        putSetting(fields, "replyTo", settings.getReplyTo(), false);
+        putSetting(fields, "subject", settings.getSubject(), false);
+        putSetting(fields, "forward", settings.getForward(), false);
+        putSetting(fields, "forwardFail", settings.getForwardFail(), false);
+        putSetting(fields, "maxSizeInKilobytes", settings.getMaxSizeInKilobytes(), false);
+        putSetting(fields, "maxCombinedSizeInKilobytes", settings.getMaxCombinedSizeInKilobytes(), false);
+        putSetting(fields, "allowedExtensions", settings.getAllowedExtensions(), false);
+        putSetting(fields, "pictureHeight", settings.getPictureHeight(), false);
+        putSetting(fields, "pictureWidth", settings.getPictureWidth(), false);
+        putSetting(fields, "formAddClasses", settings.getFormAddClasses(), false);
+        putSetting(fields, "rowView", settings.getRowView(), false);
+        return fields;
+    }
+
+    private static void putSetting(Map<String, String> fields, String name, Object value, boolean allowHtml) {
+        String text = value == null ? "" : StringEscapeUtils.unescapeHtml4(value.toString());
+        fields.put("settings." + name, allowHtml ? text : ResponseUtils.filter(text));
     }
 
     /**
@@ -861,9 +879,33 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      */
     public static final String replaceFields(String html, String formName, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop, HttpServletRequest request)
     {
-        html = Tools.replace(Tools.getStringValue(html, ""), "${formname}", Tools.getStringValue(formName, ""));
-        html = Tools.replace(html, "${savedb}", Tools.getStringValue(formName, ""));
-        html = Tools.replace(html, "${recipients}", Tools.getStringValue(recipients, ""));
+        return replaceFields(html, formName, null, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop, request);
+    }
+
+    /**
+     * Renders a field or form wrapper with the settings already loaded by the caller.
+     *
+     * @param html source HTML template
+     * @param formName form identifier used by the legacy placeholders
+     * @param formSettings current domain's form settings, or {@code null}
+     * @param recipients legacy recipient placeholder value
+     * @param item item metadata, or {@code null} for wrappers
+     * @param requiredLabelAdd required-field label suffix
+     * @param isEmailRender whether to omit interactive tooltips
+     * @param rowView whether to wrap the item in a column
+     * @param firstTimeHeadingSet headings already rendered in this form
+     * @param prop localization provider
+     * @param request current request used for user expressions
+     * @return rendered HTML without recursively expanding replacement values
+     */
+    public static String replaceFields(String html, String formName, FormSettingsEntity formSettings, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop, HttpServletRequest request)
+    {
+        html = Tools.getStringValue(html, "");
+        Map<String, String> formFields = getSettingsReplacementMap(formSettings);
+        formFields.put("formname", Tools.getStringValue(formName, ""));
+        formFields.put("savedb", Tools.getStringValue(formName, ""));
+        formFields.put("recipients", Tools.getStringValue(recipients, ""));
+        requiredLabelAdd = replaceFields(requiredLabelAdd, formFields);
 
         if (item != null) {
             try {
@@ -920,15 +962,6 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     }
                 }
 
-                String tooltip = "";
-                Map<String, String> replacementFields = getFieldReplacementMap(item, id, label, labelSanitized, value, placeholder, classes, tooltip);
-                if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel)) {
-                    Map<String, String> tooltipFields = new HashMap<>(replacementFields);
-                    tooltipFields.put("label", tooltipLabel);
-                    tooltip = " " + replaceFields(prop.getText("components.formsimple.tooltipCode"), tooltipFields);
-                    replacementFields.put("tooltip", tooltip);
-                }
-
                 //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
                 String firstTimeHeadingKey = "components.formsimple.firstTimeHeading." + fieldType;
                 String firstTimeHeading = prop.getText(firstTimeHeadingKey, false);
@@ -937,52 +970,69 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     html = firstTimeHeading + html;
                 }
 
-                //iterable - pre skupinu poli
-                int iterableSize = 0;
+                // Prepare nested templates before expanding any replacement values.
+                String iterableCode = null;
+                String[] values = null;
                 if (html.contains("${iterable}") && Tools.isNotEmpty(value)) {
-                    StringBuilder iterable = new StringBuilder();
                     String iterableKey = "components.formsimple.iterable." + fieldType;
-                    String iterableCode = prop.getText(iterableKey);
-                    if (Tools.isNotEmpty(iterableCode) && iterableCode.equals(iterableKey) == false) {
-                        String[] values = parseIterableValues(value);
-
-                        int counter = 0;
-                        iterableSize = values.length;
-                        for (String token : values) {
-                            String valueLabel = token;
-                            String code = iterableCode;
-
-                            int separator = token.indexOf(":");
-                            if (code.contains("${value-label}") && separator >= 0) {
-                                valueLabel = token.substring(0, separator);
-                                token = token.substring(separator + 1);
-                            }
-
-                            code = Tools.replace(code, "${value}", token);
-                            code = Tools.replace(code, "${value-label}", valueLabel);
-                            code = Tools.replace(code, "${counter}", String.valueOf(counter));
-
-                            iterable.append(code).append("\n");
-                            counter++;
-                        }
+                    iterableCode = prop.getText(iterableKey);
+                    values = new String[0];
+                    if (Tools.isNotEmpty(iterableCode) && !iterableCode.equals(iterableKey)) {
+                        values = parseIterableValues(removeUnsupportedEmptyOption(value, fieldType, prop));
                     }
-                    html = Tools.replace(html, "${iterable}", iterable.toString());
                 }
-
-                html = replaceFields(html, replacementFields);
 
                 StringBuilder csError = new StringBuilder();
                 csError.append("<div class=\"help-block cs-error cs-error-").append(id);
-                if (iterableSize > 0) {
-                    for (int counter = 0; counter < iterableSize; counter++) {
+                if (values != null) {
+                    for (int counter = 0; counter < values.length; counter++) {
                         csError.append(" cs-error-").append(id).append("-").append(counter);
                     }
                 }
                 csError.append("\"></div>");
-                html = Tools.replace(html, "${cs-error}", csError.toString());
+
+                String tooltip = "";
+                Map<String, String> replacementFields = getFieldReplacementMap(item, id, label, labelSanitized, value, placeholder, classes, tooltip);
+                replacementFields.putAll(formFields);
+                replacementFields.put("cs-error", csError.toString());
+                if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel)) {
+                    Map<String, String> tooltipFields = new HashMap<>(replacementFields);
+                    tooltipFields.put("label", tooltipLabel);
+                    tooltip = " " + replaceFields(prop.getText("components.formsimple.tooltipCode"), tooltipFields);
+                    replacementFields.put("tooltip", tooltip);
+                }
+
+                if (values != null) {
+                    StringBuilder iterable = new StringBuilder();
+                    int counter = 0;
+                    for (String token : values) {
+                        String valueLabel = token;
+                        int separator = token.indexOf(":");
+                        if (":".equals(token) && isEnumerationOptions(value) == false) {
+                            token = "";
+                            valueLabel = "";
+                            if ("radiogroup".equals(fieldType)) {
+                                valueLabel = ResponseUtils.filter(prop.getText("components.formsimple.emptyOptionLabel.radiogroup"));
+                            }
+                        } else if (iterableCode.contains("${value-label}") && separator >= 0) {
+                            valueLabel = token.substring(0, separator);
+                            token = token.substring(separator + 1);
+                        }
+                        Map<String, String> iterableFields = new HashMap<>(replacementFields);
+                        iterableFields.put("value", token);
+                        iterableFields.put("value-label", valueLabel);
+                        iterableFields.put("counter", String.valueOf(counter));
+                        iterable.append(replaceFields(iterableCode, iterableFields)).append("\n");
+                        counter++;
+                    }
+                    replacementFields.put("iterable", iterable.toString());
+                }
+                html = replaceFields(html, replacementFields);
             } catch (Exception ex) {
                 sk.iway.iwcm.Logger.error(ex);
             }
+       } else {
+           html = replaceFields(html, formFields);
        }
 
        if (rowView && html.startsWith("</div") == false) {
@@ -991,6 +1041,37 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
        }
 
        return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
+    }
+
+    /**
+     * Removes the manual empty-option sentinel when the field type hides its editor control.
+     * Enumeration configurations and all other option tokens are preserved verbatim.
+     * Separators are retained so a single remaining option keeps its original parsing mode.
+     *
+     * @param value serialized options
+     * @param fieldType configured form field type
+     * @param prop localization provider containing the field visibility configuration
+     * @return options without unsupported empty entries
+     */
+    public static String removeUnsupportedEmptyOption(String value, String fieldType, Prop prop) {
+        if (Tools.isEmpty(value) || isEnumerationOptions(value)) return value;
+        String hiddenFields = prop.getText("components.formsimple.hide." + fieldType);
+        if (Arrays.asList(Tools.getTokens(hiddenFields, ",", true)).contains("emptyOption") == false) return value;
+
+        String delimiter = " ";
+        if (value.contains("|")) delimiter = "|";
+        else if (value.contains(",")) delimiter = ",";
+        return Arrays.stream(value.split(java.util.regex.Pattern.quote(delimiter), -1))
+            .map(token -> ":".equals(token.trim()) ? "" : token)
+            .collect(Collectors.joining(delimiter));
+    }
+
+    private static boolean isEnumerationOptions(String value) {
+        String normalized = Tools.getStringValue(value, "").trim();
+        if (normalized.startsWith("{") && normalized.endsWith("}")) {
+            normalized = normalized.substring(1, normalized.length() - 1).trim();
+        }
+        return normalized.startsWith("enumeration-options");
     }
 
     /**

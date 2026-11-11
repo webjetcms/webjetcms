@@ -6,6 +6,18 @@ WebJET obsahuje inteligentný editor web stránok, ktorý vám čo najvernejšie
 
 Prehľad skratiek pre textový editor aj ďalšie časti administrácie nájdete na stránke [Klávesové skratky](../../admin/keyboard-shortcuts.md). Na Macu sa pri kopírovaní, vystrihovaní, vkladaní a úprave odkazov používa **Command (⌘)** namiesto **Ctrl**.
 
+## Panel nástrojov v úzkom okne
+
+Ak sa všetky nástroje nezmestia vedľa seba, časť skupín nájdete pod tlačidlom **… Ďalšie nástroje**. Lišta sa tak nezalomí do ďalšieho pásu a prepínač editora aj rozmerov zostane dostupný. Funguje to v Štandardnom editore aj v Page Builderi, napríklad pri mobilnom zobrazení. Po rozšírení okna sa skupiny vrátia na pôvodné miesta.
+
+![Panel Ďalšie nástroje v mobilnom náhľade Page Buildera](toolbar-overflow.png)
+
+Panel zostáva otvorený pri formátovaní textu, takže môžete použiť viac nástrojov za sebou. Zatvoríte ho kliknutím mimo panela, opätovným kliknutím na **…**, krížikom alebo klávesom **Escape**. Zatvorí sa aj pri prechode do iného bloku či otvorení dialógu. Dlhší obsah panela môžete posúvať.
+
+Ak sa dialóg, napríklad Obrázok, Odkaz alebo Aplikácie, nezmestí do šírky náhľadu v Page Builderi, automaticky sa otvorí vo veľkosti okna prehliadača. Po potvrdení alebo zatvorení dialógu sa obnoví pôvodná šírka náhľadu a posun stránky. Počas automatického rozšírenia sa tlačidlo **Zmenšiť** nezobrazuje.
+
+Klávesom **Alt+F10** prejdete na lištu. **Tab** prepína medzi dostupnými skupinami a tlačidlom **…**, šípky medzi nástrojmi v skupine. Tlačidlo **…** otvoríte klávesom **Enter**, medzerníkom alebo šípkou dole. Ak otvoríte vnorenú ponuku, napríklad farby či Štýly, prvý **Escape** zatvorí túto ponuku a ďalší panel nástrojov.
+
 ## Práca s textom (písanie / vkladanie / kopírovanie)
 
 Pri práci s textom si musíte v prvom rade uvedomiť rozdiel medzi odsekom a zalomeným textom, čiže rozdelením vety do ďalšieho riadku. Jednotlivé odseky vytvoríte bežným stlačením ```ENTER```, zatiaľ čo zalomenie textu pomocou klávesovej kombinácie ```SHIFT + ENTER```.
@@ -203,7 +215,9 @@ Po kliknutí na ikonku sa vám zobrazí dialógové okno na vloženie obrázka:
 
 ![](image_dialog.png)
 
-Pri prechádzaní cez stromovú štruktúru sú zobrazené len súbory typu obrázok alebo video, ostatné súbory sú filtrované.
+Pri prechádzaní cez stromovú štruktúru sú zobrazené len obrázky, videá a zvukové súbory. Rovnaké obmedzenie platí aj pri nahrávaní, vrátane priečinka **Súbory**. Výber súborov v počítači je obmedzený na tieto typy. Ak napríklad PDF alebo ZIP presuniete do dialógu, zobrazí sa chyba **Nepovolený typ súboru** ešte pred odoslaním súboru. Súbory, ktorých typ prehliadač nerozpozná, skontroluje server pred uložením. Pri nahrávaní viacerých súborov sa podporované súbory nahrajú a pri ostatných sa zobrazí upozornenie.
+
+PDF a ďalšie dokumenty môžete nahrať cez dialóg na vloženie odkazu, kartu **Médiá** alebo **Prieskumník**.
 
 ### Karta Obsah
 

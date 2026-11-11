@@ -77,13 +77,17 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.waitForText(auto_name, 10);
      I.click(locate('#editorAppDTE_Field_editorFields-defaultDocDetails').find('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
      // nejde vybrat priecinok, len webstranku
-     I.click(locate('.jstree-node.jstree-closed').withText(auto_name).find('a.jstree-anchor'));
+     const rootInPicker = locate(WebjetDteJsTree.tree + ' li.jstree-closed').withChild(locate('a.jstree-anchor').withTextEquals(auto_name));
+     I.waitForVisible(rootInPicker, 10);
+     I.click(rootInPicker.find('a.jstree-anchor'));
      I.waitForText('Vyberte web stránku', 10);
      I.click('.toast-close-button');
-     I.wait(2);
      // vyberie web stranku z priecinka name-autotest
-     I.click(locate('.jstree-node.jstree-closed').withText(auto_name).find('.jstree-icon.jstree-ocl'));
-     I.click(locate('.jstree-node.jstree-leaf').withText(auto_webPage).find('a.jstree-anchor'));
+     I.click(rootInPicker.find('.jstree-ocl'));
+     const pageInPicker = locate(WebjetDteJsTree.tree + ' li.jstree-leaf > a.jstree-anchor').withTextEquals(auto_webPage);
+     I.waitForVisible(pageInPicker, 10);
+     I.click(pageInPicker);
+     I.waitForInvisible(WebjetDteJsTree.tree, 10);
      DTE.save();
      I.wait(1);
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0'); // musim refreshnut stranku, pretoze v tomto kroku WJ prestane reagovat
@@ -100,9 +104,11 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      // vyber web stranku z priecinka folder-autotest
      I.click(locate('#editorAppDTE_Field_editorFields-defaultDocDetails').find('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'));
      I.waitForElement(WebjetDteJsTree.tree);
-     I.click(locate('.jstree-node.jstree-closed').withText(auto_folder).find('.jstree-icon.jstree-ocl'));
-     I.wait(1);
-     I.click(locate('.jstree-node.jstree-leaf.jstree-last').withText(auto_folder).find('a.jstree-anchor'));
+     I.click(locate(WebjetDteJsTree.tree + ' li.jstree-closed').withChild(locate('a.jstree-anchor').withTextEquals(auto_folder)).find('.jstree-ocl'));
+     const otherPageInPicker = locate(WebjetDteJsTree.tree + ' li.jstree-leaf > a.jstree-anchor').withTextEquals(auto_folder);
+     I.waitForVisible(otherPageInPicker, 10);
+     I.click(otherPageInPicker);
+     I.waitForInvisible(WebjetDteJsTree.tree, 10);
      I.waitForText(auto_folder, 10);
      DTE.save();
      I.waitForText('Webové stránky', 10);
@@ -121,9 +127,11 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.wait(1);
      I.click('Zmazať', "#groups-datatable_modal");
      DTE.waitForLoader();
+     DTE.waitForModalClose("groups-datatable_modal");
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
      I.waitForText('Webové stránky', 10);
      DT.waitForLoader();
+     I.waitForInvisible(locate('#SomStromcek a.jstree-anchor').withText(auto_folder), 20);
      I.dontSee(auto_folder);
      I.wait(1);
      // zmazanie name-autotest
@@ -132,10 +140,11 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.clickCss('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
      I.wait(1);
      I.click('Zmazať', "#groups-datatable_modal");
-     I.wait(1);
+     DTE.waitForModalClose("groups-datatable_modal");
      DT.waitForLoader();
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
      I.waitForText('Webové stránky', 10);
+     I.waitForInvisible(locate('#SomStromcek a.jstree-anchor').withText(auto_name), 20);
      I.dontSee(auto_name);
 });
 

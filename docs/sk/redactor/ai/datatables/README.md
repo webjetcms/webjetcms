@@ -155,29 +155,33 @@ Nemusíte upravovať celý obsah stránky. Asistent pracujúci s `PageBuilder` p
 
 ![](page_builder-selection.png)
 
-## Režim chat
+## Režim čet
 
-Ak je asistent nastavený do režimu chat, aplikujú sa zmeny v PageBuilder na celú štruktúru, nielen textový/editovateľný obsah. Asistent tak dokáže generovať nové bloky, upravovať existujúce a podobne. Viete mu zadávať požiadavky na úpravu textov v stránke a generovanie nových blokov. Režim aktivujete nastavením poľa Typ požiadavky na hodnotu `Chat` vo vlastnostiach asistenta.
+V PageBuilderi môžete z podkladov vytvoriť stránku a potom ju upravovať v tom istom rozhovore. Ak chcete rozhovor neskôr otvoriť z histórie, novú stránku najprv uložte a znova otvorte v editore. Pri novej, ešte neuloženej stránke je čet dočasný (neuloží sa do histórie). Odporúčame vám teda novú stránku najskôr uložiť až potom upravovať jej text pre zachovanie histórie.
 
-Okno so zadaním požiadavky obsahuje nové polia na nastavenie režimu:
+V paneli nástrojov kliknite na ikonu AI a vyberte asistenta **Webový dizajnér (PageBuilder)**. Ikonou plus **Nahrať súbor** priložte podklad. Môže to byť PDF s textovou vrstvou, dokument Word (DOCX) alebo prezentácia PowerPoint (PPTX). Do správy napíšte napríklad „Podľa PDF vytvor stránku kaderníckeho salónu s úvodným blokom, službami a otváracími hodinami.“ Odošlite správu.
 
-- **Pridať** - výstupný HTML kód z požiadavky pridá na koniec stránky. Neposiela asistentovi aktuálny obsah stránky, vykonanie je teda lacnejšie (spotrebuje sa menej tokenov).
-- **Upraviť** - spolu s inštrukciou a vašou požiadavkou sa pošle aj aktuálny HTML kód stránky, v ktorom vie asistent upraviť texty, bloky, HTML kód. Spotrebuje sa viac tokenov na vykonanie požiadavky.
-- **Nahradiť** - podobne ako pridať, spolu s požiadavkou sa neposiela aktuálny kód stránky. Výsledkom je nahradená aktuálna stránka. Vhodné, ak chcete začať od znova a zmazať celý aktuálny obsah.
+![Zadanie pre webového dizajnéra s priloženým PDF salónu](pb-chat-prompt.png)
 
-![](pb-chat-prompt.png)
+Po odoslaní správy asistent pripraví HTML bloky. Keď odpoveď dokončí, na karte **Návrh obsahu** sa automaticky otvorí **Náhľad**. Ikonami **Desktop**, **Tablet** a **Mobil** si skontrolujte, ako sa bloky zobrazia na rôznych obrazovkách. Tlačidlom **Maximalizovať okno** zväčšíte náhľad na celú plochu četu. Klávesom **Esc** sa vrátite k odpovedi.
 
-Po vykonaní požiadavky sa zobrazí okno so stavom a počtom použitých tokenov. Naviac ale v tomto okne je možnosť **Pokračovať**, ktorá znova zobrazí okno pre zadanie požiadavky.
+![Návrh stránky salónu s prepínačmi zariadení a tlačidlami na vloženie blokov](pb-chat-preview.png)
 
-![](pb-chat-success.png)
+Keď vám návrh vyhovuje, kliknite pod odpoveďou na **Nahradiť obsah**. Až týmto krokom vložíte navrhnuté bloky do stránky. Ak chcete pôvodné bloky ponechať a nové pripojiť na koniec, použite **Pridať**. Tlačidlom **Minimalizovať čet** (mínus vpravo hore) minimalizujete okno četu do malej ikony vpravo dole a môžete pokračovať v práci priamo v stránke.
 
-Môžete teda pokračovať v úpravách na web stránke a zadať požiadavku na úpravu textu stránky. Zvolením možnosti **Upraviť** sa odošle spolu s vašou požiadavkou aj aktuálny HTML kód stránky, asistent v ňom teda vie vykonať zmeny.
+![Stránka salónu vytvorená z PDF a ikona minimalizovaného četu](pb-chat-success.png)
 
-![](pb-chat-edit.png)
+Kliknutím na ikonu AI v pravom dolnom rohu obnovíte ten istý čet. Prílohu už nemusíte posielať znova. Napíšte napríklad „Zmeň hlavný nadpis na Super Barber Bernolákovo a pridaj blok s tipmi na starostlivosť o vlasy. Vráť celú upravenú stránku.“
 
-Vykonané úpravy sa zobrazia vo web stránke a znova môžete kliknutím na Pokračovať zadať ďalšiu požiadavku, alebo kliknutím na **OK** asistenta ukončiť. Všimnite si na fotke, že podľa zadanej požiadavky je upravený nadpis oproti predchádzajúcej verzii.
+![Pokračovanie v čete s požiadavkou na úpravu stránky](pb-chat-edit.png)
 
-![](pb-chat-edit-success.png)
+Pod novou odpoveďou kliknite na **Nahradiť obsah** a skontrolujte výsledok v PageBuilderi. Ak ste obsah medzitým ručne neupravili, posledný krok môžete vrátiť tlačidlom **Zrušiť vloženie**. Hotovú stránku uložte v editore.
+
+![Upravená stránka s novým nadpisom po druhej správe](pb-chat-edit-success.png)
+
+Pri uloženej stránke a asistentovi OpenAI alebo Gemini s vypnutým dočasným četom nájdete správy aj prílohy cez **História četov** pri tom istom poli stránky. Rozhovor môžete otvoriť aj po zatvorení a opätovnom otvorení editora. Keď ho už nepotrebujete, kliknite pri jeho názve na ikonu koša a potvrďte vymazanie.
+
+Rovnaký režim podporujú aj textové polia a editor stránky podľa nastavenia asistenta. Prácu s výberom textu, prílohami a históriou opisuje kapitola [Čet pri poli a v editore stránky](../chat/README.md#čet-pri-poli-a-v-editore-stránky).
 
 ## Obrázky v stránke
 

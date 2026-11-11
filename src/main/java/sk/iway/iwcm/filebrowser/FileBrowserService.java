@@ -23,6 +23,7 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.EditorToolsForCore;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -185,16 +186,22 @@ public class FileBrowserService {
 		boolean needRefreshParent = false;
 
 		boolean isProp = "yes".equals(request.getParameter("prop"));
+		if (FileBrowserTools.hasForbiddenSymbol(editForm.getDir() + "/" + editForm.getOrigFile())
+			|| FileBrowserTools.hasForbiddenSymbol(editForm.getDir() + "/" + editForm.getFile())) {
+			return SpringUrlMapping.redirectTo403();
+		}
 
 		//ak treba, presun subor
 		if (editForm.getOrigFile() != null && editForm.getOrigFile().length() > 0 && isProp)
 		{
 			if (!editForm.getFile().equals(editForm.getOrigFile()))
 			{
-				Adminlog.add(Adminlog.TYPE_FILE_EDIT, "Rename file: oldUrl="+editForm.getDir()+"/"+editForm.getOrigFile()+" newUrl="+editForm.getDir()+"/"+editForm.getFile(), -1, -1);
-
 				String dir = Tools.getRealPath(editForm.getDir());
-				Tools.renameFile(dir + File.separatorChar + editForm.getOrigFile(), dir + File.separatorChar + editForm.getFile());
+				if (Tools.renameFile(dir + File.separatorChar + editForm.getOrigFile(), dir + File.separatorChar + editForm.getFile()) == false)
+				{
+					return SpringUrlMapping.redirectTo403();
+				}
+				Adminlog.add(Adminlog.TYPE_FILE_EDIT, "Rename file: oldUrl="+editForm.getDir()+"/"+editForm.getOrigFile()+" newUrl="+editForm.getDir()+"/"+editForm.getFile(), -1, -1);
 				needRefreshParent = true;
 
 				//ak existuje full text zmen odkaz

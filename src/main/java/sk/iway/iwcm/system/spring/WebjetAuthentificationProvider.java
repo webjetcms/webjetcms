@@ -133,7 +133,7 @@ public class WebjetAuthentificationProvider implements AuthenticationProvider
 
             for (ModuleInfo mod : Modules.getInstance().getAvailableModules())
             {
-                if (i.isDisabledItem(mod.getItemKey())==false && user.isDisabledItem(mod.getItemKey())==false) {
+                if (i.isDisabledItem(mod.getItemKey(), false)==false && user.isDisabledItem(mod.getItemKey(), false)==false) {
                     String itemKey = WebjetSecurityService.normalizeUserGroupName(mod.getItemKey());
                     grantedAuths.add(new SimpleGrantedAuthority("ROLE_Permission_" + itemKey));
                 }
@@ -144,8 +144,8 @@ public class WebjetAuthentificationProvider implements AuthenticationProvider
                     for (ModuleInfo submod : mod.getSubmenus())
                     {
                         if (Tools.isEmpty(submod.getItemKey())) continue;
-                        if (i.isDisabledItem(submod.getItemKey())) continue;
-                        if (user.isDisabledItem(submod.getItemKey())) continue;
+                        if (i.isDisabledItem(submod.getItemKey(), false)) continue;
+                        if (user.isDisabledItem(submod.getItemKey(), false)) continue;
 
                         String itemKey = WebjetSecurityService.normalizeUserGroupName(submod.getItemKey());
                         grantedAuths.add(new SimpleGrantedAuthority("ROLE_Permission_" + itemKey));

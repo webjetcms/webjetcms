@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.gallery;
 
+import sk.iway.iwcm.system.datatable.NotifyBean;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -185,8 +187,13 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 
         if (rotateAngle!=0) {
             status = ImageTools.rotateImage(imageUrl, rotateAngle);
-            if (isGalleryFolder) {
-                GalleryDB.resizePicture(Tools.getRealPath(imageUrl), entity.getImagePath());
+            if (status == 0 && isGalleryFolder) {
+                status = GalleryDB.resizePicture(Tools.getRealPath(imageUrl), entity.getImagePath());
+            }
+            if (status != 0) {
+                addNotify(new NotifyBean(null, getProp().getText(ImageTools.getErrorKey(status)),
+                    NotifyBean.NotifyType.ERROR));
+                return false;
             }
         }
 

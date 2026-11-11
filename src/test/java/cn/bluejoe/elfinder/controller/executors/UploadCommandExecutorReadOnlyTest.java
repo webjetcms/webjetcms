@@ -1,6 +1,7 @@
 package cn.bluejoe.elfinder.controller.executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,6 +24,9 @@ import org.apache.commons.fileupload2.core.FileItem;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -35,6 +39,65 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 class UploadCommandExecutorReadOnlyTest extends BaseWebjetTest {
+
+    /** The explorer represents its root folder with an empty volume-relative path. */
+    @ParameterizedTest
+    @ValueSource(strings = {"", "/files"})
+    void shouldAcceptChunkUploadIntoWritableFolder(String folderPath, @TempDir Path tempDir) throws Exception {
+        FsService fsService = mock(FsService.class);
+        FsItemEx folder = writableFilesFolder();
+        when(folder.getPath()).thenReturn(folderPath);
+        FileItem<?> upload = mock(FileItem.class);
+        MockHttpServletRequest request = uploadRequest(Map.of("upload[]", upload));
+        request.addParameter("cid", "root-upload");
+        request.addParameter("chunk", "probe.txt.0_1.part");
+        request.addParameter("range", "0,3,6");
+        JSONObject json = new JSONObject();
+
+        try (MockedStatic<FsServiceUtils> finder = mockStatic(FsServiceUtils.class);
+             MockedStatic<sk.iway.iwcm.system.elfinder.FsService> currentUser = mockCurrentUser();
+             MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
+             MockedConstruction<FsItemEx> destinations = mockConstruction(FsItemEx.class, (item, context) -> {
+                 when(item.getPath()).thenReturn(folderPath + "/probe.txt");
+                 when(item.isWritable(item)).thenReturn(true);
+                 when(item.getParent()).thenReturn(folder);
+             })) {
+            finder.when(() -> FsServiceUtils.findItem(fsService, "filesHash")).thenReturn(folder);
+            tools.when(() -> Tools.getRealPath(folderPath)).thenReturn(tempDir.toString());
+            tools.when(() -> Tools.getRealPath(folderPath + "/probe.txt")).thenReturn(tempDir.resolve("probe.txt").toString());
+
+            new UploadCommandExecutor().execute(fsService, request, null, json);
+
+            assertFalse(json.has("error"), json.toString());
+            assertNotNull(request.getServletContext().getAttribute("chunk_root-upload_probe.txt"));
+            verify(folder).isWritable(folder);
+        }
+    }
+
+    /** Neither an invalid path nor a read-only root may accept an upload. */
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", "/files"})
+    void shouldRejectInvalidOrReadOnlyUploadFolder(String folderPath) throws Exception {
+        FsService fsService = mock(FsService.class);
+        FsItemEx folder = mock(FsItemEx.class);
+        when(folder.getPath()).thenReturn(folderPath);
+        when(folder.isWritable(folder)).thenReturn(folderPath == null);
+        FileItem<?> upload = mock(FileItem.class);
+        MockHttpServletRequest request = uploadRequest(Map.of("probe.txt", upload));
+        JSONObject json = new JSONObject();
+
+        try (MockedStatic<FsServiceUtils> finder = mockStatic(FsServiceUtils.class);
+             MockedStatic<sk.iway.iwcm.system.elfinder.FsService> currentUser = mockCurrentUser()) {
+            finder.when(() -> FsServiceUtils.findItem(fsService, "filesHash")).thenReturn(folder);
+
+            new UploadCommandExecutor().execute(fsService, request, null, json);
+        }
+
+        assertTrue(json.has("error"));
+        assertEquals(0, ((Object[]) json.get("added")).length);
+        verify(upload, never()).getInputStream();
+    }
 
     @Test
     void shouldRejectRenameOfExistingFileInReadOnlyFolder(@TempDir Path tempDir) throws Exception {
@@ -223,7 +286,7 @@ class UploadCommandExecutorReadOnlyTest extends BaseWebjetTest {
     private MockedStatic<sk.iway.iwcm.system.elfinder.FsService> mockCurrentUser() {
         Identity user = new Identity();
         user.setWritableFolders("*");
-        MockedStatic<sk.iway.iwcm.system.elfinder.FsService> currentUser = mockStatic(sk.iway.iwcm.system.elfinder.FsService.class);
+        MockedStatic<sk.iway.iwcm.system.elfinder.FsService> currentUser = mockStatic(sk.iway.iwcm.system.elfinder.FsService.class, CALLS_REAL_METHODS);
         currentUser.when(sk.iway.iwcm.system.elfinder.FsService::getCurrentUser).thenReturn(user);
         return currentUser;
     }

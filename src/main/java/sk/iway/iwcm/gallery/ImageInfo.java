@@ -16,6 +16,9 @@ package sk.iway.iwcm.gallery;
  */
 
 import java.io.DataInput;
+import java.io.ByteArrayInputStream;
+import java.io.EOFException;
+import java.io.SequenceInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -189,6 +192,9 @@ public class ImageInfo {
    /** Return value of {@link #getFormat()} for WebP streams. */
    public static final int FORMAT_WEBP = 12;
 
+   /** Return value of {@link #getFormat()} for AVIF streams. */
+   public static final int FORMAT_AVIF = 13;
+
    /**
     * The names of all supported file formats.
     * The FORMAT_xyz int constants can be used as index values for
@@ -197,7 +203,7 @@ public class ImageInfo {
    private static final String[] FORMAT_NAMES =
       {"JPEG", "GIF", "PNG", "BMP", "PCX",
        "IFF", "RAS", "PBM", "PGM", "PPM",
-       "PSD", "SWF", "WEBP"};
+       "PSD", "SWF", "WEBP", "AVIF"};
 
    /**
     * The names of the MIME types for all supported file formats.
@@ -207,7 +213,7 @@ public class ImageInfo {
    private static final String[] MIME_TYPE_STRINGS =
       {"image/jpeg", "image/gif", "image/png", "image/bmp", "image/pcx",
        "image/iff", "image/ras", "image/x-portable-bitmap", "image/x-portable-graymap", "image/x-portable-pixmap",
-       "image/psd", "application/x-shockwave-flash", "image/webp"};
+       "image/psd", "application/x-shockwave-flash", "image/webp", "image/avif"};
 
    private int width;
    private int height;
@@ -364,11 +370,41 @@ public class ImageInfo {
             return checkWebp();
          }
          else {
-            return false;
+            return checkAvif(b1, b2);
          }
       } catch (IOException ioe) {
          return false;
       }
+   }
+
+   private boolean checkAvif(int first, int second) throws IOException {
+      InputStream remaining = new InputStream() {
+         @Override
+         public int read(byte[] bytes, int offset, int length) throws IOException {
+            return in != null ? in.read(bytes, offset, length) : super.read(bytes, offset, length);
+         }
+
+         @Override
+         public long skip(long count) throws IOException {
+            return in != null ? in.skip(count) : din.skipBytes((int) Math.min(count, Integer.MAX_VALUE));
+         }
+
+         @Override
+         public int read() throws IOException {
+            try {
+               return in != null ? in.read() : din.readUnsignedByte();
+            } catch (EOFException ex) {
+               return -1;
+            }
+         }
+      };
+      InputStream input = new SequenceInputStream(new ByteArrayInputStream(new byte[] {(byte) first, (byte) second}), remaining);
+      java.awt.Dimension dimensions = AvifImageInfo.read(input);
+      if (dimensions == null) return false;
+      width = dimensions.width;
+      height = dimensions.height;
+      format = FORMAT_AVIF;
+      return true;
    }
 
    private boolean checkBmp() throws IOException {

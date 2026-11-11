@@ -3,7 +3,9 @@ Feature('admin.dashboard.social-news');
 const cards = '.md-dashboard-widget__news-card';
 const socialCards = `${cards}[data-news-id^="youtube:"], ${cards}[data-news-id^="facebook:"]`;
 
-Before(({ login }) => {
+Before(async ({ I, login }) => {
+    // This scenario checks the live feed, even if an earlier mocked news scenario failed.
+    await I.stopMockingRoute('**/wjnews.*.json');
     login('admin');
 });
 

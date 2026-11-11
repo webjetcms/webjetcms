@@ -42,6 +42,8 @@ In each of these subdirectories, you need to create **block groups as additional
     - contactus.html
 ```
 
+Do not insert the `contenteditable` attribute into HTML blocks. Editable areas are managed by Page Builder. The editor removes this attribute regardless of the value (`true`, `false`, `plaintext-only` and empty value) when loading content and before saving, even if the user adds it in HTML mode. Attributes needed during editing remain in the live editor, they are not saved to the database.
+
 ## Block name and tags
 
 If you want to have a nice block name in the block list, you can create a file `pagebuilder.properties` in the encoding `utf-8` in the corresponding subdirectory of the block group (e.g. in `section/Contact/pagebuilder.properties`). In it, you can define the block group name, icon and search tags:

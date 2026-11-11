@@ -817,8 +817,8 @@ private static String combineCss(String cssStyle)
             }
         }
 
-        //httpS presmerovanie
-        if (Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
+        // Keep the admin inline editor on the same origin by skipping HTTP/HTTPS redirects.
+        if (inlineEditorAdmin == false && Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
         {
             if (doc.isRequireSsl() && !Tools.isSecure(request))
             {
@@ -1039,6 +1039,9 @@ private static String combineCss(String cssStyle)
         //ak to nie je urcene pre editor a mame nastavene presmerovanie na externu linku
         if (skipExternalLink==false && request.getParameter("approveNoRedirect")==null && request.getParameter("notemp") == null && Tools.isNotEmpty(doc.getExternalLink()))
         {
+            if (user.isAdmin()) {
+                PathFilter.setNoCacheHeaders(response);
+            }
             String externalLink = getExternalLinkRedirectUrl(doc, request);
 
             if (doc.getExternalLink().startsWith("http://") || doc.getExternalLink().startsWith("https://"))

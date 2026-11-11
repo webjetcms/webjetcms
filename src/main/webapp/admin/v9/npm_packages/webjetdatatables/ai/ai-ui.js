@@ -1,10 +1,12 @@
 import { createWebjetDteJsTree } from '../../../src/js/web-components/webjet-dte-jstree';
+import { EditorChatWindow } from '../../../src/js/ai/editor-chat-window';
 
 /**
  * User Interface for AI interactions. It uses toastr to show popup with options and status.
  */
 export class AiUserInterface {
 
+    static activeInstance = null;
     EDITOR = null;
     lastToast = null;
     progressBar = {
@@ -13,15 +15,102 @@ export class AiUserInterface {
         maxHideTime: null
     };
     $progressElement = null;
+    viewRevision = 0;
+    activeAssistant = null;
 
     constructor(EDITOR, editorAiInstance) {
         this.EDITOR = EDITOR;
         this.editorAiInstance = editorAiInstance;
+        this.currentChat = null;
+    }
+
+    isActive() {
+        return AiUserInterface.activeInstance === this;
+    }
+
+    /** Mounts the reusable chat inside the editor's existing assistant dialog. */
+    openChat(conversation) {
+        this.detachChat();
+        this.currentChat = conversation;
+        this.$chatDialog = $("#toast-container-ai .toast.toast-info");
+        this.chatDialogDisplay = this.$chatDialog[0]?.style.display;
+        this.chatDialogAttributes = {};
+        for (const name of ["role", "aria-modal", "aria-label"]) {
+            this.chatDialogAttributes[name] = this.$chatDialog.attr(name);
+        }
+        this.$chatDialog.css("display", "flex").attr({
+            role: "dialog", "aria-modal": "false", "aria-label": conversation.aiCol.description
+        });
+        $("#toast-container-ai").removeClass("ai-status-working ai-status-success ai-status-error");
+        $("#toast-container-ai").toggleClass("ai-chat-with-history", conversation.host != null);
+        conversation.view.mount($("#toast-container-ai-content").empty()[0]);
+        this.chatWindow = new EditorChatWindow(this.$chatDialog[0],
+            () => this.activeButton?.trigger("focus"), () => conversation.chat.refresh());
+        this.$chatDialog.on("keydown.aiChatHost", event => this._handleChatDialogKey(event));
+    }
+
+    detachChat() {
+        this.chatWindow?.destroy();
+        this.chatWindow = null;
+        this.currentChat?.view.unmount();
+        this.currentChat = null;
+        $("#toast-container-ai").removeClass("ai-chat-with-history");
+        this.$chatDialog?.off("keydown.aiChatHost");
+        if (this.chatDialogAttributes != null) {
+            this.$chatDialog.css("display", this.chatDialogDisplay || "");
+            for (const [name, value] of Object.entries(this.chatDialogAttributes)) {
+                if (value == null) this.$chatDialog.removeAttr(name);
+                else this.$chatDialog.attr(name, value);
+            }
+        }
+        this.chatDialogAttributes = null;
+        this.$chatDialog = null;
+    }
+
+    _handleChatDialogKey(event) {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            this._closeToast();
+        }
+    }
+
+    /** Rejects asynchronous rendering after navigation, closure or a shared-dialog owner change. */
+    _isCurrentAssistantView(aiCol, revision) {
+        return this.isActive() && this.activeAssistant === aiCol && this.viewRevision === revision
+            && this.currentChat == null;
+    }
+
+    _onToastClose() {
+        this.viewRevision++;
+        this.activeAssistant = null;
+        const wasChat = this.currentChat != null;
+        this.detachChat();
+        this._clearProgress();
+        if (!wasChat) {
+            this._hideLoader(this.activeButton);
+            this.editorAiInstance.stopExecution();
+        }
+        $('#toast-container-ai').find('.toast-close-button').tooltip('disable').tooltip('hide');
+        AiUserInterface.activeInstance = null;
+        this.activeButton?.trigger("focus");
     }
 
     generateAssistentOptions(button, column) {
         //console.log("AI button clicked for column:", column);
 
+        if (this.isActive() && this.chatWindow?.dialog.hidden && this.activeButton?.[0] === button?.[0]) {
+            this.chatWindow.restore();
+            return;
+        }
+
+        const previous = AiUserInterface.activeInstance;
+        previous?.detachChat();
+        previous?._clearProgress();
+        AiUserInterface.activeInstance = this;
+        this.viewRevision++;
+        this.activeAssistant = null;
+        this.activeButton = button;
         this._clearProgress();
         let self = this;
 
@@ -39,12 +128,7 @@ export class AiUserInterface {
                 preventDuplicates: true,
                 progressBar: true,
                 onCloseClick: () => {
-                    self._clearProgress();
-                    self._hideLoader(button);
-                    if (self.editorAiInstance != null) self.editorAiInstance.stopExecution();
-                    //get tootltip element and hide tooltip
-                    $('#toast-container-ai').find('.toast-close-button').tooltip('disable');
-                    $('#toast-container-ai').find('.toast-close-button').tooltip('hide');
+                    AiUserInterface.activeInstance?._onToastClose();
                 }
             });
             window.lastToast = this.lastToast;
@@ -73,13 +157,17 @@ export class AiUserInterface {
             //add tooltip to close button
             $('#toast-container-ai').find('.toast-close-button').tooltip({ trigger: 'hover', customClass: 'tooltip-ai' });
         }
+        this.$progressElement = $("#toast-container-ai .toast-progress");
 
         //set default header
         $("#toast-container-ai").removeClass("has-back-button");
+        $("#toast-container-ai").removeClass(function (index, className) {
+            return (className.match(/(^|\s)ai-(?:action|status)-\S+/g) || []).join(' ');
+        });
         $("#toast-container-ai .toast-title").html("<strong>"+WJ.translate("components.ai_assistants.editor.btn.tooltip.js")+"</strong>");
         $("#toast-ai-user-prompt-saved").empty();
 
-        $("#toast-container-ai").on("click", (e) => {
+        $("#toast-container-ai").off("click.aiBackdrop").on("click.aiBackdrop", (e) => {
             if (e.target.id === "toast-container-ai") {
                 //animate zoom in on .toast.toast-info element
                 const $toast = $("#toast-container-ai .toast.toast-info");
@@ -102,7 +190,7 @@ export class AiUserInterface {
 
             //check value in input, if empty remove if there is no userPromptEnabled
             let hasInput = false;
-            if (true === aiCol.userPromptEnabled && "edit_image" !== aiCol.action) hasInput = true;
+            if (aiCol.action === "live_chat" || (true === aiCol.userPromptEnabled && "edit_image" !== aiCol.action)) hasInput = true;
             else {
                 let inputFieldName = aiCol.from;
                 if (inputFieldName == null || inputFieldName === "") inputFieldName = aiCol.to;
@@ -134,6 +222,10 @@ export class AiUserInterface {
 
             // Bind click to _executeAction
             btn.on('click', () => {
+                const conversation = aiCol.action === "live_chat"
+                    ? this.editorAiInstance.getChatConversation(button, column, aiCol) : null;
+                this.viewRevision++;
+                this.activeAssistant = aiCol;
                 //use original button clicked - which shows this popup
                 this._renderHeader(button, column, aiCol);
 
@@ -143,7 +235,9 @@ export class AiUserInterface {
                 });
                 toastContainerAi.addClass("ai-action-" + aiCol.action.replaceAll("_", "-"));
 
-                if (true === aiCol.userPromptEnabled) {
+                if (aiCol.action === "live_chat") {
+                    this.openChat(conversation);
+                } else if (true === aiCol.userPromptEnabled) {
                     //we must first show dialog with textarea and after that call _executeAction
                     this._renderUserPromptDialog(button, column, aiCol);
                 } else {
@@ -205,6 +299,7 @@ export class AiUserInterface {
     }
 
     setCurrentStatus(textKey, pulsate = false, ...params) {
+        if (!this.isActive() || this.currentChat != null) return;
         let self = this;
         let contentContainer = $("#toast-container-ai-content");
 
@@ -277,12 +372,6 @@ export class AiUserInterface {
                     this.editorAiInstance.undo();
                 });
 
-                //generate continue chat button
-                let continueChatButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-continue-chat" type="button"><i class="ti ti-player-play-filled"></i> ' + WJ.translate("components.ai_assistants.editor.continueChat.js")+'</button></div>');
-                continueChatButton.find("button").on('click', () => {
-                    this.editorAiInstance.continueChat();
-                });
-
                 //generate OK button, on click close toast
                 let okButton = $('<div class="text-end"><button class="btn btn-primary btn-ai-ok" type="button"><i class="ti ti-check"></i> ' + WJ.translate("button.ok")+'</button></div>');
                 okButton.find("button").on('click', () => {
@@ -290,7 +379,6 @@ export class AiUserInterface {
                 });
                 let buttonContainer = $('<div class="ai-status-buttons-container d-flex justify-content-end gap-2 mt-1"></div>');
                 buttonContainer.append(undoButton);
-                buttonContainer.append(continueChatButton);
                 buttonContainer.append(okButton);
                 contentContainer.append(buttonContainer);
             }
@@ -317,6 +405,7 @@ export class AiUserInterface {
     }
 
     setExplanatoryText(text) {
+        if (!this.isActive() || this.currentChat != null) return;
         if (typeof text != "undefined" && text != null) {
             let explanatoryTextContainer = $("#toast-container-ai").find(".explanatory-text-container");
             explanatoryTextContainer.html(WJ.parseMarkdown(text));
@@ -356,9 +445,12 @@ export class AiUserInterface {
     }
 
     _closeToast(timeOut) {
+        if (!this.isActive()) return;
         if (typeof timeOut === "undefined" || timeOut == null || timeOut < 1) {
             $("#toast-container-ai").find(".toast-close-button").trigger("click");
+            return;
         }
+        if (this.currentChat != null) return;
 
         let progressBar = this.progressBar;
 
@@ -433,7 +525,9 @@ export class AiUserInterface {
     async _renderUserPromptDialog(button, column, aiCol) {
         //console.log("_renderUserPromptDialog, button=", button, "column=", column, "aiCol=", aiCol);
 
+        const revision = this.viewRevision;
         let bonusHtml = await this._getBonusHtml(aiCol.assistantId);
+        if (!this._isCurrentAssistantView(aiCol, revision)) return;
         let html = `
             <div class="user-prompt-container">
                 <div class="mb-3">
@@ -576,6 +670,8 @@ export class AiUserInterface {
     }
 
     async renderImageSelection(button, aiCol, images, generatedImageName, toField, textKey, ...params) {
+        const revision = this.viewRevision;
+        if (!this._isCurrentAssistantView(aiCol, revision)) return;
         let contentContainer = $("#toast-container-ai-content");
 
         let self = this;
@@ -606,6 +702,7 @@ export class AiUserInterface {
             }
         }
 
+        if (!this._isCurrentAssistantView(aiCol, revision)) return;
         this.setCurrentStatus(textKey, false, ...params);
 
         let currentStatus = contentContainer.html();

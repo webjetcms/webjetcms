@@ -75,6 +75,28 @@ textarea {}
     box-shadow: 0 0 0 2px $white !important;
 }
 
+.DTE_Field_Type_buttonGroup .dt-button-group {
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    max-width: 100%;
+
+    > .btn-check + .btn {
+        margin-left: 0;
+        white-space: normal;
+    }
+
+    > .btn:not(:last-child) {
+        border-right-width: 0;
+    }
+
+    > .btn-check:checked + .btn {
+        color: $white;
+        background-color: var(--wj-primary);
+        border-color: var(--wj-primary);
+    }
+}
+
 .input-group-text {
     background-color: transparent;
     border-right: 0;

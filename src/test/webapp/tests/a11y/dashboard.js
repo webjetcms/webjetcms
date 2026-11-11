@@ -188,7 +188,9 @@ Scenario('Dashboard controls support Space and keyboard search scope', async ({ 
     I.pressKey('Enter');
     I.waitForVisible('#admin-quick-search', 10);
     I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 10);
+    I.clickCss('.md-quick-search__scopes [data-scope="docs"]');
     I.pressKey(['Alt', 'ArrowRight']);
+    I.seeElement('.md-quick-search__scopes [data-scope="files"][aria-pressed="true"]');
     I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 5);
     I.assertTrue(await I.executeScript(() => {
         const input = document.querySelector('#admin-quick-search-input');

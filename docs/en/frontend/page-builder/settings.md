@@ -237,6 +237,10 @@ If editing an element that is not among those mentioned above is required, an el
 
 This element will not be styled using Page Builder, but will be editable using the CK editor.
 
+A separate editor is created only on elements supported by CKEditor, such as `div`, `p` or headings. On unsupported elements, such as `li`, `ul` or `td`, the `pb-editable` tag is ignored so that the embedded HTML code does not block the Page Builder from opening. The element and its content are preserved. If it is inside an editable wrapper, its text can be edited through that wrapper; for example, put the entire list in `div.pb-editable`.
+
+Do not nest editable areas. For example, if `div.pb-editable` contains `p.pb-editable`, Page Builder will remove the `pb-editable` tag from the nested paragraph before launching the editor. It will also remove the nested `pb-content` tags. The text, other CSS classes, and markup of the outer area will be preserved. The content is managed by a single CKEditor, so Enter and list creation do not carry over excess markup to new paragraphs or list items.
+
 ```html
 <div class="pb-editable"></div>
 ```

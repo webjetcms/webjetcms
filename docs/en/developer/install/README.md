@@ -29,7 +29,7 @@ If you get the `zsh: command not found: codex` error when trying to install via 
 
 A global installation makes the skills available to the user. Their setup for a specific repository is done once and shared via files in Git. In this repository, it is already stored in `AGENTS.md` and `docs/agents/` ; once it is obtained, there is no need to repeat the setup on each computer.
 
-For initial setup or configuration changes, open the project in Codex and in **chat, not terminal**, type:
+For initial setup or configuration changes, open the project in `Codex` and in **chat, not terminal**, enter:
 
 ```text
 Použi skill setup-matt-pocock-skills pre tento repozitár.
@@ -47,6 +47,13 @@ Setup first submits a proposal for approval. After confirmation, it adds a secti
 Once set up, continue with the [Using AI skills](../guidelines/ai-skills.md) guide, which describes the process from a request or GitHub issue to implementation and review.
 
 ## rspack build JS, CSS and PUG files
+
+Use the Node.js version listed in `.nvmrc` in the root of your project. If you are using `nvm`, run from the root of your project before building:
+
+```shell
+nvm install
+nvm use
+```
 
 The administration files are compiled via rspack from the source ```js/scss/pug``` files. For the initial installation, run in a new terminal:
 

@@ -16,7 +16,13 @@ In the form editor, you can change the note field (in which you can record the p
 
 ![](detail-editnote.png)
 
-Deleting all submitted records in a form's details does not delete its definition, settings, or items. You can only delete the form itself by deleting its controlling record in the form list.
+Deleting all submitted records in a form detail does not delete its definition, settings, or items.
+
+The **Delete** button in the form list will delete submitted records. If the form is used by a web page with display enabled or contains data in the archive, its settings, steps, items, and conditions will be preserved.
+
+If the form is not used by any displayed page and has no data in the archive, it will be deleted in its entirety, including settings, steps, items, and conditions. A notification will confirm the complete deletion.
+
+Deleting a form from the archive list only removes its archive records. Settings and items are preserved if the form remains in the active list or is used by a displayed page.
 
 ## Create a form
 
@@ -54,7 +60,7 @@ It is possible to set additional optional parameters for the form that will affe
 - **Require email confirmation** - activates [email address confirmation] mode(#email-address-confirmation-settings).
 - **Send form as an attachment to an email** - when enabled, the form will be attached to the email as an HTML attachment.
   - **Form attachment name** - the name of the attachment in HTML format.
-- **Encryption key** - if you want to encrypt the form values, you can enter [encryption key](../../admin/README.md#header). For multi-step forms, the values ​​and HTML form are stored encrypted in the database. The sent email and generated PDF copy contain readable filled-in values.
+- **Encryption key** - public key for encrypting the values ​​and HTML form of the submitted form in the database. Creating a key pair, setting up and decrypting data is described in [Form encryption](encryption.md). The sent email and generated PDF copy contain readable filled values.
 - **Doc id of the page where the form is located** - doc ID of the page where the form is located. By default, the system tries to determine this page based on ```refereru```, or the last viewed page in `session`. For precise determination, this value can be entered. If it is not entered, WebJET will automatically fill it in when the form is displayed.
 - **Doc id notification for user** - if set to the value of a web page, then after successfully saving the form, an email with the text of the given web page is sent to the visitor's email (from the email / e-mail field). This can be, for example, a thank you for filling out the form, or further instructions on the procedure.
 - **Doc id of the page with the email version** - doc ID of the page whose content will be used to create the email version of the form. If the value `none` is specified, the page for email will not be used. If the value is not specified at all, the value of the parameter ```useFormDocId``` will be used. For a multi-step form, you can use a tag in the form `!identifikator-polozky!` in the content of the selected page; when submitted, it will be replaced with the value of the corresponding [form item](../multistep-form/README.md#tags-of-item-values). The content and CSS styles of the page will also be used for the saved HTML form and PDF version of the form. If the selected page does not exist, the standard form view will be used.
@@ -97,6 +103,23 @@ It is possible to set additional optional parameters for the form that will affe
 - **Allowed extensions** - comma-separated list of allowed extensions for uploaded files, e.g. `jpg,png,pdf,docx`.
 - **Maximum height (for images)** - maximum height of the uploaded image in pixels.
 - **Maximum width (for images)** - maximum width of the uploaded image in pixels.
+
+## CSS styles for email and PDF
+
+When preparing an HTML email from a classic or multi-step form, WebJET loads the CSS styles of the page used for the email. Large CSS files on the website also make the sent message larger. The designer can prepare smaller files containing only the styles needed to display the completed form.
+
+For each CSS file, WebJET first looks for a file with the extension `-email.css` in the same folder. For example:
+
+| CSS template file | Preferred version for email |
+| --- | --- |
+| `/templates/orange/dist/css/main.css` | `/templates/orange/dist/css/main-email.css` |
+| `/templates/orange/dist/css/theme.css` | `/templates/orange/dist/css/theme-email.css` |
+
+If version `*-email.css` exists, it replaces the original file. If it does not, the original CSS is loaded. This rule is evaluated separately for main and secondary CSS templates, files from the `editorEditorCss` configuration variable, and additional CSS passed from form settings. Replacing one file does not disable other styles, so prepare smaller versions for any large CSS files that the form uses.
+
+The content of the selected files will be inserted into the email and PDF document via the `<style>` tag. The saved HTML form of the form references the same files via the `<link>` tags, so keep them available even after the form is submitted. Verify the email CSS edits when viewing the saved form and its PDF version. The form display on the website continues to use the original CSS.
+
+If the page does not have a template available, `/css/email.css` will be used; if this file does not exist either, the file from the configuration variable `editorPageCss` will be used. When sending as plain text, no CSS is added.
 
 ## Setting up email address confirmation
 

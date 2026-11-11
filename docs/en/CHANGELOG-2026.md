@@ -6,6 +6,7 @@
 
 ### Groundbreaking changes
 
+- Forms - for classic forms and the Form application, the encryption key is easily loaded exclusively from the form's server settings. If it was previously entered only in the HTML field `encryptKey`, transfer it to the **Encryption key** field in the administration. The parameter sent by the visitor no longer affects encryption. More in the [Form encryption] guide (redactor/apps/form/encryption.md#setting-up-the-public-key-for-a-form) (#376).
 - Databases - the minimum supported version is MariaDB 10.11 LTS or MySQL 8.4 LTS. Before updating WebJET CMS on an older server, update the database according to the manufacturer's instructions. Details and requirements for the updated JDBC driver are in the [installation guide](install/setup/README.md#basic-requirements-for-server) (#349).
 - Statistics - browsers are saved without version numbers after updating, which change very often these days. After deploying this version, it is necessary to start the migration of historical statistics to URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser version number (#303).
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
@@ -13,6 +14,9 @@
 - Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
 - Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
 - Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
+- Gallery - method `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` returns processing result of type `int` instead of `void`: `0` on success, otherwise error code. After the update, it is necessary to recompile dependent Java code and JSP files, for example by cleaning the working folder of a specific application in Tomcat (#371).
+- Multi-step forms - methods `validateStep` and `runStepInterceptor` of the [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) interface receive a new parameter `FormSettingsEntity formSettings` instead of `formName`. If you use your own Java class for processing forms, you need to modify it and recompile it. Settings no longer need to be loaded by form name, but you will get it directly (#364).
+- Multi-step forms - field identifier is now generated from the name with HTML code removed (only text is used). If you have HTM formatting used in the field name for radio groups, then re-save **all its options**. Also update the conditions and references to the changed identifiers (#396).
 
 ### Home screen
 
@@ -25,6 +29,10 @@
 - [Quick search](redactor/admin/search/README.md) is available from the header of the entire administration by the **Search…** button or the shortcut **Ctrl+K / ⌘K**. It offers page suggestions by name and URL, results from page content, files, users, text keys and menu items. You can transfer the selected term to the appropriate section with additional filters (#348).
 
 ![](redactor/admin/search/quick-search.png)
+
+- New [AI Chat](redactor/admin/search/README.md#ai-chat) tab in quick search allows you to chat with an AI assistant. It supports assistant selection, continuous display and pausing of replies, Markdown with tables, and text copying. For saved OpenAI and Gemini chats, you can add images and documents by dragging anywhere into the chat area, search the history, and download attachments from the **Chat Files** panel. History and attachments are only available to the chat owner in the respective domain. Switching assistants preserves written messages and unsent attachments; you can zoom in or maximize the window. The magnifying glass in the history header displays chat search; attachments are added with the plus icon. The Slovak interface and documentation use the "chat" label (#386).
+
+![](redactor/ai/chat/chat-history.png)
 
 - The [What's New] panel (redactor/admin/welcome.md#What-is-new) supplements the news of the installed version with videos and posts from YouTube and Facebook of WebJET CMS. The **New** label is hidden after expanding the panel and again notifies about new content (#358).
 
@@ -108,6 +116,31 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
     <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+- Websites - new menu [More actions](redactor/webpages/README.md#more-actions-and-bulk-change-of-groups) in the right part of the toolbar includes bulk addition and removal of tags and user groups without overwriting other groups. Rights groups and email groups are selected together. We have also moved link checking, page statistics, saving as AB test and Import/Export (#368).
+
+![More Actions menu in the website list](redactor/webpages/more-actions.png)
+
+- Web pages - [default tree settings](redactor/webpages/README.md#default-settings-for-users) for a new user can be set via the configuration variable `webpagesTreeDefaultSettings` (#368).
+- Page Editor - in a narrow window, the tool groups are moved to the [More Tools panel](redactor/webpages/working-in-editor/README.md#tool-panel-in-a-narrow-window). The bar does not wrap into another strip and does not overlap the editor and size switcher. The button with three dots is directly behind the last group of icons and has a bubble tip. The same control works in the Standard Editor and in the Page Builder (#372).
+
+![More Tools Panel in the Page Builder Mobile Preview](redactor/webpages/working-in-editor/toolbar-overflow.png)
+
+- Page Builder - dialogs that do not fit within the preview width will automatically expand to the size of the browser window. After confirmation or closing, the original preview width and page offset will be restored. Page Builder controls use the administration language (#372).
+- Images - added support for images and animations in [AVIF format](frontend/thumb-servlet/README.md#images-avif). Server-side editing, watermarking, and thumbnails via `/thumb` preserve frames, transparency, and animation timing. Processing requires `ImageMagick` 7.1.2-34 or later with `libheif` 1.22.0 or later. Image editor saves a static image (#371).
+
+- Mirroring the structure - before deleting a page or folder, a [list of mirrored items](redactor/webpages/README.md#deleting-mirrored-pages-and-folders) will be displayed, which will also be deleted.
+
+![](redactor/webpages/mirroring/delete-groups.png)
+
+- Structure mirroring - the **Show mirroring** option in the tree structure display settings adds [language version links](redactor/webpages/README.md#navigation-between-mirrored-folders) and [warnings about incorrect mappings](redactor/webpages/mirroring/groups.md#warnings-in-tree-structure) to the tree (#370).
+
+![](redactor/webpages/mirroring/tree-navigation.png)
+
+- AI Chat by field - added saved history filtered by the same field and record. You can search, open and continue an older conversation even after closing the editor; replies remain available for insertion into the field.
+- AI Chat in the field and in the page editor - added image and document upload for assistants with history support. You can select files with the plus icon, drag and drop into the message, or insert an image from the clipboard - the assistant will process them along with the page content (#386).
+
+![](redactor/ai/datatables/pb-chat-preview.png)
+
 ### Headless mode
 
 Added [headless mode support](frontend/headless/README.md), in which WebJET CMS serves purely as a `backend` CMS. Content, navigation, search and forms are accessible via REST API. Frontend application (e.g. Astro, Next.js, Vue, React or any HTTP client) will download the data and display it according to its own templates (#258).
@@ -124,7 +157,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
-- Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.mustistep.form.back_button` (#osk782).
+- Multi-step forms - an optional **Help** field has been added to the editor of each item after the field name. It supports multi-line formatted text and more extensive HTML content. It is displayed after the field name in the form via the `${hint}` tag and is also transferred when copying the item (#396).
+- Easy form and multi-step forms - single-line field name and explanation editor does not allow headings, lists, or line breaks. Inserted text and HTML are converted to a single line, preserving highlighting, colors, and links (#396).
+- Form Settings - added **Optional Fields** tab with fields A–F. Fields are also available in the Form Simple editor and via `FormSettingsEntity`. In the HTML of the translation keys, you can use [`${settings.*}`](redactor/apps/formsimple/README.md#fields-from-form-settings) tags for A–F, email settings, redirects, file limits, and appearance. They are also supported by the preview and email appearance of multi-step forms. A–F and the text before and after the email are enabled by HTML (#364).
+- Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.multistep.form.back_button` (#osk782).
 - Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
 - Forms - validation of uploaded files distinguishes between an illegal character in the name and an illegal extension. A name error will indicate the specific illegal character or string. File names in error messages are displayed as text to prevent any HTML tags in the name from being executed (#58794).
 - Multi-step forms - when [returning to the previous step](redactor/apps/multistep-form/README.md#returning-to-the-previous-step) both the processed values ​​and the completed uploads are preserved (#58794).
@@ -141,6 +177,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/apps/multistep-form/stat-section-advanced.png)
 
+- Multi-step forms - [empty option](redactor/apps/multistep-form/README.md#empty-option) in a group of selection fields displays the adjustable text **Without selected option** (#381).
 - Added the ability to easily set up checkboxes and groups of checkboxes/select fields in multi-step forms (#58517).
 
 ![](redactor/apps/multistep-form/form-item-editor-advanced.png)
@@ -157,6 +194,16 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Easy form and multi-step forms - the default tooltip is now available with both mouse and keyboard, provides a stable contextual title and description, remains displayed when the cursor is moved to its content, and can be closed with the `Escape` key (#306).
 - Multistep forms - added [copy fields between forms and steps](redactor/apps/multistep-form/README.md#copy-fields-between-forms). Paste opens the editor with saved field settings; display conditions and obligations are not carried over. Internal clipboard works across browser tabs and allows repeated pasting for 30 minutes (#58826).
 - Multi-step forms - added option [Show content without redirection](redactor/apps/form/README.md#tab---settings). The switch will use the web page from the **Redirect after completion** field and after successful submission will replace the default message with its content without changing the URL address. If the visitor does not have permission to view the web page, the default message about successful submission will be displayed (#58826).
+- Multistep forms - the new [Bindings](redactor/apps/multistep-form/README.md#bindings) tab in the field editor displays separate lists of fields that use its value in display and obligation conditions (#377).
+
+![](editor/apps/multistep-form/tab-relations.png)
+
+- Multi-step forms - when setting display conditions and obligations, the compared value for selection fields is selected from their options, including code lists and common radio groups. There is no need to enter values ​​manually (#391).
+- Multi-step forms - selecting **Form Step** in the item editor now shows the current step number even after changing the order of steps by dragging with the mouse (#392).
+- Regular expressions - the list displays the translated name according to the administration language and indicates the original name as **Translation key**. The **Allowed value** selection in multi-step forms uses the format **code - name** (#387).
+- Multi-step forms - fixed typo in translation keys from `components.mustistep.*` to `components.multistep.*` (#378).
+- Multi-step forms - auxiliary statistics entries on [public cluster node with limited database rights](install/config/ro-user.md#multi-step-forms) no longer block form display, validation, or submission. In case of an error, the visitor will see the application name instead of the Java class name (#384).
+- Delayed email sending - increased column `emails.message` to `LONGTEXT` in MySQL/MariaDB so that saving a large HTML email does not fail. Added [instructions for smaller CSS for email and PDF](redactor/apps/form/README.md#css-styles-for-email-and-pdf) (#374).
 
 ### Semantic search
 
@@ -176,6 +223,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- AI assistants - fixed handling of continuous text responses including Gemini. Token counts and error messages are now handled correctly even when splitting or merging network blocks; technical data is not inserted into the generated text. An interrupted response is no longer marked as successfully completed.
 - Enumerations - type selection and management moved to the tree in the left panel with search. More in [Enumerations documentation](redactor/apps/enumeration/README.md) (#58786).
 - Blog - selecting and adding sections are available in the tree in the left panel with search. More in [Blog documentation](redactor/apps/blog/README.md) (#58786).
 - News - folder selection has been moved to the tree in the left search panel, also available in the application editor. Automatic folder search skips blogger roots and their subfolders. More in [News documentation](redactor/apps/news/README.md) (#58786).
@@ -209,11 +257,28 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Document Manager - improved file system rights checking. The icon for adding a folder is only displayed if the user has write rights, rights are checked when selecting a folder, if the user does not have write rights to files in `/files/archiv` an error message (#osk802) is displayed.
+- Folder selection - disabled folders in the tree structure are displayed with a folder icon with a cross (#osk802).
+- Document Manager - the folder tree has a minimum width of 200 px so that the search field with buttons does not extend into the table even when setting a smaller ratio. Therefore, the width settings in pixels offer values ​​starting from 200 px (#360).
+- Document Manager - **Product** and **Category** fields normalize hard spaces, tabs, and line breaks, merge repeating spaces, and remove trailing spaces and distracting invisible characters from copied text when saving, renaming, and bulk uploading. **Warning:** When resaving an existing document, hard spaces in the title, products, and so on are removed. Filters in the application in websites are not automatically updated. If they use the original name with hard or repeating spaces or invisible characters, the document may not appear in the filtered list after saving. Correct the names in all affected documents and set the filters in the applications to the new values. Saving one document will not correct other documents with the same product or category name (#360).
+- Document Manager - in [website application](redactor/files/file-archive/file-archive-app.md#tab---advanced) added sorting by validity start and end, product code, product, category, file name and document size (#359, #osk791).
+- Document Manager - the configuration variable `fileArchivCheckHistoryValid=false` can be used to enable downloading of historical versions even outside the validity period; historical versions of documents will then also be displayed in the application on the website. The dates remain displayed in the archive; the default value `true` maintains the validity check from and to. More in [documentation](redactor/files/file-archive/README.md#validity-and-downloading-historical-versions) (#380).
+
 ### Gallery
 
 - Added the ability to set a separate [resizing method for a large image](redactor/apps/gallery/structure.md#tab-dimensions) independent of the small image. By default, the same resizing method is used as set for the small image. The setting can optionally be copied to subfolders (#58633).
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
+
+### Data tables
+
+- The **Settings → Data Tables** section combines [Field Settings](frontend/datatables/fields-settings.md), [Tab Settings](frontend/datatables/tabs-settings.md) and [Optional Fields](frontend/datatables/custom-fields-settings.md). You can change the names, order, and display of fields for individual entities and domains, or disable their editing. You can also edit editor tabs and create your own tabs with optional fields. **Warning:** The original **Optional Fields** permission (`customFields`) has been removed. After the update, the relevant users or permission groups must be assigned the new **Data Tables** permission (`dataTablesConfig`). The original permissions will not be automatically transferred (#366).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Web pages - when saving, the values ​​of fields hidden in the editor and fields with editing disabled will be preserved according to the same rules as in other data tables. When editing from history, the values ​​from the selected version of the page will be used (#366).
 
 ### Optional fields
 
@@ -277,9 +342,39 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Multi-step forms - the item identifier is generated from the field name text without HTML tags so that name formatting does not affect the identifier (#396).
+- Multi-step forms - when an item, step, or form is deleted, the corresponding display conditions and obligations are also deleted. Conditions for already deleted items do not block the deletion of the fields they referenced (#395).
+- Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
+- Page Builder - inserted cards will receive their own ID even when copied before initialization is complete, so that their links do not link to the original block.
+- Data tables - entering the ID will open the record even after previous filtering without results.
+- Websites - fixed [export to ZIP archive](redactor/webpages/import-export.md) for images inserted via `/thumb/` that were not originally added to the export (#389).
+- Web pages - the insert image dialog limits file selection to images, videos, and audio files, even in the Files folder. Unsupported types recognized by the browser will be rejected before submission. Additionally, the server will validate the extension before saving (#375).
+- Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the page is opened (#372).
+- Spring applications - [error creating or executing application](custom-apps/spring-mvc/README.md#error-executing-application) will replace only its `INCLUDE` tag. Surrounding text, JSP applications, and other Spring applications will remain on the page, and the message will state the name of the application that failed (#384).
+- Redis session - fixed uploading files in parts, consuming one-time CSRF tokens, and updating logged-in user data after editing profile via registration form. Changed objects are written back to session.
+- Page editor - fixed a bug when opening a preview after restoring a session from a serialized storage, such as Redis. Missing editor data will be restored from the preview version of the page.
+- Templates - creation, modification and deletion audit uses uniform prefixes `CREATE:`, `UPDATE:` and `DELETE:` with the template ID and name.
+- Page Editor - when switching pages, it waits for CKEditor to complete the refresh so that the content of the previous page is not displayed and saved.
+- Websites - slashes in the page title, menu title, and header, footer, or navigation selection are displayed as `/` instead of `&#47;`.
+- AI assistants - when HTTP error occurs while generating an image, an error is displayed and the processing indicator is terminated. The request can be retried.
+- Datatables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - the titles, alignment, and color menus are no longer clipped at the bottom of the dialog box and remain available even in a low browser window (#376).
+- E-commerce - fixed adding a product category without a marked product in the table (#373).
+- Web pages - Page URLs, redirects, and image perex now preserve parameters even after loading via JPA, including history. The HTML sanitizer no longer rewrites the `&` and `=` characters in URLs to HTML entities (#373).
+- Websites - page redirection is not saved in the browser cache for the logged-in administrator so that its change or cancellation will be reflected the next time the pages are opened (#372).
+- Page Editor - when auto-maximizing in a low or narrow window, the entire toolbar remains above the page content. Content no longer shines through under icons and group names (#372).
+- Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
+- Page Builder - when content loading fails, you can switch to HTML mode by restoring the last available HTML. The restore requires confirmation as it may not contain the latest changes (#369).
+- Page Builder - fixed editor freeze when opening HTML with remaining `contenteditable="true"` attribute. CKEditor no longer initializes twice on the same block.
+- Page Builder - restoring focus after inserting content or a structural block, moving, duplicating, and closing properties or libraries does not move the page to the beginning of the editor. The fix also works in templates with smooth scrolling (`scroll-behavior: smooth`) (#389).
+- Page Builder - unsupported elements marked `pb-editable`, such as list items `li`, no longer block switching from the HTML editor. Their content remains intact and can be edited via the parent editable area (#382).
+- Page Builder - nested tags `pb-editable` and `pb-content` are removed before the editor is launched. Nested CKEditors are not created in one block and redundant markup is not copied when creating paragraphs or lists. Text and other CSS classes are preserved (#382).
+- Email - fixed SMTP settings being affected between applications on a shared application server. Each send uses its own properties and mail session, so SSL port, authentication, or Amazon SES settings from another application are not transferred (#367).
+- Page Builder - fixed accumulation of empty lines in HTML of nested blocks. When saving and switching to HTML editor, old extra lines between elements are also removed. Content of `pre`, `textarea` and spaces preserved via CSS `white-space` remain unchanged (#367).
+- Webpages - fixed stuttering and jumping when [compare versions](redactor/webpages/history.md) if the page template uses smooth scrolling (`scroll-behavior: smooth`) (#367).
 - Web pages - JSON editor now accepts fields and simple values ​​with comments. Fixed column splitting and scrolling in Page Builder and closing tooltip when editing from history (#346).
 - Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
+- Forms - separate deletion of submitted data from settings and items. If a form is used by a displayed page or has data in the archive, the definition will be preserved and the notification will indicate the reason and the docId of the pages. When completely deleted, steps, items and their conditions will also be deleted (#393).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
 - Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
@@ -287,6 +382,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Builder - fixed unnecessary scrolling up/down the page if you were editing an application on a page (#343).
 - Page Builder - fixed displaying the toolbar if the page does not contain any sections (#343).
 - Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
+- Administration - fixed display of check mark icon when an item is selected in the autocomplete menu (#osk800).
+- Structure mirroring - [draft version](redactor/apps/docmirroring/README.md#edit-existing-webpage) no longer overwrites published translations and [bulk delete](redactor/webpages/README.md#delete-mirrored-pages-and-folders) no longer processes the same item repeatedly. Moving does not create duplicate language versions. When moving a folder, generated and inherited URLs are updated. Temporary cloning settings and mirror administration state are not shared between concurrent requests (#370).
 
 ### Performance
 
@@ -295,6 +392,18 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- AI assistants - search in statistics and usage graphs only show records and assistants of the current domain (#58850).
+- Websites - deletion checks permissions for all mirrored pages and also requires `deleteDir` for folders. [Unmirroring](redactor/apps/clone-structure/README.md#unmirroring) checks permissions for the entire subtree including configured domain and user group restrictions (#370).
+- Dependency Check - updated libraries `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` with fix `CVE-2026-110879` and `undici 6.28.1 → 6.29.1` with fix `CVE-2026-109383`. Jackson update tightens type checking during polymorphic deserialization; custom integrations using Java class names in JSON need to be verified (#385).
+- Dependency Check - exceptions for `CVE-2026-116802`, `CVE-2026-116803` and `CVE-2026-116804` in `DOMPurify 3.4.16` have been verified and constrained to the exact hash of the supplied `Swagger UI 5.34.0` bundle. The integration handles HTML strings without XHTML mode, `IN_PLACE`, `SAFE_FOR_TEMPLATES` and DOM returns; its hook does not remove nodes. The exceptions confirm the non-use of the affected modes, not a fix for the DOMPurify library (#385).
+- Dependency Check - updated libraries `Hibernate Validator 9.0.0.Final → 9.0.2.Final` with fix `CVE-2026-93879`, transitive dependency `ASM 9.7.1 → 9.11.1` with Java bytecode processing fixes, and administration build dependency `ip-address 10.7.1 → 10.7.4` with fix `CVE-2026-111997`. The updates do not require a Java version change or application API modification (#385).
+- Dependency Check - added exception for `CVE-2026-104828` in `neko-htmlunit 4.5.0`, existing exception for `CVE-2026-47842` was re-verified for `spring-security-crypto 7.1.2`. Verified integrations do not use `HTMLWriterFilter` or the old AES API. Exceptions are limited to specific versions; they should be re-evaluated when changing integrations. This is not a fix for these libraries (#385).
+- Forms - prevented overwriting of the encryption key by the `encryptKey` parameter in the request. A forged, empty or corrupted parameter will not change the encryption of the stored values ​​or the HTML form of the form (#376).
+- Node.js - development and build version in `.nvmrc` and `devcontainer` updated to `22.23.4`, which fixes the Brotli decoder vulnerability CVE-2026-111497. Locally and in build environments, update Node.js according to [installation instructions](developer/install/README.md#rspack-build-js-css-a-pug-files) (#373).
+- Web pages - when saving, the rights to the original page and to the target folder when moving are verified. Changing the ID and folder in the request does not allow you to download another page (#373).
+- Web pages - page title and menu title are cleaned of dangerous HTML on both save and load (#373).
+- HTML sanitization - added shared `AllowSafeHtmlAttributeConverterWithSave` to sanitize HTML on both save and load. Used for path from folder names in pages and history; older JDBC writes are also handled.
+- Datatables - when rendering links and images, URLs in HTML attributes are escaped so that embedded quotes cannot create another attribute. The URL itself in the data remains unchanged (#373).
 - Dependency Check - updated libraries `Jackson 2.22.3/3.2.3`, `jsoup 1.23.2`, `logback-core/classic 1.6.5`, `slf4j-api 2.0.19`, `mariadb-java-client 3.5.10`, `postgresql 42.7.14`, `Swagger UI 5.32.15` (with `DOMPurify 3.4.13`), `moment 2.31.0` including static copy, `@tootallnate/once 2.0.1`, `@xmldom/xmldom 0.9.12`, `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` and `undici 6.28.1`. Build requires Node.js 20 or 22 and later (#349).
 - Dependency Check - added exceptions for `kotlin-stdlib 2.4.0`, `webjet-ai/webjet-ai-local 2.0.4`, `spring-security-crypto 7.1.1`, `http-cache-semantics 4.2.0`, `fabric 5.2.4/5.5.2` and `jQuery 3.3.1` in the e-shop test template. Exceptions for `ai.djl:api 0.36.0` and `tar 6.2.1` represent approved acceptance of residual risk. Details are in `dependency-check-suppressions-project.xml` (#349).
 - Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
@@ -303,12 +412,17 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Documentation
 
+- AI skills - added [WebJET skills overview](developer/guidelines/ai-skills.md#webjet-skills-overview) with purpose and usage examples. The same table is automatically transferred to the README of the `webjetcms/skills` distribution. Export checks the completeness of the list (#376).
+- Forms - supplemented guide [Form Encryption](redactor/apps/form/encryption.md) with creation and setting of keys, decryption of records, scope of protection and technical description of algorithms (#376).
 - Datatables - added explanation of [notifications about unsaved changes](redactor/datatables/README.md#notifications-about-unsaved-changes) when refreshing or leaving the page and when closing the editor with the Cancel button (#339).
 - A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
 - Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.
 
 ### For the programmer
 
+- Datatables - settings tables have a common prefix `dt_`: `dt_customfields`, `dt_fields` and `dt_tabs`. The existing table `custom_fields` is automatically renamed during the update, preserving the data; custom SQL queries must be modified to `dt_customfields` (#58830).
+- Datatables - Classes for [system settings](developer/datatables/README.md#system-settings) optional fields, fields, and cards have been moved under `sk.iway.iwcm.system.datatable.settings` to subpackages `customfields`, `fields`, and `tabs`. Custom code and templates using these classes require updating imports and full class names (#58830).
+- Datatables - added field type [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) for selecting a single option from a group of buttons. It uses administration styles and also supports the **No change** option for three-state settings (#58830).
 - SBOM - added [generate a common list of Java and npm dependencies](developer/install/sbom.md) in CycloneDX JSON format with the `ant -f ant/build.xml sbom` command, including transitive dependencies and report validation.
 - [Central News Generator](developer/install/social-media-feed.md) will remove unused previews with a 30-day grace period after successful publishing. It will preserve images of current posts as well as backup data for source failure (#358).
 - Page Editor - [Styles menu setting](frontend/examples/template-bare/README.md#search-and-style-groups) supports metadata in `editor.scss` / `editor.css` comments for categories and their icons, mutually exclusive groups, allowed elements, and base classes preserved across skins. The new menu is enabled by default; setting `ckeditor_styleComboEnabled=false` restores the original style selection (#OSK764).
@@ -631,10 +745,21 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Database - fixed generation of SQL conditions `IN` and `NOT IN` with a large number of values ​​by dividing the lists into smaller parts. Fixed errors when exceeding the limit of 1000 values ​​in the Oracle database, for example when loading the page history or working with an extensive folder tree. The maximum number of values ​​in one part is determined by the configuration variable `dbInClauseMaxItems` (default 1000, in Oracle no more than 1000).
+- Web pages - fixed limiting search and replace in folder names to the selected folder tree and setting the parent when fixing erroneously deleted folders during moving a page to the trash (#390).
+- Event Calendar - fixed filtering by multiple perex groups when setting `perexGroupUseJoin=true` without duplicate events. Fixed limit on number of results also for Oracle and Microsoft SQL (#390).
 - Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
 - Cluster - optimized writing of changes in the cluster when starting a new node (#337).
 - Redis - improved transfer of information about the uploaded file in the session (#342).
+- Applications - fixed respecting the `domainName` setting in the `modinfo.properties` file when displaying the left menu and verifying access to the module, including the REST API. In the rights settings, modules are filtered by domain only when separating users by domain (MultiWeb or `usersSplitByDomain=true`), for shared users, module rights from all domains are displayed.
 - Security - updated library `FreeMarker` from version `2.3.34` to `2.3.35`.
+- Security - updated library `Hibernate Validator` from version `6.2.5.Final` to `6.2.6.Final` with fix `CVE-2026-93879`. Maintained compatibility with `javax.validation`.
+- Security - updated administration build dependencies `PostCSS` from version `8.5.12` to `8.5.23` and `source-map-js` from version `1.2.1` to `1.2.2` with fixes `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` and `CVE-2026-93749`.
+- Security - added Dependency Check exceptions for specific HIGH findings in unused functions `Moment, Vue SSR, DOMPurify, Neko, Spring` and for incorrect assignment of XML error to used version `jsoup`. Exceptions are limited to reviewed library versions or Swagger UI hashes; they need to be re-evaluated when enabling affected functions or custom configuration extensions. This is not a fix for these libraries.
+- Security - updated libraries `Jackson Databind, Core, JAX-RS, JAXB` module from version `2.22.1` to `2.22.4` with fix for [CVE-2026-110879](https://github.com/FasterXML/jackson-databind/security/advisories/GHSA-m8xf-2cr7-77ph). `Jackson Annotations` remains in version `2.22`.
+- Security - added exception for [CVE-2026-116804](https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7) in a specific Swagger UI file. The DOMPurify configuration used does not enable the modes needed to exploit this flaw.
+- Updated library `swagger-ui` to version 5.34.0.
+- Security - fixed application protection against [CVE-2025-22228](https://spring.io/security/cve-2025-22228/). Bcrypt passwords longer than 72 bytes in UTF-8 do not work during login and are reported as incorrect password. With diacritics and other multi-byte characters, it can be less than 72 characters. This applies to existing and new passwords, their storage is not changed and conversion is not performed. The user must use forgotten password recovery or reset by the administrator.
 - Security - updated administration libraries `Lodash` from version `4.17.21` to `4.18.1` and `PostCSS` from version `8.5.2` to `8.5.12`. As part of the PostCSS update, its dependency `Nano ID` was also updated from version `3.3.8` to `3.3.20`.
 - Security - disabled compilation of SpringEL expressions in Thymeleaf templates and by default in Spring as protection against [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Standard template syntax and allowed method calls remain supported, no template modification is required. Templates with a large number of repeatedly evaluated expressions may take longer to render.
 - Security - disabled saving protected files from `/files/protected/` to browser cache and proxy servers by setting HTTP headers before sending the file. Fixed setting response length when sending the entire file and its scope so that Spring Security writes security headers in time.

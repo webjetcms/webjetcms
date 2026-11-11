@@ -77,11 +77,7 @@ block content
             var order = [];
             order.push([5, 'desc']);
 
-            var tabs = [
-                { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                { id: 'advanced', title: '[[\#{editor.planned_changes}]]' },
-                { id: 'history', title: '[[\#{editor.tab.history}]]', hideOnCreate: true }
-            ];
+            var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.configuration.model.ConfDetailsDto')})];
 
             const configurationBaseUrl = "/admin/rest/settings/configuration";
             let url = configurationBaseUrl + "?view=changed";

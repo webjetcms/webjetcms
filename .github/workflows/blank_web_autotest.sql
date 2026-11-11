@@ -1755,6 +1755,53 @@ CREATE TABLE `domain_redirects` (
 
 
 
+# Dump of table dt_fields
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `dt_fields`;
+
+CREATE TABLE `dt_fields` (
+  id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  class_name VARCHAR(255) NOT NULL,
+  field_name VARCHAR(255),
+  tab VARCHAR(255),
+  title VARCHAR(255),
+  sort_after VARCHAR(255),
+  visible TINYINT(1),
+  hidden TINYINT(1),
+  hiddenEditor TINYINT(1),
+  filter TINYINT(1),
+  orderable TINYINT(1),
+  ai TINYINT(1),
+  disabled TINYINT(1),
+  domain_id INT NOT NULL DEFAULT 1,
+  CONSTRAINT uk_dt_fields_target UNIQUE (domain_id, class_name, field_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+# Dump of table dt_tabs
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `dt_tabs`;
+
+CREATE TABLE `dt_tabs` (
+  id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  class_name VARCHAR(255) NOT NULL,
+  tab_id VARCHAR(255) NOT NULL,
+  title VARCHAR(255),
+  sort_after VARCHAR(255),
+  selected TINYINT(1),
+  hide_on_create TINYINT(1),
+  perms VARCHAR(255),
+  css_class VARCHAR(255),
+  content TEXT,
+  domain_id INT NOT NULL DEFAULT 1,
+  CONSTRAINT uk_dt_tabs_target UNIQUE (domain_id, class_name, tab_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
 # Dump of table email_files
 # ------------------------------------------------------------
 
@@ -2119,6 +2166,41 @@ CREATE TABLE `form_attributes` (
   `param_name` varchar(64) NOT NULL,
   `domain_id` int(11) NOT NULL DEFAULT 1,
   PRIMARY KEY (`form_name`,`param_name`,`domain_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+# Dump of table form_items
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `form_items`;
+
+CREATE TABLE `form_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `form_name` varchar(255) NOT NULL,
+  `field_type` varchar(255) NOT NULL,
+  `required` tinyint(1) DEFAULT NULL,
+  `label` text DEFAULT NULL,
+  `value` text DEFAULT NULL,
+  `placeholder` varchar(255) NOT NULL,
+  `tooltip` text DEFAULT NULL,
+  `regex_validation` varchar(255) DEFAULT NULL,
+  `item_form_id` varchar(255) NOT NULL,
+  `step_id` int(11) NOT NULL,
+  `sort_priority` int(11) NOT NULL,
+  `domain_id` int(11) NOT NULL DEFAULT 1,
+  `show_stat` tinyint(1) NOT NULL DEFAULT 1,
+  `top_count` int(11) NOT NULL DEFAULT 5,
+  `show_other_count` tinyint(1) NOT NULL DEFAULT 1,
+  `show_unanswered` tinyint(1) NOT NULL DEFAULT 0,
+  `chart_type` varchar(255) NOT NULL DEFAULT 'bar_horizontal',
+  `compare_insensitive` tinyint(1) NOT NULL DEFAULT 0,
+  `color_scheme` varchar(32) DEFAULT NULL,
+  `error_count` int(11) DEFAULT 0,
+  `custom_error` varchar(255) DEFAULT NULL,
+  `trim_value` tinyint(1) NOT NULL DEFAULT 0,
+  `hint` longtext DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 

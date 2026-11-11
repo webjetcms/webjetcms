@@ -35,6 +35,204 @@ Scenario('history version retains the Page Builder content and toolbar', async (
     DTE.cancel();
 });
 
+Scenario('nested and unsupported inline hosts preserve content through Page Builder mode switching', async ({ I, DTE, Document }) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow.pageBuilderReady === true, [], 20);
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.selectOption('.exit-inline-editor select', 'html');
+    I.switchTo();
+    I.waitForVisible('.CodeMirror', 10);
+    const source = '<section><div class="container"><div class="row"><div class="col-12 pb-not-editable pb-always-mark">' +
+        '<div id="unsupported-hosts-autotest" class="pb-editable"><h2>Mobile network autotest</h2>' +
+        '<p id="nested-paragraph-autotest" class="pb-editable lead">Coverage autotest</p><ul>' +
+        '<li id="unsupported-item-autotest" class="pb-editable">First item autotest</li>' +
+        '<li class="pb-editable">Second item autotest</li></ul>' +
+        '<table><tbody><tr><td class="pb-editable">Cell autotest</td></tr></tbody></table></div>' +
+        '<p id="following-host-autotest" class="pb-editable">Following paragraph autotest</p>' +
+        '</div></div></div></section>';
+    await I.executeScript(html => document.querySelector('.CodeMirror').CodeMirror.setValue(html), source);
+
+    for (let round = 0; round < 2; round++) {
+        I.clickCss('#DTE_Field_data-editorTypeSelector button');
+        I.click(locate('.dropdown-item').withText('Page Builder'));
+        I.waitForFunction(() => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow;
+            return frame?.pageBuilderReady === true && frame.document.body.inert === false &&
+                frame.document.querySelector('#unsupported-hosts-autotest') !== null;
+        }, [], 20);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        const state = await I.executeScript(() => ({
+            unsupportedEditors: document.querySelectorAll('#unsupported-hosts-autotest li[data-ckeditor-instance], #unsupported-hosts-autotest td[data-ckeditor-instance]').length,
+            nestedEditors: document.querySelectorAll('#unsupported-hosts-autotest [data-ckeditor-instance]').length,
+            nestedMarkers: document.querySelectorAll('#unsupported-hosts-autotest .pb-editable, #unsupported-hosts-autotest .pb-content').length,
+            parentReady: CKEDITOR.instances[document.querySelector('#unsupported-hosts-autotest').dataset.ckeditorInstance]?.status === 'ready',
+            followingReady: CKEDITOR.instances[document.querySelector('#following-host-autotest').dataset.ckeditorInstance]?.status === 'ready'
+        }));
+        I.assertEqual(state.unsupportedEditors, 0, 'Unsupported elements must not become independent editors');
+        I.assertEqual(state.nestedEditors + state.nestedMarkers, 0, 'The parent must own its content without nested editor markers');
+        I.assertTrue(state.parentReady && state.followingReady, 'The containing editor and subsequent regions must be ready');
+        I.see('Second item autotest', '#unsupported-hosts-autotest');
+        I.see('Cell autotest', '#unsupported-hosts-autotest');
+        if (round === 0) {
+            I.click('#unsupported-item-autotest');
+            I.pressKey('End');
+            I.type(' edited');
+            I.click('#nested-paragraph-autotest');
+            I.pressKey('End');
+            I.pressKey('Enter');
+            I.type('New list item autotest');
+            I.clickCss('#wjInlineCkEditorToolbarElement a.cke_button__bulletedlist');
+        }
+        I.see('First item autotest edited', '#unsupported-item-autotest');
+        I.see('New list item autotest', '#unsupported-hosts-autotest li.lead');
+        I.dontSeeElementInDOM('#unsupported-hosts-autotest .pb-editable');
+        I.selectOption('.exit-inline-editor select', 'html');
+        I.switchTo();
+        I.waitForVisible('.CodeMirror', 10);
+        const content = await I.executeScript(() => {
+            const html = document.querySelector('.CodeMirror').CodeMirror.getValue();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            return {
+                text: doc.querySelector('#unsupported-item-autotest').textContent,
+                markedItems: doc.querySelectorAll('#unsupported-hosts-autotest li.pb-editable').length,
+                nestedParagraphClass: doc.querySelector('#nested-paragraph-autotest').className,
+                independentEditors: doc.querySelectorAll('#unsupported-hosts-autotest.pb-editable, #following-host-autotest.pb-editable').length,
+                hasEditorAttributes: /data-ckeditor-instance|contenteditable/.test(html)
+            };
+        });
+        I.assertEqual(content.text, 'First item autotest edited', 'Edits through the parent editor must survive serialization');
+        I.assertEqual(content.markedItems, 0, 'List commands must not inherit redundant editor markers');
+        I.assertEqual(content.nestedParagraphClass, 'lead', 'Formatting classes must survive editor marker cleanup');
+        I.assertEqual(content.independentEditors, 2, 'Independent editable regions must retain their markers');
+        I.assertFalse(content.hasEditorAttributes, 'Runtime editor attributes must not enter saved HTML');
+    }
+    DTE.cancel();
+    Document.resetPageBuilderMode();
+});
+
+for (const action of ['move', 'duplicate']) {
+    Scenario(`nested column remains editable after ${action} outside its parent editor`, async ({ I, DTE, Document }) => {
+        Document.resetPageBuilderMode();
+        I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        DTE.waitForEditor();
+        DTE.waitForCkeditor();
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        await I.executeScript(async () => {
+            const pb = $('#wjInline-docdata').data('plugin_ninjaPageBuilder');
+            const section = $('<section class="nested-columns-autotest"><div class="container"><div class="row">' +
+                '<div id="outer-column-autotest" class="col-12"><p>Outer content autotest</p><div class="row">' +
+                '<div id="nested-column-autotest" class="col-6"><p>Nested content autotest</p></div></div></div>' +
+                '<div id="destination-column-autotest" class="col-12"><p>Destination autotest</p></div>' +
+                '</div></div></section>');
+            pb.$wrapper.append(section);
+            pb.mark_section(section[0]);
+            await initPageBuilderEditors(pb.$wrapper);
+        });
+        I.dontSeeElementInDOM('#nested-column-autotest .pb-content, #nested-column-autotest [data-ckeditor-instance]');
+
+        I.click('#nested-column-autotest p');
+        I.click(locate('.pb-workbench-path button[data-type=column]').last());
+        I.click('.pb-workbench [data-pb-action=more]');
+        I.waitForVisible(`.pb-workbench [data-pb-action=${action}]`, 10);
+        I.click(`.pb-workbench [data-pb-action=${action}]`);
+        I.switchTo();
+        I.waitForFunction(() => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow;
+            return frame.pageBuilder.ui.insertPoints.some(point =>
+                point.type === 'column' && point.previous?.id === 'destination-column-autotest');
+        }, [], 10);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        await I.executeScript(() => {
+            const point = window.pageBuilder.ui.insertPoints.find(point =>
+                point.type === 'column' && point.previous?.id === 'destination-column-autotest');
+            point.button.attr('data-autotest-column-destination', 'true');
+            point.button[0].focus();
+        });
+        I.click('[data-autotest-column-destination]');
+
+        const contentSelector = '#destination-column-autotest + .pb-column > .pb-column__content';
+        I.switchTo();
+        I.waitForFunction(([selector]) => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow;
+            const content = frame.document.querySelector(selector);
+            const editor = frame.CKEDITOR.instances[content?.dataset.ckeditorInstance];
+            return editor?.status === 'ready' && editor.element.$ === content && content.isContentEditable;
+        }, [contentSelector], 20);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.dontSeeElementInDOM('.nested-columns-autotest [data-ckeditor-instance] [data-ckeditor-instance]');
+        I.click(`${contentSelector} p`);
+        I.pressKey('End');
+        I.type(' edited');
+        I.see('Nested content autotest edited', contentSelector);
+
+        const saved = await I.executeScript(() => {
+            const html = window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data;
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const destination = doc.querySelector('#destination-column-autotest').nextElementSibling;
+            const source = doc.querySelector('#outer-column-autotest #nested-column-autotest');
+            return {
+                destinationText: destination.textContent.trim(),
+                sourceText: source?.textContent.trim() || null,
+                hasEditorAttributes: /data-ckeditor-instance|contenteditable/.test(doc.querySelector('.nested-columns-autotest').outerHTML)
+            };
+        });
+        I.assertEqual(saved.destinationText, 'Nested content autotest edited', 'The independent editor must serialize the edited content');
+        I.assertEqual(saved.sourceText, action === 'duplicate' ? 'Nested content autotest' : null, 'Duplicating must preserve the original content independently');
+        I.assertFalse(saved.hasEditorAttributes, 'Runtime editor attributes must not enter saved HTML');
+        I.switchTo();
+        DTE.cancel();
+        Document.resetPageBuilderMode();
+    });
+}
+
+Scenario('failed Page Builder initialization allows HTML recovery through the parent selector', async ({ I, DTE, Document }) => {
+    Document.resetPageBuilderMode();
+    const routePattern = '**/*inlineEditorAdmin=true*';
+    const failInitialization = async route => {
+        const response = await route.fetch();
+        const body = await response.text();
+        assert.ok(body.includes('initializePageBuilder();'), 'The response must contain the Page Builder startup');
+        // Fail during the real initialization, after it makes the iframe body inert.
+        await route.fulfill({response, body: body.replace('initializePageBuilder();', 'CKEDITOR.inline = () => null; initializePageBuilder();')});
+    };
+    await I.mockRoute(routePattern, failInitialization, {times: 1});
+    try {
+        I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        DTE.waitForEditor();
+        I.waitForFunction(() => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe');
+            return frame?.contentWindow.pageBuilderReady === false && frame.contentDocument.body.inert === true &&
+                frame.contentDocument.querySelector('div.exit-inline-editor select') !== null;
+        }, 20);
+        I.waitForVisible('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle', 15);
+        const preservedHtml = await I.executeScript(() => webpagesDatatable.EDITOR.field('data').s.opts._input.val());
+        assert.ok(preservedHtml.includes('Suspendisse interdum dolor justo'), 'The preserved HTML must contain the original page');
+
+        // Use the visible control: calling switchEditorType directly would miss an inaccessible selector.
+        I.clickCss('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle');
+        I.click(locate('.dropdown-item').withText('HTML editor'));
+        I.waitForText('Obnoviť HTML?', 10, '.toast-title');
+        I.clickCss('button[id^="confirmationNo"]');
+        I.waitForInvisible('.toast-title', 10);
+        I.assertEqual(await I.grabValueFrom('#DTE_Field_data-editorTypeSelector select'), 'pageBuilder');
+        I.seeElement('#DTE_Field_data-pageBuilderIframe');
+
+        I.clickCss('#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle');
+        I.click(locate('.dropdown-item').withText('HTML editor'));
+        I.waitForText('Obnoviť HTML?', 10, '.toast-title');
+        I.click('Obnoviť HTML', 'button[id^="confirmationYes"]');
+        I.waitForVisible('.CodeMirror', 10);
+        I.waitForFunction(([html]) => document.querySelector('.CodeMirror')?.CodeMirror.getValue() === html, [preservedHtml], 10);
+        I.dontSeeElement('#DTE_Field_data-pageBuilderIframe');
+        DTE.cancel();
+        Document.resetPageBuilderMode();
+    } finally {
+        await I.stopMockingRoute(routePattern, failInitialization);
+    }
+});
+
 Scenario('overenie zobrazenia podla sablony', async ({I, DTE, Document}) => {
 
     //reset PB settings
@@ -102,26 +300,25 @@ Scenario('bug - prepnutie editora', async ({I, DTE, Apps, Document}) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
     DTE.waitForEditor();
-    I.wait(5);
+    I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow.pageBuilderReady === true, [], 20);
 
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('div.exit-inline-editor select', 10);
     I.selectOption({css: "div.exit-inline-editor select"}, "");
     I.switchTo();
-    I.wait(2);
-
-    I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
+    I.waitForVisible('.cke_wysiwyg_frame.cke_reset', 20);
     Apps.switchEditor('html');
     const html = await I.executeScript(() => document.querySelector('.CodeMirror').CodeMirror.getValue());
     assert.ok(html.includes('Suspendisse interdum dolor justo, ac venenatis massa'), 'The HTML editor must retain the complete page, including content outside its virtual viewport');
 
-    I.wait(1);
     I.switchTo();
     DTE.cancel();
 
     //otvor druhu stranku a over zobrazeny kod
     I.click("Produktová stránka - multi");
     DTE.waitForEditor();
-    I.wait(5);
+    DTE.waitForCkeditor();
+    I.waitForVisible('.cke_wysiwyg_frame.cke_reset', 20);
 
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
     I.dontSee("This is old page");
@@ -172,23 +369,32 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, 
 
     //reset PB settings
     Document.resetPageBuilderMode();
+    const modeSelector = "#DTE_Field_data-editorTypeSelector .bootstrap-select > button.dropdown-toggle";
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
     DTE.waitForEditor();
 
     I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
     I.waitForElement("#DTE_Field_data-editorTypeSelector select", 10);
+    // Selecting an option programmatically can bypass the inert state during Page Builder startup.
+    I.waitForFunction(() => {
+        const frame = document.querySelector("#DTE_Field_data-pageBuilderIframe");
+        return frame?.contentWindow.pageBuilderReady === true && frame.contentDocument.body.inert !== true;
+    }, [], 20);
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
     I.waitForElement("div.exit-inline-editor", 10);
     I.selectOption({css: "div.exit-inline-editor select"}, "");
     I.switchTo();
-    I.wait(2);
+    I.waitForInvisible("#DTE_Field_data-pageBuilderIframe", 10);
+    I.waitForVisible("#trEditor div.wysiwyg_textarea", 10);
+    // Closing before the asynchronous mode switch finishes prevents its preference from being saved.
+    I.waitForFunction(() => window.editorTypeForced === "" && window.jQuery.active === 0, [], 20);
 
     DTE.cancel();
 
     I.click("Produktová stránka - PageBuilder");
     DTE.waitForEditor();
-    I.waitForElement("div.exit-inline-editor", 10);
+    I.waitForVisible(modeSelector, 10);
 
     DTE.cancel();
 
@@ -196,8 +402,8 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, 
     I.say("stranka bez pagebuildera");
     I.click("Produktová stránka - B verzia");
     DTE.waitForEditor();
-    I.wait(2);
-    I.clickCss("div.exit-inline-editor button");
+    I.waitForVisible(modeSelector, 10);
+    I.clickCss(modeSelector);
     I.dontSee("Page Builder", "ul.dropdown-menu.inner.show li a span");
     I.pressKey(['Escape']);
 
@@ -207,8 +413,8 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, 
     I.say("otvor znova PB a over, ze mame selector aj s moznostou PageBuilder");
     I.click("Produktová stránka - PageBuilder");
     DTE.waitForEditor();
-    I.waitForElement("div.exit-inline-editor", 10);
-    I.clickCss("div.exit-inline-editor button");
+    I.waitForVisible(modeSelector, 10);
+    I.clickCss(modeSelector);
     I.see("Page Builder", "ul.dropdown-menu.inner.show li a span");
     I.pressKey(['Escape']);
 
@@ -841,6 +1047,118 @@ async function openWorkbenchFixture(I, DTE, Document) {
     I.click(workbenchFixture+' .pb-workbench-copy');
     I.waitForVisible('.pb-outline[data-type=column]', 10);
 }
+
+/** Keeps the caret far below the inline editor's start and enables customer-template smooth scrolling. */
+async function openScrolledWorkbenchFixture(I, DTE, Document) {
+    await openWorkbenchFixture(I, DTE, Document);
+    I.executeScript(() => {
+        const paragraph = document.querySelector('section.pb-workbench-autotest .pb-workbench-copy');
+        const spacer = document.createElement('p');
+        spacer.textContent = 'Tall content autotest';
+        spacer.style.height = '1400px';
+        paragraph.before(spacer);
+        document.documentElement.style.scrollBehavior = 'smooth';
+        window.scrollTo({top: paragraph.getBoundingClientRect().top + scrollY - innerHeight/2, behavior: 'instant'});
+    });
+    I.click(workbenchFixture+' .pb-workbench-copy');
+    I.assertAbove(await I.executeScript(() => window.scrollY), 1000, 'The caret must be below the start of the inline editor');
+}
+
+/** Samples rendered frames after the next user action, including delayed native focus scrolling. */
+function armWorkbenchScrollProbe(I, eventName = 'click') {
+    I.executeScript((root, eventName) => {
+        window.pbScrollProbe = {before: scrollY, samples: [], done: false};
+        window.addEventListener(eventName, () => {
+            const end = performance.now() + 600;
+            const sample = () => {
+                window.pbScrollProbe.samples.push(scrollY);
+                if (performance.now() < end) requestAnimationFrame(sample);
+                else window.pbScrollProbe.done = true;
+            };
+            requestAnimationFrame(sample);
+        }, {once: true, capture: true});
+    }, eventName);
+}
+
+/** Checks every observed frame, not just the scroll position after a corrective scroll. */
+async function assertWorkbenchScrollPreserved(I) {
+    // CodeceptJS uses a FrameLocator here, which cannot wait for JavaScript state directly.
+    await I.usePlaywrightTo('wait for scroll sampling in the canvas frame', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => window.pbScrollProbe.done, null, {timeout: 5000});
+    });
+    const probe = await I.executeScript(() => window.pbScrollProbe);
+    const min = Math.min(...probe.samples), max = Math.max(...probe.samples);
+    assert.ok(probe.samples.length > 1, 'The probe must observe multiple rendered frames');
+    assert.ok(Math.abs(min-probe.before) <= 1 && Math.abs(max-probe.before) <= 1,
+        'Restoring focus must preserve every rendered scroll position: '+JSON.stringify({before: probe.before, min, max}));
+}
+
+for (const action of ['library', 'style']) {
+    Scenario('workbench restores focus without scrolling after '+action, async ({I, DTE, Document}) => {
+        await openScrolledWorkbenchFixture(I, DTE, Document);
+        if (action === 'library') {
+            I.clickCss('.cke_button__htmlbox');
+            I.waitForVisible('.pb-library--content', 10);
+            // CodeceptJS cannot poll asynchronous focus through its FrameLocator.
+            await I.usePlaywrightTo('wait for the library search focus', async ({page}) => {
+                const frame = await getPageBuilderFrame(page);
+                await frame.waitForFunction(() => document.activeElement.matches('.pb-library--content .library-filter-input'), null, {timeout: 10000});
+            });
+            armWorkbenchScrollProbe(I, 'keydown');
+            I.pressKey('Escape');
+            I.waitForInvisible('.pb-library', 10);
+        } else {
+            I.click('.pb-workbench [data-pb-action=more]');
+            I.click('.pb-workbench [data-pb-action=style]');
+            I.waitForVisible('.pb-modal', 10);
+            armWorkbenchScrollProbe(I);
+            I.click('.pb-modal__header__button-close');
+            I.waitForInvisible('.pb-modal', 10);
+        }
+        await assertWorkbenchScrollPreserved(I);
+        I.switchTo();
+        I.amAcceptingPopups();
+        DTE.cancel();
+    });
+}
+
+Scenario('workbench keeps inserted section below the toolbar with smooth scrolling', async ({I, DTE, Document}) => {
+    await openScrolledWorkbenchFixture(I, DTE, Document);
+    I.executeScript(() => {
+        const pb = window.pageBuilder, grid = pb.grid;
+        const column = '<div class="'+grid.column_default_class+'" style="padding-top:1200px"><p>Inserted block autotest</p></div>';
+        const container = '<div class="'+grid.container_default_class+'"><div class="'+grid.row_default_class+'">'+column+'</div></div>';
+        const content = '<section class="'+grid.section_default_class+'">'+container+'</section>';
+        let library = pb.template.library.find(item => item.textKey === 'section');
+        if (!library) {
+            library = {textKey: 'section', groups: []};
+            pb.template.library.push(library);
+        }
+        library.groups.push({id: 'autotest-scroll-insert', textKey: 'Scroll insertion autotest', content});
+        pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
+    });
+    I.click('.pb-workbench [data-pb-action=insert]');
+    await chooseWorkbenchInsertion(I, 'section', '#wjInline-docdata', 1);
+    I.fillField('.pb-library .library-filter-input:visible', 'Scroll insertion autotest');
+    I.clickCss('.pb-library [data-library-item-id=autotest-scroll-insert]');
+    I.waitForInvisible('.pb-library', 10);
+    // CodeceptJS cannot poll asynchronous editor readiness through its FrameLocator.
+    await I.usePlaywrightTo('wait for the inserted block editor', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => {
+            const selected = window.pageBuilder.ui.selected;
+            const field = selected?.querySelector('[data-ckeditor-instance]');
+            const editor = field && CKEDITOR.instances[field.dataset.ckeditorInstance];
+            return selected?.dataset.pbId === 'autotest-scroll-insert' && editor?.status === 'ready' && editor.focusManager.hasFocus;
+        }, null, {timeout: 10000});
+    });
+    const offset = await I.executeScript(() => window.pageBuilder.ui.selected.getBoundingClientRect().top - document.querySelector('.pb-workbench').getBoundingClientRect().bottom);
+    I.assertTrue(Math.abs(offset-20) <= 1, 'The inserted section must stay below the toolbar, without jumping to its first editor: '+offset);
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
 
 /** Captures layout relative to the content root, independent of selection-induced scrolling. */
 async function workbenchGeometry(I) {
@@ -2595,19 +2913,16 @@ async function validateThumb(I, elementText, checkData, setData = null) {
 
 function insertLink(I, link) {
     I.clickCss(".cke_button.cke_button__link.cke_button_off");
-    I.switchTo(locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find("table.cke_dialog #wjLinkIframe"));
-    I.wait(1); //necessary static waiting
-    I.waitForElement('#txtUrl', 10);
+    I.waitForVisible(".cke_dialog_container:visible #wjLinkIframe", 10);
+    I.switchTo(".cke_dialog_container:visible #wjLinkIframe");
+    I.waitForVisible("#finder .elfinder-cwd-wrapper", 30);
+    I.waitForVisible('#txtUrl', 10);
     I.fillField("#txtUrl", link);
+    I.pressKey("Tab");
     I.switchTo();
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
-    I.clickCss('.cke_dialog_ui_button_ok');
-    I.executeScript(() => {
-    const element = document.querySelector('#cke_730_uiElement #wjLinkIframe');
-        if (element) {
-          element.remove();
-        }
-    });
+    I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_ok');
+    I.waitForInvisible('.cke_dialog_container:visible', 10);
 }
 
 Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({I, DTE, Document}) => {
@@ -3331,6 +3646,40 @@ Scenario('library content initializes duplicable elements immediately', async ({
     const saved = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
     I.assertNotContain(saved, 'pb-duplicable-element', 'Saving must remove runtime markers from newly inserted items');
     I.assertNotContain(saved, 'pb-toolbar', 'Saving must remove inserted controls');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
+Scenario('library image insertion keeps the scrolled destination visible', async ({I, DTE, Document}) => {
+    await openScrolledWorkbenchFixture(I, DTE, Document);
+    I.executeScript(() => {
+        const pb = window.pageBuilder;
+        pb.template.library.find(item => item.textKey === 'content').groups.push({
+            id: 'autotest-blog-image', textKey: 'Blog image autotest',
+            content: '<div class="autotest-blog-image"><img alt="Image autotest" src="/templates/aceintegration/jet/assets/images/logo-jet.png"></div>'
+        });
+        pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
+    });
+    const paragraph = workbenchFixture+' .pb-workbench-copy';
+    // Magicline needs a pointer position relative to the paragraph inside the scaled iframe.
+    I.usePlaywrightTo('hover the content insertion destination', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const box = await frame.locator(paragraph).boundingBox();
+        await page.mouse.move(box.x+20, box.y+2);
+    });
+    I.waitForVisible('#pb-wjmagiclinePlus', 10);
+    // The animated handle listens to mouseup and cannot satisfy locator stability checks.
+    I.executeScript(() => document.querySelector('#pb-wjmagiclinePlus').dispatchEvent(new MouseEvent('mouseup', {bubbles: true})));
+    I.waitForVisible('.pb-library--content', 10);
+    I.clickCss('.pb-library--content [data-library-type=library]');
+    I.fillField('.pb-library--content .library-template-block--content .library-filter-input', 'Blog image autotest');
+    armWorkbenchScrollProbe(I);
+    I.clickCss('.pb-library--content [data-library-item-id=autotest-blog-image]');
+    I.waitForInvisible('.pb-library--content', 10);
+    I.waitForElement(workbenchFixture+' .autotest-blog-image img', 10);
+    await assertWorkbenchScrollPreserved(I);
+    I.seeNumberOfElements(workbenchFixture+' .autotest-blog-image img', 1);
     I.switchTo();
     I.amAcceptingPopups();
     DTE.cancel();

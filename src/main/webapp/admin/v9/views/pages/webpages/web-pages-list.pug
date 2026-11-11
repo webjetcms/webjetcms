@@ -74,6 +74,13 @@ block content
                 let hasTrashTab = [(${hasTrashTab})];
                 let showTab = "[(${showTab})]";
 
+                // Match lazy-loaded children to the tree data injected by the server before jsTree initializes.
+                if (showTab === "pills-system-tab") {
+                    $("#SomStromcek").data("rest-url", "/admin/rest/groups/tree?click=dt-tree-group-system");
+                } else if (showTab === "pills-trash-tab") {
+                    $("#SomStromcek").data("rest-url", "/admin/rest/groups/tree?click=dt-tree-group-trash");
+                }
+
                 let changesId =  [(${layout.getConstant('systemPagesRecentPages')})];
 
                 //we need to reload webpages after jstree reload into selected element, when user click from System tab to Active tab
@@ -249,6 +256,7 @@ block content
                         }
                     });
                     webpagesDatatable = wpdInstance.createDatatable();
+                    window.bindDeleteMirrors(webpagesDatatable, "/admin/rest/web-pages/deletion-preview", "pages");
 
                     var buttonCounter = 4;
                     webpagesDatatable.button().add(buttonCounter++, {
@@ -268,15 +276,7 @@ block content
 
                     var groupColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.GroupDetails')})];
 
-                    var groupsTabs = [
-                        { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                        { id: 'template', title: '[[\#{editor.tab.template}]]' },
-                        { id: 'menu', title: '[[\#{editor.tab.navigation}]]' },
-                        { id: 'access', title: '[[\#{editor.tab.permissions}]]' },
-                        { id: 'publishing', title: '[[\#{editor.tab.publishing}]]' },
-                        { id: 'fields', title: '[[\#{editor.tab.fields}]]' },
-                        { id: 'history', title: '[[\#{editor.tab.history}]]', content: '<div class="groupHistoryPlaceholder"><div>' }
-                    ];
+                    var groupsTabs = [(${layout.getDataTableTabs('sk.iway.iwcm.doc.GroupDetails')})];
 
                     window.WJ.DataTable.mergeColumns(
                         groupColumns,
@@ -338,6 +338,8 @@ block content
                             remove: 'deleteDir'
                         }
                     });
+
+                    window.bindDeleteMirrors(groupsDatatable, "/admin/rest/groups/deletion-preview", "groups");
 
                     groupsDatatable.hideButton("import");
                     groupsDatatable.hideButton("export");
@@ -964,9 +966,11 @@ block content
                     }
                 });
 
-                // Open the approval queue from the dashboard after both tables exist.
+                // Open linked tabs after both tables exist so their click handlers also load the correct data.
                 window.domReady.add(function () {
-                    if (WJ.urlGetParam("show") === "toapprove" && (hasPagesToApprove || hasGroupsToApprove)) {
+                    if (window.location.hash === "#pills-changes") {
+                        $('#pills-pages #pills-changes-tab').trigger('click');
+                    } else if ((window.location.hash === "#pills-waiting" || WJ.urlGetParam("show") === "toapprove") && (hasPagesToApprove || hasGroupsToApprove)) {
                         $('#pills-pages #pills-waiting-tab').trigger('click');
                         if (!hasPagesToApprove && hasGroupsToApprove) {
                             // Wait for headerSubTabs to update the subtab IDs after the parent click.
@@ -1021,11 +1025,19 @@ block content
                     }
 
                     if("pills-folders-tab" == currentTab) {
-                        $("button.buttons-linkcheck").show();
-                        $("button.buttons-abtest").show();
+                        webpagesDatatable.showButton("linkcheck");
+                        webpagesDatatable.showButton("abtest");
+                        webpagesDatatable.showButton("addPerexGroup");
+                        webpagesDatatable.showButton("removePerexGroup");
+                        webpagesDatatable.showButton("addUserGroup");
+                        webpagesDatatable.showButton("removeUserGroup");
                     } else {
-                        $("button.buttons-linkcheck").hide();
-                        $("button.buttons-abtest").hide();
+                        webpagesDatatable.hideButton("linkcheck");
+                        webpagesDatatable.hideButton("abtest");
+                        webpagesDatatable.hideButton("addPerexGroup");
+                        webpagesDatatable.hideButton("removePerexGroup");
+                        webpagesDatatable.hideButton("addUserGroup");
+                        webpagesDatatable.hideButton("removeUserGroup");
                     }
 
                     //if ("pills-trash-tab"==currentTab)

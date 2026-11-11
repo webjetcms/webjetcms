@@ -32,22 +32,20 @@ import sk.iway.iwcm.users.UsersDB;
 public class CloneStructureService {
 
     private static final String CONFIG_KEY = "structureMirroringConfig";
-    private static final String DISABLE_ON_CREATE_KEY = "structureMirroringDisabledOnCreate";
 
     private CloneStructureService() {
         //Utility class
     }
 
     /**
-     * Check if "structureMirroringConfig" conf contain combination of entered id's.
-     * If yes, this folder are allready set for mirroring -> do nothing.
-     * If no, add to this conf combination of entered id's + current domain comment.
+     * Build a configuration containing the source and destination mapping without changing shared settings.
      *
      * @param srcGroupId
      * @param destGroupId
      * @param domainName - name of current domain
+     * @return current configuration with the requested mapping included
      */
-	private static void setMirroringConfig(int srcGroupId, int destGroupId, String domainName) {
+	private static String getMirroringConfig(int srcGroupId, int destGroupId, String domainName) {
 		String mirroringConfig = Constants.getString(CONFIG_KEY);
 
 		if(mirroringConfig.isEmpty()==false) {
@@ -62,13 +60,11 @@ public class CloneStructureService {
 
 				if(Tools.containsOneItem(ids, ""+srcGroupId)) {
                     //mapping is allready set
-                    if (Tools.containsOneItem(ids, ""+destGroupId)) return;
+                    if (Tools.containsOneItem(ids, ""+destGroupId)) return mirroringConfig;
 
                     //add mapping to this line
 					String newLine = line.substring(0, i) + "," + destGroupId + line.substring(i);
-                    mirroringConfig = mirroringConfig.replace(line, newLine);
-                    Constants.setString(CONFIG_KEY, mirroringConfig);
-                    return;
+                    return mirroringConfig.replace(line, newLine);
 				}
 			}
 		}
@@ -77,8 +73,13 @@ public class CloneStructureService {
         if (mirroringConfig.isEmpty()==false) mirroringConfig += "\n";
 		mirroringConfig += srcGroupId + "," + destGroupId + ":" + domainName;
 
-        Constants.setString(CONFIG_KEY, mirroringConfig);
+        return mirroringConfig;
 	}
+
+    private static synchronized void saveMirroringConfig(int srcGroupId, int destGroupId, String domainName) {
+        // Merge with the latest shared configuration so concurrent clones retain each other's mappings.
+        ConfDB.setName(CONFIG_KEY, getMirroringConfig(srcGroupId, destGroupId, domainName));
+    }
 
     /**
      * Check if GroupDetails entity contain's sync_id.
@@ -184,19 +185,13 @@ public class CloneStructureService {
             return null;
         }
 
-        //Constants that are needed in Mirror logic to chnage how we do thinks
-        setCloneConstants(true, srcGroupId, destGroupId);
-
         //save parameters to requestBean to use in services
         RequestBean.addParameter("keepVirtualPath", ""+keepVirtualPath);
-        RequestBean.addParameter("srcGroupId", ""+srcGroupId);
-        RequestBean.addParameter("destGroupId", ""+destGroupId);
+        // Replace raw parameter values with validated IDs; the String overload would append them.
+        RequestBean.addParameter("srcGroupId", new String[]{String.valueOf(srcGroupId)});
+        RequestBean.addParameter("destGroupId", new String[]{String.valueOf(destGroupId)});
 
         int srcSyncId = GroupMirroringServiceV9.getSyncId(srcGroupId);
-
-		//Set id's to mirroring (if they are not set allready)
-        String mirroringConfig = Constants.getString(CONFIG_KEY);
-		setMirroringConfig(srcGroupId, destGroupId, domainName);
 
         sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
         request.setAttribute("iconLink", "");
@@ -210,10 +205,9 @@ public class CloneStructureService {
         out.flush();
         println(out, prop.getText("components.clone.copy_dir") + ": " + srcGroupId + " -> " + destGroupId);
 
-        //disable structure mirroring available=false on create
-        boolean structureMirroringDisabledOnCreate = Constants.getBoolean(DISABLE_ON_CREATE_KEY);
-        Constants.setBoolean(DISABLE_ON_CREATE_KEY, false);
-
+        // Scope the temporary mapping and clone behavior to this request while mirroring events run.
+        Object originalConfig = RequestBean.getAttribute(CONFIG_KEY);
+        RequestBean.setAttribute(CONFIG_KEY, getMirroringConfig(srcGroupId, destGroupId, domainName));
         try {
             //Get all group's that belongs under source group (even with source group)
             List<GroupDetails> groups = groupsDB.getGroupsTree(srcGroupId, true, true);
@@ -243,28 +237,18 @@ public class CloneStructureService {
         } catch (Exception e) {
             Logger.error(e);
             println(out, "ERROR: "+e.getLocalizedMessage());
-
-            //Reset values
-            setCloneConstants(false, -1, -1);
+        } finally {
+            // Restore the request context even if a mirroring event fails.
+            RequestBean.setAttribute(CONFIG_KEY, originalConfig);
         }
 
-        Constants.setBoolean(DISABLE_ON_CREATE_KEY, structureMirroringDisabledOnCreate);
         if (keepMirroring) {
-            //use current mirroring config updated before cloning
-            mirroringConfig = Constants.getString(CONFIG_KEY);
-            //Set it to DB
-            ConfDB.setName(CONFIG_KEY, mirroringConfig);
+            saveMirroringConfig(srcGroupId, destGroupId, domainName);
         } else {
-            //set original mirroring config
-            Constants.setString(CONFIG_KEY, mirroringConfig);
-
             //it there was no syncId on sourceFolder clear also source
             if (srcSyncId<1) MirroringService.clearSyncId(srcGroupId);
             MirroringService.clearSyncId(destGroupId);
         }
-
-        //Reset values
-        setCloneConstants(false, -1, -1);
 
         DocDB.getInstance(true);
         GroupsDB.getInstance(true);
@@ -281,13 +265,5 @@ public class CloneStructureService {
         session.setAttribute("err_msg", prop.getText(errMsgKey));
         response.sendRedirect("/components/clone_structure/clone_structure.jsp");
         Logger.debug(CloneStructureService.class, "cloneStructure() - " + debugMsg);
-    }
-
-    private static void setCloneConstants(boolean isCloneAction, int srcId, int destId) {
-        if(isCloneAction == true) Constants.setString("mirroringMode", MirroringService.MIRRORING_MODE_CLONE);
-        else Constants.setString("mirroringMode", MirroringService.MIRRORING_MODE_MIRROR);
-
-        Constants.setInt("cloneActionSrcId", srcId);
-        Constants.setInt("cloneActionDestId", destId);
     }
 }

@@ -1,5 +1,28 @@
 @charset "UTF-8";
 
+@mixin modal-window-button {
+    display: inline-block;
+    cursor: pointer;
+    color: $nice-gray-300;
+    font-size: 6px;
+    border: 1px solid $nice-gray-300;
+    border-radius: $border-radius;
+    padding: 5px 6px;
+
+    .ti {
+        font-size: 18px;
+        color: $secondary;
+    }
+
+    &:hover, &:active, &:focus, &:focus-visible {
+        color: $white;
+        background-color: $secondary;
+        .ti {
+            color: $white;
+        }
+    }
+}
+
 @mixin show-scrollbar {
     &::-webkit-scrollbar {
         -webkit-appearance: none;
@@ -88,10 +111,11 @@
     &.DTE_nested_modal.show .close {
         top: 14px;
     }
-    .cke_top {
+    // Only legacy toolbars need a scrollable, height-limited ribbon.
+    .cke_top:not(.wj-cke-toolbar-top) {
         overflow: scroll;
     }
-    .cke_top span.cke_toolbox {
+    .cke_top span.cke_toolbox:not(.wj-cke-toolbar) {
         max-height: 55px;
         min-height: auto;
         width: 1100px;

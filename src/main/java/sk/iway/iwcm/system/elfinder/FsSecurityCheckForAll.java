@@ -28,6 +28,7 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isLocked(FsService fsService, FsItem fsi)
 	{
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(item.getFile().getVirtualPath())) return true;
 		return _locked || isFileArchiveReadOnly(fsService, fsi);
 	}
 
@@ -39,6 +40,7 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isReadable(FsService fsService, FsItem fsi)
 	{
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(item.getFile().getVirtualPath())) return false;
         if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(item.getFile().getVirtualPath())) {
             String path = item.getFile().getVirtualPath();
             Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
@@ -56,6 +58,7 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isWritable(FsService fsService, FsItem fsi)
 	{
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(item.getFile().getVirtualPath())) return false;
         if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(item.getFile().getVirtualPath())) {
             return isReadable(fsService, fsi);
         }

@@ -41,6 +41,7 @@
 - AI asistent
   - [AI asistent](/redactor/ai/README.md)
   - [Používanie AI asistentov](/redactor/ai/datatables/README.md)
+  - [AI Čet](/redactor/ai/chat/README.md)
   - [Nastavenie](/redactor/ai/settings/README.md)
   - [Písanie inštrukcií](/redactor/ai/instructions/README.md)
   - [Štatistika](/redactor/ai/stat/README.md)
@@ -82,6 +83,7 @@
   - Formuláre
     - [Zoznam formulárov](/redactor/apps/form/README.md)
     - [Položky formuláru](/redactor/apps/multistep-form/README.md)
+    - [Šifrovanie formulárov](/redactor/apps/form/encryption.md)
     - [Štatistiky formulára](/redactor/apps/multistep-form/stat.md)
     - [Regulárne výrazy](/redactor/apps/form/regexps.md)
   - Fórum/Diskusia

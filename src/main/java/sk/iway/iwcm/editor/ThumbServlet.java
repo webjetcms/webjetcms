@@ -376,6 +376,7 @@ public class ThumbServlet extends HttpServlet
 					boolean isSizeAllowd = isSizeAllowed(realPathSmall, user);
 					if (isSizeAllowd == false)
 					{
+						Logger.debug(ThumbServlet.class, "Image size not allowed: " + realPathSmall);
 						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 						return;
 					}
@@ -477,7 +478,7 @@ public class ThumbServlet extends HttpServlet
 							//vyrez moze byt 400x300 a my chceme 300x300, cize ho posunieme o 50 doprava a zmensime na 300x300
 							//http://iwcm.interway.sk:8080/thumb/images/gallery/19-24-mesiacov/DSC06443.JPG?w=200&h=200&ip=5
 
-							Logger.debug(ThumbServlet.class, "\n\nURCI OREZ\n width="+width+" height="+height+" cleft="+cleft+" ctop="+ctop+" cwidth="+cwidth+" cheight="+cheight);
+							Logger.debug(ThumbServlet.class, "URCI OREZ: width="+width+" height="+height+" cleft="+cleft+" ctop="+ctop+" cwidth="+cwidth+" cheight="+cheight);
 
 							//pomer stran urcim ako pomer sirok jednotlivych elementov
 							double pomer = (double)cwidth / (double) width;
@@ -611,6 +612,8 @@ public class ThumbServlet extends HttpServlet
 					}
 					else
 					{
+						Logger.error(ThumbServlet.class, "Thumbnail generation failed for " + imagePath
+							+ ": result=" + ret + ", error=" + ImageTools.getErrorKey(ret));
 						imgPath = Tools.getRealPath("/components/_common/mime/big_unknown.gif");
 					}
 				}
@@ -624,14 +627,11 @@ public class ThumbServlet extends HttpServlet
          }
          if (inFile != null && inFile.exists())
          {
-            //response.setHeader("Pragma", "No-Cache");
-            //response.setDateHeader("Expires", 0);
-            //response.setHeader("Cache-Control", "no-Cache");
-
-            String mimeType = Constants.getServletContext().getMimeType(imagePath.toLowerCase());
+            String mimeType = Constants.getServletContext().getMimeType(inFile.getName().toLowerCase());
             if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
             response.setContentType(mimeType);
 
+            // Cache placeholders by the same policy to avoid repeated conversion attempts on reload.
             PathFilter.setStaticContentHeaders(imagePath, UsersDB.getCurrentUser(request), request, response);
 
             ServletOutputStream out = response.getOutputStream();
@@ -678,11 +678,18 @@ public class ThumbServlet extends HttpServlet
 				conn.setDoOutput(false);
 				conn.connect();
 
-				String mimeType = Constants.getServletContext().getMimeType("/"+imagePath.toLowerCase());
-            if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
-            response.setContentType(mimeType);
+				String mimeType = conn.getContentType();
+				if (Tools.isEmpty(mimeType)) mimeType = Constants.getServletContext().getMimeType("/"+imagePath.toLowerCase());
+				if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
+				response.setContentType(mimeType);
 
-            PathFilter.setStaticContentHeaders("/"+imagePath, null, request, response);
+				// Honor an explicit no-store policy from the rendering node.
+				String cacheControl = conn.getHeaderField("Cache-Control");
+				if (Tools.isNotEmpty(cacheControl) && cacheControl.contains("no-store")) {
+					response.setHeader("Cache-Control", cacheControl);
+				} else {
+					PathFilter.setStaticContentHeaders("/"+imagePath, null, request, response);
+				}
 
 				BufferedInputStream is = new BufferedInputStream(conn.getInputStream());
 				ServletOutputStream os = response.getOutputStream();

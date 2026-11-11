@@ -4,6 +4,165 @@ Before(({ I, login }) => {
      login('admin');
 });
 
+/** Verifies single-line labels across typing, pasting, source editing and reopening editor values. */
+Scenario('type-quill-oneline', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/form-steps/?formName=Multistepform_1');
+    DT.waitForLoader('formStepsDataTable');
+    I.waitForElement('#formStepsDataTable tbody tr.selected', 10);
+    DT.waitForLoader('formItemsDataTable');
+    I.clickCss('#formItemsDataTable_wrapper button.buttons-create');
+    DTE.waitForEditor('formItemsDataTable');
+    DTE.selectOption('fieldType', 'Popiska (info text)');
+
+    const field = '#formItemsDataTable_modal #DTE_Field_label';
+    const editor = field + ' .ql-editor';
+    for (const control of ['ql-header', 'ql-align', 'ql-list', 'ql-indent']) {
+        I.dontSeeElement(field + ' .' + control);
+    }
+    I.seeAttributesOnElements(editor, { 'aria-multiline': 'false' });
+    DTE.fillQuill('label', 'Single-line autotest');
+    I.pressKey('Enter');
+    I.pressKey(['Shift', 'Enter']);
+    I.type(' continued');
+    I.seeTextEquals('Single-line autotest continued', editor);
+    I.assertEqual(await I.executeScript(selector => document.querySelector(selector).innerHTML, editor), '<p>Single-line autotest continued</p>');
+
+    for (const [format, content] of [
+        ['text/plain', 'First autotest\nSecond\nThird'],
+        ['text/html', '<h2>First autotest</h2><p><strong>Second</strong><br>Third</p>']
+    ]) {
+        I.clickCss(editor);
+        I.pressKey(['CommandOrControl', 'A']);
+        I.executeScript(({ selector, format, content }) => {
+            const clipboardData = new DataTransfer();
+            clipboardData.setData(format, content);
+            document.querySelector(selector).dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }));
+        }, { selector: editor, format, content });
+        I.seeTextEquals('First autotest Second Third', editor);
+        I.assertEqual(await I.grabNumberOfVisibleElements(editor + ' p'), 1);
+        I.dontSeeElement(editor + ' h2');
+        I.dontSeeElement(editor + ' br');
+    }
+
+    I.clickCss(field + ' button:has(.ti-code)');
+    I.waitForVisible('.ql-html-textArea', 5);
+    I.fillField('.ql-html-textArea', '<h1>Heading autotest</h1><ul><li><strong>Bold</strong></li><li><em>Italic</em></li></ul><p><a href="https://example.com">Link</a> <span style="color: #ff0000">Red</span><br>End</p>');
+    I.clickCss('button.ql-html-buttonOk');
+    I.seeTextEquals('Heading autotest Bold Italic Link Red End', editor);
+    I.see('Bold', editor + ' strong');
+    I.see('Italic', editor + ' em');
+    I.seeAttributesOnElements(editor + ' a', { href: 'https://example.com' });
+    I.assertEqual(await I.grabCssPropertyFrom(editor + ' span', 'color'), 'rgb(255, 0, 0)');
+    I.assertEqual(await I.grabNumberOfVisibleElements(editor + ' p'), 1);
+    for (const tag of ['h1', 'ul', 'li', 'br']) I.dontSeeElement(editor + ' ' + tag);
+
+    const savedValue = await I.executeScript(() => formItemsDataTable.EDITOR.field('label').val());
+    I.assertNotContain(savedValue, '<p>');
+    I.executeScript(value => formItemsDataTable.EDITOR.field('label').val(value), savedValue);
+    I.assertEqual(await I.executeScript(() => formItemsDataTable.EDITOR.field('label').val()), savedValue);
+    I.saveScreenshot('quill-oneline-autotest.png');
+    DTE.cancel('formItemsDataTable');
+});
+
+/** Verifies that toolbar menus remain clickable beyond a short modal body and in a short viewport. */
+Scenario('type-quill-pickers-in-short-modal', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/form-steps/?formName=Multistepform_1');
+    DT.waitForLoader('formStepsDataTable');
+    I.waitForElement('#formStepsDataTable tbody tr.selected', 10);
+    DT.waitForLoader('formItemsDataTable');
+
+    const field = '#formStepsDataTable_modal #DTE_Field_header';
+    const heading = field + ' .ql-header';
+    for (const [width, height, toolbarOffset] of [[1440, 900, 0], [1024, 768, 0], [600, 650, 0], [600, 400, 40], [600, 400, 80]]) {
+        I.resizeWindow(width, height);
+        I.clickCss('#formStepsDataTable_wrapper button.buttons-create');
+        DTE.waitForEditor('formStepsDataTable');
+        DTE.fillQuill('header', 'Quill picker autotest');
+
+        // Place the toolbar where neither side has room for the full menu in a short viewport.
+        I.executeScript(({ selector, offset }) => {
+            document.querySelector(selector).closest('.DTE_Field').style.marginTop = offset + 'px';
+        }, { selector: field, offset: toolbarOffset });
+
+        for (const level of [1, 2, 3, 4, 5, 6]) {
+            I.clickCss(heading + ' .ql-picker-label');
+            // Hit testing also catches the picker label covering a vertically shifted menu.
+            I.waitForFunction((selector) => {
+                const items = [...document.querySelectorAll(selector + ' .ql-picker-item')];
+                return items.length === 7 && items.every(item => {
+                    const rect = item.getBoundingClientRect();
+                    return item.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+                });
+            }, [heading], 10);
+            I.clickCss(heading + ' .ql-picker-item[data-value="' + level + '"]');
+            I.see('Quill picker autotest', field + ' .ql-editor h' + level);
+        }
+
+        I.clickCss(heading + ' .ql-picker-label');
+        I.pressKey('Escape');
+        I.dontSeeElement(heading + ' .ql-picker-options');
+        I.pressKey('Enter');
+        I.waitForVisible(heading + ' .ql-picker-options', 5);
+        I.clickCss(heading + ' .ql-picker-item:not([data-value])');
+        I.see('Quill picker autotest', field + ' .ql-editor p');
+
+        I.clickCss(field + ' .ql-color .ql-picker-label');
+        I.clickCss(field + ' .ql-color .ql-picker-item:last-child');
+        I.dontSeeElement(field + ' .ql-color .ql-picker-options');
+        I.executeScript(selector => {
+            document.querySelector(selector).closest('.DTE_Field').style.removeProperty('margin-top');
+        }, field);
+        DTE.cancel('formStepsDataTable');
+    }
+    I.wjSetDefaultWindowSize();
+});
+
+/** Verifies that open picker menus hide while their toolbar is clipped by the modal body. */
+Scenario('type-quill-pickers-in-scrolled-modal', ({ I, DTE }) => {
+    I.resizeWindow(1024, 650);
+    I.amOnPage('/apps/banner/admin/?id=7053');
+    DTE.waitForEditor('bannerDataTable');
+    I.clickCss('#pills-dt-bannerDataTable-advanced-tab');
+
+    const field = '#bannerDataTable_modal #DTE_Field_descriptionText';
+    for (const pickerType of ['ql-header', 'ql-color']) {
+        const picker = field + ' .' + pickerType + '.ql-picker';
+        const options = picker + ' .ql-picker-options';
+        I.clickCss(picker + ' .ql-picker-label');
+        I.waitForVisible(options, 10);
+
+        // Scroll without clicking outside the picker, which would close it through Quill.
+        I.executeScript(selector => {
+            const label = document.querySelector(selector + ' .ql-picker-label');
+            const body = label.closest('.modal-body');
+            body.scrollTop += label.getBoundingClientRect().bottom - body.getBoundingClientRect().top + 10;
+        }, picker);
+        I.waitForFunction(selector => {
+            const label = document.querySelector(selector + ' .ql-picker-label');
+            return label.getBoundingClientRect().bottom <= label.closest('.modal-body').getBoundingClientRect().top;
+        }, [picker], 10);
+        I.waitForInvisible(options, 10);
+
+        // Returning to the toolbar restores the same open menu and its clickable options.
+        I.executeScript(selector => {
+            document.querySelector(selector).closest('.modal-body').scrollTop = 0;
+        }, picker);
+        I.waitForVisible(options, 10);
+        I.waitForFunction(selector => {
+            const items = [...document.querySelectorAll(selector + ' .ql-picker-item')];
+            return items.length > 0 && items.every(item => {
+                const rect = item.getBoundingClientRect();
+                return item.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+            });
+        }, [picker], 10);
+        I.pressKey('Escape');
+        I.dontSeeElement(options);
+    }
+
+    DTE.cancel('bannerDataTable');
+    I.wjSetDefaultWindowSize();
+});
+
 
 /**
  * Verify that the HTML source preserves ordered and unordered lists,

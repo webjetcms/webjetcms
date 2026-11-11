@@ -24,6 +24,14 @@ The folder's main page has [website name with folder name] synchronized by defau
 
 Every page that is to be publicly viewable on the website must have "Yes" set in the **View** section. If it does not have this setting, it is unavailable to visitors. It will only be available to the logged in administrator so that they can see what the website will actually look like while creating it.
 
+### Redirection
+
+In the **URL address to which you want to redirect the web page** field, you can enter a path, such as `/xiaomi`, or a full URL. To cancel the redirection, empty the field and save the page.
+
+For a logged-in administrator, the redirect is not cached in the browser so that they can immediately verify its change or cancellation. Older redirects that the browser has already remembered may require clearing the cache. For regular visitors, the redirect is sent to the path as a permanent redirect `301`, which the browser can save.
+
+The disabled **Show** option does not preserve the deleted redirect. Such a page is inaccessible to a regular visitor; a logged-in administrator can open it and verify its redirection.
+
 ### Classification in the tree structure
 
 You can save a web page in **multiple folders**, which are listed in the Tree Structure section. The main folder is marked as Parent Folder, additional ones are in the Copy of Web Page in section. Technically, copies of the web page will be created in all selected folders. When you save any page, all data will be copied to the other copies of the web page, except:

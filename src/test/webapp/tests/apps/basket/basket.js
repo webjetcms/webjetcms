@@ -282,10 +282,12 @@ function sanitazeValue(value) {
 }
 
 async function checkDeliveryValue(I, wantedValue) {
-    const deliveryValue = await I.executeScript(() => {
-        return $("#deliveryMethodId option:selected").text();
-    });
-    I.assertEqual(deliveryValue.trim(), wantedValue.trim());
+    // Changing the country reloads delivery options asynchronously.
+    await I.retry({
+        retries: 20,
+        minTimeout: 1000,
+        maxTimeout: 1000
+    }).seeTextEquals(wantedValue.trim(), '#deliveryMethodId option:checked');
 }
 
 async function sortAndCheck(I, sortMethod, expectedOrder) {
@@ -311,9 +313,9 @@ function modifyBasket(I, nameProduct, action, selector = 'td > a.newWindow') {
 }
 
 function checkBasketSmallBox(I, expectedNumOfItems, expectedTotalPrice){
-    I.seeElement('.basketSmallBox')
-    I.waitForText(`${expectedNumOfItems}`,'.basketSmallBox .basketSmallItems > span');
-    I.see(`${expectedTotalPrice}\u00A0€`,'.basketSmallBox .basketSmallPrice > span');
+    I.waitForVisible('.basketSmallBox', 10);
+    I.waitForText(`${expectedNumOfItems}`, 10, '.basketSmallBox .basketSmallItems > span');
+    I.waitForText(`${expectedTotalPrice}\u00A0€`, 10, '.basketSmallBox .basketSmallPrice > span');
 }
 
 async function checkAmountInBasket(I, nameProduct = null, expectedAmount = null){

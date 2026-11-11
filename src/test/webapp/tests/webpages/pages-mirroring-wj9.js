@@ -84,8 +84,9 @@ function wj9CreateMirroringSubfolder(I, DTE, DT, randomNumber) {
      I.say('Kontrolujem ci sa pridali nepublikovane priecinky i do en struktury');
      I.jstreeClick(auto_folder_en);
 
-     I.seeElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
-     I.seeElement(locate('li.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder2_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
+     // Folders are expandable when the tree also displays their default pages.
+     I.seeElement(locate('li.jstree-node').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
+     I.seeElement(locate('li.jstree-node').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder2_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ));
 }
 
 function wj9DeleteSubpage(I, DT, DTE, randomNumber) {
@@ -332,7 +333,7 @@ Scenario("mirroring with multigroup mapping", ({ I, DT, DTE }) => {
      I.wait(1);
      DT.waitForLoader();
      I.seeElement(locate('tr.is-not-public').withText(auto_webpage1_sk));
-     I.click(auto_webpage1_sk);
+     I.click(auto_webpage1_sk, '#datatableInit tbody');
      DTE.waitForEditor();
      I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.seeInField("#editorAppDTE_Field_editorFields-groupCopyDetails input.form-control", '/' + auto_folder_en + '/' + auto_subfolder1_sk);
@@ -350,7 +351,7 @@ Scenario("mirroring with multigroup mapping", ({ I, DT, DTE }) => {
      I.wait(1);
      DT.waitForLoader();
      I.seeElement(locate('tr').withText(auto_webpage1_sk));
-     I.click(auto_webpage1_sk);
+     I.click(auto_webpage1_sk, '#datatableInit tbody');
      DTE.waitForEditor();
      I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.seeInField("#editorAppDTE_Field_editorFields-groupCopyDetails div.form-group:nth-child(1) input.form-control", '/' + auto_folder_sk + '/' + auto_subfolder1_sk);
@@ -367,7 +368,7 @@ Scenario("mirroring with multigroup mapping", ({ I, DT, DTE }) => {
      I.wait(1);
      DT.waitForLoader();
      I.seeElement(locate('tr').withText(auto_webpage1_sk));
-     I.click(auto_webpage1_sk);
+     I.click(auto_webpage1_sk, '#datatableInit tbody');
      DTE.waitForEditor();
      I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.dontSeeInField("#editorAppDTE_Field_editorFields-groupCopyDetails div.form-group:nth-child(1) input.form-control", '/' + auto_folder_en + '/' + auto_subfolder1_sk);

@@ -23,7 +23,9 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.blog.rest.BloggerService;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -850,18 +852,22 @@ public class Modules
 		sub.setMenuIcon("disc");
 		loadModule(sub);
 
-		// Custom fields
+		// DataTable editor configuration
 		sub = new ModuleInfo().setMenuOrder(7120);
-		sub.setLeftMenuNameKey("settings.custom-fields.title");
-		sub.setNameKey("settings.custom-fields.title");
-		sub.setPath("/admin/v9/settings/custom-fields/");
+		sub.setLeftMenuNameKey("settings.datatables.title");
+		sub.setNameKey("settings.datatables.title");
+		sub.setPath("/admin/v9/settings/fields-settings/");
 		sub.setWjVersions("BPECDIM");
 		sub.setUserItem(true);
-		sub.setItemKey("customFields");
+		sub.setItemKey("dataTablesConfig");
 		sub.setDefaultDisabled(true);
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("table-options");
+		setAvailable(sub);
+		sub.addSubmenu("settings.fields-settings.title", "/admin/v9/settings/fields-settings/");
+		sub.addSubmenu("settings.tabs-settings.title", "/admin/v9/settings/tabs-settings/");
+		sub.addSubmenu("settings.custom-fields.title", "/admin/v9/settings/custom-fields/");
 		loadModule(sub);
 
 		// Restartovat
@@ -1139,6 +1145,26 @@ public class Modules
 	}
 
 	/**
+	 * Checks the current domain restriction, inherited by submenu permissions.
+	 * Unregistered permissions have no module domain restriction.
+	 */
+	public boolean isAllowedForDomain(String itemKey)
+	{
+		for (ModuleInfo module : modules)
+		{
+			if (itemKey.equals(module.getItemKey())) return isAllowedForDomain(module, CloudToolsForCore.getDomainName());
+			if (module.getSubmenus() != null)
+			{
+				for (ModuleInfo submenu : module.getSubmenus())
+				{
+					if (itemKey.equals(submenu.getItemKey())) return isAllowedForDomain(module, CloudToolsForCore.getDomainName());
+				}
+			}
+		}
+		return true;
+	}
+
+	/**
 	 * Skontroluje, ci zadany modul existuje
 	 * @param itemKey
 	 * @return
@@ -1218,10 +1244,14 @@ public class Modules
 	 */
 	public List<ModuleInfo> getUserEditItems(Prop prop)
 	{
+		List<ModuleInfo> modulesForUserEdit = modules;
+		if (UserDetailsService.isUsersSplitByDomain()) {
+			modulesForUserEdit = filterDomain(modulesForUserEdit, CloudToolsForCore.getDomainName());
+		}
 		List<ModuleInfo> ret = new ArrayList<>();
 		ModuleInfo miUser;
 		Set<String> uniqueItems = new HashSet<>();
-		for (ModuleInfo mi : modules)
+		for (ModuleInfo mi : modulesForUserEdit)
 		{
 			if (mi.isAvailable())
 			{
@@ -1408,14 +1438,23 @@ public class Modules
 	{
 		if (domain == null) return modules;
 
-		domain = domain.toLowerCase();
 		List<ModuleInfo> filtered = new ArrayList<>();
 		for (ModuleInfo module : modules)
 		{
-			if (Tools.isNotEmpty(module.getDomainName()) && module.getDomainName().contains(domain)==false) continue;
+			if (!isAllowedForDomain(module, domain)) continue;
 
 			filtered.add(module);
 		}
 		return filtered;
+	}
+
+	private static boolean isAllowedForDomain(ModuleInfo module, String domain)
+	{
+		if (Tools.isEmpty(module.getDomainName())) return true;
+		for (String allowedDomain : Tools.getTokens(module.getDomainName(), ","))
+		{
+			if (allowedDomain.trim().equalsIgnoreCase(domain)) return true;
+		}
+		return false;
 	}
 }

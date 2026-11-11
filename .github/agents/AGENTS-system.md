@@ -47,6 +47,11 @@ Paths below refer to the current core checkout. In customer projects, verify the
 - Use the feature's established audit path for changes outside entity lifecycle callbacks. Keep credentials and verification secrets out of audit messages.
 - `WebjetEvent<T>` and Spring `@EventListener` support feature callbacks. DataTable lifecycle events have their own types in `system/datatable/events/`; inspect the actual publisher and payload before adding a listener.
 
+## Criteria Membership Lists
+
+- Use `JpaTools.in(field, values, builder)` / `notIn` for unbounded Criteria collections; these share `DB.getInClauseMaxItems()` with SQL helpers. Keep caller guards when empty input means omitting a filter.
+- Bound repository collection parameters follow a different EclipseLink path; see the [SQL membership audit](../../docs/en/developer/backend/sql-in-condition-audit.md#orm-findings-criteria-literals-differ-from-bound-collection-parameters) before changing those queries.
+
 ## Security, translation and serialization
 
 - `src/main/java/sk/iway/iwcm/system/spring/SpringSecurityConf.java` configures authentication and delegates additional rules to Spring configuration classes. Endpoint permissions also use `WebjetSecurityService`; see [Users](AGENTS-users.md). Do not infer authorization from an `/admin/` URL or a hidden button.

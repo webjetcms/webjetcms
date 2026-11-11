@@ -398,7 +398,7 @@ function openPayments(I, DT, DTE, testerName) {
 function verifyInvoice(I, TempMail, testerName, deliveryMethodName, paymentMethodName, price) {
   const date = getCurrentDate();
   I.switchTo("#dataDiv");
-  I.see("Potvrdenie objednávky", "td.invoiceHeader.alignRight");
+  I.waitForText("Potvrdenie objednávky", 20, "td.invoiceHeader.alignRight");
   I.see(`Dátum vytvorenia: ${date}`, "td.alignRight");
   I.see("Nová (nezaplatená)", 'td[colspan="2"]');
   I.see(testerName, "table.invoiceInnerTable");

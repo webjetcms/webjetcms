@@ -28,6 +28,8 @@ After clicking the **Show advanced statistics** button, additional tabs will als
 
 ![](stat-section-header-advanced.png)
 
+!>**Public cluster node warning:** On a node with `clusterMyNodeType=public` setting, the running counters of **Views**, **Attempts**, and item validation errors are not written. Responses stored in the `forms` table remain available in basic statistics, but the **Rate** value does not include form views on the public node. More in [read-only database user settings](../../../install/config/ro-user.md#multi-step-forms).
+
 ## Filtering the period
 
 There is a date filter **From - To** in the top bar of the page. After changing the range and clicking the filter button, responses, form item graphs, and statistics that are tied to saved submissions will be recalculated. If you do not specify a range, the default range of the last 30 days will be used.

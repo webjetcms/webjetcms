@@ -18,11 +18,25 @@ import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @Table(name = "documents")
 @EntityListeners(AuditEntityListener.class)
 @EntityListenersType(Adminlog.TYPE_SAVEDOC)
+@DataTableTabs(tabs = {
+	@DataTableTab(id = "content", title = "editor.tab.editor", selected = true, content = ""),
+	@DataTableTab(id = "basic", title = "editor.tab.basic_info"),
+	@DataTableTab(id = "template", title = "editor.tab.template"),
+	@DataTableTab(id = "menu", title = "editor.tab.navigation"),
+	@DataTableTab(id = "access", title = "editor.tab.permissions"),
+	@DataTableTab(id = "perex", title = "editor.tab.public"),
+	@DataTableTab(id = "media", title = "editor.tab.media", content = "<div class=\"mediaContentPlaceholder\"><div>"),
+	@DataTableTab(id = "fields", title = "editor.tab.fields"),
+	@DataTableTab(id = "attributes", title = "editor.tab.atributes"),
+	@DataTableTab(id = "history", title = "editor.tab.history", content = "<div class=\"historyContentPlaceholder\"><div>")
+})
 public class DocDetails extends DocBasic {
 
 	public DocDetails(){}

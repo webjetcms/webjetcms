@@ -30,6 +30,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 /**
  * JPA bean pre zaznam z tabulky media
@@ -47,6 +49,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Table(name="media")
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_MEDIA)
+@DataTableTabs(tabs = {
+	@DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+	@DataTableTab(id = "fields", title = "editor.tab.fields")
+})
 public class Media extends ActiveRecordRepository implements Serializable
 {
 	private static final long serialVersionUID = -1L;

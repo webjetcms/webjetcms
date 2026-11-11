@@ -32,6 +32,16 @@ Nakoľko previazané by mali byť iba stránky s rovnakým obsahom len v inej ja
 
 Nakoľko previazané by mali byť rovnaké štruktúry, rozdielne hĺbky rodičovských adresárov previazaných stránok indikujú chybu medzi štruktúrami. Oproti **zlému mapovaniu** nemusí ísť hneď o chybu, takéto previazania sú označené pre lepšie hľadanie prípadných chýb.
 
+### Upozornenia v stromovej štruktúre
+
+Ak v nastavení stromu zapnete **Web Stránky** aj **Zobraziť zrkadlenie**, pri stránkach s problémom sa zobrazí červené alebo žlté upozornenie.
+
+![](../jstree-settings.png)
+
+Kliknutím naň otvoríte editor príslušného mapovania na karte **Stránky** v sekcii **Zrkadlenie**. Pri súbehu oboch problémov má červené upozornenie na zlé mapovanie prednosť.
+
+![](tree-problems.png)
+
 ## Vymazanie/zrušenie previazania
 
 Pri vymazaní/zrušení celého previazania zaniká existujúci synchronizačný parameter `syncId`, nakoľko už nemá čo previazať.

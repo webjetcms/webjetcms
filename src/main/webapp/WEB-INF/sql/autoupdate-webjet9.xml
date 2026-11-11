@@ -4124,6 +4124,30 @@
 
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>13.10.2026</string></void>
+                <void property="desc"><string>ai_assistants - add used_tokens and token_limit columns</string></void>
+                <void property="mysql"><string>ALTER TABLE ai_assistants ADD COLUMN used_tokens BIGINT DEFAULT 0, ADD COLUMN token_limit BIGINT DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE ai_assistants ADD used_tokens BIGINT DEFAULT 0 WITH VALUES, token_limit BIGINT DEFAULT 0 WITH VALUES</string></void>
+                <void property="oracle"><string>ALTER TABLE ai_assistants ADD (used_tokens NUMBER(19) DEFAULT 0, token_limit NUMBER(19) DEFAULT 0)</string></void>
+                <void property="pgsql"><string>ALTER TABLE ai_assistants ADD COLUMN used_tokens BIGINT DEFAULT 0, ADD COLUMN token_limit BIGINT DEFAULT 0</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>14.10.2026</string></void>
+                <void property="desc"><string>ai_assistants - add token usage notification email and level</string></void>
+                <void property="mysql"><string>ALTER TABLE ai_assistants ADD COLUMN notif_email VARCHAR(255), ADD COLUMN notif_level INT DEFAULT 0 NOT NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE ai_assistants ADD notif_email NVARCHAR(255), notif_level INT DEFAULT 0 NOT NULL WITH VALUES</string></void>
+                <void property="oracle"><string>ALTER TABLE ai_assistants ADD (notif_email NVARCHAR2(255), notif_level INTEGER DEFAULT 0 NOT NULL)</string></void>
+                <void property="pgsql"><string>ALTER TABLE ai_assistants ADD COLUMN notif_email VARCHAR(255), ADD COLUMN notif_level INT DEFAULT 0 NOT NULL</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>codex</string></void>
                 <void property="date"><string>14.10.2026</string></void>
                 <void property="desc"><string>templates - add stop-word removal mode for page URLs</string></void>
@@ -4164,25 +4188,351 @@
 
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
-                <void property="author"><string>sivan</string></void>
-                <void property="date"><string>13.10.2026</string></void>
-                <void property="desc"><string>ai_assistants - add used_tokens and token_limit columns</string></void>
-                <void property="mysql"><string>ALTER TABLE ai_assistants ADD COLUMN used_tokens BIGINT DEFAULT 0, ADD COLUMN token_limit BIGINT DEFAULT 0</string></void>
-                <void property="mssql"><string>ALTER TABLE ai_assistants ADD used_tokens BIGINT DEFAULT 0 WITH VALUES, token_limit BIGINT DEFAULT 0 WITH VALUES</string></void>
-                <void property="oracle"><string>ALTER TABLE ai_assistants ADD (used_tokens NUMBER(19) DEFAULT 0, token_limit NUMBER(19) DEFAULT 0)</string></void>
-                <void property="pgsql"><string>ALTER TABLE ai_assistants ADD COLUMN used_tokens BIGINT DEFAULT 0, ADD COLUMN token_limit BIGINT DEFAULT 0</string></void>
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>19.10.2026</string></void>
+                <void property="desc"><string>form_settings - add custom fields A-F</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE form_settings ADD field_a VARCHAR(255), ADD field_b VARCHAR(255), ADD field_c VARCHAR(255), ADD field_d VARCHAR(255), ADD field_e VARCHAR(255), ADD field_f VARCHAR(255);
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE form_settings ADD field_a NVARCHAR(255), field_b NVARCHAR(255), field_c NVARCHAR(255), field_d NVARCHAR(255), field_e NVARCHAR(255), field_f NVARCHAR(255);
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE form_settings ADD (field_a NVARCHAR2(255), field_b NVARCHAR2(255), field_c NVARCHAR2(255), field_d NVARCHAR2(255), field_e NVARCHAR2(255), field_f NVARCHAR2(255));
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        ALTER TABLE form_settings ADD COLUMN field_a VARCHAR(255), ADD COLUMN field_b VARCHAR(255), ADD COLUMN field_c VARCHAR(255), ADD COLUMN field_d VARCHAR(255), ADD COLUMN field_e VARCHAR(255), ADD COLUMN field_f VARCHAR(255);
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>24.10.2026</string></void>
+                <void property="desc"><string>ai - replace retired OpenAI gpt-image-1 with gpt-image-2</string></void>
+                <void property="mysql"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+                <void property="mssql"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+                <void property="oracle"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+                <void property="pgsql"><string>UPDATE ai_assistants SET model='gpt-image-2' WHERE provider='openai' AND model='gpt-image-1'</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>20.10.2026</string></void>
+                <void property="desc"><string>Create dt_fields table</string></void>
+                <void property="mysql"><string>
+                    CREATE TABLE dt_fields (
+                        id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                        class_name VARCHAR(255) NOT NULL,
+                        field_name VARCHAR(255),
+                        tab VARCHAR(255),
+                        title VARCHAR(255),
+                        sort_after VARCHAR(255),
+                        visible TINYINT(1),
+                        hidden TINYINT(1),
+                        hiddenEditor TINYINT(1),
+                        filter TINYINT(1),
+                        orderable TINYINT(1),
+                        ai TINYINT(1),
+                        disabled TINYINT(1),
+                        domain_id INT NOT NULL DEFAULT 1,
+                        CONSTRAINT uk_dt_fields_target UNIQUE (domain_id, class_name, field_name)
+                    );
+                </string></void>
+                <void property="mssql"><string>
+                    CREATE TABLE dt_fields (
+                        id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                        class_name NVARCHAR(255) NOT NULL,
+                        field_name NVARCHAR(255),
+                        tab NVARCHAR(255),
+                        title NVARCHAR(255),
+                        sort_after NVARCHAR(255),
+                        visible BIT,
+                        hidden BIT,
+                        hiddenEditor BIT,
+                        filter BIT,
+                        orderable BIT,
+                        ai BIT,
+                        disabled BIT,
+                        domain_id INT NOT NULL DEFAULT 1,
+                        CONSTRAINT uk_dt_fields_target UNIQUE (domain_id, class_name, field_name)
+                    );
+                </string></void>
+                <void property="oracle"><string>
+                    CREATE TABLE dt_fields (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        class_name NVARCHAR2(255) NOT NULL,
+                        field_name NVARCHAR2(255),
+                        tab NVARCHAR2(255),
+                        title NVARCHAR2(255),
+                        sort_after NVARCHAR2(255),
+                        visible NUMBER(1),
+                        hidden NUMBER(1),
+                        hiddenEditor NUMBER(1),
+                        filter NUMBER(1),
+                        orderable NUMBER(1),
+                        ai NUMBER(1),
+                        disabled NUMBER(1),
+                        domain_id INTEGER DEFAULT 1 NOT NULL,
+                        CONSTRAINT uk_dt_fields_target UNIQUE (domain_id, class_name, field_name)
+                    );
+                    CREATE SEQUENCE S_dt_fields START WITH 1;
+                    CREATE TRIGGER T_dt_fields BEFORE INSERT ON dt_fields
+                        FOR EACH ROW
+                            DECLARE
+                                val INTEGER|
+                            BEGIN
+                                IF :new.id IS NULL THEN
+                                    SELECT S_dt_fields.nextval into val FROM dual|
+                                    :new.id:= val|
+                                END IF|
+                            END|
+                    ;
+                </string></void>
+                <void property="pgsql"><string>
+                    CREATE TABLE dt_fields (
+                        id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY NOT NULL,
+                        class_name VARCHAR(255) NOT NULL,
+                        field_name VARCHAR(255),
+                        tab VARCHAR(255),
+                        title VARCHAR(255),
+                        sort_after VARCHAR(255),
+                        visible BOOLEAN,
+                        hidden BOOLEAN,
+                        hiddenEditor BOOLEAN,
+                        filter BOOLEAN,
+                        orderable BOOLEAN,
+                        ai BOOLEAN,
+                        disabled BOOLEAN,
+                        domain_id INT NOT NULL DEFAULT 1,
+                        CONSTRAINT uk_dt_fields_target UNIQUE (domain_id, class_name, field_name)
+                    );
+                </string></void>
             </object>
         </void>
 
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
-                <void property="date"><string>14.10.2026</string></void>
-                <void property="desc"><string>ai_assistants - add token usage notification email and level</string></void>
-                <void property="mysql"><string>ALTER TABLE ai_assistants ADD COLUMN notif_email VARCHAR(255), ADD COLUMN notif_level INT DEFAULT 0 NOT NULL</string></void>
-                <void property="mssql"><string>ALTER TABLE ai_assistants ADD notif_email NVARCHAR(255), notif_level INT DEFAULT 0 NOT NULL WITH VALUES</string></void>
-                <void property="oracle"><string>ALTER TABLE ai_assistants ADD (notif_email NVARCHAR2(255), notif_level INTEGER DEFAULT 0 NOT NULL)</string></void>
-                <void property="pgsql"><string>ALTER TABLE ai_assistants ADD COLUMN notif_email VARCHAR(255), ADD COLUMN notif_level INT DEFAULT 0 NOT NULL</string></void>
+                <void property="date"><string>21.10.2026</string></void>
+                <void property="desc"><string>Create dt_tabs table</string></void>
+                <void property="mysql"><string>
+                    CREATE TABLE dt_tabs (
+                        id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                        class_name VARCHAR(255) NOT NULL,
+                        tab_id VARCHAR(255) NOT NULL,
+                        title VARCHAR(255),
+                        sort_after VARCHAR(255),
+                        selected TINYINT(1),
+                        hide_on_create TINYINT(1),
+                        perms VARCHAR(255),
+                        css_class VARCHAR(255),
+                        content TEXT,
+                        domain_id INT NOT NULL DEFAULT 1,
+                        CONSTRAINT uk_dt_tabs_target UNIQUE (domain_id, class_name, tab_id)
+                    );
+                </string></void>
+                <void property="mssql"><string>
+                    CREATE TABLE dt_tabs (
+                        id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                        class_name NVARCHAR(255) NOT NULL,
+                        tab_id NVARCHAR(255) NOT NULL,
+                        title NVARCHAR(255),
+                        sort_after NVARCHAR(255),
+                        selected BIT,
+                        hide_on_create BIT,
+                        perms NVARCHAR(255),
+                        css_class NVARCHAR(255),
+                        content NTEXT,
+                        domain_id INT NOT NULL DEFAULT 1,
+                        CONSTRAINT uk_dt_tabs_target UNIQUE (domain_id, class_name, tab_id)
+                    );
+                </string></void>
+                <void property="oracle"><string>
+                    CREATE TABLE dt_tabs (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        class_name NVARCHAR2(255) NOT NULL,
+                        tab_id NVARCHAR2(255) NOT NULL,
+                        title NVARCHAR2(255),
+                        sort_after NVARCHAR2(255),
+                        selected NUMBER(1),
+                        hide_on_create NUMBER(1),
+                        perms NVARCHAR2(255),
+                        css_class NVARCHAR2(255),
+                        content CLOB,
+                        domain_id INTEGER DEFAULT 1 NOT NULL,
+                        CONSTRAINT uk_dt_tabs_target UNIQUE (domain_id, class_name, tab_id)
+                    );
+                    CREATE SEQUENCE S_dt_tabs START WITH 1;
+                    CREATE TRIGGER T_dt_tabs BEFORE INSERT ON dt_tabs
+                        FOR EACH ROW
+                            DECLARE
+                                val INTEGER|
+                            BEGIN
+                                IF :new.id IS NULL THEN
+                                    SELECT S_dt_tabs.nextval into val FROM dual|
+                                    :new.id:= val|
+                                END IF|
+                            END|
+                    ;
+                </string></void>
+                <void property="pgsql"><string>
+                    CREATE TABLE dt_tabs (
+                        id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY NOT NULL,
+                        class_name VARCHAR(255) NOT NULL,
+                        tab_id VARCHAR(255) NOT NULL,
+                        title VARCHAR(255),
+                        sort_after VARCHAR(255),
+                        selected BOOLEAN,
+                        hide_on_create BOOLEAN,
+                        perms VARCHAR(255),
+                        css_class VARCHAR(255),
+                        content TEXT,
+                        domain_id INT NOT NULL DEFAULT 1,
+                        CONSTRAINT uk_dt_tabs_target UNIQUE (domain_id, class_name, tab_id)
+                    );
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>26.10.2026</string></void>
+                <void property="desc"><string>Rename custom_fields to dt_customfields</string></void>
+                <void property="mysql"><string>RENAME TABLE custom_fields TO dt_customfields</string></void>
+                <void property="mssql"><string>EXEC sp_rename 'custom_fields', 'dt_customfields'</string></void>
+                <void property="oracle"><string>
+                    RENAME custom_fields TO dt_customfields;
+                    RENAME S_custom_fields TO S_dt_customfields;
+                    DROP TRIGGER T_custom_fields;
+                    CREATE TRIGGER T_dt_customfields BEFORE INSERT ON dt_customfields
+                        FOR EACH ROW
+                            DECLARE
+                                val INTEGER|
+                            BEGIN
+                                IF :new.id IS NULL THEN
+                                    SELECT S_dt_customfields.nextval into val FROM dual|
+                                    :new.id:= val|
+                                END IF|
+                            END|
+                    ;
+                </string></void>
+                <void property="pgsql"><string>ALTER TABLE custom_fields RENAME TO dt_customfields</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>26.10.2026</string></void>
+                <void property="desc"><string>emails - allow large HTML messages in the delivery queue</string></void>
+                <void property="mysql"><string>ALTER TABLE emails MODIFY COLUMN message LONGTEXT NULL;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivam</string></void>
+                <void property="date"><string>04.11.2026</string></void>
+                <void property="desc"><string>form_items - add hint with large HTML content</string></void>
+                <void property="mysql"><string>ALTER TABLE form_items ADD COLUMN hint LONGTEXT NULL;</string></void>
+                <void property="mssql"><string>ALTER TABLE form_items ADD hint NTEXT NULL;</string></void>
+                <void property="oracle"><string>ALTER TABLE form_items ADD (hint CLOB);</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_items ADD COLUMN hint TEXT;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>09.11.2026</string></void>
+                <void property="desc"><string>ai_assistants - default CHAT_SEARCH assistants</string></void>
+                <!-- UpdateDatabase splits SQL on semicolons even inside string literals.
+                     Preserve the prompt punctuation using CHAR/CHR(59), or the Oracle | escape. -->
+                <void property="mysql"><string>
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gpt-6.1-sol', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'openai', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHAR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gpt-6.1-sol', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gpt-6-astra', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'openai', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHAR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gpt-6-astra', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gemini-3.8-flash', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'gemini', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHAR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gemini-3.8-flash', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gemini-4-argon', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'gemini', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHAR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gemini-4-argon', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                </string></void>
+                <void property="mssql"><string>
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gpt-6.1-sol', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'openai', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHAR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gpt-6.1-sol', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gpt-6-astra', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'openai', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHAR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gpt-6-astra', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gemini-3.8-flash', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'gemini', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHAR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gemini-3.8-flash', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gemini-4-argon', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'gemini', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHAR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gemini-4-argon', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                </string></void>
+                <void property="oracle"><string>
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gpt-6.1-sol', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'openai', 'You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise| provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.', 'gpt-6.1-sol', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gpt-6-astra', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'openai', 'You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise| provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.', 'gpt-6-astra', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gemini-3.8-flash', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'gemini', 'You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise| provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.', 'gemini-3.8-flash', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gemini-4-argon', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'gemini', 'You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise| provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.', 'gemini-4-argon', NULL, '00-chat', 0, '', 'messages', 0, 1, 0, 1, 1);
+                </string></void>
+                <void property="pgsql"><string>
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gpt-6.1-sol', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'openai', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gpt-6.1-sol', NULL, '00-chat', false, '', 'messages', false, true, false, true, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gpt-6-astra', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'openai', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gpt-6-astra', NULL, '00-chat', false, '', 'messages', false, true, false, true, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gemini-3.8-flash', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'gemini', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gemini-3.8-flash', NULL, '00-chat', false, '', 'messages', false, true, false, true, 1);
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('CHAT-gemini-4-argon', '{model}', 'live_chat', '*', '', 'dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field', 'gemini', CONCAT('You are a general-purpose assistant in WebJET CMS administration.\nHelp with questions and tasks on any topic.\nReply in the user''s language unless asked otherwise.\nBe clear, practical and concise', CHR(59), ' provide detail when needed.\nFormat responses in Markdown unless the user requests another format. Use headings, lists, tables and fenced code blocks when they improve readability. Do not wrap the entire response in a code block unless requested.\nAsk clarifying questions only when necessary.\nUse the previous messages in this conversation when answering follow-up questions. Consider supplied attachments when relevant.\nOfficial WebJET CMS documentation: https://docs.webjetcms.sk/latest/sk/\nDo not invent features, settings, menu paths or links. State uncertainty when relevant.\nDo not assume access to CMS data or websites. Never claim to have checked a source or performed an action unless you actually did.'), 'gemini-4-argon', NULL, '00-chat', false, '', 'messages', false, true, false, true, 1);
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>11.11.2026</string></void>
+                <void property="desc"><string>ai - replace deprecated OpenAI image, GPT-5 and o3 models</string></void>
+                <void property="mysql"><string>
+                    UPDATE ai_assistants SET model='gpt-image-2.6-sunburst' WHERE provider='openai' AND model IN ('gpt-image-2', 'gpt-image-2-2026-04-21');
+                    UPDATE ai_assistants SET model='gpt-5.6-sol' WHERE provider='openai' AND model IN ('gpt-5', 'gpt-5-2025-08-07', 'gpt-5-pro', 'gpt-5-pro-2025-10-06', 'o3', 'o3-2025-04-16', 'o3-pro', 'o3-pro-2025-06-10');
+                    UPDATE ai_assistants SET model='gpt-5.6-terra' WHERE provider='openai' AND model IN ('gpt-5-mini', 'gpt-5-mini-2025-08-07');
+                    UPDATE ai_assistants SET model='gpt-5.6-luna' WHERE provider='openai' AND model IN ('gpt-5-nano', 'gpt-5-nano-2025-08-07');
+                </string></void>
+                <void property="mssql"><string>
+                    UPDATE ai_assistants SET model='gpt-image-2.6-sunburst' WHERE provider='openai' AND model IN ('gpt-image-2', 'gpt-image-2-2026-04-21');
+                    UPDATE ai_assistants SET model='gpt-5.6-sol' WHERE provider='openai' AND model IN ('gpt-5', 'gpt-5-2025-08-07', 'gpt-5-pro', 'gpt-5-pro-2025-10-06', 'o3', 'o3-2025-04-16', 'o3-pro', 'o3-pro-2025-06-10');
+                    UPDATE ai_assistants SET model='gpt-5.6-terra' WHERE provider='openai' AND model IN ('gpt-5-mini', 'gpt-5-mini-2025-08-07');
+                    UPDATE ai_assistants SET model='gpt-5.6-luna' WHERE provider='openai' AND model IN ('gpt-5-nano', 'gpt-5-nano-2025-08-07');
+                </string></void>
+                <void property="oracle"><string>
+                    UPDATE ai_assistants SET model='gpt-image-2.6-sunburst' WHERE provider='openai' AND model IN ('gpt-image-2', 'gpt-image-2-2026-04-21');
+                    UPDATE ai_assistants SET model='gpt-5.6-sol' WHERE provider='openai' AND model IN ('gpt-5', 'gpt-5-2025-08-07', 'gpt-5-pro', 'gpt-5-pro-2025-10-06', 'o3', 'o3-2025-04-16', 'o3-pro', 'o3-pro-2025-06-10');
+                    UPDATE ai_assistants SET model='gpt-5.6-terra' WHERE provider='openai' AND model IN ('gpt-5-mini', 'gpt-5-mini-2025-08-07');
+                    UPDATE ai_assistants SET model='gpt-5.6-luna' WHERE provider='openai' AND model IN ('gpt-5-nano', 'gpt-5-nano-2025-08-07');
+                </string></void>
+                <void property="pgsql"><string>
+                    UPDATE ai_assistants SET model='gpt-image-2.6-sunburst' WHERE provider='openai' AND model IN ('gpt-image-2', 'gpt-image-2-2026-04-21');
+                    UPDATE ai_assistants SET model='gpt-5.6-sol' WHERE provider='openai' AND model IN ('gpt-5', 'gpt-5-2025-08-07', 'gpt-5-pro', 'gpt-5-pro-2025-10-06', 'o3', 'o3-2025-04-16', 'o3-pro', 'o3-pro-2025-06-10');
+                    UPDATE ai_assistants SET model='gpt-5.6-terra' WHERE provider='openai' AND model IN ('gpt-5-mini', 'gpt-5-mini-2025-08-07');
+                    UPDATE ai_assistants SET model='gpt-5.6-luna' WHERE provider='openai' AND model IN ('gpt-5-nano', 'gpt-5-nano-2025-08-07');
+                </string></void>
             </object>
         </void>
 

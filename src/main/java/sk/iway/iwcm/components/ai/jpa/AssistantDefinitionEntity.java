@@ -19,12 +19,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Entity
@@ -33,6 +37,13 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_AI)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "action", title = "editor.form.action"),
+    @DataTableTab(id = "provider", title = "components.ai_assistants.provider"),
+    @DataTableTab(id = "instructions", title = "components.ai_assistants.instruction_tab"),
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced")
+})
 public class AssistantDefinitionEntity implements Serializable {
 
     @Id
@@ -129,7 +140,7 @@ public class AssistantDefinitionEntity implements Serializable {
 					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-field"),
 					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
 					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
-                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className")
+                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className,#DTE_Field_action")
 				}
 			)
 		}
@@ -240,4 +251,25 @@ public class AssistantDefinitionEntity implements Serializable {
 
     @Column(name="domain_id")
 	private Integer domainId;
+
+    /**
+     * Resolves the user-visible name, translating an optional prefix before the model placeholder.
+     *
+     * @param prop translations for the current user
+     * @return translated name with {@code {model}} replaced, or the internal name when no description is set
+     */
+    public String getDisplayName(Prop prop) {
+        if (Tools.isEmpty(description)) return name;
+
+        String label = prop.getText(description, false);
+        int modelIndex = label.indexOf("{model}");
+        if (modelIndex < 0) return label;
+
+        String prefix = label.substring(0, modelIndex);
+        String prefixKey = prefix.strip();
+        if (Tools.isNotEmpty(prefixKey)) {
+            label = prefix.replace(prefixKey, prop.getText(prefixKey, false)) + label.substring(modelIndex);
+        }
+        return label.replace("{model}", model == null ? "" : model);
+    }
 }

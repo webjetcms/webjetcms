@@ -7,6 +7,8 @@
 
 import { htmlEditButton } from "./quill.htmlEditButton";
 import { SoftLineBreakBlot, shiftEnterHandler, lineBreakMatcher } from "./quill.br";
+import { createPopper } from "@popperjs/core";
+import Delta from 'quill-delta';
 
 export function typeQuill() {
 
@@ -32,15 +34,33 @@ export function typeQuill() {
     ];
 
     var toolbarOptionsOneline = [
-        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
         [
             'bold', 'italic', 'underline', 'strike',
-            { 'align': [] },
             { 'script': 'sub'}, { 'script': 'super' }, // superscript/subscript
             { 'color': [] }, { 'background': [] },          // dropdown with defaults from theme
             'link'
         ]
     ];
+
+    const formatsOneline = ['bold', 'italic', 'underline', 'strike', 'script', 'color', 'background', 'link'];
+
+    /** Flattens imported content to one line while preserving supported inline formatting. */
+    function toOneLine(delta) {
+        const lastInsert = delta.ops.at(-1)?.insert;
+        if (typeof lastInsert === 'string' && lastInsert.endsWith('\n')) {
+            delta = delta.slice(0, delta.length() - 1);
+        }
+        return delta.reduce((result, op) => {
+            let text = '';
+            if (typeof op.insert === 'string') {
+                text = op.insert.replace(/[\r\n]+/g, ' ');
+            } else if (op.insert?.sbreak != null) {
+                text = ' ';
+            }
+            const attributes = Object.fromEntries(Object.entries(op.attributes || {}).filter(([name]) => formatsOneline.includes(name)));
+            return result.insert(text, attributes);
+        }, new Delta());
+    }
 
     /**
      * Update HTML to quill supported HTML tags, e.g.:
@@ -188,6 +208,40 @@ export function typeQuill() {
         });
     }
 
+    /** Positions open toolbar menus outside clipping modal containers and returns their cleanup callbacks. */
+    function positionToolbarPickers(quill) {
+        const toolbar = quill.getModule('toolbar');
+        if (!toolbar || !toolbar.container) return [];
+
+        return Array.from(toolbar.container.querySelectorAll('.ql-picker'), picker => {
+            const label = picker.querySelector('.ql-picker-label');
+            const options = picker.querySelector('.ql-picker-options');
+            let popper;
+
+            const observer = new MutationObserver(() => {
+                if (picker.classList.contains('ql-expanded')) {
+                    if (popper) return;
+                    popper = createPopper(label, options, {
+                        placement: 'bottom-start',
+                        strategy: 'fixed',
+                        modifiers: [
+                            { name: 'flip', options: { boundary: document.documentElement } },
+                            { name: 'preventOverflow', options: { boundary: document.documentElement, padding: 8, altAxis: true } }
+                        ]
+                    });
+                } else if (popper) {
+                    popper.destroy();
+                    popper = null;
+                }
+            });
+            observer.observe(picker, { attributes: true, attributeFilter: ['class'] });
+            return () => {
+                observer.disconnect();
+                popper?.destroy();
+            };
+        });
+    }
+
     /**
      * Test if the editor is one line (without P tags)
      * @param {*} conf - datatanle column config
@@ -210,6 +264,7 @@ export function typeQuill() {
     return {
         create: function (conf) {
             //console.log("Creating quill editor");
+            const oneLine = isOneLine(conf);
             var safeId = $.fn.dataTable.Editor.safeId(conf.id);
             var input = $(
                 '<div id="' + safeId + '" class="quill-wrapper">' +
@@ -250,9 +305,11 @@ export function typeQuill() {
 
             conf._quill = new Quill(input.find('.editor')[0], $.extend(true, {
                 theme: 'snow',
+                formats: oneLine ? formatsOneline : null,
                 modules: {
-                    toolbar: isOneLine(conf) === true ? toolbarOptionsOneline : toolbarOptions,
+                    toolbar: oneLine ? toolbarOptionsOneline : toolbarOptions,
                     htmlEditButton: {
+                        oneLine: oneLine,
                         msg: WJ.translate("datatables.quill.htmlButton.tooltip.js"), //Custom message to display in the editor, default: Edit HTML here, when you click "OK" the quill editor's contents will be replaced
                         okText: '<i class="ti ti-check"></i> '+WJ.translate("button.submit"), // Text to display in the OK button, default: Ok,
                         cancelText: '<i class="ti ti-x"></i> '+WJ.translate("button.cancel"), // Text to display in the cancel button, default: Cancel
@@ -267,6 +324,16 @@ export function typeQuill() {
                     },
                     keyboard: {
                         bindings: {
+                            "one line enter": {
+                                key: 'Enter',
+                                shiftKey: null,
+                                altKey: null,
+                                ctrlKey: null,
+                                metaKey: null,
+                                handler: function () {
+                                    return oneLine !== true;
+                                }
+                            },
                             "shift enter": {
                                 key: 'Enter',
                                 shiftKey: true,
@@ -287,10 +354,17 @@ export function typeQuill() {
             }
 
             // Add the matcher to the clipboard module
-            conf._quill.clipboard.addMatcher(Node.ELEMENT_NODE, removeStylesAndClasses);
+            if (oneLine) {
+                const clipboard = conf._quill.clipboard;
+                const convert = clipboard.convert.bind(clipboard);
+                clipboard.convert = (...args) => toOneLine(convert(...args));
+            } else {
+                conf._quill.clipboard.addMatcher(Node.ELEMENT_NODE, removeStylesAndClasses);
+            }
 
             // Add accessibility attributes to toolbar picker elements
             addToolbarA11y(conf._quill);
+            conf._quillPickerCleanups = positionToolbarPickers(conf._quill);
 
             return input;
         },
@@ -333,7 +407,11 @@ export function typeQuill() {
             var htmlCode = quillFromHtmlFormat(val);
 
             //console.log("QUILL SET, FIXED htmlCode=", htmlCode);
-            conf._quill.root.innerHTML = htmlCode;
+            if (isOneLine(conf)) {
+                conf._quill.setContents(conf._quill.clipboard.convert({ html: htmlCode }));
+            } else {
+                conf._quill.root.innerHTML = htmlCode;
+            }
         },
 
         enable: function (conf) {
@@ -341,6 +419,10 @@ export function typeQuill() {
 
         disable: function (conf) {
         }, // not supported by Quill
+
+        destroy: function (conf) {
+            conf._quillPickerCleanups?.forEach(cleanup => cleanup());
+        },
 
         // Get the Quill instance
         quill: function (conf) {

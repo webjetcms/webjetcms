@@ -21,6 +21,7 @@ work
 **/WEB-INF/tmp
 src/main/webapp/images/gallery/test/subfolder1
 src/main/webapp/files/protected/backup/
+/src/main/webapp/files/protected/ai-chat/
 **/_tmp_*
 
 #node_modules
@@ -50,6 +51,7 @@ docs/feature-video/
 
 #logs
 *.log
+/outputs/
 
 #idea
 .idea

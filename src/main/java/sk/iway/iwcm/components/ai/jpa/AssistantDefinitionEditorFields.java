@@ -49,7 +49,7 @@ public class AssistantDefinitionEditorFields extends BaseEditorFields {
         setStatusIconsList(null);
 
         if(Tools.isNotEmpty(assistant.getDescription())) {
-            setTranslatedDescription( prop.getText(assistant.getDescription()) );
+            setTranslatedDescription(assistant.getDisplayName(prop));
         }
 
         if(Tools.isNotEmpty(assistant.getUserPromptLabel())) {

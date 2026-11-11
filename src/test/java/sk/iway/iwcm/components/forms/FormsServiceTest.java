@@ -1,8 +1,10 @@
 package sk.iway.iwcm.components.forms;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -19,10 +21,18 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.doc.DocDB;
@@ -32,6 +42,64 @@ import sk.iway.iwcm.users.UserDetails;
 
 class FormsServiceTest {
 
+    /** Removing a hidden empty option preserves the remaining label and submitted value before and after saving. */
+    @ParameterizedTest
+    @CsvSource({"'I agree',yes", "'Sales, Europe',sales", "Consent,'yes please'", "Region,'Europe, West'"})
+    void preservesSingleOptionWhenRemovingEmptyOption(String label, String value) {
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.formsimple.hide.checkboxgroup")).thenReturn("placeholder,emptyOption");
+        when(prop.getText("components.formsimple.iterable.checkboxgroup")).thenReturn(
+            "<label><input type=\"checkbox\" value=\"${value}\">${value-label}</label>");
+        String configured = ":|" + label + ":" + value;
+        String filtered = FormsService.removeUnsupportedEmptyOption(configured, "checkboxgroup", prop);
+        assertArrayEquals(new String[] {label + ":" + value}, FormsService.parseIterableValues(filtered));
+
+        for (String options : new String[] {configured, filtered}) {
+            JSONObject item = new JSONObject().put("fieldType", "checkboxgroup").put("label", "Choice")
+                .put("labelOriginal", "Choice").put("itemFormId", "autotest-choice").put("value", options);
+            String html = FormsService.replaceFields("<div>${iterable}</div>", "autotest", "", item,
+                "", false, false, new HashSet<>(), prop, null);
+            Document document = Jsoup.parseBodyFragment(html);
+            assertEquals(1, document.select("input").size());
+            assertEquals(value, document.selectFirst("input").val());
+            assertEquals(label, document.selectFirst("label").text());
+        }
+    }
+
+    /** Hidden empty entries are ignored with legacy separators and with multiple or no remaining choices. */
+    @Test
+    void preservesLegacyAndMultipleOptionsWhenRemovingEmptyOption() {
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.formsimple.hide.checkboxgroup")).thenReturn("emptyOption");
+        for (String configured : new String[] {":,I agree:yes", ": Agree:yes"}) {
+            String filtered = FormsService.removeUnsupportedEmptyOption(configured, "checkboxgroup", prop);
+            assertArrayEquals(new String[] {configured.substring(2)}, FormsService.parseIterableValues(filtered));
+        }
+        String filtered = FormsService.removeUnsupportedEmptyOption(":|First:one| : |Second:two", "checkboxgroup", prop);
+        assertArrayEquals(new String[] {"First:one", "Second:two"}, FormsService.parseIterableValues(filtered));
+        assertArrayEquals(new String[0], FormsService.parseIterableValues(
+            FormsService.removeUnsupportedEmptyOption(":", "checkboxgroup", prop)));
+        assertEquals("First:one|Second:two", FormsService.removeUnsupportedEmptyOption("First:one|Second:two", "checkboxgroup", prop));
+    }
+
+    /** Field types that allow empty options retain the sentinel. */
+    @ParameterizedTest
+    @ValueSource(strings = {"radiogroup", "select"})
+    void preservesAllowedEmptyOption(String fieldType) {
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.formsimple.hide." + fieldType)).thenReturn("trimValue");
+        assertEquals(":|I agree:yes", FormsService.removeUnsupportedEmptyOption(":|I agree:yes", fieldType, prop));
+    }
+
+    /** Enumeration expressions are not rewritten as manual option lists. */
+    @ParameterizedTest
+    @ValueSource(strings = {"enumeration-options|1|string1|string2", "{enumeration-options|1|string1|string2}"})
+    void preservesEnumerationOptions(String value) {
+        Prop prop = mock(Prop.class);
+        assertEquals(value, FormsService.removeUnsupportedEmptyOption(value, "checkboxgroup", prop));
+        verifyNoInteractions(prop);
+    }
+
     @Test
     void replaceFieldsPreservesReplacementValuesAndUnknownExpressions() {
         Map<String, String> fields = Map.of("id", "field-${stepId}");
@@ -40,6 +108,33 @@ class FormsServiceTest {
             "field-${stepId}|${unknown}|${unknown:-fallback}|$field-${stepId}",
             FormsService.replaceFields("${id}|${unknown}|${unknown:-fallback}|$${id}", fields)
         );
+    }
+
+    /** Renders entity hints as HTML in page and email templates without expanding their contents again. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void replaceFieldsRendersHintHtmlAndDefaultsMissingHintsToEmpty(boolean isEmailRender) {
+        Prop prop = mock(Prop.class);
+        FormItemEntity entity = new FormItemEntity();
+        entity.setFieldType("text");
+        entity.setLabel("Name");
+        entity.setItemFormId("name-1");
+        entity.setHint("<p><strong>First paragraph</strong> &amp; text</p><p>&lt;em&gt; ${id} ${settings.subject}</p>");
+        String template = "<label for=\"${id}\">${label}</label><div class=\"form-hint\">${hint}</div>";
+
+        String html = FormsService.replaceFields(template, "contact", "", new JSONObject(entity),
+            "", isEmailRender, false, new HashSet<>(), prop, null);
+
+        assertEquals("<label for=\"name-1\">Name</label><div class=\"form-hint\">" + entity.getHint() + "</div>", html);
+
+        entity.setHint(null);
+        html = FormsService.replaceFields(template, "contact", "", new JSONObject(entity),
+            "", isEmailRender, false, new HashSet<>(), prop, null);
+        assertEquals("<label for=\"name-1\">Name</label><div class=\"form-hint\"></div>", html);
+
+        entity.setHint("");
+        assertEquals(html, FormsService.replaceFields(template, "contact", "", new JSONObject(entity),
+            "", isEmailRender, false, new HashSet<>(), prop, null));
     }
 
     @Test
@@ -105,6 +200,135 @@ class FormsServiceTest {
         assertEquals("Enter ${id}, ${itemId} and ${stepId} literally (7)", tooltip.text());
         assertFalse(trigger.outerHtml().contains("${"));
         assertFalse(tooltip.attr("id").contains("${"));
+    }
+
+    /** Exposes only the documented settings and preserves raw HTML in the eight HTML fields. */
+    @Test
+    void exposesSettingsWithContextAppropriateEscaping() {
+        FormSettingsEntity settings = new FormSettingsEntity();
+        String html = "<strong title=\"A & B\">${id} ${settings.subject}</strong>";
+        String storedHtml = ResponseUtils.filter(html);
+        settings.setFieldA(storedHtml);
+        settings.setFieldB(html);
+        settings.setFieldC("C");
+        settings.setFieldD("D");
+        settings.setFieldE("E");
+        settings.setFieldF("F");
+        settings.setEmailTextBefore(storedHtml);
+        settings.setEmailTextAfter(storedHtml);
+        settings.setFormName("Contact Form");
+        settings.setRecipients("a@example.org");
+        settings.setCcEmails("cc@example.org");
+        settings.setBccEmails("bcc@example.org");
+        settings.setReplyTo("reply@example.org");
+        settings.setSubject(ResponseUtils.filter("<subject> \" & '"));
+        settings.setForward("/ok?a=1&b=2");
+        settings.setForwardFail("/error");
+        settings.setMaxSizeInKilobytes(1024);
+        settings.setMaxCombinedSizeInKilobytes(4096L);
+        settings.setAllowedExtensions("pdf,docx");
+        settings.setPictureHeight(600);
+        settings.setPictureWidth(800);
+        settings.setFormAddClasses("form-wide");
+        settings.setRowView(false);
+        settings.setEncryptKey("must-not-be-exposed");
+        settings.setAfterSendInterceptor("internal.Processor");
+
+        Map<String, String> fields = FormsService.getSettingsReplacementMap(settings);
+        assertEquals(Map.ofEntries(
+            Map.entry("settings.fieldA", html), Map.entry("settings.fieldB", html),
+            Map.entry("settings.fieldC", "C"), Map.entry("settings.fieldD", "D"),
+            Map.entry("settings.fieldE", "E"), Map.entry("settings.fieldF", "F"),
+            Map.entry("settings.emailTextBefore", html), Map.entry("settings.emailTextAfter", html),
+            Map.entry("settings.formName", "Contact Form"), Map.entry("settings.recipients", "a@example.org"),
+            Map.entry("settings.ccEmails", "cc@example.org"), Map.entry("settings.bccEmails", "bcc@example.org"),
+            Map.entry("settings.replyTo", "reply@example.org"),
+            Map.entry("settings.subject", "&lt;subject&gt; &quot; &amp; &#39;"),
+            Map.entry("settings.forward", "/ok?a=1&amp;b=2"), Map.entry("settings.forwardFail", "/error"),
+            Map.entry("settings.maxSizeInKilobytes", "1024"), Map.entry("settings.maxCombinedSizeInKilobytes", "4096"),
+            Map.entry("settings.allowedExtensions", "pdf,docx"), Map.entry("settings.pictureHeight", "600"),
+            Map.entry("settings.pictureWidth", "800"), Map.entry("settings.formAddClasses", "form-wide"),
+            Map.entry("settings.rowView", "false")
+        ), fields);
+        settings.setRowView(true);
+        assertEquals("true", FormsService.getSettingsReplacementMap(settings).get("settings.rowView"));
+        assertEquals(storedHtml, settings.getFieldA(), "Rendering must not modify the entity");
+    }
+
+    /** Missing settings are empty, while unsupported expressions remain literal. */
+    @Test
+    void handlesMissingSettingsAndUnknownExpressions() {
+        Map<String, String> fields = FormsService.getSettingsReplacementMap(null);
+        assertEquals(23, fields.size());
+        assertTrue(fields.values().stream().allMatch(String::isEmpty));
+        assertEquals(fields, FormsService.getSettingsReplacementMap(new FormSettingsEntity()));
+        assertEquals("||${settings.encryptKey}|${settings.fieldZ}", FormsService.replaceFields(
+            "${settings.fieldA}|${settings.subject}|${settings.encryptKey}|${settings.fieldZ}", fields));
+    }
+
+    /** The loader never reuses settings from another domain or another form. */
+    @Test
+    void loadsSettingsForTheCurrentFormAndDomain() {
+        FormSettingsRepository repository = mock(FormSettingsRepository.class);
+        FormSettingsEntity first = new FormSettingsEntity();
+        first.setFieldA("first domain");
+        FormSettingsEntity second = new FormSettingsEntity();
+        second.setFieldA("second domain");
+        when(repository.findByFormNameAndDomainId("contact", 1)).thenReturn(first);
+        when(repository.findByFormNameAndDomainId("contact", 2)).thenReturn(second);
+        try (MockedStatic<Tools> tools = mockStatic(Tools.class);
+             MockedStatic<CloudToolsForCore> cloud = mockStatic(CloudToolsForCore.class)) {
+            tools.when(() -> Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class)).thenReturn(repository);
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(1);
+            org.junit.jupiter.api.Assertions.assertSame(first, FormSettingsService.loadEntity("contact"));
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(2);
+            org.junit.jupiter.api.Assertions.assertSame(second, FormSettingsService.loadEntity("contact"));
+            org.junit.jupiter.api.Assertions.assertNull(FormSettingsService.loadEntity("other"));
+            verify(repository).findByFormNameAndDomainId("contact", 1);
+            verify(repository).findByFormNameAndDomainId("contact", 2);
+            verify(repository).findByFormNameAndDomainId("other", 2);
+        }
+    }
+
+    /** Nested templates expand settings once and never interpret expressions in inserted values. */
+    @Test
+    void rendersSettingsInFieldsHeadingsTooltipsAndIterableOptions() {
+        FormSettingsEntity settings = new FormSettingsEntity();
+        settings.setFieldA("<b>${id}|${settings.subject}|${cs-error}|${counter}</b>");
+        settings.setSubject("A & B");
+        Prop prop = mock(Prop.class);
+        when(prop.getText("components.formsimple.tooltipCode")).thenReturn("<aside>${settings.fieldA} ${label}${cs-error}</aside>");
+        when(prop.getText("components.formsimple.firstTimeHeading.select", false)).thenReturn("<h2>${settings.subject}</h2>");
+        when(prop.getText("components.formsimple.iterable.select")).thenReturn(
+            "<option value=\"${value}\" data-counter=\"${counter}\" data-title=\"${settings.subject}\">${value-label} ${settings.fieldA}</option>${cs-error}");
+        JSONObject item = new JSONObject().put("fieldType", "select").put("label", "Choice")
+            .put("labelOriginal", "Choice").put("itemFormId", "f1-choice").put("id", 1)
+            .put("value", "One:${settings.subject}|Two:2").put("tooltip", "Literal ${settings.subject}");
+
+        String result = FormsService.replaceFields(
+            "<label>${label}</label>${tooltip}<select>${iterable}</select><footer>${settings.fieldA}</footer>${cs-error}",
+            "form", settings, "", item, "", false, false, new HashSet<>(), prop, null);
+        Document document = Jsoup.parseBodyFragment(result);
+        assertEquals("A & B", document.selectFirst("h2").text());
+        assertEquals("Literal ${settings.subject}", document.selectFirst("aside").ownText());
+        assertEquals(4, result.split(java.util.regex.Pattern.quote(settings.getFieldA()), -1).length - 1);
+        assertEquals(2, document.select("b").size());
+        for (Element element : document.select("b")) {
+            assertEquals("${id}|${settings.subject}|${cs-error}|${counter}", element.text());
+        }
+        assertEquals("${settings.subject}", document.selectFirst("option").attr("value"));
+        assertEquals("A & B", document.selectFirst("option").attr("data-title"));
+        assertEquals("0", document.selectFirst("option").attr("data-counter"));
+        assertNotNull(document.selectFirst(".cs-error-f1-choice-1"));
+        assertEquals(4, result.split(java.util.regex.Pattern.quote(
+            "<div class=\"help-block cs-error cs-error-f1-choice cs-error-f1-choice-0 cs-error-f1-choice-1\"></div>"), -1).length - 1);
+
+        String email = FormsService.replaceFields("${tooltip}${settings.emailTextBefore}${settings.fieldA}",
+            "form", settings, "", item, "", true, false, new HashSet<>(), prop, null);
+        assertFalse(email.contains("<aside>"));
+        assertTrue(email.contains(settings.getFieldA()));
+        assertEquals("<b>${id}|${settings.subject}|${cs-error}|${counter}</b>|form", FormsService.replaceFields(
+            "${settings.fieldA}|${formname}", "form", settings, "", null, "", false, false, null, prop, null));
     }
 
     @Test

@@ -6,10 +6,7 @@ block content
         window.helpLink = "/sysadmin/data-deleting/README";
         var cacheObjectsTable;
         window.domReady.add(function () {
-            var tabs = [
-                {id: 'descriptionTab', title: '[[\#{components.memory_cleanup.cache_objects.description_tab}]]', selected: true, content:'<div></div>'},
-                {id: 'basicTab', title: '[[\#{components.memory_cleanup.cache_objects.basic_tab}]]'}
-            ]
+            var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.memory_cleanup.cache_objects.CacheDto')})];
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.memory_cleanup.cache_objects.CacheDto')})];
 
             cacheObjectsTable = WJ.DataTable({

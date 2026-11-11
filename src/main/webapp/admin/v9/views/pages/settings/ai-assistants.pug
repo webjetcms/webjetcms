@@ -14,16 +14,7 @@ block content
 
         window.domReady.add(function () {
 
-            let tokenUsageChart;
-
-            var tabs = [
-                {id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true},
-                {id: 'action', title: '[[\#{editor.form.action}]]'},
-                {id: 'provider', title: '[[\#{components.ai_assistants.provider}]]'},
-                {id: 'instructions', title: '[[\#{components.ai_assistants.instruction_tab}]]'},
-                {id: 'advanced', title: '[[\#{datatable.tab.advanced}]]'},
-                {id: 'tokenLimits', title: '[[\#{components.ai_assistants.token_limits}]]'}
-            ]
+            var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity')})];
 
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity')})];
 
@@ -110,11 +101,11 @@ block content
                         let newValue = $("#DTE_Field_provider").val();
                         if((oldValue == null && newValue != null) || (oldValue != null && newValue == null) || (oldValue != newValue)) {
                             //Provider was changed and oldValue != newValue ... so remove value from model
-                            $("#DTE_Field_model").val("");
+                            $("#DTE_Field_model").val("").trigger("change");
                         }
                     });
 
-                    $("#DTE_Field_description").on("blur", function() {
+                    $("#DTE_Field_description, #DTE_Field_model").on("blur change", function() {
                         getTranslatedKey($("#DTE_Field_description").val(), "editorFields-translatedDescription");
                     });
 
@@ -271,11 +262,14 @@ block content
             function getTranslatedKey(keyToTranslate, fieldId) {
                 if(keyToTranslate == undefined || keyToTranslate == null || keyToTranslate == "") return;
 
+                let data = { key: keyToTranslate };
+                if (fieldId === "editorFields-translatedDescription") data.model = $("#DTE_Field_model").val() || "";
+
                 $.ajax({
                     url: url + "translate-key",
                     method: "get",
                     contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-                    data: { key: keyToTranslate },
+                    data: data,
                     success: function(response) {
                         $("#DTE_Field_" + fieldId).val(response);
                     }

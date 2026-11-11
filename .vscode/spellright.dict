@@ -136,8 +136,11 @@ CodeceptUI
 colour
 Column
 columns
+commitnite
 commitnuté
 Commitol
+commitujte
+commity
 Community
 components
 Conf
@@ -163,6 +166,15 @@ customfields
 customizable
 Customizer
 časopisové
+Čete
+četoch
+četov
+četového
+četoví
+Četový
+četových
+četu
+čety
 číslovanom
 DATA
 Databinding
@@ -272,10 +284,12 @@ embeddingu
 embeddingy
 emoji
 emotikony
+enkodéra
 enkódera
 entitné
 escapingu
 escapovať
+escapujú
 eshopu
 example
 exceli
@@ -406,6 +420,7 @@ Klikateľná
 klikateľné
 klikateľnú
 klikateľný
+kodek
 kombinujúce
 komitov
 komponenách
@@ -472,6 +487,7 @@ media
 meme
 Message
 Metadát
+metadátach
 metadátových
 MicroSoft
 migrovanej
@@ -502,6 +518,7 @@ naštýlovať
 neaktivity
 neanotovanú
 neaplikovateľnosť
+necommitnuté
 nekonzistencii
 nekonzistentnosť
 nepoužívajúce
@@ -513,6 +530,7 @@ newsletter
 newsletterov
 Nezapisovateľní
 Ninja
+NNCZ
 Nothing
 notifikáciám
 Notifikáciám
@@ -562,6 +580,7 @@ penetračnom
 penetračných
 penetračnými
 perex
+perexoch
 perexu
 Persistent
 Personalizácia
@@ -598,6 +617,7 @@ podreťazec
 podstránkam
 podstránky
 podstránok
+podstrom
 podtémy
 Podtémy
 poduzlov
@@ -612,12 +632,14 @@ Predpripravený
 Predprodukcia
 predvolene
 predvolí
+predvypĺňa
 Predvyplnená
 predvyplnené
 Predvyplnenie
 predvyplní
 pregenerovania
 Pregenerovať
+prehliadačový
 Preiteruje
 Prekryv
 prelínajúce
@@ -645,6 +667,8 @@ prototypovať
 PUG
 puppeteer
 push
+pushnite
+pushujte
 QR
 Random
 README
@@ -685,6 +709,7 @@ repozitárov
 repozitárových
 repozitáru
 requiredFields
+reranking
 resetovanie
 resetovaný
 Resetovať
@@ -713,6 +738,7 @@ ROW
 rozbaľovacej
 saltovania
 sanitizácia
+sanitizér
 screenshotov
 Script
 scroll
@@ -726,6 +752,7 @@ serializáciou
 serializáciu
 serializoval
 serializované
+serializovaného
 serializovanými
 serializovať
 serverovo
@@ -738,6 +765,7 @@ Sfunkčnené
 sfunkčnenie
 Sfunkčnený
 shell
+shopový
 schvaľovateľ
 Schvaľovateľovi
 skompilovanie
@@ -820,6 +848,7 @@ transition
 Translate
 Translator
 tree
+trojstavových
 troubles
 tučno
 UAP-java
@@ -884,6 +913,7 @@ Widgety
 Within
 WJ
 worktree
+worktrees
 WSL
 WYSIWYG
 XLS
@@ -926,9 +956,13 @@ zobraziteľná
 zobraziteľný
 zobraziteľných
 zozipovať
+zrkadlená
 zrkadlené
+zrkadleného
 zrkadlenej
 zrkadlenú
 zrkadlený
 zrkadlených
+zrkadleným
 zrkadlenými
+Zrkadliace

@@ -11,7 +11,9 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.PdfTools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
+import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.multistep_form.rest.FormHtmlHandler;
 import sk.iway.iwcm.components.multistep_form.rest.FormMailService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
@@ -224,6 +226,8 @@ public class FormMailAction extends HttpServlet
 			String paramName = entry.getKey();
 			String value = entry.getValue();
 			if (Tools.isEmpty(value)) continue;
+			// An unselected source page must not replace the page ID submitted by the form.
+			if ("useFormDocId".equals(paramName) && Tools.getIntValue(value, -1) < 1) continue;
 			//nastaveny parameter useFormDocId ma prioritu z databazy (lebo WriteTag ho vzdy nastavi podla aktualnej stranky)
 			if (wrapped.hasParameter(paramName)==false || "useFormDocId".equals(paramName))
 			{
@@ -737,7 +741,9 @@ public class FormMailAction extends HttpServlet
 		}
 
 		CryptoFactory cryptoFactory = new CryptoFactory();
-		String publicKey = request.getParameter("encryptKey");
+		// Only server-side settings may select the encryption key, including when encryption is disabled.
+		FormSettingsEntity formSettings = Tools.isNotEmpty(formName) ? FormSettingsService.loadEntity(DB.internationalToEnglish(formName)) : null;
+		String publicKey = formSettings == null ? null : formSettings.getEncryptKey();
 
 		StringBuilder db_data = null;
 		StringBuilder db_data_names = null;
@@ -835,7 +841,8 @@ public class FormMailAction extends HttpServlet
 
 		if ("true".equals(request.getParameter("addTechInfo")))
 		{
-			String techInfoHtml = prop.getText("components.formsimple.techinfo");
+			String techInfoHtml = FormsService.replaceFields(prop.getText("components.formsimple.techinfo"),
+				FormsService.getSettingsReplacementMap(FormSettingsService.loadEntity(formName)));
 			techInfoHtml = ShowDoc.updateCodes(null, techInfoHtml, docId, request, Constants.getServletContext());
 			if (forceTextPlain)
 			{

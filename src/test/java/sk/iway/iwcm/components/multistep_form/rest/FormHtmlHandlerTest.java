@@ -9,23 +9,40 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import jakarta.servlet.ServletContext;
 
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.forms.FormsEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
+import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.doc.DocDB;
@@ -44,8 +61,8 @@ class FormHtmlHandlerTest {
 
     /** Keeps UTF-8 form CSS usable in PDF rendering without embedding a file BOM. */
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void preparesCssForEmailAndPdf(boolean useTemplate) {
+    @CsvSource({"true, true", "false, true", "false, false"})
+    void preparesCssForEmailAndPdf(boolean useTemplate, boolean emailCssExists) {
         String css = "\uFEFF/* Unicode: \u017D */\n.answer { color: blue; }";
         DocDB docDB = mock(DocDB.class);
         GroupsDB groupsDB = mock(GroupsDB.class);
@@ -59,7 +76,8 @@ class FormHtmlHandlerTest {
         when(docDB.getDoc(10, -1, false)).thenReturn(doc);
         when(groupsDB.getGroup(2)).thenReturn(new GroupDetails());
         when(templatesDB.getTemplate(1)).thenReturn(useTemplate ? template : null);
-        when(context.getResourceAsStream("/css/email.css"))
+        String fallbackPath = emailCssExists ? "/css/email.css" : "/css/page.css";
+        when(context.getResourceAsStream(fallbackPath))
             .thenReturn(new ByteArrayInputStream(css.getBytes(StandardCharsets.UTF_8)));
 
         try (MockedStatic<Constants> constants = mockStatic(Constants.class);
@@ -68,6 +86,7 @@ class FormHtmlHandlerTest {
              MockedStatic<TemplatesDB> templates = mockStatic(TemplatesDB.class);
              MockedStatic<FileTools> files = mockStatic(FileTools.class)) {
             constants.when(Constants::getServletContext).thenReturn(context);
+            constants.when(() -> Constants.getString("editorPageCss")).thenReturn("/css/page.css");
             docs.when(DocDB::getInstance).thenReturn(docDB);
             groups.when(GroupsDB::getInstance).thenReturn(groupsDB);
             templates.when(TemplatesDB::getInstance).thenReturn(templatesDB);
@@ -81,7 +100,78 @@ class FormHtmlHandlerTest {
             assertTrue(result.first.contains("/* Unicode: \u017D */"));
             assertTrue(result.first.contains(".answer { color: blue; }"));
             assertFalse(result.first.contains("\uFEFF"));
-            assertTrue(result.second.contains(useTemplate ? "/css/form.css" : "/css/email.css"));
+            assertTrue(result.second.contains(useTemplate ? "/css/form.css" : fallbackPath));
+        }
+    }
+
+    /** Replaces each CSS source independently and keeps email/PDF styles and stored HTML links consistent. */
+    @ParameterizedTest
+    @CsvSource({
+        "main.css, theme.css, editor.css, form.css",
+        "main-email.css, theme.css, editor.css, form.css",
+        "main.css, theme-email.css, editor.css, form.css",
+        "main.css, theme.css, editor-email.css, form.css",
+        "main.css, theme.css, editor.css, form-email.css",
+        "main-email.css, theme-email.css, editor-email.css, form-email.css"
+    })
+    void prefersEmailCssForAvailableSources(String main, String theme, String editor, String form) {
+        DocDB docDB = mock(DocDB.class);
+        GroupsDB groupsDB = mock(GroupsDB.class);
+        TemplatesDB templatesDB = mock(TemplatesDB.class);
+        DocDetails doc = new DocDetails();
+        doc.setTempId(1);
+        doc.setGroupId(2);
+        String directory = "/templates/test/dist/css/";
+        List<String> expectedPaths = List.of(main, theme, editor, form).stream().map(name -> directory + name).toList();
+        List<String> loadedPaths = new ArrayList<>();
+        TemplateDetails template = new TemplateDetails();
+        template.setBaseCssPath(directory + "main.css");
+        template.setCss(directory + "theme.css");
+        when(docDB.getDoc(10, -1, false)).thenReturn(doc);
+        when(groupsDB.getGroup(2)).thenReturn(new GroupDetails());
+        when(templatesDB.getTemplate(1)).thenReturn(template);
+
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+             MockedStatic<DocDB> docs = mockStatic(DocDB.class);
+             MockedStatic<GroupsDB> groups = mockStatic(GroupsDB.class);
+             MockedStatic<TemplatesDB> templates = mockStatic(TemplatesDB.class);
+             MockedStatic<FileTools> files = mockStatic(FileTools.class)) {
+            constants.when(() -> Constants.getString("editorEditorCss")).thenReturn(directory + "editor.css");
+            docs.when(DocDB::getInstance).thenReturn(docDB);
+            groups.when(GroupsDB::getInstance).thenReturn(groupsDB);
+            templates.when(TemplatesDB::getInstance).thenReturn(templatesDB);
+            String encoding = SetCharacterEncodingFilter.getEncoding();
+            files.when(() -> FileTools.isFile(anyString())).thenAnswer(call -> expectedPaths.contains(call.getArgument(0)));
+            files.when(() -> FileTools.readFileContent(anyString(), eq(encoding))).thenAnswer(call -> {
+                String path = call.getArgument(0);
+                loadedPaths.add(path);
+                return "/* " + path + " */";
+            });
+
+            Pair<String, String> result = FormHtmlHandler.getCssDataLink(10, false, directory + "form.css");
+
+            assertEquals(expectedPaths, loadedPaths);
+            assertEquals(expectedPaths, Jsoup.parse(result.second).select("link").eachAttr("href"));
+            assertEquals(expectedPaths.stream().map(path -> "/* " + path + " */").toList(),
+                Jsoup.parse(result.first).selectFirst("style").data().lines().toList());
+        }
+    }
+
+    /** Skips all CSS resolution when either global or form-specific settings request plain text. */
+    @ParameterizedTest
+    @CsvSource({"true, false", "false, true", "true, true"})
+    void omitsCssForPlainText(boolean globalPlainText, boolean formPlainText) {
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+             MockedStatic<DocDB> docs = mockStatic(DocDB.class);
+             MockedStatic<FileTools> files = mockStatic(FileTools.class)) {
+            constants.when(() -> Constants.getBoolean("formMailSendPlainText")).thenReturn(globalPlainText);
+
+            Pair<String, String> result = FormHtmlHandler.getCssDataLink(10, formPlainText, "/css/form.css");
+
+            assertEquals("", result.first);
+            assertEquals("", result.second);
+            docs.verifyNoInteractions();
+            files.verifyNoInteractions();
         }
     }
 
@@ -93,7 +183,7 @@ class FormHtmlHandlerTest {
         Prop prop = mock(Prop.class);
         StringBuilder formEndHtml = new StringBuilder("<button type=\"submit\">Send</button></form><script></script>");
         String loaderHtml = "<div class=\"loader\">Loading...</div>";
-        when(prop.getText("components.mustistep.form.loader")).thenReturn(loaderHtml);
+        when(prop.getText("components.multistep.form.loader")).thenReturn(loaderHtml);
 
         FormHtmlHandler.appendFormLoader(formEndHtml, false, prop);
 
@@ -101,7 +191,7 @@ class FormHtmlHandlerTest {
             "<button type=\"submit\">Send</button>" + loaderHtml + "</form><script></script>",
             formEndHtml.toString()
         );
-        verify(prop).getText("components.mustistep.form.loader");
+        verify(prop).getText("components.multistep.form.loader");
     }
 
     /**
@@ -117,6 +207,119 @@ class FormHtmlHandlerTest {
 
         assertEquals(originalHtml, formEndHtml.toString());
         verifyNoInteractions(prop);
+    }
+
+    /** Preserves settings and multiline field hints across a complete step and its email representation. */
+    @Test
+    void rendersSettingsAndHintsInAllStepWrappersAndEmail() {
+        FormStepsRepository steps = mock(FormStepsRepository.class);
+        FormItemsRepository items = mock(FormItemsRepository.class);
+        FormItemsConditionsRepository conditions = mock(FormItemsConditionsRepository.class);
+        FormSettingsRepository settingsRepository = mock(FormSettingsRepository.class);
+        FormSettingsEntity settings = new FormSettingsEntity();
+        settings.setFormName("contact");
+        settings.setSubject("A & B");
+        settings.setFieldA("<b>${formActionSrc}|${submitButtonText}|${settings.subject}</b>");
+        settings.setEmailTextBefore("&lt;em&gt;Before&lt;/em&gt;");
+        settings.setEmailTextAfter("<em>After</em>");
+        settings.setAddTechInfo(true);
+        settings.setRowView(true);
+        when(settingsRepository.findByFormNameAndDomainId("contact", 7)).thenReturn(settings);
+        FormStepEntity step = new FormStepEntity();
+        step.setId(2L);
+        step.setCurrentPosition(2);
+        step.setMaxPosition(2);
+        step.setHeader("Heading");
+        step.setBackStepBtnLabel("Back & more");
+        step.setNextStepBtnLabel("Send");
+        FormStepEntity previous = new FormStepEntity();
+        previous.setId(1L);
+        when(steps.getReferenceById(2L)).thenReturn(step);
+        when(steps.findById(2L)).thenReturn(Optional.of(step));
+        when(steps.getStepByPosition("contact", 1, 7)).thenReturn(Optional.of(previous));
+        when(steps.findAllByFormNameAndDomainIdOrderBySortPriorityAsc("contact", 7)).thenReturn(List.of(step));
+        FormItemEntity field = new FormItemEntity();
+        field.setFieldType("meno");
+        field.setLabel("Name");
+        field.setItemFormId("name-1");
+        field.setHint("<p><strong>Hint autotest</strong> &amp; details</p><p>Second paragraph</p>"
+            + "<ul><li>First instruction</li><li><a href=\"/help\">Help</a></li></ul>");
+        when(items.getAllStepItems(2L, 7)).thenReturn(List.of(field));
+        Map<String, String> templates = Map.ofEntries(
+            Map.entry("components.multistep.form.start", "<form action=\"${formActionSrc}\" data-title=\"${settings.subject}\">${settings.fieldA}"),
+            Map.entry("components.multistep.step.start", "<section data-title=\"${settings.subject}\">"),
+            Map.entry("components.multistep.step.header", "<h2>${step-header} ${settings.fieldA}</h2>"),
+            Map.entry("components.multistep.rowView.start", "<div class=\"row\" data-title=\"${settings.subject}\">"),
+            Map.entry("components.multistep.rowView.end", "</div><i>${settings.subject}</i>"),
+            Map.entry("components.multistep.step.end", "<footer>${settings.fieldA}</footer></section>"),
+            Map.entry("components.multistep.form.back_button", "<button type=\"button\" data-multistep-back-step=\"${previousStepId}\" title=\"${settings.subject}\">${backButtonText}${settings.fieldA}</button>"),
+            Map.entry("components.multistep.form.end", "<button type=\"submit\" title=\"${settings.subject}\">${submitButtonText}</button>{tech-info}</form>"),
+            Map.entry("components.multistep.form.loader", "<div class=\"loader\">${settings.fieldA}</div>"),
+            Map.entry("components.formsimple.techinfo", "<div class=\"techinfo\">${settings.subject} ${settings.fieldA}</div>"),
+            Map.entry("components.formsimple.input.meno", "<div class=\"form-group\"><label for=\"${id}\">${label}</label>"
+                + "<div class=\"form-hint\">${hint}</div><input id=\"${id}\" name=\"${id}\" value=\"${value}\"></div>")
+        );
+        Prop prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> templates.getOrDefault(invocation.getArgument(0), ""));
+        Map<String, Object> beans = Map.of("formStepsRepository", steps, "formItemsRepository", items,
+            "formItemsConditionsRepository", conditions, "formSettingsRepository", settingsRepository);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("language", "en");
+        try (MockedStatic<Tools> tools = mockStatic(Tools.class, invocation -> {
+                if ("getSpringBean".equals(invocation.getMethod().getName())) return beans.get(invocation.getArgument(0));
+                return invocation.callRealMethod();
+            });
+             MockedStatic<CloudToolsForCore> cloud = mockStatic(CloudToolsForCore.class);
+             MockedStatic<Prop> props = mockStatic(Prop.class);
+             MockedStatic<ShowDoc> showDoc = mockStatic(ShowDoc.class);
+             MockedStatic<FormHtmlHandler> handlers = mockStatic(FormHtmlHandler.class, CALLS_REAL_METHODS)) {
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(7);
+            props.when(() -> Prop.getInstance("en")).thenReturn(prop);
+            handlers.when(() -> FormHtmlHandler.getCssDataLink(10, false, null)).thenReturn(new Pair<>("", ""));
+            showDoc.when(() -> ShowDoc.updateCodes(org.mockito.ArgumentMatchers.isNull(), anyString(),
+                org.mockito.ArgumentMatchers.eq(10), org.mockito.ArgumentMatchers.same(request), org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+
+            FormHtmlHandler handler = new FormHtmlHandler("contact", 1, request);
+            org.jsoup.nodes.Document page = Jsoup.parseBodyFragment(handler.getFormStepHtml(2L, request));
+            assertEquals("A & B", page.selectFirst("form").attr("data-title"));
+            assertEquals("/rest/multistep-form/save-form?form-name=contact&step-id=2", page.selectFirst("form").attr("action"));
+            assertEquals("A & B", page.selectFirst("section").attr("data-title"));
+            assertEquals("A & B", page.selectFirst(".row").attr("data-title"));
+            assertEquals("A & B", page.selectFirst("i").text());
+            assertEquals("1", page.selectFirst("[data-multistep-back-step]").attr("data-multistep-back-step"));
+            assertEquals("Back & more", page.selectFirst("[data-multistep-back-step]").ownText());
+            assertEquals("Send", page.selectFirst("[type=submit]").text());
+            assertEquals(5, page.select("b").size());
+            page.select("b").forEach(element -> assertEquals("${formActionSrc}|${submitButtonText}|${settings.subject}", element.text()));
+            assertFalse(page.select("form .loader").isEmpty());
+            assertHintMarkup(page);
+            assertEquals("Name", page.selectFirst("label").text());
+            assertEquals("f1-name-1", page.selectFirst("input").id());
+
+            FormsEntity form = new FormsEntity();
+            form.setFormName("contact");
+            handler.setFormHtml(form, Map.of("name-1", "Alice"), request, 10);
+            org.jsoup.nodes.Document email = Jsoup.parseBodyFragment(handler.getFormHtmlBeforeCss());
+            assertEquals("Before", email.select("em").first().text());
+            assertEquals("After", email.select("em").last().text());
+            assertEquals("A & B", email.selectFirst(".techinfo").ownText());
+            assertTrue(email.select(".loader, [data-multistep-back-step]").isEmpty());
+            assertHintMarkup(email);
+            assertTrue(email.select("input").isEmpty());
+            assertTrue(email.text().contains("Alice"));
+            email.select("b").forEach(element -> assertEquals("${formActionSrc}|${submitButtonText}|${settings.subject}", element.text()));
+            verify(settingsRepository).findByFormNameAndDomainId("contact", 7);
+        }
+    }
+
+    private void assertHintMarkup(org.jsoup.nodes.Document document) {
+        assertEquals(1, document.select(".form-hint").size());
+        assertEquals(2, document.select(".form-hint > p").size());
+        assertEquals("Hint autotest", document.selectFirst(".form-hint strong").text());
+        assertEquals(2, document.select(".form-hint ul > li").size());
+        assertEquals("/help", document.selectFirst(".form-hint a").attr("href"));
+        assertFalse(document.html().contains("${hint}"));
     }
 
     /** Resolves selected and unselected options from exact or legacy values containing commas. */

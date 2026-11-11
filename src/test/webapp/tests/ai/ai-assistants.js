@@ -91,13 +91,11 @@ Scenario('ai_assistants editor logic', async ({I, DTE}) => {
 
         DTE.selectOption("provider", openAiId);
         I.seeElement("#DTE_Field_model");
-        let optionsD = ["gpt-4.1", "gpt-4.1-nano", "gpt-4.1-mini"];
-        checkAutocomplete(I, "DTE_Field_model", "gpt-4.1", null, optionsD);
+        await checkModelAutocomplete(I, "gpt");
 
         DTE.selectOption("provider", geminiId);
         I.seeElement("#DTE_Field_model");
-        let optionsE = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.5-flash-lite"];
-        checkAutocomplete(I, "DTE_Field_model", "gemini-2.5", null, optionsE);
+        await checkModelAutocomplete(I, "gemini");
 });
 
 Scenario('AI instructions textarea preserves shared gutter and keyboard behavior', async ({I, DT, DTE}) => {
@@ -276,6 +274,8 @@ async function textAnswerTest(I, DTE, aiProviderId) {
         I.assertEqual(defaultValue, valueB);
 
     I.say("TRY the TEXT answer WITH stream");
+        I.clickCss('#toast-container-ai .toast-close-button');
+        I.waitForInvisible('#toast-container-ai', 10);
         I.clickCss("#pills-dt-datatableInit-perex-tab");
         I.fillField("#DTE_Field_htmlData", defaultValue);
 
@@ -355,7 +355,7 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
     I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
     await checkImageOptions(I, {
         count: true,
-        size: ["auto", "1024x1024", "1024x1536", "1536x1024"],
+        size: ["auto", "1024x1024", "1024x1536", "1536x1024", "2048x2048", "2048x1152", "3840x2160", "2160x3840"],
         quality: ["auto", "low", "medium", "high"],
         ratio: false
     });
@@ -368,6 +368,34 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
     checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openAiId, "ti.ti-photo-ai", true);
     waiToEndImage(I, true);
     checkImages(I, 2);
+});
+
+Scenario('Image HTTP errors leave the working state and allow another request', async ({I, DTE}) => {
+    const routePattern = '**/admin/rest/ai/assistant/response-image/';
+    const errorText = 'autotest image gateway failure';
+    let requests = 0;
+    await I.mockRoute(routePattern, route => {
+        requests++;
+        return route.fulfill({ status: 504, contentType: 'application/json', body: JSON.stringify({ error: errorText }) });
+    });
+    try {
+        openPageAndPerexTab(I, DTE);
+        startAssistant(I, "perexImage", "Vytvoriť nový obrázok", geminiId);
+        I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "autotest image");
+        for (let attempt = 0; attempt < 2; attempt++) {
+            I.click(locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")));
+            await I.waitForVisible('#toast-container-ai.ai-status-error', 10);
+            I.assertEqual(requests, attempt + 1, 'Retry must send a new request');
+            I.see(errorText, containerAiContent);
+            I.dontSeeElement('#toast-container-ai.ai-status-working');
+            I.dontSeeElement('#toast-container-ai .btn-ai-stop');
+            I.dontSeeElement('.DTE_Field_Name_perexImage.ai-loading');
+        }
+        I.clickCss('#toast-container-ai .toast-close-button');
+        DTE.cancel();
+    } finally {
+        await I.stopMockingRoute(routePattern);
+    }
 });
 
 Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
@@ -600,6 +628,25 @@ async function deleteLocalAssistants(I, DT) {
         DT.deleteAll();
         DT.waitForLoader();
     }
+}
+
+/** Checks real provider suggestions without depending on a fixed model catalogue. */
+async function checkModelAutocomplete(I, term) {
+    const field = "#DTE_Field_model";
+    // Scope assertions to this field's menu and let its initial focus search finish first.
+    const menuId = await I.executeScript(() => window.jQuery("#DTE_Field_model").autocomplete("widget").attr("id"));
+    const menu = "#" + menuId;
+    I.click(field);
+    I.waitForVisible(menu, 10);
+    I.fillField(field, term);
+    I.waitForText(term, 10, menu);
+    // The open menu can still contain the previous query during autocomplete's debounce.
+    await I.retry({ retries: 10, minTimeout: 500, maxTimeout: 500 }).seeNumberOfElements(
+        menu + ' li.ui-menu-item:not(:has-text("' + term + '"))', 0);
+    const suggestions = await I.grabTextFromAll(menu + " li.ui-menu-item");
+    I.assertAbove(suggestions.length, 0, "The provider must return matching models");
+    I.click(locate(menu + " li.ui-menu-item").first());
+    I.seeInField(field, suggestions[0].trim());
 }
 
 function checkAutocomplete(I, id, value, valueToSelect, options) {

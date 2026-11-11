@@ -41,6 +41,7 @@
 - AI assistant
   - [AI assistant](/redactor/ai/README.md)
   - [Using AI assistants](/redactor/ai/datatables/README.md)
+  - [AI Chat](/redactor/ai/chat/README.md)
   - [Settings](/redactor/ai/settings/README.md)
   - [Writing instructions](/redactor/ai/instructions/README.md)
   - [Statistics](/redactor/ai/stat/README.md)
@@ -82,6 +83,7 @@
   - Forms
     - [List of forms](/redactor/apps/form/README.md)
     - [Form Items](/redactor/apps/multistep-form/README.md)
+    - [Form Encryption](/redactor/apps/form/encryption.md)
     - [Form Statistics](/redactor/apps/multistep-form/stat.md)
     - [Regular expressions](/redactor/apps/form/regexps.md)
   - Forum/Discussion
