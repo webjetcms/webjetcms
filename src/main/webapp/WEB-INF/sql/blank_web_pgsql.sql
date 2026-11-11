@@ -1,3 +1,4 @@
+-- Store local date/time values without timezone conversion, matching MariaDB DATETIME.
 
 
 SET statement_timeout = 0;
@@ -17,7 +18,7 @@ CREATE TABLE "webjet_cms"."_adminlog_" (
     "log_id" integer NOT NULL,
     "log_type" integer DEFAULT 0,
     "user_id" integer DEFAULT '-1'::integer NOT NULL,
-    "create_date" timestamp with time zone NOT NULL,
+    "create_date" timestamp without time zone NOT NULL,
     "description" "text",
     "sub_id1" integer DEFAULT 0,
     "sub_id2" integer DEFAULT 0,
@@ -45,7 +46,7 @@ ALTER SEQUENCE "webjet_cms"."_adminlog__log_id_seq" OWNED BY "webjet_cms"."_admi
 CREATE TABLE "webjet_cms"."_conf_" (
     "name" character varying(255) DEFAULT ''::character varying NOT NULL,
     "value" "text" NOT NULL,
-    "date_changed" timestamp with time zone
+    "date_changed" timestamp without time zone
 );
 
 
@@ -53,11 +54,11 @@ CREATE TABLE "webjet_cms"."_conf_" (
 CREATE TABLE "webjet_cms"."_conf_prepared_" (
     "name" character varying(255) DEFAULT ''::character varying NOT NULL,
     "value" "text" NOT NULL,
-    "date_changed" timestamp with time zone,
-    "date_prepared" timestamp with time zone,
+    "date_changed" timestamp without time zone,
+    "date_prepared" timestamp without time zone,
     "user_id" integer,
     "id" integer NOT NULL,
-    "date_published" timestamp with time zone
+    "date_published" timestamp without time zone
 );
 
 
@@ -125,7 +126,7 @@ CREATE TABLE "webjet_cms"."_properties_" (
     "prop_key" character varying(255) DEFAULT ''::character varying NOT NULL,
     "lng" character(3) DEFAULT ''::"bpchar" NOT NULL,
     "prop_value" "text",
-    "update_date" timestamp with time zone,
+    "update_date" timestamp without time zone,
     "id" integer NOT NULL
 );
 
@@ -146,7 +147,7 @@ ALTER SEQUENCE "webjet_cms"."_properties__id_seq" OWNED BY "webjet_cms"."_proper
 
 CREATE TABLE "webjet_cms"."admin_message" (
     "admin_message_id" integer NOT NULL,
-    "create_date" timestamp with time zone NOT NULL,
+    "create_date" timestamp without time zone NOT NULL,
     "create_by_user_id" integer NOT NULL,
     "recipient_user_id" integer NOT NULL,
     "only_for_logged" boolean DEFAULT false NOT NULL,
@@ -191,7 +192,7 @@ CREATE TABLE "webjet_cms"."appcache" (
     "path" character varying(255) DEFAULT NULL::character varying,
     "filename" character varying(255) DEFAULT NULL::character varying,
     "version" integer,
-    "created" timestamp with time zone
+    "created" timestamp without time zone
 );
 
 
@@ -201,7 +202,7 @@ CREATE TABLE "webjet_cms"."appcache_file" (
     "path" character varying(255) DEFAULT NULL::character varying,
     "filename" character varying(255) DEFAULT NULL::character varying,
     "extension" character varying(255) DEFAULT NULL::character varying,
-    "created" timestamp with time zone,
+    "created" timestamp without time zone,
     "appcache_id" integer NOT NULL,
     "is_recursive" boolean
 );
@@ -237,7 +238,7 @@ ALTER SEQUENCE "webjet_cms"."appcache_id_seq" OWNED BY "webjet_cms"."appcache"."
 CREATE TABLE "webjet_cms"."appcache_page" (
     "id" integer NOT NULL,
     "path" character varying(255) DEFAULT NULL::character varying,
-    "created" timestamp with time zone,
+    "created" timestamp without time zone,
     "appcache_id" integer NOT NULL,
     "is_recursive" boolean
 );
@@ -268,13 +269,13 @@ CREATE TABLE "webjet_cms"."banner_banners" (
     "width" integer,
     "height" integer,
     "html_code" "text",
-    "date_from" timestamp with time zone,
-    "date_to" timestamp with time zone,
+    "date_from" timestamp without time zone,
+    "date_to" timestamp without time zone,
     "max_views" integer,
     "max_clicks" integer,
     "stat_views" integer DEFAULT '0'::integer,
     "stat_clicks" integer DEFAULT '0'::integer,
-    "stat_date" timestamp with time zone,
+    "stat_date" timestamp without time zone,
     "name" character varying(255) DEFAULT NULL::character varying,
     "target" character varying(16) DEFAULT NULL::character varying,
     "click_tag" character varying(32) DEFAULT NULL::character varying,
@@ -350,7 +351,7 @@ ALTER SEQUENCE "webjet_cms"."banner_gr_id_seq" OWNED BY "webjet_cms"."banner_gr"
 CREATE TABLE "webjet_cms"."banner_stat_clicks" (
     "id" integer NOT NULL,
     "banner_id" integer DEFAULT 0 NOT NULL,
-    "insert_date" timestamp with time zone,
+    "insert_date" timestamp without time zone,
     "ip" character varying(16) DEFAULT NULL::character varying,
     "host" character varying(128) DEFAULT NULL::character varying,
     "clicks" integer DEFAULT 1,
@@ -376,7 +377,7 @@ ALTER SEQUENCE "webjet_cms"."banner_stat_clicks_id_seq" OWNED BY "webjet_cms"."b
 CREATE TABLE "webjet_cms"."banner_stat_views" (
     "id" integer NOT NULL,
     "banner_id" integer DEFAULT 0 NOT NULL,
-    "insert_date" timestamp with time zone,
+    "insert_date" timestamp without time zone,
     "ip" character varying(16) DEFAULT NULL::character varying,
     "host" character varying(128) DEFAULT NULL::character varying,
     "views" integer DEFAULT 1,
@@ -426,7 +427,7 @@ CREATE TABLE "webjet_cms"."basket_invoice" (
     "basket_invoice_id" integer NOT NULL,
     "browser_id" bigint DEFAULT '0'::bigint NOT NULL,
     "logged_user_id" integer NOT NULL,
-    "create_date" timestamp with time zone NOT NULL,
+    "create_date" timestamp without time zone NOT NULL,
     "status_id" integer,
     "delivery_company" character varying(255) DEFAULT NULL::character varying,
     "delivery_name" character varying(255) DEFAULT NULL::character varying,
@@ -469,10 +470,10 @@ CREATE TABLE "webjet_cms"."basket_invoice" (
 CREATE TABLE "webjet_cms"."basket_invoice_payments" (
     "payment_id" integer NOT NULL,
     "invoice_id" integer NOT NULL,
-    "create_date" timestamp with time zone NOT NULL,
+    "create_date" timestamp without time zone NOT NULL,
     "payed_price" numeric(10,2) DEFAULT 0.00 NOT NULL,
     "payment_method" character varying(255) DEFAULT NULL::character varying,
-    "closed_date" timestamp with time zone,
+    "closed_date" timestamp without time zone,
     "confirmed" boolean
 );
 
@@ -502,7 +503,7 @@ CREATE TABLE "webjet_cms"."basket_item" (
     "item_vat" double precision,
     "item_qty" integer NOT NULL,
     "item_note" character varying(255) DEFAULT NULL::character varying,
-    "date_insert" timestamp with time zone NOT NULL,
+    "date_insert" timestamp without time zone NOT NULL,
     "basket_invoice_id" integer,
     "domain_id" integer DEFAULT '1'::integer NOT NULL
 );
@@ -518,7 +519,7 @@ CREATE TABLE "webjet_cms"."bazar_advertisements" (
     "confirmation" boolean,
     "image" character varying(255) DEFAULT NULL::character varying,
     "price" character varying(255) DEFAULT NULL::character varying,
-    "date_insert" timestamp with time zone
+    "date_insert" timestamp without time zone
 );
 
 
@@ -565,7 +566,7 @@ CREATE TABLE "webjet_cms"."cache" (
     "data_value" character varying(2000) DEFAULT NULL::character varying,
     "data_result" "text",
     "refresh_minutes" integer,
-    "next_refresh" timestamp with time zone
+    "next_refresh" timestamp without time zone
 );
 
 
@@ -574,8 +575,8 @@ CREATE TABLE "webjet_cms"."calendar" (
     "calendar_id" integer NOT NULL,
     "title" "text" NOT NULL,
     "description" "text",
-    "date_from" timestamp with time zone DEFAULT '2000-01-01 00:00:00+01'::timestamp with time zone NOT NULL,
-    "date_to" timestamp with time zone DEFAULT '2000-01-01 00:00:00+01'::timestamp with time zone NOT NULL,
+    "date_from" timestamp without time zone DEFAULT '2000-01-01 00:00:00'::timestamp without time zone NOT NULL,
+    "date_to" timestamp without time zone DEFAULT '2000-01-01 00:00:00'::timestamp without time zone NOT NULL,
     "type_id" integer DEFAULT 0 NOT NULL,
     "time_range" character varying(128) DEFAULT NULL::character varying,
     "area" character varying(255) DEFAULT NULL::character varying,
@@ -619,8 +620,8 @@ CREATE TABLE "webjet_cms"."calendar_invitation" (
     "calendar_invitation_id" integer NOT NULL,
     "calendar_id" integer NOT NULL,
     "user_id" integer NOT NULL,
-    "sent_date" timestamp with time zone NOT NULL,
-    "status_date" timestamp with time zone,
+    "sent_date" timestamp without time zone NOT NULL,
+    "status_date" timestamp without time zone,
     "status" character(1) NOT NULL,
     "domain_id" integer DEFAULT '1'::integer NOT NULL
 );
@@ -732,7 +733,7 @@ CREATE TABLE "webjet_cms"."cluster_monitoring" (
     "node" character varying(64) NOT NULL,
     "type" character varying(64) NOT NULL,
     "content" "text",
-    "created_at" timestamp with time zone
+    "created_at" timestamp without time zone
 );
 
 
@@ -741,7 +742,7 @@ CREATE TABLE "webjet_cms"."cluster_refresher" (
     "cluster_refresh_id" integer NOT NULL,
     "node_name" character varying(255) DEFAULT NULL::character varying,
     "class_name" character varying(255) DEFAULT NULL::character varying,
-    "refresh_time" timestamp with time zone
+    "refresh_time" timestamp without time zone
 );
 
 
@@ -788,7 +789,7 @@ CREATE TABLE "webjet_cms"."cookies" (
     "cookie_id" integer NOT NULL,
     "domain_id" integer,
     "user_id" integer,
-    "save_date" timestamp with time zone,
+    "save_date" timestamp without time zone,
     "cookie_name" character varying(255) DEFAULT NULL::character varying,
     "description" character varying(1000) DEFAULT NULL::character varying,
     "provider" character varying(255) DEFAULT NULL::character varying,
@@ -933,7 +934,7 @@ CREATE TABLE "webjet_cms"."doc_reactions" (
     "user_id" integer NOT NULL,
     "doc_id" integer NOT NULL,
     "reaction" integer NOT NULL,
-    "created_at" timestamp with time zone NOT NULL
+    "created_at" timestamp without time zone NOT NULL
 );
 
 
@@ -981,7 +982,7 @@ CREATE TABLE "webjet_cms"."document_forum" (
     "parent_id" integer DEFAULT '-1'::integer NOT NULL,
     "subject" character varying(255) DEFAULT NULL::character varying,
     "question" "text",
-    "question_date" timestamp with time zone,
+    "question_date" timestamp without time zone,
     "author_name" character varying(255) DEFAULT NULL::character varying,
     "author_email" character varying(255) DEFAULT NULL::character varying,
     "ip" character varying(255) DEFAULT NULL::character varying,
@@ -992,7 +993,7 @@ CREATE TABLE "webjet_cms"."document_forum" (
     "flag" character varying(128) DEFAULT NULL::character varying,
     "stat_views" integer,
     "stat_replies" integer,
-    "stat_last_post" timestamp with time zone,
+    "stat_last_post" timestamp without time zone,
     "active" boolean DEFAULT true,
     "deleted" boolean DEFAULT false,
     "domain_id" integer DEFAULT '1'::integer NOT NULL
@@ -1023,7 +1024,7 @@ CREATE TABLE "webjet_cms"."document_notes" (
     "history_id" integer,
     "note" character varying(255) DEFAULT NULL::character varying,
     "user_id" integer,
-    "created" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    "created" timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -1035,9 +1036,9 @@ CREATE TABLE "webjet_cms"."documents" (
     "data_asc" "text" NOT NULL,
     "external_link" character varying(255) DEFAULT NULL::character varying,
     "navbar" "text" NOT NULL,
-    "date_created" timestamp with time zone DEFAULT '2000-01-01 00:00:00+01'::timestamp with time zone NOT NULL,
-    "publish_start" timestamp with time zone,
-    "publish_end" timestamp with time zone,
+    "date_created" timestamp without time zone DEFAULT '2000-01-01 00:00:00'::timestamp without time zone NOT NULL,
+    "publish_start" timestamp without time zone,
+    "publish_end" timestamp without time zone,
     "author_id" integer DEFAULT '0'::integer NOT NULL,
     "group_id" integer,
     "temp_id" integer DEFAULT '0'::integer NOT NULL,
@@ -1047,7 +1048,7 @@ CREATE TABLE "webjet_cms"."documents" (
     "available" boolean DEFAULT false NOT NULL,
     "cacheable" boolean DEFAULT false NOT NULL,
     "file_name" character varying(255) DEFAULT NULL::character varying,
-    "file_change" timestamp with time zone,
+    "file_change" timestamp without time zone,
     "sort_priority" integer DEFAULT '0'::integer NOT NULL,
     "header_doc_id" integer,
     "menu_doc_id" integer DEFAULT '-1'::integer NOT NULL,
@@ -1059,7 +1060,7 @@ CREATE TABLE "webjet_cms"."documents" (
     "perex_image" character varying(255) DEFAULT NULL::character varying,
     "perex_group" character varying(255) DEFAULT NULL::character varying,
     "show_in_menu" boolean DEFAULT true,
-    "event_date" timestamp with time zone,
+    "event_date" timestamp without time zone,
     "virtual_path" character varying(255) DEFAULT NULL::character varying,
     "sync_id" integer DEFAULT '0'::integer,
     "sync_status" integer DEFAULT '0'::integer,
@@ -1123,7 +1124,7 @@ ALTER SEQUENCE "webjet_cms"."documents_doc_id_seq" OWNED BY "webjet_cms"."docume
 
 CREATE TABLE "webjet_cms"."documents_history" (
     "history_id" integer NOT NULL,
-    "save_date" timestamp with time zone,
+    "save_date" timestamp without time zone,
     "approved_by" integer DEFAULT '-1'::integer NOT NULL,
     "awaiting_approve" character varying(255) DEFAULT NULL::character varying,
     "actual" boolean DEFAULT false NOT NULL,
@@ -1133,9 +1134,9 @@ CREATE TABLE "webjet_cms"."documents_history" (
     "data_asc" "text" NOT NULL,
     "external_link" character varying(255) DEFAULT NULL::character varying,
     "navbar" "text" NOT NULL,
-    "date_created" timestamp with time zone DEFAULT '2000-01-01 00:00:00+01'::timestamp with time zone NOT NULL,
-    "publish_start" timestamp with time zone,
-    "publish_end" timestamp with time zone,
+    "date_created" timestamp without time zone DEFAULT '2000-01-01 00:00:00'::timestamp without time zone NOT NULL,
+    "publish_start" timestamp without time zone,
+    "publish_end" timestamp without time zone,
     "author_id" integer DEFAULT '0'::integer NOT NULL,
     "group_id" integer,
     "temp_id" integer DEFAULT '0'::integer NOT NULL,
@@ -1145,7 +1146,7 @@ CREATE TABLE "webjet_cms"."documents_history" (
     "available" boolean DEFAULT false NOT NULL,
     "cacheable" boolean DEFAULT false NOT NULL,
     "file_name" character varying(255) DEFAULT NULL::character varying,
-    "file_change" timestamp with time zone,
+    "file_change" timestamp without time zone,
     "sort_priority" integer DEFAULT '0'::integer NOT NULL,
     "header_doc_id" integer,
     "footer_doc_id" integer,
@@ -1158,7 +1159,7 @@ CREATE TABLE "webjet_cms"."documents_history" (
     "perex_image" character varying(255) DEFAULT NULL::character varying,
     "perex_group" character varying(255) DEFAULT NULL::character varying,
     "show_in_menu" boolean DEFAULT true,
-    "event_date" timestamp with time zone,
+    "event_date" timestamp without time zone,
     "virtual_path" character varying(255) DEFAULT NULL::character varying,
     "sync_id" integer DEFAULT '0'::integer,
     "sync_status" integer DEFAULT '0'::integer,
@@ -1177,7 +1178,7 @@ CREATE TABLE "webjet_cms"."documents_history" (
     "field_k" character varying(255) DEFAULT NULL::character varying,
     "field_l" character varying(255) DEFAULT NULL::character varying,
     "disable_after_end" boolean DEFAULT false,
-    "approve_date" timestamp with time zone,
+    "approve_date" timestamp without time zone,
     "forum_count" integer DEFAULT '0'::integer,
     "field_m" character varying(255) DEFAULT NULL::character varying,
     "field_n" character varying(255) DEFAULT NULL::character varying,
@@ -1261,7 +1262,7 @@ CREATE TABLE "webjet_cms"."email_files" (
     "id" integer NOT NULL,
     "subject" character varying(255) NOT NULL,
     "sender" character varying(255) NOT NULL,
-    "sent_date" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    "sent_date" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     "file_path" character varying(255) NOT NULL,
     "visible" integer NOT NULL
 );
@@ -1291,10 +1292,10 @@ CREATE TABLE "webjet_cms"."emails" (
     "url" character varying(255) DEFAULT ''::character varying NOT NULL,
     "attachments" "text",
     "retry" integer DEFAULT 0 NOT NULL,
-    "sent_date" timestamp with time zone,
+    "sent_date" timestamp without time zone,
     "created_by_user_id" integer DEFAULT 0 NOT NULL,
-    "create_date" timestamp with time zone,
-    "send_at" timestamp with time zone,
+    "create_date" timestamp without time zone,
+    "send_at" timestamp without time zone,
     "message" "text",
     "reply_to" character varying(255) DEFAULT NULL::character varying,
     "cc_email" character varying(255) DEFAULT NULL::character varying,
@@ -1302,7 +1303,7 @@ CREATE TABLE "webjet_cms"."emails" (
     "disabled" boolean DEFAULT false,
     "campain_id" integer,
     "recipient_user_id" integer DEFAULT '-1'::integer,
-    "seen_date" timestamp with time zone,
+    "seen_date" timestamp without time zone,
     "click_hash" character varying(64) DEFAULT NULL::character varying
 );
 
@@ -1315,12 +1316,12 @@ CREATE TABLE "webjet_cms"."emails_campain" (
     "subject" character varying(255) DEFAULT NULL::character varying,
     "url" character varying(255) DEFAULT NULL::character varying,
     "created_by_user_id" integer,
-    "create_date" timestamp with time zone,
+    "create_date" timestamp without time zone,
     "count_of_recipients" integer,
     "count_of_sent_mails" integer DEFAULT '0'::integer NOT NULL,
-    "last_sent_date" timestamp with time zone,
+    "last_sent_date" timestamp without time zone,
     "user_groups" character varying(64) DEFAULT NULL::character varying,
-    "send_at" timestamp with time zone,
+    "send_at" timestamp without time zone,
     "attachments" "text",
     "reply_to" character varying(255) DEFAULT NULL::character varying,
     "cc_email" character varying(255) DEFAULT NULL::character varying,
@@ -1360,7 +1361,7 @@ CREATE TABLE "webjet_cms"."emails_stat_click" (
     "click_id" integer NOT NULL,
     "email_id" integer NOT NULL,
     "link" character varying(255) NOT NULL,
-    "click_date" timestamp with time zone NOT NULL,
+    "click_date" timestamp without time zone NOT NULL,
     "session_id" bigint DEFAULT '0'::bigint,
     "browser_id" bigint DEFAULT '0'::bigint
 );
@@ -1383,7 +1384,7 @@ ALTER SEQUENCE "webjet_cms"."emails_stat_click_click_id_seq" OWNED BY "webjet_cm
 CREATE TABLE "webjet_cms"."emails_unsubscribed" (
     "emails_unsubscribed_id" integer NOT NULL,
     "email" character varying(128) DEFAULT NULL::character varying,
-    "create_date" timestamp with time zone
+    "create_date" timestamp without time zone
 );
 
 
@@ -1422,10 +1423,10 @@ CREATE TABLE "webjet_cms"."enumeration_data" (
     "dtype" character varying(31) DEFAULT 'default'::character varying,
     "string5" character varying(1024) DEFAULT NULL::character varying,
     "string6" character varying(1024) DEFAULT NULL::character varying,
-    "date1" timestamp with time zone,
-    "date2" timestamp with time zone,
-    "date3" timestamp with time zone,
-    "date4" timestamp with time zone,
+    "date1" timestamp without time zone,
+    "date2" timestamp without time zone,
+    "date3" timestamp without time zone,
+    "date4" timestamp without time zone,
     "parent_enumeration_data_id" integer,
     "string7" character varying(1024) DEFAULT NULL::character varying,
     "string8" character varying(1024) DEFAULT NULL::character varying,
@@ -1496,9 +1497,9 @@ CREATE TABLE "webjet_cms"."file_archiv" (
     "file_name" character varying(255) DEFAULT NULL::character varying,
     "virtual_file_name" character varying(255) DEFAULT NULL::character varying,
     "show_file" boolean NOT NULL,
-    "date_insert" timestamp with time zone,
-    "valid_from" timestamp with time zone,
-    "valid_to" timestamp with time zone,
+    "date_insert" timestamp without time zone,
+    "valid_from" timestamp without time zone,
+    "valid_to" timestamp without time zone,
     "domain" character varying(255) DEFAULT NULL::character varying,
     "reference_id" integer,
     "order_id" integer,
@@ -1532,7 +1533,7 @@ CREATE TABLE "webjet_cms"."file_archiv_category_node" (
     "lvl" integer,
     "rootid" integer,
     "category_name" character varying(500) DEFAULT NULL::character varying,
-    "date_insert" timestamp with time zone,
+    "date_insert" timestamp without time zone,
     "string1name" character varying(500) DEFAULT NULL::character varying,
     "string2name" character varying(500) DEFAULT NULL::character varying,
     "string3name" character varying(500) DEFAULT NULL::character varying,
@@ -1601,7 +1602,7 @@ ALTER SEQUENCE "webjet_cms"."file_atr_def_atr_id_seq" OWNED BY "webjet_cms"."fil
 CREATE TABLE "webjet_cms"."file_history" (
     "file_history_id" integer NOT NULL,
     "file_url" character varying(255) DEFAULT NULL::character varying,
-    "change_date" timestamp with time zone,
+    "change_date" timestamp without time zone,
     "user_id" integer,
     "deleted" boolean DEFAULT false,
     "history_path" character varying(255) DEFAULT NULL::character varying,
@@ -1646,14 +1647,14 @@ CREATE TABLE "webjet_cms"."forms" (
     "form_name" character varying(255) DEFAULT ''::character varying NOT NULL,
     "data" "text" NOT NULL,
     "files" "text",
-    "create_date" timestamp with time zone,
+    "create_date" timestamp without time zone,
     "html" "text",
     "user_id" integer DEFAULT '-1'::integer NOT NULL,
     "note" "text",
     "doc_id" integer DEFAULT '-1'::integer NOT NULL,
-    "last_export_date" timestamp with time zone,
+    "last_export_date" timestamp without time zone,
     "domain_id" integer DEFAULT '1'::integer NOT NULL,
-    "double_optin_confirmation_date" timestamp with time zone,
+    "double_optin_confirmation_date" timestamp without time zone,
     "double_optin_hash" character varying(20) DEFAULT NULL::character varying
 );
 
@@ -1668,14 +1669,14 @@ CREATE TABLE "webjet_cms"."forms_archive" (
     "form_name" character varying(255) DEFAULT ''::character varying NOT NULL,
     "data" "text" NOT NULL,
     "files" "text",
-    "create_date" timestamp with time zone,
+    "create_date" timestamp without time zone,
     "html" "text",
     "user_id" integer DEFAULT '-1'::integer NOT NULL,
     "note" "text",
     "doc_id" integer DEFAULT '-1'::integer NOT NULL,
-    "last_export_date" timestamp with time zone,
+    "last_export_date" timestamp without time zone,
     "domain_id" integer DEFAULT '1'::integer NOT NULL,
-    "double_optin_confirmation_date" timestamp with time zone,
+    "double_optin_confirmation_date" timestamp without time zone,
     "double_optin_hash" character varying(20) DEFAULT NULL::character varying
 );
 
@@ -1698,8 +1699,8 @@ CREATE TABLE "webjet_cms"."forum" (
     "id" integer NOT NULL,
     "doc_id" integer,
     "active" boolean NOT NULL,
-    "date_from" timestamp with time zone,
-    "date_to" timestamp with time zone,
+    "date_from" timestamp without time zone,
+    "date_to" timestamp without time zone,
     "hours_after_last_message" integer,
     "message_confirmation" boolean DEFAULT false NOT NULL,
     "approve_email" character varying(255) DEFAULT NULL::character varying,
@@ -1756,7 +1757,7 @@ CREATE TABLE "webjet_cms"."gallery" (
     "selected_y" integer,
     "selected_width" integer,
     "selected_height" integer,
-    "upload_datetime" timestamp with time zone,
+    "upload_datetime" timestamp without time zone,
     "sort_priority" integer,
     "domain_id" integer DEFAULT '1'::integer NOT NULL
 );
@@ -1773,7 +1774,7 @@ CREATE TABLE "webjet_cms"."gallery_dimension" (
     "resize_mode" character varying(1) DEFAULT NULL::character varying,
     "gallery_name" character varying(255) DEFAULT NULL::character varying,
     "gallery_perex" "text",
-    "create_date" timestamp with time zone,
+    "create_date" timestamp without time zone,
     "author" character varying(255) DEFAULT NULL::character varying,
     "views" integer DEFAULT '0'::integer NOT NULL,
     "watermark_saturation" integer,
@@ -1817,7 +1818,7 @@ CREATE TABLE "webjet_cms"."gdpr_regexp" (
     "regexp_name" character varying(255) DEFAULT NULL::character varying,
     "regexp_value" character varying(1024) DEFAULT NULL::character varying,
     "user_id" integer,
-    "date_insert" timestamp with time zone,
+    "date_insert" timestamp without time zone,
     "domain_id" integer DEFAULT '1'::integer NOT NULL
 );
 
@@ -1939,11 +1940,11 @@ CREATE TABLE "webjet_cms"."groups_scheduler" (
     "field_c" character varying(255) DEFAULT NULL::character varying,
     "field_d" character varying(255) DEFAULT NULL::character varying,
     "link_group_id" integer DEFAULT '-1'::integer,
-    "when_to_publish" timestamp with time zone,
-    "save_date" timestamp with time zone,
+    "when_to_publish" timestamp without time zone,
+    "save_date" timestamp without time zone,
     "user_id" integer DEFAULT '-1'::integer,
     "lng" character varying(8) DEFAULT NULL::character varying,
-    "date_published" timestamp with time zone,
+    "date_published" timestamp without time zone,
     "show_in_navbar" boolean,
     "show_in_sitemap" boolean,
     "logged_show_in_navbar" boolean,
@@ -1976,8 +1977,8 @@ CREATE TABLE "webjet_cms"."inquiry" (
     "question_group" character varying(255) DEFAULT NULL::character varying,
     "answer_text_ok" "text",
     "answer_text_fail" "text",
-    "date_from" timestamp with time zone,
-    "date_to" timestamp with time zone,
+    "date_from" timestamp without time zone,
+    "date_to" timestamp without time zone,
     "question_active" boolean DEFAULT true,
     "multiple" boolean,
     "total_clicks" integer,
@@ -2030,7 +2031,7 @@ CREATE TABLE "webjet_cms"."inquiry_users" (
     "user_id" integer NOT NULL,
     "question_id" integer NOT NULL,
     "answer_id" integer NOT NULL,
-    "create_date" timestamp with time zone,
+    "create_date" timestamp without time zone,
     "ip_address" character varying(255) DEFAULT NULL::character varying,
     "domain_id" integer DEFAULT 1
 );
@@ -2061,12 +2062,12 @@ ALTER SEQUENCE "webjet_cms"."inquirysimple_answers_id_seq" OWNED BY "webjet_cms"
 
 CREATE TABLE "webjet_cms"."insert_script" (
     "insert_script_id" integer NOT NULL,
-    "save_date" timestamp with time zone,
+    "save_date" timestamp without time zone,
     "user_id" integer,
     "script_body" "text",
     "name" character varying(255) DEFAULT NULL::character varying,
-    "valid_from" timestamp with time zone,
-    "valid_to" timestamp with time zone,
+    "valid_from" timestamp without time zone,
+    "valid_to" timestamp without time zone,
     "position" character varying(60) DEFAULT NULL::character varying,
     "domain_id" integer DEFAULT '1'::integer,
     "cookie_class" character varying(255) DEFAULT NULL::character varying
@@ -2150,7 +2151,7 @@ CREATE TABLE "webjet_cms"."media" (
     "media_info_de" "text",
     "media_info_en" "text",
     "media_sort_order" integer DEFAULT '10'::integer NOT NULL,
-    "last_update" timestamp with time zone,
+    "last_update" timestamp without time zone,
     "domain_id" integer DEFAULT '1'::integer NOT NULL,
     "field_a" character varying(255) DEFAULT NULL::character varying,
     "field_b" character varying(255) DEFAULT NULL::character varying,
@@ -2180,7 +2181,7 @@ CREATE TABLE "webjet_cms"."media_groups" (
 
 CREATE TABLE "webjet_cms"."monitoring" (
     "monitoring_id" integer NOT NULL,
-    "date_insert" timestamp with time zone,
+    "date_insert" timestamp without time zone,
     "node_name" character varying(16) DEFAULT NULL::character varying,
     "db_active" integer,
     "db_idle" integer,
@@ -2220,7 +2221,7 @@ CREATE TABLE "webjet_cms"."passwords_history" (
     "user_id" integer,
     "password" character varying(128) DEFAULT NULL::character varying,
     "salt" character varying(64) DEFAULT NULL::character varying,
-    "save_date" timestamp with time zone
+    "save_date" timestamp without time zone
 );
 
 
@@ -2304,8 +2305,8 @@ CREATE TABLE "webjet_cms"."questions_answers" (
     "qa_id" integer NOT NULL,
     "group_name" character varying(255) DEFAULT ''::character varying NOT NULL,
     "category_name" character varying(64) DEFAULT NULL::character varying,
-    "question_date" timestamp with time zone,
-    "answer_date" timestamp with time zone,
+    "question_date" timestamp without time zone,
+    "answer_date" timestamp without time zone,
     "question" "text",
     "answer" "text",
     "from_name" character varying(255) DEFAULT ''::character varying NOT NULL,
@@ -2357,7 +2358,7 @@ CREATE TABLE "webjet_cms"."quiz_answers" (
     "quiz_question_id" integer NOT NULL,
     "answer" integer NOT NULL,
     "is_correct" boolean NOT NULL,
-    "created" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "created" timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "right_answer" integer NOT NULL,
     "rate" integer
 );
@@ -2455,7 +2456,7 @@ CREATE TABLE "webjet_cms"."rating" (
     "doc_id" integer,
     "user_id" integer,
     "rating_value" integer,
-    "insert_date" timestamp with time zone
+    "insert_date" timestamp without time zone
 );
 
 
@@ -2481,8 +2482,8 @@ ALTER SEQUENCE "webjet_cms"."rating_rating_id_seq" OWNED BY "webjet_cms"."rating
 CREATE TABLE "webjet_cms"."reservation" (
     "reservation_id" integer NOT NULL,
     "reservation_object_id" integer DEFAULT '0'::integer NOT NULL,
-    "date_from" timestamp with time zone,
-    "date_to" timestamp with time zone,
+    "date_from" timestamp without time zone,
+    "date_to" timestamp without time zone,
     "name" character varying(150) DEFAULT NULL::character varying,
     "surname" character varying(155) DEFAULT NULL::character varying,
     "email" character varying(100) DEFAULT NULL::character varying,
@@ -2502,8 +2503,8 @@ CREATE TABLE "webjet_cms"."reservation_object" (
     "email_accepter" character varying(150) DEFAULT NULL::character varying,
     "passwd" character varying(60) DEFAULT NULL::character varying,
     "max_reservations" smallint DEFAULT '1'::smallint,
-    "reservation_time_from" timestamp with time zone,
-    "reservation_time_to" timestamp with time zone,
+    "reservation_time_from" timestamp without time zone,
+    "reservation_time_to" timestamp without time zone,
     "price_for_day" numeric(7,2) DEFAULT 0.00 NOT NULL,
     "price_for_hour" numeric(7,2) DEFAULT 0.00 NOT NULL,
     "reservation_for_all_day" boolean NOT NULL,
@@ -2543,8 +2544,8 @@ ALTER SEQUENCE "webjet_cms"."reservation_object_reservation_object_id_seq" OWNED
 CREATE TABLE "webjet_cms"."reservation_object_times" (
     "object_time_id" integer NOT NULL,
     "object_id" integer NOT NULL,
-    "cas_od" timestamp with time zone,
-    "cas_do" timestamp with time zone,
+    "cas_od" timestamp without time zone,
+    "cas_do" timestamp without time zone,
     "den" integer,
     "domain_id" integer DEFAULT '1'::integer NOT NULL
 );
@@ -2569,7 +2570,7 @@ CREATE TABLE "webjet_cms"."response_headers" (
     "url" character varying(255) NOT NULL,
     "header_name" character varying(255) NOT NULL,
     "header_value" character varying(255) NOT NULL,
-    "change_date" timestamp with time zone NOT NULL,
+    "change_date" timestamp without time zone NOT NULL,
     "note" character varying(255) DEFAULT NULL::character varying,
     "domain_id" integer NOT NULL
 );
@@ -2615,7 +2616,7 @@ CREATE TABLE "webjet_cms"."restaurant_menu_meals" (
 CREATE TABLE "webjet_cms"."seo_bots" (
     "seo_bots_id" integer NOT NULL,
     "name" character varying(255) DEFAULT NULL::character varying,
-    "last_visit" timestamp with time zone,
+    "last_visit" timestamp without time zone,
     "visit_count" integer
 );
 
@@ -2638,7 +2639,7 @@ CREATE TABLE "webjet_cms"."seo_google_position" (
     "seo_google_position_id" integer NOT NULL,
     "keyword_id" integer,
     "position" integer,
-    "search_datetime" timestamp with time zone
+    "search_datetime" timestamp without time zone
 );
 
 
@@ -2659,7 +2660,7 @@ ALTER SEQUENCE "webjet_cms"."seo_google_position_seo_google_position_id_seq" OWN
 CREATE TABLE "webjet_cms"."seo_keywords" (
     "seo_keyword_id" integer NOT NULL,
     "name" character varying(100) DEFAULT NULL::character varying,
-    "created_time" timestamp with time zone,
+    "created_time" timestamp without time zone,
     "author" integer,
     "domain" character varying(255) DEFAULT NULL::character varying,
     "search_bot" character varying(150) DEFAULT NULL::character varying,
@@ -2683,7 +2684,7 @@ ALTER SEQUENCE "webjet_cms"."seo_keywords_seo_keyword_id_seq" OWNED BY "webjet_c
 
 CREATE TABLE "webjet_cms"."sita_parsed_ids" (
     "news_item_id" integer NOT NULL,
-    "parse_date" timestamp with time zone NOT NULL,
+    "parse_date" timestamp without time zone NOT NULL,
     "sita_group" character varying(16) DEFAULT NULL::character varying
 );
 
@@ -2715,7 +2716,7 @@ CREATE TABLE "webjet_cms"."sms_log" (
     "log_id" integer NOT NULL,
     "user_id" integer DEFAULT 0 NOT NULL,
     "user_ip" character varying(32) DEFAULT ''::character varying NOT NULL,
-    "sent_date" timestamp with time zone DEFAULT '2000-01-01 00:00:00+01'::timestamp with time zone NOT NULL,
+    "sent_date" timestamp without time zone DEFAULT '2000-01-01 00:00:00'::timestamp without time zone NOT NULL,
     "sms_number" character varying(32) DEFAULT ''::character varying NOT NULL,
     "sms_text" character varying(255) DEFAULT ''::character varying NOT NULL
 );
@@ -2804,7 +2805,7 @@ CREATE TABLE "webjet_cms"."stat_from" (
     "session_id" bigint,
     "referer_server_name" character varying(255) DEFAULT NULL::character varying,
     "referer_url" character varying(255) DEFAULT NULL::character varying,
-    "from_time" timestamp with time zone,
+    "from_time" timestamp without time zone,
     "doc_id" integer,
     "group_id" integer DEFAULT '0'::integer NOT NULL
 );
@@ -2832,7 +2833,7 @@ CREATE TABLE "webjet_cms"."stat_keys" (
 
 
 CREATE TABLE "webjet_cms"."stat_searchengine" (
-    "search_date" timestamp with time zone DEFAULT '2000-01-01 00:00:00+01'::timestamp with time zone NOT NULL,
+    "search_date" timestamp without time zone DEFAULT '2000-01-01 00:00:00'::timestamp without time zone NOT NULL,
     "server" character varying(16) DEFAULT ''::character varying NOT NULL,
     "query" character varying(64) DEFAULT ''::character varying NOT NULL,
     "doc_id" integer DEFAULT 0 NOT NULL,
@@ -2927,7 +2928,7 @@ CREATE TABLE "webjet_cms"."stat_userlogon" (
     "week" integer DEFAULT 0 NOT NULL,
     "user_id" integer DEFAULT 0 NOT NULL,
     "views" integer DEFAULT 1,
-    "logon_time" timestamp with time zone,
+    "logon_time" timestamp without time zone,
     "view_minutes" integer DEFAULT '0'::integer,
     "hostname" character varying(255) DEFAULT NULL::character varying
 );
@@ -2940,7 +2941,7 @@ CREATE TABLE "webjet_cms"."stat_views" (
     "session_id" bigint,
     "doc_id" integer,
     "last_doc_id" integer,
-    "view_time" timestamp with time zone,
+    "view_time" timestamp without time zone,
     "group_id" integer DEFAULT '0'::integer NOT NULL,
     "last_group_id" integer DEFAULT '0'::integer NOT NULL,
     "browser_ua_id" integer,
@@ -3087,13 +3088,13 @@ ALTER SEQUENCE "webjet_cms"."tips_of_the_day_tip_id_seq" OWNED BY "webjet_cms"."
 CREATE TABLE "webjet_cms"."todo" (
     "todo_id" integer NOT NULL,
     "user_id" integer NOT NULL,
-    "create_date" timestamp with time zone NOT NULL,
-    "modif_date" timestamp with time zone,
+    "create_date" timestamp without time zone NOT NULL,
+    "modif_date" timestamp without time zone,
     "text" character varying(128) NOT NULL,
     "is_global" boolean DEFAULT false NOT NULL,
     "is_resolved" boolean DEFAULT false NOT NULL,
     "sort_priority" integer,
-    "dead_line" timestamp with time zone,
+    "dead_line" timestamp without time zone,
     "note" character varying(2000) DEFAULT NULL::character varying,
     "group_id" integer DEFAULT '0'::integer
 );
@@ -3105,9 +3106,9 @@ CREATE TABLE "webjet_cms"."url_redirect" (
     "old_url" character varying(255) NOT NULL,
     "new_url" character varying(255) NOT NULL,
     "redirect_code" integer NOT NULL,
-    "insert_date" timestamp with time zone NOT NULL,
+    "insert_date" timestamp without time zone NOT NULL,
     "domain_name" character varying(255) DEFAULT NULL::character varying,
-    "publish_date" timestamp with time zone
+    "publish_date" timestamp without time zone
 );
 
 
@@ -3116,7 +3117,7 @@ CREATE TABLE "webjet_cms"."user_alarm" (
     "user_id" integer DEFAULT 0 NOT NULL,
     "alarm_id" integer,
     "warning" integer,
-    "send_date" timestamp with time zone
+    "send_date" timestamp without time zone
 );
 
 
@@ -3133,8 +3134,8 @@ CREATE TABLE "webjet_cms"."user_group_verify" (
     "user_id" integer DEFAULT 0 NOT NULL,
     "user_groups" character varying(255) DEFAULT ''::character varying NOT NULL,
     "hash" character varying(32) DEFAULT ''::character varying NOT NULL,
-    "create_date" timestamp with time zone DEFAULT '2000-01-01 00:00:00+01'::timestamp with time zone NOT NULL,
-    "verify_date" timestamp with time zone,
+    "create_date" timestamp without time zone DEFAULT '2000-01-01 00:00:00'::timestamp without time zone NOT NULL,
+    "verify_date" timestamp without time zone,
     "email" character varying(255) DEFAULT ''::character varying NOT NULL,
     "hostname" character varying(255) DEFAULT NULL::character varying
 );
@@ -3211,7 +3212,7 @@ CREATE TABLE "webjet_cms"."user_settings" (
     "sint2" integer,
     "sint3" integer,
     "sint4" integer,
-    "sdate" timestamp with time zone
+    "sdate" timestamp without time zone
 );
 
 
@@ -3271,10 +3272,10 @@ CREATE TABLE "webjet_cms"."users" (
     "editable_groups" character varying(255) DEFAULT NULL::character varying,
     "editable_pages" character varying(255) DEFAULT NULL::character varying,
     "writable_folders" "text",
-    "last_logon" timestamp with time zone,
+    "last_logon" timestamp without time zone,
     "module_perms" character varying(255) DEFAULT NULL::character varying,
     "disabled_items" character varying(255) DEFAULT NULL::character varying,
-    "reg_date" timestamp with time zone,
+    "reg_date" timestamp without time zone,
     "field_a" character varying(255) DEFAULT NULL::character varying,
     "field_b" character varying(255) DEFAULT NULL::character varying,
     "field_c" character varying(255) DEFAULT NULL::character varying,
@@ -3336,16 +3337,16 @@ CREATE TABLE "webjet_cms"."zmluvy" (
     "predmet" "text",
     "hodnota_zmluvy" double precision,
     "mena" character varying(3) DEFAULT NULL::character varying,
-    "podpisanie" timestamp with time zone,
-    "platnost_od" timestamp with time zone,
-    "ucinnost" timestamp with time zone,
-    "zverejnenie" timestamp with time zone,
+    "podpisanie" timestamp without time zone,
+    "platnost_od" timestamp without time zone,
+    "ucinnost" timestamp without time zone,
+    "zverejnenie" timestamp without time zone,
     "zdroj" character varying(255) DEFAULT NULL::character varying,
     "zdroj_nazov" character varying(255) DEFAULT NULL::character varying,
     "editor" integer,
     "skupina" smallint,
     "status" smallint,
-    "platnost_do" timestamp with time zone,
+    "platnost_do" timestamp without time zone,
     "viazanost_k_zmluve" integer,
     "zmluvna_strana1" character varying(255) DEFAULT NULL::character varying,
     "zs_nazov1" character varying(255) DEFAULT NULL::character varying,
@@ -3747,11 +3748,11 @@ INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('sho
 INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('inlineEditingEnabled', 'true', NULL);
 INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('disableWebJETToolbar', 'true', NULL);
 INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('logLevel', 'debug', NULL);
-INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('galleryWebJET7Converted', 'true', '2024-02-14 15:00:55.902+01');
-INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('statEnableTablePartitioning', 'true', '2024-02-14 15:00:57.302+01');
-INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('statWebJET7Converted', 'true', '2024-02-14 15:00:57.314+01');
-INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('passwordUseHash', 'true', '2024-02-14 15:01:02.974+01');
-INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('statTablePartitioningDate-stat_error', '14.02.2024 15:04', '2024-02-14 15:04:24.537+01');
+INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('galleryWebJET7Converted', 'true', '2024-02-14 15:00:55.902');
+INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('statEnableTablePartitioning', 'true', '2024-02-14 15:00:57.302');
+INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('statWebJET7Converted', 'true', '2024-02-14 15:00:57.314');
+INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('passwordUseHash', 'true', '2024-02-14 15:01:02.974');
+INSERT INTO "webjet_cms"."_conf_" ("name", "value", "date_changed") VALUES ('statTablePartitioningDate-stat_error', '14.02.2024 15:04', '2024-02-14 15:04:24.537');
 
 
 INSERT INTO "webjet_cms"."_db_" ("id", "create_date", "note") VALUES (1, '2003-12-06', 'ukladanie poznamky a prihlaseneho usera k formularom');
@@ -4339,7 +4340,7 @@ INSERT INTO "webjet_cms"."crontab" ("id", "task_name", "second", "minute", "hour
 
 
 
-INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (2, 'Default navigation', '!INCLUDE(/components/menu/menu_ul_li.jsp, rootGroupId=1, startOffset=0, maxLevel=3, classes=basic, openAllItems=true, rootUlId=mainNavigation)!', '', '', 'Default menu', '2003-05-23 00:00:00+02', NULL, NULL, 1, 3, 1, 0, 0, false, true, false, NULL, '2003-08-27 10:36:59+02', 50, -1, -1, -1, NULL, '', '', NULL, NULL, NULL, true, NULL, NULL, 2, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 3, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
+INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (2, 'Default navigation', '!INCLUDE(/components/menu/menu_ul_li.jsp, rootGroupId=1, startOffset=0, maxLevel=3, classes=basic, openAllItems=true, rootUlId=mainNavigation)!', '', '', 'Default menu', '2003-05-23 00:00:00', NULL, NULL, 1, 3, 1, 0, 0, false, true, false, NULL, '2003-08-27 10:36:59', 50, -1, -1, -1, NULL, '', '', NULL, NULL, NULL, true, NULL, NULL, 2, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 3, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
 INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (7, 'Stranka s nadpisom a 2 stlpcami', '<table cellspacing=''0'' cellpadding=''2'' width=''100%'' border=''0''>
     <tbody>
         <tr>
@@ -4376,15 +4377,15 @@ INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "ex
             </td>
         </tr>
     </tbody>
-</table>', '', 'Stranka s nadpisom a 2 stlpcami', '2003-10-05 22:43:25+02', NULL, NULL, 1, 2, 1, 0, 0, true, true, false, NULL, '2003-10-05 22:43:25+02', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, NULL, 7, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 2, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
-INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (9, 'Default left menu', '!INCLUDE(/components/menu/menu_ul_li.jsp, rootGroupId=1, startOffset=1, maxLevel=3, classes=basic, openAllItems=true, rootUlId=mainNavigation)!', '', '', 'Default menu', '2003-05-23 00:00:00+02', NULL, NULL, 1, 3, 1, 0, 0, false, true, false, NULL, '2003-08-27 10:36:59+02', 50, -1, -1, -1, NULL, '', '', NULL, NULL, NULL, true, NULL, NULL, 9, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 3, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
+</table>', '', 'Stranka s nadpisom a 2 stlpcami', '2003-10-05 22:43:25', NULL, NULL, 1, 2, 1, 0, 0, true, true, false, NULL, '2003-10-05 22:43:25', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, NULL, 7, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 2, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
+INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (9, 'Default left menu', '!INCLUDE(/components/menu/menu_ul_li.jsp, rootGroupId=1, startOffset=1, maxLevel=3, classes=basic, openAllItems=true, rootUlId=mainNavigation)!', '', '', 'Default menu', '2003-05-23 00:00:00', NULL, NULL, 1, 3, 1, 0, 0, false, true, false, NULL, '2003-08-27 10:36:59', 50, -1, -1, -1, NULL, '', '', NULL, NULL, NULL, true, NULL, NULL, 9, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 3, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
 INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (4, 'Hlavna stranka', '<p>Vitajte na demo stránke systému WebJET.</p>
 <p>Viac informácií o systéme nájdete na stránke <a href=''http://www.webjetcms.sk/'' target=''_blank''>www.webjetcms.sk</a>.</p>', '   vitajte na demo stranke systemu webjet.
    viac informacii o systeme najdete na stranke                                                    www.webjetcms.sk    .    <h1>hlavna stranka</h1>
-', '', 'Hlavna stranka', '2024-02-14 15:04:14.106+01', NULL, NULL, 1, 1, 1, 0, 0, true, true, false, '/Slovensky', '2003-10-05 22:43:25+02', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, '/sk/', 4, 1, -1, -1, '', '', '', '', '', '', '', '', '', '', '', '', false, 0, '', '', '', '', '', '', '', '', false, 1, NULL, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
-INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (1, 'Default header', '<h1>Headline</h1><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sit aspernatur labore vel rem adipisci commodi odit eum vitae asperiores esse?</p><a href=''#'' class=''btn btn-default''>Lorem ipsum.</a>', '', '', 'Default hlavička', '2002-07-25 00:00:00+02', NULL, NULL, 1, 4, 1, 0, 0, false, true, false, NULL, '2003-04-11 15:51:10+02', 50, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, 1, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 4, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
-INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (3, 'Default footer', '<p>© !YEAR! InterWay, a. s. All Rights Reserved. Page generated by WebJET CMS.</p>', '', '', 'Default pätička', '2002-07-25 00:00:00+02', NULL, NULL, 1, 4, 1, 0, 0, false, true, false, NULL, '2003-04-11 15:51:10+02', 50, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, 3, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 4, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
-INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (6, 'Podstránka 2', '<h1>Podstránka 2</h1><p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi id sapien ut massa interdum ultricies. Sed eget enim in ante ornare feugiat. Curabitur risus lectus, iaculis sed, pulvinar quis, convallis euismod, massa. Curabitur est enim, varius sed, hendrerit at, convallis elementum, tortor. In hac habitasse platea dictumst. Proin sagittis massa ac massa. Maecenas vel libero. Curabitur vestibulum pellentesque elit. Phasellus aliquet quam quis urna. In ultrices est vel lorem. Aliquam sit amet mi et nulla scelerisque vestibulum. Donec pellentesque tellus vitae massa. Curabitur euismod. Donec quis pede. Vivamus nulla mauris, aliquet sed, aliquet vitae, fringilla id, massa. Etiam id magna sed dolor rhoncus condimentum. Ut lacinia nonummy odio. Pellentesque interdum, tortor vitae congue elementum, nibh ipsum pellentesque quam, sed tempor tortor est sit amet felis. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam sagittis tellus vitae lorem.</p>', '    podstranka 2        lorem ipsum dolor sit amet, consectetuer adipiscing elit. morbi id sapien ut massa interdum ultricies. sed eget enim in ante ornare feugiat. curabitur risus lectus, iaculis sed, pulvinar quis, convallis euismod, massa. curabitur est enim, varius sed, hendrerit at, convallis elementum, tortor. in hac habitasse platea dictumst. proin sagittis massa ac massa. maecenas vel libero. curabitur vestibulum pellentesque elit. phasellus aliquet quam quis urna. in ultrices est vel lorem. aliquam sit amet mi et nulla scelerisque vestibulum. donec pellentesque tellus vitae massa. curabitur euismod. donec quis pede. vivamus nulla mauris, aliquet sed, aliquet vitae, fringilla id, massa. etiam id magna sed dolor rhoncus condimentum. ut lacinia nonummy odio. pellentesque interdum, tortor vitae congue elementum, nibh ipsum pellentesque quam, sed tempor tortor est sit amet felis. cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. nullam sagittis tellus vitae lorem.    ', '', 'Podstránka 2', '2024-02-14 15:04:14.341+01', NULL, NULL, 1, 1, 1, 0, 0, true, true, false, '/Slovensky', '2003-10-05 22:43:25+02', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, '/sk/podstranka-2.html', 6, 1, -1, -1, '', '', '', '', '', '', '', '', '', '', '', '', false, 0, '', '', '', '', '', '', '', '', false, 1, NULL, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
+', '', 'Hlavna stranka', '2024-02-14 15:04:14.106', NULL, NULL, 1, 1, 1, 0, 0, true, true, false, '/Slovensky', '2003-10-05 22:43:25', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, '/sk/', 4, 1, -1, -1, '', '', '', '', '', '', '', '', '', '', '', '', false, 0, '', '', '', '', '', '', '', '', false, 1, NULL, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
+INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (1, 'Default header', '<h1>Headline</h1><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sit aspernatur labore vel rem adipisci commodi odit eum vitae asperiores esse?</p><a href=''#'' class=''btn btn-default''>Lorem ipsum.</a>', '', '', 'Default hlavička', '2002-07-25 00:00:00', NULL, NULL, 1, 4, 1, 0, 0, false, true, false, NULL, '2003-04-11 15:51:10', 50, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, 1, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 4, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
+INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (3, 'Default footer', '<p>© !YEAR! InterWay, a. s. All Rights Reserved. Page generated by WebJET CMS.</p>', '', '', 'Default pätička', '2002-07-25 00:00:00', NULL, NULL, 1, 4, 1, 0, 0, false, true, false, NULL, '2003-04-11 15:51:10', 50, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, 3, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 4, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
+INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (6, 'Podstránka 2', '<h1>Podstránka 2</h1><p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi id sapien ut massa interdum ultricies. Sed eget enim in ante ornare feugiat. Curabitur risus lectus, iaculis sed, pulvinar quis, convallis euismod, massa. Curabitur est enim, varius sed, hendrerit at, convallis elementum, tortor. In hac habitasse platea dictumst. Proin sagittis massa ac massa. Maecenas vel libero. Curabitur vestibulum pellentesque elit. Phasellus aliquet quam quis urna. In ultrices est vel lorem. Aliquam sit amet mi et nulla scelerisque vestibulum. Donec pellentesque tellus vitae massa. Curabitur euismod. Donec quis pede. Vivamus nulla mauris, aliquet sed, aliquet vitae, fringilla id, massa. Etiam id magna sed dolor rhoncus condimentum. Ut lacinia nonummy odio. Pellentesque interdum, tortor vitae congue elementum, nibh ipsum pellentesque quam, sed tempor tortor est sit amet felis. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam sagittis tellus vitae lorem.</p>', '    podstranka 2        lorem ipsum dolor sit amet, consectetuer adipiscing elit. morbi id sapien ut massa interdum ultricies. sed eget enim in ante ornare feugiat. curabitur risus lectus, iaculis sed, pulvinar quis, convallis euismod, massa. curabitur est enim, varius sed, hendrerit at, convallis elementum, tortor. in hac habitasse platea dictumst. proin sagittis massa ac massa. maecenas vel libero. curabitur vestibulum pellentesque elit. phasellus aliquet quam quis urna. in ultrices est vel lorem. aliquam sit amet mi et nulla scelerisque vestibulum. donec pellentesque tellus vitae massa. curabitur euismod. donec quis pede. vivamus nulla mauris, aliquet sed, aliquet vitae, fringilla id, massa. etiam id magna sed dolor rhoncus condimentum. ut lacinia nonummy odio. pellentesque interdum, tortor vitae congue elementum, nibh ipsum pellentesque quam, sed tempor tortor est sit amet felis. cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. nullam sagittis tellus vitae lorem.    ', '', 'Podstránka 2', '2024-02-14 15:04:14.341', NULL, NULL, 1, 1, 1, 0, 0, true, true, false, '/Slovensky', '2003-10-05 22:43:25', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, '/sk/podstranka-2.html', 6, 1, -1, -1, '', '', '', '', '', '', '', '', '', '', '', '', false, 0, '', '', '', '', '', '', '', '', false, 1, NULL, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
 INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (8, 'Kontaktný formulár', '<p>Pred použitím formuláru prosím najskôr naň kliknite pravým tlačítkom, dajte vlastnosti formuláru a zmeňte emailovú adresu.</p>
 <p>
 <script src=''/components/form/check_form.js'' ENGINE=''text/javascript''></script>
@@ -4437,7 +4438,7 @@ INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "ex
     </table>
 </form>
 </p>
-<p> </p>', '', 'Kontaktný formulár', '2003-10-05 22:43:25+02', NULL, NULL, 1, 21, 1, 0, 0, true, true, false, NULL, '2003-10-05 22:43:25+02', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, NULL, 8, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 21, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
+<p> </p>', '', 'Kontaktný formulár', '2003-10-05 22:43:25', NULL, NULL, 1, 21, 1, 0, 0, true, true, false, NULL, '2003-10-05 22:43:25', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, NULL, 8, 2, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, 20, 21, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
 INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "external_link", "navbar", "date_created", "publish_start", "publish_end", "author_id", "group_id", "temp_id", "views_total", "views_month", "searchable", "available", "cacheable", "file_name", "file_change", "sort_priority", "header_doc_id", "menu_doc_id", "footer_doc_id", "password_protected", "html_head", "html_data", "perex_place", "perex_image", "perex_group", "show_in_menu", "event_date", "virtual_path", "sync_id", "sync_status", "logon_page_doc_id", "right_menu_doc_id", "field_a", "field_b", "field_c", "field_d", "field_e", "field_f", "field_g", "field_h", "field_i", "field_j", "field_k", "field_l", "disable_after_end", "forum_count", "field_m", "field_n", "field_o", "field_p", "field_q", "field_r", "field_s", "field_t", "require_ssl", "root_group_l1", "root_group_l2", "root_group_l3", "temp_field_a_docid", "temp_field_b_docid", "temp_field_c_docid", "temp_field_d_docid", "show_in_navbar", "show_in_sitemap", "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "url_inherit_group", "generate_url_from_title", "editor_virtual_path", "publish_after_start") VALUES (5, 'Podstránka 1', '<p>Toto je podstránka 1</p>
 <p>Ak chcete do stránky vložiť predpripravený objekt, kliknite v editore na komponenty a vyberte Predpripravené HTML. Tam si vyberte stránku a kliknutím na OK ju vložte do stránky. Nové predpripravené objekty si môžete vytvoriť v adresári System->HTMLBox.</p>
 <p>Pred použitím formuláru prosím najskôr naň kliknite pravým tlačítkom, dajte vlastnosti formuláru a zmeňte emailovú adresu.</p>
@@ -4504,7 +4505,7 @@ INSERT INTO "webjet_cms"."documents" ("doc_id", "title", "data", "data_asc", "ex
 
 
 
-        ', '', 'Podstránka 1', '2024-02-14 15:04:14.298+01', NULL, NULL, 1, 1, 1, 0, 0, true, true, false, '/Slovensky', '2003-10-05 22:43:25+02', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, '/sk/podstranka-1.html', 5, 1, -1, -1, '', '', '', '', '', '', '', '', '', '', '', '', false, 0, '', '', '', '', '', '', '', '', false, 1, NULL, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
+        ', '', 'Podstránka 1', '2024-02-14 15:04:14.298', NULL, NULL, 1, 1, 1, 0, 0, true, true, false, '/Slovensky', '2003-10-05 22:43:25', 1, -1, -1, -1, NULL, '', NULL, '', '', NULL, true, NULL, '/sk/podstranka-1.html', 5, 1, -1, -1, '', '', '', '', '', '', '', '', '', '', '', '', false, 0, '', '', '', '', '', '', '', '', false, 1, NULL, NULL, -1, -1, -1, -1, NULL, NULL, NULL, NULL, NULL, false, false, NULL, false);
 
 
 
@@ -5165,9 +5166,9 @@ INSERT INTO "webjet_cms"."user_groups" ("user_group_id", "user_group_name", "use
 
 
 
-INSERT INTO "webjet_cms"."users" ("user_id", "title", "first_name", "last_name", "login", "password", "is_admin", "user_groups", "company", "adress", "city", "email", "psc", "country", "phone", "authorized", "editable_groups", "editable_pages", "writable_folders", "last_logon", "module_perms", "disabled_items", "reg_date", "field_a", "field_b", "field_c", "field_d", "field_e", "date_of_birth", "sex_male", "photo", "signature", "forum_rank", "rating_rank", "allow_login_start", "allow_login_end", "authorize_hash", "fax", "delivery_first_name", "delivery_last_name", "delivery_company", "delivery_adress", "delivery_city", "delivery_psc", "delivery_country", "delivery_phone", "position", "parent_id", "password_salt", "domain_id", "mobile_device", "api_key") VALUES (2, '', 'Obchodny', 'Partner', 'partner', 'bcrypt:$2a$12$PLDs60I1iwxVxWUngJM.vu5oaQV87tEGwR.2TTn.pFJIL2i4XoEMu', false, '2', 'InterWay, a. s.', '', '', 'web.spam@interway.sk', '', 'Slovensko', '02/32788888', true, '', NULL, NULL, NULL, NULL, NULL, '2024-01-18 09:42:28+01', NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'bcrypt:$2a$12$PLDs60I1iwxVxWUngJM.vu', 1, NULL, NULL);
-INSERT INTO "webjet_cms"."users" ("user_id", "title", "first_name", "last_name", "login", "password", "is_admin", "user_groups", "company", "adress", "city", "email", "psc", "country", "phone", "authorized", "editable_groups", "editable_pages", "writable_folders", "last_logon", "module_perms", "disabled_items", "reg_date", "field_a", "field_b", "field_c", "field_d", "field_e", "date_of_birth", "sex_male", "photo", "signature", "forum_rank", "rating_rank", "allow_login_start", "allow_login_end", "authorize_hash", "fax", "delivery_first_name", "delivery_last_name", "delivery_company", "delivery_adress", "delivery_city", "delivery_psc", "delivery_country", "delivery_phone", "position", "parent_id", "password_salt", "domain_id", "mobile_device", "api_key") VALUES (3, '', 'VIP', 'Klient', 'vipklient', 'bcrypt:$2a$12$VbAxo2hKqQ5TUXv7KvGyeO.wXSyMp2/WgeshNNi7RPdzITM6zFfT.', false, '1', 'InterWay, a. s.', '', NULL, 'web.spam@interway.sk', '', 'Slovensko', '02/32788888', true, NULL, NULL, NULL, NULL, NULL, NULL, '2024-01-18 09:42:28+01', NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'bcrypt:$2a$12$VbAxo2hKqQ5TUXv7KvGyeO', 1, NULL, NULL);
-INSERT INTO "webjet_cms"."users" ("user_id", "title", "first_name", "last_name", "login", "password", "is_admin", "user_groups", "company", "adress", "city", "email", "psc", "country", "phone", "authorized", "editable_groups", "editable_pages", "writable_folders", "last_logon", "module_perms", "disabled_items", "reg_date", "field_a", "field_b", "field_c", "field_d", "field_e", "date_of_birth", "sex_male", "photo", "signature", "forum_rank", "rating_rank", "allow_login_start", "allow_login_end", "authorize_hash", "fax", "delivery_first_name", "delivery_last_name", "delivery_company", "delivery_adress", "delivery_city", "delivery_psc", "delivery_country", "delivery_phone", "position", "parent_id", "password_salt", "domain_id", "mobile_device", "api_key") VALUES (1, '', 'WebJET', 'Administrátor', 'admin', 'bcrypt:$2a$12$kZ7OopAy.sx5MX8gYjbRBOQlzuZ6h6/jsM/XK4Kp2zN90FqrRmog2', true, NULL, 'InterWay, a. s.', '', '', 'web.spam@interway.sk', '', 'Slovakia', '02/32788888', true, '', '', '', '2024-02-14 15:00:39.494+01', NULL, NULL, '2024-02-14 15:03:45.983+01', '', '', '', '', '', NULL, true, '', '', 0, 0, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0, 'bcrypt:$2a$12$kZ7OopAy.sx5MX8gYjbRBO', 1, NULL, NULL);
+INSERT INTO "webjet_cms"."users" ("user_id", "title", "first_name", "last_name", "login", "password", "is_admin", "user_groups", "company", "adress", "city", "email", "psc", "country", "phone", "authorized", "editable_groups", "editable_pages", "writable_folders", "last_logon", "module_perms", "disabled_items", "reg_date", "field_a", "field_b", "field_c", "field_d", "field_e", "date_of_birth", "sex_male", "photo", "signature", "forum_rank", "rating_rank", "allow_login_start", "allow_login_end", "authorize_hash", "fax", "delivery_first_name", "delivery_last_name", "delivery_company", "delivery_adress", "delivery_city", "delivery_psc", "delivery_country", "delivery_phone", "position", "parent_id", "password_salt", "domain_id", "mobile_device", "api_key") VALUES (2, '', 'Obchodny', 'Partner', 'partner', 'bcrypt:$2a$12$PLDs60I1iwxVxWUngJM.vu5oaQV87tEGwR.2TTn.pFJIL2i4XoEMu', false, '2', 'InterWay, a. s.', '', '', 'web.spam@interway.sk', '', 'Slovensko', '02/32788888', true, '', NULL, NULL, NULL, NULL, NULL, '2024-01-18 09:42:28', NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'bcrypt:$2a$12$PLDs60I1iwxVxWUngJM.vu', 1, NULL, NULL);
+INSERT INTO "webjet_cms"."users" ("user_id", "title", "first_name", "last_name", "login", "password", "is_admin", "user_groups", "company", "adress", "city", "email", "psc", "country", "phone", "authorized", "editable_groups", "editable_pages", "writable_folders", "last_logon", "module_perms", "disabled_items", "reg_date", "field_a", "field_b", "field_c", "field_d", "field_e", "date_of_birth", "sex_male", "photo", "signature", "forum_rank", "rating_rank", "allow_login_start", "allow_login_end", "authorize_hash", "fax", "delivery_first_name", "delivery_last_name", "delivery_company", "delivery_adress", "delivery_city", "delivery_psc", "delivery_country", "delivery_phone", "position", "parent_id", "password_salt", "domain_id", "mobile_device", "api_key") VALUES (3, '', 'VIP', 'Klient', 'vipklient', 'bcrypt:$2a$12$VbAxo2hKqQ5TUXv7KvGyeO.wXSyMp2/WgeshNNi7RPdzITM6zFfT.', false, '1', 'InterWay, a. s.', '', NULL, 'web.spam@interway.sk', '', 'Slovensko', '02/32788888', true, NULL, NULL, NULL, NULL, NULL, NULL, '2024-01-18 09:42:28', NULL, NULL, NULL, NULL, NULL, NULL, true, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'bcrypt:$2a$12$VbAxo2hKqQ5TUXv7KvGyeO', 1, NULL, NULL);
+INSERT INTO "webjet_cms"."users" ("user_id", "title", "first_name", "last_name", "login", "password", "is_admin", "user_groups", "company", "adress", "city", "email", "psc", "country", "phone", "authorized", "editable_groups", "editable_pages", "writable_folders", "last_logon", "module_perms", "disabled_items", "reg_date", "field_a", "field_b", "field_c", "field_d", "field_e", "date_of_birth", "sex_male", "photo", "signature", "forum_rank", "rating_rank", "allow_login_start", "allow_login_end", "authorize_hash", "fax", "delivery_first_name", "delivery_last_name", "delivery_company", "delivery_adress", "delivery_city", "delivery_psc", "delivery_country", "delivery_phone", "position", "parent_id", "password_salt", "domain_id", "mobile_device", "api_key") VALUES (1, '', 'WebJET', 'Administrátor', 'admin', 'bcrypt:$2a$12$kZ7OopAy.sx5MX8gYjbRBOQlzuZ6h6/jsM/XK4Kp2zN90FqrRmog2', true, NULL, 'InterWay, a. s.', '', '', 'web.spam@interway.sk', '', 'Slovakia', '02/32788888', true, '', '', '', '2024-02-14 15:00:39.494', NULL, NULL, '2024-02-14 15:03:45.983', '', '', '', '', '', NULL, true, '', '', 0, 0, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0, 'bcrypt:$2a$12$kZ7OopAy.sx5MX8gYjbRBO', 1, NULL, NULL);
 
 
 

@@ -2104,7 +2104,7 @@
       `field_d` varchar(255) default NULL,
       `logged_menu_type` tinyint(1) default '-1',
       `link_group_id` int(11) default '-1',
-      `when_to_publish` timestamp NOT NULL,
+      `when_to_publish` DATETIME NOT NULL,
       PRIMARY KEY  (`schedule_id`)
       ) AUTO_INCREMENT=1;
       INSERT INTO crontab (second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays) VALUES ('0', '*', '*', '*', '*', '*', '*', 'sk.iway.iwcm.doc.GroupPublisher', NULL, 0);
@@ -4766,7 +4766,7 @@
     <void property="author"><string>rzapach</string></void>
     <void property="date"><string>12.2.2016</string></void>
     <void property="desc"><string>groups_scheduler -> groups history, pridanie stlpca s casom a zmena when_to_publish aby povoloval null hodnoty</string></void>
-    <void property="mysql"><string>ALTER TABLE groups_scheduler ADD COLUMN save_date DATETIME;ALTER TABLE groups_scheduler MODIFY when_to_publish TIMESTAMP NULL;</string></void>
+    <void property="mysql"><string>ALTER TABLE groups_scheduler ADD COLUMN save_date DATETIME;ALTER TABLE groups_scheduler MODIFY when_to_publish DATETIME NULL;</string></void>
     <void property="mssql"><string>ALTER TABLE groups_scheduler ADD save_date DATETIME; ALTER TABLE groups_scheduler DROP COLUMN when_to_publish; ALTER TABLE groups_scheduler ADD when_to_publish DATETIME NULL;</string></void>
     <void property="oracle"><string>ALTER TABLE groups_scheduler ADD save_date DATE;ALTER TABLE groups_scheduler DROP COLUMN when_to_publish; ALTER TABLE groups_scheduler ADD when_to_publish DATE NULL;</string></void>
    </object>
@@ -4916,10 +4916,10 @@
     <void property="date"><string>26.04.2017</string></void>
     <void property="desc"><string>vytvorenie tabulky pre poznmaky pre editorov k strankam</string></void>
     <void property="mysql"><string>
-     CREATE TABLE document_notes (id INT NOT NULL PRIMARY KEY,doc_id INT,history_id INT,note VARCHAR(255),user_id INT,created TIMESTAMP);
+     CREATE TABLE document_notes (id INT NOT NULL PRIMARY KEY,doc_id INT,history_id INT,note VARCHAR(255),user_id INT,created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
      INSERT INTO pkey_generator VALUES('document_notes', 1 , 'document_notes', 'id');</string></void>
     <void property="mssql"><string>
-     CREATE TABLE document_notes (id INT NOT NULL PRIMARY KEY,doc_id INT,history_id INT,note NVARCHAR(255),user_id INT,created TIMESTAMP);
+     CREATE TABLE document_notes (id INT NOT NULL PRIMARY KEY,doc_id INT,history_id INT,note NVARCHAR(255),user_id INT,created DATETIME);
      INSERT INTO pkey_generator VALUES('document_notes', 1 , 'document_notes', 'id');</string></void>
     <void property="oracle"><string>
      CREATE TABLE document_notes (id INTEGER NOT NULL PRIMARY KEY,doc_id INTEGER,history_id INTEGER,note NVARCHAR2(255),user_id INTEGER,created DATE);
@@ -5236,7 +5236,7 @@
              `quiz_question_id` INT(11) NOT NULL,
              `answer`           INT(11) NOT NULL,
              `is_correct`       INT(11) NOT NULL,
-             `created`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+             `created`          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
              PRIMARY KEY (`id`),
              KEY `quiz_id` (`quiz_id`),
              KEY `quiz_question_id` (`quiz_question_id`)
@@ -6397,7 +6397,7 @@
       `id`           INT(11) NOT NULL auto_increment,
       `subject`      VARCHAR(255) NOT NULL,
       `sender`       VARCHAR(255) NOT NULL,
-      `sent_date`    TIMESTAMP NOT NULL,
+      `sent_date`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       `file_path`    VARCHAR(255) NOT NULL,
       `visible`      INT(1) NOT NULL,
       PRIMARY KEY (`id`)
@@ -6411,7 +6411,7 @@
       ID DECIMAL(38, 0) NOT NULL identity(1,1),
       subject NVARCHAR(255) NOT NULL,
       sender NVARCHAR(255) NOT NULL,
-      sent_date TIMESTAMP NOT NULL,
+      sent_date DATETIME NOT NULL,
       file_path NVARCHAR(255) NOT NULL,
       visible DECIMAL(1, 0) NOT NULL,
       PRIMARY KEY(ID)
