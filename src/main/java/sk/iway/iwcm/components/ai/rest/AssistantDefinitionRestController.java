@@ -119,7 +119,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
-        Long nextTokenReset = aiAssistantsService.getNextTokenReset();
+        Long nextTokenReset = null;
+        if (repo.existsByDomainIdAndTokenLimitGreaterThan(CloudToolsForCore.getDomainId(), 0L)) {
+            nextTokenReset = aiAssistantsService.getNextTokenReset();
+        }
         page.addSummary("nextTokenReset", nextTokenReset == null ? 0L : nextTokenReset);
         page.addOptions("provider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);

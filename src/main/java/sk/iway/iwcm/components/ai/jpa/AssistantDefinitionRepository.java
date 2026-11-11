@@ -29,6 +29,8 @@ public interface AssistantDefinitionRepository extends DomainIdRepository<Assist
 
     List<AssistantDefinitionEntity> findAllByClassNameAndDomainId(String className, Integer domainId);
 
+    boolean existsByDomainIdAndTokenLimitGreaterThan(Integer domainId, Long tokenLimit);
+
     /**
      * Atomically adds token usage for an assistant with token limits enabled.
      *

@@ -164,7 +164,7 @@ Hodnota **Deň v týždni = `1`** znamená pondelok, `0` znamená nedeľu. Zodpo
 
 Úloha vynuluje spotrebu **všetkých AI asistentov vo všetkých doménach**. Neprijíma parameter domény. Nastavené limity ani historické štatistiky nemení a počet aktualizovaných asistentov zapíše do auditu automatizovaných úloh.
 
-Ak existuje povolená úloha `AiTokenUsageReset` s budúcim termínom spustenia, pri načítaní zoznamu asistentov sa na 10 sekúnd zobrazí informačná notifikácia **Najbližšie vynulovanie počtu použitých tokenov** s dátumom a časom. Pri viacerých povolených úlohách sa zobrazí najbližší termín. Pri filtrovaní alebo stránkovaní tabuľky sa notifikácia zopakuje iba vtedy, ak sa termín zmenil.
+Ak má aspoň jeden asistent v aktuálnej doméne nastavený limit tokenov väčší ako nula a existuje povolená úloha `AiTokenUsageReset` s budúcim termínom spustenia, pri načítaní zoznamu asistentov sa na 10 sekúnd zobrazí informačná notifikácia **Najbližšie vynulovanie počtu použitých tokenov** s dátumom a časom. Pri viacerých povolených úlohách sa zobrazí najbližší termín. Pri filtrovaní alebo stránkovaní tabuľky sa notifikácia zopakuje iba vtedy, ak sa termín zmenil.
 
 ## Nastavenie četového asistenta
 
