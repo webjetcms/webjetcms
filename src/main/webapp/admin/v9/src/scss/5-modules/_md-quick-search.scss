@@ -60,6 +60,7 @@
 
         .btn {
             @include modal-window-button;
+            color: $secondary;
             flex-shrink: 0;
             min-width: 32px;
         }

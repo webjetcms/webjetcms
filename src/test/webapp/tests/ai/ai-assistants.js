@@ -274,6 +274,8 @@ async function textAnswerTest(I, DTE, aiProviderId) {
         I.assertEqual(defaultValue, valueB);
 
     I.say("TRY the TEXT answer WITH stream");
+        I.clickCss('#toast-container-ai .toast-close-button');
+        I.waitForInvisible('#toast-container-ai', 10);
         I.clickCss("#pills-dt-datatableInit-perex-tab");
         I.fillField("#DTE_Field_htmlData", defaultValue);
 

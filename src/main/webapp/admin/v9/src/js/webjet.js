@@ -1512,7 +1512,9 @@ const WJ = (() => {
                     if ($el.parents('.modal:not(.show)').length > 0) event.preventDefault();
                 })
                 .on('keydown.wjTooltipA11y', function(event) {
-                    if (event.key === 'Escape') {
+                    const tooltipId = $el.attr('aria-describedby');
+                    const tooltip = tooltipId ? el.ownerDocument.getElementById(tooltipId) : null;
+                    if (event.key === 'Escape' && tooltip?.classList.contains('show')) {
                         event.preventDefault();
                         event.stopPropagation();
                         $el.tooltip('hide');
