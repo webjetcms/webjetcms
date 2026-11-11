@@ -2,6 +2,14 @@
 
 This document describes the management and configuration of AI assistants in WebJET CMS. In the **AI assistants** section, you can create and edit individual assistants, with each entry representing a specific type of action with a selected AI service provider. The settings allow you to specify where (in which table) and for which field or fields the given assistant will be available, i.e. it will perform the set action.
 
+The **Status** column in the assistant list shows the possible states:
+
+- <span class="text"><i class="ti ti-ban" style="color: #E00028;" aria-hidden="true"></i>Disabled assistant</span> - The assistant has the **Allow use** option disabled. It is not visible to users and cannot be launched.
+- <span class="text"><i class="ti ti-alert-triangle" style="color: #FABD00;" aria-hidden="true"></i>Uninitialized provider</span> - The AI ​​provider is not ready to use. Please check its configuration, such as API key or local model settings.
+- <span class="text"><i class="ti ti-gauge-off" style="color: #FABD00;" aria-hidden="true"></i>Token limit reached</span> - the number of tokens used has reached or exceeded the set limit. Further requests are blocked until you reset the consumption or increase the limit above the current consumption.
+
+For example, you can use the filter in this column to find assistants with a status of **Token limit reached**.
+
 ![](datatable.png)
 
 !>**Warning:** Settings should only be performed by a person who has sufficient knowledge of how AI assistants work and understands the capabilities of individual providers. Incorrect settings may lead to suboptimal behavior of the assistant or limited functionality. We recommend that the configuration be performed by an administrator or a technically savvy user who knows how to correctly enter instructions and parameters for a specific AI provider.
@@ -15,6 +23,7 @@ In this section, we will discuss how to add/set up a new **AI assistant**. The f
 - Provider
 - Instructions
 - Advanced
+- Token limits
 
 ### Tab - Basic
 
@@ -95,6 +104,67 @@ This tab provides advanced configuration options for the Assistant, allowing you
 - **Request Description** – a short hint displayed next to the input field (makes it easier for the user to understand what to type). A translation key can also be entered; its evaluated value will be displayed in the field below it.
 
 ![](datatable-advanced-tab.png)
+
+### Tab - Token Limits
+
+On the **Token Limits** tab, you can limit the consumption of a specific assistant. The limit is common to all users of that assistant in the current domain.
+
+- **Use token limits** - turns on consumption control and displays additional fields. After turning it off and saving, the limit and the counter of used tokens are reset.
+- **Tokens Used** - the number of tokens consumed while the restriction was on since the last reset. The field is read-only, the value is updated after the assistant consumption is recorded.
+- **Token Limit** - required integer greater than `0` if the limit is enabled.
+- **Notification email** - optional email address to which a notification will be sent when the **75%** and **100%** limits are reached. If you leave the field blank, notifications will not be sent.
+
+The alert is evaluated after the assistant's consumption is recorded. The email contains the assistant name, domain, number of tokens used, and the set limit. After being successfully sent or queued, the alert is marked as resolved until the consumption is reset. The same alert may arrive multiple times for concurrent requests. If a single request increases the consumption from below 75% straight to 100% or more, only the full limit alert is sent.
+
+!> Warning: The current consumption is checked before the request is executed. If the number of tokens used is equal to or higher than the limit, the assistant rejects the request. An already executed request may exceed the limit because its consumption is only added after processing. You can use the assistant again after resetting the consumption or increasing the limit above the current consumption.
+
+The check also applies to saved chats and is performed before processing attachments. Saved responses remain available even after the limit is reached, re-delivering an already completed request will not trigger a new AI call.
+
+The tab also provides a **Daily Token Usage for the Last 14 Days (Including Today)** graph. It helps you choose a limit based on your past usage. Each column represents a daily token total from [AI Statistics](../stat/README.md) ; higher usage is a darker shade of red. The graph also includes usage before the limit was enabled, and its history is preserved when the counter is reset.
+
+![Token Limits tab with counter, limit, and daily usage graph](datatable-token-limits-tab.png)
+
+### Resetting consumption
+
+There are two buttons at the end of the toolbar <button class="btn btn-sm btn-warning" type="button"><span><i class="ti ti-eraser" aria-hidden="true"></i></span></button>
+
+- **Reset used tokens of selected assistants** - the first button is available after selecting one or more assistants.
+- **Reset tokens used by all assistants in the current domain** - the second button is available when no assistant is selected. It resets the consumption of the entire current domain, even if the list is filtered.
+
+Both actions require confirmation and display the result in a notification. They reset the **Tokens Used** counter and enable resending of email notifications when the 75% and 100% limits are reached. The set limits, notification email, and statistics and graph history will be preserved. The same applies to automatic reset.
+
+### Automatic token reset
+
+The update will automatically add an enabled task **AI - Reset token usage** that will reset token usage every day at midnight server time. The task runs on admin nodes and does not start after boot. It will wait a random time of less than 10 seconds before resetting to limit concurrency on multiple nodes.
+
+You can change the timing or disable the task in the **Settings → [Automated Tasks](../../../admin/settings/cronjob/README.md) ** section at `/admin/v9/settings/cronjob/`. Default setting:
+
+- ** Task name** - `AI - Reset token usage`.
+- **Task** - `sk.iway.iwcm.components.ai.rest.AiTokenUsageReset`.
+- **Task Parameters** - leave blank.
+- **Enabled** - turn on.
+- **Startup after startup** - leave disabled if you want to reset only according to the specified schedule.
+- **Seconds, minutes, hours** - `0`.
+- **Day of the month, month, day of the week, year** - `*`.
+- **Cluster node** - `all-admin`.
+
+To use the **weekly limit**, modify the existing task **AI - Reset token usage** to reset every Monday at midnight:
+
+| Field | Value |
+| --- | --- |
+| Seconds | `0` |
+| Minutes | `0` |
+| Clock | `0` |
+| Day of the month | Moon |
+| Day of the week | `1` |
+| Year | `1` |
+| Rok | `*` |
+
+The value **Day of the week = `1`** means Monday, `0` means Sunday. The corresponding cron expression is `0 0 0 * * 1 *` in the order of seconds, minutes, hours, day of the month, month, day of the week, and year. Leave the job enabled and run on startup disabled. This will replace the default daily reset with weekly; the counter will reset every Monday at midnight server time with a short random delay as described above.
+
+The task resets the consumption of **all AI assistants in all domains**. It does not accept a domain parameter. It does not change the set limits or historical statistics, and it writes the number of updated assistants to the automated task audit.
+
+If there is an enabled task `AiTokenUsageReset` with a future start date, the information **Next token reset** with the date and time will be displayed above the assistants list. If multiple enabled tasks are enabled, the next due date will be displayed.
 
 ## Chat Assistant Settings
 

@@ -375,7 +375,7 @@ Scenario('ai-assistants empty', async ({ I, DT, DTE, Document }) => {
 
 let originalPageBuilderChatMode;
 
-Scenario('ai-assistants pagebuilder-chat @current', async ({ I, DT, DTE, Document, i18n }) => {
+Scenario('ai-assistants pagebuilder-chat', async ({ I, DT, DTE, Document, i18n }) => {
     const host = '#toast-container-ai';
     const frame = '#DTE_Field_data-pageBuilderIframe';
     const input = `${host} .ai-chat-input`;

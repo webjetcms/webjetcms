@@ -135,13 +135,32 @@ Obe akcie vyžadujú potvrdenie a výsledok zobrazia v notifikácii. Vynulujú p
 
 ### Automatické vynulovanie tokenov
 
-Pravidelné vynulovanie nastavíte v sekcii **Nastavenia → [Automatizované úlohy](../../../admin/settings/cronjob/README.md)** na adrese `/admin/v9/settings/cronjob/`. Vytvorte úlohu s týmito hodnotami:
+Aktualizácia automaticky pridá povolenú úlohu **AI - Reset token usage**, ktorá každý deň o polnoci podľa času servera vynuluje spotrebu tokenov. Úloha beží na administrátorských nodoch a nespúšťa sa po štarte. Pred resetom počká náhodný čas kratší ako 10 sekúnd, aby sa obmedzil súbeh na viacerých nodoch.
 
-- **Názov úlohy** - napríklad `Vynulovanie tokenov AI asistentov`.
+Časovanie môžete zmeniť alebo úlohu vypnúť v sekcii **Nastavenia → [Automatizované úlohy](../../../admin/settings/cronjob/README.md)** na adrese `/admin/v9/settings/cronjob/`. Predvolené nastavenie:
+
+- **Názov úlohy** - `AI - Reset token usage`.
 - **Úloha** - `sk.iway.iwcm.components.ai.rest.AiTokenUsageReset`.
 - **Parametre úlohy** - ponechajte prázdne.
 - **Povolené** - zapnite.
 - **Spúšťanie po štarte** - ponechajte vypnuté, ak chcete nulovať iba podľa zadaného harmonogramu.
+- **Sekundy, minúty, hodiny** - `0`.
+- **Deň v mesiaci, mesiac, deň v týždni, rok** - `*`.
+- **Cluster nod** - `all-admin`.
+
+Ak chcete používať **týždenný limit**, upravte existujúcu úlohu **AI - Reset token usage** na reset každý pondelok o polnoci:
+
+| Pole | Hodnota |
+| --- | --- |
+| Sekundy | `0` |
+| Minúty | `0` |
+| Hodiny | `0` |
+| Deň v mesiaci | `*` |
+| Mesiac | `*` |
+| Deň v týždni | `1` |
+| Rok | `*` |
+
+Hodnota **Deň v týždni = `1`** znamená pondelok, `0` znamená nedeľu. Zodpovedajúci cron výraz je `0 0 0 * * 1 *` v poradí sekundy, minúty, hodiny, deň v mesiaci, mesiac, deň v týždni a rok. Úlohu ponechajte povolenú a spúšťanie po štarte vypnuté. Tým nahradíte predvolený denný reset týždenným; počítadlo sa vynuluje každý pondelok o polnoci podľa času servera s krátkym náhodným oneskorením opísaným vyššie.
 
 Úloha vynuluje spotrebu **všetkých AI asistentov vo všetkých doménach**. Neprijíma parameter domény. Nastavené limity ani historické štatistiky nemení a počet aktualizovaných asistentov zapíše do auditu automatizovaných úloh.
 

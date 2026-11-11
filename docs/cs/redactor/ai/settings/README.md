@@ -2,6 +2,14 @@
 
 Tento dokument popisuje správu a konfiguraci AI asistentů ve WebJET CMS. V sekci **AI asistenti** můžete vytvářet a upravovat jednotlivé asistenty, přičemž každý záznam představuje konkrétní typ akce s vybraným poskytovatelem AI služeb. Nastavení umožňují určit, kde (ve které tabulce) a pro které pole nebo pole bude daný asistent dostupný, čili bude provádět nastavenou akci.
 
+Sloupec **Stav** v seznamu asistentů zobrazuje možné stavy:
+
+- <span class="text"><i class="ti ti-ban" style="color: #E00028;" aria-hidden="true"></i>Vypnutý asistent</span> - asistent má vypnutou možnost **Povolit používání**. Uživatelem se nezobrazuje a nelze jej spustit.
+- <span class="text"><i class="ti ti-alert-triangle" style="color: #FABD00;" aria-hidden="true"></i>Neinicializovaný poskytovatel</span> - poskytovatel AI není připraven k používání. Zkontrolujte jeho konfiguraci, například API klíč nebo nastavení lokálního modelu.
+- <span class="text"><i class="ti ti-gauge-off" style="color: #FABD00;" aria-hidden="true"></i>Dosažený limit tokenů</span> - počet použitých tokenů dosáhl nebo překročil nastavený limit. Další požadavky jsou zablokovány, dokud spotřebu nevynulujete nebo limit nezvýšíte nad aktuální spotřebu.
+
+Pomocí filtru v tomto sloupci můžete vyhledat například asistenty se stavem **Dosažený limit tokenů**.
+
 ![](datatable.png)
 
 !>**Upozornění:** Nastavení by měla provádět pouze osoba, která má dostatečné znalosti o fungování AI asistentů a rozumí možnostem jednotlivých poskytovatelů. Nesprávné nastavení může vést k neoptimálnímu chování asistenta nebo k omezení jeho funkčnosti. Doporučujeme, aby konfiguraci prováděl administrátor nebo technicky zdatný uživatel, který umí správně zadat instrukce a parametry pro konkrétního AI poskytovatele.
@@ -15,6 +23,7 @@ V této části si probereme, jak přidat/nastavit nového **AI asistenta**. Př
 - Poskytovatel
 - Instrukce
 - Pokročilé
+- Limity tokenů
 
 ### Karta - Základní
 
@@ -95,6 +104,67 @@ Na této kartě naleznete rozšířené možnosti konfigurace asistenta, které 
 - **Popis požadavku** – krátká nápověda zobrazovaná u pole pro zadání vstupu (usnadňuje uživateli pochopit, co má napsat). Může být zadán i překladový klíč; jeho vyhodnocená hodnota se zobrazí v poli pod ním.
 
 ![](datatable-advanced-tab.png)
+
+### Karta - Limity tokenů
+
+Na kartě **Limity tokenů** můžete omezit spotřebu konkrétního asistenta. Limit je společný pro všechny uživatele tohoto asistenta v aktuální doméně.
+
+- **Použít limity tokenů** - zapne kontrolu spotřeby a zobrazí další pole. Po vypnutí a uložení se limit i počítadlo použitých tokenů vynulují.
+- **Použité tokeny** - počet tokenů spotřebovaných během zapnutého omezení od posledního vynulování. Pole je pouze pro čtení, hodnota se aktualizuje po zaznamenání spotřeby asistenta.
+- **Limit tokenů** - povinné celé číslo větší než `0`, pokud je omezení zapnuto.
+- **Notifikační e-mail** - volitelná e-mailová adresa, na kterou se odešle upozornění při dosažení **75 %** a **100 %** limitu. Pokud pole ponecháte prázdné, upozornění se neodesílají.
+
+Upozornění se vyhodnotí po zaznamenání spotřeby asistenta. E-mail obsahuje název asistenta, doménu, počet použitých tokenů a nastavený limit. Po úspěšném odeslání nebo zařazení do fronty se upozornění označí jako vybavené do vynulování spotřeby. Při souběžných požadavcích může stejné upozornění přijít vícekrát. Pokud jeden požadavek zvýší spotřebu z hodnoty pod 75 % rovnou na 100 % nebo více, odešle se pouze upozornění o dosažení celého limitu.
+
+!> Upozornění: Před spuštěním požadavku se ověří aktuální spotřeba. Pokud je počet použitých tokenů roven limitu nebo vyšší, asistent požadavek odmítne. Již spuštěný požadavek může limit překročit, protože jeho spotřeba se přičte až po zpracování. Asistenta můžete znovu používat po vynulování spotřeby nebo po zvýšení limitu nad aktuální spotřebu.
+
+Kontrola platí i pro ukládané čety a provede se před zpracováním příloh. Uložené odpovědi zůstávají dostupné i po vyčerpání limitu, opakované doručení již dokončeného požadavku nespustí nové volání AI.
+
+Karta poskytuje také graf **Denní spotřeba tokenů za posledních 14 dní (včetně dneška)**. Pomáhá zvolit limit podle dosavadního používání. Každý sloupec představuje denní součet tokenů ze [statistiky AI](../stat/README.md) ; vyšší spotřeba má tmavší odstín červené. Graf zahrnuje i spotřebu před zapnutím limitu a jeho historie se při vynulování počítadla zachová.
+
+![Karta Limity tokenů s počítadlem, limitem a grafem denní spotřeby](datatable-token-limits-tab.png)
+
+### Vynulování spotřeby
+
+Na konci nástrojové lišty jsou dvě tlačítka <button class="btn btn-sm btn-warning" type="button"><span><i class="ti ti-eraser" aria-hidden="true"></i></span></button>
+
+- **Vynulovat použité tokeny vybraných asistentů** - první tlačítko je dostupné po označení jednoho nebo více asistentů.
+- **Vynulovat použité tokeny všech asistentů v aktuální doméně** - druhé tlačítko je dostupné, když není označen žádný asistent. Vynuluje spotřebu celé aktuální domény, i když je seznam filtrován.
+
+Obě akce vyžadují potvrzení a výsledek zobrazí v notifikaci. Vynulují počítadlo **Použité tokeny** a umožní opětovné odeslání e-mailových upozornění při dosažení 75 % a 100 % limitu. Nastavené limity, notifikační e-mail i historie statistik a grafu zůstanou zachovány. Totéž platí při automatickém vynulování.
+
+### Automatické vynulování tokenů
+
+Aktualizace automaticky přidá povolenou úlohu **AI - Reset token usage**, která každý den o půlnoci podle času serveru vynuluje spotřebu tokenů. Role běží na administrátorských nodech a nespouští se po startu. Před resetem počká náhodný čas kratší než 10 vteřin, aby se omezil souběh na více nodech.
+
+Časování můžete změnit nebo úlohu vypnout v sekci **Nastavení → [Automatizované úlohy](../../../admin/settings/cronjob/README.md) ** na adrese `/admin/v9/settings/cronjob/`. Výchozí nastavení:
+
+- ** Název úlohy** - `AI - Reset token usage`.
+- **Úkol** - `sk.iway.iwcm.components.ai.rest.AiTokenUsageReset`.
+- **Parametry úlohy** - ponechte prázdné.
+- **Povoleno** - zapněte.
+- **Spouštění po startu** - ponechte vypnuto, chcete-li nulovat pouze podle zadaného harmonogramu.
+- **Sekundy, minuty, hodiny** - `0`.
+- **Den v měsíci, měsíc, den v týdnu, rok** - `*`.
+- **Clustr nod** - `all-admin`.
+
+Chcete-li používat **týdenní limit**, upravte stávající úlohu **AI - Reset token usage** pro reset každé pondělí o půlnoci:
+
+| Pole | Hodnota |
+| --- | --- |
+| Sekundy | `0` |
+| Minuty | `0` |
+| Hodiny | `0` |
+| Den v měsíci | Měsíc |
+| Den v týdnu | `1` |
+| Rok | `1` |
+| Rok | `*` |
+
+Hodnota **Den v týdnu = `1`** znamená pondělí, `0` znamená neděli. Odpovídající cron výraz je `0 0 0 * * 1 *` v pořadí sekundy, minuty, hodiny, den v měsíci, měsíc, den v týdnu a rok. Úlohu ponechte povolenou a spouštění po startu vypnuto. Tím nahradíte výchozí denní reset týdenním; počítadlo se vynuluje každé pondělí o půlnoci podle času serveru s krátkým náhodným zpožděním popsaným výše.
+
+Úloha vynuluje spotřebu **všech AI asistentů ve všech doménách**. Nepřijímá parametr domény. Nastavené limity ani historické statistiky nemění a počet aktualizovaných asistentů zapíše do auditu automatizovaných úkolů.
+
+Pokud existuje povolená úloha `AiTokenUsageReset` s budoucím termínem spuštění, nad seznamem asistentů se zobrazí informace **Nejbližší vynulování počtu použitých tokenů** s datem a časem. U více povolených úloh se zobrazí nejbližší termín.
 
 ## Nastavení četového asistenta
 
