@@ -42,7 +42,8 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
     @DataTableTab(id = "action", title = "editor.form.action"),
     @DataTableTab(id = "provider", title = "components.ai_assistants.provider"),
     @DataTableTab(id = "instructions", title = "components.ai_assistants.instruction_tab"),
-    @DataTableTab(id = "advanced", title = "datatable.tab.advanced")
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "tokenLimits", title = "components.ai_assistants.token_limits")
 })
 public class AssistantDefinitionEntity implements Serializable {
 
