@@ -556,8 +556,9 @@ public class AiAssistantsService {
         return null;
     }
 
-        /**
-     * Locks the assistant to prevent concurrent notifications for the same threshold.
+    /**
+     * Sends a threshold notification and conditionally advances its marker without locking during delivery.
+     * Concurrent calls may deliver duplicate notifications.
      * Usage must already be committed so a notification failure cannot roll back token accounting.
      *
      * @param assistantId assistant whose usage changed
@@ -593,6 +594,8 @@ public class AiAssistantsService {
             sentOrQueued = SendMail.sendLater(senderName, senderEmail, assistant.getNotifEmail(),
                 null, null, null, subject, body, null, null, null);
         }
-        if (sentOrQueued) assistants.updateNotificationLevel(assistantId, domainId, level);
+        if (sentOrQueued) {
+            assistants.updateNotificationLevel(assistantId, domainId, level, limit, used);
+        }
     }
 }

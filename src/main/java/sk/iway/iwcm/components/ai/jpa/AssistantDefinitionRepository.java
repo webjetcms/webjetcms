@@ -5,10 +5,12 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.QueryHint;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
 public interface AssistantDefinitionRepository extends DomainIdRepository<AssistantDefinitionEntity, Long> {
@@ -41,19 +43,28 @@ public interface AssistantDefinitionRepository extends DomainIdRepository<Assist
     int incrementUsedTokens(@Param("assistantId") Long assistantId, @Param("domainId") Integer domainId, @Param("usedTokens") Long usedTokens);
 
     /**
-     * Reads current notification state while serializing notifications and resets for this assistant.
-     * Must be called inside the transaction that sends the notification.
+     * Reads current database usage and notification state before preparing a notification.
      */
+    @QueryHints(@QueryHint(name = "jakarta.persistence.cache.storeMode", value = "REFRESH"))
     @Query("SELECT ade FROM AssistantDefinitionEntity ade WHERE ade.id = :assistantId AND ade.domainId = :domainId")
     Optional<AssistantDefinitionEntity> findForTokenNotification(@Param("assistantId") Long assistantId, @Param("domainId") Integer domainId);
 
     /**
-     * Advances the internal marker after the notification is sent or queued.
+     * Advances a sent or queued notification's marker while respecting concurrent usage, resets and higher levels.
+     *
+     * @param assistantId assistant whose notification was delivered
+     * @param domainId domain owning the assistant
+     * @param level delivered notification threshold
+     * @param tokenLimit limit read when preparing the notification
+     * @param usedTokens usage read when preparing the notification
+     * @return number of updated assistants
      */
     @Transactional
     @Modifying
-    @Query("UPDATE AssistantDefinitionEntity ade SET ade.notifLevel = :level WHERE ade.id = :assistantId AND ade.domainId = :domainId")
-    void updateNotificationLevel(@Param("assistantId") Long assistantId, @Param("domainId") Integer domainId, @Param("level") Integer level);
+    @Query("UPDATE AssistantDefinitionEntity ade SET ade.notifLevel = :level WHERE ade.id = :assistantId AND ade.domainId = :domainId"
+        + " AND ade.tokenLimit = :tokenLimit AND ade.usedTokens >= :usedTokens AND COALESCE(ade.notifLevel, 0) < :level")
+    int updateNotificationLevel(@Param("assistantId") Long assistantId, @Param("domainId") Integer domainId,
+        @Param("level") Integer level, @Param("tokenLimit") Long tokenLimit, @Param("usedTokens") Long usedTokens);
 
     /**
      * Checks the stored token usage against an enabled limit in the given domain.

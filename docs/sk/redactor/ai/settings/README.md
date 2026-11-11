@@ -114,7 +114,7 @@ Na karte **Limity tokenov** môžete obmedziť spotrebu konkrétneho asistenta. 
 - **Limit tokenov** - povinné celé číslo väčšie ako `0`, ak je obmedzenie zapnuté.
 - **Notifikačný e-mail** - voliteľná e-mailová adresa, na ktorú sa odošle upozornenie pri dosiahnutí **75 %** a **100 %** limitu. Ak pole ponecháte prázdne, upozornenia sa neodosielajú.
 
-Upozornenie sa vyhodnotí po zaznamenaní spotreby asistenta. E-mail obsahuje názov asistenta, doménu, počet použitých tokenov a nastavený limit. Každé upozornenie sa odošle raz do vynulovania spotreby. Ak jedna požiadavka zvýši spotrebu z hodnoty pod 75 % rovno na 100 % alebo viac, odošle sa iba upozornenie o dosiahnutí celého limitu.
+Upozornenie sa vyhodnotí po zaznamenaní spotreby asistenta. E-mail obsahuje názov asistenta, doménu, počet použitých tokenov a nastavený limit. Po úspešnom odoslaní alebo zaradení do fronty sa upozornenie označí ako vybavené do vynulovania spotreby. Pri súbežných požiadavkách môže rovnaké upozornenie prísť viackrát. Ak jedna požiadavka zvýši spotrebu z hodnoty pod 75 % rovno na 100 % alebo viac, odošle sa iba upozornenie o dosiahnutí celého limitu.
 
 !> Upozornenie: Pred spustením požiadavky sa overí aktuálna spotreba. Ak je počet použitých tokenov rovný limitu alebo vyšší, asistent požiadavku odmietne. Už spustená požiadavka môže limit prekročiť, pretože jej spotreba sa pripočíta až po spracovaní. Asistenta môžete znova používať po vynulovaní spotreby alebo po zvýšení limitu nad aktuálnu spotrebu.
 
