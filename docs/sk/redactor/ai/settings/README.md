@@ -118,6 +118,8 @@ Upozornenie sa vyhodnotí po zaznamenaní spotreby asistenta. E-mail obsahuje n�
 
 !> Upozornenie: Pred spustením požiadavky sa overí aktuálna spotreba. Ak je počet použitých tokenov rovný limitu alebo vyšší, asistent požiadavku odmietne. Už spustená požiadavka môže limit prekročiť, pretože jej spotreba sa pripočíta až po spracovaní. Asistenta môžete znova používať po vynulovaní spotreby alebo po zvýšení limitu nad aktuálnu spotrebu.
 
+Kontrola platí aj pre ukladané čety a vykoná sa pred spracovaním príloh. Uložené odpovede zostávajú dostupné aj po vyčerpaní limitu, opakované doručenie už dokončenej požiadavky nespustí nové volanie AI.
+
 Karta poskytuje aj graf **Denná spotreba tokenov za posledných 14 dní (vrátane dneška)**. Pomáha zvoliť limit podľa doterajšieho používania. Každý stĺpec predstavuje denný súčet tokenov zo [štatistiky AI](../stat/README.md); vyššia spotreba má tmavší odtieň červenej. Graf zahŕňa aj spotrebu pred zapnutím limitu a jeho história sa pri vynulovaní počítadla zachová.
 
 ![Karta Limity tokenov s počítadlom, limitom a grafom dennej spotreby](datatable-token-limits-tab.png)

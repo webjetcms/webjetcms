@@ -80,7 +80,7 @@ class EmbeddingServiceTest extends BaseWebjetTest {
         when(repository.countWithReachedTokenLimit(42L, 17)).thenReturn(1L);
         ProviderCallException exception = assertThrows(ProviderCallException.class, () ->
             service.embedWithUsage(List.of("Text to embed"), assistant, "customer.example"));
-        assertEquals(Prop.getInstance().getText("components.ai_assistants.token_limit.reached"), exception.getMessage());
+        assertEquals(Prop.getInstance().getText("components.ai_assistants.token_limit.reached.js"), exception.getMessage());
         verifyNoMoreInteractions(aiClient);
     }
 }

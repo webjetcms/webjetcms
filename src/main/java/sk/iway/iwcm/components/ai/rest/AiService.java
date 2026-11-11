@@ -334,7 +334,7 @@ public class AiService {
      */
     private void checkTokenLimit(Long assistantId, AssistantDefinitionRepository assistantRepo, Prop prop) {
         if (assistantRepo.countWithReachedTokenLimit(assistantId, CloudToolsForCore.getDomainId()) > 0) {
-            throw new IllegalStateException(prop.getText("components.ai_assistants.token_limit.reached"));
+            throw new IllegalStateException(prop.getText("components.ai_assistants.token_limit.reached.js"));
         }
     }
 

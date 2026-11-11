@@ -163,7 +163,7 @@ public class EmbeddingService {
             throw new ProviderCallException("RAG embedding dimensions must be greater than zero");
         }
         if (assistantRepository.countWithReachedTokenLimit(assistant.getId(), assistant.getDomainId()) > 0) {
-            throw new ProviderCallException(Prop.getInstance(servletRequest).getText("components.ai_assistants.token_limit.reached"));
+            throw new ProviderCallException(Prop.getInstance(servletRequest).getText("components.ai_assistants.token_limit.reached.js"));
         }
 
         EmbeddingRequest request = EmbeddingRequest.builder()

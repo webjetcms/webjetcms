@@ -69,7 +69,7 @@ public class AssistantDefinitionEditorFields extends BaseEditorFields {
             && assistant.getUsedTokens() != null && assistant.getUsedTokens() >= assistant.getTokenLimit()) {
             addRowClass("out-of-tokens");
             addStatusIcon("ti ti-gauge-off");
-            statusLabel = prop.getText("components.ai_assistants.token_limit.reached");
+            statusLabel = prop.getText("components.ai_assistants.token_limit.reached.js");
         }
 
         statusIcons = getStatusIconsHtml();

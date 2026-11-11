@@ -134,11 +134,18 @@ export class AiChat {
 
         // Saved attempts use server IDs and retry metadata; local request snapshots are no longer needed.
         const questions = new Map(detail.messages.filter(message => message.role === 'user').map(message => [message.id, message.text]));
-        state.messages = detail.messages.map(message => ({ ...message, confirmed: true,
-            userPrompt: questions.get(message.turnId),
-            error: message.status === 'error' ? historyText(message.errorCategory === 'ATTACHMENT_INVALID' ? 'attachmentUnreadable' : 'generationFailed') : null,
-            retryable: message.retryable ?? (message.errorCategory === 'ATTACHMENT_INVALID' ? false : null)
-        }));
+        state.messages = detail.messages.map(message => {
+            let error = null;
+            if (message.status === 'error') {
+                if (message.errorCategory === 'TOKEN_LIMIT_REACHED') error = WJ.translate('components.ai_assistants.token_limit.reached.js');
+                else error = historyText(message.errorCategory === 'ATTACHMENT_INVALID' ? 'attachmentUnreadable' : 'generationFailed');
+            }
+            return { ...message, confirmed: true,
+                userPrompt: questions.get(message.turnId),
+                error,
+                retryable: message.retryable ?? (message.errorCategory === 'ATTACHMENT_INVALID' ? false : null)
+            };
+        });
         this.refresh();
         return true;
     }
