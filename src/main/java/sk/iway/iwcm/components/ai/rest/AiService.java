@@ -148,6 +148,7 @@ public class AiService {
         if(doesSupportAction(assistant, SupportedActions.GENERATE_IMAGE) == false && doesSupportAction(assistant, SupportedActions.EDIT_IMAGE) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
+        checkTokenLimit(assistant.getId(), assistantRepo, prop);
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
@@ -176,6 +177,7 @@ public class AiService {
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
+        checkTokenLimit(assistant.getId(), assistantRepo, prop);
         validateChatAttachments(assistant, inputData, prop);
 
         if(shouldRemoveHtml(assistant, inputData)) {
@@ -320,6 +322,20 @@ public class AiService {
             values.add(label.getValue());
         }
         return values;
+    }
+
+    /**
+     * Rejects scheduling when the assistant's current database usage has reached its limit.
+     *
+     * @param assistantId assistant to check
+     * @param assistantRepo repository used to query the current token usage
+     * @param prop translations for the current request
+     * @throws IllegalStateException if the assistant has reached its token limit
+     */
+    private void checkTokenLimit(Long assistantId, AssistantDefinitionRepository assistantRepo, Prop prop) {
+        if (assistantRepo.countWithReachedTokenLimit(assistantId, CloudToolsForCore.getDomainId()) > 0) {
+            throw new IllegalStateException(prop.getText("components.ai_assistants.token_limit.reached.js"));
+        }
     }
 
     private String getNotSupportedAction(Prop prop) {

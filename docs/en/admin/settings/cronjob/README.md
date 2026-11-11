@@ -115,3 +115,9 @@ SQL commands, separated by the `|` character.
 **Parameters:**
 
 - No.
+
+[sk.iway.iwcm.components.ai.rest.AiTokenUsageReset](../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiTokenUsageReset.java) - Resets the counter of used tokens of all AI assistants in all domains. It preserves the set limits and historical statistics. The update adds a daily reset at midnight on the administrator nodes. You can change the timing according to [AI assistant limit settings](../../../redactor/ai/settings/README.md#automatic-reset-tokens).
+
+**Parameters:**
+
+- No.
