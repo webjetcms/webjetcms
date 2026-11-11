@@ -3199,5 +3199,37 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>11.11.2026</string></void>
+                <void property="desc"><string>ai - replace deprecated OpenAI image, GPT-5 and o3 models</string></void>
+                <void property="mysql"><string>
+                    UPDATE ai_assistants SET model='gpt-image-2.6-sunburst' WHERE provider='openai' AND model IN ('gpt-image-2', 'gpt-image-2-2026-04-21');
+                    UPDATE ai_assistants SET model='gpt-5.6-sol' WHERE provider='openai' AND model IN ('gpt-5', 'gpt-5-2025-08-07', 'gpt-5-pro', 'gpt-5-pro-2025-10-06', 'o3', 'o3-2025-04-16', 'o3-pro', 'o3-pro-2025-06-10');
+                    UPDATE ai_assistants SET model='gpt-5.6-terra' WHERE provider='openai' AND model IN ('gpt-5-mini', 'gpt-5-mini-2025-08-07');
+                    UPDATE ai_assistants SET model='gpt-5.6-luna' WHERE provider='openai' AND model IN ('gpt-5-nano', 'gpt-5-nano-2025-08-07');
+                </string></void>
+                <void property="mssql"><string>
+                    UPDATE ai_assistants SET model='gpt-image-2.6-sunburst' WHERE provider='openai' AND model IN ('gpt-image-2', 'gpt-image-2-2026-04-21');
+                    UPDATE ai_assistants SET model='gpt-5.6-sol' WHERE provider='openai' AND model IN ('gpt-5', 'gpt-5-2025-08-07', 'gpt-5-pro', 'gpt-5-pro-2025-10-06', 'o3', 'o3-2025-04-16', 'o3-pro', 'o3-pro-2025-06-10');
+                    UPDATE ai_assistants SET model='gpt-5.6-terra' WHERE provider='openai' AND model IN ('gpt-5-mini', 'gpt-5-mini-2025-08-07');
+                    UPDATE ai_assistants SET model='gpt-5.6-luna' WHERE provider='openai' AND model IN ('gpt-5-nano', 'gpt-5-nano-2025-08-07');
+                </string></void>
+                <void property="oracle"><string>
+                    UPDATE ai_assistants SET model='gpt-image-2.6-sunburst' WHERE provider='openai' AND model IN ('gpt-image-2', 'gpt-image-2-2026-04-21');
+                    UPDATE ai_assistants SET model='gpt-5.6-sol' WHERE provider='openai' AND model IN ('gpt-5', 'gpt-5-2025-08-07', 'gpt-5-pro', 'gpt-5-pro-2025-10-06', 'o3', 'o3-2025-04-16', 'o3-pro', 'o3-pro-2025-06-10');
+                    UPDATE ai_assistants SET model='gpt-5.6-terra' WHERE provider='openai' AND model IN ('gpt-5-mini', 'gpt-5-mini-2025-08-07');
+                    UPDATE ai_assistants SET model='gpt-5.6-luna' WHERE provider='openai' AND model IN ('gpt-5-nano', 'gpt-5-nano-2025-08-07');
+                </string></void>
+                <void property="pgsql"><string>
+                    UPDATE ai_assistants SET model='gpt-image-2.6-sunburst' WHERE provider='openai' AND model IN ('gpt-image-2', 'gpt-image-2-2026-04-21');
+                    UPDATE ai_assistants SET model='gpt-5.6-sol' WHERE provider='openai' AND model IN ('gpt-5', 'gpt-5-2025-08-07', 'gpt-5-pro', 'gpt-5-pro-2025-10-06', 'o3', 'o3-2025-04-16', 'o3-pro', 'o3-pro-2025-06-10');
+                    UPDATE ai_assistants SET model='gpt-5.6-terra' WHERE provider='openai' AND model IN ('gpt-5-mini', 'gpt-5-mini-2025-08-07');
+                    UPDATE ai_assistants SET model='gpt-5.6-luna' WHERE provider='openai' AND model IN ('gpt-5-nano', 'gpt-5-nano-2025-08-07');
+                </string></void>
+            </object>
+        </void>
+
     </object>
 </java>

@@ -10,6 +10,7 @@
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
 - Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
 - Redis - zlepšený prenos informácie o nahrávanom súbore v session (#342).
+- Aplikácie - opravené rešpektovanie nastavenia `domainName` v súbore `modinfo.properties` pri zobrazení ľavého menu a overovaní prístupu k modulu vrátane REST API. V nastavení práv sa moduly filtrujú podľa domény iba pri oddelení používateľov podľa domén (MultiWeb alebo `usersSplitByDomain=true`), pri spoločných používateľoch sa zobrazujú práva modulov zo všetkých domén.
 - Bezpečnosť - aktualizovaná knižnica `FreeMarker` z verzie `2.3.34` na `2.3.35`.
 - Bezpečnosť - aktualizovaná knižnica `Hibernate Validator` z verzie `6.2.5.Final` na `6.2.6.Final` s opravou `CVE-2026-93879`. Zachovaná kompatibilita s `javax.validation`.
 - Bezpečnosť - aktualizované závislosti zostavenia administrácie `PostCSS` z verzie `8.5.12` na `8.5.23` a `source-map-js` z verzie `1.2.1` na `1.2.2` s opravami `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` a `CVE-2026-93749`.
@@ -22,6 +23,7 @@
 - Bezpečnosť - vypnutá kompilácia výrazov SpringEL v Thymeleaf šablónach a predvolene aj v Spring ako ochrana pred [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Štandardná syntax šablón a povolené volania metód zostávajú podporované, úprava šablón nie je potrebná. Pri šablónach s veľkým množstvom opakovane vyhodnocovaných výrazov môže vykresľovanie trvať dlhšie.
 - Bezpečnosť - vypnuté ukladanie chránených súborov z `/files/protected/` do cache prehliadača a proxy serverov nastavením HTTP hlavičiek pred odoslaním súboru. Opravené nastavenie dĺžky odpovede pri odosielaní celého súboru aj jeho rozsahu, aby Spring Security zapísal bezpečnostné hlavičky včas.
 - Bezpečnosť - doplnené zdôvodnené výnimky v `dependency-check-suppressions.xml` pre zraniteľnosti nevyužívaných častí Spring a pre zraniteľnosť ošetrenú vyššie uvedeným nastavením SpringEL. Výnimka pre [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) zohľadňuje vyššie uvedenú ochranu chránených súborov a opravu odosielania súborov; predstavuje aplikačné opatrenia a akceptované zvyškové riziko, nie opravu knižnice ani potvrdenie bezpečnosti všetkých spôsobov odosielania odpovedí. Predvolené odložené zapisovanie hlavičiek Spring Security zostáva zachované. Verzie `Spring Framework 5.3.39` a `Spring Security 5.8.16` zostávajú zachované.
+- AI asistenti - pri aktualizácii sa modely OpenAI nahradia novšími: `gpt-image-2` modelom `gpt-image-2.6-sunburst` pre generovanie a úpravu obrázkov, `gpt-5`, `gpt-5-pro`, `o3` a `o3-pro` modelom `gpt-5.6-sol`, `gpt-5-mini` modelom `gpt-5.6-terra` a `gpt-5-nano` modelom `gpt-5.6-luna`. OpenAI vypne pôvodné textové modely 11. decembra 2026 a obrazový model 10. februára 2027. Asistenti s pôvodnými modelmi Pro prejdú na štandardný režim Sol.
 - Dátové tabuľky - opravené generovanie podmienok pri filtrovaní polí odkazujúcich na inú entitu. Textové vyhľadávanie sa pre tieto polia preskočí, aby nevznikali neplatné SQL podmienky (#397).
 
 ## 2026.0.40
