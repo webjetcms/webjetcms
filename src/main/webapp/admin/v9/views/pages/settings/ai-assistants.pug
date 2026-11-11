@@ -14,6 +14,7 @@ block content
 
         window.domReady.add(function () {
             let tokenUsageChart = null;
+            let lastTokenReset = null;
 
             var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity')})];
 
@@ -52,16 +53,18 @@ block content
                 onXhr: function(TABLE, e, settings, json) {
                     if (!json?.summary || !("nextTokenReset" in json.summary)) return;
                     let nextReset = json.summary.nextTokenReset;
-                    let info = $("#tokenResetInfo");
-                    info.toggleClass("d-none", !nextReset);
-                    info.find("span").text(nextReset ? '[[\#{components.ai_assistants.token_reset.next}]]'.replace("{1}", WJ.formatDateTimeSeconds(nextReset)) : "");
-                    document.body.style.setProperty("--dt-autoheight-offset", nextReset ? Math.ceil(info.outerHeight(true)) : 0);
+                    if (nextReset === lastTokenReset) return;
+                    lastTokenReset = nextReset;
+                    if (nextReset) {
+                        let message = '[[\#{components.ai_assistants.token_reset.next}]]'.replace("{1}", WJ.formatDateTimeSeconds(nextReset));
+                        WJ.notifyInfo('[[\#{components.ai_assistants.token_reset.title}]]', message, 10000);
+                    }
                 }
             });
 
             aiAssistantsDataTable.button().add(null, {
-                text: '<i class="ti ti-eraser" aria-hidden="true"></i>',
-                className: 'btn btn-warning buttons-reset-token-usage buttons-divider-left',
+                text: '<i class="ti ti-restore" aria-hidden="true"></i>',
+                className: 'btn btn-outline-secondary buttons-reset-token-usage buttons-divider-left',
                 init: function(dt) {
                     $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
                 },
@@ -76,8 +79,8 @@ block content
             });
 
             aiAssistantsDataTable.button().add(null, {
-                text: '<i class="ti ti-eraser" aria-hidden="true"></i>',
-                className: 'btn btn-warning buttons-reset-all-token-usage',
+                text: '<i class="ti ti-restore" aria-hidden="true"></i>',
+                className: 'btn btn-outline-secondary buttons-reset-all-token-usage',
                 init: function(dt) {
                     $.fn.dataTable.Buttons.showIfRowUnselected(this, dt);
                 },
@@ -307,10 +310,6 @@ block content
         tr.not-init td div a, tr.out-of-tokens td div a {
             color: var(--bs-warning) !important;
         }
-
-    div#tokenResetInfo.alert.alert-info.mb-3.mt-3.d-none(role="status")
-        i.ti.ti-info-circle.me-2(aria-hidden="true")
-        span
 
     template#tokenUsageTemplate
         section#tokenUsagePanel.pg-ai-token-usage.mt-3.mx-3.d-none
