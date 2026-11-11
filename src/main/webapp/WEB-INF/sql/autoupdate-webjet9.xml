@@ -4420,6 +4420,7 @@ CREATE TABLE IF NOT EXISTS branches (
     `domain_name` VARCHAR(255) NOT NULL,
     `name` VARCHAR(255) NOT NULL,
     `description` LONGTEXT NULL,
+    `color` VARCHAR(16) NOT NULL DEFAULT 'cyan',
     `state` VARCHAR(32) NOT NULL DEFAULT 'DRAFT',
     `revision` BIGINT NOT NULL DEFAULT 0,
     `publish_at` DATETIME NULL,

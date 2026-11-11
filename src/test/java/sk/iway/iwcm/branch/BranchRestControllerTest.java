@@ -30,7 +30,8 @@ class BranchRestControllerTest {
         entity.setName("Campaign");
         entity.setDomainName("a.example.sk");
         entity.setState("DRAFT");
-        when(service.create("a.example.sk", "Campaign", "Description", 7)).thenAnswer(invocation -> {
+        entity.setColor("lavender");
+        when(service.create("a.example.sk", "Campaign", "Description", "lavender", 7)).thenAnswer(invocation -> {
             assertEquals(BranchContext.Mode.LIVE, BranchContexts.current(request).mode());
             return entity;
         });
@@ -39,12 +40,13 @@ class BranchRestControllerTest {
             return List.of(entity);
         });
         try (var requests = mockStatic(SetCharacterEncodingFilter.class)) {
-            var response = controller.create(new BranchRestController.Create(" Campaign ", "Description", "a.example.sk"), request);
+            var response = controller.create(new BranchRestController.Create(" Campaign ", "Description", "a.example.sk", "lavender"), request);
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertEquals("/admin/rest/branches/42", response.getHeaders().getLocation().toString());
             assertEquals(42L, response.getBody().id());
+            assertEquals("lavender", response.getBody().color());
             assertSame(branch, request.getAttribute(BranchContexts.ATTRIBUTE));
-            assertEquals(1, controller.list(false, request).size());
+            assertEquals(List.of(response.getBody()), controller.list(false, request));
             assertSame(branch, request.getAttribute(BranchContexts.ATTRIBUTE));
             verify(access).requireExpectedDomain("a.example.sk", "a.example.sk");
             verify(access).requireCsrf(request);
@@ -60,7 +62,7 @@ class BranchRestControllerTest {
         when(user.getUserId()).thenReturn(7);
         when(access.requireUser(request)).thenReturn(user);
         when(access.requireDomain(request,user)).thenReturn("a.example.sk");
-        when(service.create("a.example.sk","Campaign",null,7)).thenThrow(new BranchService.UnavailableException("InnoDB required: groups",new java.sql.SQLException()));
+        when(service.create("a.example.sk","Campaign",null,null,7)).thenThrow(new BranchService.UnavailableException("InnoDB required: groups",new java.sql.SQLException()));
         try (var requests = mockStatic(SetCharacterEncodingFilter.class)) {
             ResponseStatusException failure = assertThrows(ResponseStatusException.class, () -> new BranchRestController(service,access).create(
                 new BranchRestController.Create("Campaign",null,"a.example.sk"),request));
@@ -85,5 +87,28 @@ class BranchRestControllerTest {
         assertEquals(HttpStatus.CONFLICT, assertThrows(ResponseStatusException.class,
                 () -> controller.create(new BranchRestController.Create("Campaign", null, "b.example.sk"), request)).getStatusCode());
         verifyNoInteractions(service);
+    }
+
+    /** Old JSON payloads still deserialize, while an unsupported color is rejected before opening storage. */
+    @Test
+    void acceptsMissingColorAndRejectsUnknownPreset() {
+        var mapper = new tools.jackson.databind.ObjectMapper();
+        var input = mapper.readValue("""
+                {"name":"Campaign","expectedDomainName":"a.example.sk"}
+                """, BranchRestController.Create.class);
+        assertNull(input.color());
+        var service = new BranchService(() -> { throw new AssertionError("Unexpected database access"); });
+        BranchAccess access = mock(BranchAccess.class);
+        var request = new MockHttpServletRequest();
+        var user = mock(Identity.class);
+        when(user.getUserId()).thenReturn(7);
+        when(access.requireUser(request)).thenReturn(user);
+        when(access.requireDomain(request, user)).thenReturn("a.example.sk");
+        var controller = new BranchRestController(service, access);
+        try (var requests = mockStatic(SetCharacterEncodingFilter.class)) {
+            var unknown = new BranchRestController.Create("Campaign", null, "a.example.sk", "#c0ffee");
+            var failure = assertThrows(ResponseStatusException.class, () -> controller.create(unknown, request));
+            assertEquals(HttpStatus.BAD_REQUEST, failure.getStatusCode());
+        }
     }
 }

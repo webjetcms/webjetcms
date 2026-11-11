@@ -1,6 +1,7 @@
 Feature('webpages.branch-p04');
 
 if (process.env.WEBJET_P04_BROWSER === 'true') {
+    const branchPicker = require('../../helpers/branch-picker');
     const fs = require('fs');
     const read = path => Object.fromEntries(fs.readFileSync(path, 'utf8').trim().split('\n').filter(line => line && !line.startsWith('=')).map(line => { const i = line.indexOf('='); return [line.slice(0, i), line.slice(i + 1)]; }));
     const p03 = read('/tmp/webjet-p03-manual.properties');
@@ -29,26 +30,23 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.fillField('username', credentials.login);
         I.fillField('password', secret(credentials.password));
         I.click('Prihlásiť sa');
-        I.waitForElement('#branch-selection', 30);
-        I.waitForEnabled('#branch-selection', 20);
+        I.waitForEnabled('#branch-switcher', 20);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${p03.groupId}`);
-        I.waitForEnabled('#branch-selection', 20);
+        I.waitForEnabled('#branch-switcher', 20);
     });
 
     Scenario('P04 real editor creates branch folder and available categorized news', async ({ I, DT, DTE }) => {
         if (!fixture.branchId) {
-            I.selectOption('#branch-selection', '+ Nová pracovná verzia');
+            branchPicker.action(I, 'create');
             I.waitForVisible('dialog[open]', 10);
             I.fillField('dialog input[name=name]', 'autotest P04 redakcia');
             I.fillField('dialog textarea[name=description]', 'P04 News and Menu editorial walkthrough');
-            I.click('Vytvoriť', 'dialog');
-            I.waitForText('autotest P04 redakcia', 20, 'dialog .branch-result');
-            I.click('Upravovať web', 'dialog .branch-result');
+            I.click('Vytvoriť a otvoriť', 'dialog');
             I.waitForText('autotest P04 redakcia', 20, '#branch-active-label');
             fixture.branchId = await I.executeScript(() => window.branchScreen.branchId);
             saveFixture();
         } else {
-            I.selectOption('#branch-selection', String(fixture.branchId));
+            branchPicker.select(I, fixture.branchId);
             I.waitForText('autotest P04 redakcia', 20, '#branch-active-label');
         }
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${p03.groupId}`);
@@ -90,7 +88,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
     });
 
     Scenario('P04 filtered News preview, nested administration and MenuApp selector', async ({ I, DT, DTE, Apps }) => {
-        I.selectOption('#branch-selection', String(fixture.branchId));
+        branchPicker.select(I, fixture.branchId);
         I.waitForText('autotest P04 redakcia', 20, '#branch-active-label');
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${p03.homeId}`);
         DTE.waitForEditor();
@@ -167,8 +165,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.saveScreenshot('branch-p04-news-iframe.png');
         I.openNewTab();
         I.amOnPage('/admin/v9/webpages/web-pages-list/');
-        I.waitForEnabled('#branch-selection', 20);
-        I.selectOption('#branch-selection', p03.branchB);
+        branchPicker.select(I, p03.branchB);
         I.waitForText('P03 manual B', 20, '#branch-active-label');
         I.switchToPreviousTab();
         const staleIframe = await I.executeScript(async groupId => {
@@ -178,7 +175,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.assertEqual(staleIframe.rest, 409);
         I.assertEqual(staleIframe.bootstrap, 409);
         I.switchToNextTab();
-        I.selectOption('#branch-selection', String(fixture.branchId));
+        branchPicker.select(I, fixture.branchId);
         I.waitForText('autotest P04 redakcia', 20, '#branch-active-label');
         I.switchToPreviousTab();
         I.closeOtherTabs();
@@ -193,7 +190,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
 
 
     Scenario('P04 menu follows editor addition, move, rename and deletion', async ({ I, DT, DTE }) => {
-        I.selectOption('#branch-selection', String(fixture.branchId));
+        branchPicker.select(I, fixture.branchId);
         I.waitForText('autotest P04 redakcia', 20, '#branch-active-label');
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`);
         DT.waitForLoader();
@@ -325,18 +322,23 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
     });
 
     Scenario('P04 revert working edit and reject an old form after branch switch', async ({ I, DT, DTE }) => {
-        I.selectOption('#branch-selection', String(fixture.branchId));
+        branchPicker.select(I, fixture.branchId);
         I.waitForText('autotest P04 redakcia', 20, '#branch-active-label');
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${p03.detailId}`);
         DTE.waitForEditor();
         I.clickCss('#pills-dt-datatableInit-basic-tab');
         I.fillField('#DTE_Field_title', 'autotest P04 návrat zmeny');
         DTE.save(undefined, true);
-        I.click('Pracovné zmeny');
-        I.waitForText('autotest P04 návrat zmeny', 20, 'dialog');
-        I.click('Vrátiť zmenu', locate('dialog p').withText('autotest P04 návrat zmeny'));
-        I.waitForInvisible('dialog[open]', 20);
-        I.waitForEnabled('#branch-selection', 20);
+        I.click('#branch-changes');
+        const changes = '#branch-merge-dialog';
+        const compare = `${changes} [data-branch-type="DOCUMENT"] [data-branch-compare="${p03.detailId}"]`;
+        I.waitForText('autotest P04 návrat zmeny', 20, changes);
+        I.click(compare);
+        I.click('Vrátiť zmenu', changes + ' .pg-branch-merge__detail');
+        I.waitForInvisible(compare, 20);
+        I.pressKey('Escape');
+        I.waitForInvisible(changes, 20);
+        I.waitForEnabled('#branch-switcher', 20);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${p03.detailId}`);
         DTE.waitForEditor();
         I.clickCss('#pills-dt-datatableInit-basic-tab');
@@ -349,9 +351,8 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.executeScript(() => { window.p04LastStatus = null; $(document).ajaxError((event, xhr) => { window.p04LastStatus = xhr.status; }); });
         I.openNewTab();
         I.amOnPage('/admin/v9/webpages/web-pages-list/');
-        I.waitForEnabled('#branch-selection', 20);
-        I.selectOption('#branch-selection', '0');
-        I.waitForText('Produkcia', 20, '#branch-active-label');
+        branchPicker.select(I, 0);
+        I.waitForElement('#branch-switcher[aria-label*="Hlavná verzia"]', 20);
         I.switchToPreviousTab();
         I.switchTo();
         I.waitForVisible('#datatableInit_modal', 10);
@@ -364,7 +365,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
     });
 
     Scenario('P04 server rejects unsupported writes and multiple component includes', async ({ I }) => {
-        I.selectOption('#branch-selection', String(fixture.branchId));
+        branchPicker.select(I, fixture.branchId);
         I.waitForText('autotest P04 redakcia', 20, '#branch-active-label');
         const statuses = await I.executeScript(async ({ groupId, docId }) => {
             const json = async (path, body) => {

@@ -50,7 +50,9 @@ window.initSubmenuTabsClick = function() {
             $this.addClass("active");
             $this.closest('ul').removeClass("open");
             //hide menu
-            $(".js-sidebar-toggler").trigger("click");
+            if (!$(".ly-header--versions").length || $(".ly-sidebar").hasClass("active")) {
+                $(".js-sidebar-toggler").trigger("click");
+            }
         }
     });
 }

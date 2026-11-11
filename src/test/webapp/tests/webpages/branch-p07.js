@@ -27,9 +27,9 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
         I.fillField('username', credentials.login);
         I.fillField('password', secret(credentials.password));
         I.click('Prihlásiť sa');
-        I.waitForEnabled('#branch-selection', 30);
+        I.waitForEnabled('#branch-switcher', 30);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${root}`);
-        I.waitForEnabled('#branch-selection', 30);
+        I.waitForEnabled('#branch-switcher', 30);
     }
 
     async function report(I, f) {
@@ -196,7 +196,7 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
             I.pressKey('Escape'); I.waitForInvisible(dialog, 10);
             // Edit the actual LIVE page through the normal editor after the package has been scheduled.
             I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${attention.pageId}`);
-            I.waitForEnabled('#branch-selection', 30); I.seeInField('#branch-selection', '0');
+            I.waitForEnabled('#branch-switcher', 30); I.seeElementInDOM('#branch-switcher[aria-label*="Hlavná verzia"]');
             DTE.waitForEditor();
             I.clickCss('#pills-dt-datatableInit-basic-tab');
             I.fillField('#DTE_Field_title', 'autotest P07 LIVE conflict after scheduling');

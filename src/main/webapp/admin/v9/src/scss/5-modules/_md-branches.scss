@@ -1,0 +1,143 @@
+// Share the editor's shortcut palette with the workspace picker and its preview.
+@each $name, $color in $shortcut-colors {
+    [data-branch-color="#{$name}"] { --wj-branch-color: #{$color}; }
+}
+
+.md-branch-switch, .md-branch-bar__switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: $border-radius;
+    color: inherit;
+    background: transparent;
+    &:focus-visible { outline: 2px solid $primary; outline-offset: 1px; }
+}
+.md-branch-switch {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-color: $nice-gray-100;
+    &:hover, &[aria-expanded="true"] { background: $nice-gray; border-color: $nice-gray-300; }
+}
+.md-branch-bar, .md-branch-sample {
+    --wj-branch-ink: color-mix(in srgb, var(--wj-branch-color, #00707f) 45%, #13151b);
+    border-inline-start: 4px solid var(--wj-branch-color, #00707f);
+    color: var(--wj-branch-ink);
+    background: color-mix(in srgb, var(--wj-branch-color, #00707f) 11%, white);
+    text-align: start;
+}
+.md-branch-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 5px 15px 5px 9px;
+    border-bottom: 1px solid color-mix(in srgb, var(--wj-branch-color, #00707f) 25%, white);
+
+    &__switch { justify-content: flex-start; gap: 8px; min-width: 0; max-width: 100%; padding: 2px 5px; text-align: start; }
+    &__switch:hover, &__switch[aria-expanded="true"] { background: rgba($white, .72); }
+    &__icon { font-size: 19px; }
+    &__text { display: grid; min-width: 0; }
+    &__text small { font-size: 12px; line-height: 15px; }
+    &__text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 19px; }
+    &__state { font-size: 13px; }
+    &__actions { display: flex; gap: 6px; margin-inline-start: auto; }
+    &__actions:empty { display: none; }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        color: var(--wj-branch-ink) !important;
+        border-color: color-mix(in srgb, var(--wj-branch-color, #00707f) 40%, white) !important;
+        background: rgba($white, .76);
+        &:hover, &:focus { background: $white !important; }
+    }
+    @media (max-width: ($bp-dinosaur - 1)) {
+        &__actions { margin-inline-start: 0; }
+    }
+}
+.md-branch-picker {
+    position: fixed;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    inset: auto;
+    margin: 0;
+    padding: 0;
+    width: min(350px, calc(100vw - 16px));
+    max-height: min(480px, calc(100dvh - 16px));
+    border: 1px solid $nice-gray-100;
+    border-radius: $border-radius;
+    box-shadow: 0 8px 24px rgba($secondary, .16);
+    color: $secondary;
+    background: $white;
+    text-align: start;
+    overflow: hidden;
+    overscroll-behavior: contain;
+
+    &[hidden] { display: none; }
+    &__header, &__footer { flex: none; padding: 10px 12px; background: $white; }
+    &__header { border-bottom: 1px solid $nice-gray-100; }
+    &__footer { display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid $nice-gray-100; }
+    &__options { min-height: 0; overflow: auto; padding: 4px; }
+    &__option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        width: 100%;
+        border: 0;
+        border-radius: $border-radius;
+        background: transparent;
+        color: $secondary;
+        text-align: start;
+        &:hover, &:focus-visible { background: $nice-gray; }
+        &[aria-current="true"] { background: $nice-gray; font-weight: bold; }
+    }
+    &__dot { flex: 0 0 12px; width: 12px; height: 12px; border-radius: 50%; background: var(--wj-branch-color, $nice-gray-200); }
+    &__dot[data-branch-color="default"] { border: 1px solid $nice-gray-200; }
+    &__text { display: grid; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    &__text small { color: $gray-text; font-weight: normal; }
+}
+.md-branch-dialog {
+    width: min(460px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    padding: 20px;
+    legend.form-label { font-size: inherit; }
+    border: 1px solid $nice-gray-100;
+    border-radius: $border-radius;
+    &::backdrop { background: rgba($secondary,.45); }
+}
+.md-branch-colors { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.md-branch-swatch {
+    position: relative;
+    cursor: pointer;
+    > span {
+        display: inline-grid;
+        vertical-align: middle;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        color: white;
+        border: 1px solid transparent;
+        border-radius: 50%;
+        background: var(--wj-branch-color);
+    }
+    &[data-branch-color="default"] > span { color: $secondary; border-color: $nice-gray-200; }
+    &[data-branch-color="amber"] > span { color: $secondary; }
+    input:not(:checked) + span > i { visibility: hidden; }
+    input:checked + span { outline: 2px solid $secondary; outline-offset: 2px; }
+    input:focus-visible + span { outline: 3px solid $primary; outline-offset: 2px; }
+}
+.md-branch-sample {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: $border-radius;
+    overflow-wrap: anywhere;
+    > span { display: grid; min-width: 0; }
+}

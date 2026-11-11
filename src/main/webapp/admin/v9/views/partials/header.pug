@@ -1,5 +1,21 @@
 include ../pug/mixins
 
+div#branch-band.md-branch-bar(data-th-if="${branchScreen.allowed and branchScreen.branchId > 0}" data-th-data-branch-color="${branchScreen.color}")
+    button#branch-switcher.md-branch-bar__switch(type="button" disabled aria-haspopup="dialog" aria-controls="branch-picker" aria-expanded="false" data-th-aria-label="\#{branches.switch.js}")
+        i.ti.ti-git-branch.md-branch-bar__icon(aria-hidden="true")
+        span.md-branch-bar__text
+            small(data-th-text="\#{branches.label}") Pracovná verzia
+            strong#branch-active-label(data-th-text="${branchScreen.name}")
+        i.ti.ti-chevron-down(aria-hidden="true")
+    span#branch-state.md-branch-bar__state(hidden)
+    div.md-branch-bar__actions
+        button#branch-changes.btn.btn-sm.btn-outline-secondary.d-none(type="button")
+            i.ti.ti-list-check(aria-hidden="true")
+            span(data-th-text="\#{branches.changes.js}") Pracovné zmeny
+        a#branch-preview-link.btn.btn-sm.btn-outline-secondary.d-none(target="_blank" rel="noopener")
+            i.ti.ti-external-link(aria-hidden="true")
+            span(data-th-text="\#{branches.preview}") Náhľad
+
 div.ly-container.container
 
     div.header-link-group.header-branding
@@ -9,9 +25,9 @@ div.ly-container.container
 
         include ./environment
 
+        button#branch-switcher.md-branch-switch(data-th-if="${branchScreen.allowed and branchScreen.branchId == 0}" type="button" disabled aria-haspopup="dialog" aria-controls="branch-picker" aria-expanded="false" data-th-with="switchLabel=\#{branches.main.js} + ' · ' + \#{branches.switch.js}" data-th-title="${switchLabel}" data-th-aria-label="${switchLabel}")
+            i.ti.ti-git-branch(aria-hidden="true")
         .header-title(role="heading" aria-level="1")
-        span#branch-active-label.badge.text-bg-light(data-th-if="${layout.branchScreen.allowed}" role="status" tabindex="0") Produkcia
-        a#branch-preview-link.btn.btn-sm.btn-outline-secondary.d-none(data-th-if="${layout.branchScreen.allowed}" target="_blank" rel="noopener") Náhľad
 
     div.header-link-wrapper
 

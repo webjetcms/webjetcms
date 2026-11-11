@@ -1,11 +1,9 @@
 import $ from 'jquery';
-import {openBranchMerge} from './branch-merge';
+import {initBranchSwitcher} from './branch-switcher';
 
 // The server embeds the context of this screen; never refresh it silently from another tab.
 const screen = window.branchScreen;
 const selectedBranchId = screen?.selectedBranchId ?? screen?.branchId;
-const branchText = (key, ...args) => WJ.translate(`branches.${key}.js`, ...args);
-const stateText = state => WJ.translate(`branches.merge.state.${state}.js`);
 window.branchAssetUrl = value => {
     if (!screen?.enabled || !screen.branchId || typeof value !== 'string') return value;
     return /^\/(?:images|files|thumb\/(?:images|files))\//.test(value) ? `/admin/webpages/branch-preview/${screen.branchId}${value}` : value;
@@ -127,120 +125,8 @@ async function api(path, body) {
     return response.json();
 }
 
-$(async () => {
-    if (!screen?.allowed) return;
-    const selector = document.getElementById('branch-selection');
-    const label = document.getElementById('branch-active-label');
-    if (!selector) return;
-    const showError = error => window.WJ?.notifyError ? window.WJ.notifyError(error.message) : window.alert(error.message);
-    try {
-        const branches = await api('');
-        branches.forEach(branch => selector.add(new Option(`${branch.name} · ${stateText(branch.state)} (#${branch.id})`, branch.id)));
-        selector.add(new Option(branchText('new'), 'create'));
-        selector.add(new Option(branchText('manage'), 'manage'));
-        selector.value = String(selectedBranchId);
-        const active = branches.find(branch => branch.id === selectedBranchId);
-        const updateLabel = branch => {
-            label.textContent = branch ? `${selector.labels[0].textContent}: ${branch.name}${branch.state === 'DRAFT' ? '' : ` · ${branchText('readonly')}`}` : selector.options[0].text;
-            label.title = label.textContent;
-        };
-        updateLabel(active);
-        window.addEventListener('WJ.Branch.updated', event => {
-            const updated = event.detail;
-            const branch = branches.find(item => Number(item.id) === Number(updated.id));
-            if (branch) Object.assign(branch, updated);
-            const option = Array.from(selector.options).find(item => item.value === String(updated.id));
-            if (option) option.text = `${updated.name} · ${stateText(updated.state)} (#${updated.id})`;
-            if (Number(selectedBranchId) === Number(updated.id)) updateLabel(updated);
-        });
-        label.title = label.textContent;
-        if (active) {
-            if (['DRAFT', 'SCHEDULED', 'NEEDS_ATTENTION'].includes(active.state)) try {
-                const link = await api(`/${active.id}/preview-link`);
-                const preview = document.getElementById('branch-preview-link');
-                if (preview) { preview.href = link.url; preview.classList.remove('d-none'); }
-            } catch (error) { label.title += ` · ${branchText('previewUnavailable')}`; }
-
-            const changesButton = document.createElement('button');
-            changesButton.type = 'button'; changesButton.className = 'btn btn-sm btn-outline-secondary';
-            changesButton.textContent = WJ.translate('branches.changes.js');
-            selector.parentElement.append(changesButton);
-            changesButton.onclick = () => openBranchMerge(active.id, api, {...screen, branchId: selectedBranchId}, changesButton);
-        }
-
-        const compareId = new URLSearchParams(location.hash.substring(1)).get('branchCompare') || new URLSearchParams(location.search).get('branchCompare');
-        if (compareId && /^[1-9][0-9]*$/.test(compareId)) openBranchMerge(Number(compareId), api, screen, selector);
-
-        async function activate(id) {
-            const editorOpen = $('div.modal.DTED.show:visible').length > 0;
-            if (editorOpen && !window.confirm(branchText('discardConfirm'))) return;
-            // Close the explicitly discarded editor before changing the session selection.
-            if (editorOpen) $('div.modal.DTED.show:visible').removeClass('show');
-            await api('/context', { branchId: Number(id), expectedDomainName: screen.domainName });
-            window.location.href = '/admin/v9/webpages/web-pages-list/';
-        }
-
-        async function dialog(create) {
-            const listedBranches = create ? branches : await api('?includeClosed=true');
-            const modal = document.createElement('dialog');
-            modal.className = 'p-4 border rounded';
-            modal.setAttribute('aria-labelledby', 'branch-dialog-title');
-            modal.innerHTML = '<h2 id="branch-dialog-title">Pracovné verzie</h2><p class="branch-domain"></p><div class="branch-list"></div><form><label class="form-label">Názov <input name="name" class="form-control" required maxlength="255"></label><br><label class="form-label">Poznámka <textarea name="description" class="form-control"></textarea></label><p>Nezmenený obsah sa preberá z aktuálnej produkcie. Stránky a priečinky sa ukladajú do pracovnej verzie.</p><button class="btn btn-primary" type="submit">Vytvoriť</button> <button class="btn btn-outline-secondary branch-close" type="button">Zavrieť</button><p class="branch-result" role="status"></p></form>';
-            modal.querySelector('.branch-domain').textContent = branchText('domain', screen.domainName);
-            modal.querySelector('h2').textContent = branchText('versions');
-            const name = modal.querySelector('[name=name]');
-            name.parentElement.firstChild.textContent = branchText('name')+' ';
-            const description = modal.querySelector('[name=description]');
-            description.parentElement.firstChild.textContent = branchText('description')+' ';
-            modal.querySelector('form > p').textContent = branchText('createNote');
-            modal.querySelector('[type=submit]').textContent = branchText('create');
-            modal.querySelector('.branch-close').textContent = WJ.translate('button.close');
-            const list = modal.querySelector('.branch-list');
-            if (!create) listedBranches.forEach(branch => {
-                const row = document.createElement('p');
-                row.className = 'd-flex flex-wrap gap-2 align-items-center';
-                row.append(document.createTextNode(`${branch.name} · ${stateText(branch.state)} `));
-                const detail = document.createElement('button');
-                detail.type = 'button'; detail.className = 'btn btn-outline-secondary';
-                detail.textContent = WJ.translate('branches.merge.compare.js');
-                detail.onclick = () => { modal.close(); openBranchMerge(branch.id, api, screen, selector); };
-                row.append(detail);
-                if (branch.state === 'DRAFT') {
-                    const edit = document.createElement('button');
-                    edit.type = 'button'; edit.className = 'btn btn-outline-secondary';
-                    edit.textContent = WJ.translate('branches.merge.editWeb.js');
-                    edit.onclick = () => activate(branch.id).catch(showError); row.append(edit);
-                }
-                list.append(row);
-            });
-            modal.querySelector('.branch-close').onclick = () => modal.close();
-            modal.onclose = () => { modal.remove(); selector.focus(); };
-            modal.querySelector('form').onsubmit = async event => {
-                event.preventDefault();
-                const form = event.target;
-                try {
-                    const branch = await api('', { name: form.elements.name.value, description: form.elements.description.value, expectedDomainName: screen.domainName });
-                    const result = modal.querySelector('.branch-result');
-                    result.textContent = branchText('created', branch.name)+' ';
-                    const activateButton = document.createElement('button'); activateButton.type = 'button'; activateButton.className = 'btn btn-primary'; activateButton.textContent = WJ.translate('branches.merge.editWeb.js');
-                    activateButton.onclick = () => activate(branch.id).catch(showError); result.append(activateButton);
-                    try {
-                        const link = await api(`/${branch.id}/preview-link`);
-                        const preview = document.createElement('a'); preview.href = link.url; preview.target = '_blank'; preview.rel = 'noopener'; preview.className = 'btn btn-outline-secondary'; preview.textContent = WJ.translate('branches.merge.preview.js'); result.append(preview);
-                    } catch (error) { result.append(document.createTextNode(' '+branchText('previewUnavailable'))); }
-                    branches.unshift(branch); selector.add(new Option(`${branch.name} · ${stateText(branch.state)} (#${branch.id})`, branch.id), 1);
-                    form.querySelector('[type=submit]').disabled = true;
-                } catch (error) { modal.querySelector('.branch-result').textContent = error.message; }
-            };
-            document.body.append(modal); modal.showModal();
-        }
-        selector.onchange = async () => {
-            const value = selector.value; selector.value = String(selectedBranchId);
-            if (value === 'create' || value === 'manage') dialog(value === 'create').catch(showError);
-            else try { await activate(value); } catch (error) { showError(error); }
-        };
-        selector.disabled = false;
-    } catch (error) { showError(error); }
+$(() => {
+    if (screen?.allowed) initBranchSwitcher(screen, api);
 });
 
 /** Limits the existing editor to the supported P04 fields. The server enforces the same boundary. */

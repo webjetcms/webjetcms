@@ -1,6 +1,7 @@
 Feature('webpages.branch-p05');
 
 if (process.env.WEBJET_P05_BROWSER === 'true') {
+    const branchPicker = require('../../helpers/branch-picker');
     const fs = require('fs');
     const crypto = require('crypto');
     const path = require('path');
@@ -21,16 +22,77 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.fillField('username', credentials.login);
         I.fillField('password', secret(credentials.password));
         I.click('Prihlásiť sa');
-        I.waitForEnabled('#branch-selection', 30);
+        I.waitForEnabled('#branch-switcher', 30);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`);
-        I.waitForEnabled('#branch-selection', 20);
-        I.selectOption('#branch-selection', fixture.branchA);
+        branchPicker.select(I, fixture.branchA);
         I.waitForText('autotest P05 media/files A', 20, '#branch-active-label');
     });
 
     After(async ({ I }) => {
         fs.mkdirSync(evidence,{recursive:true});
         fs.writeFileSync(path.join(evidence,'browser-console.json'),JSON.stringify(await I.grabBrowserLogs(),null,2));
+    });
+
+    Scenario('P05 header switcher keeps the chosen version, color and actions reachable', async ({ I, DT }) => {
+        const url = `/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`;
+        branchPicker.select(I, 0);
+        I.waitForElement('#branch-switcher[aria-label*="Hlavná verzia"]', 20);
+        I.resizeWindow(1265, 947);
+        I.amOnPage(url);
+        DT.waitForLoader();
+        const mainPageLength = await I.executeScript(() => webpagesDatatable.DATA.autoPageLength);
+        I.waitForEnabled('#branch-switcher', 20);
+        I.focus('#branch-switcher');
+        I.pressKey('Enter');
+        I.waitForVisible('#branch-picker [data-branch-id="0"][aria-current="true"]', 10);
+        I.pressKey('Escape');
+        I.waitForInvisible('#branch-picker', 10);
+        I.seeElement('#branch-switcher:focus');
+        branchPicker.action(I, 'create');
+        I.waitForVisible('dialog[open]', 10);
+        const name = `autotest P05 ${I.getRandomText()} – jesenná kampaň pre slovenskú a českú verziu webu`;
+        I.fillField('dialog input[name=name]', name);
+        I.fillField('dialog textarea[name=description]', 'P05 header regression');
+        I.clickCss('dialog label:has(input[name="color"][value="lavender"])');
+        I.seeCheckboxIsChecked('dialog input[name="color"][value="lavender"]');
+        I.click('Vytvoriť a otvoriť', 'dialog');
+        I.waitForText(name, 20, '#branch-active-label');
+        I.amOnPage(url);
+        I.waitForText(name, 20, '#branch-active-label');
+        DT.waitForLoader();
+        const workingPageLength = await I.executeScript(() => webpagesDatatable.DATA.autoPageLength);
+        I.assertTrue(workingPageLength < mainPageLength,
+            'The working-version band reserves at least one row of the automatic page size at this viewport.');
+        I.waitForVisible('#branch-preview-link', 20);
+        // The original regression clipped preview under search and pushed the table footer outside the viewport.
+        I.waitForFunction(() => {
+            const preview = document.querySelector('#branch-preview-link');
+            const bounds = preview.getBoundingClientRect();
+            const hit = document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+            const footer = document.querySelector('#datatableInit_wrapper .dt-footer-row').getBoundingClientRect();
+            return preview.contains(hit) && footer.height > 0 && footer.bottom <= innerHeight + 1;
+        }, [], 10);
+        I.seeAttributesOnElements('#branch-band', {'data-branch-color': 'lavender'});
+        I.saveScreenshot('branch-header-1265.png');
+        DT.setPageLength(50);
+        I.resizeWindow(1265, 760);
+        // The visible row capacity must change without replacing the editor's explicit page size.
+        I.waitForFunction(previous => webpagesDatatable.DATA.autoPageLength < previous, [workingPageLength], 10);
+        I.assertEqual(await I.executeScript(() => webpagesDatatable.page.len()), 50);
+        DT.setPageLength('Automaticky');
+        I.resizeWindow(390, 844);
+        branchPicker.open(I);
+        I.see(name, '#branch-picker [aria-current="true"]');
+        I.pressKey('Escape');
+        I.waitForInvisible('#branch-picker', 10);
+        I.click('#branch-changes');
+        I.waitForText(name, 20, '#branch-merge-title');
+        I.pressKey('Escape');
+        I.waitForInvisible('#branch-merge-dialog', 10);
+        I.seeElement('#branch-preview-link');
+        branchPicker.select(I, 0);
+        I.waitForElement('#branch-switcher[aria-label*="Hlavná verzia"]', 20);
+        I.dontSeeElement('#branch-active-label');
     });
 
     async function openFiles(I, DTE, requireProof = true) {

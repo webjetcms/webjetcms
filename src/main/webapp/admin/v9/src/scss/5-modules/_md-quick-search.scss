@@ -193,7 +193,7 @@
 }
 
 @media (max-width: ($bp-laptop - 1)) {
-    .ly-header .md-quick-search-trigger {
+    .ly-header:where(:not(.ly-header--versions)) .md-quick-search-trigger {
         position: absolute;
         top: 48px;
         right: 15px;
@@ -202,7 +202,7 @@
         justify-content: center;
         &__label, &__shortcut { display: none; }
     }
-    body.ly-submenu-active .ly-header .md-quick-search-trigger { top: 103px; }
-    .ly-page-wrapper.active .ly-header .md-quick-search-trigger { position: static; }
-    .ly-page-wrapper:not(.active) .ly-header:has(.md-environment) .header-branding { right: 63px; }
+    body.ly-submenu-active .ly-header:where(:not(.ly-header--versions)) .md-quick-search-trigger { top: 103px; }
+    .ly-page-wrapper.active .ly-header:where(:not(.ly-header--versions)) .md-quick-search-trigger { position: static; }
+    .ly-page-wrapper:not(.active) .ly-header:where(:not(.ly-header--versions)):has(.md-environment) .header-branding { right: 63px; }
 }

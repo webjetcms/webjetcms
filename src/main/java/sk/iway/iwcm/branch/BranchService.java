@@ -10,12 +10,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import sk.iway.iwcm.DBPool;
 
 /** Minimal package metadata service. User/domain authorization belongs to the calling boundary. */
 @Service
 public class BranchService {
+    private static final Set<String> COLORS = Set.of("default", "red", "peach", "amber", "mint", "cyan", "blue", "lavender", "gray");
     @FunctionalInterface
     interface Connections { Connection open() throws SQLException; }
     private final Connections connections;
@@ -24,17 +26,24 @@ public class BranchService {
     BranchService(Connections connections) { this.connections = connections; }
 
     public BranchEntity create(String domainName, String name, String description, int userId) {
+        return create(domainName, name, description, null, userId);
+    }
+
+    public BranchEntity create(String domainName, String name, String description, String color, int userId) {
         if (domainName == null || domainName.isBlank() || domainName.length() > 255
                 || name == null || name.isBlank() || name.strip().length() > 255 || userId <= 0)
             throw new IllegalArgumentException("Invalid publishing package metadata");
+        String selectedColor = color == null ? BranchEntity.DEFAULT_COLOR : color;
+        if (!COLORS.contains(selectedColor)) throw new IllegalArgumentException("Unknown working version color");
         try (Connection connection = connections.open()) {
             BranchReadiness.verifyActivation(connection);
             Timestamp now = Timestamp.from(Instant.now());
             try (PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO branches(domain_name,name,description,state,revision,created_by,updated_by,created_at,updated_at) VALUES (?,?,?,'DRAFT',0,?,?,?,?)",
+                    "INSERT INTO branches(domain_name,name,description,color,state,revision,created_by,updated_by,created_at,updated_at) VALUES (?,?,?,?,'DRAFT',0,?,?,?,?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 statement.setString(1, domainName); statement.setString(2, name.strip()); statement.setString(3, description);
-                statement.setInt(4, userId); statement.setInt(5, userId); statement.setTimestamp(6, now); statement.setTimestamp(7, now);
+                statement.setString(4, selectedColor);
+                statement.setInt(5, userId); statement.setInt(6, userId); statement.setTimestamp(7, now); statement.setTimestamp(8, now);
                 statement.executeUpdate();
                 long id;
                 try (ResultSet keys = statement.getGeneratedKeys()) {
@@ -79,6 +88,7 @@ public class BranchService {
         BranchEntity branch = new BranchEntity();
         branch.setId(result.getLong("id")); branch.setDomainName(result.getString("domain_name"));
         branch.setName(result.getString("name")); branch.setDescription(result.getString("description"));
+        branch.setColor(result.getString("color"));
         branch.setState(result.getString("state")); branch.setRevision(result.getLong("revision"));
         branch.setPublishAt(result.getTimestamp("publish_at")); branch.setScheduledBy((Integer) result.getObject("scheduled_by"));
         branch.setCreatedBy(result.getInt("created_by")); branch.setUpdatedBy(result.getInt("updated_by"));

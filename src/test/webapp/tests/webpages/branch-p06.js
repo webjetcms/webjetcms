@@ -1,6 +1,7 @@
 Feature('webpages.branch-p06').tag('@singlethread');
 
 if (process.env.WEBJET_P06_BROWSER === 'true') {
+    const branchPicker = require('../../helpers/branch-picker');
     const fs = require('fs');
     const path = require('path');
     const crypto = require('crypto');
@@ -42,8 +43,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
     async function openComparison(I, fixture, management = false) {
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}${management ? '' : '#branchCompare='+fixture.branchId}`);
         if (management) {
-            I.waitForEnabled('#branch-selection', 30);
-            I.selectOption('#branch-selection', 'manage');
+            branchPicker.action(I, 'manage');
             I.waitForVisible('dialog[open] .branch-list', 20);
             const current = await report(I, fixture);
             I.click(locate('dialog[open] .branch-list p').withText(current.name).find('button').withText('Skontrolovať zmeny'));
@@ -146,10 +146,10 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.fillField('username', credentials.login);
         I.fillField('password', secret(credentials.password));
         I.click('Prihlásiť sa');
-        I.waitForEnabled('#branch-selection', 30);
+        I.waitForEnabled('#branch-switcher', 30);
         // Loading the fixture root selects its logical domain; the initial dashboard can use another domain.
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${retain().groupId}`);
-        I.waitForEnabled('#branch-selection', 30);
+        I.waitForEnabled('#branch-switcher', 30);
         const translations = await I.executeScript(() => Object.fromEntries(['contentWrittenError', 'contentWrittenNote', 'trashWaitNote', 'fileStateNote', 'liveMoveNote'].map(name => [name, WJ.translate(`branches.merge.${name}.js`)])));
         for (const [name, value] of Object.entries(translations)) I.assertNotEqual(value, `branches.merge.${name}.js`, 'P06 completion and recovery messages must be loaded before changing any fixture.');
     });
@@ -318,8 +318,8 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.assertFalse(before.page.available);
         I.assertTrue(Boolean(before.page.title)); I.assertTrue(Boolean(before.page.data));
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.section}`);
-        I.waitForEnabled('#branch-selection', 30);
-        I.seeInField('#branch-selection', '0');
+        I.waitForEnabled('#branch-switcher', 30);
+        I.seeElementInDOM('#branch-switcher[aria-label*="Hlavná verzia"]');
         DT.waitForLoader();
         I.waitForElement('#pills-trash-tab.active', 20);
         I.waitForVisible('.tree-col .dt-header-row .buttons-recover', 20);

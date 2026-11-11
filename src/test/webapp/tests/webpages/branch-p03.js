@@ -1,6 +1,7 @@
 Feature('webpages.branch-p03');
 
 if (process.env.WEBJET_P03_BROWSER === 'true') {
+    const branchPicker = require('../../helpers/branch-picker');
     const fs = require('fs');
     const read = path => Object.fromEntries(fs.readFileSync(path, 'utf8').trim().split('\n').map(line => { const i = line.indexOf('='); return [line.slice(0, i), line.slice(i + 1)]; }));
     const fixture = read('/tmp/webjet-p03-manual.properties');
@@ -18,11 +19,10 @@ if (process.env.WEBJET_P03_BROWSER === 'true') {
 
     Scenario('P03 real administration selection, protected preview and read-only boundary', async ({ I, DT }) => {
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`);
-        I.waitForElement('#branch-selection', 20);
-        I.waitForEnabled('#branch-selection', 20);
-        I.selectOption('#branch-selection', fixture.branchA);
+        branchPicker.select(I, fixture.branchA);
         I.waitForText('P03 manual A', 20, '#branch-active-label');
-        I.seeTextEquals(`P03 manual A · DRAFT (#${fixture.branchA})`, '#branch-selection option:checked');
+        I.seeElement('#branch-changes');
+        I.waitForVisible('#branch-preview-link', 20);
         DT.waitForLoader();
         I.saveScreenshot('branch-p03-admin.png');
 
@@ -49,27 +49,25 @@ if (process.env.WEBJET_P03_BROWSER === 'true') {
         I.amOnPage('/p03-manual/'); I.waitForText('P03 LIVE home', 20); I.dontSee('P03 WORK A');
     });
 
-    Scenario('P03 create dialog keeps selection and rejects stale domain', async ({ I }) => {
+    Scenario('P03 create opens the new working version and rejects a stale domain', async ({ I }) => {
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`);
-        I.waitForElement('#branch-selection', 20);
-        I.waitForEnabled('#branch-selection', 20);
-        I.selectOption('#branch-selection', '+ Nová pracovná verzia');
+        branchPicker.action(I, 'create');
         I.waitForVisible('dialog[open]', 10);
         const name = `autotest-p03-created-${Date.now()}`;
         I.fillField('dialog input[name=name]', name);
         I.fillField('dialog textarea[name=description]', 'P03 local browser fixture');
-        I.click('Vytvoriť', 'dialog');
-        I.waitForText(name, 15, 'dialog .branch-result');
-        I.see('Upravovať web', 'dialog .branch-result');
+        I.click('Vytvoriť a otvoriť', 'dialog');
+        I.waitForText(name, 20, '#branch-active-label');
         const result = await I.executeScript(async () => {
             const context = await fetch('/admin/rest/branches/context').then(response => response.json());
             const stale = await fetch('/admin/rest/branches/context', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branchId: 0, expectedDomainName: 'foreign.example' }) });
             return { branchId: context.branchId, stale: stale.status };
         });
-        I.assertEqual(result.branchId, 0); I.assertEqual(result.stale, 409);
+        I.assertTrue(result.branchId > 0);
+        I.assertEqual(result.stale, 409);
         I.saveScreenshot('branch-p03-create.png');
-        I.click('Zavrieť', 'dialog');
-        I.waitForInvisible('dialog[open]', 10);
+        branchPicker.select(I, 0);
+        I.waitForElement('#branch-switcher[aria-label*="Hlavná verzia"]', 20);
     });
 
     Scenario('P03 first administration screen on a separate local transport host', async ({ I }) => {
@@ -77,13 +75,12 @@ if (process.env.WEBJET_P03_BROWSER === 'true') {
         I.fillField('username', credentials.login);
         I.fillField('password', secret(credentials.password));
         I.click('Prihlásiť sa');
-        I.waitForElement('#branch-selection', 30);
-        I.waitForEnabled('#branch-selection', 20);
+        I.waitForEnabled('#branch-switcher', 20);
         const context = await I.executeScript(() => ({ host: location.hostname, domain: window.branchScreen.domainName, branchId: window.branchScreen.branchId }));
         I.assertEqual(context.host, '127.0.0.1');
         I.assertEqual(context.domain, 'iwcm.interway.sk');
         I.assertEqual(context.branchId, 0);
-        I.selectOption('#branch-selection', fixture.branchA);
+        branchPicker.select(I, fixture.branchA);
         I.waitForText('P03 manual A', 20, '#branch-active-label');
         I.amOnPage(`http://127.0.0.1:8086/admin/webpages/branch-preview/${fixture.branchA}/p03-manual/`);
         I.waitForText('P03 WORK A', 20);

@@ -79,6 +79,16 @@ class BranchStorageTest extends BaseWebjetTest {
         }
     }
 
+    /** Both the selected color and the default for older callers survive a fresh metadata query. */
+    @Test @Order(2) void persistsWorkingVersionColor() {
+        var service = new BranchService();
+        long legacyId = branch("P02 default color").branchId();
+        assertEquals("cyan", service.find(legacyId, "p02.example").orElseThrow().getColor());
+        var colored = service.create("p02.example", "P02 selected color", null, "lavender", 1);
+        branches.add(colored.getId());
+        assertEquals("lavender", service.find(colored.getId(), "p02.example").orElseThrow().getColor());
+    }
+
     /** Stores changes in two branches while LIVE content, history and derived indexes remain untouched. */
     @Test @Order(2) void storageIsolationStableIdsAndStaleEdits() throws Exception {
         BranchContext a=branch("P02 A"); BranchContext b=branch("P02 B");
@@ -250,6 +260,13 @@ class BranchStorageTest extends BaseWebjetTest {
     static void execute(Connection connection,String sql) throws SQLException {try(Statement statement=connection.createStatement()){statement.execute(sql);}}
     static long count(Connection connection,String sql) throws SQLException {try(Statement statement=connection.createStatement();ResultSet result=statement.executeQuery(sql)){assertTrue(result.next());return result.getLong(1);}}
     static void assertColumns(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement();
+                ResultSet color = statement.executeQuery("SHOW COLUMNS FROM branches LIKE 'color'")) {
+            assertTrue(color.next());
+            assertEquals("varchar(16)", color.getString("Type"));
+            assertEquals("NO", color.getString("Null"));
+            assertEquals("cyan", color.getString("Default"));
+        }
         for(BranchType type:List.of(BranchType.DOCUMENT,BranchType.GROUP,BranchType.MEDIA)) {
             var names=new java.util.HashSet<String>();try(Statement statement=connection.createStatement();ResultSet result=statement.executeQuery("SHOW COLUMNS FROM "+type.workTable())){while(result.next())names.add(result.getString(1));}
             assertTrue(names.containsAll(BranchFields.forType(type).columns()));assertTrue(names.containsAll(List.of("branch_id","base_snapshot","base_hash","resolved_choice","apply_state")));

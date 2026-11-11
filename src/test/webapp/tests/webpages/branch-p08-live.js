@@ -69,9 +69,10 @@ if (process.env.WEBJET_P08_REFERENCE === 'true') {
         result.context = await I.executeScript(() => ({
             enabled: window.branchScreen.enabled,
             allowed: window.branchScreen.allowed,
-            hasBranchSelection: document.querySelector('#branch-selection') != null,
+            hasBranchSelection: document.querySelector('#branch-switcher') != null,
             branchId: window.branchScreen?.branchId
         }));
+        I.assertEqual(result.context.hasBranchSelection, enabled && result.context.allowed);
         save();
     });
 

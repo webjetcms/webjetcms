@@ -41,7 +41,7 @@ Náhodné oneskorenie 0–10 sekúnd rozloží admin behy. Pred dvojitým spraco
 
 ## Vypnutie
 
-Najprv zrušte naplánovanie alebo počkajte na kontrolované dokončenie balíkov. Nevypínajte funkciu uprostred `MERGING` ako spôsob rollbacku. Zaznamenajte priebeh a pri chybe posúďte už verejné položky. Zastavte branch cron, nastavte `branchesEnabled=false` na všetkých obsahových uzloch a obnovte uzly/session. Otvorené pracovné formuláre sa nesmú uložiť do LIVE; po vedomom výbere Produkcia otvorte nový editor.
+Najprv zrušte naplánovanie alebo počkajte na kontrolované dokončenie balíkov. Nevypínajte funkciu uprostred `MERGING` ako spôsob rollbacku. Zaznamenajte priebeh a pri chybe posúďte už verejné položky. Zatvorte pracovné formuláre a zvoľte **Hlavná verzia**. Zastavte branch cron, nastavte `branchesEnabled=false` na všetkých obsahových uzloch a obnovte uzly/session. Potom otvorte editor znovu.
 
 Vypnutie nemaže WORK dáta, rezervované ID ani súkromné súbory a nevracia už publikovaný obsah. Úložisko zachovajte, kým nepotvrdíte, že sa nebude obnovovať žiadny balík. Pri ďalšom zapnutí zopakujte kontrolu podmienok aj konfliktov.
 

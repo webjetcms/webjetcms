@@ -1,6 +1,7 @@
 Feature('webpages.branch-p08-regression').tag('@singlethread');
 
 if (process.env.WEBJET_P08_BROWSER === 'true') {
+    const branchPicker = require('../../helpers/branch-picker');
     const fs = require('fs');
     const path = require('path');
     const read = file => Object.fromEntries(fs.readFileSync(file, 'utf8').trim().split('\n').map(line => {
@@ -35,8 +36,7 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
     Scenario('P08 prepare a separate production regression folder', async ({I, DT, DTE}) => {
         logon(I);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${pilot.groupId}`);
-        I.waitForEnabled('#branch-selection', 30);
-        I.selectOption('#branch-selection', 'Produkcia');
+        branchPicker.select(I, 0);
         // Context is server-owned; a default label alone cannot establish which screen was loaded.
         I.waitForFunction(() => window.branchScreen?.branchId === 0, [], 30);
         if (!fixture.groupId) {
@@ -149,7 +149,7 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
         const editors = read('/tmp/webjet-p08-login.properties');
         logon(I);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`);
-        I.waitForEnabled('#branch-selection', 30);
+        I.waitForEnabled('#branch-switcher', 30);
         const record = await I.executeScript(async id => (await fetch(`/admin/rest/web-pages/${id}`, {cache: 'no-store'})).json(), fixture.false.id);
         await I.assertTrue(typeof record.title === 'string' && record.title.length > 0);
         const publicBefore = await anonymous(I, fixture.false.url);
@@ -159,7 +159,7 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
         I.click('Prihlásiť sa');
         I.waitForVisible('button.js-profile-toggler', 30);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${pilot.groupId}`);
-        I.waitForEnabled('#branch-selection', 30);
+        I.waitForEnabled('#branch-switcher', 30);
         const denied = await I.executeScript(async ({id, record, group}) => {
             const response = await fetch(`/admin/rest/web-pages/${id}`, {cache: 'no-store'});
             const read = await response.json();

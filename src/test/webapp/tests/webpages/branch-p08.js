@@ -1,6 +1,7 @@
 Feature('webpages.branch-p08').tag('@singlethread');
 
 if (process.env.WEBJET_P08_BROWSER === 'true') {
+    const branchPicker = require('../../helpers/branch-picker');
     const fs = require('fs');
     const path = require('path');
     const read = file => Object.fromEntries(fs.readFileSync(file, 'utf8').trim().split('\n').filter(line => line && !line.startsWith('#')).map(line => {
@@ -29,7 +30,7 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
         I.click('Prihlásiť sa');
         I.waitForVisible('button.js-profile-toggler', 30);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`);
-        I.waitForEnabled('#branch-selection', 30);
+        I.waitForEnabled('#branch-switcher', 30);
     }
 
     async function report(I) {
@@ -82,7 +83,7 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
     for (const [index, editor] of ['a', 'b', 'c'].entries()) {
         Scenario(`P08 editor ${editor} prepares assigned campaign pages through the normal editor`, async ({I, DTE}) => {
             logon(I, editor);
-            I.selectOption('#branch-selection', fixture.branchId);
+            branchPicker.select(I, fixture.branchId);
             I.waitForText('autotest P08 pilot', 20, '#branch-active-label');
             const assigned = pages.filter((id, pageIndex) => pageIndex % 3 === index);
             for (const id of assigned) {
@@ -113,7 +114,7 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
 
     Scenario('P08 concurrent production edit, unknown type rejection and UI conflict publication', async ({I, DTE}) => {
         logon(I, 'c');
-        I.selectOption('#branch-selection', fixture.branchId);
+        branchPicker.select(I, fixture.branchId);
         I.waitForText('autotest P08 pilot', 20, '#branch-active-label');
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${fixture.pageId}`);
         DTE.waitForEditor();
@@ -121,11 +122,8 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
         I.fillField('#DTE_Field_title', `autotest P08 editor a page ${fixture.pageId}`);
         DTE.save();
         DTE.waitForModalClose();
-        I.waitForEnabled('#branch-selection', 30);
-        I.selectOption('#branch-selection', 'Produkcia');
-        // The label can briefly show its server-rendered default before branch initialization completes.
-        I.waitForFunction(() => window.branchScreen?.branchId === 0, [], 30);
-        I.waitForText('Produkcia', 20, '#branch-active-label');
+        branchPicker.select(I, 0);
+        I.waitForElement('#branch-switcher[aria-label*="Hlavná verzia"]', 20);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${fixture.pageId}`);
         DTE.waitForEditor();
         I.clickCss('#pills-dt-datatableInit-basic-tab');

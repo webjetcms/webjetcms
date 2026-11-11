@@ -11,6 +11,8 @@ import lombok.Setter;
 @Getter @Setter
 public class BranchEntity
 {
+    public static final String DEFAULT_COLOR = "cyan";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -19,6 +21,8 @@ public class BranchEntity
     private String domainName;
     @Column(name = "name")
     private String name;
+    @Column(name = "color", length = 16, nullable = false)
+    private String color = DEFAULT_COLOR;
     @Lob
     @Column(name = "description")
     private String description;

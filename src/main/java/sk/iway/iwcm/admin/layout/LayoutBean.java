@@ -13,6 +13,7 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.admin.DocumentationTools;
 import sk.iway.iwcm.branch.BranchContexts;
 import sk.iway.iwcm.branch.BranchProductionSection;
+import sk.iway.iwcm.branch.BranchSelection;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 import sk.iway.iwcm.system.stripes.CSRF;
@@ -50,9 +51,12 @@ public class LayoutBean {
         var selection = BranchProductionSection.currentSelection();
         boolean enabled=Constants.getBoolean("branchesEnabled");
         boolean allowed=enabled&&user!=null&&user.isAdmin()&&user.isEnabledItem("menuBranches");
-        return java.util.Map.of("enabled",enabled,"allowed",allowed,"branchId",context.branchId(),
-            "selectedBranchId",selection == null ? context.branchId() : selection.branchId(),
-            "domainName",selection != null ? selection.domainName() : context.isBranch() ? context.domainName() : header.getCurrentDomain());
+        long selectedId = selection == null ? context.branchId() : selection.branchId();
+        String domain = selection != null ? selection.domainName() : context.isBranch() ? context.domainName() : header.getCurrentDomain();
+        var branch = allowed && selectedId > 0 ? BranchSelection.screenBranch(selectedId, domain) : null;
+        return java.util.Map.of("enabled", enabled, "allowed", allowed, "branchId", context.branchId(),
+            "selectedBranchId", selectedId, "domainName", domain, "name", branch == null ? "" : branch.getName(),
+            "state", branch == null ? "" : branch.getState(), "color", branch == null ? "default" : branch.getColor());
     }
 
     public boolean confirmProductionLink(String href) {

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.i18n.Prop;
 
 /** Minimal branch management API; content routing and selection are added in P03. */
 @RestController
@@ -50,7 +51,10 @@ public class BranchRestController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Branch name must contain 1 to 255 characters");
         try (BranchContexts.Scope ignored = BranchContexts.live(request, domain, user.getUserId())) {
             Summary created;
-            try { created = Summary.from(branches.create(domain, input.name().strip(), input.description(), user.getUserId())); }
+            try { created = Summary.from(branches.create(domain, input.name().strip(), input.description(), input.color(), user.getUserId())); }
+            catch (IllegalArgumentException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+            }
             catch (BranchService.UnavailableException ex) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Branch prerequisites failed: " + ex.getMessage(), ex);
             }
@@ -58,14 +62,18 @@ public class BranchRestController {
         }
     }
 
-    public record Create(String name, String description, String expectedDomainName) { }
+    public record Create(String name, String description, String expectedDomainName, String color) {
+        public Create(String name, String description, String expectedDomainName) {
+            this(name, description, expectedDomainName, null);
+        }
+    }
 
     @GetMapping("/context")
     public ContextInfo context(HttpServletRequest request) {
         Identity user=access.requireUser(request);
         String domain=access.requireDomain(request,user);
         BranchContext context=BranchSelection.selected(request,user,domain);
-        return contextInfo(context);
+        return contextInfo(context,request);
     }
 
     @PostMapping("/context")
@@ -79,7 +87,7 @@ public class BranchRestController {
             request.getSession().removeAttribute(BranchProductionSection.ATTRIBUTE);
             request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(input.branchId(),domain));
         }
-        return contextInfo(BranchSelection.selected(request,user,domain));
+        return contextInfo(BranchSelection.selected(request,user,domain),request);
     }
 
     @GetMapping("/{id}/preview-link")
@@ -94,17 +102,17 @@ public class BranchRestController {
         }
     }
 
-    private ContextInfo contextInfo(BranchContext context) {
-        if (!context.isBranch()) return new ContextInfo(0,context.domainName(),"Produkcia",false);
+    private ContextInfo contextInfo(BranchContext context,HttpServletRequest request) {
+        if (!context.isBranch()) return new ContextInfo(0,context.domainName(),Prop.getInstance(request).getText("branches.main.js"),false,"default");
         BranchEntity branch=BranchSelection.requireBranch(context.branchId(),context.domainName());
-        return new ContextInfo(context.branchId(),context.domainName(),branch.getName(),"DRAFT".equals(branch.getState()));
+        return new ContextInfo(context.branchId(),context.domainName(),branch.getName(),"DRAFT".equals(branch.getState()),branch.getColor());
     }
     public record Selection(long branchId,String expectedDomainName) { }
-    public record ContextInfo(long branchId,String domainName,String name,boolean editable) { }
+    public record ContextInfo(long branchId,String domainName,String name,boolean editable,String color) { }
 
-    public record Summary(long id, String name, String domainName, String state) {
+    public record Summary(long id, String name, String domainName, String state, String color) {
         static Summary from(BranchEntity branch) {
-            return new Summary(branch.getId(), branch.getName(), branch.getDomainName(), branch.getState());
+            return new Summary(branch.getId(), branch.getName(), branch.getDomainName(), branch.getState(), branch.getColor());
         }
     }
 }

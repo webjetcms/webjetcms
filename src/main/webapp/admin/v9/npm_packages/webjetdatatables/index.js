@@ -226,6 +226,10 @@ export const dataTableInit = options => {
     DATA.columns = window.dataTableCellVisibilityService.updateColumnConfig(DATA.id, filterColumnsByPerms(options.columns));
 
     const dataTableSelector = `#${DATA.id}`;
+    const versionHeader = DATA.autoHeight === true && !DATA.nestedModal
+        && !document.getElementById(DATA.id)?.closest(".modal-body-content")
+        ? document.querySelector(dtWJ.versionHeaderSelector)
+        : null;
     const urlSuffix = DATA.noAll ? '' : '/all';
 
     var DT_SELECTPICKER_OPTS = {
@@ -742,7 +746,8 @@ export const dataTableInit = options => {
      * Vypocita velkost stranky (zobrazeny pocet zaznamov)
      * @param {*} updateLengthSelect - ak je true aj sa reloadnu udaje (napr. pri zmene velkosti obrazka v galerii)
      */
-    function calculateAutoPageLength(updateLengthSelect) {
+    function calculateAutoPageLength(updateLengthSelect, preserveManual = false) {
+        const previousLength = DATA.autoPageLength;
         var pageLength = DATA.autoPageLength;
         var pageLengthTitle = DATA.autoPageLengthTitle;
         //console.log("height=", $("#"+DATA.id+"_wrapper div.dataTables_scroll").height(), "width=", $("#"+DATA.id+"_wrapper div.dataTables_scroll").width(), "id=", DATA.id, "window.height=", $(window).height(), "nested=", DATA.nestedModal);
@@ -753,7 +758,7 @@ export const dataTableInit = options => {
             var customOffset = parseInt(getComputedStyle(document.body).getPropertyValue('--dt-autoheight-offset')) || 0;
             height -= customOffset;
 
-            var headerHeight = $("div.ly-header").outerHeight();
+            var headerHeight = $("div.ly-header").outerHeight() || 0;
             var breadcrumbHeight = 0;
             var breadcrumbElemets = $("div.md-breadcrumb");
             if (breadcrumbElemets.length>0) {
@@ -791,7 +796,7 @@ export const dataTableInit = options => {
             }
 
             if ($(window).width()<1200) {
-                headerHeight = 0;
+                if (!versionHeader) headerHeight = 0;
                 dtFooterHeight = 38;
             }
 
@@ -800,6 +805,14 @@ export const dataTableInit = options => {
             height = height - headerHeight - breadcrumbHeight - dtToolbarRowHeight - dtScrollHeadHeight - dtFooterHeight - dtSummaryHeight - scrollbarWidth;
             //console.log("height=", height, "headerHeight=", headerHeight, "breadcrumbHeight=", breadcrumbHeight, "dtToolbarRowHeight=", dtToolbarRowHeight, "dtScrollHeadHeight=", dtScrollHeadHeight, "dtFooterHeight=", dtFooterHeight, "scrollbarWidth=", scrollbarWidth);
 
+            // After initialization the scroll body also accounts for wrapped toolbars and horizontal scrollbars.
+            const scrollBody = versionHeader && TABLE?.table().container().querySelector(".dt-scroll-body");
+            if (scrollBody && DATA.id === "galleryTable" && updateLengthSelect && !preserveManual) {
+                // Switching between list and cards shows or hides the filter header before the draw.
+                dtWJ.calculateAutoHeight(DATA);
+            }
+            const measuredHeight = scrollBody?.clientWidth ? scrollBody.clientHeight : 0;
+            if (measuredHeight) height = measuredHeight;
             pageLength = Math.floor(height / 41);
             //console.log("Computed pageLength=", pageLength);
 
@@ -807,7 +820,7 @@ export const dataTableInit = options => {
             //pageLength = Math.ceil(pageLength/5)*5;
             //console.log("Rounded pageLength=", pageLength);
 
-            if (pageLength < 6) pageLength = 6;
+            pageLength = Math.max(versionHeader ? 1 : 6, pageLength);
             if (pageLength > 25) pageLength = 25;
 
             //in inner table always set pageLength to 25 to better performance with paging search
@@ -832,11 +845,13 @@ export const dataTableInit = options => {
                     imgWidth = 6 + imgWidth + 6;
                     imgHeight = 6 + 24 + imgHeight + 6;
 
-                    var colWidth = $("#"+DATA.id+"_wrapper .dt-scroll-body").width();
+                    var colWidth = scrollBody?.clientWidth || $("#"+DATA.id+"_wrapper .dt-scroll-body").width();
                     if (typeof colWidth == "undefined") colWidth = $("#"+DATA.id).width() + 15 + 15; //before render it has 15 px padding on left and right
 
-                    var columns = Math.floor(colWidth / imgWidth);
-                    var rows = Math.floor((height + dtScrollHeadHeight) / imgHeight);
+                    // The initial estimate reserved a filter header that cards do not show.
+                    const cardAreaHeight = measuredHeight || (height + dtScrollHeadHeight);
+                    var columns = Math.max(1, Math.floor(colWidth / imgWidth));
+                    var rows = Math.max(1, Math.floor(cardAreaHeight / imgHeight));
                     //console.log("colWidth=", colWidth, "imgWidth=", imgWidth, "dtScrollHeadHeight=", dtScrollHeadHeight, "height=", height, "imgHeight=", imgHeight, "columns=", columns, "rows=", rows, "breadcrumbHeight=", breadcrumbHeight);
 
                     pageLength = columns * rows;
@@ -851,9 +866,17 @@ export const dataTableInit = options => {
             if (updateLengthSelect) {
                 //console.log("Setting new page size: ", pageLength, " - ", pageLengthTitle);
                 //tabulka uz je vykonstruovana, aktualizuj moznosti v select boxe
-                TABLE.settings()[0].aLengthMenu[0][0]=pageLength;
-                TABLE.settings()[0].aLengthMenu[1][0]=pageLengthTitle;
-                TABLE.page.len(pageLength).draw();
+                const settings = TABLE.settings()[0];
+                const isAutomatic = !settings.wjManualPageLength && TABLE.page.len() === previousLength;
+                if (previousLength !== pageLength) {
+                    settings.aLengthMenu[0][0] = pageLength;
+                    settings.aLengthMenu[1][0] = pageLengthTitle;
+                    TABLE.button("automaticPageLength:name").text(pageLengthTitle);
+                }
+                if (!preserveManual || (isAutomatic && TABLE.page.len() !== pageLength)) {
+                    settings.wjManualPageLength = false;
+                    TABLE.page.len(pageLength).draw(preserveManual ? false : true);
+                }
             }
         }
     }
@@ -2492,6 +2515,7 @@ export const dataTableInit = options => {
                 {
                     name: "pageLengthMenu",
                     extend: 'pageLength',
+                    ...(versionHeader ? { buttons: [dtWJ.pageLengthOptions] } : {}),
                     text: '<i class="ti ti-layout-rows"></i> ' + WJ.translate('datatables.button.pagelength.js'),
                     autoClose: false,
                     attr: {
@@ -4242,7 +4266,7 @@ export const dataTableInit = options => {
     window.addEventListener("WJ.DTE.opened", function() {
         dtWJ.resizeTabContent(EDITOR);
     });
-    dtWJ.bindOnResize(TABLE, DATA);
+    dtWJ.bindOnResize(TABLE, DATA, versionHeader);
     dtWJ.bindDialogDragDrop(TABLE);
     dtWJ.bindColumnReorder(TABLE);
     dtWJ.iframeHideParentFooterOnEditorOpen(TABLE);
