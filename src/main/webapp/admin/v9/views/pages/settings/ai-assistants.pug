@@ -2,6 +2,30 @@ extends ../../partials/layout
 
 block content
 
+    template#assistant-tools-template
+        fieldset
+            .d-flex.gap-2.mb-3
+                select.form-select(data-live-search="true" th:attr="aria-label=#{components.ai_assistants.tools.name}")
+                button.btn.btn-primary(type="button" th:text="#{button.add}")
+            .table-responsive
+                table.table.align-middle(th:attr="aria-label=#{components.ai_assistants.tools.title}")
+                    thead
+                        tr
+                            th(scope="col" th:text="#{components.ai_assistants.tools.name}")
+                            th(scope="col" th:text="#{components.ai_assistants.tools.description}")
+                            th(scope="col")
+                                span.visually-hidden(th:text="#{editor.form.action}")
+                    tbody
+                    tfoot
+                        tr
+                            td.text-center(colspan="3" th:text="#{components.ai_assistants.tools.none_assigned}")
+            template
+                button.btn.btn-sm.btn-outline-danger(type="button" th:title="#{components.ai_assistants.tools.remove}")
+                    i.ti.ti-trash(aria-hidden="true")
+
+    script
+        include assistant-tool-field.js
+
     script.
         window.helpLink = "/redactor/ai/settings/README";
         var aiAssistantsDataTable;
@@ -50,6 +74,14 @@ block content
                 fetchOnEdit: true
             });
 
+            const editor = aiAssistantsDataTable.EDITOR;
+            const editorFields = editor.fields();
+            if (editorFields.includes("toolNames")) {
+                const toolField = $(editor.field("toolNames").node());
+                toolField.children("label").addClass("visually-hidden");
+                toolField.children('[data-dte-e="input"]').addClass("w-100");
+            }
+
             var eventsBinded = false;
             aiAssistantsDataTable.EDITOR.on( 'open', function ( e, data, action ) {
                 if (eventsBinded==false) {
@@ -79,10 +111,9 @@ block content
 
             function initInstructionsEnhancements() {
                 var textarea = document.getElementById("DTE_Field_instructions");
-                var lines = WJ.initTextareaLineNumbers(textarea);
+                var lines = WJ.initTextareaLineNumbers(textarea, {toggleWrapOnDoubleClick: true});
                 if (!textarea || $(textarea).data("instructions-enhanced")) return;
 
-                // Preserve the instructions editor's existing keyboard and wrapping shortcuts.
                 $(textarea).on("keydown", function(event) {
                     if (event.key !== "Tab") return;
                     event.preventDefault();
@@ -91,9 +122,6 @@ block content
                     this.value = this.value.substring(0, start) + "\t" + this.value.substring(end);
                     this.selectionStart = this.selectionEnd = start + 1;
                     lines.refresh();
-                });
-                $(textarea).on("dblclick", function() {
-                    $(this.parentElement).toggleClass("instructions-editor-wrapped");
                 });
                 $(textarea).data("instructions-enhanced", true);
             }
@@ -112,6 +140,7 @@ block content
 
                         if("create" == action) {
                             hideOnCreate.forEach(function(fieldName) {
+                                if (!editorFields.includes(fieldName)) return;
                                 if(toShow.includes(fieldName)) {
                                     aiAssistantsDataTable.EDITOR.field(fieldName).show();
                                 } else {
@@ -120,6 +149,7 @@ block content
                             });
                         } else if("edit" == action) {
                             hideOnEdit.forEach(function(fieldName) {
+                                if (!editorFields.includes(fieldName)) return;
                                 if(toShow.includes(fieldName)) {
                                     aiAssistantsDataTable.EDITOR.field(fieldName).show();
                                 } else {
@@ -153,10 +183,18 @@ block content
         });
 
     style.
+        #datatableInit_modal .DTE_Field_Type_assistantTools {
+            margin-inline: 0;
+        }
+        #datatableInit_modal .DTE_Field_Type_assistantTools :is(th, td) {
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+        #datatableInit_modal .DTE_Field_Type_assistantTools th:first-child { width: 30%; }
+        #datatableInit_modal .DTE_Field_Type_assistantTools th:last-child { width: 3rem; }
+
         div.DTE_Field_Name_instructions label { display: none; }
         div.DTE_Field_Name_instructions .md-textarea-editor { height: 502px; }
-        .DTE .DTE_Field .instructions-editor-wrapped > textarea { white-space: break-spaces; overflow-wrap: normal; }
-        .instructions-editor-wrapped > .md-textarea-editor__lines { display: none; }
 
         label[for='DTE_Field_editorFields-translatedDescription'] { visibility: hidden; }
         div.DTE_Field_Name_editorFields\.translatedDescription div.form-group-tooltip { display: none; }

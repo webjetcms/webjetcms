@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.components.ai.tools.AiTool;
+import sk.iway.iwcm.components.ai.tools.AiToolDescription;
 import sk.iway.iwcm.components.quiz.jpa.QuizEntity;
 import sk.iway.iwcm.components.quiz.jpa.QuizQuestionRepository;
 import sk.iway.iwcm.components.quiz.jpa.QuizRepository;
@@ -19,6 +21,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @RequestMapping("/admin/rest/quiz")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_quiz')")
 @Datatable
+@AiTool(description = "components.ai.tools.quiz.context")
 public class QuizRestController extends DatatableRestControllerV2<QuizEntity, Long> {
 
     private final QuizRepository quizRepository;
@@ -55,11 +58,12 @@ public class QuizRestController extends DatatableRestControllerV2<QuizEntity, Lo
     }
 
     @RequestMapping(value="/quizInfo", params={"quizId"})
+    @AiToolDescription("components.ai.tools.quiz_get_quiz_type.description")
     public QuizEntity getQuizType(@RequestParam("quizId") int quizId) {
         //Default type
-        if(quizId > 0) {
-            Optional<QuizEntity> quizOptional =  quizRepository.findById(quizId);
-            if(quizOptional.isPresent()) return quizOptional.get();
+        if (quizId > 0) {
+            Optional<QuizEntity> quiz = quizRepository.findFirstByIdAndDomainId((long) quizId, getDomainId());
+            if (quiz.isPresent()) return quiz.get();
         }
 
         QuizEntity tmp = new QuizEntity();

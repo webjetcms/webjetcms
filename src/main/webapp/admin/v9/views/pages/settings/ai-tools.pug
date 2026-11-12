@@ -1,0 +1,150 @@
+extends ../../partials/layout
+
+block content
+    link(rel="stylesheet" href="/admin/codemirror/lib/codemirror.css")
+    script(src="/admin/codemirror/lib/codemirror.js")
+    script(src="/admin/codemirror/mode/javascript/javascript.js")
+
+    table#aiToolsDataTable.datatableInit.table(th:attr="aria-label=#{components.ai_assistants.tools.title}")
+
+    mixin codeViews(tab, field, example)
+        - const group = "ai-tool-" + tab + "-view"
+        .ai-tool-code-views.btn-group.btn-group-sm(role="group" hidden aria-labelledby="pills-dt-aiToolsDataTable-" + tab + "-tab")
+            input.btn-check(type="radio" id=group + "-example" name=group value=example aria-controls=group + "-code" checked)
+            label.btn.btn-outline-secondary(for=group + "-example" th:text="#{components.ai_assistants.tools.example_value}")
+            input.btn-check(type="radio" id=group + "-schema" name=group value=field aria-controls=group + "-code")
+            label.btn.btn-outline-secondary(for=group + "-schema" th:text="#{components.ai_assistants.tools.schema}")
+
+    +codeViews("input", "inputSchema", "example")
+    +codeViews("output", "response", "responseExample")
+
+    style.
+        #aiToolsDataTable_modal .ai-tool-code-field {
+            padding-inline: 5px;
+        }
+        #aiToolsDataTable_modal .ai-tool-code-field .DTE_Field_InputControl {
+            width: 100%;
+            margin-bottom: 0;
+        }
+        #aiToolsDataTable_modal .cm-s-ai-tools {
+            height: 502px;
+            min-height: 6rem;
+            resize: vertical;
+            border: 1px solid var(--wj-nice-gray-300);
+            border-radius: var(--wj-border-radius);
+            background: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            line-height: 1.2;
+        }
+        .cm-s-ai-tools .cm-string { color: var(--bs-success-text-emphasis); }
+        .cm-s-ai-tools .cm-property { color: var(--bs-primary-text-emphasis); }
+        .cm-s-ai-tools .cm-number { color: var(--bs-danger-text-emphasis); }
+        .cm-s-ai-tools .cm-atom { color: var(--bs-warning-text-emphasis); }
+        .cm-s-ai-tools .CodeMirror-gutters { background: var(--wj-nice-gray); border-color: var(--wj-nice-gray-300); }
+        .cm-s-ai-tools .CodeMirror-linenumber { color: var(--wj-gray-text); }
+        .cm-s-ai-tools .CodeMirror-selected { background: var(--bs-primary-bg-subtle); }
+        #aiToolsDataTable_modal .cm-s-ai-tools:focus-within { border-color: var(--wj-primary); }
+        #aiToolsDataTable_modal .ai-tool-code-views {
+            margin: 10px 5px 0;
+            align-self: flex-start;
+        }
+        #aiToolsDataTable_modal .modal-fullscreen .modal-body:has(.tab-pane.active .ai-tool-code-field) {
+            container-type: size;
+        }
+        #aiToolsDataTable_modal .modal-fullscreen .tab-pane:has(.ai-tool-code-field) {
+            padding-bottom: 0;
+        }
+        #aiToolsDataTable_modal .modal-fullscreen .panel-body:has(> .ai-tool-code-field) {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 100cqh;
+        }
+        #aiToolsDataTable_modal .modal-fullscreen .ai-tool-code-field {
+            flex: 1 0 6rem;
+            container-type: size;
+            margin-top: 0;
+        }
+        #aiToolsDataTable_modal .modal-fullscreen .ai-tool-code-field .CodeMirror {
+            min-height: 100cqh;
+            max-height: 100cqh;
+            resize: none;
+        }
+
+    script.
+        window.helpLink = "/redactor/ai/settings/README";
+
+        window.domReady.add(function () {
+            const table = WJ.DataTable({
+                id: "aiToolsDataTable",
+                url: "/admin/rest/settings/ai-tools",
+                columns: [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.tools.AiToolEntity')})],
+                tabs: [(${layout.getDataTableTabs('sk.iway.iwcm.components.ai.tools.AiToolEntity')})],
+                editorId: "name",
+                idAutoOpener: false,
+                fetchOnEdit: true,
+                editorLocking: false,
+                keyboardSave: false,
+                editorButtons: [],
+                hideButtons: "create,edit,remove,duplicate,celledit,import,export"
+            });
+
+            const editor = table.EDITOR;
+            const editorFields = editor.fields();
+            for (const views of document.querySelectorAll(".ai-tool-code-views")) {
+                const [exampleView, schemaView] = views.querySelectorAll("input");
+                if (!editorFields.includes(schemaView.value)) continue;
+                const field = editor.field(schemaView.value);
+                const input = field.input()[0];
+                const row = $(field.node()).addClass("ai-tool-code-field");
+                const label = row.children("label").addClass("visually-hidden");
+                row.children('[data-dte-e="input"]').addClass("w-100");
+
+                const code = CodeMirror.fromTextArea(input, {
+                    theme: "ai-tools",
+                    mode: "application/json",
+                    readOnly: true,
+                    lineNumbers: true,
+                    undoDepth: 0,
+                    extraKeys: {Tab: false, "Shift-Tab": false}
+                });
+                code.getWrapperElement().id = schemaView.getAttribute("aria-controls");
+                code.getInputField().setAttribute("aria-label", label.text().trim());
+                code.getInputField().setAttribute("aria-readonly", "true");
+                code.on("mousedown", (cm, event) => {
+                    if (event.button !== 0 || event.detail !== 2) return;
+                    const wrap = !cm.getOption("lineWrapping");
+                    cm.setOption("lineWrapping", wrap);
+                    cm.setOption("lineNumbers", !wrap);
+                });
+                new ResizeObserver(([entry]) => {
+                    if (entry.contentRect.width && entry.contentRect.height) code.refresh();
+                }).observe(code.getWrapperElement());
+
+                function showValue() {
+                    const selected = exampleView.checked ? exampleView : schemaView;
+                    const value = editor.currentJson[selected.value] ?? "";
+                    field.val(value);
+                    code.setOption("mode", !views.hidden || value.startsWith("{") ? "application/json" : "text/plain");
+                    code.setValue(value);
+                    code.scrollTo(0, 0);
+                }
+                views.addEventListener("change", showValue);
+                editor.on("open", function () {
+                    field.node().before(views);
+                    views.hidden = this.currentJson[exampleView.value] == null;
+                    const defaultView = views.hidden ? schemaView : exampleView;
+                    defaultView.checked = true;
+                    showValue();
+                });
+            }
+
+            editor.on("open", function () {
+                for (const name of ["required", "conditions"]) {
+                    if (!editorFields.includes(name)) continue;
+                    const field = this.field(name);
+                    if (field.val()) field.show();
+                    else field.hide();
+                }
+            });
+        });

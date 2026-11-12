@@ -40,6 +40,7 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
     @DataTableTab(id = "action", title = "editor.form.action"),
     @DataTableTab(id = "provider", title = "components.ai_assistants.provider"),
     @DataTableTab(id = "instructions", title = "components.ai_assistants.instruction_tab"),
+    @DataTableTab(id = "tools", title = "components.ai_assistants.tools.title"),
     @DataTableTab(id = "advanced", title = "datatable.tab.advanced")
 })
 public class AssistantDefinitionEntity implements Serializable {
@@ -186,6 +187,12 @@ public class AssistantDefinitionEntity implements Serializable {
     @NotBlank
     @jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String instructions;
+
+    @Lob
+    @Column(name = "tool_names")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.tools.title",
+        tab = "tools", hidden = true, ai = false, editor = @DataTableColumnEditor(type = "assistantTools"))
+    private String toolNames;
 
     /* ADVANCED tab */
 

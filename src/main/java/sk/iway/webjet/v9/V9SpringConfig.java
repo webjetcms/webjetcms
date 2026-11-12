@@ -16,11 +16,14 @@ import org.springframework.web.multipart.support.StandardServletMultipartResolve
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
+import org.springframework.web.servlet.handler.MappedInterceptor;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.tools.AiToolAuthorization;
+import sk.iway.iwcm.components.ai.tools.AiToolInterceptor;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.FileArchivFilter;
 import sk.iway.iwcm.system.spring.ApiTokenAuthFilter;
@@ -147,6 +150,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.appimpressslideshow",
     "sk.iway.iwcm.components.carouselslider",
     "sk.iway.iwcm.components.ai.rest",
+    "sk.iway.iwcm.components.ai.tools",
     "sk.iway.iwcm.components.ai.providers",
     "sk.iway.iwcm.components.ai.stat.rest",
     "sk.iway.iwcm.components.formsimple",
@@ -216,5 +220,10 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
         // filter for setting non filter header for files "X-Robots-Tag","noindex, nofollow"
         http.addFilterAfter(new FileArchivFilter(), SetCharacterEncodingFilter.class);
+    }
+
+    @Bean
+    public MappedInterceptor aiToolInterceptor(AiToolAuthorization authorization) {
+        return new MappedInterceptor((String[]) null, new AiToolInterceptor(authorization));
     }
 }
