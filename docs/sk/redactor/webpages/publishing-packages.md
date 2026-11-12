@@ -28,6 +28,14 @@ Cron kontroluje termíny každú minútu aj po odhlásení redaktora. Znovu prev
 
 Publikovanie prebieha po položkách. Pri chybe už dokončené položky môžu byť verejné. Skontrolujte priebeh a dôvod; po odstránení príčiny overte **Pokračovať**. Balík ani jeho hotové položky neprepisujte ručne bez posúdenia správcu. Úspešný balík je uzavretý; pre ďalšiu kampaň vytvorte nový. Na návrat do bežnej editácie vyberte v prepínači **Hlavná verzia**.
 
+## Zmazanie pracovnej verzie
+
+V tabuľke **Pracovné verzie** označte jednu alebo viac verzií a kliknite na ikonu **Zmazať**. Po potvrdení sa trvalo odstránia aj ich pracovné stránky, priečinky, médiá, súbory a náhľadové obrázky. Už publikovaný obsah hlavnej verzie zostáva zachovaný.
+
+Zmazať môžete verziu v ktoromkoľvek stave, vrátane naplánovanej a publikovanej, bez čakania na bežiace publikovanie. Po zmazaní aktívnej verzie sa administrácia prepne na **Hlavnú verziu**.
+
+Akcie **Skontrolovať zmeny** a **Upravovať web** majú v lište ikonové tlačidlá s tooltipmi. Export a import nie sú dostupné, pretože samotné metadáta verzie neobsahujú jej pracovný obsah a súbory.
+
 ## Čo v POC pripraviť mimo balíka
 
 Vo vybranej pracovnej verzii môžete otvoriť každú časť administrácie, na ktorú máte oprávnenie. V tabuľke sú adresy, ktoré podporujú prácu s balíkom.

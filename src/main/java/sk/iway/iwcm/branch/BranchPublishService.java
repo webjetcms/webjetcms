@@ -16,7 +16,6 @@ import sk.iway.iwcm.users.UsersDB;
 /** Fixed-order, checkpointed publication on the verified single-node local-filesystem profile. */
 public final class BranchPublishService {
     private static final ExecutorService EXECUTOR=Executors.newSingleThreadExecutor(task->{Thread thread=new Thread(task,"branch-publisher");thread.setDaemon(true);return thread;});
-    private static final Object RUN_LOCK=new Object();
     private static final Set<Long> RUNNING=ConcurrentHashMap.newKeySet();
     private final Consumer<String> afterCommit;
     private Item current;
@@ -47,48 +46,46 @@ public final class BranchPublishService {
     }
 
     private void runOwned(long id,int actor) {
-        synchronized(RUN_LOCK) {
-            RequestBean previous=SetCharacterEncodingFilter.getCurrentRequestBean();
-            branchId=id;userId=actor;current=null;items.clear();
-            try(Connection connection=DBPool.getConnection()) {
-                BranchReadiness.verify(connection);
-                domain=BranchService.getInstance().publication(id).getDomainName();
-                var details=UsersDB.getUser(actor);
-                if(details==null||!details.isAdmin()||!details.isAuthorized())throw new IllegalStateException("Publishing administrator no longer exists");
-                Identity user=new Identity(details);
-                RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(domain);
-                SetCharacterEncodingFilter.setCurrentRequestBean(bean);
-                try(BranchContexts.Scope ignored=BranchContexts.live(null,domain,actor)) {
-                    BranchMergeService.validatePublisher(id,domain,user);
-                    for(BranchType type:BranchType.values()) {
-                        List<Item> rows=new ArrayList<>();
-                        for(Map<String,Object> row:BranchPublishRows.rows(connection,id,type))rows.add(new Item(type,row));
-                        items.put(type,rows);
-                    }
-                    markNoops();
-                    List<Item> groups=new ArrayList<>(items.get(BranchType.GROUP));
-                    groups.sort(Comparator.comparingInt(this::groupDepth));
-                    for(Item item:groups)if(item.upsert())applyDatabase(item,false);
-                    BranchPublishEffects.refreshReaders();
-                    List<Item> files=new ArrayList<>(items.get(BranchType.FILE));
-                    files.sort(Comparator.comparingInt(item->item.key().length()));
-                    for(Item item:files)if(item.upsert())applyFile(item);
-                    for(Item item:items.get(BranchType.DOCUMENT))if(item.upsert()) {applyDatabase(item,false);finish(item);}
-                    for(Item item:items.get(BranchType.MEDIA))if(item.upsert()) {applyDatabase(item,false);finish(item);}
-                    for(Item item:groups)if(item.upsert()) {completeGroupReferences(item);finish(item);}
-                    for(Item item:items.get(BranchType.MEDIA))if(item.deleting()) {applyDatabase(item,false);finish(item);}
-                    publishDeletes(groups);
-                    for(Item item:files)if(item.deleting())applyFile(item);
-                    BranchPublishEffects.refresh(rows(BranchType.DOCUMENT),rows(BranchType.FILE));
-                    afterCommit.accept("FINAL_EFFECTS");
-                    BranchService.getInstance().completePublication(id);
+        RequestBean previous=SetCharacterEncodingFilter.getCurrentRequestBean();
+        branchId=id;userId=actor;current=null;items.clear();
+        try(Connection connection=DBPool.getConnection()) {
+            BranchReadiness.verify(connection);
+            domain=BranchService.getInstance().publication(id).getDomainName();
+            var details=UsersDB.getUser(actor);
+            if(details==null||!details.isAdmin()||!details.isAuthorized())throw new IllegalStateException("Publishing administrator no longer exists");
+            Identity user=new Identity(details);
+            RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(domain);
+            SetCharacterEncodingFilter.setCurrentRequestBean(bean);
+            try(BranchContexts.Scope ignored=BranchContexts.live(null,domain,actor)) {
+                BranchMergeService.validatePublisher(id,domain,user);
+                for(BranchType type:BranchType.values()) {
+                    List<Item> rows=new ArrayList<>();
+                    for(Map<String,Object> row:BranchPublishRows.rows(connection,id,type))rows.add(new Item(type,row));
+                    items.put(type,rows);
                 }
-            } catch(Exception ex) {
-                if(current!=null)recordItemError(current,ex);
-                try {BranchPublishEffects.refreshReaders();}catch(Exception refresh) {ex.addSuppressed(refresh);}
-                fail(id,ex);
-            } finally {SetCharacterEncodingFilter.setCurrentRequestBean(previous);}
-        }
+                markNoops();
+                List<Item> groups=new ArrayList<>(items.get(BranchType.GROUP));
+                groups.sort(Comparator.comparingInt(this::groupDepth));
+                for(Item item:groups)if(item.upsert())applyDatabase(item,false);
+                BranchPublishEffects.refreshReaders();
+                List<Item> files=new ArrayList<>(items.get(BranchType.FILE));
+                files.sort(Comparator.comparingInt(item->item.key().length()));
+                for(Item item:files)if(item.upsert())applyFile(item);
+                for(Item item:items.get(BranchType.DOCUMENT))if(item.upsert()) {applyDatabase(item,false);finish(item);}
+                for(Item item:items.get(BranchType.MEDIA))if(item.upsert()) {applyDatabase(item,false);finish(item);}
+                for(Item item:groups)if(item.upsert()) {completeGroupReferences(item);finish(item);}
+                for(Item item:items.get(BranchType.MEDIA))if(item.deleting()) {applyDatabase(item,false);finish(item);}
+                publishDeletes(groups);
+                for(Item item:files)if(item.deleting())applyFile(item);
+                BranchPublishEffects.refresh(rows(BranchType.DOCUMENT),rows(BranchType.FILE));
+                afterCommit.accept("FINAL_EFFECTS");
+                BranchService.getInstance().completePublication(id);
+            }
+        } catch(Exception ex) {
+            if(current!=null)recordItemError(current,ex);
+            try {BranchPublishEffects.refreshReaders();}catch(Exception refresh) {ex.addSuppressed(refresh);}
+            fail(id,ex);
+        } finally {SetCharacterEncodingFilter.setCurrentRequestBean(previous);}
     }
 
     private List<Map<String,Object>> rows(BranchType type) {return items.getOrDefault(type,List.of()).stream().map(item->item.row).toList();}

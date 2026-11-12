@@ -4531,7 +4531,7 @@ CREATE TABLE IF NOT EXISTS branch_documents (
     `planned_media_initialized` TINYINT(1) NULL,
     `follow_links` TINYINT(4) NULL ,
     UNIQUE KEY uk_branch_documents(branch_id,doc_id),
-    CONSTRAINT fk_branch_documents FOREIGN KEY (branch_id) REFERENCES branches(id),
+    CONSTRAINT fk_branch_documents FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     INDEX idx_branch_documents_group(branch_id,group_id),
     INDEX idx_branch_documents_path(branch_id,virtual_path)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -4585,7 +4585,7 @@ CREATE TABLE IF NOT EXISTS branch_groups (
     `logged_show_in_navbar` TINYINT(1) NULL,
     `logged_show_in_sitemap` TINYINT(1) NULL ,
     UNIQUE KEY uk_branch_groups(branch_id,group_id),
-    CONSTRAINT fk_branch_groups FOREIGN KEY (branch_id) REFERENCES branches(id),
+    CONSTRAINT fk_branch_groups FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     INDEX idx_branch_groups_parent(branch_id,parent_group_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
@@ -4631,7 +4631,7 @@ CREATE TABLE IF NOT EXISTS branch_media (
     `field_f` VARCHAR(255) NULL,
     `group_ids_snapshot` LONGTEXT NULL ,
     UNIQUE KEY uk_branch_media(branch_id,media_id),
-    CONSTRAINT fk_branch_media FOREIGN KEY (branch_id) REFERENCES branches(id),
+    CONSTRAINT fk_branch_media FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     INDEX idx_branch_media_owner(branch_id,media_fk_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
@@ -4660,7 +4660,7 @@ CREATE TABLE IF NOT EXISTS branch_files (
     `size_bytes` BIGINT NULL,
     `mime_type` VARCHAR(255) NULL ,
     UNIQUE KEY uk_branch_files_path(branch_id,path_key),
-    CONSTRAINT fk_branch_files FOREIGN KEY (branch_id) REFERENCES branches(id)
+    CONSTRAINT fk_branch_files FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
                 </string></void>
             </object>

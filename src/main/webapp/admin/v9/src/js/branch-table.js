@@ -33,25 +33,27 @@ export function initBranchTable(columns, screen, api) {
         serverSide: true,
         fetchOnCreate: true,
         fetchOnEdit: true,
-        hideButtons: 'duplicate,remove,import,celledit',
+        hideButtons: 'duplicate,export,import,celledit',
         order: [[columns.findIndex(column => column.data === 'id'), 'desc']]
     });
     function selected() {
         const rows = table.rows({selected: true}).data().toArray();
         return rows.length === 1 ? rows[0] : null;
     }
-    table.button().add(2, {
+    table.button().add(4, {
         extend: 'selectedSingle',
-        text: `<i class="ti ti-list-check" aria-hidden="true"></i> ${WJ.escapeHtml(tr('merge.compare'))}`,
+        text: '<i class="ti ti-list-check" aria-hidden="true"></i>',
         className: 'btn btn-outline-secondary buttons-branch-compare',
+        attr: {title: tr('merge.compare'), 'aria-label': tr('merge.compare'), 'data-toggle': 'tooltip'},
         action: (event, dt, trigger) => {
             const branch = selected();
             if (branch) openBranchMerge(branch.id, api, screen, trigger[0]);
         }
     });
-    table.button().add(3, {
-        text: `<i class="ti ti-edit" aria-hidden="true"></i> ${WJ.escapeHtml(tr('merge.editWeb'))}`,
+    table.button().add(5, {
+        text: '<i class="ti ti-edit" aria-hidden="true"></i>',
         className: 'btn btn-outline-secondary buttons-branch-open buttons-divider',
+        attr: {title: tr('merge.editWeb'), 'aria-label': tr('merge.editWeb'), 'data-toggle': 'tooltip'},
         enabled: false,
         action: async () => {
             const branch = selected();

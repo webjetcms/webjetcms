@@ -32,6 +32,11 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.seeElement('a[href="/admin/v9/webpages/branches/"]');
         I.seeElement('.buttons-branch-open:disabled');
         I.seeElement('.buttons-branch-compare:disabled');
+        I.seeElement('.buttons-remove:disabled');
+        I.dontSeeElement('#branchesDataTable_wrapper .buttons-export');
+        I.dontSeeElement('#branchesDataTable_wrapper .buttons-import');
+        I.seeAttributesOnElements('.buttons-branch-compare', {'aria-label':'Skontrolovať zmeny', 'data-toggle':'tooltip'});
+        I.seeAttributesOnElements('.buttons-branch-open', {'aria-label':'Upravovať web', 'data-toggle':'tooltip'});
         I.clickCss('#branchesDataTable_wrapper .buttons-create');
         DTE.waitForEditor('branchesDataTable');
         DTE.save('branchesDataTable');
@@ -64,8 +69,14 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.waitForText(name+' upravená', 20, '#branch-active-label');
         I.seeInCurrentUrl('/admin/v9/webpages/web-pages-list/');
         I.seeAttributesOnElements('#branch-band', {'data-branch-color':'mint'});
-        branchPicker.select(I, 0);
+        I.amOnPage('/admin/v9/webpages/branches/');
+        DT.waitForLoader();
+        DT.filterContains('name', name+' upravená');
+        DT.deleteAll('branchesDataTable');
         I.waitForElement('#branch-switcher[aria-label*="Hlavná verzia"]', 20);
+        DT.waitForLoader();
+        DT.filterContains('name', name+' upravená');
+        I.dontSee(name+' upravená', '#branchesDataTable');
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`);
         I.amOnPage('/admin/v9/webpages/branches/');
         DT.waitForLoader();
@@ -75,6 +86,7 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.clickCss('#branchesDataTable tbody tr:first-child td.dt-select-td');
         I.seeElement('.buttons-branch-open:disabled');
         I.seeElement('.buttons-branch-compare:not(:disabled)');
+        I.seeElement('.buttons-remove:not(:disabled)');
         DT.checkPerms('menuBranches', '/admin/v9/webpages/branches/');
     });
 }

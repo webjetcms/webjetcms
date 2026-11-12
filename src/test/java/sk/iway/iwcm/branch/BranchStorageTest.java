@@ -29,6 +29,7 @@ import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
@@ -170,6 +171,63 @@ class BranchStorageTest extends BranchJpaTest {
             audit.verify(()->sk.iway.iwcm.Adminlog.add(eq(sk.iway.iwcm.Adminlog.TYPE_CLIENT_SPECIFIC),startsWith("CREATE:"),eq(branch.getId().intValue()),eq(-1)),times(1));
             audit.verify(()->sk.iway.iwcm.Adminlog.add(eq(sk.iway.iwcm.Adminlog.TYPE_CLIENT_SPECIFIC),startsWith("UPDATE:"),eq(branch.getId().intValue()),eq(-1)),times(1));
         }
+    }
+
+    /** Removal in every lifecycle state cascades WORK data and private bytes while preserving the LIVE attachment. */
+    @Test @Order(2) void deletesWorkingVersionsAndTheirDataInEveryState() throws Exception {
+        String logical="/files/autotest-branch-delete-"+System.nanoTime()+".txt";
+        Path live=Path.of(sk.iway.iwcm.Tools.getRealPath(logical));
+        Files.createDirectories(live.getParent());Files.writeString(live,"LIVE attachment");
+        List<Long> created=new ArrayList<>();
+        try {
+            for(String state:List.of("DRAFT","SCHEDULED","MERGING","MERGE_FAILED","NEEDS_ATTENTION","MERGED","CANCELLED")) {
+                var branch=createBranch("p02.example","autotest delete "+state,null,1);
+                branches.add(branch.getId());created.add(branch.getId());
+                var context=new BranchContext(branch.getId(),"p02.example",1,BranchContext.Mode.ADMIN);
+                var store=new BranchStore();
+                var doc=store.create(context,BranchType.DOCUMENT,BranchDocumentMapper.initialValues(1,1,Instant.now(),false));
+                store.create(context,BranchType.GROUP,BranchGroupMapper.initialValues(1,"p02.example"));
+                store.create(context,BranchType.MEDIA,BranchMediaMapper.initialValues(1,((Number)doc.get("doc_id")).intValue(),1));
+                var file=store.putFile(context,logical,"FILE",BranchFiles.liveSnapshot(logical),"a".repeat(64),10L,"text/plain",false);
+                Path work=BranchFiles.workPath(branch.getId(),((Number)file.get("row_id")).longValue());
+                Files.createDirectories(work.getParent());Files.writeString(work,"WORK bytes");
+                Files.writeString(work.resolveSibling("base"),"BASE bytes");
+                Files.writeString(work.resolveSibling("publish-backup"),"Backup bytes");
+                Path privateDirectory=work.getParent().getParent();
+                Path thumbnails=Path.of(Constants.getString("branchStorageRoot")).resolve("thumbs").resolve(Long.toString(branch.getId()));
+                Files.createDirectories(thumbnails);Files.writeString(thumbnails.resolve("autotest.png"),"Thumbnail bytes");
+                branch=branchService().find(branch.getId(),branch.getDomainId()).orElseThrow();
+                branch.setState(state);metadataRepository.saveAndFlush(branch);
+                var request=new DatatableRequest<Long,BranchEntity>();request.setAction("remove");request.setData(Map.of(branch.getId(),branch));
+                var controller=editor(metadataRepository);
+                assertNull(controller.handleEditor(controller.getRequest(),request).getBody().getError(),state);
+                assertTrue(branchService().find(branch.getId(),branch.getDomainId()).isEmpty(),state);
+                try(Connection connection=connect()) {
+                    for(String table:List.of("branch_documents","branch_groups","branch_media","branch_files"))
+                        assertEquals(0,count(connection,"SELECT COUNT(*) FROM "+table+" WHERE branch_id="+branch.getId()),state+": "+table);
+                }
+                assertFalse(Files.exists(privateDirectory),state);
+                assertFalse(Files.exists(thumbnails),state);
+                assertEquals("LIVE attachment",Files.readString(live),state);
+            }
+        } finally {
+            Files.deleteIfExists(live);
+            for(long id:created)BranchFiles.deleteBranch(id);
+        }
+    }
+
+    /** A domain mismatch cannot remove another website's metadata or private staging directory. */
+    @Test @Order(2) void deletionCannotCrossTheDomainBoundary() throws Exception {
+        var branch=createBranch("p02.other","autotest foreign deletion",null,1);
+        branches.add(branch.getId());
+        Path file=BranchFiles.workPath(branch.getId(),1);
+        Files.createDirectories(file.getParent());Files.writeString(file,"Foreign WORK bytes");
+        try {
+            var error=assertThrows(ResponseStatusException.class,()->branchService().delete(branch.getId(),BranchDomains.id("p02.example")));
+            assertEquals(404,error.getStatusCode().value());
+            assertTrue(branchService().find(branch.getId(),branch.getDomainId()).isPresent());
+            assertEquals("Foreign WORK bytes",Files.readString(file));
+        } finally { BranchFiles.deleteBranch(branch.getId()); }
     }
 
     /** Repository and DataTable reads enforce the numeric domain scope. */

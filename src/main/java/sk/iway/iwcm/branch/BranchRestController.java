@@ -74,8 +74,20 @@ public class BranchRestController extends DatatableRestControllerV2<BranchEntity
     }
 
     @Override
-    public boolean beforeDelete(BranchEntity entity) {
-        throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED);
+    public boolean deleteItem(BranchEntity entity, long id) {
+        branches.delete(id,getDomainId());
+        return true;
+    }
+
+    @Override
+    public void afterDelete(BranchEntity entity, long id) {
+        var session=getRequest().getSession();
+        if (session.getAttribute(BranchSelection.SESSION_KEY) instanceof BranchSelection.Selected selected
+                && selected.branchId()==id) {
+            session.setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(0,selected.domainId()));
+            session.removeAttribute(BranchProductionSection.ATTRIBUTE);
+        }
+        setRedirect("/admin/v9/webpages/branches/");
     }
 
     @Override

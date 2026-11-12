@@ -127,10 +127,22 @@ class BranchRestControllerTest extends BaseWebjetTest {
 
     @Test void unsupportedOperationsCannotWrite() {
         var input=new BranchEntity();
-        assertThrows(ResponseStatusException.class,()->controller.beforeDelete(input));
         assertThrows(ResponseStatusException.class,()->controller.beforeDuplicate(input));
         controller=spy(controller);doReturn(true).when(controller).isImporting();
         assertEquals(HttpStatus.METHOD_NOT_ALLOWED,assertThrows(ResponseStatusException.class,()->controller.beforeSave(input)).getStatusCode());
+        verifyNoInteractions(repository);
+    }
+
+    @Test void standardEditorDeletesInTheCurrentDomainAndClearsTheActiveVersion() {
+        request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(42,1));
+        request.getSession().setAttribute(BranchProductionSection.ATTRIBUTE,"production context");
+        var input=new BranchEntity();input.setId(42L);input.setDomainId(1);
+        var edit=new DatatableRequest<Long,BranchEntity>();edit.setAction("remove");edit.setData(Map.of(42L,input));
+        var response=controller.handleEditor(request,edit).getBody();
+        verify(service).delete(42,1);
+        assertEquals(new BranchSelection.Selected(0,1),request.getSession().getAttribute(BranchSelection.SESSION_KEY));
+        assertNull(request.getSession().getAttribute(BranchProductionSection.ATTRIBUTE));
+        assertEquals("/admin/v9/webpages/branches/",response.getRedirect());
         verifyNoInteractions(repository);
     }
 

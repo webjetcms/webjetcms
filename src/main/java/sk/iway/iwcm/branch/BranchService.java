@@ -1,5 +1,6 @@
 package sk.iway.iwcm.branch;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -38,6 +39,17 @@ public class BranchService {
     public Optional<BranchEntity> find(long id, int domainId) {
         BranchReadiness.requireEnabled();
         return repository.findFirstByIdAndDomainId(id, domainId);
+    }
+
+    /** Deletes a domain-scoped version in any state, including its private files and cascading WORK data. */
+    public void delete(long id, int domainId) {
+        BranchReadiness.requireEnabled();
+        BranchEntity branch=repository.findFirstByIdAndDomainId(id,domainId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Publishing package not found"));
+        try { BranchFiles.deleteBranch(id); }
+        catch (IOException ex) { throw new IllegalStateException("Cannot delete working version files",ex); }
+        repository.delete(branch);
+        BranchView.invalidate();
     }
 
     /** Resolves server-owned routing metadata before the preview checks domain permissions. */

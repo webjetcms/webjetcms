@@ -5,6 +5,7 @@ import java.nio.file.*;
 import java.security.*;
 import java.util.*;
 import java.sql.*;
+import org.apache.commons.io.FileUtils;
 import jakarta.servlet.http.*;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.Identity;
@@ -19,6 +20,14 @@ public final class BranchFiles {
         if (branchId<=0 || rowId<=0) throw new IllegalArgumentException("Invalid staging identity");
         Path root=Path.of(Constants.getString("branchStorageRoot")).toAbsolutePath().normalize();
         return root.resolve(Long.toString(branchId)).resolve(Long.toString(rowId)).resolve("content");
+    }
+
+    /** Removes this version's private content, BASE copies, publication backups and cached thumbnails. */
+    static void deleteBranch(long branchId) throws IOException {
+        if (branchId <= 0) throw new IllegalArgumentException("Invalid staging identity");
+        Path root=BranchReadiness.privateRoot();
+        FileUtils.deleteDirectory(root.resolve(Long.toString(branchId)).toFile());
+        FileUtils.deleteDirectory(root.resolve("thumbs").resolve(Long.toString(branchId)).toFile());
     }
 
     /** Lists the effective direct children, including empty directory markers and implied parents. */
