@@ -223,6 +223,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Aplikace
 
+- AI asistenti - nová karta [Limity tokenů](redactor/ai/settings/README.md#karta----limity-tokenů) umožňuje omezit spotřebu asistenta a zobrazit její vývoj za posledních 14 dní. Na zadaný notifikační e-mail se odešlou upozornění při dosažení 75 % a 100 % limitu. Po dosažení limitu se další požadavky zablokují. Spotřebu lze vynulovat ručně pro vybrané asistenty nebo aktuální doménu, případně pravidelně pro všechny domény úlohou `AiTokenUsageReset`, která se ve výchozím nastavení spouští každý den o půlnoci (#58814).
 - AI asistenti - opraveno zpracování průběžných textových odpovědí včetně Gemini. Počet tokenů a chybové zprávy se správně zpracují i ​​při rozdělení nebo spojení síťových bloků; technické údaje se nevkládají do generovaného textu. Přerušená odpověď se již neoznačí jako úspěšně dokončená.
 - Číselníky - výběr a správa typů se přesunuly do stromu v levém panelu s vyhledáváním. Více v [dokumentaci Číselníků](redactor/apps/enumeration/README.md) (#58786).
 - Blog - výběr a přidávání sekcí jsou dostupné ve stromu v levém panelu s vyhledáváním. Více v [dokumentaci Blogu](redactor/apps/blog/README.md) (#58786).
@@ -764,6 +765,8 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Bezpečnost - vypnutá kompilace výrazů SpringEL v Thymeleaf šablonách a ve výchozím nastavení i ve Spring jako ochrana před [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Standardní syntax šablon a povolená volání metod zůstávají podporovány, úprava šablon není nutná. U šablon s velkým množstvím opakovaně vyhodnocovaných výrazů může vykreslování trvat déle.
 - Bezpečnost - vypnuté ukládání chráněných souborů z `/files/protected/` do cache prohlížeče a proxy serverů nastavením HTTP hlaviček před odesláním souboru. Opraveno nastavení délky odpovědi při odesílání celého souboru i jeho rozsahu, aby Spring Security zapsal bezpečnostní hlavičky včas.
 - Bezpečnost - doplněné zdůvodněné výjimky v `dependency-check-suppressions.xml` pro zranitelnosti nevyužívaných částí Spring a pro zranitelnost ošetřenou výše uvedeným nastavením SpringEL. Výjimka pro [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) zohledňuje výše uvedenou ochranu chráněných souborů a opravu odesílání souborů; představuje aplikační opatření a akceptované zbytkové riziko, nikoli opravu knihovny ani potvrzení bezpečnosti všech způsobů odesílání odpovědí. Výchozí odložené zapisování hlaviček Spring Security zůstává zachováno. Verze `Spring Framework 5.3.39` a `Spring Security 5.8.16` zůstávají zachovány.
+- AI asistenti - při aktualizaci se modely OpenAI nahradí novějšími: `gpt-image-2` modelem `gpt-image-2.6-sunburst` pro generování a úpravu obrázků, `gpt-5`, `gpt-5-pro`, `o3` a `o3-pro` modelem `gpt-5.6-sol`, `gpt-5-mini` modelem @@ `gpt-5.6-luna`. OpenAI vypne původní textové modely 11. prosince 2026 a obrazový model 10. února 2027. Asistenti s původními modely Pro přejdou na standardní režim Sol.
+- Datové tabulky - opraveno generování podmínek při filtrování polí odkazujících na jinou entitu. Textové vyhledávání se pro tato pole přeskočí, aby nevznikaly neplatné SQL podmínky (#397).
 
 ## 2026.0.40
 

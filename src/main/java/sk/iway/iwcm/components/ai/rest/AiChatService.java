@@ -151,6 +151,11 @@ public class AiChatService implements DisposableBean {
         boolean submitted = false;
         var renewal = renewLease(prepared, input);
         try {
+            if (assistants.countWithReachedTokenLimit(prepared.assistant().getId(), prepared.scope().domainId()) > 0) {
+                category = "TOKEN_LIMIT_REACHED";
+                result = failure(category, null, request);
+                return result;
+            }
             LibrarySupportLogic provider = provider(prepared.assistant().getProvider());
             var providerConfig = configuration.resolveForDomain(provider, prepared.scope().domainName());
             if (!configuration.chatScope(providerConfig).equals(prepared.turn().thread().getProviderScope())) {
@@ -428,13 +433,14 @@ public class AiChatService implements DisposableBean {
     private static AssistantResponseDTO failure(String category, Integer status, Boolean retryable, HttpServletRequest request) {
         AssistantResponseDTO result = new AssistantResponseDTO();
         String messageKey = switch (category) {
-            case "ATTACHMENT_INVALID" -> "attachmentUnreadable";
-            case "INVALID_CONTINUATION" -> "expired";
-            case "CANCELLED" -> "stopped";
-            case "PENDING" -> "busy";
-            default -> "generationFailed";
+            case "TOKEN_LIMIT_REACHED" -> "components.ai_assistants.token_limit.reached.js";
+            case "ATTACHMENT_INVALID" -> "components.ai_assistants.chat.history.attachmentUnreadable.js";
+            case "INVALID_CONTINUATION" -> "components.ai_assistants.chat.history.expired.js";
+            case "CANCELLED" -> "components.ai_assistants.chat.history.stopped.js";
+            case "PENDING" -> "components.ai_assistants.chat.history.busy.js";
+            default -> "components.ai_assistants.chat.history.generationFailed.js";
         };
-        result.setError(Prop.getInstance(request).getText("components.ai_assistants.chat.history." + messageKey + ".js"));
+        result.setError(Prop.getInstance(request).getText(messageKey));
         result.setErrorCategory(category);
         result.setProviderStatusCode(status);
         if (retryable == null) {

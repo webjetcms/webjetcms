@@ -1584,7 +1584,7 @@
                <void property="mysql"><string>ALTER TABLE file_archiv MODIFY date_upload_later DATETIME NULL;</string></void>
                 <void property="mssql"><string>ALTER TABLE file_archiv ALTER COLUMN date_upload_later DATETIME NULL;</string></void>
                 <void property="oracle"><string></string></void>
-                <void property="pgsql"><string>ALTER TABLE file_archiv ALTER COLUMN date_upload_later TYPE TIMESTAMP;</string></void>
+                <void property="pgsql"><string>ALTER TABLE file_archiv ALTER COLUMN date_upload_later TYPE TIMESTAMP WITHOUT TIME ZONE;</string></void>
             </object>
         </void>
 
@@ -2034,7 +2034,7 @@
                             provider VARCHAR(255) NOT NULL,
                             instructions TEXT NOT NULL,
                             model VARCHAR(255),
-                            last_update TIMESTAMP,
+                            last_update DATETIME,
 
                             group_name VARCHAR(255),
                             user_prompt_enabled TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
@@ -2342,7 +2342,7 @@
                             provider VARCHAR(255) NOT NULL,
                             instructions TEXT NOT NULL,
                             model VARCHAR(255),
-                            last_update TIMESTAMP,
+                            last_update TIMESTAMP WITHOUT TIME ZONE,
 
                             group_name VARCHAR(255),
                             user_prompt_enabled BOOLEAN DEFAULT FALSE,
@@ -2450,7 +2450,7 @@
                         CREATE TABLE ai_stats (
                             id INT DEFAULT NEXTVAL('S_ai_stats') PRIMARY KEY NOT NULL,
                             assistant_id INT NOT NULL,
-                            created TIMESTAMP NOT NULL,
+                            created TIMESTAMP WITHOUT TIME ZONE NOT NULL,
                             used_tokens INT NOT NULL,
                             user_id INT NOT NULL,
                             domain_id INT DEFAULT 1 NOT NULL
@@ -2641,7 +2641,7 @@
                 <void property="mysql"><string>ALTER TABLE url_redirect ADD description TEXT, ADD valid_to DATETIME NULL</string></void>
                 <void property="mssql"><string>ALTER TABLE url_redirect ADD description NTEXT, valid_to DATETIME NULL</string></void>
                 <void property="oracle"><string>ALTER TABLE url_redirect ADD (description CLOB, valid_to DATE NULL)</string></void>
-                <void property="pgsql"><string>ALTER TABLE url_redirect ADD description TEXT, ADD valid_to TIMESTAMP NULL</string></void>
+                <void property="pgsql"><string>ALTER TABLE url_redirect ADD description TEXT, ADD valid_to TIMESTAMP WITHOUT TIME ZONE NULL</string></void>
             </object>
         </void>
 
@@ -4119,6 +4119,38 @@
                 <void property="mssql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.DeviceCleanup', NULL, 'false', 'all')</string></void>
                 <void property="oracle"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.DeviceCleanup', NULL, 0, 'all')</string></void>
                 <void property="pgsql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.DeviceCleanup', NULL, false, 'all')</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>13.10.2026</string></void>
+                <void property="desc"><string>ai_assistants - add token usage limits and notification columns</string></void>
+                <void property="mysql"><string>
+                    ALTER TABLE ai_assistants ADD COLUMN used_tokens BIGINT DEFAULT 0, ADD COLUMN token_limit BIGINT DEFAULT 0;
+                    ALTER TABLE ai_assistants ADD COLUMN notif_email VARCHAR(255), ADD COLUMN notif_level INT DEFAULT 0 NOT NULL;
+                    INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node, audit_task, run_at_startup, enable_task)
+                    VALUES ('AI - Reset token usage', '0', '0', '0', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTokenUsageReset', NULL, 'false', 'all-admin', 'true', 0, 1);
+                </string></void>
+                <void property="mssql"><string>
+                    ALTER TABLE ai_assistants ADD used_tokens BIGINT DEFAULT 0 WITH VALUES, token_limit BIGINT DEFAULT 0 WITH VALUES;
+                    ALTER TABLE ai_assistants ADD notif_email NVARCHAR(255), notif_level INT DEFAULT 0 NOT NULL WITH VALUES;
+                    INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node, audit_task, run_at_startup, enable_task)
+                    VALUES ('AI - Reset token usage', '0', '0', '0', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTokenUsageReset', NULL, 'false', 'all-admin', 'true', 0, 1);
+                </string></void>
+                <void property="oracle"><string>
+                    ALTER TABLE ai_assistants ADD (used_tokens NUMBER(19) DEFAULT 0, token_limit NUMBER(19) DEFAULT 0);
+                    ALTER TABLE ai_assistants ADD (notif_email NVARCHAR2(255), notif_level INTEGER DEFAULT 0 NOT NULL);
+                    INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node, audit_task, run_at_startup, enable_task)
+                    VALUES ('AI - Reset token usage', '0', '0', '0', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTokenUsageReset', NULL, 0, 'all-admin', '1', 0, 1);
+                </string></void>
+                <void property="pgsql"><string>
+                    ALTER TABLE ai_assistants ADD COLUMN used_tokens BIGINT DEFAULT 0, ADD COLUMN token_limit BIGINT DEFAULT 0;
+                    ALTER TABLE ai_assistants ADD COLUMN notif_email VARCHAR(255), ADD COLUMN notif_level INT DEFAULT 0 NOT NULL;
+                    INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node, audit_task, run_at_startup, enable_task)
+                    VALUES ('AI - Reset token usage', '0', '0', '0', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTokenUsageReset', NULL, 'false', 'all-admin', 'true', false, true);
+                </string></void>
             </object>
         </void>
 

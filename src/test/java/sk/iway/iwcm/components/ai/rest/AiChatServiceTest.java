@@ -42,6 +42,7 @@ import com.webjetcms.ai.AiResponseDeletion;
 import com.webjetcms.ai.TokenUsage;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.chat.AiChatFiles;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
@@ -63,6 +64,7 @@ class AiChatServiceTest {
     private final AiClient aiClient = mock(AiClient.class);
     private final AiTaskRegistry tasks = mock(AiTaskRegistry.class);
     private final AiStatRepository statistics = mock(AiStatRepository.class);
+    private final AssistantDefinitionRepository assistants = mock(AssistantDefinitionRepository.class);
     private final WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final AiProviderConfig config = AiProviderConfig.builder("key").build();
@@ -71,6 +73,7 @@ class AiChatServiceTest {
     private AssistantDefinitionEntity assistant;
     private MockedStatic<Adminlog> audit;
     private MockedStatic<Prop> translations;
+    private MockedStatic<Tools> tools;
 
     @BeforeEach
     void configure() throws Exception {
@@ -84,7 +87,6 @@ class AiChatServiceTest {
         assistant.setClassName(AiAssistantsService.CHAT_TARGET);
         assistant.setActive(true);
         assistant.setUseTemporal(false);
-        var assistants = mock(AssistantDefinitionRepository.class);
         when(assistants.findByIdAndDomainId(12L, 7)).thenReturn(Optional.of(assistant));
         when(provider.getProviderId()).thenReturn("openai");
         when(provider.isInit()).thenReturn(true);
@@ -96,6 +98,9 @@ class AiChatServiceTest {
         when(tasks.runChatTask(anyString(), same(scope), any(), any())).thenAnswer(call ->
             call.<Callable<AssistantResponseDTO>>getArgument(2).call());
         service = new AiChatService(store, assistants, List.of(provider), tasks, aiClient, configuration, statistics);
+        tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
+        tools.when(() -> Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class))
+            .thenReturn(assistants);
         audit = mockStatic(Adminlog.class);
         translations = mockStatic(Prop.class);
         Prop prop = mock(Prop.class);
@@ -108,7 +113,7 @@ class AiChatServiceTest {
     }
 
     @AfterEach
-    void close() { service.destroy(); translations.close(); audit.close(); }
+    void close() { service.destroy(); translations.close(); audit.close(); tools.close(); }
 
     private AiChatService.Prepared prepare(String thread, Long revision) {
         return service.prepare(new AiChatRequest(thread, 12L, UUID.randomUUID().toString(), revision, "Question", null), scope);
@@ -116,6 +121,86 @@ class AiChatServiceTest {
 
     private AssistantResponseDTO execute(AiChatService.Prepared prepared) {
         return service.execute(prepared, text -> { }, false, request);
+    }
+
+    /** Checks current domain usage at execution time before any text or image provider call, then releases the turn. */
+    @ParameterizedTest
+    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+    void rejectsReachedTokenLimitBeforeProcessingAttachments(boolean withAttachment, boolean streaming) throws Exception {
+        assistant.setTokenLimit(100L);
+        assistant.setUsedTokens(0L);
+        var uploads = withAttachment ? AiChatAttachments.read(List.of(
+            new MockMultipartFile("files", "image.png", "image/png", new byte[] {(byte)137, 80, 78, 71, 13, 10, 26, 10})))
+            : List.<AiChatAttachments.Upload>of();
+        String requestId = UUID.randomUUID().toString();
+        var input = new AiChatRequest(null, 12L, requestId, null, "Question", null);
+        var prepared = service.prepare(input, scope, uploads);
+        // Another request exhausted the limit while this attempt was waiting to execute.
+        when(assistants.countWithReachedTokenLimit(12L, 7)).thenReturn(1L);
+
+        var response = service.execute(prepared, text -> fail("Blocked requests must not stream text"), streaming, request);
+
+        assertEquals("TOKEN_LIMIT_REACHED", response.getErrorCategory());
+        assertEquals("components.ai_assistants.token_limit.reached.js", response.getError());
+        assertNull(response.getProviderStatusCode());
+        assertTrue(response.getRetryable());
+        verify(assistants).countWithReachedTokenLimit(12L, 7);
+        verify(provider, never()).prepareChatAttachment(any(), any(), any(), any());
+        verify(provider, never()).describeChatImage(any(), any(), any(), any());
+        verify(provider, never()).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
+        verifyNoInteractions(statistics);
+        var saved = new AiChatStore().get(prepared.turn().thread().getId(), scope);
+        assertNull(saved.thread().getActiveMessageId());
+        assertEquals("error", saved.messages().get(1).getStatus());
+        assertEquals("TOKEN_LIMIT_REACHED", saved.messages().get(1).getErrorCategory());
+
+        var duplicate = service.prepare(input, scope, uploads);
+        assertEquals(response.getError(), service.execute(duplicate, text -> { }, streaming, request).getError());
+        verify(assistants, times(1)).countWithReachedTokenLimit(12L, 7);
+    }
+
+    /** Replays a completed delivery after the budget is exhausted without checking or charging it again. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void replaysCompletedResponseAfterTokenLimitIsReached(boolean streaming) throws Exception {
+        var input = new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null);
+        var first = service.prepare(input, scope);
+        assertEquals("Answer", service.execute(first, text -> { }, streaming, request).getResponse());
+        when(assistants.countWithReachedTokenLimit(12L, 7)).thenReturn(1L);
+
+        var duplicate = service.prepare(input, scope);
+        var replay = service.execute(duplicate, text -> fail("Replays must not call the provider"), streaming, request);
+
+        assertTrue(duplicate.turn().duplicate());
+        assertNull(replay.getError());
+        assertEquals("Answer", replay.getResponse());
+        verify(assistants, times(1)).countWithReachedTokenLimit(12L, 7);
+        verify(provider, times(1)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
+        verify(statistics, times(1)).save(any());
+        verify(assistants, times(1)).incrementUsedTokens(12L, 7, 3L);
+    }
+
+    /** A new retry succeeds after resetting usage and preserves the failed attempt in history. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void retriesAfterTokenUsageReset(boolean streaming) {
+        when(assistants.countWithReachedTokenLimit(12L, 7)).thenReturn(1L);
+        var first = prepare(null, null);
+        assertEquals("TOKEN_LIMIT_REACHED", service.execute(first, text -> { }, streaming, request).getErrorCategory());
+        when(assistants.countWithReachedTokenLimit(12L, 7)).thenReturn(0L);
+        var retry = service.prepare(new AiChatRequest(first.turn().thread().getId(), 12L, UUID.randomUUID().toString(),
+            1L, "Question", first.turn().message().getId()), scope);
+
+        var response = service.execute(retry, text -> { }, streaming, request);
+
+        assertNull(response.getError());
+        assertEquals("Answer", response.getResponse());
+        verify(assistants, times(2)).countWithReachedTokenLimit(12L, 7);
+        verify(statistics, times(1)).save(any());
+        var saved = store.get(first.turn().thread().getId(), scope);
+        assertNull(saved.thread().getActiveMessageId());
+        assertEquals("TOKEN_LIMIT_REACHED", saved.messages().get(1).getErrorCategory());
+        assertEquals("complete", saved.messages().get(2).getStatus());
     }
 
     /** Saved turns use the standard AI audit and record consumption once, including after a replay. */

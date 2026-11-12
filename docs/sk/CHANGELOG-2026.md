@@ -223,6 +223,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
+- AI asistenti - nová karta [Limity tokenov](redactor/ai/settings/README.md#karta---limity-tokenov) umožňuje obmedziť spotrebu asistenta a zobraziť jej vývoj za posledných 14 dní. Na zadaný notifikačný e-mail sa odošlú upozornenia pri dosiahnutí 75 % a 100 % limitu. Po dosiahnutí limitu sa ďalšie požiadavky zablokujú. Spotrebu možno vynulovať ručne pre vybraných asistentov alebo aktuálnu doménu, prípadne pravidelne pre všetky domény úlohou `AiTokenUsageReset`, ktorá sa predvolene spúšťa každý deň o polnoci (#58814).
 - AI asistenti - opravené spracovanie priebežných textových odpovedí vrátane Gemini. Počet tokenov a chybové správy sa správne spracujú aj pri rozdelení alebo spojení sieťových blokov; technické údaje sa nevkladajú do generovaného textu. Prerušená odpoveď sa už neoznačí ako úspešne dokončená.
 - Číselníky - výber a správa typov sa presunuli do stromu v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Číselníkov](redactor/apps/enumeration/README.md) (#58786).
 - Blog - výber a pridávanie sekcií sú dostupné v strome v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Blogu](redactor/apps/blog/README.md) (#58786).
@@ -747,6 +748,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 > Opravná verzia pôvodnej verzie 2026.0.
 
 - Databáza - opravené generovanie SQL podmienok `IN` a `NOT IN` s veľkým počtom hodnôt rozdelením zoznamov na menšie časti. Odstránené chyby pri prekročení limitu 1000 hodnôt v Oracle databáze, napríklad pri načítaní histórie stránky alebo práci s rozsiahlym stromom priečinkov. Maximálny počet hodnôt v jednej časti určuje konfiguračná premenná `dbInClauseMaxItems` (predvolene 1000, v Oracle najviac 1000).
+- Databáza - zjednotené dátumové typy v SQL skriptoch pre nové inštalácie: PostgreSQL používa `TIMESTAMP WITHOUT TIME ZONE`, opravené nesprávne použitie `TIMESTAMP` v MariaDB a Microsoft SQL. Existujúce databázy sa automaticky nekonvertujú (#399).
 - Webové stránky - opravené obmedzenie hľadania a nahrádzania v názvoch priečinkov na vybraný strom priečinkov a nastavenie rodiča pri oprave chybne zmazaných priečinkov počas presunu stránky do koša (#390).
 - Kalendár udalostí - opravené filtrovanie podľa viacerých perex skupín pri nastavení `perexGroupUseJoin=true` bez duplicitných udalostí. Upravené obmedzenie počtu výsledkov aj pre Oracle a Microsoft SQL (#390).
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
@@ -766,6 +768,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Bezpečnosť - vypnuté ukladanie chránených súborov z `/files/protected/` do cache prehliadača a proxy serverov nastavením HTTP hlavičiek pred odoslaním súboru. Opravené nastavenie dĺžky odpovede pri odosielaní celého súboru aj jeho rozsahu, aby Spring Security zapísal bezpečnostné hlavičky včas.
 - Bezpečnosť - doplnené zdôvodnené výnimky v `dependency-check-suppressions.xml` pre zraniteľnosti nevyužívaných častí Spring a pre zraniteľnosť ošetrenú vyššie uvedeným nastavením SpringEL. Výnimka pre [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) zohľadňuje vyššie uvedenú ochranu chránených súborov a opravu odosielania súborov; predstavuje aplikačné opatrenia a akceptované zvyškové riziko, nie opravu knižnice ani potvrdenie bezpečnosti všetkých spôsobov odosielania odpovedí. Predvolené odložené zapisovanie hlavičiek Spring Security zostáva zachované. Verzie `Spring Framework 5.3.39` a `Spring Security 5.8.16` zostávajú zachované.
 - AI asistenti - pri aktualizácii sa modely OpenAI nahradia novšími: `gpt-image-2` modelom `gpt-image-2.6-sunburst` pre generovanie a úpravu obrázkov, `gpt-5`, `gpt-5-pro`, `o3` a `o3-pro` modelom `gpt-5.6-sol`, `gpt-5-mini` modelom `gpt-5.6-terra` a `gpt-5-nano` modelom `gpt-5.6-luna`. OpenAI vypne pôvodné textové modely 11. decembra 2026 a obrazový model 10. februára 2027. Asistenti s pôvodnými modelmi Pro prejdú na štandardný režim Sol.
+- Dátové tabuľky - opravené generovanie podmienok pri filtrovaní polí odkazujúcich na inú entitu. Textové vyhľadávanie sa pre tieto polia preskočí, aby nevznikali neplatné SQL podmienky (#397).
 
 ## 2026.0.40
 
