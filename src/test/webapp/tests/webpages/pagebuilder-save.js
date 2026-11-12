@@ -6,6 +6,51 @@ const frameSelector = '#DTE_Field_data-pageBuilderIframe';
 
 Before(({ login }) => login('admin'));
 
+Scenario('adding a block with no CKEditor instances closes the library and initializes the new editor', async ({ I, DT, DTE, Document }) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=' + groupId);
+    DT.waitForLoader();
+    const routePattern = '**/*inlineEditorAdmin=true*';
+    const loadWithoutEditors = async route => {
+        const response = await route.fetch();
+        const body = await response.text();
+        assert.ok(body.includes('initializePageBuilder();'), 'The response must contain the real Page Builder startup');
+        // Inject the initial HTML before startup so the frame never inherits WJ from an earlier editor.
+        const html = '<section id="no-editor-autotest"><div class="container"><h1>Heading without columns autotest</h1></div></section>';
+        const startup = '$("#wjInline-docdata").html(' + JSON.stringify(html) + '); initializePageBuilder();';
+        await route.fulfill({ response, body: body.replace('initializePageBuilder();', startup) });
+    };
+    await I.mockRoute(routePattern, loadWithoutEditors, { times: 1 });
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-content-tab');
+    // The readiness flag and editor registry have no equivalent visible UI condition.
+    I.waitForFunction(() => {
+        const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow;
+        return frame?.pageBuilderReady === true && frame.document.querySelector('#no-editor-autotest') !== null;
+    }, [], 20);
+    I.switchTo(frameSelector);
+    const count = await I.executeScript(() => Object.keys(CKEDITOR.instances).length);
+    assert.equal(count, 0, 'The page must start without any CKEditor instance');
+    I.waitForElement('.pb-library .library-tab-link[data-library-type="basic"]', 10);
+    I.click('.pb-empty-placeholder-wrapper .pb-empty-placeholder__button');
+    I.waitForVisible('.pb-library', 10);
+    I.click('.pb-library--section .library-tab-link[data-library-type="basic"]');
+    I.click('.library-template-block--section .library-tab-item-button[data-library-item-id="pb-basic-2.4"]');
+    I.seeNumberOfElements('#wjInline-docdata > section', 2);
+    I.waitForInvisible('.pb-library', 5);
+    I.see('Heading without columns autotest', '#no-editor-autotest');
+    I.switchTo();
+    I.waitForFunction(() => {
+        const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow;
+        return Object.values(frame.CKEDITOR.instances).some(editor => editor.status === 'ready');
+    }, [], 20);
+    DTE.cancel();
+    I.acceptPopup();
+    await I.stopMockingRoute(routePattern, loadWithoutEditors);
+    Document.resetPageBuilderMode();
+});
+
 Scenario('malformed Page Builder HTML preserves unowned content and live edits through save and reopen', async ({ I, DT, DTE, Document }) => {
     const title = 'pb-save-autotest-' + I.getRandomText();
     const source = '<section id="heading-autotest" data-pb-id="heading"><div class="container">' +

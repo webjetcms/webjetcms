@@ -8,21 +8,26 @@ const webapp = path.resolve(__dirname, '../../../main/webapp');
 const read = file => fs.readFileSync(path.join(webapp, file), 'utf8');
 
 /** Runs the real CKEditor and Page Builder bootstrap in their browser script order. */
-async function fixture(t, html) {
+async function fixture(t, html, framed = false) {
     const errors = [];
     const virtualConsole = new VirtualConsole();
     virtualConsole.on('jsdomError', error => errors.push(error));
-    const dom = new JSDOM('<!doctype html><html><body><div id="wjInline-docdata">' + html + '</div></body></html>', {
+    const content = '<div id="wjInline-docdata">' + html + '</div>';
+    const dom = new JSDOM('<!doctype html><html><body>' + (framed ? '<iframe src="http://localhost/"></iframe>' : content) + '</body></html>', {
         runScripts: 'outside-only', url: 'http://localhost/', virtualConsole
     });
-    const window = dom.window;
-    t.after(() => window.close());
+    const window = framed ? dom.window.document.querySelector('iframe').contentWindow : dom.window;
+    if (framed) {
+        window.document.write('<!doctype html><html><body>' + content + '</body></html>');
+        window.document.close();
+    }
+    t.after(() => dom.window.close());
     Object.defineProperty(window.navigator, 'userAgent', {
         value: 'Mozilla/5.0 AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36'
     });
     const $ = window.$ = window.jQuery = require('jquery')(window);
-    window.WJ = { translate: key => key, dispatchEvent() {} };
-    window.userLng = 'sk';
+    window.parent.WJ = { translate: key => key, dispatchEvent() {} };
+    window.parent.userLng = 'sk';
     window.ckeditorRegexps = {};
     // Grid discovery is independent of editor creation; keep only its editable-region markers.
     $.fn.ninjaPageBuilder = function() {
@@ -36,7 +41,7 @@ async function fixture(t, html) {
         .replace('import WJ from "./webjet";', '')
         .replace('import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";', '')
         .replace('export class DatatablesCkEditor', 'window.DatatablesCkEditor = class DatatablesCkEditor'));
-    window.datatablesCkEditorModule = { DatatablesCkEditor: window.DatatablesCkEditor };
+    window.parent.datatablesCkEditorModule = { DatatablesCkEditor: window.DatatablesCkEditor };
 
     const toolbar = read('admin/inline/inline_page_toolbar_v9.jsp')
         .replace(/<%--[\s\S]*?--%>/g, '')
@@ -61,10 +66,26 @@ async function fixture(t, html) {
     return { window, $, errors, ckeErrors };
 }
 
+test('A fresh Page Builder frame dispatches block events even without any CKEditor instance', async t => {
+    const f = await fixture(t, '<section><div class="container"><h1>Heading without columns</h1></div></section>', true);
+    assert.equal(Object.keys(f.window.CKEDITOR.instances).length, 0);
+    assert.equal(f.window.pageBuilderReady, true, 'The page must finish its actual startup without an editor');
+    f.window.eval(read('admin/webpages/page-builder/scripts/ninja-page-builder.js.jsp')
+        .replace(/<%=[\s\S]*?%>/g, 'null')
+        .replace('$.fn[ pluginName ] = function', 'window.PageBuilderPlugin = Plugin;\n    $.fn[ pluginName ] = function'));
+    const options = f.window.PageBuilderPlugin.prototype.get_defaults();
+    let added = 0;
+    f.window.addEventListener('WJ.PageBuilder.newElementAdded', () => added++);
+
+    assert.doesNotThrow(() => options.onNewElementAdded(), 'Adding the first block must dispatch its event before the library closes');
+    assert.equal(added, 1, 'The event must reach the Page Builder frame');
+    assert.deepEqual(f.errors, []);
+});
+
 for (const persistedAttributes of ['', ' contenteditable="true" role="textbox" tabindex="0"']) {
     test(`Page Builder creates one configured editor per region${persistedAttributes ? ' with persisted editor attributes' : ''}`, async t => {
         const f = await fixture(t, '<div class="column-content"><p>First</p></div>' +
-            '<div class="column-content"' + persistedAttributes + '><p>Second <span contenteditable="false">Protected</span></p></div>');
+            '<div class="column-content"' + persistedAttributes + '><p>Second <span contenteditable="false">Protected</span></p></div>', !!persistedAttributes);
         assert.deepEqual(f.ckeErrors, [], 'Automatic inline creation must not conflict with Page Builder');
         assert.deepEqual(f.errors, []);
         const elements = f.$('.column-content').toArray();
