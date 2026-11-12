@@ -64,6 +64,7 @@ public class BranchRestController extends DatatableRestControllerV2<BranchEntity
             entity.setCreatedAt(now);
             entity.setPublishAt(null);
             entity.setScheduledBy(null);
+            entity.setPublishRequestedBy(null);
             entity.setMergeStartedAt(null);
             entity.setMergeFinishedAt(null);
             entity.setLastError(null);

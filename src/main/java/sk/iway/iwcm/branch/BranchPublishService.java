@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.Identity;
@@ -15,7 +15,6 @@ import sk.iway.iwcm.users.UsersDB;
 
 /** Fixed-order, checkpointed publication on the verified single-node local-filesystem profile. */
 public final class BranchPublishService {
-    private static final ExecutorService EXECUTOR=Executors.newSingleThreadExecutor(task->{Thread thread=new Thread(task,"branch-publisher");thread.setDaemon(true);return thread;});
     private static final Set<Long> RUNNING=ConcurrentHashMap.newKeySet();
     private final Consumer<String> afterCommit;
     private Item current;
@@ -27,19 +26,17 @@ public final class BranchPublishService {
     public BranchPublishService() {this(key->{});}
     BranchPublishService(Consumer<String> afterCommit) {this.afterCommit=afterCommit;}
 
-    /** The complete immutable plan must already be committed in MERGING state. */
     public static boolean isRunning(long id) {return RUNNING.contains(id);}
 
-    public void kickoff(long id,int actor) {
-        if(!RUNNING.add(id))throw new IllegalStateException("The publisher already owns this package");
-        try {EXECUTOR.execute(()->{
-            try {new BranchPublishService().runOwned(id,actor);}
-            finally {try {SetCharacterEncodingFilter.unRegisterDataContext();}finally {RUNNING.remove(id);}}
-        });}
-        catch(RuntimeException ex) {RUNNING.remove(id);fail(id,ex);throw ex;}
+    /** Atomically takes an explicit request; interrupted publications require a newly reviewed request. */
+    void runRequested(long id,int actor,long revision) {
+        if(!RUNNING.add(id))return;
+        try {
+            if(BranchService.getInstance().takePublicationRequest(id,revision,actor))runOwned(id,actor);
+        } finally {RUNNING.remove(id);}
     }
 
-    /** Also used by database integration tests, with no HTTP request or session ownership. */
+    /** Publishes a claimed plan synchronously on the caller's cron thread. */
     public void run(long id,int actor) {
         if(!RUNNING.add(id))throw new IllegalStateException("The publisher already owns this package");
         try {runOwned(id,actor);}finally {RUNNING.remove(id);}

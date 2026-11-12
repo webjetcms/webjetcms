@@ -69,6 +69,16 @@ public class BranchService {
             .orElseThrow(() -> new IllegalStateException("The branch is not owned by the publisher"));
     }
 
+    public List<BranchEntity> publicationRequests() {
+        BranchReadiness.requireEnabled();
+        return repository.findAllByStateAndPublishRequestedByIsNotNullOrderByIdAsc("MERGING");
+    }
+
+    public boolean takePublicationRequest(long id,long revision,int actor) {
+        BranchReadiness.requireEnabled();
+        return repository.takePublicationRequest(id,revision,actor)==1;
+    }
+
     public void completePublication(long id) {
         if (repository.markMerged(id, Timestamp.from(Instant.now())) != 1)
             throw new IllegalStateException("Publication ownership was lost");

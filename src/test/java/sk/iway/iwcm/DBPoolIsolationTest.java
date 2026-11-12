@@ -31,6 +31,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -84,6 +85,21 @@ class DBPoolIsolationTest
         setIsolation(dirtyRead);
         verify(connection).setTransactionIsolation(dirtyRead
             ? Connection.TRANSACTION_READ_UNCOMMITTED : Connection.TRANSACTION_READ_COMMITTED);
+    }
+
+    /** A partially configured feature keeps legacy dirty reads and best-effort error handling. */
+    @ParameterizedTest
+    @CsvSource({"true, false", "false, true"})
+    void incompleteConfigurationPreservesLegacyIsolation(boolean featureFlag, boolean externalDirectories) throws Exception
+    {
+        constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(featureFlag);
+        constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(externalDirectories);
+        DBPool.setTransactionIsolationReadUNCommited(connection);
+        verify(connection).setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+        when(connection.getTransactionIsolation()).thenThrow(new SQLException("legacy isolation failure"));
+        assertDoesNotThrow(() -> DBPool.setTransactionIsolationReadUNCommited(connection));
+        verify(connection, never()).abort(any());
+        verify(connection, never()).close();
     }
 
     /** Oracle's legacy flag-off path does not call unsupported dirty-read settings. */
@@ -263,6 +279,7 @@ class DBPoolIsolationTest
     private void enableBranches()
     {
         constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(true);
+        constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
     }
 
     private void setIsolation(boolean dirtyRead)

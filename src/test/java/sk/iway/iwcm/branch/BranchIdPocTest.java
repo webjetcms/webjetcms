@@ -40,8 +40,10 @@ class BranchIdPocTest
     void coreIsolationGuardSeparatesFlagOffAndOn() throws Exception
     {
         boolean original = Constants.getBoolean("branchesEnabled");
+        boolean originalExternalDirectories = Constants.getBoolean("enableStaticFilesExternalDir");
         try (Connection writer = connect(); Connection reader = connect())
         {
+            Constants.setBoolean("enableStaticFilesExternalDir", true);
             writer.setAutoCommit(false);
             try
             {
@@ -66,6 +68,7 @@ class BranchIdPocTest
         finally
         {
             Constants.setBoolean("branchesEnabled", original);
+            Constants.setBoolean("enableStaticFilesExternalDir", originalExternalDirectories);
         }
     }
 

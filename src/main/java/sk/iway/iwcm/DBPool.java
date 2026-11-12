@@ -7,6 +7,7 @@ import com.zaxxer.hikari.util.PropertyElf;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXParseException;
+import sk.iway.iwcm.branch.BranchAccess;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
@@ -555,7 +556,7 @@ public class DBPool
 			{
 				try
 				{
-					if (Constants.getBoolean("branchesEnabled"))
+					if (BranchAccess.isEnabled())
 					{
 						HikariDataSource hikari = ds.isWrapperFor(HikariDataSource.class) ? ds.unwrap(HikariDataSource.class) : null;
 						if (hikari != null) hikari.evictConnection(con);
@@ -633,11 +634,11 @@ public class DBPool
 
 	/**
 	 * Prevents technical ID reservation rows from entering core reads when branches are enabled.
-	 * The legacy flag-off path retains its best-effort isolation handling.
+	 * The legacy path retains its best-effort isolation handling when working versions are disabled.
 	 */
 	private static void setTransactionIsolation(Connection dbConn, int requestedIsolation)
 	{
-		boolean strict = Constants.getBoolean("branchesEnabled");
+		boolean strict = BranchAccess.isEnabled();
 		if (!strict && Constants.DB_TYPE==Constants.DB_ORACLE) return;
 		int isolation = strict ? Connection.TRANSACTION_READ_COMMITTED : requestedIsolation;
 

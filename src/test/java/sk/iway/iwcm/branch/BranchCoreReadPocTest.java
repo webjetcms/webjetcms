@@ -43,6 +43,8 @@ class BranchCoreReadPocTest extends BaseWebjetTest
     {
         DBPool.getInstance();
         boolean original = Constants.getBoolean("branchesEnabled");
+        boolean originalExternalDirectories = Constants.getBoolean("enableStaticFilesExternalDir");
+        Constants.setBoolean("enableStaticFilesExternalDir", true);
         Constants.setBoolean("branchesEnabled", true);
         EntityManager manager = null;
         try (Connection writer = DBPool.getConnection())
@@ -115,6 +117,7 @@ class BranchCoreReadPocTest extends BaseWebjetTest
             if (manager != null) manager.close();
             DBPool.jpaDestroy();
             Constants.setBoolean("branchesEnabled", original);
+            Constants.setBoolean("enableStaticFilesExternalDir", originalExternalDirectories);
         }
     }
 

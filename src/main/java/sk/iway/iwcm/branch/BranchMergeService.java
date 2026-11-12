@@ -60,14 +60,19 @@ public final class BranchMergeService {
 
     /** Persists the complete reviewed plan together with the conditional state transition. */
     public Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume) {
-        return claim(id,domain,user,revision,hash,resume,false);
+        return claim(id,domain,user,revision,hash,resume,false,false);
+    }
+
+    /** Commits the immutable plan and its publication request together for the fixed cron job. */
+    public Report enqueue(long id,String domain,Identity user,long revision,String hash,boolean resume) {
+        return claim(id,domain,user,revision,hash,resume,false,true);
     }
 
     Report claimScheduled(long id,String domain,Identity user,long revision,String hash) {
-        return claim(id,domain,user,revision,hash,false,true);
+        return claim(id,domain,user,revision,hash,false,true,false);
     }
 
-    private Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume,boolean scheduled) {
+    private Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume,boolean scheduled,boolean queued) {
         try(Connection c=DBPool.getConnection()) {
             c.setAutoCommit(false);
             try {
@@ -79,7 +84,7 @@ public final class BranchMergeService {
                 if(!allowed.contains(state)) throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
                 if(scheduled && (!(branch.get("publish_at") instanceof java.util.Date at) || at.getTime()>System.currentTimeMillis()
                         || !Objects.equals(branch.get("scheduled_by"),user.getUserId()))) throw conflict("Termín alebo publikujúci sa zmenil.");
-                if("MERGING".equals(state) && BranchPublishService.isRunning(id)) throw conflict("Publikovanie už prebieha.");
+                if("MERGING".equals(state) && (branch.get("publish_requested_by")!=null||BranchPublishService.isRunning(id))) throw conflict("Publikovanie už prebieha alebo čaká na úlohu na pozadí.");
                 Plan plan=plan(c,id,domain,user,revision);
                 if(!plan.errors.isEmpty()||plan.entries.stream().anyMatch(Entry::conflict)) {
                     List<String> reasons=new ArrayList<>(plan.errors);
@@ -93,8 +98,8 @@ public final class BranchMergeService {
                         s.setString(1,e.target.json());s.setString(2,e.live.hash());s.setString(3,e.change.work().hash());s.setString(4,Boolean.TRUE.equals(e.row.get("_derived_write"))?"DERIVED":null);s.setObject(5,e.row.get("row_id"));s.setLong(6,id);s.executeUpdate();
                     }
                 }
-                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='MERGING',revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=COALESCE(merge_started_at,CURRENT_TIMESTAMP),last_error=NULL WHERE id=? AND revision=? AND state=?")) {
-                    s.setInt(1,user.getUserId());s.setLong(2,id);s.setLong(3,revision);s.setString(4,state);
+                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='MERGING',revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=COALESCE(merge_started_at,CURRENT_TIMESTAMP),last_error=NULL,publish_requested_by=? WHERE id=? AND revision=? AND state=?")) {
+                    s.setInt(1,user.getUserId());s.setObject(2,queued?user.getUserId():null);s.setLong(3,id);s.setLong(4,revision);s.setString(5,state);
                     if(s.executeUpdate()!=1) throw conflict("Balík už prevzal iný beh.");
                 }
                 c.commit();

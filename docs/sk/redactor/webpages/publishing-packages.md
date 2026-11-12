@@ -20,11 +20,11 @@ Voľba výsledku hneď ovplyvní náhľad vrátane menu, Noviniek, médií a pr�
 
 ## Publikovanie a termín
 
-Po kontrole zoznamu a náhľadu kliknite **Publikovať** a potvrďte konkrétne zmeny. Publikujúci musí mať práva na priamu publikáciu celého balíka. Balík neobchádza schvaľovanie a nemení existujúce individuálne plány.
+Po kontrole zoznamu a náhľadu kliknite **Publikovať** a potvrďte konkrétne zmeny. Požiadavku spracuje najbližší beh úlohy na pozadí, predvolene do piatich minút. Ak pred ňou beží iný balík, počká na jeho dokončenie. Publikujúci musí mať práva na priamu publikáciu celého balíka. Balík neobchádza schvaľovanie a nemení existujúce individuálne plány.
 
 Pre spoločný termín použite **Naplánovať publikovanie**. Skontrolujte dátum, čas a zobrazené časové pásmo. Naplánovaný balík sa neupravuje. **Zmeniť termín** posunie celý balík jednou operáciou; **Zrušiť plánovanie** zachová obsah aj rozhodnutia a vráti prípravu. Náhľad Noviniek používa budúci termín, po zrušení aktuálny čas. Menu nemá nový časový filter.
 
-Cron kontroluje termíny každú minútu aj po odhlásení redaktora. Znovu preverí používateľa, práva, konflikty a individuálne plány. Nový problém zastaví balík a prehľad uvedie dôvod. Po oprave použite **Obnoviť prípravu** a nové porovnanie.
+Spoločná úloha kontroluje termíny predvolene každých päť minút aj po odhlásení redaktora. Presný interval nastavuje správca. Znovu preverí používateľa, práva, konflikty a individuálne plány. Nový problém zastaví balík a prehľad uvedie dôvod. Po oprave použite **Obnoviť prípravu** a nové porovnanie.
 
 Publikovanie prebieha po položkách. Pri chybe už dokončené položky môžu byť verejné. Skontrolujte priebeh a dôvod; po odstránení príčiny overte **Pokračovať**. Balík ani jeho hotové položky neprepisujte ručne bez posúdenia správcu. Úspešný balík je uzavretý; pre ďalšiu kampaň vytvorte nový. Na návrat do bežnej editácie vyberte v prepínači **Hlavná verzia**.
 

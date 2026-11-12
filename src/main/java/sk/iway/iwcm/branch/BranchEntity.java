@@ -60,6 +60,9 @@ public class BranchEntity
     @Column(name = "scheduled_by")
     @DataTableColumn(hidden = true, hiddenEditor = true)
     private Integer scheduledBy;
+    @Column(name = "publish_requested_by")
+    @DataTableColumn(hidden = true, hiddenEditor = true)
+    private Integer publishRequestedBy;
     @Column(name = "created_by")
     @DataTableColumn(hidden = true, hiddenEditor = true)
     private Integer createdBy;

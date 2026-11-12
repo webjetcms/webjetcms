@@ -4425,6 +4425,7 @@ CREATE TABLE IF NOT EXISTS branches (
     `revision` BIGINT NOT NULL DEFAULT 0,
     `publish_at` DATETIME NULL,
     `scheduled_by` INT NULL,
+    `publish_requested_by` INT NULL,
     `created_by` INT NOT NULL,
     `updated_by` INT NOT NULL,
     `created_at` DATETIME NOT NULL,
@@ -4680,7 +4681,7 @@ CREATE TABLE IF NOT EXISTS branch_files (
                 <void property="author"><string>webjet</string></void>
                 <void property="date"><string>09.11.2026</string></void>
                 <void property="desc"><string>Publishing branches P07 - admin-node cron, gated by branchesEnabled</string></void>
-                <void property="mysql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, businessDays, cluster_node, audit_task, run_at_startup, enable_task) SELECT 'Publishing branches', '0', '*', '*', '*', '*', '*', '*', 'sk.iway.iwcm.branch.BranchScheduler', false, 'all-admin', false, false, true WHERE NOT EXISTS (SELECT 1 FROM crontab WHERE task='sk.iway.iwcm.branch.BranchScheduler')</string></void>
+                <void property="mysql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, businessDays, cluster_node, audit_task, run_at_startup, enable_task) SELECT 'Publishing branches', '0', '*/5', '*', '*', '*', '*', '*', 'sk.iway.iwcm.branch.BranchScheduler', false, 'all-admin', false, false, true WHERE NOT EXISTS (SELECT 1 FROM crontab WHERE task='sk.iway.iwcm.branch.BranchScheduler')</string></void>
             </object>
         </void>
 

@@ -3,18 +3,26 @@ package sk.iway.iwcm.branch;
 import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.users.UsersDB;
 
-/** Existing WebJET cron entry point for due packages on administrative nodes. */
+/** Fixed WebJET cron task that publishes queued requests and due packages on administrative nodes. */
 public final class BranchScheduler {
+    private static final AtomicBoolean RUNNING=new AtomicBoolean();
     private BranchScheduler() { }
 
     public static void main(String[] args) {
-        if(!Constants.getBoolean("branchesEnabled") || !Constants.getBoolean("enableStaticFilesExternalDir") || ClusterDB.isPublicNode())return;
+        if(!BranchAccess.isEnabled() || ClusterDB.isPublicNode())return;
+        if(!RUNNING.compareAndSet(false,true))return;
+        try {publish();}
+        finally {RUNNING.set(false);}
+    }
+
+    private static void publish() {
         try {
             // Stagger dynamic admin nodes; the database claim remains the protection against duplicate execution.
             Thread.sleep(ThreadLocalRandom.current().nextInt(10000));
@@ -23,6 +31,11 @@ public final class BranchScheduler {
         try {
             BranchReadiness.verify();
             BranchService branches=BranchService.getInstance();
+            for(BranchEntity item:branches.publicationRequests()) {
+                try {new BranchPublishService().runRequested(item.getId(),item.getPublishRequestedBy(),item.getRevision());}
+                catch(Exception ex){Logger.error(BranchScheduler.class,ex);}
+                finally{SetCharacterEncodingFilter.setCurrentRequestBean(previous);BranchView.invalidate();}
+            }
             for(BranchEntity item:branches.due(new Timestamp(System.currentTimeMillis()))) {
                 try {
                     String domain = BranchDomains.name(item.getDomainId());
@@ -36,13 +49,13 @@ public final class BranchScheduler {
                         BranchMergeService merge=new BranchMergeService();
                         var report=merge.prepare(item.getId(),domain,user,item.getRevision());
                         merge.claimScheduled(item.getId(),domain,user,item.getRevision(),report.preparationHash());
-                        new BranchPublishService().kickoff(item.getId(),item.getScheduledBy());
+                        new BranchPublishService().run(item.getId(),item.getScheduledBy());
                     }
                 }catch(Exception ex){attention(item,ex);}
                 finally{SetCharacterEncodingFilter.setCurrentRequestBean(previous);BranchView.invalidate();}
             }
         }catch(Exception ex){Logger.error(BranchScheduler.class,ex);}
-        finally {SetCharacterEncodingFilter.setCurrentRequestBean(previous);}
+        finally {try {SetCharacterEncodingFilter.unRegisterDataContext();}finally {SetCharacterEncodingFilter.setCurrentRequestBean(previous);}}
     }
 
     private static void attention(BranchEntity item,Exception error) {

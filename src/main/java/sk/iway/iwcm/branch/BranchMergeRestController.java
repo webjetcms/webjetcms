@@ -67,8 +67,7 @@ public class BranchMergeRestController {
     private ResponseEntity<BranchMergeService.Report> execute(long id,Execution input,HttpServletRequest request,boolean resume) {
         Identity user=fresh(request);String domain=access.requireDomain(request,user);
         try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {
-            BranchMergeService.Report report=merge.claim(id,domain,user,input.expectedRevision(),input.preparationHash(),resume);
-            new BranchPublishService().kickoff(id,user.getUserId());
+            BranchMergeService.Report report=merge.enqueue(id,domain,user,input.expectedRevision(),input.preparationHash(),resume);
             return ResponseEntity.accepted().body(report);
         }
     }

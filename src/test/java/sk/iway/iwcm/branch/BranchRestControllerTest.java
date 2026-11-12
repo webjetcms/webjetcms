@@ -65,6 +65,7 @@ class BranchRestControllerTest extends BaseWebjetTest {
     @Test void standardEditorSetsDomainAndInitialValuesBeforeInheritedInsert() {
         var input=new BranchEntity();input.setId(99L);input.setDomainId(2);
         input.setName("  Campaign  ");input.setState("MERGED");input.setRevision(999L);
+        input.setPublishRequestedBy(99);
         when(repository.save(any())).thenAnswer(call->{BranchEntity row=call.getArgument(0);row.setId(42L);return row;});
         var edit=new DatatableRequest<Long,BranchEntity>();edit.setAction("create");edit.setData(Map.of(-1L,input));
         try(var readiness=mockStatic(BranchReadiness.class)) {
@@ -74,6 +75,7 @@ class BranchRestControllerTest extends BaseWebjetTest {
         assertEquals(42L,input.getId());assertEquals(1,input.getDomainId());
         assertEquals("Campaign",input.getName());assertEquals("DRAFT",input.getState());assertEquals(0L,input.getRevision());
         assertEquals(7,input.getCreatedBy());assertEquals(7,input.getUpdatedBy());
+        assertNull(input.getPublishRequestedBy());
         assertEquals(input.getCreatedAt(),input.getUpdatedAt());
         verify(repository).save(input);
     }

@@ -24,7 +24,7 @@ class BranchAccessTest {
         try (var constants = mockStatic(Constants.class); var users = mockStatic(UsersDB.class)) {
             assertStatus(HttpStatus.NOT_FOUND, () -> access.requireUser(request));
             constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(true);
-            assertStatus(HttpStatus.CONFLICT, () -> access.requireUser(request));
+            assertStatus(HttpStatus.NOT_FOUND, () -> access.requireUser(request));
             constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
             assertStatus(HttpStatus.FORBIDDEN, () -> access.requireUser(request));
             Identity user = mock(Identity.class);

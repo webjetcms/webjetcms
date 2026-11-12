@@ -11,6 +11,7 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.admin.DocumentationTools;
+import sk.iway.iwcm.branch.BranchAccess;
 import sk.iway.iwcm.branch.BranchContexts;
 import sk.iway.iwcm.branch.BranchProductionSection;
 import sk.iway.iwcm.branch.BranchSelection;
@@ -49,7 +50,7 @@ public class LayoutBean {
     public java.util.Map<String,Object> getBranchScreen() {
         var context = BranchContexts.current();
         var selection = BranchProductionSection.currentSelection();
-        boolean enabled=Constants.getBoolean("branchesEnabled")&&Constants.getBoolean("enableStaticFilesExternalDir");
+        boolean enabled=BranchAccess.isEnabled();
         boolean allowed=enabled&&user!=null&&user.isAdmin()&&user.isEnabledItem("menuBranches");
         long selectedId = selection == null ? context.branchId() : selection.branchId();
         String domain = selection != null ? selection.domainName() : context.isBranch() ? context.domainName() : header.getCurrentDomain();

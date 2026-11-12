@@ -74,6 +74,64 @@ class BranchMergeTest extends BranchJpaTest {
         original.forEach(Constants::setString);SetCharacterEncodingFilter.setCurrentRequestBean(null);GroupsDB.getInstance(true);DocDB.getInstance(true);sk.iway.iwcm.system.Modules.getInstance(null,true);
     }
 
+    /** The fixed cron consumes a durable request without creating per-package cron tasks. */
+    @Test void publicationCronProcessesRequestWithoutCreatingTasks()throws Exception {
+        long cronTasks=count("SELECT COUNT(*) FROM crontab");
+        var report=ready();service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false);
+        assertEquals(user.getUserId(),branchService().publication(f.branch).getPublishRequestedBy());
+        assertEquals(cronTasks,count("SELECT COUNT(*) FROM crontab"));
+        var queued=detail();
+        assertThrows(ResponseStatusException.class,()->service.enqueue(f.branch,DOMAIN,user,queued.revision(),queued.preparationHash(),true));
+        Map<String,String> live=productionInputs();
+        Constants.setBoolean("branchesEnabled",false);
+        try {BranchScheduler.main(new String[0]);assertEquals(live,productionInputs());}
+        finally {Constants.setBoolean("branchesEnabled",true);}
+        assertEquals(user.getUserId(),branchService().publication(f.branch).getPublishRequestedBy());
+        BranchScheduler.main(new String[0]);
+        assertEquals("MERGED",detail().state(),detail().lastError());
+        assertNull(branchService().find(f.branch,DOMAIN).orElseThrow().getPublishRequestedBy());
+        assertEquals(cronTasks,count("SELECT COUNT(*) FROM crontab"));
+        long histories=count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0));
+        Map<String,String> published=productionInputs();
+        BranchScheduler.main(new String[0]);
+        assertEquals(published,productionInputs());
+        assertEquals(histories,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0)));
+    }
+
+    /** A stale candidate cannot consume the request for a newer package revision. */
+    @Test void publicationCronRejectsStaleRequestClaim()throws Exception {
+        var report=ready();var queued=service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false);
+        Map<String,String> live=productionInputs();
+        sql("UPDATE branches SET revision=revision+1 WHERE id="+f.branch);
+        new BranchPublishService().runRequested(f.branch,user.getUserId(),queued.revision());
+        assertEquals(live,productionInputs());assertEquals("MERGING",detail().state());
+        assertEquals(user.getUserId(),branchService().publication(f.branch).getPublishRequestedBy());
+        assertFalse(BranchPublishService.isRunning(f.branch));
+    }
+
+    /** A process interrupted after taking its request needs an explicit reviewed resume. */
+    @Test void publicationCronDoesNotResumeInterruptedPublication()throws Exception {
+        var report=ready();service.claim(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false);
+        Map<String,String> live=productionInputs();
+        BranchScheduler.main(new String[0]);
+        assertEquals("MERGING",detail().state());assertEquals(live,productionInputs());
+        var retry=ready();service.enqueue(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);
+        BranchScheduler.main(new String[0]);
+        assertEquals("MERGED",detail().state(),detail().lastError());
+    }
+
+    /** A failed publication is not retried by later periodic ticks. */
+    @Test void publicationCronDoesNotRetryFailedPublication()throws Exception {
+        var report=ready();service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false);
+        sql("UPDATE documents SET title='autotest changed after publication request' WHERE doc_id="+f.pages.get(0));
+        Map<String,String> live=productionInputs();
+        BranchScheduler.main(new String[0]);
+        var failed=detail();assertEquals("MERGE_FAILED",failed.state());assertEquals(live,productionInputs());
+        assertNull(branchService().find(f.branch,DOMAIN).orElseThrow().getPublishRequestedBy());
+        BranchScheduler.main(new String[0]);
+        assertEquals(failed.revision(),detail().revision());assertEquals(live,productionInputs());
+    }
+
     @Test void twentyPagePackagePublishesStableIdsAuthorDatesMediaAndMovedFolder()throws Exception {
         var report=ready();assertEquals(20,report.items().stream().filter(i->i.type().equals("DOCUMENT")).count());
         assertEquals(Set.of("DOCUMENT","GROUP","MEDIA","FILE"),report.items().stream().map(BranchMergeService.Item::type).collect(java.util.stream.Collectors.toSet()));

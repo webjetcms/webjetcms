@@ -50,7 +50,7 @@ public final class BranchFilter implements Filter {
             }
             return;
         }
-        if(!Constants.getBoolean("branchesEnabled") || !Constants.getBoolean("enableStaticFilesExternalDir")) {
+        if(!BranchAccess.isEnabled()) {
             Object selected=request.getSession(false)==null?null:request.getSession(false).getAttribute(BranchSelection.SESSION_KEY);
             boolean frameContext=request.getParameter("branchId")!=null && ("true".equals(request.getParameter("inlineEditorAdmin")) || path.startsWith("/apps/news/admin/") || path.startsWith("/admin/v9/webpages/component/"));
             boolean staleBranch=productionRequest || (frameContext && !"0".equals(request.getParameter("branchId")))

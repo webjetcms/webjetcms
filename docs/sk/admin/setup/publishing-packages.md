@@ -37,9 +37,11 @@ Pri TLS terminácii nastavte existujúce `serverBeyoundProxy=true` a `requestIsS
 
 ## Cron
 
-Použite jedinú existujúcu úlohu `sk.iway.iwcm.branch.BranchScheduler`, každú minútu (`* * * * *`). V poli **Beží na uzle** nastavte **`CronTask.clusterNode=all-admin`**, alebo konkrétny stabilný admin uzol. Presné meno uzla nie je povinné. Admin/public rolu určuje existujúce `clusterMyNodeType`; public uzol scheduler odmietne aj pri chybnej konfigurácii úlohy.
+Použite jedinú trvalú úlohu `sk.iway.iwcm.branch.BranchScheduler`, predvolene každých päť minút (`*/5 * * * *`). Interval môžete upraviť v Úlohách na pozadí. V poli **Beží na uzle** nastavte **`CronTask.clusterNode=all-admin`**, alebo konkrétny stabilný admin uzol. Presné meno uzla nie je povinné. Admin/public rolu určuje existujúce `clusterMyNodeType`; public uzol scheduler odmietne aj pri chybnej konfigurácii úlohy.
 
 Náhodné oneskorenie 0–10 sekúnd rozloží admin behy. Pred dvojitým spracovaním chráni transakčné prevzatie `SCHEDULED → MERGING` podľa revízie, nie oneskorenie. Skontrolujte, že migrácia nevytvorila duplicitnú úlohu. POC úloha má ID 14; toto ID nekopírujte do cudzej DB. Nastavenie `all-admin` samo nepotvrdzuje otestovanie Kubernetes/failover. Cron používa čerstvé práva účtu uloženého v `scheduled_by` a nepotrebuje online redaktorskú session.
+
+Úloha vyhľadá splatné naplánované balíky a uložené požiadavky na ručné publikovanie alebo pokračovanie priamo v tabuľke `branches`. Balíky spracuje postupne vo svojom cron vlákne, podobne ako `GroupPublisher` spracúva plánované zmeny priečinkov. Pre jednotlivé balíky sa nevytvárajú nové cron úlohy. Aj ručné publikovanie čaká na najbližší beh; pri predvolenom intervale môže začať približne o päť minút alebo neskôr, ak pred ním beží iný balík. Požiadavka zostáva uložená aj po reštarte. Po prevzatí sa jej príznak vymaže, takže chyba alebo pád nespustí automatické opakovanie. Vtedy použite kontrolu priebehu a pokračovanie podľa časti Obnova.
 
 ## Vypnutie
 

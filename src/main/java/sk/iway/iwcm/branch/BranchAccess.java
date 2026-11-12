@@ -17,11 +17,14 @@ import sk.iway.iwcm.users.UsersDB;
 public class BranchAccess {
     public static final String PERMISSION = "menuBranches";
 
+    /** Returns whether working versions are enabled with their required domain separation. */
+    public static boolean isEnabled() {
+        return Constants.getBoolean("branchesEnabled") && Constants.getBoolean("enableStaticFilesExternalDir");
+    }
+
     public Identity requireUser(HttpServletRequest request) {
-        if (!Constants.getBoolean("branchesEnabled"))
+        if (!isEnabled())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Branches are disabled");
-        if (!Constants.getBoolean("enableStaticFilesExternalDir"))
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Working versions require enableStaticFilesExternalDir=true");
         Identity user = UsersDB.getCurrentUser(request);
         if (user == null || !user.isAdmin() || !user.isEnabledItem(PERMISSION))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
