@@ -104,6 +104,7 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 </div>
 
 - Page Builder - improved detection of changes in the HTML code of the page so that the message "You probably have unsaved text in the editor" is not displayed even if you have not actually changed any text on the page (#317).
+- Page Builder - fixed saving pages with incomplete HTML structure and invalid links to older editor instances. The content of such elements will be preserved along with current edits to other blocks (#400).
 - [Page Builder](redactor/webpages/pagebuilder.md) - after clicking on the + in the yellow line in the **Insert Block** window on the **Basic** tab, the **Image** and **Application** options have been added. They will open the corresponding editor dialog and allow you to insert content at the selected location (#339).
 - Page Builder - added [block copying between pages](redactor/webpages/pagebuilder.md#block-copying-between-pages). The **Copy** and **Paste** options transfer sections, containers, and columns with content and custom styles. The editor will only offer locations suitable for the block type. The clipboard is valid for 30 minutes from the time of copying (#353).
 - Templates - on the Advanced tab you can set [removing links from page URL](frontend/templates/templates.md#advanced-tab): according to `urlRemoveSpojky`, always remove or keep. This way, the blog can keep links even when removal is enabled for the rest of the site (#353).
@@ -223,7 +224,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
-- AI assistants - new [Token limits] tab (redactor/ai/settings/README.md#card---token-limits) allows you to limit the assistant's consumption and view its development over the last 14 days. Notifications will be sent to the specified notification email when the 75% and 100% limit is reached. After the limit is reached, further requests will be blocked. Consumption can be reset manually for selected assistants or the current domain, or regularly for all domains with the `AiTokenUsageReset` task, which runs every day at midnight by default (#58814).
+- AI assistants - new tab [Token limits](redactor/ai/settings/README.md#karta---limity-tokenov) allows you to limit the assistant's consumption and view its development over the last 14 days. Notifications will be sent to the specified notification email when the 75% and 100% limit is reached. After the limit is reached, further requests will be blocked. Consumption can be reset manually for selected assistants or the current domain, or regularly for all domains with the `AiTokenUsageReset` task, which runs every day at midnight (#400) by default.
 - AI assistants - fixed handling of continuous text responses including Gemini. Token counts and error messages are now handled correctly even when splitting or merging network blocks; technical data is not inserted into the generated text. An interrupted response is no longer marked as successfully completed.
 - Enumerations - type selection and management moved to the tree in the left panel with search. More in [Enumerations documentation](redactor/apps/enumeration/README.md) (#58786).
 - Blog - selecting and adding sections are available in the tree in the left panel with search. More in [Blog documentation](redactor/apps/blog/README.md) (#58786).
@@ -343,6 +344,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Data tables - after editing a single record, when forced to refresh the data, the page with the edited record is displayed according to the current sorting. In the configuration, the variable is searched by name even when its ID is changed. When deleting, the current page is preserved, or the last valid page is displayed. When creating a record, the pagination is still reset (#400).
 - Multi-step forms - the item identifier is generated from the field name text without HTML tags so that name formatting does not affect the identifier (#396).
 - Multi-step forms - when an item, step, or form is deleted, the corresponding display conditions and obligations are also deleted. Conditions for already deleted items do not block the deletion of the fields they referenced (#395).
 - Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
@@ -747,6 +749,7 @@ Redesigned application properties settings in the editor from the old code in `J
 > A patch version of the original version 2026.0.
 
 - Database - fixed generation of SQL conditions `IN` and `NOT IN` with a large number of values ​​by dividing the lists into smaller parts. Fixed errors when exceeding the limit of 1000 values ​​in the Oracle database, for example when loading the page history or working with an extensive folder tree. The maximum number of values ​​in one part is determined by the configuration variable `dbInClauseMaxItems` (default 1000, in Oracle no more than 1000).
+- Database - unified date types in SQL scripts for new installations: PostgreSQL uses `TIMESTAMP WITHOUT TIME ZONE`, fixed incorrect use of `TIMESTAMP` in MariaDB and Microsoft SQL. Existing databases are not automatically converted (#399).
 - Web pages - fixed limiting search and replace in folder names to the selected folder tree and setting the parent when fixing erroneously deleted folders during moving a page to the trash (#390).
 - Event Calendar - fixed filtering by multiple perex groups when setting `perexGroupUseJoin=true` without duplicate events. Fixed limit on number of results also for Oracle and Microsoft SQL (#390).
 - Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).

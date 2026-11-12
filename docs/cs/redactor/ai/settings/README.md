@@ -164,7 +164,7 @@ Hodnota **Den v týdnu = `1`** znamená pondělí, `0` znamená neděli. Odpoví
 
 Úloha vynuluje spotřebu **všech AI asistentů ve všech doménách**. Nepřijímá parametr domény. Nastavené limity ani historické statistiky nemění a počet aktualizovaných asistentů zapíše do auditu automatizovaných úkolů.
 
-Pokud existuje povolená úloha `AiTokenUsageReset` s budoucím termínem spuštění, nad seznamem asistentů se zobrazí informace **Nejbližší vynulování počtu použitých tokenů** s datem a časem. U více povolených úloh se zobrazí nejbližší termín.
+Pokud má alespoň jeden asistent v aktuální doméně nastavený limit tokenů větší než nula a existuje povolená úloha `AiTokenUsageReset` s budoucím termínem spuštění, při načtení seznamu asistentů se na 10 sekund zobrazí informační notifikace **Nejbližší vynulování počtu použitých tokenů** s datem a časem. U více povolených úloh se zobrazí nejbližší termín. Při filtrování nebo stránkování tabulky se oznámení zopakuje pouze tehdy, pokud se termín změnil.
 
 ## Nastavení četového asistenta
 
