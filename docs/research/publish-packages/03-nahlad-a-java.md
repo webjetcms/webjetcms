@@ -351,7 +351,7 @@ Presné endpointy zoznamu balíkov a merge patria do príslušných dokumentov. 
 | Endpoint | Výsledok |
 | --- | --- |
 | `GET /admin/rest/branches` | Dostupné neuzavreté verzie aktuálnej admin domény pre prepínač, vrátane názvu a stavu. Prehľad môže výslovne vyžiadať aj uzavreté verzie cez `includeClosed=true`. |
-| `POST /admin/rest/branches` s `{ "name": "Vianočná kampaň", "description": "...", "expectedDomainId": 123 }` | Overí práva a údaje aj zhodu očakávanej domény formulára s aktuálnou admin doménou servera; nesúlad vráti `409`. Vlastníka určí server a založí prázdnu `DRAFT` verziu bez termínu. Vráti `201` a identitu/názov/doménu/stav. Nemení admin výber, nevytvára snapshot webu ani vetvu z inej vetvy. |
+| `POST /admin/rest/branches/editor` s DataTable akciou `create` | Jediná cesta vytvorenia pracovnej verzie cez štandardný Editor. Doménu nastavuje server; `beforeSave` inicializuje prázdnu `DRAFT` verziu bez termínu a bez snapshotu webu. Odpoveď má štandardný DataTable kontrakt. Aktívny admin výber sa nemení. Samostatný `POST /admin/rest/branches` nie je podporovaný. |
 | `GET /admin/rest/branches/context` | Produkcia alebo zvolená vetva pre aktuálnu doménu, názov a aktuálne oprávnenia. |
 | `POST /admin/rest/branches/context` s `{ "branchId": 42, "expectedDomainId": 123 }` | Overenie domény otvorenej obrazovky a zmena výberu v administrácii; `0` vyberie produkciu. Nesúlad domény vráti `409` aj pri voľbe `0`. Existujúca CSRF ochrana zostáva. |
 | `GET /admin/rest/branches/42/preview-link?docId=123` | Overená URL na výslednú stránku vetvy; pri zmazanej/nedostupnej položke vysvetlená chyba. |
@@ -359,7 +359,7 @@ Presné endpointy zoznamu balíkov a merge patria do príslušných dokumentov. 
 
 Server odpovedá `403` pri nedostatočnom oprávnení, `404` pri neexistujúcom zdroji v príslušnom kontexte a `409` pri neplatnom stave alebo nesúlade administračnej obrazovky s výberom. Chyby používať v existujúcom štýle REST/DataTables, bez nového všeobecného API obalu.
 
-UI `Vytvoriť` použije POST kolekcie a otvorí detail; `Upravovať web` až následne použije POST `/context` s vráteným ID. Rovnaký endpoint výberu používa prepínač. Pri chybe sa aktívny indikátor nezmení. Vybraný neuzavretý stav môže dovoliť iba čítanie; voľba kontextu sama nemení životný cyklus vetvy. Po uzavretí aktívnej verzie sa zápis odmietne a UI ponúkne explicitný prechod na produkciu; starý request sa nikdy automaticky nepresmeruje na LIVE. Konkrétne stavy, formulár a navigáciu určuje [návrh UI](05-rozhranie.md).
+UI `Vytvoriť` otvorí štandardný DataTable editor na stránke Pracovné verzie. `Upravovať web` následne použije POST `/context` s ID označeného riadka. Rovnaký endpoint výberu používa prepínač. Pri chybe sa aktívny indikátor nezmení. Vybraný neuzavretý stav môže dovoliť iba čítanie; voľba kontextu sama nemení životný cyklus vetvy. Po uzavretí aktívnej verzie sa zápis odmietne a UI ponúkne explicitný prechod na produkciu; starý request sa nikdy automaticky nepresmeruje na LIVE. Konkrétne stavy, formulár a navigáciu určuje [návrh UI](05-rozhranie.md).
 
 ## 11. Overenie návrhu pri realizácii
 

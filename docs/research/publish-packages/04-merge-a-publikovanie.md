@@ -211,12 +211,10 @@ Balík nevytvára paralelné publikačné histórie pre dnešný `DocPublishServ
 
 ## 11. Navrhované API a dokončenie
 
-Všetky mutácie používajú existujúcu autentifikáciu, CSRF ochranu, obsahové práva a očakávanú `revision`. Riadiace endpointy pracujú s explicitným ID vetvy a produkčným technickým kontextom podľa dokumentu 03.
+Všetky mutácie používajú existujúcu autentifikáciu, CSRF ochranu, obsahové práva a očakávanú `revision`. Riadiace endpointy pracujú s explicitným ID vetvy a produkčným technickým kontextom podľa dokumentu 03. Metadáta spravuje štandardný DataTable Editor na `/admin/rest/branches/editor`; detail metadát používa `GET /admin/rest/branches/{id}` a report porovnania aj publikovania `GET /admin/rest/branches/{id}/progress`.
 
 | Endpoint pod `/admin/rest/branches/{id}` | Kontrakt |
 | --- | --- |
-| `GET` | Detail vetvy: metadáta, stav, revízia, dostupné akcie a súhrn položiek. Aktuálnu pripravenosť potvrdzuje až `/prepare`; starý výsledok má čas kontroly. |
-| `PATCH` | `{ expectedRevision, name, description }`; v `DRAFT` upraví názov/poznámku a zvýši revíziu. Doména, vlastník a obsahové položky sa tým nemenia. |
 | `POST /discard-change` | `{ expectedRevision, type, objectKey, workHash }`; iba v `DRAFT` zahodí konkrétnu pracovnú zmenu po kontrole práv a závislostí. Závislé položky vráti ako prekážku, nemaže ich potichu. |
 | `POST /cancel` | `{ expectedRevision }`; uzavrie dosiaľ nepublikovanú vetvu z `DRAFT`, `SCHEDULED` alebo `NEEDS_ATTENTION` do `CANCELLED`, zruší jej termín. Nie je to fyzické čistenie ani rollback; v `MERGING`/`MERGE_FAILED` sa odmietne. |
 | `POST /prepare` | Overí `{ expectedRevision }`; vráti položky, chyby, konflikty, výslednú revíziu a `preparationHash` pre zobrazené porovnanie. Bez publikovania. |

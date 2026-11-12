@@ -409,7 +409,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         const fixture = retain();
         I.amOnPage('/logoff.do?forward=/admin/logon/');
         const denied = await I.executeScript(async f => {
-            const detail = await fetch(`/admin/rest/branches/${f.branchId}`);
+            const detail = await fetch(`/admin/rest/branches/${f.branchId}/progress`);
             const file = await fetch(`/admin/rest/branches/${f.branchId}/file-version?path=${encodeURIComponent(f.file)}&version=BASE`);
             const publish = await fetch(`/admin/rest/branches/${f.branchId}/merge`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({expectedRevision: 0, preparationHash: 'unauthorized-autotest'})});
             return {detail: detail.status, file: file.status, publish: publish.status};

@@ -11,11 +11,10 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import sk.iway.iwcm.*;
-import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Retained P05 UI data only; never reuses or edits the P04 demo branch. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P05_MANUAL",matches="true")
-class BranchP05ManualTest extends BaseWebjetTest {
+class BranchP05ManualTest extends BranchJpaTest {
     private static final String DOMAIN="iwcm.interway.sk";
     @Test void prepareUiFixture()throws Exception {
         try(Connection c=DBPool.getConnection();Statement s=c.createStatement()) {
@@ -50,8 +49,8 @@ class BranchP05ManualTest extends BaseWebjetTest {
             try(PreparedStatement s=c.prepareStatement("INSERT INTO news_templates(name,template_html,paging_html,paging_position,engine,domain_id) VALUES ('p05-autotest',?,'',1,'velocity',1)")){s.setString(1,"<ol class='p05-news'>#foreach($item in $news)<li data-id='$item.docId'><a href='$actionBean.link($item)'>$item.title</a><span>$item.htmlData</span><img class='p05-news-image' src='$item.perexImage'>#foreach($medium in $MediaDB.getMedia($item, ''))<a class='p05-news-media' data-media='$medium.mediaId' href='$medium.mediaLink'>$medium.mediaTitleSk</a>#end</li>#end</ol>");s.executeUpdate();}
             c.commit();
         }
-        BranchContext a=new BranchContext(new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P05 media/files A","Retained local P05 UI fixture",1).getId(),DOMAIN,1,BranchContext.Mode.ADMIN);
-        long b=new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P05 media/files B","Unchanged comparison version",1).getId();
+        BranchContext a=new BranchContext(createBranch(BranchTestDomains.ensure(DOMAIN),"autotest P05 media/files A","Retained local P05 UI fixture",1).getId(),DOMAIN,1,BranchContext.Mode.ADMIN);
+        long b=createBranch(BranchTestDomains.ensure(DOMAIN),"autotest P05 media/files B","Unchanged comparison version",1).getId();
         var fresh=new LinkedHashMap<>(BranchDocumentMapper.initialValues(1,1,Instant.now(),false));fresh.put("group_id",group);fresh.put("temp_id",template);fresh.put("title","autotest P05 WORK-only page");fresh.put("navbar","autotest P05 WORK-only page");fresh.put("virtual_path","/p05-autotest/work-only.html");fresh.put("available",true);fresh.put("html_data","autotest P05 WORK perex");fresh.put("data","<h1>autotest P05 WORK-only page</h1>");fresh.put("perex_image","/images/branch-p05-autotest/proof.png");
         int newPage=((Number)new BranchStore().create(a,BranchType.DOCUMENT,fresh).get("doc_id")).intValue();
         String manifest="branchA="+a.branchId()+"\nbranchB="+b+"\ngroupId="+group+"\npageId="+page+"\nhomeId="+page+"\nnewPageId="+newPage+"\nmediaId="+mediaId+"\ncategoryId="+category+"\nimage=/images/branch-p05-autotest/proof.png\npdf=/files/branch-p05-autotest/proof.pdf\nurl=http://iwcm.interway.sk:8086/admin/webpages/branch-preview/"+a.branchId()+"/p05-autotest/\n";

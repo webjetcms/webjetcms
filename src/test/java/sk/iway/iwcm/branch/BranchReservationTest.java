@@ -18,11 +18,10 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.PkeyGenerator;
-import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Explicit two-JVM restart proof for the P02 public allocator/storage implementation. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P02_DB",matches="true")
-class BranchReservationTest extends BaseWebjetTest {
+class BranchReservationTest extends BranchJpaTest {
     @BeforeEach void configure() throws Exception {
         try(Connection connection=DBPool.getConnection()){assertEquals("webjet_p01",connection.getCatalog());assertTrue(connection.getMetaData().getURL().startsWith(BranchStorageTest.URL));}
         Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
@@ -33,8 +32,8 @@ class BranchReservationTest extends BaseWebjetTest {
     /** Reserves two identities per type, interleaves native/legacy LIVE generation and persists the restart fixture. */
     @Test @EnabledIfEnvironmentVariable(named="WEBJET_P02_RESTART",matches="before") void beforeDatabaseRestart() throws Exception {
         assertEquals("before",System.getenv("WEBJET_P02_RESTART"),"Run the documented before phase explicitly");
-        BranchService service=new BranchService();BranchStore store=new BranchStore();
-        BranchEntity branch=service.create("p02-restart.example","P02 restart fixture",null,1);
+        BranchStore store=new BranchStore();
+        BranchEntity branch=createBranch("p02-restart.example","P02 restart fixture",null,1);
         BranchContext context=new BranchContext(branch.getId(),branch.getDomainName(),1,BranchContext.Mode.ADMIN);
         try(Connection connection=BranchStorageTest.connect()) {
             BranchStorageTest.execute(connection,"CREATE TABLE IF NOT EXISTS p02_restart_fixture (branch_id BIGINT, before_uptime BIGINT, type VARCHAR(16), lower_id INT, higher_id INT, native_id INT) ENGINE=InnoDB");

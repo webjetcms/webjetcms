@@ -10,12 +10,11 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import sk.iway.iwcm.*;
-import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.users.PasswordSecurity;
 
 /** Explicitly retained local demo, restricted to the disposable P01 database. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P03_MANUAL",matches="true")
-class BranchManualFixtureTest extends BaseWebjetTest {
+class BranchManualFixtureTest extends BranchJpaTest {
     private static final String DOMAIN="iwcm.interway.sk";
     private final BranchStore store=new BranchStore();
     @Test void prepareRetainedManualPreview()throws Exception {
@@ -88,6 +87,6 @@ class BranchManualFixtureTest extends BaseWebjetTest {
     private int liveDoc(int group,int template,String title,String url,int priority,String html)throws Exception {
         try(Connection connection=DBPool.getConnection()) {connection.setAutoCommit(false);int id=BranchStore.reserveNative(connection,BranchType.DOCUMENT);var row=new LinkedHashMap<>(BranchDocumentMapper.initialValues(id,1,Instant.now(),false));row.put("title",title);row.put("navbar",title);row.put("group_id",group);row.put("temp_id",template);row.put("virtual_path",url);row.put("available",true);row.put("show_in_menu",true);row.put("sort_priority",priority);row.put("html_data","LIVE perex");row.put("data",html);BranchRowWriter.insertDocumentWithId(connection,BranchContext.live(DOMAIN,1),row);connection.commit();return id;}
     }
-    private BranchContext branch(String name){var value=new BranchService().create(BranchTestDomains.ensure(DOMAIN),name,"Retained P03 local fixture",1);return new BranchContext(value.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
+    private BranchContext branch(String name){var value=createBranch(BranchTestDomains.ensure(DOMAIN),name,"Retained P03 local fixture",1);return new BranchContext(value.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
     private void stage(BranchContext context,String path,Path source,String mime)throws Exception {var row=store.putFile(context,path,"FILE",BranchSnapshot.absent(),BranchFiles.hash(source),Files.size(source),mime,false);Path target=BranchFiles.workPath(context.branchId(),((Number)row.get("row_id")).longValue());Files.createDirectories(target.getParent());Files.move(source,target);}
 }

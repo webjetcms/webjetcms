@@ -1,11 +1,13 @@
 package sk.iway.iwcm.components.media;
 
 import java.util.List;
+import jakarta.persistence.QueryHint;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,10 @@ import sk.iway.spirit.model.Media;
 
 @Repository
 public interface MediaRepository extends DomainIdRepository<Media, Long> {
+
+    @QueryHints(@QueryHint(name="eclipselink.refresh", value="true"))
+    @Query("SELECT DISTINCT m FROM Media m LEFT JOIN FETCH m.groups WHERE m.mediaFkTableName=:tableName AND m.domainId=:domainId")
+    List<Media> findAllByMediaFkTableNameAndDomainId(@Param("tableName") String mediaFkTableName, @Param("domainId") Integer domainId);
 
     Page<Media> findAllByMediaFkTableNameAndDomainId(String mediaFkTableName, Integer domainId, Pageable pageable);
 

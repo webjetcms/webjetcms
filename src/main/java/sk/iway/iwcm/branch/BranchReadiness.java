@@ -27,6 +27,11 @@ public final class BranchReadiness {
     }
 
     /** Verifies physical storage and schema before a branch transaction can write. */
+    public static void verify() throws SQLException {
+        try (Connection connection = sk.iway.iwcm.DBPool.getConnection()) { verify(connection); }
+    }
+
+    /** Verifies prerequisites using the caller's transaction connection. */
     public static void verify(Connection connection) throws SQLException {
         requireEnabled();
         if (!"MariaDB".equals(connection.getMetaData().getDatabaseProductName())

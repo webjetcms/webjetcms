@@ -15,12 +15,11 @@ import org.springframework.data.domain.PageRequest;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
-import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.spirit.MediaDB;
 
 /** Real prepared bytes, media and administrative SQL; no mocked content lists. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P03_DB",matches="true")
-class BranchResourcesTest extends BaseWebjetTest {
+class BranchResourcesTest extends BranchJpaTest {
     private static final String DOMAIN="p03-resources.example";
     private long branch;private int group,doc,liveOwner,liveMedia,category;
     private Path privateRoot;
@@ -29,7 +28,7 @@ class BranchResourcesTest extends BaseWebjetTest {
         for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","mediaCheckAvailabilityMode","multiDomainEnabled","galleryEnableWatermarking"))config.put(key,Constants.getString(key));
         try(Connection connection=DBPool.getConnection()){assertEquals("webjet_p01",connection.getCatalog());assertTrue(connection.getMetaData().getURL().contains(":33316/"));}
         privateRoot=Files.createTempDirectory("webjet-p03-resources-");Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("galleryEnableWatermarking",false);
-        branch=new BranchService().create(BranchTestDomains.ensure(DOMAIN),"P03 resources","prepared bytes",1).getId();
+        branch=createBranch(BranchTestDomains.ensure(DOMAIN),"P03 resources","prepared bytes",1).getId();
         try(Connection connection=DBPool.getConnection()) {
             connection.setAutoCommit(false);group=BranchStore.reserveNative(connection,BranchType.GROUP);
             var values=new LinkedHashMap<>(BranchGroupMapper.initialValues(group,DOMAIN));values.put("group_name","P03 resources");values.put("url_dir_name","resources");BranchRowWriter.insertGroupWithId(connection,BranchContext.live(DOMAIN,1),values);connection.commit();

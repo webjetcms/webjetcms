@@ -15,11 +15,10 @@ import org.springframework.mock.web.MockPart;
 import org.springframework.mock.web.MockMultipartFile;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.system.elfinder.BranchFsVolume;
-import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Verifies actual WORK bytes, markers, conflicts and side-effect isolation on the POC database. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P05_DB",matches="true")
-class BranchFilesTest extends BaseWebjetTest {
+class BranchFilesTest extends BranchJpaTest {
     private static final String DOMAIN="p05-files.example";
     private final Map<String,String> configuration=new LinkedHashMap<>();
     private BranchContext a,b,foreign;
@@ -38,8 +37,8 @@ class BranchFilesTest extends BaseWebjetTest {
         RequestBean bean=new RequestBean();bean.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(bean);
         Constants.setString("cloudStaticFilesDir", externalRoot.toString()+java.io.File.separator);
         Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fbrowserShowOnlyWritableFolders",false);Constants.setBoolean("defaultDisableUpload",false);
-        a=context(new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P05 A","disposable files",1).getId());
-        b=context(new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P05 B","disposable files",1).getId());
+        a=context(createBranch(BranchTestDomains.ensure(DOMAIN),"autotest P05 A","disposable files",1).getId());
+        b=context(createBranch(BranchTestDomains.ensure(DOMAIN),"autotest P05 B","disposable files",1).getId());
         root="/files/autotest-p05-"+UUID.randomUUID();liveRoot=Path.of(Tools.getRealPath(root));Files.createDirectories(liveRoot);
         Files.writeString(liveRoot.resolve("existing.txt"),"original LIVE bytes");
         source=privateRoot.resolve("upload.txt");Files.writeString(source,"new WORK bytes");
@@ -60,7 +59,7 @@ class BranchFilesTest extends BaseWebjetTest {
 
     @Test void equalLogicalPathsStayInTheirOwnExternalDomainFolders() throws Exception {
         String otherDomain="p05-files-other.example";
-        long id=new BranchService().create(BranchTestDomains.ensure(otherDomain), "autotest external domain", null, 1).getId();
+        long id=createBranch(BranchTestDomains.ensure(otherDomain), "autotest external domain", null, 1).getId();
         foreign=new BranchContext(id,otherDomain,1,BranchContext.Mode.ADMIN);
         in(foreign, request -> {
             Path destination=Path.of(Tools.getRealPath(root+"/existing.txt"));

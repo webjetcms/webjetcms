@@ -1,8 +1,9 @@
 package sk.iway.iwcm.branch;
 
-import java.sql.*;
 import java.util.*;
-import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.media.MediaGroupRepository;
+import sk.iway.iwcm.components.media.MediaRepository;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.spirit.model.*;
 
@@ -10,54 +11,51 @@ import sk.iway.spirit.model.*;
 public final class BranchMedia {
     private BranchMedia() { }
     public static List<MediaGroupBean> categories(int folder) {
-        try(Connection connection=DBPool.getConnection()) {
-            List<MediaGroupBean> groups=sk.iway.spirit.MediaDB.filterDomainId(new ArrayList<>(definitions(connection).values()),true);
-            if(folder<1) return groups;
-            Set<Integer> ancestors=new HashSet<>();
-            for(sk.iway.iwcm.doc.GroupDetails group=BranchView.current().group(folder);group!=null&&ancestors.add(group.getGroupId());group=BranchView.current().group(group.getParentGroupId())) { }
-            return groups.stream().filter(group->group.getAvailableGroups()==null||group.getAvailableGroups().isBlank()||BranchFields.normalizedIds(group.getAvailableGroups()).stream().anyMatch(ancestors::contains)).toList();
-        } catch(SQLException ex) {throw new IllegalStateException("Cannot read media categories",ex);}
+        List<MediaGroupBean> groups=sk.iway.spirit.MediaDB.filterDomainId(new ArrayList<>(definitions().values()),true);
+        if(folder<1) return groups;
+        Set<Integer> ancestors=new HashSet<>();
+        for(sk.iway.iwcm.doc.GroupDetails group=BranchView.current().group(folder);group!=null&&ancestors.add(group.getGroupId());group=BranchView.current().group(group.getParentGroupId())) { }
+        return groups.stream().filter(group->group.getAvailableGroups()==null||group.getAvailableGroups().isBlank()||BranchFields.normalizedIds(group.getAvailableGroups()).stream().anyMatch(ancestors::contains)).toList();
     }
-    private static Map<Integer,MediaGroupBean> definitions(Connection connection)throws SQLException {
+    private static Map<Integer,MediaGroupBean> definitions() {
         Map<Integer,MediaGroupBean> definitions=new LinkedHashMap<>();
-        try(PreparedStatement statement=connection.prepareStatement("SELECT media_group_id,media_group_name,available_groups,related_pages FROM media_groups");ResultSet result=statement.executeQuery()) {
-            while(result.next()) {MediaGroupBean group=new MediaGroupBean();group.setMediaGroupId(result.getInt(1));group.setMediaGroupName(result.getString(2));group.setAvailableGroups(result.getString(3));group.setRelatedPages(result.getString(4));definitions.put(group.getMediaGroupId(),group);}
-        }
+        for(MediaGroupBean group:Tools.getSpringBean("mediaGroupRepository",MediaGroupRepository.class).findAllByOrderByIdAsc())
+            definitions.put(group.getMediaGroupId(),group);
         return definitions;
     }
     public static List<Media> list(int owner,List<MediaGroupBean> categories) {
         BranchView view=BranchView.current();
         Map<Integer,Map<String,Object>> rows=new LinkedHashMap<>();
-        try(Connection connection=DBPool.getConnection()) {
-            Map<Integer,MediaGroupBean> definitions=definitions(connection);
-            try(PreparedStatement statement=connection.prepareStatement("SELECT media_id FROM media WHERE media_fk_table_name='documents'")) {
-                try(ResultSet result=statement.executeQuery()) {while(result.next()) {
-                    int id=result.getInt(1);rows.put(id,BranchStore.readLive(connection,BranchType.MEDIA,id).orElseThrow());
-                }}
-            }
-            for(Map<String,Object> work:view.workRows(BranchType.MEDIA)) {
-                int id=number(work,"media_id");Map<String,Object> live=rows.get(id);
-                BranchSnapshot snapshot=live==null?BranchSnapshot.absent():BranchStore.snapshot(BranchType.MEDIA,live);
-                if(!view.selectWork(BranchType.MEDIA,work,snapshot)) continue;
-                if("DELETE".equals(work.get("operation"))) {rows.remove(id);continue;}
-                DocDetails page=view.document(number(work,"media_fk_id"),true);
-                if(page==null) {rows.remove(id);continue;}
-                // A no-op must retain LIVE's unpublished-media cutoff.
-                if(live!=null && BranchStore.snapshot(BranchType.MEDIA,work).equals(snapshot)) continue;
-                Map<String,Object> projected=new LinkedHashMap<>(BranchMediaMapper.project(work,live,BranchMediaMapper.initialValues(id,page.getDocId(),number(work,"domain_id")),java.time.Instant.ofEpochMilli(page.getDateCreated())));
-                projected.put("group_ids_snapshot",work.get("group_ids_snapshot"));rows.put(id,projected);
-            }
-            List<Media> result=new ArrayList<>();
-            for(Map<String,Object> row:rows.values()) {
-                int pageId=number(row,"media_fk_id");
-                if(owner>0&&pageId!=owner) continue;
-                if(view.document(pageId,true)==null) continue;
-                List<Integer> ids=BranchFields.normalizedIds(row.get("group_ids_snapshot"));
-                if(categories!=null&&!categories.isEmpty()&&categories.stream().noneMatch(group->ids.contains(group.getMediaGroupId())))continue;
-                result.add(bean(row,ids,definitions));
-            }
-            result.sort(Comparator.comparing(Media::getMediaSortOrder).thenComparing(Media::getMediaId));return result;
-        } catch(SQLException ex) {throw new IllegalStateException("Cannot read branch media",ex);}
+        Map<Integer,MediaGroupBean> definitions=definitions();
+        for(Media media:Tools.getSpringBean("mediaRepository",MediaRepository.class)
+                .findAllByMediaFkTableNameAndDomainId("documents",BranchContexts.current().domainId())) {
+            Map<String,Object> row=BranchEditorRows.media(media,BranchMediaMapper.initialValues(media.getMediaId(),media.getMediaFkId(),media.getDomainId()));
+            row.put("last_update",media.getLastUpdate());
+            row.put("group_ids_snapshot",media.getGroups().stream().map(MediaGroupBean::getMediaGroupId).toList());
+            rows.put(media.getMediaId(),row);
+        }
+        for(Map<String,Object> work:view.workRows(BranchType.MEDIA)) {
+            int id=number(work,"media_id");Map<String,Object> live=rows.get(id);
+            BranchSnapshot snapshot=live==null?BranchSnapshot.absent():BranchStore.snapshot(BranchType.MEDIA,live);
+            if(!view.selectWork(BranchType.MEDIA,work,snapshot)) continue;
+            if("DELETE".equals(work.get("operation"))) {rows.remove(id);continue;}
+            DocDetails page=view.document(number(work,"media_fk_id"),true);
+            if(page==null) {rows.remove(id);continue;}
+            // A no-op must retain LIVE's unpublished-media cutoff.
+            if(live!=null && BranchStore.snapshot(BranchType.MEDIA,work).equals(snapshot)) continue;
+            Map<String,Object> projected=new LinkedHashMap<>(BranchMediaMapper.project(work,live,BranchMediaMapper.initialValues(id,page.getDocId(),number(work,"domain_id")),java.time.Instant.ofEpochMilli(page.getDateCreated())));
+            projected.put("group_ids_snapshot",work.get("group_ids_snapshot"));rows.put(id,projected);
+        }
+        List<Media> result=new ArrayList<>();
+        for(Map<String,Object> row:rows.values()) {
+            int pageId=number(row,"media_fk_id");
+            if(owner>0&&pageId!=owner) continue;
+            if(view.document(pageId,true)==null) continue;
+            List<Integer> ids=BranchFields.normalizedIds(row.get("group_ids_snapshot"));
+            if(categories!=null&&!categories.isEmpty()&&categories.stream().noneMatch(group->ids.contains(group.getMediaGroupId())))continue;
+            result.add(bean(row,ids,definitions));
+        }
+        result.sort(Comparator.comparing(Media::getMediaSortOrder).thenComparing(Media::getMediaId));return result;
     }
     public static Media one(int id) {return list(-1,null).stream().filter(media->media.getMediaId()==id).findFirst().orElse(null);}
     private static int number(Map<String,?> row,String column){Object value=row.get(column);return value instanceof Number n?n.intValue():0;}

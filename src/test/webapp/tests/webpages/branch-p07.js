@@ -214,7 +214,7 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
         }
         // Logout is deliberate: only the existing background cron can publish the pending package.
         I.amOnPage('/logoff.do?forward=/admin/logon/');
-        const anonymous = await I.executeScript(async id => (await fetch(`/admin/rest/branches/${id}`)).status, scheduled.branchId);
+        const anonymous = await I.executeScript(async id => (await fetch(`/admin/rest/branches/${id}/progress`)).status, scheduled.branchId);
         I.assertEqual(anonymous, 403);
         I.waitForFunction(at => Date.now() >= at, [originalTerm+15000], 220);
         if (Date.now() < newTerm) {

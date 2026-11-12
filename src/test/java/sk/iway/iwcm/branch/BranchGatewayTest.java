@@ -31,11 +31,10 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
 import sk.iway.iwcm.doc.*;
-import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** HTTP proof using production BranchFilter/readers and unchanged Jasper menu/News JSPs. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P03_DB",matches="true")
-class BranchGatewayTest extends BaseWebjetTest {
+class BranchGatewayTest extends BranchJpaTest {
     private static final Path WEBAPP=Path.of("src/main/webapp").toAbsolutePath();
     private static final String TEMPLATE="/templates/aceintegration/jet/blank.jsp",MENU="/components/menu/menu_ul_li.jsp";
     private static final String DOMAIN="p03-gateway.example";
@@ -61,6 +60,7 @@ class BranchGatewayTest extends BaseWebjetTest {
             Constants.setServletContext(new org.springframework.mock.web.MockServletContext(root.toString()) {
                 @Override public String getRealPath(String path){return root.resolve(path.replaceFirst("^/","")).toString();}
             });
+            installBranchPersistence();
             for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","enableStaticFilesExternalDir","docAuthorLazyLoad","disableWebJETToolbar","installName","menuIncludePerex","menuInfoDirName","galleryEnableWatermarking","adminCheckUserGroups"))config.put(key,Constants.getString(key));
             Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setBoolean("multiDomainEnabled",false);Constants.setBoolean("docAuthorLazyLoad",true);Constants.setBoolean("disableWebJETToolbar",true);Constants.setBoolean("galleryEnableWatermarking",false);Constants.setString("installName","aceintegration");
             // Restoring a DB dump can reuse IDs; isolate this fixture from bytes left by earlier runs.
@@ -80,7 +80,7 @@ class BranchGatewayTest extends BaseWebjetTest {
                 }
             });context.addServletMappingDecoded("/_p03-template-stage","forwardStage");
             context.getServletContext().setAttribute("org.apache.catalina.jsp_classpath",System.getProperty("java.class.path"));
-            server.start();Constants.setServletContext(context.getServletContext());stripes.initLazy();installTemplate();
+            server.start();Constants.setServletContext(context.getServletContext());installBranchPersistence();stripes.initLazy();installTemplate();
             String origin="http://127.0.0.1:"+server.getConnector().getLocalPort();
             HttpClient guest=HttpClient.newHttpClient();assertEquals(403,get(guest,origin+prefix(a)+"/home.html").statusCode());assertEquals(403,get(guest,origin+prefix(a)+"/images/p03.png").statusCode());
             HttpClient editor=HttpClient.newBuilder().cookieHandler(new CookieManager(null,CookiePolicy.ACCEPT_ALL)).build();assertEquals(204,get(editor,origin+"/_login?token="+token).statusCode());
@@ -223,7 +223,7 @@ class BranchGatewayTest extends BaseWebjetTest {
         NewsTemplatesEntity template=new NewsTemplatesEntity();template.setName("p03-gateway");template.setTemplateCode("<ol class='news'>#foreach($item in $news)<li data-id='$item.docId'><a href='$actionBean.link($item)'>$item.title</a><span>$item.htmlData</span></li>#end</ol>");template.setPagingCode("<nav class='paging'>#foreach($item in $pagesAll)<a href='$item.url'>$item.label</a>#end</nav>");template.setPagingPosition(2);Cache.getInstance().setObjectSeconds("newsTemplatesService.templates",new HashMap<>(Map.of("0.p03-gateway",template,BranchDomains.id(DOMAIN)+".p03-gateway",template)),600);
     }
     private BranchContext branch(String label){return branch(label,DOMAIN);}
-    private BranchContext branch(String label,String domain){long id=new BranchService().create(BranchTestDomains.ensure(domain),"P03 gateway "+label,"Real JSP fixture",1).getId();branchIds.add(id);return new BranchContext(id,domain,1,BranchContext.Mode.ADMIN);}
+    private BranchContext branch(String label,String domain){long id=createBranch(BranchTestDomains.ensure(domain),"P03 gateway "+label,"Real JSP fixture",1).getId();branchIds.add(id);return new BranchContext(id,domain,1,BranchContext.Mode.ADMIN);}
     private void group(int id,int parent,String name,int defaultDoc)throws Exception{Map<String,Object> v=new LinkedHashMap<>(BranchGroupMapper.initialValues(id,DOMAIN));v.put("parent_group_id",parent);v.put("group_name",name);v.put("navbar",name);v.put("default_doc_id",defaultDoc);v.put("url_dir_name",name.toLowerCase());try(Connection c=DBPool.getConnection()){BranchStore.insert(c,"groups",v);}liveGroups.add(id);}
     private Map<String,Object> doc(int id,int group,String title,String path,String body,int priority){Map<String,Object> v=new LinkedHashMap<>(BranchDocumentMapper.initialValues(id,1,Instant.now(),false));v.put("group_id",group);v.put("title",title);v.put("navbar",title);v.put("virtual_path",path);v.put("data",body);v.put("html_data","Perex "+title);v.put("available",true);v.put("show_in_menu",true);v.put("sort_priority",priority);v.put("cacheable",true);return v;}
     private void document(int id,int group,String title,String path,String body,int priority)throws Exception{try(Connection c=DBPool.getConnection()){BranchStore.insert(c,"documents",doc(id,group,title,path,body,priority));}liveDocs.add(id);}

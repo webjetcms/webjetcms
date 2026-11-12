@@ -52,12 +52,7 @@ public final class BranchPublishService {
             branchId=id;userId=actor;current=null;items.clear();
             try(Connection connection=DBPool.getConnection()) {
                 BranchReadiness.verify(connection);
-                try(PreparedStatement statement=connection.prepareStatement("SELECT domain_id,state FROM branches WHERE id=?")) {
-                    statement.setLong(1,id);try(ResultSet result=statement.executeQuery()) {
-                        if(!result.next()||!"MERGING".equals(result.getString(2)))throw new IllegalStateException("The branch is not owned by the publisher");
-                        domain=BranchDomains.name(result.getInt(1));
-                    }
-                }
+                domain=BranchService.getInstance().publication(id).getDomainName();
                 var details=UsersDB.getUser(actor);
                 if(details==null||!details.isAdmin()||!details.isAuthorized())throw new IllegalStateException("Publishing administrator no longer exists");
                 Identity user=new Identity(details);
@@ -86,10 +81,7 @@ public final class BranchPublishService {
                     for(Item item:files)if(item.deleting())applyFile(item);
                     BranchPublishEffects.refresh(rows(BranchType.DOCUMENT),rows(BranchType.FILE));
                     afterCommit.accept("FINAL_EFFECTS");
-                    try(PreparedStatement statement=connection.prepareStatement("UPDATE branches SET state='MERGED',revision=revision+1,merge_finished_at=?,updated_at=?,last_error=NULL WHERE id=? AND state='MERGING'")) {
-                        Timestamp now=new Timestamp(System.currentTimeMillis());statement.setTimestamp(1,now);statement.setTimestamp(2,now);statement.setLong(3,id);
-                        if(statement.executeUpdate()!=1)throw new SQLException("Publication ownership was lost");
-                    }
+                    BranchService.getInstance().completePublication(id);
                 }
             } catch(Exception ex) {
                 if(current!=null)recordItemError(current,ex);
@@ -391,10 +383,8 @@ public final class BranchPublishService {
             for(BranchType type:BranchType.values())try(PreparedStatement check=connection.prepareStatement("SELECT 1 FROM `"+type.workTable()+"` WHERE branch_id=? AND ((applied_hash IS NOT NULL AND COALESCE(apply_phase,'')<>'NOOP') OR apply_phase LIKE 'FILE_%') LIMIT 1")) {
                 check.setLong(1,id);try(ResultSet result=check.executeQuery()){applied|=result.next();}
             }
-            try(PreparedStatement statement=connection.prepareStatement("UPDATE branches SET state=CASE WHEN scheduled_by IS NOT NULL AND publish_at IS NOT NULL AND ?=false THEN 'NEEDS_ATTENTION' ELSE 'MERGE_FAILED' END,revision=revision+1,last_error=?,updated_at=? WHERE id=? AND state='MERGING'")) {
-                String reason=error instanceof org.springframework.web.server.ResponseStatusException response?Objects.toString(response.getReason(),sk.iway.iwcm.i18n.Prop.getInstance().getText("branches.schedule.permission")):Objects.toString(error.getMessage(),error.getClass().getSimpleName());
-                statement.setBoolean(1,applied);statement.setString(2,reason);statement.setTimestamp(3,new Timestamp(System.currentTimeMillis()));statement.setLong(4,id);statement.executeUpdate();
-            }
+            String reason=error instanceof org.springframework.web.server.ResponseStatusException response?Objects.toString(response.getReason(),sk.iway.iwcm.i18n.Prop.getInstance().getText("branches.schedule.permission")):Objects.toString(error.getMessage(),error.getClass().getSimpleName());
+            BranchService.getInstance().failPublication(id,applied,reason);
         } catch(Exception recording) {Logger.error(BranchPublishService.class,recording);}
     }
 

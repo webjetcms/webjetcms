@@ -19,13 +19,16 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.persistence.EntityManager;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import org.springframework.beans.factory.annotation.Autowired;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
@@ -33,15 +36,16 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.system.UpdateDBBean;
 import sk.iway.iwcm.system.UpdateDatabase;
-import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.webjet.v9.V9JpaDBConfig;
 
 /** Opt-in storage proof restricted to the disposable P01 single-writer instance. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P02_DB",matches="true")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class BranchStorageTest extends BaseWebjetTest {
+class BranchStorageTest extends BranchJpaTest {
     static final String URL="jdbc:mariadb://127.0.0.1:33316/webjet_p01";
     private final List<Long> branches=new ArrayList<>();
+    @Autowired BranchRepository metadataRepository;
+    @Autowired Validator validator;
 
     @BeforeEach void configure() throws Exception {
         try(Connection connection=DBPool.getConnection()) { assertEquals("webjet_p01",connection.getCatalog()); assertTrue(connection.getMetaData().getURL().startsWith(URL)); }
@@ -91,20 +95,20 @@ class BranchStorageTest extends BaseWebjetTest {
 
     /** Both the selected color and the default for older callers survive a fresh metadata query. */
     @Test @Order(2) void persistsWorkingVersionColor() {
-        var service = new BranchService();
+        var service = branchService();
         long legacyId = branch("P02 default color").branchId();
         assertEquals("cyan", service.find(legacyId, "p02.example").orElseThrow().getColor());
-        var colored = service.create("p02.example", "P02 selected color", null, "lavender", 1);
+        var colored = createBranch("p02.example", "P02 selected color", null, "lavender", 1);
         branches.add(colored.getId());
         assertEquals("lavender", service.find(colored.getId(), "p02.example").orElseThrow().getColor());
     }
 
     /** Metadata edits preserve publication state and revision, and cannot cross the domain boundary. */
     @Test @Order(2) void updatesOnlyWorkingVersionMetadata() {
-        var service = new BranchService();
-        var original = service.create("p02.example", "autotest metadata", "Original", "cyan", 1);
+        var service = branchService();
+        var original = createBranch("p02.example", "autotest metadata", "Original", "cyan", 1);
         branches.add(original.getId());
-        service.updateMetadata(original.getId(), BranchDomains.id("p02.example"), "  autotest renamed  ", "Updated", "lavender", 1);
+        editMetadata(original.getId(), BranchDomains.id("p02.example"), "  autotest renamed  ", "Updated", "lavender");
         var saved = service.find(original.getId(), "p02.example").orElseThrow();
         assertEquals("autotest renamed", saved.getName());
         assertEquals("Updated", saved.getDescription());
@@ -112,17 +116,68 @@ class BranchStorageTest extends BaseWebjetTest {
         assertEquals(original.getState(), saved.getState());
         assertEquals(original.getRevision(), saved.getRevision());
         assertEquals(BranchDomains.id("p02.example"), saved.getDomainId());
-        assertThrows(IllegalArgumentException.class, () -> service.updateMetadata(original.getId(), BranchDomains.id("other.example"), "No", null, "cyan", 1));
-        assertThrows(IllegalArgumentException.class, () -> service.updateMetadata(original.getId(), BranchDomains.id("p02.example"), "No", null, "#fff", 1));
+        assertThrows(RuntimeException.class, () -> editMetadata(original.getId(), BranchDomains.id("other.example"), "No", null, "cyan"));
+        assertThrows(ConstraintViolationException.class, () -> editMetadata(original.getId(), BranchDomains.id("p02.example"), "No", null, "x".repeat(17)));
         assertEquals("autotest renamed", service.find(original.getId(), "p02.example").orElseThrow().getName());
+        editMetadata(original.getId(), original.getDomainId(), "autotest renamed", "Updated", "future-color");
+        assertEquals("future-color", service.find(original.getId(), "p02.example").orElseThrow().getColor());
+    }
+
+    /** Publication fields support ordinary JPA persistence as well as the publisher's conditional transition. */
+    @Test @Order(2) void persistsPublicationFieldsThroughJpa() {
+        var service=branchService();
+        var branch=createBranch("p02.example","autotest publication metadata",null,1);
+        branches.add(branch.getId());
+        var at=java.sql.Timestamp.valueOf("2026-11-12 10:00:00");
+        branch.setState("MERGING");branch.setRevision(1L);branch.setPublishAt(at);branch.setScheduledBy(1);
+        branch.setMergeStartedAt(at);branch.setMergeFinishedAt(at);branch.setLastError("Previous attempt");
+        metadataRepository.saveAndFlush(branch);
+        var reloaded=service.find(branch.getId(),branch.getDomainId()).orElseThrow();
+        assertEquals("MERGING",reloaded.getState());assertEquals(1L,reloaded.getRevision());
+        assertEquals(at,reloaded.getPublishAt());assertEquals(1,reloaded.getScheduledBy());
+        assertEquals(at,reloaded.getMergeStartedAt());assertEquals(at,reloaded.getMergeFinishedAt());
+        assertEquals("Previous attempt",reloaded.getLastError());
+        service.completePublication(branch.getId());
+        reloaded=service.find(branch.getId(),branch.getDomainId()).orElseThrow();
+        assertEquals("MERGED",reloaded.getState());assertEquals(2L,reloaded.getRevision());assertNull(reloaded.getLastError());
+    }
+
+    /** The inherited create flow assigns server identity and cannot insert publication metadata from the client. */
+    @Test @Order(2) void standardCreateRejectsOperationalStateFromThePayload() {
+        var input=new BranchEntity();input.setId(999L);input.setDomainId(BranchDomains.id("p02.other"));input.setName("autotest standard create");
+        input.setState("MERGED");input.setRevision(999L);input.setCreatedBy(999);input.setCreatedAt(new java.sql.Timestamp(1000));
+        input.setPublishAt(new java.sql.Timestamp(2000));input.setScheduledBy(999);input.setMergeStartedAt(new java.sql.Timestamp(3000));
+        input.setMergeFinishedAt(new java.sql.Timestamp(4000));input.setLastError("forged");
+        var controller=editor(metadataRepository);
+        var request=new DatatableRequest<Long,BranchEntity>();request.setAction("create");request.setData(Map.of(-1L,input));
+        var saved=controller.handleEditor(controller.getRequest(),request).getBody().getData().get(0);
+        branches.add(saved.getId());
+        var reloaded=branchService().find(saved.getId(),BranchDomains.id("p02.example")).orElseThrow();
+        assertEquals("DRAFT",reloaded.getState());assertEquals(0L,reloaded.getRevision());assertEquals(1,reloaded.getCreatedBy());
+        assertTrue(reloaded.getCreatedAt().after(new java.sql.Timestamp(1000)));
+        assertNull(reloaded.getPublishAt());assertNull(reloaded.getScheduledBy());assertNull(reloaded.getMergeStartedAt());
+        assertNull(reloaded.getMergeFinishedAt());assertNull(reloaded.getLastError());
+    }
+
+    /** Entity callbacks supply a single CREATE and UPDATE audit for metadata persistence. */
+    @Test @Order(2) void metadataUsesTheStandardJpaAuditListener() {
+        try(var runtime=mockStatic(sk.iway.iwcm.InitServlet.class,CALLS_REAL_METHODS);
+                var audit=mockStatic(sk.iway.iwcm.Adminlog.class)) {
+            runtime.when(sk.iway.iwcm.InitServlet::isSpringInitialized).thenReturn(true);
+            var branch=createBranch("p02.example","autotest JPA audit",null,1);
+            branches.add(branch.getId());
+            editMetadata(branch.getId(),branch.getDomainId(),"autotest JPA audit updated",null,"blue");
+            audit.verify(()->sk.iway.iwcm.Adminlog.add(eq(sk.iway.iwcm.Adminlog.TYPE_CLIENT_SPECIFIC),startsWith("CREATE:"),eq(branch.getId().intValue()),eq(-1)),times(1));
+            audit.verify(()->sk.iway.iwcm.Adminlog.add(eq(sk.iway.iwcm.Adminlog.TYPE_CLIENT_SPECIFIC),startsWith("UPDATE:"),eq(branch.getId().intValue()),eq(-1)),times(1));
+        }
     }
 
     /** Repository and DataTable reads enforce the numeric domain scope. */
     @Test @Order(3) void domainRepositoryScopesDatatableReads() throws Exception {
-        var service = new BranchService();
-        var own = service.create("p02.example", "autotest domain scope", null, 1);
-        var otherId = service.create("p02.example", "autotest foreign domain ID", null, 1);
-        var otherName = service.create("p02.other", "autotest foreign domain name", null, 1);
+        var service = branchService();
+        var own = createBranch("p02.example", "autotest domain scope", null, 1);
+        var otherId = createBranch("p02.other", "autotest foreign domain ID", null, 1);
+        var otherName = createBranch("p02.other", "autotest foreign domain name", null, 1);
         branches.addAll(List.of(own.getId(), otherId.getId(), otherName.getId()));
         int domainId = own.getDomainId();
         var factoryBean = new V9JpaDBConfig().entityManagerFactory();
@@ -133,13 +188,6 @@ class BranchStorageTest extends BaseWebjetTest {
         assertNotNull(factory);
         try (EntityManager manager = factory.createEntityManager()) {
             BranchRepository repository = new JpaRepositoryFactory(manager).getRepository(BranchRepository.class);
-            manager.getTransaction().begin();
-            BranchEntity foreign = repository.findById(otherId.getId()).orElseThrow();
-            foreign.setDomainId(otherName.getDomainId());
-            repository.save(foreign);
-            manager.flush();
-            manager.getTransaction().commit();
-            manager.clear();
             assertTrue(repository.findFirstByIdAndDomainId(otherId.getId(), domainId).isEmpty());
             assertEquals(List.of(own.getId()), repository.findAllByIdInAndDomainId(List.of(own.getId(), otherId.getId()), domainId)
                 .stream().map(BranchEntity::getId).toList());
@@ -149,7 +197,7 @@ class BranchStorageTest extends BaseWebjetTest {
             var user = mock(Identity.class);
             when(access.requireUser(request)).thenReturn(user);
             when(access.requireDomain(request, user)).thenReturn("p02.example");
-            var controller = new BranchDatatableRestController(repository, service, access);
+            var controller = new BranchRestController(repository, branchService(), access);
             controller.setRequest(request);
             ReflectionTestUtils.setField(controller, "checkDomainId", true);
             request.addParameter("searchId", own.getId().toString());
@@ -158,8 +206,8 @@ class BranchStorageTest extends BaseWebjetTest {
             request.setParameter("searchId", otherId.getId().toString());
             assertTrue(controller.searchItem(Map.of("searchId", otherId.getId().toString()), pageable, new BranchEntity()).isEmpty());
             assertTrue(controller.searchItem(Map.of("searchDomainId", Integer.toString(otherName.getDomainId())), pageable, new BranchEntity()).isEmpty());
-            assertThrows(ResponseStatusException.class, () -> controller.getOneItem(otherId.getId()));
-            assertThrows(ResponseStatusException.class, () -> controller.getOneItem(otherName.getId()));
+            assertNull(controller.getOneItem(otherId.getId()));
+            assertNull(controller.getOneItem(otherName.getId()));
         } finally { factory.close(); }
     }
 
@@ -317,10 +365,28 @@ class BranchStorageTest extends BaseWebjetTest {
         }
     }
 
+    private BranchRestController editor(BranchRepository repository) {
+        var request=new MockHttpServletRequest();
+        var user=new Identity();user.setAdmin(true);user.setUserId(1);
+        request.getSession().setAttribute(Constants.USER_KEY,user);
+        var controller=new BranchRestController(repository,branchService(),mock(BranchAccess.class));
+        controller.setRequest(request);
+        ReflectionTestUtils.setField(controller,"checkDomainId",true);
+        ReflectionTestUtils.setField(controller,"validator",validator);
+        return controller;
+    }
+
+    private BranchEntity editMetadata(long id,int domainId,String name,String description,String color) {
+        var entity=new BranchEntity();entity.setId(id);entity.setDomainId(domainId);entity.setName(name);entity.setDescription(description);entity.setColor(color);
+        var controller=editor(metadataRepository);
+        var request=new DatatableRequest<Long,BranchEntity>();request.setAction("edit");request.setData(Map.of(id,entity));
+        return controller.handleEditor(controller.getRequest(),request).getBody().getData().get(0);
+    }
+
     private BranchContext branch(String name) {
-        BranchEntity value=new BranchService().create("p02.example",name,null,1);branches.add(value.getId());
-        assertTrue(new BranchService().find(value.getId(),"other.example").isEmpty());
-        assertTrue(new BranchService().list("p02.example",false).stream().anyMatch(b->b.getId().equals(value.getId())));
+        BranchEntity value=createBranch("p02.example",name,null,1);branches.add(value.getId());
+        assertTrue(branchService().find(value.getId(),"other.example").isEmpty());
+        assertTrue(branchService().list("p02.example",false).stream().anyMatch(b->b.getId().equals(value.getId())));
         return new BranchContext(value.getId(),"p02.example",1,BranchContext.Mode.ADMIN);
     }
 

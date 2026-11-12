@@ -28,7 +28,7 @@ export function initBranchTable(columns, screen, api) {
     };
     const table = WJ.DataTable({
         id: 'branchesDataTable',
-        url: '/admin/rest/branches/datatable',
+        url: '/admin/rest/branches',
         columns,
         serverSide: true,
         fetchOnCreate: true,

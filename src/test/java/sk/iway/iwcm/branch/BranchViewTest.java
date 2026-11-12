@@ -12,11 +12,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.menu.MenuULLI;
 import sk.iway.iwcm.doc.*;
-import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Real DB-backed effective content and unchanged MenuULLI renderer checks. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P03_DB",matches="true")
-class BranchViewTest extends BaseWebjetTest {
+class BranchViewTest extends BranchJpaTest {
     private static final String DOMAIN="p03-menu.example";
     private final List<Long> branches=new ArrayList<>();
     private final Map<String,String> configuration=new LinkedHashMap<>();
@@ -313,7 +312,7 @@ class BranchViewTest extends BaseWebjetTest {
             BranchRowWriter.insertDocumentWithId(connection,BranchContext.live(DOMAIN,1),row);connection.commit();docs.add(id);return id;
         }
     }
-    private BranchContext branch(String name) {var row=new BranchService().create(BranchTestDomains.ensure(DOMAIN),name,"P03 render fixture",1);branches.add(row.getId());return new BranchContext(row.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
+    private BranchContext branch(String name) {var row=createBranch(BranchTestDomains.ensure(DOMAIN),name,"P03 render fixture",1);branches.add(row.getId());return new BranchContext(row.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
     private static BranchContext preview(BranchContext context){return new BranchContext(context.branchId(),context.domainName(),context.userId(),BranchContext.Mode.PREVIEW);}
     private void work(BranchContext context,BranchType type,int id,Map<String,Object> changes,boolean delete) throws Exception {
         try(Connection connection=DBPool.getConnection()) {

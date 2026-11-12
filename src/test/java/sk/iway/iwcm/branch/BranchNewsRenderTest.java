@@ -45,11 +45,10 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.PerexGroupBean;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Real DB -> NewsActionBean -> Velocity rendering; no mocked content lists or SQL. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P03_DB",matches="true")
-class BranchNewsRenderTest extends BaseWebjetTest {
+class BranchNewsRenderTest extends BranchJpaTest {
     private static final int ROOT=1_930_001, CHILD=1_930_002, OUTSIDE=1_930_003;
     private static final int A=1_930_011, B=1_930_012, DELETED=1_930_013, MOVED=1_930_014, OWNER=1_930_015;
     private static final String DOMAIN="p03-news.example";
@@ -264,7 +263,7 @@ class BranchNewsRenderTest extends BaseWebjetTest {
         RequestBean bean=new RequestBean();bean.setRequest(request);bean.setDomain(DOMAIN);bean.setLng("sk");SetCharacterEncodingFilter.setCurrentRequestBean(bean);scope=BranchContexts.open(request,value);
     }
     private BranchContext adminBranch(){return new BranchContext(branch.branchId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
-    private BranchContext newBranch(String name) {long id=new BranchService().create(BranchTestDomains.ensure(DOMAIN),"P03 News "+name,"N01-N08 render fixture",1).getId();branchIds.add(id);return new BranchContext(id,DOMAIN,1,BranchContext.Mode.PREVIEW);}
+    private BranchContext newBranch(String name) {long id=createBranch(BranchTestDomains.ensure(DOMAIN),"P03 News "+name,"N01-N08 render fixture",1).getId();branchIds.add(id);return new BranchContext(id,DOMAIN,1,BranchContext.Mode.PREVIEW);}
     private void group(int id,int parent,String name) throws Exception {
         Map<String,Object> values=new LinkedHashMap<>(BranchGroupMapper.initialValues(id,DOMAIN));values.put("group_name",name);values.put("parent_group_id",parent);values.put("url_dir_name",name.toLowerCase());
         try(Connection c=DBPool.getConnection()){BranchStore.insert(c,"groups",values);}liveGroups.add(id);

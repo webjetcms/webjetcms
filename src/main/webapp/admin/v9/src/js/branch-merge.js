@@ -452,7 +452,7 @@ export async function openBranchMerge(id, api, screen, invoker) {
 
     try {
         status.textContent = tr('loading');
-        report = await api(`/${id}`);
+        report = await api(`/${id}/progress`);
         if (!dialog.open) return;
         render();
         if (['DRAFT', 'SCHEDULED', 'MERGE_FAILED'].includes(report.state)) await compare();

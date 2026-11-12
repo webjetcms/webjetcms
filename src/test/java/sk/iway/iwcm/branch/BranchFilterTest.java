@@ -157,8 +157,8 @@ class BranchFilterTest {
     @Test void metadataTableUsesLiveStorageWithoutChangingTheSelectedVersion() throws Exception {
         selected();
         request.setMethod("POST");
-        for (String path : List.of("/admin/rest/branches/datatable/all", "/admin/rest/branches/datatable/-1",
-                "/admin/rest/branches/datatable/search/findByColumns", "/admin/rest/branches/datatable/editor")) {
+        for (String path : List.of("/admin/rest/branches/all", "/admin/rest/branches/-1",
+                "/admin/rest/branches/search/findByColumns", "/admin/rest/branches/editor")) {
             request.setRequestURI(path);
             response = new MockHttpServletResponse();
             filter.doFilter(request, response, (in, out) -> assertFalse(BranchContexts.current().isBranch()));

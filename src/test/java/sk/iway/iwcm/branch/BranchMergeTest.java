@@ -12,23 +12,17 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.SharedEntityManagerCreator;
-import org.springframework.test.util.ReflectionTestUtils;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.perex_groups.*;
 import sk.iway.iwcm.doc.*;
-import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.users.UsersDB;
-import sk.iway.webjet.v9.V9JpaDBConfig;
 
 /** Real MariaDB manual publication, stale-input checks and checkpoint recovery on isolated P06 data. */
 @EnabledIf("databaseEnabled")
-class BranchMergeTest extends BaseWebjetTest {
+class BranchMergeTest extends BranchJpaTest {
     static boolean databaseEnabled() {return "true".equals(System.getenv("WEBJET_P06_DB")) || "true".equals(System.getenv("WEBJET_P07_DB")) || "true".equals(System.getenv("WEBJET_P08_DB"));}
     static final String DOMAIN="iwcm.interway.sk";
     final BranchMergeService service=new BranchMergeService();
@@ -36,41 +30,21 @@ class BranchMergeTest extends BaseWebjetTest {
     final Map<String,String> original=new LinkedHashMap<>();
     Fixture f;
     Identity user;
-    static LocalContainerEntityManagerFactoryBean jpa;
-    static GenericApplicationContext spring;
-    static Object previousSpring,previousFactories;
+    @Autowired BranchFileRepository files;
 
-    @BeforeAll static void initializePersistence()throws Exception {
-        try(Connection c=DBPool.getConnection()) {assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));}
-        jpa=new V9JpaDBConfig().entityManagerFactory();
-        jpa.setPersistenceUnitPostProcessors(unit->{
-            unit.getManagedClassNames().removeIf(name->Files.exists(Path.of("build/classes/java/test",name.replace('.','/')+".class")));
-            unit.getManagedClassNames().add(sk.iway.iwcm.io.FileHistoryBean.class.getName());
-        });
-        jpa.afterPropertiesSet();
-        spring=new GenericApplicationContext();
-        var beans=spring.getBeanFactory();
-        beans.registerSingleton("webjet2022EntityManager",jpa.getObject());
-        beans.registerSingleton("transactionManager",new JpaTransactionManager(jpa.getObject()));
-        var repository=new JpaRepositoryFactoryBean<PerexGroupDocRepository,PerexGroupDocEntity,Long>(PerexGroupDocRepository.class);
-        repository.setEntityManager(SharedEntityManagerCreator.createSharedEntityManager(jpa.getObject()));
-        repository.setBeanFactory(beans);repository.afterPropertiesSet();
-        beans.registerSingleton("perexGroupDocRepository",repository.getObject());
-        spring.refresh();
-        previousSpring=Constants.getServletContext().getAttribute("springContext");
-        Constants.getServletContext().setAttribute("springContext",spring);
-        previousFactories=ReflectionTestUtils.getField(DBPool.class,"entityManagerFactories");
-        // BaseWebjetTest omits servlet startup; use the real test JPA unit for both cache lookups.
-        ReflectionTestUtils.setField(DBPool.class,"entityManagerFactories",Map.of("iwcm",jpa.getObject()));
+    /** Binary comparison reads the scoped JPA file identity and serves each actual version. */
+    @Test void binaryComparisonUsesJpaFileIdentityForBaseLiveAndWork() throws Exception {
+        var request=new MockHttpServletRequest(Constants.getServletContext());
+        request.getSession().setAttribute(Constants.USER_KEY,user);
+        request.getSession().setAttribute("preview.editorDomainName",DOMAIN);
+        var controller=new BranchMergeRestController(files);
+        for(String version:List.of("BASE","LIVE","WORK")) {
+            var response=new MockHttpServletResponse();
+            controller.file(f.branch,f.file,version,request,response);
+            assertEquals("WORK".equals(version)?"autotest P06 WORK attachment":"autotest P06 BASE attachment",response.getContentAsString());
+            assertEquals("private, no-store",response.getHeader("Cache-Control"));
+        }
     }
-
-    @AfterAll static void closePersistence() {
-        Constants.getServletContext().setAttribute("springContext",previousSpring);
-        ReflectionTestUtils.setField(DBPool.class,"entityManagerFactories",previousFactories);
-        if(spring!=null)spring.close();
-        if(jpa!=null)jpa.destroy();
-    }
-
     @BeforeEach void setup()throws Exception {
         try(Connection c=DBPool.getConnection()) {assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));}
         for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","fulltextExecuteApps","fulltextDataAscMethod","perexGroupUseJoin","editorDisableHistory","iwfs_useVersioning","clusterMyNodeType"))original.put(key,Constants.getString(key));
@@ -630,7 +604,7 @@ class BranchMergeTest extends BaseWebjetTest {
             }c.commit();
         }
         GroupsDB.getInstance(true);DocDB.getInstance(true);
-        long branch=new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P06 "+suffix,"20 pages, folder move, media and file; P06 only",1).getId();BranchContext context=new BranchContext(branch,DOMAIN,1,BranchContext.Mode.ADMIN);
+        long branch=createBranch(BranchTestDomains.ensure(DOMAIN),"autotest P06 "+suffix,"20 pages, folder move, media and file; P06 only",1).getId();BranchContext context=new BranchContext(branch,DOMAIN,1,BranchContext.Mode.ADMIN);
         var destination=new LinkedHashMap<>(BranchGroupMapper.initialValues(1,DOMAIN));destination.put("group_name","autotest P06 destination");destination.put("url_dir_name","destination");destination.put("parent_group_id",root);destination.put("temp_id",template);
         int newGroup=((Number)store.create(context,BranchType.GROUP,destination).get("group_id")).intValue();
         var moved=live(BranchType.GROUP,section);String groupHash=BranchStore.snapshot(BranchType.GROUP,moved).hash();moved.put("parent_group_id",newGroup);moved.put("url_dir_name","moved");store.put(context,BranchType.GROUP,section,moved,groupHash,false);

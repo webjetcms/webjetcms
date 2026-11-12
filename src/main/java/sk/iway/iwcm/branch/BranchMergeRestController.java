@@ -18,12 +18,16 @@ import sk.iway.iwcm.users.UsersDB;
 public class BranchMergeRestController {
     private final BranchMergeService merge=new BranchMergeService();
     private final BranchAccess access=new BranchAccess();
+    private final BranchFileRepository files;
+
+    public BranchMergeRestController(BranchFileRepository files) { this.files=files; }
+
     public record Revision(long expectedRevision) { }
     public record Resolution(long expectedRevision,BranchType type,String objectKey,BranchDecision.Source choice,String liveHash,String workHash) { }
     public record Execution(long expectedRevision,String preparationHash) { }
     public record Schedule(long expectedRevision,String preparationHash,long publishAt) { }
 
-    @GetMapping({"","/progress"})
+    @GetMapping("/progress")
     public BranchMergeService.Report detail(@PathVariable long id,HttpServletRequest request) {
         Identity user=access.requireUser(request);String domain=access.requireDomain(request,user);
         try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {return merge.detail(id,domain,user);}
@@ -87,11 +91,12 @@ public class BranchMergeRestController {
             if(!"ACTIVE".equals(snapshot.state())||!"FILE".equals(snapshot.fields().get("entry_kind")))throw new ResponseStatusException(HttpStatus.NOT_FOUND);
             Path file;
             if("LIVE".equals(version))file=Path.of(Tools.getRealPath(logical));
-            else try(var c=DBPool.getConnection()) {
-                var row=BranchStore.readWork(c,id,BranchType.FILE,logical).orElseThrow();
-                file=BranchFiles.workPath(id,((Number)row.get("row_id")).longValue());
+            else {
+                var row=files.findByBranchIdAndPathKey(id,BranchFilePaths.key(logical))
+                    .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
+                file=BranchFiles.workPath(id,row.getRowId());
                 if("BASE".equals(version))file=file.resolveSibling("base");
-            }catch(java.sql.SQLException ex){throw new IOException(ex);}
+            }
             if(!Files.isRegularFile(file)||!Objects.equals(snapshot.fields().get("content_hash"),BranchFiles.hash(file)))throw new ResponseStatusException(HttpStatus.CONFLICT,"Podklad súboru sa zmenil. Obnovte porovnanie.");
             response.setHeader("Cache-Control","private, no-store");response.setHeader("X-Content-Type-Options","nosniff");
             boolean image=logical.toLowerCase(java.util.Locale.ROOT).matches(".*\\.(png|jpe?g|gif|webp)$");

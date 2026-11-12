@@ -16,13 +16,12 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.media.*;
 import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.editor.service.MediaService;
-import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.spirit.MediaDB;
 import sk.iway.spirit.model.*;
 
 /** Real WORK media CRUD, old-page visibility, category paging and unchanged LIVE relations. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P05_DB",matches="true")
-class BranchMediaEditorTest extends BaseWebjetTest {
+class BranchMediaEditorTest extends BranchJpaTest {
     private static final String DOMAIN="p05-media.example";
     private final Map<String,String> configuration=new LinkedHashMap<>();
     private BranchContext a,b;
@@ -116,7 +115,7 @@ class BranchMediaEditorTest extends BaseWebjetTest {
     }
 
     private static Media fresh(String title,Integer...categories) {Media m=new Media();m.setMediaTitleSk(title);m.setMediaLink("https://example.invalid/attachment.pdf");m.setMediaThumbLink("");MediaEditorFields fields=new MediaEditorFields();fields.setGroups(categories);fields.setBranchHash("new");m.setEditorFields(fields);return m;}
-    private BranchContext branch(String name) {return new BranchContext(new BranchService().create(BranchTestDomains.ensure(DOMAIN),name,"disposable P05 media test",1).getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
+    private BranchContext branch(String name) {return new BranchContext(createBranch(BranchTestDomains.ensure(DOMAIN),name,"disposable P05 media test",1).getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
     private String fingerprint()throws Exception {
         MessageDigest digest=MessageDigest.getInstance("SHA-256");try(Connection c=DBPool.getConnection();Statement s=c.createStatement()) {for(String table:List.of("documents","groups","documents_history","perex_group_doc","media","media_group_to_media","media_groups","groups_scheduler","multigroup_mapping","file_atr","dirprop")) {List<String> rows=new ArrayList<>();try(ResultSet r=s.executeQuery("SELECT * FROM `"+table+"`")){while(r.next()){StringBuilder row=new StringBuilder();for(int i=1;i<=r.getMetaData().getColumnCount();i++)row.append(Base64.getEncoder().encodeToString(Objects.toString(r.getString(i),"NULL").getBytes(java.nio.charset.StandardCharsets.UTF_8))).append('|');rows.add(row.toString());}}Collections.sort(rows);for(String row:rows)digest.update(row.getBytes(java.nio.charset.StandardCharsets.UTF_8));}}return HexFormat.of().formatHex(digest.digest());
     }

@@ -6,8 +6,7 @@ import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.DBPool;
-import java.sql.*;
+import java.sql.SQLException;
 
 /** Session selection is only a hint; every request rechecks user, domain and package state. */
 public final class BranchSelection {
@@ -35,9 +34,9 @@ public final class BranchSelection {
     }
 
     public static BranchEntity requireBranch(long id, String domain) {
-        try(Connection connection=DBPool.getConnection()) {BranchReadiness.verify(connection);}
+        try {BranchReadiness.verify();}
         catch(SQLException|IllegalStateException ex) {throw new ResponseStatusException(HttpStatus.CONFLICT,"Branch prerequisites failed: "+ex.getMessage(),ex);}
-        BranchEntity branch = new BranchService().find(id, domain).orElseThrow(() ->
+        BranchEntity branch = BranchService.getInstance().find(id, domain).orElseThrow(() ->
             new ResponseStatusException(HttpStatus.NOT_FOUND, "Publishing package not found"));
         if ("MERGED".equals(branch.getState()) || "CANCELLED".equals(branch.getState()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Publishing package is closed; explicitly select production");
@@ -46,17 +45,10 @@ public final class BranchSelection {
 
     /** The gateway resolves the logical domain from server metadata, never from its query string. */
     public static String previewDomain(long id, Identity user) {
-        try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(
-                "SELECT domain_id FROM branches WHERE id=?")) {
-            statement.setLong(1, id);
-            try (ResultSet result = statement.executeQuery()) {
-                if (!result.next()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-                String domain = BranchDomains.name(result.getInt(1));
-                if (!GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain))
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No access to preview domain");
-                requireBranch(id, domain);
-                return domain;
-            }
-        } catch (SQLException ex) { throw new IllegalStateException("Cannot resolve preview domain", ex); }
+        String domain = BranchDomains.name(BranchService.getInstance().previewDomainId(id));
+        if (!GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No access to preview domain");
+        requireBranch(id, domain);
+        return domain;
     }
 }

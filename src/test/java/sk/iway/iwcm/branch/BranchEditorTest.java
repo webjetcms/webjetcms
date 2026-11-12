@@ -14,11 +14,10 @@ import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.editor.service.EditorService;
-import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Exercises the actual authorized WORK editor and verifies production tables byte for byte. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P04_DB",matches="true")
-class BranchEditorTest extends BaseWebjetTest {
+class BranchEditorTest extends BranchJpaTest {
     private static final String DOMAIN="p04-editor.example";
     private final Map<String,String> configuration=new LinkedHashMap<>();
     private BranchContext context;
@@ -36,7 +35,7 @@ class BranchEditorTest extends BaseWebjetTest {
         root=liveGroup("autotest P04 root",0,"autotest-p04"); other=liveGroup("autotest P04 other",root,"other");
         page=liveDoc(root,"/autotest-p04/existing.html");
         try(Connection c=DBPool.getConnection();Statement statement=c.createStatement()) { statement.executeUpdate("UPDATE `groups` SET default_doc_id="+page+" WHERE group_id="+root); }
-        var branch=new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P04 editor","disposable integration test",1);
+        var branch=createBranch(BranchTestDomains.ensure(DOMAIN),"autotest P04 editor","disposable integration test",1);
         context=new BranchContext(branch.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);
         production=fingerprint();
     }

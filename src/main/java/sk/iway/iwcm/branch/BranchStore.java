@@ -22,9 +22,10 @@ import sk.iway.iwcm.PkeyGenerator;
  * All row writes use one JDBC connection and increment the package revision.
  */
 public final class BranchStore {
-    private final BranchService.Connections connections;
+    @FunctionalInterface interface Connections { Connection open() throws SQLException; }
+    private final Connections connections;
     public BranchStore() { this(DBPool::getConnection); }
-    BranchStore(BranchService.Connections connections) { this.connections = connections; }
+    BranchStore(Connections connections) { this.connections = connections; }
 
     /** Reserves the native LIVE identity and persists WORK before returning it. */
     Map<String, Object> create(BranchContext context, BranchType type, Map<String, ?> values) throws SQLException {
