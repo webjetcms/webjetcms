@@ -86,6 +86,13 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     }
 
     function initializePageBuilder() {
+        // Shared helpers and frame events must work even when the page has no inline editors.
+        window.userLng = window.parent.userLng;
+        window.WJ = window.parent.WJ;
+        window.WJ.fireEvent = function(name, detail) {
+            window.dispatchEvent(new CustomEvent(name, {detail: detail}));
+        };
+
         let pageDiv = $("#wjInline-docdata");
         // Keep initial user input out of the snapshot while inline editors normalize their HTML.
         document.body.inert = true;
@@ -166,18 +173,6 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
             var mainWindow = window.parent;
             //window.CKEDITOR = mainWindow.CKEDITOR;
-            window.userLng = mainWindow.userLng;
-            window.WJ = mainWindow.WJ;
-            //BEWARE: this must be here, because WJ is binded to window in parent frame
-            window.WJ.fireEvent = function(name, detail) {
-                //console.log("Firing event: ", name, detail, "window=", window.location.href);
-                //firni event
-                const event = new CustomEvent(name, {
-                    detail: detail
-                });
-                //console.log('Dispatching event, name=', name, 'detail=', detail);
-                window.dispatchEvent(event);
-            }
             var DatatablesCkEditor = mainWindow.datatablesCkEditorModule.DatatablesCkEditor;
 
             //console.log("DatatablesCkEditor=", DatatablesCkEditor, "window=", window);
@@ -391,7 +386,10 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         CKEDITOR.on('instanceReady', function(ev) {
             //console.log("Ckeditor "+ev.editor.name+" instance ready");
             //console.log(ev);
-            ckEditorInstance = ev.editor;
+            // A sibling finishing initialization must not replace the focused editor after block insertion.
+            if (ckEditorInstance == null || ev.editor.focusManager.hasFocus) {
+                ckEditorInstance = ev.editor;
+            }
 
                 //ev.editor.on("blur", function(event) { console.log("blured"); $("#wjInlineCkEditorToolbarElement").hide(); });
             ev.editor.on("focus", function(event)

@@ -104,6 +104,7 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 </div>
 
 - Page Builder - zlepšená detekce změn v HTML kódu stránky, aby se nezobrazilo hlášení "V editoru pravděpodobně máte neuložený text" i když jste reálně žádný text ve stránce nezměnili (#317).
+- Page Builder - opraveno ukládání stránek s neúplnou HTML strukturou a neplatnými odkazy na starší instance editoru. Obsah takových prvků se zachová spolu s aktuálními úpravami ostatních bloků (#400).
 - [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + ve žluté čáře v okně **Vložit blok** na kartě **Základní** přibyly možnosti **Obrázek** a **Aplikace**. Otevřou příslušný dialog editoru a umožní vložit obsah na zvolené místo (#339).
 - Page Builder - přidáno [kopírování bloků mezi stránkami](redactor/webpages/pagebuilder.md#kopírování-bloků-mezi-stránkami). Volby **Zkopírovat** a **Vložit** přenášejí sekce, kontejnery a sloupce is obsahem a vlastními styly. Editor nabídne pouze místa vhodná pro typ bloku. Schránka má platnost 30 minut od zkopírování (#353).
 - Šablony - na kartě Pokročilé můžete nastavit [odstraňování spojek z URL stránky](frontend/templates/templates.md#karta-pokročilé): podle `urlRemoveSpojky`, vždy odstranit nebo ponechat. Blog tak může ponechat spojky i při zapnutém odstraňování pro zbytek webu (#353).
@@ -223,7 +224,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Aplikace
 
-- AI asistenti - nová karta [Limity tokenů](redactor/ai/settings/README.md#karta----limity-tokenů) umožňuje omezit spotřebu asistenta a zobrazit její vývoj za posledních 14 dní. Na zadaný notifikační e-mail se odešlou upozornění při dosažení 75 % a 100 % limitu. Po dosažení limitu se další požadavky zablokují. Spotřebu lze vynulovat ručně pro vybrané asistenty nebo aktuální doménu, případně pravidelně pro všechny domény úlohou `AiTokenUsageReset`, která se ve výchozím nastavení spouští každý den o půlnoci (#58814).
+- AI asistenti - nová karta [Limity tokenů](redactor/ai/settings/README.md#karta----limity-tokenů) umožňuje omezit spotřebu asistenta a zobrazit její vývoj za posledních 14 dní. Na zadaný notifikační e-mail se odešlou upozornění při dosažení 75 % a 100 % limitu. Po dosažení limitu se další požadavky zablokují. Spotřebu lze vynulovat ručně pro vybrané asistenty nebo aktuální doménu, případně pravidelně pro všechny domény úkolem `AiTokenUsageReset`, který se ve výchozím nastavení spouští každý den o půlnoci (#400).
 - AI asistenti - opraveno zpracování průběžných textových odpovědí včetně Gemini. Počet tokenů a chybové zprávy se správně zpracují i ​​při rozdělení nebo spojení síťových bloků; technické údaje se nevkládají do generovaného textu. Přerušená odpověď se již neoznačí jako úspěšně dokončená.
 - Číselníky - výběr a správa typů se přesunuly do stromu v levém panelu s vyhledáváním. Více v [dokumentaci Číselníků](redactor/apps/enumeration/README.md) (#58786).
 - Blog - výběr a přidávání sekcí jsou dostupné ve stromu v levém panelu s vyhledáváním. Více v [dokumentaci Blogu](redactor/apps/blog/README.md) (#58786).
@@ -343,6 +344,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Datové tabulky - po úpravě jednoho záznamu se při vynuceném obnovení údajů zobrazí strana s upraveným záznamem podle aktuálního třídění. V konfiguraci se proměnná vyhledává podle názvu i při změně jejího ID. Při mazání se zachová aktuální strana, případně se zobrazí poslední platná strana. Při pořizování záznamu se stránkování nadále resetuje (#400).
 - Vícekrokové formuláře - identifikátor položky se generuje z textu názvu pole bez HTML značek, aby formátování názvu neovlivňovalo identifikátor (#396).
 - Vícekrokové formuláře - při smazání položky, kroku nebo formuláře se odstraní i příslušné podmínky zobrazení a povinnosti. Podmínky již smazaných položek neblokují odstranění polí, na která odkazovaly (#395).
 - Vícekrokové formuláře - pravidla **Povolená hodnota** již neodmítnou prázdné nepovinné pole. U povinného pole se regulární výrazy kontrolují i ​​pro prázdnou hodnotu; při odeslání kroku se zohledňují i ​​podmínky povinnosti (#394).
@@ -747,6 +749,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 > Opravná verze původní verze 2026.0.
 
 - Databáze - opraveno generování SQL podmínek `IN` a `NOT IN` s velkým počtem hodnot rozdělením seznamů na menší části. Odstraněny chyby při překročení limitu 1000 hodnot v Oracle databázi, například při načítání historie stránky nebo práci s rozsáhlým stromem složek. Maximální počet hodnot v jedné části určuje konfigurační proměnná `dbInClauseMaxItems` (výchozí 1000, v Oracle nejvýše 1000).
+- Databáze - sjednocené datové typy v SQL skriptech pro nové instalace: PostgreSQL používá `TIMESTAMP WITHOUT TIME ZONE`, opraveno nesprávné použití `TIMESTAMP` v MariaDB a Microsoft SQL. Stávající databáze se automaticky nekonvertují (#399).
 - Webové stránky - opraveno omezení hledání a nahrazování v názvech složek na vybraný strom složek a nastavení rodiče při opravě chybně smazaných složek během přesunu stránky do koše (#390).
 - Kalendář událostí - opraveno filtrování podle více perex skupin při nastavení `perexGroupUseJoin=true` bez duplicitních událostí. Upraveno omezení počtu výsledků i pro Oracle a Microsoft SQL (#390).
 - Webové stránky - opraveno zacyklení inicializace složek a kontroly plánovaného publikování při pomalém připojení k databázi (#337).

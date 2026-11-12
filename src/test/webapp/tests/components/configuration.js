@@ -43,6 +43,134 @@ Scenario('zoznam konfiguracnych premennych', ({ I }) => {
     I.dontSeeElement("#configurationDatatable.dt-hide-id tbody td.dt-select-td > .datatable-column-width");
 });
 
+Data([
+    { action: "edit", column: "name", direction: "asc", page: 2, expectedPage: 2 },
+    { action: "edit", column: "dateChanged", direction: "desc", page: 2, expectedPage: 0 },
+    { action: "remove", column: "name", direction: "asc", page: 1, expectedPage: 1 },
+    { action: "remove", column: "name", direction: "asc", page: 2, rowCount: 21, expectedPage: 1 }
+]).Scenario('configuration pagination after forceReload', async ({ I, DT, DTE, current }) => {
+    const routePattern = /\/admin\/rest\/settings\/configuration\/(all|search\/findByColumns|editor|\d+)(\?|$)/;
+    const originalDate = Date.UTC(2026, 0, 1);
+    const rowCount = current.rowCount || 30;
+    const rows = Array.from({ length: rowCount }, (_, index) => ({
+        id: index + 1,
+        name: "autotest-pagination-" + String(index + 1).padStart(2, "0"),
+        value: "autotest-original-value",
+        displayValue: "autotest-original-value",
+        oldValue: "",
+        description: "autotest pagination regression",
+        dateChanged: originalDate + (rowCount - index) * 86400000,
+        datePrepared: null,
+        encrypt: false,
+        temporary: false,
+        runtimeValueDifferent: false,
+        databaseValuePresent: true,
+        confPrepared: [],
+        confHistory: []
+    }));
+    const targetRow = rows[current.page * 10];
+    const editedValue = "autotest-edited-value";
+    let originalTableState;
+    let reloadedRows;
+
+    await I.mockRoute(routePattern, route => {
+        const path = new URL(route.request().url()).pathname;
+        if (path.endsWith("/editor")) {
+            const request = route.request().postDataJSON();
+            const submitted = request.data[targetRow.id];
+            if (request.action !== current.action || submitted == null) return route.fulfill({ status: 400 });
+            if (request.action === "remove") {
+                reloadedRows = rows.filter(row => row.id !== targetRow.id);
+                return route.fulfill({ json: { data: [], forceReload: true } });
+            }
+            const savedRow = {
+                ...targetRow,
+                value: submitted.value,
+                displayValue: submitted.value,
+                dateChanged: originalDate + 31 * 86400000
+            };
+            // Reuse every old ID for a different row, so matching the saved ID would find the wrong record.
+            reloadedRows = rows.map((row, index) => ({
+                ...(row.name === savedRow.name ? savedRow : row),
+                id: (index + 10) % rows.length + 1
+            }));
+            return route.fulfill({ json: { data: [savedRow], forceReload: true } });
+        }
+        if (path.endsWith("/all") || path.endsWith("/search/findByColumns")) {
+            const content = reloadedRows || rows;
+            return route.fulfill({ json: { content, totalElements: content.length, options: {} } });
+        }
+        return route.fulfill({ json: targetRow });
+    });
+
+    try {
+        I.refreshPage();
+        I.waitForText("autotest-pagination-", 20, "#configurationDatatable");
+        DT.waitForLoader(datatableName);
+        originalTableState = await I.executeScript(() => ({
+            length: configurationDatatable.page.len(),
+            order: configurationDatatable.order()
+        }));
+        await I.executeScript(sort => {
+            const table = configurationDatatable;
+            table.page.len(10).order([table.column(sort.column + ":name").index(), sort.direction]).draw();
+            table.page(sort.page).draw("page");
+        }, current);
+        I.see(targetRow.name, "#configurationDatatable");
+        I.assertEqual(await I.executeScript(() => configurationDatatable.page()), current.page);
+        I.assertEqual(await I.executeScript(() => configurationDatatable.rows({ page: "current" }).count()),
+            Math.min(10, rowCount - current.page * 10));
+
+        if (current.action === "edit") {
+            I.click(targetRow.name);
+            DTE.waitForEditor(datatableName);
+            DTE.fillField("value", editedValue);
+        } else {
+            I.clickCss(`#configurationDatatable tr[id='${targetRow.id}'] td.dt-select-td`);
+            I.clickCss("#configurationDatatable_wrapper button.buttons-remove");
+            I.waitForVisible("div.DTE_Action_Remove", 10);
+        }
+        await I.executeScript(() => {
+            // Wait for the forced Ajax reload's draw, not the Editor's earlier local update.
+            configurationDatatable.one("xhr.dt.autotestPagination", () => {
+                configurationDatatable.one("draw.dt.autotestPagination", () => {
+                    document.getElementById("configurationDatatable").dataset.autotestReloadComplete = "true";
+                });
+            });
+        });
+        if (current.action === "edit") DTE.save(datatableName);
+        else I.click("Zmazať", "div.DTE_Action_Remove");
+        I.waitForElement('#configurationDatatable[data-autotest-reload-complete="true"]', 10);
+        if (current.action === "remove") {
+            DTE.waitForLoader();
+            DT.waitForLoader(datatableName);
+        }
+        I.assertEqual(await I.executeScript(() => configurationDatatable.page()), current.expectedPage);
+        if (current.action === "edit") {
+            I.see(targetRow.name, "#configurationDatatable");
+            I.see(editedValue, "#configurationDatatable");
+            const reloadedRow = await I.executeScript(name => {
+                return configurationDatatable.rows({ page: "current" }).data().toArray().find(row => row.name === name);
+            }, targetRow.name);
+            I.assertNotEqual(reloadedRow.id, targetRow.id);
+            I.assertEqual(reloadedRow.dateChanged, originalDate + 31 * 86400000);
+        } else {
+            I.dontSee(targetRow.name, "#configurationDatatable");
+            I.see(reloadedRows[current.expectedPage * 10].name, "#configurationDatatable");
+            I.assertEqual(await I.executeScript(() => configurationDatatable.page.info().recordsDisplay), rowCount - 1);
+        }
+    } finally {
+        await I.stopMockingRoute(routePattern);
+        if (originalTableState != null) {
+            await I.executeScript(state => {
+                configurationDatatable.off(".autotestPagination");
+                delete document.getElementById("configurationDatatable").dataset.autotestReloadComplete;
+                configurationDatatable.page.len(state.length).order(state.order).draw();
+            }, originalTableState);
+        }
+    }
+});
+
 Scenario('configuration default tree width @singlethread', async ({ I, DT }) => {
     I.waitForVisible("#SomStromcek", 20);
     const originalSettings = await I.executeScript(() => {

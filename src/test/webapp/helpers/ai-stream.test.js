@@ -102,6 +102,15 @@ test('an incomplete stream keeps partial text but never finalizes the edit', asy
     assert.deepEqual(updates, [{ text: 'Partial text', final: false }]);
 });
 
+test('rejected local generation preserves the editor value and never reports success', async () => {
+    const payload = { response: null, error: 'The local model did not return usable text.',
+        errorCategory: 'UNKNOWN', totalTokens: 0 };
+    const { execution, updates } = await execute([Buffer.from(JSON.stringify(payload))], false);
+    assert.equal(execution.success, false);
+    assert.equal(execution.errorText, payload.error);
+    assert.deepEqual(updates, [], 'An error response must not replace the editor content.');
+});
+
 test('shared requests keep raw chat text while ordinary JSON generation formats the editor', async () => {
     const text = '```html\n<body><p>Hello</p></body>\n```\nExplanation of changes.';
     const payload = { response: text, totalTokens: 42, conversationId: 'next-turn', error: null };

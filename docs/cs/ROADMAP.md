@@ -69,6 +69,7 @@ filtr bere pouze první hodnotu. Dodělat tedy možnost `IN` pro možnost zadán
 - [x] +Přidat podporu obrázků a animací typu AVIF (#371).
 - [x] +Možnost změnit pořadí polí v datatables editoru, kartu ve které se pole nachází, případně i vytvořit novou kartu do které se pole vloží. Tedy konfiguračně upravit hodnoty co se dnes nastavují cea anotace (#366).
 - [ ] +V okně před připravených bloků přidat možnost editovat blok, který se načte z web stránek (otevřít v nové kartě editor s docid bloku) (#NNCZ-4456).
+- [ ] +Pokud vytvářím velký ZIP soubor často se přeruší spojení se serverem (pokud tam je např. proxy), zobrazí se chyba ale po nějaké době ZIP vznikne. Buď upravit chybovou zprávu aby uživatel věděl, že se jen přerušilo spojení, nebo ze serveru to spojení nějak udržovat posíláním nějakých status info aby proxy spojení nepřerušila.
 
 ## 2025
 

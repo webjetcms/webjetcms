@@ -33,6 +33,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockMultipartFile;
@@ -58,9 +59,12 @@ import com.webjetcms.ai.security.PromptInjectionDefense.UntrustedSource;
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
+import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.rest.AiChatAttachments;
+import sk.iway.iwcm.components.ai.providers.local.text.LocalTextProvider;
+import sk.iway.iwcm.components.ai.providers.local.text.LocalTextService;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
 
@@ -371,6 +375,81 @@ class LibrarySupportLogicTest {
             assertEquals(AiErrorCategory.INVALID_CONTINUATION, exception.getErrorCategory());
             assertEquals(400, exception.getProviderStatusCode());
             assertFalse(exception.getRetryable());
+        }
+    }
+
+    /** Blank local generations must become errors before success auditing or editor updates. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" \t\n"})
+    void rejectsBlankLocalGenerationBeforeRecordingSuccess(String generatedText) throws Exception {
+        AiClient client = mock(AiClient.class);
+        WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
+        when(configuration.resolve(any(), any())).thenReturn(AiProviderConfig.empty());
+        when(client.capabilities(any(), any())).thenReturn(AiCapabilities.unknown());
+        LocalTextService logic = new LocalTextService(client, configuration, mock(LocalTextProvider.class));
+        AssistantDefinitionEntity assistant = assistant();
+        assistant.setModel(LocalTextService.DEFAULT_MODEL);
+        InputDataDTO input = textInput();
+        when(client.execute(any(String.class), any(), any(), same(input.getCancellationToken())))
+            .thenReturn(new AiResponse(generatedText, List.of(), TokenUsage.EMPTY, "stop"));
+        Prop prop = mock(Prop.class);
+        String error = "The local model did not return usable text. The original content was preserved.";
+        when(prop.getText("components.ai_assistants.provider.local-generation.empty_response")).thenReturn(error);
+
+        try (MockedStatic<Adminlog> audit = mockStatic(Adminlog.class);
+            MockedStatic<AiStatService> statistics = mockStatic(AiStatService.class)) {
+            ProviderCallException failure = assertThrows(ProviderCallException.class,
+                () -> logic.getAiResponse(assistant, input, prop, null, null));
+            AssistantResponseDTO response = AssistantResponseDTO.fromError(failure);
+            assertEquals(error, response.getError());
+            assertNull(response.getResponse());
+            assertEquals("Text to process", input.getInputValue());
+            statistics.verifyNoInteractions();
+            ArgumentCaptor<String> message = ArgumentCaptor.forClass(String.class);
+            audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), message.capture(), eq(-1), eq(-1)));
+            assertTrue(message.getValue().contains("ERROR"));
+            assertFalse(message.getValue().contains("SUCCESS"));
+            audit.verifyNoMoreInteractions();
+        }
+    }
+
+    /** Zero reported tokens are valid when the local provider returns actual generated text. */
+    @Test
+    void acceptsLocalGenerationWithZeroTokensAndNonBlankText() throws Exception {
+        AiClient client = mock(AiClient.class);
+        WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
+        when(configuration.resolve(any(), any())).thenReturn(AiProviderConfig.empty());
+        when(client.capabilities(any(), any())).thenReturn(AiCapabilities.unknown());
+        LocalTextService logic = new LocalTextService(client, configuration, mock(LocalTextProvider.class));
+        InputDataDTO input = textInput();
+        when(client.execute(any(String.class), any(), any(), same(input.getCancellationToken())))
+            .thenReturn(AiResponse.text("Nature..."));
+
+        try (MockedStatic<Adminlog> audit = mockStatic(Adminlog.class);
+            MockedStatic<AiStatService> statistics = mockStatic(AiStatService.class)) {
+            AssistantResponseDTO response = logic.getAiResponse(assistant(), input, null, null, null);
+            assertEquals("Nature...", response.getResponse());
+            assertEquals(0, response.getTotalTokens());
+            assertNull(response.getError());
+            statistics.verify(() -> AiStatService.addRecord(null, 0, null, null));
+        }
+    }
+
+    /** Providers without the local generation contract retain their existing empty-response behavior. */
+    @Test
+    void preservesEmptyResponseForOtherProviders() throws Exception {
+        AiClient client = mock(AiClient.class);
+        TestLibrarySupportLogic logic = chatLogic(client);
+        InputDataDTO input = textInput();
+        when(client.execute(any(String.class), any(), any(), same(input.getCancellationToken())))
+            .thenReturn(AiResponse.text(""));
+
+        try (MockedStatic<Adminlog> audit = mockStatic(Adminlog.class);
+            MockedStatic<AiStatService> statistics = mockStatic(AiStatService.class)) {
+            AssistantResponseDTO response = logic.getAiResponse(assistant(), input, null, null, null);
+            assertEquals("", response.getResponse());
+            assertNull(response.getError());
         }
     }
 

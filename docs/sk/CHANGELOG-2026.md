@@ -104,6 +104,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 </div>
 
 - Page Builder - zlepšená detekcia zmien v HTML kóde stránky, aby sa nezobrazilo hlásenie "V editore pravdepodobne máte neuložený text" aj keď ste reálne žiaden text v stránke nezmenili (#317).
+- Page Builder - opravené ukladanie stránok s neúplnou HTML štruktúrou a neplatnými odkazmi na staršie inštancie editora. Obsah takýchto prvkov sa zachová spolu s aktuálnymi úpravami ostatných blokov (#400).
 - [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + v žltej čiare v okne **Vložiť blok** na karte **Základné** pribudli možnosti **Obrázok** a **Aplikácia**. Otvoria príslušný dialóg editora a umožnia vložiť obsah na zvolené miesto (#339).
 - Page Builder - pridané [kopírovanie blokov medzi stránkami](redactor/webpages/pagebuilder.md#kopírovanie-blokov-medzi-stránkami). Voľby **Skopírovať** a **Vložiť** prenášajú sekcie, kontajnery a stĺpce aj s obsahom a vlastnými štýlmi. Editor ponúkne iba miesta vhodné pre typ bloku. Schránka má platnosť 30 minút od skopírovania (#353).
 - Šablóny - na karte Pokročilé môžete nastaviť [odstraňovanie spojok z URL stránky](frontend/templates/templates.md#karta-pokročilé): podľa `urlRemoveSpojky`, vždy odstrániť alebo ponechať. Blog tak môže ponechať spojky aj pri zapnutom odstraňovaní pre zvyšok webu (#353).
@@ -223,7 +224,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
-- AI asistenti - nová karta [Limity tokenov](redactor/ai/settings/README.md#karta---limity-tokenov) umožňuje obmedziť spotrebu asistenta a zobraziť jej vývoj za posledných 14 dní. Na zadaný notifikačný e-mail sa odošlú upozornenia pri dosiahnutí 75 % a 100 % limitu. Po dosiahnutí limitu sa ďalšie požiadavky zablokujú. Spotrebu možno vynulovať ručne pre vybraných asistentov alebo aktuálnu doménu, prípadne pravidelne pre všetky domény úlohou `AiTokenUsageReset`, ktorá sa predvolene spúšťa každý deň o polnoci (#58814).
+- AI asistenti - nová karta [Limity tokenov](redactor/ai/settings/README.md#karta---limity-tokenov) umožňuje obmedziť spotrebu asistenta a zobraziť jej vývoj za posledných 14 dní. Na zadaný notifikačný e-mail sa odošlú upozornenia pri dosiahnutí 75 % a 100 % limitu. Po dosiahnutí limitu sa ďalšie požiadavky zablokujú. Spotrebu možno vynulovať ručne pre vybraných asistentov alebo aktuálnu doménu, prípadne pravidelne pre všetky domény úlohou `AiTokenUsageReset`, ktorá sa predvolene spúšťa každý deň o polnoci (#400).
 - AI asistenti - opravené spracovanie priebežných textových odpovedí vrátane Gemini. Počet tokenov a chybové správy sa správne spracujú aj pri rozdelení alebo spojení sieťových blokov; technické údaje sa nevkladajú do generovaného textu. Prerušená odpoveď sa už neoznačí ako úspešne dokončená.
 - Číselníky - výber a správa typov sa presunuli do stromu v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Číselníkov](redactor/apps/enumeration/README.md) (#58786).
 - Blog - výber a pridávanie sekcií sú dostupné v strome v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Blogu](redactor/apps/blog/README.md) (#58786).
@@ -343,6 +344,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Dátové tabuľky - po úprave jedného záznamu sa pri vynútenom obnovení údajov zobrazí strana s upraveným záznamom podľa aktuálneho triedenia. V konfigurácii sa premenná vyhľadáva podľa názvu aj pri zmene jej ID. Pri mazaní sa zachová aktuálna strana, prípadne sa zobrazí posledná platná strana. Pri vytvorení záznamu sa stránkovanie naďalej resetuje (#400).
 - Viackrokové formuláre - identifikátor položky sa generuje z textu názvu poľa bez HTML značiek, aby formátovanie názvu neovplyvňovalo identifikátor  (#396).
 - Viackrokové formuláre - pri zmazaní položky, kroku alebo formulára sa odstránia aj príslušné podmienky zobrazenia a povinnosti. Podmienky už zmazaných položiek neblokujú odstránenie polí, na ktoré odkazovali (#395).
 - Viackrokové formuláre - pravidlá **Povolená hodnota** už neodmietnu prázdne nepovinné pole. Pri povinnom poli sa regulárne výrazy kontrolujú aj pre prázdnu hodnotu; pri odoslaní kroku sa zohľadňujú aj podmienky povinnosti (#394).

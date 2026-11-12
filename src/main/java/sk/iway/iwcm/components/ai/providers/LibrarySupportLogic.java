@@ -217,6 +217,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 responseDto.setResponse(includeHandler.getWholeResponse());
             }
             checkCancellation(inputData);
+            validateTextResponse(responseDto.getResponse(), prop);
             successAdminLog(
                 responseDto,
                 inputPair,
@@ -643,6 +644,17 @@ public abstract class LibrarySupportLogic implements AiInterface {
         Long assistantId
     ) throws IOException {
         // Providers may reject suspicious values expanded into trusted instructions.
+    }
+
+    /**
+     * Validates completed text before success auditing and returning it to the editor.
+     *
+     * @param text final provider text after restoring protected INCLUDE commands
+     * @param prop translations used for provider-specific validation errors
+     * @throws IOException if the provider rejects the completed text
+     */
+    protected void validateTextResponse(String text, Prop prop) throws IOException {
+        // Providers may enforce additional output requirements.
     }
 
     private ImageOptions supportedImageOptions(
