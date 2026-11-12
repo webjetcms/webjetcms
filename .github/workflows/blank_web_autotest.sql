@@ -708,6 +708,40 @@ VALUES
 UNLOCK TABLES;
 
 
+# Dump of table ai_assistants
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `ai_assistants`;
+
+CREATE TABLE `ai_assistants` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `action` varchar(255) NOT NULL,
+  `class_name` varchar(255) NOT NULL,
+  `field_from` varchar(255) DEFAULT NULL,
+  `field_to` varchar(255) NOT NULL,
+  `provider` varchar(255) NOT NULL,
+  `instructions` text NOT NULL,
+  `model` varchar(255) DEFAULT NULL,
+  `last_update` datetime DEFAULT NULL,
+  `group_name` varchar(255) DEFAULT NULL,
+  `user_prompt_enabled` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `user_prompt_label` text DEFAULT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `keep_html` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `use_streaming` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `use_temporal` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `active` tinyint(1) unsigned NOT NULL DEFAULT 1,
+  `domain_id` int(11) NOT NULL DEFAULT 1,
+  `used_tokens` bigint DEFAULT 0,
+  `token_limit` bigint DEFAULT 0,
+  `notif_email` varchar(255) DEFAULT NULL,
+  `notif_level` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
 # Dump of table alarm_action
 # ------------------------------------------------------------
 
