@@ -44,9 +44,13 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}${management ? '' : '#branchCompare='+fixture.branchId}`);
         if (management) {
             branchPicker.action(I, 'manage');
-            I.waitForVisible('dialog[open] .branch-list', 20);
+            I.waitForVisible('#branchesDataTable tbody tr td.dt-select-td', 20);
             const current = await report(I, fixture);
-            I.click(locate('dialog[open] .branch-list p').withText(current.name).find('button').withText('Skontrolovať zmeny'));
+            I.fillField('.dt-scroll-head input.dt-filter-name', current.name);
+            I.click('.dt-scroll-head button.dt-filtrujem-name');
+            I.waitForText(current.name, 20, '#branchesDataTable');
+            I.click(locate('#branchesDataTable tbody tr').withText(current.name).find('td.dt-select-td'));
+            I.clickCss('.buttons-branch-compare');
         }
         I.waitForVisible(dialog, 30);
         I.waitForElement(itemButton(fixture.pageId), 30);

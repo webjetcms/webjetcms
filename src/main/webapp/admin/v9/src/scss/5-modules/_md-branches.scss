@@ -1,6 +1,7 @@
 // Share the editor's shortcut palette with the workspace picker and its preview.
 @each $name, $color in $shortcut-colors {
-    [data-branch-color="#{$name}"] { --wj-branch-color: #{$color}; }
+    [data-branch-color="#{$name}"],
+    #branchesDataTable_modal input[name="color"][value="#{$name}"] + label { --wj-branch-color: #{$color}; }
 }
 
 .md-branch-switch, .md-branch-bar__switch {
@@ -101,36 +102,6 @@
     &__text { display: grid; flex: 1; min-width: 0; overflow-wrap: anywhere; }
     &__text small { color: $gray-text; font-weight: normal; }
 }
-.md-branch-dialog {
-    width: min(460px, calc(100vw - 24px));
-    max-height: calc(100dvh - 24px);
-    padding: 20px;
-    legend.form-label { font-size: inherit; }
-    border: 1px solid $nice-gray-100;
-    border-radius: $border-radius;
-    &::backdrop { background: rgba($secondary,.45); }
-}
-.md-branch-colors { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.md-branch-swatch {
-    position: relative;
-    cursor: pointer;
-    > span {
-        display: inline-grid;
-        vertical-align: middle;
-        place-items: center;
-        width: 28px;
-        height: 28px;
-        color: white;
-        border: 1px solid transparent;
-        border-radius: 50%;
-        background: var(--wj-branch-color);
-    }
-    &[data-branch-color="default"] > span { color: $secondary; border-color: $nice-gray-200; }
-    &[data-branch-color="amber"] > span { color: $secondary; }
-    input:not(:checked) + span > i { visibility: hidden; }
-    input:checked + span { outline: 2px solid $secondary; outline-offset: 2px; }
-    input:focus-visible + span { outline: 3px solid $primary; outline-offset: 2px; }
-}
 .md-branch-sample {
     display: flex;
     align-items: center;
@@ -139,4 +110,36 @@
     border-radius: $border-radius;
     overflow-wrap: anywhere;
     > span { display: grid; min-width: 0; }
+}
+
+.md-branch-table-color { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.md-branch-state {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: $border-radius;
+    background: $nice-gray;
+    color: $gray-text;
+    font-size: 13px;
+    white-space: nowrap;
+    &[data-state="DRAFT"] { color: $primary; background: tint-color($primary, 92%); }
+    &[data-state="SCHEDULED"], &[data-state="MERGING"] { color: $secondary; background: tint-color($warning, 80%); }
+    &[data-state="NEEDS_ATTENTION"], &[data-state="MERGE_FAILED"] { color: $danger; background: tint-color($danger, 94%); }
+    &[data-state="MERGED"] { color: shade-color($success, 50%); background: tint-color($success, 90%); }
+}
+#branchesDataTable_modal .DTE_Field_Name_color .DTE_Field_InputControl {
+    > div { display: flex; flex-wrap: wrap; gap: 8px; }
+    input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 9px;
+        margin: 0;
+        border: 1px solid $nice-gray-100;
+        border-radius: $border-radius;
+        cursor: pointer;
+        &::before { content: ""; width: 14px; height: 14px; border: 1px solid $nice-gray-200; border-radius: 50%; background: var(--wj-branch-color); }
+    }
+    input:checked + label { border-color: $primary; background: tint-color($primary, 95%); }
+    input:focus-visible + label { outline: 2px solid $secondary; outline-offset: 2px; }
 }

@@ -4,8 +4,8 @@ Publikačný balík spojí prípravu viacerých stránok, priečinkov, médií a
 
 ## Príprava kampane
 
-1. V časti **Webové stránky** vyberte doménu v ľavom menu. V hornej hlavičke pred názvom obrazovky kliknite na ikonu vetvenia. Zobrazí sa **Hlavná verzia** a pracovné verzie vybratej domény. Ak už máte kampaň založenú, vyberte ju zo zoznamu.
-2. Pre novú kampaň vyberte **Nová pracovná verzia**. Zadajte názov, prípadne poznámku a farbu, podľa ktorej kampaň spoznáte. Kliknite na **Vytvoriť a otvoriť**. Nad hlavičkou sa zobrazí pás s názvom verzie, v ktorej práve upravujete obsah. Kliknutím na názov môžete prepnúť verziu alebo založiť ďalšiu.
+1. V časti **Webové stránky → Pracovné verzie** vyberte doménu v ľavom menu. Tabuľka zobrazuje jej pracovné verzie vrátane publikovaných, ich farbu, stav a poslednú úpravu. Termín publikovania a ďalšie údaje si môžete zapnúť vo výbere stĺpcov. Zoznam môžete filtrovať a zoradiť.
+2. Tlačidlom **Pridať** vytvorte novú kampaň. Zadajte názov, poznámku a farbu; ukážka zobrazí jej označenie v hlavičke. Uloženie vytvorí verziu bez prepnutia obsahu. Názov, poznámku a farbu môžete neskôr upraviť kliknutím na názov riadka. Označte rozpracovanú verziu a kliknite **Upravovať web**. Nad hlavičkou sa zobrazí pás s jej názvom. Prepínač v hlavičke slúži na výber verzie; odkaz **Spravovať pracovné verzie** vedie späť do tabuľky.
 3. Stránky a priečinky upravujte obvyklým editorom. Uložená zmena sa pridá do balíka. Nové položky dostanú konečné ID, ktoré sa pri publikovaní nemení. Kolegovia vyberú ten istý balík vo vlastnom prihlásení. Potrebujú svoje bežné práva na dotknutý obsah.
 4. Pridajte médiá a obrázky/prílohy mimo galérie. Možno vytvoriť prázdny súborový adresár a pracovať s jednotlivými súbormi. Súbor spoločný viacerým doménam po publikovaní ovplyvní všetky jeho použitia.
 5. Pred zmenou verzie alebo domény uložte rozpracovaný formulár. Ak kolega či druhá záložka zmení kontext alebo obsah, staré uloženie server odmietne. Zachovajte si text a otvorte čerstvý editor.
@@ -14,7 +14,7 @@ Publikačný balík spojí prípravu viacerých stránok, priečinkov, médií a
 
 V páse pracovnej verzie kliknite na **Náhľad**. V novej karte môžete prejsť menu, Novinky, detaily, obrázky a prílohy. Náhľad vyžaduje prihlásenie do administrácie. Lišta uvádza logickú doménu a čas použitý Novinkami.
 
-Tlačidlom **Pracovné zmeny** v tom istom páse otvoríte porovnanie pôvodného základu, súčasnej hlavnej verzie a pracovnej verzie. Ak niekto zmenil tú istú položku na oboch stranách, vyberte verziu položky, ktorú chcete ponechať, a uložte voľbu. Vlastnú kombináciu polí pripravte v pracovnom editore a znovu porovnajte.
+V tabuľke pracovných verzií označte riadok a kliknite **Skontrolovať zmeny**. Porovnanie je dostupné aj tlačidlom **Pracovné zmeny** v páse pracovnej verzie. Otvoríte porovnanie pôvodného základu, súčasnej hlavnej verzie a pracovnej verzie. Ak niekto zmenil tú istú položku na oboch stranách, vyberte verziu položky, ktorú chcete ponechať, a uložte voľbu. Vlastnú kombináciu polí pripravte v pracovnom editore a znovu porovnajte.
 
 Voľba výsledku hneď ovplyvní náhľad vrátane menu, Noviniek, médií a príloh. Editor ďalej uchováva pracovný obsah. Pri nevyriešenom konflikte lišta upozorní na pracovný predpoklad. Neskoršia zmena produkcie alebo WORK zneplatní starú voľbu a vyžiada nové porovnanie.
 
@@ -35,6 +35,7 @@ Vo vybranej pracovnej verzii môžete otvoriť každú časť administrácie, na
 | Obrazovka | URL |
 | --- | --- |
 | Prehľad administrácie a výber balíka | `/admin/v9/` |
+| Správa pracovných verzií | `/admin/v9/webpages/branches/` |
 | Webové stránky a ich editor | `/admin/v9/webpages/web-pages-list/` |
 | Médiá | `/admin/v9/webpages/media/` |
 | Editor komponentu stránky | `/admin/v9/webpages/component/` |

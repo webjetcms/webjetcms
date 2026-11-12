@@ -107,7 +107,7 @@ if (showForm)
 				if (win.parent.document.editorForm) editorWindow = win.parent;
 
 				const branch = editorWindow.branchScreen;
-				if (branch?.enabled) document.componentForm.action += '&branchId=' + branch.branchId + '&branchDomain=' + encodeURIComponent(branch.domainName);
+				if (branch?.enabled) document.componentForm.action += '&branchId=' + branch.branchId + '&branchDomain=' + encodeURIComponent(branch.domainId);
 				document.componentForm.docid.value = editorWindow.document.editorForm.docId.value;
 				document.componentForm.groupId.value = editorWindow.document.editorForm.groupId.value;
 

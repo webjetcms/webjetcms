@@ -5,6 +5,9 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.mockito.MockedStatic;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
@@ -13,6 +16,14 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 
 /** Verifies server-owned domain and explicit LIVE operation context for create/list API. */
 class BranchRestControllerTest {
+    private MockedStatic<BranchDomains> domains;
+    @BeforeEach void domainIds() {
+        domains = mockStatic(BranchDomains.class);
+        domains.when(() -> BranchDomains.id("a.example.sk")).thenReturn(1);
+        domains.when(() -> BranchDomains.name(1)).thenReturn("a.example.sk");
+    }
+    @AfterEach void closeDomainIds() { domains.close(); }
+
     @Test
     void createsWithoutChangingSelectionAndListsOnlyServerDomain() {
         BranchService service = mock(BranchService.class);
@@ -28,7 +39,7 @@ class BranchRestControllerTest {
         BranchEntity entity = new BranchEntity();
         entity.setId(42L);
         entity.setName("Campaign");
-        entity.setDomainName("a.example.sk");
+        entity.setDomainId(1);
         entity.setState("DRAFT");
         entity.setColor("lavender");
         when(service.create("a.example.sk", "Campaign", "Description", "lavender", 7)).thenAnswer(invocation -> {
@@ -40,7 +51,7 @@ class BranchRestControllerTest {
             return List.of(entity);
         });
         try (var requests = mockStatic(SetCharacterEncodingFilter.class)) {
-            var response = controller.create(new BranchRestController.Create(" Campaign ", "Description", "a.example.sk", "lavender"), request);
+            var response = controller.create(new BranchRestController.Create(" Campaign ", "Description", 1, "lavender"), request);
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertEquals("/admin/rest/branches/42", response.getHeaders().getLocation().toString());
             assertEquals(42L, response.getBody().id());
@@ -48,7 +59,7 @@ class BranchRestControllerTest {
             assertSame(branch, request.getAttribute(BranchContexts.ATTRIBUTE));
             assertEquals(List.of(response.getBody()), controller.list(false, request));
             assertSame(branch, request.getAttribute(BranchContexts.ATTRIBUTE));
-            verify(access).requireExpectedDomain("a.example.sk", "a.example.sk");
+            verify(access).requireExpectedDomain(1, 1);
             verify(access).requireCsrf(request);
         }
     }
@@ -65,7 +76,7 @@ class BranchRestControllerTest {
         when(service.create("a.example.sk","Campaign",null,null,7)).thenThrow(new BranchService.UnavailableException("InnoDB required: groups",new java.sql.SQLException()));
         try (var requests = mockStatic(SetCharacterEncodingFilter.class)) {
             ResponseStatusException failure = assertThrows(ResponseStatusException.class, () -> new BranchRestController(service,access).create(
-                new BranchRestController.Create("Campaign",null,"a.example.sk"),request));
+                new BranchRestController.Create("Campaign",null,1),request));
             assertEquals(HttpStatus.CONFLICT,failure.getStatusCode());
             assertTrue(failure.getReason().contains("InnoDB required: groups"));
             assertNull(request.getAttribute(BranchContexts.ATTRIBUTE));
@@ -82,10 +93,10 @@ class BranchRestControllerTest {
         when(access.requireUser(request)).thenReturn(user);
         when(access.requireDomain(request, user)).thenReturn("a.example.sk");
         assertEquals(HttpStatus.BAD_REQUEST, assertThrows(ResponseStatusException.class,
-                () -> controller.create(new BranchRestController.Create(" ", null, "a.example.sk"), request)).getStatusCode());
-        doThrow(new ResponseStatusException(HttpStatus.CONFLICT)).when(access).requireExpectedDomain("a.example.sk", "b.example.sk");
+                () -> controller.create(new BranchRestController.Create(" ", null, 1), request)).getStatusCode());
+        doThrow(new ResponseStatusException(HttpStatus.CONFLICT)).when(access).requireExpectedDomain(1, 2);
         assertEquals(HttpStatus.CONFLICT, assertThrows(ResponseStatusException.class,
-                () -> controller.create(new BranchRestController.Create("Campaign", null, "b.example.sk"), request)).getStatusCode());
+                () -> controller.create(new BranchRestController.Create("Campaign", null, 2), request)).getStatusCode());
         verifyNoInteractions(service);
     }
 
@@ -94,7 +105,7 @@ class BranchRestControllerTest {
     void acceptsMissingColorAndRejectsUnknownPreset() {
         var mapper = new tools.jackson.databind.ObjectMapper();
         var input = mapper.readValue("""
-                {"name":"Campaign","expectedDomainName":"a.example.sk"}
+                {"name":"Campaign","expectedDomainId":1}
                 """, BranchRestController.Create.class);
         assertNull(input.color());
         var service = new BranchService(() -> { throw new AssertionError("Unexpected database access"); });
@@ -106,7 +117,7 @@ class BranchRestControllerTest {
         when(access.requireDomain(request, user)).thenReturn("a.example.sk");
         var controller = new BranchRestController(service, access);
         try (var requests = mockStatic(SetCharacterEncodingFilter.class)) {
-            var unknown = new BranchRestController.Create("Campaign", null, "a.example.sk", "#c0ffee");
+            var unknown = new BranchRestController.Create("Campaign", null, 1, "#c0ffee");
             var failure = assertThrows(ResponseStatusException.class, () -> controller.create(unknown, request));
             assertEquals(HttpStatus.BAD_REQUEST, failure.getStatusCode());
         }

@@ -28,15 +28,15 @@ class BranchEditorTest extends BaseWebjetTest {
 
     @BeforeEach void fixture() throws Exception {
         try(Connection c=DBPool.getConnection()) { assertEquals("webjet_p01",c.getCatalog()); assertTrue(c.getMetaData().getURL().contains(":33316/")); }
-        for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder","fulltextExecuteApps","linkType")) configuration.put(key,Constants.getString(key));
-        Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("branchSingleWriterConfirmed",true);
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder","fulltextExecuteApps","linkType")) configuration.put(key,Constants.getString(key));
+        Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private")); Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
         Constants.setBoolean("multiDomainEnabled",true); Constants.setBoolean("templatesUseRecursiveSystemFolder",false); Constants.setBoolean("fulltextExecuteApps",true);
         Constants.setInt("linkType",Constants.LINK_TYPE_HTML);
         root=liveGroup("autotest P04 root",0,"autotest-p04"); other=liveGroup("autotest P04 other",root,"other");
         page=liveDoc(root,"/autotest-p04/existing.html");
         try(Connection c=DBPool.getConnection();Statement statement=c.createStatement()) { statement.executeUpdate("UPDATE `groups` SET default_doc_id="+page+" WHERE group_id="+root); }
-        var branch=new BranchService().create(DOMAIN,"autotest P04 editor","disposable integration test",1);
+        var branch=new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P04 editor","disposable integration test",1);
         context=new BranchContext(branch.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);
         production=fingerprint();
     }
@@ -100,8 +100,12 @@ class BranchEditorTest extends BaseWebjetTest {
             BranchEditor service=new BranchEditor(request);
             // The tree delete button submits its displayed group, without opening the folder editor first.
             GroupDetails folder=BranchView.current().group(root);
+            int domainId=context.domainId();
             assertNotNull(folder.getEditorFields().getBranchHash());
             service.deleteGroup(folder); assertNull(BranchView.current().group(root)); assertNull(BranchView.current().document(page,false));
+            assertEquals(domainId,context.domainId());
+            assertEquals(domainId,sk.iway.iwcm.common.CloudToolsForCore.getDomainId());
+            assertEquals(DOMAIN,BranchDomains.name(domainId));
             service.revert(BranchType.GROUP,root,hash(BranchType.GROUP,root));
             assertNotNull(BranchView.current().group(other)); assertNotNull(BranchView.current().document(page,false));
             return null;

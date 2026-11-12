@@ -40,7 +40,7 @@ Koordinácia a spoločný prehľad použijú identitu `type + objectKey` a spolo
 
 Výber v administrácii sa uloží do session pre vybranú doménu. Zmena domény vyberie produkciu; novú vetvu používateľ vyberie výslovne. Prepínač obnoví otvorenú obsahovú obrazovku.
 
-Každá podporovaná administračná obrazovka dostane pri načítaní `branchId` a `branchDomain`; hodnota ID `0` znamená produkciu. Jej AJAX požiadavky vrátane uploadu posielajú hlavičky `X-WebJET-Branch` a `X-WebJET-Branch-Domain`, prípadne zodpovedajúce multipart polia. Server porovná **obe** hodnoty s aktuálnym výberom v session a overí doménu cieľového objektu. Nesúlad vráti `409` s pokynom obnoviť obrazovku. Kontrola domény platí aj pre `branchId=0`: dve produkčné záložky rôznych domén majú rovnaké ID vetvy, ale iný cieľ. Chýbajúci kontext v pracovnom režime sa nesmie interpretovať ako súhlas so zápisom do produkcie.
+Každá podporovaná administračná obrazovka dostane pri načítaní `branchId` a číselné `branchDomain` (`domainId`); hodnota ID vetvy `0` znamená produkciu. Jej AJAX požiadavky vrátane uploadu posielajú hlavičky `X-WebJET-Branch` a `X-WebJET-Branch-Domain`, prípadne zodpovedajúce multipart polia. Server porovná **obe** hodnoty s aktuálnym výberom v session a overí doménu cieľového objektu. Nesúlad vráti `409` s pokynom obnoviť obrazovku. Kontrola domény platí aj pre `branchId=0`: dve produkčné záložky rôznych domén majú rovnaké ID vetvy, ale iný cieľ. Chýbajúci kontext v pracovnom režime sa nesmie interpretovať ako súhlas so zápisom do produkcie.
 
 Táto kontrola rieši bežný prípad dvoch otvorených záložiek: prepnutie vetvy v jednej záložke nezmení nepozorovane cieľ uloženia formulára v druhej. Nerieši súbežné editovanie pomocou zámkov.
 
@@ -351,9 +351,9 @@ Presné endpointy zoznamu balíkov a merge patria do príslušných dokumentov. 
 | Endpoint | Výsledok |
 | --- | --- |
 | `GET /admin/rest/branches` | Dostupné neuzavreté verzie aktuálnej admin domény pre prepínač, vrátane názvu a stavu. Prehľad môže výslovne vyžiadať aj uzavreté verzie cez `includeClosed=true`. |
-| `POST /admin/rest/branches` s `{ "name": "Vianočná kampaň", "description": "...", "expectedDomainName": "www.firma.sk" }` | Overí práva a údaje aj zhodu očakávanej domény formulára s aktuálnou admin doménou servera; nesúlad vráti `409`. Vlastníka určí server a založí prázdnu `DRAFT` verziu bez termínu. Vráti `201` a identitu/názov/doménu/stav. Nemení admin výber, nevytvára snapshot webu ani vetvu z inej vetvy. |
+| `POST /admin/rest/branches` s `{ "name": "Vianočná kampaň", "description": "...", "expectedDomainId": 123 }` | Overí práva a údaje aj zhodu očakávanej domény formulára s aktuálnou admin doménou servera; nesúlad vráti `409`. Vlastníka určí server a založí prázdnu `DRAFT` verziu bez termínu. Vráti `201` a identitu/názov/doménu/stav. Nemení admin výber, nevytvára snapshot webu ani vetvu z inej vetvy. |
 | `GET /admin/rest/branches/context` | Produkcia alebo zvolená vetva pre aktuálnu doménu, názov a aktuálne oprávnenia. |
-| `POST /admin/rest/branches/context` s `{ "branchId": 42, "expectedDomainName": "www.firma.sk" }` | Overenie domény otvorenej obrazovky a zmena výberu v administrácii; `0` vyberie produkciu. Nesúlad domény vráti `409` aj pri voľbe `0`. Existujúca CSRF ochrana zostáva. |
+| `POST /admin/rest/branches/context` s `{ "branchId": 42, "expectedDomainId": 123 }` | Overenie domény otvorenej obrazovky a zmena výberu v administrácii; `0` vyberie produkciu. Nesúlad domény vráti `409` aj pri voľbe `0`. Existujúca CSRF ochrana zostáva. |
 | `GET /admin/rest/branches/42/preview-link?docId=123` | Overená URL na výslednú stránku vetvy; pri zmazanej/nedostupnej položke vysvetlená chyba. |
 | `GET /admin/webpages/branch-preview/42/...` | Chránený náhľad stránky alebo podporovaného assetu. |
 

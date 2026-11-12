@@ -133,7 +133,7 @@ Práca:
 2. Napojenie cez `IwcmFsVolume`/`FsService`, moderný admin upload a CKEditor upload. Príkazy obchádzajúce volume sa buď napoja, alebo server vo vetve odmietne; na začiatok netreba ZIP extract alebo hromadné transformácie.
 3. Oddeliť pracovné operácie bežných obrázkov od GalleryDB, file_atr, dirprop, fulltextu, redirectov a customer hookov. Galerijné cesty a varianty sú podľa Q18 iba na čítanie, vrátane priameho uploadu či elFinder bypassu. Zachovať dnešné upload typové/veľkostné/prístupové kontroly; konkrétne následky príkazov inventarizuje súborová analýza.
 4. Zapájať médiá cez `MediaRestController`, `MediaDB`, `MediaService`, presné ID a kategorizáciu. Filtrovanie kategórií musí rešpektovať pracovný zoznam pred paging.
-5. Doplniť gateway asset streaming a oddelené thumbnail kľúče, súborové konflikty a informáciu o dosahu spoločného fyzického úložiska.
+5. Doplniť gateway asset streaming a oddelené thumbnail kľúče, súborové konflikty a oddelenie cez existujúce externé priečinky domén podľa Q20.
 6. Overiť media-only uloženie bez uloženia stránky: WORK médium v náhľade aj po publikovaní zostane viditeľné pri staršom `dateCreated` stránky. Nezmeniť tým autora, SAVE_DATE ani viditeľnosť rozpracovaných produkčných médií.
 
 **Dokončené, keď:** T02/T05/T07/T09 prejdú pre oba upload vstupy a elFinder. Produkčná URL nikdy nevráti pracovné bajty; pracovná DELETE sa nikdy neprepadne na pôvodný súbor. Nové aj existujúce médiá zachovajú ID.

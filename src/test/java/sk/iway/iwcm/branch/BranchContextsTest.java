@@ -4,12 +4,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mockStatic;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 
 /** Verifies nested technical LIVE scopes and request cleanup on a reused thread. */
 class BranchContextsTest {
+    private MockedStatic<BranchDomains> domains;
+    @BeforeEach void domainIds() {
+        domains = mockStatic(BranchDomains.class);
+        domains.when(() -> BranchDomains.id("a.example.sk")).thenReturn(1);
+        domains.when(() -> BranchDomains.id("b.example.sk")).thenReturn(2);
+    }
+    @AfterEach void closeDomainIds() { domains.close(); }
+
     @Test
     void restoresBranchAfterTechnicalLiveAndCleansUpAfterFailure() {
         RequestBean bean = new RequestBean();
@@ -39,9 +50,9 @@ class BranchContextsTest {
     @Test
     void rejectsChangedBranchAndChangedDomainEvenForLive() {
         BranchContext live = BranchContext.live("a.example.sk", 7);
-        assertDoesNotThrow(() -> BranchContexts.requireSameSelection(live, 0, "a.example.sk"));
-        assertThrows(IllegalStateException.class, () -> BranchContexts.requireSameSelection(live, 0, "b.example.sk"));
-        assertThrows(IllegalStateException.class, () -> BranchContexts.requireSameSelection(live, 12, "a.example.sk"));
+        assertDoesNotThrow(() -> BranchContexts.requireSameSelection(live, 0, "1"));
+        assertThrows(IllegalStateException.class, () -> BranchContexts.requireSameSelection(live, 0, "2"));
+        assertThrows(IllegalStateException.class, () -> BranchContexts.requireSameSelection(live, 12, "1"));
         assertThrows(IllegalStateException.class, () -> BranchContexts.requireSameSelection(live, 0, null));
     }
 

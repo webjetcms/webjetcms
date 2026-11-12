@@ -153,6 +153,10 @@ public class GroupsDB extends DB
     /** Creates an isolated facade without refreshing or writing shared production caches. */
     public static GroupsDB forBranch(List<GroupDetails> effectiveGroups) {
         GroupsDB result = new GroupsDB(effectiveGroups);
+        var context = sk.iway.iwcm.branch.BranchContexts.current();
+        try (var ignored = sk.iway.iwcm.branch.BranchContexts.live(null, context.domainName(), context.userId())) {
+            result.domainIds = new HashMap<>(getInstance().domainIds);
+        }
         for (GroupDetails group : effectiveGroups) group.setFullPath(result.getPath(group.getGroupId()));
         return result;
     }
@@ -164,8 +168,6 @@ public class GroupsDB extends DB
         idToGroups = new HashMap<>(); domainIds = new HashMap<>();
         for (GroupDetails group : groups) {
             idToGroups.put(group.getGroupId(), group);
-            if (group.getParentGroupId() == 0 && Tools.isNotEmpty(group.getDomainName()))
-                domainIds.merge(group.getDomainName(),group.getGroupId(),Math::min);
         }
     }
 

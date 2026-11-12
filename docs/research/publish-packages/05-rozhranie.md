@@ -1,20 +1,20 @@
 # Rozhranie pracovných verzií a publikovania
 
-**Stav: návrh rozhrania, bez implementácie.** Potvrdený základ je živá overlay jednej domény, postupný merge, redakčné súbory a náhľad dostupný prihláseným používateľom administrácie s príslušnými oprávneniami. Existujúce aj nové stránky, priečinky a médiá zachovajú ID. Vstavané stránky, navigácia, menu, novinky a médiá podporujú branch; zákaznícke priame SQL/JPA čítanie potrebuje adaptér a vlastné aplikačné dáta sa neverzionujú. Rozhranie používa označenie **Pracovná verzia**; technický parameter zostáva `branchId`.
+**Stav: pôvodný návrh rozhrania.** Aktuálne redakčné postupy opisuje [používateľská dokumentácia](../../sk/redactor/webpages/publishing-packages.md). Správa pracovných verzií používa štandardnú DataTable stránku v ľavom menu; prepínač v hlavičke obsahuje len výber a odkaz **Spravovať**. Potvrdený základ je živá overlay jednej domény, postupný merge, redakčné súbory a náhľad dostupný prihláseným používateľom administrácie s príslušnými oprávneniami. Existujúce aj nové stránky, priečinky a médiá zachovajú ID. Vstavané stránky, navigácia, menu, novinky a médiá podporujú branch; zákaznícke priame SQL/JPA čítanie potrebuje adaptér a vlastné aplikačné dáta sa neverzionujú. Rozhranie používa označenie **Pracovná verzia**; technický parameter zostáva `branchId`.
 
-Zvolená jednoduchá politika rieši konflikt celého objektu voľbou produkcie alebo pracovnej verzie. Samostatné polia sa používajú na vysvetlenie rozdielov, automaticky sa nespájajú. Branch sa po publikovaní uzavrie, individuálne plány sa nesmú s balíkom potichu prekryť a zrkadlenie sa nevykoná implicitne. Zdieľané systémové stránky sú iba na čítanie. Redakčné súbory používajú dnešné mapovanie úložiska a oprávnenia; pri spoločných fyzických cestách UI upozorní na dosah na ďalšie domény. Databázové predpoklady vrátane InnoDB rieši dátový návrh.
+Zvolená jednoduchá politika rieši konflikt celého objektu voľbou produkcie alebo pracovnej verzie. Samostatné polia sa používajú na vysvetlenie rozdielov, automaticky sa nespájajú. Branch sa po publikovaní uzavrie, individuálne plány sa nesmú s balíkom potichu prekryť a zrkadlenie sa nevykoná implicitne. Zdieľané systémové stránky sú iba na čítanie. Redakčné súbory používajú existujúce externé priečinky domén a adresárové oprávnenia podľa Q20. Databázové predpoklady vrátane InnoDB rieši dátový návrh.
 
 ## Rýchly postup: od vytvorenia po prepnutie
 
 `Package/balík` a `branch/vetva` označujú ten istý pripravovaný obsah; používateľ nevytvára dva samostatné objekty. V UI používame názov **Pracovná verzia**, napríklad „Vianočná kampaň“.
 
-1. V administrácii vyberiem doménu a otvorím **Pracovné verzie → Nová pracovná verzia**. Rovnaký formulár otvorím aj z prepínača pod doménou.
-2. Vyplním názov a prípadne poznámku. **Vytvoriť** založí prázdnu rozpracovanú verziu a otvorí jej detail.
-3. Kliknem **Upravovať web**. Tým sa verzia vyberie v administrácii a otvorí sa bežný strom stránok. V hlavičke vidím jej názov.
+1. V administrácii vyberiem doménu a v ľavom menu otvorím **Pracovné verzie**. Rovnakú tabuľku otvorí odkaz **Spravovať** v hornom prepínači. Kliknem na štandardné tlačidlo **Pridať**.
+2. V štandardnom editore vyplním názov, farbu a prípadne poznámku. **Pridať** založí prázdnu rozpracovanú verziu. Názov v tabuľke otvorí editor jej údajov.
+3. Označím riadok a kliknem na tlačidlo tabuľky **Upravovať web**. Tým sa verzia vyberie v administrácii a otvorí sa bežný strom stránok. V hlavičke vidím jej názov.
 4. Upravujem existujúcimi editormi. Uloženie automaticky pridá zmenu do balíka; stránky a súbory netreba osobitne označovať tlačidlom „pridať do balíka“.
 5. Cez **Náhľad** preklikám pracovný web. Cez prepínač **Pracovná verzia** sa vrátim na **Produkcia** alebo vyberiem inú verziu.
 
-Vytvorenie, výber na editovanie, otvorenie náhľadu a publikovanie sú samostatné akcie. Prepnutie verzie nič nepublikuje a zachová už uložené pracovné zmeny. Rozbalená ponuka je nižšie; presný formulár je v časti 2.
+Vytvorenie, výber na editovanie, otvorenie náhľadu a publikovanie sú samostatné akcie. Prepnutie verzie nič nepublikuje a zachová už uložené pracovné zmeny. Tlačidlo tabuľky **Skontrolovať zmeny** otvorí porovnanie obsahu označenej verzie. Nižšie sú pôvodné návrhy rozloženia.
 
 ## 1. Prepínač produkcie a pracovných verzií
 
@@ -314,7 +314,7 @@ Počas `MERGING`/`MERGE_FAILED` sa namiesto preklikateľného náhľadu ponúkne
 
 Redaktor môže meniť iba podporované polia a operácie. Schválený základ nepripúšťa editáciu kódu a šablón. Doplnkové metadáta súborov, galerijné údaje a správa definícií kategórií médií sa riadia potvrdeným rozsahom Q7. Priradenie média do už existujúcich kategórií je editovateľnou súčasťou jeho pracovnej verzie a jeho porovnania/hashe; produkčná zmena členstva preto môže vyvolať konflikt celého média.
 
-Zdieľané systémové stránky sú iba na čítanie. Pri redakčných súboroch zostávajú dnešné povolené obsahové korene, mapovanie filesystemu a práva k priečinkom. Pri spoločnej fyzickej ceste správca súborov, detail zmeny a súhrn publikovania výrazne zobrazia: `Tento súbor môže používať viac domén. Jeho publikovanie ovplyvní všetky odkazy na túto cestu.` Nevzniká nová evidencia vlastníctva súboru podľa domény ani automatický skener všetkých jeho použití. V zdieľanom úložisku sa upozornenie zobrazuje konzervatívne aj bez dôkazu konkrétneho použitia inou doménou.
+Zdieľané systémové stránky sú iba na čítanie. Redakčné súbory používajú dnešné povolené obsahové korene, externé priečinky domén a práva k priečinkom. Q20 vyžaduje doménové oddelenie; UI preto nepotrebuje variant pre spoločné súborové úložisko. Nevzniká nová evidencia vlastníctva súboru ani skener jeho použití.
 
 Rozhranie nebude sľubovať automatické zrkadlenie pracovných úprav do ďalších stránok. Dotknuté väzby sa ukážu v kontrole pripravenosti podľa návrhu závislostí. Zmena URL stránky tiež nevytvorí potichu presmerovanie mimo rozsahu podporovaných tabuliek. Detail zmeny a záverečný súhrn uvedú pôvodnú a novú URL s upozornením `Skontrolujte odkazy na pôvodnú adresu; automatické presmerovanie sa nevytvorí.`
 

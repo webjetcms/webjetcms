@@ -1,12 +1,14 @@
 # Pracovné vetvy webu a publikačné balíky
 
+**Aktuálna požiadavka Q20 (11. november 2026):** pracovné verzie vyžadujú `enableStaticFilesExternalDir=true`. Balíky sa oddeľujú štandardným `domainId` a `DomainIdRepository`; pôvodné oddelenie cez `branches.domain_name` a podpora režimu so spoločným ID domény sa vypúšťajú. [Register rozhodnutí](01-rozhodnutia.md#oddelenie-domén-11-novembra-2026) má prednosť pred staršími POC výsledkami. Výsledky starších testov sa tým spätne neprehlasujú za overenie nového režimu.
+
 Stav: **P01 a P02 dokončené na zvolenom InnoDB POC profile; funkcia zostáva vypnutá**. Aktuálne [výsledky P02](P02-vysledky.md), [matica stĺpcov](P02-matica-stlpcov.md) a [stav realizácie](STAV.md) určujú hranicu hotového kódu; nasledujúce kapitoly naďalej opisujú aj budúce P03–P08. Podklady vznikli 1. novembra 2026 nad aktuálnym checkoutom WebJET CMS; 2. novembra pribudlo podrobné zapojenie aplikácie Novinky a návrh budúceho rozširovania modulov. Produktové rozhodnutia Q1–Q19 a doplnenia N1–N5 sú v [rozhodnutiach](01-rozhodnutia.md).
 
 **Priorita tejto fázy: jednoduchý a čitateľný POC.** Overujeme použiteľnosť pre niekoľko spolupracujúcich redaktorov. Použiť konkrétne služby a minimum vrstiev; nepripravovať frameworky pre hypotetické moduly, zriedkavé súbehy či veľkú prevádzku. Záväzné [pokyny pre agentov](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc) zachovávajú dohodnuté funkcie a určujú aj rozsah prvého overenia.
 
 Cieľom je pripraviť viac stránok, zmeny stromu, stránkové médiá a redakčné súbory v jednej pracovnej vetve. Redaktor môže preklikať pripravovaný web, porovnať zmeny s produkciou, vyriešiť konflikty a publikovať balík okamžite alebo v spoločnom termíne. Existujúce aj nové stránky a priečinky si zachovajú ID.
 
-**Kde vytvorím balík a ako ho vyberiem?** [Rýchly postup v návrhu UI](05-rozhranie.md#rýchly-postup-od-vytvorenia-po-prepnutie) ukazuje vytvorenie cez `Pracovné verzie`, aktiváciu cez `Upravovať web` a prepínač pod doménou. Dokument obsahuje formulár aj rozbalenú ponuku produkcie a pracovných verzií.
+**Kde vytvorím balík a ako ho vyberiem?** [Rýchly postup v návrhu UI](05-rozhranie.md#rýchly-postup-od-vytvorenia-po-prepnutie) ukazuje vytvorenie cez `Pracovné verzie`, aktiváciu cez `Upravovať web` a prepínač v hlavičke. Dokument obsahuje formulár aj rozbalenú ponuku produkcie a pracovných verzií.
 
 **Ako začnem implementáciu?** [Orchestrácia](ORCHESTRACIA.md#ako-prácu-spustiť) obsahuje kopírovateľný prompt pre P01, pokračovanie P02–P08 aj obnovu rozpracovaného kroku. [Modely a roly](ORCHESTRACIA.md#modely-a-spôsob-riadenia) odporúčajú jeden model GPT-6.1 Sol / High pre hlavného agenta aj pomocníkov; voliteľné alternatívy sú uvedené osobitne. Ide o pokyny agentovi, nie samostatný program, ktorý treba inštalovať.
 
@@ -51,7 +53,7 @@ Tento adresár nie je návrhom kopírovania celého Git modelu. Git ostáva prir
 | [03a — Novinky](03a-novinky.md) | Konkrétny návrh NewsApp/NewsActionBean: pracovné stránky pred filtrami, kategórie, čas, count/paging, admin editor a zhoda po merge. |
 | [03b — Menu](03b-menu.md) | Povinný menu_ul_li.jsp/MenuULLI: účinný strom, parametre, aktívna cesta, default odkazy, perex/HTML, cache a M01–M11. |
 | [04 — Merge a publikovanie](04-merge-a-publikovanie.md) | Pracovné ukladanie, porovnanie, API, poradie zápisov, termín a chyby. |
-| [05 — Rozhranie](05-rozhranie.md) | Vytvorenie balíka krok za krokom, formulár, aktivácia a prepínač pod doménou; konflikty, plánovanie a priebeh. |
+| [05 — Rozhranie](05-rozhranie.md) | Vytvorenie balíka krok za krokom, formulár, aktivácia a prepínač v hlavičke; konflikty, plánovanie a priebeh. |
 | [06 — Implementačný plán](06-plan-implementacie.md) | Osem postupných krokov, závislosti, podmienky dokončenia a odhad. |
 | [07 — Overenie](07-overenie.md) | Šestnásť akceptačných oblastí vrátane Noviniek a existujúce testy, na ktoré nadviazať. |
 | [08 — Ďalšie moduly](08-rozsirovanie-modulov.md) | Porovnanie architektúr, spoločná budúca JSON tabuľka, príprava jadra už dnes a konkrétny postup pre základný banner a galériu. |

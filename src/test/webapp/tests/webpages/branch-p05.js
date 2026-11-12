@@ -33,7 +33,7 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         fs.writeFileSync(path.join(evidence,'browser-console.json'),JSON.stringify(await I.grabBrowserLogs(),null,2));
     });
 
-    Scenario('P05 header switcher keeps the chosen version, color and actions reachable', async ({ I, DT }) => {
+    Scenario('P05 header switcher keeps the chosen version, color and actions reachable', async ({ I, DT, DTE }) => {
         const url = `/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`;
         branchPicker.select(I, 0);
         I.waitForElement('#branch-switcher[aria-label*="Hlavná verzia"]', 20);
@@ -48,14 +48,19 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.pressKey('Escape');
         I.waitForInvisible('#branch-picker', 10);
         I.seeElement('#branch-switcher:focus');
-        branchPicker.action(I, 'create');
-        I.waitForVisible('dialog[open]', 10);
+        branchPicker.action(I, 'manage');
+        DT.waitForLoader();
+        I.clickCss('#branchesDataTable_wrapper .buttons-create');
+        DTE.waitForEditor('branchesDataTable');
         const name = `autotest P05 ${I.getRandomText()} – jesenná kampaň pre slovenskú a českú verziu webu`;
-        I.fillField('dialog input[name=name]', name);
-        I.fillField('dialog textarea[name=description]', 'P05 header regression');
-        I.clickCss('dialog label:has(input[name="color"][value="lavender"])');
-        I.seeCheckboxIsChecked('dialog input[name="color"][value="lavender"]');
-        I.click('Vytvoriť a otvoriť', 'dialog');
+        I.fillField('#DTE_Field_name', name);
+        I.fillField('#DTE_Field_description', 'P05 header regression');
+        I.checkOption('#branchesDataTable_modal input[name="color"][value="lavender"]');
+        I.seeCheckboxIsChecked('#branchesDataTable_modal input[name="color"][value="lavender"]');
+        DTE.save('branchesDataTable', true);
+        DT.filterContains('name', name);
+        I.clickCss('#branchesDataTable tbody tr td.dt-select-td');
+        I.clickCss('.buttons-branch-open');
         I.waitForText(name, 20, '#branch-active-label');
         I.amOnPage(url);
         I.waitForText(name, 20, '#branch-active-label');
@@ -322,7 +327,7 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
             output.directoryDelete=await call('/admin/elfinder-connector/',new URLSearchParams({cmd:'rm','targets[]':root,volumes:'images'}));
             output.directoryRename=await call('/admin/elfinder-connector/',new URLSearchParams({cmd:'rename',target:root,name:'autotest-denied',volumes:'images'}));
             output.copy=await call('/admin/elfinder-connector/',new URLSearchParams({cmd:'paste',cut:'0',dst:root,'targets[]':root,volumes:'images'}));
-            const select = branchId => fetch('/admin/rest/branches/context',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({branchId:Number(branchId),expectedDomainName:f.domain||'iwcm.interway.sk'})});
+            const select = branchId => fetch('/admin/rest/branches/context',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({branchId:Number(branchId),expectedDomainId:window.branchScreen.domainId})});
             await select(f.branchB);
             output.stale=await call('/admin/upload/chunk',form('/images/branch-p05-autotest/','autotest-stale.png'));
             output.staleMedia=await call('/admin/rest/media/editor',new URLSearchParams({action:'remove'}));

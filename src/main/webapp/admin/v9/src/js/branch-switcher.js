@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import {openBranchMerge} from './branch-merge';
 import {icon, node} from './dashboard/widget-utils';
-import {SHORTCUT_COLORS} from './shortcut-colors';
 
 const tr = (key, ...args) => WJ.translate(`branches.${key}.js`, ...args);
 const stateName = state => tr(`merge.state.${state}`);
@@ -21,128 +20,6 @@ function dot(color) {
     return result;
 }
 
-function suggestColor(branches) {
-    const colors = ['cyan', 'lavender', 'blue', 'amber', 'mint', 'peach', 'red', 'gray'];
-    const usage = new Map(colors.map(color => [color, 0]));
-    for (const {color} of branches) usage.set(color, (usage.get(color) || 0) + 1);
-    return colors.reduce((best, color) => usage.get(color) < usage.get(best) ? color : best);
-}
-
-function dialog(titleText, domain, trigger) {
-    const modal = node('dialog', 'md-branch-dialog');
-    modal.setAttribute('aria-labelledby', 'branch-dialog-title');
-    const header = node('header', 'd-flex justify-content-between align-items-start gap-3 mb-3');
-    const titles = node('div');
-    const title = node('h2', 'h4 mb-1', titleText);
-    title.id = 'branch-dialog-title';
-    titles.append(title, node('span', 'branch-domain text-muted small', tr('domain', domain)));
-    const close = button('', 'btn-close branch-close', () => modal.close());
-    close.setAttribute('aria-label', WJ.translate('button.close'));
-    header.append(titles, close);
-    modal.append(header);
-    modal.addEventListener('close', () => {
-        modal.remove();
-        if (!document.querySelector('dialog[open]')) trigger.focus();
-    }, {once: true});
-    document.body.append(modal);
-    return modal;
-}
-
-function createDialog(branches, screen, trigger, api, confirmSwitch, activate) {
-    const modal = dialog(tr('new'), screen.domainName, trigger);
-    const form = node('form');
-    const fields = node('fieldset');
-    const nameLabel = node('label', 'form-label d-block mb-3', tr('name'));
-    const name = node('input', 'form-control');
-    Object.assign(name, {name: 'name', required: true, maxLength: 255, autocomplete: 'off', autofocus: true});
-    nameLabel.append(name);
-    const noteLabel = node('label', 'form-label d-block mb-3', tr('optionalNote'));
-    const note = node('textarea', 'form-control');
-    note.name = 'description';
-    note.rows = 2;
-    noteLabel.append(note);
-    const colors = node('fieldset', 'mb-3');
-    colors.append(node('legend', 'form-label', WJ.translate('admin.dashboard.shortcutColor.js')));
-    const swatches = node('div', 'md-branch-colors');
-    const sample = node('div', 'md-branch-sample mb-3');
-    const sampleText = node('span', 'd-flex flex-column');
-    const sampleName = node('strong', 'text-truncate', tr('new'));
-    sampleText.append(node('small', '', tr('sample')), sampleName);
-    sample.append(icon('ti-git-branch'), sampleText);
-    sample.dataset.branchColor = suggestColor(branches);
-    for (const color of SHORTCUT_COLORS) {
-        const label = node('label', 'md-branch-swatch');
-        label.dataset.branchColor = color;
-        label.title = WJ.translate(`admin.dashboard.shortcutColor.${color}.js`);
-        const radio = node('input', 'visually-hidden');
-        Object.assign(radio, {type: 'radio', name: 'color', value: color, checked: color === sample.dataset.branchColor});
-        radio.setAttribute('aria-label', label.title);
-        radio.addEventListener('change', () => { sample.dataset.branchColor = color; });
-        const mark = node('span');
-        mark.append(icon('ti-check'));
-        label.append(radio, mark);
-        swatches.append(label);
-    }
-    name.addEventListener('input', () => {
-        name.setCustomValidity('');
-        sampleName.textContent = name.value.trim() || tr('new');
-    });
-    colors.append(swatches);
-    fields.append(nameLabel, noteLabel, colors, sample);
-    const status = node('p', 'branch-result text-danger');
-    status.setAttribute('role', 'alert');
-    const footer = node('footer', 'd-flex justify-content-end gap-2');
-    const cancel = button(WJ.translate('button.cancel'), 'btn btn-outline-secondary', () => modal.close());
-    const submit = node('button', 'btn btn-primary', tr('createOpen'));
-    submit.type = 'submit';
-    footer.append(cancel, submit);
-    form.append(fields, status, footer);
-    modal.append(node('p', '', tr('createNote')), form);
-    let created;
-    modal.addEventListener('cancel', event => { if (submit.disabled) event.preventDefault(); });
-    // A failed context switch can be retried without creating a second version.
-    form.onsubmit = async event => {
-        event.preventDefault();
-        if (submit.disabled) return;
-        if (!created && !name.value.trim()) {
-            name.setCustomValidity(tr('nameRequired'));
-            name.reportValidity();
-            return;
-        }
-        if (!confirmSwitch()) return;
-        submit.disabled = cancel.disabled = modal.querySelector('.branch-close').disabled = true;
-        status.textContent = '';
-        try {
-            if (!created) {
-                created = await api('', {name: name.value.trim(), description: note.value, color: form.elements.color.value, expectedDomainName: screen.domainName});
-                branches.unshift(created);
-                fields.disabled = true;
-                submit.textContent = tr('merge.editWeb');
-            }
-            await activate(created.id);
-        } catch (error) {
-            status.textContent = created ? tr('openFailed', created.name, error.message) : error.message;
-            submit.disabled = cancel.disabled = modal.querySelector('.branch-close').disabled = false;
-        }
-    };
-    modal.showModal();
-}
-
-function manageDialog(branches, screen, trigger, compare, switchTo) {
-    const modal = dialog(tr('versions'), screen.domainName, trigger);
-    const list = node('div', 'branch-list');
-    for (const branch of branches) {
-        const row = node('p', 'd-flex gap-2 align-items-center flex-wrap');
-        row.append(dot(branch.color), node('strong', '', branch.name), node('span', 'small text-muted', stateName(branch.state)),
-            button(tr('merge.compare'), 'btn btn-sm btn-outline-secondary', () => { modal.close(); compare(branch.id, trigger); }));
-        if (branch.state === 'DRAFT') row.append(button(tr('merge.editWeb'), 'btn btn-sm btn-outline-secondary', () => switchTo(branch.id)));
-        list.append(row);
-    }
-    if (!branches.length) list.append(node('p', 'text-muted', tr('noVersions')));
-    modal.append(list);
-    modal.showModal();
-}
-
 /** Opens the domain's version picker from the main header icon or the active working version bar. */
 export function initBranchSwitcher(screen, api) {
     const trigger = document.getElementById('branch-switcher');
@@ -159,7 +36,7 @@ export function initBranchSwitcher(screen, api) {
         if (switching) return;
         switching = true;
         try {
-            await api('/context', {branchId: Number(id), expectedDomainName: screen.domainName});
+            await api('/context', {branchId: Number(id), expectedDomainId: screen.domainId});
             $('div.modal.DTED.show:visible').removeClass('show');
             window.location.assign('/admin/v9/webpages/web-pages-list/');
         } catch (error) {
@@ -261,17 +138,11 @@ export function initBranchSwitcher(screen, api) {
         if (!count) options.append(node('p', 'small text-muted m-3', tr('noMatches')));
     }
     search.addEventListener('input', renderOptions);
-    function action(key, label, glyph, handler) {
-        const item = button(label, 'md-branch-picker__option', async () => {
-            closePicker(true);
-            try { await handler(); } catch (error) { showError(error); }
-        });
-        item.prepend(icon(glyph));
-        item.dataset.branchAction = key;
-        footer.append(item);
-    }
-    action('create', tr('new'), 'ti-plus', () => createDialog(branches, screen, trigger, api, confirmSwitch, activate));
-    action('manage', tr('manage'), 'ti-list-details', async () => manageDialog(await api('?includeClosed=true'), screen, trigger, compare, switchTo));
+    const manage = node('a', 'md-branch-picker__option', tr('manage'));
+    manage.href = '/admin/v9/webpages/branches/';
+    manage.dataset.branchAction = 'manage';
+    manage.prepend(icon('ti-settings'));
+    footer.append(manage);
     document.addEventListener('pointerdown', event => {
         if (!picker.hidden && !picker.contains(event.target) && !trigger.contains(event.target)) closePicker();
     });
@@ -284,7 +155,7 @@ export function initBranchSwitcher(screen, api) {
             closePicker(true);
         } else if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
             event.preventDefault();
-            const buttons = Array.from(picker.querySelectorAll('button'));
+            const buttons = Array.from(picker.querySelectorAll('button, a[href]'));
             const index = buttons.indexOf(document.activeElement);
             buttons[(index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length].focus();
         }

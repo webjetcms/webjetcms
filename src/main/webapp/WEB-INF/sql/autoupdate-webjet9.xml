@@ -4417,7 +4417,7 @@
                 <void property="mysql"><string>
 CREATE TABLE IF NOT EXISTS branches (
     `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `domain_name` VARCHAR(255) NOT NULL,
+    `domain_id` INT NOT NULL,
     `name` VARCHAR(255) NOT NULL,
     `description` LONGTEXT NULL,
     `color` VARCHAR(16) NOT NULL DEFAULT 'cyan',
@@ -4432,7 +4432,7 @@ CREATE TABLE IF NOT EXISTS branches (
     `merge_started_at` DATETIME NULL,
     `merge_finished_at` DATETIME NULL,
     `last_error` LONGTEXT NULL ,
-    INDEX idx_branches_domain_state(domain_name,state),
+    INDEX idx_branches_domain_state(domain_id,state),
     INDEX idx_branches_schedule(state,publish_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 

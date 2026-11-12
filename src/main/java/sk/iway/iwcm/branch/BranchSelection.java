@@ -17,11 +17,11 @@ public final class BranchSelection {
     private static final String SCREEN_BRANCH = BranchSelection.class.getName() + ".screenBranch";
     private BranchSelection() { }
 
-    public record Selected(long branchId, String domainName) implements java.io.Serializable { }
+    public record Selected(long branchId, int domainId) implements java.io.Serializable { }
 
     public static BranchContext selected(HttpServletRequest request, Identity user, String domain) {
         Object value = request.getSession().getAttribute(SESSION_KEY);
-        if (!(value instanceof Selected selected) || !domain.equals(selected.domainName()))
+        if (!(value instanceof Selected selected) || BranchDomains.id(domain) != selected.domainId())
             return BranchContext.live(domain, user.getUserId());
         if (selected.branchId() == 0) return BranchContext.live(domain, user.getUserId());
         RequestBean.setAttribute(SCREEN_BRANCH, requireBranch(selected.branchId(), domain));
@@ -31,7 +31,7 @@ public final class BranchSelection {
     /** Metadata already verified for this request, used for the initial administration header. */
     public static BranchEntity screenBranch(long id, String domain) {
         return RequestBean.getAttribute(SCREEN_BRANCH) instanceof BranchEntity branch
-            && branch.getId() == id && domain.equals(branch.getDomainName()) ? branch : null;
+            && branch.getId() == id && branch.getDomainId() == BranchDomains.id(domain) ? branch : null;
     }
 
     public static BranchEntity requireBranch(long id, String domain) {
@@ -47,11 +47,11 @@ public final class BranchSelection {
     /** The gateway resolves the logical domain from server metadata, never from its query string. */
     public static String previewDomain(long id, Identity user) {
         try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(
-                "SELECT domain_name FROM branches WHERE id=?")) {
+                "SELECT domain_id FROM branches WHERE id=?")) {
             statement.setLong(1, id);
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-                String domain = result.getString(1);
+                String domain = BranchDomains.name(result.getInt(1));
                 if (!GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain))
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No access to preview domain");
                 requireBranch(id, domain);

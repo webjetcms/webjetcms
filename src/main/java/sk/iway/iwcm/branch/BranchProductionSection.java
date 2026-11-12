@@ -18,9 +18,9 @@ public final class BranchProductionSection {
     private static final String PARAMETER = "wjProductionPage";
     private static final Pattern TOKEN = Pattern.compile("(?:^|&)" + PARAMETER + "=([a-f0-9-]{36})(?=&|$)");
 
-    // Only screens which actually read/write WORK belong here. Unknown administration screens use the production dialog.
+    // Screens usable with a working version selected, including its metadata management. Unknown screens use the production dialog.
     private static final Set<String> BRANCH_PAGES = Set.of(
-        "/admin/v9/", "/admin/v9/webpages/web-pages-list/", "/admin/v9/webpages/media/",
+        "/admin/v9/", "/admin/v9/webpages/web-pages-list/", "/admin/v9/webpages/branches/", "/admin/v9/webpages/media/",
         "/admin/v9/webpages/component/", "/apps/news/admin/", "/admin/v9/files/index/",
         "/admin/v9/files/dialog/", "/admin/v9/files/wj_link/", "/admin/v9/files/wj_image/"
     );
@@ -46,10 +46,10 @@ public final class BranchProductionSection {
             && !path.startsWith("/admin/rest/");
     }
 
-    private record Grant(String path, long branch, String domain, int user, String method, boolean opened) implements Serializable {
+    private record Grant(String path, long branch, int domain, int user, String method, boolean opened) implements Serializable {
         boolean matches(String document, BranchContext context) {
             return context.isBranch() && path.equals(document) && branch == context.branchId()
-                && domain.equals(context.domainName()) && user == context.userId();
+                && domain == context.domainId() && user == context.userId();
         }
     }
 
@@ -64,7 +64,7 @@ public final class BranchProductionSection {
         synchronized (session) {
             Grants grants = (Grants) session.getAttribute(ATTRIBUTE);
             if (grants == null) grants = new Grants();
-            grants.put(key, new Grant(request.getRequestURI(), selection.branchId(), selection.domainName(), selection.userId(), request.getMethod(), false));
+            grants.put(key, new Grant(request.getRequestURI(), selection.branchId(), selection.domainId(), selection.userId(), request.getMethod(), false));
             session.setAttribute(ATTRIBUTE, grants);
         }
         String preserved = originalQuery(request);

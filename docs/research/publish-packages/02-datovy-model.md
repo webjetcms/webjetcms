@@ -2,6 +2,8 @@
 
 **Realizácia P02 (4. november 2026):** platné API, migrácia a hranice sú v [P02-vysledky.md](P02-vysledky.md), konkrétne polia v [matici stĺpcov](P02-matica-stlpcov.md). Nasledujúci návrh zahŕňa aj dosiaľ neimplementované etapy; stav kódu určuje [STAV.md](STAV.md).
 
+**Aktualizácia Q20, 11. novembra 2026:** vlastníctvo balíka používa štandardné `domainId`; podpora bez `enableStaticFilesExternalDir=true` sa nevyžaduje. Názov domény slúži na zobrazenie a URL, nie na samostatné oddelenie balíkov.
+
 Stav: technický návrh na posúdenie. Vychádza z uzatvorených Q1–Q19 v [registri rozhodnutí](01-rozhodnutia.md). Názvy nových tabuliek a tried sú navrhované, nejde o existujúci kód.
 
 ## Odporúčanie
@@ -47,7 +49,7 @@ Nasleduje logická schéma. Migrácia musí použiť typy a generátory danej po
 | Stĺpec | Logický typ | Význam |
 | --- | --- | --- |
 | `id` | BIGINT, PK | Identita balíka, samostatná od obsahových ID. |
-| `domain_name` | VARCHAR(255), NOT NULL | Doména vlastníka. Nie `CloudToolsForCore.getDomainId()`, ktorý v bežnom režime nemusí rozlišovať domény. |
+| `domain_id` | INT, NOT NULL | Doména vlastníka podľa `CloudToolsForCore.getDomainId()`. Funkcia vyžaduje `enableStaticFilesExternalDir=true` podľa Q20; repozitár používa `DomainIdRepository`. |
 | `name` | VARCHAR(255), NOT NULL | Názov kampane. |
 | `description` | TEXT/CLOB, nullable | Poznámka koordinátora. |
 | `state` | VARCHAR(32), NOT NULL | Životný cyklus opísaný v merge dokumente. |
@@ -59,7 +61,7 @@ Nasleduje logická schéma. Migrácia musí použiť typy a generátory danej po
 | `merge_started_at`, `merge_finished_at` | TIMESTAMP, nullable | Evidencia posledného/úspešného publikovania. |
 | `last_error` | TEXT/CLOB, nullable | Konkrétny problém poslednej kontroly/publikovania. |
 
-Indexy: PK `id`, `(domain_name, state)`, `(state, publish_at)`. Názov nemusí byť jedinečný; ID rozlíši dva rovnaké názvy kampaní. Samostatné členstvá tímu a ACL vetvy sa v prvej verzii nezavádzajú; platia existujúce obsahové práva a nové funkčné právo k obrazovke balíkov.
+Indexy: PK `id`, `(domain_id, state)`, `(state, publish_at)`. Názov nemusí byť jedinečný; ID rozlíši dva rovnaké názvy kampaní. Samostatné členstvá tímu a ACL vetvy sa v prvej verzii nezavádzajú; platia existujúce obsahové práva a nové funkčné právo k obrazovke balíkov.
 
 ## Spoločné pracovné stĺpce
 
@@ -117,7 +119,7 @@ Pracovné `available` znamená výslednú dostupnosť stránky po merge; nevnuco
 
 `branch_groups` obsahuje `group_id INT NOT NULL`, spoločné stĺpce a typované perzistentné stĺpce dnešnej tabuľky `groups`. Jedinečnosť `(branch_id, group_id)`, index `(branch_id, parent_group_id)`.
 
-Podporovať názov, navigačný názov, rodiča v rovnakej doméne, URL segment, poradie, existujúcu šablónu, jazyk, dostupné navigačné/prístupové nastavenia, voliteľné polia a default stránku. `domain_name` je hranica vetvy, nie spôsob presunu do inej domény. Zmeny synchronizačných identifikátorov, schvaľovacích definícií a súborových vlastností priečinka sú mimo rozsahu.
+Podporovať názov, navigačný názov, rodiča v rovnakej doméne, URL segment, poradie, existujúcu šablónu, jazyk, dostupné navigačné/prístupové nastavenia, voliteľné polia a default stránku. `groups.domain_name` zostáva obsahovým poľom pôvodného priečinka iba na čítanie; vlastníctvo balíka určuje `branches.domain_id`. Zmeny synchronizačných identifikátorov, schvaľovacích definícií a súborových vlastností priečinka sú mimo rozsahu.
 
 Zmena rodiča či URL segmentu vytvorí aj pracovné zmeny ovplyvnených stránok, ak dnešný workflow ich URL alebo odvodené údaje mení. V prehľade sú označené ako odvodené z presunu/premenovania. Pri merge sa produkčný strom neprepočítava prekvapivo nad inou množinou stránok; noví potomkovia vytvorení medzitým vyžadujú nové posúdenie rozsahu.
 

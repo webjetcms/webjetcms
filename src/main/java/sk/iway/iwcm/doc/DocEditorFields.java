@@ -358,7 +358,7 @@ public class DocEditorFields extends BaseEditorFields {
                 editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, "inlineEditorAdmin", "true");
                 if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
                     editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink,"branchId",String.valueOf(sk.iway.iwcm.branch.BranchContexts.current().branchId()));
-                    editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink,"branchDomain",sk.iway.iwcm.branch.BranchContexts.current().domainName());
+                    editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink,"branchDomain",Integer.toString(sk.iway.iwcm.branch.BranchContexts.current().domainId()));
                 }
                 if (doc instanceof DocDetails) {
                     DocDetails docDocDetails = (DocDetails)doc;

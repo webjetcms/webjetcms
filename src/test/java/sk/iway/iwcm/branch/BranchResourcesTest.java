@@ -26,10 +26,10 @@ class BranchResourcesTest extends BaseWebjetTest {
     private Path privateRoot;
     private final Map<String,String> config=new LinkedHashMap<>();
     @BeforeEach void fixture()throws Exception {
-        for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","mediaCheckAvailabilityMode","multiDomainEnabled","galleryEnableWatermarking"))config.put(key,Constants.getString(key));
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","mediaCheckAvailabilityMode","multiDomainEnabled","galleryEnableWatermarking"))config.put(key,Constants.getString(key));
         try(Connection connection=DBPool.getConnection()){assertEquals("webjet_p01",connection.getCatalog());assertTrue(connection.getMetaData().getURL().contains(":33316/"));}
-        privateRoot=Files.createTempDirectory("webjet-p03-resources-");Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("galleryEnableWatermarking",false);
-        branch=new BranchService().create(DOMAIN,"P03 resources","prepared bytes",1).getId();
+        privateRoot=Files.createTempDirectory("webjet-p03-resources-");Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("galleryEnableWatermarking",false);
+        branch=new BranchService().create(BranchTestDomains.ensure(DOMAIN),"P03 resources","prepared bytes",1).getId();
         try(Connection connection=DBPool.getConnection()) {
             connection.setAutoCommit(false);group=BranchStore.reserveNative(connection,BranchType.GROUP);
             var values=new LinkedHashMap<>(BranchGroupMapper.initialValues(group,DOMAIN));values.put("group_name","P03 resources");values.put("url_dir_name","resources");BranchRowWriter.insertGroupWithId(connection,BranchContext.live(DOMAIN,1),values);connection.commit();
@@ -56,7 +56,7 @@ class BranchResourcesTest extends BaseWebjetTest {
         Path imageBytes=BranchFiles.workPath(branch,((Number)picture.get("row_id")).longValue());Files.createDirectories(imageBytes.getParent());Files.move(image,imageBytes);
         var variant=new BranchStore().putFile(admin(),"/images/s_p03-resource.png","FILE",BranchSnapshot.absent(),BranchFiles.hash(imageBytes),Files.size(imageBytes),"image/png",false);
         Path variantBytes=BranchFiles.workPath(branch,((Number)variant.get("row_id")).longValue());Files.createDirectories(variantBytes.getParent());Files.copy(imageBytes,variantBytes);
-        var media=new LinkedHashMap<>(BranchMediaMapper.initialValues(1,doc,1));media.put("media_title_sk","Prepared attachment");media.put("media_link","/files/p03-proof.pdf");media.put("group_ids_snapshot",List.of());new BranchStore().create(admin(),BranchType.MEDIA,media);
+        var media=new LinkedHashMap<>(BranchMediaMapper.initialValues(1,doc,BranchDomains.id(DOMAIN)));media.put("media_title_sk","Prepared attachment");media.put("media_link","/files/p03-proof.pdf");media.put("group_ids_snapshot",List.of());new BranchStore().create(admin(),BranchType.MEDIA,media);
         prepareExistingMedia();
         RequestBean bean=new RequestBean();bean.setDomain(DOMAIN);MockHttpServletRequest request=new MockHttpServletRequest(Constants.getServletContext());
         Identity user=new Identity();user.setAdmin(true);user.setUserId(1);request.getSession().setAttribute(Constants.USER_KEY,user);
@@ -109,7 +109,7 @@ class BranchResourcesTest extends BaseWebjetTest {
             try(PreparedStatement definition=connection.prepareStatement("INSERT INTO media_groups(media_group_id,media_group_name,available_groups) VALUES(1940999,'P03 existing category',?)")){definition.setString(1,Integer.toString(group));definition.executeUpdate();category=1940999;}
             connection.setAutoCommit(false);liveOwner=BranchStore.reserveNative(connection,BranchType.DOCUMENT);
             var page=new LinkedHashMap<>(BranchDocumentMapper.initialValues(liveOwner,1,Instant.parse("2020-01-01T10:00:00Z"),false));page.put("group_id",group);page.put("title","Media owner");page.put("available",true);page.put("virtual_path","/resources/owner.html");BranchRowWriter.insertDocumentWithId(connection,BranchContext.live(DOMAIN,1),page);
-            liveMedia=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media"));var medium=new LinkedHashMap<>(BranchMediaMapper.initialValues(liveMedia,liveOwner,1));medium.put("media_title_sk","LIVE attachment");medium.put("media_link","https://example.invalid/attachment.pdf");medium.put("last_update",Timestamp.from(Instant.parse("2019-01-01T10:00:00Z")));BranchRowWriter.insertMediaWithId(connection,BranchContext.live(DOMAIN,1),medium,List.of());connection.commit();
+            liveMedia=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media"));var medium=new LinkedHashMap<>(BranchMediaMapper.initialValues(liveMedia,liveOwner,BranchDomains.id(DOMAIN)));medium.put("media_title_sk","LIVE attachment");medium.put("media_link","https://example.invalid/attachment.pdf");medium.put("last_update",Timestamp.from(Instant.parse("2019-01-01T10:00:00Z")));BranchRowWriter.insertMediaWithId(connection,BranchContext.live(DOMAIN,1),medium,List.of());connection.commit();
             var original=BranchStore.readLive(connection,BranchType.MEDIA,liveMedia).orElseThrow();var changed=new LinkedHashMap<>(original);changed.put("media_title_sk","WORK attachment");changed.put("group_ids_snapshot",List.of(category));new BranchStore().put(admin(),BranchType.MEDIA,liveMedia,changed,BranchStore.snapshot(BranchType.MEDIA,original).hash(),false);
         }
     }

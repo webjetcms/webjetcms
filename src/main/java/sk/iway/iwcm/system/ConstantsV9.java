@@ -22,7 +22,7 @@ public class ConstantsV9 {
 	 * This method is reimplemented in the WebJET 9 distribution and must remain compatible with it.
 	 */
 	public static void clearValuesWebJet9() {
-		Constants.setBoolean("branchesEnabled", false, Constants.MOD_SYSTEM_ADMIN, "Enable publishing branches only on a verified InnoDB single-writer installation.");
+		Constants.setBoolean("branchesEnabled", false, Constants.MOD_SYSTEM_ADMIN, "Enable publishing branches only with enableStaticFilesExternalDir=true on a verified InnoDB single-writer installation.");
 		Constants.setString("branchStorageRoot", "", Constants.MOD_SYSTEM_ADMIN, "Absolute private filesystem root outside the served web application for publishing branches.");
 		Constants.setBoolean("branchSingleWriterConfirmed", false, Constants.MOD_SYSTEM_ADMIN, "Operator confirmation that every content-serving node uses branchesEnabled and the same single writable database.");
 

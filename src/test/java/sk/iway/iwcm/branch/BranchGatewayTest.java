@@ -62,7 +62,7 @@ class BranchGatewayTest extends BaseWebjetTest {
                 @Override public String getRealPath(String path){return root.resolve(path.replaceFirst("^/","")).toString();}
             });
             for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","enableStaticFilesExternalDir","docAuthorLazyLoad","disableWebJETToolbar","installName","menuIncludePerex","menuInfoDirName","galleryEnableWatermarking","adminCheckUserGroups"))config.put(key,Constants.getString(key));
-            Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("multiDomainEnabled",false);Constants.setBoolean("enableStaticFilesExternalDir",false);Constants.setBoolean("docAuthorLazyLoad",true);Constants.setBoolean("disableWebJETToolbar",true);Constants.setBoolean("galleryEnableWatermarking",false);Constants.setString("installName","aceintegration");
+            Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setBoolean("multiDomainEnabled",false);Constants.setBoolean("docAuthorLazyLoad",true);Constants.setBoolean("disableWebJETToolbar",true);Constants.setBoolean("galleryEnableWatermarking",false);Constants.setString("installName","aceintegration");
             // Restoring a DB dump can reuse IDs; isolate this fixture from bytes left by earlier runs.
             Constants.setString("branchStorageRoot",Files.createTempDirectory("webjet-p03-gateway-private-").toString());
             fixture();
@@ -203,10 +203,10 @@ class BranchGatewayTest extends BaseWebjetTest {
     }
     private void fixture() throws Exception {
         try(Connection c=DBPool.getConnection()){assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));}
-        a=branch("A");b=branch("B");forbidden=branch("forbidden","p03-forbidden.example");
         try(Connection c=DBPool.getConnection();Statement p=c.createStatement()){p.executeUpdate("INSERT INTO user_groups(user_group_id,user_group_name,user_group_type) VALUES(1940077,'P03 gateway permission',0)");}
         sk.iway.iwcm.users.UserGroupsDB.getInstance(true);
         group(ROOT,0,"Root",HOME);group(CHILD,ROOT,"Child",PAGE);group(TARGET,ROOT,"Target",SECOND);group(NESTED,CHILD,"Nested",NESTED_PAGE);
+        a=branch("A");b=branch("B");forbidden=branch("forbidden","p03-forbidden.example");
         String menu="!INCLUDE(/components/menu/menu_ul_li.jsp,rootGroupId="+ROOT+",openAllItems=true,classes=full,maxLevel=-1)!";
         String news="!INCLUDE(/components/news/news-velocity.jsp,groupIds="+ROOT+",alsoSubGroups=true,template=p03-gateway,publishType=all,perexNotRequired=false,order=priority,ascending=true,pageSize=2,paging=true)!";
         String body=menu+"<main><h1>LIVE home</h1>"+news+"<a id='absolute' href='https://"+DOMAIN+"/target.html?q=x#anchor'>Absolute</a><a id='relative' href='target.html?x=1#part'>Relative</a><a id='external' href='https://example.org/out'>External</a><img id='original' src='/images/p03.png'><img id='thumbnail' src='/thumb/images/p03.png?w=16&amp;h=16'><a id='pdf' href='/files/p03.pdf'>PDF</a><link rel='stylesheet' href='/templates/p03/probe.css'><script src='/templates/p03/probe.js'></script><form action='/submit' method='post'><button>Send</button></form></main>";
@@ -220,10 +220,10 @@ class BranchGatewayTest extends BaseWebjetTest {
         GroupsDB.getInstance(true);DocDB.getInstance(true);
     }
     private void installTemplate() {
-        NewsTemplatesEntity template=new NewsTemplatesEntity();template.setName("p03-gateway");template.setTemplateCode("<ol class='news'>#foreach($item in $news)<li data-id='$item.docId'><a href='$actionBean.link($item)'>$item.title</a><span>$item.htmlData</span></li>#end</ol>");template.setPagingCode("<nav class='paging'>#foreach($item in $pagesAll)<a href='$item.url'>$item.label</a>#end</nav>");template.setPagingPosition(2);Cache.getInstance().setObjectSeconds("newsTemplatesService.templates",new HashMap<>(Map.of("0.p03-gateway",template,"1.p03-gateway",template)),600);
+        NewsTemplatesEntity template=new NewsTemplatesEntity();template.setName("p03-gateway");template.setTemplateCode("<ol class='news'>#foreach($item in $news)<li data-id='$item.docId'><a href='$actionBean.link($item)'>$item.title</a><span>$item.htmlData</span></li>#end</ol>");template.setPagingCode("<nav class='paging'>#foreach($item in $pagesAll)<a href='$item.url'>$item.label</a>#end</nav>");template.setPagingPosition(2);Cache.getInstance().setObjectSeconds("newsTemplatesService.templates",new HashMap<>(Map.of("0.p03-gateway",template,BranchDomains.id(DOMAIN)+".p03-gateway",template)),600);
     }
     private BranchContext branch(String label){return branch(label,DOMAIN);}
-    private BranchContext branch(String label,String domain){long id=new BranchService().create(domain,"P03 gateway "+label,"Real JSP fixture",1).getId();branchIds.add(id);return new BranchContext(id,domain,1,BranchContext.Mode.ADMIN);}
+    private BranchContext branch(String label,String domain){long id=new BranchService().create(BranchTestDomains.ensure(domain),"P03 gateway "+label,"Real JSP fixture",1).getId();branchIds.add(id);return new BranchContext(id,domain,1,BranchContext.Mode.ADMIN);}
     private void group(int id,int parent,String name,int defaultDoc)throws Exception{Map<String,Object> v=new LinkedHashMap<>(BranchGroupMapper.initialValues(id,DOMAIN));v.put("parent_group_id",parent);v.put("group_name",name);v.put("navbar",name);v.put("default_doc_id",defaultDoc);v.put("url_dir_name",name.toLowerCase());try(Connection c=DBPool.getConnection()){BranchStore.insert(c,"groups",v);}liveGroups.add(id);}
     private Map<String,Object> doc(int id,int group,String title,String path,String body,int priority){Map<String,Object> v=new LinkedHashMap<>(BranchDocumentMapper.initialValues(id,1,Instant.now(),false));v.put("group_id",group);v.put("title",title);v.put("navbar",title);v.put("virtual_path",path);v.put("data",body);v.put("html_data","Perex "+title);v.put("available",true);v.put("show_in_menu",true);v.put("sort_priority",priority);v.put("cacheable",true);return v;}
     private void document(int id,int group,String title,String path,String body,int priority)throws Exception{try(Connection c=DBPool.getConnection()){BranchStore.insert(c,"documents",doc(id,group,title,path,body,priority));}liveDocs.add(id);}

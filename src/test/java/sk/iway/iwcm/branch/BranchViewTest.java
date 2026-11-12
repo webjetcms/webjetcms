@@ -30,8 +30,8 @@ class BranchViewTest extends BaseWebjetTest {
             assertEquals("webjet_p01",connection.getCatalog());
             assertTrue(connection.getMetaData().getURL().contains(":33316/"));
         }
-        for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder")) configuration.put(key,Constants.getString(key));
-        Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("branchSingleWriterConfirmed",true);
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder")) configuration.put(key,Constants.getString(key));
+        Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private")); Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
         Constants.setBoolean("multiDomainEnabled",true); Constants.setBoolean("templatesUseRecursiveSystemFolder",false);
         root=liveGroup("Menu root",0,"p03-menu"); section=liveGroup("Original section",root,"original");
@@ -313,7 +313,7 @@ class BranchViewTest extends BaseWebjetTest {
             BranchRowWriter.insertDocumentWithId(connection,BranchContext.live(DOMAIN,1),row);connection.commit();docs.add(id);return id;
         }
     }
-    private BranchContext branch(String name) {var row=new BranchService().create(DOMAIN,name,"P03 render fixture",1);branches.add(row.getId());return new BranchContext(row.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
+    private BranchContext branch(String name) {var row=new BranchService().create(BranchTestDomains.ensure(DOMAIN),name,"P03 render fixture",1);branches.add(row.getId());return new BranchContext(row.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
     private static BranchContext preview(BranchContext context){return new BranchContext(context.branchId(),context.domainName(),context.userId(),BranchContext.Mode.PREVIEW);}
     private void work(BranchContext context,BranchType type,int id,Map<String,Object> changes,boolean delete) throws Exception {
         try(Connection connection=DBPool.getConnection()) {

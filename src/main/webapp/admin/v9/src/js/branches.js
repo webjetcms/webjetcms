@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import {initBranchSwitcher} from './branch-switcher';
+import {initBranchTable} from './branch-table';
 
 // The server embeds the context of this screen; never refresh it silently from another tab.
 const screen = window.branchScreen;
@@ -12,20 +13,13 @@ window.branchLogicalAssetUrl = value => {
     const prefix = `/admin/webpages/branch-preview/${screen?.branchId}`;
     return screen?.branchId && typeof value === 'string' && value.startsWith(prefix+'/') ? value.substring(prefix.length) : value;
 };
-window.branchFileDialogUrl = path => screen?.enabled ? WJ.urlAddParam(WJ.urlAddParam(path, 'branchId', screen.branchId), 'branchDomain', screen.domainName) : path;
+window.branchFileDialogUrl = path => screen?.enabled ? WJ.urlAddParam(WJ.urlAddParam(path, 'branchId', screen.branchId), 'branchDomain', screen.domainId) : path;
 window.initBranchFileUpload = finder => {
     if (!screen?.enabled || !screen.branchId) return;
     const picker = new URLSearchParams(window.location.search).get('volumes');
     const uploader = window.AdminUpload({element: '#dt-upload', uploadType: picker === 'images' ? 'image' : 'file', writeDirectlyToDestination: true});
     window.branchAdminUpload = uploader;
     const button = document.getElementById('branch-upload-button');
-    if (!document.getElementById('branch-file-warning')) {
-        const warning = document.createElement('p');
-        warning.id = 'branch-file-warning';
-        warning.className = 'alert alert-warning small m-2 p-2';
-        warning.textContent = WJ.translate('branches.files.shared.js');
-        button.before(warning);
-    }
     button.classList.remove('d-none');
     const updateDestination = (folder = finder.cwd()) => {
         uploader.setDestinationFolder(folder.virtualPath || '');
@@ -53,7 +47,7 @@ window.bindBranchContext = (target, context) => {
         if (url.origin === target.location.origin && url.pathname.includes('/admin/')) {
             const headers = new Headers(request.headers);
             if (!headers.has('X-WebJET-Branch')) headers.set('X-WebJET-Branch', String(context.branchId));
-            if (!headers.has('X-WebJET-Branch-Domain')) headers.set('X-WebJET-Branch-Domain', context.domainName);
+            if (!headers.has('X-WebJET-Branch-Domain')) headers.set('X-WebJET-Branch-Domain', String(context.domainId));
             if (!headers.has('X-CSRF-Token')) headers.set('X-CSRF-Token', target.csrfToken || window.csrfToken);
             return nativeFetch(new Request(request, { headers }));
         }
@@ -64,7 +58,7 @@ window.bindBranchContext = (target, context) => {
         const url = new URL(options.url, target.location.href);
         if (url.origin === target.location.origin && url.pathname.includes('/admin/')) {
             xhr.setRequestHeader('X-WebJET-Branch', String(context.branchId));
-            xhr.setRequestHeader('X-WebJET-Branch-Domain', context.domainName);
+            xhr.setRequestHeader('X-WebJET-Branch-Domain', String(context.domainId));
         }
     });
 };
@@ -87,7 +81,7 @@ if (selectedBranchId) {
             const response = await fetch(url, {headers: {
                 'X-WebJET-Production-Navigation': 'dialog',
                 'X-WebJET-Branch': String(selectedBranchId),
-                'X-WebJET-Branch-Domain': screen.domainName
+                'X-WebJET-Branch-Domain': String(screen.domainId)
             }});
             if (!response.ok) throw new Error(WJ.translate('branches.stale.js'));
             const page = new DOMParser().parseFromString(await response.text(), 'text/html');
@@ -124,6 +118,8 @@ async function api(path, body) {
     }
     return response.json();
 }
+
+window.initBranchTable = columns => initBranchTable(columns, screen, api);
 
 $(() => {
     if (screen?.allowed) initBranchSwitcher(screen, api);

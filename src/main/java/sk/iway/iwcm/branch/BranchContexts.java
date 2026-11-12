@@ -33,8 +33,8 @@ public final class BranchContexts {
     }
 
     /** Rejects stale screens, including two LIVE screens belonging to different domains. */
-    public static void requireSameSelection(BranchContext selected, long branchId, String domainName) {
-        if (selected.branchId() != branchId || !selected.domainName().equals(domainName))
+    public static void requireSameSelection(BranchContext selected, long branchId, String domainId) {
+        if (selected.branchId() != branchId || domainId == null || !Integer.toString(selected.domainId()).equals(domainId))
             throw new IllegalStateException("Branch context changed; reload the screen");
     }
 

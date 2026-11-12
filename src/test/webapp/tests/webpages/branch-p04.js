@@ -37,11 +37,16 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
 
     Scenario('P04 real editor creates branch folder and available categorized news', async ({ I, DT, DTE }) => {
         if (!fixture.branchId) {
-            branchPicker.action(I, 'create');
-            I.waitForVisible('dialog[open]', 10);
-            I.fillField('dialog input[name=name]', 'autotest P04 redakcia');
-            I.fillField('dialog textarea[name=description]', 'P04 News and Menu editorial walkthrough');
-            I.click('Vytvoriť a otvoriť', 'dialog');
+            branchPicker.action(I, 'manage');
+            DT.waitForLoader();
+            I.clickCss('#branchesDataTable_wrapper .buttons-create');
+            DTE.waitForEditor('branchesDataTable');
+            I.fillField('#DTE_Field_name', 'autotest P04 redakcia');
+            I.fillField('#DTE_Field_description', 'P04 News and Menu editorial walkthrough');
+            DTE.save('branchesDataTable', true);
+            DT.filterContains('name', 'autotest P04 redakcia');
+            I.clickCss('#branchesDataTable tbody tr td.dt-select-td');
+            I.clickCss('.buttons-branch-open');
             I.waitForText('autotest P04 redakcia', 20, '#branch-active-label');
             fixture.branchId = await I.executeScript(() => window.branchScreen.branchId);
             saveFixture();
@@ -161,7 +166,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.assertEqual(newsContext.branch.branchId, Number(fixture.branchId));
         I.assertEqual(newsContext.branch.domainName, 'iwcm.interway.sk');
         I.assertContain(newsContext.url, `branchId=${fixture.branchId}`);
-        I.assertContain(newsContext.url, 'branchDomain=iwcm.interway.sk');
+        I.assertContain(newsContext.url, 'branchDomain=' + await I.executeScript(() => window.branchScreen.domainId));
         I.saveScreenshot('branch-p04-news-iframe.png');
         I.openNewTab();
         I.amOnPage('/admin/v9/webpages/web-pages-list/');
@@ -378,7 +383,7 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
             const frame=document.createElement('iframe'); frame.hidden=true; frame.setAttribute('sandbox','allow-same-origin'); frame.src=preview;
             await new Promise(resolve=>{frame.onload=resolve;document.body.append(frame);});
             const render = async componentCode => {
-                const response=await frame.contentWindow.fetch(preview, {method:'POST', referrerPolicy:'unsafe-url', headers:{'X-CSRF-Token':window.csrfToken,'X-WebJET-Branch':String(window.branchScreen.branchId),'X-WebJET-Branch-Domain':window.branchScreen.domainName}, body:new URLSearchParams({docid:docId,componentCode})});
+                const response=await frame.contentWindow.fetch(preview, {method:'POST', referrerPolicy:'unsafe-url', headers:{'X-CSRF-Token':window.csrfToken,'X-WebJET-Branch':String(window.branchScreen.branchId),'X-WebJET-Branch-Domain':String(window.branchScreen.domainId)}, body:new URLSearchParams({docid:docId,componentCode})});
                 const text=await response.text();
                 return {status:response.status,form:text.includes('document.componentForm'),blocked:text.includes('This component preview is unavailable')};
             };

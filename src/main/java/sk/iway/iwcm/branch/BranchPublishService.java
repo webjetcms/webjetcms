@@ -52,10 +52,10 @@ public final class BranchPublishService {
             branchId=id;userId=actor;current=null;items.clear();
             try(Connection connection=DBPool.getConnection()) {
                 BranchReadiness.verify(connection);
-                try(PreparedStatement statement=connection.prepareStatement("SELECT domain_name,state FROM branches WHERE id=?")) {
+                try(PreparedStatement statement=connection.prepareStatement("SELECT domain_id,state FROM branches WHERE id=?")) {
                     statement.setLong(1,id);try(ResultSet result=statement.executeQuery()) {
                         if(!result.next()||!"MERGING".equals(result.getString(2)))throw new IllegalStateException("The branch is not owned by the publisher");
-                        domain=result.getString(1);
+                        domain=BranchDomains.name(result.getInt(1));
                     }
                 }
                 var details=UsersDB.getUser(actor);

@@ -1,5 +1,7 @@
 # Publikačné balíky: správa a obnova
 
+Pracovné verzie vyžadujú `enableStaticFilesExternalDir=true`. Správa, API, náhľad, publikovanie aj cron oddeľujú balíky cez štandardné `domainId`; názov domény sa odvodzuje pre zobrazenie a URL. Výsledky prechodu sú v [registri realizácie](../../../research/publish-packages/STAV.md#zmena-požiadaviek-11-novembra-2026).
+
 Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Overený profil je **MariaDB 12.2.2, InnoDB, MariaDB Connector/J 3.5.10, Java 17.0.18, jedna inštancia, jedna zapisovateľná DB a lokálny filesystem**. Testovacia DB je `127.0.0.1:33316/webjet_p01`. Toto overenie nepovoľuje produkčné zapnutie; to vyžaduje samostatný pokyn pre konkrétne nasadenie.
 
 ## Inventár a hranice
@@ -20,10 +22,10 @@ Iné DB vrátane MySQL, SQL Servera, PostgreSQL/Oracle, MyISAM, viacuzlové nasa
 2. Nasaďte kód a existujúce migrácie z `WEB-INF/sql/autoupdate.xml`. Automatická konverzia engine sa nevykonáva. Skontrolujte InnoDB na `documents`, `groups`, `media`, `pkey_generator`, `media_group_to_media`, `documents_history`, `groups_scheduler`, `branches`, `branch_documents`, `branch_groups`, `branch_media`, `branch_files`; perex API potrebuje aj oprávnenia na `perex_group_doc`.
 3. Pripravte existujúci absolútny adresár `branchStorageRoot` **mimo webrootu**, prístupný len aplikačnému účtu a zálohovaniu. Nesmie byť aliasom/symlinkom do verejného úložiska. Právo zápisu sa overuje vytvorením dočasného súboru. Zachovajte existujúci generátor `pkey_generator` pre `media`.
 4. Overte single-writer DB, aspoň `READ_COMMITTED` pre JDBC aj JPA, rovnaké konfiguračné hodnoty a kód na všetkých uzloch obsluhujúcich obsah. Nastavte `branchSingleWriterConfirmed=true` až po tejto kontrole. Aktuálny POC deklaruje iba jednu inštanciu; ďalšia topológia potrebuje vlastné overenie súborov/cache/session.
-5. Nastavte `branchesEnabled=true` globálne a obnovte všetky dotknuté uzly. Obe premenné sú globálne, nie prepínače jednej domény. Priraďte **Pracovné verzie** (`menuBranches`) a existujúce práva stránok, priečinkov a súborov. Prvé vytvorenie balíka vykoná kontrolu aktivácie a pri probléme vráti konkrétny dôvod.
+5. Overte `enableStaticFilesExternalDir=true` a existujúce mapovanie súborov jednotlivých domén. Nastavte `branchesEnabled=true` globálne a obnovte všetky dotknuté uzly. Konfigurácia pracovných verzií je globálna, nie prepínač jednej domény. Priraďte **Pracovné verzie** (`menuBranches`) a existujúce práva stránok, priečinkov a súborov. Prvé vytvorenie balíka vykoná kontrolu aktivácie a pri probléme vráti konkrétny dôvod.
 6. Pred pilotom overte verejnú stránku bez cookies na jej skutočnej doméne. Hostiteľ administrácie môže byť iný; `domain_redirects` alias musí zodpovedať logickej doméne obsahu. Pôvodné lokálne POC fixture mali alias `iwcm.interway.sk → demo.webjetcms.sk`; P08 používa samostatnú doménu `127.0.0.1`.
 
-Preflight publikovania odmietne externé súborové úložisko, `fulltextExecuteApps=true` a vlastný `fulltextDataAscMethod`. Branch save nesmie vykonať živé JSP/fulltext hooky. Test vlastného kódu patrí pred aktiváciu.
+Preflight publikovania odmietne `fulltextExecuteApps=true` a vlastný `fulltextDataAscMethod`. Súbory používajú existujúce externé priečinky domén. Branch save nesmie vykonať živé JSP/fulltext hooky. Test vlastného kódu patrí pred aktiváciu.
 
 ## Proxy a cache
 

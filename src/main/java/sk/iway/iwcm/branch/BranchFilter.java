@@ -40,7 +40,7 @@ public final class BranchFilter implements Filter {
                 String domain = access.requireDomain(request, user);
                 BranchContext selection = BranchSelection.selected(request, user, domain);
                 if (!selection.isBranch() || !Long.toString(selection.branchId()).equals(request.getHeader(BranchSelection.ID_HEADER))
-                    || !domain.equals(request.getHeader(BranchSelection.DOMAIN_HEADER))) {
+                    || !Integer.toString(BranchDomains.id(domain)).equals(request.getHeader(BranchSelection.DOMAIN_HEADER))) {
                     response.sendError(409);
                     return;
                 }
@@ -50,7 +50,7 @@ public final class BranchFilter implements Filter {
             }
             return;
         }
-        if(!Constants.getBoolean("branchesEnabled")) {
+        if(!Constants.getBoolean("branchesEnabled") || !Constants.getBoolean("enableStaticFilesExternalDir")) {
             Object selected=request.getSession(false)==null?null:request.getSession(false).getAttribute(BranchSelection.SESSION_KEY);
             boolean frameContext=request.getParameter("branchId")!=null && ("true".equals(request.getParameter("inlineEditorAdmin")) || path.startsWith("/apps/news/admin/") || path.startsWith("/admin/v9/webpages/component/"));
             boolean staleBranch=productionRequest || (frameContext && !"0".equals(request.getParameter("branchId")))
@@ -69,7 +69,7 @@ public final class BranchFilter implements Filter {
             Identity user=sk.iway.iwcm.users.UsersDB.getCurrentUser(request);
             if(selection instanceof BranchSelection.Selected selected && selected.branchId()>0 && user!=null && user.isAdmin()) {
                 Object domain=request.getSession(false).getAttribute("preview.editorDomainName");
-                boolean sameDomain=domain==null||selected.domainName().equals(domain);
+                boolean sameDomain=domain==null||domain instanceof String name && selected.domainId()==BranchDomains.id(name);
                 boolean legacy=(path.matches("(?i).*\\.(jsp|action|do)$")||path.equals("/XhrFileUpload")) && !isPublicPageLink(path,request);
                 if(sameDomain && !path.equals("/logoff.do") && (legacy||!Set.of("GET","HEAD").contains(request.getMethod()))) {
                     response.sendError(409,"This write path is unavailable in a publishing branch; select production");return;
@@ -111,7 +111,7 @@ public final class BranchFilter implements Filter {
                 context=new BranchContext(id,domain,user.getUserId(),BranchContext.Mode.PREVIEW);
             } else {
                 String domain=access.requireDomain(request,user);
-                boolean management=(path.equals("/admin/rest/branches")||path.equals("/admin/rest/branches/context")||path.matches("/admin/rest/branches/[0-9]+(?:/(?:preview-link|prepare|resolve|merge|resume|schedule|unschedule|reopen|progress|file-version))?"))||path.equals("/admin/rest/refresher")
+                boolean management=(path.equals("/admin/rest/branches")||path.startsWith("/admin/rest/branches/datatable")||path.equals("/admin/rest/branches/context")||path.matches("/admin/rest/branches/[0-9]+(?:/(?:preview-link|prepare|resolve|merge|resume|schedule|unschedule|reopen|progress|file-version))?"))||path.equals("/admin/rest/refresher")
                     || ("GET".equals(request.getMethod()) && path.matches("/admin/rest/properties/[a-zA-Z_-]+/"));
                 context=management?BranchContext.live(domain,user.getUserId()):BranchSelection.selected(request,user,domain);
                 String explicit=request.getHeader(BranchSelection.ID_HEADER),expectedDomain=request.getHeader(BranchSelection.DOMAIN_HEADER);
@@ -125,7 +125,7 @@ public final class BranchFilter implements Filter {
                         && !confirmed && !(inherited && (frame || "0".equals(explicit)));
                     if (!branchScreen && (confirmed || inherited)) {
                         access.requireUser(request);
-                        if (explicit != null && (!domain.equals(expectedDomain)
+                        if (explicit != null && (!Integer.toString(context.domainId()).equals(expectedDomain)
                                 || !("0".equals(explicit) || Long.toString(context.branchId()).equals(explicit)))) {
                             response.sendError(409, "Screen context changed; reload the screen");
                             return;

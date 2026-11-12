@@ -27,7 +27,7 @@ if (process.env.WEBJET_P03_BROWSER === 'true') {
         I.saveScreenshot('branch-p03-admin.png');
 
         const statuses = await I.executeScript(async ({ group, branch }) => {
-            const headers = { 'X-CSRF-Token': window.csrfToken, 'X-WebJET-Branch': String(branch), 'X-WebJET-Branch-Domain': 'iwcm.interway.sk', 'Content-Type': 'application/json' };
+            const headers = { 'X-CSRF-Token': window.csrfToken, 'X-WebJET-Branch': String(branch), 'X-WebJET-Branch-Domain': String(window.branchScreen.domainId), 'Content-Type': 'application/json' };
             const write = await fetch('/admin/rest/web-pages', { method: 'POST', headers, body: '{}' });
             const stale = await fetch(`/admin/rest/web-pages?groupId=${group}`, { headers: { ...headers, 'X-WebJET-Branch': '0' } });
             const context = await fetch('/admin/rest/branches/context').then(response => response.json());
@@ -49,18 +49,23 @@ if (process.env.WEBJET_P03_BROWSER === 'true') {
         I.amOnPage('/p03-manual/'); I.waitForText('P03 LIVE home', 20); I.dontSee('P03 WORK A');
     });
 
-    Scenario('P03 create opens the new working version and rejects a stale domain', async ({ I }) => {
+    Scenario('P03 create opens the new working version and rejects a stale domain', async ({ I, DT, DTE }) => {
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`);
-        branchPicker.action(I, 'create');
-        I.waitForVisible('dialog[open]', 10);
+        branchPicker.action(I, 'manage');
+        DT.waitForLoader();
+        I.clickCss('#branchesDataTable_wrapper .buttons-create');
+        DTE.waitForEditor('branchesDataTable');
         const name = `autotest-p03-created-${Date.now()}`;
-        I.fillField('dialog input[name=name]', name);
-        I.fillField('dialog textarea[name=description]', 'P03 local browser fixture');
-        I.click('Vytvoriť a otvoriť', 'dialog');
+        I.fillField('#DTE_Field_name', name);
+        I.fillField('#DTE_Field_description', 'P03 local browser fixture');
+        DTE.save('branchesDataTable', true);
+        DT.filterContains('name', name);
+        I.clickCss('#branchesDataTable tbody tr td.dt-select-td');
+        I.clickCss('.buttons-branch-open');
         I.waitForText(name, 20, '#branch-active-label');
         const result = await I.executeScript(async () => {
             const context = await fetch('/admin/rest/branches/context').then(response => response.json());
-            const stale = await fetch('/admin/rest/branches/context', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branchId: 0, expectedDomainName: 'foreign.example' }) });
+            const stale = await fetch('/admin/rest/branches/context', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ branchId: 0, expectedDomainId: -1 }) });
             return { branchId: context.branchId, stale: stale.status };
         });
         I.assertTrue(result.branchId > 0);

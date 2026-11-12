@@ -14,7 +14,7 @@ public final class BranchScheduler {
     private BranchScheduler() { }
 
     public static void main(String[] args) {
-        if(!Constants.getBoolean("branchesEnabled") || ClusterDB.isPublicNode())return;
+        if(!Constants.getBoolean("branchesEnabled") || !Constants.getBoolean("enableStaticFilesExternalDir") || ClusterDB.isPublicNode())return;
         try {
             // Stagger dynamic admin nodes; the database claim remains the protection against duplicate execution.
             Thread.sleep(ThreadLocalRandom.current().nextInt(10000));
@@ -23,22 +23,23 @@ public final class BranchScheduler {
         try(Connection c=DBPool.getConnection()) {
             BranchReadiness.verify(c);
             List<Due> due=new ArrayList<>();
-            try(PreparedStatement s=c.prepareStatement("SELECT id,domain_name,revision,scheduled_by FROM branches WHERE state='SCHEDULED' AND publish_at<=? ORDER BY publish_at,id")) {
+            try(PreparedStatement s=c.prepareStatement("SELECT id,domain_id,revision,scheduled_by FROM branches WHERE state='SCHEDULED' AND publish_at<=? ORDER BY publish_at,id")) {
                 s.setTimestamp(1,new Timestamp(System.currentTimeMillis()));
-                try(ResultSet r=s.executeQuery()){while(r.next())due.add(new Due(r.getLong(1),r.getString(2),r.getLong(3),r.getInt(4)));}
+                try(ResultSet r=s.executeQuery()){while(r.next())due.add(new Due(r.getLong(1),r.getInt(2),r.getLong(3),r.getInt(4)));}
             }
             for(Due item:due) {
                 try {
+                    String domain = BranchDomains.name(item.domainId);
                     var details=UsersDB.getUser(item.actor);
                     if(details==null||!details.isAdmin()||!details.isAuthorized())throw new IllegalStateException(Prop.getInstance().getText("branches.schedule.user_unavailable"));
                     Identity user=new Identity(details);
                     if(!user.isEnabledItem(BranchAccess.PERMISSION))throw new IllegalStateException(Prop.getInstance().getText("branches.schedule.permission"));
-                    RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(item.domain);
+                    RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(domain);
                     SetCharacterEncodingFilter.setCurrentRequestBean(bean);
-                    try(BranchContexts.Scope ignored=BranchContexts.live(null,item.domain,item.actor)) {
+                    try(BranchContexts.Scope ignored=BranchContexts.live(null,domain,item.actor)) {
                         BranchMergeService merge=new BranchMergeService();
-                        var report=merge.prepare(item.id,item.domain,user,item.revision);
-                        merge.claimScheduled(item.id,item.domain,user,item.revision,report.preparationHash());
+                        var report=merge.prepare(item.id,domain,user,item.revision);
+                        merge.claimScheduled(item.id,domain,user,item.revision,report.preparationHash());
                         new BranchPublishService().kickoff(item.id,item.actor);
                     }
                 }catch(Exception ex){attention(item,ex);}
@@ -55,5 +56,5 @@ public final class BranchScheduler {
         }catch(SQLException ex){Logger.error(BranchScheduler.class,ex);}
     }
 
-    private record Due(long id,String domain,long revision,int actor) { }
+    private record Due(long id,int domainId,long revision,int actor) { }
 }

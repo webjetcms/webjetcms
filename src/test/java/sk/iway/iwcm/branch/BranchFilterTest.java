@@ -33,12 +33,12 @@ class BranchFilterTest {
     private MockedStatic<BranchSelection> selection;
 
     @BeforeEach void requestBoundary() {
-        constants=mockStatic(Constants.class);constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(true);
+        constants=mockStatic(Constants.class);constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(true);constants.when(()->Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
         constants.when(()->Constants.getString("xsrfReferers")).thenReturn("");
         constants.when(()->Constants.getString("allowAdminUrls")).thenReturn("");
         constants.when(()->Constants.getString("xsrfParamNameExceptionSystem")).thenReturn("");
         constants.when(Constants::getInstallName).thenReturn("test");
-        groups=mockStatic(GroupsDB.class);GroupsDB permissions=mock(GroupsDB.class);groups.when(GroupsDB::getInstance).thenReturn(permissions);
+        groups=mockStatic(GroupsDB.class);GroupsDB permissions=mock(GroupsDB.class);groups.when(GroupsDB::getInstance).thenReturn(permissions);groups.when(()->GroupsDB.getDomainId(DOMAIN)).thenReturn(1);groups.when(()->GroupsDB.getDomainId("b.example")).thenReturn(2);
         admin.setAdmin(true);admin.setUserId(1);when(permissions.getUserRootDomainNames(admin)).thenReturn(List.of(DOMAIN,"b.example"));
         doReturn(true).when(admin).isEnabledItem(BranchAccess.PERMISSION);
         request.setMethod("GET");request.setServerName("admin.example");request.getSession().setAttribute(Constants.USER_KEY,admin);request.getSession().setAttribute("preview.editorDomainName",DOMAIN);
@@ -77,7 +77,7 @@ class BranchFilterTest {
             assertEquals("/WEB-INF/branch-production.jsp", response.getForwardedUrl());
         }
         request.setQueryString(null);
-        for (String path : List.of("/admin/v9/webpages/web-pages-list/", "/admin/v9/files/index/", "/apps/news/admin/")) {
+        for (String path : List.of("/admin/v9/webpages/web-pages-list/", "/admin/v9/webpages/branches/", "/admin/v9/files/index/", "/apps/news/admin/")) {
             request.setRequestURI(path);
             AtomicBoolean dispatched = new AtomicBoolean();
             filter.doFilter(request, new MockHttpServletResponse(), (in, out) -> {
@@ -100,6 +100,8 @@ class BranchFilterTest {
         String referrer = request.getRequestURL() + continuation;
         request.addHeader("Referer", referrer);
         request.addHeader("Sec-Fetch-Dest", "empty");
+        request.addHeader(BranchSelection.ID_HEADER, "42");
+        request.addHeader(BranchSelection.DOMAIN_HEADER, "1");
         request.setMethod("POST");
         request.setRequestURI("/admin/rest/templates/editor");
         filter.doFilter(request, response, (in, out) -> fail("Missing CSRF"));
@@ -152,9 +154,22 @@ class BranchFilterTest {
         }
     }
 
+    @Test void metadataTableUsesLiveStorageWithoutChangingTheSelectedVersion() throws Exception {
+        selected();
+        request.setMethod("POST");
+        for (String path : List.of("/admin/rest/branches/datatable/all", "/admin/rest/branches/datatable/-1",
+                "/admin/rest/branches/datatable/search/findByColumns", "/admin/rest/branches/datatable/editor")) {
+            request.setRequestURI(path);
+            response = new MockHttpServletResponse();
+            filter.doFilter(request, response, (in, out) -> assertFalse(BranchContexts.current().isBranch()));
+            assertEquals(200, response.getStatus());
+        }
+        assertEquals(42, ((BranchSelection.Selected) request.getSession().getAttribute(BranchSelection.SESSION_KEY)).branchId());
+    }
+
     @Test void permitsOnlyOrdinaryEditorPostsAndRejectsLegacyImportActions() throws Exception {
         selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);
-        request.setMethod("POST"); request.addHeader(BranchSelection.ID_HEADER,"42"); request.addHeader(BranchSelection.DOMAIN_HEADER,DOMAIN);
+        request.setMethod("POST"); request.addHeader(BranchSelection.ID_HEADER,"42"); request.addHeader(BranchSelection.DOMAIN_HEADER,"1");
         for(String path:List.of("/admin/rest/web-pages/editor","/admin/rest/groups/editor","/admin/rest/news/news-list/editor","/admin/rest/media/editor","/admin/upload/chunk","/admin/upload/overwrite","/admin/web-pages/upload/","/admin/elfinder-connector/")) {
             request.setRequestURI(path); response=new MockHttpServletResponse();
             filter.doFilter(request,response,(in,out)->assertEquals(branch,BranchContexts.current())); assertEquals(200,response.getStatus());
@@ -167,11 +182,11 @@ class BranchFilterTest {
 
     @Test void nestedIframeBootstrapChecksBothFrozenContextValues() throws Exception {
         selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);
-        request.setRequestURI("/apps/news/admin/"); request.setParameter("branchId","42"); request.setParameter("branchDomain",DOMAIN);
+        request.setRequestURI("/apps/news/admin/"); request.setParameter("branchId","42"); request.setParameter("branchDomain","1");
         filter.doFilter(request,response,(in,out)->assertEquals(branch,BranchContexts.current())); assertEquals(200,response.getStatus());
         response=new MockHttpServletResponse(); request.setParameter("branchDomain","b.example");
         filter.doFilter(request,response,(in,out)->fail("Foreign iframe domain dispatched")); assertEquals(409,response.getStatus());
-        response=new MockHttpServletResponse(); request.setParameter("branchDomain",DOMAIN);
+        response=new MockHttpServletResponse(); request.setParameter("branchDomain","1");
         selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(BranchContext.live(DOMAIN,1));
         filter.doFilter(request,response,(in,out)->fail("Stale branch iframe fell back to LIVE")); assertEquals(409,response.getStatus());
     }
@@ -192,7 +207,7 @@ class BranchFilterTest {
 
     @Test void inlineEditorFrameReadsWorkAndNeverFallsThroughAfterSelectionChanges() throws Exception {
         selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);
-        request.setRequestURI("/p04-frame.html"); request.setParameter("inlineEditorAdmin","true"); request.setParameter("branchId","42"); request.setParameter("branchDomain",DOMAIN);
+        request.setRequestURI("/p04-frame.html"); request.setParameter("inlineEditorAdmin","true"); request.setParameter("branchId","42"); request.setParameter("branchDomain","1");
         var view=mock(BranchView.class); var doc=new sk.iway.iwcm.doc.DocDetails(); doc.setDocId(123);
         try(var views=mockStatic(BranchView.class);var editor=mockStatic(sk.iway.iwcm.editor.service.EditorService.class)) {
             views.when(BranchView::current).thenReturn(view); when(view.docIdFromUrl("/p04-frame.html")).thenReturn(123); when(view.document(123,false)).thenReturn(doc);
@@ -207,9 +222,9 @@ class BranchFilterTest {
     @Test void flagOffAndGuestPreviewArePrivateAndNeverDispatch()throws Exception {
         request.setRequestURI("/admin/webpages/branch-preview/42/images/a.png");constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(false);
         filter.doFilter(request,response,(in,out)->fail("Disabled preview dispatched"));assertEquals(404,response.getStatus());assertTrue(response.getHeader("Cache-Control").contains("no-store"));
-        response=new MockHttpServletResponse();request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(42,DOMAIN));request.setRequestURI("/components/news/admin_save.jsp");
+        response=new MockHttpServletResponse();request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(42,1));request.setRequestURI("/components/news/admin_save.jsp");
         filter.doFilter(request,response,(in,out)->fail("Disabled stale branch executed a legacy write"));assertEquals(409,response.getStatus());request.getSession().removeAttribute(BranchSelection.SESSION_KEY);request.setRequestURI("/admin/webpages/branch-preview/42/images/a.png");
-        response=new MockHttpServletResponse();constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(true);request.getSession().removeAttribute(Constants.USER_KEY);
+        response=new MockHttpServletResponse();constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(true);constants.when(()->Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);request.getSession().removeAttribute(Constants.USER_KEY);
         filter.doFilter(request,response,(in,out)->fail("Guest preview dispatched"));assertEquals(403,response.getStatus());assertTrue(response.getHeader("Cache-Control").contains("no-store"));
     }
 
@@ -251,7 +266,7 @@ class BranchFilterTest {
     }
 
     @Test void rejectsStaleLiveDomainAndMissingContextForWrites()throws Exception {
-        request.setRequestURI("/admin/rest/web-pages/all");request.addHeader(BranchSelection.ID_HEADER,"0");request.addHeader(BranchSelection.DOMAIN_HEADER,"b.example");
+        request.setRequestURI("/admin/rest/web-pages/all");request.addHeader(BranchSelection.ID_HEADER,"0");request.addHeader(BranchSelection.DOMAIN_HEADER,"2");
         filter.doFilter(request,response,(in,out)->fail("Stale LIVE domain dispatched"));assertEquals(409,response.getStatus());
         response=new MockHttpServletResponse();request.removeHeader(BranchSelection.ID_HEADER);request.removeHeader(BranchSelection.DOMAIN_HEADER);request.setMethod("POST");
         filter.doFilter(request,response,(in,out)->fail("Unscoped LIVE write dispatched"));assertEquals(409,response.getStatus());
@@ -320,6 +335,6 @@ class BranchFilterTest {
         response=new MockHttpServletResponse();request.setMethod("GET");request.setRequestURI("/admin/v9/dist/scripts/app.js");AtomicBoolean dispatched=new AtomicBoolean();filter.doFilter(request,response,(in,out)->dispatched.set(true));assertTrue(dispatched.get());
     }
 
-    private void selected(){request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(42,DOMAIN));selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);}
-    private void headers(long id,String domain){request.removeHeader(BranchSelection.ID_HEADER);request.removeHeader(BranchSelection.DOMAIN_HEADER);request.addHeader(BranchSelection.ID_HEADER,Long.toString(id));request.addHeader(BranchSelection.DOMAIN_HEADER,domain);}
+    private void selected(){request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(42,1));selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);}
+    private void headers(long id,String domain){request.removeHeader(BranchSelection.ID_HEADER);request.removeHeader(BranchSelection.DOMAIN_HEADER);request.addHeader(BranchSelection.ID_HEADER,Long.toString(id));request.addHeader(BranchSelection.DOMAIN_HEADER,DOMAIN.equals(domain)?"1":"2");}
 }

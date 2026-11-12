@@ -137,8 +137,8 @@ public final class BranchStore {
             boolean completed = false;
             try {
                 try (PreparedStatement statement = connection.prepareStatement(
-                        "SELECT state FROM branches WHERE id=? AND domain_name=? FOR UPDATE")) {
-                    statement.setLong(1, context.branchId()); statement.setString(2, context.domainName());
+                        "SELECT state FROM branches WHERE id=? AND domain_id=? FOR UPDATE")) {
+                    statement.setLong(1, context.branchId()); statement.setInt(2, context.domainId());
                     try (ResultSet result = statement.executeQuery()) {
                         if (!result.next() || !"DRAFT".equals(result.getString(1))) throw new IllegalStateException("Package is absent or not editable");
                     }

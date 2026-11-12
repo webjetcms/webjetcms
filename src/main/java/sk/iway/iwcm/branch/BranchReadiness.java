@@ -20,6 +20,8 @@ public final class BranchReadiness {
 
     public static void requireEnabled() {
         if (!Constants.getBoolean("branchesEnabled")) throw new IllegalStateException("Publishing branches are disabled");
+        if (!Constants.getBoolean("enableStaticFilesExternalDir"))
+            throw new IllegalStateException("Working versions require enableStaticFilesExternalDir=true");
         if (!Constants.getBoolean("branchSingleWriterConfirmed"))
             throw new IllegalStateException("Confirm the same branch configuration on all content nodes and a single writable database");
     }

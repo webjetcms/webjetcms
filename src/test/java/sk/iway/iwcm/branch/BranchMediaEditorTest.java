@@ -31,9 +31,10 @@ class BranchMediaEditorTest extends BaseWebjetTest {
 
     @BeforeEach void fixture()throws Exception {
         try(Connection c=DBPool.getConnection()) {assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));}
-        for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder"))configuration.put(key,Constants.getString(key));
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("templatesUseRecursiveSystemFolder",false);
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder"))configuration.put(key,Constants.getString(key));
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("templatesUseRecursiveSystemFolder",false);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private"));Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
+        BranchTestDomains.ensure(DOMAIN);
         category=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media_groups"));liveMedia=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media"));
         try(Connection c=DBPool.getConnection()) {
             c.setAutoCommit(false);root=BranchStore.reserveNative(c,BranchType.GROUP);
@@ -41,7 +42,7 @@ class BranchMediaEditorTest extends BaseWebjetTest {
             page=BranchStore.reserveNative(c,BranchType.DOCUMENT);var doc=new LinkedHashMap<>(BranchDocumentMapper.initialValues(page,1,Instant.parse("2020-01-01T12:00:00Z"),false));
             doc.put("group_id",root);doc.put("title","autotest old LIVE page");doc.put("navbar","autotest old LIVE page");doc.put("data","<p>LIVE</p>");doc.put("virtual_path","/autotest-p05-media/");doc.put("available",true);BranchRowWriter.insertDocumentWithId(c,BranchContext.live(DOMAIN,1),doc);
             try(PreparedStatement s=c.prepareStatement("INSERT INTO media_groups(media_group_id,media_group_name,available_groups) VALUES (?,?,'')")){s.setInt(1,category);s.setString(2,"autotest P05 media category");s.executeUpdate();}
-            var media=new LinkedHashMap<>(BranchMediaMapper.initialValues(liveMedia,page,1));media.put("media_title_sk","autotest LIVE media");media.put("media_link","https://example.invalid/live.pdf");media.put("last_update",Timestamp.from(Instant.parse("2020-01-01T11:59:00Z")));BranchRowWriter.insertMediaWithId(c,BranchContext.live(DOMAIN,1),media,List.of(category));c.commit();
+            var media=new LinkedHashMap<>(BranchMediaMapper.initialValues(liveMedia,page,BranchDomains.id(DOMAIN)));media.put("media_title_sk","autotest LIVE media");media.put("media_link","https://example.invalid/live.pdf");media.put("last_update",Timestamp.from(Instant.parse("2020-01-01T11:59:00Z")));BranchRowWriter.insertMediaWithId(c,BranchContext.live(DOMAIN,1),media,List.of(category));c.commit();
         }
         a=branch("autotest P05 media A");b=branch("autotest P05 media B");before=fingerprint();
     }
@@ -115,7 +116,7 @@ class BranchMediaEditorTest extends BaseWebjetTest {
     }
 
     private static Media fresh(String title,Integer...categories) {Media m=new Media();m.setMediaTitleSk(title);m.setMediaLink("https://example.invalid/attachment.pdf");m.setMediaThumbLink("");MediaEditorFields fields=new MediaEditorFields();fields.setGroups(categories);fields.setBranchHash("new");m.setEditorFields(fields);return m;}
-    private BranchContext branch(String name) {return new BranchContext(new BranchService().create(DOMAIN,name,"disposable P05 media test",1).getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
+    private BranchContext branch(String name) {return new BranchContext(new BranchService().create(BranchTestDomains.ensure(DOMAIN),name,"disposable P05 media test",1).getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
     private String fingerprint()throws Exception {
         MessageDigest digest=MessageDigest.getInstance("SHA-256");try(Connection c=DBPool.getConnection();Statement s=c.createStatement()) {for(String table:List.of("documents","groups","documents_history","perex_group_doc","media","media_group_to_media","media_groups","groups_scheduler","multigroup_mapping","file_atr","dirprop")) {List<String> rows=new ArrayList<>();try(ResultSet r=s.executeQuery("SELECT * FROM `"+table+"`")){while(r.next()){StringBuilder row=new StringBuilder();for(int i=1;i<=r.getMetaData().getColumnCount();i++)row.append(Base64.getEncoder().encodeToString(Objects.toString(r.getString(i),"NULL").getBytes(java.nio.charset.StandardCharsets.UTF_8))).append('|');rows.add(row.toString());}}Collections.sort(rows);for(String row:rows)digest.update(row.getBytes(java.nio.charset.StandardCharsets.UTF_8));}}return HexFormat.of().formatHex(digest.digest());
     }

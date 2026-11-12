@@ -73,8 +73,8 @@ class BranchMergeTest extends BaseWebjetTest {
 
     @BeforeEach void setup()throws Exception {
         try(Connection c=DBPool.getConnection()) {assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));}
-        for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","fulltextExecuteApps","fulltextDataAscMethod","perexGroupUseJoin","editorDisableHistory","iwfs_useVersioning","clusterMyNodeType"))original.put(key,Constants.getString(key));
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setString("branchStorageRoot","/tmp/webjet-p03-private");Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fulltextExecuteApps",false);Constants.setString("fulltextDataAscMethod","");Constants.setBoolean("perexGroupUseJoin",true);
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","fulltextExecuteApps","fulltextDataAscMethod","perexGroupUseJoin","editorDisableHistory","iwfs_useVersioning","clusterMyNodeType"))original.put(key,Constants.getString(key));
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot","/tmp/webjet-p03-private");Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fulltextExecuteApps",false);Constants.setString("fulltextDataAscMethod","");Constants.setBoolean("perexGroupUseJoin",true);
         Files.createDirectories(Path.of("/tmp/webjet-p03-private"));sk.iway.iwcm.system.Modules.getInstance(null,true);user=new Identity(UsersDB.getUser("tester-p05"));
         assertTrue(user.isAdmin(),"fresh admin");assertTrue(user.isAuthorized(),"fresh authorized");assertTrue(user.isEnabledItem("menuBranches"),"menuBranches enabled");
         RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(bean);
@@ -182,7 +182,7 @@ class BranchMergeTest extends BaseWebjetTest {
         assertEquals("MERGE_FAILED",detail().state());assertEquals("autotest P06 WORK attachment",Files.readString(Path.of(Tools.getRealPath(f.file))));
         assertEquals(1,count("SELECT COUNT(*) FROM file_history WHERE file_url='"+f.file+"'"));
         assertEquals(user.getUserId(),((Number)query("SELECT user_id FROM file_history WHERE file_url='"+f.file+"'")).intValue());
-        assertEquals(1,((Number)query("SELECT domain_id FROM file_history WHERE file_url='"+f.file+"'")).intValue());
+        assertEquals(BranchDomains.id(DOMAIN),((Number)query("SELECT domain_id FROM file_history WHERE file_url='"+f.file+"'")).intValue());
         assertEquals(originalBytes,Files.readString(Path.of(Tools.getRealPath(query("SELECT CONCAT(history_path,file_history_id) FROM file_history WHERE file_url='"+f.file+"'").toString()))));
         long modified=Files.getLastModifiedTime(Path.of(Tools.getRealPath(f.file))).toMillis();
         var retry=ready();service.claim(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);new BranchPublishService().run(f.branch,user.getUserId());
@@ -326,7 +326,7 @@ class BranchMergeTest extends BaseWebjetTest {
 
     @Test void categoryPreflightAndExistingPerexApiPreserveOtherPages()throws Exception {
         sql("DELETE FROM perex_groups WHERE perex_group_id="+f.perex);assertFalse(detail().ready());
-        sql("INSERT INTO perex_groups(perex_group_id,perex_group_name,available_groups,domain_id) VALUES ("+f.perex+",'autotest P06 restored category','',1)");
+        sql("INSERT INTO perex_groups(perex_group_id,perex_group_name,available_groups,domain_id) VALUES ("+f.perex+",'autotest P06 restored category','',"+BranchDomains.id(DOMAIN)+")");
         PerexGroupsService.savePerexGroupsDoc(f.home,new int[]{f.perex});
         long unrelated=((Number)query("SELECT id FROM perex_group_doc WHERE doc_id="+f.home)).longValue();
         merge(ready(),new BranchPublishService());assertEquals("MERGED",detail().state(),detail().lastError());
@@ -488,6 +488,35 @@ class BranchMergeTest extends BaseWebjetTest {
         var report=ready();service.schedule(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),System.currentTimeMillis()+120_000);
         sql("UPDATE branches SET publish_at=CURRENT_TIMESTAMP-INTERVAL 1 SECOND WHERE id="+f.branch);
     }
+
+    /** The cron derives its filesystem context from domain_id, without an HTTP session. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void cronPublishesOnlyItsExternalDomainFolder()throws Exception {
+        Path originalFile=Path.of(Tools.getRealPath(f.file));
+        Path external=Files.createTempDirectory("branch-cron-domains-");
+        String previous=Constants.getString("cloudStaticFilesDir");
+        try {
+            Constants.setString("cloudStaticFilesDir",external+java.io.File.separator);
+            Path own=Path.of(Tools.getRealPath(f.file));
+            Files.createDirectories(own.getParent());Files.copy(originalFile,own);
+            RequestBean bean=SetCharacterEncodingFilter.getCurrentRequestBean();
+            bean.setDomain("demo.webjetcms.sk");
+            Path foreign=Path.of(Tools.getRealPath(f.file));
+            Files.createDirectories(foreign.getParent());Files.writeString(foreign,"foreign LIVE bytes");
+            bean.setDomain(DOMAIN);
+            assertNotEquals(own,foreign);
+            scheduleDue();BranchScheduler.main(new String[0]);
+            long deadline=System.currentTimeMillis()+30_000;
+            while(BranchPublishService.isRunning(f.branch)&&System.currentTimeMillis()<deadline)Thread.sleep(50);
+            assertFalse(BranchPublishService.isRunning(f.branch),"Cron publication did not complete");
+            assertEquals("MERGED",detail().state(),detail().lastError());
+            assertEquals("autotest P06 WORK attachment",Files.readString(own));
+            assertEquals("foreign LIVE bytes",Files.readString(foreign));
+            assertEquals("autotest P06 BASE attachment",Files.readString(originalFile));
+        } finally {
+            Constants.setString("cloudStaticFilesDir",previous);
+            try(var paths=Files.walk(external)){for(Path path:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(path);}
+        }
+    }
     private Map<String,String> workInputs()throws Exception {
         Map<String,String> result=new LinkedHashMap<>();
         try(Connection c=DBPool.getConnection()){for(BranchType type:BranchType.values())for(var row:BranchPublishRows.rows(c,f.branch,type)){var change=BranchStore.change(type,row);result.put(change.identity(),change.work().hash());}}
@@ -563,7 +592,7 @@ class BranchMergeTest extends BaseWebjetTest {
         assertFalse(Files.exists(manifest),"Reuse the retained P08 pilot; do not replace earlier demos");
         assertFalse(Files.exists(credentials));
         // The existing iwcm host is aliased to demo.webjetcms.sk; give this public fixture its own loopback domain.
-        sql("UPDATE branches SET domain_name='127.0.0.1',name='autotest P08 pilot',description='20 pages, three editorial accounts; isolated P08 data' WHERE id="+f.branch);
+        sql("UPDATE branches SET domain_id="+BranchDomains.id("127.0.0.1")+",name='autotest P08 pilot',description='20 pages, three editorial accounts; isolated P08 data' WHERE id="+f.branch);
         sql("UPDATE `groups` SET domain_name='127.0.0.1' WHERE group_id IN ("+f.root+","+f.section+")");
         sql("UPDATE branch_groups SET domain_name='127.0.0.1' WHERE branch_id="+f.branch);
         StringBuilder loginData=new StringBuilder();
@@ -588,27 +617,27 @@ class BranchMergeTest extends BaseWebjetTest {
         try(Connection c=DBPool.getConnection();Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT temp_id FROM templates WHERE forward='/templates/aceintegration/jet/blank.jsp' LIMIT 1")){assertTrue(r.next());template=r.getInt(1);}
         try(Connection c=DBPool.getConnection()) {
             c.setAutoCommit(false);
-            try(PreparedStatement s=c.prepareStatement("INSERT INTO perex_groups(perex_group_name,available_groups,domain_id) VALUES (?,'',1)",Statement.RETURN_GENERATED_KEYS)){s.setString(1,"autotest P06 "+suffix);s.executeUpdate();try(ResultSet r=s.getGeneratedKeys()){r.next();perex=r.getInt(1);}}
+            try(PreparedStatement s=c.prepareStatement("INSERT INTO perex_groups(perex_group_name,available_groups,domain_id) VALUES (?,'',"+BranchDomains.id(DOMAIN)+")",Statement.RETURN_GENERATED_KEYS)){s.setString(1,"autotest P06 "+suffix);s.executeUpdate();try(ResultSet r=s.getGeneratedKeys()){r.next();perex=r.getInt(1);}}
             root=BranchStore.reserveNative(c,BranchType.GROUP);section=BranchStore.reserveNative(c,BranchType.GROUP);
             for(int id:List.of(root,section)){var g=new LinkedHashMap<>(BranchGroupMapper.initialValues(id,DOMAIN));g.put("group_name",id==root?"autotest P06 "+suffix:"autotest P06 section");g.put("navbar",g.get("group_name"));g.put("url_dir_name",id==root?url.substring(1):"section");g.put("parent_group_id",id==root?0:root);g.put("temp_id",template);BranchRowWriter.insertGroupWithId(c,BranchContext.live(DOMAIN,1),g);}
             home=BranchStore.reserveNative(c,BranchType.DOCUMENT);var homepage=doc(home,root,"autotest P06 home",url+"/");homepage.put("temp_id",template);homepage.put("data","<h1>autotest P06</h1><div id='p06-menu'>!INCLUDE(/components/menu/menu_ul_li.jsp, rootGroupId="+root+", openAllItems=true, classes=full)!</div> !INCLUDE(/components/news/news-velocity.jsp, groupIds="+root+", alsoSubGroups=true, template=p06-autotest-"+suffix+", publishType=all, perexNotRequired=true, order=priority, ascending=true, pageSize=30, paging=false, includeActualDoc=true)!");BranchRowWriter.insertDocumentWithId(c,BranchContext.live(DOMAIN,1),homepage);
             for(int i=0;i<18;i++){int id=BranchStore.reserveNative(c,BranchType.DOCUMENT);var d=doc(id,section,"autotest P06 LIVE "+i,url+"/section/page-"+i+".html");d.put("sort_priority",i);d.put("temp_id",template);BranchRowWriter.insertDocumentWithId(c,BranchContext.live(DOMAIN,1),d);pages.add(id);}
             try(PreparedStatement s=c.prepareStatement("UPDATE `groups` SET default_doc_id=? WHERE group_id=?")){s.setInt(1,home);s.setInt(2,root);s.executeUpdate();s.setInt(1,pages.get(0));s.setInt(2,section);s.executeUpdate();}
             try(PreparedStatement s=c.prepareStatement("INSERT INTO media_groups(media_group_id,media_group_name,available_groups) VALUES (?,?,'')")){s.setInt(1,category);s.setString(2,"autotest P06 "+suffix);s.executeUpdate();}
-            var m=new LinkedHashMap<>(BranchMediaMapper.initialValues(media,home,1));m.put("media_title_sk","autotest P06 LIVE media");m.put("media_link","/files/branch-p06-autotest/"+suffix+".txt");m.put("last_update",Timestamp.from(Instant.parse("2020-01-01T11:00:00Z")));BranchRowWriter.insertMediaWithId(c,BranchContext.live(DOMAIN,1),m,List.of(category));
-            try(PreparedStatement s=c.prepareStatement("INSERT INTO news_templates(name,template_html,paging_html,paging_position,engine,domain_id) VALUES (?,?,'',1,'velocity',1)")){
+            var m=new LinkedHashMap<>(BranchMediaMapper.initialValues(media,home,BranchDomains.id(DOMAIN)));m.put("media_title_sk","autotest P06 LIVE media");m.put("media_link","/files/branch-p06-autotest/"+suffix+".txt");m.put("last_update",Timestamp.from(Instant.parse("2020-01-01T11:00:00Z")));BranchRowWriter.insertMediaWithId(c,BranchContext.live(DOMAIN,1),m,List.of(category));
+            try(PreparedStatement s=c.prepareStatement("INSERT INTO news_templates(name,template_html,paging_html,paging_position,engine,domain_id) VALUES (?,?,'',1,'velocity',"+BranchDomains.id(DOMAIN)+")")){
                 s.setString(1,"p06-autotest-"+suffix);s.setString(2,"<ol class='p06-news'>#foreach($item in $news)<li data-id='$item.docId' data-author='$item.authorId' data-date='$item.dateCreated'><a href='$actionBean.link($item)'>$item.title</a><span>$item.htmlData</span>#foreach($medium in $MediaDB.getMedia($item, ''))<a class='p06-media' data-media='$medium.mediaId' href='$medium.mediaLink'>$medium.mediaTitleSk</a>#end</li>#end</ol>");s.executeUpdate();
             }c.commit();
         }
         GroupsDB.getInstance(true);DocDB.getInstance(true);
-        long branch=new BranchService().create(DOMAIN,"autotest P06 "+suffix,"20 pages, folder move, media and file; P06 only",1).getId();BranchContext context=new BranchContext(branch,DOMAIN,1,BranchContext.Mode.ADMIN);
+        long branch=new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P06 "+suffix,"20 pages, folder move, media and file; P06 only",1).getId();BranchContext context=new BranchContext(branch,DOMAIN,1,BranchContext.Mode.ADMIN);
         var destination=new LinkedHashMap<>(BranchGroupMapper.initialValues(1,DOMAIN));destination.put("group_name","autotest P06 destination");destination.put("url_dir_name","destination");destination.put("parent_group_id",root);destination.put("temp_id",template);
         int newGroup=((Number)store.create(context,BranchType.GROUP,destination).get("group_id")).intValue();
         var moved=live(BranchType.GROUP,section);String groupHash=BranchStore.snapshot(BranchType.GROUP,moved).hash();moved.put("parent_group_id",newGroup);moved.put("url_dir_name","moved");store.put(context,BranchType.GROUP,section,moved,groupHash,false);
         for(int i=0;i<18;i++){int id=pages.get(i);var d=live(BranchType.DOCUMENT,id);String hash=BranchStore.snapshot(BranchType.DOCUMENT,d).hash();d.put("perex_group",","+perex+",");d.put("title","autotest P06 WORK "+i);d.put("navbar","autotest P06 WORK "+i);d.put("virtual_path",url+"/moved/page-"+i+".html");store.put(context,BranchType.DOCUMENT,id,d,hash,false);}
         for(int i=18;i<20;i++){var d=doc(1,section,"autotest P06 WORK "+i,url+"/moved/page-"+i+".html");d.put("temp_id",template);d.put("perex_group",","+perex+",");d.put("sort_priority",i);pages.add(((Number)store.create(context,BranchType.DOCUMENT,d).get("doc_id")).intValue());}
         var m=live(BranchType.MEDIA,media);String mediaHash=BranchStore.snapshot(BranchType.MEDIA,m).hash();m.put("media_title_sk","autotest P06 WORK media");m.put("media_sort_order",0);store.put(context,BranchType.MEDIA,media,m,mediaHash,false);
-        var nm=new LinkedHashMap<>(BranchMediaMapper.initialValues(1,pages.get(19),1));nm.put("media_title_sk","autotest P06 new media");nm.put("media_link","/files/branch-p06-autotest/"+suffix+".txt");nm.put("last_update",Timestamp.from(Instant.parse("2020-01-01T12:00:00Z")));nm.put("group_ids_snapshot",List.of(category));int newMedia=((Number)store.create(context,BranchType.MEDIA,nm).get("media_id")).intValue();
+        var nm=new LinkedHashMap<>(BranchMediaMapper.initialValues(1,pages.get(19),BranchDomains.id(DOMAIN)));nm.put("media_title_sk","autotest P06 new media");nm.put("media_link","/files/branch-p06-autotest/"+suffix+".txt");nm.put("last_update",Timestamp.from(Instant.parse("2020-01-01T12:00:00Z")));nm.put("group_ids_snapshot",List.of(category));int newMedia=((Number)store.create(context,BranchType.MEDIA,nm).get("media_id")).intValue();
         String logical="/files/branch-p06-autotest/"+suffix+".txt";Path target=Path.of(Tools.getRealPath(logical));Files.createDirectories(target.getParent());Files.writeString(target,"autotest P06 BASE attachment");BranchSnapshot base=BranchFiles.liveSnapshot(logical);Path bytes=Files.createTempFile("p06-upload-",".txt");Files.writeString(bytes,"autotest P06 WORK attachment");var file=store.putFile(context,logical,"FILE",base,BranchFiles.hash(bytes),Files.size(bytes),"text/plain",false);Path stage=BranchFiles.workPath(branch,((Number)file.get("row_id")).longValue());Files.createDirectories(stage.getParent());Files.copy(bytes,stage,StandardCopyOption.REPLACE_EXISTING);Files.copy(target,stage.resolveSibling("base"),StandardCopyOption.REPLACE_EXISTING);Files.delete(bytes);
         return new Fixture(branch,root,section,newGroup,home,pages,media,newMedia,category,perex,logical,url);
     }

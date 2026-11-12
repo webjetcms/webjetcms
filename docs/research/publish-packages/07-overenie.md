@@ -6,6 +6,12 @@ Použiť reálnu podporovanú databázu, existujúce Java testovacie zázemie a 
 
 Podľa [priority POC](ORCHESTRACIA.md#záväzná-priorita-jednoduchý-a-čitateľný-poc) sa scenáre postupne vykonávajú na jednom pomenovanom DB profile, jednej inštancii a reprezentatívnej šablóne. Matica je plán overenia jednotlivých etáp, nie požiadavka vybudovať celý testovací systém už v P01. Chýbajúci ďalší DB profil neblokuje POC; nesmie sa však vykázať ako podporovaný. Nepotrebujeme záťažové testy stoviek redaktorov ani nový framework na simuláciu všetkých kombinácií porúch.
 
+## Povinné oddelenie domén podľa Q20
+
+Nové overenie musí používať `enableStaticFilesExternalDir=true` a skutočné `domainId` dvoch domén. Vypnuté oddelenie domén musí znemožniť aktiváciu pracovných verzií. Zoznam, filter, export, detail, vytvorenie, úprava, náhľad a cron nesmú načítať ani meniť balík inej domény; podstrčené `domainId` editor odmietne. Názov domény slúži na URL a zobrazenie, nie ako paralelný kľúč vlastníctva.
+
+Fyzické mapovanie a publikovanie v tomto režime overujú `BranchFilesTest.equalLogicalPathsStayInTheirOwnExternalDomainFolders` a `BranchMergeTest.cronPublishesOnlyItsExternalDomainFolder`. Zmazanie koreňa vo WORK nesmie meniť štandardnú mapu domainId. Výsledky spoločného regresného behu sú v [registri realizácie](STAV.md#zmena-požiadaviek-11-novembra-2026); staršie POC výsledky so spoločným filesystemom samy osebe túto podmienku nedokazujú.
+
 ## Akceptačné prípady
 
 | ID | Scenár | Požadovaný výsledok |

@@ -57,8 +57,8 @@ public final class BranchView {
     }
 
     private void load(Connection connection) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("SELECT state,publish_at,name FROM branches WHERE id=? AND domain_name=?")) {
-            statement.setLong(1, context.branchId()); statement.setString(2, context.domainName());
+        try (PreparedStatement statement = connection.prepareStatement("SELECT state,publish_at,name FROM branches WHERE id=? AND domain_id=?")) {
+            statement.setLong(1, context.branchId()); statement.setInt(2, context.domainId());
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next()) throw new IllegalStateException("Branch is absent in the verified domain");
                 Timestamp date = result.getTimestamp(2);

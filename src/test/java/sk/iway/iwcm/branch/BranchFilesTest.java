@@ -22,19 +22,24 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 class BranchFilesTest extends BaseWebjetTest {
     private static final String DOMAIN="p05-files.example";
     private final Map<String,String> configuration=new LinkedHashMap<>();
-    private BranchContext a,b;
-    private Path privateRoot,liveRoot,source;
+    private BranchContext a,b,foreign;
+    private Path privateRoot,liveRoot,source,externalRoot;
+    private RequestBean previousRequest;
     private String root,originalFingerprint;
 
     @BeforeEach void fixture()throws Exception {
         try(Connection connection=DBPool.getConnection()) {
             assertEquals("webjet_p01",connection.getCatalog());assertTrue(connection.getMetaData().getURL().contains(":33316/"));
         }
-        for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","fbrowserShowOnlyWritableFolders","defaultDisableUpload")) configuration.put(key,Constants.getString(key));
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","cloudStaticFilesDir","fbrowserShowOnlyWritableFolders","defaultDisableUpload")) configuration.put(key,Constants.getString(key));
         privateRoot=Files.createTempDirectory("webjet-p05-files-");
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fbrowserShowOnlyWritableFolders",false);Constants.setBoolean("defaultDisableUpload",false);
-        a=context(new BranchService().create(DOMAIN,"autotest P05 A","disposable files",1).getId());
-        b=context(new BranchService().create(DOMAIN,"autotest P05 B","disposable files",1).getId());
+        externalRoot=Files.createTempDirectory("webjet-p05-domain-files-");
+        previousRequest=SetCharacterEncodingFilter.getCurrentRequestBean();
+        RequestBean bean=new RequestBean();bean.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(bean);
+        Constants.setString("cloudStaticFilesDir", externalRoot.toString()+java.io.File.separator);
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fbrowserShowOnlyWritableFolders",false);Constants.setBoolean("defaultDisableUpload",false);
+        a=context(new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P05 A","disposable files",1).getId());
+        b=context(new BranchService().create(BranchTestDomains.ensure(DOMAIN),"autotest P05 B","disposable files",1).getId());
         root="/files/autotest-p05-"+UUID.randomUUID();liveRoot=Path.of(Tools.getRealPath(root));Files.createDirectories(liveRoot);
         Files.writeString(liveRoot.resolve("existing.txt"),"original LIVE bytes");
         source=privateRoot.resolve("upload.txt");Files.writeString(source,"new WORK bytes");
@@ -42,14 +47,35 @@ class BranchFilesTest extends BaseWebjetTest {
     }
     @AfterEach void cleanup()throws Exception {
         try(Connection connection=DBPool.getConnection();Statement statement=connection.createStatement()) {
-            for(BranchContext context:List.of(a,b)) if(context!=null) for(String table:List.of("branch_files","branch_media","branch_documents","branch_groups","branches"))
+            for(BranchContext context:java.util.stream.Stream.of(a,b,foreign).filter(Objects::nonNull).toList()) for(String table:List.of("branch_files","branch_media","branch_documents","branch_groups","branches"))
                 statement.executeUpdate("DELETE FROM "+table+" WHERE "+(table.equals("branches")?"id":"branch_id")+"="+context.branchId());
         } finally {
             configuration.forEach(Constants::setString);
-            for(Path directory:new Path[]{privateRoot,liveRoot}) if(directory!=null&&Files.exists(directory)) try(var files=Files.walk(directory)) {
+            SetCharacterEncodingFilter.setCurrentRequestBean(previousRequest);
+            for(Path directory:new Path[]{privateRoot,liveRoot,externalRoot}) if(directory!=null&&Files.exists(directory)) try(var files=Files.walk(directory)) {
                 for(Path path:files.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(path);
             }
         }
+    }
+
+    @Test void equalLogicalPathsStayInTheirOwnExternalDomainFolders() throws Exception {
+        String otherDomain="p05-files-other.example";
+        long id=new BranchService().create(BranchTestDomains.ensure(otherDomain), "autotest external domain", null, 1).getId();
+        foreign=new BranchContext(id,otherDomain,1,BranchContext.Mode.ADMIN);
+        in(foreign, request -> {
+            Path destination=Path.of(Tools.getRealPath(root+"/existing.txt"));
+            Files.createDirectories(destination.getParent());Files.writeString(destination,"foreign LIVE bytes");
+            assertNotEquals(liveRoot.resolve("existing.txt"),destination);
+            return null;
+        });
+        in(a, request -> {BranchFiles.put(root+"/existing.txt",source,request);return null;});
+        in(foreign, request -> {
+            assertEquals("foreign LIVE bytes",Files.readString(BranchFiles.read(root+"/existing.txt")));
+            assertTrue(workOptional(foreign,root+"/existing.txt").isEmpty());
+            return null;
+        });
+        in(a, request -> {assertEquals("new WORK bytes",Files.readString(BranchFiles.read(root+"/existing.txt")));return null;});
+        assertEquals("original LIVE bytes",Files.readString(liveRoot.resolve("existing.txt")));
     }
 
     @Test void overwriteAndDeleteKeepOtherVersionsAndOriginalBase()throws Exception {
@@ -203,7 +229,7 @@ class BranchFilesTest extends BaseWebjetTest {
     private <T>T in(BranchContext context,Call<T> callback)throws Exception {
         MockHttpServletRequest request=new MockHttpServletRequest(Constants.getServletContext());request.setAttribute("csrfDisabled",true);
         Identity user=new Identity();user.setAdmin(true);user.setValid(true);user.setUserId(1);user.setWritableFolders("*");request.getSession().setAttribute(Constants.USER_KEY,user);
-        RequestBean bean=new RequestBean();bean.setRequest(request);bean.setDomain(DOMAIN);
+        RequestBean bean=new RequestBean();bean.setRequest(request);bean.setDomain(context.domainName());
         try(var lifecycle=mockStatic(SetCharacterEncodingFilter.class)) {
             lifecycle.when(SetCharacterEncodingFilter::getCurrentRequestBean).thenReturn(bean);
             lifecycle.when(SetCharacterEncodingFilter::getEncoding).thenReturn("UTF-8");

@@ -141,12 +141,12 @@ block content
 
                 elFinderInstance = $('#finder').elfinder({
                     url: '/admin/elfinder-connector/',
-                customHeaders: {'X-CSRF-Token': window.csrfToken, ...(window.branchScreen?.enabled ? {'X-WebJET-Branch': String(window.branchScreen.branchId), 'X-WebJET-Branch-Domain': window.branchScreen.domainName} : {})},
+                customHeaders: {'X-CSRF-Token': window.csrfToken, ...(window.branchScreen?.enabled ? {'X-WebJET-Branch': String(window.branchScreen.branchId), 'X-WebJET-Branch-Domain': String(window.branchScreen.domainId)} : {})},
                     enableByMouseOver: false,
                     width: '100%',
                     rememberLastDir: [(${rememberLastDir})],
                     uploadOverwrite: true,
-                    customData: {...customData, ...(window.branchScreen?.enabled ? {branchId: window.branchScreen.branchId, branchDomain: window.branchScreen.domainName} : {})},
+                    customData: {...customData, ...(window.branchScreen?.enabled ? {branchId: window.branchScreen.branchId, branchDomain: window.branchScreen.domainId} : {})},
                     requestType: 'post',
                     handlers: {
                         select: function(event, elfinderInstance) {

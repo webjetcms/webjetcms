@@ -49,13 +49,13 @@ public class LayoutBean {
     public java.util.Map<String,Object> getBranchScreen() {
         var context = BranchContexts.current();
         var selection = BranchProductionSection.currentSelection();
-        boolean enabled=Constants.getBoolean("branchesEnabled");
+        boolean enabled=Constants.getBoolean("branchesEnabled")&&Constants.getBoolean("enableStaticFilesExternalDir");
         boolean allowed=enabled&&user!=null&&user.isAdmin()&&user.isEnabledItem("menuBranches");
         long selectedId = selection == null ? context.branchId() : selection.branchId();
         String domain = selection != null ? selection.domainName() : context.isBranch() ? context.domainName() : header.getCurrentDomain();
         var branch = allowed && selectedId > 0 ? BranchSelection.screenBranch(selectedId, domain) : null;
         return java.util.Map.of("enabled", enabled, "allowed", allowed, "branchId", context.branchId(),
-            "selectedBranchId", selectedId, "domainName", domain, "name", branch == null ? "" : branch.getName(),
+            "selectedBranchId", selectedId, "domainId", enabled ? sk.iway.iwcm.branch.BranchDomains.id(domain) : 0, "domainName", domain, "name", branch == null ? "" : branch.getName(),
             "state", branch == null ? "" : branch.getState(), "color", branch == null ? "default" : branch.getColor());
     }
 

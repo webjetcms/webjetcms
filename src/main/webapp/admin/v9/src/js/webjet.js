@@ -785,7 +785,7 @@ const WJ = (() => {
         let url = '/admin/v9/files/dialog/';
         if (window.branchScreen?.enabled) {
             url = urlAddParam(url, 'branchId', window.branchScreen.branchId);
-            url = urlAddParam(url, 'branchDomain', window.branchScreen.domainName);
+            url = urlAddParam(url, 'branchDomain', window.branchScreen.domainId);
         }
         //if (options.link !== undefined && options.link !== null && options.link !== '')
         if (!!options.link) {

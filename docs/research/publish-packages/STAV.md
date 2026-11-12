@@ -1,5 +1,14 @@
 # Stav návrhu a realizácie
 
+## Zmena požiadaviek 11. novembra 2026
+
+Potvrdené Q20 vyžaduje `enableStaticFilesExternalDir=true` a štandardné oddelenie balíkov cez `domainId`/`DomainIdRepository`. Samostatné vlastníctvo cez `branches.domain_name` a podpora vypnutého oddelenia domén sa z návrhu vypúšťajú. Schéma sa upravuje v pôvodnej vytváracej migrácii; nepodporuje sa prechod starých branch dát z nasadených verzií, pretože PR ešte nie je distribuované.
+
+Celá implementácia používa `branches.domain_id`: správa DataTables, create/list API, session výber, náhľad, zámky WORK, porovnávanie, publikovanie aj cron. Hlavička a vnorené editory posielajú číselné ID domény. Routovacia doména sa odvodzuje zo štandardnej LIVE mapy `GroupsDB`, ktorá zostáva stabilná aj pri zmazaní koreňa vo WORK. Pôvodný zákaz externých priečinkov v preflighte a upozornenie na spoločný filesystem sú odstránené. Lokálna POC DB `127.0.0.1:33316/webjet_p01` aj čistá testovacia schéma boli opravené priamo; 25 starých WORK mediálnych riadkov dostalo domainId ich balíka; nový dátový migračný krok nevznikol.
+
+Overenie 11. novembra: Gradle **158 testov / 142 PASS / 0 chýb / 16 zámerných skipov** s `WEBJET_P02_DB` až `WEBJET_P07_DB=true`. Zahrnuté sú skutočné JPA/DataTable filtre a detail cudzieho ID, editory, JSP/Menu/News gateway, uploady, BASE/LIVE/WORK, obnovenie publikovania a cron. Doplnené testy overujú rovnakú logickú cestu v dvoch fyzicky oddelených doménových priečinkoch a skutočný cron → asynchrónny publisher bez HTTP session: zapíše sa iba priečinok domény balíka. Frontend build prešiel. CodeceptJS scenár `branch-management.js` **1/1 PASS**: vytvorenie, validácia, premenovanie, farba, poznámka, porovnanie, otvorenie webu, zákaz editácie publikovanej verzie a odobratie práva k stránke aj REST. Predchádzajúce výsledky P01–P08 zostávajú historickým záznamom svojho profilu; tieto nové výsledky ich nenahrádzajú pre ďalšie DB/topológie.
+
+
 ## Návrh
 
 - Dátum vzniku: 1. november 2026. Posledné doplnenie: 10. november 2026.

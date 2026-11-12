@@ -83,7 +83,7 @@ Pred spustením treba overiť:
 3. Kolízie výsledných URL v rovnakej doméne, cieľových súborových ciest a identít. Kontrola pracuje s výsledkom celého plánu, nie iba s dnešnou produkčnou URL mapou.
 4. Zdrojové pracovné súbory, ich hashe, zapisovateľné cieľové umiestnenie a podporované úložisko. Neporovnávať iba mtime/veľkosť.
 5. Individuálne budúce plány stránok/priečinkov, čakajúce schválenia a naplánované zneprístupnenie dotknutých stránok. Pri súboroch navyše porovnať cieľové cesty so súbormi **všetkých** pending plánov stránok, aj stránok mimo balíka. Rozhodujúce je skutočné cieľové úložisko: rovnaká logická cesta v oddelených doménových úložiskách nie je kolízia, spoločný fyzický cieľ naprieč doménami je. Kolízia sa musí vyriešiť vedome v pôvodnom nástroji; balík ju potichu nezruší ani neprevezme.
-6. Rozsah podporovaných dát a známych vedľajších účinkov. Zdieľané System stránky mimo domény sú iba na čítanie. Súbory používajú dnešné doménové mapovanie a adresárové práva; pri spoločnom fyzickom adresári UI upozorní, že účinok môže presiahnuť doménu. Nepridáva sa nový register vlastníctva ani skenovanie všetkých referencií.
+6. Rozsah podporovaných dát a známych vedľajších účinkov. Zdieľané System stránky mimo domény sú iba na čítanie. Súbory používajú dnešné mapovanie externých priečinkov domén a adresárové práva podľa Q20. Nepridáva sa nový register vlastníctva ani skenovanie všetkých referencií.
 
 Presun/premenovanie priečinka rozvinie ovplyvnené stránky, odkazy a médiá na viditeľné položky už pri príprave pracovných zmien. Pred merge sa rozsah znovu porovná s produkciou. Nový potomok alebo nová závislosť, ktorá by vyžadovala ďalší zápis, znamená nové posúdenie; nezahrnie sa potichu až počas publikovania.
 

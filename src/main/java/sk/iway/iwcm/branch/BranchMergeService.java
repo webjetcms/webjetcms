@@ -81,7 +81,11 @@ public final class BranchMergeService {
                         || !Objects.equals(branch.get("scheduled_by"),user.getUserId()))) throw conflict("Termín alebo publikujúci sa zmenil.");
                 if("MERGING".equals(state) && BranchPublishService.isRunning(id)) throw conflict("Publikovanie už prebieha.");
                 Plan plan=plan(c,id,domain,user,revision);
-                if(!plan.errors.isEmpty()||plan.entries.stream().anyMatch(Entry::conflict)) throw conflict(String.join("; ",plan.errors)+" Obnovte porovnanie a vyriešte konflikty.");
+                if(!plan.errors.isEmpty()||plan.entries.stream().anyMatch(Entry::conflict)) {
+                    List<String> reasons=new ArrayList<>(plan.errors);
+                    plan.entries.stream().filter(Entry::conflict).forEach(e->reasons.add(e.type+":"+e.row.get(e.type.idColumn())+(e.error==null?"":": "+e.error)));
+                    throw conflict(String.join("; ",reasons)+" Obnovte porovnanie a vyriešte konflikty.");
+                }
                 if(!Objects.equals(hash,plan.hash)) throw conflict("Podklad porovnania sa zmenil. Znova overte balík.");
                 for(Entry e:plan.entries) {
                     if(resume) continue;
@@ -221,7 +225,7 @@ public final class BranchMergeService {
 
     private Report report(Plan p) {
         List<Item> items=p.entries.stream().map(e->new Item(e.type.name(),e.change.objectKey(),label(e),e.change.operation().name(),Version.of(e.change.base()),Version.of(e.live),Version.of(e.change.work()),e.live.hash(),e.change.work().hash(),Objects.toString(e.row.get("resolved_choice"),null),e.conflict,e.write,Objects.toString(e.row.get("apply_state"),"PENDING"),Objects.toString(e.row.get("apply_phase"),null),e.error!=null?e.error:Objects.toString(e.row.get("apply_error"),null),"DRAFT".equals(p.branch.get("state")),"DRAFT".equals(p.branch.get("state")) || "MERGE_FAILED".equals(p.branch.get("state")) && e.row.get("applied_hash")==null && Set.of("PENDING","ERROR").contains(e.row.get("apply_state")))).toList();
-        return new Report(((Number)p.branch.get("id")).longValue(),Objects.toString(p.branch.get("name")),Objects.toString(p.branch.get("domain_name")),Objects.toString(p.branch.get("state")),((Number)p.branch.get("revision")).longValue(),p.hash,p.errors.isEmpty()&&items.stream().noneMatch(Item::conflict),p.errors,items,Objects.toString(p.branch.get("last_error"),null),BranchMergeLabels.translate(Prop.getInstance()),p.branch.get("publish_at") instanceof java.util.Date at?at.getTime():null,(Integer)p.branch.get("scheduled_by"),java.time.ZoneId.systemDefault().getId());
+        return new Report(((Number)p.branch.get("id")).longValue(),Objects.toString(p.branch.get("name")),BranchDomains.name(((Number)p.branch.get("domain_id")).intValue()),Objects.toString(p.branch.get("state")),((Number)p.branch.get("revision")).longValue(),p.hash,p.errors.isEmpty()&&items.stream().noneMatch(Item::conflict),p.errors,items,Objects.toString(p.branch.get("last_error"),null),BranchMergeLabels.translate(Prop.getInstance()),p.branch.get("publish_at") instanceof java.util.Date at?at.getTime():null,(Integer)p.branch.get("scheduled_by"),java.time.ZoneId.systemDefault().getId());
     }
 
     private static BranchSnapshot derivedFields(Map<String,Object> row,Set<String> projected) {
@@ -236,7 +240,6 @@ public final class BranchMergeService {
     }
 
     private void validate(Connection c,List<Entry> entries,String domain,Identity user,boolean frozen)throws SQLException {
-        if(Constants.getBoolean("enableStaticFilesExternalDir"))throw new IllegalStateException("Tento POC vyžaduje lokálny spoločný filesystem bez externého doménového úložiska.");
         Map<Integer,Map<String,Object>> liveGroups=table(c,"groups","group_id"),groups=new LinkedHashMap<>(liveGroups);
         Map<Integer,Map<String,Object>> liveDocs=table(c,"documents","doc_id"),docs=new LinkedHashMap<>(liveDocs);
         Map<Integer,Map<String,Object>> media=table(c,"media","media_id");
@@ -382,7 +385,7 @@ public final class BranchMergeService {
         try(Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT DISTINCT doc_id,group_id FROM documents_history WHERE publicable=true OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')")) {
             while(r.next()) {
                 int id=r.getInt(1);String plannedDomain=GroupsDB.getInstance().getDomain(r.getInt(2));
-                if(Constants.getBoolean("enableStaticFilesExternalDir")&&!domain.equalsIgnoreCase(plannedDomain))continue;
+                if(!domain.equalsIgnoreCase(plannedDomain))continue;
                 for(String folder:List.of("images","files")) {
                     String prefix=PlannedAssetPaths.ROOT+id+"/"+folder+"/";Path root=Path.of(Tools.getRealPath(prefix));if(!Files.exists(root))continue;
                     try(var stream=Files.walk(root)) {
@@ -463,7 +466,7 @@ public final class BranchMergeService {
     }
 
     private static Map<String,Object> branch(Connection c,long id,String domain,long revision,boolean lock)throws SQLException {
-        try(PreparedStatement s=c.prepareStatement("SELECT * FROM branches WHERE id=? AND domain_name=?"+(lock?" FOR UPDATE":""))){s.setLong(1,id);s.setString(2,domain);try(ResultSet r=s.executeQuery()){if(!r.next())throw new ResponseStatusException(HttpStatus.NOT_FOUND);Map<String,Object> row=new LinkedHashMap<>();for(int i=1;i<=r.getMetaData().getColumnCount();i++)row.put(r.getMetaData().getColumnName(i),r.getObject(i));if(revision>=0&&((Number)row.get("revision")).longValue()!=revision)throw conflict("Balík sa zmenil. Obnovte porovnanie.");return row;}}
+        try(PreparedStatement s=c.prepareStatement("SELECT * FROM branches WHERE id=? AND domain_id=?"+(lock?" FOR UPDATE":""))){s.setLong(1,id);s.setInt(2,BranchDomains.id(domain));try(ResultSet r=s.executeQuery()){if(!r.next())throw new ResponseStatusException(HttpStatus.NOT_FOUND);Map<String,Object> row=new LinkedHashMap<>();for(int i=1;i<=r.getMetaData().getColumnCount();i++)row.put(r.getMetaData().getColumnName(i),r.getObject(i));if(revision>=0&&((Number)row.get("revision")).longValue()!=revision)throw conflict("Balík sa zmenil. Obnovte porovnanie.");return row;}}
     }
     private static void bump(Connection c,long id,int user)throws SQLException {try(PreparedStatement s=c.prepareStatement("UPDATE branches SET revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE id=?")){s.setInt(1,user);s.setLong(2,id);s.executeUpdate();}}
     private static ResponseStatusException conflict(String message){return new ResponseStatusException(HttpStatus.CONFLICT,message);}

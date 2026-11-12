@@ -46,7 +46,7 @@ public class BranchRestController {
         Identity user = access.requireUser(request);
         access.requireCsrf(request);
         String domain = access.requireDomain(request, user);
-        access.requireExpectedDomain(domain, input.expectedDomainName());
+        access.requireExpectedDomain(BranchDomains.id(domain), input.expectedDomainId());
         if (input.name() == null || input.name().isBlank() || input.name().strip().length() > 255)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Branch name must contain 1 to 255 characters");
         try (BranchContexts.Scope ignored = BranchContexts.live(request, domain, user.getUserId())) {
@@ -62,9 +62,9 @@ public class BranchRestController {
         }
     }
 
-    public record Create(String name, String description, String expectedDomainName, String color) {
-        public Create(String name, String description, String expectedDomainName) {
-            this(name, description, expectedDomainName, null);
+    public record Create(String name, String description, Integer expectedDomainId, String color) {
+        public Create(String name, String description, Integer expectedDomainId) {
+            this(name, description, expectedDomainId, null);
         }
     }
 
@@ -80,12 +80,12 @@ public class BranchRestController {
     public ContextInfo select(@RequestBody Selection input,HttpServletRequest request) {
         Identity user=access.requireUser(request);access.requireCsrf(request);
         String domain=access.requireDomain(request,user);
-        access.requireExpectedDomain(domain,input.expectedDomainName());
+        access.requireExpectedDomain(BranchDomains.id(domain),input.expectedDomainId());
         if(input.branchId()<0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         if(input.branchId()>0) BranchSelection.requireBranch(input.branchId(),domain);
         synchronized (request.getSession()) {
             request.getSession().removeAttribute(BranchProductionSection.ATTRIBUTE);
-            request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(input.branchId(),domain));
+            request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(input.branchId(),BranchDomains.id(domain)));
         }
         return contextInfo(BranchSelection.selected(request,user,domain),request);
     }
@@ -103,16 +103,16 @@ public class BranchRestController {
     }
 
     private ContextInfo contextInfo(BranchContext context,HttpServletRequest request) {
-        if (!context.isBranch()) return new ContextInfo(0,context.domainName(),Prop.getInstance(request).getText("branches.main.js"),false,"default");
+        if (!context.isBranch()) return new ContextInfo(0,context.domainId(),context.domainName(),Prop.getInstance(request).getText("branches.main.js"),false,"default");
         BranchEntity branch=BranchSelection.requireBranch(context.branchId(),context.domainName());
-        return new ContextInfo(context.branchId(),context.domainName(),branch.getName(),"DRAFT".equals(branch.getState()),branch.getColor());
+        return new ContextInfo(context.branchId(),context.domainId(),context.domainName(),branch.getName(),"DRAFT".equals(branch.getState()),branch.getColor());
     }
-    public record Selection(long branchId,String expectedDomainName) { }
-    public record ContextInfo(long branchId,String domainName,String name,boolean editable,String color) { }
+    public record Selection(long branchId,Integer expectedDomainId) { }
+    public record ContextInfo(long branchId,int domainId,String domainName,String name,boolean editable,String color) { }
 
-    public record Summary(long id, String name, String domainName, String state, String color) {
+    public record Summary(long id, String name, int domainId, String domainName, String state, String color) {
         static Summary from(BranchEntity branch) {
-            return new Summary(branch.getId(), branch.getName(), branch.getDomainName(), branch.getState(), branch.getColor());
+            return new Summary(branch.getId(), branch.getName(), branch.getDomainId(), branch.getDomainName(), branch.getState(), branch.getColor());
         }
     }
 }

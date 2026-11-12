@@ -66,18 +66,19 @@ class BranchNewsRenderTest extends BaseWebjetTest {
 
     @BeforeEach void fixture() throws Exception {
         try(Connection c=DBPool.getConnection()) { assertEquals("webjet_p01",c.getCatalog()); assertTrue(c.getMetaData().getURL().contains(":33316/")); }
-        for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","docAuthorLazyLoad","perexGroupUseJoin")) originalConfig.put(key,Constants.getString(key));
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","docAuthorLazyLoad","perexGroupUseJoin")) originalConfig.put(key,Constants.getString(key));
         Constants.setBoolean("branchesEnabled",true);
-        Constants.setBoolean("branchSingleWriterConfirmed",true);
+        Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
         Constants.setBoolean("docAuthorLazyLoad",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private"));
         Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
-        branch=newBranch("N01 fixture");
         group(ROOT,0,"Root"); group(CHILD,ROOT,"Child"); group(OUTSIDE,0,"Outside");
         document(A,ROOT,"Alpha",10,"intro Alpha"); document(B,OUTSIDE,"Beta LIVE",20,"intro Beta");
         document(DELETED,ROOT,"Removed",30,"intro removed"); document(MOVED,ROOT,"Moved",40,"intro moved");
         document(OWNER,OUTSIDE,"News owner",50,"owner");
         update("UPDATE groups SET default_doc_id=? WHERE group_id=?",A,ROOT);
+        branch=newBranch("N01 fixture");
+        RequestBean fixtureRequest=new RequestBean();fixtureRequest.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(fixtureRequest);
         change(B,Map.of("group_id",ROOT,"title","Beta WORK","perex_group",",1,2,1930081,1930082,"),false);
         change(DELETED,Map.of(),true); change(MOVED,Map.of("group_id",OUTSIDE),false);
         Map<String,Object> values=docValues(1,ROOT,"Fresh WORK",20,"intro fresh");
@@ -87,7 +88,7 @@ class BranchNewsRenderTest extends BaseWebjetTest {
         template.setTemplateCode("<ol class='news'>#foreach($item in $news)<li data-id='$item.docId'><a href='$actionBean.link($item)'>$item.title</a><span>$item.htmlData</span><img src='$item.perexImage'/></li>#end</ol>");
         template.setPagingCode("<nav>#foreach($item in $pagesAll)<a href='$item.url'>$item.label</a>#end</nav>");
         template.setPagingPosition(2);
-        Cache.getInstance().setObjectSeconds("newsTemplatesService.templates",new java.util.HashMap<>(Map.of("1.p03-proof",template,"0.p03-proof",template)),600);
+        Cache.getInstance().setObjectSeconds("newsTemplatesService.templates",new java.util.HashMap<>(Map.of(BranchDomains.id(DOMAIN)+".p03-proof",template,"0.p03-proof",template)),600);
         update("INSERT INTO perex_groups(perex_group_id,perex_group_name,domain_id) VALUES(1930081,'#p03tag',?),(1930082,'@p03author',?)",CloudToolsForCore.getDomainId(),CloudToolsForCore.getDomainId());
         primePerexDefinitionCache();
         open(branch);
@@ -263,7 +264,7 @@ class BranchNewsRenderTest extends BaseWebjetTest {
         RequestBean bean=new RequestBean();bean.setRequest(request);bean.setDomain(DOMAIN);bean.setLng("sk");SetCharacterEncodingFilter.setCurrentRequestBean(bean);scope=BranchContexts.open(request,value);
     }
     private BranchContext adminBranch(){return new BranchContext(branch.branchId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
-    private BranchContext newBranch(String name) {long id=new BranchService().create(DOMAIN,"P03 News "+name,"N01-N08 render fixture",1).getId();branchIds.add(id);return new BranchContext(id,DOMAIN,1,BranchContext.Mode.PREVIEW);}
+    private BranchContext newBranch(String name) {long id=new BranchService().create(BranchTestDomains.ensure(DOMAIN),"P03 News "+name,"N01-N08 render fixture",1).getId();branchIds.add(id);return new BranchContext(id,DOMAIN,1,BranchContext.Mode.PREVIEW);}
     private void group(int id,int parent,String name) throws Exception {
         Map<String,Object> values=new LinkedHashMap<>(BranchGroupMapper.initialValues(id,DOMAIN));values.put("group_name",name);values.put("parent_group_id",parent);values.put("url_dir_name",name.toLowerCase());
         try(Connection c=DBPool.getConnection()){BranchStore.insert(c,"groups",values);}liveGroups.add(id);

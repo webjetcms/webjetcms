@@ -24,6 +24,8 @@ class BranchAccessTest {
         try (var constants = mockStatic(Constants.class); var users = mockStatic(UsersDB.class)) {
             assertStatus(HttpStatus.NOT_FOUND, () -> access.requireUser(request));
             constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(true);
+            assertStatus(HttpStatus.CONFLICT, () -> access.requireUser(request));
+            constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
             assertStatus(HttpStatus.FORBIDDEN, () -> access.requireUser(request));
             Identity user = mock(Identity.class);
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
@@ -45,8 +47,8 @@ class BranchAccessTest {
             db.when(GroupsDB::getInstance).thenReturn(groups);
             when(groups.getUserRootDomainNames(user)).thenReturn(List.of("a.example.sk"));
             assertEquals("a.example.sk", access.requireDomain(request, user));
-            assertStatus(HttpStatus.CONFLICT, () -> access.requireExpectedDomain("a.example.sk", "b.example.sk"));
-            assertStatus(HttpStatus.CONFLICT, () -> access.requireExpectedDomain("a.example.sk", null));
+            assertStatus(HttpStatus.CONFLICT, () -> access.requireExpectedDomain(1, 2));
+            assertStatus(HttpStatus.CONFLICT, () -> access.requireExpectedDomain(1, null));
             request.getSession().setAttribute("preview.editorDomainName", "b.example.sk");
             assertStatus(HttpStatus.FORBIDDEN, () -> access.requireDomain(request, user));
         }

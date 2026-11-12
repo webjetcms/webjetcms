@@ -120,7 +120,7 @@ export async function openBranchMerge(id, api, screen, invoker) {
     async function edit(item) {
         if (!report || report.state !== 'DRAFT') return;
         try {
-            await api('/context', {branchId: id, expectedDomainName: screen.domainName});
+            await api('/context', {branchId: id, expectedDomainId: screen.domainId});
             const fields = item.work?.fields || {};
             const query = item.type === 'DOCUMENT' ? `docid=${encodeURIComponent(item.objectKey)}`
                 : item.type === 'MEDIA' ? `docid=${encodeURIComponent(fields.media_fk_id)}`
@@ -365,7 +365,6 @@ export async function openBranchMerge(id, api, screen, invoker) {
         else if (item.applyState === 'ERROR' && writtenPhases.has(item.applyPhase)) section.append(element('p', 'alert alert-warning', tr('contentWrittenNote')));
         if (item.applyPhase === 'FILE_STARTED') section.append(element('p', 'alert alert-warning', tr('fileStateNote')));
         if (item.type === 'DOCUMENT' && item.choice === 'LIVE' && item.writeRequired) section.append(element('p', 'alert alert-info', tr('liveMoveNote')));
-        if (item.type === 'FILE') section.append(element('p', 'alert alert-warning', WJ.translate('branches.files.shared.js')));
         if (item.base?.fields?.virtual_path !== item.work?.fields?.virtual_path && item.type === 'DOCUMENT') section.append(element('p', 'alert alert-warning', tr('redirectNote')));
         const allFields = [...new Set(['title', 'group_name', 'data', ...['base', 'live', 'work'].flatMap(name => Object.keys(item[name]?.fields || {}))])]
             .filter(key => ['base', 'live', 'work'].some(name => Object.hasOwn(item[name]?.fields || {}, key)));

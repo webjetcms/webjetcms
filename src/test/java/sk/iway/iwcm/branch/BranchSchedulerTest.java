@@ -12,6 +12,7 @@ class BranchSchedulerTest {
     @Test void publicNodeNeverOpensDatabase() {
         try(var constants=mockStatic(Constants.class);var cluster=mockStatic(ClusterDB.class);var database=mockStatic(DBPool.class)) {
             constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(true);
+            constants.when(()->Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
             cluster.when(ClusterDB::isPublicNode).thenReturn(true);
             BranchScheduler.main(new String[0]);database.verifyNoInteractions();
         }
@@ -23,9 +24,17 @@ class BranchSchedulerTest {
         }
     }
 
+    @Test void sharedDomainModeNeverOpensDatabase() {
+        try(var constants=mockStatic(Constants.class);var database=mockStatic(DBPool.class)) {
+            constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(true);
+            BranchScheduler.main(new String[0]);database.verifyNoInteractions();
+        }
+    }
+
     @Test void interruptedDelayPreservesInterruptAndNeverOpensDatabase() {
         try(var constants=mockStatic(Constants.class);var cluster=mockStatic(ClusterDB.class);var database=mockStatic(DBPool.class)) {
             constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(true);
+            constants.when(()->Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
             Thread.currentThread().interrupt();
             try {
                 BranchScheduler.main(new String[0]);assertTrue(Thread.currentThread().isInterrupted());database.verifyNoInteractions();

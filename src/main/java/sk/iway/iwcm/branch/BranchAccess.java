@@ -20,6 +20,8 @@ public class BranchAccess {
     public Identity requireUser(HttpServletRequest request) {
         if (!Constants.getBoolean("branchesEnabled"))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Branches are disabled");
+        if (!Constants.getBoolean("enableStaticFilesExternalDir"))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Working versions require enableStaticFilesExternalDir=true");
         Identity user = UsersDB.getCurrentUser(request);
         if (user == null || !user.isAdmin() || !user.isEnabledItem(PERMISSION))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -43,8 +45,8 @@ public class BranchAccess {
         return domain;
     }
 
-    public void requireExpectedDomain(String actual, String expected) {
-        if (!actual.equals(expected))
+    public void requireExpectedDomain(int actual, Integer expected) {
+        if (expected == null || actual != expected)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Administration domain changed; reload the screen");
     }
 

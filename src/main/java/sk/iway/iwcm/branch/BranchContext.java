@@ -19,6 +19,11 @@ public record BranchContext(long branchId, String domainName, int userId, Mode m
         return new BranchContext(0, domainName, userId, Mode.LIVE);
     }
 
+    /** Returns the standard scope used by every branch storage operation. */
+    public int domainId() {
+        return BranchDomains.id(domainName);
+    }
+
     public boolean isBranch() {
         return branchId > 0;
     }

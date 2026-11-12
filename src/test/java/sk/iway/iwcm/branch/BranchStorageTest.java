@@ -1,6 +1,7 @@
 package sk.iway.iwcm.branch;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.beans.XMLDecoder;
 import java.nio.file.Files;
@@ -21,9 +22,14 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.system.UpdateDBBean;
 import sk.iway.iwcm.system.UpdateDatabase;
@@ -39,8 +45,12 @@ class BranchStorageTest extends BaseWebjetTest {
 
     @BeforeEach void configure() throws Exception {
         try(Connection connection=DBPool.getConnection()) { assertEquals("webjet_p01",connection.getCatalog()); assertTrue(connection.getMetaData().getURL().startsWith(URL)); }
+        Constants.setBoolean("enableStaticFilesExternalDir",true);
+        BranchTestDomains.ensure("p02.example"); BranchTestDomains.ensure("p02.other"); BranchTestDomains.ensure("other.example");
+        var requestBean = new sk.iway.iwcm.RequestBean(); requestBean.setDomain("p02.example");
+        sk.iway.iwcm.SetCharacterEncodingFilter.setCurrentRequestBean(requestBean);
         Constants.setBoolean("branchesEnabled",true);
-        Constants.setBoolean("branchSingleWriterConfirmed",true);
+        Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private"));
         Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
     }
@@ -52,7 +62,7 @@ class BranchStorageTest extends BaseWebjetTest {
                     try(PreparedStatement statement=connection.prepareStatement("DELETE FROM "+table+" WHERE "+(table.equals("branches")?"id":"branch_id")+"=?")) {statement.setLong(1,branch);statement.executeUpdate();}
                 }
             }
-        } finally { Constants.setBoolean("branchesEnabled",false); Constants.setBoolean("branchSingleWriterConfirmed",false); }
+        } finally { Constants.setBoolean("branchesEnabled",false); Constants.setBoolean("branchSingleWriterConfirmed",false); sk.iway.iwcm.SetCharacterEncodingFilter.setCurrentRequestBean(null); }
     }
 
     /** Runs the real XML update path on existing data and its SQL on an empty current-profile schema. */
@@ -87,6 +97,70 @@ class BranchStorageTest extends BaseWebjetTest {
         var colored = service.create("p02.example", "P02 selected color", null, "lavender", 1);
         branches.add(colored.getId());
         assertEquals("lavender", service.find(colored.getId(), "p02.example").orElseThrow().getColor());
+    }
+
+    /** Metadata edits preserve publication state and revision, and cannot cross the domain boundary. */
+    @Test @Order(2) void updatesOnlyWorkingVersionMetadata() {
+        var service = new BranchService();
+        var original = service.create("p02.example", "autotest metadata", "Original", "cyan", 1);
+        branches.add(original.getId());
+        service.updateMetadata(original.getId(), BranchDomains.id("p02.example"), "  autotest renamed  ", "Updated", "lavender", 1);
+        var saved = service.find(original.getId(), "p02.example").orElseThrow();
+        assertEquals("autotest renamed", saved.getName());
+        assertEquals("Updated", saved.getDescription());
+        assertEquals("lavender", saved.getColor());
+        assertEquals(original.getState(), saved.getState());
+        assertEquals(original.getRevision(), saved.getRevision());
+        assertEquals(BranchDomains.id("p02.example"), saved.getDomainId());
+        assertThrows(IllegalArgumentException.class, () -> service.updateMetadata(original.getId(), BranchDomains.id("other.example"), "No", null, "cyan", 1));
+        assertThrows(IllegalArgumentException.class, () -> service.updateMetadata(original.getId(), BranchDomains.id("p02.example"), "No", null, "#fff", 1));
+        assertEquals("autotest renamed", service.find(original.getId(), "p02.example").orElseThrow().getName());
+    }
+
+    /** Repository and DataTable reads enforce the numeric domain scope. */
+    @Test @Order(3) void domainRepositoryScopesDatatableReads() throws Exception {
+        var service = new BranchService();
+        var own = service.create("p02.example", "autotest domain scope", null, 1);
+        var otherId = service.create("p02.example", "autotest foreign domain ID", null, 1);
+        var otherName = service.create("p02.other", "autotest foreign domain name", null, 1);
+        branches.addAll(List.of(own.getId(), otherId.getId(), otherName.getId()));
+        int domainId = own.getDomainId();
+        var factoryBean = new V9JpaDBConfig().entityManagerFactory();
+        factoryBean.setPersistenceUnitPostProcessors(unit -> unit.getManagedClassNames().removeIf(name ->
+            Files.exists(Path.of("build/classes/java/test", name.replace('.', '/') + ".class"))));
+        factoryBean.afterPropertiesSet();
+        var factory = factoryBean.getObject();
+        assertNotNull(factory);
+        try (EntityManager manager = factory.createEntityManager()) {
+            BranchRepository repository = new JpaRepositoryFactory(manager).getRepository(BranchRepository.class);
+            manager.getTransaction().begin();
+            BranchEntity foreign = repository.findById(otherId.getId()).orElseThrow();
+            foreign.setDomainId(otherName.getDomainId());
+            repository.save(foreign);
+            manager.flush();
+            manager.getTransaction().commit();
+            manager.clear();
+            assertTrue(repository.findFirstByIdAndDomainId(otherId.getId(), domainId).isEmpty());
+            assertEquals(List.of(own.getId()), repository.findAllByIdInAndDomainId(List.of(own.getId(), otherId.getId()), domainId)
+                .stream().map(BranchEntity::getId).toList());
+
+            var request = new MockHttpServletRequest();
+            var access = mock(BranchAccess.class);
+            var user = mock(Identity.class);
+            when(access.requireUser(request)).thenReturn(user);
+            when(access.requireDomain(request, user)).thenReturn("p02.example");
+            var controller = new BranchDatatableRestController(repository, service, access);
+            controller.setRequest(request);
+            ReflectionTestUtils.setField(controller, "checkDomainId", true);
+            request.addParameter("searchId", own.getId().toString());
+            var pageable = PageRequest.of(0, 10);
+            assertEquals(List.of(own.getId()), controller.getAllItems(pageable).getContent().stream().map(BranchEntity::getId).toList());
+            request.setParameter("searchId", otherId.getId().toString());
+            assertTrue(controller.searchItem(Map.of("searchId", otherId.getId().toString()), pageable, new BranchEntity()).isEmpty());
+            assertTrue(controller.searchItem(Map.of("searchDomainId", Integer.toString(otherName.getDomainId())), pageable, new BranchEntity()).isEmpty());
+            assertThrows(ResponseStatusException.class, () -> controller.getOneItem(otherId.getId()));
+            assertThrows(ResponseStatusException.class, () -> controller.getOneItem(otherName.getId()));
+        } finally { factory.close(); }
     }
 
     /** Stores changes in two branches while LIVE content, history and derived indexes remain untouched. */
@@ -159,8 +233,8 @@ class BranchStorageTest extends BaseWebjetTest {
         try(EntityManager manager=factory.createEntityManager()) {
             JpaRepositoryFactory repositories=new JpaRepositoryFactory(manager);
             BranchRepository packages=repositories.getRepository(BranchRepository.class);
-            assertEquals(context.branchId(),packages.findByIdAndDomainName(context.branchId(),"p02.example").orElseThrow().getId());
-            assertTrue(packages.findByIdAndDomainName(context.branchId(),"other.example").isEmpty());
+            assertEquals(context.branchId(),packages.findFirstByIdAndDomainId(context.branchId(),BranchDomains.id("p02.example")).orElseThrow().getId());
+            assertTrue(packages.findFirstByIdAndDomainId(context.branchId(),BranchDomains.id("other.example")).isEmpty());
             BranchDocumentEntity reloaded=repositories.getRepository(BranchDocumentRepository.class).findByBranchIdAndDocId(context.branchId(),((Number)doc.get("doc_id")).intValue()).orElseThrow();
             assertEquals(doc.get("title"),reloaded.getTitle());assertNotNull(reloaded.getDateCreated());
             assertEquals(1,repositories.getRepository(BranchGroupRepository.class).findByBranchId(context.branchId()).size());
@@ -175,14 +249,14 @@ class BranchStorageTest extends BaseWebjetTest {
             mediaRow.setMediaTitleSk("P02 JPA media");repositories.getRepository(BranchMediaRepository.class).save(mediaRow);
             BranchFileEntity fileRow=repositories.getRepository(BranchFileRepository.class).findByBranchId(context.branchId()).get(0);
             fileRow.setApplyState("PENDING");repositories.getRepository(BranchFileRepository.class).save(fileRow);
-            BranchEntity packageRow=packages.findByIdAndDomainName(context.branchId(),"p02.example").orElseThrow();
+            BranchEntity packageRow=packages.findFirstByIdAndDomainId(context.branchId(),BranchDomains.id("p02.example")).orElseThrow();
             packageRow.setDescription("P02 JPA metadata");packages.save(packageRow);
             manager.flush();manager.getTransaction().commit();manager.clear();
             assertEquals("P02 JPA saved",repositories.getRepository(BranchDocumentRepository.class).findByBranchId(context.branchId()).get(0).getTitle());
             assertEquals("P02 JPA group",repositories.getRepository(BranchGroupRepository.class).findByBranchId(context.branchId()).get(0).getGroupName());
             assertEquals("P02 JPA media",repositories.getRepository(BranchMediaRepository.class).findByBranchId(context.branchId()).get(0).getMediaTitleSk());
-            assertEquals("P02 JPA metadata",packages.findByIdAndDomainName(context.branchId(),"p02.example").orElseThrow().getDescription());
-            assertEquals(1,packages.findByDomainNameOrderByIdDesc("p02.example").stream().filter(v->v.getId()==context.branchId()).count());
+            assertEquals("P02 JPA metadata",packages.findFirstByIdAndDomainId(context.branchId(),BranchDomains.id("p02.example")).orElseThrow().getDescription());
+            assertEquals(1,packages.findAllByDomainId(BranchDomains.id("p02.example")).stream().filter(v->v.getId()==context.branchId()).count());
         }finally{factoryBean.destroy();}
     }
 
@@ -195,7 +269,7 @@ class BranchStorageTest extends BaseWebjetTest {
         assertThrows(SQLException.class,()->store.create(context,BranchType.DOCUMENT,invalid));
         try(Connection connection=connect()) {
             assertEquals(liveBefore,count(connection,"SELECT COUNT(*) FROM documents"));assertEquals(workBefore,count(connection,"SELECT COUNT(*) FROM branch_documents WHERE branch_id="+context.branchId()));
-            Constants.setBoolean("branchSingleWriterConfirmed",false);assertThrows(IllegalStateException.class,()->BranchReadiness.verify(connection));Constants.setBoolean("branchSingleWriterConfirmed",true);
+            Constants.setBoolean("branchSingleWriterConfirmed",false);assertThrows(IllegalStateException.class,()->BranchReadiness.verify(connection));Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
             Constants.setString("branchStorageRoot",Path.of("src/main/webapp").toAbsolutePath().toString());assertThrows(SQLException.class,()->BranchReadiness.verify(connection));Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
             execute(connection,"ALTER TABLE media_group_to_media ENGINE=MyISAM");
             try{assertThrows(SQLException.class,()->BranchReadiness.verify(connection));}finally{execute(connection,"ALTER TABLE media_group_to_media ENGINE=InnoDB");}
@@ -266,6 +340,11 @@ class BranchStorageTest extends BaseWebjetTest {
             assertEquals("varchar(16)", color.getString("Type"));
             assertEquals("NO", color.getString("Null"));
             assertEquals("cyan", color.getString("Default"));
+        }
+        try (Statement statement = connection.createStatement();
+                ResultSet domainId = statement.executeQuery("SHOW COLUMNS FROM branches LIKE 'domain_id'")) {
+            assertTrue(domainId.next());
+            assertEquals("NO", domainId.getString("Null"));
         }
         for(BranchType type:List.of(BranchType.DOCUMENT,BranchType.GROUP,BranchType.MEDIA)) {
             var names=new java.util.HashSet<String>();try(Statement statement=connection.createStatement();ResultSet result=statement.executeQuery("SHOW COLUMNS FROM "+type.workTable())){while(result.next())names.add(result.getString(1));}

@@ -188,7 +188,7 @@
 				const newsListIframe = $("iframe#newsListIframe");
 				if(newsListIframe != null && newsListIframe.length > 0) {
 					let link = "/apps/news/admin/?include=" + safeLink;
-                    if (window.branchScreen?.enabled) link += "&branchId=" + window.branchScreen.branchId + "&branchDomain=" + encodeURIComponent(window.branchScreen.domainName);
+                    if (window.branchScreen?.enabled) link += "&branchId=" + window.branchScreen.branchId + "&branchDomain=" + encodeURIComponent(window.branchScreen.domainId);
 					newsListIframe.attr("src", link);
 				}
 			});

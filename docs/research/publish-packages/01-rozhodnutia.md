@@ -18,13 +18,20 @@ Tento dokument je jediný register produktových rozhodnutí pre návrh. Technic
 | Q10 | Používateľ delegoval výber jednoduchšej implementácie. Zvolené rozhodovanie za celú položku. | Trojcestné porovnanie podporovaných údajov; pri súbežnej odlišnej zmene výber produkcia/vetva. Polia slúžia na zobrazenie diffu, nie automatické skladanie. Vlastná kombinácia vznikne bežnou úpravou vo vetve. |
 | Q11 | Jednorazové nezávislé vetvy. | Viac vetiev z produkcie; úspešný úplný merge vetvu uzavrie. Vetvy z vetiev a merge medzi vetvami sa nepridávajú. |
 | Q12 | Nový problém pri plánovanom spustení zastaví balík. | Znovu overiť konflikty, práva a samostatné plány; nevynucovať staré rozhodnutie nad novými dátami. |
-| Q13 | Používateľ delegoval jednoduchší model spoločných prvkov. | Spoločné System stránky ostávajú read-only. Súbory používajú existujúce mapovanie úložísk a adresárové práva; fyzicky spoločné súbory možno meniť s upozornením na dosah na ďalšie domény. Nevzniká nový systém vlastníctva súborov ani vyhľadávanie všetkých použití. |
+| Q13 | Používateľ delegoval jednoduchší model spoločných prvkov. | Spoločné System stránky ostávajú read-only. Súbory používajú existujúce mapovanie externých priečinkov domén a adresárové práva podľa Q20. Nevzniká nový systém vlastníctva súborov ani vyhľadávanie všetkých použití. |
 | Q14 | Bez skrytého zrkadlenia a prekladov. | Publikovať iba explicitne zobrazené položky; zmeny jazykových stránok pripraví tím. |
 | Q15 | Funkcia môže vyžadovať InnoDB. | Žiadna podpora MyISAM v tejto funkcii a žiadna automatická konverzia zákazníckych tabuliek. |
 | Q16 | Preklikateľný náhľad zohľadní zvolený výsledok konfliktu. | Voľba produkcie sa prejaví aj v stránke, strome, Novinkách, médiách a súboroch. Pracovný editor uchová WORK; náhľad a editor majú odlišný účel. Nevyriešené konflikty sú v náhľade označené, nejde o potvrdený výsledok publikovania. |
 | Q17 | V súboroch vytvoriť adresár a upravovať jednotlivé súbory. | Prázdny adresár má položku v existujúcej pracovnej súborovej tabuľke. Presun, premenovanie, mazanie a rekurzívne kopírovanie súborových adresárov sa zatiaľ nepodporujú. Toto obmedzenie sa netýka stromu webových stránok. |
 | Q18 | Galerijné adresáre sú do rozšírenia galérie iba na čítanie. | Ani obyčajný upload alebo správca súborov nesmie meniť albumové súbory a ich varianty. Bežné obrázky a prílohy mimo galérie sa upravovať môžu. |
 | Q19 | Náhľad sa otvára na hostiteľovi administrácie. | Používa jeho prihlásenie; logická doména obsahu pochádza z overenej vetvy a je viditeľná v lište. Nevytvára sa prenos prihlásenia na verejnú doménu. |
+| Q20 | Pracovné verzie vyžadujú oddelenie domén cez `enableStaticFilesExternalDir=true` a používajú štandardné `domainId`. | Vlastníkom balíka je `branches.domain_id`; `BranchRepository` rozširuje `DomainIdRepository`. Režim so spoločným ID `1` a paralelné oddelenie balíkov cez `domain_name` sa nepodporujú. Názov domény sa používa na zobrazenie a URL náhľadu. |
+
+## Oddelenie domén, 11. novembra 2026
+
+Q20 nahrádza pôvodný predpoklad, že balíky musia rozlišovať weby aj bez zapnutého štandardného oddelenia domén. Funkcia musí vyžadovať `enableStaticFilesExternalDir=true`; filtrovanie, načítanie a zápisy používajú `domainId` a existujúce kontroly DataTables. Implementácia nemusí udržiavať variant s vypnutým oddelením domén. `domain_name` nie je druhý kľúč vlastníctva balíka.
+
+PR ešte nie je nasadené u ďalších používateľov. Schéma sa upraví v pôvodnom `CREATE TABLE branches`; nepridáva sa migračná vetva ani spätná kompatibilita starých branch dát. Existujúca lokálna POC databáza sa opraví priamo.
 
 ## Doplnenie požiadavky 2. novembra 2026
 

@@ -25,7 +25,7 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 class BranchReservationTest extends BaseWebjetTest {
     @BeforeEach void configure() throws Exception {
         try(Connection connection=DBPool.getConnection()){assertEquals("webjet_p01",connection.getCatalog());assertTrue(connection.getMetaData().getURL().startsWith(BranchStorageTest.URL));}
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private"));Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
     }
     @AfterEach void restore(){Constants.setBoolean("branchesEnabled",false);Constants.setBoolean("branchSingleWriterConfirmed",false);}

@@ -141,7 +141,7 @@ export class DatatablesCkEditor {
 			fileLoader.xhr.open( 'POST', fileLoader.uploadUrl, true );
 			if (window.branchScreen?.enabled) {
 				fileLoader.xhr.setRequestHeader('X-WebJET-Branch', String(window.branchScreen.branchId));
-				fileLoader.xhr.setRequestHeader('X-WebJET-Branch-Domain', window.branchScreen.domainName);
+				fileLoader.xhr.setRequestHeader('X-WebJET-Branch-Domain', String(window.branchScreen.domainId));
 				fileLoader.xhr.setRequestHeader('X-CSRF-Token', window.csrfToken);
 			}
 			formData.append( 'uploadFile', fileLoader.file, fileLoader.fileName );

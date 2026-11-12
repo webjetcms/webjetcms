@@ -24,7 +24,7 @@ class BranchManualFixtureTest extends BaseWebjetTest {
             try(var statement=connection.createStatement();var result=statement.executeQuery("SELECT count(*) FROM branches WHERE name='P03 manual A'")){result.next();assertEquals(0,result.getInt(1),"Manual fixture already exists; use its manifest");}
         }
         Path privateRoot=Path.of("/tmp/webjet-p03-private");Files.createDirectories(privateRoot);
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setString("branchStorageRoot",privateRoot.toString());
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());
         int template;
         try(Connection connection=DBPool.getConnection();PreparedStatement statement=connection.prepareStatement("INSERT INTO templates(temp_name,forward,lng,templates_group_id) VALUES ('P03 manual','/templates/aceintegration/jet/blank.jsp','sk',1)",Statement.RETURN_GENERATED_KEYS)) {
             statement.executeUpdate();try(var keys=statement.getGeneratedKeys()){keys.next();template=keys.getInt(1);}
@@ -88,6 +88,6 @@ class BranchManualFixtureTest extends BaseWebjetTest {
     private int liveDoc(int group,int template,String title,String url,int priority,String html)throws Exception {
         try(Connection connection=DBPool.getConnection()) {connection.setAutoCommit(false);int id=BranchStore.reserveNative(connection,BranchType.DOCUMENT);var row=new LinkedHashMap<>(BranchDocumentMapper.initialValues(id,1,Instant.now(),false));row.put("title",title);row.put("navbar",title);row.put("group_id",group);row.put("temp_id",template);row.put("virtual_path",url);row.put("available",true);row.put("show_in_menu",true);row.put("sort_priority",priority);row.put("html_data","LIVE perex");row.put("data",html);BranchRowWriter.insertDocumentWithId(connection,BranchContext.live(DOMAIN,1),row);connection.commit();return id;}
     }
-    private BranchContext branch(String name){var value=new BranchService().create(DOMAIN,name,"Retained P03 local fixture",1);return new BranchContext(value.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
+    private BranchContext branch(String name){var value=new BranchService().create(BranchTestDomains.ensure(DOMAIN),name,"Retained P03 local fixture",1);return new BranchContext(value.getId(),DOMAIN,1,BranchContext.Mode.ADMIN);}
     private void stage(BranchContext context,String path,Path source,String mime)throws Exception {var row=store.putFile(context,path,"FILE",BranchSnapshot.absent(),BranchFiles.hash(source),Files.size(source),mime,false);Path target=BranchFiles.workPath(context.branchId(),((Number)row.get("row_id")).longValue());Files.createDirectories(target.getParent());Files.move(source,target);}
 }
