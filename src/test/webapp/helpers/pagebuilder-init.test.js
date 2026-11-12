@@ -192,6 +192,31 @@ test('Page Builder resolves readiness when all marked hosts are unsupported', as
     assert.equal(page.html(), html);
 });
 
+test('A later inline editor becoming ready preserves the focused image editor', async t => {
+    const f = await fixture(t, '<div class="column-content"><p>Existing content</p></div>', true);
+    const page = f.$('#wjInline-docdata');
+    const initialEditor = Object.values(f.window.CKEDITOR.instances)[0];
+    f.window.CKEDITOR.fire('instanceReady', null, initialEditor);
+    assert.equal(f.window.getCkEditorInstance(), initialEditor, 'The first ready editor remains the fallback');
+
+    page.append('<div class="column-content pb-content"><img src="/placeholder.svg" class="fixedSize-640-1145-0"></div>' +
+        '<div class="column-content pb-content"><p>New text column</p></div>');
+    f.window.initPageBuilderEditors(page);
+    const [, imageEditor, textEditor] = Object.values(f.window.CKEDITOR.instances);
+
+    // Inserting a block can focus its first editor before the instanceReady listener is registered.
+    imageEditor.focusManager.focus();
+    f.window.CKEDITOR.fire('instanceReady', null, imageEditor);
+    f.window.CKEDITOR.fire('instanceReady', null, textEditor);
+    imageEditor.focusManager.focus();
+    assert.equal(f.window.getCkEditorInstance(), imageEditor,
+        'An image click in an already focused column must use its editor after the sibling becomes ready');
+
+    textEditor.focusManager.focus();
+    assert.equal(f.window.getCkEditorInstance(), textEditor, 'Moving focus must still switch the active editor');
+    assert.deepEqual(f.errors, []);
+});
+
 test('A failed CKEditor creation stops before scheduling instance callbacks', async t => {
     const f = await fixture(t, '');
     const element = f.window.document.createElement('div');

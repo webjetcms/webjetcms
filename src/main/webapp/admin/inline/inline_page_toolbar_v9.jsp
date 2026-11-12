@@ -386,7 +386,10 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         CKEDITOR.on('instanceReady', function(ev) {
             //console.log("Ckeditor "+ev.editor.name+" instance ready");
             //console.log(ev);
-            ckEditorInstance = ev.editor;
+            // A sibling finishing initialization must not replace the focused editor after block insertion.
+            if (ckEditorInstance == null || ev.editor.focusManager.hasFocus) {
+                ckEditorInstance = ev.editor;
+            }
 
                 //ev.editor.on("blur", function(event) { console.log("blured"); $("#wjInlineCkEditorToolbarElement").hide(); });
             ev.editor.on("focus", function(event)
