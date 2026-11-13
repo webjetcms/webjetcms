@@ -161,7 +161,19 @@ const config = {
                         options: {
                             postcssOptions: {
                                 plugins: [
-                                    "autoprefixer"
+                                    "autoprefixer",
+                                    {
+                                        postcssPlugin: "webjet-woff2-fonts",
+                                        AtRule: {
+                                            "font-face": fontFace => {
+                                                // Filter font alternatives before css-loader emits their assets.
+                                                fontFace.walkDecls("src", declaration => {
+                                                    const sources = declaration.value.match(/url\([^)]*\)\s*format\(["']woff2["']\)/g);
+                                                    if (sources) declaration.value = sources.join(", ");
+                                                });
+                                            }
+                                        }
+                                    }
                                 ]
                             }
                         }
