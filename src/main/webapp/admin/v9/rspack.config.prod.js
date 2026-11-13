@@ -27,6 +27,10 @@ module.exports = {
     ...common,
     mode: "production",
     devtool: false,
+    output: {
+        ...common.output,
+        clean: true
+    },
     optimization: {
         ...common.optimization,
         minimizer: [

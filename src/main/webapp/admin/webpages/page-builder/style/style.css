@@ -3,15 +3,13 @@
   font-family: "Asap";
   font-style: normal;
   font-weight: 400;
-  src: url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.eot);
-  src: local(""), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.eot?#iefix) format("embedded-opentype"), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff2) format("woff2"), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff) format("woff"), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.ttf) format("truetype"), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.svg#Asap) format("svg");
+  src: url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff2) format("woff2");
 }
 @font-face {
   font-family: "Asap";
   font-style: normal;
   font-weight: 700;
-  src: url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.eot);
-  src: local(""), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.eot?#iefix) format("embedded-opentype"), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff2) format("woff2"), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff) format("woff"), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.ttf) format("truetype"), url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.svg#Asap) format("svg");
+  src: url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff2) format("woff2");
 }
 /* WJ admin variables from ninja.scss */
 /* Page Builder variables */
