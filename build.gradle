@@ -374,6 +374,7 @@ war {
     exclude('admin/v9/.browserslistrc')
     exclude('**/WEB-INF/imgcache/**')
     exclude('**/scss/**')
+    exclude('admin/webpages/page-builder/style/sass/**')
     exclude('scratchpad*.jsp')
     exclude('localconf*.jsp')
     exclude('**/LICENSE')
