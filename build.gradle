@@ -367,6 +367,11 @@ war {
     exclude('**/package-lock.json')
     exclude('**/package.json')
     exclude('**/webpack*.js')
+    // Admin frontend build inputs are bundled into dist before packaging.
+    exclude('admin/v9/npm_packages/**')
+    exclude('admin/v9/rspack.config*.js')
+    exclude('admin/v9/pug.render.js')
+    exclude('admin/v9/.browserslistrc')
     exclude('**/WEB-INF/imgcache/**')
     exclude('**/scss/**')
     exclude('scratchpad*.jsp')
