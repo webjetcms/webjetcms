@@ -84,6 +84,7 @@ export class WebPagesDatatable {
         this.#updateColumns(this.options.columns);
         this.webpagesDatatable = window.WJ.DataTable(this.options);
         this.#bindAll();
+        window.applyBranchEditor?.(this.webpagesDatatable);
 
         //spravanie tlacidla nahlad
         let preview = new EditorPreview({
@@ -139,6 +140,17 @@ export class WebPagesDatatable {
             if (event.detail.conf.id=="DTE_Field_editorFields.media") {
                 let mediaTable = event.detail.conf.datatable;
                 instance.#mediaTable = mediaTable;
+                if (window.branchScreen?.enabled && window.branchScreen.branchId) {
+                    mediaTable.hideButton('import');
+                    mediaTable.EDITOR.on('preSubmit.branchMedia', (event, data, action) => {
+                        if (action === 'create') return;
+                        Object.values(data.data).forEach(record => {
+                            const original = mediaTable.row('#'+record.id).data() || mediaTable.EDITOR.currentJson;
+                            record.editorFields ||= {};
+                            record.editorFields.branchHash = original?.editorFields?.branchHash;
+                        });
+                    });
+                }
                 event.detail.conf.datatable.EDITOR.on( 'open', function( e, mode, action ) {
                     //console.log("DTED inner table opened");
                     //pri prvom nacitani nastav on change listener na reload dat

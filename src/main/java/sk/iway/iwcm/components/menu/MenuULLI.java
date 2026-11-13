@@ -55,6 +55,8 @@ public class MenuULLI
 
 	public static String doTree(int rootGroup, int maxLevel, int startOffset, String classes, String rootUlId, int itemMaxLen, boolean isSitemap, HttpServletRequest request)
 	{
+		// A second menu with an invalid root must not reuse the first menu's ROOT variables.
+		for (String key : new String[]{"!ROOT_GROUP_ID!", "!ROOT_GROUP_DOCID!", "!ROOT_GROUP_LINK!", "!ROOT_GROUP_NAME!", "!ROOT_GROUP_NAVBAR!"}) request.removeAttribute(key);
 		GroupsDB groupsDB = GroupsDB.getInstance();
 		DocDB docDB = DocDB.getInstance();
 		int docId = 0;
@@ -66,6 +68,8 @@ public class MenuULLI
 		if (Tools.isEmpty(classes)) classes = "full";
 
 		DocDetails doc = (DocDetails)request.getAttribute("docDetails");
+		// Gateway URLs have no docid query parameter; use the rendered page to determine the active path.
+		if (doc != null) docId = doc.getDocId();
 		if (Tools.isNotEmpty(request.getParameter("docid")))
 		{
 			docId = Integer.parseInt(request.getParameter("docid"));
@@ -80,7 +84,7 @@ public class MenuULLI
 			docId = Tools.getIntValue((String)request.getAttribute("ulLiForceDocid"), -1);
 		}
 
-		if (doc != null && docId != doc.getDocId())
+		if (docId > 0)
 		{
 			doc = DocDB.getInstance().getBasicDocDetails(docId, false);
 		}
@@ -146,7 +150,8 @@ public class MenuULLI
 		HashMap<Integer, String> groupTable = null;
 		if (docId > 0)
 		{
-			int groupId = docDB.getBasicDocDetails(docId, true).getGroupId();
+			DocDetails currentDoc = docDB.getBasicDocDetails(docId, false);
+			int groupId = currentDoc == null ? 0 : currentDoc.getGroupId();
 			if (groupId > 0)
 			{
 				groupTable = new HashMap<Integer, String>();
@@ -438,6 +443,8 @@ public class MenuULLI
 
 					//ak default stranka adresara nie je available adresar nezobrazme
 					groupDocDetails = docDB.getBasicDocDetails(group.getDefaultDocId(), false);
+					// A deleted effective default page must not leave a menu link pointing back into LIVE.
+					if (group.getDefaultDocId() > 0 && groupDocDetails == null && sk.iway.iwcm.branch.BranchContexts.current().isBranch()) continue;
 					if (groupDocDetails != null && groupDocDetails.isAvailable()==false)
 					{
 						//Logger.debug(MenuULLI.class, "docDetails is not available: "+groupDocDetails.getDocId()+" available="+groupDocDetails.isAvailable());
@@ -578,7 +585,8 @@ public class MenuULLI
 								if (Tools.isNotEmpty(menuInfoDirName) && menuInfoDirName.equals(navbarName) && group.getDefaultDocId() > 0) {
 									DocDetails dd = docDB.getDoc(group.getDefaultDocId());
 									if (dd != null) {
-										out.append(spacerLi).append("<li class=\"").append(styleClassDir).append(" menu-info-li").append("\">");
+										String infoClass = Tools.isEmpty(styleClassDir) ? " class=\"menu-info-li\"" : styleClassDir.substring(0, styleClassDir.length()-1)+" menu-info-li\"";
+										out.append(spacerLi).append("<li").append(infoClass).append(">");
 										out.append("<div class=\"menu-info\"><span class=\"menu-info-headline\">").append(dd.getTitle()).append("</span>");
 
 										out.append("<div class=\"menu-info-content\">").append(dd.getData()).append("</div>");
@@ -680,6 +688,8 @@ public class MenuULLI
 		}
 		catch (Exception ex)
 		{
+			// Swallowing a branch read/choice failure would present an incomplete menu as a valid preview.
+			if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) throw new IllegalStateException("Cannot render branch menu", ex);
 			Logger.error(MenuULLI.class, ex);
 		}
 

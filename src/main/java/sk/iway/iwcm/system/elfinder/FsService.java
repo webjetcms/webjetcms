@@ -166,7 +166,16 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 
 		int counter = 0;
 
-		if (type == TYPE_IMAGES || type == TYPE_MULTIMEDIA || type == TYPE_VIDEOS)
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch() && type != TYPE_PAGES)
+        {
+            boolean includePages = type == TYPE_LINK || type == TYPE_FILES || type == TYPE_ALL;
+            _volumes = new FsVolume[includePages ? 2 : 1];
+            _volumes[counter] = new BranchFsVolume(Prop.getTxt("elfinder.allFiles"));
+            _volumeIds.put(_volumes[counter], "iwcm_1");
+            counter++;
+            if (includePages) counter = addDocGroupVolume(counter);
+        }
+        else if (type == TYPE_IMAGES || type == TYPE_MULTIMEDIA || type == TYPE_VIDEOS)
 		{
 			_volumes = new FsVolume[2];
 

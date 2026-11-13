@@ -62,6 +62,18 @@ public class ThumbTag extends BodyTagSupport
 				String thumbExternalServer = Constants.getString("thumbExternalServer");
 
 				HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
+				// External thumbnail servers and the LIVE thumbnail cache cannot read private WORK bytes.
+				// Route through the authenticated preview gateway; BranchFiles checks access and uses
+				// a branch/content-hash cache. Keep transform parameters so unsupported ones fail
+				// explicitly there instead of silently displaying a different or LIVE image.
+				if (sk.iway.iwcm.branch.BranchContexts.current(request).mode() == sk.iway.iwcm.branch.BranchContext.Mode.PREVIEW) {
+					String previewUrl="/thumb"+imagePath+"?w="+w+"&h="+h;
+					if(ip>0)previewUrl+="&ip="+ip;
+					if(ip==2)previewUrl+="&c="+c;
+					if(ip>0&&q>10&&q<=100)previewUrl+="&q="+q;
+					getPreviousOut().print(sk.iway.iwcm.branch.BranchPreviewUrls.toPreviewUrl(previewUrl,request));
+					return SKIP_BODY;
+				}
 				//kontrola prav
 				EditForm ef = PathFilter.isPasswordProtected(imagePath.startsWith("/") == false ? "/"+imagePath : imagePath, request, request.getSession());
 				Identity user = UsersDB.getCurrentUser(request);

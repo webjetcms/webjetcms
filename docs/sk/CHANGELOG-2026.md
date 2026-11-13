@@ -54,6 +54,10 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Pracovné verzie - správa v samostatnej tabuľke v ľavom menu, vytváranie a úprava názvu, poznámky a farby výlučne cez štandardný DataTable editor. Kontrola zmien a úprava webu sú dostupné ako akcie označeného riadka; horný prepínač obsahuje výber verzie a odkaz na správu. Správa, API, náhľad a cron používajú štandardné `domainId`; funkcia vyžaduje oddelené domény cez `enableStaticFilesExternalDir=true`. Metadáta sa ukladajú cez JPA so štandardným auditom. Pracovnú verziu možno zmazať v každom stave aj s jej pracovnými dátami a súkromnými súbormi, bez čakania na publikovanie; publikovaný web zostáva zachovaný. Publikovanie a pokračovanie spracúva jediná pevná úloha na pozadí, predvolene každých päť minút; požiadavky a termíny sú uložené pri pracovných verziách. Akcie kontroly zmien a úpravy webu majú ikonové tlačidlá s tooltipmi, export/import sú skryté.
+
+- [Publikačné balíky (POC)](redactor/webpages/publishing-packages.md) - v hlavičke administrácie môžete vybrať pracovnú verziu aktuálnej domény a cez ľavé menu ju vytvoriť alebo upraviť. Tím môže pripravovať stránky, priečinky, médiá a súbory v spoločnej pracovnej verzii, skontrolovať menu a Novinky v náhľade, vyriešiť konflikty a publikovať balík ručne alebo v jednom termíne. ID zostávajú zachované; priebeh ukáže zastavenie a umožní overené pokračovanie. Pilot s 20 stránkami a tromi účtami overil aj anonymný verejný výsledok. Funkcia zostáva **predvolene vypnutá** a obmedzená na overený MariaDB/InnoDB profil; pôvodné Novinky a LIVE schvaľovanie, zrkadlenie a multigroup pri off/on majú [doložené výsledky P08](../research/publish-packages/P08-vysledky.md#doplnenie-t16-a-t13-nad-6fb0a30c9). [Návod správcu](admin/setup/publishing-packages.md) opisuje proxy, cron `all-admin`, zapnutie/vypnutie a obnovu rezervovaných ID. Produkčné zapnutie vyžaduje samostatné overenie konkrétneho nasadenia.
+
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">
@@ -423,6 +427,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
 
 ### Pre programátora
+
+- Pracovné verzie - pridaný experimentálny náhľad pripravených stránok, menu, Noviniek a súborov na admin hostiteľovi. Funkcia je predvolene vypnutá a zatiaľ overená iba na samostatnom MariaDB 12.2/InnoDB POC profile; redakčné ukladanie ani publikovanie balíka ešte nie sú dostupné.
+
+- Publikačné balíky - pridaný vypnutý POC základ úložiska, kontextu, stabilných ID a porovnávania zmien. Podporený testovací profil a hranice ďalších etáp sú v [technických výsledkoch P02](../research/publish-packages/P02-vysledky.md).
 
 - Datatabuľky - tabuľky nastavení majú spoločný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Existujúca tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje so zachovaním údajov; vlastné SQL dotazy treba upraviť na `dt_customfields` (#58830).
 - Datatabuľky - triedy pre [systémové nastavenia](developer/datatables/README.md#systémové-nastavenia) voliteľných polí, polí a kariet boli presunuté pod `sk.iway.iwcm.system.datatable.settings` do podbalíkov `customfields`, `fields` a `tabs`. Vlastný kód a šablóny používajúce tieto triedy vyžadujú aktualizáciu importov a úplných názvov tried (#58830).

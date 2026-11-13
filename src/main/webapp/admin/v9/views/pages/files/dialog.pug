@@ -141,11 +141,12 @@ block content
 
                 elFinderInstance = $('#finder').elfinder({
                     url: '/admin/elfinder-connector/',
+                customHeaders: {'X-CSRF-Token': window.csrfToken, ...(window.branchScreen?.enabled ? {'X-WebJET-Branch': String(window.branchScreen.branchId), 'X-WebJET-Branch-Domain': String(window.branchScreen.domainId)} : {})},
                     enableByMouseOver: false,
                     width: '100%',
                     rememberLastDir: [(${rememberLastDir})],
                     uploadOverwrite: true,
-                    customData: customData,
+                    customData: {...customData, ...(window.branchScreen?.enabled ? {branchId: window.branchScreen.branchId, branchDomain: window.branchScreen.domainId} : {})},
                     requestType: 'post',
                     handlers: {
                         select: function(event, elfinderInstance) {
@@ -181,7 +182,7 @@ block content
                                 }
                             }
                             var added = typeof event.data != 'undefined' && event.data.added != 'undefined' ? event.data.added : null;
-                            elFinderInstance.exec("wjmetadata", added);
+                            if (!window.branchScreen?.branchId) elFinderInstance.exec("wjmetadata", added);
                         },
                         beforeUpload: function(files) {
                             filesRespository = files;
@@ -338,6 +339,7 @@ block content
                         }
                     }
                 })[0].elfinder;
+                window.initBranchFileUpload(elFinderInstance);
 
                 var toolbarFixApplied = false;
                 elFinderInstance.bind('lazydone', function(event) {
@@ -428,6 +430,8 @@ block content
                                 span(data-th-case="'videos'" data-th-text="#{elfinder.images.video}" data-th-remove="tag")
                                 span(data-th-case="'images'" data-th-text="#{elfinder.images}" data-th-remove="tag")
                                 span(data-th-case="*" data-th-text="#{fbrowse.file}" data-th-remove="tag")
+            button#branch-upload-button.btn.btn-primary.d-none.mb-2(type='button' disabled) [[\#{datatables.upload.uploadFile.js}]]
+            include ../../partials/datatables-upload
             #finder [[\#{divpopup-blank.wait_please}]]
             #pixabay(style='display: none;')
                 iframe#wjImagePixabayIframeElement(style='width: 100%; height: 480px; border: 0px;' src='/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_pixabay.jsp' border='0')

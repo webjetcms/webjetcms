@@ -755,10 +755,11 @@ TABLE.showButton(name);
 TABLE.cellEditOff()
 
 /**
- * Vypocita/prepocita velkost stranky (zobrazeny pocet zaznamov)
- * @param {*} updateLengthSelect - ak je true aj sa reloadnu udaje (napr. pri zmene velkosti obrazka v galerii)
+ * Prepočíta počet záznamov pre automatickú veľkosť stránky.
+ * @param {boolean} updateLengthSelect Aktualizuje aj ponuku počtu záznamov a stránkovanie.
+ * @param {boolean} [preserveManual=false] Pri aktualizácii stránkovania zachová ručne zvolený počet záznamov.
  */
-TABLE.calculateAutoPageLength(updateLengthSelect)
+TABLE.calculateAutoPageLength(updateLengthSelect, preserveManual)
 ```
 
 ## Ukážky kódu

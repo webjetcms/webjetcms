@@ -318,6 +318,11 @@ dependencies {
     testImplementation 'org.hamcrest:hamcrest:2.2'
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
     testImplementation 'org.mockito:mockito-core:5.18.0'
+    // P01 opt-in embedded JSP probe; these do not enter the application WAR.
+    testImplementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.13'
+    testImplementation 'org.apache.tomcat.embed:tomcat-embed-jasper:11.0.13'
+    testImplementation 'org.apache.tomcat.embed:tomcat-embed-el:11.0.13'
+    testImplementation 'org.eclipse.jdt:ecj:3.42.0'
     testRuntimeOnly 'org.glassfish:jakarta.el:5.0.0-M1'
     // Allure - temporarily disabled until allure-junit6 is available
     //testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")

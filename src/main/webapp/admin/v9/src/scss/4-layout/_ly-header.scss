@@ -121,7 +121,7 @@
 }
 
 @media (max-width: ($bp-laptop - 1)) {
-    .ly-header {
+    .ly-header:where(:not(.ly-header--versions)) {
         position: absolute;
         left:0;
         top: -40px;
@@ -182,7 +182,7 @@
         }
     }
     .ly-page-wrapper.active {
-        .ly-header {
+        .ly-header:where(:not(.ly-header--versions)) {
             margin-top: 40px;
 
             .js-sidebar-toggler {
@@ -196,7 +196,7 @@
         }
     }
     body.ly-submenu-active {
-        .ly-header {
+        .ly-header:where(:not(.ly-header--versions)) {
             top: -95px;
             .js-sidebar-toggler {
                 //verify in webpages
@@ -204,14 +204,14 @@
             }
         }
         .ly-page-wrapper.active {
-            .ly-header {
+            .ly-header:where(:not(.ly-header--versions)) {
                 margin-top: 95px;
             }
         }
     }
 }
 @media (max-width: ($bp-laptop - 1)) {
-    .ly-header {
+    .ly-header:where(:not(.ly-header--versions)) {
         .container {
             padding-left: 7px;
             padding-right: 7px;
@@ -230,7 +230,7 @@
     }
 }
 @media (max-width: 360px) {
-    .ly-header {
+    .ly-header:where(:not(.ly-header--versions)) {
         .header-link-group {
             .js-tasks-toggler {
                 display: none;
@@ -240,7 +240,7 @@
 }
 
 // Keep the environment anchored before the title, including the collapsed mobile header.
-.ly-header:has(.md-environment) {
+.ly-header:where(:not(.ly-header--versions)):has(.md-environment) {
     > .ly-container {
         display: flex;
         flex-wrap: wrap;
@@ -265,14 +265,14 @@
 }
 
 @media (min-width: $bp-laptop) {
-    body.ly-submenu-active .ly-header:has(.md-environment) > .ly-container {
+    body.ly-submenu-active .ly-header:where(:not(.ly-header--versions)):has(.md-environment) > .ly-container {
         height: 100%;
         align-content: space-between;
     }
 }
 
 @media (max-width: ($bp-laptop - 1)) {
-    .ly-header:has(.md-environment) {
+    .ly-header:where(:not(.ly-header--versions)):has(.md-environment) {
         > .ly-container { justify-content: flex-end; }
         .header-branding {
             position: absolute;
@@ -287,13 +287,109 @@
         }
         .header-title { padding-left: 0; }
     }
-    body.ly-submenu-active .ly-header:has(.md-environment) .header-branding { top: 103px; }
-    .ly-page-wrapper.active .ly-header:has(.md-environment) .header-branding {
+    body.ly-submenu-active .ly-header:where(:not(.ly-header--versions)):has(.md-environment) .header-branding { top: 103px; }
+    .ly-page-wrapper.active .ly-header:where(:not(.ly-header--versions)):has(.md-environment) .header-branding {
         top: 5px;
         right: 165px;
     }
-    html:not(.in-iframe):not(.in-iframe-show-table) body:has(.ly-header .md-environment) {
+    html:not(.in-iframe):not(.in-iframe-show-table) body:has(.ly-header:where(:not(.ly-header--versions)) .md-environment) {
         .ly-content-wrapper { padding-top: 48px !important; }
         .ly-content { height: calc(100vh - 48px) !important; }
+    }
+}
+
+// The version bar and the page tabs belong to the header. Its grid row grows when either wraps.
+html:not(.in-iframe):not(.in-iframe-show-table) .ly-page-wrapper--versions {
+    display: grid;
+    position: relative;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+
+    > .ly-header {
+        grid-row: 1;
+        position: relative;
+        inset: auto;
+        height: auto;
+        min-width: 0;
+        padding: 0;
+        margin: 0 0 0 $sidebar-width;
+    }
+    > .ly-content-wrapper {
+        grid-row: 2;
+        min-height: 0;
+        min-width: 0;
+        padding-top: 0 !important;
+        .ly-content { height: 100% !important; }
+    }
+    .ly-header > .ly-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: minmax(48px, auto) auto;
+        column-gap: 8px;
+        align-items: center;
+        height: auto;
+    }
+    .header-branding, .header-link-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+    .header-link-wrapper { gap: clamp(8px, 1.5vw, 30px); }
+    .header-link-group { margin-left: 0; }
+    .header-title {
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        text-align: left;
+    }
+    .ly-submenu { grid-column: 1 / -1; min-width: 0; }
+    .md-quick-search-trigger { width: clamp(130px, 20vw, 300px); }
+
+    @media (max-width: ($bp-laptop - 1)) {
+        > .ly-header { margin-left: 0; }
+        .ly-submenu .md-tabs { padding-left: 15px; }
+        .js-sidebar-toggler { display: inline-flex; align-items: center; justify-content: center; }
+        .ly-sidebar.active {
+            grid-row: 2;
+            position: absolute;
+            top: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            .menu-wrapper { flex: 1; height: auto; min-height: 0; }
+            .js-domain-toggler { padding-bottom: 9px; }
+        }
+        .dt-header-row .row { margin-left: -15px; }
+    }
+    @media (max-width: ($bp-mobile - 1)) {
+        .header-link-wrapper { gap: 2px; }
+        .md-quick-search-trigger, .js-help-toggler, .js-profile-toggler, .js-logout-toggler, .js-sidebar-toggler {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 31px;
+            padding: 0;
+            background-image: none;
+            .ti { padding: 0; }
+        }
+        .md-quick-search-trigger__label, .md-quick-search-trigger__shortcut,
+        .js-help-toggler span, .md-help-menu__chevron { display: none; }
+        .js-profile-toggler span { @include visually-hidden(); }
+    }
+    @media (max-width: 380px) {
+        .ly-header > .ly-container { column-gap: 2px; padding-inline: 4px; }
+        .ly-submenu :is(.md-tabs, .md-sub-tabs) { margin-inline: -4px; }
+        .header-branding { gap: 3px; }
+        .md-quick-search-trigger, .js-help-toggler, .js-profile-toggler, .js-logout-toggler, .js-sidebar-toggler,
+        .md-branch-switch { width: 27px; }
+        .md-environment > .ti { display: none; }
+        .header-title { font-size: 15px; }
+        .header-link-wrapper { gap: 0; }
+        .header-link-wrapper .header-link-group { margin-left: 0 !important; }
     }
 }

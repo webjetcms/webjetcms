@@ -52,3 +52,7 @@ $secondary-font-family: 'Asap', sans-serif;
   //borders
   --wj-border-radius: #{$border-radius};
 }
+$shortcut-colors: (
+  'default': #eef0f4, 'red': #c4001f, 'peach': #c24e00, 'amber': #f6be3f,
+  'mint': #007e69, 'cyan': #00707f, 'blue': $primary, 'lavender': #6e00dc, 'gray': #4d5262
+);

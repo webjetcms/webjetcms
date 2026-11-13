@@ -1,3 +1,4 @@
+import { SHORTCUT_COLORS } from '../shortcut-colors';
 import { menuEntries } from '../admin-menu';
 import { registerWidget } from './registry';
 import { node, text, localUrl, shortcutUrl, icon, field, containNativeScroll } from './widget-utils';
@@ -25,9 +26,6 @@ function shortcutMenu(context) {
     return visit(context.data.dashboardMenu);
 }
 
-const SHORTCUT_COLORS = [
-    'default', 'red', 'peach', 'amber', 'mint', 'cyan', 'blue', 'lavender', 'gray'
-];
 const SHORTCUT_HEX_COLOR = /^#[a-f0-9]{6}(?:[a-f0-9]{2})?$/i;
 
 function shortcutColor(value) {

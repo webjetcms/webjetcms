@@ -209,7 +209,8 @@ public class DocDB extends DB
 	{
 		DocDB myDocDB = getInstanceWithoutPublishCheck(force_refresh, serverName);
 		// Publication may initialize GroupsDB, so run it outside the DocDB initialization lock.
-		myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
+		// A read-only branch request must not trigger scheduled writes to production.
+		if (!sk.iway.iwcm.branch.BranchContexts.current().isBranch()) myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 		return myDocDB;
 	}
 
@@ -362,6 +363,8 @@ public class DocDB extends DB
 	 */
 	public int getVirtualPathDocId(String virtualPath, String domain)
 	{
+		// Shared LIVE URL indexes do not contain new, moved or deleted branch pages.
+		if (sk.iway.iwcm.branch.BranchView.current() != null) return sk.iway.iwcm.branch.BranchReadService.docIdFromUrl(virtualPath);
 		//disallow webpages URL starts with /admin
 		if (virtualPath.startsWith("/admin")) return -1;
 
@@ -531,6 +534,12 @@ public class DocDB extends DB
 	 */
 	public DocDetails getDoc(int doc_id, int history_id, boolean useCache)
 	{
+		// Use detached effective content; the shared document/history cache contains only LIVE rows.
+		sk.iway.iwcm.branch.BranchView branch = sk.iway.iwcm.branch.BranchView.current();
+		if (branch != null) {
+			if (history_id > 0) throw new IllegalStateException("History is unavailable in a working branch");
+			return branch.document(doc_id, false);
+		}
 		boolean dbConnectionOK = false;
 
 		String sql = "";
@@ -788,6 +797,9 @@ public class DocDB extends DB
 	 */
 	public List<DocDetails> getDocByGroup(int groupId, int orderType, boolean asc, int start, int end, boolean no_data, boolean onlyAvailable)
 	{
+        // Merge the selected LIVE/WORK rows before this legacy query applies filters, count or paging.
+        sk.iway.iwcm.branch.BranchSql.Fragment branchSource = sk.iway.iwcm.branch.BranchSql.documentSource("d");
+        String documentFields = no_data && sk.iway.iwcm.branch.BranchContexts.current().isBranch() ? getDocumentFieldsNodata() : "d.*";
 		List<DocDetails> ret = new ArrayList<>();
 		java.sql.Connection db_conn = null;
 		java.sql.PreparedStatement ps = null;
@@ -858,12 +870,12 @@ public class DocDB extends DB
 				{
 					top = "TOP " + end;
 				}
-				sql = "SELECT " + top + " u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
+				sql = "SELECT " + top + " u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+documentFields+" FROM "+branchSource.sql()+" LEFT JOIN  users u ON d.author_id=u.user_id WHERE "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
 			}
 			else if (Constants.DB_TYPE == Constants.DB_ORACLE)
 			{
 				//POZOR: ORA tu chyba limit!
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+documentFields+" FROM "+branchSource.sql()+",  users u WHERE d.author_id=u.user_id(+) AND "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
 			}
 			else
 			{
@@ -877,9 +889,10 @@ public class DocDB extends DB
 					end = rows + 1;
 					//?? je treba +1 ??
 				}
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order + limit;
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, "+documentFields+" FROM "+branchSource.sql()+" LEFT JOIN  users u ON d.author_id=u.user_id WHERE "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order + limit;
 			}
 			ps = db_conn.prepareStatement(sql);
+            branchSource.bind(ps,1);
 			rs = ps.executeQuery();
 
 			int counter = 0;
@@ -905,6 +918,8 @@ public class DocDB extends DB
 				counter++;
 
 				doc = getDocDetails(rs, no_data);
+                // A moved WORK ancestor can change the URL even when this document itself is unchanged.
+                if (sk.iway.iwcm.branch.BranchView.current() != null) sk.iway.iwcm.branch.BranchView.current().normalizeUrl(doc);
 
 				ret.add(doc);
 			}
@@ -915,7 +930,11 @@ public class DocDB extends DB
 			ps = null;
 			rs = null;
 		}
-		catch (Exception ex){Logger.error(DocDB.class, ex);}
+		catch (Exception ex) {
+            // A failed branch query must be visible, rather than silently producing an empty preview.
+            if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) throw new IllegalStateException("Cannot query branch folder pages",ex);
+            Logger.error(DocDB.class, ex);
+        }
 		finally{
 			try{
 				if (rs != null) rs.close();
@@ -1417,7 +1436,8 @@ public class DocDB extends DB
 
 		if (perexGroup!=null)
 		{
-			if(Constants.getBoolean("perexGroupUseJoin"))
+			// LIVE perex_group_doc has no WORK assignments; branch filters use the effective perex_group field.
+			if(Constants.getBoolean("perexGroupUseJoin") && !sk.iway.iwcm.branch.BranchContexts.current().isBranch())
 			{
 				StringBuilder groupNamesIn = new StringBuilder();
 				String[] groupNames = Tools.getTokens(perexGroup, ",", true);
@@ -1806,6 +1826,11 @@ public class DocDB extends DB
 	 */
 	private List<DocDetails> getDocPerex(String groupIds, int orderType, boolean asc, int startIndex, int endIndex, int publishType, long now, String whereSql, String orderSql, boolean noData, String docIdsNotIn, boolean onlyAvailable, String datum, int rootGroupLevel)
 	{
+        // Merge the selected LIVE/WORK rows before this legacy query applies filters, count or paging.
+        sk.iway.iwcm.branch.BranchSql.Fragment branchSource = sk.iway.iwcm.branch.BranchSql.documentSource("d");
+        // Freeze publication time for all list/count queries in this preview request.
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) now = sk.iway.iwcm.branch.BranchView.current().previewAt();
+
 		//Logger.println(this,"DocDB.getDocPerex now="+now+" "+(new java.util.Date(now)));
 		if (whereSql==null) whereSql = "";
 		//len pre istotu...
@@ -1818,7 +1843,7 @@ public class DocDB extends DB
 
 		if (now < 0)
 		{
-			now = (new java.util.Date()).getTime();
+			now = (sk.iway.iwcm.branch.BranchView.current() == null ? System.currentTimeMillis() : sk.iway.iwcm.branch.BranchView.current().previewAt());
 		}
 
 		Connection db_conn = null;
@@ -1956,10 +1981,10 @@ public class DocDB extends DB
 					}
 					top = "TOP " + endIndex;
 				}
-				sql = new StringBuilder("SELECT " ).append( top ).append( " u.title as u_title, u.first_name, u.last_name, u.email, u.photo, ").append(docFields).append(" FROM documents d LEFT JOIN users u ON d.author_id=u.user_id"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
+				sql = new StringBuilder("SELECT " ).append( top ).append( " u.title as u_title, u.first_name, u.last_name, u.email, u.photo, ").append(docFields).append(" FROM "+branchSource.sql()+" LEFT JOIN users u ON d.author_id=u.user_id"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 
 				if (Constants.getBoolean("docAuthorLazyLoad"))
-					sql = new StringBuilder("SELECT " ).append( top ).append(' ').append(docFields).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
+					sql = new StringBuilder("SELECT " ).append( top ).append(' ').append(docFields).append(" FROM "+branchSource.sql()+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 
 				if (onlyAvailable) sql.append(" available="+DB.getBooleanSql(true)+" ");
 				else sql.append(" d.doc_id>0 ");
@@ -1973,9 +1998,9 @@ public class DocDB extends DB
 			}
 			else if (Constants.DB_TYPE == Constants.DB_ORACLE)
 			{
-				sql = new StringBuilder("SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, ").append(docFields).append(" FROM documents d LEFT JOIN users u ON d.author_id=u.user_id"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
+				sql = new StringBuilder("SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, ").append(docFields).append(" FROM "+branchSource.sql()+" LEFT JOIN users u ON d.author_id=u.user_id"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 				if (Constants.getBoolean("docAuthorLazyLoad"))
-					sql = new StringBuilder("SELECT ").append(docFields).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
+					sql = new StringBuilder("SELECT ").append(docFields).append(" FROM "+branchSource.sql()+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 
 				if (onlyAvailable) sql.append(" available="+DB.getBooleanSql(true)+" ");
 				else sql.append(" d.doc_id>0 ");
@@ -1997,9 +2022,9 @@ public class DocDB extends DB
 					if (Constants.DB_TYPE == Constants.DB_PGSQL) limit = " OFFSET " + startIndex + " LIMIT " + rows;
 					startIndex = 0;
 				}
-				sql = new StringBuilder("SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, ").append(docFields).append(" FROM documents d LEFT JOIN users u ON d.author_id=u.user_id"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
+				sql = new StringBuilder("SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, ").append(docFields).append(" FROM "+branchSource.sql()+" LEFT JOIN users u ON d.author_id=u.user_id"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 				if (Constants.getBoolean("docAuthorLazyLoad"))
-					sql = new StringBuilder("SELECT ").append((perexGroupUseJoin ? "DISTINCT " : "")+docFields).append(" FROM documents d"+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
+					sql = new StringBuilder("SELECT ").append((perexGroupUseJoin ? "DISTINCT " : "")+docFields).append(" FROM "+branchSource.sql()+(perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 
 				if (onlyAvailable) sql.append(" available="+DB.getBooleanSql(true)+" ");
 				else sql.append(" d.doc_id>0 ");
@@ -2012,28 +2037,34 @@ public class DocDB extends DB
 				sql.append(' ').append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order ).append( limit);
 			}
 			//Logger.println(this,"getDocPerex() sql="+sql);
+			// The effective source binds its own parameters first and returns the next free index.
+			int psCounter = 1;
 			if(datum != null)
 			{
 				ps = db_conn.prepareStatement(sql.toString());
-				ps.setTimestamp(1, new Timestamp(DB.getTimestamp(datum, "00:00:00")));
-				ps.setTimestamp(2, new Timestamp(DB.getTimestamp(datum, "23:59:59")));
+				psCounter = branchSource.bind(ps, psCounter);
+				ps.setTimestamp(psCounter++, new Timestamp(DB.getTimestamp(datum, "00:00:00")));
+				ps.setTimestamp(psCounter++, new Timestamp(DB.getTimestamp(datum, "23:59:59")));
 			}
 			else if (publishType == PUBLISH_NEW || publishType == PUBLISH_NEXT)
 			{
 				Timestamp tsNow = new Timestamp(now);
 				ps = db_conn.prepareStatement(sql.toString());
-				ps.setTimestamp(1, tsNow);
-				ps.setTimestamp(2, tsNow);
+				psCounter = branchSource.bind(ps, psCounter);
+				ps.setTimestamp(psCounter++, tsNow);
+				ps.setTimestamp(psCounter++, tsNow);
 			}
 			else if (publishType == PUBLISH_OLD)
 			{
 				Timestamp tsNow = new Timestamp(now);
 				ps = db_conn.prepareStatement(sql.toString());
-				ps.setTimestamp(1, tsNow);
+				psCounter = branchSource.bind(ps, psCounter);
+				ps.setTimestamp(psCounter++, tsNow);
 			}
 			else
 			{
 				ps = db_conn.prepareStatement(sql.toString());
+				psCounter = branchSource.bind(ps, psCounter);
 			}
 			Logger.debug(this,"sql: "+sql);
 
@@ -2089,6 +2120,8 @@ public class DocDB extends DB
 		}
 		catch (Exception ex)
 		{
+			// Do not hide branch selection/SQL failures as a valid empty list or zero count.
+			if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) throw new IllegalStateException("Cannot query branch page list",ex);
 			Logger.error(DocDB.class, ex);
 		}
 		finally
@@ -2119,6 +2152,9 @@ public class DocDB extends DB
 	 */
 	private int getDocPerexCountInGroups(String groupIds, int publishType, String whereSql, String docIdsNotIn, boolean onlyAvailable, String datum, int rootGroupLevel)
 	{
+        // Merge the selected LIVE/WORK rows before this legacy query applies filters, count or paging.
+        sk.iway.iwcm.branch.BranchSql.Fragment branchSource = sk.iway.iwcm.branch.BranchSql.documentSource("d");
+
 		if (whereSql==null) whereSql = "";
 		//len pre istotu...
 		whereSql = whereSql.replace(';', ' ');
@@ -2156,8 +2192,8 @@ public class DocDB extends DB
 			if (groupIds != null) groupIds = getOnlyNumbersIn(groupIds,true);
 
 			StringBuilder sql = new StringBuilder("");
-			if(Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) sql.append("SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) as total FROM documents d");
-			else sql.append("SELECT count(d.doc_id) as total FROM documents d");
+			if(Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) sql.append("SELECT count("+(perexGroupUseJoin ? "DISTINCT " : "")+"d.doc_id) as total FROM "+branchSource.sql());
+			else sql.append("SELECT count(d.doc_id) as total FROM "+branchSource.sql());
 
 			sql.append((perexGroupUseJoin ? " LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id" : "")+" WHERE");
 
@@ -2172,6 +2208,8 @@ public class DocDB extends DB
 
 			if (checkPerex) sql.append(" AND html_data IS NOT null ");
 			sql.append(whereSql);
+			// The effective source binds its own parameters first and returns the next free index.
+			int psCounter = 1;
 			if(datum != null)
 			{
 				//v pripade ze existuje parameter datum napr. datum=25.10.2011
@@ -2179,40 +2217,45 @@ public class DocDB extends DB
 				Logger.debug(this, "getDocPerexCountInGroups sql="+sql);
 
 				ps = db_conn.prepareStatement(sql.toString());
-				ps.setTimestamp(1, new Timestamp(DB.getTimestamp(datum, "00:00:00")));
-				ps.setTimestamp(2, new Timestamp(DB.getTimestamp(datum, "23:59:59")));
+				psCounter = branchSource.bind(ps, psCounter);
+				ps.setTimestamp(psCounter++, new Timestamp(DB.getTimestamp(datum, "00:00:00")));
+				ps.setTimestamp(psCounter++, new Timestamp(DB.getTimestamp(datum, "23:59:59")));
 			}
 			else if (publishType == PUBLISH_NEW)
 			{
 				sql.append(" AND ( (publish_start IS null OR publish_start < ?) AND (publish_end IS null OR publish_end > ?) )");
 				Logger.debug(this, "getDocPerexCountInGroups sql="+sql);
 
-				Timestamp now = new Timestamp((new java.util.Date()).getTime());
+				Timestamp now = new Timestamp((sk.iway.iwcm.branch.BranchView.current() == null ? System.currentTimeMillis() : sk.iway.iwcm.branch.BranchView.current().previewAt()));
 				ps = db_conn.prepareStatement(sql.toString());
-				ps.setTimestamp(1, now);
-				ps.setTimestamp(2, now);
+				psCounter = branchSource.bind(ps, psCounter);
+				ps.setTimestamp(psCounter++, now);
+				ps.setTimestamp(psCounter++, now);
 			}
 			else if (publishType == PUBLISH_OLD)
 			{
 				sql.append(" AND ( (publish_end IS NOT null AND publish_end < ?) )");
 				Logger.debug(this, "getDocPerexCountInGroups sql="+sql.toString());
 
-				Timestamp now = new Timestamp((new java.util.Date()).getTime());
+				Timestamp now = new Timestamp((sk.iway.iwcm.branch.BranchView.current() == null ? System.currentTimeMillis() : sk.iway.iwcm.branch.BranchView.current().previewAt()));
 				ps = db_conn.prepareStatement(sql.toString());
-				ps.setTimestamp(1, now);
+				psCounter = branchSource.bind(ps, psCounter);
+				ps.setTimestamp(psCounter++, now);
 			}
 			else if (publishType == PUBLISH_NEXT)
 			{
 				sql.append(" AND ( (publish_end IS NOT null AND publish_end >= ?) OR (publish_end IS null AND publish_start IS NOT NULL AND publish_start >= ?) ) ");
-				Timestamp now = new Timestamp((new java.util.Date()).getTime() - TimeUnit.DAYS.toMillis(1));
+				Timestamp now = new Timestamp((sk.iway.iwcm.branch.BranchView.current() == null ? System.currentTimeMillis() : sk.iway.iwcm.branch.BranchView.current().previewAt()) - TimeUnit.DAYS.toMillis(1));
 				ps = db_conn.prepareStatement(sql.toString());
-				ps.setTimestamp(1, now);
-				ps.setTimestamp(2, now);
+				psCounter = branchSource.bind(ps, psCounter);
+				ps.setTimestamp(psCounter++, now);
+				ps.setTimestamp(psCounter++, now);
 			}
 			else
 			{
 				Logger.debug(this, "getDocPerexCountInGroups sql="+sql.toString());
 				ps = db_conn.prepareStatement(sql.toString());
+				psCounter = branchSource.bind(ps, psCounter);
 			}
 			rs = ps.executeQuery();
 
@@ -2229,6 +2272,8 @@ public class DocDB extends DB
 		}
 		catch (Exception ex)
 		{
+			// Do not hide branch selection/SQL failures as a valid empty list or zero count.
+			if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) throw new IllegalStateException("Cannot query branch page list",ex);
 			Logger.error(DocDB.class, ex);
 		}
 		finally
@@ -2260,6 +2305,8 @@ public class DocDB extends DB
 	 */
 	public int getDocCountInGroup(int group_id)
 	{
+		// The LIVE count would omit new WORK pages and still include pages deleted or moved in WORK.
+		if (sk.iway.iwcm.branch.BranchView.current() != null) return (int)sk.iway.iwcm.branch.BranchView.current().documents().stream().filter(d -> d.getGroupId() == group_id && d.isAvailable()).count();
 		int ret = 0;
 		java.sql.Connection db_conn = null;
 		java.sql.PreparedStatement ps = null;
@@ -2592,6 +2639,9 @@ public class DocDB extends DB
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public List<DocDetails> getBasicDocDetailsAll()
 	{
+		// Shared metadata belongs to LIVE; return detached metadata from the same effective view as detail reads.
+		sk.iway.iwcm.branch.BranchView branch = sk.iway.iwcm.branch.BranchView.current();
+		if (branch != null) return branch.documents(true);
 		//je to tu takto aby sa nehadzala ClassCastException v Spotlighte
 		List basicDocDetails = new ArrayList();
 		basicDocDetails.addAll(Arrays.asList(basicAllDocsTable.getValues()));
@@ -2607,6 +2657,9 @@ public class DocDB extends DB
 	 */
 	public DocDetails getBasicDocDetails(int docId, boolean doNotReturnNull)
 	{
+		// Deleted branch pages must stay absent even when the legacy caller requests a fallback object.
+		sk.iway.iwcm.branch.BranchView branch = sk.iway.iwcm.branch.BranchView.current();
+		if (branch != null) return branch.document(docId, true);
 		DocDetails doc = null;
 
 		if (basicAllDocsTable!=null && basicAllDocsTable.size()>0 && docId > 0)
@@ -2632,6 +2685,8 @@ public class DocDB extends DB
 	 */
 	public List<DocDetails> getBasicDocDetailsByGroup(int groupId, int orderType)
 	{
+		// Query effective rows instead of the shared LIVE group-to-document cache.
+		if (sk.iway.iwcm.branch.BranchView.current() != null) return getDocByGroup(groupId, orderType, true, 0, 0, true, false);
 		List<DocDetails> docs = new ArrayList<>();
 
 		List<DocDetails> docsInGroup = basicAllDocsInGroupTable.get(groupId);
@@ -2720,6 +2775,9 @@ public class DocDB extends DB
 	 */
 	public static String getDomain(String serverName, HttpServletRequest request)
 	{
+		sk.iway.iwcm.branch.BranchContext branchContext = sk.iway.iwcm.branch.BranchContexts.current(request);
+		// The gateway transport host and the verified logical content domain can differ.
+		if (branchContext.isBranch()) return branchContext.domainName();
 		if (request == null) return serverName;
 
 		String sessionDomain = (String)request.getSession().getAttribute("preview.editorDomainName");
@@ -2776,6 +2834,8 @@ public class DocDB extends DB
 	 */
 	public int getDocIdFromURLImpl(String url, String domain)
 	{
+		// Resolve against effective URLs, not the shared LIVE URL cache.
+		if (sk.iway.iwcm.branch.BranchView.current() != null) return sk.iway.iwcm.branch.BranchReadService.docIdFromUrl(url);
 		Logger.debug(DocDB.class, "getDocIdFromURLImpl, url="+url+" domain="+domain);
 		try
 		{
@@ -2982,6 +3042,14 @@ public class DocDB extends DB
 	 */
 	public String getDocLink(int docId, String externalLink, boolean alwaysIncludeHttpPrefix, HttpServletRequest request)
 	{
+        // Build links from the selected result; only the response boundary adds the preview transport prefix.
+        sk.iway.iwcm.branch.BranchView branch = sk.iway.iwcm.branch.BranchView.current();
+        if (branch != null) {
+            if (Tools.isNotEmpty(externalLink)) return externalLink;
+            String url = sk.iway.iwcm.branch.BranchReadService.docLink(docId);
+            if (alwaysIncludeHttpPrefix && url.startsWith("/")) return "https://" + branch.context().domainName() + url;
+            return url;
+        }
 		if (docId<1)
 		{
 			return("javascript:void(0)");
@@ -3099,6 +3167,7 @@ public class DocDB extends DB
 	 */
 	public List<DocDetails> replaceTextAll(String oldText, String newText)
 	{
+		requireLiveWrite();
 		List<DocDetails> docs = new ArrayList<>();
 		Connection db_conn = null;
 		PreparedStatement ps = null;
@@ -3250,6 +3319,7 @@ public class DocDB extends DB
 	 */
 	public static boolean deleteDoc(int docId, HttpServletRequest request, boolean publishEvents, boolean withHistory, boolean refreshDocDB)
 	{
+		requireLiveWrite();
 		// ziskanie namapovanych stranok
 		List<Integer> slaves = MultigroupMappingDB.getSlaveDocIds(docId);
 
@@ -3590,6 +3660,7 @@ public class DocDB extends DB
 	 */
 	public boolean savePerexGroup(String groupName, int groupId, String availableGroups, HttpServletRequest request)
 	{
+		requireLiveWrite();
 		PerexGroupsEntity saved = PerexGroupsService.savePerexGroup(groupId, groupName, availableGroups);
 		if (saved == null) return false;
 		return true;
@@ -3659,6 +3730,7 @@ public class DocDB extends DB
 	 */
 	public boolean deletePerexGroup(String groups)
 	{
+		requireLiveWrite();
 		String[] groupsArray;
 
 		if (Tools.isNotEmpty(groups)) {
@@ -4047,6 +4119,8 @@ public class DocDB extends DB
 	 * @return
 	 */
 	public static int getMaxSortPriorityInGroup(int groupId) {
+        sk.iway.iwcm.branch.BranchView branch=sk.iway.iwcm.branch.BranchView.current();
+        if (branch!=null) return branch.documents(true).stream().filter(doc -> doc.getGroupId()==groupId).mapToInt(DocDetails::getSortPriority).max().orElse(0);
 		int maxP = 0;
 		Connection db_conn = null;
 		PreparedStatement ps = null;
@@ -4543,6 +4617,7 @@ public class DocDB extends DB
 	 */
 	public static boolean saveDoc(DocDetails docDetails, boolean publishEvents)
 	{
+		requireLiveWrite();
 		if (docDetails==null) return false;
 
 		boolean saveOK = false;
@@ -5063,6 +5138,7 @@ public class DocDB extends DB
 
 	public synchronized void updateInternalCaches(int docId)
 	{
+		requireLiveWrite();
 		//najskor vyber z DB rovnako ako pre loadUrls
 		java.sql.Connection db_conn = null;
 		java.sql.PreparedStatement ps = null;
@@ -5327,6 +5403,7 @@ public class DocDB extends DB
 	 */
 	public static void updateFileNameField(int rootGroupId)
 	{
+		requireLiveWrite();
 		//nacitaj si hodnoty doc_id, group_id do listu
 
 		Connection db_conn = null;
@@ -5530,6 +5607,7 @@ public class DocDB extends DB
 	 */
 	public static void updateRootGroupLevelValues(int rootGroupId)
 	{
+		requireLiveWrite();
 		if (rootGroupId < 1 && InitServlet.isTypeCloud())
 		{
             rootGroupId = CloudToolsForCore.getDomainId();
@@ -5756,6 +5834,7 @@ public class DocDB extends DB
 	 */
 	public static boolean changeGroupTitle(int groupId, int docId, String newTitle, boolean forceUpdate)
 	{
+		requireLiveWrite();
 		if (newTitle != null) newTitle = GroupsDB.sanitizeGroupName(newTitle, false);
 		GroupDetails grDetails =  GroupsDB.getInstance().getGroup(groupId);
 		if(grDetails != null && grDetails.getDefaultDocId() == docId && newTitle != null && !newTitle.equals(grDetails.getGroupName()) &&
@@ -6509,4 +6588,10 @@ public class DocDB extends DB
 		perexGroupName = DB.internationalToEnglish(perexGroupName);
 		return perexGroupName.toLowerCase();
 	}
+    /** Blocks legacy writers before they change production rows, history, events or shared caches. */
+    private static void requireLiveWrite() {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch())
+            throw new IllegalStateException("Production page writes are disabled in a publishing branch");
+    }
+
 }

@@ -96,7 +96,18 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
      */
     @PostMapping("/deletion-preview")
     public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return new DeleteMirrorsResult();
         return deleteMirrorsService.getGroupMirrors(ids, getUser());
+    }
+
+    @Override
+    public org.springframework.http.ResponseEntity<sk.iway.iwcm.system.datatable.DatatableResponse<GroupDetails>> handleEditor(
+            HttpServletRequest request, @org.springframework.web.bind.annotation.RequestBody sk.iway.iwcm.system.datatable.DatatableRequest<Long,GroupDetails> input) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()
+                && (!java.util.Set.of("create","edit","remove").contains(java.util.Objects.toString(input.getAction(),""))
+                    || input.getImportedColumns()!=null || input.getImportMode()!=null || input.getUpdateByColumn()!=null || input.isDeleteOldData()))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Imports and bulk operations are unavailable in a publishing branch");
+        return super.handleEditor(request,input);
     }
 
     @Override
@@ -195,6 +206,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         GroupDetails group = null;
         int schedulerId = Tools.getIntValue(getRequest().getParameter("schedulerId"), -1);
 
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch() && schedulerId>0)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Folder history is read-only in a publishing branch");
         // Create new group
         if (id == -1) {
             // Get groupID from new group is made (it's parentGroupId)
@@ -220,6 +233,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 group = groupsDB.getGroup((int) id);
             }
         }
+        if (group==null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND);
         GroupEditorField gef = new GroupEditorField();
         group = gef.fromGroupDetails(group);
 
@@ -227,6 +241,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             throwError("admin.editor_dir.dontHavePermsForThisDir");
         }
 
+        sk.iway.iwcm.branch.BranchEditor.attachHash(group);
         return group;
     }
 
@@ -252,6 +267,10 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public GroupDetails editItem(GroupDetails entity, long id) { //NOSONAR
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            setForceReload(true);
+            return new sk.iway.iwcm.branch.BranchEditor(getRequest()).saveGroup(entity);
+        }
         entity.getEditorFields().toGroupDetails(entity);
         GroupsDB groupsDB = GroupsDB.getInstance();
         Identity user = getUser();
@@ -779,6 +798,10 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean deleteItem(GroupDetails entity, long id) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            setForceReload(true);
+            return new sk.iway.iwcm.branch.BranchEditor(getRequest()).deleteGroup(entity);
+        }
         if (getUser().isDisabledItem("deleteDir")) {
             throwError("admin.delete.deleteDirDisabled.error");
             return false;
@@ -952,6 +975,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             rootParentGroupDetails.setGroupName("/");
             gef.setParentGroupDetails(rootParentGroupDetails);
         }
+        sk.iway.iwcm.branch.BranchEditor.attachHash(group);
         return group;
     }
 

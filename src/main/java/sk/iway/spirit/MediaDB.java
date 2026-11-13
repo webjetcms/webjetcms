@@ -33,7 +33,6 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.filebrowser.EditForm;
-import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
@@ -73,6 +72,8 @@ public class MediaDB extends JpaDB<Media>
 	 */
 	public static Media getMedia(int mediaId)
 	{
+        // Direct JPA lookup is LIVE-only; media detail must use its selected Q16 result.
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return sk.iway.iwcm.branch.BranchMedia.one(mediaId);
         Media result = JpaTools.findFirstByMatchingProperty(Media.class, "id", mediaId);
         if (result != null && sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE.equals(result.getMediaFkTableName())) {
             RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -144,6 +145,13 @@ public class MediaDB extends JpaDB<Media>
 	 */
 	public static List<Media> getMediaByMediaGroups(HttpSession session, String tableName, int pkIdParam, List<MediaGroupBean> mediaGroups, long lastUpdate, boolean checkAvailability)
 	{
+        // WORK category membership and the effective owner timestamp must be applied before availability filters.
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            if (!"documents".equals(tableName)) throw new IllegalStateException("Only document media are supported in a publishing branch");
+            List<Media> records=sk.iway.iwcm.branch.BranchMedia.list(pkIdParam,mediaGroups);
+            if(lastUpdate>0) records=filterByLastUpdateDate(records,lastUpdate);
+            return checkAvailability?filterByAvailability(records,session):records;
+        }
         RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
         jakarta.servlet.http.HttpServletRequest request = rb == null ? null : rb.getRequest();
         if (request != null && "documents".equals(tableName) && sk.iway.iwcm.doc.PlannedAccess.isPlannedPreview(request, pkIdParam)) {
@@ -251,8 +259,8 @@ public class MediaDB extends JpaDB<Media>
 
 			if (m.getMediaLink().startsWith("/files") || m.getMediaLink().startsWith("/archiv"))
 			{
-				IwcmFile f = new IwcmFile(Tools.getRealPath(m.getMediaLink()));
-				if (!f.exists()) continue;
+				// WORK-only attachments have no LIVE file, while a WORK DELETE must stay absent despite LIVE bytes.
+				if (!sk.iway.iwcm.branch.BranchFiles.exists(m.getMediaLink())) continue;
 
 				if ("fast".equals(mode))
 				{
@@ -315,8 +323,8 @@ public class MediaDB extends JpaDB<Media>
 		{
 			if (m.getMediaLink().startsWith("/files") || m.getMediaLink().startsWith("/archiv") || m.getMediaLink().startsWith("/images"))
 			{
-				IwcmFile f = new IwcmFile(Tools.getRealPath(m.getMediaLink()));
-				return f.exists();
+				// Check selected read visibility without redirecting the global resolver used by file writers.
+				return sk.iway.iwcm.branch.BranchFiles.exists(m.getMediaLink());
 			}
 		}
 		catch (Exception e)
@@ -572,6 +580,10 @@ public class MediaDB extends JpaDB<Media>
 	 * @return najvyssi sortOrder medii v stranke
 	 */
 	public static int getLastOrder(int mediaFkId, String mediaFkTableName){
+		if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+			if (!"documents".equals(mediaFkTableName)) throw new IllegalStateException("Save the page in this branch before adding media");
+			return sk.iway.iwcm.branch.BranchMedia.list(mediaFkId,null).stream().mapToInt(Media::getMediaSortOrder).max().orElse(0);
+		}
 		int sortOrder = 0;
 		if(mediaFkId == -1) return  sortOrder;
 

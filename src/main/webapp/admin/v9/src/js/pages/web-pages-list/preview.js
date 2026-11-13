@@ -21,6 +21,20 @@ export class EditorPreview {
         var self = this;
 
         window.previewPage = function() {
+            if (window.branchScreen?.enabled && window.branchScreen.branchId) {
+                const preview = window.open('about:blank', 'webjetPreviewWindow');
+                const openPreview = async (doc) => {
+                    try {
+                        const response = await fetch(`/admin/rest/branches/${window.branchScreen.branchId}/preview-link?docId=${doc.docId}`);
+                        if (!response.ok) throw new Error(await response.text());
+                        preview.location = (await response.json()).url;
+                    } catch (error) { preview.close(); WJ.notifyError(error.message); }
+                };
+                if (self.webpagesDatatable.EDITOR.currentJson.editorFields?.branchReadOnlyReason) {
+                    openPreview(self.webpagesDatatable.EDITOR.currentJson);
+                } else self.webpagesDatatable.EDITOR.submit(json => openPreview(json.data[0]), () => preview.close(), null, false);
+                return;
+            }
             self.isPreviewClicked = true;
             //vykonaj akoze submit, v preSubmit to odchytime a zastavime odoslanie
             self.webpagesDatatable.EDITOR.submit();

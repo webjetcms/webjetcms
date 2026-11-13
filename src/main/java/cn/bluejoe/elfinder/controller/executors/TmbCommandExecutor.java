@@ -24,7 +24,8 @@ public class TmbCommandExecutor extends AbstractCommandExecutor
 		
 		//JEEFF: preposleme na thumb server
 		response.setStatus(302);
-		response.setHeader("Location", "/thumb"+virtualPath+"?w="+width);
+		String prefix=sk.iway.iwcm.branch.BranchContexts.current().isBranch() ? sk.iway.iwcm.branch.BranchPreviewUrls.PREFIX+sk.iway.iwcm.branch.BranchContexts.current().branchId() : "";
+        response.setHeader("Location", prefix+"/thumb"+virtualPath+"?w="+width);
 		
 		/*
 		InputStream is = fsi.openInputStream();

@@ -567,81 +567,39 @@ public class Documents extends Indexed
 	 *
 	 * @param docId
 	 */
-	public static void updateSingleDocument(int docId)
-	{
-		if (Constants.getBoolean("luceneIncrementalDocumentIndexing"))
-		{
-			Connection db_conn = null;
-			PreparedStatement ps = null;
-			ResultSet rs = null;
-			IndexWriter writer = null;
-			try
-			{
-				db_conn = DBPool.getConnection();
-				ps = db_conn.prepareStatement("SELECT * FROM documents WHERE doc_id = ? ");
-				ps.setInt(1, docId);
-				rs = ps.executeQuery();
-				if (rs.next())
-				{
-					int groupId = rs.getInt("group_id");
-					int tempId = rs.getInt("temp_id");
-					String lng = getDocumentLanguage(groupId, tempId);
+    public static void updateSingleDocument(int docId)
+    {
+        try { updateSingleDocumentChecked(docId); }
+        catch (Exception ex) { Logger.error(ex); }
+    }
 
-					IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));
-					config.setOpenMode(OpenMode.APPEND);
-					writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);
-					if(rs.getBoolean("available") == false || rs.getBoolean("searchable") == false || isProtectedFile(rs.getString("external_link")))
-					{
-						writer.deleteDocuments(new Term("doc_id", Integer.toString(docId)));
-					}
-					else
-					{
-						Document luceneDoc = toLuceneDocument(rs, lng);
-						if (luceneDoc == null) writer.deleteDocuments(new Term("doc_id", Integer.toString(docId)));
-						else writer.updateDocument(new Term("doc_id", Integer.toString(docId)), luceneDoc);
-					}
-					writer.commit();
-					writer.close();
-					writer = null;
-					IndexSearcherBuilder.refresh();
-				}
-				rs.close();
-				ps.close();
-				db_conn.close();
-				rs = null;
-				ps = null;
-				db_conn = null;
-			}
-			catch (Exception ex)
-			{
-				sk.iway.iwcm.Logger.error(ex);
-			}
-			finally
-			{
-				try
-				{
-					if (rs != null)
-						rs.close();
-					if (ps != null)
-						ps.close();
-					if (db_conn != null)
-						db_conn.close();
-				}
-				catch (Exception ex2)
-				{
-				}
-				try
-				{
-					if (writer != null) writer.close();
-				}
-				catch (Exception e)
-				{
-				}
-			}
-		}
-
-
-	}
+    /** Refreshes one document and propagates index failures to a resumable publisher. */
+    public static void updateSingleDocumentChecked(int docId) throws SQLException, IOException
+    {
+        if (!Constants.getBoolean("luceneIncrementalDocumentIndexing")) return;
+        try (Connection connection = DBPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM documents WHERE doc_id=?")) {
+            statement.setInt(1, docId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next()) throw new SQLException("Document disappeared during index refresh: " + docId);
+                String language = getDocumentLanguage(result.getInt("group_id"), result.getInt("temp_id"));
+                IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, language));
+                config.setOpenMode(OpenMode.APPEND);
+                try (IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(language), config)) {
+                    Term identity = new Term("doc_id", Integer.toString(docId));
+                    if (!result.getBoolean("available") || !result.getBoolean("searchable") || isProtectedFile(result.getString("external_link"))) {
+                        writer.deleteDocuments(identity);
+                    } else {
+                        Document document = toLuceneDocument(result, language);
+                        if (document == null) writer.deleteDocuments(identity);
+                        else writer.updateDocument(identity, document);
+                    }
+                    writer.commit();
+                }
+                IndexSearcherBuilder.refresh();
+            }
+        }
+    }
 
 	/**
 	 * Zmaze dokument z indexu

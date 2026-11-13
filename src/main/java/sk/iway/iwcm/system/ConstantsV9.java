@@ -22,6 +22,10 @@ public class ConstantsV9 {
 	 * This method is reimplemented in the WebJET 9 distribution and must remain compatible with it.
 	 */
 	public static void clearValuesWebJet9() {
+		Constants.setBoolean("branchesEnabled", false, Constants.MOD_SYSTEM_ADMIN, "Enable publishing branches only with enableStaticFilesExternalDir=true on a verified InnoDB single-writer installation.");
+		Constants.setString("branchStorageRoot", "", Constants.MOD_SYSTEM_ADMIN, "Absolute private filesystem root outside the served web application for publishing branches.");
+		Constants.setBoolean("branchSingleWriterConfirmed", false, Constants.MOD_SYSTEM_ADMIN, "Operator confirmation that every content-serving node uses branchesEnabled and the same single writable database.");
+
 		Constants.setString("chunksQuantity", "25", Constants.MOD_PERFORMANCE, "Pocet zaznamov spracovanych v jednej davke pri importe cez DataTable.");
 		Constants.setString("propertiesAdminKeys",
 			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*,components.search.rag_answer,temp_edit.HTMLCode",

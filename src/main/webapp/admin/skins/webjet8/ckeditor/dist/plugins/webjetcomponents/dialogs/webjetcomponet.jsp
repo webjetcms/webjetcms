@@ -199,6 +199,8 @@ body { overflow: hidden; }
                 //console.log("CURRENT PARAMETERS=", parameters);
 
                 var src = '/admin/v9/webpages/component/?id=1&showOnlyEditor=true&name=' + encodeURIComponent(c);
+                const branch = window.parent.branchScreen;
+                if (branch?.enabled) src += '&branchId=' + branch.branchId + '&branchDomain=' + encodeURIComponent(branch.domainId);
                 /*var iframe = $('#editorComponent');
                 iframe
                     .after($('<input type="hidden" id="className" />').val(c))

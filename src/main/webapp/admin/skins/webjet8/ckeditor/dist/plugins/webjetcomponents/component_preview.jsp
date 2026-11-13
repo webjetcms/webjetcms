@@ -106,6 +106,8 @@ if (showForm)
 				var editorWindow = win.parent.parent;
 				if (win.parent.document.editorForm) editorWindow = win.parent;
 
+				const branch = editorWindow.branchScreen;
+				if (branch?.enabled) document.componentForm.action += '&branchId=' + branch.branchId + '&branchDomain=' + encodeURIComponent(branch.domainId);
 				document.componentForm.docid.value = editorWindow.document.editorForm.docId.value;
 				document.componentForm.groupId.value = editorWindow.document.editorForm.groupId.value;
 
@@ -129,6 +131,11 @@ if (showForm)
 }
 else
 {
+    if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()
+        && !sk.iway.iwcm.branch.BranchApps.isSupportedPreview(componentCode)) {
+        response.sendError(409, "This component preview is unavailable in a publishing branch");
+        return;
+    }
 	request.setAttribute("componentCode", componentCode);
 
 	if (docId > 0)

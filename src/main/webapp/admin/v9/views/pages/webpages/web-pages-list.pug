@@ -339,6 +339,7 @@ block content
                         }
                     });
 
+                    window.applyBranchEditor?.(groupsDatatable, true);
                     window.bindDeleteMirrors(groupsDatatable, "/admin/rest/groups/deletion-preview", "groups");
 
                     groupsDatatable.hideButton("import");

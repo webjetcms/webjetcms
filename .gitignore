@@ -28,6 +28,8 @@ src/main/webapp/files/protected/backup/
 node_modules/
 
 #local files
+/src/main/webapp/images/branch-p05-autotest/
+/src/main/webapp/files/branch-p05-autotest/
 localconf*.jsp
 scratchpad*.jsp
 /target
@@ -100,3 +102,6 @@ src/main/webapp/admin/v9/src/js/plugins/Editor-*.zip
 
 # Local model bundles
 **/WEB-INF/local-ai-models
+
+# Local P06 publishing-package review assets
+/src/main/webapp/files/branch-p06-autotest/

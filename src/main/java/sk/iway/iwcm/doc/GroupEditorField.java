@@ -22,6 +22,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Setter
 public class GroupEditorField extends BaseEditorFields {
 
+    /** Hash of the content actually displayed, carried back unchanged on save/delete. */
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
+    private String branchHash;
+
+
     @DataTableColumn(inputType = DataTableColumnType.JSON, title = "group.superior_directory", tab = "basic", visible = false, sortAfter = "editorFields.forceDomainNameChange", className = "dt-tree-group-root", editor = {
             @DataTableColumnEditor(attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before") }) })
     private GroupDetails parentGroupDetails;

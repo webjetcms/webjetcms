@@ -190,6 +190,8 @@ public class GroupsService extends NotifyService {
 	 */
     public static boolean isInTrash(GroupDetails group) {
         GroupDetails trashGroupDetails = getTrashGroupDetails();
+        // Branch views deliberately have no Trash folder and must not create it as a side effect of reading.
+        if (trashGroupDetails == null || group == null) return false;
         if (group.getFullPath().startsWith(trashGroupDetails.getFullPath())) return true;
         return false;
     }
