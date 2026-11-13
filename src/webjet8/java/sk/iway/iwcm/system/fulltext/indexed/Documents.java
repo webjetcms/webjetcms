@@ -17,6 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import net.sourceforge.stripes.mock.MockHttpServletRequest;
+import net.sourceforge.stripes.mock.MockHttpSession;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -30,11 +32,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
 import sk.iway.Html2Text;
-import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.DB;
-import sk.iway.iwcm.DBPool;
-import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
@@ -156,7 +154,17 @@ public class Documents extends Indexed
             DocDetails doc = docDB.getDoc(docId);
             EditorForm ef = new EditorForm(doc);
 
-            String data = EditorDB.getDataAsc(plainText, ef, true);
+			//vytvorim fejkovy request a aby nepadlo vo WJte ze request alebo session je null
+			MockHttpServletRequest request = new MockHttpServletRequest(null, "/LuceneFulltextSearch");
+			MockHttpSession session = new MockHttpSession(null);
+			request.setSession(session);
+			request.setServerName("");
+			SetCharacterEncodingFilter.registerDataContext(request);
+
+            String data = EditorDB.getDataAsc(plainText, ef, true, request);
+
+			//odregistrujem fejkovy data context
+			SetCharacterEncodingFilter.unRegisterDataContext();
 
             String htmlData = SearchTools.htmlToPlain(rs.getString("html_data"));
 
