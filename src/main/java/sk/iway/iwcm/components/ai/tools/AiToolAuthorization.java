@@ -42,7 +42,7 @@ public class AiToolAuthorization {
         CATALOG,
         /** Also check the assistant assignment when the request identifies an assistant. */
         ASSIGNED,
-        /** Check the assignment and defer record-dependent rules to the secured MVC handler. */
+        /** Start the audit after granting dispatch and defer record-dependent rules to the secured MVC handler. */
         INVOKE
     }
 
@@ -88,33 +88,15 @@ public class AiToolAuthorization {
         request.setAttribute(AiToolRequest.CHECKING_PERMISSION, Boolean.TRUE);
         try {
             String assistantId = request.getHeader(ASSISTANT_HEADER);
-            if (access != Access.CATALOG && assistantId != null && assistant(Long.parseLong(assistantId))
-                    .filter(a -> Arrays.asList(a.getToolNames().split(",")).contains(entry.definition().name())).isEmpty()) return false;
-            Object bean = entry.handler().createWithResolvedBean().getBean();
-            Class<?> type = entry.handler().getBeanType();
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            PermissionInvocation invocation = new PermissionInvocation(bean, entry.handler().getMethod());
-            // A handler annotation can replace Spring's type-level annotation. Tool access requires both.
-            PreAuthorize classRule = AnnotatedElementUtils.findMergedAnnotation(type, PreAuthorize.class);
-            if (classRule != null) {
-                var expression = expressions.getExpressionParser().parseExpression(classRule.value());
-                if (expression instanceof SpelExpression spel && requiresArguments(spel.getAST())) return false;
-                if (!Boolean.TRUE.equals(expression.getValue(expressions.createEvaluationContext(() -> auth, invocation), Boolean.class))) return false;
+            AssistantDefinitionEntity assigned = null;
+            if (access != Access.CATALOG && assistantId != null) {
+                assigned = assistant(Long.parseLong(assistantId))
+                        .filter(a -> Arrays.asList(a.getToolNames().split(",")).contains(entry.definition().name())).orElse(null);
+                if (assigned == null) return false;
             }
-            Secured classRoles = AnnotatedElementUtils.findMergedAnnotation(type, Secured.class);
-            if (classRoles != null && auth.getAuthorities().stream()
-                    .noneMatch(a -> Arrays.asList(classRoles.value()).contains(a.getAuthority()))) return false;
-
-            if (DatatableRestControllerV2.class.isAssignableFrom(type)
-                    && (!(bean instanceof DatatableRestControllerV2<?, ?> table) || !table.checkAccessAllowed(request))) return false;
-            if (!grants(secured.authorize(() -> auth, invocation))) return false;
-            PreAuthorize handlerRule = SecurityAnnotationScanners.requireUnique(PreAuthorize.class).scan(invocation.getMethod(), type);
-            if (handlerRule != null && expressions.getExpressionParser().parseExpression(handlerRule.value()) instanceof SpelExpression spel
-                    && requiresArguments(spel.getAST())) {
-                // Only Spring MVC has the bound Java arguments. Its secured proxy evaluates this rule when invoking.
-                return access == Access.INVOKE;
-            }
-            return grants(preAuthorize.authorize(() -> auth, invocation));
+            if (!hasHandlerPermission(entry, request, access)) return false;
+            if (access == Access.INVOKE) AiToolAudit.begin(request, entry, assigned);
+            return true;
         } catch (RuntimeException cannotEstablishPermission) {
             // A record-dependent expression cannot grant catalog visibility without a record.
             return false;
@@ -122,6 +104,33 @@ public class AiToolAuthorization {
             if (previous == null) request.removeAttribute(AiToolRequest.CHECKING_PERMISSION);
             else request.setAttribute(AiToolRequest.CHECKING_PERMISSION, previous);
         }
+    }
+
+    private boolean hasHandlerPermission(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {
+        Object bean = entry.handler().createWithResolvedBean().getBean();
+        Class<?> type = entry.handler().getBeanType();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        PermissionInvocation invocation = new PermissionInvocation(bean, entry.handler().getMethod());
+        // A handler annotation can replace Spring's type-level annotation. Tool access requires both.
+        PreAuthorize classRule = AnnotatedElementUtils.findMergedAnnotation(type, PreAuthorize.class);
+        if (classRule != null) {
+            var expression = expressions.getExpressionParser().parseExpression(classRule.value());
+            if (expression instanceof SpelExpression spel && requiresArguments(spel.getAST())) return false;
+            if (!Boolean.TRUE.equals(expression.getValue(expressions.createEvaluationContext(() -> auth, invocation), Boolean.class))) return false;
+        }
+        Secured classRoles = AnnotatedElementUtils.findMergedAnnotation(type, Secured.class);
+        if (classRoles != null && auth.getAuthorities().stream()
+                .noneMatch(a -> Arrays.asList(classRoles.value()).contains(a.getAuthority()))) return false;
+        if (DatatableRestControllerV2.class.isAssignableFrom(type)
+                && (!(bean instanceof DatatableRestControllerV2<?, ?> table) || !table.checkAccessAllowed(request))) return false;
+        if (!grants(secured.authorize(() -> auth, invocation))) return false;
+        PreAuthorize handlerRule = SecurityAnnotationScanners.requireUnique(PreAuthorize.class).scan(invocation.getMethod(), type);
+        if (handlerRule != null && expressions.getExpressionParser().parseExpression(handlerRule.value()) instanceof SpelExpression spel
+                && requiresArguments(spel.getAST())) {
+            // Only Spring MVC has the bound Java arguments. Its secured proxy evaluates this rule when invoking.
+            return access == Access.INVOKE;
+        }
+        return grants(preAuthorize.authorize(() -> auth, invocation));
     }
 
     private static boolean grants(AuthorizationResult result) {

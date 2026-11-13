@@ -10,6 +10,7 @@ Filtrovanie je možné podľa typu auditných záznamov, času, používateľa a
 Každý auditný záznam automaticky zaznamená dátum a čas, ID prihláseného používateľa, IP adresu a ak je povolený reverzný DNS server aj meno počítača. Do textu auditného záznamu sa automaticky vkladá meno uzla clustra, URI adresa, doména a hodnota http hlavičky User-Agent.
 
 - ```ADMINLOG_NOTIFY``` - zmena v zozname notifikácií v aplikácii Audit.
+- `AI` - zahŕňa aj volania nástrojov. V sekcii **Audit → Vyhľadávanie** zvoľte typ `AI` a do filtra **Opis** zadajte napríklad `AI tool: quiz_add`. Záznam obsahuje meno a ID asistenta, HTTP metódu, cestu a stavový kód odpovede. Pri ručnom volaní nástroja je pri jeho názve uvedené `(manual call)`. Ak zrušíte filter typu, uvidíte aj súvisiace auditné záznamy z dátových tabuliek, napríklad záznam typu `QUIZ` o vytvorení kvízu. V stĺpci **Používateľ** vidíte, v koho mene nástroj konal.
 - ```BANNER``` - operácie v aplikácii Bannerový systém
 - ```BASKET``` - operácie v aplikácii Elektronický obchod
 - ```CALENDAR``` - operácie v aplikácii Kalendár udalostí

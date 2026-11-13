@@ -136,13 +136,16 @@ public class AiToolService {
         RequestPath originalPath = (RequestPath) request.getAttribute(ServletRequestPathUtils.PATH_ATTRIBUTE);
         request.setAttribute(TARGET, entry);
         request.setAttribute(PathFilter.AI_TOOL_ENTRY_PATH, "/admin/rest/ai/tools/" + entry.definition().name() + "/call");
+        int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         try {
             ServletRequestPathUtils.parseAndCache(target);
             chain.doFilter(target, response);
+            status = response.getStatus();
         } finally {
             request.removeAttribute(TARGET);
             request.removeAttribute(PathFilter.AI_TOOL_ENTRY_PATH);
             ServletRequestPathUtils.setParsedRequestPath(originalPath, request);
+            AiToolAudit.finish(request, status);
         }
     }
 
