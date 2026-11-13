@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.ai.tools;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -128,6 +129,22 @@ class AiToolDiscoveryTest {
         assertTrue(quiz.at("/inputSchema/properties/quizId").isObject());
         assertTrue(quiz.get("outputSchema").isObject());
         call("quiz_get_quiz_type", "{\"quizId\":42}", 404);
+    }
+
+    @Test
+    void toolInputUsesStoredChoiceValuesFromEditorMetadata() {
+        var schema = context.getBean(AiToolRegistry.class).lookup("quiz_add").definition().inputSchema();
+        var jsonSchema = json.valueToTree(schema);
+        var bodyRef = jsonSchema.at("/properties/body/$ref").asString();
+        var choice = jsonSchema.at(bodyRef.substring(1) + "/properties/quizType");
+        assertEquals(List.of("0", "1"), choice.get("enum").valueStream().map(JsonNode::asString).toList());
+        assertTrue(choice.get("description").asString().contains("1 = "));
+        AiToolArgumentValidator.validate(schema, Map.of("body", Map.of("name", "autotest", "quizType", "1")));
+        assertThrows(IllegalArgumentException.class, () -> AiToolArgumentValidator.validate(schema,
+                Map.of("body", Map.of("name", "autotest", "quizType", "bodovaný"))));
+        var numeric = Map.<String, Object>of("type", "integer", "enum", List.of(java.math.BigInteger.ONE));
+        AiToolArgumentValidator.validate(numeric, 1);
+        assertThrows(IllegalArgumentException.class, () -> AiToolArgumentValidator.validate(numeric, "1"));
     }
 
     @Test

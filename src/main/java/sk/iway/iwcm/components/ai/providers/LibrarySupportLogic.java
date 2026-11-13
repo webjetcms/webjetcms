@@ -205,12 +205,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
                     responseDto.setResponse(response.text());
                 } else {
                     // Tool arguments must never reach the editor as a streamed reply.
-                    try {
-                        inputData.getToolProtocol().apply(response.text(), responseDto, prop);
-                    } catch (IllegalArgumentException invalidDecision) {
-                        AiStatService.addRecord(assistant.getId(), Tools.safeLongToInt(response.usage().plus(attachmentUsage).totalTokens()), statRepo, request);
-                        throw invalidDecision;
-                    }
+                    inputData.getToolProtocol().apply(response.text(), responseDto, prop);
                 }
                 if (responseDto.getToolCall() == null && responseDto.getResponse() != null) {
                     responseDto.setResponse(includeHandler.restoreIncludes(responseDto.getResponse()));

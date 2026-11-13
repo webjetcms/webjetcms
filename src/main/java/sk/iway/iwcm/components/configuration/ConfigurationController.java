@@ -16,6 +16,8 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.tools.AiTool;
+import sk.iway.iwcm.components.ai.tools.AiToolDescription;
 import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConfDB;
@@ -32,6 +34,7 @@ import jakarta.servlet.http.HttpServletRequest;
 @Datatable
 @RequestMapping(value = "/admin/rest/settings/configuration")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuConfig')")
+@AiTool(description = "components.ai.tools.configuration.context")
 public class ConfigurationController extends DatatableRestControllerV2<ConfDetailsDto, Long> {
 
     private final ConfigurationService configurationService;
@@ -125,6 +128,7 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
     }
 
     @GetMapping("/autocomplete/detail")
+    @AiToolDescription("components.ai.tools.configuration_get_autocomplete_detail.description")
     public ConfDetailsDto getAutocompleteDetail(@RequestParam String name) {
         Identity user = getUser();
         if (null == user) {
@@ -137,6 +141,7 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
     }
 
     @GetMapping("/autocomplete")
+    @AiToolDescription("components.ai.tools.configuration_get_autocomplete.description")
     public List<String> getAutocomplete(@RequestParam String term) {
         Identity user = getUser();
         if (null == user) {

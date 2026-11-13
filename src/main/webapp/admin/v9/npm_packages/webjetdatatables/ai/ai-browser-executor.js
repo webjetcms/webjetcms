@@ -46,9 +46,11 @@ export class AiBrowserExecutor {
      * @param {*} inputData
      * @param {*} reuseApiInstance - set to true to reuse latest instance, EG for PageBuilder you need to reuse it for every editor
      * @param {*} setFunction
+     * @param {Function} [onWrite] Reports the current write outcomes.
+     * @param {Function} [onToolActivity] Reports the active tool name, or null after the call.
      * @returns {AiExecutionResult}
      */
-    async execute(aiCol, inputData, reuseApiInstance = false, setFunction = null, onWrite) {
+    async execute(aiCol, inputData, reuseApiInstance = false, setFunction = null, onWrite, onToolActivity) {
 
         let instructions = aiCol.instructions;
         let executionResult = new AiExecutionResult();
@@ -84,7 +86,7 @@ export class AiBrowserExecutor {
                     this.toolController = controller;
                     try {
                         const result = await runBrowserTools(aiCol, inputData,
-                            message => apiInstance.prompt(message, { signal: controller.signal }), controller.signal, onWrite);
+                            message => apiInstance.prompt(message, { signal: controller.signal }), controller.signal, onWrite, onToolActivity);
                         this._assertActive();
                         if (setFunction) setFunction(toolReply(result, false), true);
                         else if (aiCol.toolsWrite) {

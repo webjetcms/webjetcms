@@ -132,6 +132,6 @@ Zatvorenie okna AI zachová rozpísanú správu a neodoslané prílohy, kým zos
 - **Nie je dostupný žiadny asistent:** správca musí povoliť asistenta s typom požiadavky **Čet**, nakonfigurovať jeho poskytovateľa a pridať `top-search-field` medzi cieľové polia alebo `CHAT_SEARCH` medzi entity. Postup je v [nastavení četového asistenta](../settings/README.md#nastavenie-četového-asistenta).
 - **Tlačidlo na pridanie príloh je neaktívne:** asistent nepodporuje prílohy, čet práve spracúva požiadavku alebo je dostupný iba na čítanie. Na karte AI Čet v rýchlom vyhľadávaní musí byť navyše zapnuté ukladanie rozhovoru.
 - **Prílohu nemožno spracovať:** overte formát, veľkosť a čitateľnosť textu; pri obrázku aj podporu obrazového vstupu modelom.
-- **Odpoveď sa nepodarilo dokončiť:** čet zobrazí dôvod a podľa typu chyby ponúkne opakovanie požiadavky alebo nový čet. Požiadavky sa automaticky neopakujú.
+- **Neplatný krok pri práci s nástrojmi:** ak asistent v ukladanom čete navrhne neplatný prvý krok, dostane jednu možnosť opraviť ho pred zavolaním nástroja. Táto oprava spotrebúva tokeny. Ak sa odpoveď nepodarí dokončiť, čet podľa typu chyby ponúkne opakovanie požiadavky alebo nový čet. Pri opakovaní sa nová odpoveď zobrazí pod pôvodnou otázkou na mieste predošlého pokusu.
 
 Podrobnosti ukladania a REST rozhrania sú v [dokumentácii pre programátora](../../../custom-apps/apps/ai/assistants/README.md#ukladané-rozhovory).

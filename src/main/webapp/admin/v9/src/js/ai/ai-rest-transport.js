@@ -10,11 +10,12 @@ import { runToolSteps } from './ai-tool-transport';
  * @param {boolean} [options.toolsEnabled=false] Uses one JSON model response per step.
  * @param {AbortSignal} [options.signal] Cancels the browser's HTTP request.
  * @param {function(string): void} [options.onDelta] Receives raw text fragments as they arrive.
+ * @param {function(string|null): void} [options.onToolActivity] Receives the tool name at dispatch and null when the call settles.
  * @param {string} [options.endpoint] Overrides the assistant endpoint for saved chat requests.
  * @param {function(object): void} [options.onMetadata] Receives saved thread/message IDs and the thread revision.
  * @returns {Promise<object>} CMS response containing text, usage, continuation and error metadata.
  */
-export async function requestAiText(inputData, { toolsEnabled, onWrite, ...options } = {}) {
+export async function requestAiText(inputData, { toolsEnabled, onWrite, onToolActivity, ...options } = {}) {
     if (!toolsEnabled) return generate(inputData, options);
     const message = { ...inputData };
     let totalTokens = 0;
@@ -37,7 +38,7 @@ export async function requestAiText(inputData, { toolsEnabled, onWrite, ...optio
             delete message.files;
         }
         return result;
-    }, options.signal, onWrite);
+    }, options.signal, onWrite, onToolActivity);
 }
 
 async function generate(inputData, { streaming = false, signal, onDelta = () => {}, endpoint, onMetadata = () => {} }) {

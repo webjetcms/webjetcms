@@ -33,7 +33,7 @@ final class AiToolArgumentValidator {
         Object type = schema.get("type");
         if (type instanceof List<?> types && types.stream().noneMatch(t -> isType(value, t))) return false;
         if (type instanceof String && !isType(value, type)) return false;
-        if (schema.get("enum") instanceof List<?> values && !values.contains(value)) return false;
+        if (schema.get("enum") instanceof List<?> values && values.stream().noneMatch(option -> AiToolProtocol.sameJson(value, option))) return false;
         if (value instanceof Number number && schema.get("minimum") instanceof Number min
             && new BigDecimal(number.toString()).compareTo(new BigDecimal(min.toString())) < 0) return false;
         if (value instanceof List<?> list && schema.containsKey("items")) {

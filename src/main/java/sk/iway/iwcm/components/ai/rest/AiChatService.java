@@ -30,6 +30,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.chat.AiChatEntry;
 import sk.iway.iwcm.components.ai.chat.AiChatEntry.WriteOutcome;
 import sk.iway.iwcm.components.ai.chat.AiChatAttachment;
@@ -71,7 +72,7 @@ public class AiChatService implements DisposableBean {
         String unavailableReason, String deletionError, AiChatContext context) { }
     public record MessageView(String id, String turnId, String requestId, String role, String text, String status,
         Date created, int totalTokens, String errorCategory, Integer providerStatusCode, Boolean retryable,
-        List<AttachmentView> attachments, List<WriteOutcome> writeOutcomes) { }
+        List<AttachmentView> attachments, List<WriteOutcome> writeOutcomes, List<String> toolCalls, String activeTool) { }
     public record AttachmentView(String id, String name, String mediaType, long size, String url) { }
     public record HistoryPage(List<ThreadView> items, boolean hasMore) { }
     public record Detail(ThreadView thread, List<MessageView> messages) { }
@@ -157,7 +158,7 @@ public class AiChatService implements DisposableBean {
         Pair<String, String> inputPair = new Pair<>(input.getInputValue(), input.getUserPrompt());
         TokenUsage usage = TokenUsage.EMPTY;
         AssistantResponseDTO result = new AssistantResponseDTO();
-        int tokens = 0;
+        int recordedTokens = 0;
         String status = "error";
         String category = "UNKNOWN";
         Integer providerStatus = null;
@@ -167,7 +168,7 @@ public class AiChatService implements DisposableBean {
         boolean awaitingTool = false;
         var renewal = renewLease(prepared, input);
         try {
-            if (assistants.countWithReachedTokenLimit(prepared.assistant().getId(), prepared.scope().domainId()) > 0) {
+            if (tokenLimitReached(prepared)) {
                 category = "TOKEN_LIMIT_REACHED";
                 result = failure(category, null, request);
                 return result;
@@ -192,43 +193,58 @@ public class AiChatService implements DisposableBean {
                     new AiChatAttachments.Upload(attachment, bytes));
                 // Keep already incurred image costs even when a later attachment is unreadable.
                 usage = usage.plus(preparedAttachment.usage());
-                tokens = (int)Math.min(Integer.MAX_VALUE, usage.totalTokens());
                 preparedAttachment.appendTo(context);
             }
             input.setInputValue(input.getInputValue() + context);
-            // Once submitted, a remote response may exist even if the connection fails before its ID arrives.
-            // Record any observed ID immediately so deletion can clean up unsuccessful attempts too.
-            store.submitted(prepared.scope(), threadId, messageId);
-            submitted = true;
-            AiResponse response = provider.getPersistentChatResponse(prepared.assistant(), input, onText, streaming, providerConfig,
-                responseId -> store.lifecycle(prepared.scope(), threadId, messageId, new AiRequestLifecycle(State.RESPONSE_OBSERVED, responseId)));
-            usage = usage.plus(response.usage());
-            tokens = (int)Math.min(Integer.MAX_VALUE, usage.totalTokens());
-            if (input.getCancellationToken().isCancelled()) throw new CancellationException();
+            AiToolProtocol protocol = input.getToolProtocol();
+            boolean canCorrect = answer.getToolResults().isEmpty();
+            while (true) {
+                if (input.getCancellationToken().isCancelled()) throw new CancellationException();
+                // Each provider response, including a rejected decision, owns a cleanup ID.
+                store.submitted(prepared.scope(), threadId, messageId);
+                submitted = true;
+                AiResponse response = provider.getPersistentChatResponse(prepared.assistant(), input, onText, streaming, providerConfig,
+                    responseId -> store.lifecycle(prepared.scope(), threadId, messageId, new AiRequestLifecycle(State.RESPONSE_OBSERVED, responseId)));
+                usage = usage.plus(response.usage());
+                if (input.getCancellationToken().isCancelled()) throw new CancellationException();
+                if (protocol == null) {
+                    result.setResponse(String.valueOf(response.text()));
+                    break;
+                }
+                protocol.apply(response.text(), result, Prop.getInstance(request));
+                if (!canCorrect || !AiToolProtocol.INVALID_TOOL_STEP.equals(result.getErrorCategory()) || Tools.isEmpty(response.responseId())) break;
+
+                // Ask once for a corrected decision before any write. Charge the first call before checking the limit again.
+                canCorrect = false;
+                recordedTokens = tokenCount(usage);
+                if (recordedTokens > 0) recordUsage(prepared, recordedTokens, request);
+                if (tokenLimitReached(prepared)) {
+                    result = failure("TOKEN_LIMIT_REACHED", null, request);
+                    break;
+                }
+                input.setPreviousResponseId(response.responseId());
+                input.setUserPrompt("Return your next step again as a single JSON object matching the tool instructions and input schema. The previous step was rejected before dispatch.");
+                input.setInputValue("");
+                result = new AssistantResponseDTO();
+            }
             // The completed provider response is authoritative; streamed text may contain only a partial answer.
             text.setLength(0);
-            if (input.getToolProtocol() != null) {
-                input.getToolProtocol().apply(response.text(), result, Prop.getInstance(request));
-                if (result.getError() != null) {
-                    category = result.getErrorCategory();
-                    return result;
-                }
-                if (result.getToolCall() != null) {
-                    awaitingTool = store.awaitToolResult(prepared.scope(), threadId, messageId, result.getToolCall(),
-                        cumulativeTokens(answer, tokens));
-                    if (!awaitingTool) throw new CancellationException();
-                    status = "pending";
-                    category = null;
-                    return result;
-                }
-                text.append(result.getResponse());
-                if (streaming) output.accept(text.toString());
-            } else {
-                text.append(response.text());
+            if (result.getError() != null) {
+                category = result.getErrorCategory();
+                return result;
             }
+            if (result.getToolCall() != null) {
+                awaitingTool = store.awaitToolResult(prepared.scope(), threadId, messageId, result.getToolCall(),
+                    cumulativeTokens(answer, tokenCount(usage)));
+                if (!awaitingTool) throw new CancellationException();
+                status = "pending";
+                category = null;
+                return result;
+            }
+            text.append(result.getResponse());
+            if (protocol != null && streaming) output.accept(text.toString());
             status = "complete";
             category = null;
-            result = completedResponse(text.toString(), cumulativeTokens(answer, tokens));
             return result;
         } catch (AiChatAttachments.UnreadableException exception) {
             category = "ATTACHMENT_INVALID";
@@ -257,8 +273,9 @@ public class AiChatService implements DisposableBean {
             boolean interrupted = Thread.interrupted();
             try {
                 // Account for completed calls even if a later attachment or the main generation failed.
+                int tokens = tokenCount(usage);
                 result.setTotalTokens(cumulativeTokens(answer, tokens));
-                if ("complete".equals(status) || tokens > 0) recordUsage(prepared, tokens, request);
+                if ("complete".equals(status) || tokens > recordedTokens) recordUsage(prepared, tokens - recordedTokens, request);
                 auditResponse(prepared, inputPair, streaming, result, text.toString(), usage);
                 try {
                     // Remote cleanup facts and successful continuation are separate: finish advances only the latter.
@@ -266,7 +283,7 @@ public class AiChatService implements DisposableBean {
                 } finally {
                     if (!awaitingTool) {
                         store.finish(prepared.scope(), threadId, messageId, text.toString(), status,
-                            cumulativeTokens(answer, tokens), category, providerStatus, retryable);
+                            result.getTotalTokens(), category, providerStatus, retryable);
                     }
                 }
                 cleanup(threadId, prepared.scope());
@@ -274,6 +291,14 @@ public class AiChatService implements DisposableBean {
                 if (interrupted) Thread.currentThread().interrupt();
             }
         }
+    }
+
+    private boolean tokenLimitReached(Prepared prepared) {
+        return assistants.countWithReachedTokenLimit(prepared.assistant().getId(), prepared.scope().domainId()) > 0;
+    }
+
+    private static int tokenCount(TokenUsage usage) {
+        return (int)Math.min(Integer.MAX_VALUE, usage.totalTokens());
     }
 
     private static int cumulativeTokens(AiChatEntry answer, int roundTokens) {
@@ -345,7 +370,7 @@ public class AiChatService implements DisposableBean {
             audit.append("\nThread ID: ").append(prepared.turn().thread().getId());
             audit.append("\nMessage ID: ").append(prepared.turn().message().getId()).append('\n');
             AiAuditLog.appendUsage(audit, usage);
-            int totalTokens = (int)Math.min(Integer.MAX_VALUE, usage.totalTokens());
+            int totalTokens = tokenCount(usage);
             if (result.getError() != null) audit.append("\nError message:\n").append(result.getError());
             if (result.getErrorCategory() != null) audit.append("\nError category: ").append(result.getErrorCategory());
             if (result.getProviderStatusCode() != null) audit.append("\nProvider status: ").append(result.getProviderStatusCode());
@@ -444,7 +469,8 @@ public class AiChatService implements DisposableBean {
             message.getRetryable(),
             message.getAttachments().stream().map(attachment -> new AttachmentView(attachment.id(), attachment.name(), attachment.mediaType(),
                 attachment.size(), "/admin/rest/ai/chat/threads/" + threadId + "/attachments/" + attachment.id())).toList(),
-            writeOutcomes(message));
+            writeOutcomes(message), message.getToolResults().stream().map(AiToolProtocol.Result::name).toList(),
+            message.getPendingToolCall() == null ? null : message.getPendingToolCall().name());
     }
 
     private List<WriteOutcome> writeOutcomes(AiChatEntry message) {
@@ -505,6 +531,7 @@ public class AiChatService implements DisposableBean {
             case "PENDING" -> "components.ai_assistants.chat.history.busy.js";
             case "TOOL_OUTCOME_UNKNOWN" -> "components.ai.tools.uncertain.js";
             case AiToolProtocol.TOOL_LIMIT_REACHED -> AiToolProtocol.TOOL_LIMIT_MESSAGE;
+            case AiToolProtocol.INVALID_TOOL_STEP -> AiToolProtocol.INVALID_TOOL_MESSAGE;
             default -> "components.ai_assistants.chat.history.generationFailed.js";
         };
         result.setError(Prop.getInstance(request).getText(messageKey));

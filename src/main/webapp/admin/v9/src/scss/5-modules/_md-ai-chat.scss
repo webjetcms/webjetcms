@@ -236,6 +236,21 @@
 
     .ai-chat-message-status { white-space: pre-line; }
 
+    .ai-chat-tool-activity {
+        margin: 4px 0;
+        font-size: 13px;
+        color: var(--wj-gray-text);
+        overflow-wrap: anywhere;
+
+        summary {
+            width: fit-content;
+            cursor: pointer;
+            &:focus-visible { outline: 2px solid var(--wj-ai-color); outline-offset: 2px; }
+        }
+
+        ol { margin: 4px 0; padding-left: 22px; }
+    }
+
     .ai-chat-html-response {
         margin: 8px 0;
         border: 1px solid var(--wj-nice-gray-100);

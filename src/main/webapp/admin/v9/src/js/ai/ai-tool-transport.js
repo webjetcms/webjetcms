@@ -97,7 +97,7 @@ function writeStatus(observation) {
 }
 
 /** Alternates one model request with one HTTP request until the model returns its final answer. */
-export async function runToolSteps(assistantId, next, signal, onWrite = () => {}) {
+export async function runToolSteps(assistantId, next, signal, onWrite = () => {}, onToolActivity) {
     const results = [];
     const writes = new Map();
     let previous;
@@ -119,7 +119,7 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
             const call = answer.toolCall;
             signal?.throwIfAborted();
             if (typeof call.name !== 'string' || !toolName.test(call.name) || !call.arguments || typeof call.arguments !== 'object' || Array.isArray(call.arguments)) {
-                throw new Error('Invalid assistant tool call.');
+                throw new Error(WJ.translate('components.ai.tools.invalidStep.js'));
             }
             const key = call.name + JSON.stringify(canonicalArguments(call.arguments));
             if (results.length >= maxCalls || key === previous || writes.has(key)) throw new Error(WJ.translate('components.ai.tools.limit.js'));
@@ -130,7 +130,9 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
                 writes.set(key, writeStatus({ name: call.name, uncertain: true }));
                 onWrite([...writes.values()].join('\n'), true);
             }
+            onToolActivity?.(call.name);
             const observation = await callEndpoint(assistantId, call, signal);
+            onToolActivity?.(null);
             results.push(observation);
             if (write) {
                 uncertain ||= observation.uncertain;
@@ -147,7 +149,7 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
 }
 
 /** Browser models propose a single next step using the current assistant's server-provided catalog. */
-export async function runBrowserTools(assistant, input, prompt, signal, onWrite) {
+export async function runBrowserTools(assistant, input, prompt, signal, onWrite, onToolActivity) {
     const assistantId = assistant.assistantId;
     const response = await fetch('/admin/rest/ai/tools?assistantId=' + encodeURIComponent(assistantId), {
         credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal,
@@ -163,15 +165,18 @@ export async function runBrowserTools(assistant, input, prompt, signal, onWrite)
             : instructions + '\nUser input:\n' + JSON.stringify({ input: input.inputValue, prompt: input.userPrompt });
         const raw = await prompt(message);
         let decision;
-        try { decision = JSON.parse(raw); } catch { throw new Error('Invalid assistant tool response.'); }
+        const text = raw.trim();
+        const block = /^```(?:json)?[ \t]*\r?\n([\s\S]*)\r?\n```$/i.exec(text);
+        try { decision = JSON.parse(block ? block[1] : text); }
+        catch { throw new Error(WJ.translate('components.ai.tools.invalidStep.js')); }
         if (decision?.type === 'final' && typeof decision.text === 'string' && decision.text.trim()) {
             const text = assistant.action !== 'live_chat' && assistant.toolsWrite && results.length === 0
                 ? WJ.translate('components.ai.tools.unverified.js') : decision.text;
             return { response: text };
         }
-        if (decision?.type !== 'call' || !definitions.has(decision.name)) throw new Error('Invalid or unassigned assistant tool.');
+        if (decision?.type !== 'call' || !definitions.has(decision.name)) throw new Error(WJ.translate('components.ai.tools.invalidStep.js'));
         return { toolCall: { name: decision.name, arguments: decision.arguments, write: isWrite(decision.name) } };
-    }, signal, onWrite);
+    }, signal, onWrite, onToolActivity);
 }
 
 /** Show the model's reply together with the actual endpoint evidence in an action preset. */

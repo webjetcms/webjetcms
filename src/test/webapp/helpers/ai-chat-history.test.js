@@ -45,10 +45,12 @@ test('history retains attachment and generic errors while completed answers rema
         messages: [
             { role: 'assistant', status: 'error', errorCategory: 'ATTACHMENT_INVALID' },
             { role: 'assistant', status: 'error', errorCategory: 'UNKNOWN' },
-            { role: 'assistant', status: 'complete', text: 'Saved answer' }
+            { role: 'assistant', turnId: 'retried', status: 'error', errorCategory: 'INVALID_TOOL_STEP' },
+            { role: 'assistant', turnId: 'retried', status: 'complete', text: 'Saved answer' }
         ]
     });
 
+    assert.equal(chat.state.messages.length, 3);
     const [attachment, failed, completed] = chat.state.messages;
     assert.equal(attachment.error, 'translated:components.ai_assistants.chat.history.attachmentUnreadable.js');
     assert.equal(attachment.retryable, false);

@@ -28,6 +28,7 @@ import org.mockito.MockedStatic;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.webjetcms.ai.AiClient;
@@ -54,6 +55,8 @@ import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
+import sk.iway.iwcm.components.ai.tools.AiToolDefinition;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.i18n.Prop;
 
 /** Verifies saved chat cleanup, retry metadata and continuation from completed turns only. */
@@ -121,6 +124,29 @@ class AiChatServiceTest {
 
     private AssistantResponseDTO execute(AiChatService.Prepared prepared) {
         return service.execute(prepared, text -> { }, false, request);
+    }
+
+    /** Only a validated correction becomes visible as an active tool for the saved reply. */
+    @Test
+    void correctsMalformedToolDecisionOnce() throws Exception {
+        var toolService = mock(AiToolService.class);
+        ReflectionTestUtils.setField(service, "tools", toolService);
+        assistant.setToolNames("add_record");
+        when(toolService.assigned(assistant, request)).thenReturn(List.of(new AiToolDefinition("add_record", "Add a record",
+            Map.of("type", "object"), "/records", "POST", Map.of())));
+        var usage = new TokenUsage(1, 2, 3, Map.of());
+        String correction = "```json\n{\"type\":\"call\",\"name\":\"add_record\",\"arguments\":{}}\n```";
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenReturn(
+            new AiResponse("Invalid decision", List.of(), usage, "completed", "first"),
+            new AiResponse(correction, List.of(), usage, "completed", "second"));
+
+        var prepared = prepare(null, null);
+        var response = execute(prepared);
+        assertEquals("add_record", response.getToolCall().name());
+        assertEquals(6, response.getTotalTokens());
+        assertEquals("add_record", service.detail(prepared.turn().thread().getId(), scope).messages().get(1).activeTool());
+        verify(assistants, times(2)).incrementUsedTokens(12L, 7, 3L);
+        verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any());
     }
 
     /** Checks current domain usage at execution time before any text or image provider call, then releases the turn. */

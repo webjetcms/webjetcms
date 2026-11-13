@@ -15,6 +15,7 @@ export class AiChatTransport {
      * @param {object} inputData Current prompt, optional context and previous conversation ID.
      * @param {object} callbacks Callbacks for updates, translated statuses, download progress and confirmation.
      * @param {function(string): void} [callbacks.onUpdate] Receives the accumulated raw response.
+     * @param {function(string|null): void} [callbacks.onToolActivity] Receives the tool name at dispatch and null when the call settles.
      * @param {function(string): void} [callbacks.onStatus] Receives a translated status message.
      * @param {function(number|string): void} [callbacks.onDownload] Receives browser model download progress.
      * @param {function(string, string): Promise<boolean>} [callbacks.onConfirm] Requests browser activation or download approval.
@@ -77,6 +78,7 @@ export class AiChatTransport {
         const result = await requestAiText(data, {
             toolsEnabled: assistant.toolsEnabled,
             onWrite: callbacks.onWrite,
+            onToolActivity: callbacks.onToolActivity,
             streaming: assistant.useStreaming === true,
             endpoint: persistent ? '/admin/rest/ai/chat/messages' : undefined,
             signal: request.controller.signal,
@@ -125,7 +127,7 @@ export class AiChatTransport {
         if (!request.browser.isAvailable(assistant)) {
             throw new Error(WJ.translate("components.ai_assistants.browser.api_not_available.js", [request.browser.getApiName(assistant)]));
         }
-        const result = await request.browser.execute(assistant, inputData, false, update, callbacks.onWrite);
+        const result = await request.browser.execute(assistant, inputData, false, update, callbacks.onWrite, callbacks.onToolActivity);
         return {
             success: result.success,
             response: result.explanatoryText || request.text,

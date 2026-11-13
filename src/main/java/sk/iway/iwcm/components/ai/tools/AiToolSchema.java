@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.ai.tools;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.BeanUtils;
@@ -28,12 +30,15 @@ import io.swagger.v3.core.util.Json;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 /** Describes concrete JSON types in the direction in which MVC uses them. */
 final class AiToolSchema {
     private static final ObjectMapper MAPPER = Json.mapper();
+    private static final Set<DataTableColumnType> CHOICE_TYPES = Set.of(
+            DataTableColumnType.SELECT, DataTableColumnType.RADIO, DataTableColumnType.BUTTON_GROUP);
     private final Map<String, Map<String, Object>> definitions = new LinkedHashMap<>();
     private final boolean output;
 
@@ -108,6 +113,7 @@ final class AiToolSchema {
             if (output && (omitted.contains(prop.getName()) || member.hasAnnotation(JsonBackReference.class))) continue;
             Map<String, Object> field = new LinkedHashMap<>(memberSchema(prop.getPrimaryType(), output ? member.getAnnotation(JsonFormat.class) : null));
             field.put("description", label(prop));
+            if (!output) addChoiceValues(prop, field);
             if (!output && raw == DatatableRequest.class && "action".equals(prop.getName())) {
                 field.put("enum", List.of("create", "edit", "remove"));
             }
@@ -120,6 +126,43 @@ final class AiToolSchema {
         if (!output && raw == DatatableRequest.class) required = List.of("action", "data");
         if (!required.isEmpty()) bean.put("required", required);
         return root ? bean : Map.of("$ref", "#/$defs/" + key);
+    }
+
+    /** Uses the editor's fixed choices as wire values. Runtime option sources cannot be resolved at discovery. */
+    private static void addChoiceValues(BeanPropertyDefinition prop, Map<String, Object> field) {
+        if (field.containsKey("enum") || !(field.get("type") instanceof String jsonType)) return;
+        DataTableColumn column = prop.getPrimaryMember().getAnnotation(DataTableColumn.class);
+        if (column == null || column.editor().length == 0 || column.inputType().length == 0
+                || !CHOICE_TYPES.contains(column.inputType()[0])) return;
+        var editor = column.editor()[0];
+        if (editor.options().length == 0 || editor.optionMethods().length > 0) return;
+        var values = new LinkedHashMap<Object, String>();
+        for (var option : editor.options()) {
+            if (option.key().startsWith("method:") || option.key().startsWith("enumeration:")) return;
+            String literal = option.value();
+            // Translated option values may vary with the request language.
+            if (!literal.equals(AiToolRegistry.translated(literal, literal))) return;
+            Object value = choiceValue(jsonType, literal);
+            if (value == null) return;
+            values.put(value, AiToolRegistry.translated(option.key(), option.key()));
+        }
+        field.put("enum", List.copyOf(values.keySet()));
+        field.put("description", field.get("description") + ". " + values.entrySet().stream()
+                .map(entry -> entry.getKey() + " = " + entry.getValue()).collect(Collectors.joining(", ")));
+    }
+
+    private static Object choiceValue(String jsonType, String literal) {
+        try {
+            return switch (jsonType) {
+                case "string" -> literal;
+                case "integer" -> new BigInteger(literal);
+                case "number" -> new BigDecimal(literal);
+                case "boolean" -> "true".equals(literal) || "false".equals(literal) ? Boolean.valueOf(literal) : null;
+                default -> null;
+            };
+        } catch (NumberFormatException invalid) {
+            return null;
+        }
     }
 
     private Map<String, Object> memberSchema(JavaType type) {

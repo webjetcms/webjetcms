@@ -1505,12 +1505,24 @@ test('AI Chat sends no webpage context and completed responses expose only Copy'
     assert.deepEqual(JSON.parse(JSON.stringify(f.chatRequests[0].inputData)), {
         inputValue: '', inputValueType: 'text', outputValueType: 'text', userPrompt: 'Write a short announcement'
     });
+    const { callbacks } = f.chatRequests[0];
+    callbacks.onToolActivity('list_records');
+    const activity = f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-tool-activity');
+    assert.equal(activity.querySelector('li').textContent, 'list_records');
+    activity.open = true;
+    callbacks.onToolActivity(null);
+    callbacks.onToolActivity('read_record');
+    assert.deepEqual(Array.from(activity.querySelectorAll('li'), item => item.textContent), ['list_records', 'read_record']);
+    callbacks.onToolActivity(null);
     const reply = '<p>Our announcement</p>';
     f.chatRequests[0].resolve({ success: true, response: reply });
     await tick();
     const message = f.controller.chatPanel.querySelector('.ai-chat-assistant');
-    assert.equal(message.querySelector('details code').textContent, reply);
-    assert.equal(message.querySelector('details').open, true);
+    assert.equal(activity.open, true);
+    assert.equal(activity.querySelectorAll('li').length, 2);
+    const preview = message.querySelector('.ai-chat-html-response');
+    assert.equal(preview.querySelector('code').textContent, reply);
+    assert.equal(preview.open, true);
     assert.equal(message.querySelector('.ai-chat-message-text p'), null, 'Raw HTML must remain inert text.');
     const actions = message.querySelectorAll('.ai-chat-message-actions button');
     assert.equal(actions.length, 1);
@@ -2289,7 +2301,7 @@ for (const scenario of [
     { label: 'invalid attachment', errorCategory: 'ATTACHMENT_INVALID', retryable: null, canRetry: false },
     { label: 'unsupported operation', errorCategory: 'UNSUPPORTED_OPERATION', retryable: true, canRetry: false },
     { label: 'invalid continuation', errorCategory: 'INVALID_CONTINUATION', retryable: true, canRetry: false },
-    { label: 'stopped response', status: 'stopped', errorCategory: 'CANCELLED', retryable: false, canRetry: true }
+    { label: 'non-retryable stopped response', status: 'stopped', errorCategory: 'CANCELLED', retryable: false, canRetry: false }
 ]) {
     test(`Saved chat restores retry controls for a ${scenario.label}`, async t => {
         const f = fixture(t, deniedRestPermissions, { aiChat: true });
