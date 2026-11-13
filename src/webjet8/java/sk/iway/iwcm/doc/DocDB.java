@@ -5244,7 +5244,7 @@ public class DocDB extends DB
 		Cache.getInstance().clearAll();
 		Cache.getInstance(true);
 		ClusterDB.addRefresh(DocDB.class.getName()+"-"+docId);
-		Documents.deleteSingleDocument(docId);
+		Documents.deleteSingleDocument(doc);
 	}
 
 	/**

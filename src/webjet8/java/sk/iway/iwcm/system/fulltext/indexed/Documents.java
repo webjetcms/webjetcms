@@ -646,59 +646,28 @@ public class Documents extends Indexed
 	/**
 	 * Zmaze dokument z indexu
 	 *
-	 * @param docId
+	 * @param doc
 	 */
-	public static void deleteSingleDocument(int docId)
+	public static void deleteSingleDocument(DocDetails doc)
 	{
 		if (Constants.getBoolean("luceneIncrementalDocumentIndexing"))
 		{
-			Connection db_conn = null;
-			PreparedStatement ps = null;
-			ResultSet rs = null;
-			try
+			if (doc != null && doc.getGroup() != null)
 			{
-				db_conn = DBPool.getConnection();
-				ps = db_conn.prepareStatement("SELECT * FROM documents WHERE doc_id = ? ");
-				ps.setInt(1, docId);
-				rs = ps.executeQuery();
-				while (rs.next())
-				{
-					int tempId = GroupsDB.getInstance().getGroup(rs.getInt("group_id")).getTempId();
-					String lng = TemplatesDB.getInstance().getTemplate(tempId).getLng();
-					IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));
-					config.setOpenMode(OpenMode.APPEND);
-					IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);
-					writer.deleteDocuments(new Term("doc_id", Integer.toString(docId)));
-					writer.commit();
-					writer.close();
-					IndexSearcherBuilder.refresh();
-				}
-				rs.close();
-				ps.close();
-				db_conn.close();
-				rs = null;
-				ps = null;
-				db_conn = null;
-			}
-			catch (Exception ex)
-			{
-				sk.iway.iwcm.Logger.error(ex);
-			}
-			finally
-			{
-				try
-				{
-					if (rs != null)
-						rs.close();
-					if (ps != null)
-						ps.close();
-					if (db_conn != null)
-						db_conn.close();
-				}
-				catch (Exception ex2)
-				{
-				}
-			}
+                try {
+                    int tempId = doc.getGroup().getTempId();
+                    String lng = TemplatesDB.getInstance().getTemplate(tempId).getLng();
+                    IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));
+                    config.setOpenMode(OpenMode.APPEND);
+                    IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);
+                    writer.deleteDocuments(new Term("doc_id", Integer.toString(doc.getDocId())));
+                    writer.commit();
+                    writer.close();
+                    IndexSearcherBuilder.refresh();
+                } catch (IOException e) {
+                    Logger.error(Documents.class, "Error deleting document doc: " + doc.getDocId() + " from index: " + e.getMessage(), e);
+                }
+            }
 		}
 	}
 
