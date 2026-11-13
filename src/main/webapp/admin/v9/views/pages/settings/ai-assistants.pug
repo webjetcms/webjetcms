@@ -3,25 +3,35 @@ extends ../../partials/layout
 block content
 
     template#assistant-tools-template
-        fieldset
-            .d-flex.gap-2.mb-3
-                select.form-select(data-live-search="true" th:attr="aria-label=#{components.ai_assistants.tools.name}")
-                button.btn.btn-primary(type="button" th:text="#{button.add}")
-            .table-responsive
-                table.table.align-middle(th:attr="aria-label=#{components.ai_assistants.tools.title}")
-                    thead
-                        tr
-                            th(scope="col" th:text="#{components.ai_assistants.tools.name}")
-                            th(scope="col" th:text="#{components.ai_assistants.tools.description}")
-                            th(scope="col")
-                                span.visually-hidden(th:text="#{editor.form.action}")
-                    tbody
-                    tfoot
-                        tr
-                            td.text-center(colspan="3" th:text="#{components.ai_assistants.tools.none_assigned}")
-            template
-                button.btn.btn-sm.btn-outline-danger(type="button" th:title="#{components.ai_assistants.tools.remove}")
-                    i.ti.ti-trash(aria-hidden="true")
+        fieldset.assistant-tools
+            label.form-label.fw-bold(th:text="#{components.ai_assistants.tools.quick_add}")
+            input.form-control(type="search" autocomplete="off" th:placeholder="#{components.ai_assistants.tools.search}")
+            .tool-results.list-group.list-group-flush.mt-2(hidden)
+            .d-flex.justify-content-between.align-items-baseline.gap-2.mt-3.mb-2
+                strong(th:text="#{components.ai_assistants.tools.assigned}")
+                small.tool-count.text-muted
+            .tool-groups.list-group
+            p.tool-empty.text-muted(th:text="#{components.ai_assistants.tools.none_assigned}")
+            .tool-feedback.mt-2
+                span(role="status")
+                button.tool-undo.btn.btn-sm.btn-link(type="button" hidden th:text="#{admin.dashboard.undo.js}")
+    style.
+        .assistant-tools { min-width: 0; }
+        .assistant-tools .tool-results {
+            --bs-list-group-bg: var(--bs-secondary-bg);
+            max-height: 16rem;
+            overflow-y: auto;
+            border: 1px solid var(--wj-nice-gray-300);
+            border-radius: var(--wj-border-radius);
+            background-color: var(--bs-list-group-bg);
+        }
+        .assistant-tools .tool-item-text { min-width: 0; overflow-wrap: anywhere; }
+        .assistant-tools .tool-method { --bs-badge-font-size: .875em; }
+        .assistant-tools .tool-toggle { flex: 1; min-width: 0; white-space: normal; }
+        .assistant-tools .tool-toggle[aria-expanded="true"] .ti-chevron-right { transform: rotate(90deg); }
+        .assistant-tools .tool-browse-header { position: sticky; top: 0; z-index: 1; background: var(--bs-list-group-bg); }
+        .assistant-tools .tool-browse { flex-basis: 11rem; }
+        .assistant-tools .tool-result { color: var(--bs-body-color); }
 
     script
         include assistant-tool-field.js
@@ -315,12 +325,6 @@ block content
         #datatableInit_modal .DTE_Field_Type_assistantTools {
             margin-inline: 0;
         }
-        #datatableInit_modal .DTE_Field_Type_assistantTools :is(th, td) {
-            white-space: normal;
-            overflow-wrap: anywhere;
-        }
-        #datatableInit_modal .DTE_Field_Type_assistantTools th:first-child { width: 30%; }
-        #datatableInit_modal .DTE_Field_Type_assistantTools th:last-child { width: 3rem; }
 
         .pg-ai-token-usage div.amcharts { isolation: isolate; }
 

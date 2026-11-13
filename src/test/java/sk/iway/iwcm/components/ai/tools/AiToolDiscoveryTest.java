@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -57,6 +58,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.rest.AiToolsController;
+import sk.iway.iwcm.components.quiz.rest.QuizQuestionRestController;
 import sk.iway.iwcm.components.quiz.rest.QuizRestController;
 import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
 import sk.iway.iwcm.system.datatable.events.DatatableEvent;
@@ -97,6 +99,7 @@ class AiToolDiscoveryTest {
         WebjetSecurityService security() { return mock(WebjetSecurityService.class); }
         @Bean AssistantDefinitionRepository assistants() { return mock(AssistantDefinitionRepository.class); }
         @Bean QuizRestController quizzes() { return new QuizRestController(null, null, null); }
+        @Bean QuizQuestionRestController questions() { return new QuizQuestionRestController(null); }
         @Bean AuditProbeController probe() { return new AuditProbeController(); }
         @Bean MappedInterceptor guard(AiToolAuthorization authorization) {
             return new MappedInterceptor(null, new AiToolInterceptor(authorization));
@@ -138,6 +141,33 @@ class AiToolDiscoveryTest {
     void tearDown() {
         SecurityContextHolder.clearContext();
         context.close();
+    }
+
+    @Test
+    void controllerGroupPrefixEndsAtACompletePathSegment() {
+        var registry = context.getBean(AiToolRegistry.class);
+        var add = registry.lookup("quiz_add");
+        var action = registry.lookup("quiz_action");
+        assertEquals("/admin/rest/quiz", new AiToolGroup(QuizRestController.class, List.of(add, action), null).getPathPrefix());
+        assertEquals("/admin/rest/quiz/add", new AiToolGroup(QuizRestController.class, List.of(add), null).getPathPrefix());
+    }
+
+    @Test
+    void assignmentPickerGroupsByComponentPackageAndFiltersByPermission() {
+        var request = new MockHttpServletRequest(context.getServletContext());
+        request.setSession(session);
+        var service = context.getBean(AiToolService.class);
+        var tools = service.assignmentTools(request, null);
+        assertTrue(tools.stream().anyMatch(tool -> tool.group().equals("quiz") && tool.name().equals("quiz_get_all")));
+        assertTrue(tools.stream().anyMatch(tool -> tool.group().equals("quiz") && tool.name().equals("quiz_question_add")
+                && tool.httpMethod().equals("POST") && tool.path().equals("/admin/rest/quiz/question/add")));
+        assertTrue(tools.stream().anyMatch(tool -> tool.group().equals("ai") && tool.name().equals("ai_tools_preview")));
+        assertTrue(tools.stream().anyMatch(tool -> tool.group().equals("ai") && tool.name().equals("audit_probe_batch")));
+
+        when(security.hasPermission("cmp_quiz")).thenReturn(false);
+        var visible = service.assignmentTools(request, null);
+        assertFalse(visible.stream().anyMatch(tool -> tool.group().equals("quiz") || tool.name().equals("audit_probe_batch")));
+        assertTrue(visible.stream().anyMatch(tool -> tool.name().equals("ai_tools_preview")));
     }
 
     private JsonNode call(String tool, String arguments, int expectedStatus) throws Exception {

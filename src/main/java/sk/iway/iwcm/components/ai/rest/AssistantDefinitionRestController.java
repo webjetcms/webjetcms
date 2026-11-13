@@ -133,7 +133,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         page.addOptions("provider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
         page.addOptions("groupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
-        page.addOptions("toolNames", toolService.list(getRequest(), getProp()), "description", "name", false);
+        page.addOptions("toolNames", toolService.assignmentTools(getRequest(), getProp()), "description", "name", true);
         page.addOptions("editorFields.statusIcons", aiAssistantsService.getStatusIconOptions(getProp()), "label", "value", false);
 
         //Every assistant should set their specific selects

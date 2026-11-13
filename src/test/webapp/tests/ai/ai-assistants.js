@@ -98,6 +98,84 @@ Scenario('ai_assistants editor logic', async ({I, DTE}) => {
         await checkModelAutocomplete(I, "gemini");
 });
 
+Scenario('Quick add saves explicit tools and undoes partial group removal', async ({I, DT, DTE}) => {
+    const name = "tool-picker-autotest-" + I.getRandomText();
+    const field = "#datatableInit_modal .assistant-tools";
+    const search = field + " input[type=search]";
+    const browseQuiz = field + ' .tool-browse[data-group="quiz"]';
+    const choice = name => field + ' .tool-choices input[value="' + name + '"]';
+    const quiz = field + ' .tool-groups .tool-toggle[data-group="quiz"]';
+    const removeQuiz = quiz + " + .tool-remove-group";
+    const assigned = () => I.executeScript(() => aiAssistantsDataTable.EDITOR.field("toolNames").val().split(",").filter(Boolean));
+    function openTools() {
+        I.click(locate("#datatableInit tbody a").withText(name));
+        DTE.waitForEditor();
+        I.clickCss("#pills-dt-datatableInit-tools-tab");
+    }
+
+    createLocalAssistant(I, DT, DTE, name, "Prehliadač", "Test tool assignment.");
+    DT.filterEquals("name", name);
+    try {
+        openTools();
+        I.fillField(search, "GET /admin/rest/ai/tools/preview");
+        I.pressKey("ArrowDown");
+        I.pressKey("Enter");
+        I.click(search);
+        I.click(browseQuiz);
+        I.checkOption(choice("quiz_get_all"));
+        I.checkOption(choice("quiz_question_add"));
+        I.click(browseQuiz);
+        I.click(browseQuiz);
+        I.seeCheckboxIsChecked(choice("quiz_get_all"));
+        I.assertDeepEqual(await assigned(), ["ai_tools_preview"]);
+        I.click(field + " .tool-add-selected:enabled:visible");
+        const subset = ["ai_tools_preview", "quiz_get_all", "quiz_question_add"];
+        I.assertDeepEqual((await assigned()).sort(), subset);
+        I.click(search);
+        I.click(browseQuiz);
+        I.seeElement(choice("quiz_get_all"));
+        I.click(quiz);
+        I.dontSeeElement(field + " .tool-results");
+        I.seeElement(field + ' [data-remove="quiz_get_all"]');
+        DTE.save();
+        openTools();
+        I.assertDeepEqual((await assigned()).sort(), subset);
+        I.fillField(search, "quiz");
+        I.click(browseQuiz);
+        I.seeElement(choice("quiz_get_all") + ":checked:disabled");
+        I.seeElement(choice("quiz_delete") + ":not(:checked):enabled");
+        I.click(field + " .tool-add-all");
+        I.click(quiz);
+        I.seeElement(field + ' [data-remove="quiz_question_add"]');
+        I.click(field + ' [data-remove="quiz_delete"]');
+        const partial = await assigned();
+        I.assertTrue(partial.includes("quiz_get_all") && partial.includes("quiz_question_add") && !partial.includes("quiz_delete"));
+        I.click(removeQuiz);
+        I.assertEqual((await assigned()).join(","), "ai_tools_preview");
+        I.click(field + " .tool-undo");
+        I.assertDeepEqual((await assigned()).sort(), partial.sort());
+        DTE.save();
+
+        openTools();
+        I.assertDeepEqual((await assigned()).sort(), partial);
+        I.click(removeQuiz);
+        DTE.cancel();
+        openTools();
+        I.assertDeepEqual((await assigned()).sort(), partial);
+        I.click(removeQuiz);
+        DTE.save();
+        openTools();
+        I.assertEqual((await assigned()).join(","), "ai_tools_preview");
+        I.dontSeeElement(quiz);
+        DTE.cancel();
+    } finally {
+        I.amOnPage("/admin/v9/settings/ai-assistants/");
+        DT.waitForLoader();
+        DT.filterEquals("name", name);
+        DT.deleteAll();
+    }
+});
+
 Scenario('AI instructions textarea preserves shared gutter and keyboard behavior', async ({I, DT, DTE}) => {
     I.amOnPage("/admin/v9/settings/ai-assistants/");
     DT.waitForLoader();

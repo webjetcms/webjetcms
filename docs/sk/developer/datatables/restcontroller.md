@@ -168,6 +168,8 @@ Samotné `@AiTool` zahrnie aj zápisové operácie. Voľba `readOnly = true` obm
 
 Voľbou `include` môžete vymenovať Java metódy, ktoré chcete sprístupniť. Pre kontrolér, ktorý nededí z `DatatableRestControllerV2`, je tento zoznam povinný. Napríklad `AiToolsController` používa `@AiTool(readOnly = true, include = {"preview", "details"})`.
 
+Editor asistenta zoskupuje nástroje podľa názvu Java balíka za `.components.`. Napríklad kontroléry dotazníkov aj otázok v balíku `sk.iway.iwcm.components.quiz.rest` patria do skupiny `quiz`. Jej názov môžete preložiť kľúčom `components.ai_assistants.tools.group.quiz`. Mimo balíkov `components.<názov>` má každý kontrolér vlastnú skupinu. Asistent ukladá názvy vybraných nástrojov.
+
 Vlastný endpoint môžete opísať anotáciou `@AiToolDescription` na mapovanej metóde. Ako hodnotu zadajte anglický text alebo prekladový kľúč. Napríklad opis metódy `getQuizType` vysvetľuje, ako interpretovať pole `quizType` vo vrátenom kvíze.
 
 ```java
@@ -183,7 +185,7 @@ public QuizEntity getQuizType(@RequestParam("quizId") int quizId) {
 
 Ak anotáciu vynecháte alebo zadáte prázdny text, katalóg použije preklad podľa vzoru `components.ai.tools.<kontrolér>_<metóda>.description`, potom opis štandardnej operácie alebo text odvodený z názvu metódy. API pre AI používa anglické preklady. V administrácii sa opis zobrazí v jazyku používateľa, pri chýbajúcom preklade v angličtine.
 
-Spoločný opis z `@AiTool(description = "...")` sa zobrazí v riadku kontroléra po zapnutí voľby **Zoskupiť podľa REST kontroléra**. V odpovedi `GET /admin/rest/settings/ai-tools/controllers/all` ho nájdete v poli `controllerDescription` pri zozname `endpoints` daného kontroléra.
+Spoločný opis z `@AiTool(description = "...")` sa zobrazí v riadku kontroléra po zapnutí voľby **Zoskupiť podľa REST kontroléra**. V odpovedi `GET /admin/rest/settings/ai-tools/controllers/all` ho nájdete v poli `controllerDescription`. Pole `pathPrefix` obsahuje spoločný začiatok REST ciest v zozname `endpoints`, napríklad `/admin/rest/quiz`.
 
 `GET /admin/rest/ai/tools` vráti v poli `tools` úplné definície nástrojov dostupných prihlásenému používateľovi. Ak asistent potrebuje vyhľadať len niekoľko operácií, priraďte mu tieto dva nástroje:
 

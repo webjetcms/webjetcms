@@ -144,7 +144,7 @@ public class AiToolRegistry {
         if (!values.isEmpty()) result.put(key, values.stream().map(Object::toString).sorted().toList());
     }
 
-    private static String resource(Class<?> type) {
+    static String resource(Class<?> type) {
         return identifier(type.getSimpleName().replaceFirst("(?:RestController|Controller)$", ""));
     }
 
@@ -173,7 +173,7 @@ public class AiToolRegistry {
         return Character.toUpperCase(words.charAt(0)) + words.substring(1) + ".";
     }
 
-    private static String translated(Prop language, String key, String fallback) {
+    static String translated(Prop language, String key, String fallback) {
         if (language != null) {
             String text = language.getTextProp(key);
             if (text != null) return text;

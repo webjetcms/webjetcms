@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.server.RequestPath;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -73,6 +74,21 @@ public class AiToolService {
 
     public List<AiToolDefinition> list(HttpServletRequest request, Prop language) {
         return visibleEntries(request).map(entry -> entry.definition(language)).toList();
+    }
+
+    /** Lightweight picker data; groups are expanded to individual names before an assistant is saved. */
+    public record AssignmentTool(String name, String description, String group, String groupLabel, String httpMethod, String path) {}
+
+    public List<AssignmentTool> assignmentTools(HttpServletRequest request, Prop language) {
+        return visibleEntries(request).map(entry -> {
+            Class<?> type = entry.controllerType();
+            String component = StringUtils.substringBefore(StringUtils.substringAfter(type.getPackageName(), ".components."), '.');
+            String resource = component.isEmpty() ? AiToolRegistry.resource(type) : component;
+            String label = AiToolRegistry.translated(language, "components.ai_assistants.tools.group." + resource, resource.replace('_', ' '));
+            var tool = entry.definition(language);
+            return new AssignmentTool(tool.name(), tool.description(), component.isEmpty() ? type.getName() : component,
+                    label, tool.httpMethod(), tool.path());
+        }).toList();
     }
 
     public List<AiToolGroup> listGroups(HttpServletRequest request, Prop language) {

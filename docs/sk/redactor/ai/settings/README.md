@@ -96,13 +96,17 @@ Táto karta je kľúčová pre správne fungovanie asistenta. Obsahuje jedno pol
 
 ### Karta - Nástroje
 
-Vyberte nástroj z ponuky a kliknite na **Pridať**. V tabuľke sa zobrazí jeho názov a popis. Tlačidlom **Odobrať nástroj** v príslušnom riadku ho môžete asistentovi odobrať. Ponuka obsahuje nástroje z katalógu, ku ktorým máte prístup.
+V poli **Rýchle pridanie** vyhľadajte skupinu, nástroj alebo časť REST cesty. Ak potrebujete len niektoré nástroje, kliknite na názov skupiny, napríklad **Dotazníky (Quiz)**, začiarknite požadované koncové body a kliknite na **Pridať vybrané**. Už priradené nástroje majú označenie **Pridané**. Tlačidlo **Pridať všetky** pridá zvyšok skupiny bez vyberania jednotlivých položiek. Číslo na tlačidle udáva, koľko nástrojov pribudne. Pridať môžete len nástroje, ku ktorým máte prístup. Nové koncové body sa asistentovi nepridajú automaticky.
+
+![Výber dvoch nástrojov z rozbalenej skupiny Dotazníky](datatable-tools-quick-add.png)
+
+V časti **Priradené nástroje** môžete odobrať celú skupinu alebo ju rozbaliť a odobrať jednotlivý nástroj. Tlačidlo **Vrátiť späť** obnoví práve odobraté nástroje. Ak ste mali priradenú len časť skupiny, obnoví sa iba táto časť.
 
 Zmeny priradenia sa uložia spolu s asistentom po kliknutí na **Uložiť**. Tlačidlom **Zrušiť** ich zahodíte.
 
-Ak má asistent vyhľadávať v katalógu, pridajte mu `ai_tools_preview` a `ai_tools_details`. Prvým nástrojom získa názvy a krátke opisy všetkých operácií, ku ktorým má prihlásený používateľ prístup. Druhým si vyžiada vstupné a výstupné schémy iba pre vybrané názvy. Operáciu, ktorú má asistent aj vykonať, mu priraďte samostatne.
+Ak má asistent vyhľadávať v katalógu, pridajte mu skupinu **Katalóg nástrojov**. Nástrojom `ai_tools_preview` získa názvy a krátke opisy všetkých operácií, ku ktorým má prihlásený používateľ prístup. Nástrojom `ai_tools_details` si vyžiada vstupné a výstupné schémy pre vybrané názvy. Operáciu, ktorú má asistent aj vykonať, mu priraďte jednotlivo alebo ako súčasť skupiny.
 
-![Karta Nástroje s dvoma nástrojmi priradenými asistentovi](datatable-tools-tab.png)
+![Karta Nástroje s priradenými skupinami Katalóg nástrojov a Dotazníky](datatable-tools-tab.png)
 
 ### Karta - Pokročilé
 
@@ -181,7 +185,7 @@ Ak má aspoň jeden asistent v aktuálnej doméne nastavený limit tokenov väč
 
 Na stránke **AI nástroje → Nástroje** vidíte REST operácie, ku ktorým máte prístup. Kliknutím na názov nástroja otvoríte jeho opis, vstupné argumenty a očakávanú odpoveď.
 
-Prepínač **Zoskupiť podľa REST kontroléra** zobrazí názov súboru každého kontroléra a počet jeho dostupných koncových bodov. V stĺpci **Opis** si môžete prečítať, aké údaje kontrolér spravuje. Kliknite napríklad na `QuizRestController.java` a otvorte ponuku **Koncový bod**. Operáciu môžete vyhľadať podľa názvu nástroja, HTTP metódy alebo REST cesty. Výberom inej operácie v tom istom okne zmeníte náhľad.
+Prepínač **Zoskupiť podľa REST kontroléra** zobrazí názov súboru každého kontroléra a počet jeho dostupných koncových bodov. Stĺpec **Prefix REST cesty** zobrazuje spoločnú časť ich ciest, napríklad `/admin/rest/quiz` pre `QuizRestController.java`. V stĺpci **Opis** si môžete prečítať, aké údaje kontrolér spravuje. Kliknutím na názov súboru otvoríte ponuku **Koncový bod**. Operáciu môžete vyhľadať podľa názvu nástroja, HTTP metódy alebo REST cesty. Výberom inej operácie v tom istom okne zmeníte náhľad.
 
 ## Nastavenie četového asistenta
 
