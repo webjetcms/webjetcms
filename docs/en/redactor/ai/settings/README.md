@@ -2,6 +2,14 @@
 
 This document describes the management and configuration of AI assistants in WebJET CMS. In the **AI assistants** section, you can create and edit individual assistants, with each entry representing a specific type of action with a selected AI service provider. The settings allow you to specify where (in which table) and for which field or fields the given assistant will be available, i.e. it will perform the set action.
 
+The **Status** column in the assistant list shows the possible states:
+
+- <span class="text"><i class="ti ti-ban" style="color: #E00028;" aria-hidden="true"></i>Disabled assistant</span> - The assistant has the **Allow use** option disabled. It is not visible to users and cannot be launched.
+- <span class="text"><i class="ti ti-alert-triangle" style="color: #FABD00;" aria-hidden="true"></i>Uninitialized provider</span> - The AI ​​provider is not ready to use. Please check its configuration, such as API key or local model settings.
+- <span class="text"><i class="ti ti-gauge-off" style="color: #FABD00;" aria-hidden="true"></i>Token limit reached</span> - the number of tokens used has reached or exceeded the set limit. Further requests are blocked until you reset the consumption or increase the limit above the current consumption.
+
+For example, you can use the filter in this column to find assistants with a status of **Token limit reached**.
+
 ![](datatable.png)
 
 !>**Warning:** Settings should only be performed by a person who has sufficient knowledge of how AI assistants work and understands the capabilities of individual providers. Incorrect settings may lead to suboptimal behavior of the assistant or limited functionality. We recommend that the configuration be performed by an administrator or a technically savvy user who knows how to correctly enter instructions and parameters for a specific AI provider.
@@ -15,6 +23,7 @@ In this section, we will discuss how to add/set up a new **AI assistant**. The f
 - Provider
 - Instructions
 - Advanced
+- Token limits
 
 ### Tab - Basic
 
@@ -22,6 +31,9 @@ This tab contains basic information about the assistant, such as its name, icon,
 
 - **Assistant Name** – internal identifier of the assistant (not visible to the user). It must be unique in combination with the **Provider** value (i.e. you can use the same name for multiple assistants, but each must have a different provider).
 - **User Name** – the name displayed in the interface. It does not have to be unique. If it is not filled in, the value from the **Assistant Name** field will be used. You can also enter a translation key (the key value will be displayed in the field below it).
+
+  The `{model}` tag is replaced with the current value of the **Model** field when displayed. For example, `{model}` displays `gpt-6.1-sol` and `Čet {model}` displays `Čet gpt-6.1-sol`. The tag can also be preceded by a translation key: `components.ai_assistants.groups.00-chat {model}` displays the translated group name and model. You can also use the tag directly in the translation key value. The preview below the field updates when the name or model changes.
+
 - **Icon** – the name of the icon from https://tabler.io/icons. It is displayed together with the **User Name** field. Enter only the icon identifier (without the URL).
 - **Group** – a logical or visual grouping of assistants in the interface. It has no effect on processing or result.
 - **Created** – system-generated creation date. Cannot be edited and only appears when editing an existing assistant.
@@ -38,9 +50,9 @@ On this tab, you set what action the AI ​​assistant should perform, where it
   - Generate image
   - Edit image
   - Chat
-- **Use for Entity** – you select the entity (table) in which the assistant will be available. All supported entities will automatically appear as you type.
+- **Use for Entity** – you select the entity (table) in which the assistant will be available. As you type, all supported entities and the value `CHAT_SEARCH` for a standalone AI Chat will automatically appear in the quick search.
 - **Source Field** – you specify the field from the selected entity from which the assistant should draw data when performing the action. This field is not required; select it only if input data is required. All fields of the given entity will be displayed.
-- **Target Field** – you select the field in the entity where the result of the assistant action will be stored or where the assistant will be available. All fields of the given entity will be displayed again.
+- **Target Field** – you select the field in the entity where the assistant will be available. For the **Chat** type, you can also add `top-search-field` for the **AI Chat** card in the quick search. If the only entity is `CHAT_SEARCH`, when saving the chat assistant, the empty target field will be filled in with `*`.
 
 ![](datatable-action-tab.png)
 
@@ -87,11 +99,100 @@ This tab provides advanced configuration options for the Assistant, allowing you
 
 - **Preserve HTML code** - if enabled, HTML tags from the source field will not be stripped and will be sent to the provider as is. Enable only if the model needs to work with structured HTML (e.g. parsing or editing content). Otherwise, leave disabled for cleaner input.
 - **Use progressive loading** – the answer will be displayed in parts (streaming) instead of in one block. Suitable for longer generated texts so that the user has immediate feedback. Works only for text outputs.
-- **Enable temporary chat** - Context and message exchange are not saved after the session ends. Use for sensitive or one-time requests. History will not be available for future continuation.
+- **Enable temporary chat** – disables saving the conversation to the AI ​​Chat history. Displayed messages remain only on the current administration page and attachments are not available. For saved history on the AI ​​Chat tab, disable this option and use a supported OpenAI or Gemini model. The setting does not replace the provider's data processing and retention policies.
 - **Require user input** – Before running the assistant, the user must provide their own input (e.g., entering a topic, additional instructions, or keywords). If disabled, the assistant runs without additional input.
 - **Request Description** – a short hint displayed next to the input field (makes it easier for the user to understand what to type). A translation key can also be entered; its evaluated value will be displayed in the field below it.
 
 ![](datatable-advanced-tab.png)
+
+### Tab - Token Limits
+
+On the **Token Limits** tab, you can limit the consumption of a specific assistant. The limit is common to all users of that assistant in the current domain.
+
+- **Use token limits** - turns on consumption control and displays additional fields. After turning it off and saving, the limit and the counter of used tokens are reset.
+- **Tokens Used** - the number of tokens consumed while the restriction was on since the last reset. The field is read-only, the value is updated after the assistant consumption is recorded.
+- **Token Limit** - required integer greater than `0` if the limit is enabled.
+- **Notification email** - optional email address to which a notification will be sent when the **75%** and **100%** limits are reached. If you leave the field blank, notifications will not be sent.
+
+The alert is evaluated after the assistant's consumption is recorded. The email contains the assistant name, domain, number of tokens used, and the set limit. After being successfully sent or queued, the alert is marked as resolved until the consumption is reset. The same alert may arrive multiple times for concurrent requests. If a single request increases the consumption from below 75% straight to 100% or more, only the full limit alert is sent.
+
+!> Warning: The current consumption is checked before the request is executed. If the number of tokens used is equal to or higher than the limit, the assistant rejects the request. An already executed request may exceed the limit because its consumption is only added after processing. You can use the assistant again after resetting the consumption or increasing the limit above the current consumption.
+
+The check also applies to saved chats and is performed before processing attachments. Saved responses remain available even after the limit is reached, re-delivering an already completed request will not trigger a new AI call.
+
+The tab also provides a **Daily Token Usage for the Last 14 Days (Including Today)** graph. It helps you choose a limit based on your past usage. Each column represents a daily token total from [AI Statistics](../stat/README.md) ; higher usage is a darker shade of red. The graph also includes usage before the limit was enabled, and its history is preserved when the counter is reset.
+
+![Token Limits tab with counter, limit, and daily usage graph](datatable-token-limits-tab.png)
+
+### Resetting consumption
+
+There are two buttons at the end of the toolbar <button class="btn btn-sm btn-warning" type="button"><span><i class="ti ti-eraser" aria-hidden="true"></i></span></button>
+
+- **Reset used tokens of selected assistants** - the first button is available after selecting one or more assistants.
+- **Reset tokens used by all assistants in the current domain** - the second button is available when no assistant is selected. It resets the consumption of the entire current domain, even if the list is filtered.
+
+Both actions require confirmation and display the result in a notification. They reset the **Tokens Used** counter and enable resending of email notifications when the 75% and 100% limits are reached. The set limits, notification email, and statistics and graph history will be preserved. The same applies to automatic reset.
+
+### Automatic token reset
+
+The update will automatically add an enabled task **AI - Reset token usage** that will reset token usage every day at midnight server time. The task runs on admin nodes and does not start after boot. It will wait a random time of less than 10 seconds before resetting to limit concurrency on multiple nodes.
+
+You can change the timing or disable the task in the **Settings → [Automated Tasks](../../../admin/settings/cronjob/README.md) ** section at `/admin/v9/settings/cronjob/`. Default setting:
+
+- ** Task name** - `AI - Reset token usage`.
+- **Task** - `sk.iway.iwcm.components.ai.rest.AiTokenUsageReset`.
+- **Task Parameters** - leave blank.
+- **Enabled** - turn on.
+- **Startup after startup** - leave disabled if you want to reset only according to the specified schedule.
+- **Seconds, minutes, hours** - `0`.
+- **Day of the month, month, day of the week, year** - `*`.
+- **Cluster node** - `all-admin`.
+
+To use the **weekly limit**, modify the existing task **AI - Reset token usage** to reset every Monday at midnight:
+
+| Field | Value |
+| --- | --- |
+| Seconds | `0` |
+| Minutes | `0` |
+| Clock | `0` |
+| Day of the month | Moon |
+| Day of the week | `1` |
+| Year | `1` |
+| Rok | `*` |
+
+The value **Day of the week = `1`** means Monday, `0` means Sunday. The corresponding cron expression is `0 0 0 * * 1 *` in the order of seconds, minutes, hours, day of the month, month, day of the week, and year. Leave the job enabled and run on startup disabled. This will replace the default daily reset with weekly; the counter will reset every Monday at midnight server time with a short random delay as described above.
+
+The task resets the consumption of **all AI assistants in all domains**. It does not accept a domain parameter. It does not change the set limits or historical statistics, and it writes the number of updated assistants to the automated task audit.
+
+If at least one assistant in the current domain has a token limit greater than zero and there is an enabled task `AiTokenUsageReset` with a future start date, an information notification **Next reset of used tokens** with the date and time will be displayed for 10 seconds when loading the assistant list. If multiple enabled tasks are enabled, the next due date will be displayed. When filtering or paging the table, the notification will only be repeated if the due date has changed.
+
+## Chat Assistant Settings
+
+The update adds four universal assistants to the default domain in the **Chat** group:
+
+| Assistant name | Provider | Model |
+| --- | --- | --- |
+| `CHAT-gpt-6.1-sol` | OpenAI | `gpt-6.1-sol` |
+| `CHAT-gpt-6-astra` | OpenAI | `gpt-6-astra` |
+| `CHAT-gemini-3.8-flash` | Gemini | `gemini-3.8-flash` |
+| `CHAT-gemini-4-argon` | Gemini | `gemini-4-argon` |
+
+Once the provider is configured, these assistants will be offered in quick search and text fields, including the WYSIWYG editor. In the **Use for Entity** setting, they have `*` and in the **Target Field** setting, they have `dt-format-text,dt-format-text-wrap,dt-format-wysiwyg,top-search-field`.
+
+The menu displays the model name (`{model}`). Assistants have response loading and conversation saving enabled. Common instructions specify short responses in the user's language, Markdown formatting, linking to previous messages, and a link to WebJET CMS documentation. You can edit both the model and instructions in the assistant settings.
+
+To set up your own chat assistant:
+
+1. In **Settings → AI Assistants**, create or edit an assistant and turn on **Allow use**.
+2. On the **Action** tab, select **Request Type → Chat**.
+3. To display in quick search, add the value `top-search-field` to the **Target Field**. Separate additional target fields with a comma. For example, for an entity `sk.iway.iwcm.doc.DocDetails` and a target `title,top-search-field`, the assistant will be available in the page title and in quick search. If it should be available only in quick search, just set **Use for Entity** to `CHAT_SEARCH`.
+4. On the **Provider** tab, select the configured provider and model supporting the desired way of working.
+5. In **Instructions**, specify the assistant's role, language, and desired response format.
+6. For saved conversations with attachments in the **AI Chat** tab, use OpenAI or Gemini, a chat-enabled model, and turn off **Enable temporary chat**. To display the response continuously, turn on **Use progressive loading**, if the model supports it.
+
+Quick search offers active chat assistants of the current domain with the configured provider. Requires the exact value `top-search-field` in the target field list or `CHAT_SEARCH` in the entity list. A conversation opened from quick search starts with no content on the open page. If you remove the last quick search binding for an assistant, its saved conversations in this menu will remain read-only.
+
+The user needs permission to use AI assistants (`cmp_ai_button`). If you change the model, assistant, or provider configuration, older saved chats may remain read-only. For instructions on how to work with chats, see the [AI Chat](../chat/README.md) chapter.
 
 ## Providers
 
@@ -248,22 +349,55 @@ Don't forget to also set up a [background task](../../apps/semantic-search/READM
 
 ### Browser
 
-AI in the browser is currently a [working standard](https://developer.chrome.com/docs/ai/get-started) created by Google. It is currently supported in Google Chrome using a secure (HTTPS) connection. Once the API is standardized, it is expected to be available in other browsers. You can disable AI in the browser by setting the configuration variable `ai_browserAiEnabled` to `false`, at which point the options will no longer be displayed.
+The **Browser** provider uses [Google Chrome's built-in AI interfaces](https://developer.chrome.com/docs/ai/get-started). Models are downloaded to the user's computer and requests are executed in the browser. You can disable the availability of this provider by setting the configuration variable `ai_browserAiEnabled` to `false`.
 
 To run AI in the browser, you must:
 
 - [HW requirements](https://developer.chrome.com/docs/ai/get-started#hardware) of the computer.
 - The connection to WebJET CMS must be secure (HTTPS protocol used).
 
-If you meet the requirements, we recommend first trying the translation assistant and then the text summarization assistant – these are the simplest services that AI in the browser supports. This will verify the model has been downloaded and installed on your computer and its functionality in the browser.
+#### Enabling the necessary APIs
 
-Some interfaces are [still in experimental mode](https://developer.chrome.com/docs/ai/built-in-apis#api_status). To use them, you need to open the Experiments page in your browser by entering `chrome://flags/#prompt-api-for-gemini-nano` and set the value `Enabled` for items `Prompt API for Gemini Nano`, `Summarization API for Gemini Nano`, `Writer API for Gemini Nano`, `Rewriter API for Gemini Nano`. Then click Restart to restart the browser. We recommend entering the term `gemini` at the top of the page to filter the options and find them easier. Without enabling these options, only the translation and summarization API will be available.
+The availability of individual APIs depends on the version of Chrome; some are [still experimental](https://developer.chrome.com/docs/ai/built-in-apis#api_status). If the API you want is not available, open `chrome://flags/`, find the specific item, and set it to **Enabled**:
 
-![](chrome-ai-settings.png)
+| APIs | Use in WebJET CMS | Setting address |
+| --- | --- | --- |
+| **API Prompt** | Custom assignments for `LanguageModel` | `chrome://flags/#prompt-api` |
+| **Summarizer API** | Text summarization | `chrome://flags/#summarizer-api` |
+| **Writer API** | Creating new text | `chrome://flags/#writer-api` |
+| **Rewriter API** | Rewriting the text, for example into an informal form | `chrome://flags/#rewriter-api` |
 
-You can check the status of AI models by entering the following address into your browser's address bar: `chrome://on-device-internals/`.
+The names may vary between Chrome versions; older versions also used **for Gemini Nano**. After changing, click **Restart**. Save your edits in progress in WebJET CMS before restarting.
 
-Some APIs do not yet support working in all languages, so automatic translation may occur after use. However, the translator also needs to be downloaded when used for the first time, so we recommend that you first try the AI ​​translation tool to install the translator. It can then be used after executing other AI assistants to translate the output text.
+**Do not enable all AI-related experiments.** For normal use of assistants, leave these options at **Default**:
+
+| Experiment | Setting address |
+| --- | --- |
+| **Gemma 4 for Built-in AI** | `chrome://flags/#gemma4-for-built-in-ai` |
+| **Speculative Decoding for Built-in AI** | `chrome://flags/#on-device-model-speculative-decoding` |
+| **Prompt API Tool Usage** | `chrome://flags/#prompt-api-tool-use` |
+
+These experiments may also force a different model or execution pattern for other AI APIs. When tested in **Chrome 157.0.8103.50 on macOS**, Rewriter repeatedly crashed with a combination of these three experiments enabled. After reverting all three to **Default** and restarting Chrome, it started working. The test confirmed this workaround; it did not determine which experiment or combination of experiments was causing the crash.
+
+#### Download and verify functionality
+
+When you first launch the assistant, Chrome may request a model download that is several GB in size. Once the download is complete, the progress view will change to Preparing the model; wait for the request to complete. You can verify the status of the models at `chrome://on-device-internals/`, in the **Broker State** tab. Installed models have a status of **Ready** and a progress of **100%**. It is not necessary to have all the models in the list installed.
+
+You can first try the translation, which will download the required translation model. **Successful translation does not confirm the functionality of Rewriter or other generative APIs**, as they use different models. Therefore, try the desired action separately, for example **Rewrite text to informal form** on a short text.
+
+Some APIs do not support all languages, so WebJET CMS may translate the output afterwards. This translation may also require downloading a translation model on first use.
+
+#### Errors when running the model
+
+The `The device is unable to create a session to run the model. Please check the result of availability() first.` message means that Chrome was unable to establish a session with the model. It can also appear when the model is downloaded and `availability()` returns `available` ; the availability status alone does not confirm a successful launch.
+
+The message `The model process crashed too many times for this version` means that Chrome has blocked the model process after repeated crashes. Follow these steps:
+
+1. Check the three experiments listed and change any **Enabled** to **Default**.
+2. Open `chrome://on-device-internals/`. If Chrome reports that internal diagnostic pages are disabled, enable them via `chrome://chrome-urls/` and then return to diagnostics.
+3. On the **Broker State** tab, check the **Model crash count (current/maximum)**. For example, a value of `6 / 3` means that the crash limit has been exceeded. The **Reset** button will only reset this counter, the installed models will be preserved.
+4. Save your edits and completely quit and restart Chrome. Restarting alone may not reset the counter, and **Reset** alone may not immediately remove the block from the running browser.
+5. Try one short request. If the counter increases again, the model process is crashing again. Look for additional data in the **Event Logs** tab and `chrome://crashes/` ; running the assistant repeatedly will not resolve this condition.
 
 ## Connection
 

@@ -4,6 +4,8 @@ In today's world, artificial intelligence is all around us, and of course, WebJE
 
 These features will make it easier for you to create and edit content - from grammar correction, text translations, title suggestions, generating illustrative images, to complete page design from PageBuilder blocks.
 
+In [AI Chat](chat/README.md) you can gradually refine your input and work with attached documents. You can open a separate conversation via **Search… → AI Chat**, you can add the assistant's response directly to the content or replace it with the content in the field or in the page editor.
+
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/LhXo7zx7bEc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>

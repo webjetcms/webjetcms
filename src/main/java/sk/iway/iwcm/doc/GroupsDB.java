@@ -3493,6 +3493,7 @@ public class GroupsDB extends DB
 	{
 		if (isEmpty(groupName))
 			return "";
+		groupName = Tools.removeNbsp(groupName);
 		//znak / nemozeme nahradzat priamo v GroupDetails.setGroupName(), pretoze pre userov s obmedzenymi pravami sa potom zle zobrazoval adresar (lebo sa mu do nazvu klonuje cela cesta, napr. /Interway/Novinky/
 		if (alsoSlash)
 		{
@@ -3619,6 +3620,7 @@ public class GroupsDB extends DB
 			if (docDetails != null)
 			{
 				groupTitle = docDetails.getTitle();
+				groupTitle = sanitizeGroupName(groupTitle, false);
 				//in group title / are replaced with &#47; because of path separator issues
 				groupTitle = Tools.replace(groupTitle, "/", "&#47;");
 			}

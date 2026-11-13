@@ -28,6 +28,7 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.system.translation.TranslationService;
+import sk.iway.iwcm.system.translation.TranslationException;
 //Riesi vytvaranie/zmeny synchronizovanych adresarov podla sync_id - EUSTREAMNW-84
 public class GroupMirroringServiceV9 {
 
@@ -117,7 +118,15 @@ public class GroupMirroringServiceV9 {
 
                TranslationService translationService = new TranslationService(null, null);
                for (GroupDetails mappedGroup : mappedGroupsList) {
-                  String translatedGroupName = translationService.translate(group.getGroupName(), getLanguage(group) , getLanguage(mappedGroup));
+                  String translatedGroupName;
+                  try {
+                     translatedGroupName = translationService.translateOrThrow(group.getGroupName(), getLanguage(group), getLanguage(mappedGroup));
+                  } catch (TranslationException ex) {
+                     Logger.error(GroupMirroringServiceV9.class, "Using source name for folder mirror after translation failure, groupId=" + group.getGroupId() + ", targetGroupId=" + mappedGroup.getGroupId(), ex);
+                     MirroringService.notifyTranslationFailure(ex);
+                     translatedGroupName = group.getGroupName();
+                  }
+                  translatedGroupName = GroupsDB.sanitizeGroupName(translatedGroupName, false);
                   GroupDetails existing = groupsDB.getGroup(translatedGroupName, mappedGroup.getGroupId());
 
                   if (existing!=null) {

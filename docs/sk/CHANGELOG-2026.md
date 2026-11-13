@@ -30,6 +30,10 @@
 
 ![](redactor/admin/search/quick-search.png)
 
+- Nová karta [AI Čet](redactor/admin/search/README.md#ai-čet) v rýchlom vyhľadávaní umožňuje rozhovor s AI asistentom. Podporuje výber asistenta, priebežné zobrazovanie a zastavenie odpovedí, Markdown s tabuľkami a kopírovanie textu. Pri ukladaných rozhovoroch OpenAI a Gemini môžete pridávať obrázky a dokumenty pretiahnutím kamkoľvek do plochy četu, vyhľadávať v histórii a sťahovať prílohy z panela **Súbory v čete**. História a prílohy sú dostupné iba vlastníkovi rozhovoru v príslušnej doméne. Prepínanie asistentov zachová rozpísané správy aj neodoslané prílohy; okno môžete zväčšiť alebo maximalizovať. Lupa v hlavičke histórie zobrazí vyhľadávanie rozhovorov; prílohy pridáte ikonou plus. Slovenské rozhranie a dokumentácia používajú označenie „čet“ (#386).
+
+![](redactor/ai/chat/chat-history.png)
+
 - Panel [Čo je nové](redactor/admin/welcome.md#Čo-je-nové) dopĺňa novinky nainštalovanej verzie o videá a príspevky z YouTube a Facebooku WebJET CMS. Štítok **Nové** sa po rozbalení panela skryje a znova upozorní na nový obsah (#358).
 
 ### Prihlasovanie a ochrana účtu
@@ -104,6 +108,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 </div>
 
 - Page Builder - zlepšená detekcia zmien v HTML kóde stránky, aby sa nezobrazilo hlásenie "V editore pravdepodobne máte neuložený text" aj keď ste reálne žiaden text v stránke nezmenili (#317).
+- Page Builder - opravené ukladanie stránok s neúplnou HTML štruktúrou a neplatnými odkazmi na staršie inštancie editora. Obsah takýchto prvkov sa zachová spolu s aktuálnymi úpravami ostatných blokov (#400).
 - [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + v žltej čiare v okne **Vložiť blok** na karte **Základné** pribudli možnosti **Obrázok** a **Aplikácia**. Otvoria príslušný dialóg editora a umožnia vložiť obsah na zvolené miesto (#339).
 - Page Builder - pridané [kopírovanie blokov medzi stránkami](redactor/webpages/pagebuilder.md#kopírovanie-blokov-medzi-stránkami). Voľby **Skopírovať** a **Vložiť** prenášajú sekcie, kontajnery a stĺpce aj s obsahom a vlastnými štýlmi. Editor ponúkne iba miesta vhodné pre typ bloku. Schránka má platnosť 30 minút od skopírovania (#353).
 - Šablóny - na karte Pokročilé môžete nastaviť [odstraňovanie spojok z URL stránky](frontend/templates/templates.md#karta-pokročilé): podľa `urlRemoveSpojky`, vždy odstrániť alebo ponechať. Blog tak môže ponechať spojky aj pri zapnutom odstraňovaní pre zvyšok webu (#353).
@@ -135,6 +140,11 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 - Zrkadlenie štruktúry - voľba **Zobraziť zrkadlenie** v nastavení zobrazenia stromovej štruktúry pridáva do stromu [odkazy na jazykové verzie](redactor/webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) a [upozornenia na chybné mapovania](redactor/webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre) (#370).
 
 ![](redactor/webpages/mirroring/tree-navigation.png)
+
+- AI Čet pri poli - pridaná ukladaná história filtrovaná podľa rovnakého poľa a záznamu. Starší rozhovor môžete vyhľadať, otvoriť a pokračovať v ňom aj po zatvorení editora; odpovede zostávajú dostupné na vloženie do poľa.
+- AI Čet pri poli a v editore stránky - pridané nahrávanie obrázkov a dokumentov pre asistentov s podporou histórie. Súbory môžete vybrať ikonou plus, pretiahnuť do správy alebo vložiť obrázok zo schránky - asistent ich spracuje spolu s obsahom stránky (#386).
+
+![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless režim
 
@@ -218,6 +228,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
+- AI asistenti - nová karta [Limity tokenov](redactor/ai/settings/README.md#karta---limity-tokenov) umožňuje obmedziť spotrebu asistenta a zobraziť jej vývoj za posledných 14 dní. Na zadaný notifikačný e-mail sa odošlú upozornenia pri dosiahnutí 75 % a 100 % limitu. Po dosiahnutí limitu sa ďalšie požiadavky zablokujú. Spotrebu možno vynulovať ručne pre vybraných asistentov alebo aktuálnu doménu, prípadne pravidelne pre všetky domény úlohou `AiTokenUsageReset`, ktorá sa predvolene spúšťa každý deň o polnoci (#400).
 - AI asistenti - opravené spracovanie priebežných textových odpovedí vrátane Gemini. Počet tokenov a chybové správy sa správne spracujú aj pri rozdelení alebo spojení sieťových blokov; technické údaje sa nevkladajú do generovaného textu. Prerušená odpoveď sa už neoznačí ako úspešne dokončená.
 - Číselníky - výber a správa typov sa presunuli do stromu v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Číselníkov](redactor/apps/enumeration/README.md) (#58786).
 - Blog - výber a pridávanie sekcií sú dostupné v strome v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Blogu](redactor/apps/blog/README.md) (#58786).
@@ -337,6 +348,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Zrkadlenie štruktúry - pri zlyhaní prekladu, napríklad po vyčerpaní kvóty DeepL, používateľ dostane upozornenie s konkrétnym dôvodom z výnimky prekladača vrátane HTTP kódu a dostupnej chybovej správy DeepL. Pevné medzery a ich HTML entity sa normalizujú v názvoch priečinkov a generovaných URL, aby nevznikali adresy s textom `nbsp` ani zbytočné presmerovania (#402).
+- Dátové tabuľky - po úprave jedného záznamu sa pri vynútenom obnovení údajov zobrazí strana s upraveným záznamom podľa aktuálneho triedenia. V konfigurácii sa premenná vyhľadáva podľa názvu aj pri zmene jej ID. Pri mazaní sa zachová aktuálna strana, prípadne sa zobrazí posledná platná strana. Pri vytvorení záznamu sa stránkovanie naďalej resetuje (#400).
 - Viackrokové formuláre - identifikátor položky sa generuje z textu názvu poľa bez HTML značiek, aby formátovanie názvu neovplyvňovalo identifikátor  (#396).
 - Viackrokové formuláre - pri zmazaní položky, kroku alebo formulára sa odstránia aj príslušné podmienky zobrazenia a povinnosti. Podmienky už zmazaných položiek neblokujú odstránenie polí, na ktoré odkazovali (#395).
 - Viackrokové formuláre - pravidlá **Povolená hodnota** už neodmietnu prázdne nepovinné pole. Pri povinnom poli sa regulárne výrazy kontrolujú aj pre prázdnu hodnotu; pri odoslaní kroku sa zohľadňujú aj podmienky povinnosti (#394).
@@ -387,6 +400,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- AI asistenti - vyhľadávanie v štatistike a grafy používania zobrazujú iba záznamy a asistentov aktuálnej domény (#58850).
 - Webové stránky - mazanie overuje práva ku všetkým zrkadleným stránkam a pri priečinkoch vyžaduje aj `deleteDir`. [Zrušenie zrkadlenia](redactor/apps/clone-structure/README.md#zrušenie-zrkadlenia) kontroluje oprávnenia pre celý podstrom vrátane nakonfigurovaných obmedzení domény a používateľských skupín (#370).
 - Dependency Check - aktualizované knižnice `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizácia Jackson sprísňuje kontrolu typov pri polymorfnej deserializácii; vlastné integrácie používajúce názvy Java tried v JSON je potrebné overiť (#385).
 - Dependency Check - výnimky pre `CVE-2026-116802`, `CVE-2026-116803` a `CVE-2026-116804` v `DOMPurify 3.4.16` boli overené a obmedzené na presný hash dodávaného `Swagger UI 5.34.0` bundle. Integrácia ošetruje HTML reťazce bez XHTML režimu, `IN_PLACE`, `SAFE_FOR_TEMPLATES` a vracania DOM; jej hook neodstraňuje uzly. Výnimky potvrdzujú nepoužitie dotknutých režimov, nie opravu knižnice DOMPurify (#385).
@@ -744,6 +758,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 > Opravná verzia pôvodnej verzie 2026.0.
 
 - Databáza - opravené generovanie SQL podmienok `IN` a `NOT IN` s veľkým počtom hodnôt rozdelením zoznamov na menšie časti. Odstránené chyby pri prekročení limitu 1000 hodnôt v Oracle databáze, napríklad pri načítaní histórie stránky alebo práci s rozsiahlym stromom priečinkov. Maximálny počet hodnôt v jednej časti určuje konfiguračná premenná `dbInClauseMaxItems` (predvolene 1000, v Oracle najviac 1000).
+- Databáza - zjednotené dátumové typy v SQL skriptoch pre nové inštalácie: PostgreSQL používa `TIMESTAMP WITHOUT TIME ZONE`, opravené nesprávne použitie `TIMESTAMP` v MariaDB a Microsoft SQL. Existujúce databázy sa automaticky nekonvertujú (#399).
 - Webové stránky - opravené obmedzenie hľadania a nahrádzania v názvoch priečinkov na vybraný strom priečinkov a nastavenie rodiča pri oprave chybne zmazaných priečinkov počas presunu stránky do koša (#390).
 - Kalendár udalostí - opravené filtrovanie podľa viacerých perex skupín pri nastavení `perexGroupUseJoin=true` bez duplicitných udalostí. Upravené obmedzenie počtu výsledkov aj pre Oracle a Microsoft SQL (#390).
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
@@ -762,6 +777,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Bezpečnosť - vypnutá kompilácia výrazov SpringEL v Thymeleaf šablónach a predvolene aj v Spring ako ochrana pred [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Štandardná syntax šablón a povolené volania metód zostávajú podporované, úprava šablón nie je potrebná. Pri šablónach s veľkým množstvom opakovane vyhodnocovaných výrazov môže vykresľovanie trvať dlhšie.
 - Bezpečnosť - vypnuté ukladanie chránených súborov z `/files/protected/` do cache prehliadača a proxy serverov nastavením HTTP hlavičiek pred odoslaním súboru. Opravené nastavenie dĺžky odpovede pri odosielaní celého súboru aj jeho rozsahu, aby Spring Security zapísal bezpečnostné hlavičky včas.
 - Bezpečnosť - doplnené zdôvodnené výnimky v `dependency-check-suppressions.xml` pre zraniteľnosti nevyužívaných častí Spring a pre zraniteľnosť ošetrenú vyššie uvedeným nastavením SpringEL. Výnimka pre [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) zohľadňuje vyššie uvedenú ochranu chránených súborov a opravu odosielania súborov; predstavuje aplikačné opatrenia a akceptované zvyškové riziko, nie opravu knižnice ani potvrdenie bezpečnosti všetkých spôsobov odosielania odpovedí. Predvolené odložené zapisovanie hlavičiek Spring Security zostáva zachované. Verzie `Spring Framework 5.3.39` a `Spring Security 5.8.16` zostávajú zachované.
+- AI asistenti - pri aktualizácii sa modely OpenAI nahradia novšími: `gpt-image-2` modelom `gpt-image-2.6-sunburst` pre generovanie a úpravu obrázkov, `gpt-5`, `gpt-5-pro`, `o3` a `o3-pro` modelom `gpt-5.6-sol`, `gpt-5-mini` modelom `gpt-5.6-terra` a `gpt-5-nano` modelom `gpt-5.6-luna`. OpenAI vypne pôvodné textové modely 11. decembra 2026 a obrazový model 10. februára 2027. Asistenti s pôvodnými modelmi Pro prejdú na štandardný režim Sol.
+- Dátové tabuľky - opravené generovanie podmienok pri filtrovaní polí odkazujúcich na inú entitu. Textové vyhľadávanie sa pre tieto polia preskočí, aby nevznikali neplatné SQL podmienky (#397).
 
 ## 2026.0.40
 

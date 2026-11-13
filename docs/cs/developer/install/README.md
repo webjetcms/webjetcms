@@ -29,7 +29,7 @@ Pokud při pokusu o instalaci přes `codex plugin marketplace add` dostanete chy
 
 Globální instalace zpřístupní skilly uživateli. Jejich nastavení pro konkrétní repozitář se provádí jednou a sdílí se přes soubory v Gite. V tomto repozitáři je již uloženo v `AGENTS.md` a `docs/agents/` ; po jeho získání není třeba setup opakovat na každém počítači.
 
-Při prvotním nastavení nebo změně konfigurace otevřete projekt v Codexu a do **chatu, nikoli do terminálu**, zadejte:
+Při prvotním nastavení nebo změně konfigurace otevřete projekt v `Codex` a do **četu, ne do terminálu**, zadejte:
 
 ```text
 Použi skill setup-matt-pocock-skills pre tento repozitár.

@@ -126,6 +126,7 @@ export const dataTableInit = options => {
     ];
     DATA.url = options.url ? options.url : null;
     DATA.editorId = options.editorId ? options.editorId : "id";
+    DATA.reloadRowKey = options.reloadRowKey ? options.reloadRowKey : DATA.editorId;
     DATA.onXhr = options.onXhr ? options.onXhr : null;
     DATA.onPreXhr = options.onPreXhr ? options.onPreXhr : null;
     DATA.json = null;
@@ -1667,13 +1668,45 @@ export const dataTableInit = options => {
             });
             window.dispatchEvent(eventClose);
         });
+        EDITOR.on('postRemove', function () {
+            if (DATA.serverSide === false) {
+                // Adjust the page before Editor redraws a last page that no longer exists.
+                const info = TABLE.page.info();
+                if (info.length <= 0 || DATA.paging === false) return;
+                // The filtered record count still includes removed rows until the next draw.
+                const remainingRows = TABLE.rows({ search: "applied" }).data().length;
+                const page = Math.min(info.page, Math.max(0, Math.ceil(remainingRows / info.length) - 1));
+                if (info.page !== page) TABLE.page(page);
+            }
+        });
         EDITOR.on('submitSuccess', function (e, json, data, action) {
             //console.log("Editor.on submitSuccess, json=", json, "DATA=", DATA, "data=", data, "action=", action);
             if (DATA.isLocalJson === false) {
                 setTimeout(function() {
                     if (json.forceReload === true) {
                         //serverSide is reloading by datatable directly
-                        if (EDITOR.TABLE.DATA.serverSide===false) TABLE.ajax.reload();
+                        if (EDITOR.TABLE.DATA.serverSide===false) {
+                            // Follow the edited row or preserve the page after deletion.
+                            const originalPage = TABLE.page();
+                            const resetPaging = action !== "edit" && action !== "remove";
+                            const getReloadRowKey = $.fn.dataTable.util.get(DATA.reloadRowKey);
+                            const savedKey = action === "edit" && json.data?.length === 1
+                                ? getReloadRowKey(json.data[0]) : null;
+
+                            TABLE.ajax.reload(function () {
+                                if (resetPaging) return;
+                                const info = TABLE.page.info();
+                                if (info.length <= 0 || DATA.paging === false) return;
+
+                                const indexes = TABLE.rows({ order: "applied", search: "applied" }).indexes().toArray();
+                                const position = savedKey == null ? -1 : indexes.findIndex(index =>
+                                    getReloadRowKey(TABLE.row(index).data()) === savedKey
+                                );
+                                let page = Math.min(originalPage, Math.max(0, info.pages - 1));
+                                if (position >= 0) page = Math.floor(position / info.length);
+                                if (info.page !== page) TABLE.page(page).draw("page");
+                            }, resetPaging);
+                        }
 
                         //publishni reload event, napr. pre jstree
                         const eventReload = new CustomEvent('WJ.DTE.forceReload', {

@@ -2611,7 +2611,7 @@ export class DatatablesCkEditor {
 		});
 		//reinitialize pb blocks
 		if (final===true) {
-			this.markPbElements();
+			return this.markPbElements();
 		}
 	}
 
@@ -2621,7 +2621,7 @@ export class DatatablesCkEditor {
 			let fieldId = this.options.fieldid;
 			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
 
-			pageBuilderIframe[0].contentWindow.markPbElements("doc_data");
+			return pageBuilderIframe[0].contentWindow.markPbElements("doc_data");
 		}
 	}
 

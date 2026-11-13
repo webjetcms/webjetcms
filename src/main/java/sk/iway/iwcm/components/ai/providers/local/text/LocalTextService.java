@@ -91,6 +91,14 @@ public class LocalTextService extends LibrarySupportLogic implements AiAssitants
         }
     }
 
+    /** Rejects empty or safety-filtered generations before the editor can replace its original text. */
+    @Override
+    protected void validateTextResponse(String text, Prop prop) throws IOException {
+        if (text == null || text.isBlank()) {
+            throw new IOException(prop.getText("components.ai_assistants.provider.local-generation.empty_response"));
+        }
+    }
+
     @Override
     public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
     }

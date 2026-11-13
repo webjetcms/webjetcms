@@ -82,6 +82,8 @@ Všimnite si definovanie `output_format`, ktorý definuje vytvorenie 2 sekcií s
 
 ## AI v prehliadači
 
+Pred použitím overte [nastavenie AI v prehliadači](../settings/README.md#prehliadač). Návod uvádza potrebné API, experimenty, ktoré majú zostať na **Default**, aj postup pri zlyhaní modelu.
+
 Písanie inštrukcií pre AI v prehliadači je špecifické podľa [možností dostupného API](https://developer.chrome.com/docs/ai/built-in-apis). Inštrukcia je rozdelená na názov API a následnú konfiguráciu. V odkaze na `MDM` dokumentáciu nájdete podrobné informácie o možnostiach konfigurácie.
 
 Aj keď API podporuje nastavenie jazyka, aktuálne zvyčajne podporuje len anglický jazyk. Do konfigurácie môžete pridať možnosť `"translateOutputLanguage": "autodetect"` pre následné vykonanie prekladu. Hodnota `autodetect` deteguje jazyk pôvodného textu a tento následne použije. Môžete prípadne zadať aj fixnú hodnotu, napr. `sk`, alebo hodnotu `userLng` kde sa jazyk nastaví podľa jazyka aktuálne prihláseného používateľa.
@@ -202,7 +204,7 @@ V inštrukciách sú pred použitím nahradené špeciálne značky, tie môžet
 
 ## Generovanie PageBuilder blokov
 
-Nasledovná inštrukcia umožňuje generovať [PageBuilder bloky pre editor](../datatables/README.md#režim-chat), je potrebné ju nastaviť ako typ požiadavky `Chat`, v takom prípade sa korektne vyplní aj `{inputText}` pri editácii.
+Nasledovná inštrukcia umožňuje generovať [PageBuilder bloky pre editor](../datatables/README.md#režim-čet), je potrebné ju nastaviť ako typ požiadavky **Čet**, v takom prípade sa korektne vyplní aj `{inputText}` pri editácii.
 
 Pre nastavenie odporúčame model `gemini-2.5-pro`, v akcii nastavte entitu `sk.iway.iwcm.doc.DocDetails`, zdrojové a cieľové pole nastavte na `data`. V pokročilé je potrebné zapnúť možnosť Zachovať HTML kód a Požadovať vstup od používateľa.
 

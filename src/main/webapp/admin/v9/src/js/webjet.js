@@ -1363,6 +1363,38 @@ const WJ = (() => {
             else htmlText += "\n\n";
         }
 
+        // Parse pipe tables before replacing line breaks, leaving fenced code untouched.
+        const lines = htmlText.replace(/\r\n?/g, '\n').split('\n');
+        const cells = line => line.trim().replace(/^\|/, '').replace(/(?<!\\)\|$/, '')
+            .split(/(?<!\\)\|/).map(cell => cell.trim().replace(/\\\|/g, '|'));
+        let fence = null;
+        for (let index = 0; index < lines.length - 1; index++) {
+            const marker = lines[index].match(/^\s*(`{3,}|~{3,})/);
+            if (marker) {
+                if (fence == null) fence = marker[1];
+                else if (marker[1][0] === fence[0] && marker[1].length >= fence.length) fence = null;
+                continue;
+            }
+            if (fence || !lines[index].includes('|')) continue;
+            const header = cells(lines[index]);
+            const separator = cells(lines[index + 1]);
+            if (header.length !== separator.length || !separator.every(cell => /^:?-{3,}:?$/.test(cell))) continue;
+            const row = (values, tag) => '<tr>' + header.map((_, column) => {
+                let alignment = '';
+                if (separator[column].endsWith(':')) alignment = separator[column].startsWith(':') ? 'text-center' : 'text-end';
+                else if (separator[column].startsWith(':')) alignment = 'text-start';
+                return `<${tag}${alignment ? ` class="${alignment}"` : ''}>${values[column] || ''}</${tag}>`;
+            }).join('') + '</tr>';
+            let end = index + 2;
+            const rows = [];
+            while (end < lines.length && lines[end].trim() && lines[end].includes('|') && !/^\s*(`{3,}|~{3,})/.test(lines[end])) {
+                rows.push(row(cells(lines[end]), 'td'));
+                end++;
+            }
+            lines.splice(index, end - index, '<table><thead>' + row(header, 'th') + '</thead><tbody>' + rows.join('') + '</tbody></table>');
+        }
+        htmlText = lines.join('\n');
+
         htmlText = htmlText.replace(/^### (.*$)/gim, '<h3>$1</h3>')
 
             //headings
@@ -1402,6 +1434,10 @@ const WJ = (() => {
             //fix BR tag before H1-H6 tag
             .replace(/<br \/><h([1-6])>/gim, '<h$1>')
             .replace(/<br \/><h([1-6])>/gim, '<h$1>')
+
+            // Tables provide their own block spacing.
+            .replace(/(?:<br \/>)+(<table>)/g, '$1')
+            .replace(/(<\/table>)(?:<br \/>)+/g, '$1')
             ;
 
         if (typeof options != "undefined") {
@@ -1480,7 +1516,9 @@ const WJ = (() => {
                     if ($el.parents('.modal:not(.show)').length > 0) event.preventDefault();
                 })
                 .on('keydown.wjTooltipA11y', function(event) {
-                    if (event.key === 'Escape') {
+                    const tooltipId = $el.attr('aria-describedby');
+                    const tooltip = tooltipId ? el.ownerDocument.getElementById(tooltipId) : null;
+                    if (event.key === 'Escape' && tooltip?.classList.contains('show')) {
                         event.preventDefault();
                         event.stopPropagation();
                         $el.tooltip('hide');

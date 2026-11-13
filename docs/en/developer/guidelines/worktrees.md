@@ -16,7 +16,7 @@ A Git worktree is a separate working folder for a single branch. Worktrees share
 
 In VS Code, open the original folder **`webjetcms`**. In the bottom left, check out the branch **`main`**, open the command palette, and select **Git: Pull**.
 
-Terminal alternative that will only allow update without merge commit:
+Terminal alternative that will only allow update without `merge commit`:
 
 ```shell
 git pull --ff-only

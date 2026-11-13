@@ -4,6 +4,8 @@ V dnešním světě je umělá inteligence všude kolem nás a samozřejmě WebJ
 
 Tyto funkce vám usnadní tvorbu a úpravu obsahu – od opravy gramatiky, přes překlady textů, návrhy titulků, generování ilustračních obrázků až po kompletní návrh stránky z PageBuilder bloků.
 
+V [AI Čete](chat/README.md) můžete zadání postupně upřesňovat a pracovat s přiloženými dokumenty. Samostatný rozhovor otevřete přes **Hledat… → AI Čet**, u pole nebo v editoru stránky můžete odpověď asistenta přímo přidat do obsahu nebo jí obsah nahradit.
+
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/LhXo7zx7bEc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>

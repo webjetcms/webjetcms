@@ -188,10 +188,18 @@ class ToolsTest extends BaseWebjetTest {
         assertEquals(normalized, Tools.removeNbsp(normalized));
     }
 
-    /** Preserves accents, combining marks, emoji joiners and script-specific formatting. */
+    /** Normalizes HTML non-breaking-space entities together with surrounding whitespace. */
+    @ParameterizedTest
+    @ValueSource(strings = {"&nbsp;", "&NBSP;", "&NonBreakingSpace;", "&#160;", "&#0160;", "&#xA0;", "&#x00a0;", "&#8239;", "&#x202f;"})
+    void testRemoveNbsp_normalizesHtmlSpaceEntities(String entity) {
+        assertEquals("Ročné správy", Tools.removeNbsp(entity + "Ročné " + entity + " správy" + entity));
+        assertEquals("", Tools.removeNbsp(entity));
+    }
+
+    /** Preserves accents, combining marks, emoji joiners, script-specific formatting and other HTML entities. */
     @Test
     void testRemoveNbsp_preservesMeaningfulUnicodeAndLiteralHtml() {
-        String value = "Žltý kôň a\u0301 👩‍💻 می\u200Cروم \u200Fالعربية &nbsp; <b>Text</b>";
+        String value = "Žltý kôň a\u0301 👩‍💻 می\u200Cروم \u200Fالعربية &amp; &#47; <b>Text</b>";
         assertEquals(value, Tools.removeNbsp(value));
     }
 

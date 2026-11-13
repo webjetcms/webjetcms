@@ -3,6 +3,8 @@ package sk.iway.iwcm.components.ai.jpa;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -12,11 +14,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -38,7 +42,8 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
     @DataTableTab(id = "action", title = "editor.form.action"),
     @DataTableTab(id = "provider", title = "components.ai_assistants.provider"),
     @DataTableTab(id = "instructions", title = "components.ai_assistants.instruction_tab"),
-    @DataTableTab(id = "advanced", title = "datatable.tab.advanced")
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "tokenLimits", title = "components.ai_assistants.token_limits")
 })
 public class AssistantDefinitionEntity implements Serializable {
 
@@ -136,7 +141,7 @@ public class AssistantDefinitionEntity implements Serializable {
 					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-field"),
 					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
 					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
-                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className")
+                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className,#DTE_Field_action")
 				}
 			)
 		}
@@ -208,10 +213,64 @@ public class AssistantDefinitionEntity implements Serializable {
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.ai_assistants.user_prompt.label", tab = "advanced", className = "wrap", hidden = true)
     private String userPromptLabel;
 
+    /* TOKEN LIMITS tab */
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.use_token_limits", tab = "tokenLimits", hidden = true, filter = false)
+    private Boolean useTokenLimits;
+
+    @Column(name = "used_tokens", insertable = false, updatable = false)
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.ai_assistants.used_tokens", tab = "tokenLimits", visible = false,
+        editor = {
+            @DataTableColumnEditor(attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") })
+        }
+    )
+    private Long usedTokens;
+
+    @Column(name = "token_limit")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.ai_assistants.token_limit", tab = "tokenLimits", visible = false,
+        editor = {
+            @DataTableColumnEditor(attr = { @DataTableColumnEditorAttr(key = "min", value = "1") })
+        }
+    )
+    private Long tokenLimit;
+
+    @Column(name = "notif_email")
+    @Email
+    @Size(max = 128)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.notif_email", tab = "tokenLimits", hidden = true)
+    private String notifEmail;
+
+    // Only notification and reset queries may update this marker; editor saves must preserve it.
+    @JsonIgnore
+    @Column(name = "notif_level", insertable = false, updatable = false)
+    private Integer notifLevel;
+
     @Transient
 	@DataTableColumnNested
 	private AssistantDefinitionEditorFields editorFields = null;
 
     @Column(name="domain_id")
 	private Integer domainId;
+
+    /**
+     * Resolves the user-visible name, translating an optional prefix before the model placeholder.
+     *
+     * @param prop translations for the current user
+     * @return translated name with {@code {model}} replaced, or the internal name when no description is set
+     */
+    public String getDisplayName(Prop prop) {
+        if (Tools.isEmpty(description)) return name;
+
+        String label = prop.getText(description, false);
+        int modelIndex = label.indexOf("{model}");
+        if (modelIndex < 0) return label;
+
+        String prefix = label.substring(0, modelIndex);
+        String prefixKey = prefix.strip();
+        if (Tools.isNotEmpty(prefixKey)) {
+            label = prefix.replace(prefixKey, prop.getText(prefixKey, false)) + label.substring(modelIndex);
+        }
+        return label.replace("{model}", model == null ? "" : model);
+    }
 }

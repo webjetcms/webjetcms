@@ -29,7 +29,7 @@ If you get the `zsh: command not found: codex` error when trying to install via 
 
 A global installation makes the skills available to the user. Their setup for a specific repository is done once and shared via files in Git. In this repository, it is already stored in `AGENTS.md` and `docs/agents/` ; once it is obtained, there is no need to repeat the setup on each computer.
 
-For initial setup or configuration changes, open the project in Codex and in **chat, not terminal**, type:
+For initial setup or configuration changes, open the project in `Codex` and in **chat, not terminal**, enter:
 
 ```text
 Použi skill setup-matt-pocock-skills pre tento repozitár.
