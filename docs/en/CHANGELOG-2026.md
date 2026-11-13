@@ -344,6 +344,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Structure mirroring - when a translation fails, for example after running out of DeepL quota, the user will receive a notification with the specific reason for the translator exception, including the HTTP code and available DeepL error message. Hard spaces and their HTML entities are normalized in folder names and generated URLs to avoid `nbsp` addresses and unnecessary redirects (#402).
 - Data tables - after editing a single record, when forced to refresh the data, the page with the edited record is displayed according to the current sorting. In the configuration, the variable is searched by name even when its ID is changed. When deleting, the current page is preserved, or the last valid page is displayed. When creating a record, the pagination is still reset (#400).
 - Multi-step forms - the item identifier is generated from the field name text without HTML tags so that name formatting does not affect the identifier (#396).
 - Multi-step forms - when an item, step, or form is deleted, the corresponding display conditions and obligations are also deleted. Conditions for already deleted items do not block the deletion of the fields they referenced (#395).
