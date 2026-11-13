@@ -15,6 +15,10 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 
 /**
  * Vseobecna trieda pre mirrorovanie struktury. Synchronizuju sa zadane ID adresarov
@@ -33,6 +37,14 @@ public class MirroringService {
 
    private MirroringService() {
       //tools class
+   }
+
+   /** Adds a request-scoped warning; ThreadBean deduplicates repeated translation failures. */
+   static void notifyTranslationFailure() {
+      Prop prop = Prop.getInstance();
+      DatatableRestControllerV2.addNotify(new NotifyBean(
+         prop.getText("components.mirroring.translation_failed.title"),
+         prop.getText("components.mirroring.translation_failed.text"), NotifyType.WARNING, 60000));
    }
 
    public static boolean isCloneAction() {

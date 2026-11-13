@@ -5756,6 +5756,7 @@ public class DocDB extends DB
 	 */
 	public static boolean changeGroupTitle(int groupId, int docId, String newTitle, boolean forceUpdate)
 	{
+		if (newTitle != null) newTitle = GroupsDB.sanitizeGroupName(newTitle, false);
 		GroupDetails grDetails =  GroupsDB.getInstance().getGroup(groupId);
 		if(grDetails != null && grDetails.getDefaultDocId() == docId && newTitle != null && !newTitle.equals(grDetails.getGroupName()) &&
 				(forceUpdate || (grDetails.isInternal()==false && grDetails.getMenuType()!=GroupDetails.MENU_TYPE_HIDDEN &&  grDetails.getFullPath()!=null))

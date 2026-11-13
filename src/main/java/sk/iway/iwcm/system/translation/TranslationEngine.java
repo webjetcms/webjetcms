@@ -17,6 +17,19 @@ public abstract class TranslationEngine {
     public abstract boolean isConfigured();
 
     /**
+     * Translates text while allowing providers to report failures instead of returning source text.
+     * Existing providers retain their translation implementation until they opt into this contract.
+     * @param text source text
+     * @param fromLanguage source language
+     * @param toLanguage target language
+     * @return translated text
+     * @throws TranslationException when the provider cannot translate the text
+     */
+    public String translateOrThrow(String text, String fromLanguage, String toLanguage) {
+        return translate(text, fromLanguage, toLanguage);
+    }
+
+    /**
      * Compute exponential delay based on attempt number. Use delay ms to fall asleep thread.
      * @param attempt - number of attemp
      * @return TRUE if sleep was successfull and we have another try, else FALSE

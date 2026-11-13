@@ -98,6 +98,12 @@ Prekladač pri vytvorení stránky hľadá v priečinkoch rekurzívne smerom ku 
 
 Prekladá sa **Názov web stránky**, názov položky v menu, URL adresa a **Obsah** web stránky.
 
+Ak preklad zlyhá, napríklad po vyčerpaní kvóty DeepL, zrkadlenie pokračuje s aktuálnym názvom a obsahom v pôvodnom jazyku. Nové stránky a priečinky sa vytvoria a zachovajú sa ich vzájomné prepojenia. Existujúce stránky, ktoré spĺňajú podmienky automatického prekladu, sa aktualizujú pôvodným textom vrátane názvu a generovanej URL. Pri čiastočnom zlyhaní prekladu sa prevezmú všetky prekladané polia z pôvodnej stránky, aby nevznikla zmes jazykov.
+
+Po uložení sa zobrazí upozornenie **Automatický preklad zlyhal** s informáciou, že bol použitý pôvodný jazyk. Redaktor môže jazykovú verziu preložiť ručne alebo po obnovení prekladača zopakovať uloženie pôvodnej stránky. Podrobnosti chyby sa zapíšu do serverového logu. Ak prekladač nie je nakonfigurovaný, zrkadlenie naďalej vytvára kópie bez prekladu.
+
+Pevné medzery vrátane HTML zápisu `&nbsp;` sa v názvoch priečinkov a pri generovaní URL nahradia obyčajnými medzerami. Nespôsobia tak vloženie textu `nbsp` do URL ani opakované premenovanie priečinka pri synchronizácii názvu hlavnej stránky.
+
 ### Nová stránka
 
 Pri vytváraní stránky sa vždy spustí automatický preklad. Ak vytvoríte novú stránku s názvom "dobré ráno" v priečinku `preklad_sk`, kde je nastavený Slovenský jazyk, tak v adresári `preklad_en` vznikne stránka `good morning`, obsah stránky bude tiež preložený do Anglického jazyka.

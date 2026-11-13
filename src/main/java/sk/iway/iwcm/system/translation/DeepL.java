@@ -47,6 +47,16 @@ public class DeepL extends TranslationEngine {
 
     @Override
     public String translate(String text, String fromLanguage, String toLanguage) {
+        try {
+            return translateOrThrow(text, fromLanguage, toLanguage);
+        } catch (TranslationException ex) {
+            Logger.error(DeepL.class, ex);
+            return text;
+        }
+    }
+
+    @Override
+    public String translateOrThrow(String text, String fromLanguage, String toLanguage) {
         Cache cache = Cache.getInstance();
         @SuppressWarnings("unchecked")
         Map<String, String> translationsCache = (Map<String, String>)cache.getObject(CACHE_KEY);
@@ -54,6 +64,9 @@ public class DeepL extends TranslationEngine {
             translationsCache = new Hashtable<>();
             cache.setObject(CACHE_KEY, translationsCache, 10);
         }
+
+        // Use the same normalized input for the cache key and the API request.
+        text = Tools.replace(text, "&nbsp;", " ");
 
         String translationKey = null;
         String translatedText;
@@ -65,9 +78,6 @@ public class DeepL extends TranslationEngine {
         }
 
         String translationApiUrl = Constants.getString("deepl_api_url");
-
-        //DeepL has a problem with nbsp entity
-        text = Tools.replace(text, "&nbsp;", " ");
 
         int attempt = 0;
         while (attempt < MAX_RETRIES) {
@@ -83,9 +93,8 @@ public class DeepL extends TranslationEngine {
                 if (translations.length()>0) {
                     translatedText = translations.getJSONObject(0).getString("text");
 
-                    if (translationKey != null) translationsCache.put(translationKey, translatedText);
-
                     if (Tools.isNotEmpty(translatedText)) {
+                        if (translationKey != null) translationsCache.put(translationKey, translatedText);
                         try {
                             long billedCharacters = translations.getJSONObject(0).has("billed_characters") ? translations.getJSONObject(0).getLong("billed_characters") : 0;
                             auditBilledCharacters(billedCharacters);
@@ -102,26 +111,16 @@ public class DeepL extends TranslationEngine {
                 if(ex instanceof HttpResponseException responseException) {
                     if(responseException.getStatusCode() == 429) {
                         //too many requests, apply sleep delay
-                        if(applyDelay(attempt)) continue;
+                        if(applyDelay(attempt++)) continue;
                         else break;
-                    } else if(responseException.getStatusCode() == 456) {
-                        //quota exceeded
-                        Logger.error(DeepL.class, "Unable to translate '" + translationApiUrl + "', monthly quota of characters exceeded");
-                        return text; //return original text, no translation available
-                    } else if(responseException.getStatusCode() == 500) {
-                        //internal server error
-                        Logger.error(DeepL.class, "Unable to translate '" + translationApiUrl + "', temporal error in DeepL services");
-                        return text; //return original text, no translation available
                     }
                 }
 
-                Logger.error(DeepL.class,"Unable to connect to '" + translationApiUrl + "'");
-                Logger.error(DeepL.class, ex);
-                break;
+                throw new TranslationException("DeepL translation failed", ex);
             }
         }
 
-        return text;
+        throw new TranslationException("DeepL did not return a translation");
     }
 
     private String getBodyString(String text, String fromLanguage, String toLanguage) {
@@ -187,7 +186,7 @@ public class DeepL extends TranslationEngine {
                 if(ex instanceof HttpResponseException responseException) {
                     if(responseException.getStatusCode() == 429) {
                         //too many requests, apply sleep delay
-                        if(applyDelay(attempt)) continue;
+                        if(applyDelay(attempt++)) continue;
                         else break;
                     }
                 }
