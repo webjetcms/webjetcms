@@ -52,7 +52,7 @@ function fixture(t, { reduced = false, saved, response = true, random = 0.75, fe
     return { scope, context, window, container, controller, render, timers, requests, errors, advance, cleanup: () => cleanup?.() };
 }
 
-test('Every shipped translation parses as five titled updates through the real Markdown renderer', t => {
+test('Every shipped translation parses as titled updates through the real Markdown renderer', t => {
     const { scope, context } = fixture(t);
     const webjet = fs.readFileSync(path.join(sourceRoot, 'webjet.js'), 'utf8');
     const start = webjet.indexOf('    function parseMarkdown(');
@@ -62,8 +62,8 @@ test('Every shipped translation parses as five titled updates through the real M
         const raw = properties.split('\n').find(line => line.startsWith('admin.overview.changelog=')).split('=').slice(1).join('=');
         context.labels.changelog = scope.parseMarkdown('\n' + raw.replace(/\\\\n/g, '\n') + '\n\n', { link: true, imgSrcPrefix: '' });
         const news = scope.releaseNews(context.labels.changelog);
-        assert.equal(news.version, '2026.18');
-        assert.equal(news.items.length, 5);
+        assert.equal(news.version, locale === '' ? '2026.40' : '2026.18');
+        assert.equal(news.items.length, locale === '' ? 6 : 5);
         assert.ok(news.items.every(item => item.title && item.description));
     }
 });

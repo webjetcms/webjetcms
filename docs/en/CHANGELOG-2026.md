@@ -1,22 +1,16 @@
 # List of changes version 2026
 
-## 2026.0-SNAPSHOT
+## 2026.40
 
-> Development version updated from the main repository.
+> WebJET CMS 2026.40 brings [**new version of PageBuilder**](#websites) with a Structure panel, a clearer block library, and copying blocks between pages. [**Scheduled publishing of pages and files**](#websites) allows you to prepare future content with images and documents that will remain protected until the publication date. The feature is enabled by the administrator.
+>
+> [**Multi-step forms**](#forms) have improved setting of display conditions and field requirements, returning to the previous step while preserving filled-in data, copying fields between forms, and linking selection fields to code lists.
+>
+> You can customize the [**New home screen**](#home-screen) by selecting widgets, their size and order. This way you have the necessary data in one place. [**Quick search**](#home-screen) available throughout the administration via Ctrl+K / ⌘K will help you find pages, files and settings.
+>
+> [**Semantic Search**](#semantic-search) allows visitors to find pages based on the meaning of a question and optionally display an AI answer compiled from the content of the site. The new [**headless mode**](#headless-mode) makes content, navigation, search, and forms accessible via REST APIs for web applications with their own frontend.
 
-### Groundbreaking changes
-
-- Forms - for classic forms and the Form application, the encryption key is easily loaded exclusively from the form's server settings. If it was previously entered only in the HTML field `encryptKey`, transfer it to the **Encryption key** field in the administration. The parameter sent by the visitor no longer affects encryption. More in the [Form encryption] guide (redactor/apps/form/encryption.md#setting-up-the-public-key-for-a-form) (#376).
-- Databases - the minimum supported version is MariaDB 10.11 LTS or MySQL 8.4 LTS. Before updating WebJET CMS on an older server, update the database according to the manufacturer's instructions. Details and requirements for the updated JDBC driver are in the [installation guide](install/setup/README.md#basic-requirements-for-server) (#349).
-- Statistics - browsers are saved without version numbers after updating, which change very often these days. After deploying this version, it is necessary to start the migration of historical statistics to URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser version number (#303).
-- The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
-- AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
-- Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
-- Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
-- Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
-- Gallery - method `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` returns processing result of type `int` instead of `void`: `0` on success, otherwise error code. After the update, it is necessary to recompile dependent Java code and JSP files, for example by cleaning the working folder of a specific application in Tomcat (#371).
-- Multi-step forms - methods `validateStep` and `runStepInterceptor` of the [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) interface receive a new parameter `FormSettingsEntity formSettings` instead of `formName`. If you use your own Java class for processing forms, you need to modify it and recompile it. Settings no longer need to be loaded by form name, but you will get it directly (#364).
-- Multi-step forms - field identifier is now generated from the name with HTML code removed (only text is used). If you have HTM formatting used in the field name for radio groups, then re-save **all its options**. Also update the conditions and references to the changed identifiers (#396).
+!>**Before updating:** Review [breaking changes](#breaking-changes) and requirements for modifying the environment, configuration, or custom extensions.
 
 ### Home screen
 
@@ -424,6 +418,22 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+#### Groundbreaking changes
+
+- Forms - for classic forms and the Form application, the encryption key is easily loaded exclusively from the form's server settings. If it was previously entered only in the HTML field `encryptKey`, transfer it to the **Encryption key** field in the administration. The parameter sent by the visitor no longer affects encryption. More in the [Form encryption] guide (redactor/apps/form/encryption.md#setting-up-the-public-key-for-a-form) (#376).
+- Databases - the minimum supported version is MariaDB 10.11 LTS or MySQL 8.4 LTS. Before updating WebJET CMS on an older server, update the database according to the manufacturer's instructions. Details and requirements for the updated JDBC driver are in the [installation guide](install/setup/README.md#basic-requirements-for-server) (#349).
+- Statistics - browsers are saved without version numbers after updating, which change very often these days. After deploying this version, it is necessary to start the migration of historical statistics to URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser version number (#303).
+- The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#further-changes).
+- AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#other-changes). When used in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
+- Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
+- Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
+- Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
+- Gallery - method `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` returns processing result of type `int` instead of `void`: `0` on success, otherwise error code. After the update, it is necessary to recompile dependent Java code and JSP files, for example by cleaning the working folder of a specific application in Tomcat (#371).
+- Multi-step forms - methods `validateStep` and `runStepInterceptor` of the [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) interface receive a new parameter `FormSettingsEntity formSettings` instead of `formName`. If you use your own Java class for processing forms, you need to modify it and recompile it. Settings no longer need to be loaded by form name, but you will get it directly (#364).
+- Multi-step forms - field identifier is now generated from the name with HTML code removed (only text is used). If you have HTM formatting used in the field name for radio groups, then re-save **all its options**. Also update the conditions and references to the changed identifiers (#396).
+
+#### Other changes
+
 - Datatables - settings tables have a common prefix `dt_`: `dt_customfields`, `dt_fields` and `dt_tabs`. The existing table `custom_fields` is automatically renamed during the update, preserving the data; custom SQL queries must be modified to `dt_customfields` (#58830).
 - Datatables - Classes for [system settings](developer/datatables/README.md#system-settings) optional fields, fields, and cards have been moved under `sk.iway.iwcm.system.datatable.settings` to subpackages `customfields`, `fields`, and `tabs`. Custom code and templates using these classes require updating imports and full class names (#58830).
 - Datatables - added field type [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) for selecting a single option from a group of buttons. It uses administration styles and also supports the **No change** option for three-state settings (#58830).
@@ -554,6 +564,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Data tables - modified validation of required fields of type [`DATE` and `DATETIME`](developer/datatables-editor/standard-fields.md#date). This allows you to delete the set date or number value in the editor - originally, when the value was empty, the value in the saved entity was preserved (#58770).
 - Data tables - field validation error [`QUILL`](developer/datatables-editor/standard-fields.md#quill) highlights both the toolbar and editor border (#58770).
 - Data tables - a clearer error message will be displayed for a duplicate value, an attempt to delete or change a record referenced by other records, or an empty value for the `NOT NULL` column (#58770).
+
+![meme](_media/meme/2026-40.jpg ":no-zoom")
 
 ## 2026.18
 

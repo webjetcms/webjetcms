@@ -21,6 +21,10 @@
   --heading-h2-padding: 0px;
 }
 
+.markdown-section a :is(strong, b) {
+  color: inherit;
+}
+
 .sidebar-section {
   font-weight: bold;
   font-size: 21px;
