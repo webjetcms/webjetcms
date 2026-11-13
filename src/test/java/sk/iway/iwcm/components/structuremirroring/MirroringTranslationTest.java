@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
@@ -22,7 +21,10 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import org.apache.http.client.HttpResponseException;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.Test;
 
@@ -71,7 +73,7 @@ class MirroringTranslationTest extends BaseWebjetTest {
                         .thenThrow(new TranslationException("Fixture quota exhausted")))) {
             groupAccess.when(GroupsDB::getInstance).thenReturn(groups);
             groupAccess.when(() -> GroupsDB.sanitizeGroupName(anyString(), anyBoolean())).thenCallRealMethod();
-            mapping.when(MirroringService::notifyTranslationFailure).thenCallRealMethod();
+            mapping.when(() -> MirroringService.notifyTranslationFailure(any(TranslationException.class))).thenCallRealMethod();
             request.when(SetCharacterEncodingFilter::getCurrentRequestBean).thenReturn(new RequestBean());
             mapping.when(() -> MirroringService.isEnabled(42)).thenReturn(true);
             mapping.when(() -> MirroringService.getMappingForGroup(10)).thenReturn(List.of(destination));
@@ -81,6 +83,7 @@ class MirroringTranslationTest extends BaseWebjetTest {
                 new GroupMirroringServiceV9().handleGroupSave(source, WebjetEventType.AFTER_SAVE, null));
 
             assertTranslationWarning(notifications);
+            assertTrue(notifications.get(0).getText().contains("Fixture quota exhausted"));
             verify(groups).setGroup(mirror, false);
             assertAll(
                 () -> assertEquals("Akciové ponuky v e-shope", mirror.getGroupName()),
@@ -126,7 +129,7 @@ class MirroringTranslationTest extends BaseWebjetTest {
                 var translators = mockConstruction(TranslationService.class, (translator, context) ->
                     when(translator.translateOrThrow(anyString())).thenThrow(new TranslationException("Fixture quota exhausted")))) {
             Constants.setString("structureMirroringAutoTranslatorLogin", "");
-            mapping.when(MirroringService::notifyTranslationFailure).thenCallRealMethod();
+            mapping.when(() -> MirroringService.notifyTranslationFailure(any(TranslationException.class))).thenCallRealMethod();
             groupAccess.when(GroupsDB::getInstance).thenReturn(groups);
             documentAccess.when(DocDB::getInstance).thenReturn(documents);
             titleSync.when(() -> sk.iway.iwcm.editor.service.GroupsService.canSyncTitle(8, 200)).thenReturn(true);
@@ -152,6 +155,7 @@ class MirroringTranslationTest extends BaseWebjetTest {
                 () -> assertEquals("", target.getVirtualPath())
             );
             assertTranslationWarning(notifications);
+            assertTrue(notifications.get(0).getText().contains("Fixture quota exhausted"));
         } finally {
             Constants.setString("structureMirroringAutoTranslatorLogin", originalLogin);
         }
@@ -191,7 +195,7 @@ class MirroringTranslationTest extends BaseWebjetTest {
                         return "Translated " + text;
                     }))) {
             Constants.setString("structureMirroringAutoTranslatorLogin", "");
-            mapping.when(MirroringService::notifyTranslationFailure).thenCallRealMethod();
+            mapping.when(() -> MirroringService.notifyTranslationFailure(any(TranslationException.class))).thenCallRealMethod();
             groupAccess.when(GroupsDB::getInstance).thenReturn(groups);
             documentAccess.when(DocDB::getInstance).thenReturn(documents);
             request.when(SetCharacterEncodingFilter::getCurrentRequestBean).thenReturn(new RequestBean());
@@ -220,6 +224,7 @@ class MirroringTranslationTest extends BaseWebjetTest {
                 new DocMirroringServiceV9().handleDocSave(source, WebjetEventType.AFTER_SAVE));
 
             assertTranslationWarning(notifications);
+            assertTrue(notifications.get(0).getText().contains("Fixture quota exhausted"));
             documentAccess.verify(() -> DocDB.saveDoc(any(DocDetails.class), anyBoolean()), times(1));
             verify(groups).setGroup(targetGroup, false);
             assertEquals(8, targetGroup.getDefaultDocId());
@@ -309,6 +314,57 @@ class MirroringTranslationTest extends BaseWebjetTest {
             DocMirroringServiceV9.translateDoc(source, new DocDetails(), translator);
         });
         assertTranslationWarning(notifications);
+        assertTrue(notifications.get(0).getText().contains("Fixture quota exhausted"));
+    }
+
+    /** Wrapped HTTP errors expose the provider reason and status in the user-facing notification. */
+    @ParameterizedTest
+    @CsvSource({ "456, Quota Exceeded", "400, Unsupported language pair", "500, Internal Server Error" })
+    void includesProviderFailureInWarning(int status, String message) {
+        TranslationService translator = mock(TranslationService.class);
+        when(translator.translateOrThrow(anyString())).thenThrow(new TranslationException("DeepL translation failed",
+            new HttpResponseException(status, message)));
+        DocDetails source = new DocDetails();
+        source.setTitle("Ponuky");
+
+        List<NotifyBean> notifications = runWithNotifications(() ->
+            DocMirroringServiceV9.translateDoc(source, new DocDetails(), translator));
+
+        assertTranslationWarning(notifications);
+        assertTrue(notifications.get(0).getText().contains(message));
+        assertTrue(notifications.get(0).getText().contains(Integer.toString(status)));
+    }
+
+    /** Failures without a message still display the translated fallback warning. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    void preservesWarningWithoutFailureMessage(String message) {
+        TranslationService translator = mock(TranslationService.class);
+        when(translator.translateOrThrow(anyString())).thenThrow(new TranslationException(message));
+        DocDetails source = new DocDetails();
+        source.setTitle("Ponuky");
+
+        List<NotifyBean> notifications = runWithNotifications(() ->
+            DocMirroringServiceV9.translateDoc(source, new DocDetails(), translator));
+
+        assertTranslationWarning(notifications);
+        assertFalse(notifications.get(0).getText().contains("<br>"));
+    }
+
+    /** Provider text is escaped because notification bodies support HTML. */
+    @Test
+    void escapesProviderFailureInWarning() {
+        TranslationService translator = mock(TranslationService.class);
+        when(translator.translateOrThrow(anyString())).thenThrow(new TranslationException("Unsupported <pair> & language"));
+        DocDetails source = new DocDetails();
+        source.setTitle("Ponuky");
+
+        List<NotifyBean> notifications = runWithNotifications(() ->
+            DocMirroringServiceV9.translateDoc(source, new DocDetails(), translator));
+
+        assertTranslationWarning(notifications);
+        assertTrue(notifications.get(0).getText().contains("Unsupported &lt;pair&gt; &amp; language"));
+        assertFalse(notifications.get(0).getText().contains("<pair>"));
     }
 
     private List<NotifyBean> runWithNotifications(Runnable operation) {

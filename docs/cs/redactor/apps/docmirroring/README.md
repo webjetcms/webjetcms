@@ -98,11 +98,7 @@ Překladač při vytvoření stránky hledá ve složkách rekurzivně směrem k
 
 Překládá se **Název web stránky**, název položky v menu, URL adresa a **Obsah** web stránky.
 
-Pokud překlad selže, například po vyčerpání kvóty DeepL, zrcadlení pokračuje s aktuálním názvem a obsahem v původním jazyce. Nové stránky a složky se vytvoří a zachovají se jejich vzájemná propojení. Stávající stránky, které splňují podmínky automatického překladu, se aktualizují původním textem včetně názvu a generované URL. Při částečném selhání překladu se převezmou všechna překládaná pole z původní stránky, aby nevznikla směs jazyků.
-
-Po uložení se zobrazí upozornění **Automatický překlad selhal** s informací, že byl použit původní jazyk. Redaktor může jazykovou verzi přeložit ručně nebo po obnovení překladače zopakovat uložení původní stránky. Podrobnosti chyby se zapíší do serverového logu. Pokud překladač není nakonfigurován, zrcadlení nadále vytváří kopie bez překladu.
-
-Pevné mezery včetně HTML zápisu `&nbsp;` se v názvech složek a při generování URL nahradí obyčejnými mezerami. Nezpůsobí tak vložení textu `nbsp` do URL ani opakované přejmenování složky při synchronizaci názvu hlavní stránky.
+Pokud překlad selže, například po vyčerpání kvóty DeepL, zrcadlení pokračuje s aktuálním názvem a obsahem v původním jazyce. Po uložení se zobrazí upozornění **Automatický překlad selhal** s informací, že byl použit původní jazyk. Upozornění obsahuje i konkrétní důvod z výjimky překladače; při HTTP chybě DeepL zobrazí HTTP kód a zprávu z odpovědi, je-li dostupná, například o vyčerpané kvótě, nepodporované kombinaci jazyků nebo interní chybě služby. Redaktor může jazykovou verzi přeložit ručně nebo po obnovení překladače zopakovat uložení původní stránky.
 
 ### Nová stránka
 

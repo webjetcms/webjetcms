@@ -4,13 +4,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import sk.iway.iwcm.Cache;
@@ -82,13 +85,18 @@ public class DeepL extends TranslationEngine {
         int attempt = 0;
         while (attempt < MAX_RETRIES) {
             try {
-                String response = Executor.newInstance(HTTP_CLIENT).execute(Request.Post(translationApiUrl)
+                HttpResponse response = Executor.newInstance(HTTP_CLIENT).execute(Request.Post(translationApiUrl)
                                 .setHeader("Content-Type", "application/json; charset=utf-8")
                                 .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
                                 .bodyString(getBodyString(text, fromLanguage, toLanguage), ContentType.APPLICATION_JSON))
-                        .returnContent().asString(StandardCharsets.UTF_8);
+                        .returnResponse();
+                String responseBody = response.getEntity() == null ? "" : EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+                int status = response.getStatusLine().getStatusCode();
+                if (status >= 300) {
+                    throw new HttpResponseException(status, getErrorMessage(responseBody, response.getStatusLine().getReasonPhrase()));
+                }
 
-                JSONObject json = new JSONObject(response);
+                JSONObject json = new JSONObject(responseBody);
                 JSONArray translations = json.getJSONArray("translations");
                 if (translations.length()>0) {
                     translatedText = translations.getJSONObject(0).getString("text");
@@ -111,8 +119,7 @@ public class DeepL extends TranslationEngine {
                 if(ex instanceof HttpResponseException responseException) {
                     if(responseException.getStatusCode() == 429) {
                         //too many requests, apply sleep delay
-                        if(applyDelay(attempt++)) continue;
-                        else break;
+                        if(applyDelay(attempt++) && attempt < MAX_RETRIES) continue;
                     }
                 }
 
@@ -121,6 +128,17 @@ public class DeepL extends TranslationEngine {
         }
 
         throw new TranslationException("DeepL did not return a translation");
+    }
+
+    /** Extracts the provider's JSON error message, retaining the HTTP reason for other response formats. */
+    private static String getErrorMessage(String responseBody, String reasonPhrase) {
+        try {
+            String message = new JSONObject(responseBody).optString("message");
+            if (Tools.isNotEmpty(message)) return message;
+        } catch (JSONException ex) {
+            // Proxy and server errors may return HTML or an empty body instead of JSON.
+        }
+        return reasonPhrase;
     }
 
     private String getBodyString(String text, String fromLanguage, String toLanguage) {

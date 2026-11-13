@@ -98,11 +98,7 @@ When creating a page, the translator searches the folders recursively towards th
 
 The **Website name**, menu item name, URL address, and **Content** of the website are translated.
 
-If the translation fails, for example after running out of DeepL quota, mirroring continues with the current title and content in the original language. New pages and folders are created and their links to each other are preserved. Existing pages that meet the conditions for automatic translation are updated with the original text, including the title and the generated URL. In the event of a partial translation failure, all translated fields from the original page are taken to avoid a mix of languages.
-
-After saving, a notification **Automatic translation failed** will appear, stating that the original language was used. The editor can translate the language version manually or, after restoring the translator, re-save the original page. Details of the error will be written to the server log. If the translator is not configured, mirroring continues to create copies without translation.
-
-Hard spaces, including the HTML notation `&nbsp;`, will be replaced with regular spaces in folder names and when generating URLs. This will prevent `nbsp` from being inserted into the URL or causing the folder to be renamed repeatedly when the main page name is synchronized.
+If the translation fails, for example after running out of DeepL quota, the mirroring continues with the current title and content in the original language. After saving, a notification **Automatic translation failed** will be displayed, informing that the original language was used. The notification also includes the specific reason for the translator exception; for an HTTP error, DeepL will display the HTTP code and the response message, if available, for example about an exhausted quota, an unsupported language combination, or an internal service error. The editor can translate the language version manually or, after restarting the translator, re-save the original page.
 
 ### New page
 

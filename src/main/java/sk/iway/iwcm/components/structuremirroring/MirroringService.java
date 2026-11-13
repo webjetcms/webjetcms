@@ -19,6 +19,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.system.translation.TranslationException;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  * Vseobecna trieda pre mirrorovanie struktury. Synchronizuju sa zadane ID adresarov
@@ -39,12 +41,18 @@ public class MirroringService {
       //tools class
    }
 
-   /** Adds a request-scoped warning; ThreadBean deduplicates repeated translation failures. */
-   static void notifyTranslationFailure() {
+   /** Adds a request-scoped warning with the provider's error; ThreadBean deduplicates identical failures. */
+   static void notifyTranslationFailure(TranslationException exception) {
       Prop prop = Prop.getInstance();
+      String text = prop.getText("components.mirroring.translation_failed.text");
+      String errorMessage = null;
+      for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+         if (Tools.isNotEmpty(cause.getMessage())) errorMessage = cause.getMessage();
+      }
+      if (Tools.isNotEmpty(errorMessage)) text += "<br><br>" + ResponseUtils.filter(errorMessage);
       DatatableRestControllerV2.addNotify(new NotifyBean(
          prop.getText("components.mirroring.translation_failed.title"),
-         prop.getText("components.mirroring.translation_failed.text"), NotifyType.WARNING, 60000));
+         text, NotifyType.WARNING, 60000));
    }
 
    public static boolean isCloneAction() {

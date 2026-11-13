@@ -123,7 +123,7 @@ public class GroupMirroringServiceV9 {
                      translatedGroupName = translationService.translateOrThrow(group.getGroupName(), getLanguage(group), getLanguage(mappedGroup));
                   } catch (TranslationException ex) {
                      Logger.error(GroupMirroringServiceV9.class, "Using source name for folder mirror after translation failure, groupId=" + group.getGroupId() + ", targetGroupId=" + mappedGroup.getGroupId(), ex);
-                     MirroringService.notifyTranslationFailure();
+                     MirroringService.notifyTranslationFailure(ex);
                      translatedGroupName = group.getGroupName();
                   }
                   translatedGroupName = GroupsDB.sanitizeGroupName(translatedGroupName, false);

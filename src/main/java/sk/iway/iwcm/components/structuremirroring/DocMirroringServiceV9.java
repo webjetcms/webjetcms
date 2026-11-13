@@ -121,7 +121,7 @@ public class DocMirroringServiceV9 {
                      translatedTitle = Tools.removeNbsp(translator.translateOrThrow(doc.getTitle()));
                   } catch (TranslationException ex) {
                      Logger.error(DocMirroringServiceV9.class, "Using source content for page mirror after translation failure, docId=" + doc.getDocId() + ", targetGroupId=" + mappedGroup.getGroupId(), ex);
-                     MirroringService.notifyTranslationFailure();
+                     MirroringService.notifyTranslationFailure(ex);
                      translatedTitle = Tools.removeNbsp(doc.getTitle());
                      translateContent = false;
                   }
@@ -301,7 +301,7 @@ public class DocMirroringServiceV9 {
       } catch (TranslationException ex) {
          Logger.error(DocMirroringServiceV9.class, "Using source content for page mirror after translation failure, docId=" + source.getDocId() + ", targetGroupId=" + doc.getGroupId(), ex);
          copySourceContent(source, doc);
-         MirroringService.notifyTranslationFailure();
+         MirroringService.notifyTranslationFailure(ex);
          return false;
       }
    }
