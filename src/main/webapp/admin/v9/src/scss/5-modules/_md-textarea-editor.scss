@@ -52,6 +52,17 @@
         overflow: auto;
         box-shadow: none;
     }
+
+    &--wrapped {
+        > textarea {
+            white-space: break-spaces;
+            overflow-wrap: normal;
+        }
+
+        > .md-textarea-editor__lines {
+            display: none;
+        }
+    }
 }
 
 .input-group > .md-textarea-editor {

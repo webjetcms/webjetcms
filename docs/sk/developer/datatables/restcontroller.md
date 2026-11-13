@@ -145,6 +145,67 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 }
 ```
 
+## AI_TOOLS
+
+Anotáciou `@AiTool` sprístupníte REST operácie konkrétneho kontroléra cez katalóg AI nástrojov. Katalóg preberie zo Spring MVC zdedené aj vlastné mapovania. Metódy ako `afterSave` zostávajú súčasťou životného cyklu editora.
+
+Používateľ s právom `cmp_quiz` môže cez nástroje kontroléra `QuizRestController` čítať, vytvárať, upravovať a mazať dotazníky.
+
+```java
+import sk.iway.iwcm.components.ai.tools.AiTool;
+
+@RestController
+@RequestMapping("/admin/rest/quiz")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_quiz')")
+@Datatable
+@AiTool(description = "components.ai.tools.quiz.context")
+public class QuizRestController extends DatatableRestControllerV2<QuizEntity, Long> {
+    // ...
+}
+```
+
+Samotné `@AiTool` zahrnie aj zápisové operácie. Voľba `readOnly = true` obmedzí výpis aj volanie na HTTP GET. Pomocou `exclude = {"getQuizType"}` môžete v oboch režimoch vyradiť všetky mapovania konkrétnej Java metódy, vrátane zdedenej metódy. Pri vlastných mapovaniach bez určenej HTTP metódy katalóg použije GET, v plnom režime pri vstupe s telom požiadavky použije POST.
+
+Vlastný endpoint môžete opísať anotáciou `@AiToolDescription` na mapovanej metóde. Ako hodnotu zadajte anglický text alebo prekladový kľúč. Napríklad opis metódy `getQuizType` vysvetľuje, ako interpretovať pole `quizType` vo vrátenom kvíze.
+
+```java
+import sk.iway.iwcm.components.ai.tools.AiToolDescription;
+
+// V triede QuizRestController
+@RequestMapping(value = "/quizInfo", params = {"quizId"})
+@AiToolDescription("components.ai.tools.quiz_get_quiz_type.description")
+public QuizEntity getQuizType(@RequestParam("quizId") int quizId) {
+    // ...
+}
+```
+
+Ak anotáciu vynecháte alebo zadáte prázdny text, katalóg použije preklad podľa vzoru `components.ai.tools.<kontrolér>_<metóda>.description`, potom opis štandardnej operácie alebo text odvodený z názvu metódy. K opisu operácie pripojí spoločný kontext z `@AiTool(description = "...")`, ak ho kontrolér uvádza. API pre AI používa anglické preklady. V administrácii sa opis zobrazí v jazyku používateľa, pri chýbajúcom preklade v angličtine.
+
+`GET /admin/rest/ai/tools` vráti v poli `tools` nástroje dostupné prihlásenému používateľovi. Každá položka obsahuje anglický názov `name`, opis `description`, vstupnú schému `inputSchema` a cieľové mapovanie. Príklad môžete spustiť v konzole prehliadača v administrácii pod účtom s právom `cmp_quiz`.
+
+```javascript
+const url = "/admin/rest/ai/tools";
+const headers = { "X-CSRF-Token": window.csrfToken };
+const { tools } = await (await fetch(url, { headers })).json();
+const quiz = tools.find(tool => tool.name === "quiz_get_quiz_type");
+if (quiz) {
+    const response = await fetch(url + "/" + quiz.name + "/call", {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ quizId: 42 })
+    });
+    if (response.ok) console.log(await response.json());
+}
+```
+
+Nástroj `quiz_get_quiz_type` vyžaduje celočíselné `quizId`. Pre hodnotu `42` vykoná `GET /admin/rest/quiz/quizInfo?quizId=42`. Ak dotazník so zadaným ID vo vybranej doméne neexistuje, odpoveď obsahuje prázdny názov a `quizType` s hodnotou `"0"`. Pri každom volaní WebJET znovu overí prístup používateľa. Cieľový kontrolér spracuje požiadavku v jeho doméne a vráti svoju obvyklú odpoveď vrátane prípadných validačných chýb datatabuľky.
+
+Argumenty ďalších nástrojov zostavte podľa ich `inputSchema`. Nástroj `quiz_get_all` predvolene vráti prvú stránku s najviac 20 dotazníkmi. Ak zadáte iba `{"page":1}`, vráti druhú stránku s rovnakou veľkosťou. Pomocou `{"page":0,"size":10,"sort":["name,asc"]}` získate prvých desať dotazníkov zoradených podľa názvu.
+
+Pre operáciu s `@RequestBody` vložte údaje do vlastnosti `body`. Telo editora tak môže obsahovať rovnaké polia `action` a `data` ako pri priamom volaní `/editor`. Limit jedného JSON volania je 1 MiB. Pri väčšej požiadavke API vráti HTTP 413.
+
+Ak projekt chráni cieľovú URL vlastným servletovým filtrom, jeho URL vzor musí pokrývať aj volanie príslušného nástroja. Spoločným vzorom môže byť napríklad `/admin/rest/*`. Ak by pri preklade požiadavky kontajner vynechal filter cieľovej URL alebo vybral iný servlet, WebJET volanie odmietne.
+
 ## Filtrovanie podľa domény
 
 Ak Spring DATA repozitár implementuje rozhranie `DomainIdRepository`, trieda `DatatableRestControllerV2` pracuje s hodnotou `domainId`. Pri čítaní sa automatické filtrovanie aktivuje pre MultiWeb/Cloud inštaláciu alebo pri zapnutej konfiguračnej premennej `enableStaticFilesExternalDir`. Pri zápise sa pre takýto repozitár vždy doplní chýbajúce `domainId` a overí sa, že zaslaná hodnota zodpovedá očakávanej doméne.

@@ -22,6 +22,7 @@ V tejto časti si preberieme, ako pridať/nastaviť nového **AI asistenta**. Pr
 - Akcia
 - Poskytovateľ
 - Inštrukcie
+- Nástroje
 - Pokročilé
 - Limity tokenov
 
@@ -92,6 +93,14 @@ Táto karta slúži na výber poskytovateľa AI služieb, ktorý bude použitý 
 Táto karta je kľúčová pre správne fungovanie asistenta. Obsahuje jedno pole, do ktorého zadávate detailné inštrukcie, čo má asistent vykonať po spustení. Inštrukcie by mali byť jasné, konkrétne a zrozumiteľné, aby asistent vedel presne, akú úlohu má splniť. Správne zadané inštrukcie zabezpečia, že asistent bude vykonávať požadované akcie efektívne a podľa očakávaní. Viac sa dočítate v časti [písanie inštrukcií](../instructions/README.md).
 
 ![](datatable-instructions-tab.png)
+
+### Karta - Nástroje
+
+Vyberte nástroj z ponuky a kliknite na **Pridať**. V tabuľke sa zobrazí jeho názov a popis. Tlačidlom **Odobrať nástroj** v príslušnom riadku ho môžete asistentovi odobrať. Ponuka obsahuje nástroje z katalógu, ku ktorým máte prístup.
+
+Zmeny priradenia sa uložia spolu s asistentom po kliknutí na **Uložiť**. Tlačidlom **Zrušiť** ich zahodíte.
+
+![Karta Nástroje s dvoma nástrojmi priradenými asistentovi](datatable-tools-tab.png)
 
 ### Karta - Pokročilé
 

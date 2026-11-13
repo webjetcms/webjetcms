@@ -4544,5 +4544,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>12.11.2026</string></void>
+                <void property="desc"><string>ai - save assigned tool names with the assistant definition</string></void>
+                <void property="mysql"><string>ALTER TABLE ai_assistants ADD tool_names MEDIUMTEXT</string></void>
+                <void property="mssql"><string>ALTER TABLE ai_assistants ADD tool_names NVARCHAR(MAX)</string></void>
+                <void property="oracle"><string>ALTER TABLE ai_assistants ADD tool_names CLOB</string></void>
+                <void property="pgsql"><string>ALTER TABLE ai_assistants ADD tool_names TEXT</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

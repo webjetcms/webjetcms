@@ -4,9 +4,11 @@ const enhancedTextareas = new WeakMap();
  * Adds a decorative line-number gutter while preserving native textarea navigation.
  * Repeated calls refresh the existing gutter after programmatic value changes.
  * @param {HTMLTextAreaElement|null} textarea Textarea to enhance.
+ * @param {Object} [options] Options applied when the gutter is created.
+ * @param {boolean} [options.toggleWrapOnDoubleClick] Toggle wrapping and hide line numbers while wrapped.
  * @returns {{refresh: function(): void}|undefined} Gutter refresh handle.
  */
-export function initTextareaLineNumbers(textarea) {
+export function initTextareaLineNumbers(textarea, {toggleWrapOnDoubleClick = false} = {}) {
     if (!textarea) return;
     const existing = enhancedTextareas.get(textarea);
     if (existing) {
@@ -30,6 +32,12 @@ export function initTextareaLineNumbers(textarea) {
     textarea.addEventListener("input", refresh);
     textarea.addEventListener("change", refresh);
     textarea.addEventListener("scroll", () => { gutter.scrollTop = textarea.scrollTop; });
+    if (toggleWrapOnDoubleClick) {
+        textarea.addEventListener("dblclick", () => {
+            wrapper.classList.toggle("md-textarea-editor--wrapped");
+            gutter.scrollTop = textarea.scrollTop;
+        });
+    }
     const handle = {refresh};
     enhancedTextareas.set(textarea, handle);
     refresh();

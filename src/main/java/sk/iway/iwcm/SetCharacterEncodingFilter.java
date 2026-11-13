@@ -384,6 +384,10 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 	      //toto bypasne pathFilter
 			if (PathFilter.bypassPath(path, request))
 			{
+				if (request.getAttribute(PathFilter.AI_TOOL_ENTRY_PATH) != null) {
+					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+					return;
+				}
 				Logger.debug(SetCharacterEncodingFilter.class, "PathFilter.bypass: " + path);
 				request.setAttribute("PathFilter.bypass", "true");
 				chain.doFilter(request, response);
@@ -452,6 +456,10 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			ProxyBean proxy = proxyDB.getProxy(pathNoContext);
 			if (proxy != null)
 			{
+				if (request.getAttribute(PathFilter.AI_TOOL_ENTRY_PATH) != null) {
+					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+					return;
+				}
 				Logger.debug(SetCharacterEncodingFilter.class, "Forwarding to proxy: "+proxy.getRemoteServer());
 
 				Proxy.service(proxy, request, response);
