@@ -190,7 +190,7 @@ export class AiUserInterface {
 
             //check value in input, if empty remove if there is no userPromptEnabled
             let hasInput = false;
-            if (aiCol.action === "live_chat" || (true === aiCol.userPromptEnabled && "edit_image" !== aiCol.action)) hasInput = true;
+            if (aiCol.toolsEnabled || aiCol.action === "live_chat" || (true === aiCol.userPromptEnabled && "edit_image" !== aiCol.action)) hasInput = true;
             else {
                 let inputFieldName = aiCol.from;
                 if (inputFieldName == null || inputFieldName === "") inputFieldName = aiCol.to;
@@ -404,11 +404,12 @@ export class AiUserInterface {
         this.setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
     }
 
-    setExplanatoryText(text) {
+    setExplanatoryText(text, plainText = false) {
         if (!this.isActive() || this.currentChat != null) return;
         if (typeof text != "undefined" && text != null) {
             let explanatoryTextContainer = $("#toast-container-ai").find(".explanatory-text-container");
-            explanatoryTextContainer.html(WJ.parseMarkdown(text));
+            if (plainText) explanatoryTextContainer.text(text);
+            else explanatoryTextContainer.html(WJ.parseMarkdown(text));
             explanatoryTextContainer.show();
         } else {
             this.hideExplanatoryText();

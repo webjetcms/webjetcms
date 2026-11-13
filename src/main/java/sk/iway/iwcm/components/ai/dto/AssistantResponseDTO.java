@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 
 /**
  * DTO for AI assistant response
@@ -19,6 +20,8 @@ import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 @Setter
 public class AssistantResponseDTO {
     private String response;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private AiToolProtocol.Call toolCall;
     private String error;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String errorCategory;
@@ -27,6 +30,8 @@ public class AssistantResponseDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean retryable;
     private String conversationId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String attachmentContextId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String threadId;
     @JsonInclude(JsonInclude.Include.NON_NULL)

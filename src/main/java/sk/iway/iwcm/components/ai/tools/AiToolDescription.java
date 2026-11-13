@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Describes a mapped operation on an {@link AiTool} controller. The catalog appends the controller's shared context. */
+/** Describes a mapped operation on an {@link AiTool} controller. */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AiToolDescription {

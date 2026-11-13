@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import { AiChatTransport } from './ai-chat-transport';
+import { formatWriteOutcome } from './ai-tool-transport';
 import { splitChatResponse } from './ai-response-parser';
 import { HtmlPreview } from './html-preview';
 import { chatRequestId, chatAttachmentUrl, fetchChatAttachment, historyText } from './chat-history-api';
@@ -138,9 +139,11 @@ export class AiChat {
             let error = null;
             if (message.status === 'error') {
                 if (message.errorCategory === 'TOKEN_LIMIT_REACHED') error = WJ.translate('components.ai_assistants.token_limit.reached.js');
+                else if (message.errorCategory === 'TOOL_LIMIT_REACHED') error = WJ.translate('components.ai.tools.limit.js');
                 else error = historyText(message.errorCategory === 'ATTACHMENT_INVALID' ? 'attachmentUnreadable' : 'generationFailed');
             }
             return { ...message, confirmed: true,
+                toolWriteStatus: message.writeOutcomes?.map(formatWriteOutcome).join('\n'),
                 userPrompt: questions.get(message.turnId),
                 error,
                 retryable: message.retryable ?? (message.errorCategory === 'ATTACHMENT_INVALID' ? false : null)
@@ -316,7 +319,8 @@ export class AiChat {
         }
         Object.assign(message, {
             text: "", status: "pending", created: Date.now(), totalTokens: null, error: null,
-            errorCategory: null, providerStatusCode: null, retryable: null, inputData: { ...inputData }
+            errorCategory: null, providerStatusCode: null, retryable: null, toolWriteStatus: null, toolMayHaveSaved: false,
+            inputData: { ...inputData }
         });
         if (retryMessage == null) {
             state.draft = "";
@@ -344,6 +348,12 @@ export class AiChat {
                     state.notice = text;
                     this._changed();
                 },
+                onWrite: (status, mayHaveSaved) => {
+                    if (!current()) return;
+                    message.toolWriteStatus = status;
+                    message.toolMayHaveSaved = mayHaveSaved;
+                    if (this.options.persistent) this.refresh();
+                },
                 onMetadata: metadata => {
                     if (!current()) return;
                     state.threadId = metadata.threadId;
@@ -365,7 +375,7 @@ export class AiChat {
             state.notice = null;
             message.errorCategory = result.errorCategory;
             message.providerStatusCode = result.providerStatusCode;
-            message.retryable = result.retryable;
+            message.retryable = message.toolMayHaveSaved ? false : result.retryable;
             if (result.stopped) message.status = "stopped";
             else if (result.success) {
                 message.text = result.response ?? message.text;
@@ -375,6 +385,7 @@ export class AiChat {
                 state.conversationId = result.conversationId || null;
             } else {
                 message.status = "error";
+                if (message.toolWriteStatus && !this.options.persistent) message.text = result.response || message.toolWriteStatus;
                 message.error = result.errorText || this._text("unavailable");
                 state.needsNewChat = !this.options.persistent && result.errorCategory === "INVALID_CONTINUATION";
             }
@@ -401,6 +412,10 @@ export class AiChat {
         if (request == null) return;
         this.state.pending = null;
         request.message.status = "stopped";
+        if (request.message.toolWriteStatus) {
+            if (!this.options.persistent) request.message.text = request.message.toolWriteStatus;
+            if (request.message.toolMayHaveSaved) request.message.retryable = false;
+        }
         this.state.notice = null;
         this.state.confirmation?.resolve(false);
         request.transport?.cancel();
@@ -821,6 +836,9 @@ export class AiChat {
                 : message.retryable === false ? "changeRequest" : null;
             status = hint ? this._text(hint) + " " + (message.error || "") : message.error || this._text("unavailable");
         }
+        if (this.options.persistent && message.toolWriteStatus) {
+            status = [status, message.toolWriteStatus].filter(Boolean).join('\n');
+        }
         view.$status.text(status).toggle(Boolean(status)).toggleClass("text-danger", message.status === "error");
         const hasUsage = message.status === "complete" && message.totalTokens != null;
         view.$usage.text(hasUsage ? this._text("tokens", message.totalTokens) : "").toggle(hasUsage);
@@ -842,8 +860,8 @@ export class AiChat {
     }
 
     _canRetry(message) {
-        if (this.state.readOnlyReason || this.state.serverBusy) return false;
-        return message.status === "stopped" || (message.status === "error" && message.retryable !== false
+        if (this.state.readOnlyReason || this.state.serverBusy || message.retryable === false) return false;
+        return message.status === "stopped" || (message.status === "error"
             && !["INVALID_CONTINUATION", "UNSUPPORTED_OPERATION"].includes(message.errorCategory));
     }
 

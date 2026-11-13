@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.ai.tools;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.context.ApplicationContext;
@@ -25,18 +26,36 @@ import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Evaluates existing controller and handler permissions without executing a mapped operation. */
 @Component
 public class AiToolAuthorization {
 
+    enum Access {
+        /** Inspect metadata using the current user's endpoint permissions. */
+        CATALOG,
+        /** Also check the assistant assignment when the request identifies an assistant. */
+        ASSIGNED,
+        /** Check the assignment and defer record-dependent rules to the secured MVC handler. */
+        INVOKE
+    }
+
+    static final String ASSISTANT_HEADER = "X-WebJET-AI-Assistant";
+    private final AssistantDefinitionRepository assistants;
+    private final WebjetSecurityService security;
     private final MethodSecurityExpressionHandler expressions;
     private final PreAuthorizeAuthorizationManager preAuthorize = new PreAuthorizeAuthorizationManager();
     private final SecuredAuthorizationManager secured = new SecuredAuthorizationManager();
 
-    public AiToolAuthorization(ApplicationContext context) {
+    public AiToolAuthorization(ApplicationContext context, AssistantDefinitionRepository assistants, WebjetSecurityService security) {
+        this.assistants = assistants;
+        this.security = security;
         expressions = context.getBeanProvider(MethodSecurityExpressionHandler.class).getIfUnique(() -> {
             DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
             handler.setApplicationContext(context);
@@ -44,6 +63,12 @@ public class AiToolAuthorization {
         });
         preAuthorize.setExpressionHandler(expressions);
         preAuthorize.setApplicationContext(context);
+    }
+
+    Optional<AssistantDefinitionEntity> assistant(long id) {
+        if (id < 1 || !security.hasPermission("cmp_ai_button")) return Optional.empty();
+        return assistants.findByIdAndDomainId(id, CloudToolsForCore.getDomainId())
+                .filter(a -> !Boolean.FALSE.equals(a.getActive()) && AiToolProtocol.supports(a));
     }
 
     static boolean hasAdminIdentity(HttpServletRequest request) {
@@ -54,14 +79,17 @@ public class AiToolAuthorization {
     }
 
     public boolean isAllowed(AiToolRegistry.Entry entry, HttpServletRequest request) {
-        return isAllowed(entry, request, false);
+        return isAllowed(entry, request, Access.ASSIGNED);
     }
 
-    boolean isAllowed(AiToolRegistry.Entry entry, HttpServletRequest request, boolean invoking) {
+    boolean isAllowed(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {
         if (!hasAdminIdentity(request)) return false;
         Object previous = request.getAttribute(AiToolRequest.CHECKING_PERMISSION);
         request.setAttribute(AiToolRequest.CHECKING_PERMISSION, Boolean.TRUE);
         try {
+            String assistantId = request.getHeader(ASSISTANT_HEADER);
+            if (access != Access.CATALOG && assistantId != null && assistant(Long.parseLong(assistantId))
+                    .filter(a -> Arrays.asList(a.getToolNames().split(",")).contains(entry.definition().name())).isEmpty()) return false;
             Object bean = entry.handler().createWithResolvedBean().getBean();
             Class<?> type = entry.handler().getBeanType();
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -77,13 +105,14 @@ public class AiToolAuthorization {
             if (classRoles != null && auth.getAuthorities().stream()
                     .noneMatch(a -> Arrays.asList(classRoles.value()).contains(a.getAuthority()))) return false;
 
-            if (!((DatatableRestControllerV2<?, ?>) bean).checkAccessAllowed(request)) return false;
+            if (DatatableRestControllerV2.class.isAssignableFrom(type)
+                    && (!(bean instanceof DatatableRestControllerV2<?, ?> table) || !table.checkAccessAllowed(request))) return false;
             if (!grants(secured.authorize(() -> auth, invocation))) return false;
             PreAuthorize handlerRule = SecurityAnnotationScanners.requireUnique(PreAuthorize.class).scan(invocation.getMethod(), type);
             if (handlerRule != null && expressions.getExpressionParser().parseExpression(handlerRule.value()) instanceof SpelExpression spel
                     && requiresArguments(spel.getAST())) {
                 // Only Spring MVC has the bound Java arguments. Its secured proxy evaluates this rule when invoking.
-                return invoking;
+                return access == Access.INVOKE;
             }
             return grants(preAuthorize.authorize(() -> auth, invocation));
         } catch (RuntimeException cannotEstablishPermission) {

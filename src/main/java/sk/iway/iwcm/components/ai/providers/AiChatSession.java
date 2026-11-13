@@ -65,15 +65,22 @@ final class AiChatSession {
      */
     static String remember(AssistantDefinitionEntity assistant, HttpServletRequest request, String responseId,
         Map<String, String> includes) {
+        if (responseId == null || responseId.isBlank()) {
+            throw new IllegalStateException("The chat provider did not return a completed response ID.");
+        }
+        return remember(assistant, request, new Continuation(responseId, includes));
+    }
+
+    static String rememberAttachments(AssistantDefinitionEntity assistant, HttpServletRequest request, String attachmentContext) {
+        return remember(assistant, request, new Continuation(null, Map.of(), attachmentContext));
+    }
+
+    private static String remember(AssistantDefinitionEntity assistant, HttpServletRequest request, Continuation continuation) {
         Object captured = request == null ? null : request.getAttribute(TURN_ATTRIBUTE);
         if (captured instanceof TurnContext == false) {
             throw new IllegalStateException("Resolve the chat conversation before storing its response.");
         }
         TurnContext context = (TurnContext) captured;
-        if (responseId == null || responseId.isBlank()) {
-            throw new IllegalStateException("The chat provider did not return a completed response ID.");
-        }
-        Continuation continuation = new Continuation(responseId, includes);
         String conversationId = UUID.randomUUID().toString();
         HttpSession session = request.getSession(false);
         if (session != context.session()) throw new IllegalStateException(UNAVAILABLE_MESSAGE);
@@ -110,7 +117,11 @@ final class AiChatSession {
     }
 
     /** A completed provider response and a defensive copy of its protected INCLUDE mappings. */
-    record Continuation(String responseId, Map<String, String> includes) implements Serializable {
+    record Continuation(String responseId, Map<String, String> includes, String attachmentContext) implements Serializable {
+        Continuation(String responseId, Map<String, String> includes) {
+            this(responseId, includes, null);
+        }
+
         Continuation {
             includes = includes == null ? Map.of() : Map.copyOf(includes);
         }

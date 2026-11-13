@@ -1,4 +1,5 @@
 import {AiExecutionResult} from './ai-execution-result';
+import { runBrowserTools, toolReply } from '../../../src/js/ai/ai-tool-transport';
 
 /**
  * Class to wrap Local Browser AI execution logic
@@ -10,6 +11,7 @@ export class AiBrowserExecutor {
     lastApiInstance = null;
     languageDetector = null;
     isDestroyed = false;
+    toolController = null;
 
     EDITOR = null;
     editorAiInstance = null;
@@ -46,7 +48,7 @@ export class AiBrowserExecutor {
      * @param {*} setFunction
      * @returns {AiExecutionResult}
      */
-    async execute(aiCol, inputData, reuseApiInstance = false, setFunction = null) {
+    async execute(aiCol, inputData, reuseApiInstance = false, setFunction = null, onWrite) {
 
         let instructions = aiCol.instructions;
         let executionResult = new AiExecutionResult();
@@ -77,11 +79,28 @@ export class AiBrowserExecutor {
                 }
 
                 let useStreaming = aiCol.useStreaming || false;
-                if (apiInstance) {
+                if (apiInstance && apiName === 'LanguageModel' && aiCol.toolsEnabled) {
+                    const controller = new AbortController();
+                    this.toolController = controller;
+                    try {
+                        const result = await runBrowserTools(aiCol, inputData,
+                            message => apiInstance.prompt(message, { signal: controller.signal }), controller.signal, onWrite);
+                        this._assertActive();
+                        if (setFunction) setFunction(toolReply(result, false), true);
+                        else if (aiCol.toolsWrite) {
+                            executionResult.explanatoryText = toolReply(result, true);
+                            if (result.toolProblem || !result.toolStatus) executionResult.statusKey = 'components.ai.tools.unverified.js';
+                        } else this.EDITOR.set(aiCol.to, result.response);
+                        executionResult.success = true;
+                    } finally {
+                        this.toolController = null;
+                    }
+                } else if (apiInstance) {
                     executionResult = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, setFunction);
                 }
             }
         } catch (e) {
+            if (e.toolStatus) executionResult.explanatoryText = e.toolStatus;
             //console.log(e);
             if ("signal is aborted without reason" === e.message) {
                 executionResult.stopped = true;
@@ -103,6 +122,7 @@ export class AiBrowserExecutor {
         //console.log("Destroying instance=", this.lastApiInstance);
         //sometimes API instance is not YET available, so we need this semafor to handle this situation
         this.isDestroyed = true;
+        this.toolController?.abort();
         if (this.lastApiInstance != null) {
             this.lastApiInstance.destroy();
             this.lastApiInstance = null;

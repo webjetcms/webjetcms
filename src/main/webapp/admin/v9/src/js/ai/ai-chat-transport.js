@@ -1,5 +1,6 @@
 import { AiBrowserExecutor } from '../../../npm_packages/webjetdatatables/ai/ai-browser-executor';
 import { requestAiText } from './ai-rest-transport';
+import { toolReply } from './ai-tool-transport';
 
 /** Executes chat requests independently of their container and content-insertion behavior. */
 export class AiChatTransport {
@@ -55,7 +56,7 @@ export class AiChatTransport {
             return { ...executionResult, ...result };
         } catch (error) {
             if (!current()) return { ...executionResult, response: request.text, stopped: true };
-            return { ...executionResult, response: request.text, errorText: error.message || String(error) };
+            return { ...executionResult, response: error.toolStatus || request.text, errorText: error.message || String(error), retryable: error.retryable ?? null };
         } finally {
             this._destroyBrowser(request);
             if (this.request === request) this.request = null;
@@ -74,6 +75,8 @@ export class AiChatTransport {
         if (persistent) request.threadId = data.threadId || data.requestId;
         if (typeof data.conversationId !== "string" || data.conversationId.length === 0) delete data.conversationId;
         const result = await requestAiText(data, {
+            toolsEnabled: assistant.toolsEnabled,
+            onWrite: callbacks.onWrite,
             streaming: assistant.useStreaming === true,
             endpoint: persistent ? '/admin/rest/ai/chat/messages' : undefined,
             signal: request.controller.signal,
@@ -84,7 +87,7 @@ export class AiChatTransport {
         if (result.error) {
             return {
                 persisted: Boolean(result.threadId),
-                response: request.text,
+                response: result.toolStatus || result.response || request.text,
                 errorText: result.error,
                 errorCategory: typeof result.errorCategory === "string" ? result.errorCategory : null,
                 providerStatusCode: Number.isInteger(result.providerStatusCode) && result.providerStatusCode > 0 ? result.providerStatusCode : null,
@@ -95,7 +98,7 @@ export class AiChatTransport {
         return {
             persisted: Boolean(result.threadId),
             success: true,
-            response: typeof result.response === "string" ? result.response : request.text,
+            response: result.toolProblem && !persistent ? toolReply(result, false) : result.response ?? request.text,
             totalTokens: result.totalTokens,
             attachments: Array.isArray(result.attachments) ? result.attachments : [],
             conversationId: typeof result.conversationId === "string" && result.conversationId.length > 0 ? result.conversationId : null
@@ -122,10 +125,10 @@ export class AiChatTransport {
         if (!request.browser.isAvailable(assistant)) {
             throw new Error(WJ.translate("components.ai_assistants.browser.api_not_available.js", [request.browser.getApiName(assistant)]));
         }
-        const result = await request.browser.execute(assistant, inputData, false, update);
+        const result = await request.browser.execute(assistant, inputData, false, update, callbacks.onWrite);
         return {
             success: result.success,
-            response: request.text,
+            response: result.explanatoryText || request.text,
             totalTokens: result.totalTokens,
             stopped: result.stopped,
             errorText: result.errorText || (result.statusKey ? WJ.translate(result.statusKey, result.statusKeyParams || []) : null)

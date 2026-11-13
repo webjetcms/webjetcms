@@ -33,9 +33,12 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.json.DataTableAi;
@@ -51,6 +54,8 @@ public class AiService {
     private final List<AiInterface> aiInterfaces;
     private final AiTaskRegistry aiTaskRegistry;
     private final WebjetAiConfigurationService configurationService;
+    @Autowired
+    private AiToolService tools;
 
     private static final String CACHE_OPTION_KEYS = "AiService.ProviderOptions.";
     private static final int CACHE_MODELS_TIME = 24 * 60;
@@ -186,6 +191,12 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
+                if (inputData.isInteractiveAssistant()) {
+                    inputData.setToolProtocol(AiToolProtocol.prepare(assistant, tools, request, inputData.getToolResults()));
+                    if (inputData.getToolProtocol() != null && !(aiInterface instanceof LibrarySupportLogic)) {
+                        throw new IllegalArgumentException("This provider adapter cannot run assistant tools.");
+                    }
+                }
                 if (writer != null && aiInterface.isStreamingEnabled(assistant) == false) {
                     throw new IllegalStateException(getNotSupportedAction(prop));
                 }
@@ -194,7 +205,6 @@ public class AiService {
                     if (writer == null) return aiInterface.getAiResponse(assistant, inputData, prop, statRepo, request);
                     return aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request);
                 };
-                // Run task
                 return aiTaskRegistry.runAssistantTask(task, inputData, request);
             }
         }
@@ -427,6 +437,11 @@ public class AiService {
 
         ai.setUseStreaming(aiService == null ? Tools.isTrue(assistant.getUseStreaming()) : aiService.isStreamingEnabled(assistant));
         ai.setPersistentChat(aiService != null && aiService.isPersistentChatEnabled(assistant));
+        if (AiToolProtocol.supports(assistant)) {
+            ai.setToolsEnabled(true);
+            // Only these presentation flags go to the picker. Each invocation resolves its own authorized catalog.
+            ai.setToolsWrite(aiService == null || aiService.tools == null || aiService.tools.hasAssignedWrite(assistant));
+        }
         ai.setAction(assistant.getAction());
         ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + assistant.getGroupName()));
         ai.setUserPromptEnabled(Tools.isTrue(assistant.getUserPromptEnabled()));

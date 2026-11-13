@@ -70,6 +70,7 @@ public class AssistantController {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
+            inputData.setInteractiveAssistant(true);
             responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
         } catch (Exception e) {
             responseDto = errorResponse(e, "AI response error: ");
@@ -135,6 +136,7 @@ public class AssistantController {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
+            inputData.setInteractiveAssistant(true);
             responseDto = aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request);
         } catch(Exception e) {
             responseDto = errorResponse(e, "AI streamed response error: ");

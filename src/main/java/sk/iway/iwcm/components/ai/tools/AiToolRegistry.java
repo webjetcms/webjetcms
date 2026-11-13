@@ -29,14 +29,18 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
-/** Indexes the MVC mappings of opted-in DataTables. User authorization is evaluated by the catalog. */
+/** Indexes opted-in MVC mappings. User authorization is evaluated by the catalog. */
 @Component
 public class AiToolRegistry {
     public record Entry(HandlerMethod handler, RequestMappingInfo mapping, RequestMethod method, String path,
             AiToolDefinition definition, AiToolInputs inputs) {
+        Class<?> controllerType() {
+            return ClassUtils.getUserClass(handler.getBeanType());
+        }
+
         AiToolDefinition definition(Prop language) {
             if (language == null) return definition;
-            return new AiToolDefinition(definition.name(), description(handler, language), definition.inputSchema(),
+            return new AiToolDefinition(definition.name(), operationDescription(handler, language), definition.inputSchema(),
                     path, method.name(), definition.conditions(), definition.responseType(), definition.outputSchema());
         }
     }
@@ -88,7 +92,7 @@ public class AiToolRegistry {
                 Logger.warn(AiToolRegistry.class, "Cannot describe the response for AI tool {}", name, unsupportedModel);
                 output = new AiToolOutput("dynamic", null);
             }
-            AiToolDefinition definition = new AiToolDefinition(name, description(op.handler(), null), inputs.schema(), op.path(),
+            AiToolDefinition definition = new AiToolDefinition(name, operationDescription(op.handler(), null), inputs.schema(), op.path(),
                     op.verb().name(), conditions(op.mapping(), true), output.responseType(), output.schema());
             if (result.put(name, new Entry(op.handler(), op.mapping(), op.verb(), op.path(), definition, inputs)) != null) {
                 throw new IllegalStateException("Duplicate AI tool name: " + name);
@@ -101,8 +105,11 @@ public class AiToolRegistry {
     private static void collect(List<Operation> operations, RequestMappingInfo mapping, HandlerMethod handler) {
         Class<?> type = ClassUtils.getUserClass(handler.getBeanType());
         AiTool annotation = type.getDeclaredAnnotation(AiTool.class);
-        if (annotation == null || Modifier.isAbstract(type.getModifiers()) || !DatatableRestControllerV2.class.isAssignableFrom(type)) return;
+        if (annotation == null || Modifier.isAbstract(type.getModifiers())) return;
         String methodName = handler.getMethod().getName();
+        var included = Arrays.asList(annotation.include());
+        if (included.isEmpty() && !DatatableRestControllerV2.class.isAssignableFrom(type)) return;
+        if (!included.isEmpty() && !included.contains(methodName)) return;
         if (Arrays.asList(annotation.exclude()).contains(methodName)) return;
         String baseName = resource(type) + "_" + identifier(methodName);
         Set<RequestMethod> methods = mapping.getMethodsCondition().getMethods();
@@ -141,21 +148,19 @@ public class AiToolRegistry {
         return identifier(type.getSimpleName().replaceFirst("(?:RestController|Controller)$", ""));
     }
 
-    private static String description(HandlerMethod handler, Prop language) {
-        Class<?> type = ClassUtils.getUserClass(handler.getBeanType());
-        String text = operationDescription(handler, language, resource(type));
-        String context = type.getDeclaredAnnotation(AiTool.class).description().strip();
-        if (context.isEmpty()) return text;
-        return text + " " + translated(language, context, context);
+    static String controllerDescription(Class<?> controllerType, Prop language) {
+        String description = controllerType.getDeclaredAnnotation(AiTool.class).description().strip();
+        return description.isEmpty() ? "" : translated(language, description, description);
     }
 
-    private static String operationDescription(HandlerMethod handler, Prop language, String resource) {
+    private static String operationDescription(HandlerMethod handler, Prop language) {
         AiToolDescription annotation = handler.getMethodAnnotation(AiToolDescription.class);
         if (annotation != null && !annotation.value().isBlank()) {
             String description = annotation.value().strip();
             return translated(language, description, description);
         }
 
+        String resource = resource(ClassUtils.getUserClass(handler.getBeanType()));
         String method = identifier(handler.getMethod().getName());
         String text = translated(language, "components.ai.tools." + resource + "_" + method + ".description", null);
         if (text != null) return text;

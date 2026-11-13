@@ -7,9 +7,13 @@ block content
 
     table#aiToolsDataTable.datatableInit.table(th:attr="aria-label=#{components.ai_assistants.tools.title}")
 
+    .btn.btn-sm.custom-control.form-switch#ai-tool-mode(hidden data-toggle="tooltip" th:title="#{components.ai_assistants.tools.group_by_controller}")
+        input#ai-tool-group-by-controller.form-check-input(type="checkbox" role="switch" th:attr="aria-label=#{components.ai_assistants.tools.group_by_controller}")
+        label.form-check-label.position-absolute.top-0.start-0.w-100.h-100(for="ai-tool-group-by-controller" aria-hidden="true")
+
     mixin codeViews(tab, field, example)
         - const group = "ai-tool-" + tab + "-view"
-        .ai-tool-code-views.btn-group.btn-group-sm(role="group" hidden aria-labelledby="pills-dt-aiToolsDataTable-" + tab + "-tab")
+        .ai-tool-code-views.btn-group.btn-group-sm(role="group" hidden data-tab=tab)
             input.btn-check(type="radio" id=group + "-example" name=group value=example aria-controls=group + "-code" checked)
             label.btn.btn-outline-secondary(for=group + "-example" th:text="#{components.ai_assistants.tools.example_value}")
             input.btn-check(type="radio" id=group + "-schema" name=group value=field aria-controls=group + "-code")
@@ -19,14 +23,22 @@ block content
     +codeViews("output", "response", "responseExample")
 
     style.
-        #aiToolsDataTable_modal .ai-tool-code-field {
+        #ai-tool-mode .form-check-label::after {
+            content: "\fdd1";
+            font-size: 18px;
+        }
+        #ai-tool-mode input:focus-visible + label::before {
+            outline: 2px solid var(--bs-body-color);
+            outline-offset: 2px;
+        }
+        .ai-tool-preview .ai-tool-code-field {
             padding-inline: 5px;
         }
-        #aiToolsDataTable_modal .ai-tool-code-field .DTE_Field_InputControl {
+        .ai-tool-preview .ai-tool-code-field .DTE_Field_InputControl {
             width: 100%;
             margin-bottom: 0;
         }
-        #aiToolsDataTable_modal .cm-s-ai-tools {
+        .ai-tool-preview .cm-s-ai-tools {
             height: 502px;
             min-height: 6rem;
             resize: vertical;
@@ -43,29 +55,29 @@ block content
         .cm-s-ai-tools .CodeMirror-gutters { background: var(--wj-nice-gray); border-color: var(--wj-nice-gray-300); }
         .cm-s-ai-tools .CodeMirror-linenumber { color: var(--wj-gray-text); }
         .cm-s-ai-tools .CodeMirror-selected { background: var(--bs-primary-bg-subtle); }
-        #aiToolsDataTable_modal .cm-s-ai-tools:focus-within { border-color: var(--wj-primary); }
-        #aiToolsDataTable_modal .ai-tool-code-views {
+        .ai-tool-preview .cm-s-ai-tools:focus-within { border-color: var(--wj-primary); }
+        .ai-tool-preview .ai-tool-code-views {
             margin: 10px 5px 0;
             align-self: flex-start;
         }
-        #aiToolsDataTable_modal .modal-fullscreen .modal-body:has(.tab-pane.active .ai-tool-code-field) {
+        .ai-tool-preview .modal-fullscreen .modal-body:has(.tab-pane.active .ai-tool-code-field) {
             container-type: size;
         }
-        #aiToolsDataTable_modal .modal-fullscreen .tab-pane:has(.ai-tool-code-field) {
+        .ai-tool-preview .modal-fullscreen .tab-pane:has(.ai-tool-code-field) {
             padding-bottom: 0;
         }
-        #aiToolsDataTable_modal .modal-fullscreen .panel-body:has(> .ai-tool-code-field) {
+        .ai-tool-preview .modal-fullscreen .panel-body:has(> .ai-tool-code-field) {
             display: flex;
             flex-direction: column;
             gap: 15px;
             min-height: 100cqh;
         }
-        #aiToolsDataTable_modal .modal-fullscreen .ai-tool-code-field {
+        .ai-tool-preview .modal-fullscreen .ai-tool-code-field {
             flex: 1 0 6rem;
             container-type: size;
             margin-top: 0;
         }
-        #aiToolsDataTable_modal .modal-fullscreen .ai-tool-code-field .CodeMirror {
+        .ai-tool-preview .modal-fullscreen .ai-tool-code-field .CodeMirror {
             min-height: 100cqh;
             max-height: 100cqh;
             resize: none;
@@ -75,23 +87,48 @@ block content
         window.helpLink = "/redactor/ai/settings/README";
 
         window.domReady.add(function () {
+            const url = "/admin/rest/settings/ai-tools";
+            const modeKey = "aiToolsGrouped";
+            const grouped = (sessionStorage.getItem(modeKey) ?? sessionStorage.getItem("aiToolsGroupByEntity")) === "true";
+            const tableElement = document.getElementById("aiToolsDataTable");
+            const columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.tools.AiToolEntity')})];
+            if (grouped) {
+                tableElement.id = "aiToolGroupsDataTable";
+                for (const column of columns) column.hidden = true;
+                columns.unshift(...[(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.tools.AiToolGroup')})]);
+            }
+
             const table = WJ.DataTable({
-                id: "aiToolsDataTable",
-                url: "/admin/rest/settings/ai-tools",
-                columns: [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.tools.AiToolEntity')})],
+                id: tableElement.id,
+                url: grouped ? url + "/controllers" : url,
+                columns,
                 tabs: [(${layout.getDataTableTabs('sk.iway.iwcm.components.ai.tools.AiToolEntity')})],
-                editorId: "name",
+                editorId: grouped ? "id" : "name",
                 idAutoOpener: false,
-                fetchOnEdit: true,
+                fetchOnEdit: !grouped,
                 editorLocking: false,
                 keyboardSave: false,
                 editorButtons: [],
                 hideButtons: "create,edit,remove,duplicate,celledit,import,export"
             });
 
+            const mode = document.getElementById("ai-tool-mode");
+            $(table.table().container()).find(".dt-header-row .dt-buttons").prepend(mode);
+            mode.hidden = false;
+            WJ.initTooltip($(mode));
+            const switchInput = document.getElementById("ai-tool-group-by-controller");
+            switchInput.checked = grouped;
+            switchInput.addEventListener("change", () => {
+                sessionStorage.setItem(modeKey, switchInput.checked);
+                if (window.location.hash) history.replaceState(history.state, "", window.location.pathname + window.location.search);
+                window.location.reload();
+            });
+
             const editor = table.EDITOR;
             const editorFields = editor.fields();
+            const refreshCodeViews = [];
             for (const views of document.querySelectorAll(".ai-tool-code-views")) {
+                views.setAttribute("aria-labelledby", "pills-dt-" + tableElement.id + "-" + views.dataset.tab + "-tab");
                 const [exampleView, schemaView] = views.querySelectorAll("input");
                 if (!editorFields.includes(schemaView.value)) continue;
                 const field = editor.field(schemaView.value);
@@ -130,21 +167,92 @@ block content
                     code.scrollTo(0, 0);
                 }
                 views.addEventListener("change", showValue);
-                editor.on("open", function () {
+                refreshCodeViews.push(() => {
                     field.node().before(views);
-                    views.hidden = this.currentJson[exampleView.value] == null;
+                    views.hidden = editor.currentJson[exampleView.value] == null;
                     const defaultView = views.hidden ? schemaView : exampleView;
                     defaultView.checked = true;
                     showValue();
                 });
             }
 
-            editor.on("open", function () {
+            function refreshPreview() {
+                for (const refresh of refreshCodeViews) refresh();
                 for (const name of ["required", "conditions"]) {
                     if (!editorFields.includes(name)) continue;
-                    const field = this.field(name);
-                    if (field.val()) field.show();
-                    else field.hide();
+                    const field = editor.field(name);
+                    if (editor.currentJson[name]) field.show(false);
+                    else field.hide(false);
                 }
+            }
+
+            const modalSelector = "#" + tableElement.id + "_modal";
+            editor.on("open", () => {
+                $(modalSelector).addClass("ai-tool-preview");
+                if (!grouped) refreshPreview();
             });
+            if (!grouped) return;
+
+            const endpointField = editor.field("endpoint");
+            const endpointInput = endpointField.input();
+            let pendingDetail;
+
+            // The Editor mounts the menu under body. Bootstrap's Escape handler expects a sibling toggle.
+            window.addEventListener("keydown", event => {
+                if (event.key !== "Escape") return;
+                const picker = endpointInput.data("selectpicker");
+                if (!picker?.$menu[0].contains(event.target) || picker.$button.attr("aria-expanded") !== "true") return;
+                event.preventDefault();
+                event.stopPropagation();
+                endpointInput.selectpicker("toggle");
+                picker.$button.trigger("focus");
+            }, true);
+
+            function showPreview(visible) {
+                $(modalSelector).find(".DTE_Form_Content, .md-tabs").toggleClass("d-none", !visible);
+            }
+
+            editor.on("open", () => {
+                const options = editor.currentJson.endpoints.map(endpoint => ({
+                    label: endpoint.httpMethod + " " + endpoint.path + " (" + endpoint.name + ")",
+                    value: endpoint.name
+                }));
+                options.unshift({ label: "[[\#{components.ai_assistants.tools.choose_endpoint}]]", value: "" });
+                endpointField.update(options).val("").error("");
+                $(modalSelector).find(".DTE_Form_Content").before(endpointField.node());
+                endpointInput.selectpicker("refresh");
+                showPreview(false);
+            });
+
+            function showUnavailable() {
+                endpointField.val("").error("[[\#{components.ai_assistants.tools.unavailable}]]");
+                endpointInput.selectpicker("refresh");
+            }
+
+            endpointInput.on("change", (event, data) => {
+                if (data?.editor) return;
+                pendingDetail?.abort();
+                showPreview(false);
+                endpointField.error("");
+                const name = endpointField.val();
+                if (!name) return;
+                endpointField.processing(true);
+                pendingDetail = $.getJSON(url + "/" + encodeURIComponent(name))
+                    .done(detail => {
+                        if (detail?.name !== name) {
+                            showUnavailable();
+                            return;
+                        }
+                        editor.setJson({ ...detail, endpoint: name });
+                        $(modalSelector).find(".DTE_Field_InputControl select").selectpicker("refresh");
+                        showPreview(true);
+                        refreshPreview();
+                    })
+                    .fail((xhr, status) => {
+                        if (status !== "abort") showUnavailable();
+                    })
+                    .always(() => endpointField.processing(false));
+            });
+
+            editor.on("close", () => pendingDetail?.abort());
         });

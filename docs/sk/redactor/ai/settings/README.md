@@ -100,6 +100,8 @@ Vyberte nástroj z ponuky a kliknite na **Pridať**. V tabuľke sa zobrazí jeho
 
 Zmeny priradenia sa uložia spolu s asistentom po kliknutí na **Uložiť**. Tlačidlom **Zrušiť** ich zahodíte.
 
+Ak má asistent vyhľadávať v katalógu, pridajte mu `ai_tools_preview` a `ai_tools_details`. Prvým nástrojom získa názvy a krátke opisy všetkých operácií, ku ktorým má prihlásený používateľ prístup. Druhým si vyžiada vstupné a výstupné schémy iba pre vybrané názvy. Operáciu, ktorú má asistent aj vykonať, mu priraďte samostatne.
+
 ![Karta Nástroje s dvoma nástrojmi priradenými asistentovi](datatable-tools-tab.png)
 
 ### Karta - Pokročilé
@@ -174,6 +176,12 @@ Hodnota **Deň v týždni = `1`** znamená pondelok, `0` znamená nedeľu. Zodpo
 Úloha vynuluje spotrebu **všetkých AI asistentov vo všetkých doménach**. Neprijíma parameter domény. Nastavené limity ani historické štatistiky nemení a počet aktualizovaných asistentov zapíše do auditu automatizovaných úloh.
 
 Ak má aspoň jeden asistent v aktuálnej doméne nastavený limit tokenov väčší ako nula a existuje povolená úloha `AiTokenUsageReset` s budúcim termínom spustenia, pri načítaní zoznamu asistentov sa na 10 sekúnd zobrazí informačná notifikácia **Najbližšie vynulovanie počtu použitých tokenov** s dátumom a časom. Pri viacerých povolených úlohách sa zobrazí najbližší termín. Pri filtrovaní alebo stránkovaní tabuľky sa notifikácia zopakuje iba vtedy, ak sa termín zmenil.
+
+## Katalóg nástrojov
+
+Na stránke **AI nástroje → Nástroje** vidíte REST operácie, ku ktorým máte prístup. Kliknutím na názov nástroja otvoríte jeho opis, vstupné argumenty a očakávanú odpoveď.
+
+Prepínač **Zoskupiť podľa REST kontroléra** zobrazí názov súboru každého kontroléra a počet jeho dostupných koncových bodov. V stĺpci **Opis** si môžete prečítať, aké údaje kontrolér spravuje. Kliknite napríklad na `QuizRestController.java` a otvorte ponuku **Koncový bod**. Operáciu môžete vyhľadať podľa názvu nástroja, HTTP metódy alebo REST cesty. Výberom inej operácie v tom istom okne zmeníte náhľad.
 
 ## Nastavenie četového asistenta
 

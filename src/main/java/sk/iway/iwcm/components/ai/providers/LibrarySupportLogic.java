@@ -196,12 +196,29 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiChatSession.Continuation continuation = resolveChat(operation, assistant, inputData, request);
             IncludesHandler includeHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
             AiProviderConfig config = configurationService.resolve(this, request);
-            TokenUsage attachmentUsage = prepareChatAttachments(assistant, inputData, config);
+            TokenUsage attachmentUsage = prepareChatAttachments(assistant, inputData, config, continuation);
             AiRequest providerRequest = prepareProviderRequest(operation, assistant, inputData, includeHandler);
             AiResponse response;
-            if (writer == null) {
+            if (writer == null || inputData.getToolProtocol() != null) {
                 response = aiClient.execute(getProviderId(), providerRequest, config, inputData.getCancellationToken());
-                responseDto.setResponse(includeHandler.restoreIncludes(response.text()));
+                if (inputData.getToolProtocol() == null) {
+                    responseDto.setResponse(response.text());
+                } else {
+                    // Tool arguments must never reach the editor as a streamed reply.
+                    try {
+                        inputData.getToolProtocol().apply(response.text(), responseDto, prop);
+                    } catch (IllegalArgumentException invalidDecision) {
+                        AiStatService.addRecord(assistant.getId(), Tools.safeLongToInt(response.usage().plus(attachmentUsage).totalTokens()), statRepo, request);
+                        throw invalidDecision;
+                    }
+                }
+                if (responseDto.getToolCall() == null && responseDto.getResponse() != null) {
+                    responseDto.setResponse(includeHandler.restoreIncludes(responseDto.getResponse()));
+                    if (writer != null) {
+                        writer.write(responseDto.getResponse());
+                        writer.flush();
+                    }
+                }
             } else {
                 response = aiClient.stream(getProviderId(), providerRequest, config, delta -> {
                     checkCancellation(inputData);
@@ -217,19 +234,23 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 responseDto.setResponse(includeHandler.getWholeResponse());
             }
             checkCancellation(inputData);
-            successAdminLog(
+            recordProviderResponse(
                 responseDto,
                 inputPair,
                 assistant,
                 method,
-                responseDto.getResponse(),
+                responseDto.getToolCall() == null ? responseDto.getResponse() : responseDto.getToolCall().name(),
                 response.usage().plus(attachmentUsage),
                 statRepo,
                 request
             );
             checkCancellation(inputData);
-            if (operation == AiOperation.CHAT && Thread.currentThread().isInterrupted() == false) {
+            if (responseDto.getError() == null && operation == AiOperation.CHAT && Thread.currentThread().isInterrupted() == false) {
                 responseDto.setConversationId(AiChatSession.remember(assistant, request, response.responseId(), includeHandler.getIncludes()));
+            } else if (operation == AiOperation.TEXT && responseDto.getToolCall() != null && inputData.getChatAttachmentContext() != null) {
+                String id = inputData.getAttachmentContextId();
+                if (id == null) id = AiChatSession.rememberAttachments(assistant, request, inputData.getChatAttachmentContext());
+                responseDto.setAttachmentContextId(id);
             }
         } catch (CancellationException exception) {
             throw exception;
@@ -278,9 +299,21 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AiOperation operation, AssistantDefinitionEntity assistant, InputDataDTO inputData, HttpServletRequest request
     ) {
         inputData.setPreviousResponseId(null);
+        if (inputData.getAttachmentContextId() != null) {
+            if (operation != AiOperation.TEXT || inputData.getToolProtocol() == null || inputData.getToolProtocol().results().isEmpty()
+                    || Tools.isNotEmpty(inputData.getConversationId()) || !inputData.getChatAttachments().isEmpty()) {
+                throw new IllegalStateException("Invalid attachment continuation.");
+            }
+            var continuation = AiChatSession.resolve(inputData.getAttachmentContextId(), assistant, request);
+            if (continuation.attachmentContext() == null) throw new IllegalStateException("Attachment context is unavailable.");
+            return continuation;
+        }
         if (operation != AiOperation.CHAT) {
             if (Tools.isNotEmpty(inputData.getConversationId())) {
                 throw new IllegalStateException("This assistant no longer supports this conversation. Start a new chat.");
+            }
+            if (inputData.getToolProtocol() != null && !inputData.getChatAttachments().isEmpty()) {
+                return AiChatSession.resolve(null, assistant, request);
             }
             return new AiChatSession.Continuation(null, Map.of());
         }
@@ -288,6 +321,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             throw new IllegalStateException("Chat accepts text input only.");
         }
         AiChatSession.Continuation continuation = AiChatSession.resolve(inputData.getConversationId(), assistant, request);
+        if (continuation.attachmentContext() != null) throw new IllegalStateException("Invalid chat continuation.");
         inputData.setPreviousResponseId(continuation.responseId());
         return continuation;
     }
@@ -299,7 +333,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         if (textOperation(assistant) != AiOperation.CHAT) throw new IllegalStateException("Assistant does not support saved chat");
         // Keep attachment commands literal so provider-side history can reuse them without a CMS token map.
         AiRequest providerRequest = prepareProviderRequest(AiOperation.CHAT, assistant, inputData, null);
-        if (streaming && isStreamingEnabled(assistant)) {
+        if (streaming && inputData.getToolProtocol() == null && isStreamingEnabled(assistant)) {
             return aiClient.stream(getProviderId(), providerRequest, providerConfig,
                 onText::accept, inputData.getCancellationToken(), lifecycleListener);
         }
@@ -324,9 +358,11 @@ public abstract class LibrarySupportLogic implements AiInterface {
     }
 
     /** Extracts untrusted file content without changing the page input or creating persistent chat files. */
-    private TokenUsage prepareChatAttachments(AssistantDefinitionEntity assistant, InputDataDTO input, AiProviderConfig config)
-        throws IOException, AiProviderException {
-        input.setChatAttachmentContext(null);
+    private TokenUsage prepareChatAttachments(AssistantDefinitionEntity assistant, InputDataDTO input, AiProviderConfig config,
+            AiChatSession.Continuation continuation) throws IOException, AiProviderException {
+        input.setChatAttachmentContext(continuation.attachmentContext());
+        if (continuation.attachmentContext() != null || (continuation.responseId() != null
+                && input.getToolProtocol() != null && !input.getToolProtocol().results().isEmpty())) return TokenUsage.EMPTY;
         TokenUsage usage = TokenUsage.EMPTY;
         if (input.getChatAttachments() == null || input.getChatAttachments().isEmpty()) return usage;
         StringBuilder context = new StringBuilder();
@@ -450,7 +486,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             checkCancellation(inputData);
             responseDto.setGeneratedFileName(generatedFileName.fileName());
 
-            successAdminLog(
+            recordProviderResponse(
                 responseDto,
                 inputPair,
                 assistant,
@@ -823,6 +859,23 @@ public abstract class LibrarySupportLogic implements AiInterface {
             userPrompt = "";
         }
 
+        if (inputData.getToolProtocol() != null) {
+            var protocol = inputData.getToolProtocol();
+            instructions = (instructions == null ? "" : instructions) + "\n\n" + protocol.instructions();
+            if (!protocol.results().isEmpty()) {
+                boolean continuingChat = operation == AiOperation.CHAT && Tools.isNotEmpty(inputData.getPreviousResponseId());
+                if (continuingChat) {
+                    userPrompt = null;
+                    inputText = "";
+                }
+                // Multimodal inputs carry media instead of inputText; both fields are untrusted provider input.
+                if (inputData.getInputValueType() == InputDataDTO.InputValueType.IMAGE) {
+                    userPrompt = (userPrompt == null ? "" : userPrompt) + protocol.observations(continuingChat);
+                } else {
+                    inputText = (inputText == null ? "" : inputText) + protocol.observations(continuingChat);
+                }
+            }
+        }
         AiRequest request = buildRequest(
             operation,
             assistant,
@@ -1051,7 +1104,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         }
     }
 
-    private void successAdminLog(
+    private void recordProviderResponse(
         AssistantResponseDTO responseDto,
         Pair<String, String> inputPair,
         AssistantDefinitionEntity assistant,
@@ -1061,7 +1114,8 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AiStatRepository statRepo,
         HttpServletRequest request
     ) {
-        StringBuilder audit = AiAuditLog.create("SUCCESS", assistant, methodName);
+        StringBuilder audit = AiAuditLog.create(responseDto.getError() == null ? "SUCCESS" : "ERROR", assistant, methodName);
+        if (responseDto.getError() != null) audit.append("\nError message:\n").append(responseDto.getError()).append('\n');
         AiAuditLog.appendUsage(audit, usage);
         int totalTokens = Tools.safeLongToInt(safeUsage(usage).totalTokens());
         AiAuditLog.appendResponse(audit, inputPair, textResponse, configurationService.auditMaxLength());

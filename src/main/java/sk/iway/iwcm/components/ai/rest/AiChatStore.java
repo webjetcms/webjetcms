@@ -29,6 +29,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.chat.AiChatDocument;
 import sk.iway.iwcm.components.ai.chat.AiChatEntry;
+import sk.iway.iwcm.components.ai.chat.AiChatEntry.WriteOutcome;
 import sk.iway.iwcm.components.ai.chat.AiChatFiles;
 import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.components.ai.chat.AiChatThread;
@@ -37,6 +38,8 @@ import sk.iway.iwcm.components.ai.rest.AiChatAttachments.Upload;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol.Call;
 import sk.iway.iwcm.i18n.Prop;
 
 /** Private JSON conversations. Provider calls never hold filesystem locks. */
@@ -120,6 +123,11 @@ public class AiChatStore {
 
     public Turn begin(AiChatRequest input, Scope scope, AssistantDefinitionEntity assistant, String providerScope, List<Upload> uploads) {
         requireUuid(input.requestId());
+        try {
+            AiToolProtocol.validateResults(input.toolResults());
+        } catch (IllegalArgumentException invalid) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalidInput");
+        }
         // A new thread uses the request ID so resending its first message finds the same conversation.
         String id = input.threadId() == null ? input.requestId() : input.threadId();
         requireUuid(id);
@@ -133,9 +141,16 @@ public class AiChatStore {
             // Check duplicate delivery before revision/busy checks: the original request already advanced them.
             Turn duplicate = duplicateTurn(document, input, uploads);
             if (duplicate != null) {
+                if (input.toolResults().size() > duplicate.message().getToolResults().size()) {
+                    if (!sameAssistant(thread, assistant) || !providerScope.equals(thread.getProviderScope())) throw conflict("assistantChanged");
+                    resumeToolRound(duplicate, input);
+                    AiChatFiles.write(path, document);
+                    return new Turn(thread, duplicate.question(), duplicate.message(), false);
+                }
                 if (recovered) AiChatFiles.write(path, document);
                 return duplicate;
             }
+            if (!input.toolResults().isEmpty()) throw conflict("requestChanged");
             // A genuinely new attempt must still match the configuration and revision the client last read.
             if ("EXPIRED".equals(thread.getStatus())) throw conflict("expired");
             if (!"ACTIVE".equals(thread.getStatus())) throw conflict("deletePending");
@@ -195,11 +210,36 @@ public class AiChatStore {
             .findFirst().orElse(null);
         if (answer == null) return null;
         AiChatEntry question = entry(document, answer.getTurnId());
-        if (!Objects.equals(question.getText(), input.userPrompt())) throw conflict("requestChanged");
+        if (!Objects.equals(question.getText(), input.userPrompt()) || !Objects.equals(document.getThread().getAssistantId(), input.assistantId())) throw conflict("requestChanged");
+        int shared = Math.min(input.toolResults().size(), answer.getToolResults().size());
+        if (shared > 0 && !AiToolProtocol.sameJson(input.toolResults().subList(0, shared),
+                answer.getToolResults().subList(0, shared))) throw conflict("requestChanged");
         if (input.retryMessageId() == null && (!Objects.equals(question.getInputValue(), input.inputValue())
             || question.isInputIsSelectedTextInEditor() != input.inputIsSelectedTextInEditor()
-            || !sameAttachments(question.getAttachments(), uploads))) throw conflict("requestChanged");
+            || (input.toolResults().isEmpty() && !sameAttachments(question.getAttachments(), uploads)))) throw conflict("requestChanged");
+        if (!input.toolResults().isEmpty() && !uploads.isEmpty()) throw conflict("requestChanged");
         return new Turn(document.getThread(), question, answer, true);
+    }
+
+    /** Only the next matching endpoint result can claim another model round. */
+    private static void resumeToolRound(Turn turn, AiChatRequest input) {
+        AiChatEntry answer = turn.message();
+        AiChatThread thread = turn.thread();
+        Call pending = answer.getPendingToolCall();
+        if (!"ACTIVE".equals(thread.getStatus()) || thread.isStopRequested() || !answer.getId().equals(thread.getActiveMessageId())
+                || pending == null || input.threadId() == null || !Objects.equals(input.revision(), thread.getRevision())
+                || input.toolResults().size() != answer.getToolResults().size() + 1) throw conflict("stale");
+        var result = input.toolResults().get(input.toolResults().size() - 1);
+        if (!pending.name().equals(result.name()) || !AiToolProtocol.sameJson(pending.arguments(), result.arguments())) throw conflict("requestChanged");
+        if (pending.write()) {
+            List<WriteOutcome> outcomes = answer.getWriteOutcomes();
+            var outcome = WriteOutcome.from(result);
+            if (outcomes.isEmpty()) outcomes.add(outcome); // A pending call saved before write outcomes were recorded.
+            else outcomes.set(outcomes.size() - 1, outcome);
+        }
+        answer.setToolResults(input.toolResults());
+        answer.setPendingToolCall(null);
+        thread.setLeaseUntil(lease());
     }
 
     /** A retry reuses the saved field snapshot and attachments; a new prompt captures them once. */
@@ -210,6 +250,7 @@ public class AiChatStore {
             AiChatEntry last = history.isEmpty() ? null : history.get(history.size() - 1);
             if (last == null || !last.getId().equals(input.retryMessageId())
                 || !("error".equals(last.getStatus()) || "stopped".equals(last.getStatus()))) throw conflict("stale");
+            if (last.isToolWriteIssued()) throw conflict("requestChanged");
             AiChatEntry question = entry(document, last.getTurnId());
             if (!Objects.equals(question.getText(), input.userPrompt())) throw conflict("requestChanged");
             return question;
@@ -306,7 +347,13 @@ public class AiChatStore {
         if (responseId != null && responseId.length() > 2000) throw conflict("invalidResponse");
         update(threadId, scope, true, document -> {
             AiChatEntry message = entry(document, messageId);
-            if (responseId != null && message.getProviderResponseId() == null) message.setProviderResponseId(responseId);
+            if (responseId != null && !responseId.equals(message.getProviderResponseId())) {
+                if (message.getProviderResponseId() != null && !message.isProviderDeleted()) {
+                    message.getEarlierProviderResponseIds().add(message.getProviderResponseId());
+                }
+                message.setProviderResponseId(responseId);
+                message.setProviderDeleted(false);
+            }
             message.setStorageUnknown(false);
             return null;
         });
@@ -320,6 +367,22 @@ public class AiChatStore {
             message.setText(text);
             message.setUpdated(new Date());
             return !thread.isStopRequested();
+        });
+    }
+
+    /** Releases the provider worker while the browser invokes this call through its authenticated session. */
+    public boolean awaitToolResult(Scope scope, String threadId, String messageId, Call call, int tokens) {
+        return update(threadId, scope, true, document -> {
+            AiChatThread thread = document.getThread();
+            if (!messageId.equals(thread.getActiveMessageId()) || thread.isStopRequested()) return false;
+            AiChatEntry answer = entry(document, messageId);
+            answer.setPendingToolCall(call);
+            if (call.write()) answer.getWriteOutcomes().add(WriteOutcome.pending(call.name()));
+            answer.setToolWriteIssued(answer.isToolWriteIssued() || call.write());
+            answer.setTotalTokens(tokens);
+            answer.setUpdated(new Date());
+            thread.setLeaseUntil(lease());
+            return true;
         });
     }
 
@@ -342,7 +405,8 @@ public class AiChatStore {
             message.setTotalTokens(tokens);
             message.setErrorCategory(stopped ? "CANCELLED" : category);
             message.setProviderStatus(providerStatus);
-            message.setRetryable(retryable);
+            message.setRetryable(message.isToolWriteIssued() && (stopped || !"complete".equals(status)) ? Boolean.FALSE : retryable);
+            message.setPendingToolCall(null);
             message.setUpdated(new Date());
             // Failed/stopped attempts remain in history and cleanup tracking, but never become continuation points.
             if (!stopped && "complete".equals(status)) thread.setLastResponseId(message.getProviderResponseId());
@@ -359,6 +423,10 @@ public class AiChatStore {
             recover(document);
             AiChatThread thread = document.getThread();
             thread.setStopRequested(true);
+            if (thread.getActiveMessageId() != null && entry(document, thread.getActiveMessageId()).getPendingToolCall() != null) {
+                thread.setLeaseUntil(null);
+                recover(document);
+            }
             if (delete) {
                 thread.setStatus("DELETE_PENDING");
                 thread.setUpdated(new Date());
@@ -423,9 +491,15 @@ public class AiChatStore {
     }
 
     public void deletedResponse(Scope scope, String id, String claim, String messageId) {
+        deletedResponse(scope, id, claim, messageId, null);
+    }
+
+    public void deletedResponse(Scope scope, String id, String claim, String messageId, String responseId) {
         update(id, scope, true, document -> {
             deletionOwner(document, claim);
-            entry(document, messageId).setProviderDeleted(true);
+            AiChatEntry message = entry(document, messageId);
+            if (responseId == null || responseId.equals(message.getProviderResponseId())) message.setProviderDeleted(true);
+            else message.getEarlierProviderResponseIds().remove(responseId);
             document.getThread().setLeaseUntil(lease());
             return null;
         });
@@ -450,7 +524,8 @@ public class AiChatStore {
             AiChatDocument document = read(path, scope, true);
             deletionOwner(document, claim);
             for (AiChatEntry message : document.getMessages()) {
-                if (message.isStorageUnknown() || (message.getProviderResponseId() != null && !message.isProviderDeleted())) {
+                if (message.isStorageUnknown() || !message.getEarlierProviderResponseIds().isEmpty()
+                        || (message.getProviderResponseId() != null && !message.isProviderDeleted())) {
                     throw conflict("cleanupUnknown");
                 }
             }
@@ -533,7 +608,10 @@ public class AiChatStore {
         // A worker no longer renews this attempt. Keep its partial text and remote-resource facts for later cleanup.
         AiChatEntry message = entry(document, thread.getActiveMessageId());
         message.setStatus("stopped");
-        message.setErrorCategory("CANCELLED");
+        Call pending = message.getPendingToolCall();
+        message.setErrorCategory(pending != null && pending.write() ? "TOOL_OUTCOME_UNKNOWN" : "CANCELLED");
+        if (message.isToolWriteIssued()) message.setRetryable(false);
+        message.setPendingToolCall(null);
         message.setUpdated(new Date());
         thread.setActiveMessageId(null);
         thread.setLeaseUntil(null);

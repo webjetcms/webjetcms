@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import sk.iway.iwcm.components.ai.tools.AiToolEntity;
+import sk.iway.iwcm.components.ai.tools.AiToolGroup;
 import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -33,6 +34,17 @@ public class AiToolCatalogRestController {
         var rows = tools.list(request, Prop.getInstance(request)).stream().map(AiToolEntity::new).toList();
         var page = new DatatablePageImpl<>(rows);
         var methods = rows.stream().map(AiToolEntity::getHttpMethod).distinct().sorted().toList();
+        page.addOptions("httpMethod", methods, "", "", false);
+        return page;
+    }
+
+    @GetMapping("/controllers/all")
+    public DatatablePageImpl<AiToolGroup> getControllers(HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        var groups = tools.listGroups(request, Prop.getInstance(request));
+        var page = new DatatablePageImpl<>(groups);
+        var methods = groups.stream().flatMap(group -> group.getEndpoints().stream())
+            .map(AiToolGroup.Endpoint::httpMethod).distinct().sorted().toList();
         page.addOptions("httpMethod", methods, "", "", false);
         return page;
     }

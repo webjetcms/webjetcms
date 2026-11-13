@@ -1,6 +1,7 @@
 import {AiExecutionResult} from './ai-execution-result';
 import { requestAiText } from '../../../src/js/ai/ai-rest-transport';
 import { parseAiResponse } from '../../../src/js/ai/ai-response-parser';
+import { toolReply } from '../../../src/js/ai/ai-tool-transport';
 
 /**
  * Class to wrap REST API for AI execution logic
@@ -12,6 +13,7 @@ export class AiRestExecutor {
 
     curentAssistantId = null;
     curentTimestamp = null;
+    controller = null;
 
     constructor(EDITOR, editorAiInstance) {
         this.EDITOR = EDITOR;
@@ -27,6 +29,8 @@ export class AiRestExecutor {
 
         self.curentAssistantId = inputData.assistantId;
         self.curentTimestamp = inputData.timestamp;
+        const controller = new AbortController();
+        self.controller = controller;
 
         const streaming = aiCol.useStreaming === true;
         const setText = (text, final) => {
@@ -38,25 +42,36 @@ export class AiRestExecutor {
         try {
             let wholeText = "";
             const result = await requestAiText(inputData, {
+                signal: controller.signal,
+                toolsEnabled: aiCol.toolsEnabled,
                 streaming,
                 onDelta: text => {
                     wholeText += text;
-                    setText(wholeText, false);
+                    if (!aiCol.toolsWrite) setText(wholeText, false);
                 }
             });
             executionResult.totalTokens = result.totalTokens ?? 0;
             if (result.error) {
                 executionResult.errorText = result.error;
+                if (aiCol.toolsWrite) executionResult.explanatoryText = toolReply(result, true);
+            } else if (aiCol.toolsWrite) {
+                executionResult.explanatoryText = toolReply(result, true);
+                if (result.toolProblem || !result.toolStatus) executionResult.statusKey = 'components.ai.tools.unverified.js';
+                executionResult.success = true;
             } else {
-                const parsed = setText(streaming ? wholeText : result.response, true);
+                const parsed = setText(result.response ?? wholeText, true);
                 executionResult.explanatoryText = parsed.explanatoryText;
                 executionResult.success = true;
             }
         } catch (error) {
             executionResult.errorText = error.message || String(error);
+            executionResult.explanatoryText = error.toolStatus;
         } finally {
-            self.curentAssistantId = null;
-            self.curentTimestamp = null;
+            if (self.controller === controller) {
+                self.curentAssistantId = null;
+                self.curentTimestamp = null;
+                self.controller = null;
+            }
         }
 
         return executionResult;
@@ -104,6 +119,7 @@ export class AiRestExecutor {
 
     destroy() {
         let self = this;
+        self.controller?.abort();
 
         //console.log("ai-rest-execution self", self);
 

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.tools.AiTool;
 import sk.iway.iwcm.components.ai.tools.AiToolDescription;
 import sk.iway.iwcm.components.quiz.jpa.QuizEntity;
@@ -43,6 +44,14 @@ public class QuizRestController extends DatatableRestControllerV2<QuizEntity, Lo
             return quiz;
         }
         return super.getOneItem(id);
+    }
+
+    @Override
+    public void beforeSave(QuizEntity entity) {
+        if(entity.getId() == null || entity.getId() < 1L) {
+            entity.setDomainId(CloudToolsForCore.getDomainId());
+        }
+        super.beforeSave(entity);
     }
 
     @Override

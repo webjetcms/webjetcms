@@ -234,6 +234,8 @@
         color: var(--wj-gray-text);
     }
 
+    .ai-chat-message-status { white-space: pre-line; }
+
     .ai-chat-html-response {
         margin: 8px 0;
         border: 1px solid var(--wj-nice-gray-100);

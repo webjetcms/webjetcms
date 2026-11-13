@@ -105,7 +105,8 @@ final class AiToolRequest extends HttpServletRequestWrapper {
     static boolean safeMappingHeader(String name) {
         String key = name.toLowerCase(Locale.ROOT);
         // Preserve credentials, principal, domain and proxy information supplied by the original HTTP transport.
-        if (key.equalsIgnoreCase(Constants.getString("logonTokenHeaderName"))
+        if (AiToolAuthorization.ASSISTANT_HEADER.equalsIgnoreCase(key)
+                || key.equalsIgnoreCase(Constants.getString("logonTokenHeaderName"))
                 || key.equalsIgnoreCase(Constants.getString("requestIsSecureHeaderName"))
                 || key.equalsIgnoreCase(Constants.getString("xForwardedForHeader", "").replace("::last", ""))) return false;
         if (Set.of("host", "origin", "referer", "forwarded", "connection", "content-length", "transfer-encoding",

@@ -166,6 +166,8 @@ public class QuizRestController extends DatatableRestControllerV2<QuizEntity, Lo
 
 Samotné `@AiTool` zahrnie aj zápisové operácie. Voľba `readOnly = true` obmedzí výpis aj volanie na HTTP GET. Pomocou `exclude = {"getQuizType"}` môžete v oboch režimoch vyradiť všetky mapovania konkrétnej Java metódy, vrátane zdedenej metódy. Pri vlastných mapovaniach bez určenej HTTP metódy katalóg použije GET, v plnom režime pri vstupe s telom požiadavky použije POST.
 
+Voľbou `include` môžete vymenovať Java metódy, ktoré chcete sprístupniť. Pre kontrolér, ktorý nededí z `DatatableRestControllerV2`, je tento zoznam povinný. Napríklad `AiToolsController` používa `@AiTool(readOnly = true, include = {"preview", "details"})`.
+
 Vlastný endpoint môžete opísať anotáciou `@AiToolDescription` na mapovanej metóde. Ako hodnotu zadajte anglický text alebo prekladový kľúč. Napríklad opis metódy `getQuizType` vysvetľuje, ako interpretovať pole `quizType` vo vrátenom kvíze.
 
 ```java
@@ -179,16 +181,27 @@ public QuizEntity getQuizType(@RequestParam("quizId") int quizId) {
 }
 ```
 
-Ak anotáciu vynecháte alebo zadáte prázdny text, katalóg použije preklad podľa vzoru `components.ai.tools.<kontrolér>_<metóda>.description`, potom opis štandardnej operácie alebo text odvodený z názvu metódy. K opisu operácie pripojí spoločný kontext z `@AiTool(description = "...")`, ak ho kontrolér uvádza. API pre AI používa anglické preklady. V administrácii sa opis zobrazí v jazyku používateľa, pri chýbajúcom preklade v angličtine.
+Ak anotáciu vynecháte alebo zadáte prázdny text, katalóg použije preklad podľa vzoru `components.ai.tools.<kontrolér>_<metóda>.description`, potom opis štandardnej operácie alebo text odvodený z názvu metódy. API pre AI používa anglické preklady. V administrácii sa opis zobrazí v jazyku používateľa, pri chýbajúcom preklade v angličtine.
 
-`GET /admin/rest/ai/tools` vráti v poli `tools` nástroje dostupné prihlásenému používateľovi. Každá položka obsahuje anglický názov `name`, opis `description`, vstupnú schému `inputSchema` a cieľové mapovanie. Príklad môžete spustiť v konzole prehliadača v administrácii pod účtom s právom `cmp_quiz`.
+Spoločný opis z `@AiTool(description = "...")` sa zobrazí v riadku kontroléra po zapnutí voľby **Zoskupiť podľa REST kontroléra**. V odpovedi `GET /admin/rest/settings/ai-tools/controllers/all` ho nájdete v poli `controllerDescription` pri zozname `endpoints` daného kontroléra.
+
+`GET /admin/rest/ai/tools` vráti v poli `tools` úplné definície nástrojov dostupných prihlásenému používateľovi. Ak asistent potrebuje vyhľadať len niekoľko operácií, priraďte mu tieto dva nástroje:
+
+- `ai_tools_preview` (`GET /admin/rest/ai/tools/preview`) vráti pre každý dostupný nástroj iba polia `name` a `description`.
+- `ai_tools_details` (`GET /admin/rest/ai/tools/details`) prijíma názvy vybraných nástrojov. Pri volaní asistentom odošlite napríklad `{"names":["quiz_get_all","quiz_get_quiz_type"]}`. Pri priamom GET volaní môžete zopakovať parameter `names`. V poli `tools` dostanete úplné definície v poradí výberu vrátane vstupnej schémy, cieľového mapovania a opisu výstupu. Neznáme a neprístupné názvy sa vynechajú, opakovaný názov sa vráti len raz.
+
+Asistent tak môže čítať opis aj pri nástroji, ktorý nemá priradený. Na jeho vykonanie potrebuje samostatné priradenie aj oprávnenia prihláseného používateľa. Prehliadač prijme najviac 1 MiB na odpoveď katalógu. Ak vybrané definície presiahnu limit, vyžiadajte si ich v menších skupinách.
+
+Nasledujúci príklad priameho volania môžete spustiť v konzole prehliadača v administrácii pod účtom s právom `cmp_quiz`.
 
 ```javascript
 const url = "/admin/rest/ai/tools";
 const headers = { "X-CSRF-Token": window.csrfToken };
-const { tools } = await (await fetch(url, { headers })).json();
-const quiz = tools.find(tool => tool.name === "quiz_get_quiz_type");
-if (quiz) {
+const { tools } = await (await fetch(url + "/preview", { headers })).json();
+if (tools.some(tool => tool.name === "quiz_get_quiz_type")) {
+    const details = await (await fetch(url + "/details?names=quiz_get_quiz_type", { headers })).json();
+    const [quiz] = details.tools;
+    console.log(quiz.inputSchema);
     const response = await fetch(url + "/" + quiz.name + "/call", {
         method: "POST",
         headers: { ...headers, "Content-Type": "application/json" },

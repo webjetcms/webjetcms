@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Publishes a concrete DataTable controller's mapped REST handlers in the AI tool catalog. */
+/** Publishes a controller's selected REST handlers in the AI tool catalog. */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AiTool {
@@ -14,6 +14,9 @@ public @interface AiTool {
 
     /** Restrict discovery and invocation to GET requests. */
     boolean readOnly() default false;
+
+    /** Java handler names to publish. Only DataTable controllers publish handlers without an explicit list. */
+    String[] include() default {};
 
     /** Java handler names to omit, including inherited handlers and all their mappings. */
     String[] exclude() default {};
