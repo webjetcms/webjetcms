@@ -163,8 +163,10 @@ function testFields(I, DT, DTE, tab, modal, id) {
 
     I.say("Field in step 2 can see fields from step 2 and step 1");
         I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
-
-        I.clickCss("#formItemsDataTable td.sorting_1");
+        DT.waitForLoader('formItemsDataTable');
+        const secondStepField = locate('#formItemsDataTable tbody tr').withText('Meno a priezvisko');
+        I.waitForVisible(secondStepField, 10);
+        I.click(secondStepField.find('td.sorting_1'));
         I.click(DT.btn.formItems_edit_button);
         DTE.waitForEditor("formItemsDataTable");
         I.clickCss(tab);

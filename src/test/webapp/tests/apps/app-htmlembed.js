@@ -10,10 +10,15 @@ Scenario("Vloženie HTML kódu - test zobrazovania", async ({ I }) => {
     });
 
     I.waitForElement('iframe[src*="tiktok.com"]', 10);
+    I.scrollTo('iframe[src*="tiktok.com"]');
     await within({ frame: 'iframe[src*="tiktok.com"]' }, async () => {
-        // TikTok can show consent before its description; wait for either real player state.
-        I.waitForVisible({ xpath: "//*[contains(text(), 'Starlink') or contains(text(), 'Allow cookies from TikTok') or contains(text(), 'Player error')]" }, 30);
-        await I.clickIfVisible('Decline optional cookies');
+        // TikTok renders consent buttons in an open shadow root, which XPath cannot enter.
+        const cookieButton = 'button:has-text("Decline optional cookies")';
+        I.waitForVisible(`${cookieButton}, a[aria-label="Open description on TikTok"]`, 30);
+        if (await I.grabNumberOfVisibleElements(cookieButton)) {
+            I.clickCss(cookieButton);
+            I.waitForInvisible(cookieButton, 10);
+        }
         I.waitForText("Starlink", 30);
         I.dontSee('Player error');
     });

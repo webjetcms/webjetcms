@@ -36,6 +36,7 @@ Scenario('Test for Event Notification and Cache Handling in Audit Notifications'
 
     //verify audit log entry
     I.amOnPage('/admin/v9/apps/audit-search/');
+    DT.waitForLoader();
     I.fillField('.dt-filter-from-createDate', startDate);
     I.pressKey('Escape');
     DT.filterSelect('logType', "SENDMAIL");
