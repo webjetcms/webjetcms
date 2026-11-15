@@ -1,0 +1,208 @@
+<style>
+.wj-website-content { overflow-wrap: break-word; }
+.wj-website-content [hidden] { display: none !important; }
+.wj-website-content [id] { scroll-margin-top: 110px; }
+.wj-website-content .wj-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 24px 0; }
+.wj-website-content .wj-actions .btn { margin: 0; white-space: normal; }
+.wj-website-content .wj-media { margin: 28px 0; }
+.wj-website-content .wj-media img { display: block; width: 100%; height: auto; }
+.wj-website-content .wj-hero-media { max-width: 1052px; margin: 40px auto; }
+.wj-website-content figcaption { margin-top: 12px; color: #57585c; font-size: 15px; line-height: 1.5; }
+.wj-website-content .wj-references h2 { margin: 40px 0 30px; }
+.wj-website-content .wj-references .logo-container > div { display: flex; align-items: center; justify-content: center; flex-basis: 25%; min-height: 100px; }
+.wj-website-content .wj-references img { width: auto; height: auto; max-width: 180px; max-height: 80px; }
+.wj-website-content .wj-references p { margin: 24px 0; }
+.wj-website-content .wj-roadmap { border-left: 3px solid #007b8e; padding-left: 24px; }
+.wj-website-content .wj-details > summary { cursor: pointer; list-style: none; }
+.wj-website-content .wj-details > summary::-webkit-details-marker { display: none; }
+.wj-website-content .wj-details[open] > summary::before { content: "\f056"; }
+.wj-website-content .wj-details .md-accordion__block { margin: 10px 0 0; }
+.wj-website-content .wj-section-nav ul { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 24px 0; padding: 0; list-style: none; }
+.wj-website-content .wj-section-nav li { padding: 0; }
+.wj-website-content .wj-section-nav li::before { display: none; }
+.wj-website-content a:focus-visible, .wj-website-content summary:focus-visible { outline: 2px solid #003289; outline-offset: 4px; }
+.wj-website-content .wj-news-column { display: flex; margin: 24px 0 16px; }
+.wj-website-content .wj-news-item { width: 100%; }
+.wj-website-content .wj-news-image { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; margin-bottom: 16px; background: #f6f7f9; }
+.wj-website-content .wj-news-meta { color: #57585c; font-size: 15px; margin-bottom: 10px; }
+.wj-website-content .wj-news h3 { font-size: 22px; line-height: 1.35; margin-bottom: 12px; }
+.wj-website-content .wj-news h3 a { color: inherit; }
+.wj-website-content .wj-news-item > p:last-child { font-size: 17px; line-height: 1.5; }
+@media (max-width: 767.98px) {
+  .wj-website-content .wj-actions { gap: 16px; }
+  .wj-website-content .wj-hero-media { margin: 28px 0; }
+  .wj-website-content .wj-references .logo-container > div { flex-basis: 35%; }
+  .wj-website-content .wj-references img { max-width: 135px; max-height: 65px; }
+  .wj-website-content .wj-roadmap { padding-left: 16px; }
+}
+</style>
+<div class="wj-website-content">
+  <section class="md-banner">
+      <h1>Funkcie WebJET CMS</h1>
+      <p>Pripravujte obsah s AI, kontrolujte zmeny pred zverejnením a spravujte firemné weby v jednej administrácii.</p>
+      <p><a class="btn btn-cta" href="/kontakt/">Dohodnúť si ukážku</a></p>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-publikovanie">
+      <h2 id="funkcie-publikovanie">Schvaľovanie a plánované publikovanie</h2>
+      <p>Nový cenník, produktovú stránku alebo oznam pripravíte vopred. Redaktor upraví obsah, zodpovedný kolega skontroluje zmeny a stránka sa zverejní v naplánovanom termíne.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details" open>
+          <summary class="btn--acc-toggle">Pracovné verzie, porovnanie zmien a termín zverejnenia</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Pracovné verzie:</strong> pripravujete nový obsah, kým návštevníci vidia aktuálne publikovanú stránku.</li>
+              <li><strong>Schvaľovanie:</strong> určíte schvaľovateľov pre vybrané priečinky. Pred rozhodnutím uvidia porovnanie pôvodnej a navrhnutej verzie.</li>
+              <li><strong>História:</strong> dohľadáte publikované verzie a údaje o schválení alebo zamietnutí.</li>
+              <li><strong>Plánovanie:</strong> nastavíte budúce zverejnenie zmeny stránky. Po zapnutí rozšíreného plánovania pripravíte aj obrázky a prílohy chránené do termínu publikovania.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/sk/redactor/webpages/approve/">Postup schvaľovania v dokumentácii</a> · <a href="https://docs.webjetcms.sk/latest/sk/redactor/webpages/planned-publishing">Plánované publikovanie</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-ai">
+      <h2 id="funkcie-ai">AI pomoc priamo pri tvorbe obsahu</h2>
+      <p>Upravte formuláciu, pripravte preklad alebo vytvorte návrh stránky z podkladov v tom istom prostredí, v ktorom obsah publikujete. Správca vyberie asistentov a poskytovateľov podľa úloh tímu.</p>
+      <figure class="wj-media">
+        <a href="/images/webjetcms-2026/ai-pagebuilder.png"><img class="img-fluid" src="/images/webjetcms-2026/ai-pagebuilder.png" width="1440" height="1000" loading="lazy" alt="AI čet vo WebJET CMS s náhľadom návrhu stránky v PageBuilderi"></a>
+        <figcaption>Návrh stránky z AI četu si redaktor prezrie pred vložením. Kliknutím obrázok zväčšíte.</figcaption>
+      </figure>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Texty, obrázky, návrhy stránok a riadenie AI spotreby</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Texty:</strong> generovanie, úpravy a preklady v textových poliach aj editore. Asistent môže pracovať s označenou časťou obsahu.</li>
+              <li><strong>Obrázky:</strong> generovanie z opisu alebo úprava existujúceho obrázka podľa možností zvoleného modelu.</li>
+              <li><strong>Čet v PageBuilderi:</strong> priložíte PDF s textovou vrstvou, dokument Word alebo prezentáciu PowerPoint a zadáte návrh stránky. Ďalšie úpravy riešite v rovnakom rozhovore.</li>
+              <li><strong>Vlastní asistenti:</strong> nastavíte pokyny, model a polia, v ktorých sa má pomocník zobrazovať.</li>
+              <li><strong>Prehľad používania:</strong> sledujete využitie a spotrebu tokenov podľa asistentov a používateľov. Pre asistenta možno nastaviť tokenový limit a upozornenia.</li>
+            </ul>
+            <p>Podporované sú externé služby vrátane OpenAI, Gemini a OpenRouter. Vybrané textové úlohy a sémantické vyhľadávanie možno po príprave modelov spracovať aj na vlastnom serveri. Dostupné operácie a náklady závisia od poskytovateľa a nasadenia.</p>
+            <p><a href="https://docs.webjetcms.sk/latest/sk/redactor/ai/datatables/">Ukážky práce s AI asistentmi</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-pagebuilder">
+      <h2 id="funkcie-pagebuilder">Stránky poskladané z firemných blokov</h2>
+      <p>Produktovú stránku alebo kampaň zostavíte v PageBuilderi z pripravených blokov svojho webu. Tím pracuje s dohodnutým dizajnom a sústredí sa na texty, obrázky a poradie obsahu.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Knižnica blokov, štruktúra stránky a náhľady</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li>Bloky vyberáte podľa náhľadov, kategórií a štítkov v knižnici pripravenej pre váš projekt.</li>
+              <li>V strome štruktúry nájdete sekciu, ktorú potrebujete upraviť. Bloky môžete duplikovať a meniť ich poradie.</li>
+              <li>Rozloženie upravujete podľa ponúkaných nastavení pre mobil, tablet a počítač.</li>
+              <li>Náhľad stránky umožní skontrolovať výsledok pred zverejnením.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/sk/redactor/webpages/pagebuilder">Práca s PageBuilderom</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-prava">
+      <h2 id="funkcie-prava">Prístupy podľa zodpovednosti v tíme</h2>
+      <p>Redaktor regionálnej pobočky potrebuje upravovať iný obsah než správca celého webu. WebJET CMS umožňuje rozdeliť prístup k stránkam, súborom a aplikáciám a dohľadávať zaznamenané zmeny.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Skupiny práv, audit a firemné prihlasovanie</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Skupiny práv:</strong> pripravíte oprávnenia pre roly v organizácii a doplníte individuálne práva používateľa.</li>
+              <li><strong>Obmedzenie obsahu:</strong> určíte dostupné stránky a priečinky aj možnosti práce s aplikáciami.</li>
+              <li><strong>Audit:</strong> vyhľadávate zaznamenané udalosti, napríklad publikovanie, zmeny práv alebo prihlásenia.</li>
+              <li><strong>Firemná identita:</strong> prihlasovanie môžete prepojiť s poskytovateľom OAuth2/OpenID Connect vrátane Keycloak. Podľa nastavenia sa pri prihlásení preberajú skupiny a práva.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/sk/admin/users/perm-groups">Správa oprávnení</a> · <a href="https://docs.webjetcms.sk/latest/sk/sysadmin/audit/">Audit udalostí</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-domeny">
+      <h2 id="funkcie-domeny">Viac webov a jazykov v jednej administrácii</h2>
+      <p>Firemný web, produktové stránky aj jazykové verzie môžete spravovať v spoločnom CMS. Prepojenie jazykových verzií pomáha udržiavať ich štruktúru pri pridávaní a presúvaní obsahu.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Domény, jazykové mutácie a automatický preklad</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li>Prepínate medzi spravovanými doménami a nastavujete prístupy tímov k príslušnému obsahu.</li>
+              <li>Zrkadlenie prepája stránky a priečinky jazykových verzií; prenáša vytvorenie, presun alebo zmenu poradia.</li>
+              <li>Po nastavení prekladača sa pri vytvorení jazykovej verzie prekladá názov, URL aj obsah. Redaktor môže výsledok skontrolovať a jazykovo upraviť.</li>
+              <li>Prepínač jazyka vedie návštevníka na zodpovedajúcu stránku. Šablóna môže vytvárať aj odkazy <code>hreflang</code>.</li>
+            </ul>
+            <p>Pre oddelenú správu viacerých webov je k dispozícii aj režim MultiWeb s vlastnými používateľmi domén a spoločnou riadiacou doménou.</p>
+            <p><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/docmirroring/">Zrkadlenie a preklad jazykových verzií</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-vyhladavanie">
+      <h2 id="funkcie-vyhladavanie">Vyhľadávanie aj podľa významu otázky</h2>
+      <p>Návštevník nemusí poznať presný názov služby alebo výraz použitý v článku. Sémantické vyhľadávanie vyberá obsah podľa podobnosti významu; hybridný režim ho kombinuje s fulltextom.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Fulltext, sémantické výsledky a AI odpoveď</summary>
+          <div class="md-accordion__block">
+            <p>Pre jednotlivé vyhľadávania zvolíte mechanizmus a priečinky, v ktorých sa má obsah hľadať. Nad výsledkami možno zobraziť stručnú AI odpoveď vytvorenú z nájdených častí webu.</p>
+            <p>Sémantické vyhľadávanie vyžaduje indexovanie, podporovanú vektorovú databázu a nakonfigurovaný AI model. Spracovanie možno pripraviť aj s lokálnym modelom na serveri organizácie.</p>
+            <p><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/semantic-search/">Možnosti sémantického vyhľadávania</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-meranie">
+      <h2 id="funkcie-meranie">Nástroje pre dohľadateľnosť a vyhodnocovanie webu</h2>
+      <p>Pri úprave webu pracujete s adresami, presmerovaniami a obsahom pre vyhľadávače. V administrácii zároveň sledujete návštevnosť a môžete porovnávať varianty stránok.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">URL, odkazy, štatistiky a A/B testy</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li>Spravujete URL a presmerovania pri presunoch alebo premenovaní obsahu.</li>
+              <li>Kontrola odkazov pomáha odhaliť nefunkčné prepojenia a prázdne stránky.</li>
+              <li>Štatistiky zobrazujú návštevnosť, používané stránky a ďalšie údaje o návštevách.</li>
+              <li>A/B testovanie rozdeľuje návštevníkov medzi varianty stránky v nastavenom pomere.</li>
+              <li>Správa súhlasov s cookies sa prepája s načítaním príslušných marketingových skriptov.</li>
+            </ul>
+            <p><a href="/aplikacie/">Aplikácie pre marketing a meranie</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-integracie">
+      <h2 id="funkcie-integracie">Priestor pre vlastný vývoj a integrácie</h2>
+      <p>Java a Spring dávajú vývojovému tímu základ na vlastné aplikácie a prepojenia. Obsah možno poskytovať cez headless API aj webu s vlastnou prezentačnou vrstvou.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Vlastné aplikácie, API a headless frontend</summary>
+          <div class="md-accordion__block">
+            <p>Vývojár môže doplniť aplikáciu v prostredí Java/Spring, jej nastavenia pre redaktora aj vlastné administračné obrazovky. Dokumentácia opisuje rozširovanie systému a používanie jeho existujúcich služieb.</p>
+            <p>Headless rozhranie poskytuje obsah stránok, navigáciu, novinky a vyhľadávanie. Výber technológie frontendu tak môžete prispôsobiť projektu. Konkrétne integrácie sa pripravujú podľa rozhraní a pravidiel prepojených systémov.</p>
+            <p><a href="/pre-vyvojarov/">WebJET CMS pre Java vývojárov</a> · <a href="/pre-agentury/">WebJET CMS pre agentúry</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro wj-roadmap" aria-labelledby="funkcie-pripravujeme">
+      <h2 id="funkcie-pripravujeme">Pripravujeme</h2>
+      <p>Publikačné balíky rozšíria prípravu kampaní o spoločnú pracovnú verziu viacerých stránok, kontrolu zmien a spoločný termín publikovania. Vo vývoji je aj verzia založená na Spring Boot. Obe možnosti sú vo vývoji.</p>
+  </section>
+
+  <section class="md-intro wj-final-cta" aria-labelledby="funkcie-ukazka">
+      <h2 id="funkcie-ukazka">Pozrite si postup, ktorý potrebuje váš tím</h2>
+      <p>Napíšte nám, ako dnes pripravujete a schvaľujete obsah. Na ukážke prejdeme zodpovedajúce možnosti WebJET CMS.</p>
+      <p><a class="btn btn-cta" href="/kontakt/">Dohodnúť si ukážku</a></p>
+  </section>
+</div>
