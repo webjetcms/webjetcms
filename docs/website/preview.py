@@ -23,6 +23,36 @@ PAGES = {
     "/pre-agentury/": "pre-agentury.html",
 }
 CACHE = {}
+VIDEO_INCLUDE = re.compile(
+    r"!INCLUDE\(/components/video/video_player\.jsp,\s*"
+    r"file=https://www\.youtube\.com/watch\?v=([A-Za-z0-9_-]{11}),\s*"
+    r"width=425,\s*height=355,\s*percentageWidth=100,\s*align=left,\s*"
+    r"autoplay=0,\s*controls=1,\s*fullscreen=1,\s*branding=0,\s*rel=1,\s*showinfo=0\)!"
+)
+VIDEO_TITLES = {
+    "B_m_vPPel80": "PageBuilder: tvorba stránky z blokov",
+    "LhXo7zx7bEc": "AI asistenti vo WebJET CMS",
+    "z3QGUdDG2pk": "Plánované publikovanie textu, obrázkov a súborov",
+    "XRnwipQ-mH4": "Editor formulárov WebJET CMS",
+    "2r6-0zk5ZNQ": "Vlastné aplikácie v katalógu WebJET CMS",
+}
+
+
+def render_videos(fragment):
+    """Preview only: substitute the supported video macro without executing JSP."""
+    def render(match):
+        video_id = match.group(1)
+        title = escape(VIDEO_TITLES.get(video_id, "Videoukážka WebJET CMS"), quote=True)
+        return (
+            '<div class="videoBox"><div class="embed-responsive embed-responsive-16by9">'
+            '<iframe class="embed-responsive-item" width="425" height="355" '
+            f'src="https://www.youtube.com/embed/{video_id}'
+            '?autoplay=0&amp;controls=1&amp;modestbranding=0&amp;rel=1&amp;showinfo=0" '
+            f'title="{title}" loading="lazy" frameborder="0" allowfullscreen '
+            'referrerpolicy="strict-origin-when-cross-origin"></iframe></div></div>'
+        )
+
+    return VIDEO_INCLUDE.sub(render, fragment)
 
 
 def download(url):
@@ -66,6 +96,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
         try:
             if path in PAGES:
                 fragment = (ROOT / "sk" / PAGES[path]).read_text()
+                fragment = render_videos(fragment)
                 fragment = re.sub(
                     r'href="(/[^\"]*)"',
                     lambda match: match.group(0) if urlsplit(unescape(match.group(1))).path in PAGES

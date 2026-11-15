@@ -80,3 +80,4 @@ Funkcie a obrázky overovať podľa [produktových podkladov](product-evidence.m
 5. Spring Boot a spoločné plánovanie viacerých stránok z PR #388 označiť „Pripravujeme“, bez termínu.
 6. Na úvode ponechať len odkazy na Licencie a Aktuálnu verziu.
 7. Následné doplnenie zadania: na úvode živá sekcia noviniek z `https://docs.webjetcms.sk/json/wjnews.sk.json`, zhodného zdroja ako v dashboarde. Zobrazuje až šesť príspevkov/videí; pri nedostupnosti zdroja zostáva statický odkaz na dokumentáciu. Podrobnosti sú v [integrácii noviniek](news-feed.md).
+8. Ak dokumentácia obsahuje tematicky zodpovedajúce video, uprednostniť ho pred statickou snímkou. Použiť aplikáciu `video_player.jsp` cez zadaný `!INCLUDE`, bez automatického prehrávania. Výber a umiestnenie sú v [manifeste videí](video-manifest.md).

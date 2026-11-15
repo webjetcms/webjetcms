@@ -1,6 +1,10 @@
 # Pôvod obrázkov
 
-Všetkých 15 statických obrázkov nahrajte z `sk/images/` do `/images/webjetcms-2026/`. Deväť snímok je prevzatých bez úprav z dokumentácie; šesť log bez úprav zo súčasného verejného webu. Originálne pomery strán zostávajú zachované. Pri snímkach z dokumentácie bola overená aj binárna zhoda so zdrojom.
+Balík obsahuje 15 statických obrázkov. Aktuálne HTML používa deväť súborov: `opravnenia.png`, `sprava-dokumentov.png`, `headless-web.png` a všetkých šesť log. Tie nahrajte z `sk/images/` do `/images/webjetcms-2026/`.
+
+Zvyšných šesť snímok (`ai-pagebuilder.png`, `ai-asistenti.png`, `pagebuilder.png`, `historia-publikovania.png`, `viackrokovy-formular.png`, `vlastna-aplikacia.png`) zostáva ako voliteľná statická alternatíva k [videám](video-manifest.md). Aktuálne HTML ich nenačítava; nejde o automatický fallback prehrávača.
+
+Deväť snímok je prevzatých bez úprav z dokumentácie; šesť log bez úprav zo súčasného verejného webu. Originálne pomery strán zostávajú zachované. Pri snímkach z dokumentácie bola overená aj binárna zhoda so zdrojom.
 
 | Obrázok | Rozmery | Veľkosť | Zdroj |
 | --- | --- | --- | --- |
@@ -22,7 +26,7 @@ Všetkých 15 statických obrázkov nahrajte z `sk/images/` do `/images/webjetcm
 
 ## Použitie
 
-Snímky dokumentujú skutočné rozhranie; ukážkové názvy a obsah v nich zostali zachované. Po kliknutí sa otvorí pôvodná plná veľkosť. Snímky sa načítavajú odložene, okrem hlavného obrázka úvodu. Obrázky neobsahujú doplnené či vygenerované funkcie.
+Snímky dokumentujú skutočné rozhranie; ukážkové názvy a obsah v nich zostali zachované. Pri zostávajúcich snímkach sa po kliknutí otvorí pôvodná plná veľkosť. Načítavajú sa odložene. Obrázky neobsahujú doplnené či vygenerované funkcie.
 
 Logá UNIQA a Tatra banky majú malé pôvodné rozlíšenie. HTML ich neškáluje nad prirodzenú veľkosť. Pri budúcej výmene možno použiť kvalitnejšie schválené podklady značiek; nové logá sa teraz nevytvárali.
 
