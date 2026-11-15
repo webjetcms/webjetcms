@@ -1,13 +1,13 @@
 # Videá z dokumentácie
 
-Preferované sú tematicky zodpovedajúce videá pred statickými snímkami. Päť videí má spolu desať umiestnení v šiestich HTML fragmentoch. Osem pôvodných snímok v obsahu nahrádzajú videá; na stránke Funkcie pribudli navyše ukážky publikovania a PageBuildera.
+Preferované sú tematicky zodpovedajúce videá pred statickými snímkami. Päť videí má spolu jedenásť umiestnení v šiestich HTML fragmentoch. Osem pôvodných snímok v obsahu nahrádzajú videá; na stránke Funkcie pribudli navyše ukážky publikovania a PageBuildera a v Benefitoch ukážka viackrokových formulárov.
 
 | Video | Použitie | Podklad v dokumentácii |
 | --- | --- | --- |
 | [Page Builder – nová verzia](https://www.youtube.com/watch?v=B_m_vPPel80) | Úvodná ukážka na Domov; Benefity; Funkcie; Pre agentúry | [PageBuilder](../sk/redactor/webpages/pagebuilder.md), [sales 2026](../sk/sales/2026/README.md) |
 | [AI asistenti](https://www.youtube.com/watch?v=LhXo7zx7bEc) | AI sekcia na Domov a Funkciách | [AI asistent](../sk/redactor/ai/README.md) |
 | [Plánované publikovanie textu, obrázkov aj súborov](https://www.youtube.com/watch?v=z3QGUdDG2pk) | Benefity a Funkcie | [Plánované publikovanie](../sk/redactor/webpages/planned-publishing.md) |
-| [Viackrokové formuláre](https://www.youtube.com/watch?v=XRnwipQ-mH4) | Aplikácie – Dopyty a formuláre | [Vytvorenie formulára](../sk/redactor/apps/form/README.md#vytvorenie-formuláru) |
+| [Viackrokové formuláre](https://www.youtube.com/watch?v=XRnwipQ-mH4) | Benefity – Viackrokové formuláre; Aplikácie – Dopyty a formuláre | [Vytvorenie formulára](../sk/redactor/apps/form/README.md#vytvorenie-formuláru) |
 | [AppStore](https://www.youtube.com/watch?v=2r6-0zk5ZNQ) | Pre vývojárov – vlastné aplikácie | [Zobrazenie aplikácie v zozname](../sk/custom-apps/appstore/README.md) |
 
 YouTube oEmbed pri kontrole 15. 11. 2026 vrátil pre všetkých päť videí HTTP 200, názov a autora **WebJET od InterWay**. Obsahová zhoda sa posudzovala podľa dokumentácie a metadát; nejde o prepis celých videí. Caption AI videa preto opisuje asistentov všeobecne a nesľubuje ukážku všetkých najnovších funkcií četu.

@@ -25,7 +25,7 @@ Metadáta sa nastavujú vo vlastnostiach stránky v CMS, mimo obsahu `article.ly
 | Stránka a súbor | Verejná URL | Titulok stránky | Meta description |
 | --- | --- | --- | --- |
 | Úvod, `sk/index.html` | `/` | WebJET CMS: redakčný systém s AI pre firmy | Spravujte firemné weby a portály vo WebJET CMS. AI pomáha s obsahom, schvaľovanie a plánovanie držia publikovanie pod kontrolou. Dohodnite si ukážku. |
-| Benefity, `sk/benefity.html` | `/benefity/` | Benefity WebJET CMS: obsah a publikovanie pod kontrolou | Rozdeľte redakčnú prácu, schvaľujte zmeny a plánujte publikovanie vo WebJET CMS. Pozrite si prínosy pre tímy, ktoré spravujú firemné weby a portály. |
+| Benefity, `sk/benefity.html` | `/benefity/` | Benefity WebJET CMS: AI, headless a viackrokové formuláre | Spoznajte hlavné funkcie WebJET CMS: AI, schvaľovanie a plánovanie obsahu, headless režim aj viackrokové formuláre pre žiadosti a dopyty. |
 | Funkcie, `sk/funkcie.html` | `/funkcie/` | Funkcie WebJET CMS: AI, editor a správa webov | Spoznajte AI nástroje, PageBuilder, schvaľovanie, oprávnenia a správu jazykových verzií vo WebJET CMS. Pozrite si funkcie a ukážky z administrácie. |
 | Aplikácie, `sk/aplikacie.html` | `/aplikacie/` | Aplikácie WebJET CMS pre firemné weby a portály | Formuláre, novinky, dokumenty, vyhľadávanie a ďalšie aplikácie WebJET CMS. Vyberte si podľa úloh, ktoré má váš web riešiť pre návštevníkov a redakciu. |
 | Pre vývojárov, `sk/pre-vyvojarov.html` | `/pre-vyvojarov/` | WebJET CMS pre vývojárov: Java, Spring a REST API | Rozvíjajte WebJET CMS v Java a Spring. Vytvárajte vlastné aplikácie, administráciu nad dátami a headless weby s pomocou dokumentácie a projektu basecms. |

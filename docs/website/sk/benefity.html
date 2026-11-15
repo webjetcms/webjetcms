@@ -39,7 +39,7 @@
 <div class="wj-website-content">
   <section class="md-banner">
     <h1>Webový obsah pod kontrolou vášho tímu</h1>
-    <p>WebJET CMS pomáha firmám a verejnej správe rozdeliť redakčnú prácu, schvaľovať zmeny a pripraviť stránky na zverejnenie v správnom čase. AI pomáha s obsahom priamo v administrácii.</p>
+    <p>WebJET CMS spája tvorbu obsahu s AI, schvaľovanie a plánovanie publikovania. Vlastný frontend napojíte cez headless režim a žiadosti či registrácie pripravíte ako viackrokové formuláre.</p>
     <div class="wj-actions">
       <a class="btn btn-cta" href="/kontakt/">Dohodnúť si ukážku</a>
       <a href="/funkcie/">Pozrieť konkrétne funkcie</a>
@@ -92,6 +92,40 @@
     <p><a href="/funkcie/#funkcie-ai">Tvorba textov, práca s podkladmi a AI obrázky</a></p>
   </section>
 
+  <section class="md-intro" aria-labelledby="headless-rezim">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h2 id="headless-rezim"><strong>Headless režim:</strong> vlastný frontend, obsah vo WebJET CMS</h2>
+        <p>Vývojári vytvoria web s technológiami Astro, Next.js, React alebo Vue. Redaktori naďalej pripravujú a spravujú obsah vo WebJET CMS. Vzhľad webu a jeho technológiu tak môžete rozvíjať samostatne od redakčného prostredia.</p>
+        <p>Cez REST API získate obsah, navigáciu, vyhľadávanie aj formuláre. Jedno CMS môže poskytovať obsah viacerým webom s rôznymi frontendmi, takže pre každý web nemusíte zavádzať ďalší redakčný systém.</p>
+        <p><a href="/pre-vyvojarov/#vyvojari-headless">Možnosti headless režimu pre vývojárov</a> · <a href="https://docs.webjetcms.sk/latest/sk/frontend/headless/">Dokumentácia headless režimu</a></p>
+      </div>
+      <div class="col-md-6">
+        <figure class="wj-media">
+          <a href="/images/webjetcms-2026/headless-web.png"><img class="img-fluid" src="/images/webjetcms-2026/headless-web.png" width="1280" height="720" alt="Ukážka samostatného frontendu zobrazujúceho obsah z WebJET CMS cez headless API" loading="lazy"></a>
+          <figcaption>Vlastný frontend zobrazuje obsah, ktorý redakcia spravuje vo WebJET CMS.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="viackrokove-formulare">
+    <div class="row align-items-center">
+      <div class="col-md-6 order-md-2">
+        <h2 id="viackrokove-formulare"><strong>Viackrokové formuláre:</strong> veďte návštevníka žiadosťou krok za krokom</h2>
+        <p>Dlhšiu žiadosť, registráciu alebo dopyt rozdelíte na pomenované kroky. Návštevník postupne vyplní jednotlivé časti a tlačidlom Späť sa môže vrátiť k predchádzajúcim údajom a opraviť ich.</p>
+        <p>Polia zobrazíte alebo označíte ako povinné podľa predchádzajúcich odpovedí. Kontrola údajov upozorní na chýbajúce hodnoty či nesprávny formát. Kroky a polia pridávate, presúvate a kontrolujete v náhľade priamo v administrácii.</p>
+        <p><a href="/aplikacie/#aplikacie-formulare">Formuláre a správa odpovedí</a> · <a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/multistep-form/">Dokumentácia viackrokových formulárov</a></p>
+      </div>
+      <div class="col-md-6 order-md-1">
+        <figure class="wj-media wj-video">
+          !INCLUDE(/components/video/video_player.jsp, file=https://www.youtube.com/watch?v=XRnwipQ-mH4, width=425, height=355, percentageWidth=100, align=left, autoplay=0, controls=1, fullscreen=1, branding=0, rel=1, showinfo=0)!
+          <figcaption>Pozrite si vytvorenie formulára a úpravu jeho krokov a položiek. <a href="https://www.youtube.com/watch?v=XRnwipQ-mH4">Otvoriť video na YouTube</a>.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
   <section class="md-intro" aria-labelledby="prava">
     <div class="row align-items-center">
       <div class="col-md-6">
@@ -111,7 +145,7 @@
   <section class="md-intro" aria-labelledby="rozvoj">
     <h2 id="rozvoj"><strong>Web rozvíjate</strong> podľa procesov vašej organizácie</h2>
     <p>Začať môžete obsahom, formulármi a správou dokumentov. Keď potrebujete vlastnú evidenciu alebo prepojenie na interný systém, vývojári nadviažu na Java/Spring základ a REST API WebJET CMS.</p>
-    <p>Pre vlastný frontend je k dispozícii headless rozhranie. Redakcia pritom naďalej spravuje obsah v CMS. Konkrétne integrácie navrhneme podľa vašich systémov a požiadaviek.</p>
+    <p>Konkrétne integrácie navrhneme podľa vašich systémov a požiadaviek.</p>
     <div class="wj-actions">
       <a href="/aplikacie/">Vybrať aplikácie pre web</a>
       <a href="/pre-vyvojarov/">Možnosti vlastného vývoja</a>
@@ -124,8 +158,8 @@
   </section>
 
   <section class="md-intro" aria-labelledby="vas-proces">
-    <h2 id="vas-proces">Ukážeme vám váš redakčný proces vo WebJET CMS</h2>
-    <p>Prejdime spolu, kto obsah pripravuje, kto ho schvaľuje a kedy má ísť na web. Na ukážke sa zameriame na úlohy vášho tímu.</p>
+    <h2 id="vas-proces">Ukážeme vám WebJET CMS na úlohách vášho tímu</h2>
+    <p>Prejdime spolu váš redakčný proces, žiadosť vo formulári aj možnosti napojenia vlastného frontendu. Na ukážke sa zameriame na to, čo má váš web zvládnuť.</p>
     <p><a class="btn btn-cta" href="/kontakt/">Dohodnúť si ukážku</a></p>
   </section>
 </div>
