@@ -51,7 +51,7 @@ Na verejnom webe sa nekopírujú interné administračné API, stav prečítania
 
 Finálna implementácia je priamo v [sk/index.html](sk/index.html), v izolovanom inline skripte na konci fragmentu. Používa natívne DOM API a `fetch`; nepoužíva jQuery, framework ani ďalší súbor JavaScriptu.
 
-Statické HTML obsahuje nadpis **Čo je nové vo WebJET CMS**, krátky perex, prázdny kontajner `#wj-home-news-list`, záložný odkaz do dokumentácie a odkaz na aktuálnu verziu. Odkaz do dokumentácie sa skryje až po úspešnom vložení aspoň jednej karty. Odkaz na aktuálnu verziu zostáva viditeľný stále.
+Statické HTML obsahuje nadpis **Čo je nové vo WebJET CMS**, krátky perex, prázdny kontajner `#wj-home-news-list`, záložnú správu s odkazom do dokumentácie a odkaz **Pozrieť všetky zmeny v dokumentácii** na `https://docs.webjetcms.sk/latest/sk/`. Záložná správa sa skryje až po úspešnom vložení aspoň jednej karty. Odkaz na všetky zmeny zostáva viditeľný stále.
 
 ### Načítanie a normalizácia
 

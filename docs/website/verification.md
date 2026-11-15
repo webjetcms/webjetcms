@@ -37,7 +37,7 @@ Skutočný inline skript bol extrahovaný z `sk/index.html` a spustený v dočas
 
 Overené boli poradie a limit šiestich kariet, duplicitné a nepovolené odkazy, text obsahujúci HTML/XSS, jednopriechodové dekódovanie entít vo výňatku, chýbajúce a neplatné obrázky/dátumy, chyba načítania obrázka, prázdny a chybný JSON, sieťová/HTTP chyba, veľkostné limity, timeout vrátane neskorej odpovede, chýbajúce `fetch` a opakované spustenie skriptu. Kontrola zahŕňala aj `credentials: omit`, `referrerPolicy: no-referrer` a `cache: no-cache`.
 
-Pri chybe zostáva dostupný statický odkaz na dokumentáciu a aktuálnu verziu. Dáta zo zdroja sa nezapisujú ako HTML a novinky nevkladajú video prehrávače. Pri doplnení videoukážok do produktových sekcií sa skript noviniek nezmenil; porovnanie s predchádzajúcou verziou potvrdilo zhodu, preto sa jeho chybové scenáre neopakovali.
+Pri chybe zostáva dostupný statický odkaz na všetky zmeny v dokumentácii. Dáta zo zdroja sa nezapisujú ako HTML a novinky nevkladajú video prehrávače. Pri doplnení videoukážok do produktových sekcií sa skript noviniek nezmenil; porovnanie s predchádzajúcou verziou potvrdilo zhodu, preto sa jeho chybové scenáre neopakovali.
 
 ## Rozsah a obmedzenia
 
