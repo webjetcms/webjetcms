@@ -2555,13 +2555,13 @@ public class EditorDB
 		}
 		try
 		{
-			if (originalBean == null) SetCharacterEncodingFilter.registerDataContext(request);
+			SetCharacterEncodingFilter.registerDataContext(request);
 			return getDataAsc(data, ef, isLucene, request);
 		}
 		finally
 		{
-			// Restore only the context owned here; unregistering would close the caller's entity managers.
-			if (originalBean == null) SetCharacterEncodingFilter.setCurrentRequestBean(null);
+			// Restore the caller's context without closing its entity managers.
+			SetCharacterEncodingFilter.setCurrentRequestBean(originalBean);
 		}
 	}
 

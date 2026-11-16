@@ -3,6 +3,7 @@ package sk.iway.iwcm.editor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -43,6 +44,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -65,34 +67,60 @@ class EditorDataAscTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void preservesExistingContextWhetherOrNotItStoresTheRequest(boolean hasRequest) {
+    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+    void restoresExistingContextAfterSuccessOrFailure(boolean hasRequest, boolean fail) {
         HttpServletRequest request = null;
         if (hasRequest) request = new MockHttpServletRequest();
         HttpServletRequest expectedRequest = request;
         RequestBean bean = new RequestBean();
         bean.setRequest(request);
-        bean.setDomain("example.com");
+        bean.setDomain("tenant-a.example");
         bean.setUserId(42);
         SetCharacterEncodingFilter.setCurrentRequestBean(bean);
         EditorForm form = new EditorForm();
+        form.setGroupId(7);
+        form.setVirtualPath("/indexed-page.html");
+        GroupDetails group = new GroupDetails();
+        group.setDomainName("tenant-b.example");
+        GroupsDB groups = mock(GroupsDB.class);
+        when(groups.getGroup(7)).thenReturn(group);
 
-        try (MockedStatic<EditorToolsForCore> editor = mockStatic(EditorToolsForCore.class)) {
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<GroupsDB> groupInstances = mockStatic(GroupsDB.class);
+                MockedStatic<DocDB> documents = mockStatic(DocDB.class);
+                MockedStatic<EditorToolsForCore> editor = mockStatic(EditorToolsForCore.class)) {
+            constants.when(() -> Constants.getString(anyString())).thenReturn("");
+            constants.when(Constants::getServletContext).thenReturn(new MockServletContext());
+            groupInstances.when(GroupsDB::getInstance).thenReturn(groups);
+            documents.when(() -> DocDB.getDomain(any(HttpServletRequest.class)))
+                    .thenAnswer(invocation -> ((HttpServletRequest) invocation.getArgument(0)).getServerName());
             editor.when(() -> EditorToolsForCore.getDataAsc(eq("source"), eq(form), eq(true), any()))
                     .thenAnswer(invocation -> {
                         HttpServletRequest actualRequest = invocation.getArgument(3);
-                        if (hasRequest) assertSame(expectedRequest, actualRequest);
+                        if (hasRequest) {
+                            assertSame(expectedRequest, actualRequest);
+                            assertSame(bean, SetCharacterEncodingFilter.getCurrentRequestBean());
+                        }
                         else {
                             assertNotNull(actualRequest);
                             assertNotNull(actualRequest.getSession());
+                            assertEquals("tenant-b.example", actualRequest.getServerName());
+                            assertNotSame(bean, SetCharacterEncodingFilter.getCurrentRequestBean());
+                            assertEquals("tenant-b.example", CloudToolsForCore.getDomainName());
                         }
-                        assertSame(bean, SetCharacterEncodingFilter.getCurrentRequestBean());
+                        assertEquals("tenant-a.example", bean.getDomain());
+                        assertEquals(42, bean.getUserId());
+                        if (fail) throw new IllegalStateException("Preparation failed");
                         return "prepared";
                     });
 
-            assertEquals("prepared", EditorDB.getDataAsc("source", form, true));
+            if (fail) {
+                assertThrows(IllegalStateException.class, () -> EditorDB.getDataAsc("source", form, true));
+            } else {
+                assertEquals("prepared", EditorDB.getDataAsc("source", form, true));
+            }
             assertSame(bean, SetCharacterEncodingFilter.getCurrentRequestBean());
-            assertEquals("example.com", bean.getDomain());
+            assertEquals("tenant-a.example", bean.getDomain());
             assertEquals(42, bean.getUserId());
         }
     }
