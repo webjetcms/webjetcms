@@ -80,12 +80,36 @@ public class AiToolAuthorization {
     }
 
     AiAssistantRuntime resolve(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
-        String key = AiAssistantRuntime.class.getName() + "." + domainId + "." + assistant.getId();
+        String key = runtimeKey(assistant, domainId);
         if (request.getAttribute(key) instanceof AiAssistantRuntime cached) return cached;
         var runtime = AiAssistantRuntime.compose(skills, assistant, domainId, registry,
                 entry -> mayList(entry, request, Access.CATALOG));
         request.setAttribute(key, runtime);
         return runtime;
+    }
+
+    private static String runtimeKey(AssistantDefinitionEntity assistant, int domainId) {
+        return AiAssistantRuntime.class.getName() + "." + domainId + "." + assistant.getId();
+    }
+
+    boolean hasInstructionContext(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        String key = runtimeKey(assistant, domainId);
+        if (request.getAttribute(key) instanceof AiAssistantRuntime runtime) {
+            return !runtime.skillInstructions().isEmpty() || !runtime.tools().isEmpty();
+        }
+        String contextKey = key + ".hasContext";
+        if (request.getAttribute(contextKey) instanceof Boolean cached) return cached;
+        boolean hasContext = findInstructionContext(assistant, domainId, request);
+        request.setAttribute(contextKey, hasContext);
+        return hasContext;
+    }
+
+    private boolean findInstructionContext(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        if (!AiAssistantRuntime.canHaveReferences(assistant)) return false;
+        var template = AiInstructionTemplate.parse(assistant.getInstructions());
+        if (!template.skillIds().isEmpty() && skills.existsByDomainIdAndIdIn(domainId, template.skillIds())) return true;
+        return AiAssistantRuntime.acceptsTools(assistant) && registry.assignedEntries(template.toolNames(), template.groupNames()).stream()
+                .anyMatch(entry -> mayList(entry, request, Access.CATALOG));
     }
 
     boolean mayList(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {

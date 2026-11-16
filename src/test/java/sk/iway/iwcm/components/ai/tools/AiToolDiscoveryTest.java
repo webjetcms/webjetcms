@@ -11,9 +11,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -205,6 +207,42 @@ class AiToolDiscoveryTest {
     }
 
     @Test
+    void editorChecksSkillExistenceOnceWithoutLoadingItsInstructions() {
+        assistant.setAction("generate_text");
+        assistant.setProvider("browser");
+        assistant.setInstructions("Writer: @skill(04) @skill(4) @group(quiz)");
+        var skills = context.getBean(AiSkillRepository.class);
+        int domain = CloudToolsForCore.getDomainId();
+        when(skills.existsByDomainIdAndIdIn(domain, Set.of(4L))).thenReturn(true, false);
+
+        var service = context.getBean(AiToolService.class);
+        var request = adminRequest();
+        assertTrue(service.hasInstructionContext(assistant, request));
+        assertTrue(service.hasInstructionContext(assistant, request));
+        verify(skills).existsByDomainIdAndIdIn(domain, Set.of(4L));
+        assertFalse(service.hasInstructionContext(assistant, adminRequest()));
+        assistant.setInstructions("Translator: @skill(4)");
+        assertFalse(service.hasInstructionContext(assistant, adminRequest()));
+        verify(skills, times(2)).existsByDomainIdAndIdIn(domain, Set.of(4L));
+        verifyNoMoreInteractions(skills);
+    }
+
+    @Test
+    void editorStopsAtTheFirstVisibleToolAndRechecksPermissionsOnTheNextRequest() {
+        assistant.setAction("generate_text");
+        assistant.setInstructions("@tool(ai_tools_preview) @tool(audit_probe_batch)");
+        var service = context.getBean(AiToolService.class);
+        assertTrue(service.hasInstructionContext(assistant, adminRequest()));
+        verify(security, never()).hasPermission("cmp_quiz");
+
+        assistant.setInstructions("@group(quiz)");
+        assertTrue(service.hasInstructionContext(assistant, adminRequest()));
+        when(security.hasPermission("cmp_quiz")).thenReturn(false);
+        assertFalse(service.hasInstructionContext(assistant, adminRequest()));
+        verifyNoInteractions(context.getBean(AiSkillRepository.class));
+    }
+
+    @Test
     void linkedSkillsAndGroupsShareOneToolListAndFollowSkillEdits() throws Exception {
         assistant.setInstructions("Use @skill(04) or @skill(4), then @skill(8) or @skill(9). @tool(quiz_get_all) @group(quiz)");
         var first = skill(4L, "First", "@tool(quiz_get_all) @group(quiz)");
@@ -223,6 +261,7 @@ class AiToolDiscoveryTest {
         assertEquals(1, runtime.skillInstructions().lines().filter("Skill #4 — First"::equals).count());
         assertEquals(1, runtime.skillInstructions().lines().filter("Skill #8 — Second"::equals).count());
         var names = runtime.tools().stream().map(AiToolDefinition::name).toList();
+        assertEquals(names.stream().sorted().toList(), names);
         assertEquals(names.size(), Set.copyOf(names).size());
         assertTrue(names.containsAll(List.of("quiz_get_all", "quiz_question_add", "ai_tools_details", "audit_probe_batch")));
         call("ai_tools_details", "{\"names\":[]}", 200);
@@ -279,7 +318,7 @@ class AiToolDiscoveryTest {
         var preview = catalog.lookup("ai_tools_preview");
         var details = catalog.lookup("ai_tools_details");
         var registry = mock(AiToolRegistry.class);
-        when(registry.entries()).thenReturn(List.of(preview)).thenReturn(List.of(preview, details));
+        when(registry.assignedEntries(Set.of("unknown"), Set.of("ai"))).thenReturn(List.of(preview)).thenReturn(List.of(preview, details));
         var skills = context.getBean(AiSkillRepository.class);
         var authorization = new AiToolAuthorization(context, context.getBean(AssistantDefinitionRepository.class), security, registry, skills);
         var first = authorization.resolve(assistant, 1, adminRequest());

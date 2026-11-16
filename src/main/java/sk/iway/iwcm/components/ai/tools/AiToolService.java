@@ -74,8 +74,7 @@ public class AiToolService {
 
     /** An editor can offer a preset on an empty field when its skills or visible tools supply context. */
     public boolean hasInstructionContext(AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        var runtime = resolve(assistant, CloudToolsForCore.getDomainId(), request);
-        return !runtime.skillInstructions().isEmpty() || !runtime.tools().isEmpty();
+        return authorization.hasInstructionContext(assistant, CloudToolsForCore.getDomainId(), request);
     }
 
     public boolean isWriteTool(String name) {

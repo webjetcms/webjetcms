@@ -11,8 +11,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -61,23 +63,43 @@ public class AiToolRegistry {
         }
     }
 
+    private record Index(List<Entry> entries, Map<String, Entry> byName, Map<String, List<Entry>> byGroup) {}
+
     private final RequestMappingHandlerMapping handlerMapping;
-    private Map<String, Entry> index;
+    private Index index;
 
     public AiToolRegistry(@Lazy RequestMappingHandlerMapping handlerMapping) {
         this.handlerMapping = handlerMapping;
     }
 
     public List<Entry> entries() {
-        return List.copyOf(index().values());
+        return index().entries();
     }
 
     public Entry lookup(String name) {
-        return index().get(name);
+        return index().byName().get(name);
+    }
+
+    /** Named links follow instruction order. Including a group orders the combined tools by catalog name. */
+    List<Entry> assignedEntries(Set<String> names, Set<String> groups) {
+        if (names.isEmpty() && groups.isEmpty()) return List.of();
+        var catalog = index();
+        var named = names.stream().map(catalog.byName()::get).filter(Objects::nonNull).toList();
+        if (groups.isEmpty()) return named;
+        if (named.isEmpty() && groups.size() == 1) return catalog.byGroup().getOrDefault(groups.iterator().next(), List.of());
+
+        var assigned = new TreeMap<String, Entry>();
+        for (var entry : named) assigned.put(entry.definition().name(), entry);
+        for (String group : groups) {
+            for (var entry : catalog.byGroup().getOrDefault(group, List.of())) {
+                assigned.put(entry.definition().name(), entry);
+            }
+        }
+        return List.copyOf(assigned.values());
     }
 
     // Handler mappings are complete when the first request arrives, including customer controllers.
-    private synchronized Map<String, Entry> index() {
+    private synchronized Index index() {
         if (index != null) return index;
         List<Operation> operations = new ArrayList<>();
         handlerMapping.getHandlerMethods().forEach((mapping, handler) -> collect(operations, mapping, handler));
@@ -106,7 +128,9 @@ public class AiToolRegistry {
                 throw new IllegalStateException("Duplicate AI tool name: " + name);
             }
         }
-        index = Collections.unmodifiableMap(result);
+        var entries = List.copyOf(result.values());
+        var byGroup = entries.stream().collect(Collectors.groupingBy(Entry::assignmentGroup, Collectors.toUnmodifiableList()));
+        index = new Index(entries, Map.copyOf(result), Map.copyOf(byGroup));
         return index;
     }
 

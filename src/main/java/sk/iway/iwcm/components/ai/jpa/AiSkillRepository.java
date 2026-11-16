@@ -14,5 +14,7 @@ public interface AiSkillRepository extends DomainIdRepository<AiSkillEntity, Lon
 
     List<AiSkillEntity> findByDomainIdAndIdInOrderByIdAsc(int domainId, Collection<Long> ids);
 
+    boolean existsByDomainIdAndIdIn(int domainId, Collection<Long> ids);
+
     long countByDomainIdAndIdIn(int domainId, Collection<Long> ids);
 }
