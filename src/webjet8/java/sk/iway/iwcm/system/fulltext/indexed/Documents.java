@@ -644,6 +644,29 @@ public class Documents extends Indexed
 	}
 
 	/**
+	 * Loads the document by ID and deletes it from the index.
+	 *
+	 * @param docId the document ID
+	 * @deprecated Use {@link #deleteSingleDocument(DocDetails)} with document details
+	 *             captured before the document is deleted from the database.
+	 */
+	@Deprecated
+	public static void deleteSingleDocument(int docId)
+	{
+		if (Constants.getBoolean("luceneIncrementalDocumentIndexing"))
+		{
+			try
+			{
+				deleteSingleDocument(DocDB.getInstance().getDoc(docId));
+			}
+			catch (Exception ex)
+			{
+				Logger.error(Documents.class, "Error deleting document doc: " + docId + " from index: " + ex.getMessage(), ex);
+			}
+		}
+	}
+
+	/**
 	 * Zmaze dokument z indexu
 	 *
 	 * @param doc
