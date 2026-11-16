@@ -25,7 +25,7 @@ export async function refreshAssistantRuntime(assistant, signal) {
  * @param {boolean} [options.allowWrites=true] Whether this action was prepared for write operations.
  * @param {AbortSignal} [options.signal] Cancels the browser's HTTP request.
  * @param {function(string): void} [options.onDelta] Receives raw text fragments as they arrive.
- * @param {function(string|null): void} [options.onToolActivity] Receives the tool name at dispatch and null when the call settles.
+ * @param {function(string|null, boolean=): void} [options.onToolActivity] Receives the tool name on submission, then null. A false second argument marks a rejection before dispatch.
  * @param {string} [options.endpoint] Overrides the assistant endpoint for saved chat requests.
  * @param {function(object): void} [options.onMetadata] Receives saved thread/message IDs and the thread revision.
  * @returns {Promise<object>} CMS response containing text, usage, continuation and error metadata.

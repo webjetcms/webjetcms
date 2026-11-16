@@ -13,50 +13,88 @@ final class AiToolArgumentValidator {
 
     private AiToolArgumentValidator() {}
 
-    static void validate(Map<String,Object> schema, Object arguments) {
-        if (!matches(arguments, schema, schema, 0)) throw new IllegalArgumentException("Arguments do not match the registered tool schema.");
+    /** Contains feedback derived only from the registered schema, suitable for a model correction. */
+    static final class InvalidArguments extends IllegalArgumentException {
+        private InvalidArguments(String message) { super(message); }
     }
 
-    private static boolean matches(Object value, Object rule, Map<String,Object> root, int depth) {
-        if (rule instanceof Boolean permitted) return permitted;
-        if (!(rule instanceof Map<?,?> schema) || depth > 80 || !SUPPORTED.containsAll(schema.keySet())) return false;
+    static void validate(Map<String, Object> schema, Object arguments) {
+        String error = firstError(arguments, schema, schema, "arguments", 0);
+        if (error != null) throw new InvalidArguments(error);
+    }
+
+    /** Returns correction feedback using only paths and constraints declared by the registered schema. */
+    private static String firstError(Object value, Object rule, Map<String, Object> root, String path, int depth) {
+        if (rule instanceof Boolean permitted) return permitted ? null : path + " is not allowed.";
+        if (!(rule instanceof Map<?, ?> schema) || depth > 80 || !SUPPORTED.containsAll(schema.keySet())) {
+            return "Cannot validate the registered schema for " + path + ".";
+        }
         if (schema.get("$ref") instanceof String ref) {
-            if (!ref.startsWith("#/$defs/") || !(root.get("$defs") instanceof Map<?,?> defs)
-                || !matches(value, defs.get(ref.substring(8)), root, depth+1)) return false;
+            if (!ref.startsWith("#/$defs/") || !(root.get("$defs") instanceof Map<?, ?> defs)) {
+                return "Cannot resolve the registered schema for " + path + ".";
+            }
+            String error = firstError(value, defs.get(ref.substring(8)), root, path, depth + 1);
+            if (error != null) return error;
         }
         for (String keyword : List.of("oneOf", "anyOf")) {
             if (schema.get(keyword) instanceof List<?> choices) {
-                long count = choices.stream().filter(choice -> matches(value, choice, root, depth+1)).count();
-                if (count == 0 || (keyword.equals("oneOf") && count != 1)) return false;
+                long count = choices.stream().filter(choice -> firstError(value, choice, root, path, depth + 1) == null).count();
+                if (count == 0 || ("oneOf".equals(keyword) && count != 1)) return path + " must match its " + keyword + " schema.";
             }
         }
         Object type = schema.get("type");
-        if (type instanceof List<?> types && types.stream().noneMatch(t -> isType(value, t))) return false;
-        if (type instanceof String && !isType(value, type)) return false;
-        if (schema.get("enum") instanceof List<?> values && values.stream().noneMatch(option -> AiToolProtocol.sameJson(value, option))) return false;
-        if (value instanceof Number number && schema.get("minimum") instanceof Number min
-            && new BigDecimal(number.toString()).compareTo(new BigDecimal(min.toString())) < 0) return false;
-        if (value instanceof List<?> list && schema.containsKey("items")) {
-            return list.stream().allMatch(item -> matches(item, schema.get("items"), root, depth+1));
+        if (type instanceof List<?> types && types.stream().noneMatch(t -> isType(value, t))) return path + " must have one of the types " + types + ".";
+        if (type instanceof String && !isType(value, type)) return path + " must have type " + type + ".";
+        if (schema.get("enum") instanceof List<?> values && values.stream().noneMatch(option -> AiToolProtocol.sameJson(value, option))) {
+            return path + " must use a value from its enum.";
         }
-        if (!(value instanceof Map<?,?> map)) return true;
-        if (schema.get("required") instanceof List<?> required && !map.keySet().containsAll(required)) return false;
-        Map<?,?> properties = schema.get("properties") instanceof Map<?,?> p ? p : Map.of();
-        Map<?,?> patterns = schema.get("patternProperties") instanceof Map<?,?> p ? p : Map.of();
+        if (value instanceof Number number && schema.get("minimum") instanceof Number min
+                && new BigDecimal(number.toString()).compareTo(new BigDecimal(min.toString())) < 0) return path + " must be at least " + min + ".";
+        if (value instanceof List<?> list && schema.containsKey("items")) {
+            for (Object item : list) {
+                String error = firstError(item, schema.get("items"), root, path + "[]", depth + 1);
+                if (error != null) return error;
+            }
+        }
+        return value instanceof Map<?, ?> map ? objectError(map, schema, root, path, depth) : null;
+    }
+
+    private static String objectError(Map<?, ?> map, Map<?, ?> schema, Map<String, Object> root, String path, int depth) {
+        if (schema.get("required") instanceof List<?> required) {
+            for (Object field : required) {
+                if (!map.containsKey(field)) return path + "." + field + " is required.";
+            }
+        }
+        Map<?, ?> properties = schema.get("properties") instanceof Map<?, ?> p ? p : Map.of();
+        Map<?, ?> patterns = schema.get("patternProperties") instanceof Map<?, ?> p ? p : Map.of();
         for (var entry : map.entrySet()) {
-            if (!(entry.getKey() instanceof String key)) return false;
-            boolean known = properties.containsKey(key);
-            if (known && !matches(entry.getValue(), properties.get(key), root, depth+1)) return false;
+            if (!(entry.getKey() instanceof String key)) return path + " requires string property names.";
+            boolean declared = properties.containsKey(key);
+            String fieldPath = declared ? path + "." + key : path + ".*";
+            if (declared) {
+                String error = firstError(entry.getValue(), properties.get(key), root, fieldPath, depth + 1);
+                if (error != null) return error;
+            }
             for (var pattern : patterns.entrySet()) {
                 if (Pattern.compile(pattern.getKey().toString()).matcher(key).find()) {
-                    known = true;
-                    if (!matches(entry.getValue(), pattern.getValue(), root, depth+1)) return false;
+                    declared = true;
+                    String error = firstError(entry.getValue(), pattern.getValue(), root, fieldPath, depth + 1);
+                    if (error != null) return error;
                 }
             }
-            if (!known && schema.containsKey("additionalProperties")
-                && !matches(entry.getValue(), schema.get("additionalProperties"), root, depth+1)) return false;
+            if (!declared && schema.containsKey("additionalProperties")) {
+                Object additional = schema.get("additionalProperties");
+                if (Boolean.FALSE.equals(additional)) {
+                    if (patterns.isEmpty() && !properties.isEmpty() && properties.size() <= 8) {
+                        return path + " contains an unknown field. Allowed fields are " + properties.keySet() + ".";
+                    }
+                    return path + " contains an unknown field. Use the properties or patterns declared for it.";
+                }
+                String error = firstError(entry.getValue(), additional, root, fieldPath, depth + 1);
+                if (error != null) return error;
+            }
         }
-        return true;
+        return null;
     }
 
     private static boolean isType(Object value, Object type) {

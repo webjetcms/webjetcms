@@ -1507,6 +1507,8 @@ test('AI Chat sends no webpage context and completed responses expose only Copy'
         inputValue: '', inputValueType: 'text', outputValueType: 'text', userPrompt: 'Write a short announcement'
     });
     const { callbacks } = f.chatRequests[0];
+    callbacks.onToolActivity('invalid_lookup');
+    callbacks.onToolActivity(null, false);
     callbacks.onToolActivity('list_records');
     const activity = f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-tool-activity');
     assert.equal(activity.querySelector('li').textContent, 'list_records');

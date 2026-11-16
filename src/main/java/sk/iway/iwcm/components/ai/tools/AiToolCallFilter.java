@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.ai.tools;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.springframework.http.MediaType;
@@ -22,6 +23,7 @@ import tools.jackson.databind.json.JsonMapper;
 @Component
 public class AiToolCallFilter extends GenericFilterBean {
 
+    static final String TOOL_RESPONSE_HEADER = "X-WebJET-AI-Tool-Response";
     private static final String PREFIX = "/admin/rest/ai/tools/";
     private static final String SUFFIX = "/call";
     private static final String FAILURE = AiToolCallFilter.class.getName() + ".failure";
@@ -70,17 +72,23 @@ public class AiToolCallFilter extends GenericFilterBean {
         service.call(name, arguments, http, (HttpServletResponse) response, chain);
     }
 
-    static void invalid(HttpServletRequest request, AiToolRegistry.Entry entry, AiToolAuthorization authorization) {
-        request.setAttribute(FAILURE, new Failure(entry, authorization));
+    static void invalid(HttpServletRequest request, AiToolRegistry.Entry entry, AiToolAuthorization authorization, String correction) {
+        request.setAttribute(FAILURE, new Failure(entry, authorization, correction));
     }
 
-    public static void rejectUntranslated(HttpServletRequest request, HttpServletResponse response) {
-        int status = HttpServletResponse.SC_NOT_FOUND;
+    public static void rejectUntranslated(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (request.getAttribute(FAILURE) instanceof Failure failure && failure.authorization().isAllowed(failure.entry(), request)) {
-            status = HttpServletResponse.SC_BAD_REQUEST;
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            if (failure.correction() != null) {
+                response.setHeader(TOOL_RESPONSE_HEADER, "invalid-arguments");
+                response.setContentType(MediaType.TEXT_PLAIN_VALUE);
+                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                response.getWriter().write(failure.correction());
+            }
+            return;
         }
-        response.setStatus(status);
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
     }
 
-    private record Failure(AiToolRegistry.Entry entry, AiToolAuthorization authorization) {}
+    private record Failure(AiToolRegistry.Entry entry, AiToolAuthorization authorization, String correction) {}
 }

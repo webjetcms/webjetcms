@@ -63,7 +63,9 @@ export class AiBrowserExecutor {
                 executionResult.statusKeyParams = ["NULL"];
             } else {
                 const config = this._getConfig(instructions);
-                this._addSkillInstructions(apiName, config, aiCol.skillInstructions);
+                const useTools = apiName === 'LanguageModel' && aiCol.toolsEnabled;
+                const guidance = [aiCol.skillInstructions, useTools && aiCol.toolInstructions].filter(Boolean).join('\n\n');
+                this._addInstructions(apiName, config, guidance);
                 const configKey = JSON.stringify([apiName, config]);
                 let apiInstance = null;
 
@@ -85,7 +87,7 @@ export class AiBrowserExecutor {
                 }
 
                 let useStreaming = aiCol.useStreaming || false;
-                if (apiInstance && apiName === 'LanguageModel' && aiCol.toolsEnabled) {
+                if (apiInstance && useTools) {
                     const controller = new AbortController();
                     this.toolController = controller;
                     try {
@@ -175,17 +177,17 @@ export class AiBrowserExecutor {
         return {};
     }
 
-    /** Adds optional skill text to the configured browser API's instruction field. */
-    _addSkillInstructions(apiName, config, skills) {
-        if (!skills) return;
+    /** Adds the assigned skill and tool guidance to the browser API's instruction field. */
+    _addInstructions(apiName, config, guidance) {
+        if (!guidance) return;
         if (apiName === 'LanguageModel') {
             const prompts = config.initialPrompts ??= [];
             const system = prompts.find(prompt => prompt.role === 'system');
-            if (!system) prompts.unshift({ role: 'system', content: skills });
-            else if (Array.isArray(system.content)) system.content.push({ type: 'text', value: skills });
-            else system.content = [system.content, skills].filter(Boolean).join('\n\n');
+            if (!system) prompts.unshift({ role: 'system', content: guidance });
+            else if (Array.isArray(system.content)) system.content.push({ type: 'text', value: guidance });
+            else system.content = [system.content, guidance].filter(Boolean).join('\n\n');
         } else if (['Writer', 'Rewriter', 'Summarizer'].includes(apiName)) {
-            config.sharedContext = [config.sharedContext, skills].filter(Boolean).join('\n\n');
+            config.sharedContext = [config.sharedContext, guidance].filter(Boolean).join('\n\n');
         }
     }
 

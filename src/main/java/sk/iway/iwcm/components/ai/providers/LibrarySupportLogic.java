@@ -42,9 +42,11 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiChatAttachments;
@@ -52,6 +54,7 @@ import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
@@ -197,49 +200,60 @@ public abstract class LibrarySupportLogic implements AiInterface {
             IncludesHandler includeHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
             AiProviderConfig config = configurationService.resolve(this, request);
             TokenUsage attachmentUsage = prepareChatAttachments(assistant, inputData, config, continuation);
-            AiRequest providerRequest = prepareProviderRequest(operation, assistant, inputData, includeHandler);
+            AiToolProtocol protocol = inputData.getToolProtocol();
             AiResponse response;
-            if (writer == null || inputData.getToolProtocol() != null) {
-                response = aiClient.execute(getProviderId(), providerRequest, config, inputData.getCancellationToken());
-                if (inputData.getToolProtocol() == null) {
-                    responseDto.setResponse(response.text());
+            int totalTokens = 0;
+            for (int attempt = 1; ; attempt++) {
+                checkCancellation(inputData);
+                AiRequest providerRequest = prepareProviderRequest(operation, assistant, inputData, includeHandler);
+                if (writer == null || protocol != null) {
+                    response = aiClient.execute(getProviderId(), providerRequest, config, inputData.getCancellationToken());
+                    if (protocol == null) responseDto.setResponse(response.text());
+                    else protocol.apply(response.text(), responseDto, prop);
+                    if (responseDto.getToolCall() == null && responseDto.getResponse() != null) {
+                        checkCancellation(inputData);
+                        responseDto.setResponse(includeHandler.restoreIncludes(responseDto.getResponse()));
+                        if (writer != null) {
+                            writer.write(responseDto.getResponse());
+                            writer.flush();
+                        }
+                    }
                 } else {
-                    // Tool arguments must never reach the editor as a streamed reply.
-                    inputData.getToolProtocol().apply(response.text(), responseDto, prop);
+                    response = aiClient.stream(getProviderId(), providerRequest, config, delta -> {
+                        checkCancellation(inputData);
+                        try {
+                            includeHandler.handleLine(delta, writer);
+                        } catch (IOException exception) {
+                            outputFailure.set(exception);
+                            inputData.getCancellationToken().cancel();
+                            throw exception;
+                        }
+                    }, inputData.getCancellationToken());
+                    includeHandler.finish(writer);
+                    responseDto.setResponse(includeHandler.getWholeResponse());
                 }
-                if (responseDto.getToolCall() == null && responseDto.getResponse() != null) {
-                    responseDto.setResponse(includeHandler.restoreIncludes(responseDto.getResponse()));
-                    if (writer != null) {
-                        writer.write(responseDto.getResponse());
-                        writer.flush();
-                    }
+                // A rejected decision with known usage can still be charged if a stop raced its delivery.
+                if (responseDto.getToolCorrection() == null) checkCancellation(inputData);
+                boolean recorded = recordProviderResponse(responseDto, inputPair, assistant, method,
+                    responseDto.getToolCall() == null ? responseDto.getResponse() : responseDto.getToolCall().name(),
+                    response.usage().plus(attachmentUsage), statRepo, request);
+                totalTokens = (int)Math.min(Integer.MAX_VALUE, (long)totalTokens + responseDto.getTotalTokens());
+                responseDto.setTotalTokens(totalTokens);
+                checkCancellation(inputData);
+                boolean untrackedBudget = !recorded && assistant.getTokenLimit() != null && assistant.getTokenLimit() > 0;
+                if (responseDto.getToolCorrection() == null || attempt == AiToolProtocol.MAX_DECISION_ATTEMPTS || untrackedBudget
+                        || (operation == AiOperation.CHAT && Tools.isEmpty(response.responseId()))) break;
+
+                var assistants = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
+                if (assistants.countWithReachedTokenLimit(assistant.getId(), CloudToolsForCore.getDomainId()) > 0) {
+                    responseDto.setErrorCategory("TOKEN_LIMIT_REACHED");
+                    responseDto.setError(prop.getText("components.ai_assistants.token_limit.reached.js"));
+                    return responseDto;
                 }
-            } else {
-                response = aiClient.stream(getProviderId(), providerRequest, config, delta -> {
-                    checkCancellation(inputData);
-                    try {
-                        includeHandler.handleLine(delta, writer);
-                    } catch (IOException exception) {
-                        outputFailure.set(exception);
-                        inputData.getCancellationToken().cancel();
-                        throw exception;
-                    }
-                }, inputData.getCancellationToken());
-                includeHandler.finish(writer);
-                responseDto.setResponse(includeHandler.getWholeResponse());
+                inputData.prepareToolCorrection(responseDto.getToolCorrection(), operation == AiOperation.CHAT ? response.responseId() : null);
+                responseDto = new AssistantResponseDTO();
+                attachmentUsage = TokenUsage.EMPTY;
             }
-            checkCancellation(inputData);
-            recordProviderResponse(
-                responseDto,
-                inputPair,
-                assistant,
-                method,
-                responseDto.getToolCall() == null ? responseDto.getResponse() : responseDto.getToolCall().name(),
-                response.usage().plus(attachmentUsage),
-                statRepo,
-                request
-            );
-            checkCancellation(inputData);
             if (responseDto.getError() == null && operation == AiOperation.CHAT && Thread.currentThread().isInterrupted() == false) {
                 responseDto.setConversationId(AiChatSession.remember(assistant, request, response.responseId(), includeHandler.getIncludes()));
             } else if (operation == AiOperation.TEXT && responseDto.getToolCall() != null && inputData.getChatAttachmentContext() != null) {
@@ -857,8 +871,10 @@ public abstract class LibrarySupportLogic implements AiInterface {
         if (inputData.getToolProtocol() != null) {
             var protocol = inputData.getToolProtocol();
             instructions = (instructions == null ? "" : instructions) + "\n\n" + protocol.instructions();
-            if (!protocol.results().isEmpty()) {
-                boolean continuingChat = operation == AiOperation.CHAT && Tools.isNotEmpty(inputData.getPreviousResponseId());
+            boolean continuingChat = operation == AiOperation.CHAT && Tools.isNotEmpty(inputData.getPreviousResponseId());
+            String correction = inputData.getToolCorrection();
+            if (correction != null) instructions += "\n" + correction;
+            if (!protocol.results().isEmpty() && !(continuingChat && correction != null)) {
                 if (continuingChat) {
                     userPrompt = null;
                     inputText = "";
@@ -1099,7 +1115,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         }
     }
 
-    private void recordProviderResponse(
+    private boolean recordProviderResponse(
         AssistantResponseDTO responseDto,
         Pair<String, String> inputPair,
         AssistantDefinitionEntity assistant,
@@ -1112,16 +1128,22 @@ public abstract class LibrarySupportLogic implements AiInterface {
         StringBuilder audit = AiAuditLog.create(responseDto.getError() == null ? "SUCCESS" : "ERROR", assistant, methodName);
         if (responseDto.getError() != null) audit.append("\nError message:\n").append(responseDto.getError()).append('\n');
         AiAuditLog.appendUsage(audit, usage);
-        int totalTokens = Tools.safeLongToInt(safeUsage(usage).totalTokens());
+        int totalTokens = (int)Math.min(Integer.MAX_VALUE, safeUsage(usage).totalTokens());
         AiAuditLog.appendResponse(audit, inputPair, textResponse, configurationService.auditMaxLength());
 
         try {
             Adminlog.add(Adminlog.TYPE_AI, audit.toString(), totalTokens, -1);
-            AiStatService.addRecord(assistant.getId(), totalTokens, statRepo, request);
         } catch (Exception exception) {
             Logger.error(LibrarySupportLogic.class, "Error processing adminlog " + exception.getMessage());
         }
         responseDto.setTotalTokens(totalTokens);
+        try {
+            AiStatService.addRecord(assistant.getId(), totalTokens, statRepo, request);
+            return true;
+        } catch (Exception exception) {
+            Logger.error(LibrarySupportLogic.class, "Error recording token usage", exception);
+            return false;
+        }
     }
 
     private void errorAdminLog(

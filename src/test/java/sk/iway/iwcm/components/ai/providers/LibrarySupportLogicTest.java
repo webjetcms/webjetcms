@@ -7,10 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -28,6 +30,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
+import org.junit.jupiter.api.AutoClose;
+import org.junit.jupiter.api.function.Executable;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -57,11 +62,15 @@ import com.webjetcms.ai.security.PromptInjectionDefense.UntrustedSource;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.rest.AiChatAttachments;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
+import sk.iway.iwcm.components.ai.tools.AiToolDefinition;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 import sk.iway.iwcm.i18n.Prop;
 
 class LibrarySupportLogicTest {
@@ -452,6 +461,87 @@ class LibrarySupportLogicTest {
         WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
         when(configuration.resolve(any(), any())).thenReturn(AiProviderConfig.empty());
         return new TestLibrarySupportLogic(client, configuration);
+    }
+
+    @Nested
+    class ToolRepairs {
+        final AiClient client = mock(AiClient.class);
+        final TestLibrarySupportLogic logic = chatLogic(client);
+        final AssistantDefinitionEntity assistant = chatAssistant();
+        final InputDataDTO input = textInput();
+        final AssistantDefinitionRepository assistants = mock(AssistantDefinitionRepository.class);
+        @AutoClose final MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
+        @AutoClose final MockedStatic<Adminlog> audit = mockStatic(Adminlog.class);
+        @AutoClose final MockedStatic<AiStatService> stats = mockStatic(AiStatService.class);
+
+        ToolRepairs() {
+            assistant.setId(7L);
+            assistant.setUseTemporal(true);
+            assistant.setInstructions("Page: {inputText}. Request: {userPrompt}");
+            var lookup = new AiToolDefinition("find", "Find", Map.of(), "/records", "GET", Map.of());
+            var evidence = new AiToolProtocol.Result("find", Map.of(), 200, Map.of("id", 1596), false);
+            input.setToolProtocol(new AiToolProtocol(List.of(lookup), List.of(evidence)));
+            tools.when(() -> Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class)).thenReturn(assistants);
+        }
+
+        AiResponse reply(String text, String id) {
+            return new AiResponse(text, List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", id);
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        void streamsOnlyTheAcceptedDecision(boolean temporal) throws Exception {
+            assistant.setUseTemporal(temporal);
+            var requests = ArgumentCaptor.forClass(AiRequest.class);
+            when(client.execute(any(), requests.capture(), any(), same(input.getCancellationToken()))).thenReturn(
+                reply("invalid", "first"), reply("{}", "second"), reply("{\"type\":\"final\",\"text\":\"Found 1596\"}", "accepted"));
+            try (var session = mockStatic(AiChatSession.class)) {
+                session.when(() -> AiChatSession.resolve(null, assistant, null)).thenReturn(new AiChatSession.Continuation("original", Map.of()));
+                var output = new StringWriter();
+                var result = logic.getAiStreamResponse(assistant, input, mock(Prop.class), null, new BufferedWriter(output), null);
+                assertEquals("Found 1596", output.toString());
+                assertEquals(9, result.getTotalTokens());
+                stats.verify(() -> AiStatService.addRecord(7L, 3, null, null), times(3));
+                verify(assistants, times(2)).countWithReachedTokenLimit(eq(7L), anyInt());
+                var sent = requests.getAllValues();
+                for (int i = 0; i < sent.size(); i++) {
+                    var request = sent.get(i);
+                    boolean hasEvidence = temporal || i == 0;
+                    assertEquals(hasEvidence, request.inputText().contains("1596"));
+                    assertEquals(hasEvidence, request.instructions().contains("Text to process"));
+                    assertEquals(hasEvidence, request.instructions().contains("Make it shorter"));
+                    assertEquals(temporal ? null : List.of("original", "first", "second").get(i), request.previousResponseId());
+                    if (!hasEvidence) assertEquals("Correct the previous decision.", request.userPrompt());
+                }
+                if (!temporal) session.verify(() -> AiChatSession.remember(eq(assistant), any(), eq("accepted"), any()));
+            }
+        }
+
+        @ParameterizedTest
+        @CsvSource({"0,3,INVALID_TOOL_STEP", "1,1,TOKEN_LIMIT_REACHED"})
+        void stopsAtAttemptOrTokenLimit(long reached, int attempts, String category) throws Exception {
+            when(assistants.countWithReachedTokenLimit(eq(7L), anyInt())).thenReturn(reached);
+            when(client.execute(any(), any(), any(), same(input.getCancellationToken()))).thenReturn(reply("{}", "invalid"));
+            var result = logic.getAiResponse(assistant, input, mock(Prop.class), null, null);
+            assertEquals(category, result.getErrorCategory());
+            assertEquals(3 * attempts, result.getTotalTokens());
+            stats.verify(() -> AiStatService.addRecord(7L, 3, null, null), times(attempts));
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        void chargesOnlyCompletedCallsOnInterruption(boolean cancelled) throws Exception {
+            when(client.execute(any(), any(), any(), same(input.getCancellationToken()))).thenAnswer(call -> {
+                if (cancelled) input.getCancellationToken().cancel();
+                return reply("{}", "invalid");
+            }).thenThrow(new AiProviderException("test-provider", 503, "Unavailable", null, true));
+            Executable execution = () -> logic.getAiResponse(assistant, input, mock(Prop.class), null, null);
+            if (cancelled) assertThrows(CancellationException.class, execution);
+            else assertEquals(503, assertThrows(ProviderCallException.class, execution).getProviderStatusCode());
+            verify(client, times(cancelled ? 1 : 2)).execute(any(), any(), any(), same(input.getCancellationToken()));
+            stats.verify(() -> AiStatService.addRecord(7L, 3, null, null));
+            stats.verifyNoMoreInteractions();
+        }
     }
 
     /** Preserves editor input with optional source fields, attachments and usage across transports and continuation modes. */

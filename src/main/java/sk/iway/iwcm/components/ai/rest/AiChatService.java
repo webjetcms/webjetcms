@@ -159,7 +159,7 @@ public class AiChatService implements DisposableBean {
         Pair<String, String> inputPair = new Pair<>(input.getInputValue(), input.getUserPrompt());
         TokenUsage usage = TokenUsage.EMPTY;
         AssistantResponseDTO result = new AssistantResponseDTO();
-        int recordedTokens = 0;
+        int tokensSentToStatistics = 0;
         String status = "error";
         String category = "UNKNOWN";
         Integer providerStatus = null;
@@ -198,8 +198,7 @@ public class AiChatService implements DisposableBean {
             }
             input.setInputValue(input.getInputValue() + context);
             AiToolProtocol protocol = input.getToolProtocol();
-            boolean canCorrect = answer.getToolResults().isEmpty();
-            while (true) {
+            for (int attempt = 1; attempt <= AiToolProtocol.MAX_DECISION_ATTEMPTS; attempt++) {
                 if (input.getCancellationToken().isCancelled()) throw new CancellationException();
                 // Each provider response, including a rejected decision, owns a cleanup ID.
                 store.submitted(prepared.scope(), threadId, messageId);
@@ -213,19 +212,21 @@ public class AiChatService implements DisposableBean {
                     break;
                 }
                 protocol.apply(response.text(), result, Prop.getInstance(request));
-                if (!canCorrect || !AiToolProtocol.INVALID_TOOL_STEP.equals(result.getErrorCategory()) || Tools.isEmpty(response.responseId())) break;
+                if (result.getToolCorrection() == null || attempt == AiToolProtocol.MAX_DECISION_ATTEMPTS
+                        || Tools.isEmpty(response.responseId())) break;
 
-                // Ask once for a corrected decision before any write. Charge the first call before checking the limit again.
-                canCorrect = false;
-                recordedTokens = tokenCount(usage);
-                if (recordedTokens > 0) recordUsage(prepared, recordedTokens, request);
+                // Charge only the new usage before deciding whether the assistant can afford another model call.
+                int tokens = tokenCount(usage);
+                int newTokens = tokens - tokensSentToStatistics;
+                tokensSentToStatistics = tokens;
+                boolean recorded = newTokens == 0 || recordUsage(prepared, newTokens, request);
                 if (tokenLimitReached(prepared)) {
                     result = failure("TOKEN_LIMIT_REACHED", null, request);
                     break;
                 }
-                input.setPreviousResponseId(response.responseId());
-                input.setUserPrompt("Return your next step again as a single JSON object matching the tool instructions and input schema. The previous step was rejected before dispatch.");
-                input.setInputValue("");
+                Long limit = prepared.assistant().getTokenLimit();
+                if (!recorded && limit != null && limit > 0) break;
+                input.prepareToolCorrection(result.getToolCorrection(), response.responseId());
                 result = new AssistantResponseDTO();
             }
             // The completed provider response is authoritative; streamed text may contain only a partial answer.
@@ -277,7 +278,7 @@ public class AiChatService implements DisposableBean {
                 // Account for completed calls even if a later attachment or the main generation failed.
                 int tokens = tokenCount(usage);
                 result.setTotalTokens(cumulativeTokens(answer, tokens));
-                if ("complete".equals(status) || tokens > recordedTokens) recordUsage(prepared, tokens - recordedTokens, request);
+                if ("complete".equals(status) || tokens > tokensSentToStatistics) recordUsage(prepared, tokens - tokensSentToStatistics, request);
                 auditResponse(prepared, inputPair, streaming, result, text.toString(), usage);
                 try {
                     // Remote cleanup facts and successful continuation are separate: finish advances only the latter.
@@ -351,13 +352,19 @@ public class AiChatService implements DisposableBean {
         };
     }
 
-    private void recordUsage(Prepared prepared, int tokens, HttpServletRequest request) {
+    private boolean recordUsage(Prepared prepared, int tokens, HttpServletRequest request) {
         try {
             AiStatService.addRecord(prepared.assistant().getId(), tokens, statistics, request, prepared.scope().domainId());
+            return true;
         } catch (RuntimeException exception) {
             String threadId = prepared.turn().thread().getId();
             Logger.error(AiChatService.class, "Chat " + threadId + ": statistics failed", exception);
-            audit(threadId, "statistics_failed", null);
+            try {
+                audit(threadId, "statistics_failed", null);
+            } catch (RuntimeException ignored) {
+                // A database outage can also prevent the audit entry. The server log retains the failure.
+            }
+            return false;
         }
     }
 

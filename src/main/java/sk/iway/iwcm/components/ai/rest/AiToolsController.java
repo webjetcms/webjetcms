@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.ai.rest;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +51,7 @@ public class AiToolsController {
 
     /** Valid calls reach the target MVC handler. Unresolved calls still pass normal admin security. */
     @PostMapping("/{name}/call")
-    public void unresolvedCall(HttpServletRequest request, HttpServletResponse response) {
+    public void unresolvedCall(HttpServletRequest request, HttpServletResponse response) throws IOException {
         AiToolCallFilter.rejectUntranslated(request, response);
     }
 }

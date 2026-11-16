@@ -358,9 +358,9 @@ export class AiChat {
                     message.toolMayHaveSaved = mayHaveSaved;
                     if (this.options.persistent) this.refresh();
                 },
-                onToolActivity: name => {
+                onToolActivity: (name, dispatched = true) => {
                     if (!current()) return;
-                    if (name === null) message.toolCalls = [...message.toolCalls, message.activeTool];
+                    if (name === null && dispatched) message.toolCalls = [...message.toolCalls, message.activeTool];
                     message.activeTool = name;
                     this.refresh();
                 },

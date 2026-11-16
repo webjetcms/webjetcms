@@ -56,6 +56,7 @@ import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
 import sk.iway.iwcm.components.ai.tools.AiAssistantRuntime;
 import sk.iway.iwcm.components.ai.tools.AiToolDefinition;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.i18n.Prop;
 
@@ -128,17 +129,27 @@ class AiChatServiceTest {
         return service.execute(prepared, text -> { }, false, request);
     }
 
-    /** Only a validated correction becomes visible as an active tool for the saved reply. */
-    @Test
-    void correctsMalformedToolDecisionOnce() throws Exception {
+    private void stubToolDecisions(String... decisions) throws Exception {
         assistant.setInstructions("Use @tool(add_record)");
         var tool = new AiToolDefinition("add_record", "Add a record", Map.of("type", "object"), "/records", "POST", Map.of());
         when(toolService.resolve(assistant, scope.domainId(), request)).thenReturn(new AiAssistantRuntime(assistant, "", List.of(tool), true));
-        var usage = new TokenUsage(1, 2, 3, Map.of());
+        var steps = List.of(decisions).listIterator();
+        doAnswer(call -> {
+            int index = steps.nextIndex();
+            InputDataDTO input = call.getArgument(1);
+            if (index > 0) assertEquals("id-" + index, input.getPreviousResponseId());
+            if (input.getToolCorrection() != null) assertEquals("Correct the previous decision.", input.getUserPrompt());
+            String id = "id-" + (index + 1);
+            call.<AiLifecycleListener>getArgument(5).onResponseId(id);
+            return new AiResponse(steps.next(), List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", id);
+        }).when(provider).getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any());
+    }
+
+    /** Only a validated correction becomes visible as an active tool for the saved reply. */
+    @Test
+    void correctsMalformedToolDecisionOnce() throws Exception {
         String correction = "```json\n{\"type\":\"call\",\"name\":\"add_record\",\"arguments\":{}}\n```";
-        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenReturn(
-            new AiResponse("Invalid decision", List.of(), usage, "completed", "first"),
-            new AiResponse(correction, List.of(), usage, "completed", "second"));
+        stubToolDecisions("Invalid decision", correction, "Malformed summary", "{\"type\":\"final\",\"text\":\"Saved 1596\"}");
 
         var prepared = prepare(null, null);
         var response = execute(prepared);
@@ -147,6 +158,36 @@ class AiChatServiceTest {
         assertEquals("add_record", service.detail(prepared.turn().thread().getId(), scope).messages().get(1).activeTool());
         verify(assistants, times(2)).incrementUsedTokens(12L, 7, 3L);
         verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any());
+        var saved = service.detail(response.getThreadId(), scope).messages().get(1);
+        assertEquals("pending", saved.status());
+        assertEquals("", saved.text());
+        var result = new AiToolProtocol.Result("add_record", Map.of(), 200, Map.of("id", 1596), false);
+        var next = new AiChatRequest(response.getThreadId(), 12L, saved.requestId(), response.getRevision(), "Question",
+            null, null, null, false, List.of(result));
+        assertEquals("Saved 1596", execute(service.prepare(next, scope)).getResponse());
+        verify(provider, times(2)).getPersistentChatResponse(any(), argThat(input -> input.getToolProtocol().results().equals(List.of(result))),
+            any(), anyBoolean(), same(config), any());
+        assertEquals(List.of("add_record"), service.detail(response.getThreadId(), scope).messages().get(1).toolCalls());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"3,INVALID_TOOL_STEP", "2,TOKEN_LIMIT_REACHED", "1,INVALID_TOOL_STEP"})
+    void chargesRejectedDecisionsUntilAttemptOrQuotaLimit(int attempts, String category) throws Exception {
+        stubToolDecisions("invalid", "invalid", "invalid");
+        assistant.setTokenLimit(100L);
+        if (attempts == 2) when(assistants.countWithReachedTokenLimit(12L, 7)).thenReturn(0L, 0L, 1L);
+        if (attempts == 1) when(assistants.incrementUsedTokens(12L, 7, 3L)).thenThrow(new IllegalStateException("Counter unavailable"));
+        var result = execute(prepare(null, null));
+        assertEquals(category, result.getErrorCategory());
+        assertEquals(attempts * 3, result.getTotalTokens());
+        verify(assistants, times(attempts)).incrementUsedTokens(12L, 7, 3L);
+        verify(statistics, times(attempts)).save(any());
+        var saved = store.get(result.getThreadId(), scope);
+        var answer = saved.messages().get(1);
+        assertEquals(List.of("id-1", "id-2").subList(0, attempts - 1), answer.getEarlierProviderResponseIds());
+        assertEquals("id-" + attempts, answer.getProviderResponseId());
+        assertNull(answer.getPendingToolCall());
+        assertNull(saved.thread().getLastResponseId());
     }
 
     /** Checks current domain usage at execution time before any text or image provider call, then releases the turn. */
@@ -312,14 +353,19 @@ class AiChatServiceTest {
     }
 
     /** Audit storage errors cannot turn a completed answer into a failure or prevent saving its history. */
-    @Test
-    void auditFailurePreservesAnswerAndStatistics() {
-        audit.when(() -> Adminlog.add(eq(Adminlog.TYPE_AI), anyString(), eq(3), eq(-1)))
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void auditFailurePreservesCompletedAnswer(boolean statisticsUnavailable) {
+        audit.when(() -> Adminlog.add(eq(Adminlog.TYPE_AI), anyString(), anyInt(), eq(-1)))
             .thenThrow(new IllegalStateException("Audit unavailable"));
+        if (statisticsUnavailable) when(statistics.save(any(AiStatEntity.class))).thenThrow(new IllegalStateException("Statistics unavailable"));
         var prepared = prepare(null, null);
 
         assertEquals("Answer", execute(prepared).getResponse());
-        assertEquals("complete", store.get(prepared.turn().thread().getId(), scope).messages().get(1).getStatus());
+        var saved = store.get(prepared.turn().thread().getId(), scope);
+        assertEquals("complete", saved.messages().get(1).getStatus());
+        assertNull(saved.thread().getActiveMessageId());
+        assertNull(saved.thread().getLeaseUntil());
         verify(statistics).save(any(AiStatEntity.class));
     }
 

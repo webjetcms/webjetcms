@@ -68,8 +68,8 @@ public record AiAssistantRuntime(AssistantDefinitionEntity assistant, String ski
         Function<String, String> toolLabel = name -> visible.containsKey(name) ? name : "[tool unavailable]";
         Function<String, String> groupLabel = group -> groupLabels.getOrDefault(group, "[no available tools in this group]");
         var guidance = new StringBuilder();
+        if (!skills.isEmpty()) guidance.append("Use the skills that apply to the user's request.");
         for (var skill : skills) {
-            if (guidance.isEmpty()) guidance.append("The following skills are optional. Use the relevant guidance and tools only when they help with the user's request.");
             guidance.append("\n\nSkill: ").append(skill.getName()).append("\n")
                     .append(skillTemplates.get(skill.getName()).render(toolLabel, groupLabel, null));
         }

@@ -139,7 +139,8 @@ public class AiToolService {
             }
             target = new AiToolRequest(request, entry, entry.inputs().bind(arguments));
         } catch (IllegalArgumentException invalidArguments) {
-            AiToolCallFilter.invalid(request, entry, authorization);
+            String correction = invalidArguments instanceof AiToolArgumentValidator.InvalidArguments ? invalidArguments.getMessage() : null;
+            AiToolCallFilter.invalid(request, entry, authorization, correction);
             reject(request, response, chain);
             return;
         }

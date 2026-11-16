@@ -23,6 +23,7 @@ public class AiToolInterceptor implements HandlerInterceptor {
                 && expected.method().name().equals(request.getMethod())
                 && expected.path().equals(request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))
                 && expected.mapping().getMatchingCondition(request) != null && authorization.isAllowed(expected, request, AiToolAuthorization.Access.INVOKE)) {
+            response.setHeader(AiToolCallFilter.TOOL_RESPONSE_HEADER, expected.definition().responseType());
             return true;
         }
         response.setStatus(HttpServletResponse.SC_NOT_FOUND);

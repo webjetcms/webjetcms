@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.webjetcms.ai.AiErrorCategory;
 
@@ -22,6 +23,9 @@ public class AssistantResponseDTO {
     private String response;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AiToolProtocol.Call toolCall;
+    /** Feedback for the next provider attempt after WebJET rejects a tool decision. */
+    @JsonIgnore
+    private String toolCorrection;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private boolean noToolAction;
     private String error;

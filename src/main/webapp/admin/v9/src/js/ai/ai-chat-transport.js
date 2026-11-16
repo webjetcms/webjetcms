@@ -14,7 +14,7 @@ export class AiChatTransport {
      * @param {object} inputData Current prompt, optional context and previous conversation ID.
      * @param {object} callbacks Callbacks for updates, translated statuses, download progress and confirmation.
      * @param {function(string): void} [callbacks.onUpdate] Receives the accumulated raw response.
-     * @param {function(string|null): void} [callbacks.onToolActivity] Receives the tool name at dispatch and null when the call settles.
+     * @param {function(string|null, boolean=): void} [callbacks.onToolActivity] Receives the tool name on submission, then null. A false second argument marks a rejection before dispatch.
      * @param {function(string): void} [callbacks.onStatus] Receives a translated status message.
      * @param {function(number|string): void} [callbacks.onDownload] Receives browser model download progress.
      * @param {function(string, string): Promise<boolean>} [callbacks.onConfirm] Requests browser activation or download approval.

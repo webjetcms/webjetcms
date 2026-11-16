@@ -43,6 +43,67 @@ test('browser tools report saved IDs for writes but not for reads', async () => 
     assert.equal(result.response, 'Saved.');
 });
 
+const toolAssistant = { assistantId: 7, tools: [{ name: 'find', write: false }, { name: 'save', write: true }] };
+const toolCall = (name, args = {}) => JSON.stringify({ type: 'call', name, arguments: args });
+const done = '{"type":"final","text":"Done"}';
+
+test('browser repairs share a decision budget and never replay a dispatched write', async () => {
+    for (const exhausted of [false, true]) {
+        const rejected = new Response('arguments.id is required.', { status: 400, headers: { 'X-WebJET-AI-Tool-Response': 'invalid-arguments' } });
+        const responses = [rejected, exhausted ? rejected.clone() : Response.json({ error: 'Record is locked' }, { status: 400 })];
+        const { runBrowserTools } = loadTransport(() => responses.shift());
+        const steps = [[/^\{\}$/, toolCall('save')], [/arguments\.id is required/, 'bad JSON'],
+            [/one JSON object/, exhausted ? toolCall('save') : toolCall('save', { id: 42 })]];
+        if (!exhausted) steps.push([/Record is locked/, toolCall('unknown')], [/assigned functions/, '{"type":"final","text":""}'], [/nonempty text/, done]);
+        const statuses = [], dispatched = [];
+        const task = runBrowserTools(toolAssistant, {}, message => {
+            const [expected, decision] = steps.shift();
+            assert.match(message, expected);
+            return decision;
+        }, undefined, (...status) => statuses.push(status), (name, ran) => { if (!name) dispatched.push(ran); });
+        if (exhausted) await assert.rejects(task, /invalidStep/);
+        else assert.equal((await task).toolStatus, 'save — HTTP 400 · components.ai.tools.unverified.js');
+        assert.equal(steps.length, 0);
+        assert.deepEqual(dispatched, exhausted ? [false, false] : [false, true]);
+        assert.deepEqual(statuses[1], ['', false]);
+    }
+});
+
+test('three malformed decisions after a successful write make the error non-retryable', async t => {
+    const fetch = t.mock.fn(() => Response.json({ id: 42 }));
+    const steps = [toolCall('save'), ...Array(3).fill(toolCall('save', []))];
+    const task = loadTransport(fetch).runBrowserTools(toolAssistant, {}, () => steps.shift());
+    await assert.rejects(task, { message: /invalidStep/, retryable: false });
+    assert.equal(steps.length, 0);
+    assert.equal(fetch.mock.callCount(), 1);
+});
+
+test('prompt errors and cancellation stop before dispatch', async () => {
+    const { runBrowserTools } = loadTransport(() => assert.fail('Unexpected dispatch'));
+    const stop = new AbortController();
+    const error = new Error('Session lost');
+    await assert.rejects(runBrowserTools(toolAssistant, {}, () => { throw error; }), error);
+    await assert.rejects(runBrowserTools(toolAssistant, {}, () => { stop.abort(error); return 'invalid'; }, stop.signal), error);
+});
+
+test('browser tools distinguish declared empty results from unreadable JSON', async () => {
+    for (const [type, body, expected] of [['empty', null, null], ['empty', '', null], ['text', null, ''], ['text', '', ''],
+        ['json', null, /empty/i], ['json', '', /empty/i], ['json', 'bad JSON', /.+/]]) {
+        const { runBrowserTools } = loadTransport(() => new Response(body, { headers: {
+            'Content-Type': 'application/json', 'X-WebJET-AI-Tool-Response': type } }));
+        const result = await runBrowserTools(toolAssistant, {}, message => {
+            if (!message.startsWith('Endpoint result')) return toolCall(type === 'json' ? 'find' : 'save');
+            const observation = JSON.parse(message.split('\n')[1]);
+            assert.equal(observation.status, 200);
+            assert.equal(observation.uncertain, false);
+            if (type === 'json') assert.match(observation.result.error, expected);
+            else assert.equal(observation.result, expected);
+            return done;
+        });
+        if (type !== 'json') assert.equal(result.toolStatus, 'save — HTTP 200');
+    }
+});
+
 function delta(text) {
     return JSON.stringify({ type: 'delta', text }) + '\n';
 }

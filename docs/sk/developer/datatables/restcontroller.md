@@ -219,6 +219,8 @@ Argumenty ďalších nástrojov zostavte podľa ich `inputSchema`. Nástroj `qui
 
 Pre operáciu s `@RequestBody` vložte údaje do vlastnosti `body`. Telo editora tak môže obsahovať rovnaké polia `action` a `data` ako pri priamom volaní `/editor`. Limit jedného JSON volania je 1 MiB. Pri väčšej požiadavke API vráti HTTP 413.
 
+Pri volaní cez `/call` uvádza hlavička odpovede `X-WebJET-AI-Tool-Response` typ výstupu nástroja. Pri type `empty` môže úspešná odpoveď HTTP 200 prísť bez tela, pri type `text` môže obsahovať prázdny reťazec. Ak argumenty asistenta porušia vstupnú schému, WebJET vráti HTTP 400 s hodnotou hlavičky `invalid-arguments` a v tele uvedie dôvod odmietnutia. K tejto kontrole dochádza pred spustením cieľovej metódy.
+
 Ak projekt chráni cieľovú URL vlastným servletovým filtrom, jeho URL vzor musí pokrývať aj volanie príslušného nástroja. Spoločným vzorom môže byť napríklad `/admin/rest/*`. Ak by pri preklade požiadavky kontajner vynechal filter cieľovej URL alebo vybral iný servlet, WebJET volanie odmietne.
 
 ## Filtrovanie podľa domény
