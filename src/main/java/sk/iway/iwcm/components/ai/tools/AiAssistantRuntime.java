@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.BeanUtils;
 
 import sk.iway.iwcm.components.ai.jpa.AiSkillEntity;
@@ -21,9 +22,9 @@ import sk.iway.iwcm.components.ai.providers.local.translate.LocalTranslateProvid
 public record AiAssistantRuntime(AssistantDefinitionEntity assistant, String skillInstructions,
         List<AiToolDefinition> tools, boolean hasWriteTool) {
 
-    /** Extracts distinct numeric skill IDs for save validation and runtime lookup. */
-    public static Set<Long> referencedSkillIds(String instructions) {
-        return AiInstructionTemplate.parse(instructions).skillIds();
+    /** Extracts distinct skill names for save validation and runtime lookup. */
+    public static Set<String> referencedSkillNames(String instructions) {
+        return AiInstructionTemplate.parse(instructions).skillNames();
     }
 
     static AiAssistantRuntime compose(AiSkillRepository repository, AssistantDefinitionEntity assistant,
@@ -32,14 +33,15 @@ public record AiAssistantRuntime(AssistantDefinitionEntity assistant, String ski
         var own = AiInstructionTemplate.parse(assistant.getInstructions());
         if (!own.hasReferences()) return new AiAssistantRuntime(assistant, "", List.of(), false);
 
-        var skillIds = own.skillIds();
-        List<AiSkillEntity> skills = skillIds.isEmpty() ? List.of() : repository.findByDomainIdAndIdInOrderByIdAsc(domainId, skillIds);
-        var skillTemplates = new HashMap<Long, AiInstructionTemplate>();
+        var skillNames = own.skillNames();
+        List<AiSkillEntity> skills = skillNames.isEmpty() ? List.of() : repository.findByDomainIdAndNameInOrderByNameAsc(domainId, skillNames)
+                .stream().filter(skill -> skillNames.contains(skill.getName())).toList();
+        var skillTemplates = new HashMap<String, AiInstructionTemplate>();
         var names = new LinkedHashSet<>(own.toolNames());
         var groups = new LinkedHashSet<>(own.groupNames());
         for (var skill : skills) {
             var template = AiInstructionTemplate.parse(skill.getInstructions());
-            skillTemplates.put(skill.getId(), template);
+            skillTemplates.put(skill.getName(), template);
             names.addAll(template.toolNames());
             groups.addAll(template.groupNames());
         }
@@ -68,14 +70,18 @@ public record AiAssistantRuntime(AssistantDefinitionEntity assistant, String ski
         var guidance = new StringBuilder();
         for (var skill : skills) {
             if (guidance.isEmpty()) guidance.append("The following skills are optional. Use the relevant guidance and tools only when they help with the user's request.");
-            guidance.append("\n\nSkill #").append(skill.getId()).append(" — ").append(skill.getName()).append("\n")
-                    .append(skillTemplates.get(skill.getId()).render(toolLabel, groupLabel, null));
+            guidance.append("\n\nSkill: ").append(skill.getName()).append("\n")
+                    .append(skillTemplates.get(skill.getName()).render(toolLabel, groupLabel, null));
         }
-        String instructions = own.render(toolLabel, groupLabel, id -> skillTemplates.containsKey(id) ? "skill #" + id : "[skill unavailable]");
+        boolean browser = "browser".equals(assistant.getProvider());
+        String instructions = own.render(toolLabel, groupLabel, name -> {
+            if (!skillTemplates.containsKey(name)) return "[skill unavailable]";
+            return "skill " + (browser ? StringEscapeUtils.escapeJson(name) : name);
+        });
         var effective = new AssistantDefinitionEntity();
         BeanUtils.copyProperties(assistant, effective);
         String skillInstructions = guidance.toString();
-        if (!"browser".equals(assistant.getProvider()) && !skillInstructions.isEmpty()) instructions += "\n\n" + skillInstructions;
+        if (!browser && !skillInstructions.isEmpty()) instructions += "\n\n" + skillInstructions;
         effective.setInstructions(instructions);
         return new AiAssistantRuntime(effective, skillInstructions, List.copyOf(visible.values()), hasWrite);
     }

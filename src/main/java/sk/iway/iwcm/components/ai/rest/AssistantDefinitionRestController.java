@@ -30,6 +30,7 @@ import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.components.ai.tools.AiAssistantRuntime;
+import sk.iway.iwcm.components.ai.tools.AiSkillLink;
 import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -136,7 +137,9 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
         page.addOptions("groupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
         page.addOptions("toolNames", toolService.assignmentTools(getRequest(), getProp()), "description", "name", true);
-        page.addOptions("skillIds", skillRepository.findOptionsByDomainIdOrderByNameAscIdAsc(getDomainId()), "name", "id", false);
+        for (String name : skillRepository.listNames(getDomainId())) {
+            page.addOption("skillNames", name, AiSkillLink.token(name), null);
+        }
         page.addOptions("editorFields.statusIcons", aiAssistantsService.getStatusIconOptions(getProp()), "label", "value", false);
 
         //Every assistant should set their specific selects
@@ -151,8 +154,8 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public AssistantDefinitionEntity processToEntity(AssistantDefinitionEntity entity, ProcessItemAction action) {
-        var skillIds = AiAssistantRuntime.referencedSkillIds(entity.getInstructions());
-        if (!skillIds.isEmpty() && skillRepository.countByDomainIdAndIdIn(getDomainId(), skillIds) != skillIds.size()) {
+        var names = AiAssistantRuntime.referencedSkillNames(entity.getInstructions());
+        if (!names.isEmpty() && !skillRepository.findLinkedNames(getDomainId(), names).containsAll(names)) {
             throwError("components.ai_assistants.skills.unavailable");
         }
         entity.setDomainId(getDomainId());

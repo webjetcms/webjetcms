@@ -12,23 +12,31 @@ class AiInstructionTemplateTest {
 
     @Test
     void rendersRepeatedReferencesInPlaceAndLeavesSkillLinksLiteralInSkillBodies() {
-        var template = AiInstructionTemplate.parse("@skill(04) @tool(x.$-1) @group(g) @tool(x.$-1) @skill(4)");
+        var template = AiInstructionTemplate.parse("@skill(Výber kvízu) @tool(x.$-1) @group(g) @tool(x.$-1) @skill(Výber kvízu)");
 
-        assertEquals(List.of(4L), List.copyOf(template.skillIds()));
+        assertEquals(List.of("Výber kvízu"), List.copyOf(template.skillNames()));
         assertEquals(List.of("x.$-1"), List.copyOf(template.toolNames()));
         assertEquals(List.of("g"), List.copyOf(template.groupNames()));
-        assertEquals("#4 x.$-1 [$1] x.$-1 #4",
-                template.render(name -> name, group -> "[$1]", id -> "#" + id));
-        assertEquals("@skill(04) hidden [] hidden @skill(4)",
+        assertEquals("#Výber kvízu x.$-1 [$1] x.$-1 #Výber kvízu",
+                template.render(name -> name, group -> "[$1]", name -> "#" + name));
+        assertEquals("@skill(Výber kvízu) hidden [] hidden @skill(Výber kvízu)",
                 template.render(name -> "hidden", group -> "[]", null));
     }
 
     @Test
-    void preservesUnrecognizedReferencesAndTreatsOverflowAsAnUnavailableId() {
-        String malformed = "mail@example.com @tool() @group(two words) @skill(-1) @skill(no)";
+    void preservesMalformedLinksAndResolvesNumericSkillNamesLiterally() {
+        String malformed = "mail@example.com @tool() @group(two words) @skill()";
         assertFalse(AiInstructionTemplate.parse(malformed).hasReferences());
-        var template = AiInstructionTemplate.parse(malformed + " @skill(9223372036854775808)");
-        assertEquals(List.of(-1L), List.copyOf(template.skillIds()));
-        assertEquals(malformed + " [-1]", template.render(name -> name, group -> group, id -> "[" + id + "]"));
+        var template = AiInstructionTemplate.parse(malformed + " @skill(0042) @skill(42)");
+        assertEquals(List.of("0042", "42"), List.copyOf(template.skillNames()));
+    }
+
+    @Test
+    void readsSkillNamesWithSpecialCharactersInsideBrowserJson() throws Exception {
+        String name = "Kvíz (SK) \"50%\" \\ $1";
+        String token = AiSkillLink.token(name);
+        String json = "{\"context\":\"" + token + " / @skill(Other) @group(quiz) @tool(read) " + token + "\"}";
+        new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
+        assertEquals(List.of(name, "Other"), List.copyOf(AiInstructionTemplate.parse(json).skillNames()));
     }
 }

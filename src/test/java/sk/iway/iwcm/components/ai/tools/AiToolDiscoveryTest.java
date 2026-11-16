@@ -210,20 +210,20 @@ class AiToolDiscoveryTest {
     void editorChecksSkillExistenceOnceWithoutLoadingItsInstructions() {
         assistant.setAction("generate_text");
         assistant.setProvider("browser");
-        assistant.setInstructions("Writer: @skill(04) @skill(4) @group(quiz)");
+        assistant.setInstructions("Writer: @skill(Quiz) @skill(Quiz) @group(quiz)");
         var skills = context.getBean(AiSkillRepository.class);
         int domain = CloudToolsForCore.getDomainId();
-        when(skills.existsByDomainIdAndIdIn(domain, Set.of(4L))).thenReturn(true, false);
+        when(skills.findLinkedNames(domain, Set.of("Quiz"))).thenReturn(List.of("Quiz"), List.of());
 
         var service = context.getBean(AiToolService.class);
         var request = adminRequest();
         assertTrue(service.hasInstructionContext(assistant, request));
         assertTrue(service.hasInstructionContext(assistant, request));
-        verify(skills).existsByDomainIdAndIdIn(domain, Set.of(4L));
+        verify(skills).findLinkedNames(domain, Set.of("Quiz"));
         assertFalse(service.hasInstructionContext(assistant, adminRequest()));
-        assistant.setInstructions("Translator: @skill(4)");
+        assistant.setInstructions("Translator: @skill(Quiz)");
         assertFalse(service.hasInstructionContext(assistant, adminRequest()));
-        verify(skills, times(2)).existsByDomainIdAndIdIn(domain, Set.of(4L));
+        verify(skills, times(2)).findLinkedNames(domain, Set.of("Quiz"));
         verifyNoMoreInteractions(skills);
     }
 
@@ -244,22 +244,22 @@ class AiToolDiscoveryTest {
 
     @Test
     void linkedSkillsAndGroupsShareOneToolListAndFollowSkillEdits() throws Exception {
-        assistant.setInstructions("Use @skill(04) or @skill(4), then @skill(8) or @skill(9). @tool(quiz_get_all) @group(quiz)");
+        assistant.setInstructions("Use @skill(First) or @skill(First), then @skill(Second) or @skill(Missing). @tool(quiz_get_all) @group(quiz)");
         var first = skill(4L, "First", "@tool(quiz_get_all) @group(quiz)");
         var second = skill(8L, "Second", "@tool(quiz_get_all) @tool(ai_tools_details) @tool(audit_probe_batch)");
         int domain = CloudToolsForCore.getDomainId();
-        var ids = Set.of(4L, 8L, 9L);
+        var linkedNames = Set.of("First", "Second", "Missing");
         var skills = context.getBean(AiSkillRepository.class);
-        when(skills.findByDomainIdAndIdInOrderByIdAsc(domain, ids)).thenReturn(List.of(first, second));
+        when(skills.findByDomainIdAndNameInOrderByNameAsc(domain, linkedNames)).thenReturn(List.of(first, second));
         var service = context.getBean(AiToolService.class);
         var request = adminRequest();
 
         var runtime = service.resolve(assistant, domain, request);
         assertSame(runtime, service.resolve(assistant, domain, request));
-        verify(skills).findByDomainIdAndIdInOrderByIdAsc(domain, ids);
-        assertTrue(runtime.assistant().getInstructions().startsWith("Use skill #4 or skill #4, then skill #8 or [skill unavailable]."));
-        assertEquals(1, runtime.skillInstructions().lines().filter("Skill #4 — First"::equals).count());
-        assertEquals(1, runtime.skillInstructions().lines().filter("Skill #8 — Second"::equals).count());
+        verify(skills).findByDomainIdAndNameInOrderByNameAsc(domain, linkedNames);
+        assertTrue(runtime.assistant().getInstructions().startsWith("Use skill First or skill First, then skill Second or [skill unavailable]."));
+        assertEquals(1, runtime.skillInstructions().lines().filter("Skill: First"::equals).count());
+        assertEquals(1, runtime.skillInstructions().lines().filter("Skill: Second"::equals).count());
         var names = runtime.tools().stream().map(AiToolDefinition::name).toList();
         assertEquals(names.stream().sorted().toList(), names);
         assertEquals(names.size(), Set.copyOf(names).size());
@@ -271,7 +271,7 @@ class AiToolDiscoveryTest {
         second.setInstructions("Updated guidance with @tool(ai_tools_preview)");
         call("ai_tools_preview", "{}", 200);
         call("ai_tools_details", "{\"names\":[]}", 404);
-        when(skills.findByDomainIdAndIdInOrderByIdAsc(domain, ids)).thenReturn(List.of(first));
+        when(skills.findByDomainIdAndNameInOrderByNameAsc(domain, linkedNames)).thenReturn(List.of(first));
         call("ai_tools_preview", "{}", 404);
         var otherDomain = service.resolve(assistant, domain + 1, request);
         assertEquals("", otherDomain.skillInstructions());
@@ -284,23 +284,23 @@ class AiToolDiscoveryTest {
     void browserWriterLoadsSkillGuidanceWithoutEnablingToolsAndTranslatorSkipsSkills() {
         assistant.setAction("generate_text");
         assistant.setProvider("browser");
-        assistant.setInstructions("Writer: {\"sharedContext\":\"@skill(4)\"}");
+        assistant.setInstructions("Writer: {\"sharedContext\":\"@skill(Quiz)\"}");
         var skills = context.getBean(AiSkillRepository.class);
-        var ids = Set.of(4L);
-        when(skills.findByDomainIdAndIdInOrderByIdAsc(1, ids))
+        var linkedNames = Set.of("Quiz");
+        when(skills.findByDomainIdAndNameInOrderByNameAsc(1, linkedNames))
                 .thenReturn(List.of(skill(4L, "Quiz", "Use @tool(quiz_get_all) or @group(quiz).")));
         var service = context.getBean(AiToolService.class);
         var writer = service.resolve(assistant, 1, new MockHttpServletRequest());
         assertTrue(writer.skillInstructions().contains("Use [tool unavailable] or [no available tools in this group]."));
-        assertEquals("Writer: {\"sharedContext\":\"skill #4\"}", writer.assistant().getInstructions());
+        assertEquals("Writer: {\"sharedContext\":\"skill Quiz\"}", writer.assistant().getInstructions());
         assertTrue(writer.tools().isEmpty());
         assertFalse(writer.hasWriteTool());
 
-        assistant.setInstructions("Translator: {\"sharedContext\":\"@skill(4)\"}");
+        assistant.setInstructions("Translator: {\"sharedContext\":\"@skill(Quiz)\"}");
         var translator = service.resolve(assistant, 1, new MockHttpServletRequest());
         assertEquals("", translator.skillInstructions());
         assertTrue(translator.tools().isEmpty());
-        verify(skills).findByDomainIdAndIdInOrderByIdAsc(1, ids);
+        verify(skills).findByDomainIdAndNameInOrderByNameAsc(1, linkedNames);
     }
 
     private static AiSkillEntity skill(long id, String name, String instructions) {

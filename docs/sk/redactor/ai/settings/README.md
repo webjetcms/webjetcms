@@ -16,6 +16,8 @@ Pomocou filtra v tomto stĺpci môžete vyhľadať napríklad asistentov so stav
 
 V nastaveniach **Zručnosti** otvorte kartu **Inštrukcie** a kliknite na **Odkazy na nástroje**. Vyhľadajte nástroj a kliknutím na jeho názov vložte odkaz na miesto kurzora, napríklad `@tool(quiz_get_all)`. Tlačidlo **Vložiť skupinu** vloží odkaz na celú skupinu, napríklad `@group(quiz)`.
 
+Pri vytváraní zručnosti zadajte názov, ktorý sa v tejto doméne ešte nepoužíva. Ak zručnosť premenujete, upravte jej názov aj v odkazoch v inštrukciách asistentov.
+
 Pri každom spustení asistent načíta aktuálne inštrukcie odkazovanej zručnosti aj nástroje, na ktoré odkazuje. Keď zručnosť upravíte, zmena sa prejaví pri ďalšom spustení všetkých asistentov, ktorí ju používajú.
 
 !>**Upozornenie:** Nastavenia by mala vykonávať iba osoba, ktorá má dostatočné znalosti o fungovaní AI asistentov a rozumie možnostiam jednotlivých poskytovateľov. Nesprávne nastavenie môže viesť k neoptimálnemu správaniu asistenta alebo k obmedzeniu jeho funkčnosti. Odporúčame, aby konfiguráciu vykonával administrátor alebo technicky zdatný používateľ, ktorý vie správne zadať inštrukcie a parametre pre konkrétneho AI poskytovateľa.
@@ -101,7 +103,7 @@ Na mieste, kam chcete vložiť odkaz, nechajte kurzor a kliknite na **Odkazy na 
 
 - Kliknutím na názov nástroja vložíte napríklad `@tool(quiz_get_all)`.
 - Tlačidlom **Vložiť skupinu** vložíte napríklad `@group(quiz)`. Asistent pri spustení sprístupní nástroje, ktoré do skupiny práve patria a na ktoré má používateľ oprávnenie.
-- Kliknutím na zručnosť vložíte odkaz podľa jej ID, napríklad `@skill(42)`. Asistent tak môže použiť jej inštrukcie aj nástroje.
+- Kliknutím na zručnosť vložíte odkaz podľa jej názvu, napríklad `@skill(Správa kvízov)`. Asistent tak môže použiť jej inštrukcie aj nástroje.
 
 Ak používate poskytovateľa **Prehliadač**, vložte odkaz do textu inštrukcie vnútri JSON reťazca. Ak chcete nástroj alebo zručnosť odobrať, vymažte odkazy, ktoré ich priraďujú, a kliknite na **Uložiť**. Tlačidlom **Zrušiť** ponecháte pôvodné priradenia.
 

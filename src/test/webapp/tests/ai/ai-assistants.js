@@ -101,7 +101,7 @@ Scenario('ai_assistants editor logic', async ({I, DTE}) => {
 Scenario('Instruction links assign and remove assistant tools and skills', async ({I, DT, DTE}) => {
     const suffix = "links-autotest-" + I.getRandomText();
     const name = "assistant-" + suffix;
-    const skillName = "skill-" + suffix;
+    const skillName = "Kvíz " + suffix;
     const skillTable = "aiSkillsDataTable";
     const field = "#DTE_Field_instructions";
     const tab = "#pills-dt-datatableInit-instructions-tab";
@@ -116,6 +116,16 @@ Scenario('Instruction links assign and remove assistant tools and skills', async
     I.clickCss("#pills-dt-aiSkillsDataTable-instructions-tab");
     I.fillField(field, "Skill guidance for the assistant. @tool(ai_tools_details) @tool(quiz_get_all)");
     DTE.save(skillTable, true);
+
+    DT.clickAddButton(skillTable);
+    DTE.waitForEditor(skillTable);
+    DTE.fillField("name", skillName);
+    I.clickCss("#pills-dt-aiSkillsDataTable-instructions-tab");
+    I.fillField(field, "Duplicate skill.");
+    DTE.save(skillTable);
+    I.clickCss("#pills-dt-aiSkillsDataTable-basic-tab");
+    I.waitForText("Zručnosť s týmto názvom už v doméne existuje.", 10, "#" + skillTable + "_modal");
+    DTE.cancel(skillTable);
 
     createLocalAssistant(I, DT, DTE, name, "Prehliadač", plain);
     DT.filterEquals("name", name);
@@ -148,7 +158,7 @@ Scenario('Instruction links assign and remove assistant tools and skills', async
         I.fillField(drawer + " input", skillName);
         I.click(locate(drawer + " button").withText(skillName));
         const linked = await I.grabValueFrom(field);
-        I.assertContain(linked, "@tool(ai_tools_preview)@group(quiz)@skill(");
+        I.assertContain(linked, "@tool(ai_tools_preview)@group(quiz)@skill(" + skillName + ")");
         DTE.save();
 
         openInstructions();

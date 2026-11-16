@@ -3,18 +3,19 @@ package sk.iway.iwcm.components.ai.jpa;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.Query;
+
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
 public interface AiSkillRepository extends DomainIdRepository<AiSkillEntity, Long> {
 
-    /** Skill picker metadata for the assistant editor. */
-    record Option(Long id, String name) {}
+    @Query("select s.name from AiSkillEntity s where s.domainId = ?1 order by s.name")
+    List<String> listNames(int domainId);
 
-    List<Option> findOptionsByDomainIdOrderByNameAscIdAsc(int domainId);
+    @Query("select s.name from AiSkillEntity s where s.domainId = ?1 and s.name in ?2")
+    List<String> findLinkedNames(int domainId, Collection<String> names);
 
-    List<AiSkillEntity> findByDomainIdAndIdInOrderByIdAsc(int domainId, Collection<Long> ids);
+    List<AiSkillEntity> findByDomainIdAndNameInOrderByNameAsc(int domainId, Collection<String> names);
 
-    boolean existsByDomainIdAndIdIn(int domainId, Collection<Long> ids);
-
-    long countByDomainIdAndIdIn(int domainId, Collection<Long> ids);
+    boolean existsByDomainIdAndNameIgnoreCase(int domainId, String name);
 }

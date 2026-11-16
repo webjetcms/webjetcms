@@ -52,7 +52,7 @@ function initAiInstructionsField() {
 
     const table = this.TABLE;
     function render() {
-        const skills = table.DATA.jsonOptions?.skillIds || [];
+        const skills = table.DATA.jsonOptions?.skillNames || [];
         const groups = new Map();
         for (const {original: tool} of table.DATA.jsonOptions?.toolNames || []) {
             if (!groups.has(tool.group)) groups.set(tool.group, []);
@@ -60,13 +60,13 @@ function initAiInstructionsField() {
         }
         const query = normalize(search.value.trim());
         results.replaceChildren();
-        const matchingSkills = skills.filter(skill => normalize(skill.label).includes(query) || String(skill.value) === query);
+        const matchingSkills = skills.filter(skill => normalize(skill.label).includes(query));
         if (matchingSkills.length) {
             const heading = document.createElement("strong");
             heading.textContent = view.dataset.skills;
             results.append(heading);
             for (const skill of matchingSkills) {
-                results.append(insertButton(skill.label + " (#" + skill.value + ")", "@skill(" + skill.value + ")"));
+                results.append(insertButton(skill.label, skill.value));
             }
         }
         let toolsHeading;

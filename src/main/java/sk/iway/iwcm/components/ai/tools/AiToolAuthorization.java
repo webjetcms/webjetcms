@@ -107,7 +107,8 @@ public class AiToolAuthorization {
     private boolean findInstructionContext(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
         if (!AiAssistantRuntime.canHaveReferences(assistant)) return false;
         var template = AiInstructionTemplate.parse(assistant.getInstructions());
-        if (!template.skillIds().isEmpty() && skills.existsByDomainIdAndIdIn(domainId, template.skillIds())) return true;
+        var names = template.skillNames();
+        if (!names.isEmpty() && skills.findLinkedNames(domainId, names).stream().anyMatch(names::contains)) return true;
         return AiAssistantRuntime.acceptsTools(assistant) && registry.assignedEntries(template.toolNames(), template.groupNames()).stream()
                 .anyMatch(entry -> mayList(entry, request, Access.CATALOG));
     }
