@@ -2536,9 +2536,16 @@ public class EditorDB
 			return getDataAsc(data, ef, isLucene, originalBean.getRequest());
 		}
 
-		MockHttpServletRequest request = new MockHttpServletRequest(null, "/LuceneFulltextSearch");
+		String virtualPath = "/LuceneFulltextSearch";
+		if (ef != null && Tools.isNotEmpty(ef.getVirtualPath())) virtualPath = ef.getVirtualPath();
+		MockHttpServletRequest request = new MockHttpServletRequest("", virtualPath);
 		request.setSession(new MockHttpSession(null));
 		request.setServerName("");
+		if (ef != null && ef.getGroupId() > 0)
+		{
+			GroupDetails group = GroupsDB.getInstance().getGroup(ef.getGroupId());
+			if (group != null && Tools.isNotEmpty(group.getDomainName())) request.setServerName(group.getDomainName());
+		}
 		try
 		{
 			if (originalBean == null) SetCharacterEncodingFilter.registerDataContext(request);

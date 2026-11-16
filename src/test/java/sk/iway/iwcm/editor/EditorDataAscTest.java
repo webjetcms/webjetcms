@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -35,6 +36,8 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 
 class EditorDataAscTest {
 
@@ -81,6 +84,51 @@ class EditorDataAscTest {
             assertSame(bean, SetCharacterEncodingFilter.getCurrentRequestBean());
             assertEquals("example.com", bean.getDomain());
             assertEquals(42, bean.getUserId());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "/products/detail.html,example.com,true,/products/detail.html,example.com",
+        "'',example.com,true,/LuceneFulltextSearch,example.com",
+        "NULL,example.com,true,/LuceneFulltextSearch,example.com",
+        "'   ',NULL,true,/LuceneFulltextSearch,''",
+        "/products/,NULL,false,/products/,''"
+    }, nullValues = "NULL")
+    void mockUsesPagePathAndGroupDomainWithFallbacks(String virtualPath, String domain, boolean groupExists,
+            String expectedPath, String expectedDomain) {
+        EditorForm form = new EditorForm();
+        form.setVirtualPath(virtualPath);
+        form.setGroupId(7);
+        GroupDetails group = new GroupDetails();
+        group.setDomainName(domain);
+        GroupsDB groups = mock(GroupsDB.class);
+        if (groupExists) when(groups.getGroup(7)).thenReturn(group);
+
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<GroupsDB> groupInstances = mockStatic(GroupsDB.class);
+                MockedStatic<DocDB> documents = mockStatic(DocDB.class);
+                MockedStatic<EditorToolsForCore> editor = mockStatic(EditorToolsForCore.class)) {
+            constants.when(() -> Constants.getString(anyString())).thenReturn("");
+            constants.when(Constants::getServletContext).thenReturn(new MockServletContext());
+            groupInstances.when(GroupsDB::getInstance).thenReturn(groups);
+            documents.when(() -> DocDB.getDomain(any(HttpServletRequest.class)))
+                    .thenAnswer(invocation -> ((HttpServletRequest) invocation.getArgument(0)).getServerName());
+            editor.when(() -> EditorToolsForCore.getDataAsc(eq("source"), eq(form), eq(true), any()))
+                    .thenAnswer(invocation -> {
+                        HttpServletRequest request = invocation.getArgument(3);
+                        assertEquals(expectedPath, request.getRequestURI());
+                        assertEquals(expectedDomain, request.getServerName());
+                        assertNotNull(request.getSession());
+                        RequestBean bean = SetCharacterEncodingFilter.getCurrentRequestBean();
+                        assertEquals(expectedPath, bean.getUrl());
+                        assertEquals(expectedDomain, bean.getDomain());
+                        return "prepared";
+                    });
+
+            assertEquals("prepared", EditorDB.getDataAsc("source", form, true));
+            verify(groups).getGroup(7);
+            assertNull(SetCharacterEncodingFilter.getCurrentRequestBean());
         }
     }
 
