@@ -101,11 +101,12 @@ Scenario('ai_assistants editor logic', async ({I, DTE}) => {
 Scenario('Instruction links assign and remove assistant tools and skills', async ({I, DT, DTE}) => {
     const suffix = "links-autotest-" + I.getRandomText();
     const name = "assistant-" + suffix;
-    const skillName = "Kvíz " + suffix;
+    const skillName = "Kvíz (SK) " + suffix;
     const skillTable = "aiSkillsDataTable";
     const field = "#DTE_Field_instructions";
     const tab = "#pills-dt-datatableInit-instructions-tab";
     const drawer = "#datatableInit_modal .reference-drawer";
+    const groupField = drawer + " #DTE_Field_toolGroup";
     const plain = 'LanguageModel: {"initialPrompts":[{"role":"system","content":"Use these references: "}]}';
 
     I.amOnPage("/admin/v9/settings/ai-skills/");
@@ -127,6 +128,7 @@ Scenario('Instruction links assign and remove assistant tools and skills', async
     I.waitForText("Zručnosť s týmto názvom už v doméne existuje.", 10, "#" + skillTable + "_modal");
     DTE.cancel(skillTable);
 
+    const skillLink = "@skill(Kvíz %28SK%29 " + suffix + ")";
     createLocalAssistant(I, DT, DTE, name, "Prehliadač", plain);
     DT.filterEquals("name", name);
     const assistant = locate("#datatableInit tbody a").withText(name);
@@ -150,18 +152,33 @@ Scenario('Instruction links assign and remove assistant tools and skills', async
             const end = textarea.value.lastIndexOf('"');
             textarea.setSelectionRange(end, end);
         });
-        I.clickCss("#datatableInit_modal .reference-toggle");
-        I.fillField(drawer + " input", "ai_tools_preview");
-        I.click(locate(drawer + " button").withText("ai_tools_preview"));
-        I.fillField(drawer + " input", "quiz_get_all");
-        I.click(locate(drawer + " button").withText("Vložiť skupinu"));
-        I.fillField(drawer + " input", skillName);
-        I.click(locate(drawer + " button").withText(skillName));
+        I.seeElement(drawer);
+        I.dontSee(skillName, drawer);
+        I.clickCss(drawer + ' button[data-method="GET"]');
+        I.click(locate(drawer + " .reference-name").withText("ai_tools_preview"));
+        I.fillField(groupField, "dotazni");
+        I.click(locate("ul.dt-autocomplete-select li").withText("Dotazníky (Quiz)"));
+        I.see("quiz_get_all", drawer + " .reference-results");
+        I.dontSee("quiz_add", drawer + " .reference-results");
+        I.clickCss(drawer + " .reference-insert-group");
+        I.clickCss("#reference-tab-skills");
+        const search = drawer + ' input[type="search"]';
+        I.fillField(search, "no-match-" + suffix);
+        I.see("Žiadne zodpovedajúce odkazy.", "#reference-skills");
+        I.fillField(search, "kviz (sk) " + suffix);
+        I.see("Skill guidance for the assistant.", "#reference-skills");
+        I.click(locate(drawer + " .reference-skill").withText(skillName));
         const linked = await I.grabValueFrom(field);
-        I.assertContain(linked, "@tool(ai_tools_preview)@group(quiz)@skill(" + skillName + ")");
+        I.assertContain(linked, "@tool(ai_tools_preview)@group(quiz)" + skillLink);
+        I.clickCss("#reference-tab-tools");
+        I.seeInField(groupField, "Dotazníky (Quiz)");
+        I.seeElement(drawer + ' button[data-method="GET"][aria-pressed="true"]');
+        I.clickCss("#reference-tab-skills");
+        I.seeInField(search, "kviz (sk) " + suffix);
         DTE.save();
 
         openInstructions();
+        I.seeElement("#reference-tab-tools[aria-selected=true]");
         I.seeInField(field, linked);
         const resolved = await runtime();
         I.assertContain(resolved.skillInstructions, "Skill guidance for the assistant.");
@@ -210,7 +227,8 @@ Scenario('AI instructions textarea preserves shared gutter and keyboard behavior
     DT.waitForLoader();
     const textarea = "#datatableInit_modal #DTE_Field_instructions";
     const gutter = "#datatableInit_modal .DTE_Field_Name_instructions .md-textarea-editor__lines";
-    const source = "autotest instructions\nSecond instruction";
+    const highlights = "#datatableInit_modal .md-textarea-editor__highlights";
+    const source = "@tool(quiz_get_all) @group(quiz)\n@skill(Kvíz %28SK%29) <b>text</b> @tool(incomplete";
     let initialValue;
 
     for (let opening = 0; opening < 2; opening++) {
@@ -225,6 +243,10 @@ Scenario('AI instructions textarea preserves shared gutter and keyboard behavior
             else I.assertEqual(value, initialValue, "Cancelling must discard instruction changes");
 
             I.fillField(textarea, source);
+            I.assertDeepEqual(await I.grabTextFromAll(highlights + " [data-reference]"), [
+                "@tool(quiz_get_all)", "@group(quiz)", "@skill(Kvíz %28SK%29)"
+            ]);
+            I.dontSeeElementInDOM(highlights + " b");
             I.assertEqual(await I.grabTextFrom(gutter), "1\n2", "Typing must update logical line numbers");
             I.pressKey("End");
             I.pressKey("Tab");

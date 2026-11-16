@@ -1,17 +1,50 @@
-- const referenceTitle = assistantReferences ? "#{components.ai_assistants.references.title}" : "#{components.ai_assistants.skills.references}"
-- const referenceHeading = assistantReferences ? "#{components.ai_assistants.references.available}" : "#{components.ai_assistants.tools.title}"
-- const referenceSearch = assistantReferences ? "#{components.ai_assistants.references.search}" : "#{components.ai_assistants.tools.search}"
+- const referenceTitle = includeSkills ? "#{components.ai_assistants.references.title}" : "#{components.ai_assistants.skills.references}"
 template#skill-reference-template
-    .skill-references(th:data-skills=assistantReferences ? "#{components.ai_assistants.skills.title}" : false th:data-tools="#{components.ai_assistants.tools.title}" th:data-empty=assistantReferences ? "#{components.ai_assistants.references.empty}" : "#{components.ai_assistants.skills.reference_empty}" th:data-no-matches="#{components.ai_assistants.references.no_matches}" th:data-read="#{components.ai_assistants.skills.reference_read}" th:data-write="#{components.ai_assistants.skills.reference_write}")
+    .skill-references(th:data-no-matches="#{components.ai_assistants.references.no_matches}")
         .d-flex.justify-content-end.mb-2
-            button.btn.btn-sm.btn-outline-secondary.reference-toggle(type="button" aria-expanded="false" aria-controls="skill-reference-drawer")
-                i.ti.ti-layout-sidebar-right.me-1(aria-hidden="true")
-                span(th:text=referenceTitle)
+            button.btn.btn-sm.btn-outline-secondary.reference-toggle(type="button" th:title=referenceTitle th:aria-label=referenceTitle data-bs-animation="false" aria-expanded="false" aria-controls="skill-reference-drawer")
+                i.ti.ti-layout-sidebar-right(aria-hidden="true")
         .reference-layout
             aside#skill-reference-drawer.reference-drawer.border.rounded.p-2(hidden aria-labelledby="skill-reference-heading")
-                strong#skill-reference-heading.d-block.mb-1(th:text=referenceHeading)
-                input.form-control.form-control-sm(type="search" aria-labelledby="skill-reference-heading" autocomplete="off" th:placeholder=referenceSearch)
-                .reference-results.mt-2
+                .d-flex.flex-wrap.align-items-center.justify-content-between.column-gap-2.mb-1
+                    strong#skill-reference-heading
+                        i.ti.ti-link.me-1.text-primary(aria-hidden="true")
+                        span(th:text=includeSkills ? "#{components.ai_assistants.references.heading}" : referenceTitle)
+                    button.reference-insert-group.btn.btn-sm.btn-link(type="button" disabled)
+                        i.ti.ti-playlist-add.me-1(aria-hidden="true")
+                        span(th:text="#{components.ai_assistants.skills.insert_group.js}")
+                if includeSkills
+                    .nav.nav-underline.mb-2(role="tablist" aria-labelledby="skill-reference-heading")
+                        each tab in [{id: "tools", icon: "ti-tool", label: "#{components.ai_assistants.tools.title}"}, {id: "skills", icon: "ti-book", label: "#{components.ai_assistants.skills.title}"}]
+                            button.nav-link.px-1.py-1(type="button" role="tab" id="reference-tab-" + tab.id class=tab.id === "tools" ? "active" : "" data-bs-toggle="tab" data-bs-target="#reference-" + tab.id aria-controls="reference-" + tab.id aria-selected=tab.id === "tools" ? "true" : "false")
+                                i.ti.me-1(class=tab.icon aria-hidden="true")
+                                span(th:text=tab.label)
+                #reference-tools.reference-pane.active(role=includeSkills ? "tabpanel" : false aria-labelledby=includeSkills ? "reference-tab-tools" : false th:data-empty="#{components.ai_assistants.skills.reference_empty}")
+                    .reference-filters
+                        .reference-methods.mt-2(role="group" th:aria-label="#{components.ai_assistants.tools.http_method}")
+                            button.btn.btn-sm(type="button" data-method="" aria-pressed="true" th:text="#{datatables.defaults.length_menu.js}")
+                            each verb in ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE"]
+                                button.btn.btn-sm(type="button" data-method=verb aria-pressed="false" hidden)= verb
+                    template
+                        button.reference-item.reference-tool.btn.btn-sm.text-start(type="button")
+                            span
+                                span.reference-description.fw-bold
+                                small.reference-name.font-monospace
+                            span.reference-method.badge
+                            i.ti.ti-plus(aria-hidden="true")
+                            small.reference-path.font-monospace
+                    .reference-results.mt-2
+                if includeSkills
+                    #reference-skills.reference-pane(role="tabpanel" aria-labelledby="reference-tab-skills" th:data-empty="#{components.ai_assistants.skills.none_available}")
+                        input.form-control.form-control-sm(type="search" autocomplete="off" th:aria-label="#{components.ai_assistants.skills.search}" th:placeholder="#{components.ai_assistants.skills.search}")
+                        template
+                            button.reference-item.reference-skill.btn.btn-sm.text-start(type="button")
+                                i.ti.ti-book(aria-hidden="true")
+                                span
+                                    strong.reference-name
+                                    small.reference-excerpt
+                                i.ti.ti-plus(aria-hidden="true")
+                        .reference-results.mt-2
         span.visually-hidden(role="status")
 
 style.
@@ -24,18 +57,49 @@ style.
     }
     .modal-fullscreen .modal-body:has(.tab-pane.active .DTE_Field_Name_instructions) { container-type: size; }
     .skill-references { margin-inline: .5rem; }
+    .skill-references [data-reference="tool"] { background: var(--bs-primary-bg-subtle); }
+    .skill-references [data-reference="group"] { background: var(--bs-success-bg-subtle); }
+    .skill-references [data-reference="skill"] { background: var(--wj-ai-color-hover); }
     .reference-layout { display: flex; align-items: stretch; gap: .5rem; }
     .reference-layout > :is(.md-textarea-editor, .input-group) { flex: 1 1 0; }
     .reference-drawer { flex: 0 0 min(36%, 24rem); min-width: 0; overflow: auto; max-height: min(502px, 70dvh); }
-    .reference-drawer summary, .reference-drawer button { overflow-wrap: anywhere; }
-    .reference-drawer summary { cursor: pointer; }
+    .reference-drawer button { overflow-wrap: anywhere; }
+    .reference-drawer:not([hidden]) { display: flex; flex-direction: column; }
+    .reference-drawer .nav-underline { --bs-nav-link-color: var(--wj-gray-text); --bs-nav-underline-link-active-color: var(--wj-primary); }
+    .reference-pane { display: none; min-height: 0; }
+    .reference-pane.active { display: flex; flex-direction: column; }
+    .reference-drawer:has(#reference-skills.active) .reference-insert-group { display: none; }
+    .reference-drawer .reference-results { overflow-y: auto; min-height: 0; }
+    #skill-reference-drawer .DTE_Field_Name_toolGroup { width: 100%; margin: 0; padding: 0; }
+    .reference-filters .DTE_Field_Name_toolGroup > [data-dte-e="input"] { width: 100%; padding: 0; }
+    .reference-insert-group { padding-inline: .25rem; }
+    .reference-methods { display: flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: var(--wj-border-radius); background: var(--wj-nice-gray); }
+    .reference-methods .btn { flex: 1 1 auto; padding: .15rem .4rem; font-weight: bold; color: var(--method-color, var(--wj-secondary)); }
+    .reference-methods .btn[aria-pressed="true"] { background: var(--method-bg, var(--bs-body-bg)); box-shadow: 0 0 0 1px var(--method-color, var(--wj-nice-gray-300)); }
+    .reference-drawer [data-method="GET"] { --method-color: #14613c; --method-bg: #e1f4e9; }
+    .reference-drawer [data-method="POST"] { --method-color: var(--bs-primary-text-emphasis); --method-bg: var(--bs-primary-bg-subtle); }
+    .reference-drawer [data-method="PUT"] { --method-color: var(--bs-warning-text-emphasis); --method-bg: var(--bs-warning-bg-subtle); }
+    .reference-drawer [data-method="PATCH"] { --method-color: var(--wj-ai-color-dark); --method-bg: var(--wj-ai-color-hover); }
+    .reference-drawer [data-method="DELETE"] { --method-color: var(--bs-danger-text-emphasis); --method-bg: var(--bs-danger-bg-subtle); }
+    .reference-item.btn { display: grid; align-items: center; column-gap: .5rem; width: 100%; padding: .4rem .25rem; border: 0; border-top: 1px solid var(--wj-nice-gray-100); border-radius: 0; }
+    .reference-tool.btn { grid-template-columns: minmax(0, 1fr) auto auto; }
+    .reference-skill.btn { grid-template-columns: auto minmax(0, 1fr) auto; }
+    .reference-skill .ti-book { color: var(--wj-ai-color-dark); background: var(--wj-ai-color-hover); border-radius: var(--wj-border-radius); padding: .3rem; }
+    .reference-item :is(.reference-description, .reference-excerpt) { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .reference-item:hover, .reference-item:focus-visible { background: var(--wj-nice-gray); }
+    .reference-item:focus-visible { outline-offset: -2px; }
+    .reference-item small { color: var(--wj-gray-text); }
+    .reference-tool small { display: block; }
+    .reference-tool .reference-path { grid-column: 1 / -1; }
+    .reference-method { min-width: 3rem; font: bold .75rem/1 var(--bs-font-monospace); color: var(--method-color, var(--wj-secondary)); background: var(--method-bg, var(--wj-nice-gray)); }
+    .reference-item .ti-plus { color: var(--wj-primary); }
     .modal-fullscreen .skill-references .md-textarea-editor,
     .modal-fullscreen .skill-references .reference-drawer { height: calc(100cqh - 4.5rem); max-height: none; }
     @media (max-width: 575px) {
         .reference-layout { flex-direction: column; }
-        .reference-layout > .md-textarea-editor, .reference-drawer { flex: auto; }
-        .reference-layout > .reference-drawer { max-height: 13rem; }
-        .reference-layout:has(> .reference-drawer:not([hidden])) > .md-textarea-editor { height: min(16rem, 38dvh); }
+        .reference-layout > :is(.md-textarea-editor, .input-group, .reference-drawer) { flex: auto; }
+        .reference-layout > .reference-drawer { max-height: min(22rem, 55dvh); }
+        .reference-layout:has(> .reference-drawer:not([hidden])) .md-textarea-editor { height: min(16rem, 38dvh); }
     }
 
 script

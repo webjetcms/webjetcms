@@ -1,11 +1,14 @@
 Feature("ai.ai-skills");
 
-Scenario("Save and reopen skill tool links", ({ I, login, DT, DTE }) => {
+Scenario("Save and reopen skill tool links", async ({ I, login, DT, DTE }) => {
     login("admin");
     const table = "aiSkillsDataTable";
     const name = "skill-links-autotest-" + I.getRandomText();
     const instructionsTab = "#pills-dt-aiSkillsDataTable-instructions-tab";
     const drawer = "#aiSkillsDataTable_modal .reference-drawer";
+    const groupField = drawer + ' #DTE_Field_toolGroup[data-ac-url="/admin/rest/settings/ai-skills/autocomplete-tool-group"]';
+    const suggestions = "ul.dt-autocomplete-select";
+    const toggle = "#aiSkillsDataTable_modal .reference-toggle";
 
     I.amOnPage("/admin/v9/settings/ai-skills/");
     DT.waitForLoader();
@@ -14,10 +17,49 @@ Scenario("Save and reopen skill tool links", ({ I, login, DT, DTE }) => {
     I.dontSeeElement("#pills-dt-aiSkillsDataTable-tools-tab");
     DTE.fillField("name", name);
     I.clickCss(instructionsTab);
-    I.clickCss("#aiSkillsDataTable_modal .reference-toggle");
-    I.fillField(drawer + " input", "ai_tools_preview");
-    I.click(locate(drawer + " button").withText("ai_tools_preview"));
-    I.seeInField("#DTE_Field_instructions", "@tool(ai_tools_preview)");
+    I.dontSeeElement(drawer + ' [role="tablist"]');
+    I.assertEqual(await I.grabValueFrom(groupField), "");
+    I.seeElement(drawer + " .reference-tool");
+    I.seeElement(toggle + '[aria-expanded="true"]');
+    I.clickCss(groupField);
+    I.waitForVisible(suggestions);
+    I.see("Katalóg nástrojov", suggestions);
+    I.dontSee("Všetky skupiny", suggestions);
+    I.fillField(groupField, "dotazni");
+    I.waitForInvisible(locate(suggestions + " li").withText("Katalóg nástrojov"));
+    I.see("Dotazníky (Quiz)", suggestions);
+    I.pressKey("ArrowDown");
+    I.pressKey("Enter");
+    I.seeInField(groupField, "Dotazníky (Quiz)");
+    I.clickCss(drawer + ' button[data-method="POST"]');
+    I.see("quiz_add", drawer + " .reference-results");
+    I.dontSee("quiz_get_all", drawer + " .reference-results");
+    I.clickCss(drawer + ' button[data-method="GET"]');
+    I.click(locate(drawer + " .reference-name").withText("quiz_get_all"));
+    I.clickCss(drawer + " .reference-insert-group");
+    I.seeInField("#DTE_Field_instructions", "@tool(quiz_get_all)@group(quiz)");
+    I.clickCss(groupField);
+    I.waitForVisible(suggestions);
+    I.click(locate(suggestions + " li").withText("Katalóg nástrojov"));
+    I.dontSee("quiz_get_all", drawer + " .reference-results");
+    I.click(locate(drawer + " .reference-name").withText("ai_tools_preview"));
+    I.seeInField("#DTE_Field_instructions", "@tool(quiz_get_all)@group(quiz)@tool(ai_tools_preview)");
+    I.fillField(groupField, "unfinished group");
+    I.pressKey("Tab");
+    I.seeInField(groupField, "unfinished group");
+    I.seeElement(drawer + " .reference-insert-group:disabled");
+    I.fillField(groupField, "");
+    I.pressKey("Tab");
+    I.assertEqual(await I.grabValueFrom(groupField), "");
+    I.see("quiz_get_all", drawer + " .reference-results");
+    I.seeElement(drawer + ' button[data-method="GET"][aria-pressed="true"]');
+    const toggleTooltip = locate('[role="tooltip"]').withText("Odkazy na nástroje");
+    I.moveCursorTo(toggle);
+    I.waitForVisible(toggleTooltip);
+    I.clickCss(toggle);
+    I.waitForInvisible(toggleTooltip);
+    I.dontSeeElement(drawer);
+    I.seeElement(toggle + '[aria-expanded="false"]');
     DTE.save(table, true);
 
     DT.filterEquals("name", name);
@@ -26,7 +68,14 @@ Scenario("Save and reopen skill tool links", ({ I, login, DT, DTE }) => {
     I.click(skill);
     DTE.waitForEditor(table);
     I.clickCss(instructionsTab);
-    I.seeInField("#DTE_Field_instructions", "@tool(ai_tools_preview)");
+    I.assertEqual(await I.grabValueFrom(groupField), "");
+    I.seeElement(drawer + " .reference-tool");
+    I.see("quiz_add", drawer + " .reference-results");
+    I.clickCss(toggle);
+    I.dontSeeElement(drawer);
+    I.clickCss(toggle);
+    I.seeElement(drawer);
+    I.seeInField("#DTE_Field_instructions", "@tool(quiz_get_all)@group(quiz)@tool(ai_tools_preview)");
     I.fillField("#DTE_Field_instructions", "Instructions without tool links.");
     DTE.save(table, true);
     I.amOnPage("/admin/v9/settings/ai-skills/");

@@ -4,17 +4,17 @@ function initAiInstructionsField() {
     const wrapper = textarea?.closest(".md-textarea-editor");
     if (!wrapper) return;
     const existing = wrapper.closest(".skill-references");
-    const view = existing || document.querySelector("#skill-reference-template").content.firstElementChild.cloneNode(true);
-    const drawer = view.querySelector("aside");
-    const toggle = view.querySelector(".reference-toggle");
-    const search = view.querySelector("input");
-    toggle.hidden = this.ids().length > 1;
     if (existing) {
-        toggle.setAttribute("aria-expanded", "false");
-        drawer.hidden = true;
-        search.value = "";
+        existing.resetReferenceDrawer();
         return;
     }
+
+    const view = document.querySelector("#skill-reference-template").content.firstElementChild.cloneNode(true);
+    const drawer = view.querySelector("aside");
+    const toggle = view.querySelector(".reference-toggle");
+    const groupButton = drawer.querySelector(".reference-insert-group");
+    const groupField = this.field("toolGroup");
+    const groupInput = groupField.input()[0];
 
     function insertText(text) {
         textarea.setRangeText(text, textarea.selectionStart, textarea.selectionEnd, "end");
@@ -29,91 +29,176 @@ function initAiInstructionsField() {
         insertText("\t");
     });
 
-    const results = view.querySelector(".reference-results");
-    const translate = (key, ...args) => WJ.translate("components.ai_assistants." + key + ".js", ...args);
     const normalize = value => value.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase();
-    const isWrite = tool => !["GET", "HEAD", "OPTIONS"].includes(tool.httpMethod);
     const writingArea = wrapper.closest(".input-group") || wrapper;
     writingArea.before(view);
     view.querySelector(".reference-layout").prepend(writingArea);
+    WJ.initTooltip($(toggle));
 
-    function insertButton(label, token) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "btn btn-sm btn-link text-start d-block mw-100";
-        button.textContent = label;
-        button.onclick = () => {
-            textarea.focus();
-            insertText(token);
-            view.querySelector('[role="status"]').textContent = translate("skills.reference_inserted", token);
-        };
-        return button;
+    function insertReference(token) {
+        textarea.focus();
+        insertText(token);
+        view.querySelector('[role="status"]').textContent = WJ.translate("components.ai_assistants.skills.reference_inserted.js", token);
     }
 
     const table = this.TABLE;
-    function render() {
-        const skills = table.DATA.jsonOptions?.skillNames || [];
-        const groups = new Map();
-        for (const {original: tool} of table.DATA.jsonOptions?.toolNames || []) {
-            if (!groups.has(tool.group)) groups.set(tool.group, []);
-            groups.get(tool.group).push(tool);
+    const toolsPane = drawer.querySelector("#reference-tools");
+    const toolsTab = drawer.querySelector("#reference-tab-tools");
+    const skillsPane = drawer.querySelector("#reference-skills");
+    const highlights = document.createElement("div");
+    highlights.className = "md-textarea-editor__highlights";
+    highlights.setAttribute("aria-hidden", "true");
+    textarea.before(highlights);
+
+    function syncHighlightScroll() {
+        highlights.scrollTop = textarea.scrollTop;
+        highlights.scrollLeft = textarea.scrollLeft;
+    }
+
+    function highlightReferences() {
+        const text = textarea.value;
+        const fragment = document.createDocumentFragment();
+        let end = 0;
+        // Match AiInstructionTemplate.LINK. Skill bodies only expand tool and group references.
+        for (const match of text.matchAll(/@(tool|group)\([A-Za-z0-9_.$-]+\)|@(skill)\([^()\r\n]+\)/g)) {
+            if (match[2] && !skillsPane) continue;
+            fragment.append(text.slice(end, match.index));
+            const span = document.createElement("span");
+            span.dataset.reference = match[1] || match[2];
+            span.textContent = match[0];
+            fragment.append(span);
+            end = match.index + match[0].length;
         }
-        const query = normalize(search.value.trim());
+        fragment.append(text.slice(end));
+        highlights.replaceChildren(fragment);
+        syncHighlightScroll();
+    }
+
+    $(textarea).on("input change", highlightReferences);
+    textarea.addEventListener("scroll", syncHighlightScroll);
+
+    const skillSearch = skillsPane?.querySelector("input");
+    const filters = drawer.querySelector(".reference-methods");
+    groupField.node().querySelector("label").classList.add("visually-hidden");
+    let tools = [];
+    let selectedGroupKey;
+    let method = "";
+
+    function renderReferences(pane, matches, total, fillButton) {
+        const results = pane.querySelector(".reference-results");
+        const row = pane.querySelector("template").content.firstElementChild;
         results.replaceChildren();
-        const matchingSkills = skills.filter(skill => normalize(skill.label).includes(query));
-        if (matchingSkills.length) {
-            const heading = document.createElement("strong");
-            heading.textContent = view.dataset.skills;
-            results.append(heading);
-            for (const skill of matchingSkills) {
-                results.append(insertButton(skill.label, skill.value));
-            }
+        for (const entry of matches) {
+            const button = row.cloneNode(true);
+            fillButton(button, entry);
+            results.append(button);
         }
-        let toolsHeading;
-        for (const [key, tools] of groups) {
-            const label = tools[0].groupLabel;
-            const matchesGroup = normalize(label + " " + key).includes(query);
-            const matches = tools.filter(tool => matchesGroup ||
-                normalize([tool.name, tool.groupLabel, tool.httpMethod, tool.path, tool.description].join(" ")).includes(query));
-            if (!matches.length) continue;
-            if (view.dataset.skills && !toolsHeading) {
-                toolsHeading = document.createElement("strong");
-                toolsHeading.textContent = view.dataset.tools;
-                results.append(toolsHeading);
-            }
-            const details = document.createElement("details");
-            details.className = "border-top py-2";
-            details.open = Boolean(query) || groups.size === 1;
-            const summary = document.createElement("summary");
-            const writes = tools.filter(isWrite).length;
-            summary.textContent = label + " · " + translate("tools.group_details", tools.length, writes);
-            details.append(summary, insertButton(translate("skills.insert_group"), "@group(" + key + ")"));
-            for (const tool of matches) {
-                const button = insertButton(tool.name, "@tool(" + tool.name + ")");
-                const path = document.createElement("small");
-                path.className = "d-block text-muted";
-                path.textContent = (isWrite(tool) ? view.dataset.write : view.dataset.read) + " · " + tool.httpMethod + " " + tool.path;
-                button.append(path);
-                details.append(button);
-            }
-            results.append(details);
+        if (!matches.length) results.textContent = total ? view.dataset.noMatches : pane.dataset.empty;
+        results.scrollTop = 0;
+    }
+
+    function renderTools() {
+        const groupTools = selectedGroupKey ? tools.filter(tool => tool.group === selectedGroupKey) : tools;
+        const methods = new Set(groupTools.map(tool => tool.httpMethod));
+        if (!methods.has(method)) method = "";
+        for (const button of filters.children) {
+            const verb = button.dataset.method;
+            button.hidden = verb !== "" && !methods.has(verb);
+            button.setAttribute("aria-pressed", String(verb === method));
         }
-        if (!results.childElementCount) results.textContent = groups.size || skills.length ? view.dataset.noMatches : view.dataset.empty;
+
+        // Unmatched or ambiguous text keeps the method choices available until the group is resolved.
+        const matches = selectedGroupKey === null ? [] : groupTools.filter(tool => !method || tool.httpMethod === method);
+        renderReferences(toolsPane, matches, tools.length, (button, tool) => {
+            button.onclick = () => insertReference("@tool(" + tool.name + ")");
+            button.querySelector(".reference-description").textContent = tool.description;
+            button.querySelector(".reference-name").textContent = tool.name;
+            button.querySelector(".reference-path").textContent = tool.path;
+            const badge = button.querySelector(".reference-method");
+            badge.dataset.method = tool.httpMethod;
+            badge.textContent = tool.httpMethod;
+            button.title = tool.description;
+        });
+    }
+
+    if (skillsPane) {
+        function renderSkills() {
+            const skills = table.DATA.jsonOptions?.skillNames || [];
+            const query = normalize(skillSearch.value.trim());
+            const matches = skills.filter(skill => normalize(skill.label + " " + (skill.original || "")).includes(query));
+            renderReferences(skillsPane, matches, skills.length, (button, skill) => {
+                button.onclick = () => insertReference(skill.value);
+                button.querySelector(".reference-name").textContent = skill.label;
+                button.querySelector(".reference-excerpt").textContent = skill.original;
+            });
+        }
+        drawer.querySelector("#reference-tab-skills").addEventListener("shown.bs.tab", renderSkills);
+        skillSearch.oninput = renderSkills;
+    }
+
+    function selectGroup(key) {
+        selectedGroupKey = key;
+        groupButton.disabled = !key;
+        renderTools();
+    }
+
+    $(groupInput).on("autocompleteselect", (event, {item}) => selectGroup(item.key));
+    groupInput.oninput = () => {
+        const value = normalize(groupInput.value.trim());
+        if (!value) {
+            selectGroup("");
+            return;
+        }
+        const keys = new Set(tools.filter(tool => normalize(tool.groupLabel) === value).map(tool => tool.group));
+        selectGroup(keys.size === 1 ? keys.values().next().value : null);
+    };
+    filters.onclick = event => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        method = button.dataset.method;
+        renderTools();
+    };
+    groupButton.onclick = () => insertReference("@group(" + selectedGroupKey + ")");
+
+    function setDrawerOpen(open) {
+        drawer.hidden = !open;
+        toggle.setAttribute("aria-expanded", String(open));
     }
 
     toggle.onclick = () => {
-        drawer.hidden = !drawer.hidden;
-        toggle.setAttribute("aria-expanded", String(!drawer.hidden));
-        if (!drawer.hidden) { render(); search.focus(); }
+        // Clear both the visible tooltip and any delayed hover or focus trigger.
+        const $toggle = $(toggle);
+        $toggle.tooltip("dispose").removeAttr("aria-describedby");
+        WJ.initTooltip($toggle);
+        setDrawerOpen(drawer.hidden);
     };
-    search.oninput = render;
-    search.onkeydown = event => {
-        if (event.key === "Enter") event.preventDefault();
+    drawer.onkeydown = event => {
+        if (event.target === groupInput) return;
+        if (event.target === skillSearch && event.key === "Enter") event.preventDefault();
         if (event.key === "Escape") {
-            event.preventDefault();
             event.stopPropagation();
-            toggle.click();
+            if (event.defaultPrevented) return;
+            event.preventDefault();
             toggle.focus();
+            toggle.click();
         }
     };
+    view.resetReferenceDrawer = () => {
+        highlightReferences();
+        drawer.querySelector(".reference-filters").prepend(groupField.node());
+        toggle.hidden = this.ids().length > 1;
+        if (!toggle.hidden) {
+            if (toolsTab) {
+                skillSearch.value = "";
+                bootstrap.Tab.getOrCreateInstance(toolsTab).show();
+            }
+            tools = (table.DATA.jsonOptions?.toolNames || []).map(option => option.original);
+            groupInput.value = "";
+            groupInput.disabled = !tools.length;
+            method = "";
+            selectGroup("");
+        }
+        setDrawerOpen(!toggle.hidden);
+    };
+    view.resetReferenceDrawer();
 }

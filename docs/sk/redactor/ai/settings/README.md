@@ -14,7 +14,9 @@ Pomocou filtra v tomto stĺpci môžete vyhľadať napríklad asistentov so stav
 
 ## Zručnosti
 
-V nastaveniach **Zručnosti** otvorte kartu **Inštrukcie** a kliknite na **Odkazy na nástroje**. Vyhľadajte nástroj a kliknutím na jeho názov vložte odkaz na miesto kurzora, napríklad `@tool(quiz_get_all)`. Tlačidlo **Vložiť skupinu** vloží odkaz na celú skupinu, napríklad `@group(quiz)`.
+Pri vytváraní alebo úprave zručnosti sa na karte **Inštrukcie** automaticky zobrazí panel **Odkazy na nástroje**. Kliknutím na ikonu bočného panela <i class="ti ti-layout-sidebar-right" aria-hidden="true"></i> vpravo nad inštrukciami ho môžete skryť a znova otvoriť. Kliknite do poľa **Vyhľadať skupinu** a vyberte skupinu zo zoznamu. Ak začnete písať jej názov, ponuka sa zúži na zodpovedajúce skupiny. Nástroje vybranej skupiny môžete filtrovať podľa HTTP metódy, napríklad na nástroje `GET` v skupine **Dotazníky (Quiz)**. Vymazaním názvu skupiny zobrazíte nástroje zvolenej metódy zo všetkých skupín.
+
+Kliknutím na riadok vložíte na miesto kurzora odkaz na nástroj, napríklad `@tool(quiz_get_all)`. Tlačidlo **Vložiť skupinu** v hlavičke panela vloží odkaz na všetky nástroje vybranej skupiny, napríklad `@group(quiz)`, aj keď máte zapnutý filter metódy.
 
 Pri vytváraní zručnosti zadajte názov, ktorý sa v tejto doméne ešte nepoužíva. Ak zručnosť premenujete, upravte jej názov aj v odkazoch v inštrukciách asistentov.
 
@@ -99,11 +101,14 @@ Táto karta slúži na výber poskytovateľa AI služieb, ktorý bude použitý 
 
 Napíšte, čo má asistent vykonať. Príklady nájdete v časti [Písanie inštrukcií](../instructions/README.md).
 
-Na mieste, kam chcete vložiť odkaz, nechajte kurzor a kliknite na **Odkazy na zručnosti a nástroje**. V paneli môžete vyhľadať zručnosť, nástroj alebo skupinu nástrojov:
+Umiestnite kurzor do inštrukcií na miesto, kam chcete vložiť odkaz. Panel **Odkazy** sa otvorí na karte **Nástroje**. V poli **Vyhľadať skupinu** môžete vybrať skupinu podľa názvu a jej nástroje filtrovať podľa HTTP metódy.
+
+V texte inštrukcií majú odkazy na nástroje modré pozadie, odkazy na skupiny zelené a odkazy na zručnosti fialové. Zvýraznia sa aj pri ručnom písaní po zadaní uzatváracej zátvorky.
 
 - Kliknutím na názov nástroja vložíte napríklad `@tool(quiz_get_all)`.
 - Tlačidlom **Vložiť skupinu** vložíte napríklad `@group(quiz)`. Asistent pri spustení sprístupní nástroje, ktoré do skupiny práve patria a na ktoré má používateľ oprávnenie.
-- Kliknutím na zručnosť vložíte odkaz podľa jej názvu, napríklad `@skill(Správa kvízov)`. Asistent tak môže použiť jej inštrukcie aj nástroje.
+
+Na karte **Zručnosti** môžete zručnosť vyhľadať podľa názvu alebo ukážky jej inštrukcií. Kliknutím na riadok vložíte odkaz, napríklad `@skill(Správa kvízov)`. Po návrate na kartu **Nástroje** zostane vybraná skupina aj HTTP metóda.
 
 Ak používate poskytovateľa **Prehliadač**, vložte odkaz do textu inštrukcie vnútri JSON reťazca. Ak chcete nástroj alebo zručnosť odobrať, vymažte odkazy, ktoré ich priraďujú, a kliknite na **Uložiť**. Tlačidlom **Zrušiť** ponecháte pôvodné priradenia.
 

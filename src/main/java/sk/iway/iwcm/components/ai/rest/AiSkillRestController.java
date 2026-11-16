@@ -1,12 +1,18 @@
 package sk.iway.iwcm.components.ai.rest;
 
+import java.util.List;
+import java.util.Locale;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.components.ai.jpa.AiSkillEntity;
 import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
@@ -36,6 +42,18 @@ public class AiSkillRestController extends DatatableRestControllerV2<AiSkillEnti
     @Override
     public void getOptions(DatatablePageImpl<AiSkillEntity> page) {
         page.addOptions("toolNames", tools.assignmentTools(getRequest(), getProp()), "description", "name", true);
+    }
+
+    /** The autocomplete displays the localized value and inserts links using the group key. */
+    public record GroupOption(String key, String value) {}
+
+    @GetMapping("/autocomplete-tool-group")
+    public List<GroupOption> autocompleteToolGroup(@RequestParam(defaultValue = "") String term) {
+        String query = "%".equals(term) ? "" : DB.internationalToEnglish(term.strip()).toLowerCase(Locale.ROOT);
+        return tools.assignmentTools(getRequest(), getProp()).stream()
+                .map(tool -> new GroupOption(tool.group(), tool.groupLabel())).distinct()
+                .filter(group -> DB.internationalToEnglish(group.value()).toLowerCase(Locale.ROOT).contains(query))
+                .toList();
     }
 
     @Override

@@ -137,8 +137,8 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
         page.addOptions("groupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
         page.addOptions("toolNames", toolService.assignmentTools(getRequest(), getProp()), "description", "name", true);
-        for (String name : skillRepository.listNames(getDomainId())) {
-            page.addOption("skillNames", name, AiSkillLink.token(name), null);
+        for (var skill : skillRepository.findPreviews(getDomainId())) {
+            page.addOption("skillNames", skill.name(), AiSkillLink.token(skill.name()), skill.excerpt());
         }
         page.addOptions("editorFields.statusIcons", aiAssistantsService.getStatusIconOptions(getProp()), "label", "value", false);
 

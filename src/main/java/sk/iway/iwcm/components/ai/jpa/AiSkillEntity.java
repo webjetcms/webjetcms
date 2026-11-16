@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -56,6 +57,16 @@ public class AiSkillEntity {
         tab = "instructions", hidden = true, ai = false,
         editor = @DataTableColumnEditor(attr = @DataTableColumnEditorAttr(key = "class", value = "textarea-code")))
     private String instructions;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.group",
+        tab = "instructions", hidden = true, export = false, ai = false,
+        editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/settings/ai-skills/autocomplete-tool-group"),
+            @DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+            @DataTableColumnEditorAttr(key = "placeholder", value = "components.ai_assistants.tools.find_group")
+        }))
+    private String toolGroup;
 
     @Column(name = "domain_id", nullable = false, updatable = false)
     private Integer domainId;

@@ -179,6 +179,7 @@ public class AssistantDefinitionEntity implements Serializable {
         inputType = DataTableColumnType.TEXTAREA,
         title = "&nbsp;",
         tab = "instructions",
+        ai = false,
         className = "wrap",
         editor = {
             @DataTableColumnEditor(type = "textarea", attr = {
@@ -189,6 +190,16 @@ public class AssistantDefinitionEntity implements Serializable {
     @NotBlank
     @jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String instructions;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.group",
+        tab = "instructions", hidden = true, export = false, ai = false,
+        editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/settings/ai-skills/autocomplete-tool-group"),
+            @DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+            @DataTableColumnEditorAttr(key = "placeholder", value = "components.ai_assistants.tools.find_group")
+        }))
+    private String toolGroup;
 
     /* ADVANCED tab */
 
