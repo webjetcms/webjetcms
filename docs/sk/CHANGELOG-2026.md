@@ -4,7 +4,7 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
-- Vyhľadávanie - opravené odstránenie zmazanej webovej stránky z Lucene indexu použitím údajov stránky získaných pred jej zmazaním (#403).
+- Vyhľadávanie - opravené odstránenie zmazanej webovej stránky z Lucene indexu použitím údajov stránky získaných pred jej zmazaním. Pri mazaní sa jazyk indexu určuje rovnako ako pri indexovaní: podľa jazyka priečinka, následne jazyka šablóny stránky alebo predvoleného jazyka (#403).
 - Databáza - opravené generovanie SQL podmienok `IN` a `NOT IN` s veľkým počtom hodnôt rozdelením zoznamov na menšie časti. Odstránené chyby pri prekročení limitu 1000 hodnôt v Oracle databáze, napríklad pri načítaní histórie stránky alebo práci s rozsiahlym stromom priečinkov. Maximálny počet hodnôt v jednej časti určuje konfiguračná premenná `dbInClauseMaxItems` (predvolene 1000, v Oracle najviac 1000).
 - Databáza - zjednotené dátumové typy v SQL skriptoch pre nové inštalácie: PostgreSQL používa `TIMESTAMP WITHOUT TIME ZONE`, opravené nesprávne použitie `TIMESTAMP` v MariaDB a Microsoft SQL. Existujúce databázy sa automaticky nekonvertujú (#399).
 - Webové stránky - opravené obmedzenie hľadania a nahrádzania v názvoch priečinkov na vybraný strom priečinkov a nastavenie rodiča pri oprave chybne zmazaných priečinkov počas presunu stránky do koša (#390).

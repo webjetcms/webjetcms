@@ -678,8 +678,7 @@ public class Documents extends Indexed
 			if (doc != null && doc.getGroup() != null)
 			{
                 try {
-                    int tempId = doc.getGroup().getTempId();
-                    String lng = TemplatesDB.getInstance().getTemplate(tempId).getLng();
+                    String lng = getDocumentLanguage(doc.getGroupId(), doc.getTempId());
                     IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));
                     config.setOpenMode(OpenMode.APPEND);
                     IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);
