@@ -21,7 +21,7 @@ Každý súbor obsahuje **celý obsah na vloženie dovnútra existujúceho `arti
 2. Založte stránky `/pre-vyvojarov/` a `/pre-agentury/` s existujúcou produktovou šablónou. Tým začnú fungovať aj nové odkazy z ostatných stránok.
 3. V zdrojovom HTML režime vložte celý príslušný fragment vrátane `style` namiesto pôvodného obsahu článku. Ak štýly spravujete oddelene, vložte dodaný `style` podľa možností šablóny. Obal `.wj-website-content` musí zostať. **Zachovajte aj značky `!INCLUDE(...)!`**: WebJET ich spracuje aplikáciou `/components/video/video_player.jsp`. Nevkladajte ich ako escapovaný text ani ich nenahrádzajte iframe z lokálneho náhľadu.
 4. **Na úvode ponechajte aj koncový `script`.** Načítava novinky z verejného JSON. Ak ho starší editor odstráni, vložte rovnaký skript do poľa pre skripty danej stránky alebo za článok v šablóne. Nepotrebuje API kľúč, jQuery ani administračné rozhrania. Podrobnosti vrátane CSP sú v [news-feed.md](news-feed.md).
-5. Nastavte titulky a meta popisy podľa [redakčných poznámok](editorial-notes.md). Menu je mimo článku: nové stránky sú už prelinkované v obsahu, ich zaradenie do hlavnej navigácie treba spraviť samostatne. Poznámky obsahujú odporúčanie pre podmenu.
+5. Nastavte titulky a meta popisy podľa [redakčných poznámok](editorial-notes.md). Podľa dohody ponechajte stránky Pre agentúry a Pre vývojárov zatiaľ mimo horného menu; už sú prelinkované v obsahu. Pre neskoršiu úpravu šablóny je pripravený [návrh preskupenia navigácie](navigation-proposal.md).
 6. V náhľade CMS skontrolujte načítanie obrázkov, videá vrátane prehratia a celej obrazovky, CTA na `/kontakt/`, rozbaľovacie sekcie Funkcií/Aplikácií a šesť položiek noviniek. Rozbaľovanie používa natívne `details`, funguje aj bez JavaScriptu. Pri videách zostáva aj priamy odkaz na YouTube; automatické prehrávanie je vypnuté.
 
 Na úvode sú podľa dohody pôvodné licenčné karty nahradené odkazmi. Stránky Služby, Aktuálna verzia a Licencie sa nemenia. Spring Boot a spoločné plánovanie zmien viacerých stránok sú označené **Pripravujeme**, bez dátumu vydania.
@@ -42,6 +42,7 @@ Náhľad vkladá fragmenty do aktuálnej verejnej šablóny. Pôvodné skripty, 
 
 - [Obsahová stratégia](content-strategy.md): publikum, piliere, úlohy stránok a potvrdené rozhodnutia.
 - [Redakčné poznámky](editorial-notes.md): metadáta, navigácia a alternatívy nadpisov.
+- [Návrh navigácie](navigation-proposal.md): budúce preskupenie menu; aktuálne zostávajú nové stránky mimo horného menu.
 - [Produktové dôkazy](product-evidence.md): dostupné funkcie, podmienky AI a pripravované publikačné balíky z PR #388.
 - [Konkurencia](competitor-analysis.md): BUXUS 2.0, WordPress.org, WordPress.com a WordPress VIP s verejnými zdrojmi.
 - [Vývojári a agentúry](developer-agency-evidence.md): Java/Spring, vlastné aplikácie, REST/headless a MultiWeb.

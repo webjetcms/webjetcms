@@ -37,11 +37,9 @@ Neuvádzame odhad objemu vyhľadávania ani prísľub konkrétnej pozície vo v�
 
 ## Zaradenie do existujúceho menu
 
-Menu je mimo `article.ly-article`. Vloženie šiestich fragmentov ho nezmení a samo nevytvorí nové stránky. Existujúca navigácia už má osem obsahových položiek a kontakt; pridanie ďalších dvoch dlhých názvov do jedného riadka treba preveriť na desktope aj mobile.
+Menu je mimo `article.ly-article`. Vloženie šiestich fragmentov ho nezmení a samo nevytvorí nové stránky. Používateľ rozhodol ponechať **Pre agentúry** a **Pre vývojárov** zatiaľ mimo horného menu, pretože sa do existujúcej navigácie rozumne nezmestia. Stránky zostávajú dostupné cez pomenované odkazy na úvode a z relevantných sekcií.
 
-Odporúčané trvalé riešenie je jedna doplnková položka **Pre tímy** s podmenu **Pre vývojárov** a **Pre agentúry**. Použije sa existujúci vzhľad navigácie a mechanizmus podmenu kompatibilný s Bootstrap 4.1.3. Názov nesľubuje formálny partnerský program. Položky v podmenu majú priamo odkazovať na nové stránky; obsluhu klávesnicou, rozbalenie na mobile a príslušné atribúty musí zabezpečiť šablóna.
-
-Ak úprava navigácie teraz nie je žiaduca, nové stránky zostanú dostupné cez jasne pomenované odkazy na úvode a z relevantných sekcií. Je to použiteľný prvý krok bez zmeny šablóny. Samostatné položky na najvyššej úrovni odporúčame až po overení šírky menu. Toto je návrh na manuálne nastavenie, nie súčasť dodaných fragmentov.
+Pre budúcu úpravu je pripravený [návrh preskupenia navigácie](navigation-proposal.md): **Čo WebJET dokáže, Služby, Licencie, Dokumentácia** a CTA **Dohodnúť si ukážku**. Prvá položka združí Benefity, Funkcie, Aplikácie, Aktuálnu verziu aj stránky pre agentúry a vývojárov do jedného dvojstĺpcového podmenu. Používateľ odmietol pôvodný názov „Produkt“ ako nejasný; „Čo WebJET dokáže“ je nový návrh, zatiaľ nepotvrdený. Zoskupenie nahrádza predchádzajúce odporúčanie pridávať do súčasného riadka samostatnú položku „Pre tímy“. Zatiaľ sa neimplementuje.
 
 ## Interné alternatívy hlavného nadpisu a CTA
 

@@ -55,7 +55,7 @@ Priorita prvých štyroch stránok vyplýva zo zadania. Ako ďalšie samostatné
     └── rozhovor o spolupráci
 ```
 
-Hlavné menu už má osem obsahových položiek a kontakt. Nové cesty majú byť obsahovo samostatné, ale presné zaradenie do menu musí rešpektovať šírku existujúcej navigácie. HTML fragment menu automaticky nemení. Aktuálne stránky Služby, Aktuálna verzia a Licencie zostávajú mimo obsahového prepisu.
+Hlavné menu už má osem obsahových položiek a kontakt. Podľa rozhodnutia používateľa zostávajú Pre agentúry a Pre vývojárov zatiaľ mimo horného menu, dostupné cez odkazy v obsahu. Budúce zoskupenie s navrhovaným názvom „Čo WebJET dokáže“ je opísané v [návrhu navigácie](navigation-proposal.md); pôvodný názov „Produkt“ používateľ odmietol. HTML fragment menu automaticky nemení. Aktuálne stránky Služby, Aktuálna verzia a Licencie zostávajú mimo obsahového prepisu.
 
 ## Konverzia a meranie
 
