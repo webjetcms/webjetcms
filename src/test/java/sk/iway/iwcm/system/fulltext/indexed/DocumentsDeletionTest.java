@@ -9,7 +9,7 @@ import static org.mockito.Mockito.mockStatic;
 
 import java.io.File;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
