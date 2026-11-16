@@ -35,12 +35,14 @@ Scenario('Header help shares release news and supplies documentation links', asy
         return [button.getBoundingClientRect().height, arrow.left - label.right, button.getBoundingClientRect().right - arrow.right];
     }), [31, 3, 7], 'The Help trigger must keep its compact height and the specified arrow spacing.');
     const origin = await I.executeScript(() => window.adminHelpContext.documentationBaseUrl);
+    const release = await I.executeScript(() => WJ.getReleaseNews());
+    I.assertAbove(release.items.length, 0, 'The deployed release must contain news.');
     I.see('Pomoc k tejto stránke', panel);
     I.see('Úvod', '.md-help-menu__page-title');
-    I.see('Čo je nové vo verzii 2026.18', panel);
-    I.see('Počet noviniek: 5', panel);
+    I.see(`Čo je nové vo verzii ${release.version}`, panel);
+    I.see(`Počet noviniek: ${release.items.length}`, panel);
     I.assertEqual(await I.grabAttributeFrom('.md-help-menu__page', 'href'), `${origin}/latest/sk/redactor/admin/welcome`);
-    I.assertEqual(await I.grabAttributeFrom('.md-help-menu__release', 'href'), `${origin}/latest/sk/CHANGELOG-2026?id=_202618`);
+    I.assertEqual(await I.grabAttributeFrom('.md-help-menu__release', 'href'), `${origin}/latest/sk/CHANGELOG-${release.version.slice(0, 4)}?id=_${release.version.replaceAll('.', '')}`);
     I.assertEqual(await I.grabAttributeFrom('[data-help-path="/CHANGELOG"]', 'href'), await I.grabAttributeFrom('.md-dashboard-widget__news-more', 'href'));
     I.assertEqual(await I.executeScript(() => document.querySelector('.md-help-menu__new').hidden),
         await I.executeScript(() => document.querySelector('.md-dashboard-widget__news-badge').hidden));

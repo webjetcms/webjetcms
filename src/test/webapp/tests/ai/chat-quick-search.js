@@ -8,6 +8,7 @@ const answer = 'Saved answer autotest';
 Before(({ login }) => login('admin'));
 
 function openChat(I) {
+    I.waitForElement('button.js-search-toggler[aria-expanded]', 15);
     I.clickCss('button.js-search-toggler');
     I.waitForVisible(`${modal} [data-scope="aiChat"]`, 10);
     I.clickCss(`${modal} [data-scope="aiChat"]`);

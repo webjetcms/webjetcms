@@ -357,7 +357,8 @@ Scenario('Classic integration: administration resizing keeps all commands reacha
     DTE.waitForLoader();
     I.waitForVisible('.cke_wysiwyg_frame', 20);
     I.waitForVisible('.wj-cke-toolbar', 10);
-    const original = await I.executeScript(() => CKEDITOR.instances.data.getData());
+    // CKEditor may append its serializer's final newline after the first focus.
+    const original = await I.executeScript(() => CKEDITOR.instances.data.getData().replace(/\r?\n$/, ''));
     for (const width of [760, 600, 400]) {
         I.resizeWindow(width, 958);
         I.waitForVisible('.wj-cke-toolbar__more', 10);
@@ -379,7 +380,7 @@ Scenario('Classic integration: administration resizing keeps all commands reacha
     I.assertTrue(await I.executeScript(() => document.activeElement === CKEDITOR.instances.data.wjToolbarOverflow.button), 'Closing the palette must restore focus without opening a tooltip');
     I.resizeWindow(1280, 958);
     I.waitForInvisible('.wj-cke-toolbar__more', 10);
-    I.assertEqual(await I.executeScript(() => CKEDITOR.instances.data.getData()), original, 'Resizing and opening the palette must leave page HTML unchanged');
+    I.assertEqual(await I.executeScript(() => CKEDITOR.instances.data.getData().replace(/\r?\n$/, '')), original, 'Resizing and opening the palette must leave page HTML unchanged');
     DTE.cancel();
     I.dontSeeElement('.wj-cke-overflow');
 });
