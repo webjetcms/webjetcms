@@ -18,6 +18,8 @@ import java.util.StringTokenizer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import net.sourceforge.stripes.mock.MockHttpServletRequest;
+import net.sourceforge.stripes.mock.MockHttpSession;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -25,7 +27,9 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -2526,7 +2530,25 @@ public class EditorDB
 
 	public static String getDataAsc(String data, EditorForm ef, boolean isLucene)
 	{
-		return getDataAsc(data, ef, isLucene, null);
+		RequestBean originalBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (originalBean != null && originalBean.getRequest() != null)
+		{
+			return getDataAsc(data, ef, isLucene, originalBean.getRequest());
+		}
+
+		MockHttpServletRequest request = new MockHttpServletRequest(null, "/LuceneFulltextSearch");
+		request.setSession(new MockHttpSession(null));
+		request.setServerName("");
+		try
+		{
+			if (originalBean == null) SetCharacterEncodingFilter.registerDataContext(request);
+			return getDataAsc(data, ef, isLucene, request);
+		}
+		finally
+		{
+			// Restore only the context owned here; unregistering would close the caller's entity managers.
+			if (originalBean == null) SetCharacterEncodingFilter.setCurrentRequestBean(null);
+		}
 	}
 
     /**
