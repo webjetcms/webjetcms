@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.context.annotation.Bean;
@@ -93,52 +93,80 @@ class EditorToolsForCoreRenderTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void rendersRequestScopedSpringAppAndCompletesItsScope(boolean fail) {
+    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+    void rendersRequestScopedSpringAppsAndRestoresCallerContext(boolean fail, boolean hasCallerContext) throws IOException {
         AtomicInteger destroyedApps = new AtomicInteger();
+        AtomicInteger destroyedCallerApps = new AtomicInteger();
         try (AnnotationConfigWebApplicationContext spring = new AnnotationConfigWebApplicationContext()) {
-            spring.setServletContext(new MockServletContext());
+            RequestDispatcher dispatcher = new RequestDispatcher() {
+                @Override
+                public void forward(ServletRequest req, ServletResponse res) throws ServletException {
+                    throw new ServletException("Only an include is expected");
+                }
+
+                @Override
+                public void include(ServletRequest req, ServletResponse res) throws IOException, ServletException {
+                    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+                    assertSame(req, attributes.getRequest());
+                    WebjetComponentParser parser = spring.getBean("webjetComponentParser", WebjetComponentParser.class);
+                    assertNull(parser.getRedirectLocation((HttpServletResponse) res));
+                    spring.getBean(SpringApp.class).render();
+                    if (fail) throw new ServletException("Application rendering failed");
+                }
+            };
+            MockServletContext servletContext = new MockServletContext() {
+                @Override
+                public RequestDispatcher getRequestDispatcher(String path) {
+                    assertEquals("/components/_common/fulltext_preview.jsp", path);
+                    return dispatcher;
+                }
+            };
+            spring.setServletContext(servletContext);
             spring.register(SpringApps.class);
             spring.addBeanFactoryPostProcessor(factory -> {
                 factory.registerSingleton("componentResolver", org.mockito.Mockito.mock(WebjetComponentResolver.class));
                 factory.registerSingleton("multipartResolver", org.mockito.Mockito.mock(MultipartResolver.class));
             });
             spring.refresh();
-            MockHttpServletRequest request = new MockHttpServletRequest() {
-                @Override
-                public RequestDispatcher getRequestDispatcher(String path) {
-                    return new RequestDispatcher() {
-                        @Override
-                        public void forward(ServletRequest req, ServletResponse res) throws ServletException {
-                            throw new ServletException("Only an include is expected");
-                        }
 
-                        @Override
-                        public void include(ServletRequest req, ServletResponse res) throws IOException, ServletException {
-                            WebjetComponentParser parser = spring.getBean("webjetComponentParser", WebjetComponentParser.class);
-                            assertNull(parser.getRedirectLocation((HttpServletResponse) res));
-                            spring.getBean(SpringApp.class).render();
-                            if (fail) throw new ServletException("Application rendering failed");
-                        }
-                    };
-                }
-            };
-            request.setAttribute("message", "Spring application rendered");
-            request.setAttribute("destroyedApps", destroyedApps);
+            ServletRequestAttributes callerAttributes = null;
+            MockHttpServletResponse callerResponse = new MockHttpServletResponse();
+            if (hasCallerContext) {
+                MockHttpServletRequest callerRequest = new MockHttpServletRequest();
+                callerRequest.setAttribute("message", "Admin request");
+                callerRequest.setAttribute("destroyedApps", destroyedCallerApps);
+                callerAttributes = new ServletRequestAttributes(callerRequest, callerResponse);
+                RequestContextHolder.setRequestAttributes(callerAttributes);
+                spring.getBean(SpringApp.class).render();
+            }
 
             try (MockedStatic<Constants> constants = mockStatic(Constants.class);
                     MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS)) {
                 constants.when(() -> Constants.getString(anyString())).thenReturn("");
+                constants.when(Constants::getServletContext).thenReturn(servletContext);
                 tools.when(() -> Tools.downloadUrl(anyString())).thenThrow(new AssertionError("Loopback must not be used"));
                 tools.clearInvocations();
 
-                String result = EditorToolsForCore.renderIncludes("source", false, request);
-                if (fail) assertNull(result);
-                else assertEquals("<p>Spring application rendered</p>", result);
-                assertEquals(1, destroyedApps.get(), "The temporary Spring request scope must be completed");
-                assertNull(RequestContextHolder.getRequestAttributes());
+                for (String message : List.of("First indexed page", "Second indexed page")) {
+                    net.sourceforge.stripes.mock.MockHttpServletRequest request =
+                            new net.sourceforge.stripes.mock.MockHttpServletRequest("", "/indexed-page.html");
+                    request.setSession(new net.sourceforge.stripes.mock.MockHttpSession(servletContext));
+                    request.setAttribute("message", message);
+                    request.setAttribute("destroyedApps", destroyedApps);
+
+                    String result = EditorToolsForCore.renderIncludes("source", false, request);
+                    if (fail) assertNull(result);
+                    else assertEquals("<p>" + message + "</p>", result);
+                    assertSame(callerAttributes, RequestContextHolder.getRequestAttributes());
+                    assertEquals(0, destroyedCallerApps.get(), "The caller's Spring request scope must remain active");
+                }
+                assertEquals(2, destroyedApps.get(), "Each temporary Spring request scope must be completed");
+                if (hasCallerContext) assertEquals("<p>Admin request</p>", callerResponse.getContentAsString());
                 tools.verify(() -> Tools.downloadUrl(anyString()), never());
+            } finally {
+                if (callerAttributes != null) callerAttributes.requestCompleted();
             }
+            if (hasCallerContext) assertEquals(1, destroyedCallerApps.get());
         }
     }
 

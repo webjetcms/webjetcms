@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -326,6 +327,7 @@ public class EditorToolsForCore {
         String renderedData = null;
         String includeFileName = "/components/_common/fulltext_preview.jsp";
         StringBuilder htmlCode = null;
+        RequestAttributes originalAttributes = RequestContextHolder.getRequestAttributes();
         ServletRequestAttributes temporaryAttributes = null;
 
         try
@@ -362,9 +364,9 @@ public class EditorToolsForCore {
                 };
                 respWrapper = new WJResponseWrapper(response, request);
 
-                if (RequestContextHolder.getRequestAttributes() == null)
+                if (originalAttributes == null || request instanceof MockHttpServletRequest)
                 {
-                    // Direct includes from background threads bypass Spring's request listener.
+                    // Synthetic requests need their own scope even when the caller has a Spring request context.
                     temporaryAttributes = new ServletRequestAttributes(request, respWrapper);
                     RequestContextHolder.setRequestAttributes(temporaryAttributes);
                 }
@@ -427,7 +429,7 @@ public class EditorToolsForCore {
                 }
                 finally
                 {
-                    RequestContextHolder.resetRequestAttributes();
+                    RequestContextHolder.setRequestAttributes(originalAttributes);
                 }
             }
         }
