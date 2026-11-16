@@ -2,12 +2,13 @@
 """Preview article fragments in the existing public WebJET CMS template."""
 
 import argparse
+import base64
 import mimetypes
 import re
 from html import escape, unescape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import unquote_plus, urljoin, urlsplit
 from urllib.request import urlopen
 
 
@@ -23,6 +24,10 @@ PAGES = {
     "/pre-agentury/": "pre-agentury.html",
 }
 CACHE = {}
+HTML_EMBED_INCLUDE = re.compile(
+    r"!INCLUDE\(/components/app-htmlembed/embed\.jsp,\s*"
+    r"html=([A-Za-z0-9+/]+={0,2})\)!"
+)
 VIDEO_INCLUDE = re.compile(
     r"!INCLUDE\(/components/video/video_player\.jsp,\s*"
     r"file=https://www\.youtube\.com/watch\?v=([A-Za-z0-9_-]{11}),\s*"
@@ -53,6 +58,17 @@ def render_videos(fragment):
         )
 
     return VIDEO_INCLUDE.sub(render, fragment)
+
+
+def render_html_embeds(fragment):
+    """Decode local HTML-embed macros for the response without executing JSP or JS."""
+    def render(match):
+        html = base64.b64decode(match.group(1), validate=True).decode("utf-8")
+        if html.startswith("utf8:"):
+            html = unquote_plus(html[5:], encoding="utf-8", errors="strict")
+        return html
+
+    return HTML_EMBED_INCLUDE.sub(render, fragment)
 
 
 def download(url):
@@ -97,6 +113,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
             if path in PAGES:
                 fragment = (ROOT / "sk" / PAGES[path]).read_text()
                 fragment = render_videos(fragment)
+                fragment = render_html_embeds(fragment)
                 fragment = re.sub(
                     r'href="(/[^\"]*)"',
                     lambda match: match.group(0) if urlsplit(unescape(match.group(1))).path in PAGES

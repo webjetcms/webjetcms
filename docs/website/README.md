@@ -19,12 +19,20 @@ Každý súbor obsahuje **celý obsah na vloženie dovnútra existujúceho `arti
 
 1. Nahrajte používané obrázky z [sk/images](sk/images/) do **`/images/webjetcms-2026/`** na webe. Zachovajte názvy súborov. [Manifest](image-manifest.md) odlišuje deväť potrebných súborov od šiestich voliteľných snímok nahradených videami; možno nahrať aj celý priečinok.
 2. Založte stránky `/pre-vyvojarov/` a `/pre-agentury/` s existujúcou produktovou šablónou. Tým začnú fungovať aj nové odkazy z ostatných stránok.
-3. V zdrojovom HTML režime vložte celý príslušný fragment vrátane `style` namiesto pôvodného obsahu článku. Ak štýly spravujete oddelene, vložte dodaný `style` podľa možností šablóny. Obal `.wj-website-content` musí zostať. **Zachovajte aj značky `!INCLUDE(...)!`**: WebJET ich spracuje aplikáciou `/components/video/video_player.jsp`. Nevkladajte ich ako escapovaný text ani ich nenahrádzajte iframe z lokálneho náhľadu.
-4. **Na úvode ponechajte aj koncový `script`.** Načítava novinky z verejného JSON. Ak ho starší editor odstráni, vložte rovnaký skript do poľa pre skripty danej stránky alebo za článok v šablóne. Nepotrebuje API kľúč, jQuery ani administračné rozhrania. Podrobnosti vrátane CSP sú v [news-feed.md](news-feed.md).
+3. V zdrojovom HTML režime vložte celý príslušný fragment vrátane `style` namiesto pôvodného obsahu článku. Ak štýly spravujete oddelene, vložte dodaný `style` podľa možností šablóny. Obal `.wj-website-content` musí zostať. **Zachovajte aj značky `!INCLUDE(...)!`**: videá spracuje aplikácia `/components/video/video_player.jsp`, vložený kód noviniek aplikácia `/components/app-htmlembed/embed.jsp`. Nevkladajte ich ako escapovaný text ani ich nenahrádzajte vykresleným HTML z lokálneho náhľadu.
+4. **Na úvode ponechajte celú značku `!INCLUDE(/components/app-htmlembed/embed.jsp, html=...)!` s nezmeneným obsahom parametra `html`.** Obsahuje skript noviniek v Base64; po dekódovaní nasleduje prefix `utf8:` a URL-kódované HTML. Toto uloženie chráni medzery skriptu pred zmenami v redakčnom editore. Pri vkladaní ho nerozbaľujte na samostatný `script`. WebJET ho dekóduje pri vykreslení stránky. Nepotrebuje API kľúč, jQuery ani administračné rozhrania. Podrobnosti vrátane CSP sú v [news-feed.md](news-feed.md).
 5. Nastavte titulky a meta popisy podľa [redakčných poznámok](editorial-notes.md). Podľa dohody ponechajte stránky Pre agentúry a Pre vývojárov zatiaľ mimo horného menu; už sú prelinkované v obsahu. Pre neskoršiu úpravu šablóny je pripravený [návrh preskupenia navigácie](navigation-proposal.md).
 6. V náhľade CMS skontrolujte načítanie obrázkov, videá vrátane prehratia a celej obrazovky, CTA na `/kontakt/`, rozbaľovacie sekcie Funkcií/Aplikácií a šesť položiek noviniek. Rozbaľovanie používa natívne `details`, funguje aj bez JavaScriptu. Pri videách zostáva aj priamy odkaz na YouTube; automatické prehrávanie je vypnuté.
 
 Na úvode sú podľa dohody pôvodné licenčné karty nahradené odkazmi. Stránky Služby, Aktuálna verzia a Licencie sa nemenia. Spring Boot a spoločné plánovanie zmien viacerých stránok sú označené **Pripravujeme**, bez dátumu vydania.
+
+## CSS a JavaScript šablóny
+
+Overené CSS a JavaScript fragmenty pre produktové weby archivujeme v `docs/website/css/` a `docs/website/js/` pod názvom cieľového súboru, napríklad `css/shame.css` alebo `js/page.js`. Pri každom fragmente uvedieme miesto nasadenia; JavaScript súbor pridáme až vtedy, keď bude potrebný.
+
+[css/shame.css](css/shame.css) obsahuje spoločnú úpravu výsuvného menu produktovej šablóny. Nasadzuje sa do `/templates/webjet_products/assets/css/shame.css`: nahrádza predchádzajúci blok úprav menu, ostatné pravidlá cieľového súboru treba zachovať. Podporuje hover a prechod klávesnicou na desktope, zalamovanie a posúvanie dlhého podmenu a viditeľné podpoložky v mobilnom menu. Produktové triedy na `body` určujú iba farbu fokusu. Funkčnosť nasadeného fragmentu potvrdil používateľ.
+
+Tieto súbory sú archívom fragmentov; uloženie do repozitára ich automaticky nenasadzuje na web.
 
 ## Lokálny náhľad
 
@@ -36,7 +44,7 @@ python3 docs/website/preview.py --port 8765
 
 Otvorte [lokálny náhľad](http://127.0.0.1:8765/). Fungujú aj ostatné cesty z tabuľky. Server sa viaže len na `127.0.0.1`, nepotrebuje bežiaci WebJET ani inštaláciu Python balíkov. Vyžaduje internet na načítanie verejnej šablóny a jej existujúcich CSS/fontov. Po úprave fragmentu obnovte stránku; server ukončíte cez Ctrl+C.
 
-Náhľad vkladá fragmenty do aktuálnej verejnej šablóny. Pôvodné skripty, formuláre a trackovanie šablóny sa v náhľade odstraňujú; pôvodná mobilná navigácia a kontaktné vyskakovacie okno preto nie sú funkčné. Kontroluje sa článok, nie tieto nezmenené časti. Skript živých noviniek zostáva aktívny. Podporované video značky server nahradí responzívnym prehrávačom YouTube iba v odpovedi náhľadu; HTML súbory nemení a JSP nespúšťa. Lokálny náhľad nenahrádza poslednú kontrolu po vložení do konkrétneho CMS editora.
+Náhľad vkladá fragmenty do aktuálnej verejnej šablóny. Pôvodné skripty, formuláre a trackovanie šablóny sa v náhľade odstraňujú; pôvodná mobilná navigácia a kontaktné vyskakovacie okno preto nie sú funkčné. Kontroluje sa článok, nie tieto nezmenené časti. Podporované video značky server nahradí responzívnym prehrávačom YouTube. Značku HTML embed dekóduje podľa postupu `embed.jsp` (Base64, potom pri prefixe `utf8:` URL dekódovanie), takže skript noviniek môže vykonať prehliadač. Zmeny prebiehajú iba v odpovedi náhľadu; server nemení HTML súbory ani nespúšťa JSP či vložený JavaScript. Lokálny náhľad nenahrádza poslednú kontrolu po vložení do konkrétneho CMS editora.
 
 ## Podklady
 

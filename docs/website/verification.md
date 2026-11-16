@@ -1,11 +1,11 @@
 # Overenie pripraveného obsahu
 
-Vykonané 15. 11. 2026. Kontrola sa týka šiestich fragmentov v `sk/` a ich lokálneho náhľadu v existujúcej verejnej šablóne webjetcms.sk.
+Základné overenie bolo vykonané 15. 11. 2026; kompatibilita náhľadu s HTML embed bola doplnená 16. 11. 2026. Kontrola sa týka šiestich fragmentov v `sk/` a ich lokálneho náhľadu v existujúcej verejnej šablóne webjetcms.sk.
 
 ## HTML, obrázky a odkazy
 
 - Šesť fragmentov má správne vnorené a uzavreté elementy, práve jeden H1 a jeden vložený `style`. Žiadny neobsahuje obal `article`, `html`, `head` alebo `body`.
-- Iba úvod obsahuje jeden `script` pre živé novinky. Jeho syntax prešla `node --check`.
+- Iba úvod obsahuje skript živých noviniek, aktuálne uložený v Base64 parametri aplikácie HTML embed. V zdrojovom fragmente nie je priamy element `script`; po dekódovaní sa vykreslí jeden. Jeho syntax prešla `node --check` aj po úprave náhľadu 16. 11. 2026.
 - Skontrolované sú jedinečné ID a vnútorné aj medzistránkové kotvy. Odkazy na AI a schvaľovanie smerujú na existujúce ID na stránke Funkcie.
 - Po doplnení sekcií headless a viackrokových formulárov zostáva 11 statických použití obrázkov (9 jedinečných súborov); majú existujúci súbor, alt text a rozmery zodpovedajúce PNG. Pätnásť dodaných obrázkov vrátane šiestich voliteľných alternatív k videám je popísaných v [manifeste](image-manifest.md); deväť dokumentačných originálov je binárne zhodných so zdrojom.
 - Všetkých 11 video značiek používa požadovaný formát `!INCLUDE` s `percentageWidth=100` a `autoplay=0`. Päť jedinečných ID je podložených dokumentáciou a overených cez YouTube oEmbed (HTTP 200). Každé umiestnenie má vecný popis a priamy odkaz na video; podklady sú v [manifeste videí](video-manifest.md).
@@ -37,14 +37,28 @@ Uložené snímky: [úvod na desktope](sk/previews/uvod-desktop.jpg), [novinky n
 
 ## Chybové scenáre noviniek
 
-Skutočný inline skript bol extrahovaný z `sk/index.html` a spustený v dočasnom Node/jsdom prostredí bez inštalácie ďalších balíkov. **12 z 12 scenárov prešlo.** Táto kontrola dopĺňa reálne načítanie v prehliadači.
+Dňa 15. 11. 2026 bol skript, vtedy uložený priamo ako element `script` v `sk/index.html`, extrahovaný a spustený v dočasnom Node/jsdom prostredí bez inštalácie ďalších balíkov. **12 z 12 scenárov prešlo.** Táto historická kontrola dopĺňa reálne načítanie v prehliadači. Aktuálny dekódovaný skript je s touto podobou zhodný; zmenu spôsobu uloženia opisuje nasledujúca sekcia.
 
 Overené boli poradie a limit šiestich kariet, duplicitné a nepovolené odkazy, text obsahujúci HTML/XSS, jednopriechodové dekódovanie entít vo výňatku, chýbajúce a neplatné obrázky/dátumy, chyba načítania obrázka, prázdny a chybný JSON, sieťová/HTTP chyba, veľkostné limity, timeout vrátane neskorej odpovede, chýbajúce `fetch` a opakované spustenie skriptu. Kontrola zahŕňala aj `credentials: omit`, `referrerPolicy: no-referrer` a `cache: no-cache`.
 
 Pri chybe zostáva dostupný statický odkaz na všetky zmeny v dokumentácii. Dáta zo zdroja sa nezapisujú ako HTML a novinky nevkladajú video prehrávače. Pri doplnení videoukážok do produktových sekcií sa skript noviniek nezmenil; porovnanie s predchádzajúcou verziou potvrdilo zhodu, preto sa jeho chybové scenáre neopakovali.
 
+## HTML embed a lokálny náhľad, 16. 11. 2026
+
+Používateľ uložil skript noviniek do `!INCLUDE(/components/app-htmlembed/embed.jsp, html=...)!`, aby editor nemenil jeho medzery. [Náhľad](preview.py) teraz podporuje tento formát podľa [embed.jsp](../../src/main/webapp/components/app-htmlembed/embed.jsp) a `Tools.URLDecode`: Base64 dekódovanie, potom pri prefixe `utf8:` jedno URL dekódovanie vrátane prevodu `+` na medzeru. Dekódovaný text iba vloží do odpovede; JSP ani JavaScript na serveri nevykonáva.
+
+- Všetkých šesť fragmentov prešlo spracovaním bez zvyšnej značky `!INCLUDE`: zostalo 11 video prehrávačov a na úvode pribudol jeden dekódovaný element `script`.
+- Overené boli diakritika, rozlíšenie `+` a `%2B`, jednopriechodové dekódovanie `%2520` a zachovanie nesúvisiacej značky aplikácie. Kód vložený do testovacieho skriptu sa na serveri nevykonal.
+- Python zdroj prešiel `compile()` a skutočný dekódovaný skript noviniek `node --check`.
+- Dekódovaný JavaScript je presne zhodný s predchádzajúcim priamym skriptom v histórii súboru (`5c12a2dd5`). Jeho 12 chybových scenárov sa preto neopakovalo.
+- Spracovanie náhľadu nezmenilo zdrojové HTML súbory; hash používateľovej značky HTML embed zostal zachovaný. Táto kontrola nepredstavuje nové overenie produkčného CMS editora ani prehratia videí.
+
+## Doplnenie Open Source odkazu, 16. 11. 2026
+
+Na úvode pribudol textový odkaz **Open Source verzia na GitHube** na `https://github.com/webjetcms`, vedľa odkazu na AI a nad prvým videom. V lokálnom prehliadači boli overené jeho cieľ, zalomenie pri šírke 390 px a zobrazenie pri 1328 px bez horizontálneho presahu. Po dekódovaní HTML embed sa načítalo všetkých šesť noviniek; zdrojová značka používateľa zostala nezmenená. Uložený je [detail úvodnej sekcie](sk/previews/uvod-opensource.jpg). Kontrola sa týka obsahu článku; navigácia verejnej šablóny zostáva mimo rozsahu.
+
 ## Rozsah a obmedzenia
 
-Kontrola nepoužila redakčný editor starej produkčnej inštalácie. Po vložení treba overiť, že editor zachoval `style`, `script`, `details` a `!INCLUDE`, že aplikácia videá správne vykreslí a prehrá, že sú obrázky na dohodnutej ceste a prípadná CSP povoľuje načítanie JSON, náhľadov a prehrávačov YouTube. Tieto kroky sú popísané v [návode na vloženie](README.md).
+Kontrola nepoužila redakčný editor starej produkčnej inštalácie. Po vložení treba overiť, že editor zachoval `style`, `details` a značky `!INCLUDE` vrátane Base64 parametra HTML embed. CMS musí vykresliť dekódovaný skript aj videá; treba skontrolovať ich funkčnosť, obrázky na dohodnutej ceste a prípadnú CSP pre skript, JSON, náhľady a prehrávače YouTube. Tieto kroky sú popísané v [návode na vloženie](README.md).
 
 Lokálny náhľad odstraňuje pôvodné skripty, formuláre a trackovanie šablóny. Neoveruje nezmenenú mobilnú navigáciu, kontaktné vyskakovacie okno, odosielanie kontaktu ani produkčné meranie. Nové stránky ani zmeny menu sa na verejnom webe nezakladali. Produktové funkcie CMS neboli v rámci obsahovej úpravy runtime testované; tvrdenia boli porovnané s dokumentáciou a vybranými implementačnými podkladmi.

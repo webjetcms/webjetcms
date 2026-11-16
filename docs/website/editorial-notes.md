@@ -16,6 +16,8 @@ Diagnóza podľa skillu `copywriting`: **A, nový text podľa konkrétneho zadan
 
 Hlavné CTA je **Dohodnúť si ukážku**, smeruje na existujúcu adresu `/kontakt/`. Ide o dohodnutie ďalšieho kroku cez kontakt, nie okamžitú rezerváciu v kalendári. Na stránke Pre agentúry sa používa **Porozprávať sa o spolupráci**, tiež s cieľom `/kontakt/`. Nepridávajú sa sľuby partnerských zliav, SLA, školení alebo automatickej migrácie.
 
+Na úvode je nad prvým videom pri hlavných odkazoch aj **Open Source verzia na GitHube**, smerujúca na [profil WebJET CMS](https://github.com/webjetcms). Ide o bežný textový odkaz vedľa odkazu na AI; hlavným tlačidlom zostáva ukážka. Profil uvádza komunitnú Open Source verziu. Text nesľubuje, že všetky komerčné funkcie, licencie alebo podpora sú bezplatné. Doplnené 16. 11. 2026.
+
 Zvolený H1 v dodanom úvode je **WebJET CMS pre firemné weby. AI pre váš redakčný tím.** V HTML je medzi vetami zalomenie riadka. Nadpis pomenúva produkt, publikum a pomoc AI; perex ho dopĺňa konkrétnou prácou so schvaľovaním a plánovaním. Výsledná verzia je v [sk/index.html](sk/index.html).
 
 ## Návrh názvov a popisov stránok

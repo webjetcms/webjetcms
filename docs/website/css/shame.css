@@ -1,0 +1,129 @@
+/* Replace the previous menu snippet in /templates/webjet_products/assets/css/shame.css. */
+/* Product classes only select the focus color; menu behavior is shared. */
+body.cms { --wj-menu-accent: #003289; }
+body.net { --wj-menu-accent: #6e00dc; }
+body.dsk { --wj-menu-accent: #6d4b38; }
+body.lms { --wj-menu-accent: #0063fb; }
+body.msg { --wj-menu-accent: #b52636; } /* Darker red for visible focus. */
+body.dms { --wj-menu-accent: #007f5e; }
+
+body .ly-header .md-navigation #menu > li.has-child {
+    position: relative;
+}
+
+body .ly-header .md-navigation #menu > li.has-child > a::before {
+    content: "\25BE";
+    margin-right: 6px;
+}
+
+body .ly-header .md-navigation #menu > li.has-child > ul {
+    margin: 0;
+    padding: 8px 0;
+    list-style: none;
+}
+
+body .ly-header .md-navigation #menu > li.has-child > ul > li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Undo the original Home/Contact styles inherited by submenu items. */
+body .ly-header .md-navigation #menu > li.has-child > ul > li > a {
+    display: block;
+    position: relative;
+    top: auto;
+    width: auto;
+    height: auto;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #13151b;
+    font: inherit;
+    font-size: 16px;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    overflow: visible;
+}
+
+body .ly-header .md-navigation #menu > li.has-child > ul > li > a::before,
+body .ly-header .md-navigation #menu > li.has-child > ul > li > a::after {
+    content: none;
+    display: none;
+}
+
+body .ly-header .md-navigation #menu > li.has-child > ul > li > a:hover,
+body .ly-header .md-navigation #menu > li.has-child > ul > li > a:focus-visible {
+    border: 0;
+    background: #f3f4f6;
+    color: #13151b;
+}
+
+body .ly-header .md-navigation #menu > li.has-child a:focus-visible {
+    outline: 2px solid var(--wj-menu-accent, #13151b);
+    outline-offset: -2px;
+}
+
+@media (min-width: 1200px) {
+    body .ly-header .md-navigation {
+        z-index: 20;
+    }
+
+    body .ly-header .md-navigation #menu > li.has-child > ul {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 320px;
+        max-width: calc(100vw - 32px);
+        max-height: calc(100vh - 160px);
+        max-height: calc(100dvh - 160px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: #fff;
+        border: 1px solid #dddfe6;
+        border-radius: 6px;
+        box-shadow: 0 8px 24px rgba(19, 21, 27, .15);
+    }
+
+    /* Open menus near the right edge towards the left. */
+    body .ly-header .md-navigation #menu > li.has-child:nth-last-child(-n+3) > ul {
+        left: auto;
+        right: 0;
+    }
+
+    body .ly-header .md-navigation #menu > li.has-child:focus-within > ul {
+        display: block;
+    }
+}
+
+@media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
+    body .ly-header .md-navigation #menu > li.has-child:hover > ul {
+        display: block;
+    }
+}
+
+/* Keep child links visible and scrollable inside the mobile menu. */
+@media (max-width: 1199px) {
+    body .ly-header .md-navigation {
+        overflow-y: auto;
+    }
+
+    body .ly-header .md-navigation #menu {
+        bottom: auto;
+        min-height: 100%;
+        padding: 160px 20px 32px;
+    }
+
+    body .ly-header .md-navigation #menu > li.has-child {
+        max-width: 100%;
+    }
+
+    body .ly-header .md-navigation #menu > li.has-child > a {
+        display: block;
+        text-align: center;
+    }
+}

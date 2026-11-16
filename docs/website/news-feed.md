@@ -49,7 +49,9 @@ Na verejnom webe sa nekopírujú interné administračné API, stav prečítania
 
 ## Implementácia v dodanom HTML
 
-Finálna implementácia je priamo v [sk/index.html](sk/index.html), v izolovanom inline skripte na konci fragmentu. Používa natívne DOM API a `fetch`; nepoužíva jQuery, framework ani ďalší súbor JavaScriptu.
+Finálna implementácia je uložená v [sk/index.html](sk/index.html) v značke `!INCLUDE(/components/app-htmlembed/embed.jsp, html=...)!`. Parameter `html` obsahuje Base64 reťazec; jeho dekódovaný obsah má prefix `utf8:` a URL-kódovaný element `script`. Toto uloženie chráni skript pred prepisovaním medzier na nezalomiteľné medzery v redakčnom editore. Vo výslednej stránke sa vykreslí bežný inline skript, ktorý používa natívne DOM API a `fetch`; nepoužíva jQuery, framework ani ďalší súbor JavaScriptu.
+
+Postup vychádza z [embed.jsp](../../src/main/webapp/components/app-htmlembed/embed.jsp): najprv Base64 dekódovanie, potom odstránenie prefixu `utf8:` a `Tools.URLDecode`. [Lokálny náhľad](preview.py) podporuje tento konkrétny formát a dekóduje ho iba do HTTP odpovede. JSP ani vložený JavaScript na serveri nevykonáva; skript spúšťa až prehliadač. Obsah uloženého HTML súboru ani jeho kódovaný parameter sa pri náhľade nemenia.
 
 Statické HTML obsahuje nadpis **Čo je nové vo WebJET CMS**, krátky perex, prázdny kontajner `#wj-home-news-list`, záložnú správu s odkazom do dokumentácie a odkaz **Pozrieť všetky zmeny v dokumentácii** na `https://docs.webjetcms.sk/latest/sk/`. Záložná správa sa skryje až po úspešnom vložení aspoň jednej karty. Odkaz na všetky zmeny zostáva viditeľný stále.
 
@@ -76,7 +78,7 @@ Feed sa neukladá do `localStorage`; fragment nespracúva čítanosť ani použ�
 
 ### Vloženie do staršieho CMS a CSP
 
-Do `article.ly-article` treba vložiť celý obsah `sk/index.html` vrátane elementov `style` a `script`. V zdrojovom editore overiť, že ich starší CMS po uložení zachoval. Bez skriptu zostane funkčný textový odkaz do dokumentácie, živé karty sa však nevytvoria.
+Do `article.ly-article` treba vložiť celý obsah `sk/index.html` vrátane elementu `style` a značky HTML embed s celým parametrom `html`. V zdrojovom editore overiť, že ich starší CMS po uložení zachoval. Kódovaný obsah pri vkladaní nerozbaľovať na samostatný `script`; dekódovanie zabezpečí CMS pri vykreslení. Ak sa vložený kód nevykreslí alebo skript nespustí, zostane funkčný textový odkaz do dokumentácie, živé karty sa však nevytvoria.
 
 Ak verejný web používa Content Security Policy, jeho existujúce nastavenie musí umožniť tento inline skript a štýly, spojenie na `https://docs.webjetcms.sk` cez `connect-src` a náhľady cez `img-src`. Pri politike založenej na nonce alebo hash treba povoliť konkrétny obsah podľa pravidiel šablóny; fragment CSP sám nemení. Nejde o odporúčanie plošne zapnúť `unsafe-inline`.
 
@@ -86,6 +88,6 @@ Ak verejný web používa Content Security Policy, jeho existujúce nastavenie m
 - Pri vypnutom JavaScripte, blokovanom JSON, HTTP chybe a prázdnom zozname zostávajú použiteľné statické odkazy.
 - Chýbajúci alebo chybný obrázok nezakryje titulok ani CTA. Dlhý Facebook titulok sa nezmení na odrezaný nečitateľný fragment.
 - Text obsahujúci HTML sa zobrazí ako text, `javascript:` ani neznáma cieľová doména nevytvoria aktívny odkaz.
-- Po uložení v staršom CMS skontrolovať, či zdrojový editor zachoval `script` a `style`. Ak web používa CSP, musí povoľovať vlastný inline skript podľa existujúceho nastavenia, `connect-src` pre docs server a `img-src` pre náhľady. Toto nie je pokyn na plošné uvoľnenie CSP.
+- Po uložení v staršom CMS skontrolovať, či zdrojový editor zachoval `style` a celú značku HTML embed vrátane parametra `html`, a či sa vo vykreslenej stránke objaví dekódovaný skript. Ak web používa CSP, musí povoľovať výsledný inline skript podľa existujúceho nastavenia, `connect-src` pre docs server a `img-src` pre náhľady. Base64 kódovanie pravidlá CSP nemení. Toto nie je pokyn na plošné uvoľnenie CSP.
 
 Tento dokument zachytáva overený kontrakt zdroja a implementované správanie v `sk/index.html`. Kontrola kódu odhalila potrebu jednopriechodového dekódovania výňatkov; tá je už zapracovaná. Browserové a vizuálne overenie sa eviduje pri odovzdaní celého balíka.
