@@ -1,5 +1,7 @@
 <%@ page pageEncoding="utf-8" %><%@ page import="sk.iway.iwcm.Cache" %><%@ page import="sk.iway.iwcm.Tools" %><%
 
+System.out.println("FULTEXT PREVIEW-----------------------------------");
+
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 Object spamProtectionDisable = request.getAttribute("spamProtectionDisable");

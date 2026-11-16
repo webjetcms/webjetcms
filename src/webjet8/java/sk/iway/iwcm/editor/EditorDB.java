@@ -2538,8 +2538,14 @@ public class EditorDB
 
 		String virtualPath = "/LuceneFulltextSearch";
 		if (ef != null && Tools.isNotEmpty(ef.getVirtualPath())) virtualPath = ef.getVirtualPath();
-		MockHttpServletRequest request = new MockHttpServletRequest("", virtualPath);
-		request.setSession(new MockHttpSession(null));
+		MockHttpServletRequest request = new MockHttpServletRequest("", virtualPath) {
+			@Override
+			public boolean isAsyncSupported() { return false; }
+
+			@Override
+			public boolean isAsyncStarted() { return false; }
+		};
+		request.setSession(new MockHttpSession(Constants.getServletContext()));
 		request.setServerName("");
 		if (ef != null && ef.getGroupId() > 0)
 		{

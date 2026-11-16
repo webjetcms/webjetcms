@@ -4,10 +4,15 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
+import net.sourceforge.stripes.mock.MockHttpServletRequest;
 import net.sourceforge.stripes.mock.MockHttpServletResponse;
 import sk.iway.Password;
 import sk.iway.iwcm.Cache;
@@ -325,12 +330,40 @@ public class EditorToolsForCore {
             {
 
                 WJResponseWrapper respWrapper = null;
-                MockHttpServletResponse response = new MockHttpServletResponse();
+                MockHttpServletResponse response = new MockHttpServletResponse() {
+                    @Override
+                    public String getHeader(String name) {
+                        Collection<String> values = getHeaders(name);
+                        if (values.isEmpty()) return null;
+                        return values.iterator().next();
+                    }
+
+                    @Override
+                    public Collection<String> getHeaders(String name) {
+                        List<String> values = new ArrayList<>();
+                        for (Map.Entry<String, List<Object>> header : getHeaderMap().entrySet()) {
+                            if (header.getKey().equalsIgnoreCase(name)) {
+                                for (Object value : header.getValue()) {
+                                    if (value != null) values.add(String.valueOf(value));
+                                }
+                            }
+                        }
+                        return values;
+                    }
+
+                    @Override
+                    public Collection<String> getHeaderNames() {
+                        return new ArrayList<>(getHeaderMap().keySet());
+                    }
+                };
                 respWrapper = new WJResponseWrapper(response, request);
 
                 request.setAttribute("fulltext_preview", data);
 
-                request.getRequestDispatcher(includeFileName).include(request, respWrapper);
+                RequestDispatcher dispatcher;
+                if (request instanceof MockHttpServletRequest) dispatcher = Constants.getServletContext().getRequestDispatcher(includeFileName);
+                else dispatcher = request.getRequestDispatcher(includeFileName);
+                dispatcher.include(request, respWrapper);
                 if (Tools.isEmpty(respWrapper.redirectURL))
                 {
                     htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());
