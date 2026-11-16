@@ -12,6 +12,12 @@ Pomocou filtra v tomto stĺpci môžete vyhľadať napríklad asistentov so stav
 
 ![](datatable.png)
 
+## Zručnosti
+
+V nastaveniach **Zručnosti** otvorte kartu **Inštrukcie** a kliknite na **Odkazy na nástroje**. Vyhľadajte nástroj a kliknutím na jeho názov vložte odkaz na miesto kurzora, napríklad `@tool(quiz_get_all)`. Tlačidlo **Vložiť skupinu** vloží odkaz na celú skupinu, napríklad `@group(quiz)`.
+
+Pri každom spustení asistent načíta aktuálne inštrukcie odkazovanej zručnosti aj nástroje, na ktoré odkazuje. Keď zručnosť upravíte, zmena sa prejaví pri ďalšom spustení všetkých asistentov, ktorí ju používajú.
+
 !>**Upozornenie:** Nastavenia by mala vykonávať iba osoba, ktorá má dostatočné znalosti o fungovaní AI asistentov a rozumie možnostiam jednotlivých poskytovateľov. Nesprávne nastavenie môže viesť k neoptimálnemu správaniu asistenta alebo k obmedzeniu jeho funkčnosti. Odporúčame, aby konfiguráciu vykonával administrátor alebo technicky zdatný používateľ, ktorý vie správne zadať inštrukcie a parametre pre konkrétneho AI poskytovateľa.
 
 ## Základné informácie
@@ -22,7 +28,6 @@ V tejto časti si preberieme, ako pridať/nastaviť nového **AI asistenta**. Pr
 - Akcia
 - Poskytovateľ
 - Inštrukcie
-- Nástroje
 - Pokročilé
 - Limity tokenov
 
@@ -90,23 +95,21 @@ Táto karta slúži na výber poskytovateľa AI služieb, ktorý bude použitý 
 
 ### Karta - Inštrukcie
 
-Táto karta je kľúčová pre správne fungovanie asistenta. Obsahuje jedno pole, do ktorého zadávate detailné inštrukcie, čo má asistent vykonať po spustení. Inštrukcie by mali byť jasné, konkrétne a zrozumiteľné, aby asistent vedel presne, akú úlohu má splniť. Správne zadané inštrukcie zabezpečia, že asistent bude vykonávať požadované akcie efektívne a podľa očakávaní. Viac sa dočítate v časti [písanie inštrukcií](../instructions/README.md).
+Napíšte, čo má asistent vykonať. Príklady nájdete v časti [Písanie inštrukcií](../instructions/README.md).
+
+Na mieste, kam chcete vložiť odkaz, nechajte kurzor a kliknite na **Odkazy na zručnosti a nástroje**. V paneli môžete vyhľadať zručnosť, nástroj alebo skupinu nástrojov:
+
+- Kliknutím na názov nástroja vložíte napríklad `@tool(quiz_get_all)`.
+- Tlačidlom **Vložiť skupinu** vložíte napríklad `@group(quiz)`. Asistent pri spustení sprístupní nástroje, ktoré do skupiny práve patria a na ktoré má používateľ oprávnenie.
+- Kliknutím na zručnosť vložíte odkaz podľa jej ID, napríklad `@skill(42)`. Asistent tak môže použiť jej inštrukcie aj nástroje.
+
+Ak používate poskytovateľa **Prehliadač**, vložte odkaz do textu inštrukcie vnútri JSON reťazca. Ak chcete nástroj alebo zručnosť odobrať, vymažte odkazy, ktoré ich priraďujú, a kliknite na **Uložiť**. Tlačidlom **Zrušiť** ponecháte pôvodné priradenia.
+
+Ak na tú istú zručnosť odkážete viackrát, asistent načíta jej inštrukcie raz. Aj nástroj, na ktorý odkážete priamo, cez skupinu alebo cez viacero zručností, sa v zozname dostupných nástrojov objaví iba raz.
+
+Ak má asistent vyhľadávať v katalógu nástrojov, vložte `@group(ai)`. Nástrojom `ai_tools_preview` získa názvy a krátke opisy operácií dostupných prihlásenému používateľovi. Nástrojom `ai_tools_details` si vyžiada vstupné a výstupné schémy. Na vykonanie konkrétnej operácie potrebuje aj príslušný nástroj.
 
 ![](datatable-instructions-tab.png)
-
-### Karta - Nástroje
-
-V poli **Rýchle pridanie** vyhľadajte skupinu, nástroj alebo časť REST cesty. Ak potrebujete len niektoré nástroje, kliknite na názov skupiny, napríklad **Dotazníky (Quiz)**, začiarknite požadované koncové body a kliknite na **Pridať vybrané**. Už priradené nástroje majú označenie **Pridané**. Tlačidlo **Pridať všetky** pridá zvyšok skupiny bez vyberania jednotlivých položiek. Číslo na tlačidle udáva, koľko nástrojov pribudne. Pridať môžete len nástroje, ku ktorým máte prístup. Nové koncové body sa asistentovi nepridajú automaticky.
-
-![Výber dvoch nástrojov z rozbalenej skupiny Dotazníky](datatable-tools-quick-add.png)
-
-V časti **Priradené nástroje** môžete odobrať celú skupinu alebo ju rozbaliť a odobrať jednotlivý nástroj. Tlačidlo **Vrátiť späť** obnoví práve odobraté nástroje. Ak ste mali priradenú len časť skupiny, obnoví sa iba táto časť.
-
-Zmeny priradenia sa uložia spolu s asistentom po kliknutí na **Uložiť**. Tlačidlom **Zrušiť** ich zahodíte.
-
-Ak má asistent vyhľadávať v katalógu, pridajte mu skupinu **Katalóg nástrojov**. Nástrojom `ai_tools_preview` získa názvy a krátke opisy všetkých operácií, ku ktorým má prihlásený používateľ prístup. Nástrojom `ai_tools_details` si vyžiada vstupné a výstupné schémy pre vybrané názvy. Operáciu, ktorú má asistent aj vykonať, mu priraďte jednotlivo alebo ako súčasť skupiny.
-
-![Karta Nástroje s priradenými skupinami Katalóg nástrojov a Dotazníky](datatable-tools-tab.png)
 
 ### Karta - Pokročilé
 

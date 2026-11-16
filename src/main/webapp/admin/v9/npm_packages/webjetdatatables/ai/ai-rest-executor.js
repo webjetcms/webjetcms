@@ -1,7 +1,7 @@
 import {AiExecutionResult} from './ai-execution-result';
 import { requestAiText } from '../../../src/js/ai/ai-rest-transport';
 import { parseAiResponse } from '../../../src/js/ai/ai-response-parser';
-import { toolReply } from '../../../src/js/ai/ai-tool-transport';
+import { toolReply, writePresetStatus } from '../../../src/js/ai/ai-tool-transport';
 
 /**
  * Class to wrap REST API for AI execution logic
@@ -44,6 +44,7 @@ export class AiRestExecutor {
             const result = await requestAiText(inputData, {
                 signal: controller.signal,
                 toolsEnabled: aiCol.toolsEnabled,
+                allowWrites: aiCol.toolsWrite === true,
                 streaming,
                 onDelta: text => {
                     wholeText += text;
@@ -53,10 +54,10 @@ export class AiRestExecutor {
             executionResult.totalTokens = result.totalTokens ?? 0;
             if (result.error) {
                 executionResult.errorText = result.error;
-                if (aiCol.toolsWrite) executionResult.explanatoryText = toolReply(result, true);
+                if (aiCol.toolsWrite) executionResult.explanatoryText = toolReply(result);
             } else if (aiCol.toolsWrite) {
-                executionResult.explanatoryText = toolReply(result, true);
-                if (result.toolProblem || !result.toolStatus) executionResult.statusKey = 'components.ai.tools.unverified.js';
+                executionResult.explanatoryText = toolReply(result);
+                executionResult.statusKey = writePresetStatus(result);
                 executionResult.success = true;
             } else {
                 const parsed = setText(result.response ?? wholeText, true);

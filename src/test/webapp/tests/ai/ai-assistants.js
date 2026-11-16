@@ -98,81 +98,100 @@ Scenario('ai_assistants editor logic', async ({I, DTE}) => {
         await checkModelAutocomplete(I, "gemini");
 });
 
-Scenario('Quick add saves explicit tools and undoes partial group removal', async ({I, DT, DTE}) => {
-    const name = "tool-picker-autotest-" + I.getRandomText();
-    const field = "#datatableInit_modal .assistant-tools";
-    const search = field + " input[type=search]";
-    const browseQuiz = field + ' .tool-browse[data-group="quiz"]';
-    const choice = name => field + ' .tool-choices input[value="' + name + '"]';
-    const quiz = field + ' .tool-groups .tool-toggle[data-group="quiz"]';
-    const removeQuiz = quiz + " + .tool-remove-group";
-    const assigned = () => I.executeScript(() => aiAssistantsDataTable.EDITOR.field("toolNames").val().split(",").filter(Boolean));
-    function openTools() {
-        I.click(locate("#datatableInit tbody a").withText(name));
+Scenario('Instruction links assign and remove assistant tools and skills', async ({I, DT, DTE}) => {
+    const suffix = "links-autotest-" + I.getRandomText();
+    const name = "assistant-" + suffix;
+    const skillName = "skill-" + suffix;
+    const skillTable = "aiSkillsDataTable";
+    const field = "#DTE_Field_instructions";
+    const tab = "#pills-dt-datatableInit-instructions-tab";
+    const drawer = "#datatableInit_modal .reference-drawer";
+    const plain = 'LanguageModel: {"initialPrompts":[{"role":"system","content":"Use these references: "}]}';
+
+    I.amOnPage("/admin/v9/settings/ai-skills/");
+    DT.waitForLoader();
+    DT.clickAddButton(skillTable);
+    DTE.waitForEditor(skillTable);
+    DTE.fillField("name", skillName);
+    I.clickCss("#pills-dt-aiSkillsDataTable-instructions-tab");
+    I.fillField(field, "Skill guidance for the assistant. @tool(ai_tools_details) @tool(quiz_get_all)");
+    DTE.save(skillTable, true);
+
+    createLocalAssistant(I, DT, DTE, name, "Prehliadač", plain);
+    DT.filterEquals("name", name);
+    const assistant = locate("#datatableInit tbody a").withText(name);
+    I.waitForElement(assistant);
+    const runtime = () => I.executeScript(async () => {
+        const id = aiAssistantsDataTable.row(0).data().id;
+        return await $.getJSON("/admin/rest/ai/assistant/runtime/", {assistantId: id});
+    });
+    function openInstructions() {
+        I.click(assistant);
         DTE.waitForEditor();
-        I.clickCss("#pills-dt-datatableInit-tools-tab");
+        I.dontSeeElement("#pills-dt-datatableInit-tools-tab");
+        I.dontSeeElement("#pills-dt-datatableInit-skills-tab");
+        I.clickCss(tab);
     }
 
-    createLocalAssistant(I, DT, DTE, name, "Prehliadač", "Test tool assignment.");
-    DT.filterEquals("name", name);
     try {
-        openTools();
-        I.fillField(search, "GET /admin/rest/ai/tools/preview");
-        I.pressKey("ArrowDown");
-        I.pressKey("Enter");
-        I.click(search);
-        I.click(browseQuiz);
-        I.checkOption(choice("quiz_get_all"));
-        I.checkOption(choice("quiz_question_add"));
-        I.click(browseQuiz);
-        I.click(browseQuiz);
-        I.seeCheckboxIsChecked(choice("quiz_get_all"));
-        I.assertDeepEqual(await assigned(), ["ai_tools_preview"]);
-        I.click(field + " .tool-add-selected:enabled:visible");
-        const subset = ["ai_tools_preview", "quiz_get_all", "quiz_question_add"];
-        I.assertDeepEqual((await assigned()).sort(), subset);
-        I.click(search);
-        I.click(browseQuiz);
-        I.seeElement(choice("quiz_get_all"));
-        I.click(quiz);
-        I.dontSeeElement(field + " .tool-results");
-        I.seeElement(field + ' [data-remove="quiz_get_all"]');
-        DTE.save();
-        openTools();
-        I.assertDeepEqual((await assigned()).sort(), subset);
-        I.fillField(search, "quiz");
-        I.click(browseQuiz);
-        I.seeElement(choice("quiz_get_all") + ":checked:disabled");
-        I.seeElement(choice("quiz_delete") + ":not(:checked):enabled");
-        I.click(field + " .tool-add-all");
-        I.click(quiz);
-        I.seeElement(field + ' [data-remove="quiz_question_add"]');
-        I.click(field + ' [data-remove="quiz_delete"]');
-        const partial = await assigned();
-        I.assertTrue(partial.includes("quiz_get_all") && partial.includes("quiz_question_add") && !partial.includes("quiz_delete"));
-        I.click(removeQuiz);
-        I.assertEqual((await assigned()).join(","), "ai_tools_preview");
-        I.click(field + " .tool-undo");
-        I.assertDeepEqual((await assigned()).sort(), partial.sort());
+        openInstructions();
+        I.executeScript(() => {
+            const textarea = document.querySelector("#DTE_Field_instructions");
+            const end = textarea.value.lastIndexOf('"');
+            textarea.setSelectionRange(end, end);
+        });
+        I.clickCss("#datatableInit_modal .reference-toggle");
+        I.fillField(drawer + " input", "ai_tools_preview");
+        I.click(locate(drawer + " button").withText("ai_tools_preview"));
+        I.fillField(drawer + " input", "quiz_get_all");
+        I.click(locate(drawer + " button").withText("Vložiť skupinu"));
+        I.fillField(drawer + " input", skillName);
+        I.click(locate(drawer + " button").withText(skillName));
+        const linked = await I.grabValueFrom(field);
+        I.assertContain(linked, "@tool(ai_tools_preview)@group(quiz)@skill(");
         DTE.save();
 
-        openTools();
-        I.assertDeepEqual((await assigned()).sort(), partial);
-        I.click(removeQuiz);
+        openInstructions();
+        I.seeInField(field, linked);
+        const resolved = await runtime();
+        I.assertContain(resolved.skillInstructions, "Skill guidance for the assistant.");
+        I.assertTrue(resolved.tools.some(tool => tool.name === "ai_tools_preview"));
+        I.assertEqual(resolved.tools.filter(tool => tool.name === "quiz_get_all").length, 1);
+        I.assertTrue(resolved.tools.some(tool => tool.name === "ai_tools_details"));
         DTE.cancel();
-        openTools();
-        I.assertDeepEqual((await assigned()).sort(), partial);
-        I.click(removeQuiz);
+
+        I.amOnPage("/admin/v9/settings/ai-skills/");
+        DT.filterEquals("name", skillName);
+        I.click(locate("#aiSkillsDataTable tbody a").withText(skillName));
+        DTE.waitForEditor(skillTable);
+        I.clickCss("#pills-dt-aiSkillsDataTable-instructions-tab");
+        I.fillField(field, "Updated guidance.");
+        DTE.save(skillTable, true);
+
+        I.amOnPage("/admin/v9/settings/ai-assistants/");
+        DT.filterEquals("name", name);
+        I.waitForElement(assistant);
+        const updated = await runtime();
+        I.assertContain(updated.skillInstructions, "Updated guidance.");
+        I.assertFalse(updated.tools.some(tool => tool.name === "ai_tools_details"));
+        I.assertTrue(updated.tools.some(tool => tool.name === "quiz_get_all"));
+        openInstructions();
+        I.fillField(field, plain);
+        DTE.cancel();
+        openInstructions();
+        I.seeInField(field, linked);
+        I.fillField(field, plain);
         DTE.save();
-        openTools();
-        I.assertEqual((await assigned()).join(","), "ai_tools_preview");
-        I.dontSeeElement(quiz);
-        DTE.cancel();
+        const removed = await runtime();
+        I.assertEqual(removed.skillInstructions, "");
+        I.assertDeepEqual(removed.tools, []);
     } finally {
         I.amOnPage("/admin/v9/settings/ai-assistants/");
-        DT.waitForLoader();
         DT.filterEquals("name", name);
         DT.deleteAll();
+        I.amOnPage("/admin/v9/settings/ai-skills/");
+        DT.filterEquals("name", skillName);
+        DT.deleteAll(skillTable);
     }
 });
 

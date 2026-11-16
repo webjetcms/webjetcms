@@ -22,6 +22,8 @@ public class AssistantResponseDTO {
     private String response;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AiToolProtocol.Call toolCall;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean noToolAction;
     private String error;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String errorCategory;

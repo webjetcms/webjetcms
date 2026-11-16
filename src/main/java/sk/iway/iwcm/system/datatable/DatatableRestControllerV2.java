@@ -148,12 +148,15 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @param entityClass
 	 */
 	protected DatatableRestControllerV2(JpaRepository<T, Long> repo, Class<T> entityClass) {
+		this(repo, entityClass, false);
+	}
+
+	/** Allows a domain-owned table to retain its scope even in a single-domain installation. */
+	protected DatatableRestControllerV2(JpaRepository<T, Long> repo, Class<T> entityClass, boolean alwaysScopeByDomain) {
 		this.repo = repo;
 
-		//over, ci maju byt pouzite automaticke podmienky so stlpcom domain_id
-		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
-			if (repo instanceof DomainIdRepository) checkDomainId = true;
-		}
+		checkDomainId = repo instanceof DomainIdRepository
+				&& (alwaysScopeByDomain || InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir"));
 
 		this.entityClass = entityClass;
 	}

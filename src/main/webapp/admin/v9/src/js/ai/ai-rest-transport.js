@@ -2,12 +2,27 @@ import { readAiStream } from './ai-stream';
 import { historyText, checkAiResponse } from './chat-history-api';
 import { runToolSteps } from './ai-tool-transport';
 
+/** Loads the current user's execution settings for one editor action or chat turn. */
+export async function refreshAssistantRuntime(assistant, signal) {
+    const response = await fetch('/admin/rest/ai/assistant/runtime/?assistantId=' + encodeURIComponent(assistant.assistantId), {
+        credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal,
+        headers: { Accept: 'application/json', 'X-CSRF-Token': window.csrfToken }
+    });
+    checkAiResponse(response, 'HTTP ' + response.status);
+    const runtime = await response.json();
+    if ((assistant.provider && runtime.provider !== assistant.provider) || (assistant.action && runtime.action !== assistant.action)) {
+        throw new Error(WJ.translate('components.ai_assistants.settings_changed.js'));
+    }
+    return { ...assistant, ...runtime };
+}
+
 /**
  * Sends a text request and returns the CMS response before editor or chat formatting.
  * @param {object} inputData Request data, including the caller's assistant ID and timestamp.
  * @param {object} [options={}] HTTP and streaming options.
  * @param {boolean} [options.streaming=false] Requests newline-delimited streaming responses.
  * @param {boolean} [options.toolsEnabled=false] Uses one JSON model response per step.
+ * @param {boolean} [options.allowWrites=true] Whether this action was prepared for write operations.
  * @param {AbortSignal} [options.signal] Cancels the browser's HTTP request.
  * @param {function(string): void} [options.onDelta] Receives raw text fragments as they arrive.
  * @param {function(string|null): void} [options.onToolActivity] Receives the tool name at dispatch and null when the call settles.
@@ -15,12 +30,18 @@ import { runToolSteps } from './ai-tool-transport';
  * @param {function(object): void} [options.onMetadata] Receives saved thread/message IDs and the thread revision.
  * @returns {Promise<object>} CMS response containing text, usage, continuation and error metadata.
  */
-export async function requestAiText(inputData, { toolsEnabled, onWrite, onToolActivity, ...options } = {}) {
-    if (!toolsEnabled) return generate(inputData, options);
+export async function requestAiText(inputData, { toolsEnabled, allowWrites = true, onWrite, onToolActivity, ...options } = {}) {
+    if (!toolsEnabled) {
+        const result = await generate(inputData, options);
+        if (result.toolCall) throw new Error(WJ.translate('components.ai_assistants.settings_changed.js'));
+        return result;
+    }
     const message = { ...inputData };
     let totalTokens = 0;
     return runToolSteps(message.assistantId, async toolResults => {
         const result = await generate({ ...message, toolResults }, { ...options, streaming: false });
+        // The assignment may change after PageBuilder chooses to process each block separately.
+        if (result.toolCall && result.toolCall.write !== false && !allowWrites) throw new Error(WJ.translate('components.ai_assistants.settings_changed.js'));
         if (!options.endpoint && Number.isInteger(result.totalTokens)) {
             totalTokens += result.totalTokens;
             result.totalTokens = totalTokens;
@@ -86,7 +107,7 @@ async function generate(inputData, { streaming = false, signal, onDelta = () => 
         result = await response.json();
     }
     if (result != null && typeof result.error === "string" && result.error.length > 0) return result;
-    if (!streaming && Array.isArray(inputData.toolResults) && result?.toolCall) return result;
+    if (!streaming && result?.toolCall) return result;
     if (result == null || !Number.isInteger(result.totalTokens) || result.totalTokens < 0
         || (result.error != null && typeof result.error !== "string")
         || (result.response != null && typeof result.response !== "string")

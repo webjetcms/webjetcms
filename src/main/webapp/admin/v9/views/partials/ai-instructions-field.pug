@@ -1,0 +1,42 @@
+- const referenceTitle = assistantReferences ? "#{components.ai_assistants.references.title}" : "#{components.ai_assistants.skills.references}"
+- const referenceHeading = assistantReferences ? "#{components.ai_assistants.references.available}" : "#{components.ai_assistants.tools.title}"
+- const referenceSearch = assistantReferences ? "#{components.ai_assistants.references.search}" : "#{components.ai_assistants.tools.search}"
+template#skill-reference-template
+    .skill-references(th:data-skills=assistantReferences ? "#{components.ai_assistants.skills.title}" : false th:data-tools="#{components.ai_assistants.tools.title}" th:data-empty=assistantReferences ? "#{components.ai_assistants.references.empty}" : "#{components.ai_assistants.skills.reference_empty}" th:data-no-matches="#{components.ai_assistants.references.no_matches}" th:data-read="#{components.ai_assistants.skills.reference_read}" th:data-write="#{components.ai_assistants.skills.reference_write}")
+        .d-flex.justify-content-end.mb-2
+            button.btn.btn-sm.btn-outline-secondary.reference-toggle(type="button" aria-expanded="false" aria-controls="skill-reference-drawer")
+                i.ti.ti-layout-sidebar-right.me-1(aria-hidden="true")
+                span(th:text=referenceTitle)
+        .reference-layout
+            aside#skill-reference-drawer.reference-drawer.border.rounded.p-2(hidden aria-labelledby="skill-reference-heading")
+                strong#skill-reference-heading.d-block.mb-1(th:text=referenceHeading)
+                input.form-control.form-control-sm(type="search" aria-labelledby="skill-reference-heading" autocomplete="off" th:placeholder=referenceSearch)
+                .reference-results.mt-2
+        span.visually-hidden(role="status")
+
+style.
+    .DTE_Field_Name_instructions > label { display: none; }
+    .DTE_Field_Name_instructions > [data-dte-e="input"],
+    .DTE_Field_Name_instructions .DTE_Field_InputControl { width: 100%; }
+    .DTE_Field_Name_instructions .md-textarea-editor {
+        height: min(502px, 70dvh);
+        margin-left: 0;
+    }
+    .modal-fullscreen .modal-body:has(.tab-pane.active .DTE_Field_Name_instructions) { container-type: size; }
+    .skill-references { margin-inline: .5rem; }
+    .reference-layout { display: flex; align-items: stretch; gap: .5rem; }
+    .reference-layout > :is(.md-textarea-editor, .input-group) { flex: 1 1 0; }
+    .reference-drawer { flex: 0 0 min(36%, 24rem); min-width: 0; overflow: auto; max-height: min(502px, 70dvh); }
+    .reference-drawer summary, .reference-drawer button { overflow-wrap: anywhere; }
+    .reference-drawer summary { cursor: pointer; }
+    .modal-fullscreen .skill-references .md-textarea-editor,
+    .modal-fullscreen .skill-references .reference-drawer { height: calc(100cqh - 4.5rem); max-height: none; }
+    @media (max-width: 575px) {
+        .reference-layout { flex-direction: column; }
+        .reference-layout > .md-textarea-editor, .reference-drawer { flex: auto; }
+        .reference-layout > .reference-drawer { max-height: 13rem; }
+        .reference-layout:has(> .reference-drawer:not([hidden])) > .md-textarea-editor { height: min(16rem, 38dvh); }
+    }
+
+script
+    include ai-instructions-field.js

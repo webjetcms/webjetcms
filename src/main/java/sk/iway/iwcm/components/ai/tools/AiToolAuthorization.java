@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -48,13 +49,18 @@ public class AiToolAuthorization {
 
     static final String ASSISTANT_HEADER = "X-WebJET-AI-Assistant";
     private final AssistantDefinitionRepository assistants;
+    private final AiToolRegistry registry;
+    private final AiSkillRepository skills;
     private final WebjetSecurityService security;
     private final MethodSecurityExpressionHandler expressions;
     private final PreAuthorizeAuthorizationManager preAuthorize = new PreAuthorizeAuthorizationManager();
     private final SecuredAuthorizationManager secured = new SecuredAuthorizationManager();
 
-    public AiToolAuthorization(ApplicationContext context, AssistantDefinitionRepository assistants, WebjetSecurityService security) {
+    public AiToolAuthorization(ApplicationContext context, AssistantDefinitionRepository assistants, WebjetSecurityService security,
+            AiToolRegistry registry, AiSkillRepository skills) {
         this.assistants = assistants;
+        this.registry = registry;
+        this.skills = skills;
         this.security = security;
         expressions = context.getBeanProvider(MethodSecurityExpressionHandler.class).getIfUnique(() -> {
             DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
@@ -65,10 +71,25 @@ public class AiToolAuthorization {
         preAuthorize.setApplicationContext(context);
     }
 
-    Optional<AssistantDefinitionEntity> assistant(long id) {
+    Optional<AiAssistantRuntime> assistant(long id, HttpServletRequest request) {
         if (id < 1 || !security.hasPermission("cmp_ai_button")) return Optional.empty();
-        return assistants.findByIdAndDomainId(id, CloudToolsForCore.getDomainId())
-                .filter(a -> !Boolean.FALSE.equals(a.getActive()) && AiToolProtocol.supports(a));
+        int domainId = CloudToolsForCore.getDomainId();
+        return assistants.findByIdAndDomainId(id, domainId)
+                .filter(a -> !Boolean.FALSE.equals(a.getActive()))
+                .map(a -> resolve(a, domainId, request));
+    }
+
+    AiAssistantRuntime resolve(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        String key = AiAssistantRuntime.class.getName() + "." + domainId + "." + assistant.getId();
+        if (request.getAttribute(key) instanceof AiAssistantRuntime cached) return cached;
+        var runtime = AiAssistantRuntime.compose(skills, assistant, domainId, registry,
+                entry -> mayList(entry, request, Access.CATALOG));
+        request.setAttribute(key, runtime);
+        return runtime;
+    }
+
+    boolean mayList(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {
+        return AiToolServletRoutes.mayList(request.getServletContext(), entry) && isAllowed(entry, request, access);
     }
 
     static boolean hasAdminIdentity(HttpServletRequest request) {
@@ -90,8 +111,9 @@ public class AiToolAuthorization {
             String assistantId = request.getHeader(ASSISTANT_HEADER);
             AssistantDefinitionEntity assigned = null;
             if (access != Access.CATALOG && assistantId != null) {
-                assigned = assistant(Long.parseLong(assistantId))
-                        .filter(a -> Arrays.asList(a.getToolNames().split(",")).contains(entry.definition().name())).orElse(null);
+                assigned = assistant(Long.parseLong(assistantId), request)
+                        .filter(runtime -> runtime.tools().stream().anyMatch(tool -> tool.name().equals(entry.definition().name())))
+                        .map(AiAssistantRuntime::assistant).orElse(null);
                 if (assigned == null) return false;
             }
             if (!hasHandlerPermission(entry, request, access)) return false;

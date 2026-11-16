@@ -16,6 +16,8 @@ import java.util.concurrent.Callable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -177,11 +179,12 @@ public class AiService {
         Prop prop = Prop.getInstance(request);
         inputData.prepareData(request);
 
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
-
-        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
+        AssistantDefinitionEntity stored = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
+        if(doesSupportAction(stored, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
+        var runtime = tools.resolve(stored, CloudToolsForCore.getDomainId(), request);
+        AssistantDefinitionEntity assistant = runtime.assistant();
         checkTokenLimit(assistant.getId(), assistantRepo, prop);
         validateChatAttachments(assistant, inputData, prop);
 
@@ -192,7 +195,7 @@ public class AiService {
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
                 if (inputData.isInteractiveAssistant()) {
-                    inputData.setToolProtocol(AiToolProtocol.prepare(assistant, tools, request, inputData.getToolResults()));
+                    inputData.setToolProtocol(AiToolProtocol.prepare(runtime, inputData.getToolResults()));
                     if (inputData.getToolProtocol() != null && !(aiInterface instanceof LibrarySupportLogic)) {
                         throw new IllegalArgumentException("This provider adapter cannot run assistant tools.");
                     }
@@ -424,6 +427,10 @@ public class AiService {
             .toList();
     }
 
+    public AiToolService.RuntimeMetadata runtimeMetadata(long assistantId, HttpServletRequest request) {
+        return tools.runtimeMetadata(assistantId, request);
+    }
+
     private static DataTableAi toClientAssistant(AssistantDefinitionEntity assistant, Prop prop, AiService aiService) {
         DataTableAi ai = new DataTableAi();
         ai.setAssistantId(assistant.getId());
@@ -437,10 +444,10 @@ public class AiService {
 
         ai.setUseStreaming(aiService == null ? Tools.isTrue(assistant.getUseStreaming()) : aiService.isStreamingEnabled(assistant));
         ai.setPersistentChat(aiService != null && aiService.isPersistentChatEnabled(assistant));
-        if (AiToolProtocol.supports(assistant)) {
-            ai.setToolsEnabled(true);
-            // Only these presentation flags go to the picker. Each invocation resolves its own authorized catalog.
-            ai.setToolsWrite(aiService == null || aiService.tools == null || aiService.tools.hasAssignedWrite(assistant));
+        if ("generate_text".equals(assistant.getAction()) && !Tools.isTrue(assistant.getUserPromptEnabled())
+                && aiService != null && aiService.tools != null
+                && RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes context) {
+            ai.setHasInstructionContext(aiService.tools.hasInstructionContext(assistant, context.getRequest()));
         }
         ai.setAction(assistant.getAction());
         ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + assistant.getGroupName()));
@@ -449,8 +456,8 @@ public class AiService {
         ai.setIcon(assistant.getIcon());
         if (Tools.isEmpty(ai.getIcon())) ai.setIcon("clipboard-text");
 
-        if ("browser".equals(ai.getProvider())) {
-            // Browser execution needs the configured instructions locally.
+        // Text and chat fetch the effective browser instructions immediately before execution.
+        if ("browser".equals(ai.getProvider()) && !"generate_text".equals(ai.getAction()) && !"live_chat".equals(ai.getAction())) {
             ai.setInstructions(assistant.getInstructions());
         }
         return ai;

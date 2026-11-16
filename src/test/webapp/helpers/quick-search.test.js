@@ -119,6 +119,7 @@ function fixture(t, denied = [], options = {}) {
         vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
         vm.runInContext(`{ ${readAdmin('ai/ai-chat-host.js')}; Object.assign(this, { AiChatHost }); }`, context);
         if (options.editorChat) {
+            vm.runInContext(readAdmin('ai/ai-rest-transport.js'), context);
             vm.runInContext(readAdmin('../../npm_packages/webjetdatatables/ai/ai-execution-result.js'), context);
             vm.runInContext(`${readAdmin('../../npm_packages/webjetdatatables/editor-ai.js')}\nthis.EditorAi = EditorAi;`, context);
         }
@@ -2109,9 +2110,13 @@ test('Ordinary PageBuilder generation still edits each region and can undo all r
         update(input.inputValue + ' edited', true);
         return { success: true, totalTokens: 3 };
     };
-    await editor._executeAction(null, { name: 'data', type: 'wysiwyg' }, {
+    editor.aiUserInterface._isCurrentAssistantView = () => true;
+    const pending = editor._executeAction(null, { name: 'data', type: 'wysiwyg' }, {
         ...chatAssistants[0], action: 'generate_text', from: 'data', to: 'data'
     });
+    const runtime = f.requests.find(request => request.url.pathname === '/admin/rest/ai/assistant/runtime/');
+    await f.respond(runtime, { provider: chatAssistants[0].provider, action: 'generate_text', toolsWrite: false });
+    await pending;
     assert.deepEqual(regions.map(region => region.value), ['First region edited', 'Second region edited']);
     editor.undo();
     assert.deepEqual(regions.map(region => region.value), ['First region', 'Second region']);

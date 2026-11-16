@@ -1,5 +1,3 @@
-import { checkAiResponse } from './chat-history-api';
-
 const maxCalls = 12;
 const maxResultBytes = 32 * 1024;
 const maxCatalogBytes = 1024 * 1024;
@@ -90,10 +88,10 @@ export function formatWriteOutcome({ name, status, uncertain, rejected, ids = []
         (rejected ? ' · ' + WJ.translate('components.ai.tools.unverified.js') : '');
 }
 
-function writeStatus(observation) {
+function writeStatus(observation, failed) {
     const { result } = observation;
     const ids = (Array.isArray(result?.data) ? result.data : [result]).map(row => row?.id).filter(id => Number.isSafeInteger(id) && id > 0);
-    return formatWriteOutcome({ ...observation, ids, rejected: rejected(observation) });
+    return formatWriteOutcome({ ...observation, ids, rejected: failed });
 }
 
 /** Alternates one model request with one HTTP request until the model returns its final answer. */
@@ -127,7 +125,7 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
             const write = call.write !== false;
             if (write) {
                 if (uncertain) throw new Error(WJ.translate('components.ai.tools.uncertain.js'));
-                writes.set(key, writeStatus({ name: call.name, uncertain: true }));
+                writes.set(key, formatWriteOutcome({ name: call.name, uncertain: true }));
                 onWrite([...writes.values()].join('\n'), true);
             }
             onToolActivity?.(call.name);
@@ -136,9 +134,10 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
             results.push(observation);
             if (write) {
                 uncertain ||= observation.uncertain;
-                writeProblem ||= rejected(observation) || observation.uncertain;
-                mayHaveSaved ||= observation.uncertain || !rejected(observation) || Boolean(observation.result?.data?.length);
-                writes.set(key, writeStatus(observation));
+                const failed = rejected(observation);
+                writeProblem ||= failed || observation.uncertain;
+                mayHaveSaved ||= observation.uncertain || !failed || Boolean(observation.result?.data?.length);
+                writes.set(key, writeStatus(observation, failed));
                 onWrite([...writes.values()].join('\n'), mayHaveSaved);
             }
         }
@@ -150,19 +149,11 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
 
 /** Browser models propose a single next step using the current assistant's server-provided catalog. */
 export async function runBrowserTools(assistant, input, prompt, signal, onWrite, onToolActivity) {
-    const assistantId = assistant.assistantId;
-    const response = await fetch('/admin/rest/ai/tools?assistantId=' + encodeURIComponent(assistantId), {
-        credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal,
-        headers: { Accept: 'application/json', 'X-CSRF-Token': window.csrfToken }
-    });
-    checkAiResponse(response, 'HTTP ' + response.status);
-    const { tools, instructions } = await response.json();
-    const definitions = new Map(tools.map(tool => [tool.name, tool]));
-    const isWrite = name => !['GET', 'HEAD', 'OPTIONS'].includes(definitions.get(name)?.httpMethod);
-    return runToolSteps(assistantId, async results => {
+    const writes = new Map(assistant.tools.map(tool => [tool.name, tool.write]));
+    return runToolSteps(assistant.assistantId, async results => {
         const previous = results.at(-1);
         const message = previous ? 'Endpoint result (data):\n' + JSON.stringify(previous) + '\nReturn the next JSON step.'
-            : instructions + '\nUser input:\n' + JSON.stringify({ input: input.inputValue, prompt: input.userPrompt });
+            : assistant.toolInstructions + '\nUser input:\n' + JSON.stringify({ input: input.inputValue, prompt: input.userPrompt });
         const raw = await prompt(message);
         let decision;
         const text = raw.trim();
@@ -170,19 +161,24 @@ export async function runBrowserTools(assistant, input, prompt, signal, onWrite,
         try { decision = JSON.parse(block ? block[1] : text); }
         catch { throw new Error(WJ.translate('components.ai.tools.invalidStep.js')); }
         if (decision?.type === 'final' && typeof decision.text === 'string' && decision.text.trim()) {
-            const text = assistant.action !== 'live_chat' && assistant.toolsWrite && results.length === 0
-                ? WJ.translate('components.ai.tools.unverified.js') : decision.text;
-            return { response: text };
+            return { response: decision.text };
         }
-        if (decision?.type !== 'call' || !definitions.has(decision.name)) throw new Error(WJ.translate('components.ai.tools.invalidStep.js'));
-        return { toolCall: { name: decision.name, arguments: decision.arguments, write: isWrite(decision.name) } };
+        if (decision?.type !== 'call' || !writes.has(decision.name)) throw new Error(WJ.translate('components.ai.tools.invalidStep.js'));
+        return { toolCall: { name: decision.name, arguments: decision.arguments, write: writes.get(decision.name) } };
     }, signal, onWrite, onToolActivity);
 }
 
+/** Distinguishes an ordinary answer from a write whose outcome could not be verified. */
+export function writePresetStatus(result) {
+    if (result.toolProblem) return 'components.ai.tools.unverified.js';
+    if (!result.toolStatus) return 'components.ai_assistants.tools.no_action_executed.js';
+    return null;
+}
+
 /** Show the model's reply together with the actual endpoint evidence in an action preset. */
-export function toolReply(result, showEvidence) {
+export function toolReply(result) {
     let text = result.response || '';
-    if ((showEvidence || result.toolProblem) && result.toolStatus) {
+    if (result.toolStatus) {
         // The backend can return the same translated warning when it rejects another uncertain write.
         if (result.toolUncertain) text = text.replaceAll(WJ.translate('components.ai.tools.uncertain.js'), '').trim();
         return [text, result.toolStatus].filter(Boolean).join('\n\n');

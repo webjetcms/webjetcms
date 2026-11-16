@@ -1,14 +1,13 @@
 import {AiExecutionResult} from './ai-execution-result';
-import { runBrowserTools, toolReply } from '../../../src/js/ai/ai-tool-transport';
+import { runBrowserTools, toolReply, writePresetStatus } from '../../../src/js/ai/ai-tool-transport';
 
 /**
  * Class to wrap Local Browser AI execution logic
  */
 export class AiBrowserExecutor {
 
-    //TODO: cache API created with _apiInitialize
-    localApiCache = {};
     lastApiInstance = null;
+    lastConfigKey = null;
     languageDetector = null;
     isDestroyed = false;
     toolController = null;
@@ -63,14 +62,19 @@ export class AiBrowserExecutor {
                 executionResult.statusKey = "components.ai_assistants.browser.unknownApi.js";
                 executionResult.statusKeyParams = ["NULL"];
             } else {
-                let config = this._getConfig(instructions);
+                const config = this._getConfig(instructions);
+                this._addSkillInstructions(apiName, config, aiCol.skillInstructions);
+                const configKey = JSON.stringify([apiName, config]);
                 let apiInstance = null;
 
-                if (reuseApiInstance === true && this.lastApiInstance != null) {
+                if (reuseApiInstance && this.lastApiInstance && this.lastConfigKey === configKey) {
                     apiInstance = this.lastApiInstance;
                 } else {
+                    this.lastApiInstance?.destroy();
+                    this.lastApiInstance = null;
                     apiInstance = await this._apiInitialize(apiName, config, inputData);
                     this.lastApiInstance = apiInstance; //store last instance for destroy
+                    this.lastConfigKey = configKey;
                 }
 
                 //console.log("Initialized API instance:", apiInstance, "apiName=", apiName, "config=", config);
@@ -88,17 +92,29 @@ export class AiBrowserExecutor {
                         const result = await runBrowserTools(aiCol, inputData,
                             message => apiInstance.prompt(message, { signal: controller.signal }), controller.signal, onWrite, onToolActivity);
                         this._assertActive();
-                        if (setFunction) setFunction(toolReply(result, false), true);
+                        executionResult.noToolAction = aiCol.toolsWrite === true && !result.toolStatus;
+                        if (setFunction) setFunction(result.response, true);
                         else if (aiCol.toolsWrite) {
-                            executionResult.explanatoryText = toolReply(result, true);
-                            if (result.toolProblem || !result.toolStatus) executionResult.statusKey = 'components.ai.tools.unverified.js';
+                            executionResult.explanatoryText = toolReply(result);
+                            executionResult.statusKey = writePresetStatus(result);
                         } else this.EDITOR.set(aiCol.to, result.response);
                         executionResult.success = true;
                     } finally {
                         this.toolController = null;
                     }
                 } else if (apiInstance) {
-                    executionResult = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, setFunction);
+                    let answer;
+                    let display = setFunction;
+                    // An assistant with inaccessible writes still presents its answer outside the editor field.
+                    if (!display && aiCol.toolsWrite) display = text => { answer = text; };
+                    executionResult = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, display);
+                    if (aiCol.toolsWrite && executionResult.success) {
+                        executionResult.noToolAction = true;
+                        if (!setFunction) {
+                            executionResult.explanatoryText = answer;
+                            executionResult.statusKey = 'components.ai_assistants.tools.no_action_executed.js';
+                        }
+                    }
                 }
             }
         } catch (e) {
@@ -157,6 +173,20 @@ export class AiBrowserExecutor {
             }
         }
         return {};
+    }
+
+    /** Adds optional skill text to the configured browser API's instruction field. */
+    _addSkillInstructions(apiName, config, skills) {
+        if (!skills) return;
+        if (apiName === 'LanguageModel') {
+            const prompts = config.initialPrompts ??= [];
+            const system = prompts.find(prompt => prompt.role === 'system');
+            if (!system) prompts.unshift({ role: 'system', content: skills });
+            else if (Array.isArray(system.content)) system.content.push({ type: 'text', value: skills });
+            else system.content = [system.content, skills].filter(Boolean).join('\n\n');
+        } else if (['Writer', 'Rewriter', 'Summarizer'].includes(apiName)) {
+            config.sharedContext = [config.sharedContext, skills].filter(Boolean).join('\n\n');
+        }
     }
 
     async _apiInitialize(apiName, config, inputData, skipIsActive = false) {
@@ -291,7 +321,7 @@ export class AiBrowserExecutor {
                 }
             }
 
-            if (navigator.userActivation.isActive || skipIsActive === true) {
+            if (availability === "available" || navigator.userActivation.isActive || skipIsActive === true) {
                 apiInstance = await self[apiName].create(config);
                 if (this.isDestroyed) {
                     apiInstance.destroy();

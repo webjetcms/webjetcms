@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
@@ -36,6 +37,13 @@ public class AiToolRegistry {
             AiToolDefinition definition, AiToolInputs inputs) {
         Class<?> controllerType() {
             return ClassUtils.getUserClass(handler.getBeanType());
+        }
+
+        String assignmentGroup() {
+            Class<?> type = controllerType();
+            String component = StringUtils.substringBefore(
+                    StringUtils.substringAfter(type.getPackageName(), ".components."), '.');
+            return component.isEmpty() ? type.getName() : component;
         }
 
         AiToolDefinition definition(Prop language) {

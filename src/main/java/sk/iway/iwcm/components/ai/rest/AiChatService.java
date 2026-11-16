@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -59,8 +58,7 @@ public class AiChatService implements DisposableBean {
     private final AiClient aiClient;
     private final WebjetAiConfigurationService configuration;
     private final AiStatRepository statistics;
-    @Autowired
-    private AiToolService tools;
+    private final AiToolService tools;
     private final ScheduledExecutorService heartbeat = Executors.newScheduledThreadPool(1, task -> {
         Thread thread = new Thread(task, "webjet-ai-chat-lease");
         thread.setDaemon(true);
@@ -72,7 +70,8 @@ public class AiChatService implements DisposableBean {
         String unavailableReason, String deletionError, AiChatContext context) { }
     public record MessageView(String id, String turnId, String requestId, String role, String text, String status,
         Date created, int totalTokens, String errorCategory, Integer providerStatusCode, Boolean retryable,
-        List<AttachmentView> attachments, List<WriteOutcome> writeOutcomes, List<String> toolCalls, String activeTool) { }
+        List<AttachmentView> attachments, List<WriteOutcome> writeOutcomes, List<String> toolCalls, String activeTool,
+        boolean noToolAction) { }
     public record AttachmentView(String id, String name, String mediaType, long size, String url) { }
     public record HistoryPage(List<ThreadView> items, boolean hasMore) { }
     public record Detail(ThreadView thread, List<MessageView> messages) { }
@@ -123,10 +122,12 @@ public class AiChatService implements DisposableBean {
             InputDataDTO input = turnInput(prepared);
             AtomicBoolean started = new AtomicBoolean();
             try {
-                input.setToolProtocol(AiToolProtocol.prepare(prepared.assistant(), tools, request, turn.message().getToolResults()));
+                var runtime = tools.resolve(prepared.assistant(), prepared.scope().domainId(), request);
+                var invocation = new Prepared(turn, runtime.assistant(), prepared.scope());
+                input.setToolProtocol(AiToolProtocol.prepare(runtime, turn.message().getToolResults()));
                 result = tasks.runChatTask(turn.thread().getId(), prepared.scope(), () -> {
                     started.set(true);
-                    return generate(prepared, input, output, streaming, request);
+                    return generate(invocation, input, output, streaming, request, runtime.hasWriteTool());
                 }, input);
             } catch (Exception exception) {
                 Logger.error(AiChatService.class, "Chat " + turn.thread().getId() + ": execution failed", exception);
@@ -150,7 +151,7 @@ public class AiChatService implements DisposableBean {
     }
 
     private AssistantResponseDTO generate(Prepared prepared, InputDataDTO input, Consumer<String> output,
-        boolean streaming, HttpServletRequest request) {
+        boolean streaming, HttpServletRequest request, boolean writePreset) {
         String threadId = prepared.turn().thread().getId();
         String messageId = prepared.turn().message().getId();
         AiChatEntry answer = prepared.turn().message();
@@ -245,6 +246,7 @@ public class AiChatService implements DisposableBean {
             if (protocol != null && streaming) output.accept(text.toString());
             status = "complete";
             category = null;
+            result.setNoToolAction(writePreset && !answer.isToolWriteIssued());
             return result;
         } catch (AiChatAttachments.UnreadableException exception) {
             category = "ATTACHMENT_INVALID";
@@ -283,7 +285,7 @@ public class AiChatService implements DisposableBean {
                 } finally {
                     if (!awaitingTool) {
                         store.finish(prepared.scope(), threadId, messageId, text.toString(), status,
-                            result.getTotalTokens(), category, providerStatus, retryable);
+                            result.getTotalTokens(), category, providerStatus, retryable, result.isNoToolAction());
                     }
                 }
                 cleanup(threadId, prepared.scope());
@@ -470,7 +472,7 @@ public class AiChatService implements DisposableBean {
             message.getAttachments().stream().map(attachment -> new AttachmentView(attachment.id(), attachment.name(), attachment.mediaType(),
                 attachment.size(), "/admin/rest/ai/chat/threads/" + threadId + "/attachments/" + attachment.id())).toList(),
             writeOutcomes(message), message.getToolResults().stream().map(AiToolProtocol.Result::name).toList(),
-            message.getPendingToolCall() == null ? null : message.getPendingToolCall().name());
+            message.getPendingToolCall() == null ? null : message.getPendingToolCall().name(), message.isNoToolAction());
     }
 
     private List<WriteOutcome> writeOutcomes(AiChatEntry message) {
@@ -507,13 +509,10 @@ public class AiChatService implements DisposableBean {
             return failure(message.getErrorCategory() == null ? "PENDING" : message.getErrorCategory(), message.getProviderStatus(),
                 message.getRetryable(), request);
         }
-        return completedResponse(message.getText(), message.getTotalTokens());
-    }
-
-    private static AssistantResponseDTO completedResponse(String text, int tokens) {
         AssistantResponseDTO result = new AssistantResponseDTO();
-        result.setResponse(text);
-        result.setTotalTokens(tokens);
+        result.setResponse(message.getText());
+        result.setTotalTokens(message.getTotalTokens());
+        result.setNoToolAction(message.isNoToolAction());
         return result;
     }
 

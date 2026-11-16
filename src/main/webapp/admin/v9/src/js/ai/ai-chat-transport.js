@@ -1,6 +1,5 @@
 import { AiBrowserExecutor } from '../../../npm_packages/webjetdatatables/ai/ai-browser-executor';
-import { requestAiText } from './ai-rest-transport';
-import { toolReply } from './ai-tool-transport';
+import { refreshAssistantRuntime, requestAiText } from './ai-rest-transport';
 
 /** Executes chat requests independently of their container and content-insertion behavior. */
 export class AiChatTransport {
@@ -29,10 +28,8 @@ export class AiChatTransport {
         if (this.disposed) return { ...executionResult, stopped: true };
         if (this.request != null) return { ...executionResult, errorText: "A chat request is already running." };
 
-        AiChatTransport.lastTimestamp = Math.max(Date.now(), AiChatTransport.lastTimestamp + 1);
         const request = {
             assistantId: assistant.assistantId,
-            timestamp: AiChatTransport.lastTimestamp,
             controller: new AbortController(),
             browser: null,
             text: "",
@@ -48,6 +45,8 @@ export class AiChatTransport {
         request.cancellation = new Promise(resolve => { request.resolveCancellation = () => resolve(null); });
 
         try {
+            assistant = await refreshAssistantRuntime(assistant, request.controller.signal);
+            if (!current()) return { ...executionResult, stopped: true };
             const operation = assistant.provider === "browser"
                 ? this._executeBrowser(assistant, inputData, request, current, update, callbacks)
                 : this._executeRest(assistant, inputData, request, update, callbacks);
@@ -66,6 +65,10 @@ export class AiChatTransport {
 
     async _executeRest(assistant, inputData, request, update, callbacks) {
         const persistent = inputData.persistentChat === true;
+        if (!persistent) {
+            AiChatTransport.lastTimestamp = Math.max(Date.now(), AiChatTransport.lastTimestamp + 1);
+            request.timestamp = AiChatTransport.lastTimestamp;
+        }
         const data = persistent ? {
             assistantId: request.assistantId, threadId: inputData.threadId, revision: inputData.revision,
             requestId: inputData.requestId, retryMessageId: inputData.retryMessageId, userPrompt: inputData.userPrompt,
@@ -100,7 +103,8 @@ export class AiChatTransport {
         return {
             persisted: Boolean(result.threadId),
             success: true,
-            response: result.toolProblem && !persistent ? toolReply(result, false) : result.response ?? request.text,
+            response: result.response ?? request.text,
+            noToolAction: persistent ? result.noToolAction === true : assistant.toolsWrite === true && !result.toolStatus,
             totalTokens: result.totalTokens,
             attachments: Array.isArray(result.attachments) ? result.attachments : [],
             conversationId: typeof result.conversationId === "string" && result.conversationId.length > 0 ? result.conversationId : null
@@ -131,6 +135,7 @@ export class AiChatTransport {
         return {
             success: result.success,
             response: result.explanatoryText || request.text,
+            noToolAction: result.noToolAction,
             totalTokens: result.totalTokens,
             stopped: result.stopped,
             errorText: result.errorText || (result.statusKey ? WJ.translate(result.statusKey, result.statusKeyParams || []) : null)
@@ -151,7 +156,7 @@ export class AiChatTransport {
             fetch(`/admin/rest/ai/chat/threads/${encodeURIComponent(request.threadId)}/stop`, {
                 method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }, keepalive: true
             }).catch(() => {});
-        } else {
+        } else if (request.timestamp) {
             const parameters = new URLSearchParams({ assistantId: request.assistantId, timestamp: request.timestamp });
             fetch("/admin/rest/ai/assistant/stop-assistant/?" + parameters, {
                 method: "GET", headers: { "X-CSRF-Token": window.csrfToken }, keepalive: true
@@ -160,9 +165,11 @@ export class AiChatTransport {
     }
 
     _destroyBrowser(request) {
-        if (request.browser == null) return;
+        const browser = request.browser;
+        if (!browser) return;
+        request.browser = null;
         try {
-            request.browser.destroy();
+            browser.destroy();
         } catch (error) {
             console.warn("Could not dispose the browser AI instance:", error);
         }

@@ -390,6 +390,7 @@ export class AiChat {
             else if (result.success) {
                 message.text = result.response ?? message.text;
                 message.status = "complete";
+                message.noToolAction = result.noToolAction;
                 message.totalTokens = result.totalTokens;
                 if (Array.isArray(result.attachments)) message.attachments = result.attachments;
                 state.conversationId = result.conversationId || null;
@@ -859,7 +860,9 @@ export class AiChat {
                 : message.retryable === false ? "changeRequest" : null;
             status = hint ? this._text(hint) + " " + (message.error || "") : message.error || this._text("unavailable");
         }
-        if (this.options.persistent && message.toolWriteStatus) {
+        if (message.status === "complete" && message.noToolAction) {
+            status = WJ.translate("components.ai_assistants.tools.no_action_executed.js");
+        } else if ((this.options.persistent || message.status === "complete") && message.toolWriteStatus) {
             status = [status, message.toolWriteStatus].filter(Boolean).join('\n');
         }
         view.$status.text(status).toggle(Boolean(status)).toggleClass("text-danger", message.status === "error");

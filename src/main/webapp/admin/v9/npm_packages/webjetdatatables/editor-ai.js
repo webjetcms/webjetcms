@@ -5,6 +5,7 @@ import { AiExecutionResult } from "./ai/ai-execution-result";
 import { AiChat } from "../../src/js/ai/ai-chat";
 import { AiChatHost } from "../../src/js/ai/ai-chat-host";
 import { parseAiResponse } from "../../src/js/ai/ai-response-parser";
+import { refreshAssistantRuntime } from "../../src/js/ai/ai-rest-transport";
 import { editorPreviewContext } from "../../src/js/ai/html-preview";
 
 /**
@@ -23,6 +24,7 @@ export class EditorAi {
     //field to remember value for undo process
     undoField = null;
     stopped = false;
+    runtimeController = null;
 
     //constructor
     constructor(EDITOR, bindEvents = true) {
@@ -115,7 +117,7 @@ export class EditorAi {
                     } else if ("options"===column.type || "enumeration"===column.type || "optionsSimple"===column.type) {
                         //skip OPTIONS, ENUMERATION, OPTIONS_SIMPLE field type - AI button is not supported
                     } else {
-                        let inputField = $(field.dom.inputControl[0]).find(".form-control");
+                        let inputField = $(field.dom.inputControl[0]).find(".form-control").not(".reference-drawer input");
                         const focusedInput = inputField.filter(':focus')[0];
 
                         //console.log("inputField:", inputField, "parents=", inputField.parents(".bootstrap-select").length);
@@ -180,6 +182,7 @@ export class EditorAi {
 
     stopExecution() {
         this.stopped = true;
+        this.runtimeController?.abort();
         this.aiUserInterface.saveUserPrompt();
         this.aiUserInterface.setCurrentStatus("components.ai_assistants.stopping.js", false);
         if (this.aiBrowserExecutor != null) this.aiBrowserExecutor.destroy();
@@ -589,6 +592,34 @@ export class EditorAi {
         //console.log(inputData);
 
         self.setCurrentStatus("components.ai_assistants.editor.loading.js");
+
+        if (aiCol.action === "generate_text") {
+            this.runtimeController?.abort();
+            const controller = new AbortController();
+            this.runtimeController = controller;
+            const revision = this.aiUserInterface.viewRevision;
+            try {
+                const current = await refreshAssistantRuntime(aiCol, controller.signal);
+                controller.signal.throwIfAborted();
+                if (!this.aiUserInterface._isCurrentAssistantView(aiCol, revision)) {
+                    this._hideLoader(button);
+                    return;
+                }
+                aiCol = current;
+            } catch (error) {
+                if (this.runtimeController === controller) {
+                    if (!this.aiUserInterface._isCurrentAssistantView(aiCol, revision)) this._hideLoader(button);
+                    else if (controller.signal.aborted) this._stoppedSignalReceived(button);
+                    else {
+                        this._hideLoader(button);
+                        this.setError(error.message);
+                    }
+                }
+                return;
+            } finally {
+                if (this.runtimeController === controller) this.runtimeController = null;
+            }
+        }
 
         if (aiCol.toolsWrite) {
             // A single preset click can create records even when PageBuilder contains several editors.

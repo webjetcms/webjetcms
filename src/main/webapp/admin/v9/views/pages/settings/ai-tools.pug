@@ -89,7 +89,7 @@ block content
         window.domReady.add(function () {
             const url = "/admin/rest/settings/ai-tools";
             const modeKey = "aiToolsGrouped";
-            const grouped = (sessionStorage.getItem(modeKey) ?? sessionStorage.getItem("aiToolsGroupByEntity")) === "true";
+            const grouped = sessionStorage.getItem(modeKey) === "true";
             const tableElement = document.getElementById("aiToolsDataTable");
             const columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.tools.AiToolEntity')})];
             if (grouped) {

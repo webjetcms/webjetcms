@@ -29,8 +29,7 @@ public class DataTableAi {
     private String instructions;
     private boolean useStreaming;
     private boolean persistentChat;
-    private boolean toolsEnabled;
-    private boolean toolsWrite;
+    private boolean hasInstructionContext;
     private String action;
     private String groupName;
     private boolean userPromptEnabled;

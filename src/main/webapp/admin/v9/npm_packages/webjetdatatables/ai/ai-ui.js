@@ -188,19 +188,12 @@ export class AiUserInterface {
             let aiCol = column.ai[i];
             //console.log("aiCol=", aiCol);
 
-            //check value in input, if empty remove if there is no userPromptEnabled
-            let hasInput = false;
-            if (aiCol.toolsEnabled || aiCol.action === "live_chat" || (true === aiCol.userPromptEnabled && "edit_image" !== aiCol.action)) hasInput = true;
-            else {
-                let inputFieldName = aiCol.from;
-                if (inputFieldName == null || inputFieldName === "") inputFieldName = aiCol.to;
-                let inputValue = this.EDITOR.get(inputFieldName);
-                if (inputValue != null && inputValue !== "") hasInput = true;
-                else {
-                    //console.log("inputFieldName=", inputFieldName, "inputValue=", inputValue, "asistent=", aiCol.description, "aiCol=", aiCol);
-                }
+            const acceptsEmptyInput = aiCol.hasInstructionContext || aiCol.action === "live_chat" ||
+                (aiCol.userPromptEnabled === true && aiCol.action !== "edit_image");
+            if (!acceptsEmptyInput) {
+                const value = this.EDITOR.get(aiCol.from || aiCol.to);
+                if (value == null || value === "") continue;
             }
-            if (hasInput === false) continue;
 
             currentGroup = aiCol.groupName;
             if (currentGroup !== null && currentGroup !== "" && currentGroup !== lastGroup) {

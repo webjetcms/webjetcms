@@ -28,7 +28,6 @@ import org.mockito.MockedStatic;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.webjetcms.ai.AiClient;
@@ -55,6 +54,7 @@ import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
+import sk.iway.iwcm.components.ai.tools.AiAssistantRuntime;
 import sk.iway.iwcm.components.ai.tools.AiToolDefinition;
 import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.i18n.Prop;
@@ -62,6 +62,7 @@ import sk.iway.iwcm.i18n.Prop;
 /** Verifies saved chat cleanup, retry metadata and continuation from completed turns only. */
 class AiChatServiceTest {
     @TempDir Path root;
+    private final AiToolService toolService = mock(AiToolService.class);
     private final AiChatStore store = new AiChatStore();
     private final LibrarySupportLogic provider = mock(LibrarySupportLogic.class);
     private final AiClient aiClient = mock(AiClient.class);
@@ -100,7 +101,8 @@ class AiChatServiceTest {
         when(configuration.auditMaxLength()).thenReturn(2000);
         when(tasks.runChatTask(anyString(), same(scope), any(), any())).thenAnswer(call ->
             call.<Callable<AssistantResponseDTO>>getArgument(2).call());
-        service = new AiChatService(store, assistants, List.of(provider), tasks, aiClient, configuration, statistics);
+        service = new AiChatService(store, assistants, List.of(provider), tasks, aiClient, configuration, statistics, toolService);
+        when(toolService.resolve(assistant, scope.domainId(), request)).thenReturn(new AiAssistantRuntime(assistant, "", List.of(), false));
         tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
         tools.when(() -> Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class))
             .thenReturn(assistants);
@@ -129,11 +131,9 @@ class AiChatServiceTest {
     /** Only a validated correction becomes visible as an active tool for the saved reply. */
     @Test
     void correctsMalformedToolDecisionOnce() throws Exception {
-        var toolService = mock(AiToolService.class);
-        ReflectionTestUtils.setField(service, "tools", toolService);
-        assistant.setToolNames("add_record");
-        when(toolService.assigned(assistant, request)).thenReturn(List.of(new AiToolDefinition("add_record", "Add a record",
-            Map.of("type", "object"), "/records", "POST", Map.of())));
+        assistant.setInstructions("Use @tool(add_record)");
+        var tool = new AiToolDefinition("add_record", "Add a record", Map.of("type", "object"), "/records", "POST", Map.of());
+        when(toolService.resolve(assistant, scope.domainId(), request)).thenReturn(new AiAssistantRuntime(assistant, "", List.of(tool), true));
         var usage = new TokenUsage(1, 2, 3, Map.of());
         String correction = "```json\n{\"type\":\"call\",\"name\":\"add_record\",\"arguments\":{}}\n```";
         when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenReturn(

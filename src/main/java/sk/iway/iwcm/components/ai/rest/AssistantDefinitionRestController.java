@@ -1,8 +1,6 @@
 package sk.iway.iwcm.components.ai.rest;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -24,12 +22,14 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEditorFields;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
+import sk.iway.iwcm.components.ai.tools.AiAssistantRuntime;
 import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -52,17 +52,19 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     private final AiService aiService;
     private final AiAssistantsService aiAssistantsService;
     private final AiToolService toolService;
+    private final AiSkillRepository skillRepository;
     private final AiStatRepository aiStatRepository;
     public static final String GROUPS_PREFIX = "components.ai_assistants.groups.";
 
     @Autowired
     public AssistantDefinitionRestController(AssistantDefinitionRepository repo, AiService aiService, AiAssistantsService aiAssistantsService,
-            AiToolService toolService, AiStatRepository aiStatRepository) {
+            AiToolService toolService, AiStatRepository aiStatRepository, AiSkillRepository skillRepository) {
         super(repo);
         this.repo = repo;
         this.aiService = aiService;
         this.aiAssistantsService = aiAssistantsService;
         this.toolService = toolService;
+        this.skillRepository = skillRepository;
         this.aiStatRepository = aiStatRepository;
     }
 
@@ -134,6 +136,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
         page.addOptions("groupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
         page.addOptions("toolNames", toolService.assignmentTools(getRequest(), getProp()), "description", "name", true);
+        page.addOptions("skillIds", skillRepository.findOptionsByDomainIdOrderByNameAscIdAsc(getDomainId()), "name", "id", false);
         page.addOptions("editorFields.statusIcons", aiAssistantsService.getStatusIconOptions(getProp()), "label", "value", false);
 
         //Every assistant should set their specific selects
@@ -141,29 +144,19 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     }
 
     @Override
-    public AssistantDefinitionEntity insertItem(AssistantDefinitionEntity entity) {
-        validateToolNames(entity, null);
-        return super.insertItem(entity);
-    }
-
-    @Override
     protected void copyEntityIntoOriginal(AssistantDefinitionEntity entity, AssistantDefinitionEntity original) {
-        validateToolNames(entity, original.getToolNames());
+        if (original == null) throwError("datatables.error.domainId");
         super.copyEntityIntoOriginal(entity, original);
     }
 
-    private void validateToolNames(AssistantDefinitionEntity entity, String previous) {
-        String submitted = entity.getToolNames();
-        if (submitted == null || submitted.isEmpty() || submitted.equals(previous)) return;
-
-        var names = new LinkedHashSet<>(Arrays.asList(submitted.split(",", -1)));
-        var existing = previous == null ? List.<String>of() : Arrays.asList(previous.split(","));
-        for (String name : names) {
-            if (!existing.contains(name) && toolService.findVisible(name, getRequest()).isEmpty()) {
-                throwError("components.ai_assistants.tools.unavailable");
-            }
+    @Override
+    public AssistantDefinitionEntity processToEntity(AssistantDefinitionEntity entity, ProcessItemAction action) {
+        var skillIds = AiAssistantRuntime.referencedSkillIds(entity.getInstructions());
+        if (!skillIds.isEmpty() && skillRepository.countByDomainIdAndIdIn(getDomainId(), skillIds) != skillIds.size()) {
+            throwError("components.ai_assistants.skills.unavailable");
         }
-        entity.setToolNames(String.join(",", names));
+        entity.setDomainId(getDomainId());
+        return entity;
     }
 
     @Override

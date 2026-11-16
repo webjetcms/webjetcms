@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import sk.iway.iwcm.components.ai.tools.AiTool;
 import sk.iway.iwcm.components.ai.tools.AiToolCallFilter;
 import sk.iway.iwcm.components.ai.tools.AiToolDefinition;
-import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 import sk.iway.iwcm.components.ai.tools.AiToolService;
 
 /** Administration REST interface to the current user's AI tool catalog. */
@@ -43,17 +42,10 @@ public class AiToolsController {
         return Map.of("tools", tools.details(names, request));
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(params = "!assistantId", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, List<AiToolDefinition>> list(HttpServletRequest request, HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store");
         return Map.of("tools", tools.list(request));
-    }
-
-    @GetMapping(params = "assistantId", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> assigned(@RequestParam long assistantId, HttpServletRequest request, HttpServletResponse response) {
-        response.setHeader("Cache-Control", "no-store");
-        var assigned = tools.assigned(assistantId, request);
-        return Map.of("tools", assigned, "instructions", AiToolProtocol.instructions(assigned));
     }
 
     /** Valid calls reach the target MVC handler. Unresolved calls still pass normal admin security. */

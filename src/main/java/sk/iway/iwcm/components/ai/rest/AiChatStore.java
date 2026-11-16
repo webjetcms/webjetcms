@@ -394,6 +394,11 @@ public class AiChatStore {
     /** Persists turn completion together with the provider's optional retry recommendation. */
     public void finish(Scope scope, String threadId, String messageId, String text, String status, int tokens,
         String category, Integer providerStatus, Boolean retryable) {
+        finish(scope, threadId, messageId, text, status, tokens, category, providerStatus, retryable, false);
+    }
+
+    public void finish(Scope scope, String threadId, String messageId, String text, String status, int tokens,
+        String category, Integer providerStatus, Boolean retryable, boolean noToolAction) {
         update(threadId, scope, false, document -> {
             if (document == null) return null;
             AiChatThread thread = document.getThread();
@@ -402,14 +407,16 @@ public class AiChatStore {
             boolean stopped = thread.isStopRequested();
             message.setText(text);
             message.setStatus(stopped ? "stopped" : status);
+            boolean complete = "complete".equals(message.getStatus());
             message.setTotalTokens(tokens);
             message.setErrorCategory(stopped ? "CANCELLED" : category);
             message.setProviderStatus(providerStatus);
-            message.setRetryable(message.isToolWriteIssued() && (stopped || !"complete".equals(status)) ? Boolean.FALSE : retryable);
+            message.setRetryable(message.isToolWriteIssued() && !complete ? Boolean.FALSE : retryable);
+            message.setNoToolAction(complete && noToolAction);
             message.setPendingToolCall(null);
             message.setUpdated(new Date());
             // Failed/stopped attempts remain in history and cleanup tracking, but never become continuation points.
-            if (!stopped && "complete".equals(status)) thread.setLastResponseId(message.getProviderResponseId());
+            if (complete) thread.setLastResponseId(message.getProviderResponseId());
             if (!stopped && "INVALID_CONTINUATION".equals(category)) thread.setStatus("EXPIRED");
             thread.setActiveMessageId(null);
             thread.setLeaseUntil(null);

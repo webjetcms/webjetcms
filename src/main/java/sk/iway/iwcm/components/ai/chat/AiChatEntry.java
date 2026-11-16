@@ -35,6 +35,8 @@ public class AiChatEntry {
     private Call pendingToolCall;
     private List<Result> toolResults = List.of();
     private boolean toolWriteIssued;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean noToolAction;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<WriteOutcome> writeOutcomes = new ArrayList<>();
     private String providerResponseId;

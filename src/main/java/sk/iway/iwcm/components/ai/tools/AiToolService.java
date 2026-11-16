@@ -1,7 +1,6 @@
 package sk.iway.iwcm.components.ai.tools;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -9,12 +8,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.server.RequestPath;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.ServletRequestPathUtils;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.tools.AiToolAuthorization.Access;
 import sk.iway.iwcm.i18n.Prop;
@@ -40,27 +41,41 @@ public class AiToolService {
     }
 
     public List<AiToolDefinition.Preview> preview(HttpServletRequest request) {
-        return registry.entries().stream().filter(entry -> mayList(entry, request, Access.CATALOG))
+        return visibleEntries(request, Access.CATALOG)
                 .map(entry -> entry.definition().preview()).toList();
     }
 
     public List<AiToolDefinition> details(List<String> names, HttpServletRequest request) {
         return names.stream().distinct().map(registry::lookup).filter(Objects::nonNull)
-                .filter(entry -> mayList(entry, request, Access.CATALOG)).map(AiToolRegistry.Entry::definition).toList();
+                .filter(entry -> authorization.mayList(entry, request, Access.CATALOG)).map(AiToolRegistry.Entry::definition).toList();
     }
 
-    public List<AiToolDefinition> assigned(long assistantId, HttpServletRequest request) {
-        return assigned(authorization.assistant(assistantId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)), request);
+    public AiAssistantRuntime resolve(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        return authorization.resolve(assistant, domainId, request);
     }
 
-    /** Resolves the selected assistant's registered names against the caller's current endpoint permissions. */
-    public List<AiToolDefinition> assigned(AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        if (Boolean.FALSE.equals(assistant.getActive()) || !AiToolProtocol.supports(assistant)) return List.of();
-        return assignedEntries(assistant).filter(entry -> mayList(entry, request)).map(AiToolRegistry.Entry::definition).toList();
+    public record BrowserTool(String name, boolean write) {}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record RuntimeMetadata(String provider, String action, boolean toolsEnabled, boolean toolsWrite,
+            String instructions, String skillInstructions, List<BrowserTool> tools, String toolInstructions) {}
+
+    public RuntimeMetadata runtimeMetadata(long assistantId, HttpServletRequest request) {
+        var runtime = authorization.assistant(assistantId, request)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var assistant = runtime.assistant();
+        boolean browser = "browser".equals(assistant.getProvider());
+        var definitions = runtime.tools();
+        return new RuntimeMetadata(assistant.getProvider(), assistant.getAction(), !definitions.isEmpty(), runtime.hasWriteTool(),
+                browser ? assistant.getInstructions() : null, browser ? runtime.skillInstructions() : null,
+                browser ? definitions.stream().map(tool -> new BrowserTool(tool.name(), tool.writes())).toList() : null,
+                browser && !definitions.isEmpty() ? AiToolProtocol.instructions(definitions) : null);
     }
 
-    public boolean hasAssignedWrite(AssistantDefinitionEntity assistant) {
-        return assignedEntries(assistant).anyMatch(entry -> entry.definition().writes());
+    /** An editor can offer a preset on an empty field when its skills or visible tools supply context. */
+    public boolean hasInstructionContext(AssistantDefinitionEntity assistant, HttpServletRequest request) {
+        var runtime = resolve(assistant, CloudToolsForCore.getDomainId(), request);
+        return !runtime.skillInstructions().isEmpty() || !runtime.tools().isEmpty();
     }
 
     public boolean isWriteTool(String name) {
@@ -68,54 +83,38 @@ public class AiToolService {
         return entry != null && entry.definition().writes();
     }
 
-    private Stream<AiToolRegistry.Entry> assignedEntries(AssistantDefinitionEntity assistant) {
-        return Arrays.stream(assistant.getToolNames().split(",")).distinct().map(registry::lookup).filter(Objects::nonNull);
-    }
-
     public List<AiToolDefinition> list(HttpServletRequest request, Prop language) {
-        return visibleEntries(request).map(entry -> entry.definition(language)).toList();
+        return visibleEntries(request, Access.ASSIGNED).map(entry -> entry.definition(language)).toList();
     }
 
-    /** Lightweight picker data; groups are expanded to individual names before an assistant is saved. */
+    /** Tool and group metadata for the instruction link picker. */
     public record AssignmentTool(String name, String description, String group, String groupLabel, String httpMethod, String path) {}
 
     public List<AssignmentTool> assignmentTools(HttpServletRequest request, Prop language) {
-        return visibleEntries(request).map(entry -> {
+        return visibleEntries(request, Access.ASSIGNED).map(entry -> {
             Class<?> type = entry.controllerType();
-            String component = StringUtils.substringBefore(StringUtils.substringAfter(type.getPackageName(), ".components."), '.');
-            String resource = component.isEmpty() ? AiToolRegistry.resource(type) : component;
+            String group = entry.assignmentGroup();
+            String resource = group.equals(type.getName()) ? AiToolRegistry.resource(type) : group;
             String label = AiToolRegistry.translated(language, "components.ai_assistants.tools.group." + resource, resource.replace('_', ' '));
             var tool = entry.definition(language);
-            return new AssignmentTool(tool.name(), tool.description(), component.isEmpty() ? type.getName() : component,
+            return new AssignmentTool(tool.name(), tool.description(), group,
                     label, tool.httpMethod(), tool.path());
         }).toList();
     }
 
     public List<AiToolGroup> listGroups(HttpServletRequest request, Prop language) {
-        var groups = visibleEntries(request).collect(Collectors.groupingBy(AiToolRegistry.Entry::controllerType));
+        var groups = visibleEntries(request, Access.ASSIGNED).collect(Collectors.groupingBy(AiToolRegistry.Entry::controllerType));
         return groups.entrySet().stream().map(group -> new AiToolGroup(group.getKey(), group.getValue(), language)).toList();
     }
 
-    private Stream<AiToolRegistry.Entry> visibleEntries(HttpServletRequest request) {
-        return registry.entries().stream().filter(entry -> mayList(entry, request));
-    }
-
-    public Optional<AiToolDefinition> findVisible(String name, HttpServletRequest request) {
-        return findVisible(name, request, null);
+    private Stream<AiToolRegistry.Entry> visibleEntries(HttpServletRequest request, Access access) {
+        return registry.entries().stream().filter(entry -> authorization.mayList(entry, request, access));
     }
 
     public Optional<AiToolDefinition> findVisible(String name, HttpServletRequest request, Prop language) {
         return Optional.ofNullable(registry.lookup(name))
-            .filter(entry -> mayList(entry, request))
+            .filter(entry -> authorization.mayList(entry, request, Access.ASSIGNED))
             .map(entry -> entry.definition(language));
-    }
-
-    private boolean mayList(AiToolRegistry.Entry entry, HttpServletRequest request) {
-        return mayList(entry, request, Access.ASSIGNED);
-    }
-
-    private boolean mayList(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {
-        return AiToolServletRoutes.mayList(request.getServletContext(), entry) && authorization.isAllowed(entry, request, access);
     }
 
     /**

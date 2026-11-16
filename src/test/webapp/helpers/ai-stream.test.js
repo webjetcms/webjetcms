@@ -5,23 +5,43 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const sourceDirectory = path.resolve(__dirname, '../../../main/webapp/admin/v9/npm_packages/webjetdatatables/ai');
-const sources = ['../../../src/js/ai/chat-history-api.js', '../../../src/js/ai/ai-stream.js', '../../../src/js/ai/ai-rest-transport.js',
+const sources = ['../../../src/js/ai/chat-history-api.js', '../../../src/js/ai/ai-stream.js',
+    '../../../src/js/ai/ai-tool-transport.js', '../../../src/js/ai/ai-rest-transport.js',
     '../../../src/js/ai/ai-response-parser.js',
     'ai-execution-result.js', 'ai-rest-executor.js', '../../../src/js/ai/ai-chat-transport.js'].map(filename =>
     fs.readFileSync(path.join(sourceDirectory, filename), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')
 ).join('\n');
 
-function loadTransport(fetch, notifications = [], AiBrowserExecutor) {
+function loadTransport(fetch, notifications = []) {
     const context = vm.createContext({
-        TextDecoder, AbortController, URLSearchParams, FormData, fetch, AiBrowserExecutor, console: { log() {}, warn() {} },
+        TextDecoder, AbortController, URLSearchParams, FormData, setTimeout, clearTimeout,
+        fetch: (url, options) => url.startsWith('/admin/rest/ai/assistant/runtime/?assistantId=')
+            ? Promise.resolve(Response.json({})) : fetch(url, options), console: { log() {}, warn() {} },
         window: { csrfToken: 'test-csrf', csrfError: 'Token expired', alert: text => notifications.push(text) },
         WJ: {
+            translate: key => key,
             keepSessionShowLogoffMessage: () => notifications.push('Session expired'),
             keepSessionShowTokenMessage: text => notifications.push(text)
         }
     });
-    return vm.runInContext(sources + '\n({ AiRestExecutor, AiChatTransport, requestAiText });', context);
+    return vm.runInContext(sources + '\n({ AiRestExecutor, AiChatTransport, requestAiText, runBrowserTools });', context);
 }
+
+test('browser tools report saved IDs for writes but not for reads', async () => {
+    const calls = [];
+    const { runBrowserTools } = loadTransport(async url => {
+        calls.push(url);
+        return Response.json({ data: [{ id: 42 }] });
+    });
+    const assistant = { assistantId: 7, tools: [{ name: 'find', write: false }, { name: 'save', write: true }],
+        toolInstructions: 'Use the assigned tools.' };
+    const steps = [{ type: 'call', name: 'find', arguments: {} }, { type: 'call', name: 'save', arguments: {} },
+        { type: 'final', text: 'Saved.' }];
+    const result = await runBrowserTools(assistant, {}, () => JSON.stringify(steps.shift()));
+    assert.deepEqual(calls, ['/admin/rest/ai/tools/find/call', '/admin/rest/ai/tools/save/call']);
+    assert.equal(result.toolStatus, 'save — HTTP 200 (ID 42)');
+    assert.equal(result.response, 'Saved.');
+});
 
 function delta(text) {
     return JSON.stringify({ type: 'delta', text }) + '\n';
@@ -148,9 +168,22 @@ test('HTTP authentication failures preserve session and CSRF notifications', asy
     }
 });
 
+test('cancelling during runtime lookup does not send a stop for a task that never started', async () => {
+    const requests = [];
+    const { AiChatTransport } = loadTransport(url => { requests.push(url); return Promise.resolve(new Response()); });
+    const transport = new AiChatTransport();
+    const pending = transport.execute({ assistantId: 7 }, {});
+    transport.cancel();
+    assert.equal((await pending).stopped, true);
+    assert.deepEqual(requests, []);
+});
+
 test('chat cancellation aborts the shared fetch and stops the same server task', async () => {
     const requests = [];
+    let started;
+    const dispatched = new Promise(resolve => { started = resolve; });
     const { AiChatTransport } = loadTransport((url, options) => {
+        started();
         requests.push({ url, ...options });
         if (options.method === 'GET') return Promise.resolve(new Response());
         return new Promise((resolve, reject) => options.signal.addEventListener('abort',
@@ -158,6 +191,7 @@ test('chat cancellation aborts the shared fetch and stops the same server task',
     });
     const transport = new AiChatTransport();
     const pending = transport.execute({ assistantId: 7 }, {});
+    await dispatched;
     const data = JSON.parse(requests[0].body);
     transport.cancel();
     const chat = await pending;
