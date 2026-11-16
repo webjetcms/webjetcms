@@ -681,10 +681,10 @@ public class Documents extends Indexed
                     String lng = getDocumentLanguage(doc.getGroupId(), doc.getTempId());
                     IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));
                     config.setOpenMode(OpenMode.APPEND);
-                    IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);
-                    writer.deleteDocuments(new Term("doc_id", Integer.toString(doc.getDocId())));
-                    writer.commit();
-                    writer.close();
+                    try (IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config)) {
+                        writer.deleteDocuments(new Term("doc_id", Integer.toString(doc.getDocId())));
+                        writer.commit();
+                    }
                     IndexSearcherBuilder.refresh();
                 } catch (IOException e) {
                     Logger.error(Documents.class, "Error deleting document doc: " + doc.getDocId() + " from index: " + e.getMessage(), e);
