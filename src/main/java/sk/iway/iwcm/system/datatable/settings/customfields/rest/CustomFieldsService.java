@@ -91,7 +91,7 @@ public class CustomFieldsService {
      */
     public static String getConfiguredFieldType(CustomFieldsEntity customField, String labelKey, Prop typeProp) {
         if (customField != null) return customField.getValue();
-        return Tools.isEmpty(labelKey) ? "" : typeProp.getText(labelKey + ".type");
+        return Tools.isEmpty(labelKey) ? "" : typeProp.getText(labelKey + ".type", false);
     }
 
     /**
@@ -345,7 +345,7 @@ public class CustomFieldsService {
      * @return the localized label, retrieved using key "settings.custom-fields.type.{fieldKey}"
      */
     public static String getFieldTypeLabel(Prop prop, String fieldKey) {
-        return prop.getText(FIELD_TYPE_KEY_PREFIX + fieldKey);
+        return prop.getText(FIELD_TYPE_KEY_PREFIX + fieldKey, false);
     }
 
     /**
