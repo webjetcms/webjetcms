@@ -434,6 +434,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 #### Další změny
 
+- Font Awesome - společné CSS aktualizovány z verze 4.2.0 na 4.7.0, GridEditor používá stejné CSS a WOFF2 font z `/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css`. Staré odkazy na CSS GridEditoru se pro přihlášené administrátory přesměrují na společné CSS (#405).
+- Smazané starší nepoužívané soubory/obrázky, zkontrolujte si volání stránky 404 av případě potřeby si potřebné soubory nahrajte ze starší verze do vašeho projektu (#405).
 - Datatabulky - tabulky nastavení mají společný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Stávající tabulka `custom_fields` se při aktualizaci automaticky přejmenuje se zachováním údajů; vlastní SQL dotazy je třeba upravit na `dt_customfields` (#58830).
 - Datatabulky - třídy pro [systémová nastavení](developer/datatables/README.md#systémová-nastavení) volitelných polí, polí a karet byly přesunuty pod `sk.iway.iwcm.system.datatable.settings` do podbalíků `customfields`, `fields` a `tabs`. Vlastní kód a šablony používající tyto třídy vyžadují aktualizaci importů a úplných názvů tříd (#58830).
 - Datatabulky - přidaný typ pole [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pro výběr jedné možnosti ze skupiny tlačítek. Používá styly administrace a podporuje i volbu **Bez změny** při třístavových nastaveních (#58830).

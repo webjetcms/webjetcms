@@ -67,7 +67,7 @@ InlineEditor.EditingMode editingMode = InlineEditor.getEditingMode(request);
 if((editingMode == InlineEditor.EditingMode.newsInline && Constants.getBoolean("gridEditorEnabled")) || editingMode == InlineEditor.EditingMode.gridEditor)
 {
 %>
-    <link href="/components/grideditor/support/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css?v=4.7.0" rel="stylesheet" />
     <script src="/components/grideditor/cloud.grideditor.js.jsp"></script>
 <% } else if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     <!-- NINJA PAGE BUILDER -->

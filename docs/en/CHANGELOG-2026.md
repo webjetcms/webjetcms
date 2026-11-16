@@ -434,6 +434,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 #### Other changes
 
+- Font Awesome - shared CSS updated from version 4.2.0 to 4.7.0, GridEditor uses the same CSS and WOFF2 font from `/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css`. Old links to GridEditor CSS will be redirected to shared CSS for logged in administrators (#405).
+- Deleted older unused files/images, check for 404 page calls and if necessary, upload the necessary files from an older version to your project (#405).
 - Datatables - settings tables have a common prefix `dt_`: `dt_customfields`, `dt_fields` and `dt_tabs`. The existing table `custom_fields` is automatically renamed during the update, preserving the data; custom SQL queries must be modified to `dt_customfields` (#58830).
 - Datatables - Classes for [system settings](developer/datatables/README.md#system-settings) optional fields, fields, and cards have been moved under `sk.iway.iwcm.system.datatable.settings` to subpackages `customfields`, `fields`, and `tabs`. Custom code and templates using these classes require updating imports and full class names (#58830).
 - Datatables - added field type [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) for selecting a single option from a group of buttons. It uses administration styles and also supports the **No change** option for three-state settings (#58830).
