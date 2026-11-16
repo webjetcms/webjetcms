@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.fulltext.indexed;
 import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.dateToLucene;
 import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.nvl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.sql.Connection;
@@ -45,6 +46,7 @@ import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.system.cluster.ClusterRefresher;
 import sk.iway.iwcm.system.fulltext.FulltextSearch;
 import sk.iway.iwcm.system.fulltext.lucene.AnalyzerFactory;
 import sk.iway.iwcm.system.fulltext.lucene.IndexSearcherBuilder;
@@ -644,52 +646,29 @@ public class Documents extends Indexed
 	}
 
 	/**
-	 * Loads the document by ID and deletes it from the index.
+	 * Deletes a document from every existing local language index without loading it
+	 * from the database or document cache.
 	 *
 	 * @param docId the document ID
-	 * @deprecated Use {@link #deleteSingleDocument(DocDetails)} with document details
-	 *             captured before the document is deleted from the database.
+	 * @throws IllegalStateException on the cluster refresh thread if cleanup fails,
+	 *         so the notification remains eligible for retry
 	 */
-	@Deprecated
 	public static void deleteSingleDocument(int docId)
 	{
-		if (Constants.getBoolean("luceneIncrementalDocumentIndexing"))
-		{
-			try
-			{
-				deleteSingleDocument(DocDB.getInstance().getDoc(docId));
-			}
-			catch (Exception ex)
-			{
-				Logger.error(Documents.class, "Error deleting document doc: " + docId + " from index: " + ex.getMessage(), ex);
-			}
-		}
-	}
+		if (Constants.getBoolean("luceneIncrementalDocumentIndexing") == false || docId <= 0) return;
 
-	/**
-	 * Zmaze dokument z indexu
-	 *
-	 * @param doc
-	 */
-	public static void deleteSingleDocument(DocDetails doc)
-	{
-		if (Constants.getBoolean("luceneIncrementalDocumentIndexing"))
+		boolean success = false;
+		try
 		{
-			if (doc != null && doc.getGroup() != null)
-			{
-                try {
-                    String lng = getDocumentLanguage(doc.getGroupId(), doc.getTempId());
-                    IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));
-                    config.setOpenMode(OpenMode.APPEND);
-                    try (IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config)) {
-                        writer.deleteDocuments(new Term("doc_id", Integer.toString(doc.getDocId())));
-                        writer.commit();
-                    }
-                    IndexSearcherBuilder.refresh();
-                } catch (IOException e) {
-                    Logger.error(Documents.class, "Error deleting document doc: " + doc.getDocId() + " from index: " + e.getMessage(), e);
-                }
-            }
+			success = DocumentIndexCleaner.delete(new File(LuceneUtils.LUCENE_INDEX), docId);
+		}
+		catch (Exception ex)
+		{
+			Logger.error(Documents.class, "Error deleting document " + docId + " from local indexes", ex);
+		}
+		if (success == false && ClusterRefresher.THREAD_NAME.equals(Thread.currentThread().getName()))
+		{
+			throw new IllegalStateException("Cannot delete document " + docId + " from local indexes");
 		}
 	}
 
