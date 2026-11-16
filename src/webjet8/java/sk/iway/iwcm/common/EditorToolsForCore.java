@@ -12,6 +12,9 @@ import java.util.Map;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import net.sourceforge.stripes.mock.MockHttpServletRequest;
 import net.sourceforge.stripes.mock.MockHttpServletResponse;
 import sk.iway.Password;
@@ -323,6 +326,7 @@ public class EditorToolsForCore {
         String renderedData = null;
         String includeFileName = "/components/_common/fulltext_preview.jsp";
         StringBuilder htmlCode = null;
+        ServletRequestAttributes temporaryAttributes = null;
 
         try
         {
@@ -357,6 +361,13 @@ public class EditorToolsForCore {
                     }
                 };
                 respWrapper = new WJResponseWrapper(response, request);
+
+                if (RequestContextHolder.getRequestAttributes() == null)
+                {
+                    // Direct includes from background threads bypass Spring's request listener.
+                    temporaryAttributes = new ServletRequestAttributes(request, respWrapper);
+                    RequestContextHolder.setRequestAttributes(temporaryAttributes);
+                }
 
                 request.setAttribute("fulltext_preview", data);
 
@@ -405,6 +416,20 @@ public class EditorToolsForCore {
         {
             sk.iway.iwcm.Logger.error(ex);
             Logger.debug(EditorToolsForCore.class, "renderIncludes ERROR, htmlData:"+htmlCode);
+        }
+        finally
+        {
+            if (temporaryAttributes != null)
+            {
+                try
+                {
+                    temporaryAttributes.requestCompleted();
+                }
+                finally
+                {
+                    RequestContextHolder.resetRequestAttributes();
+                }
+            }
         }
 
         //nastala exception, radsej to do FT indexu nedame

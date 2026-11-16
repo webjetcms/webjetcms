@@ -2547,6 +2547,7 @@ public class EditorDB
 		};
 		request.setSession(new MockHttpSession(Constants.getServletContext()));
 		request.setServerName("");
+		request.setAttribute("path_filter_orig_path", virtualPath);
 		if (ef != null && ef.getGroupId() > 0)
 		{
 			GroupDetails group = GroupsDB.getInstance().getGroup(ef.getGroupId());
