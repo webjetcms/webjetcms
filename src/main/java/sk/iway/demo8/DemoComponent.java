@@ -5,8 +5,10 @@ import org.springframework.ui.Model;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
@@ -20,6 +22,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
 
 @WebjetComponent("sk.iway.demo8.DemoComponent")
 @WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "ti ti-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg,/components/app-cookiebar/screenshot-2.jpg", commonSettings = true)
@@ -146,12 +150,15 @@ public class DemoComponent extends WebjetComponentAbstract {
 	private String colorAlpha = "#FF0000";
 
 	@DefaultHandler
-	public String render(Model model)
+	public String render(Model model, HttpServletRequest request)
 	{
 		Logger.debug(this.getClass(), "groupDetails="+groupDetails+" docDetails="+docDetails+" groupDetailsList="+groupDetailsList+" docDetailsList="+docDetailsList+" dirSimple="+dirSimple+" date="+date);
 
         model.addAttribute("test", "Toto je test");
 		model.addAttribute("demoComponent", this);
+		model.addAttribute("domainName", DocDB.getDomain(request));
+		model.addAttribute("path", request.getRequestURI());
+		model.addAttribute("origPath", PathFilter.getOrigPath(request));
 
 		return "/components/aceintegration/demo-component/view";
 	}
