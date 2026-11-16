@@ -19,6 +19,7 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.cluster.ClusterRefresher;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
@@ -5205,6 +5206,10 @@ public class DocDB extends DB
 		catch (Exception ex)
 		{
 			Logger.error(DocDB.class, ex);
+			if (ClusterRefresher.THREAD_NAME.equals(Thread.currentThread().getName()))
+			{
+				throw new IllegalStateException("Cannot refresh document " + docId, ex);
+			}
 		}
 		finally
 		{
@@ -5217,29 +5222,31 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Tato metoda zmaze informacie o doc s docId z internych tabuliek
-	 * v pamati, basicAllDocsTable, basicAllDocsInGroupTable, urlsByUrlDomains
-	 * basicAllDocsTable, z cache ak sa tam nachadza, zmaze takisto data z lucene indexu
-	 * informacie o dokumente vyberie z basicAllDocsTable. ak sa tam doc uz nenachadza tak
-	 * metode nic nespravi
-	 * @param docId id dokumentu
+	 * Removes cached references and local index entries for a deleted document.
+	 * Index cleanup and cluster notification also run when the document is no
+	 * longer present in the cache.
+	 * @param docId the deleted document ID
 	 * @author mhalas
 	 */
 	private void cleanupDocReferences(int docId)
 	{
-		DocDetails doc;
-		doc = basicAllDocsTable.get(docId);
-		/* uz je to pravdepodobne vymazane aj z pamati */
-		if(doc == null) return;
-		removeDocFromBasilAllDocsInGroup(doc);
-		TObjectIntHashMap<String> oldTable = DocDB.getInstance().getUrlsByUrlDomains(doc.getGroup().getDomainName(), false);
-		if (oldTable != null && doc.getVirtualPath() != null)
+		DocDetails doc = basicAllDocsTable.get(docId);
+		if (doc != null)
 		{
-			Logger.debug(DocDB.class, "updateInternalCaches: mazem stare URL ("+doc.getVirtualPath()+") pre domenu "+doc.getGroup().getDomainName());
-			oldTable.remove(doc.getVirtualPath());
+			removeDocFromBasilAllDocsInGroup(doc);
+			GroupDetails group = doc.getGroup();
+			if (group != null)
+			{
+				TObjectIntHashMap<String> oldTable = getUrlsByUrlDomains(group.getDomainName(), false);
+				if (oldTable != null && doc.getVirtualPath() != null)
+				{
+					Logger.debug(DocDB.class, "Removing cached URL " + doc.getVirtualPath() + " for domain " + group.getDomainName());
+					oldTable.remove(doc.getVirtualPath());
+				}
+			}
+			basicAllDocsTable.remove(docId);
+			readPagesToPublic();
 		}
-		basicAllDocsTable.remove(docId);
-		readPagesToPublic();
 		if (cachedDocs.containsKey(Integer.valueOf(docId))) cachedDocs.remove(Integer.valueOf(docId));
 		Cache.getInstance().clearAll();
 		Cache.getInstance(true);
