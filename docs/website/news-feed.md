@@ -91,3 +91,12 @@ Ak verejný web používa Content Security Policy, jeho existujúce nastavenie m
 - Po uložení v staršom CMS skontrolovať, či zdrojový editor zachoval `style` a celú značku HTML embed vrátane parametra `html`, a či sa vo vykreslenej stránke objaví dekódovaný skript. Ak web používa CSP, musí povoľovať výsledný inline skript podľa existujúceho nastavenia, `connect-src` pre docs server a `img-src` pre náhľady. Base64 kódovanie pravidlá CSP nemení. Toto nie je pokyn na plošné uvoľnenie CSP.
 
 Tento dokument zachytáva overený kontrakt zdroja a implementované správanie v `sk/index.html`. Kontrola kódu odhalila potrebu jednopriechodového dekódovania výňatkov; tá je už zapracovaná. Browserové a vizuálne overenie sa eviduje pri odovzdaní celého balíka.
+
+
+## Anglický úvod (16. 11. 2026)
+
+[en/index.html](en/index.html) používa verejný [wjnews.en.json](https://docs.webjetcms.sk/json/wjnews.en.json). Pri kontrole 16. 11. 2026 server vrátil HTTP 200, `application/json;charset=UTF-8` a `Access-Control-Allow-Origin: *`. Feed obsahuje anglické názvy a výňatky; jeho odkazy stále vedú na pôvodné sociálne príspevky a videá, ktoré môžu byť slovenské. Túto skutočnosť uvádza aj text nad kartami.
+
+EN skript zachováva normalizáciu, povolené domény, limity, deduplikáciu, timeout a fallback z SK verzie. Mení iba URL feedu na `wjnews.en.json` a formát dátumu na `en-GB`; časové pásmo zostáva `Europe/Bratislava`. Base64 obal HTML embed sa nemení. Statické odkazy smerujú na `/latest/en/` dokumentácie, nie na SK feed. Náhľady sa načítajú z URL dodaných EN feedom a nekopírujú sa do `en/images/`; ich text nemusí byť celý anglický.
+
+Vkladanie aj požiadavky CSP sú rovnaké ako pri SK úvode, len fragment sa vkladá do úvodnej stránky anglického webu `webjetcms.com`. Pri nedostupnom EN feede zostane EN odkaz na dokumentáciu; fragment neprepína na slovenský feed.

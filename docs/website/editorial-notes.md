@@ -58,3 +58,26 @@ Finálny úvod používa produktový a redakčný prísľub zo zvoleného H1, ko
 ## Kontrola tvrdení pred publikovaním
 
 Opierať sa o [produktové dôkazy](product-evidence.md), [vývojárske podklady](developer-agency-evidence.md) a [konkurenčnú analýzu](competitor-analysis.md). Rozlišovať funkciu dostupnú v produkte, potrebné nastavenie a pripravovanú schopnosť. Prípadné budúce tvrdenie o úspore času potrebuje meranie konkrétnej úlohy; tvrdenie o certifikácii príslušný platný doklad; klientsky výsledok odsúhlasenú prípadovú štúdiu. Kým tieto dôkazy nie sú k dispozícii, stačí presne opísať prácu, ktorú používateľ vykoná.
+
+
+## Anglická verzia (16. 11. 2026)
+
+Diagnóza podľa `copywriting`: **B, lokalizácia existujúceho textu**. Zachováva schválené argumenty, poradie sekcií, podmienky dostupnosti aj označenie pripravovaných funkcií. Text používa britskú angličtinu a CTA **Request a demo** na `/contact/`; agentúrne CTA je **Discuss working together**. Nejde o okamžitú rezerváciu termínu.
+
+EN obsah je určený pre `https://www.webjetcms.com`. Existujúce cesty overené vo verejnej navigácii sa zachovávajú; názov stránky Features má URL `/functions/`. Nové stránky `/for-developers/` a `/for-agencies/` treba vytvoriť na EN doméne. Rovnako ako SK variant môžu zatiaľ zostať mimo horného menu.
+
+| Súbor | Verejná URL na webjetcms.com | Titulok stránky | Meta description |
+| --- | --- | --- | --- |
+| [en/index.html](en/index.html) | `/` | WebJET CMS: AI and content management for business | Create content with AI, approve changes and schedule publication. Manage business websites and public sector portals with WebJET CMS. Request a demo. |
+| [en/benefits.html](en/benefits.html) | `/benefits/` | WebJET CMS benefits: AI, headless and multi-step forms | Prepare content, manage approvals and plan publication with WebJET CMS. Explore AI, headless delivery and multi-step forms for your website. |
+| [en/functions.html](en/functions.html) | `/functions/` | WebJET CMS features: AI, editing and website management | Explore AI assistants, PageBuilder, approval workflows, access permissions and multilingual website management in WebJET CMS. |
+| [en/applications.html](en/applications.html) | `/applications/` | WebJET CMS applications for websites and portals | Add forms, news, documents and search to your website. Explore WebJET CMS applications for visitors and content teams, with links to practical guides. |
+| [en/for-developers.html](en/for-developers.html) | `/for-developers/` | WebJET CMS for developers: Java, Spring and REST APIs | Build custom applications, data administration and headless websites with Java and Spring. Get started with WebJET CMS documentation and basecms. |
+| [en/for-agencies.html](en/for-agencies.html) | `/for-agencies/` | WebJET CMS for agencies and client projects | Build client websites with custom templates, applications and editorial permissions in WebJET CMS. Discuss your first project with InterWay. |
+
+Metadáta nastavte vo vlastnostiach príslušných EN stránok; fragmenty obsahujú iba článok s `lang="en"`. Koreňový jazyk dokumentu musí naďalej určiť EN šablóna. Existujúce technické ID zostávajú slovenské, čitateľný obsah a navigačné popisy sú anglické. Presné názvy slovenských referenčných značiek, napríklad Všeobecná zdravotná poisťovňa a Tatra banka, sa neprekladajú.
+
+EN verzia nahrádza jedenásť produktových videoukážok screenshotmi z `docs/en/`; rešpektuje tým zadanie nespoliehať sa na EN nahrávky, ktoré nie sú dostupné. Rozdiely médií a zvyšný slovenský ukážkový obsah sú popísané v [manifeste obrázkov](image-manifest.md). Živé novinky majú anglický feed, ale odkazované sociálne príspevky a videá môžu byť slovenské.
+
+
+Pri kontrole existujúcej EN šablóny sa v navigácii našiel názov **Domov** a vo footerových odkazoch slovenské pomocné titulky produktov. Sú mimo článku a vloženie EN fragmentov ich neprepíše. Pri publikovaní skontrolujte aj tieto položky v EN šablóne/menu.

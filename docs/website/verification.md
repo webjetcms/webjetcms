@@ -62,3 +62,27 @@ Na úvode pribudol textový odkaz **Open Source verzia na GitHube** na `https://
 Kontrola nepoužila redakčný editor starej produkčnej inštalácie. Po vložení treba overiť, že editor zachoval `style`, `details` a značky `!INCLUDE` vrátane Base64 parametra HTML embed. CMS musí vykresliť dekódovaný skript aj videá; treba skontrolovať ich funkčnosť, obrázky na dohodnutej ceste a prípadnú CSP pre skript, JSON, náhľady a prehrávače YouTube. Tieto kroky sú popísané v [návode na vloženie](README.md).
 
 Lokálny náhľad odstraňuje pôvodné skripty, formuláre a trackovanie šablóny. Neoveruje nezmenenú mobilnú navigáciu, kontaktné vyskakovacie okno, odosielanie kontaktu ani produkčné meranie. Nové stránky ani zmeny menu sa na verejnom webe nezakladali. Produktové funkcie CMS neboli v rámci obsahovej úpravy runtime testované; tvrdenia boli porovnané s dokumentáciou a vybranými implementačnými podkladmi.
+
+
+## Anglická verzia a jazykové priečinky obrázkov (16. 11. 2026)
+
+Pribudlo šesť fragmentov v `en/`, deväť dokumentačných obrázkov a EN voľba lokálneho náhľadu. Overenie sa týka pripraveného balíka, nie vloženia do produkčného CMS. Existujúce SK články sa menia iba v cestách troch používaných screenshotov; logá a video značky zostávajú zachované.
+
+- Nezávislé porovnanie so SK podkladmi overilo zachovanie sekcií, zoznamov, rozbaľovacích detailov a technických ID. EN obsah má preložené popisy, alt texty, navigačné popisy a CTA; vlastné názvy slovenských referenčných značiek zostávajú pôvodné.
+- Overené je vnorenie HTML, jeden H1 a style na fragment, jedinečné ID, väzby `aria-labelledby`, vnútorné a medzistránkové kotvy, existujúce súbory cieľovej EN dokumentácie a rozmery PNG. EN fragmenty majú `lang="en"` a neobsahujú video include. Všetkých jedenásť SK videoumiestnení má EN obrazovú náhradu.
+- Všetkých deväť EN obrázkov je binárne zhodných s uvedeným zdrojom v `docs/en/`; boli vizuálne prezreté. Dve pôvodné snímky z EN dokumentácie boli celé slovenské, preto sa použili vhodnejšie zábery AI četu a používateľských oprávnení. Zvyšný slovenský ukážkový obsah a popisky sa evidujú v [manifeste](image-manifest.md).
+- EN doména a existujúce cesty sa overili podľa verejnej navigácie `https://www.webjetcms.com/`; `/en/` na `webjetcms.sk` vrátilo 404. Nové stránky pre agentúry a vývojárov sú súčasťou balíka a pred zverejnením odkazov ich treba vytvoriť v CMS.
+- Všetkých **28 jedinečných EN odkazov do dokumentácie** bolo overených na skutočných `.md`/`README.md` endpointoch: HTTP 200 a Markdown obsah, nie iba úspešné načítanie Docsify HTML obalu. Lokálna kontrola prešla pre 12 fragmentov, 97 odkazov v každom jazyku, 11 SK a 22 EN použití statických obrázkov. Obidve jazykové mapy náhľadu a 39 ciest obrázkov prešli skúšobnými požiadavkami s lokálnou testovacou šablónou. Python syntax prešla `compile()` a oba dekódované skripty noviniek `node --check`.
+- EN skript noviniek sa po dekódovaní od SK líši iba URL feedu a formátom dátumu. Zachováva pôvodné obmedzenia a náhradné zobrazenie. Používa `wjnews.en.json`, `en-GB` a pásmo `Europe/Bratislava`.
+- Náhľad na `http://127.0.0.1:8766/` načítal anglickú šablónu s koreňovým `lang="en-GB"`. Všetkých šesť EN stránok bolo skontrolovaných pri šírkach **320, 390 a 1280 px** bez horizontálneho presahu celej stránky. Mriežka Bootstrapu má záporné okraje voči obsahovému obalu, ale nevyvoláva vodorovné posúvanie stránky.
+- Úvod bol vizuálne skontrolovaný na desktope aj mobile. AI detail na stránke Features sa otvoril klávesom Enter aj pri 320 px a zostal v šírke stránky. V novinkách sa cez skutočný EN feed zobrazilo šesť kariet, načítalo sa všetkých šesť náhľadov a záložná správa sa skryla. Dátumy aj texty kariet boli anglické; niektoré obrázky a cieľové príspevky zostávajú slovenské.
+- SK náhľad na porte 8767 načítal obidve snímky na stránke Benefity z nových `/sk/` ciest a zachoval tri video prehrávače. Dočasné nastavenie šírky prehliadača bolo po kontrole zrušené.
+
+Uložené náhľady: [EN úvod na desktope](en/previews/home-desktop.jpg), [EN úvod na mobile](en/previews/home-mobile.jpg), [EN novinky](en/previews/news-desktop.jpg). Priečinok `previews/` sa na produkčný web nenahráva.
+
+Po nahratí obrázkov a vložení článkov zostáva overiť konkrétny CMS editor, nové EN stránky, dostupnosť jazykových priečinkov na oboch doménach a nezmenené časti šablóny. Pôvodné súbory v `/images/webjetcms-2026/` sa pri migrácii nesmú odstrániť, kým ich používajú publikované články. Žiadne produkčné nasadenie ani Git commit neboli súčasťou tejto práce.
+
+
+### Anglické názvy obrázkov
+
+EN balík používa anglické názvy súborov: `ai-chat.png`, `publication-history.png`, `user-permissions.png`, `document-manager.png`, `multi-step-form.png` a `custom-application.png`. Odkazy `src` aj `href` v EN HTML a manifestoch boli aktualizované. Pôvodne anglické názvy, SK súbory a spoločné logá zostávajú zachované. Premenovanie nemení obsah obrázkov; binárna zhoda bola overená pred aj po zmene. Náhľad odvodzuje cesty zo súborov v jazykových priečinkoch, preto nevyžaduje úpravu kódu.

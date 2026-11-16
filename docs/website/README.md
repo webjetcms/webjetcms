@@ -1,6 +1,6 @@
 # Obsah webjetcms.sk
 
-Balík pripravený 15. 11. 2026 podľa dohodnutého zamerania na firemné weby, verejnú správu, AI, schvaľovanie a plánovanie obsahu. K tematickým sekciám sú doplnené videá z dokumentácie. Na verejnom webe nebolo nič publikované.
+Balík pripravený 15. 11. 2026 podľa dohodnutého zamerania na firemné weby, verejnú správu, AI, schvaľovanie a plánovanie obsahu. Dňa 16. 11. 2026 pribudla anglická verzia pre **webjetcms.com** s EN screenshotmi. SK verzia používa aj videá z dokumentácie. Príprava EN balíka ani úprava ciest obrázkov nič nepublikuje na verejný web.
 
 ## Výsledné HTML
 
@@ -13,16 +13,31 @@ Balík pripravený 15. 11. 2026 podľa dohodnutého zamerania na firemné weby, 
 | Pre vývojárov | [pre-vyvojarov.html](sk/pre-vyvojarov.html) | `/pre-vyvojarov/` – nová stránka |
 | Pre agentúry | [pre-agentury.html](sk/pre-agentury.html) | `/pre-agentury/` – nová stránka |
 
+Anglické fragmenty patria do existujúceho webu **`https://www.webjetcms.com`**, nie do `/en/` na slovenskej doméne. Nasledujúce cesty sú relatívne voči anglickej doméne; `/functions/` a `/licenses/` zachovávajú existujúce URL.
+
+| Stránka | Súbor na vloženie | Verejná cesta |
+| --- | --- | --- |
+| Home vrátane EN noviniek | [index.html](en/index.html) | `/` (existujúca úvodná stránka) |
+| Benefits | [benefits.html](en/benefits.html) | `/benefits/` |
+| Features | [functions.html](en/functions.html) | `/functions/` |
+| Applications | [applications.html](en/applications.html) | `/applications/` |
+| For developers | [for-developers.html](en/for-developers.html) | `/for-developers/` – nová stránka |
+| For agencies | [for-agencies.html](en/for-agencies.html) | `/for-agencies/` – nová stránka |
+
 Každý súbor obsahuje **celý obsah na vloženie dovnútra existujúceho `article.ly-article`**. Neobsahuje ďalší `article` ani obal celej HTML stránky. V úvode súboru je malý `style` obmedzený na `.wj-website-content`; nadväzuje na typografiu, farby a komponenty súčasného webu s Bootstrap 4.1.3. Netreba nový CSS alebo JavaScript framework.
 
 ## Vloženie do CMS
 
-1. Nahrajte používané obrázky z [sk/images](sk/images/) do **`/images/webjetcms-2026/`** na webe. Zachovajte názvy súborov. [Manifest](image-manifest.md) odlišuje deväť potrebných súborov od šiestich voliteľných snímok nahradených videami; možno nahrať aj celý priečinok.
-2. Založte stránky `/pre-vyvojarov/` a `/pre-agentury/` s existujúcou produktovou šablónou. Tým začnú fungovať aj nové odkazy z ostatných stránok.
+1. **Najprv nahrajte obrázky, až potom aktualizujte obsah.** Snímky z [sk/images](sk/images/) okrem `logo-*.png` patria do **`/images/webjetcms-2026/sk/`**, snímky z [en/images](en/images/) do **`/images/webjetcms-2026/en/`**. Šesť spoločných `logo-*.png` zostáva v **`/images/webjetcms-2026/`**. Pri nahrávaní zachovajte názvy z príslušného jazykového priečinka; EN snímky majú anglické názvy, napríklad `publication-history.png`. Zoznam potrebných a voliteľných obrázkov je v [manifeste](image-manifest.md). Obrázky musia byť dostupné na príslušnej SK aj EN doméne. **Pôvodné obrázky v koreňovom priečinku nemažte ani nepresúvajte:** už publikované SK stránky ich môžu používať. Aktualizované SK fragmenty už odkazujú na `/sk/`; EN používa `/en/` a spoločné logá z koreňa.
+2. Založte stránky `/pre-vyvojarov/` a `/pre-agentury/` na SK webe, `/for-developers/` a `/for-agencies/` na EN webe s existujúcou produktovou šablónou, ak ešte neexistujú. Tým začnú fungovať aj nové odkazy z ostatných stránok.
 3. V zdrojovom HTML režime vložte celý príslušný fragment vrátane `style` namiesto pôvodného obsahu článku. Ak štýly spravujete oddelene, vložte dodaný `style` podľa možností šablóny. Obal `.wj-website-content` musí zostať. **Zachovajte aj značky `!INCLUDE(...)!`**: videá spracuje aplikácia `/components/video/video_player.jsp`, vložený kód noviniek aplikácia `/components/app-htmlembed/embed.jsp`. Nevkladajte ich ako escapovaný text ani ich nenahrádzajte vykresleným HTML z lokálneho náhľadu.
 4. **Na úvode ponechajte celú značku `!INCLUDE(/components/app-htmlembed/embed.jsp, html=...)!` s nezmeneným obsahom parametra `html`.** Obsahuje skript noviniek v Base64; po dekódovaní nasleduje prefix `utf8:` a URL-kódované HTML. Toto uloženie chráni medzery skriptu pred zmenami v redakčnom editore. Pri vkladaní ho nerozbaľujte na samostatný `script`. WebJET ho dekóduje pri vykreslení stránky. Nepotrebuje API kľúč, jQuery ani administračné rozhrania. Podrobnosti vrátane CSP sú v [news-feed.md](news-feed.md).
 5. Nastavte titulky a meta popisy podľa [redakčných poznámok](editorial-notes.md). Podľa dohody ponechajte stránky Pre agentúry a Pre vývojárov zatiaľ mimo horného menu; už sú prelinkované v obsahu. Pre neskoršiu úpravu šablóny je pripravený [návrh preskupenia navigácie](navigation-proposal.md).
-6. V náhľade CMS skontrolujte načítanie obrázkov, videá vrátane prehratia a celej obrazovky, CTA na `/kontakt/`, rozbaľovacie sekcie Funkcií/Aplikácií a šesť položiek noviniek. Rozbaľovanie používa natívne `details`, funguje aj bez JavaScriptu. Pri videách zostáva aj priamy odkaz na YouTube; automatické prehrávanie je vypnuté.
+6. V náhľade CMS skontrolujte obrázky, SK videá vrátane prehratia a celej obrazovky, CTA na `/kontakt/` alebo EN `/contact/`, rozbaľovacie sekcie Funkcií/Aplikácií a novinky. Rozbaľovanie používa natívne `details`, funguje aj bez JavaScriptu. SK videá majú aj priamy odkaz na YouTube; automatické prehrávanie je vypnuté. EN fragmenty namiesto videí zobrazujú zväčšiteľné screenshoty.
+
+EN texty, popisy obrázkov aj odkazy do dokumentácie sú preložené. Technické ID sekcií zostávajú rovnaké ako v SK pre jednoduché párovanie. Screenshoty zobrazujú anglické ovládanie; pôvodné ukážkové názvy, časť obsahu a niektoré popisky v zdrojoch zostali slovenské. Dve úplne slovenské snímky v `docs/en/` boli nahradené vhodnejšími EN zábermi. Podrobnosti sú v [manifeste obrázkov](image-manifest.md).
+
+EN úvod používa existujúci `wjnews.en.json`, dátumy vo formáte `en-GB` a anglickú dokumentáciu ako fallback. Ciele sociálnych odkazov a videá môžu zostať slovenské, na čo upozorňuje text sekcie. Dôvod použitia statických obrázkov namiesto automaticky prekladaných videí vysvetľuje [manifest videí](video-manifest.md#anglická-verzia-snímky-namiesto-videí).
 
 Na úvode sú podľa dohody pôvodné licenčné karty nahradené odkazmi. Stránky Služby, Aktuálna verzia a Licencie sa nemenia. Spring Boot a spoločné plánovanie zmien viacerých stránok sú označené **Pripravujeme**, bez dátumu vydania.
 
@@ -41,6 +56,14 @@ Z koreňa repozitára spustite:
 ```sh
 python3 docs/website/preview.py --port 8765
 ```
+
+Pre EN obsah v anglickej verejnej šablóne spustite samostatne:
+
+```sh
+python3 docs/website/preview.py --lang en --port 8766
+```
+
+Otvorte [anglický náhľad](http://127.0.0.1:8766/); používa anglické cesty z tabuľky. Predvolený jazyk je `sk`, možno ho zadať aj cez `--lang sk`. Náhľad obsluhuje oba jazykové priečinky obrázkov aj staré SK cesty; každý jazyk zobrazuje vlastnú sadu stránok a vlastnú verejnú šablónu.
 
 Otvorte [lokálny náhľad](http://127.0.0.1:8765/). Fungujú aj ostatné cesty z tabuľky. Server sa viaže len na `127.0.0.1`, nepotrebuje bežiaci WebJET ani inštaláciu Python balíkov. Vyžaduje internet na načítanie verejnej šablóny a jej existujúcich CSS/fontov. Po úprave fragmentu obnovte stránku; server ukončíte cez Ctrl+C.
 

@@ -14,7 +14,8 @@ from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parent
 SITE = "https://www.webjetcms.sk"
-PAGES = {
+LANGUAGE = "sk"
+PAGE_FILES = {"sk": {
     "/": "index.html",
     "/domov/": "index.html",
     "/benefity/": "benefity.html",
@@ -22,7 +23,26 @@ PAGES = {
     "/aplikacie/": "aplikacie.html",
     "/pre-vyvojarov/": "pre-vyvojarov.html",
     "/pre-agentury/": "pre-agentury.html",
+}, "en": {
+    "/": "index.html",
+    "/domov/": "index.html",
+    "/benefits/": "benefits.html",
+    "/functions/": "functions.html",
+    "/applications/": "applications.html",
+    "/for-developers/": "for-developers.html",
+    "/for-agencies/": "for-agencies.html",
+}}
+PAGES = PAGE_FILES[LANGUAGE]
+# Explicit mappings preserve old SK URLs without confusing the two languages.
+IMAGE_FILES = {
+    f"/images/webjetcms-2026/{language}/{image.name}": image
+    for language in PAGE_FILES
+    for image in (ROOT / language / "images").glob("*.png")
 }
+IMAGE_FILES.update({
+    f"/images/webjetcms-2026/{image.name}": image
+    for image in (ROOT / "sk" / "images").glob("*.png")
+})
 CACHE = {}
 HTML_EMBED_INCLUDE = re.compile(
     r"!INCLUDE\(/components/app-htmlembed/embed\.jsp,\s*"
@@ -91,7 +111,7 @@ def template():
     def rewrite(match):
         name, value = match.group(1), unescape(match.group(2))
         if value.startswith("javascript:"):
-            value = SITE + "/kontakt/"
+            value = SITE + ("/contact/" if LANGUAGE == "en" else "/kontakt/")
         elif value.startswith("/") and not value.startswith("//"):
             path = urlsplit(value).path
             if path not in PAGES and not path.startswith(("/templates/", "/images/", "/thumb/", "/components/")):
@@ -99,7 +119,8 @@ def template():
         return name + '="' + escape(value, quote=True) + '"'
 
     source = re.sub(r'\b(href|src)="([^"]*)"', rewrite, source)
-    source = source.replace("<title>", "<title>Náhľad obsahu – ", 1)
+    label = "Content preview" if LANGUAGE == "en" else "Náhľad obsahu"
+    source = source.replace("<title>", f"<title>{label} – ", 1)
     return source
 
 
@@ -111,7 +132,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
         path = urlsplit(self.path).path
         try:
             if path in PAGES:
-                fragment = (ROOT / "sk" / PAGES[path]).read_text()
+                fragment = (ROOT / LANGUAGE / PAGES[path]).read_text(encoding="utf-8")
                 fragment = render_videos(fragment)
                 fragment = render_html_embeds(fragment)
                 fragment = re.sub(
@@ -124,7 +145,10 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 content = shell.replace("<!-- ARTICLE -->", fragment).encode()
                 content_type = "text/html; charset=utf-8"
             elif path.startswith("/images/webjetcms-2026/"):
-                image = ROOT / "sk" / "images" / path.rsplit("/", 1)[-1]
+                image = IMAGE_FILES.get(path)
+                if image is None:
+                    self.send_error(404)
+                    return
                 content = image.read_bytes()
                 content_type = mimetypes.guess_type(image.name)[0] or "application/octet-stream"
             elif path.startswith(("/templates/", "/images/", "/thumb/", "/components/")):
@@ -148,8 +172,12 @@ class PreviewHandler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--lang", choices=PAGE_FILES, default="sk")
     args = parser.parse_args()
+    LANGUAGE = args.lang
+    PAGES = PAGE_FILES[LANGUAGE]
+    SITE = "https://www.webjetcms.com" if LANGUAGE == "en" else "https://www.webjetcms.sk"
     SHELL = template()
-    print(f"Preview: http://127.0.0.1:{args.port}/", flush=True)
+    print(f"Preview ({LANGUAGE}): http://127.0.0.1:{args.port}/", flush=True)
     print("The six local fragments reload on each request. Ctrl+C stops the server.", flush=True)
     ThreadingHTTPServer(("127.0.0.1", args.port), PreviewHandler).serve_forever()
