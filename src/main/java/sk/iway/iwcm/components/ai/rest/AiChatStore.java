@@ -233,7 +233,7 @@ public class AiChatStore {
         if (!pending.name().equals(result.name()) || !AiToolProtocol.sameJson(pending.arguments(), result.arguments())) throw conflict("requestChanged");
         if (pending.write()) {
             List<WriteOutcome> outcomes = answer.getWriteOutcomes();
-            var outcome = WriteOutcome.from(result);
+            var outcome = WriteOutcome.from(result, pending.rowReorder());
             if (outcomes.isEmpty()) outcomes.add(outcome); // A pending call saved before write outcomes were recorded.
             else outcomes.set(outcomes.size() - 1, outcome);
         }

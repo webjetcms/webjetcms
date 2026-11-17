@@ -90,10 +90,11 @@ async function callEndpoint(assistantId, call, signal, repairInvalidArguments) {
     return observation;
 }
 
-function rejected(observation) {
+function rejected(observation, call) {
     const { status, result } = observation;
     return status < 200 || status >= 300 || Boolean(result?.error) || Boolean(result?.fieldErrors?.length) ||
-        result?.result === false || (Array.isArray(result?.notify) && result.notify.some(note => note?.type === 'error'));
+        (call.rowReorder && result === false) || result?.result === false ||
+        (Array.isArray(result?.notify) && result.notify.some(note => note?.type === 'error'));
 }
 
 export function formatWriteOutcome({ name, status, uncertain, rejected, ids = [] }) {
@@ -168,7 +169,7 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
             results.push(observation);
             if (write) {
                 uncertain ||= observation.uncertain;
-                const failed = rejected(observation);
+                const failed = rejected(observation, call);
                 writeProblem ||= failed || observation.uncertain;
                 mayHaveSaved ||= observation.uncertain || !failed || Boolean(observation.result?.data?.length);
                 writes.set(key, writeStatus(observation, failed));

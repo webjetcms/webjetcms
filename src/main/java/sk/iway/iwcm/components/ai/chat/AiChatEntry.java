@@ -53,12 +53,12 @@ public class AiChatEntry {
             return new WriteOutcome(name, 0, true, false, List.of());
         }
 
-        public static WriteOutcome from(Result observation) {
+        public static WriteOutcome from(Result observation, boolean rowReorder) {
             Map<?, ?> body = observation.result() instanceof Map<?, ?> map ? map : Map.of();
             boolean rejected = observation.status() < 200 || observation.status() >= 300 ||
                 (body.get("error") instanceof String error && !error.isEmpty()) ||
                 (body.get("fieldErrors") instanceof List<?> errors && !errors.isEmpty()) ||
-                Boolean.FALSE.equals(body.get("result")) ||
+                (rowReorder && Boolean.FALSE.equals(observation.result())) || Boolean.FALSE.equals(body.get("result")) ||
                 (body.get("notify") instanceof List<?> notices && notices.stream()
                     .anyMatch(notice -> notice instanceof Map<?, ?> item && "error".equals(item.get("type"))));
             List<?> rows = body.get("data") instanceof List<?> data ? data : List.of(body);

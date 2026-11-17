@@ -83,6 +83,11 @@ public class AiToolService {
         return entry != null && entry.definition().writes();
     }
 
+    public boolean isRowReorderTool(String name) {
+        var entry = registry.lookup(name);
+        return entry != null && entry.definition().rowReorder();
+    }
+
     public List<AiToolDefinition> list(HttpServletRequest request, Prop language) {
         return visibleEntries(request, Access.ASSIGNED).map(entry -> entry.definition(language)).toList();
     }

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -29,7 +30,12 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, List<Result> re
             DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     private static final TypeReference<Map<String, Object>> ARGUMENTS = new TypeReference<>() {};
 
-    public record Call(String name, Map<String, Object> arguments, boolean write) {}
+    public record Call(String name, Map<String, Object> arguments, boolean write,
+            @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean rowReorder) {
+        public Call(String name, Map<String, Object> arguments, boolean write) {
+            this(name, arguments, write, false);
+        }
+    }
     public record Result(String name, Map<String, Object> arguments, int status, Object result, boolean uncertain) {}
 
     /** Prepares the tool protocol before the provider task moves to its worker thread. */
@@ -135,12 +141,13 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, List<Result> re
         }
         String name = decision.get("name").textValue();
         Map<String, Object> args = JSON.convertValue(decision.get("arguments"), ARGUMENTS);
-        boolean write;
-        try { write = validateCall(name, args).writes(); }
+        AiToolDefinition tool;
+        try { tool = validateCall(name, args); }
         catch (IllegalArgumentException invalid) {
             invalidDecision(target, prop, invalid.getMessage());
             return;
         }
+        boolean write = tool.writes();
         if (write && results.stream().anyMatch(r -> (r.uncertain() || r.status() == 0 || r.status() >= 500) && definition(r.name()).writes())) {
             target.setResponse(prop.getText("components.ai.tools.uncertain.js"));
             return;
@@ -157,7 +164,7 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, List<Result> re
             }
         }
         target.setResponse("");
-        target.setToolCall(new Call(name, args, write));
+        target.setToolCall(new Call(name, args, write, tool.rowReorder()));
     }
 
     private static void reportToolLimit(AssistantResponseDTO target, Prop prop) {

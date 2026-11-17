@@ -21,4 +21,8 @@ public record AiToolDefinition(String name, String description, Map<String, Obje
     public boolean writes() {
         return !List.of("GET", "HEAD", "OPTIONS").contains(httpMethod);
     }
+
+    public boolean rowReorder() {
+        return "POST".equals(httpMethod) && path.endsWith("/row-reorder");
+    }
 }

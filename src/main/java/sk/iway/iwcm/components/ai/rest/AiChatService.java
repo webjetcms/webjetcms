@@ -483,15 +483,42 @@ public class AiChatService implements DisposableBean {
     }
 
     private List<WriteOutcome> writeOutcomes(AiChatEntry message) {
-        if (!message.getWriteOutcomes().isEmpty() || !message.isToolWriteIssued()) return message.getWriteOutcomes();
+        if (!message.getWriteOutcomes().isEmpty()) return recordedWriteOutcomes(message);
+        if (!message.isToolWriteIssued()) return List.of();
         // Older transcripts stored observations without the write flag.
         List<WriteOutcome> outcomes = new ArrayList<>();
         for (var result : message.getToolResults()) {
-            if (result.uncertain() || tools.isWriteTool(result.name())) outcomes.add(WriteOutcome.from(result));
+            if (result.uncertain() || tools.isWriteTool(result.name())) {
+                outcomes.add(WriteOutcome.from(result, tools.isRowReorderTool(result.name())));
+            }
         }
         var pending = message.getPendingToolCall();
         if (pending != null && pending.write()) outcomes.add(WriteOutcome.pending(pending.name()));
         else if ("TOOL_OUTCOME_UNKNOWN".equals(message.getErrorCategory())) outcomes.add(WriteOutcome.pending(null));
+        return outcomes;
+    }
+
+    private List<WriteOutcome> recordedWriteOutcomes(AiChatEntry message) {
+        var results = message.getToolResults();
+        var recorded = message.getWriteOutcomes();
+        if (results.stream().noneMatch(result -> Boolean.FALSE.equals(result.result()))) return recorded;
+
+        // Older summaries counted HTTP 200/false as success. Match from the end because a
+        // transcript can start recording summaries after its first tool calls.
+        var outcomes = new ArrayList<>(recorded);
+        int nextResult = results.size();
+        for (int i = outcomes.size() - 1; i >= 0; i--) {
+            var outcome = outcomes.get(i);
+            if (outcome.status() < 200 || outcome.status() >= 300) continue;
+            while (nextResult > 0) {
+                var result = results.get(--nextResult);
+                if (result.status() != outcome.status() || !outcome.name().equals(result.name())) continue;
+                if (!outcome.rejected() && Boolean.FALSE.equals(result.result()) && tools.isRowReorderTool(result.name())) {
+                    outcomes.set(i, WriteOutcome.from(result, true));
+                }
+                break;
+            }
+        }
         return outcomes;
     }
 
