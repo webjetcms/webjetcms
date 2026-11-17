@@ -4,6 +4,7 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- `/thumb` - opravené generovanie náhľadov pri `ip=1/2`, keď sa v URL zadáva iba šírka alebo výška. Limit `imageMaxThumbsWidth` alebo `imageMaxThumbsHeight` sa pre druhý rozmer overí až po jeho výpočte z pomeru strán, pred generovaním obrázka. Formát kľúčov cache a záznamov povolených rozmerov sa nemení (#408).
 - Vyhľadávanie - zmazaná webová stránka sa odstraňuje podľa ID zo všetkých existujúcich lokálnych jazykových Lucene indexov aj bez údajov v databáze alebo cache. Pri zapnutom priebežnom indexovaní sa aj po reštarte uzla clustra spracujú zachované notifikácie zmien konkrétnych stránok. Pri chybe mazania sa cluster notifikácia nepotvrdí a spracovanie sa zopakuje (#403).
 - Vyhľadávanie - príprava náhľadu aplikácie do indexu v rámci synchronizácie clustra pripraví náhradný `request` objekt pre lepší spôsob zobrazenia aplikácií pre index vyhľadávania (#404).
 - Vyhľadávanie - pri odstraňovaní HTML značiek sa obsah neskracuje už po 100 000 znakoch. Maximálnu dĺžku spracovaného HTML určuje konfiguračná premenná `fulltextMaxHtmlLength` (predvolene 2 000 000 znakov). Pri prekročení limitu sa spracuje iba začiatok obsahu a zapíše sa upozornenie do logu. Optimalizované spracovanie dlhých atribútov HTML značiek (#404).
