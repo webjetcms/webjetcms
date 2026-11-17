@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,6 +19,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -34,9 +36,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import sk.iway.iwcm.Constants;
@@ -49,6 +56,7 @@ import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
 import sk.iway.iwcm.system.spring.webjet_component.WebjetComponentParser;
 
 class EditorDataAscTest {
@@ -67,8 +75,11 @@ class EditorDataAscTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
-    void restoresExistingContextAfterSuccessOrFailure(boolean hasRequest, boolean fail) {
+    @CsvSource({
+        "false,false,false", "false,false,true", "false,true,false", "false,true,true",
+        "true,false,false", "true,false,true", "true,true,false", "true,true,true"
+    })
+    void restoresExistingContextAfterSuccessOrFailure(boolean hasRequest, boolean isLucene, boolean fail) {
         HttpServletRequest request = null;
         if (hasRequest) request = new MockHttpServletRequest();
         HttpServletRequest expectedRequest = request;
@@ -94,10 +105,10 @@ class EditorDataAscTest {
             groupInstances.when(GroupsDB::getInstance).thenReturn(groups);
             documents.when(() -> DocDB.getDomain(any(HttpServletRequest.class)))
                     .thenAnswer(invocation -> ((HttpServletRequest) invocation.getArgument(0)).getServerName());
-            editor.when(() -> EditorToolsForCore.getDataAsc(eq("source"), eq(form), eq(true), any()))
+            editor.when(() -> EditorToolsForCore.getDataAsc(eq("source"), eq(form), eq(isLucene), any()))
                     .thenAnswer(invocation -> {
                         HttpServletRequest actualRequest = invocation.getArgument(3);
-                        if (hasRequest) {
+                        if (hasRequest && isLucene == false) {
                             assertSame(expectedRequest, actualRequest);
                             assertSame(bean, SetCharacterEncodingFilter.getCurrentRequestBean());
                         }
@@ -105,6 +116,7 @@ class EditorDataAscTest {
                             assertNotNull(actualRequest);
                             assertNotNull(actualRequest.getSession());
                             assertEquals("tenant-b.example", actualRequest.getServerName());
+                            if (hasRequest) assertNotSame(expectedRequest, actualRequest);
                             assertNotSame(bean, SetCharacterEncodingFilter.getCurrentRequestBean());
                             assertEquals("tenant-b.example", CloudToolsForCore.getDomainName());
                         }
@@ -115,13 +127,59 @@ class EditorDataAscTest {
                     });
 
             if (fail) {
-                assertThrows(IllegalStateException.class, () -> EditorDB.getDataAsc("source", form, true));
+                assertThrows(IllegalStateException.class, () -> EditorDB.getDataAsc("source", form, isLucene));
             } else {
-                assertEquals("prepared", EditorDB.getDataAsc("source", form, true));
+                assertEquals("prepared", EditorDB.getDataAsc("source", form, isLucene));
             }
             assertSame(bean, SetCharacterEncodingFilter.getCurrentRequestBean());
             assertEquals("tenant-a.example", bean.getDomain());
             assertEquals(42, bean.getUserId());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void luceneRendersAnonymouslyAndRestoresCallerSecurityContext(boolean fail) {
+        SecurityContext originalSecurityContext = SecurityContextHolder.getContext();
+        SecurityContext adminContext = SecurityContextHolder.createEmptyContext();
+        adminContext.setAuthentication(new UsernamePasswordAuthenticationToken(
+                "admin", "password", List.of(new SimpleGrantedAuthority("ROLE_Group_admin"))));
+        SecurityContextHolder.setContext(adminContext);
+
+        RequestBean callerBean = new RequestBean();
+        callerBean.setRequest(new MockHttpServletRequest());
+        SetCharacterEncodingFilter.setCurrentRequestBean(callerBean);
+        EditorForm form = new EditorForm();
+
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<DocDB> documents = mockStatic(DocDB.class);
+                MockedStatic<EditorToolsForCore> editor = mockStatic(EditorToolsForCore.class)) {
+            constants.when(() -> Constants.getString(anyString())).thenReturn("");
+            constants.when(Constants::getServletContext).thenReturn(new MockServletContext());
+            documents.when(() -> DocDB.getDomain(any(HttpServletRequest.class))).thenReturn("");
+            editor.when(() -> EditorToolsForCore.getDataAsc(eq("source"), eq(form), eq(true), any()))
+                    .thenAnswer(invocation -> {
+                        HttpServletRequest renderingRequest = invocation.getArgument(3);
+                        assertNotSame(callerBean.getRequest(), renderingRequest);
+                        assertNull(SecurityContextHolder.getContext().getAuthentication());
+                        WebjetSecurityService security = new WebjetSecurityService(
+                                renderingRequest.getSession(), renderingRequest);
+                        assertFalse(security.isLogged());
+                        assertFalse(security.isAdmin());
+                        if (fail) throw new IllegalStateException("Rendering failed");
+                        return "prepared";
+                    });
+
+            assertTrue(new WebjetSecurityService(callerBean.getRequest().getSession(), callerBean.getRequest()).isAdmin());
+            if (fail) {
+                assertThrows(IllegalStateException.class, () -> EditorDB.getDataAsc("source", form, true));
+            } else {
+                assertEquals("prepared", EditorDB.getDataAsc("source", form, true));
+            }
+            assertSame(adminContext, SecurityContextHolder.getContext());
+            assertSame(callerBean, SetCharacterEncodingFilter.getCurrentRequestBean());
+        } finally {
+            SecurityContextHolder.setContext(originalSecurityContext);
         }
     }
 

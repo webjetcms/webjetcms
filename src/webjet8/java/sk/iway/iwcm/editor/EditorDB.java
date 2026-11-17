@@ -18,6 +18,9 @@ import java.util.StringTokenizer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import net.sourceforge.stripes.mock.MockHttpServletRequest;
 import net.sourceforge.stripes.mock.MockHttpSession;
 import sk.iway.iwcm.Adminlog;
@@ -2531,7 +2534,7 @@ public class EditorDB
 	public static String getDataAsc(String data, EditorForm ef, boolean isLucene)
 	{
 		RequestBean originalBean = SetCharacterEncodingFilter.getCurrentRequestBean();
-		if (originalBean != null && originalBean.getRequest() != null)
+		if (isLucene == false && originalBean != null && originalBean.getRequest() != null)
 		{
 			return getDataAsc(data, ef, isLucene, originalBean.getRequest());
 		}
@@ -2554,9 +2557,15 @@ public class EditorDB
 			GroupDetails group = GroupsDB.getInstance().getGroup(ef.getGroupId());
 			if (group != null && Tools.isNotEmpty(group.getDomainName())) request.setServerName(group.getDomainName());
 		}
+		SecurityContext originalSecurityContext = SecurityContextHolder.getContext();
+		SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
 		try (SetCharacterEncodingFilter.IsolatedDataContext context = SetCharacterEncodingFilter.openIsolatedDataContext(request))
 		{
 			return getDataAsc(data, ef, isLucene, request);
+		}
+		finally
+		{
+			SecurityContextHolder.setContext(originalSecurityContext);
 		}
 	}
 
