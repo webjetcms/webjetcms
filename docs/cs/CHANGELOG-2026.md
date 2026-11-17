@@ -382,6 +382,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Page Builder - přidána možnost nastavit [šířku okna struktura](frontend/page-builder/settings.md) (#343)
 - Administrace - opraveno zobrazení ikony zaškrtnutí u vybrané položky v nabídce automatického doplňování (#osk800).
 - Zrcadlení struktury - [pracovní verze](redactor/apps/docmirroring/README.md#úprava-existující-web-stránky) již nepřepisuje zveřejněné překlady a [hromadné mazání](redactor/webpages/README.md#smazání-zrcadlených-stránek-a-- Přesun nevytváří duplicitní jazykové verze. Při přesunu složky se aktualizují generované a zděděné URL. Dočasná nastavení klonování a stav administrace zrcadlení se nesdílejí mezi souběžnými požadavky (#370).
+- Vložení HTML kódu - prázdná aplikace již v editoru ani na stránce nezobrazuje poškozený text. Prázdná hodnota parametru `html` zůstává zachována (#407).
 
 ### Výkon
 
@@ -763,6 +764,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- Vyhledávání - smazaná webová stránka se odstraňuje podle ID ze všech stávajících lokálních jazykových Lucene indexů i bez údajů v databázi nebo cache. Při zapnutém průběžném indexování se i po restartu uzlu clusteru zpracují zachované notifikace změn konkrétních stránek. Při chybě mazání se cluster notifikace nepotvrdí a zpracování se zopakuje (#403).
 - Databáze - opraveno generování SQL podmínek `IN` a `NOT IN` s velkým počtem hodnot rozdělením seznamů na menší části. Odstraněny chyby při překročení limitu 1000 hodnot v Oracle databázi, například při načítání historie stránky nebo práci s rozsáhlým stromem složek. Maximální počet hodnot v jedné části určuje konfigurační proměnná `dbInClauseMaxItems` (výchozí 1000, v Oracle nejvýše 1000).
 - Databáze - sjednocené datové typy v SQL skriptech pro nové instalace: PostgreSQL používá `TIMESTAMP WITHOUT TIME ZONE`, opraveno nesprávné použití `TIMESTAMP` v MariaDB a Microsoft SQL. Stávající databáze se automaticky nekonvertují (#399).
 - Webové stránky - opraveno omezení hledání a nahrazování v názvech složek na vybraný strom složek a nastavení rodiče při opravě chybně smazaných složek během přesunu stránky do koše (#390).

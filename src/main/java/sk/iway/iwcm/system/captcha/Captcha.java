@@ -96,6 +96,9 @@ public class Captcha
 	 */
 	public static boolean validateResponse(HttpServletRequest httpServletRequest, String response, String component)
 	{
+		String captchaType = Constants.getString("captchaType");
+		Logger.debug(Captcha.class, "Validating captcha response for component: {} with captchaType: {}", component, captchaType);
+
 		if (isRequired(null, httpServletRequest)==false) {
 			return true;
 		}
@@ -104,15 +107,15 @@ public class Captcha
 		{
 			if (component != null && isRequired(component, httpServletRequest)==false)
 				return true;
-			if("invisible".equals(Constants.getString("captchaType"))) {
+			if("invisible".equals(captchaType)) {
 				if (response == null) response = httpServletRequest.getParameter("g-recaptcha-response");
 				return reCaptchaValidate(response);
 			}
-			else if ("reCaptcha".equals(Constants.getString("captchaType")))
+			else if ("reCaptcha".equals(captchaType))
 			{
 				return reCaptchaValidate(getSubmittedReCaptchaResponse(httpServletRequest, response));
 			}
-			else if ("reCaptchaV3".equals(Constants.getString("captchaType")))
+			else if ("reCaptchaV3".equals(captchaType))
 			{
 				return reCaptchaV3Validate(httpServletRequest, response);
 			}
@@ -125,7 +128,7 @@ public class Captcha
 		}
 		catch (Exception e)
 		{
-
+			Logger.error(Captcha.class, "Exception during captcha validation, captchaType: " + captchaType + ", component: " + component, e);
 		}
 		return false;
 	}
@@ -216,9 +219,12 @@ public class Captcha
 
 		String ip = Tools.getRemoteIP(request);
 		if (Tools.isEmpty(ip)) {
-			Logger.debug("reCaptchaV3Validate - ip empty");
+			Logger.debug(Captcha.class, "reCaptchaV3Validate - ip empty");
 			return false;
 		}
+
+		Logger.debug(Captcha.class, "reCaptchaV3Validate - Validating token, source: {}, token: {}, ip: {}",
+				Tools.isNotEmpty(submittedResponse) ? "submitted response" : "request parameter", token, ip);
 
 		RestTemplate restTemplate = new RestTemplate();
 
@@ -235,34 +241,45 @@ public class Captcha
 
 		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
 
-		ResponseEntity<GoogleRecaptchaResponse> response =
-				restTemplate.exchange("https://www.google.com/recaptcha/api/siteverify",
-						HttpMethod.POST,
-						entity,
-						GoogleRecaptchaResponse.class);
+		long startTime = System.nanoTime();
+		ResponseEntity<GoogleRecaptchaResponse> response;
+		try {
+			response = restTemplate.exchange("https://www.google.com/recaptcha/api/siteverify",
+					HttpMethod.POST,
+					entity,
+					GoogleRecaptchaResponse.class);
+		} finally {
+			Logger.debug(Captcha.class, "reCaptchaV3Validate - Google request duration: {} ms", (System.nanoTime() - startTime) / 1_000_000);
+		}
+		Logger.debug(Captcha.class, "reCaptchaV3Validate - Google response status: {}", response.getStatusCode().value());
 
 		double minimalScore = Tools.getDoubleValue(Constants.getString("recaptchaMinScore"), 0.5);
 
 		if (response.getStatusCode() != HttpStatus.OK) {
-			Logger.debug("reCaptchaV3Validate - Google response status not ok: {}", ""+response.getStatusCode().value());
+			Logger.debug(Captcha.class, "reCaptchaV3Validate - Google response status not ok: {}", response.getStatusCode().value());
 			return false;
 		}
 
 		GoogleRecaptchaResponse body = response.getBody();
 		if (body == null) {
-			Logger.debug("reCaptchaV3Validate - Google response body null");
+			Logger.debug(Captcha.class, "reCaptchaV3Validate - Google response body null");
 			return false;
 		}
 
+		Logger.debug(Captcha.class, "reCaptchaV3Validate - Google response success: {}, score: {}, minimal score: {}, error codes: {}, hostname: {}, action: {}, challenge timestamp: {}",
+				body.isSuccess(), body.getScore(), minimalScore, Tools.join(body.getErrorCodes(), ", "), body.getHostname(), body.getAction(), body.getChallengeDate());
+
 		if (!body.isSuccess()) {
-			Logger.debug("reCaptchaV3Validate - Google response success false, error codes: {}", Tools.join(body.getErrorCodes(), ", "));
+			Logger.debug(Captcha.class, "reCaptchaV3Validate - Validation failed: Google response success false");
 			return false;
 		}
 
 		if (body.getScore() < minimalScore) {
-			Logger.debug("reCaptchaV3Validate - Google response score: "+body.getScore()+", minimal score: "+minimalScore);
+			Logger.debug(Captcha.class, "reCaptchaV3Validate - Validation failed: score below minimal score");
 			return false;
 		}
+
+		Logger.debug(Captcha.class, "reCaptchaV3Validate - Validation successful");
 
 		return true;
 	}
