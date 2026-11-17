@@ -1,6 +1,7 @@
 package sk.iway.iwcm.editor;
 
 import java.io.File;
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,6 +19,11 @@ import java.util.StringTokenizer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import net.sourceforge.stripes.mock.MockHttpServletRequest;
+import net.sourceforge.stripes.mock.MockHttpSession;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -25,7 +31,9 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -2526,7 +2534,59 @@ public class EditorDB
 
 	public static String getDataAsc(String data, EditorForm ef, boolean isLucene)
 	{
-		return getDataAsc(data, ef, isLucene, null);
+		RequestBean originalBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (isLucene == false && originalBean != null && originalBean.getRequest() != null)
+		{
+			return getDataAsc(data, ef, isLucene, originalBean.getRequest());
+		}
+
+		String virtualPath = "/LuceneFulltextSearch";
+		if (ef != null && Tools.isNotEmpty(ef.getVirtualPath())) virtualPath = ef.getVirtualPath();
+		MockHttpServletRequest request = new MockHttpServletRequest("", virtualPath) {
+			@Override
+			public boolean isAsyncSupported() { return false; }
+
+			@Override
+			public boolean isAsyncStarted() { return false; }
+		};
+		request.setMethod("GET");
+		request.setSession(new MockHttpSession(Constants.getServletContext()));
+		request.setAttribute("path_filter_orig_path", virtualPath);
+		String serverName = "";
+		if (ef != null && ef.getGroupId() > 0)
+		{
+			GroupDetails group = GroupsDB.getInstance().getGroup(ef.getGroupId());
+			if (group != null && Tools.isNotEmpty(group.getDomainName())) serverName = group.getDomainName();
+		}
+		if (Tools.isEmpty(serverName))
+		{
+			String configuredServerName = Constants.getString("httpServerName");
+			if (Tools.isNotEmpty(configuredServerName))
+			{
+				String url = configuredServerName.trim();
+				if (url.contains("://") == false) url = "http://" + url;
+				try
+				{
+					String configuredHost = URI.create(url).getHost();
+					if (Tools.isNotEmpty(configuredHost)) serverName = configuredHost;
+				}
+				catch (IllegalArgumentException ex)
+				{
+					Logger.debug(EditorDB.class, "Invalid httpServerName configuration: " + configuredServerName, ex);
+				}
+			}
+		}
+		request.setServerName(serverName);
+		SecurityContext originalSecurityContext = SecurityContextHolder.getContext();
+		SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
+		try (SetCharacterEncodingFilter.IsolatedDataContext context = SetCharacterEncodingFilter.openIsolatedDataContext(request))
+		{
+			return getDataAsc(data, ef, isLucene, request);
+		}
+		finally
+		{
+			SecurityContextHolder.setContext(originalSecurityContext);
+		}
 	}
 
     /**

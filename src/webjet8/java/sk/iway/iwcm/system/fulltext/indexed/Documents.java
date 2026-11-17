@@ -147,18 +147,17 @@ public class Documents extends Indexed
             if (dataDB != null) Logger.debug(Documents.class, "toLuceneDocument, dataDB size = "+dataDB.length());
             else Logger.debug(Documents.class, "toLuceneDocument, dataDB is null");
 
-				//vykonaj !DOC_TITLE! znacky v texte
-				dataDB = Tools.replace(dataDB, "!DOC_TITLE!", nvl(rs.getString("title")));
+			//vykonaj !DOC_TITLE! znacky v texte
+			dataDB = Tools.replace(dataDB, "!DOC_TITLE!", nvl(rs.getString("title")));
+
+			DocDetails doc = docDB.getDoc(docId);
+            EditorForm ef = new EditorForm(doc);
+			String dataAsc = EditorDB.getDataAsc(dataDB, ef, true);
 
             String plainText;
-            if (dataDB.length()<2000000) plainText = SearchTools.htmlToPlain(dataDB);
-            else if (dataDB.length()<30000000) plainText = Html2Text.html2text(dataDB);
-            else plainText = dataDB;
-
-            DocDetails doc = docDB.getDoc(docId);
-            EditorForm ef = new EditorForm(doc);
-
-            String data = EditorDB.getDataAsc(plainText, ef, true);
+            if (dataAsc.length()<2000000) plainText = SearchTools.htmlToPlain(dataAsc);
+            else if (dataAsc.length()<30000000) plainText = Html2Text.html2text(dataAsc);
+            else plainText = dataAsc;
 
             String htmlData = SearchTools.htmlToPlain(rs.getString("html_data"));
 
@@ -166,7 +165,7 @@ public class Documents extends Indexed
 			headings.setBoost(5.0f);
 
 			document.add(headings);
-            document.add(new Field("data", nvl(data), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
+            document.add(new Field("data", nvl(plainText), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
             document.add(new Field("external_link", nvl(rs.getString("external_link")), Field.Store.NO, Field.Index.ANALYZED));
             document.add(new Field("date_created", nvl(dateToLucene(rs.getTimestamp("date_created"))), Field.Store.YES, Field.Index.ANALYZED));
 

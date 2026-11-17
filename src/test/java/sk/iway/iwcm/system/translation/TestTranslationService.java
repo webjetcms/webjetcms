@@ -1,6 +1,7 @@
 package sk.iway.iwcm.system.translation;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -22,19 +23,18 @@ public class TestTranslationService extends BaseWebjetTest {
 
     @Test
     public void checkDeeplTranslation() {
-        if (Tools.isNotEmpty(Constants.getString("deepl_auth_key"))) {
-            String inputTextSk = "Toto je test: !INCLUDE(pes.jsp, ja, som, najlepší)!, tento test je povinný. Aj tento by mal fungovať: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, koniec testu.";
-            String requiredOutputEn1 = "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!, this test is mandatory. This one should also work: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, end of test.";
-            String requiredOutputEn2 = "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!, this test is mandatory. This one should work too: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, end of test.";
-            String requiredOutputEn3 = "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!; this test is required. This one should work too: !INCLUDE(neviem.jsp, skúsim, to, znovu)!; end of test.";
+        assumeTrue(Tools.isNotEmpty(Constants.getString("deepl_auth_key")), "DEEPL_AUTH_KEY is not configured");
+        String inputTextSk = "Toto je test: !INCLUDE(pes.jsp, ja, som, najlepší)!, tento test je povinný. Aj tento by mal fungovať: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, koniec testu.";
+        String requiredOutputEn1 = "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!, this test is mandatory. This one should also work: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, end of test.";
+        String requiredOutputEn2 = "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!, this test is mandatory. This one should work too: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, end of test.";
+        String requiredOutputEn3 = "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!; this test is required. This one should work too: !INCLUDE(neviem.jsp, skúsim, to, znovu)!; end of test.";
 
-            // Init Translate from SK to EN
-            TranslationService translator = new TranslationService("SK", "EN");
-            String realOutputEn = translator.translate(inputTextSk);
+        // Init Translate from SK to EN
+        TranslationService translator = new TranslationService("SK", "EN");
+        String realOutputEn = translator.translate(inputTextSk);
 
-            //output can be requiredOutputEn1 or requiredOutputEn2
-            assertTrue(realOutputEn.equals(requiredOutputEn1) || realOutputEn.equals(requiredOutputEn2) || realOutputEn.equals(requiredOutputEn3),
-                    "Translation from SK to EN failed. Expected: " + requiredOutputEn1 + " or " + requiredOutputEn2 + " or " + requiredOutputEn3 + ", BUT GOT:\n" + realOutputEn);
-        }
+        //output can be requiredOutputEn1 or requiredOutputEn2
+        assertTrue(realOutputEn.equals(requiredOutputEn1) || realOutputEn.equals(requiredOutputEn2) || realOutputEn.equals(requiredOutputEn3),
+                "Translation from SK to EN failed. Expected: " + requiredOutputEn1 + " or " + requiredOutputEn2 + " or " + requiredOutputEn3 + ", BUT GOT:\n" + realOutputEn);
     }
 }
