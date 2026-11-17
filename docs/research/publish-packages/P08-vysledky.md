@@ -4,7 +4,7 @@
 
 ## Prostredie a platnosť dôkazov
 
-MariaDB **12.2.2/InnoDB**, Connector/J **3.5.10**, Java **17.0.18**, jedna inštancia `127.0.0.1:33316/webjet_p01`, lokálny filesystem, profil `poolman-local-p01.xml`, súkromné súbory `/tmp/webjet-p03-private`. WebJET používa HTTP 8086/HTTPS 8446. Pracovná DB 3306 sa nepoužíva. Predvolené `branchesEnabled` aj `branchSingleWriterConfirmed` v zdrojovom `ConstantsV9` zostávajú `false`; zapnutý je iba existujúci izolovaný POC profil.
+MariaDB **12.2.2/InnoDB**, Connector/J **3.5.10**, Java **17.0.18**, jedna inštancia `127.0.0.1:33316/webjet_p01`, lokálny filesystem, profil `poolman-local-p01.xml`, súkromné súbory `/tmp/webjet-p03-private`. WebJET používa HTTP 8086/HTTPS 8446. Pracovná DB 3306 sa nepoužíva. Overenie prebehlo s predvolene vypnutým `branchesEnabled` v zdrojovom `ConstantsV9`; zapnutý bol iba existujúci izolovaný POC profil.
 
 `db-profile.txt` zachytáva skutočné InnoDB tabuľky a cron #14 s `cluster_node=all-admin`. Serverový predvolený isolation je `REPEATABLE-READ`; skutočné JDBC/JPA a dirty-read guardy sú osobitne overené testami. Existujúci migračný test použil aj pomocnú čistú schému `webjet_p02_clean` na tej istej izolovanej MariaDB 33316. Nešlo o ďalší podporovaný DB profil ani o pracovnú DB 3306.
 

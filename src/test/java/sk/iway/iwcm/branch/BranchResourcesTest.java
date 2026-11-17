@@ -25,9 +25,9 @@ class BranchResourcesTest extends BranchJpaTest {
     private Path privateRoot;
     private final Map<String,String> config=new LinkedHashMap<>();
     @BeforeEach void fixture()throws Exception {
-        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","mediaCheckAvailabilityMode","multiDomainEnabled","galleryEnableWatermarking"))config.put(key,Constants.getString(key));
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","mediaCheckAvailabilityMode","multiDomainEnabled","galleryEnableWatermarking"))config.put(key,Constants.getString(key));
         try(Connection connection=DBPool.getConnection()){assertEquals("webjet_p01",connection.getCatalog());assertTrue(connection.getMetaData().getURL().contains(":33316/"));}
-        privateRoot=Files.createTempDirectory("webjet-p03-resources-");Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("galleryEnableWatermarking",false);
+        privateRoot=Files.createTempDirectory("webjet-p03-resources-");Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("galleryEnableWatermarking",false);
         branch=createBranch(BranchTestDomains.ensure(DOMAIN),"P03 resources","prepared bytes",1).getId();
         try(Connection connection=DBPool.getConnection()) {
             connection.setAutoCommit(false);group=BranchStore.reserveNative(connection,BranchType.GROUP);

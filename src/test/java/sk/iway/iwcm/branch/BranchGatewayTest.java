@@ -61,8 +61,8 @@ class BranchGatewayTest extends BranchJpaTest {
                 @Override public String getRealPath(String path){return root.resolve(path.replaceFirst("^/","")).toString();}
             });
             installBranchPersistence();
-            for(String key:List.of("branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","enableStaticFilesExternalDir","docAuthorLazyLoad","disableWebJETToolbar","installName","menuIncludePerex","menuInfoDirName","galleryEnableWatermarking","adminCheckUserGroups"))config.put(key,Constants.getString(key));
-            Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setBoolean("multiDomainEnabled",false);Constants.setBoolean("docAuthorLazyLoad",true);Constants.setBoolean("disableWebJETToolbar",true);Constants.setBoolean("galleryEnableWatermarking",false);Constants.setString("installName","aceintegration");
+            for(String key:List.of("branchesEnabled","branchStorageRoot","multiDomainEnabled","enableStaticFilesExternalDir","docAuthorLazyLoad","disableWebJETToolbar","installName","menuIncludePerex","menuInfoDirName","galleryEnableWatermarking","adminCheckUserGroups"))config.put(key,Constants.getString(key));
+            Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setBoolean("multiDomainEnabled",false);Constants.setBoolean("docAuthorLazyLoad",true);Constants.setBoolean("disableWebJETToolbar",true);Constants.setBoolean("galleryEnableWatermarking",false);Constants.setString("installName","aceintegration");
             // Restoring a DB dump can reuse IDs; isolate this fixture from bytes left by earlier runs.
             Constants.setString("branchStorageRoot",Files.createTempDirectory("webjet-p03-gateway-private-").toString());
             fixture();

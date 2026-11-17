@@ -16,6 +16,8 @@ V páse pracovnej verzie kliknite na **Náhľad**. V novej karte môžete prejs�
 
 V tabuľke pracovných verzií označte riadok a kliknite **Skontrolovať zmeny**. Porovnanie je dostupné aj tlačidlom **Pracovné zmeny** v páse pracovnej verzie. Otvoríte porovnanie pôvodného základu, súčasnej hlavnej verzie a pracovnej verzie. Ak niekto zmenil tú istú položku na oboch stranách, vyberte verziu položky, ktorú chcete ponechať, a uložte voľbu. Vlastnú kombináciu polí pripravte v pracovnom editore a znovu porovnajte.
 
+Ak pracovná verzia ešte neobsahuje žiadne zmeny, okno zobrazí iba upozornenie bez filtrov a tabuľky položiek. Publikovanie a jeho plánovanie sú dostupné až po pridaní zmien a ich úspešnej kontrole.
+
 Voľba výsledku hneď ovplyvní náhľad vrátane menu, Noviniek, médií a príloh. Editor ďalej uchováva pracovný obsah. Pri nevyriešenom konflikte lišta upozorní na pracovný predpoklad. Neskoršia zmena produkcie alebo WORK zneplatní starú voľbu a vyžiada nové porovnanie.
 
 ## Publikovanie a termín

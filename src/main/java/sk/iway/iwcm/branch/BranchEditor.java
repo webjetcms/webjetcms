@@ -11,8 +11,8 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
-import sk.iway.iwcm.users.UsersDB;
 
 /** Authorized editing of the effective tree. No production save workflow or events are invoked. */
 public final class BranchEditor {
@@ -131,7 +131,7 @@ public final class BranchEditor {
             if (user.isDisabledItem(old==null ? "addSubdir" : "editDir")) throw forbidden();
             if (group.getParentGroupId()>0) folder(group.getParentGroupId(),true);
             else if (Tools.isNotEmpty(user.getEditableGroups())) throw forbidden();
-            if (old!=null && group.getParentGroupId()==0 && !context.domainName().equals(old.getDomainName()))
+            if (old!=null && old.getParentGroupId()>0 && group.getParentGroupId()==0 && !context.domainName().equals(old.getDomainName()))
                 throw invalid("Moving this inherited-domain folder to the root would change its domain");
             for (GroupDetails parent=before.group(group.getParentGroupId());parent!=null;parent=before.group(parent.getParentGroupId()))
                 if (parent.getGroupId()==group.getGroupId()) throw invalid("A folder cannot be moved below itself");
@@ -300,7 +300,9 @@ public final class BranchEditor {
         GroupDetails group=BranchView.current().group(id);
         if (group==null) throw invalid("Folder is absent in this domain");
         system(group);
-        if (!context.domainName().equals(GroupsDB.getInstance().getDomain(id))) throw forbidden();
+        String domain=GroupsDB.getInstance().getDomain(id);
+        if (Tools.isNotEmpty(domain) && !"default".equals(domain) && !context.domainName().equals(domain))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,Prop.getInstance(request).getText("branches.editor.foreignDomain"));
         if (editable && !GroupsDB.isGroupEditable(user,id)) throw forbidden();
         return group;
     }
@@ -419,5 +421,5 @@ public final class BranchEditor {
         finally { BranchView.invalidate(); }
     }
     private static ResponseStatusException invalid(String reason) { return new ResponseStatusException(HttpStatus.CONFLICT,reason); }
-    private static ResponseStatusException forbidden() { return new ResponseStatusException(HttpStatus.FORBIDDEN); }
+    private static ResponseStatusException forbidden() { return new ResponseStatusException(HttpStatus.FORBIDDEN,Prop.getInstance().getText("branches.editor.permission")); }
 }

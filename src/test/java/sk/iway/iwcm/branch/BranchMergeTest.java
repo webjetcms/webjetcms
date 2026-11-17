@@ -47,8 +47,8 @@ class BranchMergeTest extends BranchJpaTest {
     }
     @BeforeEach void setup()throws Exception {
         try(Connection c=DBPool.getConnection()) {assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));}
-        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","fulltextExecuteApps","fulltextDataAscMethod","perexGroupUseJoin","editorDisableHistory","iwfs_useVersioning","clusterMyNodeType"))original.put(key,Constants.getString(key));
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot","/tmp/webjet-p03-private");Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fulltextExecuteApps",false);Constants.setString("fulltextDataAscMethod","");Constants.setBoolean("perexGroupUseJoin",true);
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","fulltextExecuteApps","fulltextDataAscMethod","perexGroupUseJoin","editorDisableHistory","iwfs_useVersioning","clusterMyNodeType"))original.put(key,Constants.getString(key));
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot","/tmp/webjet-p03-private");Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fulltextExecuteApps",false);Constants.setString("fulltextDataAscMethod","");Constants.setBoolean("perexGroupUseJoin",true);
         Files.createDirectories(Path.of("/tmp/webjet-p03-private"));sk.iway.iwcm.system.Modules.getInstance(null,true);user=new Identity(UsersDB.getUser("tester-p05"));
         assertTrue(user.isAdmin(),"fresh admin");assertTrue(user.isAuthorized(),"fresh authorized");assertTrue(user.isEnabledItem("menuBranches"),"menuBranches enabled");
         RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(bean);

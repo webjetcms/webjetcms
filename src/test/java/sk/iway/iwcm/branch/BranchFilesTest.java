@@ -30,13 +30,13 @@ class BranchFilesTest extends BranchJpaTest {
         try(Connection connection=DBPool.getConnection()) {
             assertEquals("webjet_p01",connection.getCatalog());assertTrue(connection.getMetaData().getURL().contains(":33316/"));
         }
-        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","cloudStaticFilesDir","fbrowserShowOnlyWritableFolders","defaultDisableUpload")) configuration.put(key,Constants.getString(key));
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","cloudStaticFilesDir","fbrowserShowOnlyWritableFolders","defaultDisableUpload")) configuration.put(key,Constants.getString(key));
         privateRoot=Files.createTempDirectory("webjet-p05-files-");
         externalRoot=Files.createTempDirectory("webjet-p05-domain-files-");
         previousRequest=SetCharacterEncodingFilter.getCurrentRequestBean();
         RequestBean bean=new RequestBean();bean.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(bean);
         Constants.setString("cloudStaticFilesDir", externalRoot.toString()+java.io.File.separator);
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fbrowserShowOnlyWritableFolders",false);Constants.setBoolean("defaultDisableUpload",false);
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fbrowserShowOnlyWritableFolders",false);Constants.setBoolean("defaultDisableUpload",false);
         a=context(createBranch(BranchTestDomains.ensure(DOMAIN),"autotest P05 A","disposable files",1).getId());
         b=context(createBranch(BranchTestDomains.ensure(DOMAIN),"autotest P05 B","disposable files",1).getId());
         root="/files/autotest-p05-"+UUID.randomUUID();liveRoot=Path.of(Tools.getRealPath(root));Files.createDirectories(liveRoot);

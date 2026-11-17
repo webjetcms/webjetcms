@@ -225,7 +225,7 @@ Nič z práve bežiaceho testu nezostalo nedokončené. Zostáva zopakovať spol
 - Zachované dáta `/tmp/webjet-p01-db/data`, socket pri behu `/tmp/webjet-p01-db/mysql.sock`; ignorovaný profil `src/main/resources/poolman-local-p01.xml` s oboma datasources na 33316. `poolman-local.xml` ani pracovná DB na 3306 sa nemenili.
 - Manuálne vetvy **128 / 129** (`P03 manual A/B`), doména `iwcm.interway.sk`, groupId **1940095**, homeId **1940123**, detailId **1940124**. Manifest `/tmp/webjet-p03-manual.properties`.
 - Bajty `/tmp/webjet-p03-private` (platné PDF + PNG + thumbnaily); testové `/tmp/webjet-p02-private`. Lokálny účet `tester-p03`, heslo len v `/tmp/webjet-p03-login.properties` (600), nie v dokumentácii.
-- POC `_conf_` má branchesEnabled=true, branchSingleWriterConfirmed=true, branchStorageRoot=/tmp/webjet-p03-private a multiDomainEnabled=true; predvolené zdrojové flagy ostávajú vypnuté. Pracovnú MyISAM DB nikdy neaktivovať ani nekonvertovať.
+- POC `_conf_` má branchesEnabled=true, branchStorageRoot=/tmp/webjet-p03-private a multiDomainEnabled=true; predvolené zdrojové flagy ostávajú vypnuté. Pracovnú MyISAM DB nikdy neaktivovať ani nekonvertovať.
 - Trvalá ignorovaná záloha v **`build/test-results/p03/pause-2026-11-04/`**: `poc-databases.sql` (4 190 470 bajtov, SHA-256 vedľa), `database-state.txt`, `timestamps.txt`, všetky P03 logy, aktuálny report, `local/webjet-p03-private`, `local/webjet-p02-private`, lokálny profil, manifest aj login. Archív je 700, dump/prihlasovacie súbory 600; necommitovať ho. Pred stratou `/tmp` teda existuje obnova v worktree.
 
 ### Procesy pri prerušení

@@ -378,6 +378,7 @@ war {
     exclude('admin/v9/pug.render.js')
     exclude('admin/v9/.browserslistrc')
     exclude('**/WEB-INF/imgcache/**')
+    exclude('WEB-INF/branches/**')
     exclude('**/scss/**')
     exclude('admin/webpages/page-builder/style/sass/**')
     exclude('scratchpad*.jsp')

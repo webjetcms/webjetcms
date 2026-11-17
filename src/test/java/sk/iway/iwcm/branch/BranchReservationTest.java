@@ -24,10 +24,10 @@ import sk.iway.iwcm.PkeyGenerator;
 class BranchReservationTest extends BranchJpaTest {
     @BeforeEach void configure() throws Exception {
         try(Connection connection=DBPool.getConnection()){assertEquals("webjet_p01",connection.getCatalog());assertTrue(connection.getMetaData().getURL().startsWith(BranchStorageTest.URL));}
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private"));Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
     }
-    @AfterEach void restore(){Constants.setBoolean("branchesEnabled",false);Constants.setBoolean("branchSingleWriterConfirmed",false);}
+    @AfterEach void restore(){Constants.setBoolean("branchesEnabled",false);}
 
     /** Reserves two identities per type, interleaves native/legacy LIVE generation and persists the restart fixture. */
     @Test @EnabledIfEnvironmentVariable(named="WEBJET_P02_RESTART",matches="before") void beforeDatabaseRestart() throws Exception {

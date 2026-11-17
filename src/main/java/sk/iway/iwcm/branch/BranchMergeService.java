@@ -319,8 +319,8 @@ public final class BranchMergeService {
             }
         }
         // Use the same effective URL derivation as the real preview, after stale choices were detected.
-        if(!frozen && entries.stream().noneMatch(e->e.error!=null)) {
-            BranchContext ctx=new BranchContext(entries.isEmpty()?1:entries.get(0).change.branchId(),domain,user.getUserId(),BranchContext.Mode.PREVIEW);
+        if(!frozen && !entries.isEmpty() && entries.stream().noneMatch(e->e.error!=null)) {
+            BranchContext ctx=new BranchContext(entries.get(0).change.branchId(),domain,user.getUserId(),BranchContext.Mode.PREVIEW);
             try(BranchContexts.Scope ignored=BranchContexts.open(null,ctx)) {
                 BranchView view=BranchView.reload(c);Map<String,Integer> urls=new HashMap<>();
                 for(DocDetails d:view.documents(true)) {

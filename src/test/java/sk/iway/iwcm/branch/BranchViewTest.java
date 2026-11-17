@@ -29,8 +29,8 @@ class BranchViewTest extends BranchJpaTest {
             assertEquals("webjet_p01",connection.getCatalog());
             assertTrue(connection.getMetaData().getURL().contains(":33316/"));
         }
-        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder")) configuration.put(key,Constants.getString(key));
-        Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder")) configuration.put(key,Constants.getString(key));
+        Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private")); Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
         Constants.setBoolean("multiDomainEnabled",true); Constants.setBoolean("templatesUseRecursiveSystemFolder",false);
         root=liveGroup("Menu root",0,"p03-menu"); section=liveGroup("Original section",root,"original");

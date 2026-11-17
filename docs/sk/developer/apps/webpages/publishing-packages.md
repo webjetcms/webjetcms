@@ -18,9 +18,13 @@ Výsledky pracovného requestu neukladajte do zdieľanej LIVE cache. Kontext sa 
 
 Podľa potvrdeného Q20 je `enableStaticFilesExternalDir=true` podmienkou funkcie. Oddelenie balíkov používa iba `domainId`; varianta so spoločným ID `1` sa nepodporuje. Názov domény zostáva potrebný na zobrazenie a URL náhľadu, nie ako druhý kľúč vlastníctva. Session výber uchováva `domainId`; API očakáva `expectedDomainId`, hlavička `X-WebJET-Branch-Domain` a parameter vnoreného editora `branchDomain` prenášajú číselné ID. Náhľad a cron načítajú `domain_id` z balíka a cez `GroupsDB` odvodia routovaciu doménu. Mapa doménových ID zostáva z LIVE aj po odstránení koreňa vo WORK. Súbory sa mapujú existujúcim `Tools.getRealPath()` v overenom doménovom kontexte.
 
+Pri ukladaní stránok a priečinkov platí rovnaká doménová kontrola ako pri načítaní pracovného stromu: prázdna hodnota `domain_name` alebo `default` neoznačuje cudziu doménu. Explicitná cudzia doména, práva používateľa a zákaz úprav System obsahu sa kontrolujú naďalej. Zamietnuté úpravy vracajú editoru lokalizovaný dôvod.
+
 ## JPA a transakčné úložisko
 
 `BranchAccess.isEnabled()` spája `branchesEnabled` a `enableStaticFilesExternalDir` pre administráciu, filter, cron aj prísnu DB izoláciu. Ak chýba ktorékoľvek nastavenie, pracovné verzie sú vypnuté; `requireUser()` ich odmietne stavom 404 a DBPool zachová bežné správanie izolácie.
+
+`branchStorageRoot` má predvolenú hodnotu `/WEB-INF/branches`. `BranchReadiness.storageRoot()` ju preloží cez `Tools.getRealPath()`; rovnaký resolver používajú pracovné súbory, BASE kópie, thumbnail cache aj publikovanie. Prázdny override použije predvolenú cestu, ktorá sa automaticky vytvorí pri kontrole pripravenosti. Vlastný absolútny adresár musí existovať. Kanonická kontrola povoľuje súkromné podadresáre `/WEB-INF` alebo úložisko mimo webrootu a odmieta verejné cesty; predvolená cesta musí zostať v chránenom `/WEB-INF` aj po rozlíšení symlinkov.
 
 `BranchRestController` spája správu DataTable, zoznam prepínača, výber kontextu a náhľad. Používa zdedené `getOneItem`, `insertItem` a `editItem` z `DatatableRestControllerV2`. `DomainIdRepository` zabezpečuje doménové načítanie a Editor nastavuje/kontroluje `domainId`. `beforeSave` inicializuje nový balík, kontroluje pripravenosť pri vytvorení a nastavuje autora a čas úpravy. Názov validujú anotácie entity; farba má iba limit 16 znakov podľa DB stĺpca, bez validácie členstva v palete UI. Automatický audit poskytuje `AuditEntityListener`.
 

@@ -4445,7 +4445,7 @@
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>codex</string></void>
                 <void property="date"><string>04.11.2026</string></void>
-                <void property="desc"><string>Publishing branches P02 - MariaDB InnoDB POC storage</string></void>
+                <void property="desc"><string>Publishing branches</string></void>
                 <void property="mysql"><string>
 CREATE TABLE IF NOT EXISTS branches (
     `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,

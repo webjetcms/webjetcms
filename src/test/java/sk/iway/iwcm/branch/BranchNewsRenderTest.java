@@ -65,9 +65,9 @@ class BranchNewsRenderTest extends BranchJpaTest {
 
     @BeforeEach void fixture() throws Exception {
         try(Connection c=DBPool.getConnection()) { assertEquals("webjet_p01",c.getCatalog()); assertTrue(c.getMetaData().getURL().contains(":33316/")); }
-        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","docAuthorLazyLoad","perexGroupUseJoin")) originalConfig.put(key,Constants.getString(key));
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","docAuthorLazyLoad","perexGroupUseJoin")) originalConfig.put(key,Constants.getString(key));
         Constants.setBoolean("branchesEnabled",true);
-        Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
+        Constants.setBoolean("enableStaticFilesExternalDir",true);
         Constants.setBoolean("docAuthorLazyLoad",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private"));
         Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");

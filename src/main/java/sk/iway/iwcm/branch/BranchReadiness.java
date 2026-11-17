@@ -16,13 +16,13 @@ import sk.iway.iwcm.Tools;
 
 /** Fail-closed prerequisites for the single-writer MariaDB POC. No engine conversion. */
 public final class BranchReadiness {
+    public static final String DEFAULT_STORAGE_ROOT = "/WEB-INF/branches";
+
     private BranchReadiness() { }
 
     public static void requireEnabled() {
         if (!BranchAccess.isEnabled())
             throw new IllegalStateException("Working versions require branchesEnabled=true and enableStaticFilesExternalDir=true");
-        if (!Constants.getBoolean("branchSingleWriterConfirmed"))
-            throw new IllegalStateException("Confirm the same branch configuration on all content nodes and a single writable database");
     }
 
     /** Verifies physical storage and schema before a branch transaction can write. */
@@ -93,17 +93,35 @@ public final class BranchReadiness {
         }
     }
 
-    /** Requires a preconfigured private directory, rejecting symlinks into the served application. */
+    /** Resolves the protected default directory or an explicit absolute filesystem override. */
+    static Path storageRoot() {
+        String configured = Constants.getString("branchStorageRoot");
+        if (configured == null || configured.isBlank() || DEFAULT_STORAGE_ROOT.equals(configured))
+            return Path.of(Tools.getRealPath(DEFAULT_STORAGE_ROOT)).toAbsolutePath().normalize();
+        Path root = Path.of(configured);
+        if (!root.isAbsolute()) throw new IllegalArgumentException("branchStorageRoot must be an absolute filesystem path");
+        return root.normalize();
+    }
+
+    /** Creates protected default storage and verifies that private bytes cannot enter a public directory. */
     public static Path privateRoot() throws IOException {
         String configured = Constants.getString("branchStorageRoot");
-        if (configured == null || configured.isBlank() || !Path.of(configured).isAbsolute())
-            throw new IOException("branchStorageRoot must be an absolute existing private directory");
-        Path root = Path.of(configured).toRealPath();
+        boolean useDefault = configured == null || configured.isBlank() || DEFAULT_STORAGE_ROOT.equals(configured);
         String served = Tools.getRealPath("/");
         if (served == null || served.isBlank()) throw new IOException("Cannot verify the served web root");
         Path webRoot = Path.of(served).toRealPath();
-        if (root.startsWith(webRoot) || webRoot.startsWith(root) || !Files.isDirectory(root))
-            throw new IOException("branchStorageRoot must be separate from the served application");
+        Path protectedRoot = webRoot.resolve("WEB-INF");
+        Path directory = storageRoot();
+        if (useDefault) {
+            if (!directory.getParent().toRealPath().equals(protectedRoot))
+                throw new IOException("Default branch storage must remain inside WEB-INF");
+            Files.createDirectories(directory);
+        }
+        Path root = directory.toRealPath();
+        boolean protectedStorage = root.startsWith(protectedRoot) && !root.equals(protectedRoot);
+        if ((useDefault && !protectedStorage) || webRoot.startsWith(root)
+                || (root.startsWith(webRoot) && !protectedStorage) || !Files.isDirectory(root))
+            throw new IOException("Branch storage must be inside WEB-INF or outside the served application");
         Path probe = Files.createTempFile(root, ".branch-probe-", ".tmp");
         try { Files.writeString(probe, "branch storage probe"); }
         finally { Files.deleteIfExists(probe); }

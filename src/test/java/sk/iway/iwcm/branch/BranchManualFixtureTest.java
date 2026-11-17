@@ -23,7 +23,7 @@ class BranchManualFixtureTest extends BranchJpaTest {
             try(var statement=connection.createStatement();var result=statement.executeQuery("SELECT count(*) FROM branches WHERE name='P03 manual A'")){result.next();assertEquals(0,result.getInt(1),"Manual fixture already exists; use its manifest");}
         }
         Path privateRoot=Path.of("/tmp/webjet-p03-private");Files.createDirectories(privateRoot);
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",privateRoot.toString());
         int template;
         try(Connection connection=DBPool.getConnection();PreparedStatement statement=connection.prepareStatement("INSERT INTO templates(temp_name,forward,lng,templates_group_id) VALUES ('P03 manual','/templates/aceintegration/jet/blank.jsp','sk',1)",Statement.RETURN_GENERATED_KEYS)) {
             statement.executeUpdate();try(var keys=statement.getGeneratedKeys()){keys.next();template=keys.getInt(1);}
@@ -57,7 +57,7 @@ class BranchManualFixtureTest extends BranchJpaTest {
         String password=PasswordSecurity.generatePassword(24),salt=PasswordSecurity.generateSalt();
         try(Connection connection=DBPool.getConnection();PreparedStatement statement=connection.prepareStatement("INSERT INTO users(login,password,password_salt,is_admin,authorized,first_name,last_name,email,editable_groups,editable_pages,writable_folders,disabled_items) VALUES ('tester-p03',?,?,1,1,'P03','Local fixture','p03@example.invalid','','','/images,/files','')")) {statement.setString(1,PasswordSecurity.calculateHash(password,salt));statement.setString(2,salt);statement.executeUpdate();}
         Path credentials=Path.of("/tmp/webjet-p03-login.properties");Files.writeString(credentials,"login=tester-p03\npassword="+password+"\n");Files.setPosixFilePermissions(credentials,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
-        for(var setting:Map.of("branchesEnabled","true","branchSingleWriterConfirmed","true","branchStorageRoot",privateRoot.toString(),"multiDomainEnabled","true").entrySet())
+        for(var setting:Map.of("branchesEnabled","true","branchStorageRoot",privateRoot.toString(),"multiDomainEnabled","true").entrySet())
             try(Connection connection=DBPool.getConnection();PreparedStatement statement=connection.prepareStatement("INSERT INTO _conf_(name,value) VALUES (?,?) ON DUPLICATE KEY UPDATE value=VALUES(value)")){statement.setString(1,setting.getKey());statement.setString(2,setting.getValue());statement.executeUpdate();}
         Files.writeString(Path.of("/tmp/webjet-p03-manual.properties"),"branchA="+a.branchId()+"\nbranchB="+b.branchId()+"\ngroupId="+group+"\nhomeId="+home+"\ndetailId="+detail+"\nurl=http://iwcm.interway.sk:8086/admin/webpages/branch-preview/"+a.branchId()+"/p03-manual/\n");
         Constants.setBoolean("branchesEnabled",false);

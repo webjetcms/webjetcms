@@ -63,6 +63,13 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.clickCss('.buttons-branch-compare');
         I.waitForVisible('#branch-merge-dialog', 20);
         I.see(name+' upravená', '#branch-merge-title');
+        I.waitForText('Balík neobsahuje žiadne zmeny.', 10, '#branch-merge-dialog');
+        I.dontSee('Branch is absent in the verified domain', '#branch-merge-dialog');
+        I.dontSeeElement('#branch-merge-type');
+        I.dontSeeElement('#branch-merge-problems');
+        I.dontSeeElement('#branch-merge-dialog .pg-branch-merge__table');
+        I.seeElement('#branch-merge-publish:disabled');
+        I.seeElement('#branch-merge-schedule:disabled');
         I.pressKey('Escape');
         I.waitForInvisible('#branch-merge-dialog', 10);
         I.clickCss('.buttons-branch-open');

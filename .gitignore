@@ -18,6 +18,7 @@ work
 
 #WebJET imgcache a tmp adresar
 **/WEB-INF/imgcache
+**/WEB-INF/branches
 **/WEB-INF/tmp
 src/main/webapp/images/gallery/test/subfolder1
 src/main/webapp/files/protected/backup/

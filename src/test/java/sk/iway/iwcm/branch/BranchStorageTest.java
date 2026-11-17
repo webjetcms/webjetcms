@@ -55,7 +55,7 @@ class BranchStorageTest extends BranchJpaTest {
         var requestBean = new sk.iway.iwcm.RequestBean(); requestBean.setDomain("p02.example");
         sk.iway.iwcm.SetCharacterEncodingFilter.setCurrentRequestBean(requestBean);
         Constants.setBoolean("branchesEnabled",true);
-        Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
+        Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private"));
         Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
     }
@@ -67,7 +67,7 @@ class BranchStorageTest extends BranchJpaTest {
                     try(PreparedStatement statement=connection.prepareStatement("DELETE FROM "+table+" WHERE "+(table.equals("branches")?"id":"branch_id")+"=?")) {statement.setLong(1,branch);statement.executeUpdate();}
                 }
             }
-        } finally { Constants.setBoolean("branchesEnabled",false); Constants.setBoolean("branchSingleWriterConfirmed",false); sk.iway.iwcm.SetCharacterEncodingFilter.setCurrentRequestBean(null); }
+        } finally { Constants.setBoolean("branchesEnabled",false); sk.iway.iwcm.SetCharacterEncodingFilter.setCurrentRequestBean(null); }
     }
 
     /** Runs the real XML update path on existing data and its SQL on an empty current-profile schema. */
@@ -375,7 +375,7 @@ class BranchStorageTest extends BranchJpaTest {
         assertThrows(SQLException.class,()->store.create(context,BranchType.DOCUMENT,invalid));
         try(Connection connection=connect()) {
             assertEquals(liveBefore,count(connection,"SELECT COUNT(*) FROM documents"));assertEquals(workBefore,count(connection,"SELECT COUNT(*) FROM branch_documents WHERE branch_id="+context.branchId()));
-            Constants.setBoolean("branchSingleWriterConfirmed",false);assertThrows(IllegalStateException.class,()->BranchReadiness.verify(connection));Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
+            Constants.setBoolean("enableStaticFilesExternalDir",true);
             Constants.setString("branchStorageRoot",Path.of("src/main/webapp").toAbsolutePath().toString());assertThrows(SQLException.class,()->BranchReadiness.verify(connection));Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
             execute(connection,"ALTER TABLE media_group_to_media ENGINE=MyISAM");
             try{assertThrows(SQLException.class,()->BranchReadiness.verify(connection));}finally{execute(connection,"ALTER TABLE media_group_to_media ENGINE=InnoDB");}

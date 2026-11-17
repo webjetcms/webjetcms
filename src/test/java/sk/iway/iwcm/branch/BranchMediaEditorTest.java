@@ -30,8 +30,8 @@ class BranchMediaEditorTest extends BranchJpaTest {
 
     @BeforeEach void fixture()throws Exception {
         try(Connection c=DBPool.getConnection()) {assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));}
-        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder"))configuration.put(key,Constants.getString(key));
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("templatesUseRecursiveSystemFolder",false);
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder"))configuration.put(key,Constants.getString(key));
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("templatesUseRecursiveSystemFolder",false);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private"));Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
         BranchTestDomains.ensure(DOMAIN);
         category=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media_groups"));liveMedia=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media"));

@@ -23,8 +23,7 @@ public class ConstantsV9 {
 	 */
 	public static void clearValuesWebJet9() {
 		Constants.setBoolean("branchesEnabled", false, Constants.MOD_SYSTEM_ADMIN, "Enable publishing branches only with enableStaticFilesExternalDir=true on a verified InnoDB single-writer installation.");
-		Constants.setString("branchStorageRoot", "", Constants.MOD_SYSTEM_ADMIN, "Absolute private filesystem root outside the served web application for publishing branches.");
-		Constants.setBoolean("branchSingleWriterConfirmed", false, Constants.MOD_SYSTEM_ADMIN, "Operator confirmation that every content-serving node uses branchesEnabled and the same single writable database.");
+		Constants.setString("branchStorageRoot", sk.iway.iwcm.branch.BranchReadiness.DEFAULT_STORAGE_ROOT, Constants.MOD_SYSTEM_ADMIN, "Private publishing branch storage. The default /WEB-INF/branches directory is created automatically. An absolute filesystem path can be configured instead.");
 
 		Constants.setString("chunksQuantity", "25", Constants.MOD_PERFORMANCE, "Pocet zaznamov spracovanych v jednej davke pri importe cez DataTable.");
 		Constants.setString("propertiesAdminKeys",

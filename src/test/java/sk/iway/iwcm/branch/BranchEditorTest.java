@@ -9,6 +9,9 @@ import java.util.*;
 import java.security.MessageDigest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.*;
@@ -27,8 +30,8 @@ class BranchEditorTest extends BranchJpaTest {
 
     @BeforeEach void fixture() throws Exception {
         try(Connection c=DBPool.getConnection()) { assertEquals("webjet_p01",c.getCatalog()); assertTrue(c.getMetaData().getURL().contains(":33316/")); }
-        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchSingleWriterConfirmed","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder","fulltextExecuteApps","linkType")) configuration.put(key,Constants.getString(key));
-        Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder","fulltextExecuteApps","linkType")) configuration.put(key,Constants.getString(key));
+        Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private")); Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
         Constants.setBoolean("multiDomainEnabled",true); Constants.setBoolean("templatesUseRecursiveSystemFolder",false); Constants.setBoolean("fulltextExecuteApps",true);
         Constants.setInt("linkType",Constants.LINK_TYPE_HTML);
@@ -76,6 +79,37 @@ class BranchEditorTest extends BranchJpaTest {
         assertEquals(production,fingerprint());
     }
 
+    /** Legacy roots without an explicit domain support the same WORK editing as their displayed tree. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings={"default"})
+    void editsPagesAndFoldersBelowAnInheritedDomainRoot(String domain) throws Exception {
+        int inheritedRoot=liveGroup("autotest inherited root",0,"autotest-inherited-root");
+        int inheritedChild=liveGroup("autotest inherited child",inheritedRoot,"child");
+        int inheritedPage=liveDoc(inheritedChild,"/autotest-inherited-root/child/page.html");
+        try(Connection connection=DBPool.getConnection();PreparedStatement statement=connection.prepareStatement("UPDATE `groups` SET domain_name=? WHERE group_id IN (?,?)")) {
+            statement.setString(1,domain);statement.setInt(2,inheritedRoot);statement.setInt(3,inheritedChild);statement.executeUpdate();
+        }
+        production=fingerprint();
+        in((request,editor) -> {
+            BranchEditor service=new BranchEditor(request);
+            DocDetails doc=service.loadDocument(inheritedPage,-1,inheritedChild,editor);
+            doc.setData("<p>autotest WORK content</p>");
+            assertEquals("<p>autotest WORK content</p>",service.saveDocument(doc,editor).getData());
+
+            GroupDetails group=new GroupDetails();group.setGroupId(-1);group.setGroupName("autotest new child");
+            group.setNavbar("autotest new child");group.setUrlDirName("new-child");group.setParentGroupId(inheritedChild);
+            group=new GroupEditorField().fromGroupDetails(group);group.getEditorFields().setBranchHash("new");
+            assertTrue(service.saveGroup(group).getGroupId()>0);
+
+            GroupDetails rootEdit=new GroupEditorField().fromGroupDetails(BranchView.current().group(inheritedRoot));
+            BranchEditor.attachHash(rootEdit);rootEdit.setNavbar("autotest edited root navigation");
+            assertEquals("autotest edited root navigation",service.saveGroup(rootEdit).getNavbarName());
+            return null;
+        });
+        assertEquals(production,fingerprint());
+    }
+
     @Test void rejectsStaleContentCyclesUrlsDefaultsPlansAndRights() throws Exception {
         in((request,editor) -> {
             BranchEditor service=new BranchEditor(request);
@@ -88,7 +122,10 @@ class BranchEditorTest extends BranchJpaTest {
             GroupDetails cycle=new GroupEditorField().fromGroupDetails(BranchView.current().group(root)); BranchEditor.attachHash(cycle); cycle.getEditorFields().setParentGroupDetails(BranchView.current().group(other)); assertThrows(ResponseStatusException.class,()->service.saveGroup(cycle));
             GroupDetails invalid=new GroupEditorField().fromGroupDetails(BranchView.current().group(other)); BranchEditor.attachHash(invalid); invalid.getEditorFields().setDefaultDocDetails(BranchView.current().document(page,true)); assertThrows(ResponseStatusException.class,()->service.saveGroup(invalid));
             Identity user=(Identity)request.getSession().getAttribute(Constants.USER_KEY); user.setEditableGroups(String.valueOf(other));
-            assertThrows(ResponseStatusException.class,()->service.loadDocument(page,-1,root,editor));
+            var denied=assertThrows(ResponseStatusException.class,()->service.loadDocument(page,-1,root,editor));
+            String reason=sk.iway.iwcm.i18n.Prop.getInstance(request).getText("branches.editor.permission");
+            assertEquals(reason,denied.getReason());
+            assertEquals(reason,new sk.iway.iwcm.system.spring.DatatableExceptionHandlerV2().handleException(denied).getBody().getError());
             return null;
         });
         assertEquals(production,fingerprint());

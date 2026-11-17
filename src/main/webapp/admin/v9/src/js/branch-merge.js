@@ -207,6 +207,12 @@ export async function openBranchMerge(id, api, screen, invoker) {
             overview.append(element('p', 'alert alert-success', tr('ready')));
         }
         if (report.lastError) overview.append(element('p', 'alert alert-danger', report.lastError));
+        if (items.length > 0) renderItems(items);
+        if (running) timer = setTimeout(() => perform('/progress'), 1500);
+        else if (scheduled) timer = setTimeout(() => perform('/progress', undefined, prepared), 5000);
+    }
+
+    function renderItems(items) {
         const filters = element('div', 'd-flex flex-wrap gap-3 align-items-center my-3');
         const typeLabel = element('label', 'form-label mb-0', tr('filter'));
         const typeSelect = element('select', 'form-select form-select-sm w-auto');
@@ -251,8 +257,6 @@ export async function openBranchMerge(id, api, screen, invoker) {
         table.append(caption, head, body); tableWrap.append(table); overview.append(tableWrap);
         const current = items.find(item => `${item.type}:${item.objectKey}` === selection);
         if (current) overview.append(detail(current));
-        if (running) timer = setTimeout(() => perform('/progress'), 1500);
-        else if (scheduled) timer = setTimeout(() => perform('/progress', undefined, prepared), 5000);
     }
 
     function formatTerm(value) {

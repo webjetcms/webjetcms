@@ -18,7 +18,7 @@ public final class BranchFiles {
 
     public static Path workPath(long branchId, long rowId) {
         if (branchId<=0 || rowId<=0) throw new IllegalArgumentException("Invalid staging identity");
-        Path root=Path.of(Constants.getString("branchStorageRoot")).toAbsolutePath().normalize();
+        Path root=BranchReadiness.storageRoot();
         return root.resolve(Long.toString(branchId)).resolve(Long.toString(rowId)).resolve("content");
     }
 
@@ -197,7 +197,7 @@ public final class BranchFiles {
             if(old==null) {
                 Path target=workPath(context.branchId(),((Number)row.get("row_id")).longValue());
                 Files.createDirectories(target.getParent());
-                if(!target.getParent().toRealPath().startsWith(Path.of(Constants.getString("branchStorageRoot")).toRealPath())) throw new IOException("Working path escapes private storage");
+                if(!target.getParent().toRealPath().startsWith(BranchReadiness.storageRoot().toRealPath())) throw new IOException("Working path escapes private storage");
                 Files.copy(Path.of(Tools.getRealPath(path)),target.resolveSibling("base"),StandardCopyOption.REPLACE_EXISTING);
             }
         }
@@ -210,7 +210,7 @@ public final class BranchFiles {
         Map<String,Object> row=new BranchStore().putFile(files.connection,context,path,"FILE",base,hash(source),Files.size(source),request.getServletContext().getMimeType(path),false);
         Path target=workPath(context.branchId(),((Number)row.get("row_id")).longValue());
         Files.createDirectories(target.getParent());
-        if(!target.getParent().toRealPath().startsWith(Path.of(Constants.getString("branchStorageRoot")).toRealPath()))
+        if(!target.getParent().toRealPath().startsWith(BranchReadiness.storageRoot().toRealPath()))
             throw new IOException("Working path escapes private storage");
         // Keep the original binary for the later human conflict comparison.
         Path original=target.resolveSibling("base");
@@ -285,7 +285,7 @@ public final class BranchFiles {
                         Path bytes=workPath(context.branchId(),((Number)row.get("row_id")).longValue());
                         if("DIRECTORY".equals(row.get("entry_kind"))) return null;
                         Path real=bytes.toRealPath();
-                        Path root=Path.of(Constants.getString("branchStorageRoot")).toRealPath();
+                        Path root=BranchReadiness.storageRoot().toRealPath();
                         if(!real.startsWith(root) || !hash(real).equals(row.get("work_content_hash")))
                             throw new IllegalStateException("Missing or corrupt working file");
                         return real;
@@ -336,7 +336,7 @@ public final class BranchFiles {
         for(String option:List.of("ip","c","q","noip")) if(request.getParameter(option)!=null) {response.sendError(400,"Unsupported preview thumbnail option: "+option);return;}
         String ext=FileTools.getFileExtension(path).toLowerCase(java.util.Locale.ROOT);
         if(!List.of("png","jpg","jpeg","gif","webp").contains(ext)) {response.sendError(415);return;}
-        Path target=Path.of(Constants.getString("branchStorageRoot")).resolve("thumbs").resolve(Long.toString(BranchContexts.current().branchId()))
+        Path target=BranchReadiness.storageRoot().resolve("thumbs").resolve(Long.toString(BranchContexts.current().branchId()))
             .resolve(hash(source)+"-"+width+"x"+height+"."+ext);
         Files.createDirectories(target.getParent());
         if(!Files.isRegularFile(target)) {

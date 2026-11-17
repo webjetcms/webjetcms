@@ -2,6 +2,8 @@
 
 Pracovné verzie vyžadujú `enableStaticFilesExternalDir=true`. Správa, API, náhľad, publikovanie aj cron oddeľujú balíky cez štandardné `domainId`; názov domény sa odvodzuje pre zobrazenie a URL. Výsledky prechodu sú v [registri realizácie](../../../research/publish-packages/STAV.md#zmena-požiadaviek-11-novembra-2026).
 
+Na zapnutie pracovných verzií slúži `branchesEnabled=true`. Súkromné súbory sa predvolene ukladajú do `/WEB-INF/branches`; adresár sa vytvorí automaticky pri prvom použití. Premennú `branchStorageRoot` nastavujte iba vtedy, ak chcete použiť vlastný existujúci absolútny adresár. Prázdna hodnota tiež použije predvolené úložisko. Existujúca vlastná cesta zostáva zachovaná a jej súbory sa automaticky nepresúvajú.
+
 Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Overený profil je **MariaDB 12.2.2, InnoDB, MariaDB Connector/J 3.5.10, Java 17.0.18, jedna inštancia, jedna zapisovateľná DB a lokálny filesystem**. Testovacia DB je `127.0.0.1:33316/webjet_p01`. Toto overenie nepovoľuje produkčné zapnutie; to vyžaduje samostatný pokyn pre konkrétne nasadenie.
 
 ## Inventár a hranice
@@ -20,8 +22,8 @@ Iné DB vrátane MySQL, SQL Servera, PostgreSQL/Oracle, MyISAM, viacuzlové nasa
 
 1. Zálohujte konzistentne DB, verejné súbory a súkromné branch úložisko. Overte obnovu na oddelenom prostredí. Zaznamenajte generátory a ID podľa časti Obnova.
 2. Nasaďte kód a existujúce migrácie z `WEB-INF/sql/autoupdate.xml`. Automatická konverzia engine sa nevykonáva. Skontrolujte InnoDB na `documents`, `groups`, `media`, `pkey_generator`, `media_group_to_media`, `documents_history`, `groups_scheduler`, `branches`, `branch_documents`, `branch_groups`, `branch_media`, `branch_files`; perex API potrebuje aj oprávnenia na `perex_group_doc`.
-3. Pripravte existujúci absolútny adresár `branchStorageRoot` **mimo webrootu**, prístupný len aplikačnému účtu a zálohovaniu. Nesmie byť aliasom/symlinkom do verejného úložiska. Právo zápisu sa overuje vytvorením dočasného súboru. Zachovajte existujúci generátor `pkey_generator` pre `media`.
-4. Overte single-writer DB, aspoň `READ_COMMITTED` pre JDBC aj JPA, rovnaké konfiguračné hodnoty a kód na všetkých uzloch obsluhujúcich obsah. Nastavte `branchSingleWriterConfirmed=true` až po tejto kontrole. Aktuálny POC deklaruje iba jednu inštanciu; ďalšia topológia potrebuje vlastné overenie súborov/cache/session.
+3. Overte zápis aplikačného účtu do `/WEB-INF`, kde sa automaticky vytvorí predvolené úložisko `/WEB-INF/branches`. Voliteľný `branchStorageRoot` môže smerovať na existujúci súkromný absolútny adresár mimo webrootu. Verejné cesty a symlinky z predvoleného úložiska mimo chráneného `/WEB-INF` sa odmietnu. Právo zápisu sa overuje vytvorením dočasného súboru. Zachovajte existujúci generátor `pkey_generator` pre `media`.
+4. Overte jednu zapisovateľnú DB, aspoň `READ_COMMITTED` pre JDBC aj JPA a rovnaké konfiguračné hodnoty a kód na všetkých uzloch obsluhujúcich obsah. Aktuálny POC deklaruje iba jednu inštanciu; ďalšia topológia potrebuje vlastné overenie súborov/cache/session.
 5. Overte `enableStaticFilesExternalDir=true` a existujúce mapovanie súborov jednotlivých domén. Nastavte `branchesEnabled=true` globálne a obnovte všetky dotknuté uzly. Konfigurácia pracovných verzií je globálna, nie prepínač jednej domény. Priraďte **Pracovné verzie** (`menuBranches`) a existujúce práva stránok, priečinkov a súborov. Prvé vytvorenie balíka vykoná kontrolu aktivácie a pri probléme vráti konkrétny dôvod.
 6. Pred pilotom overte verejnú stránku bez cookies na jej skutočnej doméne. Hostiteľ administrácie môže byť iný; `domain_redirects` alias musí zodpovedať logickej doméne obsahu. Pôvodné lokálne POC fixture mali alias `iwcm.interway.sk → demo.webjetcms.sk`; P08 používa samostatnú doménu `127.0.0.1`.
 
@@ -32,6 +34,8 @@ Preflight publikovania odmietne `fulltextExecuteApps=true` a vlastný `fulltextD
 Náhľad má cestu `/admin/webpages/branch-preview/{id}/...` na **hostiteľovi administrácie**. Táto cesta musí ísť do WebJETu cez rovnaké admin/session/IP/HTTPS/Referer kontroly. Nepridávajte verejný statický alias na súkromný adresár. Ani obrázky, PDF a `/thumb/` vo vnútri gateway sa nesmú obslúžiť priamo z filesystemu alebo verejnej CDN. Cesty `/admin/rest/branches/` a `/admin/rest/branch-content` majú rovnaké pravidlo.
 
 Na proxy vypnite zdieľanú cache pre celý gateway a admin REST, zachovajte `Cache-Control: private, no-store`, cookies, query parametre a `X-CSRF-Token`. Neignorujte session pri assetoch s príponou `.png`/`.pdf`. Verejné `/files/` a `/images/` používajú bežné produkčné bajty; po publikovaní dodržte aj existujúcu invalidáciu cache daného nasadenia.
+
+`/WEB-INF/branches` nie je verejná cesta. Jeho obsah sa nezahŕňa do Gitu ani do distribučného WAR. Pri nasadení novej verzie aplikácie zachovajte tento adresár ako aplikačné dáta alebo ho obnovte spolu s databázou; pre úložisko nezávislé od aplikačného adresára použite vlastný `branchStorageRoot`.
 
 Pri TLS terminácii nastavte existujúce `serverBeyoundProxy=true` a `requestIsSecureHeaderName=X-Forwarded-Proto`; `Tools.isSecure` očakáva hodnotu `https`. Dôveryhodná proxy musí **prepísať** `X-Forwarded-Host`/`X-Forwarded-Proto` zo svojho overeného hostiteľa/protokolu a nesmie veriť rovnomenným hlavičkám od návštevníka. Testujte presmerovanie na HTTPS aj priame odmietnutie anonymného assetu. Konkrétna proxy/CDN nebola v lokálnom POC spustená.
 

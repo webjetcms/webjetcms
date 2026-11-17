@@ -21,7 +21,7 @@ class BranchP05ManualTest extends BranchJpaTest {
             assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));
             try(ResultSet r=s.executeQuery("SELECT COUNT(*) FROM branches WHERE name='autotest P05 media/files A'")){r.next();assertEquals(0,r.getInt(1),"P05 fixture already exists; reuse its manifest");}
         }
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot","/tmp/webjet-p03-private");Files.createDirectories(Path.of("/tmp/webjet-p03-private"));
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot","/tmp/webjet-p03-private");Files.createDirectories(Path.of("/tmp/webjet-p03-private"));
         Constants.setBoolean("multiDomainEnabled",true);
         Path sources=Path.of("/tmp/webjet-p05-ui");Files.createDirectories(sources);
         Path image=Path.of(Tools.getRealPath("/images/branch-p05-autotest/proof.png")),pdf=Path.of(Tools.getRealPath("/files/branch-p05-autotest/proof.pdf"));
@@ -66,7 +66,7 @@ class BranchP05ManualTest extends BranchJpaTest {
     @Test void prepareRetainedFileConflicts()throws Exception {
         try(Connection c=DBPool.getConnection()) {assertEquals("webjet_p01",c.getCatalog());assertTrue(c.getMetaData().getURL().contains(":33316/"));}
         Properties fixture=new Properties();try(var input=Files.newInputStream(Path.of("/tmp/webjet-p05-manual.properties"))){fixture.load(input);}
-        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("branchSingleWriterConfirmed",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot","/tmp/webjet-p03-private");
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot","/tmp/webjet-p03-private");
         BranchContext context=new BranchContext(Long.parseLong(fixture.getProperty("branchA")),DOMAIN,1,BranchContext.Mode.ADMIN);
         List<String> evidence=new ArrayList<>();BranchStore store=new BranchStore();
         for(String scenario:List.of("content","new","delete")) {

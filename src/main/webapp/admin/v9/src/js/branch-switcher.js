@@ -174,8 +174,12 @@ export function initBranchSwitcher(screen, api) {
     trigger.onclick = async () => {
         if (!picker.hidden) { closePicker(true); return; }
         trigger.disabled = true;
-        try { branches = await api(''); }
-        catch (error) { showError(error); return; }
+        try {
+            const result = await api('');
+            if (!Array.isArray(result)) throw new Error(tr('loadFailed'));
+            branches = result;
+        }
+        catch { showError(new Error(tr('loadFailed'))); return; }
         finally { trigger.disabled = false; }
         search.value = '';
         search.hidden = branches.length < 5;

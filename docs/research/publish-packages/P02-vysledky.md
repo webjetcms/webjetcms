@@ -54,8 +54,7 @@ Globálne konfiguračné kľúče, bez doménového override:
 | Kľúč | Predvolená hodnota | Význam |
 | --- | --- | --- |
 | `branchesEnabled` | false | Zapne centrálny izolačný guard P01. P02 neobsahuje používateľskú aktiváciu editácie/náhľadu. |
-| `branchSingleWriterConfirmed` | false | Výslovné prevádzkové potvrdenie jednej zapisovacej DB a rovnakého nastavenia všetkých obsahových uzlov. Nevytvára automatickú kontrolu cluster konfigurácií. |
-| `branchStorageRoot` | prázdny | Existujúci absolútny private filesystem adresár oddelený od webrootu aj po rozlíšení symlinkov. Pripravenosť skúsi zápis a odstránenie temp súboru. |
+| `branchStorageRoot` | `/WEB-INF/branches` | Aktuálne sa predvolené súkromné úložisko vytvára automaticky. Voliteľný vlastný absolútny adresár musí existovať. Pri pôvodnom P02 overení bola predvolená hodnota prázdna a test používal explicitnú cestu. Pripravenosť skúsi zápis a odstránenie temp súboru. |
 
 `BranchReadiness.verify` overuje profil, writable/aspoň READ_COMMITTED, fyzický InnoDB všetkých transakčných tabuliek vrátane histórií, nakonfigurovaného auditu a perex_group_doc, klasifikáciu aktuálnej schémy, media generátor a private storage. Volá sa pred pracovným zápisom. `verifyActivation` navyše vykoná rollback DML probes vrátane explicitného obsahového ID a preverí izoláciu priameho datasource JPA. Úplnú kontrolu volá BranchService pri vytvorení balíka, na jeho JDBC spojení. InitServlet ju nevolá: nesplnené predpoklady voliteľnej admin funkcie nesmú zablokovať štart servera ani zobrazovanie bežného webu. Chyba odmietne iba operáciu vetvy (create API vráti 409). Nenahrádza oprávnenia k jednotlivým obsahovým položkám.
 
@@ -71,7 +70,7 @@ Chýbajúci riadok generátora media je konkrétna chyba pripravenosti. P01 fixt
 | Migrácie | Reálny XML update na existujúcej P01 DB; rovnaké XML SQL na prázdnej `webjet_p02_clean` a opakovane, presne 5 tabuliek. Aplikácia s vypnutým flagom aplikovala update aj na pracovnej DB. Legacy `updateDB` vracia false aj po úspechu; test kontroluje skutočnú schému a záznam v _db_, nie tento návrat. |
 | JDBC storage | Dve vetvy a rovnaké LIVE ID, zachovaný prvý BASE/row_id, odmietnuté zastarané LIVE/WORK, nový objekt opakovane upravený bez LIVE, 315 KB HTML, perex tokeny, médium/kategórie, TRASH obal, DIRECTORY a FILE metadáta. LIVE obsah/história/index kategórií sa pracovným zápisom nezmenili. |
 | Skutočné JPA | V9JpaDBConfig a päť repositories: save, flush/commit, clear a reload typovaných riadkov/metadát. Testové @Entity fixture z nesúvisiacich testov sú zo scanu testového procesu vylúčené; produkčný scan ostáva rovnaký. |
-| Chyby a pripravenosť | Zlyhaný WORK insert dokumentu aj média, následná alokácia, chýbajúci generátor aj s cache, nedostupná DB, nulový atomic UPDATE, neznížený bootstrap, iný engine, chýbajúce single-writer potvrdenie, verejný/chýbajúci storage a skutočný SELECT-only DB účet. Všetko odmietnuté. |
+| Chyby a pripravenosť | Zlyhaný WORK insert dokumentu aj média, následná alokácia, chýbajúci generátor aj s cache, nedostupná DB, nulový atomic UPDATE, neznížený bootstrap, iný engine, verejný/chýbajúci storage a skutočný SELECT-only DB účet. Všetko odmietnuté. |
 | Flag-off browser | **2/2** existujúce Codecept scenáre: prihlásenie/menu/assety/thumbnail a strom/zoznam/filter/otvorenie existujúceho editora. Nejde o branch editor ani o WORK render. |
 | Kontrola zdrojov | compileJava/compileTestJava počas Gradle behu, git diff --check, lokálne Markdown odkazy a kotvy. Nezávislá kontrola ID/izolácie integrácie; opravené zistenia. |
 

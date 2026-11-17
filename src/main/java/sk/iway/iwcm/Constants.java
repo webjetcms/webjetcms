@@ -2541,7 +2541,6 @@ public class Constants {
 		if ("multiDomainUseAliasAsInstallName".equals(name) || "constantsAliasSearch".equals(name)
 				|| "branchesEnabled".equals(name)
                 || "branchStorageRoot".equals(name)
-                || "branchSingleWriterConfirmed".equals(name)
 				|| name.startsWith("multiDomainAlias:"))
 			return name;
 
