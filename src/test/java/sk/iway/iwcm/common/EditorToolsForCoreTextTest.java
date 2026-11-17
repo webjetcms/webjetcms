@@ -51,6 +51,38 @@ class EditorToolsForCoreTextTest {
         assertEquals("INDEX_TAIL", result.trim());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "<div title=\"a < b\">INDEX_TAIL</div>",
+        "<div title='a < b'>INDEX_TAIL</div>",
+        "<div title=\"a > b\">INDEX_TAIL</div>",
+        "<div title='a \"quoted\" < b > c'>INDEX_TAIL</div>",
+        "<!-- a < b --><p>INDEX_TAIL</p>",
+        "<!-- <script>ignoredComment > ' \" --><p>INDEX_TAIL</p>"
+    })
+    void preservesTextPositionsAfterQuotedAttributesAndComments(String prefix) {
+        String html = prefix + "<p>OTHER_TEXT</p>";
+
+        String result = EditorToolsForCore.removeHtmlTagsKeepLength(html);
+
+        assertEquals(html.length(), result.length());
+        assertEquals(html.indexOf("INDEX_TAIL"), result.indexOf("INDEX_TAIL"));
+        assertEquals(html.indexOf("OTHER_TEXT"), result.indexOf("OTHER_TEXT"));
+        assertEquals("INDEX_TAIL OTHER_TEXT", result.trim().replaceAll("\\s+", " "));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"<div title=\"", "<!--"})
+    void preservesInputLimitWhenAnAttributeOrCommentIsTruncated(String prefix) {
+        constants.when(() -> Constants.getInt("fulltextMaxHtmlLength")).thenReturn(32);
+        String html = "Visible" + prefix + "<".repeat(40);
+
+        String result = EditorToolsForCore.removeHtmlTagsKeepLength(html);
+
+        assertEquals(32, result.length());
+        assertEquals("Visible", result.trim());
+    }
+
     @Test
     void removesLongScriptAndStyleContentsWhilePreservingTextPositions() {
         String html = "<script data-padding=\"" + "x".repeat(120000) + "\">"
@@ -103,7 +135,8 @@ class EditorToolsForCoreTextTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void preservesLuceneBodyTextWithOrWithoutRenderedApps(boolean executeApps) {
-        String html = "<div data-padding=\"" + "x".repeat(120000) + "\">INDEX_TAIL</div>"
+        String html = "<!-- ignoredComment < b --><div title=\"a < b\" data-padding=\""
+                + "x".repeat(120000) + "\">INDEX_TAIL</div><p>OTHER_TEXT</p>"
                 + "<script>ignoredScript</script><style>.ignoredStyle{}</style>";
         EditorForm form = new EditorForm();
         form.setTitle("Page title");
@@ -120,7 +153,9 @@ class EditorToolsForCoreTextTest {
             String plainText = SearchTools.htmlToPlain(dataAsc);
 
             assertTrue(plainText.contains("INDEX_TAIL"));
+            assertTrue(plainText.contains("OTHER_TEXT"));
             assertTrue(plainText.contains("Page title"));
+            assertFalse(plainText.contains("ignoredComment"));
             assertFalse(plainText.contains("ignoredScript"));
             assertFalse(plainText.contains("ignoredStyle"));
             if (executeApps) {

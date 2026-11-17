@@ -480,6 +480,30 @@ public class EditorToolsForCore {
             c = html_text.charAt(tt);
             while (tt < html_text.length() && failsafe++ < maxLength)
             {
+                // Ignore tag-like text in comments and quoted attributes, preserving its positions.
+                int skipUntil = -1;
+                if (script == false && c == '<' && html_text.startsWith("<!--", tt))
+                {
+                    int end = html_text.indexOf("-->", tt + 4);
+                    skipUntil = end == -1 ? html_text.length() : end + 3;
+                }
+                else if (intag && script == false && (c == '"' || c == '\''))
+                {
+                    int end = html_text.indexOf(c, tt + 1);
+                    skipUntil = end == -1 ? html_text.length() : end + 1;
+                }
+                if (skipUntil != -1)
+                {
+                    while (tt < skipUntil)
+                    {
+                        s.append(' ');
+                        tt++;
+                    }
+                    if (tt == html_text.length()) break;
+                    c = html_text.charAt(tt);
+                    continue;
+                }
+
                 if (c == '<')
                 {
                     //start of a tag
