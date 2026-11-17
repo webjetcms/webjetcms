@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.BeanUtils;
 
 import sk.iway.iwcm.components.ai.jpa.AiSkillEntity;
@@ -25,6 +24,11 @@ public record AiAssistantRuntime(AssistantDefinitionEntity assistant, String ski
     /** Extracts distinct skill names for save validation and runtime lookup. */
     public static Set<String> referencedSkillNames(String instructions) {
         return AiInstructionTemplate.parse(instructions).skillNames();
+    }
+
+    /** Checks for skill, tool or group links using the same syntax as runtime resolution. */
+    public static boolean hasReferences(String instructions) {
+        return AiInstructionTemplate.parse(instructions).hasReferences();
     }
 
     static AiAssistantRuntime compose(AiSkillRepository repository, AssistantDefinitionEntity assistant,
@@ -49,17 +53,15 @@ public record AiAssistantRuntime(AssistantDefinitionEntity assistant, String ski
         var visible = new LinkedHashMap<String, AiToolDefinition>();
         var groupMembers = new HashMap<String, List<String>>();
         boolean hasWrite = false;
-        if (acceptsTools(assistant)) {
-            for (var entry : registry.assignedEntries(names, groups)) {
-                var tool = entry.definition();
-                // Keep write-preset safeguards even when the caller cannot use this tool.
-                hasWrite |= tool.writes();
-                if (!mayUse.test(entry)) continue;
-                visible.put(tool.name(), tool);
-                if (!groups.isEmpty()) {
-                    String group = entry.assignmentGroup();
-                    if (groups.contains(group)) groupMembers.computeIfAbsent(group, ignored -> new ArrayList<>()).add(tool.name());
-                }
+        for (var entry : registry.assignedEntries(names, groups)) {
+            var tool = entry.definition();
+            // Keep write-preset safeguards even when the caller cannot use this tool.
+            hasWrite |= tool.writes();
+            if (!mayUse.test(entry)) continue;
+            visible.put(tool.name(), tool);
+            if (!groups.isEmpty()) {
+                String group = entry.assignmentGroup();
+                if (groups.contains(group)) groupMembers.computeIfAbsent(group, ignored -> new ArrayList<>()).add(tool.name());
             }
         }
 
@@ -73,22 +75,13 @@ public record AiAssistantRuntime(AssistantDefinitionEntity assistant, String ski
             guidance.append("\n\nSkill: ").append(skill.getName()).append("\n")
                     .append(skillTemplates.get(skill.getName()).render(toolLabel, groupLabel, null));
         }
-        boolean browser = "browser".equals(assistant.getProvider());
-        String instructions = own.render(toolLabel, groupLabel, name -> {
-            if (!skillTemplates.containsKey(name)) return "[skill unavailable]";
-            return "skill " + (browser ? StringEscapeUtils.escapeJson(name) : name);
-        });
+        String instructions = own.render(toolLabel, groupLabel, name -> skillTemplates.containsKey(name) ? "skill " + name : "[skill unavailable]");
         var effective = new AssistantDefinitionEntity();
         BeanUtils.copyProperties(assistant, effective);
         String skillInstructions = guidance.toString();
-        if (!browser && !skillInstructions.isEmpty()) instructions += "\n\n" + skillInstructions;
+        if (!skillInstructions.isEmpty()) instructions += "\n\n" + skillInstructions;
         effective.setInstructions(instructions);
         return new AiAssistantRuntime(effective, skillInstructions, List.copyOf(visible.values()), hasWrite);
-    }
-
-    /** Checks tool support after the action and provider have passed the skill eligibility check. */
-    static boolean acceptsTools(AssistantDefinitionEntity assistant) {
-        return !"browser".equals(assistant.getProvider()) || "LanguageModel".equals(browserApi(assistant));
     }
 
     static boolean canHaveReferences(AssistantDefinitionEntity assistant) {
@@ -96,18 +89,7 @@ public record AiAssistantRuntime(AssistantDefinitionEntity assistant, String ski
         if (instructions == null || instructions.indexOf('@') < 0) return false;
         if (!("generate_text".equals(assistant.getAction()) || "live_chat".equals(assistant.getAction()))) return false;
         String provider = assistant.getProvider();
-        if (LocalTranslateProvider.PROVIDER_ID.equals(provider) || LocalEmbeddingProvider.PROVIDER_ID.equals(provider)
-                || "local-embedding".equals(provider)) return false;
-        if (!"browser".equals(provider)) return true;
-        return switch (browserApi(assistant)) {
-            case "LanguageModel", "Writer", "Rewriter", "Summarizer" -> true;
-            default -> false;
-        };
-    }
-
-    static String browserApi(AssistantDefinitionEntity assistant) {
-        String config = assistant.getInstructions();
-        int delimiter = config == null ? -1 : config.indexOf(':');
-        return delimiter < 0 ? "" : config.substring(0, delimiter).strip();
+        return !"browser".equals(provider) && !LocalTranslateProvider.PROVIDER_ID.equals(provider)
+                && !LocalEmbeddingProvider.PROVIDER_ID.equals(provider) && !"local-embedding".equals(provider);
     }
 }

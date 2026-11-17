@@ -154,6 +154,9 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public AssistantDefinitionEntity processToEntity(AssistantDefinitionEntity entity, ProcessItemAction action) {
+        if ("browser".equals(entity.getProvider()) && AiAssistantRuntime.hasReferences(entity.getInstructions())) {
+            throwError("components.ai_assistants.references.browser_unsupported");
+        }
         var names = AiAssistantRuntime.referencedSkillNames(entity.getInstructions());
         if (!names.isEmpty() && !skillRepository.findLinkedNames(getDomainId(), names).containsAll(names)) {
             throwError("components.ai_assistants.skills.unavailable");

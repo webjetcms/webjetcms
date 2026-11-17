@@ -110,7 +110,9 @@ V texte inštrukcií majú odkazy na nástroje modré pozadie, odkazy na skupiny
 
 Na karte **Zručnosti** môžete zručnosť vyhľadať podľa názvu alebo ukážky jej inštrukcií. Kliknutím na riadok vložíte odkaz, napríklad `@skill(Správa kvízov)`. Po návrate na kartu **Nástroje** zostane vybraná skupina aj HTTP metóda.
 
-Ak používate poskytovateľa **Prehliadač**, vložte odkaz do textu inštrukcie vnútri JSON reťazca. Ak chcete nástroj alebo zručnosť odobrať, vymažte odkazy, ktoré ich priraďujú, a kliknite na **Uložiť**. Tlačidlom **Zrušiť** ponecháte pôvodné priradenia.
+Pri zmene poskytovateľa na **Prehliadač** odstráňte z inštrukcií všetky odkazy `@skill(...)`, `@tool(...)` a `@group(...)`, aby sa asistent dal uložiť. V starších asistentoch s týmto poskytovateľom sa odkazy pri spustení ignorujú.
+
+Ak chcete nástroj alebo zručnosť odobrať, vymažte odkazy, ktoré ich priraďujú, a kliknite na **Uložiť**. Tlačidlom **Zrušiť** ponecháte pôvodné priradenia.
 
 Ak na tú istú zručnosť odkážete viackrát, asistent načíta jej inštrukcie raz. Aj nástroj, na ktorý odkážete priamo, cez skupinu alebo cez viacero zručností, sa v zozname dostupných nástrojov objaví iba raz.
 
