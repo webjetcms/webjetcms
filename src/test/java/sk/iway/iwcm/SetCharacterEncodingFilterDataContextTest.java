@@ -81,8 +81,10 @@ class SetCharacterEncodingFilterDataContextTest {
         assertNull(SetCharacterEncodingFilter.getCurrentRequestBean());
     }
 
-    @Test
-    void registrationFailureClosesNewManagersAndRestoresCallerContext() {
+    /** Both unchecked failure types restore the caller without closing its entity manager. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void registrationFailureClosesNewManagersAndRestoresCallerContext(boolean failWithError) {
         RequestBean callerBean = new RequestBean();
         SetCharacterEncodingFilter.setCurrentRequestBean(callerBean);
         EntityManager callerManager = openManager();
@@ -92,13 +94,14 @@ class SetCharacterEncodingFilterDataContextTest {
         assertSame(callerManager, SetCharacterEncodingFilter.getEntityManager());
 
         HttpServletRequest request = mock(HttpServletRequest.class);
-        IllegalStateException failure = new IllegalStateException("Request registration failed");
+        Throwable failure = failWithError ? new AssertionError("Request registration failed")
+                : new IllegalStateException("Request registration failed");
         when(request.getSession()).thenAnswer(invocation -> {
             assertSame(renderingManager, SetCharacterEncodingFilter.getEntityManager());
             throw failure;
         });
 
-        assertSame(failure, assertThrows(IllegalStateException.class,
+        assertSame(failure, assertThrows(failure.getClass(),
                 () -> SetCharacterEncodingFilter.openIsolatedDataContext(request)));
 
         verify(renderingManager).close();
