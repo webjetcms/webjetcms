@@ -2,6 +2,8 @@
 
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
+request.setAttribute("isPreview", Boolean.TRUE);
+
 Object spamProtectionDisable = request.getAttribute("spamProtectionDisable");
 request.setAttribute("spamProtectionDisable", "1");
 

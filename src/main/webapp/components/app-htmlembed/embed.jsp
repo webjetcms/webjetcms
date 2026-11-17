@@ -1,7 +1,7 @@
 <%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"
-	import="sk.iway.iwcm.*,sk.iway.iwcm.components.apphtmlembed.HtmlEmbedApp,sk.iway.iwcm.i18n.*,org.apache.commons.codec.binary.Base64"%><%@
+	import="sk.iway.iwcm.*,sk.iway.iwcm.components.apphtmlembed.HtmlEmbedApp,org.apache.commons.codec.binary.Base64"%><%@
 taglib prefix="iwcm"
 	uri="/WEB-INF/iwcm.tld"%><%@
 taglib prefix="iway"
@@ -16,9 +16,7 @@ taglib
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
 	PageParams pageParams = new PageParams(request);
-	Prop prop = Prop.getInstance(lng);
-	final String EMPTY_PAGE = prop.getText("components.cloud.app-htmlembed.empty_page");
-	String encoded = pageParams.getValue("html", EMPTY_PAGE);
+	String encoded = pageParams.getValue("html", "");
 	Base64 b64 = new Base64();
 	String htmlCode = new String(b64.decode(encoded.getBytes()));
 

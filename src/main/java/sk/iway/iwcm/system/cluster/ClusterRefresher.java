@@ -48,9 +48,10 @@ public class ClusterRefresher extends TimerTask
 
 	//pouzivane v rezime auto na identifikaciu poslednej hodnoty z DB tabulky ktoru mame precitanu
 	private static int lastExecutedAutoId = -1;
+	private int startupDocumentRefreshMaxId = -1;
 
 	/**
-	 * Konstruktor, ak je nastavene clusterNames tak inicializuje Timer task
+	 * Starts periodic refreshes when clustering is enabled.
 	 */
 	public ClusterRefresher()
 	{
@@ -62,6 +63,7 @@ public class ClusterRefresher extends TimerTask
 		{
 			//inicializuj aktualne poslednu hodnotu z DB tabulky pre auto aktualizaciu nodov
 			setLastExecutedAutoId(new SimpleQuery().forInt("SELECT MAX(cluster_refresh_id) FROM cluster_refresher WHERE (node_name=? OR node_name=?) ", "auto", clusterMyNodeName));
+			if (Constants.getBoolean("luceneIncrementalDocumentIndexing")) startupDocumentRefreshMaxId = getLastExecutedAutoId();
 		}
 
 		timer = new Timer(true);
@@ -172,10 +174,12 @@ public class ClusterRefresher extends TimerTask
 	 */
 	private void readFromAutoMode(String clusterMyNodeName)
 	{
+		replayStartupDocumentRefreshes(clusterMyNodeName);
 		try
 		{
 			//we need myNodeName to read monitoring refresher data
 			int actualMax = new SimpleQuery().forInt("SELECT MAX(cluster_refresh_id) FROM cluster_refresher WHERE (node_name=? OR node_name=?) AND cluster_refresh_id>?", "auto", clusterMyNodeName, getLastExecutedAutoId());
+			boolean successful = true;
 			//getLastExecutedAutoId()>0 - ak je to prvy beh, tak nechceme robit nic, su tam zapisane data z tohto nodu
 			if (actualMax > 0 && getLastExecutedAutoId()>=0)
 			{
@@ -187,13 +191,14 @@ public class ClusterRefresher extends TimerTask
 				{
 					if (shouldSkipDuplicate(allreadyExecuted, className)) continue;
 
-					refreshObject(clusterMyNodeName, className);
+					if (refreshObject(clusterMyNodeName, className) == false) successful = false;
+					allreadyExecuted.add(className);
 				}
 
 				Logger.debug(ClusterRefresher.class, "readFromAutoMode, actualMax="+actualMax+" lastExecutedAutoId="+getLastExecutedAutoId());
 			}
 
-			if (actualMax > 0) setLastExecutedAutoId(actualMax);
+			if (actualMax > 0 && successful) setLastExecutedAutoId(actualMax);
 		}
 		catch (Exception ex)
 		{
@@ -203,11 +208,39 @@ public class ClusterRefresher extends TimerTask
 	}
 
 	/**
+	 * Replays only retained document refreshes from before startup. Other cache and
+	 * session notifications keep their existing startup behavior. Failed refreshes
+	 * are retried while their rows remain within the regular retention period.
+	 */
+	private void replayStartupDocumentRefreshes(String clusterMyNodeName)
+	{
+		if (startupDocumentRefreshMaxId < 0) return;
+		try
+		{
+			List<String> updateClassNames = new SimpleQuery().forListString("SELECT class_name FROM cluster_refresher WHERE (node_name=? OR node_name=?) AND cluster_refresh_id<=? AND class_name LIKE ? ORDER BY cluster_refresh_id ASC",
+					"auto", clusterMyNodeName, startupDocumentRefreshMaxId, "sk.iway.iwcm.doc.DocDB-%");
+			Thread.currentThread().setName(THREAD_NAME);
+			Set<String> alreadyExecuted = new HashSet<>();
+			boolean successful = true;
+			for (String className : updateClassNames)
+			{
+				if (alreadyExecuted.add(className) == false) continue;
+				if (refreshObject(clusterMyNodeName, className) == false) successful = false;
+			}
+			if (successful) startupDocumentRefreshMaxId = -1;
+		}
+		catch (Exception ex)
+		{
+			Logger.error(ClusterRefresher.class, "Error replaying document refreshes after startup", ex);
+		}
+	}
+
+	/**
 	 * Vykona refresh DB objektu volanim getInstance(true)
 	 * @param nodeName
 	 * @param className
 	 */
-	private void refreshObject(String nodeName, String className)
+	private boolean refreshObject(String nodeName, String className)
 	{
 		try
 		{
@@ -302,11 +335,13 @@ public class ClusterRefresher extends TimerTask
 			}
 
 			cleanClassStatus(nodeName, className, now);
+			return true;
 		}
 		catch (Exception ex)
 		{
 			Adminlog.add(Adminlog.TYPE_CRON, "Error invoking "+className+" error: " + ex.getMessage()  +"\n\n"+Logger.getStackTrace(ex), -1, -1);
 			Logger.error(ClusterRefresher.class, ex);
+			return false;
 		}
 	}
 
