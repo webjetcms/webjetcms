@@ -117,7 +117,7 @@ public class AiChatService implements DisposableBean {
         AssistantResponseDTO result = null;
         if (turn.duplicate()) {
             // Repeated HTTP delivery replays the saved attempt; it must not call the provider again.
-            result = savedResult(turn.message(), request);
+            result = savedResult(prepared, request);
         } else {
             InputDataDTO input = turnInput(prepared);
             AtomicBoolean started = new AtomicBoolean();
@@ -535,16 +535,22 @@ public class AiChatService implements DisposableBean {
             .map(p -> (LibrarySupportLogic)p).findFirst().orElseThrow(() -> new IllegalStateException("Provider unavailable"));
     }
 
-    private static AssistantResponseDTO savedResult(AiChatEntry message, HttpServletRequest request) {
-        if (message.getPendingToolCall() != null && message.getPendingToolCall().write()) {
-            return failure("TOOL_OUTCOME_UNKNOWN", null, false, request);
-        }
-        if (!"complete".equals(message.getStatus())) {
+    private AssistantResponseDTO savedResult(Prepared prepared, HttpServletRequest request) {
+        AiChatEntry message = prepared.turn().message();
+        var pending = message.getPendingToolCall();
+        if (pending != null) {
+            if (pending.write()) return failure("TOOL_OUTCOME_UNKNOWN", null, false, request);
+            var runtime = tools.resolve(prepared.assistant(), prepared.scope().domainId(), request);
+            if (runtime.tools().stream().noneMatch(tool -> tool.name().equals(pending.name()) && !tool.writes())) {
+                return failure(AiToolProtocol.INVALID_TOOL_STEP, null, false, request);
+            }
+        } else if (!"complete".equals(message.getStatus())) {
             return failure(message.getErrorCategory() == null ? "PENDING" : message.getErrorCategory(), message.getProviderStatus(),
                 message.getRetryable(), request);
         }
         AssistantResponseDTO result = new AssistantResponseDTO();
-        result.setResponse(message.getText());
+        result.setToolCall(pending);
+        result.setResponse(pending == null ? message.getText() : "");
         result.setTotalTokens(message.getTotalTokens());
         result.setNoToolAction(message.isNoToolAction());
         return result;

@@ -141,8 +141,18 @@ public class AiChatStore {
             // Check duplicate delivery before revision/busy checks: the original request already advanced them.
             Turn duplicate = duplicateTurn(document, input, uploads);
             if (duplicate != null) {
-                if (input.toolResults().size() > duplicate.message().getToolResults().size()) {
+                AiChatEntry answer = duplicate.message();
+                int newResults = input.toolResults().size() - answer.getToolResults().size();
+                Call pending = answer.getPendingToolCall();
+                if (newResults > 0 || (pending != null && !pending.write())) {
                     if (!sameAssistant(thread, assistant) || !providerScope.equals(thread.getProviderScope())) throw conflict("assistantChanged");
+                    if (newResults < 0 || newResults > 1 || pending == null || !"ACTIVE".equals(thread.getStatus()) || thread.isStopRequested()
+                            || !answer.getId().equals(thread.getActiveMessageId())) throw conflict("stale");
+                    if (!input.toolResults().isEmpty() && (input.threadId() == null || !Objects.equals(input.revision(), thread.getRevision()))) {
+                        throw conflict("stale");
+                    }
+                }
+                if (newResults > 0) {
                     resumeToolRound(duplicate, input);
                     AiChatFiles.write(path, document);
                     return new Turn(thread, duplicate.question(), duplicate.message(), false);
@@ -226,9 +236,6 @@ public class AiChatStore {
         AiChatEntry answer = turn.message();
         AiChatThread thread = turn.thread();
         Call pending = answer.getPendingToolCall();
-        if (!"ACTIVE".equals(thread.getStatus()) || thread.isStopRequested() || !answer.getId().equals(thread.getActiveMessageId())
-                || pending == null || input.threadId() == null || !Objects.equals(input.revision(), thread.getRevision())
-                || input.toolResults().size() != answer.getToolResults().size() + 1) throw conflict("stale");
         var result = input.toolResults().get(input.toolResults().size() - 1);
         if (!pending.name().equals(result.name()) || !AiToolProtocol.sameJson(pending.arguments(), result.arguments())) throw conflict("requestChanged");
         if (pending.write()) {
