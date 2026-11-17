@@ -382,7 +382,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
 - Administration - fixed display of check mark icon when an item is selected in the autocomplete menu (#osk800).
 - Structure mirroring - [draft version](redactor/apps/docmirroring/README.md#edit-existing-webpage) no longer overwrites published translations and [bulk delete](redactor/webpages/README.md#delete-mirrored-pages-and-folders) no longer processes the same item repeatedly. Moving does not create duplicate language versions. When moving a folder, generated and inherited URLs are updated. Temporary cloning settings and mirror administration state are not shared between concurrent requests (#370).
-- HTML code insertion - empty application no longer displays corrupted text in the editor or on the page. The empty value of the parameter `html` is retained (#OSK944).
+- HTML code insertion - empty application no longer displays corrupted text in the editor or on the page. The empty value of the parameter `html` is retained (#407).
 
 ### Performance
 

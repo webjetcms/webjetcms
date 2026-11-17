@@ -382,7 +382,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Page Builder - pridaná možnosť nastaviť [šírku okna štruktúra](frontend/page-builder/settings.md) (#343)
 - Administrácia - opravené zobrazenie ikony zaškrtnutia pri vybranej položke v ponuke automatického dopĺňania (#osk800).
 - Zrkadlenie štruktúry - [pracovná verzia](redactor/apps/docmirroring/README.md#úprava-existujúcej-web-stránky) už neprepisuje zverejnené preklady a [hromadné mazanie](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov) nespracuje tú istú položku opakovane. Presun nevytvára duplicitné jazykové verzie. Pri presune priečinka sa aktualizujú generované a zdedené URL. Dočasné nastavenia klonovania a stav administrácie zrkadlenia sa nezdieľajú medzi súbežnými požiadavkami (#370).
-- Vloženie HTML kódu - prázdna aplikácia už v editore ani na stránke nezobrazuje poškodený text. Prázdna hodnota parametra `html` zostáva zachovaná (#OSK944).
+- Vloženie HTML kódu - prázdna aplikácia už v editore ani na stránke nezobrazuje poškodený text. Prázdna hodnota parametra `html` zostáva zachovaná (#407).
 
 ### Výkon
 
