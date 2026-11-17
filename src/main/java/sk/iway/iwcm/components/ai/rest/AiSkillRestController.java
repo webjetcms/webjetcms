@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.jpa.AiSkillEntity;
 import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
 import sk.iway.iwcm.components.ai.tools.AiToolService;
@@ -30,6 +31,7 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 @Datatable
 public class AiSkillRestController extends DatatableRestControllerV2<AiSkillEntity, Long> {
 
+    private static final String DUPLICATE_NAME = "components.ai_assistants.skills.duplicate_name";
     private final AiToolService tools;
     private final AiSkillRepository skills;
 
@@ -57,16 +59,35 @@ public class AiSkillRestController extends DatatableRestControllerV2<AiSkillEnti
     }
 
     @Override
+    public AiSkillEntity insertItem(AiSkillEntity entity) {
+        if (duplicateName(entity.getName(), -1L)) throwError(DUPLICATE_NAME);
+        return super.insertItem(entity);
+    }
+
+    @Override
     protected void copyEntityIntoOriginal(AiSkillEntity entity, AiSkillEntity original) {
         if (original == null) throwError("datatables.error.domainId");
+        if (duplicateName(entity.getName(), original.getId())) throwError(DUPLICATE_NAME);
         super.copyEntityIntoOriginal(entity, original);
+    }
+
+    private boolean duplicateName(String name, long excludedId) {
+        if (name == null) return false;
+        return skills.exists((root, query, builder) -> builder.and(
+                builder.equal(root.get("domainId"), getDomainId()),
+                builder.equal(builder.upper(root.get("name")), builder.upper(builder.literal(name))),
+                builder.notEqual(root.get("id"), excludedId)));
     }
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, AiSkillEntity> target, Identity user,
             Errors errors, Long id, AiSkillEntity entity) {
-        if (target.isInsert() && skills.existsByDomainIdAndNameIgnoreCase(getDomainId(), entity.getName())) {
-            errors.rejectValue("errorField.name", "", getProp().getText("components.ai_assistants.skills.duplicate_name"));
+        if (!target.isInsert() && !target.isUpdate()) return;
+        // Check imported names when the save path has resolved the actual target row.
+        if (isImporting() || Tools.isNotEmpty(target.getUpdateByColumn())) return;
+        long excludedId = target.isUpdate() && id != null ? id : -1L;
+        if (duplicateName(entity.getName(), excludedId)) {
+            errors.rejectValue("errorField.name", "", getProp().getText(DUPLICATE_NAME));
         }
     }
 
