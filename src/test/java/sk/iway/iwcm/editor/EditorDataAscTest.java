@@ -244,6 +244,7 @@ class EditorDataAscTest {
             ServletRequest request = invocation.getArgument(0);
             HttpServletResponse response = invocation.getArgument(1);
             assertSame(caller, Thread.currentThread());
+            assertEquals("GET", ((HttpServletRequest) request).getMethod());
             assertFalse(request.isAsyncSupported());
             assertFalse(request.isAsyncStarted());
             assertSame(servletContext, ((HttpServletRequest) request).getSession().getServletContext());

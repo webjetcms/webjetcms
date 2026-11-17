@@ -2545,6 +2545,7 @@ public class EditorDB
 			@Override
 			public boolean isAsyncStarted() { return false; }
 		};
+		request.setMethod("GET");
 		request.setSession(new MockHttpSession(Constants.getServletContext()));
 		request.setServerName("");
 		request.setAttribute("path_filter_orig_path", virtualPath);
