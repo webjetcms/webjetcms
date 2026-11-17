@@ -219,17 +219,28 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
            registerDataContext(request);
            return context;
        }
-       catch (RuntimeException | Error ex)
+       // Keep Exception and Error handlers separate for AspectJ's exception advice.
+       catch (RuntimeException ex)
        {
-           try
-           {
-               context.close();
-           }
-           catch (RuntimeException cleanupException)
-           {
-               ex.addSuppressed(cleanupException);
-           }
+           closeFailedDataContext(context, ex);
            throw ex;
+       }
+       catch (Error ex)
+       {
+           closeFailedDataContext(context, ex);
+           throw ex;
+       }
+   }
+
+   private static void closeFailedDataContext(IsolatedDataContext context, Throwable failure)
+   {
+       try
+       {
+           context.close();
+       }
+       catch (RuntimeException cleanupException)
+       {
+           failure.addSuppressed(cleanupException);
        }
    }
 
