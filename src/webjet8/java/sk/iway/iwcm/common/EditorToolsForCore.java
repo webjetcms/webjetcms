@@ -442,11 +442,19 @@ public class EditorToolsForCore {
     }
 
     /**
-     * Remove from string html tags and keep the length of string
+     * Removes HTML tags while preserving character positions within the configured input limit.
      */
     public static String removeHtmlTagsKeepLength(String html_text)
     {
         if (Tools.isEmpty(html_text)) return("");
+
+        int maxLength = Constants.getInt("fulltextMaxHtmlLength");
+        if (maxLength <= 0) maxLength = 2000000;
+        if (html_text.length() > maxLength)
+        {
+            Logger.warn(EditorToolsForCore.class, "Truncating HTML input from {} to {} characters (fulltextMaxHtmlLength).", html_text.length(), maxLength);
+            html_text = html_text.substring(0, maxLength);
+        }
 
         //Logger.debug(EditorDB.class, "Html size: "+html_text.length()+" Html text: "+html_text);
 
@@ -467,9 +475,10 @@ public class EditorToolsForCore {
 
         try
         {
+            // Guard against future changes that stop advancing tt.
             int failsafe = 0;
             c = html_text.charAt(tt);
-            while (tt < (html_text.length()) && failsafe++ < 100000)
+            while (tt < html_text.length() && failsafe++ < maxLength)
             {
                 if (c == '<')
                 {
@@ -529,7 +538,8 @@ public class EditorToolsForCore {
                 if(tt == (html_text.length())) break;
                 c = html_text.charAt(tt);
 
-                if (intag == true)
+                // Only script/style names and their closing tags need to be recognized.
+                if (intag == true && temp.length() < 7)
                 {
                     temp += (char) c;
                 }
