@@ -19,7 +19,11 @@ Scenario("Vloženie HTML kódu - test zobrazovania", async ({ I }) => {
             I.clickCss(cookieButton);
             I.waitForInvisible(cookieButton, 10);
         }
+        // Report a real player failure directly instead of timing out on its description.
+        const playerError = ':text("Player error")';
+        I.waitForVisible(`a[aria-label="Open description on TikTok"], ${playerError}`, 30);
+        I.dontSeeElement(playerError);
         I.waitForText("Starlink", 30);
-        I.dontSee('Player error');
+        I.dontSeeElement(playerError);
     });
 });

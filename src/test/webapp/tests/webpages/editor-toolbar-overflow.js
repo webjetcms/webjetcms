@@ -18,7 +18,11 @@ function openFixture(I, mode, extra = '') {
 }
 
 function resizeToolbar(I, width) {
-    I.executeScript(width => { document.getElementById('autotest-shell').style.width = `${width}px`; }, width);
+    I.executeScript(async width => {
+        document.getElementById('autotest-shell').style.width = `${width}px`;
+        // ResizeObserver schedules the toolbar layout for a subsequent animation frame.
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }, width);
     I.waitForFunction(width => !autotestToolbar.frame && Math.abs(autotestToolbar.toolbox.getBoundingClientRect().width - width) <= 2, [width], 5);
 }
 
@@ -386,9 +390,11 @@ Scenario('Classic integration: administration resizing keeps all commands reacha
 });
 
 for (const restore of ['close', 'minimize']) {
-    Scenario(`PageBuilder preview: desktop width recovers after dialog ${restore}`, async ({ I }) => {
+    Scenario(`PageBuilder preview: desktop width recovers after dialog ${restore}`, async ({ I, DTE }) => {
         I.resizeWindow(1303, 958);
         I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        DTE.waitForEditor();
+        DTE.waitForCkeditor();
         I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 20);
         I.switchTo('#DTE_Field_data-pageBuilderIframe');
         I.waitForVisible('.wj-cke-toolbar', 20);
@@ -425,6 +431,8 @@ for (const [command, close] of [['image', 'cancel'], ['link', 'close'], ['compon
     Scenario(`PageBuilder preview: oversized ${command} dialog restores mobile preview after ${close}`, async ({ I, DTE }) => {
         I.resizeWindow(1303, 958);
         I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        DTE.waitForEditor();
+        DTE.waitForCkeditor();
         I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 20);
         I.switchTo('#DTE_Field_data-pageBuilderIframe');
         I.waitForVisible('.wj-cke-toolbar', 20);
