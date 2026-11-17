@@ -185,13 +185,15 @@ class EditorDataAscTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-        "/products/detail.html,example.com,true,/products/detail.html,example.com",
-        "'',example.com,true,/LuceneFulltextSearch,example.com",
-        "NULL,example.com,true,/LuceneFulltextSearch,example.com",
-        "'   ',NULL,true,/LuceneFulltextSearch,''",
-        "/products/,NULL,false,/products/,''"
+        "/products/detail.html,example.com,true,configured.example,/products/detail.html,example.com",
+        "'',example.com,true,'',/LuceneFulltextSearch,example.com",
+        "NULL,example.com,true,'',/LuceneFulltextSearch,example.com",
+        "'   ',NULL,true,www.example.com,/LuceneFulltextSearch,www.example.com",
+        "/products/,NULL,false,https://www.example.com:8443,/products/,www.example.com",
+        "/products/,NULL,false,'',/products/,''",
+        "/products/,NULL,false,http://[invalid,/products/,''"
     }, nullValues = "NULL")
-    void mockUsesPagePathAndGroupDomainWithFallbacks(String virtualPath, String domain, boolean groupExists,
+    void mockUsesPagePathAndGroupDomainWithFallbacks(String virtualPath, String domain, boolean groupExists, String configuredServerName,
             String expectedPath, String expectedDomain) {
         EditorForm form = new EditorForm();
         form.setVirtualPath(virtualPath);
@@ -206,6 +208,7 @@ class EditorDataAscTest {
                 MockedStatic<DocDB> documents = mockStatic(DocDB.class);
                 MockedStatic<EditorToolsForCore> editor = mockStatic(EditorToolsForCore.class)) {
             constants.when(() -> Constants.getString(anyString())).thenReturn("");
+            constants.when(() -> Constants.getString("httpServerName")).thenReturn(configuredServerName);
             constants.when(Constants::getServletContext).thenReturn(new MockServletContext());
             groupInstances.when(GroupsDB::getInstance).thenReturn(groups);
             documents.when(() -> DocDB.getDomain(any(HttpServletRequest.class)))

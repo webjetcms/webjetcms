@@ -1,6 +1,7 @@
 package sk.iway.iwcm.editor;
 
 import java.io.File;
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -2550,13 +2551,32 @@ public class EditorDB
 		};
 		request.setMethod("GET");
 		request.setSession(new MockHttpSession(Constants.getServletContext()));
-		request.setServerName("");
 		request.setAttribute("path_filter_orig_path", virtualPath);
+		String serverName = "";
 		if (ef != null && ef.getGroupId() > 0)
 		{
 			GroupDetails group = GroupsDB.getInstance().getGroup(ef.getGroupId());
-			if (group != null && Tools.isNotEmpty(group.getDomainName())) request.setServerName(group.getDomainName());
+			if (group != null && Tools.isNotEmpty(group.getDomainName())) serverName = group.getDomainName();
 		}
+		if (Tools.isEmpty(serverName))
+		{
+			String configuredServerName = Constants.getString("httpServerName");
+			if (Tools.isNotEmpty(configuredServerName))
+			{
+				String url = configuredServerName.trim();
+				if (url.contains("://") == false) url = "http://" + url;
+				try
+				{
+					String configuredHost = URI.create(url).getHost();
+					if (Tools.isNotEmpty(configuredHost)) serverName = configuredHost;
+				}
+				catch (IllegalArgumentException ex)
+				{
+					Logger.debug(EditorDB.class, "Invalid httpServerName configuration: " + configuredServerName, ex);
+				}
+			}
+		}
+		request.setServerName(serverName);
 		SecurityContext originalSecurityContext = SecurityContextHolder.getContext();
 		SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
 		try (SetCharacterEncodingFilter.IsolatedDataContext context = SetCharacterEncodingFilter.openIsolatedDataContext(request))
