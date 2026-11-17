@@ -314,8 +314,8 @@ public class ThumbServlet extends HttpServlet
 
 			//sometimes w/h for ip1/2 will be zero but it is not important because it will be calculated
 			//like fixedSize-160-0-1
-			if (ip == 1) height = width;
-			else if (ip == 2) width = height;
+			if (ip == 1) height = Constants.getInt("imageThumbsHeight",Constants.getInt("imageMaxThumbsHeight",96));
+			else if (ip == 2) width = Constants.getInt("imageThumbsWidth",Constants.getInt("imageMaxThumbsWidth",96));
 
 			Logger.debug(ThumbServlet.class, "Farba: "+fillColor);
 			//osetrenie stavov
