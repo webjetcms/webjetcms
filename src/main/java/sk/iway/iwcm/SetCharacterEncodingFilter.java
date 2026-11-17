@@ -226,6 +226,65 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
    }
 
    /**
+    * Opens an independent request and persistence context for synchronous background rendering.
+    * Close it on the same thread, in reverse order when nested. Caller entity managers are
+    * restored without closing them or rolling back their transactions.
+    */
+   public static IsolatedDataContext openIsolatedDataContext(HttpServletRequest request)
+   {
+       IsolatedDataContext context = new IsolatedDataContext();
+       try
+       {
+           registerDataContext(request);
+           return context;
+       }
+       catch (RuntimeException | Error ex)
+       {
+           try
+           {
+               context.close();
+           }
+           catch (RuntimeException cleanupException)
+           {
+               ex.addSuppressed(cleanupException);
+           }
+           throw ex;
+       }
+   }
+
+   public static final class IsolatedDataContext implements AutoCloseable
+   {
+       private final RequestBean originalBean = getCurrentRequestBean();
+       private final Map<EntityManagerFactory, EntityManager> originalManagers = threadEntityManagers.get();
+       private boolean closed;
+
+       private IsolatedDataContext()
+       {
+           threadEntityManagers.remove();
+           requests.remove(Thread.currentThread().getId());
+       }
+
+       @Override
+       public void close()
+       {
+           if (closed) return;
+           closed = true;
+           try
+           {
+               closeEntityManagers();
+           }
+           finally
+           {
+               if (originalManagers == null) threadEntityManagers.remove();
+               else threadEntityManagers.set(originalManagers);
+
+               if (originalBean == null) requests.remove(Thread.currentThread().getId());
+               else setCurrentRequestBean(originalBean);
+           }
+       }
+   }
+
+   /**
     * inicializacia mapy EntityManager-ov
     */
    private static void initializeEntityManagerMap()
@@ -254,21 +313,30 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 
 		threadEntityManagers.remove();
 
+		RuntimeException failure = null;
 		for (EntityManager entityManager : map.values())
 		{
-			EntityTransaction transaction =	entityManager.getTransaction();
-
-			// ak niekto nechal otvorene transakcie, spravime rollback
-			if (transaction != null)
+			try
 			{
-				if (transaction.isActive())
-					transaction.rollback();
+				if (entityManager.isOpen() == false) continue;
+				try
+				{
+					EntityTransaction transaction = entityManager.getTransaction();
+					if (transaction != null && transaction.isActive()) transaction.rollback();
+				}
+				finally
+				{
+					entityManager.close();
+				}
 			}
-			if (entityManager.isOpen())
+			catch (RuntimeException ex)
 			{
-				entityManager.close();
+				// A failing manager must not prevent cleanup of the remaining databases.
+				if (failure == null) failure = ex;
+				else if (failure != ex) failure.addSuppressed(ex);
 			}
 		}
+		if (failure != null) throw failure;
    }
 
    public static void printDbErrorMessage(String path, HttpServletRequest request, HttpServletResponse res) throws IOException
