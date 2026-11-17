@@ -382,6 +382,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
 - Administration - fixed display of check mark icon when an item is selected in the autocomplete menu (#osk800).
 - Structure mirroring - [draft version](redactor/apps/docmirroring/README.md#edit-existing-webpage) no longer overwrites published translations and [bulk delete](redactor/webpages/README.md#delete-mirrored-pages-and-folders) no longer processes the same item repeatedly. Moving does not create duplicate language versions. When moving a folder, generated and inherited URLs are updated. Temporary cloning settings and mirror administration state are not shared between concurrent requests (#370).
+- HTML code insertion - empty application no longer displays corrupted text in the editor or on the page. The empty value of the parameter `html` is retained (#OSK944).
 
 ### Performance
 
@@ -763,6 +764,7 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Search - the deleted web page is removed by ID from all existing local language Lucene indexes even without data in the database or cache. With continuous indexing enabled, retained notifications of changes to specific pages are processed even after a cluster node restart. In case of a deletion error, the cluster notification is not confirmed and processing is repeated (#403).
 - Database - fixed generation of SQL conditions `IN` and `NOT IN` with a large number of values ​​by dividing the lists into smaller parts. Fixed errors when exceeding the limit of 1000 values ​​in the Oracle database, for example when loading the page history or working with an extensive folder tree. The maximum number of values ​​in one part is determined by the configuration variable `dbInClauseMaxItems` (default 1000, in Oracle no more than 1000).
 - Database - unified date types in SQL scripts for new installations: PostgreSQL uses `TIMESTAMP WITHOUT TIME ZONE`, fixed incorrect use of `TIMESTAMP` in MariaDB and Microsoft SQL. Existing databases are not automatically converted (#399).
 - Web pages - fixed limiting search and replace in folder names to the selected folder tree and setting the parent when fixing erroneously deleted folders during moving a page to the trash (#390).
