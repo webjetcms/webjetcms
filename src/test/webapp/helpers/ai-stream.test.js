@@ -66,6 +66,28 @@ test('saved tool writes identify the issuing thread and message at dispatch', as
     assert.equal(result.toolStatus, 'save — HTTP 200 (ID 42)');
 });
 
+test('a lost saved-chat response resumes the second read with the first result intact', async () => {
+    const endpoint = '/admin/rest/ai/chat/messages';
+    const messages = [], reads = [];
+    const { requestAiText } = loadTransport(async (url, { body }) => {
+        if (url !== endpoint) {
+            reads.push(url);
+            return Response.json({ id: 42 });
+        }
+        messages.push(body);
+        if (messages.length === 2) throw new TypeError('Connection lost');
+        if (messages.length === 4) return Response.json({ response: 'Done', totalTokens: 3 });
+        const name = messages.length === 1 ? 'find' : 'details';
+        return Response.json({ threadId: 'thread', messageId: 'message', revision: 1,
+            toolCall: { name, arguments: {}, write: false } });
+    });
+    const answer = await requestAiText({ assistantId: 7, requestId: 'request' }, { endpoint, toolsEnabled: true });
+    assert.equal(messages[2], messages[1]);
+    assert.deepEqual(JSON.parse(messages[2]).toolResults.map(result => result.name), ['find']);
+    assert.deepEqual(reads, ['/admin/rest/ai/tools/find/call', '/admin/rest/ai/tools/details/call']);
+    assert.equal(answer.response, 'Done');
+});
+
 test('browser repairs share a decision budget and never replay a dispatched write', async () => {
     for (const exhausted of [false, true]) {
         const rejected = new Response('arguments.id is required.', { status: 400, headers: { 'X-WebJET-AI-Tool-Response': 'invalid-arguments' } });

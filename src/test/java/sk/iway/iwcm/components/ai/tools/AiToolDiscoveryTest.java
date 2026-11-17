@@ -2,6 +2,7 @@ package sk.iway.iwcm.components.ai.tools;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -74,6 +75,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.rest.AiChatStore;
 import sk.iway.iwcm.components.ai.rest.AiToolsController;
+import sk.iway.iwcm.components.configuration.ConfigurationController;
 import sk.iway.iwcm.components.quiz.rest.QuizQuestionRestController;
 import sk.iway.iwcm.components.quiz.rest.QuizRestController;
 import sk.iway.iwcm.i18n.Prop;
@@ -118,6 +120,7 @@ class AiToolDiscoveryTest {
         WebjetSecurityService security() { return mock(WebjetSecurityService.class); }
         @Bean AssistantDefinitionRepository assistants() { return mock(AssistantDefinitionRepository.class); }
         @Bean AiSkillRepository skills() { return mock(AiSkillRepository.class); }
+        @Bean ConfigurationController configuration() { return new ConfigurationController(null); }
         @Bean QuizRestController quizzes() { return new QuizRestController(null, null, null); }
         @Bean QuizQuestionRestController questions() { return new QuizQuestionRestController(null); }
         @Bean AuditProbeController probe() { return new AuditProbeController(); }
@@ -164,6 +167,14 @@ class AiToolDiscoveryTest {
     }
 
     @Test
+    void configurationExcludesColumnSearch() {
+        var registry = context.getBean(AiToolRegistry.class);
+        assertNull(registry.lookup("configuration_find_by_columns"));
+        assertNotNull(registry.lookup("configuration_get_autocomplete"));
+        assertNotNull(registry.lookup("configuration_action"));
+    }
+
+    @Test
     void controllerGroupPrefixEndsAtACompletePathSegment() {
         var registry = context.getBean(AiToolRegistry.class);
         var add = registry.lookup("quiz_add");
@@ -197,14 +208,10 @@ class AiToolDiscoveryTest {
 
     /** The picker needs visible context; execution must still recognize a preset with inaccessible writes. */
     @Test
-    void browserRuntimeDistinguishesAssignedAndPermittedWrites() {
-        var assistant = new AssistantDefinitionEntity();
-        assistant.setId(7L);
+    void serverRuntimeDistinguishesAssignedAndPermittedWrites() {
         assistant.setAction("generate_text");
-        assistant.setProvider("browser");
-        assistant.setInstructions("LanguageModel: {\"sharedContext\":\"@tool(audit_probe_batch)\"}");
-        when(context.getBean(AssistantDefinitionRepository.class).findByIdAndDomainId(eq(7L), anyInt()))
-                .thenReturn(Optional.of(assistant));
+        assistant.setProvider("openai");
+        assistant.setInstructions("@tool(audit_probe_batch)");
         var service = context.getBean(AiToolService.class);
         for (boolean permitted : List.of(true, false)) {
             when(security.hasPermission("cmp_quiz")).thenReturn(permitted);
@@ -212,7 +219,7 @@ class AiToolDiscoveryTest {
             var runtime = service.runtimeMetadata(7, request);
             assertTrue(runtime.toolsWrite());
             assertEquals(permitted, runtime.toolsEnabled());
-            assertEquals(permitted ? List.of(new AiToolService.BrowserTool("audit_probe_batch", true)) : List.of(), runtime.tools());
+            assertNull(runtime.tools());
             assertEquals(permitted, service.hasInstructionContext(assistant, request));
         }
     }
@@ -220,8 +227,8 @@ class AiToolDiscoveryTest {
     @Test
     void editorChecksSkillExistenceOnceWithoutLoadingItsInstructions() {
         assistant.setAction("generate_text");
-        assistant.setProvider("browser");
-        assistant.setInstructions("Writer: @skill(Quiz) @skill(Quiz) @group(quiz)");
+        assistant.setProvider("openai");
+        assistant.setInstructions("@skill(Quiz) @skill(Quiz)");
         var skills = context.getBean(AiSkillRepository.class);
         int domain = CloudToolsForCore.getDomainId();
         when(skills.findLinkedNames(domain, Set.of("Quiz"))).thenReturn(List.of("Quiz"), List.of());
@@ -232,7 +239,7 @@ class AiToolDiscoveryTest {
         assertTrue(service.hasInstructionContext(assistant, request));
         verify(skills).findLinkedNames(domain, Set.of("Quiz"));
         assertFalse(service.hasInstructionContext(assistant, adminRequest()));
-        assistant.setInstructions("Translator: @skill(Quiz)");
+        assistant.setProvider("browser");
         assertFalse(service.hasInstructionContext(assistant, adminRequest()));
         verify(skills, times(2)).findLinkedNames(domain, Set.of("Quiz"));
         verifyNoMoreInteractions(skills);
@@ -322,26 +329,17 @@ class AiToolDiscoveryTest {
     }
 
     @Test
-    void browserWriterLoadsSkillGuidanceWithoutEnablingToolsAndTranslatorSkipsSkills() {
+    void browserRuntimeLeavesReferencesUnresolved() {
         assistant.setAction("generate_text");
         assistant.setProvider("browser");
-        assistant.setInstructions("Writer: {\"sharedContext\":\"@skill(Quiz)\"}");
-        var skills = context.getBean(AiSkillRepository.class);
-        var linkedNames = Set.of("Quiz");
-        when(skills.findByDomainIdAndNameInOrderByNameAsc(1, linkedNames))
-                .thenReturn(List.of(skill(4L, "Quiz", "Use @tool(quiz_get_all) or @group(quiz).")));
-        var service = context.getBean(AiToolService.class);
-        var writer = service.resolve(assistant, 1, new MockHttpServletRequest());
-        assertTrue(writer.skillInstructions().contains("Use [tool unavailable] or [no available tools in this group]."));
-        assertEquals("Writer: {\"sharedContext\":\"skill Quiz\"}", writer.assistant().getInstructions());
-        assertTrue(writer.tools().isEmpty());
-        assertFalse(writer.hasWriteTool());
-
-        assistant.setInstructions("Translator: {\"sharedContext\":\"@skill(Quiz)\"}");
-        var translator = service.resolve(assistant, 1, new MockHttpServletRequest());
-        assertEquals("", translator.skillInstructions());
-        assertTrue(translator.tools().isEmpty());
-        verify(skills).findByDomainIdAndNameInOrderByNameAsc(1, linkedNames);
+        assistant.setInstructions("Writer: {\"sharedContext\":\"@skill(Quiz) @tool(audit_probe_batch) @group(quiz)\"}");
+        var runtime = context.getBean(AiToolService.class).runtimeMetadata(7, adminRequest());
+        assertEquals(assistant.getInstructions(), runtime.instructions());
+        assertEquals("", runtime.skillInstructions());
+        assertTrue(runtime.tools().isEmpty());
+        assertFalse(runtime.toolsEnabled());
+        assertFalse(runtime.toolsWrite());
+        verifyNoInteractions(context.getBean(AiSkillRepository.class));
     }
 
     private static AiSkillEntity skill(long id, String name, String instructions) {

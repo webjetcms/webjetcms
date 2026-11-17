@@ -209,7 +209,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 if (writer == null || protocol != null) {
                     response = aiClient.execute(getProviderId(), providerRequest, config, inputData.getCancellationToken());
                     if (protocol == null) responseDto.setResponse(response.text());
-                    else protocol.apply(response.text(), responseDto, prop);
+                    else protocol.apply(response.text(), responseDto, prop, includeHandler.getIncludes());
                     if (responseDto.getToolCall() == null && responseDto.getResponse() != null) {
                         checkCancellation(inputData);
                         responseDto.setResponse(includeHandler.restoreIncludes(responseDto.getResponse()));

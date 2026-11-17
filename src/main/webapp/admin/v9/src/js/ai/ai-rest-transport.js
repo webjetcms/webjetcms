@@ -39,7 +39,14 @@ export async function requestAiText(inputData, { toolsEnabled, allowWrites = tru
     const message = { ...inputData };
     let totalTokens = 0;
     return runToolSteps(message.assistantId, async toolResults => {
-        const result = await generate({ ...message, toolResults }, { ...options, streaming: false });
+        const step = { ...message, toolResults };
+        const sendStep = () => generate(step, { ...options, streaming: false });
+        const result = await sendStep().catch(error => {
+            // A saved turn deduplicates this exact request, including the completed tool results.
+            if (!options.endpoint || !step.requestId || options.signal?.aborted ||
+                !['TypeError', 'SyntaxError'].includes(error.name)) throw error;
+            return sendStep();
+        });
         if (options.endpoint && result.toolCall) {
             if (!result.threadId || !result.messageId) throw new Error("Invalid AI response.");
             result.toolCall.chat = result.threadId + '/' + result.messageId;

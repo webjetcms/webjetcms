@@ -186,7 +186,8 @@ function initAiInstructionsField() {
     view.resetReferenceDrawer = () => {
         highlightReferences();
         drawer.querySelector(".reference-filters").prepend(groupField.node());
-        toggle.hidden = this.ids().length > 1;
+        const provider = skillsPane && table.DATA.jsonOptions?.provider?.find(option => option.value === this.val("provider"));
+        toggle.hidden = this.ids().length > 1 || (skillsPane && !provider?.original?.includes(this.val("action")));
         if (!toggle.hidden) {
             if (toolsTab) {
                 skillSearch.value = "";
@@ -200,5 +201,6 @@ function initAiInstructionsField() {
         }
         setDrawerOpen(!toggle.hidden);
     };
+    if (skillsPane) this.field("provider").input().add(this.field("action").input()).on("change", view.resetReferenceDrawer);
     view.resetReferenceDrawer();
 }

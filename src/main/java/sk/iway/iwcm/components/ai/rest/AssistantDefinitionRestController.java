@@ -133,8 +133,13 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
             nextTokenReset = aiAssistantsService.getNextTokenReset();
         }
         page.addSummary("nextTokenReset", nextTokenReset == null ? 0L : nextTokenReset);
-        page.addOptions("provider", aiService.getProviders(getProp()), "label", "value", false);
-        page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
+        var actions = SupportedActions.getSupportedActions(getProp());
+        page.addOptions("action", actions, "label", "value", false);
+        for (var provider : aiService.getProviders(getProp())) {
+            var referenceActions = actions.stream().map(action -> action.getValue())
+                    .filter(action -> AiAssistantRuntime.supportsReferences(provider.getValue(), action)).toList();
+            page.addOption("provider", provider.getLabel(), provider.getValue(), referenceActions);
+        }
         page.addOptions("groupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
         page.addOptions("toolNames", toolService.assignmentTools(getRequest(), getProp()), "description", "name", true);
         for (var skill : skillRepository.findPreviews(getDomainId())) {

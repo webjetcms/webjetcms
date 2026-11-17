@@ -488,6 +488,25 @@ class LibrarySupportLogicTest {
             return new AiResponse(text, List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", id);
         }
 
+        @Test
+        void restoresIncludesInNestedToolArguments() throws Exception {
+            String command = "!INCLUDE(/components/example.jsp, title=\"Hello\")!";
+            input.setInputValue(command);
+            assistant.setInstructions("Copy the input into the record.");
+            var save = new AiToolDefinition("save", "Save", Map.of(), "/records", "POST", Map.of());
+            input.setToolProtocol(new AiToolProtocol(List.of(save), List.of()));
+            when(client.execute(any(), any(), any(), same(input.getCancellationToken()))).thenAnswer(call -> {
+                String token = call.getArgument(1, AiRequest.class).inputText();
+                assertTrue(token.startsWith("__WJ_AI_INCLUDE_"));
+                return reply("""
+                    {"type":"call","name":"save","arguments":{"rows":[{"id":42,"html":"%s"}]}}
+                    """.formatted(token), "one");
+            });
+
+            var result = logic.getAiResponse(assistant, input, mock(Prop.class), null, null);
+            assertEquals(Map.of("rows", List.of(Map.of("id", 42, "html", command))), result.getToolCall().arguments());
+        }
+
         @ParameterizedTest
         @ValueSource(booleans = {false, true})
         void streamsOnlyTheAcceptedDecision(boolean temporal) throws Exception {

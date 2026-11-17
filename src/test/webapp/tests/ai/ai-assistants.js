@@ -133,9 +133,9 @@ Scenario('Instruction links assign and remove assistant tools and skills', async
     DT.filterEquals("name", name);
     const assistant = locate("#datatableInit tbody a").withText(name);
     I.waitForElement(assistant);
-    const runtime = () => I.executeScript(async () => {
+    const assignedTools = () => I.executeScript(async () => {
         const id = aiAssistantsDataTable.row(0).data().id;
-        return await $.getJSON("/admin/rest/ai/assistant/runtime/", {assistantId: id});
+        return await $.ajax({url: "/admin/rest/ai/tools", headers: {"X-WebJET-AI-Assistant": id}});
     });
     function openInstructions() {
         I.click(assistant);
@@ -147,6 +147,24 @@ Scenario('Instruction links assign and remove assistant tools and skills', async
 
     try {
         openInstructions();
+        I.dontSeeElement(drawer);
+        I.dontSeeElement(".reference-toggle");
+        I.fillField(field, "@tool(quiz_get_all)");
+        DTE.save();
+        I.waitForText("Pred uložením asistenta s poskytovateľom Prehliadač odstráňte", 10, "#datatableInit_modal");
+        I.fillField(field, plain);
+        I.clickCss("#pills-dt-datatableInit-provider-tab");
+        DTE.selectOption("provider", openAiId);
+        I.clickCss(tab);
+        I.seeElement(drawer);
+        I.clickCss("#pills-dt-datatableInit-action-tab");
+        DTE.selectOption("action", "Vygenerovať obrázok");
+        I.clickCss(tab);
+        I.dontSeeElement(drawer);
+        I.dontSeeElement(".reference-toggle");
+        I.clickCss("#pills-dt-datatableInit-action-tab");
+        DTE.selectOption("action", "Vygenerovať text");
+        I.clickCss(tab);
         I.executeScript(() => {
             const textarea = document.querySelector("#DTE_Field_instructions");
             const end = textarea.value.lastIndexOf('"');
@@ -180,8 +198,7 @@ Scenario('Instruction links assign and remove assistant tools and skills', async
         openInstructions();
         I.seeElement("#reference-tab-tools[aria-selected=true]");
         I.seeInField(field, linked);
-        const resolved = await runtime();
-        I.assertContain(resolved.skillInstructions, "Skill guidance for the assistant.");
+        const resolved = await assignedTools();
         I.assertTrue(resolved.tools.some(tool => tool.name === "ai_tools_preview"));
         I.assertEqual(resolved.tools.filter(tool => tool.name === "quiz_get_all").length, 1);
         I.assertTrue(resolved.tools.some(tool => tool.name === "ai_tools_details"));
@@ -198,20 +215,19 @@ Scenario('Instruction links assign and remove assistant tools and skills', async
         I.amOnPage("/admin/v9/settings/ai-assistants/");
         DT.filterEquals("name", name);
         I.waitForElement(assistant);
-        const updated = await runtime();
-        I.assertContain(updated.skillInstructions, "Updated guidance.");
+        const updated = await assignedTools();
         I.assertFalse(updated.tools.some(tool => tool.name === "ai_tools_details"));
         I.assertTrue(updated.tools.some(tool => tool.name === "quiz_get_all"));
         openInstructions();
+        I.clickCss("#reference-tab-skills");
+        I.see("Updated guidance.", locate(drawer + " .reference-skill").withText(skillName));
         I.fillField(field, plain);
         DTE.cancel();
         openInstructions();
         I.seeInField(field, linked);
         I.fillField(field, plain);
         DTE.save();
-        const removed = await runtime();
-        I.assertEqual(removed.skillInstructions, "");
-        I.assertDeepEqual(removed.tools, []);
+        I.assertDeepEqual((await assignedTools()).tools, []);
     } finally {
         I.amOnPage("/admin/v9/settings/ai-assistants/");
         DT.filterEquals("name", name);

@@ -34,7 +34,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @Datatable
 @RequestMapping(value = "/admin/rest/settings/configuration")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuConfig')")
-@AiTool(description = "components.ai.tools.configuration.context")
+// The inherited findByColumns handler requires a DataTable repository. This controller loads settings through ConfigurationService.
+@AiTool(description = "components.ai.tools.configuration.context", exclude = "findByColumns")
 public class ConfigurationController extends DatatableRestControllerV2<ConfDetailsDto, Long> {
 
     private final ConfigurationService configurationService;

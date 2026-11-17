@@ -86,9 +86,12 @@ public record AiAssistantRuntime(AssistantDefinitionEntity assistant, String ski
 
     static boolean canHaveReferences(AssistantDefinitionEntity assistant) {
         String instructions = assistant.getInstructions();
-        if (instructions == null || instructions.indexOf('@') < 0) return false;
-        if (!("generate_text".equals(assistant.getAction()) || "live_chat".equals(assistant.getAction()))) return false;
-        String provider = assistant.getProvider();
+        return instructions != null && instructions.indexOf('@') >= 0 && supportsReferences(assistant.getProvider(), assistant.getAction());
+    }
+
+    /** Whether the selected provider and action can use instruction references. */
+    public static boolean supportsReferences(String provider, String action) {
+        if (!("generate_text".equals(action) || "live_chat".equals(action))) return false;
         return !"browser".equals(provider) && !LocalTranslateProvider.PROVIDER_ID.equals(provider)
                 && !LocalEmbeddingProvider.PROVIDER_ID.equals(provider) && !"local-embedding".equals(provider);
     }

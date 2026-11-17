@@ -121,6 +121,11 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, List<Result> re
 
     /** Sets the next tool call, final answer, or tool-limit error on the response. */
     public void apply(String modelResponse, AssistantResponseDTO target, Prop prop) {
+        apply(modelResponse, target, prop, Map.of());
+    }
+
+    /** Restores the provider's protected INCLUDE tokens before validating and comparing tool calls. */
+    public void apply(String modelResponse, AssistantResponseDTO target, Prop prop, Map<String, String> includes) {
         JsonNode decision = readDecision(modelResponse);
         if (decision == null || !decision.isObject()) {
             invalidDecision(target, prop, "Return exactly one JSON object: a call with name and arguments, or a final with text.");
@@ -141,6 +146,7 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, List<Result> re
         }
         String name = decision.get("name").textValue();
         Map<String, Object> args = JSON.convertValue(decision.get("arguments"), ARGUMENTS);
+        if (!includes.isEmpty()) args.replaceAll((key, value) -> restoreArgument(value, includes));
         AiToolDefinition tool;
         try { tool = validateCall(name, args); }
         catch (IllegalArgumentException invalid) {
@@ -165,6 +171,20 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, List<Result> re
         }
         target.setResponse("");
         target.setToolCall(new Call(name, args, write, tool.rowReorder()));
+    }
+
+    private static Object restoreArgument(Object value, Map<String, String> includes) {
+        if (value instanceof String text) {
+            for (var entry : includes.entrySet()) text = text.replace(entry.getKey(), entry.getValue());
+            return text;
+        }
+        if (value instanceof List<?> items) return items.stream().map(item -> restoreArgument(item, includes)).toList();
+        if (value instanceof Map<?, ?> fields) {
+            var restored = new LinkedHashMap<>();
+            fields.forEach((key, field) -> restored.put(key, restoreArgument(field, includes)));
+            return restored;
+        }
+        return value;
     }
 
     private static void reportToolLimit(AssistantResponseDTO target, Prop prop) {
