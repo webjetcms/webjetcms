@@ -42,11 +42,13 @@ Náhľad načítava doménu balíka cez JPA. Scheduler používa repository pri 
 
 Natívny JDBC zostáva v rezervácii existujúcich produkčných ID, v klasifikovaných WORK/LIVE zápisoch a checkpointoch, ktoré musia zdieľať jednu transakciu a spojenie. Rovnako zostáva v účinných SQL reláciách stránok a Noviniek a pri kontrole fyzickej schémy, engine a DB oprávnení. Tieto transakcie nerozdeľujte volaním nezávislého JPA repository uprostred zápisu.
 
+Obsahové tabuľky, histórie, mediálne väzby a branch tabuľky používajú InnoDB. Migrácia `Publishing branches` konvertuje pôvodné tabuľky s iným enginom; existujúce InnoDB tabuľky neprebudováva. `pkey_generator` nepatrí do spoločného rollbacku obsahu a môže zostať na MyISAM. `PkeyGenerator.getNextValueAsLongStrict` prideľuje ID z rovnakých rozsahov ako pôvodné API samostatným atómovým zápisom; chyba následného WORK insertu číslo spotrebuje. Chýbajúci generátor alebo jeho nesprávne mapovanie sa naďalej odmietajú.
+
 ## Overené aplikácie
 
 V editore sú explicitne povolené iba `sk.iway.iwcm.components.menu.MenuApp` a `sk.iway.iwcm.components.news.NewsApp`, s renderermi `/components/menu/menu_ul_li.jsp` a `/components/news/news-velocity.jsp`. Povolenie riadi `BranchApps`. Inú aplikáciu treba najprv adaptovať a overiť, samotné doplnenie do mapy kompatibilitu nezabezpečí.
 
-`MenuULLI` zachováva existujúce parametre vrátane koreňa, hĺbky, tried a `onlySetVariables`; číta účinný strom. `NewsActionBean` vykonáva filter/count/paging nad účinnou SQL množinou. Používa existujúce perex kategórie, štandardné criteria a jeden `previewAt` na request. Vlastné `ResultCriteria` a `contextClasses` v preview nie sú podporované. Dátum autora/uloženia nie je čas publikovania balíka.
+`MenuULLI` zachováva existujúce parametre vrátane koreňa, hĺbky, tried a `onlySetVariables`; číta účinný strom. `NewsActionBean` vykonáva filter/count/paging nad účinnou SQL množinou. Používa existujúce perex kategórie, štandardné criteria a jeden `previewAt` na request. Vlastné `ResultCriteria` a `contextClasses` v preview vyžadujú adaptér. Zdieľané funkcie `FileTools.getFileIcon` a `ForumDB.isActive` sú dostupné cez čítacie adaptéry; nemenia súbory ani diskusie hlavnej verzie. Dátum autora/uloženia nie je čas publikovania balíka.
 
 Testujte skutočný JSP/Velocity render, preklik cez menu a Novinky, dve vetvy/LIVE a zahriatu cache. Pred merge zachyťte výsledok s rovnakou šablónou, časom a identitou a porovnajte ho s LIVE po merge. Normalizovať možno hostiteľa, prefix gateway a lištu, obsahové rozdiely sa nesmú zakryť. P08 dopĺňa aj anonymný verejný výsledok pre obsah bez prístupového obmedzenia.
 

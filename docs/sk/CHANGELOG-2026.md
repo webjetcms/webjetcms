@@ -56,6 +56,12 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 - Pracovné verzie - prepínač pri chybe načítania zobrazí preložené hlásenie a umožní pokus zopakovať.
 
+- Pracovné verzie - vytvorenie a úprava priečinka už nezlyhá na starších stránkach s prázdnymi perex kategóriami uloženými ako `,null,`.
+
+- Pracovné verzie - náhľad aplikácie v CKEditore sa načíta v kontexte pracovnej verzie bez dialógu prechodu do hlavnej verzie.
+
+- Pracovné verzie - pôvodná migrácia spolu s vytvorením branch tabuliek konvertuje obsahové tabuľky, histórie a mediálne väzby na InnoDB; existujúce InnoDB tabuľky a ich FULLTEXT indexy sa neprebudovávajú. Generátor ID môže zostať na MyISAM.
+
 - [Publikačné balíky (POC)](redactor/webpages/publishing-packages.md) - v hlavičke administrácie môžete vybrať pracovnú verziu aktuálnej domény a cez ľavé menu ju vytvoriť alebo upraviť. Tím môže pripravovať stránky, priečinky, médiá a súbory v spoločnej pracovnej verzii, skontrolovať menu a Novinky v náhľade, vyriešiť konflikty a publikovať balík ručne alebo v jednom termíne. ID zostávajú zachované; priebeh ukáže zastavenie a umožní overené pokračovanie. Pilot s 20 stránkami a tromi účtami overil aj anonymný verejný výsledok. Funkcia zostáva **predvolene vypnutá** a obmedzená na overený MariaDB/InnoDB profil; pôvodné Novinky a LIVE schvaľovanie, zrkadlenie a multigroup pri off/on majú [doložené výsledky P08](../research/publish-packages/P08-vysledky.md#doplnenie-t16-a-t13-nad-6fb0a30c9). [Návod správcu](admin/setup/publishing-packages.md) opisuje proxy, cron `all-admin`, zapnutie/vypnutie a obnovu rezervovaných ID. Produkčné zapnutie vyžaduje samostatné overenie konkrétneho nasadenia.
 
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).

@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jakarta.persistence.Column;
 import sk.iway.iwcm.doc.DocBasic;
@@ -18,6 +21,31 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.spirit.model.Media;
 
 class BranchMappingTest {
+    /** Legacy empty categories must not prevent an existing page from participating in folder validation. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"null", ",null,", " NULL ", "[null]", ",null,null,"})
+    void legacyNullCategoryTokenDoesNotBlockDocumentHashing(String categories) {
+        var row = new HashMap<>(BranchDocumentMapper.initialValues(9, 1, Instant.EPOCH, false));
+        String emptyHash = BranchDocumentMapper.snapshot(row).hash();
+        row.put("perex_group", categories);
+        assertEquals(emptyHash, BranchDocumentMapper.snapshot(row).hash());
+        assertEquals("", BranchFields.idTokens(categories));
+    }
+
+    /** Missing selections do not remove real category IDs from strings or nullable selection lists. */
+    @Test void legacyNullSelectionsPreserveActualCategories() {
+        assertEquals(java.util.List.of(3, 17), BranchFields.normalizedIds(",17,null,3,NULL,17,"));
+        assertEquals(",3,17,", BranchFields.idTokens(java.util.Arrays.asList(null, 17, 3, null, 17)));
+    }
+
+    /** Compatibility with empty selections must not hide malformed or nonpositive identities. */
+    @ParameterizedTest
+    @ValueSource(strings = {"nullish", ",3,invalid,", ",null,1.5,", ",null,0,", ",null,-1,"})
+    void rejectsInvalidCategoryIds(String categories) {
+        assertThrows(IllegalArgumentException.class, () -> BranchFields.normalizedIds(categories));
+    }
+
     @Test void groupNavigationUsesEnumsWhileDocumentNavigationUsesBooleans() {
         Map<String,Object> group=new HashMap<>(BranchGroupMapper.initialValues(20,"example.sk"));
         for(String column:java.util.List.of("show_in_navbar","show_in_sitemap","logged_show_in_navbar","logged_show_in_sitemap"))group.put(column,2);

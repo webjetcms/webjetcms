@@ -22,7 +22,8 @@ public final class BranchProductionSection {
     private static final Set<String> BRANCH_PAGES = Set.of(
         "/admin/v9/", "/admin/v9/webpages/web-pages-list/", "/admin/v9/webpages/branches/", "/admin/v9/webpages/media/",
         "/admin/v9/webpages/component/", "/apps/news/admin/", "/admin/v9/files/index/",
-        "/admin/v9/files/dialog/", "/admin/v9/files/wj_link/", "/admin/v9/files/wj_image/"
+        "/admin/v9/files/dialog/", "/admin/v9/files/wj_link/", "/admin/v9/files/wj_image/",
+        "/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp"
     );
 
     private BranchProductionSection() { }
@@ -38,7 +39,7 @@ public final class BranchProductionSection {
     }
 
     static boolean supportsBranch(String path) {
-        return BRANCH_PAGES.contains(path.endsWith("/") ? path : path + "/");
+        return BRANCH_PAGES.contains(path) || BRANCH_PAGES.contains(path + "/");
     }
 
     static boolean adminDocumentPath(String path) {

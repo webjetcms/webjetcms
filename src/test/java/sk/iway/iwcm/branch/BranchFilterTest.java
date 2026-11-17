@@ -47,6 +47,46 @@ class BranchFilterTest {
     }
     @AfterEach void cleanBoundary(){selection.close();groups.close();constants.close();SetCharacterEncodingFilter.setCurrentRequestBean(null);}
 
+    /** The preview bootstrap and its form POST must render WORK even without Fetch Metadata headers. */
+    @Test void componentPreviewKeepsTheWorkingVersionForDocumentAndFrameRequests() throws Exception {
+        selected();
+        var pkg = new BranchEntity();pkg.setName("Autumn");
+        selection.when(() -> BranchSelection.requireBranch(42, DOMAIN)).thenReturn(pkg);
+        String preview = "/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp";
+        request.setRequestURI(preview);
+        request.addHeader("Accept", "text/html");
+        for (String destination : List.of("", "iframe", "document")) {
+            request.removeHeader("Sec-Fetch-Dest");
+            if (!destination.isEmpty()) request.addHeader("Sec-Fetch-Dest", destination);
+            for (String method : List.of("GET", "POST")) {
+                request.setMethod(method);
+                if ("POST".equals(method)) {
+                    request.setParameter("branchId", "42");request.setParameter("branchDomain", "1");
+                    request.addHeader("Referer", "http://admin.example" + preview);
+                } else {
+                    request.removeParameter("branchId");request.removeParameter("branchDomain");request.removeHeader("Referer");
+                }
+                response = new MockHttpServletResponse();
+                AtomicBoolean dispatched = new AtomicBoolean();
+                filter.doFilter(request, response, (in, out) -> {
+                    dispatched.set(true);assertEquals(branch, BranchContexts.current());
+                });
+                assertTrue(dispatched.get(), method + " / " + destination + " must render the component instead of the production dialog");
+                assertNull(response.getForwardedUrl());assertNull(response.getHeader("Location"));
+                assertFalse(BranchContexts.current().isBranch());
+            }
+        }
+        assertFalse(BranchProductionSection.needsConfirmation(preview));
+        request.setMethod("POST");request.setParameter("branchId", "41");
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (in, out) -> fail("A stale component preview rendered another version"));
+        assertEquals(409, response.getStatus());
+        request.setParameter("branchId", "42");request.setParameter("branchDomain", "2");
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (in, out) -> fail("A component preview crossed the domain boundary"));
+        assertEquals(409, response.getStatus());
+    }
+
     @Test void everyNonBranchAdminDocumentRequiresConsentBeforeDispatch() throws Exception {
         selected();
         var pkg = new BranchEntity();

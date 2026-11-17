@@ -39,7 +39,8 @@ public final class BranchReadiness {
             throw new SQLException("Only the verified MariaDB 12.2 single-writer POC profile is supported");
         if (connection.isReadOnly() || connection.getTransactionIsolation() < Connection.TRANSACTION_READ_COMMITTED)
             throw new SQLException("Branches require a writable connection at READ_COMMITTED or stronger");
-        Set<String> tables = new LinkedHashSet<>(List.of("documents", "groups", "media", "pkey_generator",
+        // ID ranges are allocated independently; the legacy counter does not participate in content rollback.
+        Set<String> tables = new LinkedHashSet<>(List.of("documents", "groups", "media",
             "media_group_to_media", "documents_history", "groups_scheduler",
             "branches", "branch_documents", "branch_groups", "branch_media", "branch_files"));
         for (String table : tables) {

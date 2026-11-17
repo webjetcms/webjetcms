@@ -451,7 +451,7 @@ class BranchStorageTest extends BranchJpaTest {
     static Connection connect() throws SQLException {Connection connection=DriverManager.getConnection(URL,"root","");connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);return connection;}
     static UpdateDBBean migration() throws Exception {
         try(XMLDecoder decoder=new XMLDecoder(Files.newInputStream(Path.of("src/main/webapp/WEB-INF/sql/autoupdate-webjet9.xml")))) {
-            return ((List<?>)decoder.readObject()).stream().filter(UpdateDBBean.class::isInstance).map(UpdateDBBean.class::cast).filter(v->v.getDesc().startsWith("Publishing branches P02")).findFirst().orElseThrow();
+            return ((List<?>)decoder.readObject()).stream().filter(UpdateDBBean.class::isInstance).map(UpdateDBBean.class::cast).filter(v->v.getDesc().equals("Publishing branches")).findFirst().orElseThrow();
         }
     }
     static void apply(Connection connection,String sql) throws SQLException {for(String part:sql.split(";"))if(!part.isBlank())execute(connection,part);}

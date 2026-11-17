@@ -749,13 +749,10 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 						// Core facades are already adapted to the effective branch view.
 						if ("sk.iway.iwcm.doc.DocDB".equals(clazzName)) continue;
 						if ("sk.iway.iwcm.doc.GroupsDB".equals(clazzName)) continue;
-						// Arbitrary context classes can run their own LIVE SQL; require an explicit adapter before previewing them.
-						if (BranchContexts.current().isBranch())
-							throw new IllegalStateException("Custom News contextClasses require a branch preview adapter: " + clazzName);
-
 						try
 						{
-							Class<?> clazz = Class.forName(clazzName);
+							Class<?> clazz = BranchContexts.current().isBranch()
+								? sk.iway.iwcm.branch.BranchNewsContext.resolve(clazzName) : Class.forName(clazzName);
 							if (!vc.containsKey(clazz.getSimpleName()))
 							{
 								vc.put(clazz.getSimpleName(), clazz);

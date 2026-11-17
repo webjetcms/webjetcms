@@ -87,8 +87,10 @@ public record BranchFields(Set<String> supported, Set<String> derived,
         if (raw == null) return java.util.List.of();
         Iterable<?> items = raw instanceof Iterable<?> iterable ? iterable : java.util.List.of(raw.toString().replace("[", "").replace("]", "").split(","));
         for (Object item : items) {
+            // Empty legacy selections can contain null elements or literal comma-delimited null tokens.
+            if (item == null) continue;
             String token = item.toString().trim();
-            if (token.isEmpty()) continue;
+            if (token.isEmpty() || "null".equalsIgnoreCase(token)) continue;
             int id;
             try { id = new java.math.BigDecimal(token).intValueExact(); }
             catch (ArithmeticException | NumberFormatException e) { throw new IllegalArgumentException("Invalid category ID: " + token, e); }
