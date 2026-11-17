@@ -1,7 +1,8 @@
 - const referenceTitle = includeSkills ? "#{components.ai_assistants.references.title}" : "#{components.ai_assistants.skills.references}"
 template#skill-reference-template
     .skill-references(th:data-no-matches="#{components.ai_assistants.references.no_matches}")
-        .d-flex.justify-content-end.mb-2
+        .d-flex.align-items-center.gap-2.mb-2
+            small#ai-instructions-keyboard-hint.form-text.me-auto(data-th-text="\#{components.ai_assistants.instructions.keyboard_hint}")
             button.btn.btn-sm.btn-outline-secondary.reference-toggle(type="button" th:title=referenceTitle th:aria-label=referenceTitle data-bs-animation="false" aria-expanded="false" aria-controls="skill-reference-drawer")
                 i.ti.ti-layout-sidebar-right(aria-hidden="true")
         .reference-layout

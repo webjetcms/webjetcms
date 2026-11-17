@@ -68,7 +68,7 @@ final class AiToolSchema {
     private Map<String, Object> describe(JavaType type, boolean root) {
         Class<?> raw = ClassUtils.resolvePrimitiveIfNecessary(type.getRawClass());
         if (raw == Object.class) return Map.of();
-        if (output && type.isTypeOrSubTypeOf(tools.jackson.databind.JsonNode.class)) {
+        if (type.isTypeOrSubTypeOf(tools.jackson.databind.JsonNode.class)) {
             if (type.isTypeOrSubTypeOf(tools.jackson.databind.node.ObjectNode.class)) return Map.of("type", "object");
             if (type.isTypeOrSubTypeOf(tools.jackson.databind.node.ArrayNode.class)) return Map.of("type", "array");
             return Map.of();
@@ -123,6 +123,7 @@ final class AiToolSchema {
         }
         bean.put("type", "object");
         bean.put("properties", fields);
+        if (!output && description.findAnySetterAccessor() == null) bean.put("additionalProperties", false);
         if (!output && raw == DatatableRequest.class) required = List.of("action", "data");
         if (!required.isEmpty()) bean.put("required", required);
         return root ? bean : Map.of("$ref", "#/$defs/" + key);

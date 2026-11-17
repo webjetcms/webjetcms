@@ -32,10 +32,14 @@ public class AiChatEntry {
     private Integer providerStatus;
     private Boolean retryable;
     /** Outstanding endpoint call and results acknowledged for this saved answer. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Call pendingToolCall;
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    private boolean pendingWriteClaimed;
+    /** Absent in older transcripts, where a pending write may already have run. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean pendingWriteClaimed;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Result> toolResults = List.of();
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private boolean toolWriteIssued;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private boolean noToolAction;
@@ -43,6 +47,7 @@ public class AiChatEntry {
     private List<WriteOutcome> writeOutcomes = new ArrayList<>();
     private String providerResponseId;
     /** Earlier provider rounds for this answer that still need remote deletion. */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<String> earlierProviderResponseIds = new ArrayList<>();
     private boolean storageUnknown;
     private boolean providerDeleted;

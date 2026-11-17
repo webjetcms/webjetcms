@@ -384,9 +384,8 @@ public class AiChatStore {
             if (!messageId.equals(thread.getActiveMessageId()) || thread.isStopRequested()) return false;
             AiChatEntry answer = entry(document, messageId);
             answer.setPendingToolCall(call);
-            answer.setPendingWriteClaimed(false);
+            answer.setPendingWriteClaimed(call.write() ? Boolean.FALSE : null);
             if (call.write()) answer.getWriteOutcomes().add(WriteOutcome.pending(call.name()));
-            answer.setToolWriteIssued(answer.isToolWriteIssued() || call.write());
             answer.setTotalTokens(tokens);
             answer.setUpdated(new Date());
             thread.setLeaseUntil(lease());
@@ -403,9 +402,10 @@ public class AiChatStore {
                     || !Objects.equals(assistantId, thread.getAssistantId())) return false;
             AiChatEntry answer = entry(document, messageId);
             Call pending = answer.getPendingToolCall();
-            if (answer.isPendingWriteClaimed() || pending == null || !pending.write() || !pending.name().equals(call.name())
+            if (Boolean.TRUE.equals(answer.getPendingWriteClaimed()) || pending == null || !pending.write() || !pending.name().equals(call.name())
                     || !AiToolProtocol.sameJson(pending.arguments(), call.arguments())) return false;
             answer.setPendingWriteClaimed(true);
+            answer.setToolWriteIssued(true);
             return true;
         });
     }
@@ -640,7 +640,13 @@ public class AiChatStore {
         AiChatEntry message = entry(document, thread.getActiveMessageId());
         message.setStatus("stopped");
         Call pending = message.getPendingToolCall();
-        message.setErrorCategory(pending != null && pending.write() ? "TOOL_OUTCOME_UNKNOWN" : "CANCELLED");
+        boolean outcomeUnknown = pending != null && pending.write();
+        if (outcomeUnknown && Boolean.FALSE.equals(message.getPendingWriteClaimed())) {
+            var outcomes = message.getWriteOutcomes();
+            outcomes.remove(outcomes.size() - 1);
+            outcomeUnknown = false;
+        }
+        message.setErrorCategory(outcomeUnknown ? "TOOL_OUTCOME_UNKNOWN" : "CANCELLED");
         if (message.isToolWriteIssued()) message.setRetryable(false);
         message.setPendingToolCall(null);
         message.setUpdated(new Date());

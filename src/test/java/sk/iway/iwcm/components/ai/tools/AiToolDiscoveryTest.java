@@ -2,7 +2,6 @@ package sk.iway.iwcm.components.ai.tools;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -167,11 +166,21 @@ class AiToolDiscoveryTest {
     }
 
     @Test
-    void configurationExcludesColumnSearch() {
+    void configurationPublishesOnlyImplementedOperations() {
         var registry = context.getBean(AiToolRegistry.class);
-        assertNull(registry.lookup("configuration_find_by_columns"));
-        assertNotNull(registry.lookup("configuration_get_autocomplete"));
-        assertNotNull(registry.lookup("configuration_action"));
+        var names = registry.assignedEntries(Set.of(), Set.of("configuration")).stream()
+                .map(entry -> entry.definition().name()).toList();
+        assertEquals(List.of("configuration_add", "configuration_delete", "configuration_edit", "configuration_get_all",
+                "configuration_get_autocomplete", "configuration_get_autocomplete_detail", "configuration_get_one",
+                "configuration_handle_editor", "configuration_restart"), names);
+    }
+
+    @Test
+    void configurationWriteRejectsMisspelledBodyFields() {
+        var schema = context.getBean(AiToolRegistry.class).lookup("configuration_add").definition().inputSchema();
+        AiToolArgumentValidator.validate(schema, Map.of("body", Map.of("name", "example", "encrypt", true)));
+        assertThrows(AiToolArgumentValidator.InvalidArguments.class, () ->
+                AiToolArgumentValidator.validate(schema, Map.of("body", Map.of("name", "example", "encrypted", true))));
     }
 
     @Test
@@ -404,6 +413,15 @@ class AiToolDiscoveryTest {
                 post.header(AiToolAuthorization.CHAT_HEADER, id + "/" + message);
                 mvc.perform(post).andExpect(status().is(stopFirst ? 404 : 207));
                 mvc.perform(post).andExpect(status().isNotFound());
+                if (!stopFirst) chats.stop(id, scope, false);
+                var stopped = chats.get(id, scope).messages().get(1);
+                assertEquals(stopFirst ? "CANCELLED" : "TOOL_OUTCOME_UNKNOWN", stopped.getErrorCategory());
+                assertEquals(stopFirst, stopped.getWriteOutcomes().isEmpty());
+                assertEquals(!stopFirst, Boolean.FALSE.equals(stopped.getRetryable()));
+                if (stopFirst) {
+                    var retry = new AiChatRequest(id, assistant.getId(), UUID.randomUUID().toString(), 1L, "Save", message);
+                    assertEquals(turn.question().getId(), chats.begin(retry, scope, assistant, "config").question().getId());
+                }
             }
             audit.verify(() -> Adminlog.add(Adminlog.TYPE_QUIZ, "UPDATE:\nid: 11", 11, -1), times(1));
         }

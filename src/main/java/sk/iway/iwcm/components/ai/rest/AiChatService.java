@@ -247,7 +247,7 @@ public class AiChatService implements DisposableBean {
             if (protocol != null && streaming) output.accept(text.toString());
             status = "complete";
             category = null;
-            result.setNoToolAction(writePreset && !answer.isToolWriteIssued());
+            result.setNoToolAction(writePreset && !answer.isToolWriteIssued() && answer.getWriteOutcomes().isEmpty());
             return result;
         } catch (AiChatAttachments.UnreadableException exception) {
             category = "ATTACHMENT_INVALID";

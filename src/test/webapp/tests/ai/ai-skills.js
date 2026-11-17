@@ -37,7 +37,17 @@ Scenario("Save and reopen skill tool links", async ({ I, login, DT, DTE }) => {
     I.clickCss(drawer + ' button[data-method="GET"]');
     I.click(locate(drawer + " .reference-name").withText("quiz_get_all"));
     I.clickCss(drawer + " .reference-insert-group");
-    I.seeInField("#DTE_Field_instructions", "@tool(quiz_get_all)@group(quiz)");
+    const instructions = '#DTE_Field_instructions[aria-describedby~="ai-instructions-keyboard-hint"]';
+    I.see("Shift+Tab", "#ai-instructions-keyboard-hint");
+    for (const [exitKey, returnKey] of [["Tab", ["Shift", "Tab"]], [["Shift", "Tab"], "Tab"]]) {
+        I.seeElement(instructions + ":focus");
+        I.pressKey("Escape");
+        I.pressKey(exitKey);
+        I.dontSeeElement(instructions + ":focus");
+        I.pressKey(returnKey);
+    }
+    I.seeElement(instructions + ":focus");
+    I.assertEqual(await I.grabValueFrom(instructions), "@tool(quiz_get_all)@group(quiz)");
     I.clickCss(groupField);
     I.waitForVisible(suggestions);
     I.click(locate(suggestions + " li").withText("Katalóg nástrojov"));

@@ -3,12 +3,15 @@ package sk.iway.iwcm.components.ai.rest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webjetcms.ai.AiRequestLifecycle;
 import com.webjetcms.ai.AiRequestLifecycle.State;
 
@@ -61,7 +64,7 @@ class AiChatStoreTest {
     }
 
     @Test
-    void persistsAndContinuesConversationUntilProviderHistoryExpires() {
+    void persistsAndContinuesConversationUntilProviderHistoryExpires() throws IOException {
         var input = request(null, null, "First");
         var first = store.begin(input, scope, assistant, "config");
         String id = first.thread().getId(), message = first.message().getId();
@@ -71,6 +74,11 @@ class AiChatStoreTest {
         store.finish(scope, id, message, "Answer", "complete", 2, null, null);
         store.finish(scope, id, message, "", "stopped", 0, "CANCELLED", null);
         assertEquals("Answer", new AiChatStore().get(id, scope).messages().get(1).getText());
+        var messages = new ObjectMapper().readTree(root.resolve("7/42").resolve(id).resolve("ai_chat.json").toFile()).required("messages");
+        for (String field : List.of("pendingToolCall", "pendingWriteClaimed", "toolResults", "toolWriteIssued",
+                "noToolAction", "writeOutcomes", "earlierProviderResponseIds")) {
+            assertNull(messages.findValue(field), field);
+        }
         var next = store.begin(request(id, 1L, "Next"), scope, assistant, "config");
         assertEquals("response-one", next.thread().getLastResponseId());
         store.finish(scope, id, next.message().getId(), "", "error", 0, "INVALID_CONTINUATION", 404);

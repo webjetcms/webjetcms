@@ -23,10 +23,21 @@ function initAiInstructionsField() {
 
     const tabId = textarea.closest('[role="tabpanel"]')?.getAttribute("aria-labelledby");
     if (tabId) textarea.setAttribute("aria-labelledby", tabId);
+    const describedBy = textarea.getAttribute("aria-describedby");
+    textarea.setAttribute("aria-describedby", (describedBy ? describedBy + " " : "") + "ai-instructions-keyboard-hint");
+    let leaveOnTab = false;
+    textarea.addEventListener("blur", () => { leaveOnTab = false; });
     textarea.addEventListener("keydown", event => {
-        if (event.key !== "Tab") return;
-        event.preventDefault();
-        insertText("\t");
+        if (event.key === "Escape" && !event.isComposing) {
+            leaveOnTab = true;
+            event.preventDefault();
+            event.stopPropagation();
+        } else if (event.key === "Tab" && !leaveOnTab) {
+            event.preventDefault();
+            insertText("\t");
+        } else if (event.key !== "Shift") {
+            leaveOnTab = false;
+        }
     });
 
     const normalize = value => value.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase();

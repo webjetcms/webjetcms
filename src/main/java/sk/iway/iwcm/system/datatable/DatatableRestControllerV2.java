@@ -243,8 +243,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		Object value = bw.getPropertyValue(propertyName);
 		Expression exp = builder.get(propertyName).equal(value);
 
-		//pridaj domainId podmienku ak entita obsahuje domainId stlpec (aby sa neaktualizovali entity v inej domene)
-		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
+		// A controller can require domain-scoped import matches even when installation-wide scoping is off.
+		if (checkDomainId || InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")) {
 			if (bw.getPropertyType("domainId")!=null) {
 				exp = exp.and(builder.get("domainId").equal(getDomainId()));
 			}
