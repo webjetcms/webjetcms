@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -22,7 +21,6 @@ import sk.iway.iwcm.components.quiz.jpa.QuizQuestionRepository;
 import sk.iway.iwcm.components.quiz.jpa.QuizRepository;
 import sk.iway.iwcm.components.quiz.jpa.QuizStatDTO;
 import sk.iway.iwcm.components.quiz.jpa.QuizType;
-import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.stat.rest.StatService;
@@ -34,19 +32,18 @@ public class QuizService {
     static final String rightKey = "components.quiz.stat.right_answers";
     static final String wrongKey = "components.quiz.stat.wrong_answers";
     static final String allKey = "components.quiz.stat.all_answers";
-    
+
     /**************************** GET data methods ****************************/
+
     public static QuizEntity getById(int id) {
         if(id < 1) return new QuizEntity();
         QuizRepository qr = Tools.getSpringBean("quizRepository", QuizRepository.class);
-        Optional<QuizEntity> opt =  qr.findById((long) id);
-        if(opt.isPresent()) return opt.get();
-        else return new QuizEntity();
+        return qr.findFirstByIdAndDomainId((long) id, CloudToolsForCore.getDomainId()).orElseGet(QuizEntity::new);
     }
 
     public static List<QuizEntity> getAll() {
         QuizRepository qr = Tools.getSpringBean("quizRepository", QuizRepository.class);
-        return qr.findAll();
+        return qr.findAllByDomainId(CloudToolsForCore.getDomainId());
     }
 
     public static List<QuizQuestionEntity> getQuizQuestions(int quizId) {
@@ -56,9 +53,9 @@ public class QuizService {
         return quizQuestions;
     }
 
-    public static Map<Integer, QuizQuestionEntity> getQuizQuestionsMap(int quizId) { 
+    public static Map<Integer, QuizQuestionEntity> getQuizQuestionsMap(int quizId) {
         List<QuizQuestionEntity> quizQuestions = getQuizQuestions(quizId);
-        
+
         Map<Integer, QuizQuestionEntity> quizQuestionsByQuestionId = new HashMap<>();
         for (QuizQuestionEntity item : quizQuestions) {
             quizQuestionsByQuestionId.put(item.getId().intValue(), item);
@@ -66,14 +63,16 @@ public class QuizService {
 
         return quizQuestionsByQuestionId;
     }
-    
+
     /**************************** SAVE data method ****************************/
     public static List<QuizAnswerEntity> saveAnswersAndGetResult(int quizId, String formId, List<NameValueBean> answers) {
-        //Get quiz questions
+        QuizEntity quiz = getById(quizId);
+        if (quiz.getId() == null) return Collections.emptyList();
+
         QuizAnswerRespository qar = Tools.getSpringBean("quizAnswerRespository", QuizAnswerRespository.class);
         Map<Integer, QuizQuestionEntity> quizQuestionsByQuestionId = getQuizQuestionsMap(quizId);
 
-        QuizType quizType = QuizType.getQuizType( (new SimpleQuery()).forString("SELECT quiz_type FROM quiz WHERE id=? AND domain_id=?", quizId, CloudToolsForCore.getDomainId()) );
+        QuizType quizType = quiz.getQuizTypeEnum();
         for (NameValueBean answer : answers) {
             QuizAnswerEntity existingAnswer = JpaTools.findFirstByProperties(QuizAnswerEntity.class,
                     new Pair<String, Integer>("quizId", quizId), new Pair<String, String>("formId", formId),
@@ -103,7 +102,7 @@ public class QuizService {
                 newAnswer.setRate(rate);
 
                 //If rate is greater than 0, answer is correct
-                if(rate > 0) { 
+                if(rate > 0) {
                     newAnswer.setIsCorrect(true);
                     newAnswer.setRightAnswer( answer.getValue() ); //If our answer is correct, set it as right answer
                 } else {
@@ -114,20 +113,20 @@ public class QuizService {
             newAnswer.setCreated(new Date());
             qar.save(newAnswer);
         }
-        return qar.findAllByFormId(formId);
+        return qar.findAllByQuizIdAndFormId(quizId, formId);
     }
 
     /**************************** STAT methods ****************************/
 
     /**
      * Prepare list of QuizStatDTO entities (for chart), where every entity represents one question and has compute number of right/wrong answers for selected date range via "stringRange".
-     * 
+     *
      * @param quizId - QuizEntity id
      * @param stringRange - clasic string range
      * @param chartType
      * @param quizAnswerRespository
      * @return if any error occur, return empty list
-     */    
+     */
     public static List<QuizStatDTO> statTableData(Integer quizId, String stringRange, ChartType chartType, QuizAnswerRespository quizAnswerRespository) {
         if(quizId == null || quizId < 1) return new ArrayList<>();
         Date[] dateRangeArr = StatService.processDateRangeString(stringRange);
@@ -171,7 +170,7 @@ public class QuizService {
             if(newStat != null) {
                 newStat.setNumberOfRightAnswers(rightAnswers);
                 newStat.setNumberOfWrongAnswers(wrongAnswers);
-                
+
                 if(chartType == ChartType.NOT_CHART) newStat.setPercentageOfRightAnswers( (float) rightAnswers / (float) (rightAnswers + wrongAnswers) * 100 );
                 else newStat.setPercentageOfRightAnswers( (float) Math.round((float) rightAnswers / (float) (rightAnswers + wrongAnswers) * 100) );
 
@@ -209,15 +208,15 @@ public class QuizService {
         return cal.getTime();
     }
 
-    public static Map<String, List<QuizStatDTO>> statLineData(Integer quizId, String dateRange, String quizType, QuizAnswerRespository quizAnswerRespository, Prop prop) { 
+    public static Map<String, List<QuizStatDTO>> statLineData(Integer quizId, String dateRange, String quizType, QuizAnswerRespository quizAnswerRespository, Prop prop) {
         if(quizId == null || quizId < 1) return new HashMap<>();
         Date[] dateRangeArr = StatService.processDateRangeString(dateRange);
 
-        if(Tools.isAnyEmpty(quizType) || "0".equals(quizType)) 
+        if(Tools.isAnyEmpty(quizType) || "0".equals(quizType))
             return statLineDataAllAnswers(quizId, dateRangeArr, quizType, quizAnswerRespository, prop);
-        else if("1".equals(quizType)) 
+        else if("1".equals(quizType))
             return statLineDataAnswers(quizId, dateRangeArr, quizType, quizAnswerRespository, prop);
-        else 
+        else
             return new HashMap<>();
     }
 
@@ -225,7 +224,7 @@ public class QuizService {
         //Create combination of dates and number of right/wrong answers (separe maps)
         Map<Date, Integer> rightAnswPerDay = new HashMap<>();
         Map<Date, Integer> wrongAnswPerDay = new HashMap<>();
-        for(QuizAnswerEntity answer : quizAnswerRespository.findAllByQuizIdAndCreatedBetweenOrderByQuizQuestionId(quizId, dateRangeArr[0], dateRangeArr[1])) { 
+        for(QuizAnswerEntity answer : quizAnswerRespository.findAllByQuizIdAndCreatedBetweenOrderByQuizQuestionId(quizId, dateRangeArr[0], dateRangeArr[1])) {
             Date created = prepareDate( answer.getCreated() );
 
             if(answer.getIsCorrect()) {
@@ -265,7 +264,7 @@ public class QuizService {
         }
         //Loop combined map and create list of QuizStatDTO
         List<QuizStatDTO> allAnsw = new ArrayList<>();
-        for (Map.Entry<Date, Integer> combined : wrongAnswPerDay.entrySet()) { 
+        for (Map.Entry<Date, Integer> combined : wrongAnswPerDay.entrySet()) {
             QuizStatDTO newStat = new QuizStatDTO();
             newStat.setDayDate(combined.getKey());
             newStat.setChartValue(combined.getValue());
@@ -283,15 +282,15 @@ public class QuizService {
     private static Map<String, List<QuizStatDTO>> statLineDataAnswers(Integer quizId, Date[] dateRangeArr, String quizType, QuizAnswerRespository quizAnswerRespository, Prop prop) {
         //Compute points sum for every question for every day (time part of date is nulified)
         Map<String, QuizStatDTO> valueByDateAndQuestion = new HashMap<>();
-        for(QuizAnswerEntity answer : quizAnswerRespository.findAllByQuizIdAndCreatedBetweenOrderByQuizQuestionId(quizId, dateRangeArr[0], dateRangeArr[1])) { 
+        for(QuizAnswerEntity answer : quizAnswerRespository.findAllByQuizIdAndCreatedBetweenOrderByQuizQuestionId(quizId, dateRangeArr[0], dateRangeArr[1])) {
             Date created = prepareDate( answer.getCreated() );
             String mapKey = "" + created.getTime() + "_" + prepareQuestionString( answer.getQuizQuestion().getQuestion() );
-            
+
             if(valueByDateAndQuestion.get(mapKey) == null) {
                 QuizStatDTO newStat = new QuizStatDTO();
                 newStat.setDayDate(created);
                 newStat.setChartValue(answer.getRate());
-                
+
                 if(answer.getIsCorrect()) {
                     newStat.setNumberOfRightAnswers(1);
                     newStat.setNumberOfWrongAnswers(0);
@@ -302,7 +301,7 @@ public class QuizService {
                 valueByDateAndQuestion.put(mapKey, newStat);
             } else {
                 valueByDateAndQuestion.get(mapKey).setChartValue( valueByDateAndQuestion.get(mapKey).getChartValue() + answer.getRate() );
-                if(answer.getIsCorrect()) 
+                if(answer.getIsCorrect())
                     valueByDateAndQuestion.get(mapKey).setNumberOfRightAnswers( valueByDateAndQuestion.get(mapKey).getNumberOfRightAnswers() + 1 );
                 else
                     valueByDateAndQuestion.get(mapKey).setNumberOfWrongAnswers( valueByDateAndQuestion.get(mapKey).getNumberOfWrongAnswers() + 1 );
@@ -311,7 +310,7 @@ public class QuizService {
 
         //Tranform data to line chart format
         Map<String, List<QuizStatDTO>> lineChartData = new HashMap<>();
-        for (Map.Entry<String, QuizStatDTO> entry : valueByDateAndQuestion.entrySet()) { 
+        for (Map.Entry<String, QuizStatDTO> entry : valueByDateAndQuestion.entrySet()) {
             String[] keyParts = entry.getKey().split("_");
 
             if(lineChartData.get(keyParts[1]) == null) lineChartData.put(keyParts[1], new ArrayList<>());
@@ -326,9 +325,9 @@ public class QuizService {
      * Remove Html tags from string.
      * If string is longer than 64 characters, cut it and add "..." at the end.
      * else return string.
-     * 
+     *
      * If string is null, return empty string.
-     * 
+     *
      * @param question
      * @return
      */

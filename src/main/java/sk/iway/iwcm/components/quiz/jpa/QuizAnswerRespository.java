@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface QuizAnswerRespository extends JpaRepository<QuizAnswerEntity, Long> {
     List<QuizAnswerEntity> findAllByFormId(String formId);
+    List<QuizAnswerEntity> findAllByQuizIdAndFormId(Integer quizId, String formId);
 
     List<QuizAnswerEntity> findAllByQuizIdAndCreatedBetweenOrderByQuizQuestionId(Integer quizId, Date from, Date to);
 }
