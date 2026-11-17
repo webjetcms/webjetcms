@@ -3,6 +3,7 @@ package sk.iway.iwcm;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -67,20 +68,18 @@ class ToolsTest extends BaseWebjetTest {
 
     @Test
     void testGetServerNameWithAlias() {
-        //ENV is not available with remote push
         String defaultDomainName = System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME");
-        if (Tools.isNotEmpty(defaultDomainName)) {
-            Constants.setBoolean("multiDomainEnabled", true);
-            HttpServletRequest request = mock(HttpServletRequest.class);
-            when(request.getServerName()).thenReturn("iwcm.interway.sk");
+        assumeTrue(Tools.isNotEmpty(defaultDomainName), "CODECEPT_DEFAULT_DOMAIN_NAME is not configured");
+        Constants.setBoolean("multiDomainEnabled", true);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getServerName()).thenReturn("iwcm.interway.sk");
 
-            String domainAlias = DomainRedirectDB.getDomainFromAlias(request.getServerName());
-            System.out.println("domainAlias: " + domainAlias);
-            assertEquals(defaultDomainName, domainAlias);
+        String domainAlias = DomainRedirectDB.getDomainFromAlias(request.getServerName());
+        System.out.println("domainAlias: " + domainAlias);
+        assertEquals(defaultDomainName, domainAlias);
 
-            String serverName = Tools.getServerName(request, true);
-            assertEquals(defaultDomainName, serverName);
-        }
+        String serverName = Tools.getServerName(request, true);
+        assertEquals(defaultDomainName, serverName);
     }
 
     @Test
