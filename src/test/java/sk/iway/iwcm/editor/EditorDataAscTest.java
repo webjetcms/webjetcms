@@ -34,13 +34,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
@@ -171,27 +171,38 @@ class EditorDataAscTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void scopesMockContextWithoutClosingCallerEntityManagers(boolean fail) {
+    @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+    void closesRenderingEntityManagersWithoutClosingCallerEntityManagers(boolean hasCallerManagers, boolean fail) {
         EditorForm form = new EditorForm();
+        EntityManagerFactory factory = mock(EntityManagerFactory.class);
         EntityManager manager = mock(EntityManager.class);
         EntityTransaction transaction = mock(EntityTransaction.class);
         when(manager.isOpen()).thenReturn(true);
         when(manager.getTransaction()).thenReturn(transaction);
         when(transaction.isActive()).thenReturn(true);
+        EntityManager renderingManager = mock(EntityManager.class);
+        EntityTransaction renderingTransaction = mock(EntityTransaction.class);
+        when(factory.createEntityManager()).thenReturn(renderingManager);
+        when(renderingManager.isOpen()).thenReturn(true);
+        when(renderingManager.getTransaction()).thenReturn(renderingTransaction);
+        when(renderingTransaction.isActive()).thenReturn(true);
         @SuppressWarnings("unchecked")
         ThreadLocal<Map<EntityManagerFactory, EntityManager>> managers =
                 (ThreadLocal<Map<EntityManagerFactory, EntityManager>>) ReflectionTestUtils.getField(
                         SetCharacterEncodingFilter.class, "threadEntityManagers");
         Map<EntityManagerFactory, EntityManager> originalManagers = managers.get();
-        Map<EntityManagerFactory, EntityManager> callerManagers = Map.of(mock(EntityManagerFactory.class), manager);
-        managers.set(callerManagers);
+        Map<EntityManagerFactory, EntityManager> callerManagers = null;
+        if (hasCallerManagers) callerManagers = Map.of(factory, manager);
+        if (callerManagers == null) managers.remove();
+        else managers.set(callerManagers);
 
         try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<DBPool> database = mockStatic(DBPool.class);
                 MockedStatic<DocDB> documents = mockStatic(DocDB.class);
                 MockedStatic<EditorToolsForCore> editor = mockStatic(EditorToolsForCore.class)) {
             constants.when(() -> Constants.getString(anyString())).thenReturn("");
             constants.when(Constants::getServletContext).thenReturn(new MockServletContext());
+            database.when(() -> DBPool.getEntityManagerFactory("iwcm")).thenReturn(factory);
             documents.when(() -> DocDB.getDomain(any(HttpServletRequest.class))).thenReturn("");
             editor.when(() -> EditorToolsForCore.getDataAsc(eq("source"), eq(form), eq(true), any()))
                     .thenAnswer(invocation -> {
@@ -201,6 +212,7 @@ class EditorDataAscTest {
                         assertEquals("", request.getServerName());
                         assertEquals("/LuceneFulltextSearch", request.getServletPath());
                         assertNotNull(SetCharacterEncodingFilter.getCurrentRequestBean());
+                        assertSame(renderingManager, SetCharacterEncodingFilter.getEntityManager());
                         if (fail) throw new IllegalStateException("Preparation failed");
                         return "prepared";
                     });
@@ -212,6 +224,8 @@ class EditorDataAscTest {
             }
             assertNull(SetCharacterEncodingFilter.getCurrentRequestBean());
             assertSame(callerManagers, managers.get());
+            verify(renderingTransaction).rollback();
+            verify(renderingManager).close();
             verify(manager, never()).close();
             verify(transaction, never()).rollback();
         } finally {

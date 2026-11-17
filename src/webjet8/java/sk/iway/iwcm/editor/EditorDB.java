@@ -2553,15 +2553,9 @@ public class EditorDB
 			GroupDetails group = GroupsDB.getInstance().getGroup(ef.getGroupId());
 			if (group != null && Tools.isNotEmpty(group.getDomainName())) request.setServerName(group.getDomainName());
 		}
-		try
+		try (SetCharacterEncodingFilter.IsolatedDataContext context = SetCharacterEncodingFilter.openIsolatedDataContext(request))
 		{
-			SetCharacterEncodingFilter.registerDataContext(request);
 			return getDataAsc(data, ef, isLucene, request);
-		}
-		finally
-		{
-			// Restore the caller's context without closing its entity managers.
-			SetCharacterEncodingFilter.setCurrentRequestBean(originalBean);
 		}
 	}
 
