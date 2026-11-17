@@ -33,6 +33,8 @@ public class AiChatEntry {
     private Boolean retryable;
     /** Outstanding endpoint call and results acknowledged for this saved answer. */
     private Call pendingToolCall;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean pendingWriteClaimed;
     private List<Result> toolResults = List.of();
     private boolean toolWriteIssued;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)

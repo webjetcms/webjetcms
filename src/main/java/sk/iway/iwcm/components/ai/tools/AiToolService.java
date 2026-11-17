@@ -33,6 +33,7 @@ import sk.iway.iwcm.i18n.Prop;
 public class AiToolService {
 
     static final String TARGET = AiToolService.class.getName() + ".target";
+    static final String WRITE = AiToolService.class.getName() + ".write";
     private final AiToolRegistry registry;
     private final AiToolAuthorization authorization;
 
@@ -150,6 +151,7 @@ public class AiToolService {
         }
         RequestPath originalPath = (RequestPath) request.getAttribute(ServletRequestPathUtils.PATH_ATTRIBUTE);
         request.setAttribute(TARGET, entry);
+        if (entry.definition().writes()) request.setAttribute(WRITE, new AiToolProtocol.Call(name, arguments, true));
         request.setAttribute(PathFilter.AI_TOOL_ENTRY_PATH, "/admin/rest/ai/tools/" + entry.definition().name() + "/call");
         int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         try {
@@ -158,6 +160,7 @@ public class AiToolService {
             status = response.getStatus();
         } finally {
             request.removeAttribute(TARGET);
+            request.removeAttribute(WRITE);
             request.removeAttribute(PathFilter.AI_TOOL_ENTRY_PATH);
             ServletRequestPathUtils.setParsedRequestPath(originalPath, request);
             AiToolAudit.finish(request, status);

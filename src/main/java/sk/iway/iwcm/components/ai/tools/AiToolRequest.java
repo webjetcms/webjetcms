@@ -106,6 +106,7 @@ final class AiToolRequest extends HttpServletRequestWrapper {
         String key = name.toLowerCase(Locale.ROOT);
         // Preserve credentials, principal, domain and proxy information supplied by the original HTTP transport.
         if (AiToolAuthorization.ASSISTANT_HEADER.equalsIgnoreCase(key)
+                || AiToolAuthorization.CHAT_HEADER.equalsIgnoreCase(key)
                 || key.equalsIgnoreCase(Constants.getString("logonTokenHeaderName"))
                 || key.equalsIgnoreCase(Constants.getString("requestIsSecureHeaderName"))
                 || key.equalsIgnoreCase(Constants.getString("xForwardedForHeader", "").replace("::last", ""))) return false;

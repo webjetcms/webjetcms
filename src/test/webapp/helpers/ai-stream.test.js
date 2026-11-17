@@ -29,7 +29,8 @@ function loadTransport(fetch, notifications = []) {
 
 test('browser tools report saved IDs for writes but not for reads', async () => {
     const calls = [];
-    const { runBrowserTools } = loadTransport(async url => {
+    const { runBrowserTools } = loadTransport(async (url, options) => {
+        assert.equal(options.headers['X-WebJET-AI-Chat'], 'unsaved');
         calls.push(url);
         return Response.json({ data: [{ id: 42 }] });
     });
@@ -46,6 +47,24 @@ test('browser tools report saved IDs for writes but not for reads', async () => 
 const toolAssistant = { assistantId: 7, tools: [{ name: 'find', write: false }, { name: 'save', write: true }] };
 const toolCall = (name, args = {}) => JSON.stringify({ type: 'call', name, arguments: args });
 const done = '{"type":"final","text":"Done"}';
+
+test('saved tool writes identify the issuing thread and message at dispatch', async () => {
+    const endpoint = '/admin/rest/ai/chat/messages';
+    let round = 0;
+    const { requestAiText } = loadTransport(async (url, options) => {
+        if (url === endpoint) {
+            if (round++ === 0) return Response.json({ threadId: 'thread', messageId: 'message', revision: 1,
+                toolCall: { name: 'save', arguments: { id: 42 }, write: true } });
+            return Response.json({ response: 'Done', totalTokens: 1 });
+        }
+        assert.equal(url, '/admin/rest/ai/tools/save/call');
+        assert.equal(options.headers['X-WebJET-AI-Chat'], 'thread/message');
+        assert.deepEqual(JSON.parse(options.body), { id: 42 });
+        return Response.json({ id: 42 });
+    });
+    const result = await requestAiText({ assistantId: 7 }, { endpoint, toolsEnabled: true });
+    assert.equal(result.toolStatus, 'save — HTTP 200 (ID 42)');
+});
 
 test('browser repairs share a decision budget and never replay a dispatched write', async () => {
     for (const exhausted of [false, true]) {

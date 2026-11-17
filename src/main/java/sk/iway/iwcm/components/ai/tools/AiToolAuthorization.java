@@ -30,6 +30,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.rest.AiChatStore;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
 import sk.iway.iwcm.users.UsersDB;
@@ -48,6 +49,8 @@ public class AiToolAuthorization {
     }
 
     static final String ASSISTANT_HEADER = "X-WebJET-AI-Assistant";
+    static final String CHAT_HEADER = "X-WebJET-AI-Chat";
+    private final AiChatStore chats;
     private final AssistantDefinitionRepository assistants;
     private final AiToolRegistry registry;
     private final AiSkillRepository skills;
@@ -57,7 +60,8 @@ public class AiToolAuthorization {
     private final SecuredAuthorizationManager secured = new SecuredAuthorizationManager();
 
     public AiToolAuthorization(ApplicationContext context, AssistantDefinitionRepository assistants, WebjetSecurityService security,
-            AiToolRegistry registry, AiSkillRepository skills) {
+            AiToolRegistry registry, AiSkillRepository skills, AiChatStore chats) {
+        this.chats = chats;
         this.assistants = assistants;
         this.registry = registry;
         this.skills = skills;
@@ -142,7 +146,10 @@ public class AiToolAuthorization {
                 if (assigned == null) return false;
             }
             if (!hasHandlerPermission(entry, request, access)) return false;
-            if (access == Access.INVOKE) AiToolAudit.begin(request, entry, assigned);
+            if (access == Access.INVOKE) {
+                if (entry.definition().writes() && !allowWrite(request, assigned)) return false;
+                AiToolAudit.begin(request, entry, assigned);
+            }
             return true;
         } catch (RuntimeException cannotEstablishPermission) {
             // A record-dependent expression cannot grant catalog visibility without a record.
@@ -151,6 +158,19 @@ public class AiToolAuthorization {
             if (previous == null) request.removeAttribute(AiToolRequest.CHECKING_PERMISSION);
             else request.setAttribute(AiToolRequest.CHECKING_PERMISSION, previous);
         }
+    }
+
+    private boolean allowWrite(HttpServletRequest request, AssistantDefinitionEntity assistant) {
+        String chat = request.getHeader(CHAT_HEADER);
+        if (assistant == null) return chat == null; // Manual tool call.
+        if ("unsaved".equals(chat)) return true;
+        // Older tabs carry no chat context and cannot safely dispatch a delayed assistant write.
+        if (chat == null || !(request.getAttribute(AiToolService.WRITE) instanceof AiToolProtocol.Call call)) return false;
+        String[] ids = chat.split("/", -1);
+        if (ids.length != 2) return false;
+        var scope = new AiChatStore.Scope(UsersDB.getCurrentUser(request).getUserId(),
+                CloudToolsForCore.getDomainId(), CloudToolsForCore.getDomainName());
+        return chats.claimPendingWrite(scope, ids[0], ids[1], assistant.getId(), call);
     }
 
     private boolean hasHandlerPermission(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {

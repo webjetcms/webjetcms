@@ -40,6 +40,10 @@ export async function requestAiText(inputData, { toolsEnabled, allowWrites = tru
     let totalTokens = 0;
     return runToolSteps(message.assistantId, async toolResults => {
         const result = await generate({ ...message, toolResults }, { ...options, streaming: false });
+        if (options.endpoint && result.toolCall) {
+            if (!result.threadId || !result.messageId) throw new Error("Invalid AI response.");
+            result.toolCall.chat = result.threadId + '/' + result.messageId;
+        }
         // The assignment may change after PageBuilder chooses to process each block separately.
         if (result.toolCall && result.toolCall.write !== false && !allowWrites) throw new Error(WJ.translate('components.ai_assistants.settings_changed.js'));
         if (!options.endpoint && Number.isInteger(result.totalTokens)) {

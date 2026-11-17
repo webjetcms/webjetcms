@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -22,16 +23,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -53,6 +57,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.handler.MappedInterceptor;
 
 import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -61,11 +66,13 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.jpa.AiSkillEntity;
 import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.rest.AiChatStore;
 import sk.iway.iwcm.components.ai.rest.AiToolsController;
 import sk.iway.iwcm.components.quiz.rest.QuizQuestionRestController;
 import sk.iway.iwcm.components.quiz.rest.QuizRestController;
@@ -75,6 +82,7 @@ import sk.iway.iwcm.system.datatable.events.DatatableEvent;
 import sk.iway.iwcm.system.datatable.events.DatatableEventType;
 import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
+import sk.iway.iwcm.users.UsersDB;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -104,7 +112,7 @@ class AiToolDiscoveryTest {
 
     @EnableWebMvc
     @EnableMethodSecurity(proxyTargetClass = true, securedEnabled = true)
-    @Import({AiToolsController.class, AiToolRegistry.class, AiToolService.class, AiToolAuthorization.class, AiToolCallFilter.class, AiToolAudit.class})
+    @Import({AiToolsController.class, AiToolRegistry.class, AiToolService.class, AiToolAuthorization.class, AiToolCallFilter.class, AiToolAudit.class, AiChatStore.class})
     static class Config {
         @Bean(name = "WebjetSecurityService")
         WebjetSecurityService security() { return mock(WebjetSecurityService.class); }
@@ -353,7 +361,7 @@ class AiToolDiscoveryTest {
         var registry = mock(AiToolRegistry.class);
         when(registry.assignedEntries(Set.of("unknown"), Set.of("ai"))).thenReturn(List.of(preview)).thenReturn(List.of(preview, details));
         var skills = context.getBean(AiSkillRepository.class);
-        var authorization = new AiToolAuthorization(context, context.getBean(AssistantDefinitionRepository.class), security, registry, skills);
+        var authorization = new AiToolAuthorization(context, context.getBean(AssistantDefinitionRepository.class), security, registry, skills, context.getBean(AiChatStore.class));
         var first = authorization.resolve(assistant, 1, adminRequest());
         var next = authorization.resolve(assistant, 1, adminRequest());
         assertEquals(List.of(preview.definition()), first.tools());
@@ -364,6 +372,7 @@ class AiToolDiscoveryTest {
 
     private JsonNode call(String tool, String arguments, int expectedStatus) throws Exception {
         var response = mvc.perform(post(BASE + "/" + tool + "/call").session(session)
+                .header(AiToolAuthorization.CHAT_HEADER, "unsaved")
                 .header(AiToolAuthorization.ASSISTANT_HEADER, "7").contentType(MediaType.APPLICATION_JSON).content(arguments))
                 .andExpect(status().is(expectedStatus)).andReturn().getResponse();
         String type = response.getHeader(AiToolCallFilter.TOOL_RESPONSE_HEADER);
@@ -371,6 +380,35 @@ class AiToolDiscoveryTest {
         if (expectedStatus == 400) assertEquals("arguments.names is required.", response.getContentAsString());
         if (expectedStatus == 404) assertEquals("", response.getContentAsString());
         return expectedStatus == 200 ? json.readTree(response.getContentAsByteArray()).get("tools") : null;
+    }
+
+    @Test
+    void savedWriteCanDispatchOnceAndOnlyBeforeStop(@TempDir Path root) throws Exception {
+        UsersDB.getCurrentUser(session).setUserId(42);
+        var chats = context.getBean(AiChatStore.class);
+        var write = new AiToolProtocol.Call("audit_probe_batch", Map.of(), true);
+        var servlet = mock(ServletContext.class);
+        when(servlet.getRealPath("/")).thenReturn(root.toString());
+        when(servlet.getAttribute("springContext")).thenReturn(context);
+        try (var constants = mockStatic(Constants.class, CALLS_REAL_METHODS); var audit = mockStatic(Adminlog.class)) {
+            constants.when(Constants::getServletContext).thenReturn(servlet);
+            var scope = new AiChatStore.Scope(42, CloudToolsForCore.getDomainId(), CloudToolsForCore.getDomainName());
+            for (boolean stopFirst : List.of(true, false)) {
+                var input = new AiChatRequest(null, assistant.getId(), UUID.randomUUID().toString(), null, "Save", null);
+                var turn = chats.begin(input, scope, assistant, "config");
+                String id = turn.thread().getId();
+                String message = turn.message().getId();
+                assertTrue(chats.awaitToolResult(scope, id, message, write, 0));
+                if (stopFirst) chats.stop(id, scope, false);
+                var post = post(BASE + "/audit_probe_batch/call").session(session)
+                        .header(AiToolAuthorization.ASSISTANT_HEADER, "7").contentType(MediaType.APPLICATION_JSON).content("{}");
+                mvc.perform(post).andExpect(status().isNotFound()); // Delayed request from an older tab.
+                post.header(AiToolAuthorization.CHAT_HEADER, id + "/" + message);
+                mvc.perform(post).andExpect(status().is(stopFirst ? 404 : 207));
+                mvc.perform(post).andExpect(status().isNotFound());
+            }
+            audit.verify(() -> Adminlog.add(Adminlog.TYPE_QUIZ, "UPDATE:\nid: 11", 11, -1), times(1));
+        }
     }
 
     @Test

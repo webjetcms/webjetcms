@@ -18,6 +18,8 @@ V AI Čete môžete postupne spresňovať zadanie, pýtať sa na obsah priložen
 
 Ak má asistent zapnuté postupné načítanie, odpoveď pribúda po častiach. Tlačidlom **Zastaviť** so štvorcovou ikonou prerušíte generovanie. Už prijatý text zostane zobrazený. Samotné zatvorenie dialógu ani prepnutie karty generovanie nezastaví.
 
+Ak v uloženom čete nástroj čaká na zápis, tlačidlo **Zastaviť** ho zruší aj z inej karty prehliadača. Už spustený zápis sa môže dokončiť.
+
 Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy, pod odpoveďou údaj **Použité tokeny**. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
 
 Ak asistent vráti HTML kód, napríklad pri tvorbe PageBuilder stránky, zobrazí sa karta **Návrh obsahu**. Po dokončení odpovede sa automaticky otvorí jej **Náhľad** a starší návrh sa zbalí. Vysvetlenie mimo HTML bloku zostáva viditeľné.

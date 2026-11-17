@@ -61,7 +61,8 @@ async function callEndpoint(assistantId, call, signal, repairInvalidArguments) {
     try {
         const response = await fetch('/admin/rest/ai/tools/' + call.name + '/call', {
             method: 'POST', signal: delivery.signal, credentials: 'same-origin', redirect: 'error', cache: 'no-store',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken, 'X-WebJET-AI-Assistant': String(assistantId) },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken, 'X-WebJET-AI-Assistant': String(assistantId),
+                'X-WebJET-AI-Chat': call.chat ?? 'unsaved' },
             body: JSON.stringify(call.arguments)
         });
         observation.status = response.status;

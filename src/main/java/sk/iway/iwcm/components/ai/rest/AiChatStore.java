@@ -377,11 +377,28 @@ public class AiChatStore {
             if (!messageId.equals(thread.getActiveMessageId()) || thread.isStopRequested()) return false;
             AiChatEntry answer = entry(document, messageId);
             answer.setPendingToolCall(call);
+            answer.setPendingWriteClaimed(false);
             if (call.write()) answer.getWriteOutcomes().add(WriteOutcome.pending(call.name()));
             answer.setToolWriteIssued(answer.isToolWriteIssued() || call.write());
             answer.setTotalTokens(tokens);
             answer.setUpdated(new Date());
             thread.setLeaseUntil(lease());
+            return true;
+        });
+    }
+
+    /** Claims this exact write once under the same lock as Stop. */
+    public boolean claimPendingWrite(Scope scope, String threadId, String messageId, long assistantId, Call call) {
+        return update(threadId, scope, true, document -> {
+            AiChatThread thread = document.getThread();
+            recover(document);
+            if (thread.isStopRequested() || !"ACTIVE".equals(thread.getStatus()) || !messageId.equals(thread.getActiveMessageId())
+                    || !Objects.equals(assistantId, thread.getAssistantId())) return false;
+            AiChatEntry answer = entry(document, messageId);
+            Call pending = answer.getPendingToolCall();
+            if (answer.isPendingWriteClaimed() || pending == null || !pending.write() || !pending.name().equals(call.name())
+                    || !AiToolProtocol.sameJson(pending.arguments(), call.arguments())) return false;
+            answer.setPendingWriteClaimed(true);
             return true;
         });
     }
