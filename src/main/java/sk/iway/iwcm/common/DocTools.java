@@ -250,7 +250,7 @@ public class DocTools {
         //palarikovske_luky-pr .pdf
         ret = Tools.replace(ret, " .", ".");
 
-        ret = Tools.replace(ret, Constants.NON_BREAKING_SPACE, " ");
+        ret = Tools.removeNbsp(ret);
 
         ret = DB.internationalToEnglish(ret); //.toLowerCase();
 

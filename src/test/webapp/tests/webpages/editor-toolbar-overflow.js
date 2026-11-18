@@ -18,7 +18,11 @@ function openFixture(I, mode, extra = '') {
 }
 
 function resizeToolbar(I, width) {
-    I.executeScript(width => { document.getElementById('autotest-shell').style.width = `${width}px`; }, width);
+    I.executeScript(async width => {
+        document.getElementById('autotest-shell').style.width = `${width}px`;
+        // ResizeObserver schedules the toolbar layout for a subsequent animation frame.
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }, width);
     I.waitForFunction(width => !autotestToolbar.frame && Math.abs(autotestToolbar.toolbox.getBoundingClientRect().width - width) <= 2, [width], 5);
 }
 
@@ -357,7 +361,8 @@ Scenario('Classic integration: administration resizing keeps all commands reacha
     DTE.waitForLoader();
     I.waitForVisible('.cke_wysiwyg_frame', 20);
     I.waitForVisible('.wj-cke-toolbar', 10);
-    const original = await I.executeScript(() => CKEDITOR.instances.data.getData());
+    // CKEditor may append its serializer's final newline after the first focus.
+    const original = await I.executeScript(() => CKEDITOR.instances.data.getData().replace(/\r?\n$/, ''));
     for (const width of [760, 600, 400]) {
         I.resizeWindow(width, 958);
         I.waitForVisible('.wj-cke-toolbar__more', 10);
@@ -379,15 +384,17 @@ Scenario('Classic integration: administration resizing keeps all commands reacha
     I.assertTrue(await I.executeScript(() => document.activeElement === CKEDITOR.instances.data.wjToolbarOverflow.button), 'Closing the palette must restore focus without opening a tooltip');
     I.resizeWindow(1280, 958);
     I.waitForInvisible('.wj-cke-toolbar__more', 10);
-    I.assertEqual(await I.executeScript(() => CKEDITOR.instances.data.getData()), original, 'Resizing and opening the palette must leave page HTML unchanged');
+    I.assertEqual(await I.executeScript(() => CKEDITOR.instances.data.getData().replace(/\r?\n$/, '')), original, 'Resizing and opening the palette must leave page HTML unchanged');
     DTE.cancel();
     I.dontSeeElement('.wj-cke-overflow');
 });
 
 for (const restore of ['close', 'minimize']) {
-    Scenario(`PageBuilder preview: desktop width recovers after dialog ${restore}`, async ({ I }) => {
+    Scenario(`PageBuilder preview: desktop width recovers after dialog ${restore}`, async ({ I, DTE }) => {
         I.resizeWindow(1303, 958);
         I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        DTE.waitForEditor();
+        DTE.waitForCkeditor();
         I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 20);
         I.switchTo('#DTE_Field_data-pageBuilderIframe');
         I.waitForVisible('.wj-cke-toolbar', 20);
@@ -424,6 +431,8 @@ for (const [command, close] of [['image', 'cancel'], ['link', 'close'], ['compon
     Scenario(`PageBuilder preview: oversized ${command} dialog restores mobile preview after ${close}`, async ({ I, DTE }) => {
         I.resizeWindow(1303, 958);
         I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+        DTE.waitForEditor();
+        DTE.waitForCkeditor();
         I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 20);
         I.switchTo('#DTE_Field_data-pageBuilderIframe');
         I.waitForVisible('.wj-cke-toolbar', 20);

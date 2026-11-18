@@ -375,7 +375,7 @@ module.exports = {
    * @returns
    */
   getProtocol() {
-    let url = process.env.CODECEPT_URL;
+    let url = this.getBaseUrl();
     let protocol = "http";
     if (url.startsWith("https")) {
       protocol = "https";
@@ -384,11 +384,10 @@ module.exports = {
   },
 
   /**
-   * Returns base URL of the web application set in CODECEPT_URL environment variable
-   * @returns
+   * Returns the web application's base URL configured in the Playwright helper.
+   * @returns {string} Configured application URL.
    */
   getBaseUrl() {
-    let url = process.env.CODECEPT_URL;
-    return url;
+    return codeceptjs.config.get().helpers.Playwright.url;
   }
 }

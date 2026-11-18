@@ -234,6 +234,9 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 }
                 // A rejected decision with known usage can still be charged if a stop raced its delivery.
                 if (responseDto.getToolCorrection() == null) checkCancellation(inputData);
+                if (responseDto.getToolCall() == null && responseDto.getError() == null) {
+                    validateTextResponse(responseDto.getResponse(), prop);
+                }
                 boolean recorded = recordProviderResponse(responseDto, inputPair, assistant, method,
                     responseDto.getToolCall() == null ? responseDto.getResponse() : responseDto.getToolCall().name(),
                     response.usage().plus(attachmentUsage), statRepo, request);
@@ -688,6 +691,17 @@ public abstract class LibrarySupportLogic implements AiInterface {
         Long assistantId
     ) throws IOException {
         // Providers may reject suspicious values expanded into trusted instructions.
+    }
+
+    /**
+     * Validates completed text before success auditing and returning it to the editor.
+     *
+     * @param text final provider text after restoring protected INCLUDE commands
+     * @param prop translations used for provider-specific validation errors
+     * @throws IOException if the provider rejects the completed text
+     */
+    protected void validateTextResponse(String text, Prop prop) throws IOException {
+        // Providers may enforce additional output requirements.
     }
 
     private ImageOptions supportedImageOptions(

@@ -164,7 +164,7 @@ The value **Day of the week = `1`** means Monday, `0` means Sunday. The correspo
 
 The task resets the consumption of **all AI assistants in all domains**. It does not accept a domain parameter. It does not change the set limits or historical statistics, and it writes the number of updated assistants to the automated task audit.
 
-If there is an enabled task `AiTokenUsageReset` with a future start date, the information **Next token reset** with the date and time will be displayed above the assistants list. If multiple enabled tasks are enabled, the next due date will be displayed.
+If at least one assistant in the current domain has a token limit greater than zero and there is an enabled task `AiTokenUsageReset` with a future start date, an information notification **Next reset of used tokens** with the date and time will be displayed for 10 seconds when loading the assistant list. If multiple enabled tasks are enabled, the next due date will be displayed. When filtering or paging the table, the notification will only be repeated if the due date has changed.
 
 ## Chat Assistant Settings
 

@@ -3185,18 +3185,20 @@ public class Tools
 	}
 
 	/**
-	 * Normalizes whitespace and common copy/paste artifacts in a single-line plain-text value.
+	 * Normalizes whitespace and common copy/paste artifacts in a single-line label or path segment.
 	 * Unicode spaces (including NBSP), tabs, line breaks, NEL and zero-width spaces become
 	 * ordinary spaces. Consecutive spaces are collapsed and leading/trailing spaces are removed.
+	 * Named and numeric HTML entities for non-breaking spaces are also normalized.
 	 * Other ISO control characters, soft hyphens, word joiners and BOMs are removed.
 	 * Other formatting characters, including ZWJ/ZWNJ used in emoji and scripts, are preserved.
-	 * This method does not decode HTML entities and is not intended for rich text or multiline content.
+	 * Other HTML entities and tags are preserved; whitespace inside inline markup is normalized too.
 	 *
-	 * @param value plain text to normalize, or {@code null}
+	 * @param value single-line value to normalize, or {@code null}
 	 * @return normalized text, or {@code null} if the input is {@code null}
 	 */
 	public static String removeNbsp(String value) {
 		if (value == null) return null;
+		value = value.replaceAll("(?i)&(?:nbsp|NonBreakingSpace|#0*(?:160|8239)|#x0*(?:a0|202f));", " ");
 
 		StringBuilder result = new StringBuilder(value.length());
 		boolean pendingSpace = false;

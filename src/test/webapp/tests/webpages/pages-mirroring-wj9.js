@@ -50,8 +50,8 @@ function wj9CreateMirroringWebpage(I, DT, DTE, randomNumber) {
      I.jstreeClick(auto_folder_en);
      I.wait(1);
      within({ css: 'table#datatableInit>tbody' }, () => {
-          I.seeElement(locate('tr.even.is-not-public').withText(auto_webpage1_sk));
-          I.seeElement(locate('tr.odd.is-not-public').withText(auto_webpage2_sk));
+          I.waitForVisible(locate('tr.is-not-public').withText(auto_webpage1_sk));
+          I.waitForVisible(locate('tr.is-not-public').withText(auto_webpage2_sk));
      });
 }
 
@@ -98,9 +98,9 @@ function wj9DeleteSubpage(I, DT, DTE, randomNumber) {
      // vymazanie podstranky sk-webpage2
      I.say('Vymazavam druhu podstranku v sk strukture');
      I.jstreeClick(auto_folder_sk);
-     I.waitForElement(locate('tbody>tr.odd').withText(auto_webpage2_sk));
-     I.click(locate('tbody>tr.odd').withText(auto_webpage2_sk).find('td.dt-select-td.cell-not-editable'));
-     I.waitForElement(locate('tbody>tr.odd.selected').withText(auto_webpage2_sk));
+     I.waitForElement(locate('tbody>tr').withText(auto_webpage2_sk));
+     I.click(locate('tbody>tr').withText(auto_webpage2_sk).find('td.dt-select-td.cell-not-editable'));
+     I.waitForElement(locate('tbody>tr.selected').withText(auto_webpage2_sk));
      I.click(delete_webpage_button);
      DT.waitForLoader();
      I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
@@ -112,13 +112,13 @@ function wj9DeleteSubpage(I, DT, DTE, randomNumber) {
      // overim ci sa stranka vymazala zo sk adresara
      I.say('Overujem ci sa stranka vymazala z sk adresara');
      I.wait(1);
-     I.dontSeeElement(locate('tbody>tr.odd').withText(auto_webpage2_sk));
+     I.dontSeeElement(locate('tbody>tr').withText(auto_webpage2_sk));
      // overim ci sa stranka vymazala aj v en adresari
      I.say('Overujem ci sa stranka vymazala aj v en adresari');
      I.wait(1);
      I.jstreeClick(auto_folder_en);
-     I.waitForElement(locate('tbody>tr.even.is-not-public').withText(auto_webpage1_sk));
-     I.dontSeeElement(locate('tbody>tr.odd.is-not-public').withText(auto_webpage2_sk));
+     I.waitForElement(locate('tbody>tr.is-not-public').withText(auto_webpage1_sk));
+     I.dontSeeElement(locate('tbody>tr.is-not-public').withText(auto_webpage2_sk));
 }
 
 function wj9ChangeMainPage(I, DTE, DT, randomNumber) {
@@ -140,13 +140,13 @@ function wj9ChangeMainPage(I, DTE, DT, randomNumber) {
      I.say('Over ci sa v hlavnom sk adresari zmenila hlavna stranka na webpage1');
      I.wait(1);
      I.jstreeClick(auto_folder_sk);
-     I.seeElement(locate('tbody>tr.even.is-default-page').withText(auto_webpage1_sk));
+     I.seeElement(locate('tbody>tr.is-default-page').withText(auto_webpage1_sk));
      // over ci sa v en adresari zmenila hlavna stranka na sk-webpage1
      I.say('Over ci sa v hlavnom en adresari zmenila hlavna stranka na webpage1');
      I.jstreeClick(auto_folder_en);
      within({ css: 'table#datatableInit>tbody' }, () => {
-          I.dontSeeElement(locate('tr.odd.is-default-page').withText(auto_folder_en));
-          I.seeElement(locate('tr.even.is-default-page.is-not-public').withText(auto_webpage1_sk));
+          I.dontSeeElement(locate('tr.is-default-page').withText(auto_folder_en));
+          I.waitForVisible(locate('tr.is-default-page.is-not-public').withText(auto_webpage1_sk));
      });
 }
 
@@ -158,9 +158,9 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
      // presuvam stranku webpage1 do adresara
      I.say('Presuvam webpage1 do podpriecinka sk-mir-subfolder1');
      I.jstreeClick(auto_folder_sk);
-     I.waitForElement(locate('tbody>tr.even.is-default-page').withText(auto_webpage1_sk));
-     I.click(locate('tbody>tr.even.is-default-page').withText(auto_webpage1_sk).find('td.dt-select-td.cell-not-editable'));
-     I.waitForElement(locate('tbody>tr.even.is-default-page.selected').withText(auto_webpage1_sk));
+     I.waitForElement(locate('tbody>tr.is-default-page').withText(auto_webpage1_sk));
+     I.click(locate('tbody>tr.is-default-page').withText(auto_webpage1_sk).find('td.dt-select-td.cell-not-editable'));
+     I.waitForElement(locate('tbody>tr.is-default-page.selected').withText(auto_webpage1_sk));
      I.click(DT.btn.edit_button);
      I.waitForVisible('#datatableInit_modal');
      I.clickCss('#pills-dt-datatableInit-basic-tab');
@@ -173,17 +173,17 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
      DTE.save();
      // overim ci sa stranka webpage1 presunula do priecinka sk-mir-subfolder1
      I.say('Overim ci sa stranka webpage1 presunula do priecinka sk-mir-subfolder1');
-     I.dontSeeElement(locate('tbody>tr.even.is-default-page').withText(auto_webpage1_sk));
+     I.dontSeeElement(locate('tbody>tr.is-default-page').withText(auto_webpage1_sk));
      I.jstreeClick(auto_subfolder1_sk);
-     I.seeElement(locate('tbody>tr.odd').withText(auto_webpage1_sk));
-     I.seeElement(locate('tbody>tr.even.is-default-page').withText(auto_subfolder1_sk));
+     I.seeElement(locate('tbody>tr').withText(auto_webpage1_sk));
+     I.seeElement(locate('tbody>tr.is-default-page').withText(auto_subfolder1_sk));
      // overim ci sa stranka webpage1 premiestnila i do en struktury
      I.say('Overim ci sa stranka webpage1 premiestnila i do en podpriecinka subfolder1');
      I.jstreeClick(auto_folder_en);
      I.wait(1);
      DT.waitForLoader();
 
-     I.dontSeeElement(locate('tbody>tr.even.is-default-page.is-not-public').withText(auto_webpage1_sk));
+     I.dontSeeElement(locate('tbody>tr.is-default-page.is-not-public').withText(auto_webpage1_sk));
      I.wait(5);
 
      //I.click(locate('.jstree-node').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ) );
@@ -193,8 +193,8 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
 
      DT.waitForLoader();
      within({ css: 'table#datatableInit>tbody' }, () => {
-          I.seeElement(locate('tr.odd.is-not-public').withText(auto_webpage1_sk));
-          I.seeElement(locate('tr.even.is-default-page.is-not-public').withText(auto_subfolder1_sk));
+          I.seeElement(locate('tr.is-not-public').withText(auto_webpage1_sk));
+          I.seeElement(locate('tr.is-default-page.is-not-public').withText(auto_subfolder1_sk));
      });
 
      //kedze sme si nie isty, ci to nekliklo do SK adresara spravme reload a este raz
@@ -204,7 +204,7 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
      I.wait(1);
      DT.waitForLoader();
 
-     I.dontSeeElement(locate('tbody>tr.even.is-default-page.is-not-public').withText(auto_webpage1_sk));
+     I.dontSeeElement(locate('tbody>tr.is-default-page.is-not-public').withText(auto_webpage1_sk));
      I.wait(5);
 
      //I.click(locate('.jstree-node').withText(auto_subfolder1_sk).inside( locate(".jstree-node.jstree-open").withText(auto_folder_en) ) );
@@ -213,8 +213,8 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
 
      DT.waitForLoader();
      within({ css: 'table#datatableInit>tbody' }, () => {
-          I.seeElement(locate('tr.odd.is-not-public').withText(auto_webpage1_sk));
-          I.seeElement(locate('tr.even.is-default-page.is-not-public').withText(auto_subfolder1_sk));
+          I.seeElement(locate('tr.is-not-public').withText(auto_webpage1_sk));
+          I.seeElement(locate('tr.is-default-page.is-not-public').withText(auto_subfolder1_sk));
      });
 }
 
@@ -281,7 +281,7 @@ Scenario('Zrkadlenie webstranok wj9', async ({ I, DT, DTE }) => {
      I.wait(1);
      DTE.save();
      I.wait(1);
-     I.waitForElement(locate('#configurationDatatable').withDescendant('tr.odd').withText(skID + ',' + enID + ':mirroring.tau27.iway.sk'), 10);
+     I.waitForElement(locate('#configurationDatatable').withDescendant('tr').withText(skID + ',' + enID + ':mirroring.tau27.iway.sk'), 10);
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      I.wait(1);
 });

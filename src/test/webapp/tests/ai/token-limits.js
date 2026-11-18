@@ -25,7 +25,7 @@ Scenario('token limits require AI tools permission', ({ DT }) => {
 });
 
 /**
- * Creates a temporary gpt-4.1-nano assistant and validates its one-token limit.
+ * Creates a temporary gpt-5.6-luna assistant and validates its one-token limit.
  * Verifies that a successful call records usage in the counter and 14-day chart,
  * then blocks another call even with the assistant definition cached on the page.
  * Checks reset button states and both confirmation dialogs, cancels the domain-wide
@@ -51,7 +51,7 @@ Scenario('limit blocks further calls and selected reset restores usage', async (
     I.clickCss('#pills-dt-datatableInit-provider-tab');
     DTE.selectOption('provider', 'OpenAI');
     I.waitForVisible('#DTE_Field_model', 10);
-    I.fillField('#DTE_Field_model', 'gpt-4.1-nano');
+    I.fillField('#DTE_Field_model', 'gpt-5.6-luna');
 
     I.clickCss('#pills-dt-datatableInit-instructions-tab');
     I.fillField('#DTE_Field_instructions', 'Reply with exactly the word OK.');
@@ -221,9 +221,10 @@ function startAssistant(I) {
 async function runAssistant(I) {
     startAssistant(I);
     const status = aiContent + ' > .current-status > span';
-    I.waitForText('Hotovo! Bolo použitých', 90, status);
-    I.waitForVisible(aiContent + ' button.btn-ai-undo', 10);
+    I.waitForVisible('#toast-container-ai.ai-status-success, #toast-container-ai.ai-status-error', 90);
     const message = await I.grabTextFrom(status);
+    I.assertContain(message, 'Hotovo! Bolo použitých', 'The assistant must finish successfully.');
+    I.waitForVisible(aiContent + ' button.btn-ai-undo', 10);
     return Number(message.replace(/\D/g, ''));
 }
 

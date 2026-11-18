@@ -69,6 +69,7 @@ The filter only takes the first value. So add the `IN` option to allow multiple 
 - [x] +Add support for AVIF images and animations (#371).
 - [x] + Possibility to change the order of fields in the datatables editor, the tab in which the field is located, or even create a new tab in which the fields are inserted. That is, to configure the values ​​that are currently set for annotations (#366).
 - [ ] +In the window of pre-prepared blocks, add the option to edit a block that is loaded from a web page (open the editor with the block's docid in a new tab) (#NNCZ-4456).
+- [ ] +When I create a large ZIP file, the connection to the server is often interrupted (if there is a proxy, for example), an error is displayed, but after some time the ZIP is created. Either edit the error message so that the user knows that the connection was only interrupted, or somehow maintain the connection from the server by sending some status info so that the proxy does not interrupt the connection.
 
 ## 2025
 

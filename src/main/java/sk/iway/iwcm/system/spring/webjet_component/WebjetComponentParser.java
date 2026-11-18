@@ -336,6 +336,7 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
      */
     private boolean isCacheEnabled(HttpServletRequest request, String includeText) {
         if ("true".equals(request.getParameter("_disableCache"))) return false;
+        if (request.getAttribute("isPreview") != null) return false;
 
         Identity user = getUser(request);
         if (user!=null && user.isAdmin() && Constants.getBoolean("cacheStaticContentForAdmin")==false) return false;

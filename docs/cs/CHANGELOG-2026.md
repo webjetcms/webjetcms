@@ -1,22 +1,16 @@
 # Seznam změn verze 2026
 
-## 2026.0-SNAPSHOT
+## 2026.40
 
-> Vývojová verze aktualizovaná z main repozitáře.
+> WebJET CMS 2026.40 přináší [**novou verzi PageBuildera**](#webové-stránky) s panelem Struktura, přehlednější knihovnou bloků a kopírováním bloků mezi stránkami. [**Plánované publikování stránek i se soubory**](#webové-stránky) umožňuje připravit budoucí obsah s obrázky a dokumenty, které zůstanou chráněny až do termínu zveřejnění. Funkci zapíná správce.
+>
+> [**Vícekrokové formuláře**](#formuláře) získaly vylepšené nastavování podmínek zobrazení a povinnosti polí, návrat na předchozí krok se zachováním vyplněných údajů, kopírování polí mezi formuláři a propojení výběrových polí na číselníky.
+>
+> [**Novou úvodní obrazovku**](#úvodní-obrazovka) si přizpůsobíte výběrem widgetů, jejich velikostí a pořadím. Potřebné údaje tak máte na jednom místě. [**Rychlé vyhledávání**](#úvodní-obrazovka) dostupné v celé administraci přes Ctrl+K / ⌘K pomůže najít stránky, soubory i nastavení.
+>
+> [**Sémantické vyhledávání**](#sémantické-vyhledávání) umožňuje návštěvníkům najít stránky podle významu otázky a volitelně zobrazit AI odpověď sestavenou z obsahu webu. Nový [**headless režim**](#headless-režim) zpřístupňuje obsah, navigaci, vyhledávání a formuláře přes REST API pro webové aplikace s vlastním frontendem.
 
-### Průlomové změny
-
-- Formuláře - šifrovací klíč se u klasických formulářů a aplikací Formulář snadno načítá výhradně ze serverových nastavení formuláře. Pokud byl dosud zadán pouze v HTML poli `encryptKey`, přeneste jej do pole **Šifrovací klíč** v administraci. Parametr odeslaný návštěvníkům již šifrování neovlivňuje. Více v návodu [Šifrování formulářů](redactor/apps/form/encryption.md#nastavení-veřejného-klíče-pro-formulář) (#376).
-- Databáze - minimální podporovaná verze je MariaDB 10.11 LTS nebo MySQL 8.4 LTS. Před aktualizací WebJET CMS na starším serveru aktualizujte databázi podle postupu jejího výrobce. Podrobnosti a požadavky aktualizovaného JDBC ovladače jsou v [návodu k instalaci](install/setup/README.md#základní-požadavky-na-server) (#349).
-- Statistika – prohlížeče se po aktualizaci ukládají bez čísla verze, která se v dnešní době velmi často mění. Po nasazení této verze je třeba spustit migraci historických statistik na URL `/admin/v9/settings/stat-browser-migration/`, bez jejího dokončení zůstanou historické údaje rozděleny podle čísla verze prohlížečů (#303).
-- Z administrace byla odstraněna závislost na knihovně [Vue.js](https://vuejs.org). Před aktualizací doporučujeme ověřit kompatibilitu vlastních aplikací. Velikost JavaScript souborů se zmenšila o cca 170kB, což má dopad také na rychlost inicializace administrace. Více v [sekci pro programátora](#pre-programátora).
-- AspectJ - z distribuce byla odstraněna podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vestavěné aspekty se zpracují již při kompilaci, více v [sekci pro programátora](#pre-programátora). Při použití v MultiWeb instalaci můžete odstranit `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavení z `JAVA_OPTS` v aplikačním serveru (#290).
-- Export obsahu pro Flash - odstraněna byla historická funkce generování XML souborů `/flash_xml/{docId}.xml` při publikování stránky. Konfigurační proměnná `exportFlash` již není podporována a její definování v `SpringConfig` funkci neobnoví (#293).
-- Microsoft SQL Server - ukončena byla podpora verzí starších než 2012 a odstraněna konfigurační proměnná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 nebo novější, starý způsob stránkování pomocí `TOP` již není podporován (#293).
-- Formulář snadno a vícekrokové formuláře - upravené zobrazení `tooltip` z původního `i` elementu na standardní `button`. Je tak splněn požadavek na přístupnost - tooltip je dostupný myší i klávesnicí (#306).
-- Galerie - metoda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vrací místo `void` výsledek zpracování typu `int`: `0` při úspěchu, jinak kód chyby. Po aktualizaci je třeba překompilovat závislý Java kód i JSP soubory, například vyčištěním pracovní složky konkrétní aplikace v Tomcat (#371).
-- Vícekrokové formuláře - metody `validateStep` a `runStepInterceptor` rozhraní [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhraní-formprocessorinterface) dostávají za `formName` nový parametr `FormSettingsEntity formSettings`. Pokud používáte vlastní Java třídu pro zpracování formulářů je třeba ji upravit a znovu zkompilovat. Nastavení již nemusí načítat podle jména formuláře, ale dostanete jej přímo (#364).
-- Vícekrokové formuláře - identifikátor polí se již generuje z názvu s odstraněným HTML kódem (použije se pouze text). Pokud máte v názvu pole použité HTM formátování pro rádio skupiny, tak znovu uložte **všechny její možnosti**. Aktualizujte také podmínky a odkazy na změněné identifikátory (#396).
+!>**Před aktualizací:** Prostudujte si [průlomové změny](#průlomové-změny) a požadavky na úpravu prostředí, konfigurace či vlastních rozšíření.
 
 ### Úvodní obrazovka
 
@@ -104,6 +98,7 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 </div>
 
 - Page Builder - zlepšená detekce změn v HTML kódu stránky, aby se nezobrazilo hlášení "V editoru pravděpodobně máte neuložený text" i když jste reálně žádný text ve stránce nezměnili (#317).
+- Page Builder - opraveno ukládání stránek s neúplnou HTML strukturou a neplatnými odkazy na starší instance editoru. Obsah takových prvků se zachová spolu s aktuálními úpravami ostatních bloků (#400).
 - [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + ve žluté čáře v okně **Vložit blok** na kartě **Základní** přibyly možnosti **Obrázek** a **Aplikace**. Otevřou příslušný dialog editoru a umožní vložit obsah na zvolené místo (#339).
 - Page Builder - přidáno [kopírování bloků mezi stránkami](redactor/webpages/pagebuilder.md#kopírování-bloků-mezi-stránkami). Volby **Zkopírovat** a **Vložit** přenášejí sekce, kontejnery a sloupce is obsahem a vlastními styly. Editor nabídne pouze místa vhodná pro typ bloku. Schránka má platnost 30 minut od zkopírování (#353).
 - Šablony - na kartě Pokročilé můžete nastavit [odstraňování spojek z URL stránky](frontend/templates/templates.md#karta-pokročilé): podle `urlRemoveSpojky`, vždy odstranit nebo ponechat. Blog tak může ponechat spojky i při zapnutém odstraňování pro zbytek webu (#353).
@@ -223,7 +218,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Aplikace
 
-- AI asistenti - nová karta [Limity tokenů](redactor/ai/settings/README.md#karta----limity-tokenů) umožňuje omezit spotřebu asistenta a zobrazit její vývoj za posledních 14 dní. Na zadaný notifikační e-mail se odešlou upozornění při dosažení 75 % a 100 % limitu. Po dosažení limitu se další požadavky zablokují. Spotřebu lze vynulovat ručně pro vybrané asistenty nebo aktuální doménu, případně pravidelně pro všechny domény úlohou `AiTokenUsageReset`, která se ve výchozím nastavení spouští každý den o půlnoci (#58814).
+- AI asistenti - nová karta [Limity tokenů](redactor/ai/settings/README.md#karta----limity-tokenů) umožňuje omezit spotřebu asistenta a zobrazit její vývoj za posledních 14 dní. Na zadaný notifikační e-mail se odešlou upozornění při dosažení 75 % a 100 % limitu. Po dosažení limitu se další požadavky zablokují. Spotřebu lze vynulovat ručně pro vybrané asistenty nebo aktuální doménu, případně pravidelně pro všechny domény úkolem `AiTokenUsageReset`, který se ve výchozím nastavení spouští každý den o půlnoci (#400).
 - AI asistenti - opraveno zpracování průběžných textových odpovědí včetně Gemini. Počet tokenů a chybové zprávy se správně zpracují i ​​při rozdělení nebo spojení síťových bloků; technické údaje se nevkládají do generovaného textu. Přerušená odpověď se již neoznačí jako úspěšně dokončená.
 - Číselníky - výběr a správa typů se přesunuly do stromu v levém panelu s vyhledáváním. Více v [dokumentaci Číselníků](redactor/apps/enumeration/README.md) (#58786).
 - Blog - výběr a přidávání sekcí jsou dostupné ve stromu v levém panelu s vyhledáváním. Více v [dokumentaci Blogu](redactor/apps/blog/README.md) (#58786).
@@ -343,6 +338,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Zrcadlení struktury - při selhání překladu, například po vyčerpání kvóty DeepL, uživatel obdrží upozornění s konkrétním důvodem z výjimky překladače včetně HTTP kódu a dostupné chybové zprávy DeepL. Pevné mezery a jejich HTML entity se normalizují v názvech složek a generovaných URL, aby nevznikaly adresy s textem `nbsp` ani zbytečná přesměrování (#402).
+- Datové tabulky - po úpravě jednoho záznamu se při vynuceném obnovení údajů zobrazí strana s upraveným záznamem podle aktuálního třídění. V konfiguraci se proměnná vyhledává podle názvu i při změně jejího ID. Při mazání se zachová aktuální strana, případně se zobrazí poslední platná strana. Při pořizování záznamu se stránkování nadále resetuje (#400).
 - Vícekrokové formuláře - identifikátor položky se generuje z textu názvu pole bez HTML značek, aby formátování názvu neovlivňovalo identifikátor (#396).
 - Vícekrokové formuláře - při smazání položky, kroku nebo formuláře se odstraní i příslušné podmínky zobrazení a povinnosti. Podmínky již smazaných položek neblokují odstranění polí, na která odkazovaly (#395).
 - Vícekrokové formuláře - pravidla **Povolená hodnota** již neodmítnou prázdné nepovinné pole. U povinného pole se regulární výrazy kontrolují i ​​pro prázdnou hodnotu; při odeslání kroku se zohledňují i ​​podmínky povinnosti (#394).
@@ -385,6 +382,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Page Builder - přidána možnost nastavit [šířku okna struktura](frontend/page-builder/settings.md) (#343)
 - Administrace - opraveno zobrazení ikony zaškrtnutí u vybrané položky v nabídce automatického doplňování (#osk800).
 - Zrcadlení struktury - [pracovní verze](redactor/apps/docmirroring/README.md#úprava-existující-web-stránky) již nepřepisuje zveřejněné překlady a [hromadné mazání](redactor/webpages/README.md#smazání-zrcadlených-stránek-a-- Přesun nevytváří duplicitní jazykové verze. Při přesunu složky se aktualizují generované a zděděné URL. Dočasná nastavení klonování a stav administrace zrcadlení se nesdílejí mezi souběžnými požadavky (#370).
+- Vložení HTML kódu - prázdná aplikace již v editoru ani na stránce nezobrazuje poškozený text. Prázdná hodnota parametru `html` zůstává zachována (#407).
 
 ### Výkon
 
@@ -421,6 +419,24 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Pro programátora
 
+#### Průlomové změny
+
+- Formuláře - šifrovací klíč se u klasických formulářů a aplikací Formulář snadno načítá výhradně ze serverových nastavení formuláře. Pokud byl dosud zadán pouze v HTML poli `encryptKey`, přeneste jej do pole **Šifrovací klíč** v administraci. Parametr odeslaný návštěvníkům již šifrování neovlivňuje. Více v návodu [Šifrování formulářů](redactor/apps/form/encryption.md#nastavení-veřejného-klíče-pro-formulář) (#376).
+- Databáze - minimální podporovaná verze je MariaDB 10.11 LTS nebo MySQL 8.4 LTS. Před aktualizací WebJET CMS na starším serveru aktualizujte databázi podle postupu jejího výrobce. Podrobnosti a požadavky aktualizovaného JDBC ovladače jsou v [návodu k instalaci](install/setup/README.md#základní-požadavky-na-server) (#349).
+- Statistika – prohlížeče se po aktualizaci ukládají bez čísla verze, která se v dnešní době velmi často mění. Po nasazení této verze je třeba spustit migraci historických statistik na URL `/admin/v9/settings/stat-browser-migration/`, bez jejího dokončení zůstanou historické údaje rozděleny podle čísla verze prohlížečů (#303).
+- Z administrace byla odstraněna závislost na knihovně [Vue.js](https://vuejs.org). Před aktualizací doporučujeme ověřit kompatibilitu vlastních aplikací. Velikost JavaScript souborů se zmenšila o cca 170kB, což má dopad také na rychlost inicializace administrace. Více v [sekci pro programátora](#další-změny).
+- AspectJ - z distribuce byla odstraněna podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vestavěné aspekty se zpracují již při kompilaci, více v [sekci pro programátora](#další-změny). Při použití v MultiWeb instalaci můžete odstranit `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavení z `JAVA_OPTS` v aplikačním serveru (#290).
+- Export obsahu pro Flash - odstraněna byla historická funkce generování XML souborů `/flash_xml/{docId}.xml` při publikování stránky. Konfigurační proměnná `exportFlash` již není podporována a její definování v `SpringConfig` funkci neobnoví (#293).
+- Microsoft SQL Server - ukončena byla podpora verzí starších než 2012 a odstraněna konfigurační proměnná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 nebo novější, starý způsob stránkování pomocí `TOP` již není podporován (#293).
+- Formulář snadno a vícekrokové formuláře - upravené zobrazení `tooltip` z původního `i` elementu na standardní `button`. Je tak splněn požadavek na přístupnost - tooltip je dostupný myší i klávesnicí (#306).
+- Galerie - metoda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vrací místo `void` výsledek zpracování typu `int`: `0` při úspěchu, jinak kód chyby. Po aktualizaci je třeba překompilovat závislý Java kód i JSP soubory, například vyčištěním pracovní složky konkrétní aplikace v Tomcat (#371).
+- Vícekrokové formuláře - metody `validateStep` a `runStepInterceptor` rozhraní [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhraní-formprocessorinterface) dostávají za `formName` nový parametr `FormSettingsEntity formSettings`. Pokud používáte vlastní Java třídu pro zpracování formulářů je třeba ji upravit a znovu zkompilovat. Nastavení již nemusí načítat podle jména formuláře, ale dostanete jej přímo (#364).
+- Vícekrokové formuláře - identifikátor polí se již generuje z názvu s odstraněným HTML kódem (použije se pouze text). Pokud máte v názvu pole použité HTM formátování pro rádio skupiny, tak znovu uložte **všechny její možnosti**. Aktualizujte také podmínky a odkazy na změněné identifikátory (#396).
+
+#### Další změny
+
+- Font Awesome - společné CSS aktualizovány z verze 4.2.0 na 4.7.0, GridEditor používá stejné CSS a WOFF2 font z `/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css`. Staré odkazy na CSS GridEditoru se pro přihlášené administrátory přesměrují na společné CSS (#405).
+- Smazané starší nepoužívané soubory/obrázky, zkontrolujte si volání stránky 404 av případě potřeby si potřebné soubory nahrajte ze starší verze do vašeho projektu (#405).
 - Datatabulky - tabulky nastavení mají společný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Stávající tabulka `custom_fields` se při aktualizaci automaticky přejmenuje se zachováním údajů; vlastní SQL dotazy je třeba upravit na `dt_customfields` (#58830).
 - Datatabulky - třídy pro [systémová nastavení](developer/datatables/README.md#systémová-nastavení) volitelných polí, polí a karet byly přesunuty pod `sk.iway.iwcm.system.datatable.settings` do podbalíků `customfields`, `fields` a `tabs`. Vlastní kód a šablony používající tyto třídy vyžadují aktualizaci importů a úplných názvů tříd (#58830).
 - Datatabulky - přidaný typ pole [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pro výběr jedné možnosti ze skupiny tlačítek. Používá styly administrace a podporuje i volbu **Bez změny** při třístavových nastaveních (#58830).
@@ -551,6 +567,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Datové tabulky - upravená validace povinných polí typu [`DATE` a `DATETIME`](developer/datatables-editor/standard-fields.md#date). Umožňuje to vymazat nastavenou hodnotu data nebo čísla v editoru - původně se při prázdné hodnotě zachovala hodnota v uložené entitě (#58770).
 - Datové tabulky - validační chyba pole [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zároveň zvýrazní okraj nástrojové lišty i editoru (#58770).
 - Datové tabulky - při duplicitní hodnotě, pokusu vymazat či změnit záznam, na který odkazují další záznamy, prázdné hodnotě pro `NOT NULL` sloupec se zobrazí srozumitelnější chybová zpráva (#58770).
+
+![meme](_media/meme/2026-40.jpg ":no-zoom")
 
 ## 2026.18
 
@@ -746,7 +764,9 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- Vyhledávání - smazaná webová stránka se odstraňuje podle ID ze všech stávajících lokálních jazykových Lucene indexů i bez údajů v databázi nebo cache. Při zapnutém průběžném indexování se i po restartu uzlu clusteru zpracují zachované notifikace změn konkrétních stránek. Při chybě mazání se cluster notifikace nepotvrdí a zpracování se zopakuje (#403).
 - Databáze - opraveno generování SQL podmínek `IN` a `NOT IN` s velkým počtem hodnot rozdělením seznamů na menší části. Odstraněny chyby při překročení limitu 1000 hodnot v Oracle databázi, například při načítání historie stránky nebo práci s rozsáhlým stromem složek. Maximální počet hodnot v jedné části určuje konfigurační proměnná `dbInClauseMaxItems` (výchozí 1000, v Oracle nejvýše 1000).
+- Databáze - sjednocené datové typy v SQL skriptech pro nové instalace: PostgreSQL používá `TIMESTAMP WITHOUT TIME ZONE`, opraveno nesprávné použití `TIMESTAMP` v MariaDB a Microsoft SQL. Stávající databáze se automaticky nekonvertují (#399).
 - Webové stránky - opraveno omezení hledání a nahrazování v názvech složek na vybraný strom složek a nastavení rodiče při opravě chybně smazaných složek během přesunu stránky do koše (#390).
 - Kalendář událostí - opraveno filtrování podle více perex skupin při nastavení `perexGroupUseJoin=true` bez duplicitních událostí. Upraveno omezení počtu výsledků i pro Oracle a Microsoft SQL (#390).
 - Webové stránky - opraveno zacyklení inicializace složek a kontroly plánovaného publikování při pomalém připojení k databázi (#337).

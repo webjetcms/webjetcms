@@ -318,8 +318,8 @@ public class ThumbServlet extends HttpServlet
 			else if (ip == 2) width = height;
 
 			Logger.debug(ThumbServlet.class, "Farba: "+fillColor);
-			//osetrenie stavov
-			if (width > Constants.getInt("imageMaxThumbsWidth") || height > Constants.getInt("imageMaxThumbsHeight") || width < 1 || height < 1 || fillColor.length()!=6)
+			//For ip=1/2, validate the calculated dimension later instead of the placeholder dimension.
+			if ((ip != 2 && width > Constants.getInt("imageMaxThumbsWidth")) || (ip != 1 && height > Constants.getInt("imageMaxThumbsHeight")) || width < 1 || height < 1 || fillColor.length()!=6)
 			{
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				return;
@@ -441,7 +441,13 @@ public class ThumbServlet extends HttpServlet
 							//mame zadany len parameter w, h dopocitame podla pomeru stran povodneho vyrezu
 							//http://iwcm.interway.sk:8080/thumb/images/gallery/19-24-mesiacov/DSC06443.JPG?w=200&ip=1
 							double pomer = (double)cwidth / (double) cheight;
-							height = (int)Math.round(width / pomer);
+							long calculatedHeight = Math.round(width / pomer);
+							if (calculatedHeight < 1 || calculatedHeight > Constants.getInt("imageMaxThumbsHeight"))
+							{
+								response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+								return;
+							}
+							height = (int)calculatedHeight;
 
 							Logger.debug(ThumbServlet.class, "vypocitany h="+height);
 
@@ -452,7 +458,13 @@ public class ThumbServlet extends HttpServlet
 							//mame zadany len parameter h, w dopocitame podla pomeru stran povodneho vyrezu
 							//http://iwcm.interway.sk:8080/thumb/images/gallery/19-24-mesiacov/DSC06443.JPG?h=200&ip=2
 							double pomer = (double)cwidth / (double) cheight;
-							width = (int)Math.round(height * pomer);
+							long calculatedWidth = Math.round(height * pomer);
+							if (calculatedWidth < 1 || calculatedWidth > Constants.getInt("imageMaxThumbsWidth"))
+							{
+								response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+								return;
+							}
+							width = (int)calculatedWidth;
 
 							Logger.debug(ThumbServlet.class, "vypocitany w="+width);
 

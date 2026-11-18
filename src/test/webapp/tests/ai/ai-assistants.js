@@ -712,7 +712,8 @@ function waiToEndText(I) {
     I.say("waiToEndText");
 
     I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 180 );
-    I.seeElement( locate(containerAiContent + " > .current-status > span").withText("Hotovo! Bolo použitých") );
+    // Include the provider's error text in the assertion when the request fails.
+    I.see("Hotovo! Bolo použitých", containerAiContent + " > .current-status > span");
     I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-circle-check") );
 }
 
