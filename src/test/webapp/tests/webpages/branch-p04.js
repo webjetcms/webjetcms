@@ -338,8 +338,9 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         const changes = '#branchesDataTable_modal';
         const compare = `${changes} [data-branch-type="DOCUMENT"] [data-branch-compare="${p03.detailId}"]`;
         I.waitForText('autotest P04 návrat zmeny', 20, changes);
-        I.click(compare);
-        I.click('Vrátiť zmenu', changes + ' .pg-branch-merge__detail');
+        I.clickCss(`${changes} tr[data-branch-type="DOCUMENT"][data-branch-key="${p03.detailId}"] td.dt-select-td`);
+        I.clickCss(changes+' .buttons-branch-revert');
+        I.clickCss('#branch-merge-revert-confirm');
         I.waitForInvisible(compare, 20);
         I.clickCss(changes+' .DTE_Footer .btn-close-editor');
         I.waitForInvisible(changes, 20);

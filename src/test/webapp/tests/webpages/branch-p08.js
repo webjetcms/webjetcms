@@ -14,7 +14,7 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
     const evidence = path.resolve('../../../build/test-results/p08/browser');
     const pages = fixture.pages.split(',').map(Number);
     const dialog = '#branchesDataTable_modal';
-    const busy = dialog+' .pg-branch-panel[aria-busy=true]';
+    const busy = dialog+' [aria-busy=true]';
     if (process.env.CODECEPT_URL !== 'http://127.0.0.1:8086') throw new Error('P08 requires its isolated public loopback domain on port 8086.');
 
     function save(name, data) {

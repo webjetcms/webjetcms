@@ -15,21 +15,62 @@
     .DTE_Form_Buttons { flex-wrap: wrap; row-gap: 8px; }
 }
 
+.pg-branch-changes-notices {
+    padding: 12px 15px 0;
+}
+
+.pg-branch-change-path {
+    display: block;
+    margin-top: 2px;
+    color: $gray-text;
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+
+    tr.selected & { color: $white; }
+}
+
+.dt-header-row .pg-branch-problems.form-switch {
+    .form-check-input {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        pointer-events: none;
+    }
+
+    .form-check-label {
+        display: block;
+        min-height: 31px;
+
+        &::after {
+            content: $ti-icon-alert-triangle;
+            font-size: 16px;
+        }
+    }
+
+    .form-check-input:focus-visible + .form-check-label::before {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
+    }
+
+    .form-check-input:disabled + .form-check-label { opacity: .65; }
+}
+
+.btn.pg-branch-change-action {
+    --#{$prefix}btn-bg: #{$white};
+    --#{$prefix}btn-disabled-bg: #{$white};
+
+    &:hover {
+        color: var(--#{$prefix}btn-hover-color);
+        background-color: var(--#{$prefix}btn-hover-bg);
+        border-color: var(--#{$prefix}btn-hover-border-color);
+    }
+}
+
 .pg-branch-panel {
     padding: 20px 24px;
 
-    &__toolbar { margin-bottom: 12px; }
-    &__toolbar button i { margin: 0; }
-    .table-responsive { margin-inline: 0; }
-    &__table { min-width: 540px; }
-    &__table th:first-child,
-    &__table td:first-child { padding-left: 0; }
-    &__table th:last-child,
-    &__table td:last-child { padding-right: 0; }
-    &__table tbody td { vertical-align: middle; }
-    &__table td:last-child { white-space: nowrap; }
-    &__table .md-branch-state[data-state="NEEDS_ATTENTION"] { color: shade-color($danger, 25%); }
-    &__item { font-weight: 600; overflow-wrap: anywhere; }
     &__messages button { margin-left: 8px; }
     &__schedule { margin-bottom: 12px; }
     &__schedule-fields { width: min(100%, 22rem); }
@@ -81,5 +122,10 @@
     @media (max-width: 767.98px) {
         &__versions { grid-template-columns: minmax(0, 1fr); }
         &__header { align-items: flex-start; }
+    }
+
+    &--single {
+        width: min(900px, calc(100vw - 24px));
+        .pg-branch-merge__versions { grid-template-columns: minmax(0, 1fr); }
     }
 }

@@ -16,9 +16,11 @@ Zvolenú pracovnú verziu ukazuje prepínač v hlavičke administrácie. Editor 
 
 V páse pracovnej verzie kliknite na **Náhľad**. V novej karte môžete prejsť menu, Novinky, detaily, obrázky a prílohy. Náhľad vyžaduje prihlásenie do administrácie. Lišta uvádza logickú doménu a čas použitý Novinkami.
 
-Odkaz **Pracovné zmeny** v hlavičke otvorí priamo kartu **Zmeny** aktívnej pracovnej verzie. V zozname pracovných verzií môžete označiť ľubovoľný riadok a použiť rovnakú akciu. Na karte zúžte zoznam podľa typu položky alebo začiarknite **Len problémy**. Tlačidlo **Obnoviť zmeny** prepočíta porovnanie po úpravách v inej karte prehliadača.
+Odkaz **Pracovné zmeny** v hlavičke otvorí priamo kartu **Zmeny** aktívnej pracovnej verzie. V zozname pracovných verzií môžete označiť ľubovoľný riadok a použiť rovnakú akciu. Zoznam zúžite filtrom v stĺpci **Typ** alebo prepínačom **Len problémy** v lište. Po úpravách v inej karte prehliadača použite obnovenie tabuľky.
 
 Akciou **Porovnať** otvoríte pôvodný stav, hlavnú verziu a pracovnú verziu položky. Pri konflikte kliknite na **Vyriešiť**, vyberte verziu, ktorú chcete použiť, a uložte voľbu. Pri stránke môžete z porovnania otvoriť konkrétnu verejnú stránku aj jej náhľad.
+
+Ak chcete odstrániť pracovnú zmenu stránky alebo priečinka, označte položku a použite **Vrátiť zmenu** v lište tabuľky. Pri zmazanom priečinku sa obnovia aj položky zmazané spolu s ním.
 
 Voľba výsledku hneď ovplyvní náhľad vrátane menu, Noviniek, médií a príloh. Editor ďalej uchováva pracovný obsah. Pri nevyriešenom konflikte lišta upozorní na pracovný predpoklad. Neskoršia zmena produkcie alebo WORK zneplatní starú voľbu a vyžiada nové porovnanie.
 

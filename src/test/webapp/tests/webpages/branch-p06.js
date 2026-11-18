@@ -15,7 +15,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
     const dialog = '#branchesDataTable_modal';
     const detail = dialog+' .pg-branch-merge__detail';
     const comparisonDialog = dialog+' dialog.pg-branch-merge';
-    const busy = dialog+' .pg-branch-panel[aria-busy=true]';
+    const busy = dialog+' [aria-busy=true]';
     const itemButton = id => `${dialog} [data-branch-compare="${id}"]`;
     const retain = () => read('/tmp/webjet-p06-manual.properties');
     const disposable = () => read('/tmp/webjet-p06-publish.properties');
@@ -388,7 +388,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.assertTrue(Boolean(writtenError), 'The prepared failure must identify its already-written content phase.');
         const errorRow = `${dialog} tr[data-branch-type="${writtenError.type}"][data-branch-key="${writtenError.objectKey}"]`;
         closeComparison(I);
-        I.checkOption('#branch-merge-problems');
+        I.clickCss('label[for="branch-merge-problems"]');
         I.see('Obsah zapísaný, chyba dokončenia', errorRow);
         I.click(locate(errorRow).find('button'));
         I.waitForVisible(detail, 10);
@@ -396,7 +396,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.scrollTo('#branch-merge-progress');
         I.saveScreenshot('branch-p06-partial-failure.png');
         closeComparison(I);
-        I.clickCss('#branch-merge-reload');
+        I.clickCss('#datatableFieldDTE_Field_changes_wrapper [data-dtbtn="reload"]');
         I.waitForInvisible(busy, 30);
         I.waitForEnabled('#branch-merge-publish', 30);
         I.click('#branch-merge-publish');

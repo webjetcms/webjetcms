@@ -1,5 +1,6 @@
 package sk.iway.iwcm.branch;
 
+import java.util.List;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 /** A domain-scoped publishing package; content is captured lazily. */
 @Entity
@@ -84,4 +86,19 @@ public class BranchEntity
     @Column(name = "last_error")
     @DataTableColumn(hidden = true, hiddenEditor = true)
     private String lastError;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = "&nbsp;", tab = "changes", hidden = true,
+        editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/branches/{id}/changes"),
+            @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.branch.BranchChangeRow"),
+            @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns-customize", value = "customizeBranchChangeColumns"),
+            @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false"),
+            @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,remove,import,export,celledit"),
+            @DataTableColumnEditorAttr(key = "data-dt-field-dt-toggleStyle", value = "single"),
+            @DataTableColumnEditorAttr(key = "data-dt-field-dt-stateSave", value = "false"),
+            @DataTableColumnEditorAttr(key = "data-dt-field-dt-initHashFilter", value = "false"),
+            @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "")
+        }))
+    private List<BranchChangeRow> changes;
 }

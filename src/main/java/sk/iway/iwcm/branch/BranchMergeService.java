@@ -17,7 +17,14 @@ public final class BranchMergeService {
     }
     public record Item(String type,String objectKey,String label,String operation,Version base,Version live,Version work,
             String liveHash,String workHash,String choice,boolean conflict,boolean writeRequired,
-            String applyState,String applyPhase,String error,boolean editable,boolean resolvable) { }
+            String applyState,String applyPhase,String error,boolean editable,boolean resolvable) {
+        public boolean isWorkOnly() {
+            return !conflict && BranchChange.Operation.UPSERT.name().equals(operation)
+                && BranchSnapshot.State.ABSENT.name().equals(base.state())
+                && BranchSnapshot.State.ABSENT.name().equals(live.state())
+                && BranchSnapshot.State.ACTIVE.name().equals(work.state());
+        }
+    }
     public record Report(long id,String name,String domainName,String state,long revision,String preparationHash,
             boolean ready,List<String> errors,List<Item> items,String lastError,Map<String,Map<String,String>> fieldLabels,Long publishAt,Integer scheduledBy,String timeZone) { }
     private record Entry(BranchType type,Map<String,Object> row,BranchChange change,BranchSnapshot live,

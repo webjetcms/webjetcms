@@ -63,10 +63,9 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.clickCss('.buttons-branch-compare');
         I.waitForVisible('#branchesDataTable_modal', 20);
         I.see(name+' upravená', '#branch-merge-title');
-        I.waitForText('Pracovná verzia zatiaľ neobsahuje žiadne zmeny.', 10, '#branchChangesDataTable');
+        I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#datatableFieldDTE_Field_changes');
         I.seeElement('#pills-dt-branchesDataTable-changes-tab[aria-selected=true]');
         I.dontSee('Branch is absent in the verified domain', '#branchesDataTable_modal');
-        I.seeElement('#branch-merge-type:disabled');
         I.seeElement('#branch-merge-problems:disabled');
         I.seeElement('#branch-merge-publish:disabled');
         I.clickCss('#pills-dt-branchesDataTable-publishing-tab');

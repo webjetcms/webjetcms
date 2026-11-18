@@ -1,4 +1,4 @@
-import {mountBranchChanges, openBranchPreview, previewStates, publishStates} from './branch-merge';
+import {customizeBranchChangeColumns, mountBranchChanges, openBranchPreview, previewStates, publishStates} from './branch-merge';
 import {icon, node} from './dashboard/widget-utils';
 import {SHORTCUT_COLORS} from './shortcut-colors';
 
@@ -6,6 +6,7 @@ const tr = key => WJ.translate(`branches.${key}.js`);
 
 /** Uses the shared DataTable editor for metadata and the existing publishing comparison for content. */
 export function initBranchTable(columns, screen, api) {
+    window.customizeBranchChangeColumns = customizeBranchChangeColumns;
     const query = new URLSearchParams(location.search);
     const deepLink = query.get('tab') === 'changes' ? query.get('id') : null;
     let opening = deepLink ? {id: deepLink} : null;
@@ -37,7 +38,7 @@ export function initBranchTable(columns, screen, api) {
         columns,
         tabs: [
             {id: 'basic', title: WJ.translate('datatable.tab.basic'), selected: true},
-            {id: 'changes', title: tr('merge.changesTab'), hideOnCreate: true, content: '<div class="pg-branch-panel" id="branch-changes-panel"></div>'},
+            {id: 'changes', title: tr('merge.changesTab'), hideOnCreate: true},
             {id: 'publishing', title: tr('merge.publishingTab'), hideOnCreate: true, content: '<div class="pg-branch-panel" id="branch-publishing-panel"></div>'}
         ],
         onEdit: (dt, row, branch) => {

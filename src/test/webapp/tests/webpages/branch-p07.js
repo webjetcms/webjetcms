@@ -13,7 +13,7 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
     const dialog = '#branchesDataTable_modal';
     const scheduleTab = '#pills-dt-branchesDataTable-publishing-tab';
     const changesTab = '#pills-dt-branchesDataTable-changes-tab';
-    const busy = `${dialog} .pg-branch-panel[aria-busy=true]`;
+    const busy = `${dialog} [aria-busy=true]`;
     const workTitle = 'autotest P06 WORK';
     if (!/^http:\/\/(iwcm\.interway\.sk|127\.0\.0\.1|localhost):8086\/?$/.test(process.env.CODECEPT_URL || '')) {
         throw new Error('P07 publishing tests require the isolated local POC on port 8086.');
