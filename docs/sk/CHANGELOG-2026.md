@@ -31,6 +31,7 @@
 - AI asistenti - pri aktualizácii sa modely OpenAI nahradia novšími: `gpt-image-2` modelom `gpt-image-2.6-sunburst` pre generovanie a úpravu obrázkov, `gpt-5`, `gpt-5-pro`, `o3` a `o3-pro` modelom `gpt-5.6-sol`, `gpt-5-mini` modelom `gpt-5.6-terra` a `gpt-5-nano` modelom `gpt-5.6-luna`. OpenAI vypne pôvodné textové modely 11. decembra 2026 a obrazový model 10. februára 2027. Asistenti s pôvodnými modelmi Pro prejdú na štandardný režim Sol.
 - Dátové tabuľky - opravené generovanie podmienok pri filtrovaní polí odkazujúcich na inú entitu. Textové vyhľadávanie sa pre tieto polia preskočí, aby nevznikali neplatné SQL podmienky (#397).
 - Šablóny - [Ninja objekt](frontend/ninja-starter-kit/ninja-jv/temp-group/README.md) `${ninja.temp.group.textPrefix}` vráti prefix textových kľúčov skupiny šablón. Predtým getter volal sám seba a použitie v šablóne skončilo chybou `StackOverflowError` (#409).
+- Archív súborov - opravený názov konfiguračnej premennej `fileArchivCacheTime` pre čas cache výpisu súborov na frontende v minútach. Premenná bola deklarovaná ako `fileArchivatorCacheTime` s hodnotou 400, ktorá sa nikde nečítala, preto sa vždy použila hodnota 120 minút a zmena v administrácii nemala efekt. Predvolená hodnota je teraz 120, správanie sa nemení. Ak ste si nastavili `fileArchivatorCacheTime`, nastavte namiesto nej `fileArchivCacheTime`.
 
 ## 2026.0.40
 
