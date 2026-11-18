@@ -46,12 +46,18 @@ public class AiChatEntry {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<WriteOutcome> writeOutcomes = new ArrayList<>();
     private String providerResponseId;
+    /** Last validated tool decision; later rejected provider responses are retained only for cleanup. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String toolResponseId;
     /** Earlier provider rounds for this answer that still need remote deletion. */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<String> earlierProviderResponseIds = new ArrayList<>();
     private boolean storageUnknown;
     private boolean providerDeleted;
     private List<AiChatAttachment> attachments = List.of();
+    /** Extracted source retained locally so later tool turns do not depend on provider memory or repeat image analysis. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String preparedAttachmentContext;
 
     public record WriteOutcome(String name, int status, boolean uncertain, boolean rejected, List<Long> ids) {
         public static WriteOutcome pending(String name) {

@@ -34,6 +34,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -66,6 +68,7 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
+import sk.iway.iwcm.components.ai.jpa.AiSkillEntity;
 import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
@@ -256,7 +259,7 @@ class AiToolDiscoveryTest {
     }
 
     @Test
-    void editorChecksSkillExistenceOnceWithoutLoadingItsInstructions() {
+    void editorChecksSkillExistenceOnceWithoutLoadingItsInstructions() throws Exception {
         assistant.setAction("generate_text");
         assistant.setProvider("openai");
         assistant.setInstructions("@skill(Quiz) @skill(Quiz)");
@@ -274,6 +277,104 @@ class AiToolDiscoveryTest {
         assertFalse(service.hasInstructionContext(assistant, adminRequest()));
         verify(skills, times(2)).findLinkedNames(domain, Set.of("Quiz"));
         verifyNoMoreInteractions(skills);
+
+        assistant.setProvider("openai");
+        var skill = new AiSkillEntity();
+        skill.setName("Quiz");
+        skill.setDomainId(domain);
+        skill.setInstructions("Quiz guidance. " + "Sample content. ".repeat(20) + "Use @tool(audit_probe_batch). Full skill ending.");
+        when(skills.findByDomainIdAndNameInOrderByNameAsc(domain, Set.of("Quiz"))).thenReturn(List.of(skill));
+        var runtime = service.resolve(assistant, domain, adminRequest());
+        String catalog = AiToolProtocol.prepare(runtime, List.of()).instructions();
+        assertTrue(catalog.contains("Quiz guidance."));
+        assertFalse(catalog.contains("Full skill ending."));
+        assertEquals("skill Quiz skill Quiz", runtime.assistant().getInstructions());
+        assertEquals(Set.of("ai_tools_load_skill", "ai_tools_details", "audit_probe_batch"), runtime.tools().stream()
+                .map(AiToolDefinition::name).collect(java.util.stream.Collectors.toSet()));
+        assertTrue(runtime.hasWriteTool());
+
+        var response = mvc.perform(post(BASE + "/ai_tools_load_skill/call").session(session)
+                .header(AiToolAuthorization.ASSISTANT_HEADER, "7")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Quiz\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse();
+        var loaded = json.readTree(response.getContentAsByteArray());
+        assertEquals("Quiz", loaded.path("name").asText());
+        assertEquals(skill.getInstructions().replace("@tool(audit_probe_batch)", "audit_probe_batch"),
+                loaded.path("instructions").asText());
+        assertFalse(loaded.path("version").asText().isBlank());
+        assertTrue(catalog.contains(loaded.path("version").asText()));
+        assertFalse(loaded.has("tools"));
+        skill.setInstructions(skill.getInstructions() + " Updated guidance.");
+        var updated = service.resolve(assistant, domain, adminRequest());
+        assertFalse(updated.skills().get("Quiz").version().equals(loaded.path("version").asText()));
+        mvc.perform(get(BASE + "/load-skill").session(session).param("name", "Unrelated")
+                .header(AiToolAuthorization.ASSISTANT_HEADER, "7")).andExpect(status().isNotFound());
+        mvc.perform(get(BASE + "/load-skill").session(session).param("name", "Quiz"))
+                .andExpect(status().isNotFound());
+    }
+
+    /** Every assignment route supplies only summaries until the automatically assigned loader is called. */
+    @ParameterizedTest
+    @ValueSource(strings = {"@tool(configuration_add)", "@group(configuration)", "@skill(Configuration)"})
+    void loadsAssignedToolSchemasOnlyOnDemand(String references) throws Exception {
+        assistant.setInstructions(references);
+        when(security.hasPermission("menuConfig")).thenReturn(true);
+        var skill = new AiSkillEntity();
+        skill.setName("Configuration");
+        skill.setInstructions("Configuration guidance. " + "Description. ".repeat(20) + "@tool(configuration_add)");
+        when(context.getBean(AiSkillRepository.class).findByDomainIdAndNameInOrderByNameAsc(anyInt(), eq(Set.of("Configuration"))))
+                .thenReturn(List.of(skill));
+        var runtime = context.getBean(AiToolService.class).resolve(assistant, CloudToolsForCore.getDomainId(), adminRequest());
+        String prompt = AiToolProtocol.prepare(runtime, List.of()).instructions();
+        var summaries = json.readTree(prompt.split("Assigned tool summaries:\n", 2)[1].split("\nLoader input schemas:", 2)[0]);
+        var loaders = json.readTree(prompt.split("Loader input schemas:\n", 2)[1].split("\nLinked skills", 2)[0]);
+        for (var summary : summaries) {
+            assertEquals(6, summary.size());
+            assertTrue(summary.has("name") && summary.has("description") && summary.has("httpMethod")
+                    && summary.has("path") && summary.has("write") && summary.has("version"));
+        }
+        assertEquals(references.startsWith("@skill") ? 2 : 1, loaders.size());
+        for (var loader : loaders) {
+            assertTrue(Set.of(AiAssistantRuntime.LOAD_TOOLS, AiAssistantRuntime.LOAD_SKILL).contains(loader.path("name").asText()));
+            assertTrue(loader.has("inputSchema"));
+        }
+        assertFalse(prompt.contains("\"encrypt\"") || prompt.contains("\"outputSchema\""));
+
+        var details = call("ai_tools_details", "{\"names\":[\"configuration_add\",\"configuration_add\"]}", 200);
+        assertEquals(1, details.size());
+        var tool = runtime.tools().stream().filter(t -> t.name().equals("configuration_add")).findFirst().orElseThrow();
+        assertEquals(json.valueToTree(tool.inputSchema()), details.get(0).get("inputSchema"));
+        assertEquals(json.valueToTree(tool.outputSchema()), details.get(0).get("outputSchema"));
+        assertEquals(tool.preview().version(), details.get(0).path("version").asText());
+        assertEquals("POST", details.get(0).path("httpMethod").asText());
+        assertTrue(details.toString().contains("\"encrypt\""));
+        assertEquals(List.of("ai_tools_details"), runtime.tools().stream().filter(t -> t.name().equals("ai_tools_details"))
+                .map(AiToolDefinition::name).toList());
+    }
+
+    /** Assistant discovery cannot expand assignments; direct administrative browsing remains permission-based. */
+    @Test
+    void scopesDiscoveryToTheAssistantAndRechecksPermissions() throws Exception {
+        when(security.hasPermission("menuConfig")).thenReturn(true);
+        var details = call("ai_tools_details", "{\"names\":[\"audit_probe_batch\",\"configuration_add\",\"missing\"]}", 200);
+        assertEquals(1, details.size());
+        assertEquals("audit_probe_batch", details.get(0).path("name").asText());
+        var preview = call("ai_tools_preview", "{}", 200);
+        assertEquals(3, preview.size());
+        assertFalse(preview.toString().contains("configuration_add"));
+
+        var administrative = mvc.perform(get(BASE + "/details").session(session).param("names", "configuration_add"))
+                .andExpect(status().isOk()).andReturn().getResponse();
+        assertEquals("configuration_add", json.readTree(administrative.getContentAsByteArray()).path("tools").get(0).path("name").asText());
+        var administrativePreview = mvc.perform(get(BASE + "/preview").session(session))
+                .andExpect(status().isOk()).andReturn().getResponse();
+        assertTrue(administrativePreview.getContentAsString().contains("configuration_add"));
+        call("configuration_add", "{\"body\":{\"name\":\"test\"}}", 404);
+
+        when(security.hasPermission("cmp_quiz")).thenReturn(false);
+        assertEquals(0, call("ai_tools_details", "{\"names\":[\"audit_probe_batch\"]}", 200).size());
+        assertEquals(2, call("ai_tools_preview", "{}", 200).size());
+        call("ai_tools_details", "{}", 400);
     }
 
     @Test
@@ -296,14 +397,16 @@ class AiToolDiscoveryTest {
         var catalog = context.getBean(AiToolRegistry.class);
         var preview = catalog.lookup("ai_tools_preview");
         var details = catalog.lookup("ai_tools_details");
+        var probe = catalog.lookup("audit_probe_batch");
         var registry = mock(AiToolRegistry.class);
-        when(registry.assignedEntries(Set.of("unknown"), Set.of("ai"))).thenReturn(List.of(preview)).thenReturn(List.of(preview, details));
+        when(registry.lookup(AiAssistantRuntime.LOAD_TOOLS)).thenReturn(details);
+        when(registry.assignedEntries(Set.of("unknown"), Set.of("ai"))).thenReturn(List.of(preview)).thenReturn(List.of(preview, details, probe));
         var skills = context.getBean(AiSkillRepository.class);
         var authorization = new AiToolAuthorization(context, context.getBean(AssistantDefinitionRepository.class), security, registry, skills, context.getBean(AiChatStore.class));
         var first = authorization.resolve(assistant, 1, adminRequest());
         var next = authorization.resolve(assistant, 1, adminRequest());
-        assertEquals(List.of(preview.definition()), first.tools());
-        assertEquals(List.of(preview.definition(), details.definition()), next.tools());
+        assertEquals(List.of(preview.definition(), details.definition()), first.tools());
+        assertEquals(List.of(preview.definition(), details.definition(), probe.definition()), next.tools());
         assertTrue(next.assistant().getInstructions().endsWith("[tool unavailable]"));
         verifyNoInteractions(skills);
     }

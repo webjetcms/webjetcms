@@ -42,17 +42,37 @@ public class AiToolService {
     }
 
     public List<AiToolDefinition.Preview> preview(HttpServletRequest request) {
-        return visibleEntries(request, Access.CATALOG)
+        return visibleEntries(request, Access.ASSIGNED)
                 .map(entry -> entry.definition().preview()).toList();
     }
 
     public List<AiToolDefinition> details(List<String> names, HttpServletRequest request) {
         return names.stream().distinct().map(registry::lookup).filter(Objects::nonNull)
-                .filter(entry -> authorization.mayList(entry, request, Access.CATALOG)).map(AiToolRegistry.Entry::definition).toList();
+                .filter(entry -> authorization.mayList(entry, request, Access.ASSIGNED)).map(AiToolRegistry.Entry::definition).toList();
     }
 
     public AiAssistantRuntime resolve(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
         return authorization.resolve(assistant, domainId, request);
+    }
+
+    /** Backend calls include linked instructions eagerly because they cannot run the browser tool loop. */
+    public AiAssistantRuntime resolveForBackend(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        return authorization.resolveForBackend(assistant, domainId, request);
+    }
+
+    /** Loads only a skill linked to the active assistant in the current user's domain. */
+    public AiAssistantRuntime.Skill loadSkill(String name, HttpServletRequest request) {
+        if (AiToolAuthorization.hasAdminIdentity(request)) {
+            String header = request.getHeader(AiToolAuthorization.ASSISTANT_HEADER);
+            try {
+                var skill = authorization.assistant(Long.parseLong(header), request)
+                        .map(runtime -> runtime.skills().get(name));
+                if (skill.isPresent()) return skill.get();
+            } catch (NumberFormatException invalidAssistant) {
+                // Direct calls without a valid assistant cannot access skill contents.
+            }
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
     public record BrowserTool(String name, boolean write) {}

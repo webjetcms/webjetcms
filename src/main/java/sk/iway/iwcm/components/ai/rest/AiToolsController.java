@@ -16,8 +16,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import sk.iway.iwcm.components.ai.tools.AiTool;
+import sk.iway.iwcm.components.ai.tools.AiAssistantRuntime;
 import sk.iway.iwcm.components.ai.tools.AiToolCallFilter;
 import sk.iway.iwcm.components.ai.tools.AiToolDefinition;
+import sk.iway.iwcm.components.ai.tools.AiToolDescription;
 import sk.iway.iwcm.components.ai.tools.AiToolService;
 
 /** Administration REST interface to the current user's AI tool catalog. */
@@ -25,7 +27,7 @@ import sk.iway.iwcm.components.ai.tools.AiToolService;
 @RequiredArgsConstructor
 @RequestMapping("/admin/rest/ai/tools")
 @PreAuthorize("@WebjetSecurityService.isAdmin()")
-@AiTool(description = "components.ai.tools.ai_tools.context", readOnly = true, include = {"preview", "details"})
+@AiTool(description = "components.ai.tools.ai_tools.context", readOnly = true, include = {"preview", "details", "loadSkill"})
 public class AiToolsController {
 
     private final AiToolService tools;
@@ -41,6 +43,16 @@ public class AiToolsController {
             HttpServletRequest request, HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store");
         return Map.of("tools", tools.details(names, request));
+    }
+
+    /** Returns the full guidance for one linked skill after the model chooses to use it. */
+    @GetMapping(value = "/load-skill", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_button')")
+    @AiToolDescription("components.ai.tools.ai_tools.load_skill")
+    public AiAssistantRuntime.Skill loadSkill(@RequestParam("name") String name,
+            HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return tools.loadSkill(name, request);
     }
 
     @GetMapping(params = "!assistantId", produces = MediaType.APPLICATION_JSON_VALUE)

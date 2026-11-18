@@ -87,9 +87,14 @@ public class AiToolAuthorization {
         String key = runtimeKey(assistant, domainId);
         if (request.getAttribute(key) instanceof AiAssistantRuntime cached) return cached;
         var runtime = AiAssistantRuntime.compose(skills, assistant, domainId, registry,
-                entry -> mayList(entry, request, Access.CATALOG));
+                entry -> mayList(entry, request, Access.CATALOG), true);
         request.setAttribute(key, runtime);
         return runtime;
+    }
+
+    AiAssistantRuntime resolveForBackend(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        return AiAssistantRuntime.compose(skills, assistant, domainId, registry,
+                entry -> mayList(entry, request, Access.CATALOG), false);
     }
 
     private static String runtimeKey(AssistantDefinitionEntity assistant, int domainId) {

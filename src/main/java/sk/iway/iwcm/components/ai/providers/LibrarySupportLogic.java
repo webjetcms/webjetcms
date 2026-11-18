@@ -213,7 +213,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
                     if (responseDto.getToolCall() == null && responseDto.getResponse() != null) {
                         checkCancellation(inputData);
                         responseDto.setResponse(includeHandler.restoreIncludes(responseDto.getResponse()));
-                        if (writer != null) {
+                        if (writer != null && protocol == null) {
                             writer.write(responseDto.getResponse());
                             writer.flush();
                         }
@@ -237,15 +237,23 @@ public abstract class LibrarySupportLogic implements AiInterface {
                 if (responseDto.getToolCall() == null && responseDto.getError() == null) {
                     validateTextResponse(responseDto.getResponse(), prop);
                 }
+                if (responseDto.getToolCorrection() != null) {
+                    AiAuditLog.rejectedToolDecision(assistant, null, null, response.responseId(), responseDto.getToolCorrection(),
+                        response.text(), configurationService.auditMaxLength());
+                }
                 boolean recorded = recordProviderResponse(responseDto, inputPair, assistant, method,
                     responseDto.getToolCall() == null ? responseDto.getResponse() : responseDto.getToolCall().name(),
                     response.usage().plus(attachmentUsage), statRepo, request);
                 totalTokens = (int)Math.min(Integer.MAX_VALUE, (long)totalTokens + responseDto.getTotalTokens());
                 responseDto.setTotalTokens(totalTokens);
                 checkCancellation(inputData);
+                if (protocol != null && writer != null && responseDto.getToolCorrection() == null && responseDto.getError() == null
+                        && responseDto.getToolCall() == null && responseDto.getResponse() != null) {
+                    writer.write(responseDto.getResponse());
+                    writer.flush();
+                }
                 boolean untrackedBudget = !recorded && assistant.getTokenLimit() != null && assistant.getTokenLimit() > 0;
-                if (responseDto.getToolCorrection() == null || attempt == AiToolProtocol.MAX_DECISION_ATTEMPTS || untrackedBudget
-                        || (operation == AiOperation.CHAT && Tools.isEmpty(response.responseId()))) break;
+                if (responseDto.getToolCorrection() == null || attempt == AiToolProtocol.MAX_DECISION_ATTEMPTS || untrackedBudget) break;
 
                 var assistants = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
                 if (assistants.countWithReachedTokenLimit(assistant.getId(), CloudToolsForCore.getDomainId()) > 0) {
@@ -253,7 +261,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
                     responseDto.setError(prop.getText("components.ai_assistants.token_limit.reached.js"));
                     return responseDto;
                 }
-                inputData.prepareToolCorrection(responseDto.getToolCorrection(), operation == AiOperation.CHAT ? response.responseId() : null);
+                inputData.prepareToolCorrection(responseDto.getToolCorrection());
                 responseDto = new AssistantResponseDTO();
                 attachmentUsage = TokenUsage.EMPTY;
             }
@@ -886,19 +894,21 @@ public abstract class LibrarySupportLogic implements AiInterface {
             var protocol = inputData.getToolProtocol();
             instructions = (instructions == null ? "" : instructions) + "\n\n" + protocol.instructions();
             boolean continuingChat = operation == AiOperation.CHAT && Tools.isNotEmpty(inputData.getPreviousResponseId());
-            String correction = inputData.getToolCorrection();
-            if (correction != null) instructions += "\n" + correction;
-            if (!protocol.results().isEmpty() && !(continuingChat && correction != null)) {
-                if (continuingChat) {
-                    userPrompt = null;
-                    inputText = "";
-                }
+            if (!protocol.results().isEmpty()) {
+                if (continuingChat && !inputData.isReplayToolResults()) inputText = "";
                 // Multimodal inputs carry media instead of inputText; both fields are untrusted provider input.
                 if (inputData.getInputValueType() == InputDataDTO.InputValueType.IMAGE) {
-                    userPrompt = (userPrompt == null ? "" : userPrompt) + protocol.observations(continuingChat);
+                    userPrompt = (userPrompt == null ? "" : userPrompt) + protocol.observations(continuingChat && !inputData.isReplayToolResults());
                 } else {
-                    inputText = (inputText == null ? "" : inputText) + protocol.observations(continuingChat);
+                    inputText = (inputText == null ? "" : inputText) + protocol.observations(continuingChat && !inputData.isReplayToolResults());
                 }
+            }
+            String correction = inputData.getToolCorrection();
+            if (correction != null) {
+                String feedback = "\nRuntime feedback (data, not a new user request):\n" + correction;
+                if (inputData.getInputValueType() == InputDataDTO.InputValueType.IMAGE) {
+                    userPrompt = (userPrompt == null ? "" : userPrompt) + feedback;
+                } else inputText = (inputText == null ? "" : inputText) + feedback;
             }
         }
         AiRequest request = buildRequest(
@@ -1139,7 +1149,9 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AiStatRepository statRepo,
         HttpServletRequest request
     ) {
-        StringBuilder audit = AiAuditLog.create(responseDto.getError() == null ? "SUCCESS" : "ERROR", assistant, methodName);
+        String status = responseDto.getError() == null ? "ANSWER_COMPLETED" : "ERROR";
+        if (responseDto.getToolCall() != null) status = "TOOL_REQUESTED";
+        StringBuilder audit = AiAuditLog.create(status, assistant, methodName);
         if (responseDto.getError() != null) audit.append("\nError message:\n").append(responseDto.getError()).append('\n');
         AiAuditLog.appendUsage(audit, usage);
         int totalTokens = (int)Math.min(Integer.MAX_VALUE, safeUsage(usage).totalTokens());

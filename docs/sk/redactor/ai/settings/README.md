@@ -20,7 +20,11 @@ Kliknutím na riadok vložíte na miesto kurzora odkaz na nástroj, napríklad `
 
 Pri vytváraní zručnosti zadajte názov, ktorý sa v tejto doméne ešte nepoužíva. Ak zručnosť premenujete, upravte jej názov aj v odkazoch v inštrukciách asistentov.
 
-Pri každom spustení asistent načíta aktuálne inštrukcie odkazovanej zručnosti aj nástroje, na ktoré odkazuje. Keď zručnosť upravíte, zmena sa prejaví pri ďalšom spustení všetkých asistentov, ktorí ju používajú.
+Asistent dostane stručný zoznam priradených zručností s názvom, ukážkou textu a verziou. Úplné inštrukcie si vyžiada až vtedy, keď ich potrebuje na splnenie požiadavky. Nástroj `ai_tools_load_skill` sa sprístupní automaticky; do inštrukcií stačí vložiť odkaz `@skill(...)`.
+
+V pokračujúcom čete môže asistent použiť už načítanú zručnosť z kontextu rozhovoru. Po úprave zručnosti sa zmení jej verzia v zozname a asistent má pred ďalším použitím načítať aktuálny text. Samostatná požiadavka bez histórie potrebuje zručnosť načítať znova. Nástroje, na ktoré zručnosť odkazuje, zostávajú dostupné podľa oprávnení používateľa.
+
+Načítavanie podľa potreby šetrí tokeny pri požiadavkách, ktoré zručnosť nepoužijú. Aj už načítaný text v kontexte rozhovoru však môže vstupovať do spotreby tokenov poskytovateľa.
 
 !>**Upozornenie:** Nastavenia by mala vykonávať iba osoba, ktorá má dostatočné znalosti o fungovaní AI asistentov a rozumie možnostiam jednotlivých poskytovateľov. Nesprávne nastavenie môže viesť k neoptimálnemu správaniu asistenta alebo k obmedzeniu jeho funkčnosti. Odporúčame, aby konfiguráciu vykonával administrátor alebo technicky zdatný používateľ, ktorý vie správne zadať inštrukcie a parametre pre konkrétneho AI poskytovateľa.
 
@@ -114,9 +118,13 @@ Pri zmene poskytovateľa na **Prehliadač** odstráňte z inštrukcií všetky o
 
 Ak chcete nástroj alebo zručnosť odobrať, vymažte odkazy, ktoré ich priraďujú, a kliknite na **Uložiť**. Tlačidlom **Zrušiť** ponecháte pôvodné priradenia.
 
-Ak na tú istú zručnosť odkážete viackrát, asistent načíta jej inštrukcie raz. Aj nástroj, na ktorý odkážete priamo, cez skupinu alebo cez viacero zručností, sa v zozname dostupných nástrojov objaví iba raz.
+Ak na tú istú zručnosť odkážete viackrát, v zozname priradených zručností sa objaví iba raz. Aj nástroj, na ktorý odkážete priamo, cez skupinu alebo cez viacero zručností, sa v zozname dostupných nástrojov objaví iba raz.
 
-Ak má asistent vyhľadávať v katalógu nástrojov, vložte `@group(ai)`. Nástrojom `ai_tools_preview` získa názvy a krátke opisy operácií dostupných prihlásenému používateľovi. Nástrojom `ai_tools_details` si vyžiada vstupné a výstupné schémy. Na vykonanie konkrétnej operácie potrebuje aj príslušný nástroj.
+Asistent dostane pri spustení iba stručný zoznam nástrojov: názov, krátky opis, HTTP metódu, REST cestu, príznak zápisu a verziu definície. Úplné vstupné a výstupné schémy si vyžiada nástrojom `ai_tools_details` až pred použitím konkrétnej operácie. Tento nástroj sa sprístupní automaticky; do inštrukcií ho nemusíte pridávať. Viacero súvisiacich definícií môže načítať jedným volaním.
+
+V pokračujúcom čete môže asistent použiť úplnú definíciu, ktorú už má v kontexte a ktorej verzia sa nezmenila. Ak sa definícia zmení alebo jej text už nie je dostupný, načíta ju znova. Samostatné požiadavky bez histórie opätovne posielajú výsledky predchádzajúcich krokov. Rovnaký postup platí aj pre nástroje priradené cez zručnosti: načítanie zručnosti samo osebe nenačíta ich schémy.
+
+Ak chcete pridať aj nástroj `ai_tools_preview`, vložte `@group(ai)` alebo `@tool(ai_tools_preview)`. Pri volaní asistentom katalóg aj detaily obsahujú iba jeho priradené nástroje povolené prihlásenému používateľovi. Na stránke **AI nástroje → Nástroje** naďalej vidíte všetky operácie dostupné podľa svojich oprávnení. Načítanie definície nepridáva oprávnenia na vykonanie operácie.
 
 ![](datatable-instructions-tab.png)
 
@@ -196,6 +204,10 @@ Ak má aspoň jeden asistent v aktuálnej doméne nastavený limit tokenov väč
 ## Katalóg nástrojov
 
 Na stránke **AI nástroje → Nástroje** vidíte REST operácie, ku ktorým máte prístup. Kliknutím na názov nástroja otvoríte jeho opis, vstupné argumenty a očakávanú odpoveď.
+
+Na karte **Vstupné argumenty** zoznam **Povinné argumenty** uvádza aj povinné vnorené polia. Pri nástroji `webpages_add` uvidíte `body`, `body.title` a `body.navbar`: do objektu `body` teda patrí názov stránky aj názov v navigácii.
+
+Voľba **Príklad hodnoty** ukazuje vzor JSON údajov. Voľba **Schéma** zobrazuje rozbaľovaciu štruktúru s názvami polí, typmi, opismi a označením povinných polí. Objekt alebo zoznam rozbaľte, keď chcete vidieť jeho vnorené polia. Označenie povinnosti platí v rámci nadradeného objektu; ak je tento objekt voliteľný, nemusíte ho odoslať. Voľba **JSON** zobrazí úplnú pôvodnú schému vrátane definícií a odkazov. Rovnako môžete preskúmať štruktúru na karte **Očakávaná odpoveď**.
 
 Nástroje skupiny **Konfigurácia** posielajú asistentovi hodnoty bežných aj vlastných premenných, napríklad `smtpPort`. Pri šifrovanej hodnote alebo názve, ktorý WebJET vyhodnotí ako citlivý, nástroj vynechá polia `value`, `displayValue` a `oldValue`. Názov kontroluje podľa častí slov, napríklad `pass`, `heslo`, `secret`, `key` alebo `token`. Pri otázke, či je nastavené `smtpPassword`, asistent dostane `redacted: true` a v poli `configured` zistí, či má heslo v bežiacej aplikácii neprázdnu hodnotu.
 

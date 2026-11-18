@@ -303,6 +303,17 @@ public class AiChatStore {
 
     public record AttachmentContent(AiChatAttachment attachment, byte[] bytes) { }
 
+    /** Caches bounded extracted text on its original user message within the authenticated conversation. */
+    void cacheAttachmentContext(Scope scope, String threadId, String questionId, String context) {
+        if (context == null || context.length() > AiChatAttachments.MAX_TEXT) throw new IllegalArgumentException("Invalid attachment context");
+        update(threadId, scope, true, document -> {
+            var question = entry(document, questionId);
+            if (!"user".equals(question.getRole()) || question.getAttachments().isEmpty()) throw conflict("invalidAttachment");
+            question.setPreparedAttachmentContext(context);
+            return null;
+        });
+    }
+
     /** Resolves attachment membership only after verifying conversation ownership and domain. */
     public AttachmentContent attachment(String id, String attachmentId, Scope scope) {
         requireUuid(id);
@@ -384,6 +395,7 @@ public class AiChatStore {
             if (!messageId.equals(thread.getActiveMessageId()) || thread.isStopRequested()) return false;
             AiChatEntry answer = entry(document, messageId);
             answer.setPendingToolCall(call);
+            answer.setToolResponseId(answer.getProviderResponseId());
             answer.setPendingWriteClaimed(call.write() ? Boolean.FALSE : null);
             if (call.write()) answer.getWriteOutcomes().add(WriteOutcome.pending(call.name()));
             answer.setTotalTokens(tokens);

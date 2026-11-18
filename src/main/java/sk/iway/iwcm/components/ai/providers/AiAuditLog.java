@@ -5,6 +5,8 @@ import java.util.Map;
 import com.webjetcms.ai.TokenUsage;
 
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.utils.Pair;
@@ -49,5 +51,29 @@ public final class AiAuditLog {
         }
         details.append("\nAI response:\n").append(textResponse);
         audit.append(DB.prepareString(details.toString(), maxLength));
+    }
+
+    /** Keeps provider diagnostics in the administrative audit, separate from localized user-facing errors. */
+    public static void appendProviderFailure(StringBuilder audit, String stage, String redactedMessage, int maxLength) {
+        audit.append("\nFailure stage: ").append(stage);
+        if (maxLength > 0 && Tools.isNotEmpty(redactedMessage)) {
+            audit.append("\nProvider diagnostic:\n").append(DB.prepareString(redactedMessage, maxLength));
+        }
+    }
+
+    /** Logs each rejected decision separately, including its bounded reason and output even when a later retry succeeds. */
+    public static void rejectedToolDecision(AssistantDefinitionEntity assistant, String threadId, String messageId,
+        String responseId, String reason, String response, int maxLength) {
+        try {
+            var audit = create("TOOL_DECISION_REJECTED", assistant, "toolDecision");
+            if (threadId != null) audit.append("\nThread ID: ").append(threadId);
+            if (messageId != null) audit.append("\nMessage ID: ").append(messageId);
+            if (responseId != null) audit.append("\nProvider response ID: ").append(responseId);
+            audit.append("\nDecision not accepted; no tool dispatched by this decision.");
+            appendResponse(audit, new Pair<>(reason, null), response, maxLength);
+            Adminlog.add(Adminlog.TYPE_AI, audit.toString(), -1, -1);
+        } catch (RuntimeException failure) {
+            Logger.error(AiAuditLog.class, "Unable to audit rejected tool decision", failure);
+        }
     }
 }

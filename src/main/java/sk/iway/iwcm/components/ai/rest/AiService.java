@@ -183,7 +183,9 @@ public class AiService {
         if(doesSupportAction(stored, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
-        var runtime = tools.resolve(stored, CloudToolsForCore.getDomainId(), request);
+        var runtime = inputData.isInteractiveAssistant()
+            ? tools.resolve(stored, CloudToolsForCore.getDomainId(), request)
+            : tools.resolveForBackend(stored, CloudToolsForCore.getDomainId(), request);
         AssistantDefinitionEntity assistant = runtime.assistant();
         checkTokenLimit(assistant.getId(), assistantRepo, prop);
         validateChatAttachments(assistant, inputData, prop);

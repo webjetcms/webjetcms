@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -123,8 +124,7 @@ final class AiToolSchema {
                 field.put("enum", List.of("create", "edit", "remove"));
             }
             fields.put(prop.getName(), field);
-            if (!output && (prop.isRequired() || member.hasAnnotation(NotBlank.class) || member.hasAnnotation(NotNull.class)
-                    || member.hasAnnotation(NotEmpty.class))) required.add(prop.getName());
+            if (!output && required(raw, prop)) required.add(prop.getName());
         }
         if (configurationResult && (raw == ConfDetailsDto.class || raw == ConfPreparedEntity.class)) {
             fields.put("redacted", Map.of("type", "boolean", "const", true, "description", "Sensitive value fields were omitted."));
@@ -138,6 +138,15 @@ final class AiToolSchema {
         if (!output && raw == DatatableRequest.class) required = List.of("action", "data");
         if (!required.isEmpty()) bean.put("required", required);
         return root ? bean : Map.of("$ref", "#/$defs/" + key);
+    }
+
+    /** Reads the field constraints used by DataTableColumnEditor, including transient and inherited fields. */
+    private static boolean required(Class<?> bean, BeanPropertyDefinition prop) {
+        var field = ReflectionUtils.findField(bean, prop.getInternalName());
+        var member = prop.getPrimaryMember();
+        return prop.isRequired() || List.of(NotBlank.class, NotEmpty.class, NotNull.class).stream()
+                .anyMatch(constraint -> member.hasAnnotation(constraint)
+                        || (field != null && field.isAnnotationPresent(constraint)));
     }
 
     /** Uses the editor's fixed choices as wire values. Runtime option sources cannot be resolved at discovery. */

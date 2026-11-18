@@ -1,7 +1,10 @@
 package sk.iway.iwcm.components.ai.tools;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.core.util.Json;
 import lombok.Getter;
 import sk.iway.iwcm.i18n.Prop;
@@ -79,9 +82,10 @@ public class AiToolEntity {
         AiToolEntity entity = new AiToolEntity(tool);
         entity.call = "POST /admin/rest/ai/tools/" + tool.name() + "/call";
         if (!tool.conditions().isEmpty()) entity.conditions = Json.pretty(tool.conditions());
-        if (tool.inputSchema().get("required") instanceof List<?> names) {
-            entity.required = String.join(", ", names.stream().map(Object::toString).toList());
-        }
+        JsonNode inputSchema = Json.mapper().valueToTree(tool.inputSchema());
+        Set<String> required = new LinkedHashSet<>();
+        collectRequired(inputSchema, inputSchema, "", required, new HashSet<>());
+        if (!required.isEmpty()) entity.required = String.join(", ", required);
         entity.example = AiToolExample.forInput(tool.inputSchema());
         entity.inputSchema = Json.pretty(tool.inputSchema());
         if (tool.outputSchema() == null) {
@@ -91,5 +95,28 @@ public class AiToolEntity {
             entity.responseExample = AiToolExample.forResponse(tool.outputSchema());
         }
         return entity;
+    }
+
+    /** Lists required paths, including constraints on each item of required arrays and maps. */
+    private static void collectRequired(JsonNode schema, JsonNode root, String path, Set<String> required, Set<String> references) {
+        if (schema.path("$ref").isTextual()) {
+            String reference = schema.get("$ref").asText();
+            if (reference.startsWith("#/") && references.add(reference)) {
+                collectRequired(root.at(reference.substring(1)), root, path, required, references);
+                references.remove(reference);
+            }
+        }
+        // Children of an optional property are required only when that property is supplied.
+        for (JsonNode name : schema.path("required")) {
+            String childPath = path.isEmpty() ? name.asText() : path + "." + name.asText();
+            required.add(childPath);
+            collectRequired(schema.path("properties").path(name.asText()), root, childPath, required, references);
+        }
+        if (schema.path("items").isObject()) {
+            collectRequired(schema.get("items"), root, path + "[]", required, references);
+        }
+        if (schema.path("additionalProperties").isObject()) {
+            collectRequired(schema.get("additionalProperties"), root, path + ".*", required, references);
+        }
     }
 }

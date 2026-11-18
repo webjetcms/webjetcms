@@ -1,7 +1,7 @@
 const maxCalls = 12;
 const maxResultBytes = 32 * 1024;
 const maxCatalogBytes = 1024 * 1024;
-const catalogTools = new Set(['ai_tools_preview', 'ai_tools_details']);
+const catalogTools = new Set(['ai_tools_preview', 'ai_tools_details', 'ai_tools_load_skill']);
 const toolName = /^[A-Za-z0-9_-]{1,64}$/;
 
 function canonicalArguments(value) {
