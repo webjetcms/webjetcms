@@ -151,6 +151,8 @@ Anotáciou `@AiTool` sprístupníte REST operácie konkrétneho kontroléra cez 
 
 Kontrolér `ConfigurationController` sprístupňuje konfiguračné premenné používateľovi s právom `menuConfig`. Pri každom volaní zachováva obmedzenia prístupu ku konkrétnym premenným.
 
+Kontroléry `WebpagesRestController` a `GroupsRestController` sprístupňujú správu webových stránok a priečinkov používateľovi s právom `menuWebpages`. Asistentovi ich priradíte pomocou `@group(sk.iway.iwcm.editor.rest.WebpagesRestController)` a `@group(sk.iway.iwcm.editor.rest.GroupsRestController)`. Nástroje používajú existujúce REST operácie vrátane kontrol oprávnení a ukladania cez editor. Pred úpravou načítajte úplný záznam pomocou `webpages_get_one` alebo `groups_get_one` a zachovajte jeho `editorFields`; zoznam stránok nemusí obsahovať HTML. Katalóg vynecháva súčty a presúvanie riadkov, pri priečinkoch aj generické vyhľadávanie podľa stĺpcov, ktoré vyžaduje JPA repozitár.
+
 ```java
 import sk.iway.iwcm.components.ai.tools.AiTool;
 

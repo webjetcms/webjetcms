@@ -32,6 +32,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FilePathTools;
+import sk.iway.iwcm.components.ai.tools.AiTool;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyRepository;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -70,6 +71,7 @@ import sk.iway.iwcm.users.UsersDB;
 @Datatable
 @RequestMapping(value = "/admin/rest/groups")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
+@AiTool(description = "components.ai.tools.groups.context", exclude = {"findByColumns", "getSum", "rowReorder"})
 public class GroupsRestController extends DatatableRestControllerV2<GroupDetails, Long> {
 
     private final GroupSchedulerDtoRepository groupSchedulerDtoRepository;
