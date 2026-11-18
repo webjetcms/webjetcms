@@ -60,6 +60,10 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 - Pracovné verzie - náhľad aplikácie v CKEditore sa načíta v kontexte pracovnej verzie bez dialógu prechodu do hlavnej verzie.
 
+- Pracovné verzie - ukladanie textu stránky už neblokujú interné synchronizačné polia, ktoré sa neposielajú cez JSON. Zachovávajú sa ich serverové hodnoty. Náhľady vložených aplikácií vrátane formulárov používajú bežné vykresľovanie bez osobitného whitelistu rendererov.
+
+- Pracovné verzie - verejné volania z `/components`, `/apps` a `/templates` už neblokujú načítanie CSS/JS cez `combine.jsp` ani nezobrazujú dialóg hlavnej verzie. V `/components` a `/apps` sa administrácia rozlišuje podľa `admin` v ceste. Náhľad obrázkov používa existujúci `ThumbServlet` so všetkými jeho parametrami vrátane `ip=6`; pracovné súbory a cache zostávajú súkromné.
+
 - Pracovné verzie - pôvodná migrácia spolu s vytvorením branch tabuliek konvertuje obsahové tabuľky, histórie a mediálne väzby na InnoDB; existujúce InnoDB tabuľky a ich FULLTEXT indexy sa neprebudovávajú. Generátor ID môže zostať na MyISAM.
 
 - [Publikačné balíky (POC)](redactor/webpages/publishing-packages.md) - v hlavičke administrácie môžete vybrať pracovnú verziu aktuálnej domény a cez ľavé menu ju vytvoriť alebo upraviť. Tím môže pripravovať stránky, priečinky, médiá a súbory v spoločnej pracovnej verzii, skontrolovať menu a Novinky v náhľade, vyriešiť konflikty a publikovať balík ručne alebo v jednom termíne. ID zostávajú zachované; priebeh ukáže zastavenie a umožní overené pokračovanie. Pilot s 20 stránkami a tromi účtami overil aj anonymný verejný výsledok. Funkcia zostáva **predvolene vypnutá** a obmedzená na overený MariaDB/InnoDB profil; pôvodné Novinky a LIVE schvaľovanie, zrkadlenie a multigroup pri off/on majú [doložené výsledky P08](../research/publish-packages/P08-vysledky.md#doplnenie-t16-a-t13-nad-6fb0a30c9). [Návod správcu](admin/setup/publishing-packages.md) opisuje proxy, cron `all-admin`, zapnutie/vypnutie a obnovu rezervovaných ID. Produkčné zapnutie vyžaduje samostatné overenie konkrétneho nasadenia.

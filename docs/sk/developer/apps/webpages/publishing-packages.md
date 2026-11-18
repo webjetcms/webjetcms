@@ -46,7 +46,13 @@ Obsahové tabuľky, histórie, mediálne väzby a branch tabuľky používajú I
 
 ## Overené aplikácie
 
-V editore sú explicitne povolené iba `sk.iway.iwcm.components.menu.MenuApp` a `sk.iway.iwcm.components.news.NewsApp`, s renderermi `/components/menu/menu_ul_li.jsp` a `/components/news/news-velocity.jsp`. Povolenie riadi `BranchApps`. Inú aplikáciu treba najprv adaptovať a overiť, samotné doplnenie do mapy kompatibilitu nezabezpečí.
+Verejné volania z `/components`, `/apps` a `/templates` sa spracúvajú bežne bez prepínania pracovnej verzie. Platí to aj pre dynamické CSS/JS, napríklad `/components/_common/combine.jsp` a `page_functions.js.jsp`, a verejné AJAX požiadavky. V `/components` a `/apps` sa za administráciu považuje iba cesta obsahujúca `admin`, napríklad `/apps/news/admin/` alebo `admin_save.jsp`. Ich pôvodné kontroly prístupu sa naďalej vykonajú. Náhľad cez gateway naďalej číta pracovné stránky a súbory a odmieta zápisové metódy; verejná adresa samotného komponentu nie je náhradou za gateway.
+
+Obrázkové náhľady v gateway spracúva existujúci `ThumbServlet` vrátane jeho parametrov `w`, `h`, režimov `ip`, farby `c`, kvality `q`, `noip` a rozmerov zakódovaných v názve súboru. Používajú vybrané pracovné alebo hlavné bajty a súkromnú cache oddelenú podľa verzie, obsahu, galériového výrezu a parametrov. Pri nezmenenom obrázku sa zachová galériový originál aj výrez; pracovná náhrada používa vlastné bajty. Zmazaný pracovný obrázok sa nenahradí hlavným ani starou miniatúrou. Náhľad nemení záznamy galérie a neposiela pracovné obrázky na verejný uzol na generovanie miniatúr.
+
+Náhľady vložených aplikácií v CKEditore vykresľuje štandardný `WriteTag`, rovnako ako v hlavnej verzii; nemajú osobitný branch whitelist rendererov. Funguje tak aj zobrazenie existujúceho kontaktného formulára. Editory parametrov majú samostatné pravidlá: `BranchApps` povoľuje `sk.iway.iwcm.components.menu.MenuApp` a `sk.iway.iwcm.components.news.NewsApp`. Pri ďalšom editore treba overiť, kam ukladá parametre a či nemení zdieľané dáta mimo stránky.
+
+Synchronizačné polia stránky sa neposielajú cez editorové JSON API (`@JsonIgnore`). Branch zápis ich ponecháva zo serverového riadka a neporovnáva ich s predvolenými hodnotami prijatého formulára. Bežná úprava textu preto funguje aj pri existujúcom `syncStatus=1`; individuálne dátumy publikovania sa naďalej nemenia.
 
 `MenuULLI` zachováva existujúce parametre vrátane koreňa, hĺbky, tried a `onlySetVariables`; číta účinný strom. `NewsActionBean` vykonáva filter/count/paging nad účinnou SQL množinou. Používa existujúce perex kategórie, štandardné criteria a jeden `previewAt` na request. Vlastné `ResultCriteria` a `contextClasses` v preview vyžadujú adaptér. Zdieľané funkcie `FileTools.getFileIcon` a `ForumDB.isActive` sú dostupné cez čítacie adaptéry; nemenia súbory ani diskusie hlavnej verzie. Dátum autora/uloženia nie je čas publikovania balíka.
 

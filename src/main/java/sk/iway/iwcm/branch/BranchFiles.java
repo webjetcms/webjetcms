@@ -319,48 +319,45 @@ public final class BranchFiles {
         if(!"HEAD".equals(request.getMethod())) Files.copy(file,response.getOutputStream());
     }
 
-    /** Uses the core pixel transformer without gallery writes, in a private branch/content namespace. */
-    public static void thumbnail(String logicalPath,HttpServletRequest request,HttpServletResponse response) throws IOException {
+    /** Delegates parameter parsing, crop modes and codecs to the ordinary thumbnail servlet. */
+    public static void thumbnail(String logicalPath,HttpServletRequest request,HttpServletResponse response) throws IOException,jakarta.servlet.ServletException {
+        if(!BranchContexts.current().isBranch()) throw new IllegalStateException("A branch thumbnail requires a working version");
+        sk.iway.iwcm.editor.ThumbServlet.getThumbImage(logicalPath,request,response);
+    }
+
+    /** Selected bytes with a codec suffix; WORK replacements must not inherit the LIVE gallery crop or original. */
+    public record ThumbnailSource(sk.iway.iwcm.io.IwcmFile file,boolean working) { }
+
+    /** Creates an immutable private input snapshot for the shared renderer, without falling back after a WORK deletion. */
+    public static ThumbnailSource thumbnailSource(String logicalPath) throws IOException {
         boolean content=logicalPath.startsWith("/images/")||logicalPath.startsWith("/files/");
         String path=content?BranchFilePaths.normalize(logicalPath):logicalPath;
-        if(!content && !(path.startsWith("/templates/")&&BranchPreviewUrls.allowed(path))) {response.sendError(404);return;}
-        if(!sk.iway.iwcm.doc.PlannedAccess.isPathAccessible(path,request,response))return;
-        EditForm protection=PathFilter.isPasswordProtected(path,request,request.getSession());
-        if(protection!=null && !protection.isAccessibleFor(UsersDB.getCurrentUser(request))) {response.sendError(403);return;}
-        Path source=content?read(path):Path.of(Tools.getRealPath(path));
-        if(source!=null&&!Files.isRegularFile(source))source=null;
-        if(source==null) {response.sendError(404);return;}
-        int width=Tools.getIntValue(request.getParameter("w"),0),height=Tools.getIntValue(request.getParameter("h"),0);
-        if(width<0||height<0||width>4096||height>4096||(width==0&&height==0)) {response.sendError(400,"Invalid thumbnail dimensions");return;}
-        // Other transformations are rejected until the existing transformer has an explicit adapter.
-        for(String option:List.of("ip","c","q","noip")) if(request.getParameter(option)!=null) {response.sendError(400,"Unsupported preview thumbnail option: "+option);return;}
-        String ext=FileTools.getFileExtension(path).toLowerCase(java.util.Locale.ROOT);
-        if(!List.of("png","jpg","jpeg","gif","webp").contains(ext)) {response.sendError(415);return;}
-        Path target=BranchReadiness.storageRoot().resolve("thumbs").resolve(Long.toString(BranchContexts.current().branchId()))
-            .resolve(hash(source)+"-"+width+"x"+height+"."+ext);
-        Files.createDirectories(target.getParent());
+        if(!content && !(path.startsWith("/templates/")&&BranchPreviewUrls.allowed(path))) return null;
+        Path live=Path.of(Tools.getRealPath(path));
+        Path source=content?read(path):live;
+        if(source==null||!Files.isRegularFile(source)) return null;
+        boolean working=!Files.isRegularFile(live)||!Files.isSameFile(source,live);
+        Path directory=thumbnailRoot().resolve("sources");
+        Files.createDirectories(directory);
+        Path target=directory.resolve(hash(source)+"."+FileTools.getFileExtension(path));
         if(!Files.isRegularFile(target)) {
-            BufferedImageSize size=imageSize(source);
-            double scale=Math.min(width==0?Double.POSITIVE_INFINITY:(double)width/size.width(),height==0?Double.POSITIVE_INFINITY:(double)height/size.height());
-            int finalWidth=Math.max(1,(int)Math.round(size.width()*scale)),finalHeight=Math.max(1,(int)Math.round(size.height()*scale));
-            // The legacy Java transformer derives its output codec from the input suffix.
-            Path typedSource=Files.createTempFile(target.getParent(),"source-","."+ext);
+            Path temporary=Files.createTempFile(directory,"source-",".tmp");
             try {
-                Files.copy(source,typedSource,StandardCopyOption.REPLACE_EXISTING);
-                int status=sk.iway.iwcm.common.GalleryDBTools.cropAndResize(new sk.iway.iwcm.io.IwcmFile(typedSource.toString()),0,0,0,0,finalWidth,finalHeight,null,true,new sk.iway.iwcm.io.IwcmFile(target.toString()),-1,-1);
-                if(status!=0) {Files.deleteIfExists(target);throw new IOException("Thumbnail transformation failed: "+status);}
-            } finally {Files.deleteIfExists(typedSource);}
-            if(!Files.isRegularFile(target)) throw new IOException("Thumbnail generation failed");
+                Files.copy(source,temporary,StandardCopyOption.REPLACE_EXISTING);
+                Files.move(temporary,target,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+            } finally {Files.deleteIfExists(temporary);}
         }
-        response.setContentType("image/"+(ext.equals("jpg")?"jpeg":ext));
-        if(!"HEAD".equals(request.getMethod())) Files.copy(target,response.getOutputStream());
+        return new ThumbnailSource(new sk.iway.iwcm.io.IwcmFile(target),working);
     }
-    private record BufferedImageSize(int width,int height) { }
-    private static BufferedImageSize imageSize(Path source)throws IOException {
-        try(var input=javax.imageio.ImageIO.createImageInputStream(source.toFile())) {
-            var readers=javax.imageio.ImageIO.getImageReaders(input);
-            if(!readers.hasNext())throw new IOException("Unsupported preview image format");
-            var reader=readers.next();try {reader.setInput(input);return new BufferedImageSize(reader.getWidth(0),reader.getHeight(0));}finally {reader.dispose();}
-        }
+
+    /** Separates logical paths, selected bytes, gallery crop changes and folder resize settings in the private cache. */
+    public static String thumbnailCachePath(String path,sk.iway.iwcm.io.IwcmFile source,sk.iway.iwcm.gallery.GalleryBean crop,String resizeMode) {
+        String selection=crop==null?"":crop.getSelectedX()+":"+crop.getSelectedY()+":"+crop.getSelectedWidth()+":"+crop.getSelectedHeight();
+        String key=org.apache.commons.codec.digest.DigestUtils.sha256Hex(path+":"+selection+":"+resizeMode);
+        return thumbnailRoot().resolve("rendered").resolve(key).resolve(source.getName()).toString();
+    }
+
+    private static Path thumbnailRoot() {
+        return BranchReadiness.storageRoot().resolve("thumbs").resolve(Long.toString(BranchContexts.current().branchId()));
     }
 }

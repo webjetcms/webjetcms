@@ -131,11 +131,6 @@ if (showForm)
 }
 else
 {
-    if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()
-        && !sk.iway.iwcm.branch.BranchApps.isSupportedPreview(componentCode)) {
-        response.sendError(409, "This component preview is unavailable in a publishing branch");
-        return;
-    }
 	request.setAttribute("componentCode", componentCode);
 
 	if (docId > 0)

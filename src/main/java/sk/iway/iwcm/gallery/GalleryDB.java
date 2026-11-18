@@ -2776,8 +2776,15 @@ public class GalleryDB
 	 */
 	public static int resizePicture(String realPath, String realPathSmall, double width, double height, String resizeMode)
 	{
+		return resizePicture(realPath, realPathSmall, width, height, resizeMode, true);
+	}
+
+	/** Resizes using the existing pixel pipeline, optionally omitting gallery metadata writes for private previews. */
+	public static int resizePicture(String realPath, String realPathSmall, double width, double height, String resizeMode, boolean updateMetadata)
+	{
 		if(resizeMode!=null && resizeMode.equals("N"))
 		{
+			if (!updateMetadata) return copyFile(realPath, realPathSmall) ? 1 : 2;
 			IwcmFile fOrigImg = new IwcmFile(realPath);
 			String imageName = fOrigImg.getName();
 			if (imageName.startsWith("s_") || imageName.startsWith("o_"))
@@ -2808,7 +2815,7 @@ public class GalleryDB
 			if (imageName.startsWith("s_") || imageName.startsWith("o_"))
 				imageName = imageName.substring(2);
 
-			if (realPathSmall.indexOf(Tools.replace(Constants.getString("thumbServletCacheDir"), "/", String.valueOf(File.separatorChar) ))==-1)
+			if (updateMetadata && realPathSmall.indexOf(Tools.replace(Constants.getString("thumbServletCacheDir"), "/", String.valueOf(File.separatorChar) ))==-1)
 			{
 				//toto vykoname len ak sa nejedna o thumb obrazok
 				//ulozi obrazok do tabulky gallery, ak je uz ulozeny a nema nastaveny upload_datetime, tak ho nastavi

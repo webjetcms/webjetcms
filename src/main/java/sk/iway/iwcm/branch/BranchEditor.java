@@ -343,9 +343,10 @@ public final class BranchEditor {
         if ((fields.getGroupCopyDetails()!=null && !fields.getGroupCopyDetails().isEmpty()) || (fields.getAttrs()!=null && !fields.getAttrs().isEmpty()) || Tools.isNotEmpty(fields.getRedactorNote()))
             throw invalid("Multigroup, attributes and editor notes are unavailable in a publishing branch");
         if (fields.isPublishAfterStart()!=(old!=null&&old.isPublishAfterStart()) || fields.isDisableAfterEnd()!=(old!=null&&old.isDisableAfterEnd()) || (doc.isPublishAfterStart() && (old==null || !old.isPublishAfterStart())) || (doc.isDisableAfterEnd() && (old==null || !old.isDisableAfterEnd()))) throw invalid("Individual publishing plans are read-only");
-        if (old!=null && (!Objects.equals(doc.getPublishStartDate(),old.getPublishStartDate()) || !Objects.equals(doc.getPublishEndDate(),old.getPublishEndDate()) || doc.getSyncId()!=old.getSyncId() || doc.getSyncStatus()!=old.getSyncStatus()))
-            throw invalid("Scheduling and synchronization fields are read-only");
-        if (old==null && (doc.getPublishEndDate()!=null || doc.getSyncId()!=0 || doc.getSyncStatus()!=0)) throw invalid("Scheduling and synchronization fields are read-only");
+        // Synchronization fields are @JsonIgnore; BranchEditorRows retains their server values.
+        if (old!=null && (!Objects.equals(doc.getPublishStartDate(),old.getPublishStartDate()) || !Objects.equals(doc.getPublishEndDate(),old.getPublishEndDate())))
+            throw invalid(Prop.getInstance(request).getText("branches.editor.scheduling.readonly"));
+        if (old==null && doc.getPublishEndDate()!=null) throw invalid(Prop.getInstance(request).getText("branches.editor.scheduling.readonly"));
     }
 
     private void rejectUnsupported(GroupDetails group,GroupDetails old) {

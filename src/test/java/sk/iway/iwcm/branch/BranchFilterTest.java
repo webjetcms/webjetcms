@@ -94,7 +94,8 @@ class BranchFilterTest {
         selection.when(() -> BranchSelection.requireBranch(42, DOMAIN)).thenReturn(pkg);
         request.addHeader("Sec-Fetch-Dest", "document");
         for (String path : List.of("/admin/v9/templates/temps-list/", "/admin/v9/files/folder_prop/",
-                "/admin/v9/future-section/", "/apps/contact/admin/", "/components/news/admin_save.jsp")) {
+                "/admin/v9/future-section/", "/apps/contact/admin/", "/components/news/admin_save.jsp",
+                "/components/catalog/custom_admin.jsp", "/apps/catalog/administration/")) {
             request.setRequestURI(path);
             request.setQueryString("id=7&view=edit");
             response = new MockHttpServletResponse();
@@ -318,6 +319,38 @@ class BranchFilterTest {
         response=new MockHttpServletResponse();headers(41,DOMAIN);filter.doFilter(request,response,(in,out)->fail("Old branch screen dispatched"));assertEquals(409,response.getStatus());
         response=new MockHttpServletResponse();headers(42,DOMAIN);request.setMethod("POST");filter.doFilter(request,response,(in,out)->fail("P03 content write dispatched"));assertEquals(409,response.getStatus());
         response=new MockHttpServletResponse();request.setMethod("GET");request.setRequestURI("/admin/restart.jsp");filter.doFilter(request,response,(in,out)->fail("Unsupported admin GET dispatched"));assertEquals(409,response.getStatus());
+    }
+
+    /** Dynamic public assets and application requests keep their own response instead of a production dialog or 409. */
+    @Test void publicApplicationRequestsDoNotBecomeAdministrationScreens() throws Exception {
+        selected();
+        var pkg = new BranchEntity();pkg.setName("Autumn");
+        selection.when(() -> BranchSelection.requireBranch(42, DOMAIN)).thenReturn(pkg);
+        request.addHeader("Referer", "http://admin.example/admin/webpages/branch-preview/42/news.html");
+        request.addHeader("Accept", "text/html");
+        for (String path : List.of("/components/_common/combine.jsp", "/components/_common/javascript/page_functions.js.jsp",
+                "/components/catalog/list.jsp", "/apps/catalog/data.action", "/apps/catalog/", "/templates/site/theme.jsp",
+                "/components/catalog/app.js", "/apps/catalog/style.css", "/templates/site/main.css")) {
+            request.setRequestURI(path);
+            for (String destination : List.of("style", "script", "iframe", "document", "")) {
+                request.removeHeader("Sec-Fetch-Dest");
+                if (!destination.isEmpty()) request.addHeader("Sec-Fetch-Dest", destination);
+                for (String method : List.of("GET", "HEAD", "POST")) {
+                    request.setMethod(method);
+                    response = new MockHttpServletResponse();
+                    AtomicBoolean dispatched = new AtomicBoolean();
+                    filter.doFilter(request, response, (in, out) -> {
+                        dispatched.set(true);
+                        assertFalse(BranchContexts.current().isBranch());
+                        out.setContentType("text/css");
+                    });
+                    assertTrue(dispatched.get(), method + " " + path + " / " + destination + " returned " + response.getStatus());
+                    assertNull(response.getForwardedUrl());
+                    assertEquals("text/css", response.getContentType());
+                }
+            }
+            assertFalse(BranchProductionSection.needsConfirmation(path), path);
+        }
     }
 
     @Test void publicPageLinkReadsLiveWhileAPackageIsSelected() throws Exception {

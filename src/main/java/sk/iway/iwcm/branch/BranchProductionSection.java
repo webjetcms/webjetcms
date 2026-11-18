@@ -43,8 +43,15 @@ public final class BranchProductionSection {
     }
 
     static boolean adminDocumentPath(String path) {
-        return (path.startsWith("/admin/") || path.startsWith("/components/") || path.startsWith("/apps/"))
+        return (path.startsWith("/admin/")
+                || (path.startsWith("/components/") || path.startsWith("/apps/")) && path.contains("admin"))
             && !path.startsWith("/admin/rest/");
+    }
+
+    /** Public application resources, including dynamic CSS/JS, do not select an administration content version. */
+    static boolean publicApplicationPath(String path) {
+        return (path.startsWith("/components/") || path.startsWith("/apps/") || path.startsWith("/templates/"))
+            && !adminDocumentPath(path);
     }
 
     private record Grant(String path, long branch, int domain, int user, String method, boolean opened) implements Serializable {
