@@ -20,8 +20,8 @@ pageContext.setAttribute("lng", lng);
 PageParams pageParams = new PageParams(request);
 int quizId = pageParams.getIntValue("quizId", -1);
 boolean showAllAnswers = pageParams.getBooleanValue("showAllAnswers", false);
-QuizEntity quiz = QuizService.getById(quizId);
-if(quiz.getId() == null) return;
+QuizEntity quiz = new QuizService().getById(quizId);
+if(quiz == null) return;
 
 Prop prop = Prop.getInstance(lng);
 final int optionsCount = 6;

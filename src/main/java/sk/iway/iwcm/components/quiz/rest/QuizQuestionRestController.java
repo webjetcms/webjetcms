@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.ai.tools.AiTool;
 import sk.iway.iwcm.components.quiz.jpa.QuizQuestionEntity;
 import sk.iway.iwcm.components.quiz.jpa.QuizQuestionRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -21,7 +20,6 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @RequestMapping("/admin/rest/quiz/question")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_quiz')")
 @Datatable
-@AiTool(description = "components.ai.tools.quiz_question.context")
 public class QuizQuestionRestController extends DatatableRestControllerV2<QuizQuestionEntity, Long> {
     
     private final QuizQuestionRepository quizQuestionRepository;
