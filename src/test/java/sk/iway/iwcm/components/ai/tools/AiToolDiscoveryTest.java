@@ -39,6 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -75,6 +76,8 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.rest.AiChatStore;
 import sk.iway.iwcm.components.ai.rest.AiToolsController;
 import sk.iway.iwcm.components.configuration.ConfigurationController;
+import sk.iway.iwcm.components.configuration.ConfigurationService;
+import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
 import sk.iway.iwcm.components.quiz.rest.QuizQuestionRestController;
 import sk.iway.iwcm.components.quiz.rest.QuizRestController;
 import sk.iway.iwcm.i18n.Prop;
@@ -112,14 +115,16 @@ class AiToolDiscoveryTest {
     }
 
     @EnableWebMvc
+    @EnableSpringDataWebSupport
     @EnableMethodSecurity(proxyTargetClass = true, securedEnabled = true)
-    @Import({AiToolsController.class, AiToolRegistry.class, AiToolService.class, AiToolAuthorization.class, AiToolCallFilter.class, AiToolAudit.class, AiChatStore.class})
+    @Import({AiToolsController.class, AiToolRegistry.class, AiToolService.class, AiToolAuthorization.class, AiToolCallFilter.class, AiToolAudit.class, AiChatStore.class, ConfigurationToolResponseAdvice.class})
     static class Config {
         @Bean(name = "WebjetSecurityService")
         WebjetSecurityService security() { return mock(WebjetSecurityService.class); }
         @Bean AssistantDefinitionRepository assistants() { return mock(AssistantDefinitionRepository.class); }
         @Bean AiSkillRepository skills() { return mock(AiSkillRepository.class); }
-        @Bean ConfigurationController configuration() { return new ConfigurationController(null); }
+        @Bean ConfigurationService configurationService() { return mock(ConfigurationService.class); }
+        @Bean ConfigurationController configuration(ConfigurationService service) { return new ConfigurationController(service); }
         @Bean QuizRestController quizzes() { return new QuizRestController(null, null, null); }
         @Bean QuizQuestionRestController questions() { return new QuizQuestionRestController(null); }
         @Bean AuditProbeController probe() { return new AuditProbeController(); }
@@ -181,6 +186,58 @@ class AiToolDiscoveryTest {
         AiToolArgumentValidator.validate(schema, Map.of("body", Map.of("name", "example", "encrypt", true)));
         assertThrows(AiToolArgumentValidator.InvalidArguments.class, () ->
                 AiToolArgumentValidator.validate(schema, Map.of("body", Map.of("name", "example", "encrypted", true))));
+    }
+
+    @Test
+    void configurationToolRedactsSensitiveValuesAndPreservesOrdinaryRows() throws Exception {
+        assistant.setInstructions("@group(configuration)");
+        when(security.hasPermission("menuConfig")).thenReturn(true);
+        var service = context.getBean(ConfigurationService.class);
+        var password = configurationRow("smtpPassword", "private-stored", "private-display", "private-default");
+        var port = configurationRow("smtpPort", "25", "587", "2525");
+        var custom = configurationRow("tenantMailLabel", "Office", "Mail", null);
+        var encrypted = configurationRow("deliverySetting", "encrypted:private-stored", "private-display", "private-default");
+        when(service.getAutocompleteDetail(any(), eq("smtpPassword"))).thenReturn(password);
+        when(service.getAll(any(), any(), any())).thenReturn(List.of(password, port, custom, encrypted));
+
+        try (var constants = mockStatic(Constants.class, CALLS_REAL_METHODS)) {
+            constants.when(() -> Constants.getString("smtpPassword")).thenReturn("private-runtime");
+            var detail = configurationCall("get_autocomplete_detail", Map.of("name", "smtpPassword"));
+            assertTrue(detail.path("configured").asBoolean());
+            assertTrue(detail.path("redacted").asBoolean());
+            assertFalse(detail.has("value") || detail.has("displayValue") || detail.has("oldValue"));
+
+            var rows = configurationCall("get_all", Map.of()).path("content");
+            assertEquals(detail, rows.get(0));
+            assertEquals(json.valueToTree(port), rows.get(1));
+            assertEquals(json.valueToTree(custom), rows.get(2));
+            assertTrue(rows.get(3).required("redacted").asBoolean());
+
+            constants.when(() -> Constants.getString("smtpPassword")).thenReturn("");
+            detail = configurationCall("get_autocomplete_detail", Map.of("name", "smtpPassword"));
+            assertFalse(detail.required("configured").asBoolean());
+        }
+        var direct = mvc.perform(get("/admin/rest/settings/configuration/autocomplete/detail").session(session)
+                .param("name", "smtpPassword")).andExpect(status().isOk()).andReturn().getResponse();
+        assertEquals(json.readTree(json.writeValueAsBytes(password)), json.readTree(direct.getContentAsByteArray()));
+    }
+
+    private static ConfDetailsDto configurationRow(String name, String value, String displayValue, String oldValue) {
+        var row = new ConfDetailsDto();
+        row.setName(name);
+        row.setValue(value);
+        row.setDisplayValue(displayValue);
+        row.setOldValue(oldValue);
+        return row;
+    }
+
+    private JsonNode configurationCall(String operation, Map<String, ?> arguments) throws Exception {
+        var response = mvc.perform(post(BASE + "/configuration_" + operation + "/call").session(session)
+                .header(AiToolAuthorization.ASSISTANT_HEADER, "7").header(AiToolAuthorization.CHAT_HEADER, "unsaved")
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(arguments)))
+                .andExpect(status().isOk()).andReturn().getResponse();
+        assertFalse(response.getContentAsString().contains("private-"));
+        return json.readTree(response.getContentAsByteArray());
     }
 
     @Test

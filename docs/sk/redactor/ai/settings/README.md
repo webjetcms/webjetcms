@@ -197,6 +197,8 @@ Ak má aspoň jeden asistent v aktuálnej doméne nastavený limit tokenov väč
 
 Na stránke **AI nástroje → Nástroje** vidíte REST operácie, ku ktorým máte prístup. Kliknutím na názov nástroja otvoríte jeho opis, vstupné argumenty a očakávanú odpoveď.
 
+Nástroje skupiny **Konfigurácia** posielajú asistentovi hodnoty bežných aj vlastných premenných, napríklad `smtpPort`. Pri šifrovanej hodnote alebo názve, ktorý WebJET vyhodnotí ako citlivý, nástroj vynechá polia `value`, `displayValue` a `oldValue`. Názov kontroluje podľa častí slov, napríklad `pass`, `heslo`, `secret`, `key` alebo `token`. Pri otázke, či je nastavené `smtpPassword`, asistent dostane `redacted: true` a v poli `configured` zistí, či má heslo v bežiacej aplikácii neprázdnu hodnotu.
+
 Prepínač **Zoskupiť podľa REST kontroléra** zobrazí názov súboru každého kontroléra a počet jeho dostupných koncových bodov. Stĺpec **Prefix REST cesty** zobrazuje spoločnú časť ich ciest, napríklad `/admin/rest/quiz` pre `QuizRestController.java`. V stĺpci **Opis** si môžete prečítať, aké údaje kontrolér spravuje. Kliknutím na názov súboru otvoríte ponuku **Koncový bod**. Operáciu môžete vyhľadať podľa názvu nástroja, HTTP metódy alebo REST cesty. Výberom inej operácie v tom istom okne zmeníte náhľad.
 
 ## Nastavenie četového asistenta

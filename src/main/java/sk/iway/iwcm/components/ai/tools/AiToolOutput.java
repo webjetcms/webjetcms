@@ -72,7 +72,7 @@ record AiToolOutput(String responseType, Map<String, Object> schema) {
                         "required", List.of("result")));
             }
         }
-        return new AiToolOutput("json", AiToolSchema.output(type));
+        return new AiToolOutput("json", AiToolSchema.output(type, handler.getBeanType()));
     }
 
     private static JavaType bodyType(JavaType type) {

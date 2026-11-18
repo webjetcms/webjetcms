@@ -30,6 +30,9 @@ import io.swagger.v3.core.util.Json;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import sk.iway.iwcm.components.configuration.ConfigurationController;
+import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
+import sk.iway.iwcm.components.configuration.model.ConfPreparedEntity;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -41,13 +44,15 @@ final class AiToolSchema {
             DataTableColumnType.SELECT, DataTableColumnType.RADIO, DataTableColumnType.BUTTON_GROUP);
     private final Map<String, Map<String, Object>> definitions = new LinkedHashMap<>();
     private final boolean output;
+    private final boolean configurationResult;
 
     AiToolSchema() {
-        this(false);
+        this(null);
     }
 
-    private AiToolSchema(boolean output) {
-        this.output = output;
+    private AiToolSchema(Class<?> outputController) {
+        output = outputController != null;
+        configurationResult = output && ConfigurationController.class.isAssignableFrom(outputController);
     }
 
     Map<String, Map<String, Object>> definitions() {
@@ -58,8 +63,8 @@ final class AiToolSchema {
         return describe(MAPPER.constructType(type), false);
     }
 
-    static Map<String, Object> output(JavaType type) {
-        AiToolSchema builder = new AiToolSchema(true);
+    static Map<String, Object> output(JavaType type, Class<?> controller) {
+        AiToolSchema builder = new AiToolSchema(controller);
         Map<String, Object> schema = new LinkedHashMap<>(builder.describe(type, true));
         if (!builder.definitions.isEmpty()) schema.put("$defs", builder.definitions);
         return schema;
@@ -120,6 +125,12 @@ final class AiToolSchema {
             fields.put(prop.getName(), field);
             if (!output && (prop.isRequired() || member.hasAnnotation(NotBlank.class) || member.hasAnnotation(NotNull.class)
                     || member.hasAnnotation(NotEmpty.class))) required.add(prop.getName());
+        }
+        if (configurationResult && (raw == ConfDetailsDto.class || raw == ConfPreparedEntity.class)) {
+            fields.put("redacted", Map.of("type", "boolean", "const", true, "description", "Sensitive value fields were omitted."));
+            if (raw == ConfDetailsDto.class) {
+                fields.put("configured", Map.of("type", "boolean", "description", "Whether the redacted setting has a nonempty runtime value."));
+            }
         }
         bean.put("type", "object");
         bean.put("properties", fields);
