@@ -20,4 +20,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Datatable
 {
+    /**
+     * Declares that lists use frontend paging and do not support the page and size query parameters.
+     * AI tools use this metadata; it does not change REST behavior or configure the frontend.
+     */
+    boolean clientSidePaging() default false;
 }

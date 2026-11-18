@@ -31,7 +31,7 @@ import java.util.List;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@Datatable
+@Datatable(clientSidePaging = true)
 @RequestMapping(value = "/admin/rest/settings/configuration")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuConfig')")
 @AiTool(description = "components.ai.tools.configuration.context", exclude = {"findByColumns", "action", "getSum", "rowReorder"})

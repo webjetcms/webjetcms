@@ -159,7 +159,7 @@ import sk.iway.iwcm.components.ai.tools.AiTool;
 @RestController
 @RequestMapping("/admin/rest/settings/configuration")
 @PreAuthorize("@WebjetSecurityService.hasPermission('menuConfig')")
-@Datatable
+@Datatable(clientSidePaging = true)
 @AiTool(description = "components.ai.tools.configuration.context",
     exclude = {"findByColumns", "action", "getSum", "rowReorder"})
 public class ConfigurationController extends DatatableRestControllerV2<ConfDetailsDto, Long> {
@@ -168,6 +168,10 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
 ```
 
 Samotné `@AiTool` zahrnie aj zápisové operácie. Voľba `readOnly = true` obmedzí výpis aj volanie na HTTP GET. Pomocou `exclude = {"findByColumns"}` môžete v oboch režimoch vyradiť všetky mapovania konkrétnej Java metódy, vrátane zdedenej metódy. Pri vlastných mapovaniach bez určenej HTTP metódy katalóg použije GET, v plnom režime pri vstupe s telom požiadavky použije POST.
+
+Ak kontrolér vracia celý zoznam a nepodporuje parametre `page` a `size`, nastavte `@Datatable(clientSidePaging = true)`. Takto sú označené kontroléry konfigurácie a priečinkov, ktorých frontend používa `serverSide: false`. Predvolená hodnota je `false` pre serverové stránkovanie.
+
+Pri metódach s parametrom `Pageable` katalóg vynechá `page` a `size` zo vstupnej schémy aj príkladov, prestane dopĺňať `size=20` a odmietne tieto argumenty aj vo filtroch. Do opisu automaticky pridá informáciu o stránkovaní v prehliadači a vrátení celého zodpovedajúceho zoznamu. Upozornenie sa preloží aj v administrácii a doplní sa aj k vlastnému opisu z `@AiToolDescription`. Parameter `sort` zostáva dostupný. Anotácia opisuje existujúce správanie; nemení priame REST volania ani nastavenie frontendu. Metódy bez `Pageable` neovplyvňuje.
 
 Voľbou `include` môžete vymenovať Java metódy, ktoré chcete sprístupniť. Pre kontrolér, ktorý nededí z `DatatableRestControllerV2`, je tento zoznam povinný. Napríklad `AiToolsController` používa `@AiTool(readOnly = true, include = {"preview", "details"})`.
 
@@ -230,7 +234,7 @@ if (tools.some(tool => tool.name === "configuration_get_autocomplete_detail")) {
 
 Nástroj `configuration_get_autocomplete_detail` vyžaduje názov premennej v poli `name`. Pre hodnotu `"smtpPort"` vykoná `GET /admin/rest/settings/configuration/autocomplete/detail?name=smtpPort`. Pri každom volaní WebJET znovu overí prístup používateľa. Pri citlivej premennej vynechá hodnoty a vráti `redacted: true`; pole `configured` uvádza, či má premenná neprázdnu hodnotu v bežiacej aplikácii.
 
-Argumenty ďalších nástrojov zostavte podľa ich `inputSchema`. Štandardný zdedený handler `/all` predvolene použije veľkosť stránky 20. Konfiguračný kontrolér však vracia celý dostupný zoznam a ignoruje `page` aj `size`. Pri väčšom zozname použite `configuration_get_autocomplete` s argumentom `{"term":"smtp"}` a potom načítajte detail podľa presného názvu.
+Argumenty ďalších nástrojov zostavte podľa ich `inputSchema`. Štandardný zdedený handler `/all` pri serverovom stránkovaní predvolene použije veľkosť stránky 20. Nástroj `configuration_get_all` vracia celý dostupný zoznam a argumenty `page` aj `size` odmietne podľa anotácie `@Datatable(clientSidePaging = true)`. Pri väčšom zozname použite `configuration_get_autocomplete` s argumentom `{"term":"smtp"}` a potom načítajte detail podľa presného názvu.
 
 Spoločné inštrukcie pre asistentov uprednostňujú `get_one` pri známom ID a filtrované `find_by_columns`, vyhľadávanie alebo autocomplete pri hľadaní podľa názvu. Na vyhľadanie jedného záznamu nemajú používať `get_all`: niektoré implementácie ignorujú stránkovanie a môžu vrátiť milióny záznamov. Výnimkou je požiadavka na zoznam, ktorú nemožno splniť cieleným nástrojom a pri ktorej opis nástroja zaručuje obmedzený rozsah odpovede. Ak cielený nástroj chýba, asistent si vyžiada presné ID alebo vysvetlí chýbajúcu možnosť.
 

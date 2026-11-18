@@ -423,7 +423,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
-- Datatabuľky - anotácia `@AiTool` sprístupňuje vybrané REST operácie v [katalógu AI_TOOLS](developer/datatables/restcontroller.md#ai_tools). Klient môže vypísať anglické popisy a vstupné schémy a zavolať operáciu s oprávneniami prihláseného používateľa.
+- Datatabuľky - anotácia `@AiTool` sprístupňuje vybrané REST operácie v [katalógu AI_TOOLS](developer/datatables/restcontroller.md#ai_tools). Klient môže vypísať anglické popisy a vstupné schémy a zavolať operáciu s oprávneniami prihláseného používateľa. Nastavenie `@Datatable(clientSidePaging = true)` označuje stránkovanie v prehliadači: AI nástroje vynechajú a odmietnu parametre `page` a `size` a automaticky vysvetlia, že vracajú celý zodpovedajúci zoznam.
 
 #### Prelomové zmeny
 

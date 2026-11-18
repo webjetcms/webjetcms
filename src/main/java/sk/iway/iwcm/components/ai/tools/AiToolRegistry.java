@@ -50,7 +50,7 @@ public class AiToolRegistry {
 
         AiToolDefinition definition(Prop language) {
             if (language == null) return definition;
-            return new AiToolDefinition(definition.name(), operationDescription(handler, language), definition.inputSchema(),
+            return new AiToolDefinition(definition.name(), operationDescription(handler, language, inputs), definition.inputSchema(),
                     path, method.name(), definition.conditions(), definition.responseType(), definition.outputSchema());
         }
     }
@@ -122,7 +122,7 @@ public class AiToolRegistry {
                 Logger.warn(AiToolRegistry.class, "Cannot describe the response for AI tool {}", name, unsupportedModel);
                 output = new AiToolOutput("dynamic", null);
             }
-            AiToolDefinition definition = new AiToolDefinition(name, operationDescription(op.handler(), null), inputs.schema(), op.path(),
+            AiToolDefinition definition = new AiToolDefinition(name, operationDescription(op.handler(), null, inputs), inputs.schema(), op.path(),
                     op.verb().name(), conditions(op.mapping(), true), output.responseType(), output.schema());
             if (result.put(name, new Entry(op.handler(), op.mapping(), op.verb(), op.path(), definition, inputs)) != null) {
                 throw new IllegalStateException("Duplicate AI tool name: " + name);
@@ -185,7 +185,16 @@ public class AiToolRegistry {
         return description.isEmpty() ? "" : translated(language, description, description);
     }
 
-    private static String operationDescription(HandlerMethod handler, Prop language) {
+    private static String operationDescription(HandlerMethod handler, Prop language, AiToolInputs inputs) {
+        String description = resolvedOperationDescription(handler, language);
+        if (inputs.clientSidePaging()) {
+            description += " " + translated(language, "components.ai.tools.client_side_paging.description",
+                    "Uses frontend paging and returns the complete matching list. Do not send page or size.");
+        }
+        return description;
+    }
+
+    private static String resolvedOperationDescription(HandlerMethod handler, Prop language) {
         AiToolDescription annotation = handler.getMethodAnnotation(AiToolDescription.class);
         if (annotation != null && !annotation.value().isBlank()) {
             String description = annotation.value().strip();

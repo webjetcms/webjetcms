@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.ClassUtils;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +32,7 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpSession;
+import sk.iway.iwcm.system.datatable.Datatable;
 import tools.jackson.core.StreamReadConstraints;
 import tools.jackson.core.exc.StreamConstraintsException;
 
@@ -51,9 +54,13 @@ public final class AiToolInputs {
     private final Map<String, String> fixedHeaders = new LinkedHashMap<>();
     private final Set<NameValueExpression<String>> conditions;
     private final Map<String, Object> schema;
+    private final boolean clientSidePaging;
 
     AiToolInputs(HandlerMethod handler, RequestMappingInfo mapping, String path) {
         conditions = mapping.getParamsCondition().getExpressions();
+        Datatable datatable = ClassUtils.getUserClass(handler.getBeanType()).getAnnotation(Datatable.class);
+        clientSidePaging = datatable != null && datatable.clientSidePaging()
+                && Arrays.stream(handler.getMethodParameters()).anyMatch(param -> Pageable.class.isAssignableFrom(param.getParameterType()));
         AiToolSchema types = new AiToolSchema();
         Map<String, Object> filterFields = new LinkedHashMap<>();
         boolean queryMap = false;
@@ -83,7 +90,7 @@ public final class AiToolInputs {
                 add(Location.QUERY, "page", false, Map.of("type", "integer", "minimum", 0), "Zero-based page number.");
                 Map<String, Object> size = new LinkedHashMap<>(Map.of("type", "integer", "minimum", 1));
                 // The DataTable /all handler selects unpaged mode when the size parameter is absent.
-                if (datatableList) size.put("default", DEFAULT_LIST_SIZE);
+                if (datatableList && !clientSidePaging) size.put("default", DEFAULT_LIST_SIZE);
                 add(Location.QUERY, "size", false, size, "Number of records per page.");
                 add(Location.QUERY, "sort", false, Map.of("type", "array", "items", Map.of("type", "string")), "Sort criteria in property,direction format.");
             } else if (param.hasParameterAnnotation(ModelAttribute.class) || (param.getParameterAnnotations().length == 0 && !contextType(raw))) {
@@ -98,7 +105,13 @@ public final class AiToolInputs {
             Map<String, Object> filters = new LinkedHashMap<>();
             filters.put("type", "object");
             filters.put("properties", filterFields);
-            if (datatableSearch) filters.put("patternProperties", Map.of(SEARCH_KEY, STRING));
+            Map<String, Object> patterns = new LinkedHashMap<>();
+            if (datatableSearch) patterns.put(SEARCH_KEY, STRING);
+            if (clientSidePaging) {
+                filterFields.keySet().removeIf(AiToolInputs::pagingParameter);
+                patterns.put("^(page|size)$", false);
+            }
+            if (!patterns.isEmpty()) filters.put("patternProperties", patterns);
             filters.put("additionalProperties", queryMap && !datatableSearch ? QUERY_VALUE : false);
             add(Location.FILTERS, "filters", false, filters, queryMap && !datatableSearch
                     ? "Additional query parameters, with repeated values supplied as an array of strings." : "Query fields used to filter the records.");
@@ -163,6 +176,7 @@ public final class AiToolInputs {
     }
 
     private void add(Location location, String name, boolean required, Map<String, Object> type, String label) {
+        if (clientSidePaging && location == Location.QUERY && pagingParameter(name)) return;
         Map<String, Object> property = new LinkedHashMap<>(type);
         property.put("description", label);
         inputs.putIfAbsent(keyFor(location, name), new Input(location, name, required, property));
@@ -170,6 +184,10 @@ public final class AiToolInputs {
 
     public Map<String, Object> schema() {
         return schema;
+    }
+
+    boolean clientSidePaging() {
+        return clientSidePaging;
     }
 
     public Bound bind(Map<String, Object> arguments) {
@@ -228,7 +246,14 @@ public final class AiToolInputs {
         }
     }
 
-    private static void addQuery(Map<String, List<String>> query, String key, List<String> values) {
+    private static boolean pagingParameter(String name) {
+        return "page".equals(name) || "size".equals(name);
+    }
+
+    private void addQuery(Map<String, List<String>> query, String key, List<String> values) {
+        if (clientSidePaging && pagingParameter(key)) {
+            throw new IllegalArgumentException("Client-side paging does not support page or size query parameters.");
+        }
         if (query.putIfAbsent(key, values) != null) throw new IllegalArgumentException("Duplicate query field: " + key);
     }
 

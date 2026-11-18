@@ -68,7 +68,7 @@ import sk.iway.iwcm.users.UsersDB;
  * Rest controlle pre dtatabulku v administracii web stranky #44836
  */
 @RestController
-@Datatable
+@Datatable(clientSidePaging = true)
 @RequestMapping(value = "/admin/rest/groups")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
 @AiTool(description = "components.ai.tools.groups.context", exclude = {"findByColumns", "getSum", "rowReorder"})
