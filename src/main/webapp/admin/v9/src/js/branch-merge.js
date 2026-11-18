@@ -1,262 +1,447 @@
+import $ from 'jquery';
+import {icon, node as element} from './dashboard/widget-utils';
+
 const commonKeys = {close: 'button.close', cancel: 'button.cancel', yes: 'button.yes', no: 'button.no'};
 const tr = (key, args = []) => WJ.translate(commonKeys[key] || `branches.merge.${key}.js`, ...args);
 const types = ['DOCUMENT', 'GROUP', 'MEDIA', 'FILE'];
 const writtenPhases = new Set(['DATA', 'REFERENCES', 'TRASH_WAIT', 'TRASH_ROOT', 'EFFECTS']);
-
-function element(tag, className, text) {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text !== undefined) node.textContent = text;
-    return node;
-}
+export const previewStates = ['DRAFT', 'SCHEDULED', 'NEEDS_ATTENTION'];
+export const publishStates = ['DRAFT', 'MERGE_FAILED'];
 
 function button(text, action, primary = false) {
-    const node = element('button', `btn btn-sm ${primary ? 'btn-primary' : 'btn-outline-secondary'}`, text);
-    node.type = 'button';
-    node.addEventListener('click', action);
-    return node;
+    const el = element('button', `btn btn-sm ${primary ? 'btn-primary' : 'btn-outline-secondary'}`, text);
+    el.type = 'button';
+    el.addEventListener('click', action);
+    return el;
 }
 
 function link(text, href) {
-    const node = element('a', 'btn btn-sm btn-outline-secondary', text);
-    node.href = href;
-    node.target = '_blank';
-    node.rel = 'noopener';
-    return node;
+    const el = element('a', 'btn btn-sm btn-outline-secondary', text);
+    el.href = href;
+    el.target = '_blank';
+    el.rel = 'noopener';
+    return el;
 }
 
 function equal(left, right) { return JSON.stringify(left ?? null) === JSON.stringify(right ?? null); }
+const itemKey = item => `${item.type}:${item.objectKey}`;
+const isProblem = item => Boolean(item.conflict || item.error || item.applyState === 'ERROR');
+const showError = error => WJ.notifyError(WJ.escapeHtml(error.message));
 
-/** Opens the whole-package comparison without changing the administrator's editing context. */
-export async function openBranchMerge(id, api, screen, invoker) {
-    document.getElementById('branch-merge-dialog')?.close();
-    const dialog = element('dialog', 'pg-branch-merge');
-    dialog.id = 'branch-merge-dialog';
-    dialog.setAttribute('aria-labelledby', 'branch-merge-title');
-    const header = element('header', 'pg-branch-merge__header');
-    const title = element('h2', 'h4 mb-0', tr('title'));
-    title.id = 'branch-merge-title';
-    const close = button(tr('close'), () => dialog.close());
-    header.append(title, close);
-    const content = element('div', 'pg-branch-merge__content');
-    const status = element('p', 'small mb-0');
-    status.setAttribute('role', 'status');
-    status.setAttribute('aria-live', 'polite');
-    const errorBox = element('div', 'alert alert-danger d-none');
-    errorBox.setAttribute('role', 'alert');
-    const overview = element('div');
-    content.append(status, errorBox, overview);
-    dialog.append(header, content);
-    let report, timer, busy = false, prepared = false, filter = '', problemsOnly = false, selection = null;
-    const expanded = new Set();
-    dialog.addEventListener('close', () => {
-        clearTimeout(timer);
-        dialog.remove();
-        if (invoker?.isConnected) invoker.focus();
-        const url = new URL(location.href);
-        const fragment = new URLSearchParams(url.hash.substring(1));
-        if (fragment.has('branchCompare')) {
-            fragment.delete('branchCompare');
-            url.hash = fragment.toString();
+/** Reserves the preview tab on the click, then navigates to the URL authorized by the server. */
+export async function openBranchPreview(api, id, docId, fallback) {
+    const tab = window.open('', '_blank');
+    if (tab) tab.opener = null;
+    try {
+        if (!docId) {
+            const report = await api(`/${id}/progress`);
+            docId = report.items.find(item => item.type === 'DOCUMENT' &&
+                (item.choice === 'LIVE' || !item.writeRequired && !item.conflict ? item.live : item.work)?.state === 'ACTIVE')?.objectKey;
         }
-        if (url.searchParams.has('branchCompare')) {
-            url.searchParams.delete('branchCompare');
+        const {url} = await api(`/${id}/preview-link${docId ? `?docId=${encodeURIComponent(docId)}` : ''}`);
+        if (tab) tab.location.href = url;
+        else if (fallback?.isConnected) {
+            const anchor = link(tr('preview'), url);
+            fallback.append(anchor);
+            anchor.focus();
+        } else {
+            location.assign(url);
         }
-        history.replaceState(null, '', url);
+    } catch (error) {
+        tab?.close();
+        throw error;
+    }
+}
+
+function itemStatus(item) {
+    if (item.applyState === 'DONE') return item.applyPhase === 'NOOP' ? 'noop' : 'done';
+    if (item.applyState === 'ERROR' && writtenPhases.has(item.applyPhase)) return 'contentWrittenError';
+    if (item.error || item.applyState === 'ERROR') return 'error';
+    if (item.applyState === 'APPLYING') return 'applying';
+    if (item.conflict) return 'conflict';
+    return item.writeRequired ? 'willPublish' : 'noChange';
+}
+
+function statusBadge(item, status) {
+    const badge = element('span', 'md-branch-state', tr(status));
+    if (isProblem(item)) badge.dataset.state = 'NEEDS_ATTENTION';
+    else if (status === 'done') badge.dataset.state = 'MERGED';
+    else if (status === 'applying') badge.dataset.state = 'MERGING';
+    return badge;
+}
+
+/** Connects the version's changes and publication controls to the lifetime of one Editor session. */
+export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
+    const {id, state: initialState, revision: initialRevision} = editor.currentJson;
+    const modal = document.getElementById('branchesDataTable_modal');
+    const changes = document.getElementById('branch-changes-panel');
+    const publishing = document.getElementById('branch-publishing-panel');
+    const events = new AbortController();
+    const {signal} = events;
+    let report, timer, busy = false, stale = false, table, tableRows;
+    let activeTab = modal.querySelector('[role="tab"].active')?.dataset.tabId;
+    let detailDialog, detailItem, expanded, confirmation;
+    let scheduleForm, scheduleButton, scheduleKey;
+    const settings = () => ['name', 'color', 'description'].map(name => editor.field(name).val());
+    const savedSettings = settings();
+    const dirty = () => !equal(settings(), savedSettings);
+    const ready = () => Boolean(report?.ready && report.preparationHash && !stale);
+    const items = () => report?.items || [];
+
+    const footer = modal.querySelector('.DTE_Form_Buttons');
+    const save = footer.querySelector('button.btn-primary');
+    const publish = button(tr('publish'), () => {
+        if (!ready() || busy || dirty()) return;
+        confirmOnOpen = true;
+        selectChanges();
+        confirmWhenReady();
     });
-    document.body.append(dialog);
-    dialog.showModal();
-    close.focus();
+    publish.id = 'branch-merge-publish';
+    publish.classList.remove('btn-sm');
+    const publishLabel = document.createTextNode('');
+    publish.replaceChildren(icon('ti-world-upload'), publishLabel);
+    footer.querySelector('.buttons-footer-left').append(publish);
+    const cancel = footer.querySelector('.btn-close-editor');
+    const cancelLabel = cancel.lastChild;
+    const defaultCancel = cancelLabel.textContent;
+    const title = modal.querySelector('.modal-title');
+    const stateBadge = element('span', 'md-branch-state', tr(`state.${initialState}`));
+    stateBadge.dataset.state = initialState;
+    title.after(stateBadge);
+    title.parentElement.classList.add('pg-branch-modal-heading');
+    title.parentElement.id = 'branch-merge-title';
 
-    function failure(error) {
-        prepared = false;
-        errorBox.classList.remove('d-none');
-        errorBox.textContent = `${error.message} ${tr('compareAgain')}`;
+    const toolbar = element('div', 'pg-branch-panel__toolbar d-flex align-items-center flex-wrap gap-2');
+    const typeLabel = element('label', 'form-label mb-0', tr('filter'));
+    const typeSelect = element('select', 'form-select form-select-sm w-auto');
+    typeSelect.id = 'branch-merge-type';
+    typeLabel.htmlFor = typeSelect.id;
+    typeSelect.add(new Option(tr('all'), ''));
+    types.forEach(type => typeSelect.add(new Option(tr(`type.${type}`), type)));
+    const problemCheck = element('input', 'form-check-input me-2');
+    problemCheck.id = 'branch-merge-problems';
+    problemCheck.type = 'checkbox';
+    const problemLabel = element('label', 'form-check-label text-nowrap ms-sm-2');
+    problemLabel.append(problemCheck, document.createTextNode(tr('problemsOnly')));
+    const reload = button('', () => refresh());
+    reload.classList.add('ms-auto');
+    reload.id = 'branch-merge-reload';
+    reload.title = tr('refresh');
+    reload.setAttribute('aria-label', tr('refresh'));
+    reload.append(icon('ti-refresh'));
+    toolbar.append(typeLabel, typeSelect, problemLabel, reload);
+
+    const messages = element('div', 'pg-branch-panel__messages');
+    const settingsPending = element('p', 'alert alert-warning', tr('settingsPending'));
+    settingsPending.hidden = true;
+    messages.setAttribute('aria-live', 'polite');
+    const loading = element('p', 'text-muted mb-0', tr('loading'));
+    loading.setAttribute('role', 'status');
+    const changesError = element('div', 'alert alert-danger d-none');
+    const scheduleError = element('div', 'alert alert-danger d-none');
+    const detailError = element('div', 'alert alert-danger d-none');
+    for (const box of [changesError, scheduleError, detailError]) box.setAttribute('role', 'alert');
+    const grid = element('table', 'table table-hover pg-branch-panel__table');
+    grid.id = 'branchChangesDataTable';
+    grid.append(element('caption', 'visually-hidden', tr('table')));
+    changes.replaceChildren(changesError, messages, settingsPending, toolbar, loading, grid);
+    const scheduleSummary = element('div');
+    scheduleSummary.append(loading.cloneNode(true));
+    const scheduleBody = element('div');
+    publishing.replaceChildren(scheduleError, scheduleSummary, scheduleBody);
+
+    function makeGrid() {
+        const col = (data, key) => ({data, title: WJ.escapeHtml(tr(key)), render: $.fn.dataTable.render.text()});
+        return $(grid).DataTable({
+            dom: "<'table-responsive't><'dt-footer-row d-flex flex-wrap align-items-center justify-content-between gap-2'ip>",
+            autoWidth: false,
+            select: false,
+            colReorder: false,
+            scrollX: false,
+            stateSave: false,
+            order: [],
+            pageLength: 10,
+            language: {emptyTable: tr('noChanges'), zeroRecords: tr('empty')},
+            columns: [
+                col('typeName', 'typeLabel'),
+                {...col('label', 'item'), className: 'pg-branch-panel__item'},
+                col('operationName', 'operation'),
+                {data: 'statusName', title: WJ.escapeHtml(tr('status')), render: (value, type, row) =>
+                    type === 'display' ? statusBadge(row, row.status).outerHTML : value},
+                {data: null, title: WJ.escapeHtml(tr('action')), className: 'text-end', orderable: false, searchable: false,
+                    defaultContent: '', createdCell: (cell, value, row) => {
+                        const action = button(tr(row.conflict && row.resolvable ? 'resolve' : 'compareItem'), event => openDetail(itemKey(row), event.currentTarget));
+                        action.dataset.branchCompare = row.objectKey;
+                        action.setAttribute('aria-label', `${action.textContent} · ${row.label}`);
+                        cell.append(action);
+                        cell.parentElement.dataset.branchType = row.type;
+                        cell.parentElement.dataset.branchKey = row.objectKey;
+                    }}
+            ]
+        });
     }
 
-    async function perform(path, body, isPreparation = false) {
-        if (busy) return;
-        const activeId = document.activeElement?.id;
+    function applyFilters(resetPage = true) {
+        if (!table) return;
+        table.search.fixed('branch-type', (value, row) => !typeSelect.value || row.type === typeSelect.value);
+        table.search.fixed('branch-problems', (value, row) => !problemCheck.checked || isProblem(row));
+        table.draw(resetPage);
+    }
+
+    typeSelect.addEventListener('change', () => applyFilters());
+    problemCheck.addEventListener('change', () => applyFilters());
+
+    function selectChanges() {
+        if (activeTab !== 'branchesDataTable-changes') modal.querySelector('#pills-dt-branchesDataTable-changes-tab').click();
+    }
+
+    modal.addEventListener('shown.bs.tab', event => {
+        const tab = event.target;
+        if (!tab.dataset.tabId?.startsWith('branchesDataTable-')) return;
+        if (activeTab !== tab.dataset.tabId) clearConfirmation(false);
+        activeTab = tab.dataset.tabId;
+        modal.querySelector('.DTE_Body').classList.toggle('has-content', tab.dataset.hasContent === 'true');
+        if (activeTab === 'branchesDataTable-changes') table?.columns.adjust();
+        updateControls();
+        confirmWhenReady();
+        poll();
+    }, {signal});
+
+    function updateControls() {
+        const state = report?.state || initialState;
+        const basic = activeTab === 'branchesDataTable-basic';
+        const hasDraftSettings = dirty();
+        save.hidden = !basic;
+        save.disabled = busy;
+        cancelLabel.textContent = basic || hasDraftSettings ? defaultCancel : ' ' + tr('close');
+        publish.hidden = !publishStates.includes(state) || activeTab === 'branchesDataTable-publishing';
+        publish.disabled = busy || !ready() || hasDraftSettings;
+        publish.title = hasDraftSettings ? tr('settingsPending') : ready() ? '' : tr('publicationBlocked');
+        publish.classList.toggle('btn-outline-secondary', basic);
+        publish.classList.toggle('btn-primary', !basic);
+        if (basic && publish.parentNode === footer) footer.querySelector('.buttons-footer-left').append(publish);
+        if (!basic && publish.parentNode !== footer) cancel.after(publish);
+        publishLabel.textContent = ' ' + tr(state === 'MERGE_FAILED' ? 'resume' : 'publish');
+        settingsPending.hidden = !hasDraftSettings;
+        if (scheduleButton) {
+            scheduleButton.disabled = busy || !ready() || hasDraftSettings;
+            scheduleForm.querySelector('.pg-branch-panel__settings-pending').hidden = !hasDraftSettings;
+        }
+        const saveChoice = detailDialog?.querySelector('#branch-merge-save-choice');
+        if (saveChoice) saveChoice.disabled = busy || stale || !detailDialog.querySelector('input[name="branch-merge-choice"]:checked');
+        reload.disabled = busy;
+    }
+
+    modal.addEventListener('input', updateControls, {signal});
+    modal.addEventListener('change', updateControls, {signal});
+    editor.on('preSubmit.branchChanges', () => activeTab === 'branchesDataTable-basic' && !busy);
+
+    function setError(error, box) {
+        box.textContent = error.message;
+        box.classList.remove('d-none');
+        if (box === detailError) detailDialog?.querySelector('[data-branch-retry]').classList.remove('d-none');
+    }
+
+    async function perform(path = '/progress', body, errorBox = changesError) {
+        if (busy || signal.aborted) return;
+        clearTimeout(timer);
+        const previousState = report?.state ?? initialState;
+        const previousRevision = report?.revision ?? initialRevision;
+        const active = document.activeElement;
         busy = true;
-        errorBox.classList.add('d-none');
-        content.setAttribute('aria-busy', 'true');
-        overview.querySelectorAll('button').forEach(node => { node.disabled = true; });
+        updateControls();
+        changes.setAttribute('aria-busy', 'true');
+        publishing.setAttribute('aria-busy', 'true');
+        for (const box of [changesError, scheduleError, detailError]) box.classList.add('d-none');
         try {
             report = await api(`/${id}${path}`, body);
-            prepared = isPreparation;
-            window.dispatchEvent(new CustomEvent('WJ.Branch.updated', {detail: report}));
-        } catch (error) { failure(error); }
-        finally {
-            busy = false;
-            content.removeAttribute('aria-busy');
-            if (dialog.open && report) {
-                render();
-                if (activeId) {
-                    const target = dialog.querySelector(`#${CSS.escape(activeId)}`)
-                        || overview.querySelector('#branch-merge-schedule, #branch-merge-publish, #branch-merge-reopen') || close;
-                    target.focus();
+            stale = false;
+            if (previousState !== report.state || previousRevision !== report.revision) {
+                window.dispatchEvent(new CustomEvent('WJ.Branch.updated', {detail: report}));
+            }
+            return report;
+        } catch (error) {
+            stale = true;
+            if (!signal.aborted) {
+                setError(error, errorBox);
+                if (!body && errorBox === changesError) {
+                    setError(error, scheduleError);
+                    const retry = button(tr('refresh'), () => refresh());
+                    retry.classList.add('ms-2');
+                    scheduleError.append(' ', retry);
                 }
+            }
+        } finally {
+            busy = false;
+            if (!signal.aborted) {
+                changes.removeAttribute('aria-busy');
+                publishing.removeAttribute('aria-busy');
+                render();
+                if (active instanceof HTMLElement && active.isConnected && (document.activeElement === document.body || document.activeElement === modal)) active.focus();
             }
         }
     }
 
-    function compare() {
-        return perform('/prepare', {expectedRevision: report.revision}, true);
+    function refresh() {
+        clearConfirmation(false);
+        return perform();
     }
 
-    function itemStatus(item) {
-        if (item.applyState === 'DONE') return tr(item.applyPhase === 'NOOP' ? 'noop' : 'done');
-        if (item.applyState === 'ERROR' && writtenPhases.has(item.applyPhase)) return tr('contentWrittenError');
-        if (item.error || item.applyState === 'ERROR') return tr('error');
-        if (item.applyState === 'APPLYING') return tr('applying');
-        if (item.conflict) return tr('conflict');
-        return tr(item.writeRequired ? 'willPublish' : 'noChange');
-    }
-
-    function operation(item) {
-        return tr(item.operation === 'DELETE' ? 'deleted' : item.base?.state === 'ABSENT' ? 'new' : 'updated');
-    }
-
-    async function edit(item) {
-        if (!report || report.state !== 'DRAFT') return;
-        try {
-            await api('/context', {branchId: id, expectedDomainId: screen.domainId});
-            const fields = item.work?.fields || {};
-            const query = item.type === 'DOCUMENT' ? `docid=${encodeURIComponent(item.objectKey)}`
-                : item.type === 'MEDIA' ? `docid=${encodeURIComponent(fields.media_fk_id)}`
-                : item.type === 'GROUP' ? `groupid=${encodeURIComponent(item.objectKey)}` : '';
-            location.href = `/admin/v9/webpages/web-pages-list/?${query}`;
-        } catch (error) { failure(error); }
-    }
-
-    async function preview(docId, parent) {
-        // Open the tab within the user gesture, then obtain the authorized, effective URL.
-        const tab = window.open('', '_blank');
-        if (tab) tab.opener = null;
-        try {
-            const result = await api(`/${id}/preview-link${docId ? `?docId=${encodeURIComponent(docId)}` : ''}`);
-            if (tab) tab.location.href = result.url;
-            else { const anchor = link(tr('preview'), result.url); parent.append(anchor); anchor.focus(); }
-        } catch (error) { tab?.close(); failure(error); }
+    function poll() {
+        clearTimeout(timer);
+        if (stale || confirmation || detailDialog) return;
+        if (report?.state === 'MERGING') timer = setTimeout(() => perform(), 1500);
+        if (report?.state === 'SCHEDULED') timer = setTimeout(() => perform(), 5000);
     }
 
     function render() {
-        clearTimeout(timer);
-        title.textContent = `${report.name} · ${tr(`state.${report.state}`)}`;
-        overview.replaceChildren();
-        const items = report.items || [];
-        const done = items.filter(item => item.applyState === 'DONE').length;
-        const errors = items.filter(item => item.applyState === 'ERROR' || item.error).length;
-        const pending = items.length - done - errors;
-        const conflicts = items.filter(item => item.conflict).length;
-        const running = report.state === 'MERGING';
-        const failed = report.state === 'MERGE_FAILED';
-        const draft = report.state === 'DRAFT';
-        const scheduled = report.state === 'SCHEDULED';
-        const attention = report.state === 'NEEDS_ATTENTION';
-        status.textContent = `${report.domainName} · ${tr('items', [items.length])} · ${tr('conflicts', [conflicts])}`;
-        const toolbar = element('div', 'd-flex flex-wrap gap-2 my-3');
-        toolbar.append(button(tr('compare'), compare));
-        if (draft) toolbar.append(button(tr('editWeb'), () => edit({type: 'FILE'})));
-        const publicItem = items.find(item => item.type === 'DOCUMENT' && item.live?.state === 'ACTIVE');
-        if (publicItem) toolbar.append(link(tr('production'), `/showdoc.do?docid=${encodeURIComponent(publicItem.objectKey)}`));
-        if (draft || scheduled || attention) {
-            const target = items.find(item => item.type === 'DOCUMENT' && (item.choice === 'LIVE' || !item.writeRequired && !item.conflict ? item.live : item.work)?.state === 'ACTIVE');
-            toolbar.append(button(tr('preview'), () => preview(target?.objectKey, toolbar)));
+        loading.hidden = true;
+        if (!report) scheduleSummary.replaceChildren();
+        stateBadge.dataset.state = report?.state || initialState;
+        stateBadge.textContent = tr(`state.${stateBadge.dataset.state}`);
+        typeSelect.disabled = problemCheck.disabled = !items().length;
+        if (report) {
+            renderReport();
+            renderSchedule();
+            if (detailDialog && !stale) renderDetail();
         }
-        if (draft || failed) {
-            const publish = button(tr(failed ? 'resume' : 'publish'), () => confirmPublish(items, failed), true);
-            publish.id = 'branch-merge-publish';
-            publish.disabled = !prepared || !report.ready || !report.preparationHash || conflicts > 0;
-            toolbar.append(publish);
+        updateControls();
+        confirmWhenReady();
+        poll();
+    }
+
+    function notice(parent, type, text) {
+        const message = element('p', `alert alert-${type}`, text);
+        parent.append(message);
+        return message;
+    }
+
+    function renderReport() {
+        const rows = items();
+        const {state} = report;
+        messages.replaceChildren();
+        if (state === 'NEEDS_ATTENTION') {
+            const warning = notice(messages, 'warning', tr('attentionNote'));
+            const reopen = button(tr('reopen'), () => confirmState('reopen', messages, reopen));
+            reopen.id = 'branch-merge-reopen';
+            warning.append(reopen);
         }
-        if (draft || scheduled) {
-            const schedule = button(tr(scheduled ? 'reschedule' : 'schedule'), () => scheduleForm(items));
-            schedule.id = 'branch-merge-schedule';
-            schedule.disabled = !prepared || !report.ready || !report.preparationHash || conflicts > 0;
-            toolbar.append(schedule);
-        }
-        if (scheduled) {
-            const cancel = button(tr('unschedule'), () => confirmState('unschedule', 'unscheduleNote'));
-            cancel.id = 'branch-merge-unschedule'; toolbar.append(cancel);
-        }
-        if (attention) {
-            const reopen = button(tr('reopen'), () => confirmState('reopen', 'reopenNote'));
-            reopen.id = 'branch-merge-reopen'; toolbar.append(reopen);
-        }
-        overview.append(toolbar);
-        if (scheduled) {
-            const plan = element('div', 'alert alert-info'); plan.id = 'branch-merge-scheduled';
-            plan.append(element('p', 'fw-bold mb-1', tr('scheduledAt', [formatTerm(report.publishAt)])));
-            plan.append(element('p', 'mb-0', tr('scheduledNote'))); overview.append(plan);
-        }
-        if (attention) overview.append(element('p', 'alert alert-warning', tr('attentionNote')));
-        if (failed || running || report.state === 'MERGED') {
-            const progress = element('div', `alert ${failed ? 'alert-warning' : 'alert-info'}`);
+        if (['MERGING', 'MERGE_FAILED', 'MERGED'].includes(state)) {
+            const done = rows.filter(item => item.applyState === 'DONE').length;
+            const errors = rows.filter(item => item.applyState === 'ERROR' || item.error).length;
+            const progress = notice(messages, state === 'MERGE_FAILED' ? 'warning' : 'info',
+                tr(state === 'MERGE_FAILED' ? 'partial' : state === 'MERGED' ? 'finished' : 'running'));
             progress.id = 'branch-merge-progress';
-            progress.append(element('p', 'mb-1', tr('progress', [done, items.length, errors, pending])));
-            progress.append(element('p', 'mb-0', tr(failed ? 'partial' : running ? 'running' : 'finished')));
-            overview.append(progress);
+            progress.prepend(element('strong', 'd-block mb-1', tr('progress', [done, rows.length, errors, rows.length - done - errors])));
         }
-        if (report.errors?.length) {
+        if (rows.some(item => item.conflict)) {
+            notice(messages, 'warning', tr('resolveBeforePublish'));
+        }
+        if (rows.length && report.errors?.length) {
             const list = element('ul', 'alert alert-danger ps-5');
             list.setAttribute('aria-label', tr('blockers'));
             report.errors.forEach(error => list.append(element('li', '', error)));
-            overview.append(list);
-        } else if (draft && prepared && report.ready) {
-            overview.append(element('p', 'alert alert-success', tr('ready')));
+            messages.append(list);
         }
-        if (report.lastError) overview.append(element('p', 'alert alert-danger', report.lastError));
-        if (items.length > 0) renderItems(items);
-        if (running) timer = setTimeout(() => perform('/progress'), 1500);
-        else if (scheduled) timer = setTimeout(() => perform('/progress', undefined, prepared), 5000);
+        if (report.lastError) notice(messages, 'danger', report.lastError);
+        if (!table) table = makeGrid();
+        const data = rows.map(item => {
+            const status = itemStatus(item);
+            return {
+                type: item.type, objectKey: item.objectKey, label: item.label || item.objectKey,
+                conflict: item.conflict, error: item.error, applyState: item.applyState, resolvable: item.resolvable, status,
+                typeName: tr(`type.${item.type}`), statusName: tr(status),
+                operationName: tr(item.operation === 'DELETE' ? 'deleted' : item.base?.state === 'ABSENT' ? 'new' : 'updated')
+            };
+        });
+        if (!equal(tableRows, data)) {
+            const activeRow = document.activeElement?.closest('#branchChangesDataTable tr[data-branch-key]');
+            tableRows = data;
+            table.clear().rows.add(data);
+            applyFilters(false);
+            if (activeRow) focusItem(activeRow.dataset.branchType, activeRow.dataset.branchKey);
+        }
     }
 
-    function renderItems(items) {
-        const filters = element('div', 'd-flex flex-wrap gap-3 align-items-center my-3');
-        const typeLabel = element('label', 'form-label mb-0', tr('filter'));
-        const typeSelect = element('select', 'form-select form-select-sm w-auto');
-        typeSelect.id = 'branch-merge-type';
-        typeLabel.htmlFor = typeSelect.id;
-        typeSelect.add(new Option(tr('all'), ''));
-        types.forEach(type => typeSelect.add(new Option(tr(`type.${type}`), type)));
-        typeSelect.value = filter;
-        typeSelect.onchange = () => { filter = typeSelect.value; render(); dialog.querySelector('#branch-merge-type').focus(); };
-        const problemLabel = element('label', 'form-check-label');
-        const problemCheck = element('input', 'form-check-input me-2');
-        problemCheck.id = 'branch-merge-problems'; problemCheck.type = 'checkbox'; problemCheck.checked = problemsOnly;
-        problemCheck.onchange = () => { problemsOnly = problemCheck.checked; render(); dialog.querySelector('#branch-merge-problems').focus(); };
-        problemLabel.append(problemCheck, document.createTextNode(tr('problemsOnly')));
-        filters.append(typeLabel, typeSelect, problemLabel);
-        overview.append(filters);
-        const tableWrap = element('div', 'table-responsive');
-        const table = element('table', 'table table-hover pg-branch-merge__table');
-        const caption = element('caption', 'visually-hidden', tr('table'));
-        const head = element('thead');
-        const heading = element('tr');
-        ['typeLabel', 'item', 'operation', 'result', 'action'].forEach(key => {
-            const th = element('th', '', tr(key)); th.scope = 'col'; heading.append(th);
+    function focusItem(type, key) {
+        const row = Array.from(grid.tBodies[0]?.rows || []).find(row => row.dataset.branchType === type && row.dataset.branchKey === key);
+        (row?.querySelector('button') || (problemCheck.disabled ? reload : problemCheck)).focus();
+    }
+
+    function clearConfirmation(restoreFocus = true) {
+        if (!confirmation) return;
+        const {panel, invoker} = confirmation;
+        confirmation = null;
+        panel.remove();
+        if (restoreFocus) {
+            (invoker.isConnected && !invoker.disabled ? invoker : reload).focus();
+            poll();
+        }
+    }
+
+    function confirmAction(parent, invoker, {heading, note, summary, label, confirmId, action}) {
+        if (confirmation) return confirmation.panel.focus();
+        clearTimeout(timer);
+        const panel = element('section', 'alert alert-warning pg-branch-panel__confirmation');
+        panel.id = 'branch-merge-confirmation';
+        panel.tabIndex = -1;
+        panel.setAttribute('aria-labelledby', 'branch-merge-confirmation-title');
+        const title = element('h3', 'h5', heading);
+        title.id = 'branch-merge-confirmation-title';
+        const actions = element('div', 'd-flex flex-wrap gap-2');
+        const cancel = button(tr('cancel'), () => clearConfirmation());
+        const confirm = button(label, async () => {
+            if (busy) return;
+            confirm.disabled = cancel.disabled = true;
+            const result = await action();
+            if (signal.aborted) return;
+            clearConfirmation(false);
+            if (!result) (parent === scheduleSummary ? scheduleError : changesError).focus();
+            else (parent === scheduleSummary ? scheduleSummary : messages).focus();
+            poll();
+        }, true);
+        confirm.id = confirmId;
+        actions.append(cancel, confirm);
+        panel.append(title, element('p', '', note));
+        if (summary) panel.append(element('p', 'fw-semibold', summary));
+        panel.append(actions);
+        parent.before(panel);
+        confirmation = {panel, invoker};
+        panel.focus();
+    }
+
+    for (const node of [changesError, scheduleError, messages, scheduleSummary]) node.tabIndex = -1;
+
+    function confirmPublication() {
+        const resume = report.state === 'MERGE_FAILED';
+        const count = items().filter(item => item.writeRequired && item.applyState !== 'DONE').length;
+        confirmAction(messages, publish, {
+            heading: tr(resume ? 'resume' : 'publish'),
+            note: tr('publishNote'),
+            summary: tr('publishCount', [count]),
+            label: tr(resume ? 'resumeConfirm' : 'publishConfirm'),
+            confirmId: 'branch-merge-confirm',
+            action: () => perform(resume ? '/resume' : '/merge', {
+                expectedRevision: report.revision, preparationHash: report.preparationHash
+            })
         });
-        head.append(heading);
-        const body = element('tbody');
-        items.filter(item => (!filter || item.type === filter) && (!problemsOnly || item.conflict || item.error || item.applyState === 'ERROR')).forEach(item => {
-            const row = element('tr');
-            row.dataset.branchType = item.type; row.dataset.branchKey = item.objectKey;
-            const cell = text => element('td', '', text);
-            row.append(cell(tr(`type.${item.type}`)), cell(item.label || item.objectKey), cell(operation(item)), cell(itemStatus(item)));
-            const actions = cell('');
-            const show = button(tr(item.conflict ? 'resolve' : 'compareItem'), () => {
-                selection = `${item.type}:${item.objectKey}`;
-                render();
-                overview.querySelector('.pg-branch-merge__detail')?.focus();
-            });
-            show.dataset.branchCompare = item.objectKey;
-            actions.append(show); row.append(actions); body.append(row);
+    }
+
+    function confirmWhenReady() {
+        if (!confirmOnOpen || !report || busy || activeTab !== 'branchesDataTable-changes') return;
+        confirmOnOpen = false;
+        if (ready() && publishStates.includes(report.state)) confirmPublication();
+        else if (messages.childElementCount) messages.focus();
+    }
+
+    function confirmState(action, parent, invoker) {
+        confirmAction(parent, invoker, {
+            heading: tr(action),
+            note: tr(action + 'Note'),
+            label: tr(action),
+            confirmId: `branch-merge-${action}-confirm`,
+            action: () => perform('/' + action, {expectedRevision: report.revision}, parent === scheduleSummary ? scheduleError : changesError)
         });
-        if (!body.children.length) { const row = element('tr'); const cell = element('td', '', tr('empty')); cell.colSpan = 5; row.append(cell); body.append(row); }
-        table.append(caption, head, body); tableWrap.append(table); overview.append(tableWrap);
-        const current = items.find(item => `${item.type}:${item.objectKey}` === selection);
-        if (current) overview.append(detail(current));
     }
 
     function formatTerm(value) {
@@ -283,86 +468,152 @@ export async function openBranchMerge(id, api, screen, invoker) {
         return instant;
     }
 
-    function closePanel(panel, focusId) {
-        panel.remove(); render(); overview.querySelector(`#${focusId}`)?.focus();
+    function renderSchedule() {
+        const scheduled = report.state === 'SCHEDULED';
+        const canSchedule = scheduled || report.state === 'DRAFT';
+        const key = `${report.state}:${report.publishAt}`;
+        if (scheduleKey !== key) {
+            scheduleKey = key;
+            scheduleBody.replaceChildren();
+            scheduleSummary.replaceChildren();
+            scheduleForm = scheduleButton = null;
+            if (scheduled) {
+                const plan = notice(scheduleSummary, 'info', tr('scheduledNote'));
+                plan.id = 'branch-merge-scheduled';
+                plan.prepend(element('strong', 'd-block mb-1', tr('scheduledAt', [formatTerm(report.publishAt)])));
+                const unschedule = button(tr('unschedule'), () => confirmState('unschedule', scheduleSummary, unschedule));
+                unschedule.id = 'branch-merge-unschedule';
+                scheduleBody.append(unschedule);
+            }
+            if (canSchedule) {
+                scheduleForm = makeScheduleForm(scheduled);
+                scheduleBody.prepend(scheduleForm);
+            } else {
+                notice(scheduleSummary, 'secondary', tr('schedulingUnavailable'));
+            }
+        }
+        if (scheduleForm) {
+            const reason = scheduleForm.querySelector('.pg-branch-panel__schedule-reason');
+            reason.hidden = ready();
+            scheduleForm.querySelector('input').disabled = !ready();
+        }
     }
 
-    function confirmState(action, note) {
-        clearTimeout(timer);
-        const existing = overview.querySelector('#branch-merge-confirmation');
-        if (existing) { existing.focus(); return; }
-        const panel = element('section', 'alert alert-warning');
-        panel.id = 'branch-merge-confirmation'; panel.tabIndex = -1;
-        panel.append(element('h3', 'h5', tr(action)), element('p', '', tr(note)));
-        panel.append(button(tr('cancel'), () => closePanel(panel, `branch-merge-${action}`)), document.createTextNode(' '));
-        const confirm = button(tr(action), async () => {
-            await perform(`/${action}`, {expectedRevision: report.revision});
-            if (report.state === 'DRAFT') await compare();
-        }, true);
-        confirm.id = `branch-merge-${action}-confirm`; panel.append(confirm);
-        overview.prepend(panel); panel.focus();
-    }
-
-    function scheduleForm(items) {
-        clearTimeout(timer);
-        const existing = overview.querySelector('#branch-merge-schedule-form');
-        if (existing) { existing.querySelector('input').focus(); return; }
-        overview.querySelector('#branch-merge-confirmation')?.remove();
-        const form = element('form', 'pg-branch-merge__schedule alert alert-info');
+    function makeScheduleForm(scheduled) {
+        const form = element('form', 'pg-branch-panel__schedule');
         form.id = 'branch-merge-schedule-form';
-        const heading = element('h3', 'h5', tr(report.state === 'SCHEDULED' ? 'reschedule' : 'schedule'));
-        heading.id = 'branch-merge-schedule-title'; form.setAttribute('aria-labelledby', heading.id);
-        const fields = element('div', 'pg-branch-merge__schedule-fields');
-        const label = element('label', 'form-label', tr('publishAt'));
-        const input = element('input', 'form-control'); input.type = 'datetime-local'; input.required = true;
-        input.id = 'branch-merge-publish-at'; input.name = 'publishAt'; input.step = '60'; label.htmlFor = input.id;
-        input.value = wallTime(report.publishAt || Math.ceil((Date.now() + 300000) / 60000) * 60000);
-        const zone = element('p', 'small mb-0', tr('timeZone', [report.timeZone])); zone.id = 'branch-merge-time-zone';
-        input.setAttribute('aria-describedby', `${zone.id} branch-merge-schedule-note`);
-        const feedback = element('p', 'text-danger mb-0'); feedback.id = 'branch-merge-schedule-error'; feedback.setAttribute('role', 'alert');
-        input.addEventListener('input', () => { input.setCustomValidity(''); input.removeAttribute('aria-invalid'); feedback.textContent = ''; });
-        fields.append(label, input, zone);
-        const note = element('p', 'mt-3', tr('scheduleNote', [items.length])); note.id = 'branch-merge-schedule-note';
-        const actions = element('div', 'd-flex flex-wrap gap-2');
-        actions.append(button(tr('cancel'), () => closePanel(form, 'branch-merge-schedule')));
-        const submit = button(tr(report.state === 'SCHEDULED' ? 'reschedule' : 'schedule'), () => {}, true);
-        submit.type = 'submit'; submit.id = 'branch-merge-schedule-confirm'; actions.append(submit);
-        form.append(heading, fields, note, feedback, actions);
+        const label = element('label', 'form-label fw-semibold', tr('publishAt'));
+        const input = element('input', 'form-control');
+        input.type = 'datetime-local';
+        input.required = true;
+        input.step = '60';
+        input.id = 'branch-merge-publish-at';
+        label.htmlFor = input.id;
+        if (report.publishAt) input.value = wallTime(report.publishAt);
+        const zone = element('p', 'form-text mb-0', tr('timeZone', [report.timeZone]));
+        zone.id = 'branch-merge-time-zone';
+        input.setAttribute('aria-describedby', zone.id);
+        const feedback = element('p', 'text-danger mb-0');
+        feedback.setAttribute('role', 'alert');
+        input.addEventListener('input', () => {
+            input.setCustomValidity('');
+            input.removeAttribute('aria-invalid');
+            feedback.textContent = '';
+        });
+        const fields = element('div', 'pg-branch-panel__schedule-fields mb-3');
+        fields.append(label, input, zone, feedback);
+        const reason = element('p', 'alert alert-warning pg-branch-panel__schedule-reason', tr('publicationBlocked') + ' ');
+        const review = button(tr('changesTab'), selectChanges);
+        reason.append(review);
+        scheduleButton = button(tr(scheduled ? 'reschedule' : 'schedule'), () => {}, true);
+        scheduleButton.type = 'submit';
+        scheduleButton.id = 'branch-merge-schedule-confirm';
+        const settingsPending = element('p', 'alert alert-warning pg-branch-panel__settings-pending', tr('settingsPending'));
+        form.append(reason, settingsPending, fields, element('p', 'text-muted', tr('scheduleHint')), scheduleButton);
         form.addEventListener('submit', async event => {
             event.preventDefault();
+            if (busy || !ready() || dirty()) return;
             const publishAt = scheduledInstant(input.value);
             if (publishAt === null || publishAt <= Date.now()) {
                 const message = tr(publishAt === null ? 'invalidWallTime' : 'futureTime');
-                feedback.textContent = message; input.setCustomValidity(message); input.setAttribute('aria-invalid', 'true'); input.reportValidity(); input.focus(); return;
+                feedback.textContent = message;
+                input.setCustomValidity(message);
+                input.setAttribute('aria-invalid', 'true');
+                input.reportValidity();
+                input.focus();
+                return;
             }
-            await perform('/schedule', {expectedRevision: report.revision, preparationHash: report.preparationHash, publishAt});
-            if (report.state === 'SCHEDULED') await compare();
+            const result = await perform('/schedule', {expectedRevision: report.revision, preparationHash: report.preparationHash, publishAt}, scheduleError);
+            if (result && !signal.aborted) scheduleSummary.focus();
         });
-        overview.prepend(form); input.focus();
+        return form;
     }
 
-    function confirmPublish(items, resume) {
-        const old = overview.querySelector('#branch-merge-confirmation');
-        if (old) { old.focus(); return; }
-        const panel = element('section', 'alert alert-warning');
-        panel.id = 'branch-merge-confirmation'; panel.tabIndex = -1;
-        panel.append(element('h3', 'h5', tr(resume ? 'resume' : 'publish')));
-        panel.append(element('p', '', tr('publishNote')));
-        const counts = types.map(type => `${tr(`type.${type}`)}: ${items.filter(item => item.type === type && item.writeRequired && item.applyState !== 'DONE').length}`).join(' · ');
-        panel.append(element('p', '', counts));
-        panel.append(button(tr('cancel'), () => panel.remove()), document.createTextNode(' '));
-        const confirm = button(tr(resume ? 'resumeConfirm' : 'publishConfirm'), () => perform(resume ? '/resume' : '/merge', {
-            expectedRevision: report.revision, preparationHash: report.preparationHash
-        }), true);
-        confirm.id = 'branch-merge-confirm'; panel.append(confirm);
-        overview.prepend(panel); panel.focus();
+    function openDetail(key, invoker) {
+        const item = items().find(item => itemKey(item) === key);
+        if (busy || !item) return;
+        detailItem = item;
+        expanded = false;
+        detailError.classList.add('d-none');
+        const dialog = detailDialog = element('dialog', 'pg-branch-merge');
+        dialog.setAttribute('aria-labelledby', 'branch-item-title');
+        const header = element('header', 'pg-branch-merge__header');
+        const title = element('h2', 'h4 mb-0');
+        title.id = 'branch-item-title';
+        const close = button(tr('close'), () => dialog.close());
+        header.append(title, close);
+        const content = element('div', 'pg-branch-merge__content');
+        const retry = button(tr('refresh'), () => perform('/progress', undefined, detailError));
+        retry.dataset.branchRetry = '';
+        retry.classList.add('d-none', 'mb-3');
+        content.append(detailError, retry, element('div', 'pg-branch-merge__item'));
+        dialog.append(header, content);
+        dialog.addEventListener('keydown', event => event.stopPropagation());
+        dialog.addEventListener('close', () => {
+            detailDialog = null;
+            dialog.remove();
+            if (!signal.aborted) {
+                if (invoker.isConnected) invoker.focus();
+                else focusItem(item.type, item.objectKey);
+                poll();
+            }
+        }, {once: true});
+        modal.append(dialog);
+        renderDetail(true);
+        dialog.showModal();
+        close.focus();
+        poll();
+    }
+
+    function renderDetail(force = false) {
+        const item = items().find(row => itemKey(row) === itemKey(detailItem));
+        if (!item) { detailDialog.close(); return; }
+        if (!force && equal(detailItem, item)) return;
+        detailItem = item;
+        detailDialog.querySelector('#branch-item-title').textContent = `${item.label || item.objectKey} · ${tr(`type.${item.type}`)}`;
+        detailDialog.querySelector('[data-branch-retry]').classList.add('d-none');
+        const content = detailDialog.querySelector('.pg-branch-merge__item');
+        const focused = content.contains(document.activeElement) ? document.activeElement.id : null;
+        content.replaceChildren(detail(item));
+        if (focused) detailDialog.querySelector('#' + CSS.escape(focused))?.focus();
+    }
+
+    async function edit(item) {
+        if (report.state !== 'DRAFT') return;
+        try {
+            await api('/context', {branchId: id, expectedDomainId: screen.domainId});
+            const fields = item.work?.fields || {};
+            const query = item.type === 'DOCUMENT' ? `docid=${encodeURIComponent(item.objectKey)}`
+                : item.type === 'MEDIA' ? `docid=${encodeURIComponent(fields.media_fk_id)}`
+                : item.type === 'GROUP' ? `groupid=${encodeURIComponent(item.objectKey)}` : '';
+            location.href = `/admin/v9/webpages/web-pages-list/?${query}`;
+        } catch (error) { showError(error); }
     }
 
     function detail(item) {
-        const section = element('section', 'pg-branch-merge__detail mt-4');
+        const section = element('section', 'pg-branch-merge__detail');
         section.tabIndex = -1;
         section.setAttribute('aria-label', tr('comparison'));
-        section.append(element('h3', 'h5', `${item.label || item.objectKey} · ${tr(`type.${item.type}`)} ${item.objectKey}`));
         section.append(element('p', 'small', tr('wholeItem')));
         if (item.error) section.append(element('p', 'alert alert-danger', item.error));
         if (item.applyPhase === 'TRASH_WAIT') section.append(element('p', 'alert alert-warning', tr('trashWaitNote')));
@@ -373,10 +624,10 @@ export async function openBranchMerge(id, api, screen, invoker) {
         const allFields = [...new Set(['title', 'group_name', 'data', ...['base', 'live', 'work'].flatMap(name => Object.keys(item[name]?.fields || {}))])]
             .filter(key => ['base', 'live', 'work'].some(name => Object.hasOwn(item[name]?.fields || {}, key)));
         const differing = key => !equal(item.base?.fields?.[key], item.live?.fields?.[key]) || !equal(item.base?.fields?.[key], item.work?.fields?.[key]);
-        const showAll = expanded.has(selection);
+        const showAll = expanded;
         const show = element('label', 'form-check-label mb-3');
         const check = element('input', 'form-check-input me-2'); check.id = 'branch-merge-all-fields'; check.type = 'checkbox'; check.checked = showAll;
-        check.onchange = () => { if (check.checked) expanded.add(selection); else expanded.delete(selection); render(); dialog.querySelector('#branch-merge-all-fields').focus(); };
+        check.onchange = () => { expanded = check.checked; renderDetail(true); detailDialog?.querySelector('#branch-merge-all-fields').focus(); };
         show.append(check, document.createTextNode(tr('allFields'))); section.append(show);
         const columns = element('div', 'pg-branch-merge__versions');
         for (const version of ['base', 'live', 'work']) {
@@ -426,12 +677,12 @@ export async function openBranchMerge(id, api, screen, invoker) {
                 label.append(radio, document.createTextNode(tr(key))); choices.append(label);
             }
             const save = button(tr('saveChoice'), async () => {
+                if (busy || stale) return;
                 const choice = choices.querySelector('input:checked')?.value;
                 if (!choice) return;
-                await perform('/resolve', {expectedRevision: report.revision, type: item.type, objectKey: item.objectKey, choice, liveHash: item.liveHash, workHash: item.workHash}, true);
+                await perform('/resolve', {expectedRevision: report.revision, type: item.type, objectKey: item.objectKey, choice, liveHash: item.liveHash, workHash: item.workHash}, detailError);
             }, true);
             save.disabled = !item.choice;
-            choices.addEventListener('change', () => { save.disabled = false; });
             save.id = 'branch-merge-save-choice'; choices.append(save); section.append(choices);
         }
         if (report.state === 'DRAFT' && item.editable) {
@@ -442,23 +693,27 @@ export async function openBranchMerge(id, api, screen, invoker) {
                     try {
                         const response = await fetch('/admin/rest/branch-content/revert', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken}, body: JSON.stringify({type: item.type, id: Number(item.objectKey), hash: item.workHash})});
                         if (!response.ok) throw new Error(await response.text());
-                        selection = null;
-                        await perform(''); await compare();
-                    } catch (error) { failure(error); }
+                        detailDialog?.close();
+                        await refresh();
+                    } catch (error) { showError(error); }
                 }));
             }
             section.append(actions, element('p', 'small mt-2', tr(item.type === 'GROUP' ? 'editGroupNote' : item.type === 'MEDIA' ? 'editMediaNote' : item.type === 'FILE' ? 'editFileNote' : 'editNote')));
         }
         if (item.type === 'DOCUMENT' && item.live?.state === 'ACTIVE') section.append(link(tr('production'), `/showdoc.do?docid=${encodeURIComponent(item.objectKey)}`));
-        if (['DRAFT', 'SCHEDULED', 'NEEDS_ATTENTION'].includes(report.state) && item.type === 'DOCUMENT') section.append(button(tr('preview'), () => preview(item.objectKey, section)));
+        if (['DRAFT', 'SCHEDULED', 'NEEDS_ATTENTION'].includes(report.state) && item.type === 'DOCUMENT') section.append(button(tr('preview'), () => openBranchPreview(api, id, item.objectKey, section).catch(showError)));
         return section;
     }
 
-    try {
-        status.textContent = tr('loading');
-        report = await api(`/${id}/progress`);
-        if (!dialog.open) return;
-        render();
-        if (['DRAFT', 'SCHEDULED', 'MERGE_FAILED'].includes(report.state)) await compare();
-    } catch (error) { failure(error); }
+    updateControls();
+    perform();
+    return () => {
+        events.abort();
+        clearTimeout(timer);
+        detailDialog?.close();
+        table?.destroy(true);
+        changes.replaceChildren();
+        publishing.replaceChildren();
+        editor.off('preSubmit.branchChanges');
+    };
 }

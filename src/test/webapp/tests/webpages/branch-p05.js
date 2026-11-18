@@ -92,8 +92,8 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.waitForInvisible('#branch-picker', 10);
         I.click('#branch-changes');
         I.waitForText(name, 20, '#branch-merge-title');
-        I.pressKey('Escape');
-        I.waitForInvisible('#branch-merge-dialog', 10);
+        I.clickCss('#branchesDataTable_modal .DTE_Footer .btn-close-editor');
+        I.waitForInvisible('#branchesDataTable_modal', 10);
         I.seeElement('#branch-preview-link');
         branchPicker.select(I, 0);
         I.waitForElement('#branch-switcher[aria-label*="Hlavná verzia"]', 20);

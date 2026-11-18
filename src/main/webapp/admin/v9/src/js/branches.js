@@ -122,7 +122,13 @@ async function api(path, body) {
 window.initBranchTable = columns => initBranchTable(columns, screen, api);
 
 $(() => {
-    if (screen?.allowed) initBranchSwitcher(screen, api);
+    if (!screen?.allowed) return;
+    const compareId = new URLSearchParams(location.hash.slice(1)).get('branchCompare') || new URLSearchParams(location.search).get('branchCompare');
+    if (/^[1-9]\d*$/.test(compareId)) {
+        location.replace(`/admin/v9/webpages/branches/?id=${compareId}&tab=changes`);
+        return;
+    }
+    initBranchSwitcher(screen, api);
 });
 
 /** Limits the existing editor to the supported P04 fields. The server enforces the same boundary. */
@@ -174,7 +180,5 @@ window.applyBranchEditor = (table, group = false) => {
         ['history','publishing', ...(group ? [] : ['attributes'])].forEach(tab => {
             $('#'+table.DATA.id+'_modal').find(`[id$="-${tab}-tab"]`).closest('li').hide();
         });
-        const container = $('#'+table.DATA.id+'_modal');
-        if (!container.find('.branch-editor-note').length) $('<p class="branch-editor-note alert alert-info m-3">').text(WJ.translate('branches.editor.note.js')).prependTo(container.find('.DTE_Body'));
     });
 };

@@ -5,26 +5,28 @@ Publikačný balík spojí prípravu viacerých stránok, priečinkov, médií a
 ## Príprava kampane
 
 1. V časti **Webové stránky → Pracovné verzie** vyberte doménu v ľavom menu. Tabuľka zobrazuje jej pracovné verzie vrátane publikovaných, ich farbu, stav a poslednú úpravu. Termín publikovania a ďalšie údaje si môžete zapnúť vo výbere stĺpcov. Zoznam môžete filtrovať a zoradiť.
-2. Tlačidlom **Pridať** vytvorte novú kampaň. Zadajte názov, poznámku a farbu; ukážka zobrazí jej označenie v hlavičke. Uloženie vytvorí verziu bez prepnutia obsahu. Názov, poznámku a farbu môžete neskôr upraviť kliknutím na názov riadka. Označte rozpracovanú verziu a kliknite **Upravovať web**. Nad hlavičkou sa zobrazí pás s jej názvom. Prepínač v hlavičke slúži na výber verzie; odkaz **Spravovať pracovné verzie** vedie späť do tabuľky.
+2. Tlačidlom **Pridať** vytvorte novú kampaň. Zadajte názov, poznámku a farbu. Ukážka zobrazí jej označenie v hlavičke. Keď chcete začať upravovať obsah, označte rozpracovanú verziu a použite akciu **Prepnúť na úpravy webu**. Nad hlavičkou sa zobrazí pás s jej názvom. Z neho môžete prepnúť verziu alebo sa odkazom **Spravovať pracovné verzie** vrátiť do tabuľky.
 3. Stránky a priečinky upravujte obvyklým editorom. Uložená zmena sa pridá do balíka. Nové položky dostanú konečné ID, ktoré sa pri publikovaní nemení. Kolegovia vyberú ten istý balík vo vlastnom prihlásení. Potrebujú svoje bežné práva na dotknutý obsah.
 4. Pridajte médiá a obrázky/prílohy mimo galérie. Možno vytvoriť prázdny súborový adresár a pracovať s jednotlivými súbormi. Súbor spoločný viacerým doménam po publikovaní ovplyvní všetky jeho použitia.
 5. Pred zmenou verzie alebo domény uložte rozpracovaný formulár. Ak kolega či druhá záložka zmení kontext alebo obsah, staré uloženie server odmietne. Zachovajte si text a otvorte čerstvý editor.
+
+Zvolenú pracovnú verziu ukazuje prepínač v hlavičke administrácie. Editor zobrazí upozornenie, ak konkrétnu stránku nemožno upravovať, napríklad pri zdieľanej System stránke alebo multigroup kópii. Individuálne plány publikovania, história, atribúty a multigroup väzby sa v pracovnej verzii nemenia; spravujú sa mimo balíka.
 
 ## Náhľad a konflikt
 
 V páse pracovnej verzie kliknite na **Náhľad**. V novej karte môžete prejsť menu, Novinky, detaily, obrázky a prílohy. Náhľad vyžaduje prihlásenie do administrácie. Lišta uvádza logickú doménu a čas použitý Novinkami.
 
-V tabuľke pracovných verzií označte riadok a kliknite **Skontrolovať zmeny**. Porovnanie je dostupné aj tlačidlom **Pracovné zmeny** v páse pracovnej verzie. Otvoríte porovnanie pôvodného základu, súčasnej hlavnej verzie a pracovnej verzie. Ak niekto zmenil tú istú položku na oboch stranách, vyberte verziu položky, ktorú chcete ponechať, a uložte voľbu. Vlastnú kombináciu polí pripravte v pracovnom editore a znovu porovnajte.
+Odkaz **Pracovné zmeny** v hlavičke otvorí priamo kartu **Zmeny** aktívnej pracovnej verzie. V zozname pracovných verzií môžete označiť ľubovoľný riadok a použiť rovnakú akciu. Na karte zúžte zoznam podľa typu položky alebo začiarknite **Len problémy**. Tlačidlo **Obnoviť zmeny** prepočíta porovnanie po úpravách v inej karte prehliadača.
 
-Ak pracovná verzia ešte neobsahuje žiadne zmeny, okno zobrazí iba upozornenie bez filtrov a tabuľky položiek. Publikovanie a jeho plánovanie sú dostupné až po pridaní zmien a ich úspešnej kontrole.
+Akciou **Porovnať** otvoríte pôvodný stav, hlavnú verziu a pracovnú verziu položky. Pri konflikte kliknite na **Vyriešiť**, vyberte verziu, ktorú chcete použiť, a uložte voľbu. Pri stránke môžete z porovnania otvoriť konkrétnu verejnú stránku aj jej náhľad.
 
 Voľba výsledku hneď ovplyvní náhľad vrátane menu, Noviniek, médií a príloh. Editor ďalej uchováva pracovný obsah. Pri nevyriešenom konflikte lišta upozorní na pracovný predpoklad. Neskoršia zmena produkcie alebo WORK zneplatní starú voľbu a vyžiada nové porovnanie.
 
 ## Publikovanie a termín
 
-Po kontrole zoznamu a náhľadu kliknite **Publikovať** a potvrďte konkrétne zmeny. Požiadavku spracuje najbližší beh úlohy na pozadí, predvolene do piatich minút. Ak pred ňou beží iný balík, počká na jeho dokončenie. Publikujúci musí mať práva na priamu publikáciu celého balíka. Balík neobchádza schvaľovanie a nemení existujúce individuálne plány.
+Po kontrole zmien a náhľadu použite **Publikovať do hlavnej verzie** v pätičke editora alebo v lište označeného riadka. Potvrdením odošlete zmeny na zverejnenie. Tlačidlo **Uložiť** na karte **Základné** ukladá názov, farbu a poznámku pracovnej verzie. Požiadavku na publikovanie spracuje najbližší beh úlohy na pozadí, predvolene do piatich minút. Ak pred ňou beží iný balík, počká na jeho dokončenie. Publikujúci musí mať práva na priamu publikáciu celého balíka. Balík neobchádza schvaľovanie a nemení existujúce individuálne plány.
 
-Pre spoločný termín použite **Naplánovať publikovanie**. Skontrolujte dátum, čas a zobrazené časové pásmo. Naplánovaný balík sa neupravuje. **Zmeniť termín** posunie celý balík jednou operáciou; **Zrušiť plánovanie** zachová obsah aj rozhodnutia a vráti prípravu. Náhľad Noviniek používa budúci termín, po zrušení aktuálny čas. Menu nemá nový časový filter.
+Na karte **Plán publikovania** zadajte dátum a čas v zobrazenom časovom pásme. Kliknite na **Naplánovať publikovanie**. **Zmeniť termín** posunie celý balík. Ak potrebujete znova upravovať obsah, použite **Zrušiť plánovanie**. Pracovné zmeny aj uložené riešenia konfliktov zostanú k dispozícii. Náhľad Noviniek používa budúci termín, po zrušení aktuálny čas. Menu nemá nový časový filter.
 
 Spoločná úloha kontroluje termíny predvolene každých päť minút aj po odhlásení redaktora. Presný interval nastavuje správca. Znovu preverí používateľa, práva, konflikty a individuálne plány. Nový problém zastaví balík a prehľad uvedie dôvod. Po oprave použite **Obnoviť prípravu** a nové porovnanie.
 
@@ -36,7 +38,7 @@ V tabuľke **Pracovné verzie** označte jednu alebo viac verzií a kliknite na 
 
 Zmazať môžete verziu v ktoromkoľvek stave, vrátane naplánovanej a publikovanej, bez čakania na bežiace publikovanie. Po zmazaní aktívnej verzie sa administrácia prepne na **Hlavnú verziu**.
 
-Akcie **Skontrolovať zmeny** a **Upravovať web** majú v lište ikonové tlačidlá s tooltipmi. Export a import nie sú dostupné, pretože samotné metadáta verzie neobsahujú jej pracovný obsah a súbory.
+Export a import nie sú dostupné, pretože samotné metadáta verzie neobsahujú jej pracovný obsah a súbory.
 
 ## Čo v POC pripraviť mimo balíka
 

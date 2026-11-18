@@ -1,3 +1,43 @@
+#branchesDataTable_modal {
+    .pg-branch-modal-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding-right: 125px;
+
+        .modal-title { display: block; margin-right: 0; white-space: normal; overflow-wrap: anywhere; }
+
+        @media (max-width: 767.98px) { padding-right: 52px; }
+    }
+
+    .buttons-footer-left #branch-merge-publish { margin-left: 0; }
+    .DTE_Form_Buttons { flex-wrap: wrap; row-gap: 8px; }
+}
+
+.pg-branch-panel {
+    padding: 20px 24px;
+
+    &__toolbar { margin-bottom: 12px; }
+    &__toolbar button i { margin: 0; }
+    .table-responsive { margin-inline: 0; }
+    &__table { min-width: 540px; }
+    &__table th:first-child,
+    &__table td:first-child { padding-left: 0; }
+    &__table th:last-child,
+    &__table td:last-child { padding-right: 0; }
+    &__table tbody td { vertical-align: middle; }
+    &__table td:last-child { white-space: nowrap; }
+    &__table .md-branch-state[data-state="NEEDS_ATTENTION"] { color: shade-color($danger, 25%); }
+    &__item { font-weight: 600; overflow-wrap: anywhere; }
+    &__messages button { margin-left: 8px; }
+    &__schedule { margin-bottom: 12px; }
+    &__schedule-fields { width: min(100%, 22rem); }
+    &__schedule-fields input { min-width: 0; }
+
+    @media (max-width: 767.98px) { padding: 16px; }
+}
+
 .pg-branch-merge {
     width: min(1440px, calc(100vw - 48px));
     max-width: none;
@@ -24,16 +64,11 @@
     }
 
     &__content { padding: 20px 24px; }
-    &__table td { overflow-wrap: anywhere; }
     &__versions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     &__version { min-width: 0; padding: 16px; border: 1px solid $nice-gray-100; border-radius: 6px; }
     &__version dd { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
     &__changed { border-left: 3px solid $primary; padding-left: 8px; background: $nice-gray; }
     &__text { color: inherit; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 28rem; overflow: auto; }
-    &__schedule { overflow-wrap: anywhere; }
-    &__schedule-fields { display: grid; gap: 8px; max-width: 420px; }
-    &__schedule-fields label { margin: 0; }
-    &__schedule-fields input { min-width: 0; width: 100%; }
     &__image { display: block; max-width: 100%; max-height: 160px; object-fit: contain; margin-bottom: 12px; }
 
     @media (max-width: 1199.98px) {
@@ -45,10 +80,6 @@
     }
     @media (max-width: 767.98px) {
         &__versions { grid-template-columns: minmax(0, 1fr); }
-        &__table { min-width: 620px; }
         &__header { align-items: flex-start; }
-        &__schedule { padding: 12px; }
-        &__schedule .btn { white-space: normal; }
-        &__schedule-fields { max-width: 100%; }
     }
 }

@@ -13,8 +13,8 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
     const admin = read('/tmp/webjet-p05-login.properties');
     const evidence = path.resolve('../../../build/test-results/p08/browser');
     const pages = fixture.pages.split(',').map(Number);
-    const dialog = '#branch-merge-dialog';
-    const busy = dialog+' .pg-branch-merge__content[aria-busy=true]';
+    const dialog = '#branchesDataTable_modal';
+    const busy = dialog+' .pg-branch-panel[aria-busy=true]';
     if (process.env.CODECEPT_URL !== 'http://127.0.0.1:8086') throw new Error('P08 requires its isolated public loopback domain on port 8086.');
 
     function save(name, data) {
@@ -144,11 +144,13 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
         I.assertEqual(unknown, 400);
         I.assertEqual((await report(I)).revision, before.revision);
         for (const item of before.items.filter(item => item.conflict)) {
-            I.click(`${dialog} [data-branch-compare="${item.objectKey}"]`);
+            I.click(`${dialog} tr[data-branch-type="${item.type}"] [data-branch-compare="${item.objectKey}"]`);
             I.waitForVisible(dialog+' .pg-branch-merge__detail', 10);
             I.checkOption(`${dialog} input[name="branch-merge-choice"][value="WORK"]`);
             I.click('#branch-merge-save-choice');
             I.waitForInvisible(busy, 30);
+            I.click('Zatvoriť', dialog+' dialog.pg-branch-merge header');
+            I.waitForInvisible(dialog+' dialog.pg-branch-merge', 10);
         }
         I.waitForEnabled('#branch-merge-publish', 30);
         const preview = await render(I, true);

@@ -9,7 +9,7 @@ div#branch-band.md-branch-bar(data-th-if="${branchScreen.allowed and branchScree
         i.ti.ti-chevron-down(aria-hidden="true")
     span#branch-state.md-branch-bar__state(hidden)
     div.md-branch-bar__actions
-        button#branch-changes.btn.btn-sm.btn-outline-secondary.d-none(type="button")
+        a#branch-changes.btn.btn-sm.btn-outline-secondary(data-th-href="@{/admin/v9/webpages/branches/(id=${branchScreen.branchId},tab='changes')}")
             i.ti.ti-list-check(aria-hidden="true")
             span(data-th-text="\#{branches.changes.js}") Pracovné zmeny
         a#branch-preview-link.btn.btn-sm.btn-outline-secondary.d-none(target="_blank" rel="noopener")

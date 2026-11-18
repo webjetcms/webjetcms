@@ -12,9 +12,10 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
     const credentials = read('/tmp/webjet-p05-login.properties');
     const evidence = path.resolve(process.env.WEBJET_P06_EVIDENCE || '../../../build/test-results/p06');
     const digest = bytes => crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex');
-    const dialog = '#branch-merge-dialog';
+    const dialog = '#branchesDataTable_modal';
     const detail = dialog+' .pg-branch-merge__detail';
-    const busy = dialog+' .pg-branch-merge__content[aria-busy=true]';
+    const comparisonDialog = dialog+' dialog.pg-branch-merge';
+    const busy = dialog+' .pg-branch-panel[aria-busy=true]';
     const itemButton = id => `${dialog} [data-branch-compare="${id}"]`;
     const retain = () => read('/tmp/webjet-p06-manual.properties');
     const disposable = () => read('/tmp/webjet-p06-publish.properties');
@@ -60,6 +61,11 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.seeElement(`${detail} [data-branch-version="BASE"]`);
         I.seeElement(`${detail} [data-branch-version="LIVE"]`);
         I.seeElement(`${detail} [data-branch-version="WORK"]`);
+    }
+
+    function closeComparison(I) {
+        I.click('Zatvoriť', comparisonDialog+' header');
+        I.waitForInvisible(comparisonDialog, 10);
     }
 
     async function choose(I, choice, ready = true) {
@@ -164,17 +170,19 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.assertEqual(before.state, 'DRAFT');
         I.assertTrue(pageItem(before, fixture).conflict);
         I.assertEqual(pageItem(before, fixture).choice, null);
-        await openComparison(I, fixture, true);
-        const item = pageItem(before, fixture);
-        for (const version of ['BASE', 'LIVE', 'WORK']) I.see(item[version.toLowerCase()].fields.title, `${detail} [data-branch-version="${version}"]`);
-        I.click('#branch-merge-all-fields');
-        I.seeCheckboxIsChecked('#branch-merge-all-fields');
+        I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${fixture.groupId}`);
+        I.waitForElement('#datatableInit_wrapper', 30);
         const editorLabels = await I.executeScript(() => Object.fromEntries(
             ['htmlHead', 'fieldA'].map(name => {
                 const column = window.webpagesDatatable.settings()[0].aoColumns.find(column => column.mData === name);
                 return [name, new DOMParser().parseFromString(column.sTitle, 'text/html').body.textContent.trim()];
             })
         ));
+        await openComparison(I, fixture, true);
+        const item = pageItem(before, fixture);
+        for (const version of ['BASE', 'LIVE', 'WORK']) I.see(item[version.toLowerCase()].fields.title, `${detail} [data-branch-version="${version}"]`);
+        I.click('#branch-merge-all-fields');
+        I.seeCheckboxIsChecked('#branch-merge-all-fields');
         I.assertEqual(before.fieldLabels.DOCUMENT.html_head, editorLabels.htmlHead);
         I.assertEqual(before.fieldLabels.DOCUMENT.field_a, editorLabels.fieldA);
         I.see(editorLabels.htmlHead, `${detail} [data-branch-version="BASE"] dt`);
@@ -189,15 +197,17 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.assertNotEqual(digest(files.BASE.bytes), digest(files.WORK.bytes));
         I.resizeWindow(700, 900);
         const mobile = await I.executeScript(() => {
-            const box = document.querySelector('#branch-merge-dialog').getBoundingClientRect();
+            const comparison = document.querySelector('#branchesDataTable_modal dialog.pg-branch-merge');
+            const box = comparison.getBoundingClientRect();
             const base = document.querySelector('[data-branch-version="BASE"]').getBoundingClientRect();
             const live = document.querySelector('[data-branch-version="LIVE"]').getBoundingClientRect();
-            return {fits: box.left >= 0 && box.right <= innerWidth, stacked: live.top >= base.bottom, closeLabel: document.querySelector('#branch-merge-dialog header button').textContent, expectedCloseLabel: WJ.translate('button.close')};
+            return {fits: box.left >= 0 && box.right <= innerWidth, stacked: live.top >= base.bottom, closeLabel: comparison.querySelector('header button').textContent, expectedCloseLabel: WJ.translate('button.close')};
         });
         I.assertTrue(mobile.fits); I.assertTrue(mobile.stacked); I.assertEqual(mobile.closeLabel, mobile.expectedCloseLabel);
         I.saveScreenshot('branch-p06-mobile.png');
         I.pressKey('Escape');
-        I.waitForInvisible(dialog, 10);
+        I.waitForInvisible(comparisonDialog, 10);
+        I.seeElement(dialog);
         I.wjSetDefaultWindowSize();
         const after = await report(I, fixture);
         I.assertEqual(after.state, 'DRAFT');
@@ -235,6 +245,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.assertEqual(liveNews.title, pageItem(before, fixture).live.fields.title);
         I.assertTrue(livePreview.menu.links.some(link => link.href === pageItem(before, fixture).live.fields.virtual_path), 'MenuULLI must use the selected LIVE URL of the folder default page.');
         await choose(I, 'WORK', false);
+        closeComparison(I);
         I.click(itemButton(fixture.livePageId));
         I.waitForVisible(detail, 10);
         I.see(keepLive.live.fields.title, `${detail} [data-branch-version="LIVE"]`);
@@ -261,9 +272,10 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.assertEqual(files.WORK.status, 200);
         save('browser-before-publish', {fixture, before, selected, ownerBefore, pageBefore, livePageBefore, publicBefore, livePreview, workPreview, files});
         I.saveScreenshot('branch-p06-comparison.png');
+        closeComparison(I);
         I.click('#branch-merge-publish');
         I.waitForVisible('#branch-merge-confirmation', 10);
-        I.see('Publikujú sa iba zmeny uvedené v tomto prehľade.', '#branch-merge-confirmation');
+        I.see('Zmeny z tejto pracovnej verzie sa prenesú do hlavnej verzie', '#branch-merge-confirmation');
         I.click('#branch-merge-confirm');
         I.waitForText('Publikovaná', 90, '#branch-merge-title');
         I.waitForText('Publikovanie je dokončené.', 30, '#branch-merge-progress');
@@ -375,13 +387,16 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         const writtenError = errors.find(item => ['DATA', 'REFERENCES', 'TRASH_WAIT', 'TRASH_ROOT', 'EFFECTS'].includes(item.applyPhase));
         I.assertTrue(Boolean(writtenError), 'The prepared failure must identify its already-written content phase.');
         const errorRow = `${dialog} tr[data-branch-type="${writtenError.type}"][data-branch-key="${writtenError.objectKey}"]`;
+        closeComparison(I);
+        I.checkOption('#branch-merge-problems');
         I.see('Obsah zapísaný, chyba dokončenia', errorRow);
         I.click(locate(errorRow).find('button'));
         I.waitForVisible(detail, 10);
         I.see(writtenError.applyPhase === 'TRASH_WAIT' ? 'Stránka je už nedostupná.' : 'Obsah tejto položky už môže byť verejný.', detail);
         I.scrollTo('#branch-merge-progress');
         I.saveScreenshot('branch-p06-partial-failure.png');
-        I.click('Skontrolovať zmeny', dialog);
+        closeComparison(I);
+        I.clickCss('#branch-merge-reload');
         I.waitForInvisible(busy, 30);
         I.waitForEnabled('#branch-merge-publish', 30);
         I.click('#branch-merge-publish');

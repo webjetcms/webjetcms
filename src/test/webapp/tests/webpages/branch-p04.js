@@ -335,13 +335,13 @@ if (process.env.WEBJET_P04_BROWSER === 'true') {
         I.fillField('#DTE_Field_title', 'autotest P04 návrat zmeny');
         DTE.save(undefined, true);
         I.click('#branch-changes');
-        const changes = '#branch-merge-dialog';
+        const changes = '#branchesDataTable_modal';
         const compare = `${changes} [data-branch-type="DOCUMENT"] [data-branch-compare="${p03.detailId}"]`;
         I.waitForText('autotest P04 návrat zmeny', 20, changes);
         I.click(compare);
         I.click('Vrátiť zmenu', changes + ' .pg-branch-merge__detail');
         I.waitForInvisible(compare, 20);
-        I.pressKey('Escape');
+        I.clickCss(changes+' .DTE_Footer .btn-close-editor');
         I.waitForInvisible(changes, 20);
         I.waitForEnabled('#branch-switcher', 20);
         I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${p03.detailId}`);

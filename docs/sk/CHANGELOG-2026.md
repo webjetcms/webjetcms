@@ -48,7 +48,11 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
-- Pracovné verzie - správa v samostatnej tabuľke v ľavom menu, vytváranie a úprava názvu, poznámky a farby výlučne cez štandardný DataTable editor. Kontrola zmien a úprava webu sú dostupné ako akcie označeného riadka; horný prepínač obsahuje výber verzie a odkaz na správu. Správa, API, náhľad a cron používajú štandardné `domainId`; funkcia vyžaduje oddelené domény cez `enableStaticFilesExternalDir=true`. Metadáta sa ukladajú cez JPA so štandardným auditom. Pracovnú verziu možno zmazať v každom stave aj s jej pracovnými dátami a súkromnými súbormi, bez čakania na publikovanie; publikovaný web zostáva zachovaný. Publikovanie a pokračovanie spracúva jediná pevná úloha na pozadí, predvolene každých päť minút; požiadavky a termíny sú uložené pri pracovných verziách. Akcie kontroly zmien a úpravy webu majú ikonové tlačidlá s tooltipmi, export/import sú skryté. Prázdna verzia pri kontrole nehlási chýbajúcu vetvu v inej doméne a nezobrazuje filtre ani tabuľku zmien.
+- Pracovné verzie - editor stránok a priečinkov už nezobrazuje všeobecný modrý informačný banner. Zvolenú verziu ukazuje prepínač v hlavičke; v editore zostávajú konkrétne upozornenia pri obsahu iba na čítanie.
+
+- Pracovné verzie - odkaz v hlavičke otvára kartu Zmeny s filtrovaním položiek podľa typu a problémov. Termín sa nastavuje na karte Plán publikovania. Akcia Publikovať do hlavnej verzie je dostupná z nástrojov tabuľky aj z editora.
+
+- Pracovné verzie - správa v samostatnej tabuľke v ľavom menu, vytváranie a úprava názvu, poznámky a farby výlučne cez štandardný DataTable editor. Kontrola zmien a úprava webu sú dostupné ako akcie označeného riadka; horný prepínač obsahuje výber verzie a odkaz na správu. Správa, API, náhľad a cron používajú štandardné `domainId`; funkcia vyžaduje oddelené domény cez `enableStaticFilesExternalDir=true`. Metadáta sa ukladajú cez JPA so štandardným auditom. Pracovnú verziu možno zmazať v každom stave aj s jej pracovnými dátami a súkromnými súbormi, bez čakania na publikovanie; publikovaný web zostáva zachovaný. Publikovanie a pokračovanie spracúva jediná pevná úloha na pozadí, predvolene každých päť minút; požiadavky a termíny sú uložené pri pracovných verziách. Export a import sú skryté.
 
 - Pracovné verzie - opravené ukladanie stránok a pridávanie či úprava priečinkov pod staršími koreňmi bez vyplnenej domény alebo s hodnotou `default`. Nedostatočné oprávnenia zobrazia preložený dôvod namiesto samotného `403 FORBIDDEN`.
 

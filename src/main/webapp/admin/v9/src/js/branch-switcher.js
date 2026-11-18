@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import {openBranchMerge} from './branch-merge';
 import {icon, node} from './dashboard/widget-utils';
 
 const tr = (key, ...args) => WJ.translate(`branches.${key}.js`, ...args);
@@ -27,8 +26,6 @@ export function initBranchSwitcher(screen, api) {
     let branches = [];
     const currentId = Number(screen.branchId);
     const preview = document.getElementById('branch-preview-link');
-    const changes = document.getElementById('branch-changes');
-    const compare = (id, invoker) => openBranchMerge(id, api, screen, invoker);
     const showError = error => WJ.notifyError(WJ.escapeHtml(error.message));
     const confirmSwitch = () => !$('div.modal.DTED.show:visible').length || window.confirm(tr('discardConfirm'));
     let switching = false;
@@ -76,11 +73,7 @@ export function initBranchSwitcher(screen, api) {
     }
     if (currentId) {
         updateBand({id: currentId, name: screen.name, state: screen.state});
-        changes.classList.remove('d-none');
-        changes.onclick = () => compare(currentId, changes);
     }
-    const compareId = new URLSearchParams(location.hash.slice(1)).get('branchCompare') || new URLSearchParams(location.search).get('branchCompare');
-    if (/^[1-9]\d*$/.test(compareId)) compare(Number(compareId), trigger);
 
     const picker = node('div', 'md-branch-picker');
     picker.id = 'branch-picker';

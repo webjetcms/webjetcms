@@ -10,8 +10,10 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
     const fixture = role => read(`/tmp/webjet-p07-${role}.properties`);
     const credentials = read('/tmp/webjet-p05-login.properties');
     const evidence = path.resolve(process.env.WEBJET_P07_EVIDENCE || '../../../build/test-results/p07');
-    const dialog = '#branch-merge-dialog';
-    const busy = `${dialog} .pg-branch-merge__content[aria-busy=true]`;
+    const dialog = '#branchesDataTable_modal';
+    const scheduleTab = '#pills-dt-branchesDataTable-publishing-tab';
+    const changesTab = '#pills-dt-branchesDataTable-changes-tab';
+    const busy = `${dialog} .pg-branch-panel[aria-busy=true]`;
     const workTitle = 'autotest P06 WORK';
     if (!/^http:\/\/(iwcm\.interway\.sk|127\.0\.0\.1|localhost):8086\/?$/.test(process.env.CODECEPT_URL || '')) {
         throw new Error('P07 publishing tests require the isolated local POC on port 8086.');
@@ -72,9 +74,8 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
     }
 
     async function schedule(I, f, instant, keyboard = false) {
-        I.waitForEnabled('#branch-merge-schedule', 30);
-        I.click('#branch-merge-schedule');
-        I.waitForVisible('#branch-merge-schedule-form', 10);
+        I.clickCss(scheduleTab);
+        I.waitForEnabled('#branch-merge-schedule-confirm', 30);
         const value = await I.executeScript(at => {
             const parts = new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Bratislava', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date(at));
             const part = type => parts.find(item => item.type === type).value;
@@ -85,9 +86,8 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
         if (keyboard) { I.focus('#branch-merge-schedule-confirm'); I.pressKey('Enter'); }
         else I.click('#branch-merge-schedule-confirm');
         I.waitForInvisible(busy, 30);
-        I.waitForInvisible('#branch-merge-schedule-form', 30);
         I.waitForVisible('#branch-merge-scheduled', 30);
-        I.waitForEnabled('#branch-merge-schedule', 30);
+        I.waitForEnabled('#branch-merge-schedule-confirm', 30);
         const result = await report(I, f);
         I.assertEqual(result.state, 'SCHEDULED');
         I.assertEqual(result.publishAt, Math.floor(instant / 60000) * 60000);
@@ -145,10 +145,9 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
         I.assertFalse(shifted.news.ids.includes(Number(f.secondPageId)));
         I.assertNotEqual(shifted.banner, first.banner);
         I.assertNotEqual(shifted.news.markup, first.news.markup);
-        I.click('#branch-merge-schedule');
-        I.waitForVisible('#branch-merge-schedule-form', 10);
+        I.focus('#branch-merge-publish-at');
         const mobile = await I.executeScript(() => {
-            const dialog = document.querySelector('#branch-merge-dialog').getBoundingClientRect();
+            const dialog = document.querySelector('#branchesDataTable_modal .modal-dialog').getBoundingClientRect();
             const form = document.querySelector('#branch-merge-schedule-form').getBoundingClientRect();
             const input = document.querySelector('#branch-merge-publish-at');
             const bounds = input.getBoundingClientRect();
@@ -157,10 +156,11 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
         });
         I.assertTrue(mobile.fits); I.assertTrue(mobile.focused); I.assertTrue(Boolean(mobile.label)); I.assertTrue(Boolean(mobile.describedBy));
         I.saveScreenshot('branch-p07-mobile-schedule.png');
-        I.click('Zrušiť', '#branch-merge-schedule-form');
         I.click('#branch-merge-unschedule'); I.waitForVisible('#branch-merge-unschedule-confirm', 10);
         I.focus('#branch-merge-unschedule-confirm'); I.pressKey('Enter');
-        I.waitForInvisible(busy, 30); I.waitForEnabled('#branch-merge-publish', 30);
+        I.waitForInvisible(busy, 30);
+        I.clickCss(changesTab);
+        I.waitForEnabled('#branch-merge-publish', 30);
         const cancelled = await report(I, f);
         I.assertEqual(cancelled.state, 'DRAFT'); I.assertEqual(cancelled.publishAt, null); I.assertEqual(cancelled.scheduledBy, null);
         I.assertDeepEqual(cancelled.items.map(item => item.work), before.items.map(item => item.work), 'Cancelling preserves every WORK snapshot.');
@@ -169,7 +169,7 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
         I.assertNotEqual(afterCancel.banner, shifted.banner);
         I.assertNotContain(afterCancel.banner, 'Budúci termín');
         save('browser-preview-time', {f, firstTerm, shiftedTerm, current, first, shifted, mobile, cancelled, afterCancel});
-        I.pressKey('Escape'); I.waitForInvisible(dialog, 10); I.wjSetDefaultWindowSize();
+        I.clickCss(dialog+' .DTE_Footer .btn-close-editor'); I.waitForInvisible(dialog, 10); I.wjSetDefaultWindowSize();
     });
 
     Scenario('P07 the real cron honors a moved term after logout and stops a new conflict before publishing any item', async ({ I, DTE }) => {
@@ -193,7 +193,7 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
             I.saveScreenshot('branch-p07-moved-term.png');
             await open(I, attention);
             const plannedAttention = await schedule(I, attention, originalTerm, true);
-            I.pressKey('Escape'); I.waitForInvisible(dialog, 10);
+            I.clickCss(dialog+' .DTE_Footer .btn-close-editor'); I.waitForInvisible(dialog, 10);
             // Edit the actual LIVE page through the normal editor after the package has been scheduled.
             I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${attention.pageId}`);
             I.waitForEnabled('#branch-switcher', 30); I.seeElementInDOM('#branch-switcher[aria-label*="Hlavná verzia"]');
