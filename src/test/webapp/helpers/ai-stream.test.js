@@ -24,29 +24,25 @@ function loadTransport(fetch, notifications = []) {
             keepSessionShowTokenMessage: text => notifications.push(text)
         }
     });
-    return vm.runInContext(sources + '\n({ AiRestExecutor, AiChatTransport, requestAiText, runBrowserTools });', context);
+    return vm.runInContext(sources + '\n({ AiRestExecutor, AiChatTransport, requestAiText, runToolSteps });', context);
 }
 
-test('browser tools report saved IDs for writes but not for reads', async () => {
+const toolCall = (name, args = {}) => ({ toolCall: { name, arguments: args, write: name === 'save' } });
+const done = { response: 'Done' };
+
+test('tool calls report saved IDs for writes but not for reads', async () => {
     const calls = [];
-    const { runBrowserTools } = loadTransport(async (url, options) => {
+    const { runToolSteps } = loadTransport(async (url, options) => {
         assert.equal(options.headers['X-WebJET-AI-Chat'], 'unsaved');
         calls.push(url);
         return Response.json({ data: [{ id: 42 }] });
     });
-    const assistant = { assistantId: 7, tools: [{ name: 'find', write: false }, { name: 'save', write: true }],
-        toolInstructions: 'Use the assigned tools.' };
-    const steps = [{ type: 'call', name: 'find', arguments: {} }, { type: 'call', name: 'save', arguments: {} },
-        { type: 'final', text: 'Saved.' }];
-    const result = await runBrowserTools(assistant, {}, () => JSON.stringify(steps.shift()));
+    const steps = [toolCall('find'), toolCall('save'), { response: 'Saved.' }];
+    const result = await runToolSteps(7, () => steps.shift());
     assert.deepEqual(calls, ['/admin/rest/ai/tools/find/call', '/admin/rest/ai/tools/save/call']);
     assert.equal(result.toolStatus, 'save — HTTP 200 (ID 42)');
     assert.equal(result.response, 'Saved.');
 });
-
-const toolAssistant = { assistantId: 7, tools: [{ name: 'find', write: false }, { name: 'save', write: true }] };
-const toolCall = (name, args = {}) => JSON.stringify({ type: 'call', name, arguments: args });
-const done = '{"type":"final","text":"Done"}';
 
 test('saved tool writes identify the issuing thread and message at dispatch', async () => {
     const endpoint = '/admin/rest/ai/chat/messages';
@@ -88,58 +84,47 @@ test('a lost saved-chat response resumes the second read with the first result i
     assert.equal(answer.response, 'Done');
 });
 
-test('browser repairs share a decision budget and never replay a dispatched write', async () => {
-    for (const exhausted of [false, true]) {
-        const rejected = new Response('arguments.id is required.', { status: 400, headers: { 'X-WebJET-AI-Tool-Response': 'invalid-arguments' } });
-        const responses = [rejected, exhausted ? rejected.clone() : Response.json({ error: 'Record is locked' }, { status: 400 })];
-        const { runBrowserTools } = loadTransport(() => responses.shift());
-        const steps = [[/^\{\}$/, toolCall('save')], [/arguments\.id is required/, 'bad JSON'],
-            [/one JSON object/, exhausted ? toolCall('save') : toolCall('save', { id: 42 })]];
-        if (!exhausted) steps.push([/Record is locked/, toolCall('unknown')], [/assigned functions/, '{"type":"final","text":""}'], [/nonempty text/, done]);
-        const statuses = [], dispatched = [];
-        const task = runBrowserTools(toolAssistant, {}, message => {
-            const [expected, decision] = steps.shift();
-            assert.match(message, expected);
-            return decision;
-        }, undefined, (...status) => statuses.push(status), (name, ran) => { if (!name) dispatched.push(ran); });
-        if (exhausted) await assert.rejects(task, /invalidStep/);
-        else assert.equal((await task).toolStatus, 'save — HTTP 400 · components.ai.tools.unverified.js');
-        assert.equal(steps.length, 0);
-        assert.deepEqual(dispatched, exhausted ? [false, false] : [false, true]);
-        assert.deepEqual(statuses[1], ['', false]);
+test('tool writes cannot be dispatched twice, even after a known rejection', async t => {
+    for (const status of [200, 400]) {
+        const fetch = t.mock.fn(() => Response.json({ id: 42 }, { status }));
+        const steps = [toolCall('save'), toolCall('save')];
+        await assert.rejects(loadTransport(fetch).runToolSteps(7, () => steps.shift()), {
+            message: /limit/, retryable: status === 400
+        });
+        assert.equal(fetch.mock.callCount(), 1);
     }
 });
 
-test('three malformed decisions after a successful write make the error non-retryable', async t => {
+test('a malformed decision after a successful write makes the error non-retryable', async t => {
     const fetch = t.mock.fn(() => Response.json({ id: 42 }));
-    const steps = [toolCall('save'), ...Array(3).fill(toolCall('save', []))];
-    const task = loadTransport(fetch).runBrowserTools(toolAssistant, {}, () => steps.shift());
+    const steps = [toolCall('save'), toolCall('save', [])];
+    const task = loadTransport(fetch).runToolSteps(7, () => steps.shift());
     await assert.rejects(task, { message: /invalidStep/, retryable: false });
     assert.equal(steps.length, 0);
     assert.equal(fetch.mock.callCount(), 1);
 });
 
-test('prompt errors and cancellation stop before dispatch', async () => {
-    const { runBrowserTools } = loadTransport(() => assert.fail('Unexpected dispatch'));
+test('generation errors and cancellation stop before dispatch', async () => {
+    const { runToolSteps } = loadTransport(() => assert.fail('Unexpected dispatch'));
     const stop = new AbortController();
     const error = new Error('Session lost');
-    await assert.rejects(runBrowserTools(toolAssistant, {}, () => { throw error; }), error);
-    await assert.rejects(runBrowserTools(toolAssistant, {}, () => { stop.abort(error); return 'invalid'; }, stop.signal), error);
+    await assert.rejects(runToolSteps(7, () => { throw error; }), error);
+    await assert.rejects(runToolSteps(7, () => { stop.abort(error); return toolCall('save'); }, stop.signal), error);
 });
 
-test('browser tools distinguish declared empty results from unreadable JSON', async () => {
+test('tool calls distinguish declared empty results from unreadable JSON', async () => {
     for (const [type, body, expected] of [['empty', null, null], ['empty', '', null], ['text', null, ''], ['text', '', ''],
         ['json', null, /empty/i], ['json', '', /empty/i], ['json', 'bad JSON', /.+/]]) {
-        const { runBrowserTools } = loadTransport(() => new Response(body, { headers: {
+        const { runToolSteps } = loadTransport(() => new Response(body, { headers: {
             'Content-Type': 'application/json', 'X-WebJET-AI-Tool-Response': type } }));
-        const result = await runBrowserTools(toolAssistant, {}, message => {
-            if (!message.startsWith('Endpoint result')) return toolCall(type === 'json' ? 'find' : 'save');
-            const observation = JSON.parse(message.split('\n')[1]);
+        const result = await runToolSteps(7, observations => {
+            if (!observations.length) return toolCall(type === 'json' ? 'find' : 'save');
+            const [observation] = observations;
             assert.equal(observation.status, 200);
             assert.equal(observation.uncertain, false);
             if (type === 'json') assert.match(observation.result.error, expected);
             else assert.equal(observation.result, expected);
-            return done;
+            return { ...done };
         });
         if (type !== 'json') assert.equal(result.toolStatus, 'save — HTTP 200');
     }

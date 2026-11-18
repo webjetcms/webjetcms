@@ -131,11 +131,10 @@ export class AiChatTransport {
         if (!request.browser.isAvailable(assistant)) {
             throw new Error(WJ.translate("components.ai_assistants.browser.api_not_available.js", [request.browser.getApiName(assistant)]));
         }
-        const result = await request.browser.execute(assistant, inputData, false, update, callbacks.onWrite, callbacks.onToolActivity);
+        const result = await request.browser.execute(assistant, inputData, false, update);
         return {
             success: result.success,
-            response: result.explanatoryText || request.text,
-            noToolAction: result.noToolAction,
+            response: request.text,
             totalTokens: result.totalTokens,
             stopped: result.stopped,
             errorText: result.errorText || (result.statusKey ? WJ.translate(result.statusKey, result.statusKeyParams || []) : null)

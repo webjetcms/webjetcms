@@ -149,73 +149,74 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 
 Anotáciou `@AiTool` sprístupníte REST operácie konkrétneho kontroléra cez katalóg AI nástrojov. Katalóg preberie zo Spring MVC zdedené aj vlastné mapovania. Metódy ako `afterSave` zostávajú súčasťou životného cyklu editora.
 
-Používateľ s právom `cmp_quiz` môže cez nástroje kontroléra `QuizRestController` čítať, vytvárať, upravovať a mazať dotazníky.
+Kontrolér `ConfigurationController` sprístupňuje konfiguračné premenné používateľovi s právom `menuConfig`. Pri každom volaní zachováva obmedzenia prístupu ku konkrétnym premenným.
 
 ```java
 import sk.iway.iwcm.components.ai.tools.AiTool;
 
 @RestController
-@RequestMapping("/admin/rest/quiz")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_quiz')")
+@RequestMapping("/admin/rest/settings/configuration")
+@PreAuthorize("@WebjetSecurityService.hasPermission('menuConfig')")
 @Datatable
-@AiTool(description = "components.ai.tools.quiz.context")
-public class QuizRestController extends DatatableRestControllerV2<QuizEntity, Long> {
+@AiTool(description = "components.ai.tools.configuration.context",
+    exclude = {"findByColumns", "action", "getSum", "rowReorder"})
+public class ConfigurationController extends DatatableRestControllerV2<ConfDetailsDto, Long> {
     // ...
 }
 ```
 
-Samotné `@AiTool` zahrnie aj zápisové operácie. Voľba `readOnly = true` obmedzí výpis aj volanie na HTTP GET. Pomocou `exclude = {"getQuizType"}` môžete v oboch režimoch vyradiť všetky mapovania konkrétnej Java metódy, vrátane zdedenej metódy. Pri vlastných mapovaniach bez určenej HTTP metódy katalóg použije GET, v plnom režime pri vstupe s telom požiadavky použije POST.
+Samotné `@AiTool` zahrnie aj zápisové operácie. Voľba `readOnly = true` obmedzí výpis aj volanie na HTTP GET. Pomocou `exclude = {"findByColumns"}` môžete v oboch režimoch vyradiť všetky mapovania konkrétnej Java metódy, vrátane zdedenej metódy. Pri vlastných mapovaniach bez určenej HTTP metódy katalóg použije GET, v plnom režime pri vstupe s telom požiadavky použije POST.
 
 Voľbou `include` môžete vymenovať Java metódy, ktoré chcete sprístupniť. Pre kontrolér, ktorý nededí z `DatatableRestControllerV2`, je tento zoznam povinný. Napríklad `AiToolsController` používa `@AiTool(readOnly = true, include = {"preview", "details"})`.
 
-Editor asistenta zoskupuje nástroje podľa názvu Java balíka za `.components.`. Napríklad kontroléry dotazníkov aj otázok v balíku `sk.iway.iwcm.components.quiz.rest` patria do skupiny `quiz`. Jej názov môžete preložiť kľúčom `components.ai_assistants.tools.group.quiz`. Mimo balíkov `components.<názov>` má každý kontrolér vlastnú skupinu. Asistent ukladá názvy vybraných nástrojov.
+Editor asistenta zoskupuje nástroje podľa názvu Java balíka za `.components.`. Napríklad kontrolér v balíku `sk.iway.iwcm.components.configuration` patrí do skupiny `configuration`. Jej názov môžete preložiť kľúčom `components.ai_assistants.tools.group.configuration`. Mimo balíkov `components.<názov>` má každý kontrolér vlastnú skupinu. Asistent ukladá názvy vybraných nástrojov.
 
-Vlastný endpoint môžete opísať anotáciou `@AiToolDescription` na mapovanej metóde. Ako hodnotu zadajte anglický text alebo prekladový kľúč. Napríklad opis metódy `getQuizType` vysvetľuje, ako interpretovať pole `quizType` vo vrátenom kvíze.
+Vlastný endpoint môžete opísať anotáciou `@AiToolDescription` na mapovanej metóde. Ako hodnotu zadajte anglický text alebo prekladový kľúč. Napríklad opis metódy `getAutocompleteDetail` vysvetľuje, ako interpretovať bežné a skryté konfiguračné hodnoty.
 
 ```java
 import sk.iway.iwcm.components.ai.tools.AiToolDescription;
 
-// V triede QuizRestController
-@RequestMapping(value = "/quizInfo", params = {"quizId"})
-@AiToolDescription("components.ai.tools.quiz_get_quiz_type.description")
-public QuizEntity getQuizType(@RequestParam("quizId") int quizId) {
+// In ConfigurationController
+@GetMapping("/autocomplete/detail")
+@AiToolDescription("components.ai.tools.configuration_get_autocomplete_detail.description")
+public ConfDetailsDto getAutocompleteDetail(@RequestParam String name) {
     // ...
 }
 ```
 
 Ak anotáciu vynecháte alebo zadáte prázdny text, katalóg použije preklad podľa vzoru `components.ai.tools.<kontrolér>_<metóda>.description`, potom opis štandardnej operácie alebo text odvodený z názvu metódy. API pre AI používa anglické preklady. V administrácii sa opis zobrazí v jazyku používateľa, pri chýbajúcom preklade v angličtine.
 
-Spoločný opis z `@AiTool(description = "...")` sa zobrazí v riadku kontroléra po zapnutí voľby **Zoskupiť podľa REST kontroléra**. V odpovedi `GET /admin/rest/settings/ai-tools/controllers/all` ho nájdete v poli `controllerDescription`. Pole `pathPrefix` obsahuje spoločný začiatok REST ciest v zozname `endpoints`, napríklad `/admin/rest/quiz`.
+Spoločný opis z `@AiTool(description = "...")` sa zobrazí v riadku kontroléra po zapnutí voľby **Zoskupiť podľa REST kontroléra**. V odpovedi `GET /admin/rest/settings/ai-tools/controllers/all` ho nájdete v poli `controllerDescription`. Pole `pathPrefix` obsahuje spoločný začiatok REST ciest v zozname `endpoints`, napríklad `/admin/rest/settings/configuration`.
 
 `GET /admin/rest/ai/tools` vráti v poli `tools` úplné definície nástrojov dostupných prihlásenému používateľovi. Ak asistent potrebuje vyhľadať len niekoľko operácií, priraďte mu tieto dva nástroje:
 
 - `ai_tools_preview` (`GET /admin/rest/ai/tools/preview`) vráti pre každý dostupný nástroj iba polia `name` a `description`.
-- `ai_tools_details` (`GET /admin/rest/ai/tools/details`) prijíma názvy vybraných nástrojov. Pri volaní asistentom odošlite napríklad `{"names":["quiz_get_all","quiz_get_quiz_type"]}`. Pri priamom GET volaní môžete zopakovať parameter `names`. V poli `tools` dostanete úplné definície v poradí výberu vrátane vstupnej schémy, cieľového mapovania a opisu výstupu. Neznáme a neprístupné názvy sa vynechajú, opakovaný názov sa vráti len raz.
+- `ai_tools_details` (`GET /admin/rest/ai/tools/details`) prijíma názvy vybraných nástrojov. Pri volaní asistentom odošlite napríklad `{"names":["configuration_get_autocomplete","configuration_get_autocomplete_detail"]}`. Pri priamom GET volaní môžete zopakovať parameter `names`. V poli `tools` dostanete úplné definície v poradí výberu vrátane vstupnej schémy, cieľového mapovania a opisu výstupu. Neznáme a neprístupné názvy sa vynechajú, opakovaný názov sa vráti len raz.
 
 Asistent tak môže čítať opis aj pri nástroji, ktorý nemá priradený. Na jeho vykonanie potrebuje samostatné priradenie aj oprávnenia prihláseného používateľa. Prehliadač prijme najviac 1 MiB na odpoveď katalógu. Ak vybrané definície presiahnu limit, vyžiadajte si ich v menších skupinách.
 
-Nasledujúci príklad priameho volania môžete spustiť v konzole prehliadača v administrácii pod účtom s právom `cmp_quiz`.
+Nasledujúci príklad priameho volania môžete spustiť v konzole prehliadača v administrácii pod účtom s právom `menuConfig`.
 
 ```javascript
 const url = "/admin/rest/ai/tools";
 const headers = { "X-CSRF-Token": window.csrfToken };
 const { tools } = await (await fetch(url + "/preview", { headers })).json();
-if (tools.some(tool => tool.name === "quiz_get_quiz_type")) {
-    const details = await (await fetch(url + "/details?names=quiz_get_quiz_type", { headers })).json();
-    const [quiz] = details.tools;
-    console.log(quiz.inputSchema);
-    const response = await fetch(url + "/" + quiz.name + "/call", {
+if (tools.some(tool => tool.name === "configuration_get_autocomplete_detail")) {
+    const details = await (await fetch(url + "/details?names=configuration_get_autocomplete_detail", { headers })).json();
+    const [configuration] = details.tools;
+    console.log(configuration.inputSchema);
+    const response = await fetch(url + "/" + configuration.name + "/call", {
         method: "POST",
         headers: { ...headers, "Content-Type": "application/json" },
-        body: JSON.stringify({ quizId: 42 })
+        body: JSON.stringify({ name: "smtpPort" })
     });
     if (response.ok) console.log(await response.json());
 }
 ```
 
-Nástroj `quiz_get_quiz_type` vyžaduje celočíselné `quizId`. Pre hodnotu `42` vykoná `GET /admin/rest/quiz/quizInfo?quizId=42`. Ak dotazník so zadaným ID vo vybranej doméne neexistuje, odpoveď obsahuje prázdny názov a `quizType` s hodnotou `"0"`. Pri každom volaní WebJET znovu overí prístup používateľa. Cieľový kontrolér spracuje požiadavku v jeho doméne a vráti svoju obvyklú odpoveď vrátane prípadných validačných chýb datatabuľky.
+Nástroj `configuration_get_autocomplete_detail` vyžaduje názov premennej v poli `name`. Pre hodnotu `"smtpPort"` vykoná `GET /admin/rest/settings/configuration/autocomplete/detail?name=smtpPort`. Pri každom volaní WebJET znovu overí prístup používateľa. Pri citlivej premennej vynechá hodnoty a vráti `redacted: true`; pole `configured` uvádza, či má premenná neprázdnu hodnotu v bežiacej aplikácii.
 
-Argumenty ďalších nástrojov zostavte podľa ich `inputSchema`. Nástroj `quiz_get_all` predvolene vráti prvú stránku s najviac 20 dotazníkmi. Ak zadáte iba `{"page":1}`, vráti druhú stránku s rovnakou veľkosťou. Pomocou `{"page":0,"size":10,"sort":["name,asc"]}` získate prvých desať dotazníkov zoradených podľa názvu.
+Argumenty ďalších nástrojov zostavte podľa ich `inputSchema`. Štandardný zdedený handler `/all` predvolene použije veľkosť stránky 20. Konfiguračný kontrolér však vracia celý dostupný zoznam a ignoruje `page` aj `size`. Pri väčšom zozname použite `configuration_get_autocomplete` s argumentom `{"term":"smtp"}` a potom načítajte detail podľa presného názvu.
 
 Pre operáciu s `@RequestBody` vložte údaje do vlastnosti `body`. Telo editora tak môže obsahovať rovnaké polia `action` a `data` ako pri priamom volaní `/editor`. Limit jedného JSON volania je 1 MiB. Pri väčšej požiadavke API vráti HTTP 413.
 

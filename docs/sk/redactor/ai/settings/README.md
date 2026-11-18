@@ -14,9 +14,9 @@ Pomocou filtra v tomto stĺpci môžete vyhľadať napríklad asistentov so stav
 
 ## Zručnosti
 
-Pri vytváraní alebo úprave zručnosti sa na karte **Inštrukcie** automaticky zobrazí panel **Odkazy na nástroje**. Kliknutím na ikonu bočného panela <i class="ti ti-layout-sidebar-right" aria-hidden="true"></i> vpravo nad inštrukciami ho môžete skryť a znova otvoriť. Kliknite do poľa **Vyhľadať skupinu** a vyberte skupinu zo zoznamu. Ak začnete písať jej názov, ponuka sa zúži na zodpovedajúce skupiny. Nástroje vybranej skupiny môžete filtrovať podľa HTTP metódy, napríklad na nástroje `GET` v skupine **Dotazníky (Quiz)**. Vymazaním názvu skupiny zobrazíte nástroje zvolenej metódy zo všetkých skupín.
+Pri vytváraní alebo úprave zručnosti sa na karte **Inštrukcie** automaticky zobrazí panel **Odkazy na nástroje**. Kliknutím na ikonu bočného panela <i class="ti ti-layout-sidebar-right" aria-hidden="true"></i> vpravo nad inštrukciami ho môžete skryť a znova otvoriť. Kliknite do poľa **Vyhľadať skupinu** a vyberte skupinu zo zoznamu. Ak začnete písať jej názov, ponuka sa zúži na zodpovedajúce skupiny. Nástroje vybranej skupiny môžete filtrovať podľa HTTP metódy, napríklad na nástroje `GET` v skupine **Konfigurácia**. Vymazaním názvu skupiny zobrazíte nástroje zvolenej metódy zo všetkých skupín.
 
-Kliknutím na riadok vložíte na miesto kurzora odkaz na nástroj, napríklad `@tool(quiz_get_all)`. Tlačidlo **Vložiť skupinu** v hlavičke panela vloží odkaz na všetky nástroje vybranej skupiny, napríklad `@group(quiz)`, aj keď máte zapnutý filter metódy.
+Kliknutím na riadok vložíte na miesto kurzora odkaz na nástroj, napríklad `@tool(configuration_get_autocomplete_detail)`. Tlačidlo **Vložiť skupinu** v hlavičke panela vloží odkaz na všetky nástroje vybranej skupiny, napríklad `@group(configuration)`, aj keď máte zapnutý filter metódy.
 
 Pri vytváraní zručnosti zadajte názov, ktorý sa v tejto doméne ešte nepoužíva. Ak zručnosť premenujete, upravte jej názov aj v odkazoch v inštrukciách asistentov.
 
@@ -105,10 +105,10 @@ Umiestnite kurzor do inštrukcií na miesto, kam chcete vložiť odkaz. Panel **
 
 V texte inštrukcií majú odkazy na nástroje modré pozadie, odkazy na skupiny zelené a odkazy na zručnosti fialové. Zvýraznia sa aj pri ručnom písaní po zadaní uzatváracej zátvorky.
 
-- Kliknutím na názov nástroja vložíte napríklad `@tool(quiz_get_all)`.
-- Tlačidlom **Vložiť skupinu** vložíte napríklad `@group(quiz)`. Asistent pri spustení sprístupní nástroje, ktoré do skupiny práve patria a na ktoré má používateľ oprávnenie.
+- Kliknutím na názov nástroja vložíte napríklad `@tool(configuration_get_autocomplete_detail)`.
+- Tlačidlom **Vložiť skupinu** vložíte napríklad `@group(configuration)`. Asistent pri spustení sprístupní nástroje, ktoré do skupiny práve patria a na ktoré má používateľ oprávnenie.
 
-Na karte **Zručnosti** môžete zručnosť vyhľadať podľa názvu alebo ukážky jej inštrukcií. Kliknutím na riadok vložíte odkaz, napríklad `@skill(Správa kvízov)`. Po návrate na kartu **Nástroje** zostane vybraná skupina aj HTTP metóda.
+Na karte **Zručnosti** môžete zručnosť vyhľadať podľa názvu alebo ukážky jej inštrukcií. Kliknutím na riadok vložíte odkaz, napríklad `@skill(Kontrola konfigurácie)`. Po návrate na kartu **Nástroje** zostane vybraná skupina aj HTTP metóda.
 
 Pri zmene poskytovateľa na **Prehliadač** odstráňte z inštrukcií všetky odkazy `@skill(...)`, `@tool(...)` a `@group(...)`, aby sa asistent dal uložiť. V starších asistentoch s týmto poskytovateľom sa odkazy pri spustení ignorujú.
 
@@ -199,7 +199,7 @@ Na stránke **AI nástroje → Nástroje** vidíte REST operácie, ku ktorým m�
 
 Nástroje skupiny **Konfigurácia** posielajú asistentovi hodnoty bežných aj vlastných premenných, napríklad `smtpPort`. Pri šifrovanej hodnote alebo názve, ktorý WebJET vyhodnotí ako citlivý, nástroj vynechá polia `value`, `displayValue` a `oldValue`. Názov kontroluje podľa častí slov, napríklad `pass`, `heslo`, `secret`, `key` alebo `token`. Pri otázke, či je nastavené `smtpPassword`, asistent dostane `redacted: true` a v poli `configured` zistí, či má heslo v bežiacej aplikácii neprázdnu hodnotu.
 
-Prepínač **Zoskupiť podľa REST kontroléra** zobrazí názov súboru každého kontroléra a počet jeho dostupných koncových bodov. Stĺpec **Prefix REST cesty** zobrazuje spoločnú časť ich ciest, napríklad `/admin/rest/quiz` pre `QuizRestController.java`. V stĺpci **Opis** si môžete prečítať, aké údaje kontrolér spravuje. Kliknutím na názov súboru otvoríte ponuku **Koncový bod**. Operáciu môžete vyhľadať podľa názvu nástroja, HTTP metódy alebo REST cesty. Výberom inej operácie v tom istom okne zmeníte náhľad.
+Prepínač **Zoskupiť podľa REST kontroléra** zobrazí názov súboru každého kontroléra a počet jeho dostupných koncových bodov. Stĺpec **Prefix REST cesty** zobrazuje spoločnú časť ich ciest, napríklad `/admin/rest/settings/configuration` pre `ConfigurationController.java`. V stĺpci **Opis** si môžete prečítať, aké údaje kontrolér spravuje. Kliknutím na názov súboru otvoríte ponuku **Koncový bod**. Operáciu môžete vyhľadať podľa názvu nástroja, HTTP metódy alebo REST cesty. Výberom inej operácie v tom istom okne zmeníte náhľad.
 
 ## Nastavenie četového asistenta
 

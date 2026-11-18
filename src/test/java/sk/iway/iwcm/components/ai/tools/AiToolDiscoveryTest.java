@@ -3,7 +3,6 @@ package sk.iway.iwcm.components.ai.tools;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -13,7 +12,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -68,8 +66,6 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
-import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
-import sk.iway.iwcm.components.ai.jpa.AiSkillEntity;
 import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
@@ -78,9 +74,6 @@ import sk.iway.iwcm.components.ai.rest.AiToolsController;
 import sk.iway.iwcm.components.configuration.ConfigurationController;
 import sk.iway.iwcm.components.configuration.ConfigurationService;
 import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
-import sk.iway.iwcm.components.quiz.rest.QuizQuestionRestController;
-import sk.iway.iwcm.components.quiz.rest.QuizRestController;
-import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
 import sk.iway.iwcm.system.datatable.events.DatatableEvent;
 import sk.iway.iwcm.system.datatable.events.DatatableEventType;
@@ -125,8 +118,6 @@ class AiToolDiscoveryTest {
         @Bean AiSkillRepository skills() { return mock(AiSkillRepository.class); }
         @Bean ConfigurationService configurationService() { return mock(ConfigurationService.class); }
         @Bean ConfigurationController configuration(ConfigurationService service) { return new ConfigurationController(service); }
-        @Bean QuizRestController quizzes() { return new QuizRestController(null, null, null); }
-        @Bean QuizQuestionRestController questions() { return new QuizQuestionRestController(null); }
         @Bean AuditProbeController probe() { return new AuditProbeController(); }
         @Bean MappedInterceptor guard(AiToolAuthorization authorization) {
             return new MappedInterceptor(null, new AiToolInterceptor(authorization));
@@ -240,36 +231,10 @@ class AiToolDiscoveryTest {
         return json.readTree(response.getContentAsByteArray());
     }
 
-    @Test
-    void controllerGroupPrefixEndsAtACompletePathSegment() {
-        var registry = context.getBean(AiToolRegistry.class);
-        var add = registry.lookup("quiz_add");
-        var action = registry.lookup("quiz_action");
-        assertEquals("/admin/rest/quiz", new AiToolGroup(QuizRestController.class, List.of(add, action), null).getPathPrefix());
-        assertEquals("/admin/rest/quiz/add", new AiToolGroup(QuizRestController.class, List.of(add), null).getPathPrefix());
-    }
-
     private MockHttpServletRequest adminRequest() {
         var request = new MockHttpServletRequest(context.getServletContext());
         request.setSession(session);
         return request;
-    }
-
-    @Test
-    void assignmentPickerGroupsByComponentPackageAndFiltersByPermission() {
-        var request = adminRequest();
-        var service = context.getBean(AiToolService.class);
-        var tools = service.assignmentTools(request, null);
-        assertTrue(tools.stream().anyMatch(tool -> tool.group().equals("quiz") && tool.name().equals("quiz_get_all")));
-        assertTrue(tools.stream().anyMatch(tool -> tool.group().equals("quiz") && tool.name().equals("quiz_question_add")
-                && tool.httpMethod().equals("POST") && tool.path().equals("/admin/rest/quiz/question/add")));
-        assertTrue(tools.stream().anyMatch(tool -> tool.group().equals("ai") && tool.name().equals("ai_tools_preview")));
-        assertTrue(tools.stream().anyMatch(tool -> tool.group().equals("ai") && tool.name().equals("audit_probe_batch")));
-
-        when(security.hasPermission("cmp_quiz")).thenReturn(false);
-        var visible = service.assignmentTools(request, null);
-        assertFalse(visible.stream().anyMatch(tool -> tool.group().equals("quiz") || tool.name().equals("audit_probe_batch")));
-        assertTrue(visible.stream().anyMatch(tool -> tool.name().equals("ai_tools_preview")));
     }
 
     /** The picker needs visible context; execution must still recognize a preset with inaccessible writes. */
@@ -312,89 +277,6 @@ class AiToolDiscoveryTest {
     }
 
     @Test
-    void editorStopsAtTheFirstVisibleToolAndRechecksPermissionsOnTheNextRequest() {
-        assistant.setAction("generate_text");
-        assistant.setInstructions("@tool(ai_tools_preview) @tool(audit_probe_batch)");
-        var service = context.getBean(AiToolService.class);
-        assertTrue(service.hasInstructionContext(assistant, adminRequest()));
-        verify(security, never()).hasPermission("cmp_quiz");
-
-        assistant.setInstructions("@group(quiz)");
-        assertTrue(service.hasInstructionContext(assistant, adminRequest()));
-        when(security.hasPermission("cmp_quiz")).thenReturn(false);
-        assertFalse(service.hasInstructionContext(assistant, adminRequest()));
-        verifyNoInteractions(context.getBean(AiSkillRepository.class));
-    }
-
-    @Test
-    void linkedSkillsAndGroupsShareOneToolListAndFollowSkillEdits() throws Exception {
-        assistant.setInstructions("Use @skill(First) or @skill(First), then @skill(Second) or @skill(Missing). @tool(quiz_get_all) @group(quiz)");
-        var first = skill(4L, "First", "@tool(quiz_get_all) @group(quiz)");
-        var second = skill(8L, "Second", "@tool(quiz_get_all) @tool(ai_tools_details) @tool(audit_probe_batch)");
-        int domain = CloudToolsForCore.getDomainId();
-        var linkedNames = Set.of("First", "Second", "Missing");
-        var skills = context.getBean(AiSkillRepository.class);
-        when(skills.findByDomainIdAndNameInOrderByNameAsc(domain, linkedNames)).thenReturn(List.of(first, second));
-        var service = context.getBean(AiToolService.class);
-        var request = adminRequest();
-
-        var runtime = service.resolve(assistant, domain, request);
-        assertSame(runtime, service.resolve(assistant, domain, request));
-        verify(skills).findByDomainIdAndNameInOrderByNameAsc(domain, linkedNames);
-        assertTrue(runtime.assistant().getInstructions().startsWith("Use skill First or skill First, then skill Second or [skill unavailable]."));
-        assertEquals(1, runtime.skillInstructions().lines().filter("Skill: First"::equals).count());
-        assertEquals(1, runtime.skillInstructions().lines().filter("Skill: Second"::equals).count());
-        var names = runtime.tools().stream().map(AiToolDefinition::name).toList();
-        assertEquals(names.stream().sorted().toList(), names);
-        assertEquals(names.size(), Set.copyOf(names).size());
-        assertTrue(names.containsAll(List.of("quiz_get_all", "quiz_question_add", "ai_tools_details", "audit_probe_batch")));
-        assertQuizLookup(runtime, request);
-        call("ai_tools_details", "{}", 400);
-        call("ai_tools_details", "{\"names\":[]}", 200);
-        when(security.hasPermission("cmp_quiz")).thenReturn(false);
-        call("audit_probe_batch", "{}", 404);
-
-        second.setInstructions("Updated guidance with @tool(ai_tools_preview)");
-        call("ai_tools_preview", "{}", 200);
-        call("ai_tools_details", "{}", 404);
-        when(skills.findByDomainIdAndNameInOrderByNameAsc(domain, linkedNames)).thenReturn(List.of(first));
-        call("ai_tools_preview", "{}", 404);
-        var otherDomain = service.resolve(assistant, domain + 1, request);
-        assertEquals("", otherDomain.skillInstructions());
-        assertTrue(otherDomain.assistant().getInstructions().startsWith("Use [skill unavailable]"));
-        assertTrue(otherDomain.tools().isEmpty());
-        assertTrue(otherDomain.assistant().getInstructions().endsWith("[tool unavailable] [no available tools in this group]"));
-    }
-
-    private void assertQuizLookup(AiAssistantRuntime runtime, MockHttpServletRequest request) {
-        String read = "{\"type\":\"call\",\"name\":\"quiz_find_by_columns\",\"arguments\":{\"filters\":{\"name\":\"test_2\"}}}";
-        String write = "{\"type\":\"call\",\"name\":\"audit_probe_batch\",\"arguments\":{}}";
-        String prediction = "{\"type\":\"final\",\"text\":\"No matches\"}";
-        var protocol = AiToolProtocol.prepare(runtime, List.of());
-        var decision = new AssistantResponseDTO();
-        protocol.apply(read + prediction, decision, mock(Prop.class));
-        var call = decision.getToolCall();
-        var entry = context.getBean(AiToolRegistry.class).lookup(call.name());
-        var target = new AiToolRequest(request, entry, entry.inputs().bind(call.arguments()));
-        assertFalse(call.write());
-        assertEquals("", decision.getResponse());
-        assertEquals("/admin/rest/quiz/search/findByColumns", target.getRequestURI());
-        assertEquals("GET", target.getMethod());
-        assertEquals("test_2", target.getParameter("name"));
-
-        for (String invalid : List.of(write + prediction, read + write, write + read, read + read, prediction + read, prediction + prediction,
-                read + prediction + prediction, read + " trailing", read + prediction + " trailing", read + "{\"type\":\"final\",\"text\":\"a\",\"text\":\"b\"}",
-                "{\"type\":\"final\",\"text\":\"Found\",\"arguments\":{}}", read.replace("quiz_find_by_columns", "unknown") + prediction,
-                read.replace("filters", "unknown") + prediction)) {
-            var rejected = new AssistantResponseDTO();
-            protocol.apply(invalid, rejected, mock(Prop.class));
-            assertEquals(AiToolProtocol.INVALID_TOOL_STEP, rejected.getErrorCategory(), invalid);
-            assertNull(rejected.getToolCall());
-            assertNull(rejected.getResponse());
-        }
-    }
-
-    @Test
     void browserRuntimeLeavesReferencesUnresolved() {
         assistant.setAction("generate_text");
         assistant.setProvider("browser");
@@ -406,14 +288,6 @@ class AiToolDiscoveryTest {
         assertFalse(runtime.toolsEnabled());
         assertFalse(runtime.toolsWrite());
         verifyNoInteractions(context.getBean(AiSkillRepository.class));
-    }
-
-    private static AiSkillEntity skill(long id, String name, String instructions) {
-        var skill = new AiSkillEntity();
-        skill.setId(id);
-        skill.setName(name);
-        skill.setInstructions(instructions);
-        return skill;
     }
 
     @Test
@@ -485,26 +359,6 @@ class AiToolDiscoveryTest {
     }
 
     @Test
-    void assistantCanPreviewThenInspectOnlySelectedTools() throws Exception {
-        var preview = call("ai_tools_preview", "{}", 200);
-        for (var tool : preview) assertEquals(Set.of("name", "description"), Set.copyOf(tool.propertyNames()));
-        var names = preview.valueStream().map(tool -> tool.get("name").asString()).toList();
-        assertEquals(List.of("ai_tools_details", "ai_tools_preview"), names.stream().filter(name -> name.startsWith("ai_tools_")).toList());
-        assertTrue(names.contains("quiz_get_quiz_type"));
-
-        var details = call("ai_tools_details", """
-                {"names":["quiz_get_quiz_type","unknown","quiz_get_all","quiz_get_quiz_type"]}
-                """, 200);
-        assertEquals(List.of("quiz_get_quiz_type", "quiz_get_all"), details.valueStream().map(tool -> tool.get("name").asString()).toList());
-        var quiz = details.get(0);
-        assertEquals("/admin/rest/quiz/quizInfo", quiz.get("path").asString());
-        assertEquals("GET", quiz.get("httpMethod").asString());
-        assertTrue(quiz.at("/inputSchema/properties/quizId").isObject());
-        assertTrue(quiz.get("outputSchema").isObject());
-        call("quiz_get_quiz_type", "{\"quizId\":42}", 404);
-    }
-
-    @Test
     void auditAttributesEveryWriteAndReportsOnlyDispatchedToolCalls() throws Exception {
         var previous = SetCharacterEncodingFilter.getCurrentRequestBean();
         var request = new RequestBean();
@@ -524,7 +378,6 @@ class AiToolDiscoveryTest {
             assertFalse(request.getAuditValues(false).containsKey("AI tool"));
             assertEquals("value=private-query", request.getQueryString());
             call("ai_tools_preview", "{}", 200);
-            call("quiz_get_quiz_type", "{\"quizId\":42}", 404);
             mvc.perform(post(BASE + "/ai_tools_preview/call").session(session)
                     .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isOk());
             mvc.perform(post("/admin/rest/probe/batch").session(session).header(AiToolAuthorization.ASSISTANT_HEADER, "7"))
@@ -550,49 +403,6 @@ class AiToolDiscoveryTest {
         }
     }
 
-    private JsonNode catalog(AiToolDefinition first, AiToolDefinition second) {
-        String prompt = AiToolProtocol.instructions(List.of(first, second));
-        return json.readTree(prompt.substring(prompt.lastIndexOf('\n') + 1));
-    }
-
-    @Test
-    void sharesMatchingDefinitionsAndPreservesConflictingSchemas() {
-        var registry = context.getBean(AiToolRegistry.class);
-        var add = registry.lookup("quiz_add").definition();
-        var edit = registry.lookup("quiz_edit").definition();
-        var shared = catalog(add, edit);
-        assertEquals(2, shared.get("tools").size());
-        for (var tool : shared.get("tools")) {
-            var schema = tool.get("inputSchema");
-            assertFalse(schema.has("$defs"));
-            assertTrue(shared.at(schema.at("/properties/body/$ref").asString().substring(1)).isObject());
-        }
-        String type = shared.get("$defs").propertyNames().iterator().next();
-        var conflicting = Map.<String, Object>of("$defs", Map.of(type, Map.of("type", "integer")));
-        var other = new AiToolDefinition("other", "Other", conflicting, "/other", "GET", Map.of());
-        var distinct = catalog(add, other);
-        assertEquals(json.valueToTree(add.inputSchema()), distinct.at("/0/inputSchema"));
-        assertEquals(json.valueToTree(other.inputSchema()), distinct.at("/1/inputSchema"));
-    }
-
-    @Test
-    void toolInputUsesStoredChoiceValuesFromEditorMetadata() {
-        var schema = context.getBean(AiToolRegistry.class).lookup("quiz_add").definition().inputSchema();
-        var jsonSchema = json.valueToTree(schema);
-        var bodyRef = jsonSchema.at("/properties/body/$ref").asString();
-        var choice = jsonSchema.at(bodyRef.substring(1) + "/properties/quizType");
-        assertEquals(List.of("0", "1"), choice.get("enum").valueStream().map(JsonNode::asString).toList());
-        assertTrue(choice.get("description").asString().contains("1 = "));
-        AiToolArgumentValidator.validate(schema, Map.of("body", Map.of("name", "autotest", "quizType", "1")));
-        var rows = Map.<String, Object>of("items", Map.of("$ref", bodyRef), "$defs", schema.get("$defs"));
-        assertFeedback(rows, List.of(Map.of()), "arguments[].name is required.");
-        assertFeedback(rows, List.of(Map.of("name", "quiz", "quizType", "bodovaný")), "arguments[].quizType must use a value from its enum.");
-        assertFeedback(rows, List.of(Map.of("name", "quiz", "quizType", 42)), "arguments[].quizType must have type string.");
-        var numeric = Map.<String, Object>of("type", "integer", "enum", List.of(java.math.BigInteger.ONE));
-        AiToolArgumentValidator.validate(numeric, 1);
-        assertThrows(IllegalArgumentException.class, () -> AiToolArgumentValidator.validate(numeric, "1"));
-    }
-
     private void assertFeedback(Map<String, Object> schema, Object input, String expected) {
         assertEquals(expected, assertThrows(IllegalArgumentException.class, () -> AiToolArgumentValidator.validate(schema, input)).getMessage());
     }
@@ -606,13 +416,4 @@ class AiToolDiscoveryTest {
         for (String key : List.of("search secret", "secret")) assertFeedback(dynamic, Map.of(key, -12345), "arguments.* must be at least 1.");
     }
 
-    @Test
-    void bothStepsRespectCurrentPermissionsAndDetailsRequireNames() throws Exception {
-        when(security.hasPermission("cmp_quiz")).thenReturn(false);
-        var preview = call("ai_tools_preview", "{}", 200);
-        assertEquals(2, preview.size());
-        assertTrue(call("ai_tools_details", "{\"names\":[\"quiz_get_quiz_type\",\"unknown\"]}", 200).isEmpty());
-        assertTrue(call("ai_tools_details", "{\"names\":[]}", 200).isEmpty());
-        mvc.perform(get(BASE + "/details").session(session)).andExpect(status().isBadRequest());
-    }
 }

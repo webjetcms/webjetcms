@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const directory = path.resolve(__dirname, '../../../main/webapp/admin/v9/npm_packages/webjetdatatables/ai');
-const source = ['../../../src/js/ai/ai-tool-transport.js', 'ai-execution-result.js', 'ai-browser-executor.js'].map(file =>
+const source = ['ai-execution-result.js', 'ai-browser-executor.js'].map(file =>
     fs.readFileSync(path.join(directory, file), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')
 ).join('\n');
 
@@ -17,18 +17,21 @@ function executor(api, ui, apiName = 'Rewriter') {
     return new Executor(null, ui);
 }
 
-test('changing the active tools rebuilds the session with its assistant and skill instructions', async t => {
-    const model = { prompt: message => JSON.stringify({ type: 'final', text: message }), destroy() {} };
+test('browser sessions are reused only while the configured instructions match', async t => {
+    const destroy = t.mock.fn();
+    const model = { prompt: async message => message, destroy };
     const create = t.mock.fn(async () => model);
     const instance = executor({ availability: async () => 'available', create }, null, 'LanguageModel');
-    const assistant = { instructions: 'LanguageModel: {"initialPrompts":[{"role":"system","content":"Speak Slovak"}]}',
-        toolsEnabled: true, toolsWrite: true, tools: [], skillInstructions: 'Quiz guidance' };
-    for (const toolInstructions of ['Quiz tools', 'Page tools']) {
-        const reply = await instance.execute({ ...assistant, toolInstructions }, { userPrompt: 'Hello' }, true);
-        assert.deepEqual(JSON.parse(reply.explanatoryText), { prompt: 'Hello' });
+    const output = [];
+    for (const content of ['Speak Slovak', 'Speak Slovak', 'Speak English']) {
+        const instructions = 'LanguageModel: ' + JSON.stringify({ initialPrompts: [{ role: 'system', content }] });
+        const reply = await instance.execute({ instructions }, { inputValue: 'Hello' }, true, text => output.push(text));
+        assert.equal(reply.success, true);
     }
     assert.deepEqual(create.mock.calls.map(call => call.arguments[0].initialPrompts[0].content),
-        ['Speak Slovak\n\nQuiz guidance\n\nQuiz tools', 'Speak Slovak\n\nQuiz guidance\n\nPage tools']);
+        ['Speak Slovak', 'Speak English']);
+    assert.equal(destroy.mock.callCount(), 1);
+    assert.deepEqual(output, ['Hello', 'Hello', 'Hello']);
 });
 
 test('an unavailable model reports its status without attempting to create a session', async () => {

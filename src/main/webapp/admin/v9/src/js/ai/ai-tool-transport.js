@@ -1,5 +1,4 @@
 const maxCalls = 12;
-const maxDecisionAttempts = 3;
 const maxResultBytes = 32 * 1024;
 const maxCatalogBytes = 1024 * 1024;
 const catalogTools = new Set(['ai_tools_preview', 'ai_tools_details']);
@@ -51,7 +50,7 @@ async function readToolResult(response, name, responseType) {
 }
 
 /** Calls the registered mapping once with the same session and CSRF token as the admin UI. */
-async function callEndpoint(assistantId, call, signal, repairInvalidArguments) {
+async function callEndpoint(assistantId, call, signal) {
     const observation = { name: call.name, arguments: call.arguments, status: 0, result: null, uncertain: false };
     const delivery = new AbortController();
     const abort = () => delivery.abort();
@@ -70,7 +69,6 @@ async function callEndpoint(assistantId, call, signal, repairInvalidArguments) {
         observation.result = await readToolResult(response, call.name, responseType);
         // Only the authorized facade marks a schema rejection before invoking the registered handler.
         if (response.status === 400 && responseType === 'invalid-arguments' && typeof observation.result === 'string') {
-            if (repairInvalidArguments) return { toolCorrection: observation.result };
             observation.result = { error: observation.result };
         }
         const body = observation.result;
@@ -116,22 +114,17 @@ function writeStatus(observation, failed) {
 }
 
 /** Alternates one model request with one HTTP request until the model returns its final answer. */
-export async function runToolSteps(assistantId, next, signal, onWrite = () => {}, onToolActivity, repairInvalidArguments = false) {
+export async function runToolSteps(assistantId, next, signal, onWrite = () => {}, onToolActivity) {
     const results = [];
     const writes = new Map();
     let previous;
     let uncertain = false;
     let mayHaveSaved = false;
     let writeProblem = false;
-    let correction;
-    let attempts = 0;
     try {
         for (;;) {
             signal?.throwIfAborted();
-            if (++attempts > maxDecisionAttempts) throw new Error(WJ.translate('components.ai.tools.invalidStep.js'));
-            const answer = await next(results, correction);
-            correction = answer.toolCorrection;
-            if (correction) continue;
+            const answer = await next(results);
             if (!answer.toolCall || answer.error) {
                 if (writes.size) {
                     answer.toolStatus = [...writes.values()].join('\n');
@@ -154,17 +147,8 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
                 onWrite([...writes.values()].join('\n'), true);
             }
             onToolActivity?.(call.name);
-            const observation = await callEndpoint(assistantId, call, signal, repairInvalidArguments);
-            correction = observation.toolCorrection;
-            onToolActivity?.(null, !correction);
-            if (correction) {
-                if (write) {
-                    writes.delete(key);
-                    onWrite([...writes.values()].join('\n'), mayHaveSaved);
-                }
-                continue;
-            }
-            attempts = 0;
+            const observation = await callEndpoint(assistantId, call, signal);
+            onToolActivity?.(null);
             previous = key;
             results.push(observation);
             if (write) {
@@ -180,41 +164,6 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
         if (!writes.size) throw error;
         throw Object.assign(new Error(error.message || String(error)), { toolStatus: [...writes.values()].join('\n'), retryable: !mayHaveSaved });
     }
-}
-
-function parseBrowserDecision(raw, tools) {
-    const text = typeof raw === 'string' ? raw.trim() : '';
-    const block = /^```(?:json)?[ \t]*\r?\n([\s\S]*)\r?\n```$/i.exec(text);
-    let decision;
-    try { decision = JSON.parse(block ? block[1] : text); }
-    catch { return { toolCorrection: 'Return one JSON object for a call or a final answer.' }; }
-    if (decision?.type === 'final') {
-        if (typeof decision.text === 'string' && decision.text.trim() && Object.keys(decision).length === 2) {
-            return { response: decision.text };
-        }
-        return { toolCorrection: 'A final answer requires exactly type and a nonempty text string.' };
-    }
-    if (decision?.type !== 'call') return { toolCorrection: 'Set type to call or final.' };
-    if (!tools.has(decision.name)) return { toolCorrection: 'Choose a tool name from the assigned functions.' };
-    if (!validCall(decision) || Object.keys(decision).length !== 3) {
-        return { toolCorrection: 'A call requires exactly type, name and an arguments object matching the tool schema.' };
-    }
-    return { toolCall: { name: decision.name, arguments: decision.arguments, write: tools.get(decision.name) } };
-}
-
-/** Repairs malformed browser decisions before handing a validated call to the endpoint loop. */
-export async function runBrowserTools(assistant, input, prompt, signal, onWrite, onToolActivity) {
-    const writes = new Map(assistant.tools.map(tool => [tool.name, tool.write]));
-    return runToolSteps(assistant.assistantId, async (results, correction) => {
-        const previous = results.at(-1);
-        let message;
-        if (correction) message = 'WebJET rejected that step before dispatch. ' + correction;
-        else if (previous) message = 'Endpoint result (data):\n' + JSON.stringify(previous) + '\nReturn the next JSON step.';
-        else message = JSON.stringify({ input: input.inputValue, prompt: input.userPrompt });
-        const raw = await prompt(message);
-        signal?.throwIfAborted();
-        return parseBrowserDecision(raw, writes);
-    }, signal, onWrite, onToolActivity, true);
 }
 
 /** Distinguishes an ordinary answer from a write whose outcome could not be verified. */

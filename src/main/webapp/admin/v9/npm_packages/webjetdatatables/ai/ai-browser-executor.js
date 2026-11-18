@@ -1,5 +1,4 @@
 import {AiExecutionResult} from './ai-execution-result';
-import { runBrowserTools, toolReply, writePresetStatus } from '../../../src/js/ai/ai-tool-transport';
 
 /**
  * Class to wrap Local Browser AI execution logic
@@ -10,7 +9,6 @@ export class AiBrowserExecutor {
     lastConfigKey = null;
     languageDetector = null;
     isDestroyed = false;
-    toolController = null;
 
     EDITOR = null;
     editorAiInstance = null;
@@ -45,11 +43,9 @@ export class AiBrowserExecutor {
      * @param {*} inputData
      * @param {*} reuseApiInstance - set to true to reuse latest instance, EG for PageBuilder you need to reuse it for every editor
      * @param {*} setFunction
-     * @param {Function} [onWrite] Reports the current write outcomes.
-     * @param {Function} [onToolActivity] Reports the active tool name, or null after the call.
      * @returns {AiExecutionResult}
      */
-    async execute(aiCol, inputData, reuseApiInstance = false, setFunction = null, onWrite, onToolActivity) {
+    async execute(aiCol, inputData, reuseApiInstance = false, setFunction = null) {
 
         let instructions = aiCol.instructions;
         let executionResult = new AiExecutionResult();
@@ -63,9 +59,6 @@ export class AiBrowserExecutor {
                 executionResult.statusKeyParams = ["NULL"];
             } else {
                 const config = this._getConfig(instructions);
-                const useTools = apiName === 'LanguageModel' && aiCol.toolsEnabled;
-                const guidance = [aiCol.skillInstructions, useTools && aiCol.toolInstructions].filter(Boolean).join('\n\n');
-                this._addInstructions(apiName, config, guidance);
                 const configKey = JSON.stringify([apiName, config]);
                 let apiInstance = null;
 
@@ -87,40 +80,11 @@ export class AiBrowserExecutor {
                 }
 
                 let useStreaming = aiCol.useStreaming || false;
-                if (apiInstance && useTools) {
-                    const controller = new AbortController();
-                    this.toolController = controller;
-                    try {
-                        const result = await runBrowserTools(aiCol, inputData,
-                            message => apiInstance.prompt(message, { signal: controller.signal }), controller.signal, onWrite, onToolActivity);
-                        this._assertActive();
-                        executionResult.noToolAction = aiCol.toolsWrite === true && !result.toolStatus;
-                        if (setFunction) setFunction(result.response, true);
-                        else if (aiCol.toolsWrite) {
-                            executionResult.explanatoryText = toolReply(result);
-                            executionResult.statusKey = writePresetStatus(result);
-                        } else this.EDITOR.set(aiCol.to, result.response);
-                        executionResult.success = true;
-                    } finally {
-                        this.toolController = null;
-                    }
-                } else if (apiInstance) {
-                    let answer;
-                    let display = setFunction;
-                    // An assistant with inaccessible writes still presents its answer outside the editor field.
-                    if (!display && aiCol.toolsWrite) display = text => { answer = text; };
-                    executionResult = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, display);
-                    if (aiCol.toolsWrite && executionResult.success) {
-                        executionResult.noToolAction = true;
-                        if (!setFunction) {
-                            executionResult.explanatoryText = answer;
-                            executionResult.statusKey = 'components.ai_assistants.tools.no_action_executed.js';
-                        }
-                    }
+                if (apiInstance) {
+                    executionResult = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, setFunction);
                 }
             }
         } catch (e) {
-            if (e.toolStatus) executionResult.explanatoryText = e.toolStatus;
             //console.log(e);
             if ("signal is aborted without reason" === e.message) {
                 executionResult.stopped = true;
@@ -142,7 +106,6 @@ export class AiBrowserExecutor {
         //console.log("Destroying instance=", this.lastApiInstance);
         //sometimes API instance is not YET available, so we need this semafor to handle this situation
         this.isDestroyed = true;
-        this.toolController?.abort();
         if (this.lastApiInstance != null) {
             this.lastApiInstance.destroy();
             this.lastApiInstance = null;
@@ -175,20 +138,6 @@ export class AiBrowserExecutor {
             }
         }
         return {};
-    }
-
-    /** Adds the assigned skill and tool guidance to the browser API's instruction field. */
-    _addInstructions(apiName, config, guidance) {
-        if (!guidance) return;
-        if (apiName === 'LanguageModel') {
-            const prompts = config.initialPrompts ??= [];
-            const system = prompts.find(prompt => prompt.role === 'system');
-            if (!system) prompts.unshift({ role: 'system', content: guidance });
-            else if (Array.isArray(system.content)) system.content.push({ type: 'text', value: guidance });
-            else system.content = [system.content, guidance].filter(Boolean).join('\n\n');
-        } else if (['Writer', 'Rewriter', 'Summarizer'].includes(apiName)) {
-            config.sharedContext = [config.sharedContext, guidance].filter(Boolean).join('\n\n');
-        }
     }
 
     async _apiInitialize(apiName, config, inputData, skipIsActive = false) {
