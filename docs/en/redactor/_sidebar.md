@@ -41,6 +41,7 @@
 - AI assistant
   - [AI assistant](/redactor/ai/README.md)
   - [Using AI assistants](/redactor/ai/datatables/README.md)
+  - [AI Chat](/redactor/ai/chat/README.md)
   - [Settings](/redactor/ai/settings/README.md)
   - [Writing instructions](/redactor/ai/instructions/README.md)
   - [Statistics](/redactor/ai/stat/README.md)

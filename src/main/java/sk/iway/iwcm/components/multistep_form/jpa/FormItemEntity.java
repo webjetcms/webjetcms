@@ -10,6 +10,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
@@ -102,6 +103,12 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label-field", className="quill-oneline", hidden = true)
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String label;
+
+    @Lob
+    @Column(name = "hint")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.form_items.hint", hidden = true, tab = "basic", sortAfter = "label")
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String hint;
 
     @Column(name = "value")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", hidden = true, tab = "advanced")

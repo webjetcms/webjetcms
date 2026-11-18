@@ -20,6 +20,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ModuleInfo;
@@ -195,6 +196,8 @@ public class MenuService {
         }
         String[][] linkReplaces = {
             //{ "", ""},
+            //static assets
+            { "/components/grideditor/support/font-awesome-4.7.0/css/font-awesome.min.css", "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css?v=4.7.0"},
             //welcome
             { "/admin/", "/admin/v9/"},
             //apps
@@ -618,6 +621,9 @@ public class MenuService {
         Prop prop = Prop.getInstance();
 
         List<ModuleInfo> allModules = Modules.getInstance().getAvailableModules();
+        if (UserDetailsService.isUsersSplitByDomain()) {
+            allModules = Modules.filterDomain(allModules, CloudToolsForCore.getDomainName());
+        }
         sortModules(allModules);
 
         //ziskaj zoznam skupin prav a sprav hashtabulku CSS tried

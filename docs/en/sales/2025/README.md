@@ -14,7 +14,7 @@ A unique feature is **AI in the browser** — using models directly on the user'
 
 **AI assistants are fully configurable** — the administrator can create their own assistants with precise instructions for specific fields and entities. Each assistant can be assigned to a specific field in the system, so the editor always sees only the relevant assistants. The system allows you to define instructions, select a model, set up response streaming, and request user input — all without the need for programming.
 
-**PageBuilder** also features a **chat mode**, where AI can generate complete web page blocks, edit existing sections, or design the entire page structure based on the editor's request. The editor can gradually enter requests and fine-tune the result without manual coding.
+**PageBuilder** also features a **chat mode**, where AI can generate complete web page blocks, edit existing sections, or design the entire page structure based on an editor's request. The editor can gradually enter requests and fine-tune the result without manual coding.
 
 The solution also includes **detailed usage statistics** of AI assistants — graphs of the most used assistants, token consumption over time, identification of users with the highest consumption. This allows the organization to **control costs**, optimize instructions, and evaluate the return on investment in AI tools.
 
@@ -25,7 +25,7 @@ The solution also includes **detailed usage statistics** of AI assistants — gr
 - **Zero Cost with In-Browser AI**: Local processing without API calls means no fees for common tasks like summarization, translation, or text editing.
 - **Full configurability without programming**: The administrator creates custom assistants, defines instructions, and assigns them to fields — no code intervention.
 - **Image generation and editing**: AI can create illustrative images from text descriptions, remove backgrounds, or edit existing photos directly in the CMS.
-- **Chat mode for PageBuilder**: Complete generation and editing of website structure including blocks, texts and layout via conversation with AI.
+- **Chat Mode for PageBuilder**: Complete generation and editing of website structure including blocks, texts and layout via conversation with AI.
 - **Cost Control**: Detailed token consumption statistics by assistants, users, and days enable optimization and predictable budgeting.
 - **Security and Privacy**: The ability to encrypt API keys, local AI in the browser, and granular permissions ensure compliance with organizational security policies.
 - **Undo function**: Every AI result can be undone with one click, eliminating the worry of incorrect edits.

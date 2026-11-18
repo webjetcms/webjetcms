@@ -10,6 +10,7 @@ Před zadáním výrazu uvidíte poslední hledání a odkazy na dostupné sekce
 
 Rozsah **Vše** zobrazuje nejvýše tři výsledky z každé oblasti. Klepnutím na rozsah nebo odkaz **Všechny** zobrazíte výsledky pouze z vybrané oblasti. Nabídka se řídí vašimi oprávněními:
 
+- **AI Čet** – rozhovor s AI asistentem bez vazby na obsah otevřené webové stránky. Karta je hned za rozsahem **Všechno** a je dostupná uživatelům s oprávněním k používání AI asistentů.
 - **Web stránky** – návrhy podle názvu nebo URL stránky a hledání v obsahu. Návrh stránky otevře její editor.
 - **Soubory** – hledání v názvech a indexovaném obsahu souborů.
 - **Administrace** – odkazy na dostupné položky menu včetně jejich karet.
@@ -23,13 +24,23 @@ Na úvodní stránce se předvolí **Vše**. Při otevření z podporované sekc
 
 Odkaz **Otevřít výsledky v sekci…** přenese hledaný výraz do příslušné sekce, kde můžete použít další filtry. Pokud se nic nenašlo, při zúženém rozsahu můžete zvolit **Hledat všude**. Chyba spojení zobrazí zprávu **Vyhledávání je dočasně nedostupné** a tlačítko **Zkusit znovu**.
 
-Dialog zavřete klávesou **Esc**, tlačítkem zavření nebo kliknutím mimo něj. Fokus se vrátí na tlačítko v hlavičce; hledaný výraz se do tlačítka nepřepisuje.
-
 Dokumentace se ve výchozím nastavení neprohledává automaticky. Karta zobrazuje pomlčku, která znamená **zatím nepřehledané**, ne nulový počet výsledků. V rozsahu **Vše** naleznete vysvětlení, na který server se výraz odešle, a odkaz **Načíst výsledky iz externí dokumentace**. Klepnutí na tento odkaz nebo na kartu **Dokumentace** vyhledá již zadaný výraz a zobrazí výsledky v dialogu. Tooltip karty vysvětluje odeslání výrazu na externí server. Klávesová zkratka **Ctrl+Enter** ve Windows/Linux nebo **⌘+Enter** na Macu načte výsledky dokumentace v libovolném rozsahu otevřeného dialogu. Příslušná zkratka se zobrazuje při odkazu.
 
 Po změně výrazu se výsledky dokumentace vymažou a karta znovu zobrazí pomlčku. Nové vyhledávání spustíte kliknutím na kartu nebo odkaz, případně klávesou **Enter** v rozsahu **Dokumentace**. Enter v rozsahu **Vše** ve výchozím nastavení prohledává pouze interní zdroje. Přepínání rozsahů pomocí **Alt+šipka** samo externí dotaz neodešle.
 
 ![Výsledky hledání výrazu bannerový systém v dokumentaci s odpovědí AI](quick-search-documentation.png)
+
+### AI Čet
+
+Karta **AI Čet** otevře samostatný rozhovor s AI asistentem. V poli zprávy vyberte asistenta, napište požadavek a odešlete jej klávesou **Enter** nebo tlačítkem se šipkou. Obsah otevřené webové stránky ani výraz z vyhledávání se do rozhovoru neposílá.
+
+Nabídka obsahuje aktivní asistenty s typem požadavku **Čet**, kteří mají v **Cílovém poli** hodnotu `top-search-field` nebo v **Použít pro Entitu** hodnotu `CHAT_SEARCH`. Správce je nastaví v [AI asistentech](../../ai/settings/README.md#nastavení-četového-asistenta).
+
+Při ukládaných četách OpenAI a Gemini můžete přidávat přílohy, hledat v historii a pokračovat v rozhovoru i po obnovení stránky. Ikony v hlavičce otevírají panely **Historie četů** a **Soubory v četě**. Přepnutí asistenta nebo zavření dialogu zachová rozepsanou zprávu, dokud neopustíte aktuální stránku administrace.
+
+![AI Čet s historií rozhovorů a odpovědí ve formě tabulky](../../ai/chat/chat-history.png)
+
+Podrobný postup, rozdíl mezi ukládanými a dočasnými rozhovory, podporované přílohy a práci s odpověďmi naleznete v kapitole [AI Čet](../../ai/chat/README.md).
 
 ### Nastavení vyhledávání v dokumentaci
 

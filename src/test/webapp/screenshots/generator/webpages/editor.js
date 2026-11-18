@@ -354,7 +354,7 @@ Scenario('remove Pixabay image', ({ I, Document, i18n }) => {
 });
 
 // Keep cleanup after the metadata screenshot; @current also includes it when running only the editor scenario.
-Scenario('working-in-editor cleanup @current', () => {
+Scenario('working-in-editor cleanup', () => {
     fs.rmSync(pixabayImagePath, { force: true });
 });
 

@@ -708,6 +708,40 @@ VALUES
 UNLOCK TABLES;
 
 
+# Dump of table ai_assistants
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `ai_assistants`;
+
+CREATE TABLE `ai_assistants` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `action` varchar(255) NOT NULL,
+  `class_name` varchar(255) NOT NULL,
+  `field_from` varchar(255) DEFAULT NULL,
+  `field_to` varchar(255) NOT NULL,
+  `provider` varchar(255) NOT NULL,
+  `instructions` text NOT NULL,
+  `model` varchar(255) DEFAULT NULL,
+  `last_update` datetime DEFAULT NULL,
+  `group_name` varchar(255) DEFAULT NULL,
+  `user_prompt_enabled` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `user_prompt_label` text DEFAULT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `keep_html` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `use_streaming` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `use_temporal` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `active` tinyint(1) unsigned NOT NULL DEFAULT 1,
+  `domain_id` int(11) NOT NULL DEFAULT 1,
+  `used_tokens` bigint DEFAULT 0,
+  `token_limit` bigint DEFAULT 0,
+  `notif_email` varchar(255) DEFAULT NULL,
+  `notif_level` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
 # Dump of table alarm_action
 # ------------------------------------------------------------
 
@@ -2166,6 +2200,41 @@ CREATE TABLE `form_attributes` (
   `param_name` varchar(64) NOT NULL,
   `domain_id` int(11) NOT NULL DEFAULT 1,
   PRIMARY KEY (`form_name`,`param_name`,`domain_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+# Dump of table form_items
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `form_items`;
+
+CREATE TABLE `form_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `form_name` varchar(255) NOT NULL,
+  `field_type` varchar(255) NOT NULL,
+  `required` tinyint(1) DEFAULT NULL,
+  `label` text DEFAULT NULL,
+  `value` text DEFAULT NULL,
+  `placeholder` varchar(255) NOT NULL,
+  `tooltip` text DEFAULT NULL,
+  `regex_validation` varchar(255) DEFAULT NULL,
+  `item_form_id` varchar(255) NOT NULL,
+  `step_id` int(11) NOT NULL,
+  `sort_priority` int(11) NOT NULL,
+  `domain_id` int(11) NOT NULL DEFAULT 1,
+  `show_stat` tinyint(1) NOT NULL DEFAULT 1,
+  `top_count` int(11) NOT NULL DEFAULT 5,
+  `show_other_count` tinyint(1) NOT NULL DEFAULT 1,
+  `show_unanswered` tinyint(1) NOT NULL DEFAULT 0,
+  `chart_type` varchar(255) NOT NULL DEFAULT 'bar_horizontal',
+  `compare_insensitive` tinyint(1) NOT NULL DEFAULT 0,
+  `color_scheme` varchar(32) DEFAULT NULL,
+  `error_count` int(11) DEFAULT 0,
+  `custom_error` varchar(255) DEFAULT NULL,
+  `trim_value` tinyint(1) NOT NULL DEFAULT 0,
+  `hint` longtext DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 

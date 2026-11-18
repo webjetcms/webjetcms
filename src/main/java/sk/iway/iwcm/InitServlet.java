@@ -139,6 +139,8 @@ public class InitServlet extends HttpServlet
 
 			UpdateDatabase.updateWithSpringInitialized();
 
+			clusterRefresher = new ClusterRefresher();
+
 			SpringAppInitializer.dtDiff("WebJET INIT DONE");
 
 			setWebjetInitialized();
@@ -880,10 +882,6 @@ public class InitServlet extends HttpServlet
 		if (Tools.isNotEmpty(clusterNodeName)) logMessage.append("node:").append(clusterNodeName).append("\n");
 		logMessage.append("version: ").append(getActualVersionLong());
 		Adminlog.add(Adminlog.TYPE_INIT, logMessage.toString(), -1, -1);
-
-		clusterRefresher = new ClusterRefresher();
-
-		dt.diff("after cluster refresher");
 
 		//Logger.println(InitServlet.class,"---------------- INIT DONE --------------");
 

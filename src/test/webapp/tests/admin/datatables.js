@@ -260,7 +260,7 @@ Scenario('pamatanie velkost stranky', ({ I, DT }) => {
     I.say("reloadni a over, ze mame 50 zaznamov");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 50 z", "div.dt-footer-row");
+    I.waitForText("Záznamy 1 až 50 z", 20, "div.dt-footer-row");
 
     //
     I.say("nastav nazad na auto");
@@ -272,20 +272,20 @@ Scenario('pamatanie velkost stranky', ({ I, DT }) => {
     I.click("Automaticky ("+rowsTabs+")");
     I.click("Uložiť");
     DT.waitForLoader();
-    I.see("Záznamy 1 až "+rowsTabs+" z", "div.dt-footer-row");
+    I.waitForText("Záznamy 1 až "+rowsTabs+" z", 20, "div.dt-footer-row");
 
     //
     I.say("reloadni v auto rezime");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až "+rowsTabs+" z", "div.dt-footer-row");
+    I.waitForText("Záznamy 1 až "+rowsTabs+" z", 20, "div.dt-footer-row");
 
     //
     I.say("zvacsi okno a over, ze auto rezim funguje");
     I.resizeWindow(1280, 1000);
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 18 z", "div.dt-footer-row");
+    I.waitForText("Záznamy 1 až 18 z", 20, "div.dt-footer-row");
 });
 
 Scenario('pamatanie velkost stranky-reset', ({ I, DT }) => {

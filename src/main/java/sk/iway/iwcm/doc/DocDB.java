@@ -20,6 +20,7 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.cluster.ClusterRefresher;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
@@ -1180,8 +1181,7 @@ public class DocDB extends DB
 		int publishType = DocDB.PUBLISH_NO_PEREX_CHECK_NEW;
 		int pageSize = docIds.size();
 
-		String docIdsStr = docIds.size() > 0 ? Tools.join(docIds) : "null";
-		String whereSql = " AND doc_id IN ( " + docIdsStr + ") ";
+		String whereSql = " AND " + DB.getInCondition("doc_id", docIds) + " ";
 		String oldWhereSql = (String) request.getAttribute("whereSql");
 		request.setAttribute("whereSql", (Tools.isEmpty(oldWhereSql) ? "" : oldWhereSql) + whereSql);
 
@@ -1436,10 +1436,10 @@ public class DocDB extends DB
 						if (pgb != null) pid = pgb.getPerexGroupId();
 					}
 
-					if(pid > 0) groupNamesIn.append(gn).append(",");
+					if(pid > 0) groupNamesIn.append(pid).append(",");
 				}
 
-				if(Tools.isNotEmpty(groupNamesIn)) whereSql.append(" AND p.perex_group_id IN ("+(groupNamesIn.toString().endsWith(",") ? groupNamesIn.substring(0, groupNamesIn.length()-1) : groupNamesIn)+") ");
+				if(Tools.isNotEmpty(groupNamesIn)) whereSql.append(" AND ").append(DB.getInCondition("p.perex_group_id", groupNamesIn.substring(0, groupNamesIn.length()-1))).append(" ");
 			}
 			else
 			{
@@ -1813,7 +1813,7 @@ public class DocDB extends DB
 		whereSql = whereSql.replace(';', ' ');
 
 		if(Tools.isNotEmpty(docIdsNotIn))
-			whereSql += " AND d.doc_id NOT IN ("+docIdsNotIn+")";
+			whereSql += " AND " + DB.getNotInCondition("d.doc_id", docIdsNotIn);
 
 		List<DocDetails> ret = new ArrayList<>();
 
@@ -1968,7 +1968,7 @@ public class DocDB extends DB
 				if (groupIds!=null && groupIds.length()>0)
 				{
 					if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-					else sql.append(" AND group_id IN (" ).append( getOnlyNumbersIn(groupIds) ).append( ") ");
+					else sql.append(" AND ").append(DB.getInCondition("group_id", getOnlyNumbersIn(groupIds))).append(" ");
 				}
 				sql.append(" " ).append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order);
 			}
@@ -1984,7 +1984,7 @@ public class DocDB extends DB
 				if (groupIds!=null && groupIds.length()>0)
 				{
 					if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-					else sql.append(" AND group_id IN (" ).append( getOnlyNumbersIn(groupIds) ).append( ") ");
+					else sql.append(" AND ").append(DB.getInCondition("group_id", getOnlyNumbersIn(groupIds))).append(" ");
 				}
 				sql.append(' ').append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order);
 			}
@@ -2008,7 +2008,7 @@ public class DocDB extends DB
 				if (groupIds!=null && groupIds.length()>0)
 				{
 					if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-					else sql.append(" AND group_id IN (" ).append( getOnlyNumbersIn(groupIds) ).append( ") ");
+					else sql.append(" AND ").append(DB.getInCondition("group_id", getOnlyNumbersIn(groupIds))).append(" ");
 				}
 				sql.append(' ').append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order ).append( limit);
 			}
@@ -2125,7 +2125,7 @@ public class DocDB extends DB
 		whereSql = whereSql.replace(';', ' ');
 
 		if(Tools.isNotEmpty(docIdsNotIn))
-			whereSql += " AND d.doc_id NOT IN ("+docIdsNotIn+")";
+			whereSql += " AND " + DB.getNotInCondition("d.doc_id", docIdsNotIn);
 
 		int ret = 0;
 
@@ -2168,7 +2168,7 @@ public class DocDB extends DB
 			if (groupIds!=null && groupIds.length()>0)
 			{
 				if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-				else sql.append(" AND group_id IN (" ).append( groupIds ).append( ") ");
+				else sql.append(" AND ").append(DB.getInCondition("group_id", groupIds)).append(" ");
 			}
 
 			if (checkPerex) sql.append(" AND html_data IS NOT null ");
@@ -3847,7 +3847,7 @@ public class DocDB extends DB
 
 			if (searchGroups != null)
 			{
-				sql.append(" WHERE group_id IN (").append(getOnlyNumbersIn(searchGroups.toString(),true)).append(')');
+				sql.append(" WHERE ").append(DB.getInCondition("group_id", getOnlyNumbersIn(searchGroups.toString(), true)));
 			}
 
 
@@ -5251,6 +5251,10 @@ public class DocDB extends DB
 		catch (Exception ex)
 		{
 			Logger.error(DocDB.class, ex);
+			if (ClusterRefresher.THREAD_NAME.equals(Thread.currentThread().getName()))
+			{
+				throw new IllegalStateException("Cannot refresh document " + docId, ex);
+			}
 		}
 		finally
 		{
@@ -5263,29 +5267,31 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Tato metoda zmaze informacie o doc s docId z internych tabuliek
-	 * v pamati, basicAllDocsTable, basicAllDocsInGroupTable, urlsByUrlDomains
-	 * basicAllDocsTable, z cache ak sa tam nachadza, zmaze takisto data z lucene indexu
-	 * informacie o dokumente vyberie z basicAllDocsTable. ak sa tam doc uz nenachadza tak
-	 * metode nic nespravi
-	 * @param docId id dokumentu
+	 * Removes cached references and local index entries for a deleted document.
+	 * Index cleanup and cluster notification also run when the document is no
+	 * longer present in the cache.
+	 * @param docId the deleted document ID
 	 * @author mhalas
 	 */
 	private void cleanupDocReferences(int docId)
 	{
-		DocDetails doc;
-		doc = basicAllDocsTable.get(docId);
-		/* uz je to pravdepodobne vymazane aj z pamati */
-		if(doc == null) return;
-		removeDocFromBasilAllDocsInGroup(doc);
-		TObjectIntHashMap<String> oldTable = DocDB.getInstance().getUrlsByUrlDomains(doc.getGroup().getDomainName(), false);
-		if (oldTable != null && doc.getVirtualPath() != null)
+		DocDetails doc = basicAllDocsTable.get(docId);
+		if (doc != null)
 		{
-			Logger.debug(DocDB.class, "updateInternalCaches: mazem stare URL ("+doc.getVirtualPath()+") pre domenu "+doc.getGroup().getDomainName());
-			oldTable.remove(doc.getVirtualPath());
+			removeDocFromBasilAllDocsInGroup(doc);
+			GroupDetails group = doc.getGroup();
+			if (group != null)
+			{
+				TObjectIntHashMap<String> oldTable = getUrlsByUrlDomains(group.getDomainName(), false);
+				if (oldTable != null && doc.getVirtualPath() != null)
+				{
+					Logger.debug(DocDB.class, "Removing cached URL " + doc.getVirtualPath() + " for domain " + group.getDomainName());
+					oldTable.remove(doc.getVirtualPath());
+				}
+			}
+			basicAllDocsTable.remove(docId);
+			readPagesToPublic();
 		}
-		basicAllDocsTable.remove(docId);
-		readPagesToPublic();
 		if (cachedDocs.containsKey(Integer.valueOf(docId))) cachedDocs.remove(Integer.valueOf(docId));
 		Cache.getInstance().clearAll();
 		Cache.getInstance(true);
@@ -5757,6 +5763,7 @@ public class DocDB extends DB
 	 */
 	public static boolean changeGroupTitle(int groupId, int docId, String newTitle, boolean forceUpdate)
 	{
+		if (newTitle != null) newTitle = GroupsDB.sanitizeGroupName(newTitle, false);
 		GroupDetails grDetails =  GroupsDB.getInstance().getGroup(groupId);
 		if(grDetails != null && grDetails.getDefaultDocId() == docId && newTitle != null && !newTitle.equals(grDetails.getGroupName()) &&
 				(forceUpdate || (grDetails.isInternal()==false && grDetails.getMenuType()!=GroupDetails.MENU_TYPE_HIDDEN &&  grDetails.getFullPath()!=null))

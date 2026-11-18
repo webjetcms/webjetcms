@@ -14,6 +14,12 @@ This link contains the URL parameter ```inlineEditorAdmin=true```, according to 
 
 Technically, the Content tab in the editor is composed of two ```div``` elements, one containing the standard CK Editor and one iframe for the Page Builder. The code is created in ```field-type-wysiwyg.js```. In addition, a selection box is displayed that provides the functionality of switching between editors (provided by the ```switchEditingMode``` function).
 
+## Saving incomplete HTML
+
+HTML export is provided by the `getSaveNode` method in `admin/webpages/page-builder/scripts/ninja-page-builder.js.jsp`. It retrieves the content of the editable area from the CK Editor only if the instance specified in the `data-ckeditor-instance` attribute belongs to the given element. If the instance does not exist or belongs to another element, it preserves the HTML of the area from a copy of the current DOM. It removes temporary editor controls and attributes from the result, including invalid instance references.
+
+This way, a page can be saved even if it contains, for example, a title directly in a container without a row and column, or attributes from an older editor session. The export does not add missing wrappers. To fully control a block in Page Builder, it is necessary to correct its [HTML structure](../../../frontend/page-builder/blocks.md). The same export is used when switching to the HTML editor and when copying blocks.
+
 ## New page
 
 Page Builder opens in an iframe as a displayed web page, which complicates the display for a new web page. In this case, the main page of the directory opens, while of course empty data is set. After saving, a new web page is created correctly, which can be edited. Setting the URL address for the main page is done in [DocEditorFields.setEditingMode](../../../../javadoc/sk/iway/iwcm/doc/DocEditorFields.html).

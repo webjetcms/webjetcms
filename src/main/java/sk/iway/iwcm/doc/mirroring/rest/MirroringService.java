@@ -26,6 +26,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -654,10 +655,9 @@ public class MirroringService {
      * @param docIds
      */
     private void removeDocsFromSync(List<Integer> docIds) {
-        String stringIds = listIdsToString(docIds);
-        if(stringIds == null) return;
+        if(docIds == null || docIds.isEmpty()) return;
 
-        new SimpleQuery().execute("UPDATE documents SET sync_id = 0 WHERE doc_id IN (" + stringIds + ")");
+        new SimpleQuery().execute("UPDATE documents SET sync_id = 0 WHERE " + DB.getInCondition("doc_id", docIds));
     }
 
     /**
@@ -691,10 +691,9 @@ public class MirroringService {
         //
         docIds = filterDocWithNotif(syncId, docIds);
 
-        String stringIds = listIdsToString(docIds);
-        if(syncId < 1 || stringIds == null) return;
+        if(syncId < 1 || docIds == null || docIds.isEmpty()) return;
 
-        new SimpleQuery().execute("UPDATE documents SET sync_id = ? WHERE doc_id IN (" + stringIds + ")", syncId);
+        new SimpleQuery().execute("UPDATE documents SET sync_id = ? WHERE " + DB.getInCondition("doc_id", docIds), syncId);
     }
 
     /*********** PRIVATE GROUPS methods **************/
@@ -888,14 +887,13 @@ public class MirroringService {
             groupsTreeIds.add(group.getGroupId());
         }
 
-        String stringGroupTreeIds = listIdsToString(groupsTreeIds);
-        if(stringGroupTreeIds == null) return;
+        if(groupsTreeIds.isEmpty()) return;
 
         //Remove sync for groups
-        new SimpleQuery().execute("UPDATE groups SET sync_id = 0 WHERE group_id IN (" + stringGroupTreeIds + ")");
+        new SimpleQuery().execute("UPDATE groups SET sync_id = 0 WHERE " + DB.getInCondition("group_id", groupsTreeIds));
 
         //Remove sync for docs
-        new SimpleQuery().execute("UPDATE documents SET sync_id = 0 WHERE group_id IN (" + stringGroupTreeIds + ")");
+        new SimpleQuery().execute("UPDATE documents SET sync_id = 0 WHERE " + DB.getInCondition("group_id", groupsTreeIds));
     }
 
     /**
@@ -929,10 +927,9 @@ public class MirroringService {
         //Filter synced group - just in case
         groupIds = filterGroupWithNotif(syncId, groupIds);
 
-        String stringIds = listIdsToString(groupIds);
-        if(syncId < 1 || stringIds == null) return;
+        if(syncId < 1 || groupIds == null || groupIds.isEmpty()) return;
 
-        new SimpleQuery().execute("UPDATE groups SET sync_id = ? WHERE group_id IN (" + stringIds + ")", syncId);
+        new SimpleQuery().execute("UPDATE groups SET sync_id = ? WHERE " + DB.getInCondition("group_id", groupIds), syncId);
     }
 
     /*********** PRIVATE SUPPRORT methods **************/

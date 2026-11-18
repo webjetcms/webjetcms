@@ -163,7 +163,8 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 	private boolean isWritable(FsItemEx item) throws IOException
 	{
 		String path = item.getPath();
-		return Tools.isNotEmpty(path) && item.isWritable(item);
+		// An empty volume-relative path denotes the root; null denotes an invalid path.
+		return path != null && item.isWritable(item);
 	}
 
 	// large file will be splitted into many parts

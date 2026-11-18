@@ -155,29 +155,33 @@ You don't have to edit the entire page content. The assistant working with `Page
 
 ![](page_builder-selection.png)
 
-## Chat mode
+## Squad mode
 
-If the assistant is set to chat mode, changes in PageBuilder are applied to the entire structure, not just text/editable content. The assistant can then generate new blocks, edit existing ones, and so on. You can give it requests to edit text on the page and generate new blocks. You activate the mode by setting the Request type field to the value `Chat` in the assistant properties.
+In PageBuilder, you can create a page from the materials and then edit it in the same chat. If you want to open the chat later from the history, save the new page first and reopen it in the editor. For a new, unsaved page, the chat is temporary (it will not be saved in the history). Therefore, we recommend that you save the new page first and then edit its text to preserve the history.
 
-The request entry window includes new fields for setting the mode:
+In the toolbar, click the AI ​​icon and select the **Web Designer (PageBuilder)** assistant. Use the plus icon **Upload file** to attach the material. It can be a PDF with a text layer, a Word document (DOCX) or a PowerPoint presentation (PPTX). In the message, write, for example, "Create a hair salon page with an introductory block, services and opening hours based on the PDF." Send the message.
 
-- **Append** - adds the output HTML code from the request to the end of the page. It does not send the current page content to the assistant, so it is cheaper to execute (fewer tokens are consumed).
-- **Edit** - along with the instruction and your request, the current HTML code of the page is also sent, in which the assistant can edit texts, blocks, HTML code. More tokens are consumed to execute the request.
-- **Replace** - similar to add, the current page code is not sent with the request. The result is a replaced current page. Suitable if you want to start over and delete all current content.
+![Web designer assignment with attached PDF of the salon](pb-chat-prompt.png)
 
-![](pb-chat-prompt.png)
+After sending the message, the assistant prepares the HTML blocks. When the reply is complete, the **Preview** will automatically open in the **Content Design** tab. Use the **Desktop**, **Tablet**, and **Mobile** icons to see how the blocks will appear on different screens. Use the **Maximize Window** button to enlarge the preview to the entire chat area. Press the **Esc** key to return to the reply.
 
-After the request is made, a window will appear with the status and number of tokens used. In addition, there is an option **Continue** in this window, which will display the window for entering the request again.
+![Salon page design with device switchers and block insertion buttons](pb-chat-preview.png)
 
-![](pb-chat-success.png)
+When you are satisfied with the suggestion, click **Replace content** below the answer. This will insert the suggested blocks into the page. If you want to keep the original blocks and add the new ones at the end, use **Add**. The **Minimize chat** button (minus in the top right) minimizes the chat window to a small icon in the bottom right and you can continue working directly on the page.
 
-You can then continue editing the website and submit a request to edit the text of the page. Selecting **Edit** will send the current HTML code of the page along with your request, so the assistant can make changes to it.
+![Salon page created from PDF and minimized chat icon](pb-chat-success.png)
 
-![](pb-chat-edit.png)
+Click the AI ​​icon in the bottom right corner to restore the same chat. You don't need to send the attachment again. For example, write "Change the main title to Super Barber Bernolákovo and add a block with hair care tips. Revert the entire edited page."
 
-The changes you made will be displayed on the web page and you can click Continue again to enter another request, or click **OK** to exit the assistant. Note in the photo that the title has been modified compared to the previous version according to the entered request.
+![Continuing chat with page edit request](pb-chat-edit.png)
 
-![](pb-chat-edit-success.png)
+Under the new answer, click **Replace content** and check the result in PageBuilder. If you haven't edited the content manually in the meantime, you can undo the last step by clicking **Undo Paste**. Save the finished page in the editor.
+
+![Edited page with new title after second message](pb-chat-edit-success.png)
+
+With a saved page and OpenAI or Gemini assistant with temporary chat disabled, you can find messages and attachments via **Chat History** in the same field of the page. You can also open the conversation after closing and reopening the editor. When you no longer need it, click the trash icon next to its name and confirm deletion.
+
+The same mode is supported by text fields and the page editor, depending on the assistant settings. Working with text selection, attachments, and history is described in the chapter [Chat in a field and in the page editor](../chat/README.md#chat-in-a-field-and-in-the-page-editor).
 
 ## Images on the page
 

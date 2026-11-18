@@ -553,15 +553,16 @@
         /** Remaps colliding authored IDs and local references while keeping generated tabs stable. */
         prepare_workbench_paste_ids: function(root) {
             var elements = root.find('*').addBack(), ids = new Map(), suffix = this.user_style.counter();
-            elements.filter('[id]').each(function(index) {
+            elements.filter('[id], .tab-pane').each(function(index) {
                 var oldId = this.id;
-                if (!oldId) return;
-                if (document.getElementById(oldId)) {
+                var isTab = $(this).is('.tab-pane');
+                if (!oldId && !isTab) return;
+                if (!oldId || document.getElementById(oldId)) {
                     this.id = 'pb-paste-'+suffix+'-'+index;
-                    ids.set(oldId, this.id);
+                    if (oldId) ids.set(oldId, this.id);
                 }
                 // The tab generator derives IDs from data-title again on every grid change.
-                if ($(this).is('.tab-pane')) $(this).attr('data-title', this.id);
+                if (isTab) $(this).attr('data-title', this.id);
             });
             elements.each(function() {
                 var element = this;
@@ -1325,11 +1326,15 @@
         getSaveNode: function(element) {
             var me = this, source = element ? $(element) : me.$wrapper;
             var node = element ? $('<div>').append(source.clone()) : me.getClone();
+            var editorElements = source.find('[data-ckeditor-instance]');
+            if (element) editorElements = editorElements.addBack('[data-ckeditor-instance]');
             source.each(function(index) {
                 me.clean_cloned_whitespace(this, element ? node.children()[index] : node[index]);
             });
-            node.find('[data-ckeditor-instance]').each(function() {
+            node.find('[data-ckeditor-instance]').each(function(index) {
                 var editor = CKEDITOR.instances[$(this).attr('data-ckeditor-instance')];
+                // Persisted markers may refer to a missing editor or another region; retain their cloned HTML.
+                if (!editor || !editor.element || editor.element.$ !== editorElements[index]) return;
                 me.configure_editor_output(editor);
                 var html = $(this).hasClass(me.tag.temp_wrapper) ? me.get_application_editor_data(editor) : editor.getData();
                 $(this).html(html);
@@ -1371,13 +1376,14 @@
 
         clearEditorAttributes: function(node) {
             // <%--//musime odstranit vsetky CKeditor atributy a CSS triedy--%>
-            node.find("*[class*='editableElement']").removeAttr("contenteditable data-ckeditor-instance tabindex spellcheck role aria-label aria-readonly aria-multiline");
-            node.find("*[class*='editableElement']").attr('style', function(i, style)
+            var editorElements = node.find("*[class*='editableElement'], [data-ckeditor-instance]");
+            editorElements.removeAttr("contenteditable data-ckeditor-instance tabindex spellcheck role aria-label aria-readonly aria-multiline");
+            editorElements.attr('style', function(i, style)
             {
                 // <%--//ckeditor vklada position:relative do elementu--%>
                 return style && style.replace(/position[^;]+;?/g, '').trim();
             });
-            node.find("*[class*='editableElement']").removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders cke_focus");
+            editorElements.removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders cke_focus");
 
             var htmlCode = node.html();
             if (htmlCode.indexOf("\""+this.options.prefix+"-")!=-1) {

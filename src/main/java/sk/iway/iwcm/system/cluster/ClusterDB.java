@@ -172,7 +172,16 @@ public class ClusterDB
 			String clusterMyNodeName = Constants.getString("clusterMyNodeName");
 			if (Tools.isEmpty(clusterMyNodeName)) return;
 
-			new SimpleQuery().execute("DELETE FROM cluster_refresher WHERE node_name=?", clusterMyNodeName);
+			if (Constants.getBoolean("luceneIncrementalDocumentIndexing"))
+			{
+				// Retain document IDs needed to update the persistent local index after restart.
+				new SimpleQuery().execute("DELETE FROM cluster_refresher WHERE node_name=? AND (class_name IS NULL OR class_name NOT LIKE ?)",
+						clusterMyNodeName, "sk.iway.iwcm.doc.DocDB-%");
+			}
+			else
+			{
+				new SimpleQuery().execute("DELETE FROM cluster_refresher WHERE node_name=?", clusterMyNodeName);
+			}
 		}
 		catch (Exception ex)
 		{

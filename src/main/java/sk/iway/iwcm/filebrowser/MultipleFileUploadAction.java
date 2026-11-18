@@ -34,6 +34,7 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.editor.UploadFileAction;
 import sk.iway.iwcm.editor.UploadFileForm;
 import sk.iway.iwcm.findexer.FileIndexer;
@@ -190,6 +191,9 @@ public class MultipleFileUploadAction extends HttpServlet
 			{
 				dir = ContextFilter.removeContextPath(request.getContextPath(), dir);
 			}
+
+			// Reject private chat destinations before opening any uploaded file's input stream.
+			AiChatPaths.requireGenericAccess(new File(Tools.getRealPath(dir)));
 
 			if (Tools.isNotEmpty(dir) && GalleryDB.isGalleryFolder(dir)) typeOfUpload = "gallery";
 

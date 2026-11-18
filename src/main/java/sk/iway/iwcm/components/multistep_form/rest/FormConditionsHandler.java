@@ -53,14 +53,55 @@ public class FormConditionsHandler {
         cache.removeObject(getConditionsCacheKey(formItemId, ConditionType.REQUIREMENT, domainId), true);
     }
 
+    /**
+     * Deletes visibility and requirement conditions owned by removed fields and evicts their caches.
+     *
+     * @param formItemIds database IDs of the removed fields, not logical IDs referenced by conditions
+     * @param domainId domain owning the fields
+     */
+    public static void deleteItemConditions(List<Long> formItemIds, Integer domainId) {
+        if (formItemIds.isEmpty()) return;
+
+        getConditionsRepository().deleteAllByFormItemIdInAndDomainId(formItemIds, domainId);
+        for (Long formItemId : formItemIds) clearConditionsCache(formItemId, domainId);
+    }
+
+    /**
+     * Deletes all conditions of a removed form, including conditions whose owning fields no longer exist.
+     *
+     * @param formName name of the removed form
+     * @param domainId domain owning the form
+     */
+    public static void deleteFormConditions(String formName, Integer domainId) {
+        deleteFormConditions(formName, domainId, getConditionsRepository());
+    }
+
+    /**
+     * Deletes form conditions and evicts their caches using the caller's repository.
+     *
+     * @param formName name of the removed form
+     * @param domainId domain owning the form
+     * @param repository repository used to find condition owners and delete their conditions
+     */
+    public static void deleteFormConditions(String formName, Integer domainId, FormItemsConditionsRepository repository) {
+        List<Long> formItemIds = repository.findConditionOwnerIds(formName, domainId);
+        repository.deleteAllByFormNameAndDomainId(formName, domainId);
+        for (Long formItemId : formItemIds) clearConditionsCache(formItemId, domainId);
+    }
+
+    private static FormItemsConditionsRepository getConditionsRepository() {
+        FormItemsConditionsRepository repository = Tools.getSpringBean("formItemsConditionsRepository", FormItemsConditionsRepository.class);
+        if (repository == null) throw new IllegalStateException("FormConditionsHandler was not able to obtain FormItemsConditionsRepository");
+        return repository;
+    }
+
     public FormConditionsHandler(String formName, HttpServletRequest request) {
 
         if(Tools.isEmpty(formName)) throw new IllegalArgumentException("Form name must be provided to FormConditionsHandler.");
         this.formName = formName;
         this.request = request;
 
-        this.formItemsConditionsRepository = Tools.getSpringBean("formItemsConditionsRepository", FormItemsConditionsRepository.class);
-        if(this.formItemsConditionsRepository == null) throw new IllegalStateException("FormConditionsHandler was not able to obtain FormItemsConditionsRepository");
+        this.formItemsConditionsRepository = getConditionsRepository();
 
         this.formItemsRepository = Tools.getSpringBean("formItemsRepository", FormItemsRepository.class);
         if(this.formItemsRepository == null) throw new IllegalStateException("FormConditionsHandler was not able to obtain FormItemsRepository");

@@ -5,11 +5,21 @@ import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
 @Repository
 public interface FormItemsConditionsRepository extends DomainIdRepository<FormItemsConditionEntity, Long> {
+
+    @Transactional
+    void deleteAllByFormItemIdInAndDomainId(List<Long> formItemIds, Integer domainId);
+
+    @Transactional
+    void deleteAllByFormNameAndDomainId(String formName, Integer domainId);
+
+    @Query("SELECT DISTINCT fice.formItemId FROM FormItemsConditionEntity fice WHERE fice.formName = :formName AND fice.domainId = :domainId")
+    List<Long> findConditionOwnerIds(@Param("formName") String formName, @Param("domainId") Integer domainId);
 
     List<FormItemsConditionEntity> findAllByFormItemIdAndDomainIdOrderBySortPriorityAsc(Long formItemId, Integer domainId);
 

@@ -324,7 +324,7 @@ public class RelatedPagesDB
 						String sql = "SELECT ";
 						if (Constants.DB_TYPE == Constants.DB_MSSQL) sql += " TOP "+Constants.getInt("relatedPagesMaxSize")+" ";
 						//#17157 - uprava getRelatedPages - zmena setovanie do IN podmienky BEZ PreparedStatement (robilo to haluze pri cislach skupin vacsich ako 10000 ktore boli na zaciatku)
-						sql += DocDB.getDocumentFieldsNodata()+" FROM documents d LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id WHERE d.available="+DB.getBooleanSql(true)+" AND p.perex_group_id IN ("+groupNamesIn+") ORDER BY d.publish_start DESC";
+						sql += DocDB.getDocumentFieldsNodata()+" FROM documents d LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id WHERE d.available="+DB.getBooleanSql(true)+" AND " + DB.getInCondition("p.perex_group_id", groupNamesIn.toString()) + " ORDER BY d.publish_start DESC";
 						if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL) sql += " LIMIT "+Constants.getInt("relatedPagesMaxSize");
 						ps = db_conn.prepareStatement(sql);
 						rs = ps.executeQuery();

@@ -29,6 +29,11 @@ Paths are relative to the core repository root. API availability and behavior mu
 - `Tools.getRealPath(...)` resolves CMS virtual paths and external static storage. It does not replace path authorization; see [Shared helpers](AGENTS-common.md).
 - HTTP/file helpers can perform I/O or depend on request/configuration state. Inspect timeout, resource-closing and error behavior before reusing them. The presence of legacy `doNotVerifyCertificates(...)` methods is not a reason to disable TLS verification in new integrations.
 
+## SQL Membership Lists
+
+- Build dynamic ID predicates with `DB.getInCondition` / `getNotInCondition` (CSV, numeric collection, or `int[]`); use the collection-plus-parameters overload for bound values. Keep existing permission/domain filtering before these calls.
+- Read [SQL membership contracts and migration inventory](../../docs/en/developer/backend/sql-in-condition-audit.md#implemented-interface-and-shared-implementation) when changing an IN/NOT IN query, especially empty-list handling or JDBC binding. The helpers split predicates while preserving a single query.
+
 ## JSON, Escaping and HTML Sanitization
 
 These operations have different purposes:
@@ -41,6 +46,8 @@ These operations have different purposes:
 | `Tools.escapeHtml(text)` | Uses `ResponseUtils.filter(...)`, then restores `&amp;` to `&`; it follows WebJET's existing escaping convention rather than sanitizing an HTML document |
 | `DB.filterHtml(text)` | Escapes via `ResponseUtils.filter(...)` when `<` or `>` occurs; it does not implement an HTML allowlist |
 | `AllowSafeHtmlAttributeConverter.sanitize(html)` | Uses the OWASP HTML sanitizer with the policy defined in that converter |
+
+### HTML / JSON Safety
 
 - Serialize JSON with Jackson/the REST response pipeline instead of building quoted JSON by concatenation. JSON serialization does not itself make a value safe inside an HTML page or inline script.
 - `prepare4Json(...)` neither encodes JSON nor removes all executable HTML. Never use it as an XSS security boundary.

@@ -390,13 +390,14 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     }
 
     /**
-     * Clears cached validation fields and regenerates the form pattern after an item is deleted.
+     * Removes the deleted item's conditions, clears cached fields, and regenerates the form pattern.
      *
      * @param entity  deleted form item
      * @param id  identifier of the deleted item
      */
     @Override
     public void afterDelete(FormItemEntity entity, long id) {
+        FormConditionsHandler.deleteItemConditions(List.of(id), CloudToolsForCore.getDomainId());
         MultistepFormsService.clearValidationFieldsCache(entity.getFormName(), CloudToolsForCore.getDomainId());
         // After save ensure that form pattern is updated
         multistepFormsService.updateFormPattern(entity.getFormName());
@@ -639,6 +640,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         List<Long> conditionsUsingField = formItemsConditionsRepository.getDependedItems(entity.getFormName(), entity.getItemFormId(), CloudToolsForCore.getDomainId());
         if(conditionsUsingField != null && conditionsUsingField.size() > 0) {
             List<FormItemEntity> items = formItemsRepository.findAllByFormNameAndIdInAndDomainId(entity.getFormName(), conditionsUsingField, CloudToolsForCore.getDomainId());
+            if (items.isEmpty()) return;
 
             Prop prop = getProp();
             StringBuilder sb = new StringBuilder(prop.getText("components.form_items.bind_condition_notif.msg"));

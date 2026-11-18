@@ -2,195 +2,569 @@
 
 Vitajte v dokumentácii k WebJET CMS verzie 2026. Odporúčame prečítať si [zoznam zmien](CHANGELOG-2026.md) a [roadmap](ROADMAP.md).
 
-## Zoznam zmien vo verzii 2026.18
+## Zoznam zmien vo verzii 2026.40
 
-> WebJET CMS 2026.18 prináša **schvaľovanie zmien priečinkov** s podporou viacúrovňového schvaľovania a **testovanie prístupnosti** integrované priamo do automatizovaných testov.
+> WebJET CMS 2026.40 prináša [**novú verziu PageBuildera**](#webové-stránky) s panelom Štruktúra, prehľadnejšou knižnicou blokov a kopírovaním blokov medzi stránkami. [**Plánované publikovanie stránok aj so súbormi**](#webové-stránky) umožňuje pripraviť budúci obsah s obrázkami a dokumentmi, ktoré zostanú chránené až do termínu zverejnenia. Funkciu zapína správca.
 >
-> V editore stránok môžete teraz **maximalizovať dialógové okná** pri nastavovaní aplikácií, vkladaní obrázkov či odkazov. Nastavenie aplikácie zároveň získalo nové možnosti pre atribúty prístupnosti (aria) a **vlastné CSS štýly** zobrazenia.
+> [**Viackrokové formuláre**](#formuláre) získali vylepšené nastavovanie podmienok zobrazenia a povinnosti polí, návrat na predchádzajúci krok so zachovaním vyplnených údajov, kopírovanie polí medzi formulármi a prepojenie výberových polí na číselníky.
 >
-> V oblasti bezpečnosti pribudla **podpora prihlasovania cez OAuth2/Keycloak/Google/Facebook** a **Prístupové kľúče** (PassKey/WebAuthn), spolu s vylepšeniami pre stabilnejšiu prevádzku v klastrovom prostredí.
+> [**Novú úvodnú obrazovku**](#úvodná-obrazovka) si prispôsobíte výberom widgetov, ich veľkosťou a poradím. Potrebné údaje tak máte na jednom mieste. [**Rýchle vyhľadávanie**](#úvodná-obrazovka) dostupné v celej administrácii cez Ctrl+K / ⌘K pomôže nájsť stránky, súbory aj nastavenia.
+>
+> [**Sémantické vyhľadávanie**](#sémantické-vyhľadávanie) umožňuje návštevníkom nájsť stránky podľa významu otázky a voliteľne zobraziť AI odpoveď zostavenú z obsahu webu. Nový [**headless režim**](#headless-režim) sprístupňuje obsah, navigáciu, vyhľadávanie a formuláre cez REST API pre webové aplikácie s vlastným frontendom.
 
-!>**Upozornenie:** Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 11, používa Spring verzie 7. Pred aktualizáciou [skontrolujte požiadavky](install/versions.md#zmeny-pri-prechode-na-jakarta-verziu).
+!>**Pred aktualizáciou:** Preštudujte si [prelomové zmeny](#prelomové-zmeny) a požiadavky na úpravu prostredia, konfigurácie či vlastných rozšírení.
 
-### Prelomové zmeny
+### Úvodná obrazovka
 
-- Vyžadovaný je aplikačný server Tomcat 11, verzia 10 už nie je podporovaná (#58385).
-- Odstránené historické aplikácie `/components/adresar/editor_component.jsp` a `/components/sharing_icons/editor_component.jsp`, ktoré sa už nepoužívali. Ak ich chcete naďalej používať, stiahnite si z platformy [GitHub](https://github.com/webjetcms/webjetcms/tree/hotfix/2026.0-main/src/main/webapp/components) (#57409).
+- [Úvodnú obrazovku](redactor/admin/welcome.md) sme prerobili na widgetový systém, aby ste mali údaje potrebné pri práci na jednom mieste bez prechádzania jednotlivých častí administrácie. Sami si vyberiete widgety a nastavíte zobrazované údaje, veľkosť a poradie podľa svojich potrieb (#58806).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- [Rýchle vyhľadávanie](redactor/admin/search/README.md) je dostupné z hlavičky celej administrácie tlačidlom **Hľadať…** alebo skratkou **Ctrl+K / ⌘K**. Ponúka návrhy stránok podľa názvu a URL, výsledky z obsahu stránok, súborov, používateľov, textových kľúčov a položiek menu. Vybraný výraz môžete preniesť do príslušnej sekcie s ďalšími filtrami (#348).
+
+![](redactor/admin/search/quick-search.png)
+
+- Nová karta [AI Čet](redactor/admin/search/README.md#ai-čet) v rýchlom vyhľadávaní umožňuje rozhovor s AI asistentom. Podporuje výber asistenta, priebežné zobrazovanie a zastavenie odpovedí, Markdown s tabuľkami a kopírovanie textu. Pri ukladaných rozhovoroch OpenAI a Gemini môžete pridávať obrázky a dokumenty pretiahnutím kamkoľvek do plochy četu, vyhľadávať v histórii a sťahovať prílohy z panela **Súbory v čete**. História a prílohy sú dostupné iba vlastníkovi rozhovoru v príslušnej doméne. Prepínanie asistentov zachová rozpísané správy aj neodoslané prílohy; okno môžete zväčšiť alebo maximalizovať. Lupa v hlavičke histórie zobrazí vyhľadávanie rozhovorov; prílohy pridáte ikonou plus. Slovenské rozhranie a dokumentácia používajú označenie „čet“ (#386).
+
+![](redactor/ai/chat/chat-history.png)
+
+- Panel [Čo je nové](redactor/admin/welcome.md#Čo-je-nové) dopĺňa novinky nainštalovanej verzie o videá a príspevky z YouTube a Facebooku WebJET CMS. Štítok **Nové** sa po rozbalení panela skryje a znova upozorní na nový obsah (#358).
+
+### Prihlasovanie a ochrana účtu
+
+- [Používateľské menu v hlavičke](redactor/admin/README.md#používateľské-menu) zobrazuje údaje účtu, počet aktívnych relácií a stav dvojstupňového overovania. Položka **Aktívne prihlásenia** otvorí správu vlastných prihlásení z ktorejkoľvek stránky administrácie. Dokumentácia obsahuje aktuálny screenshot a opis všetkých položiek menu (#351).
+
+- WebJET CMS po novom [eviduje prehliadače, z ktorých sa prihlasujete](redactor/admin/logon.md#prihlásenie-z-nového-zariadenia). Prihlásenie z nového prehliadača zobrazí upozornenie na úvodnej obrazovke a odošle email, aby ste mohli rozpoznať cudzie prihlásenie do svojho účtu. Vlastné zariadenie potvrdíte emailovým odkazom alebo jednorazovým kódom cez **Bol som to ja** (#340).
+
+![Prehľad zariadení účtu na karte Moje zariadenia](redactor/admin/device-my-devices.png)
+
+- Ak prihlásenie nepoznáte, môžete [zablokovať zariadenie a ukončiť jeho aktívne prihlásenia](redactor/admin/welcome.md#ak-prihlásenie-nepoznáte). Pri ďalšom prihlásení zo zablokovaného prehliadača sa po zadaní správneho mena a hesla zobrazí **Overenie zablokovaného zariadenia**. Na odblokovanie a vstup do administrácie treba zadať šesťmiestny kód z emailu účtu; pri zapnutom 2FA sa toto overenie vykoná až po kóde z autentifikačnej aplikácie. Podrobný postup je v [návode na prihlásenie](redactor/admin/logon.md#overenie-zablokovaného-zariadenia) (#340).
+
+![Overenie zablokovaného zariadenia pred vstupom do administrácie](redactor/admin/logon-device-verification.png)
+
+- Špecifické prihlásenia cez `doFilterLogon` a `wjlogontoken` odmietnu zablokovaný prehliadač bez emailovej výzvy. Na odblokovanie treba použiť bežný prihlasovací formulár v tom istom prehliadači (#340).
+
+Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `adminNewDeviceDetectionEnabled` na false. Pri prihlásení sa aj zisťuje [približná poloha](admin/setup/configuration/dashboard.md#orientačná-poloha-prihlásenia) podľa IP adresy, vypnúť sa dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
 
 ### Webové stránky
 
-- Schvaľovanie - pridané [schvaľovanie zmien priečinkov](redactor/webpages/approve/README.md) vrátane schvaľovania vytvorenia, editácie a zmazania priečinka. Schvaľovateľ dostane email s prehľadom zmien a možnosťou schváliť alebo zamietnuť zmenu. Podporované je aj viacúrovňové schvaľovanie (#58405).
+- Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
-![](redactor/webpages/approve/approve-group-page.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/IomtyBHpx64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
-- Schvaľovanie priečinkov - v karte `Na schválenie` pridané pod-karty `Dokumenty` a `Priečinky` pre oddelené zobrazenie stránok a priečinkov čakajúcich na schválenie (#58405).
-- Schvaľovanie priečinkov - pridané zobrazenie stĺpca s dátumom schválenia/zamietnutia a menom schvaľovateľa v histórii zmien priečinkov (#58405).
-- Aplikácie - pridaná možnosť nastaviť [štýly zobrazenia aplikácie](redactor/webpages/working-in-editor/README.md#karta-zobrazenie). Môžete tak nastaviť napríklad odsadenie aplikácie v stránke, šírku alebo rôzne štýly zobrazenia, ale aj informácie pre čítačku pre slabozrakých návštevníkov (#osk418).
+- Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
 
-![](custom-apps/appstore/common-settings-tab.png)
+![](sysadmin/data-deleting/database-delete.png)
 
-- Editor stránok - do dialógového okna [Odkaz a Tlačidlo](redactor/webpages/working-in-editor/README.md#tlačidlá) pridaná karta s rozšírenými nastaveniami ako ID, titulok, popis pre čítačky (aria-label) a podobne (#osk115).
-- Ninja - pridané pole `canonical` ako [voliteľné pole Q](frontend/ninja-starter-kit/ninja-jv/page/README.md#informácie-o-stránke) pre nastavenie kanonickej URL adresy stránky. V prípade, že je pole prázdne, použije sa URL adresa stránky. Hodnotu v šablóne získate ako `${ninja.page.canonical}`. Pridá do URL parameter `page`, ak existuje, pre zobrazenie správnej strany v zozname noviniek (#OSK149, #54273-88).
-- Page Builder - opravené presúvanie okna pre vloženie blokov, opravené prekrývanie výberu režimu editora, zapracované UX pripomienky (#58353).
-- Zjednotené používanie nástroja `ImageMagick` pre zmenu veľkostí obrázkov medzi galériou a `/thumb servlet` (#osk396).
-- Pridaná podpora vkladania obrázkov vo formáte `webp` vrátane zápisu pri zmene veľkosti pomocou natívnej knižnice `libwebp` cez `ImageIO` (#osk396).
-- Pridané konfiguračné premenné `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` operácií podľa typu operácie a formátu obrázka (#osk396).
-- Aplikácie - doplnená možnosť **maximalizovať a minimalizovať** okno pre **vkladanie aplikácií, obrázku, odkazov** atď. do stránky (#57409).
-- Pridaná podpora pre automatické obnovenie všetkých previazaných (zrkadlených) stránok a priečinkov z koša, keď jedna z nich bola obnovená (#osk423).
-- Priečinok - pridaná možnosť nastaviť HTML kód novej stránky z lokálneho Systém/Šablóny priečinka, pôvodne sa zoznam stránok čítal podľa konfiguračnej premennej `tempGroupId` (#57409).
-- Upravené názvoslovie [voliteľných polí](frontend/ninja-starter-kit/ninja-jv/page/README.md) pre SEO hodnoty (#228).
-- Pridaná ikona na presun [kurzoru na ťažko dostupné miesto](redactor/webpages/working-in-editor/README.md#vkladanie-textu-na-ťažko-dostupné-miesta), ako napríklad za poslednú SVG ikonu v riadku a podobne (#osk105).
+- Presmerovania - presmerovania vytvorené používateľom sú odlíšené od automatických (označené sivým pozadím) a je možné ich samostatne [filtrovať v zozname presmerovaní](redactor/webpages/redirects/README.md#automatické-a-používateľom-vytvorené-presmerovania) (#58625).
 
-![](redactor/webpages/working-in-editor/wjmagicline-append.png)
+![](redactor/webpages/redirects/redirect-path.png)
 
-### Aplikácie
+- SEO - pridané samostatné nastavenie **Nasledovanie odkazov vyhľadávačmi** s možnosťami **Podľa nastavenia Prehľadávať**, **Povoliť nasledovanie odkazov** (`follow`) a **Zakázať nasledovanie odkazov** (`nofollow`). HTTP hlavička `X-Robots-Tag` a Ninja `${ninja.page.robots}` používajú rovnakú logiku: pri indexovaní bez obmedzení vrátia `all`, inak kombináciu direktív `noindex` a `nofollow` podľa nastavenia stránky. Viac v [dokumentácii Ninja](frontend/ninja-starter-kit/ninja-jv/page/README.md#nastavenie-indexovania-string) (#OSK563).
+- SEO - v [skupinách šablón](frontend/templates/template-groups.md#karta-seo) je možné nastaviť predvolený SEO opis, obrázok a alternatívny text obrázka. Objekt Ninja `Page` ich použije, ak stránka nemá zadané vlastné hodnoty; pribudla aj hodnota `${ninja.page.seoImageAlt}` pre `og:image:alt` (#OSK593).
 
-Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
+![](frontend/templates/temps-groups-edit-seo.png)
 
-- [Predpripravené bloky (HTMLBox)](redactor/apps/htmlbox/README.md)
+- Ninja - doplnené [generovanie rozmerov](frontend/ninja-starter-kit/ninja-bp/README.md) SEO obrázka `og:image:width` a `og:image:height` (#OSK563).
+- Šablóny - pridaná možnosť nastaviť presun `<style>` a `<link rel="stylesheet">` značiek z tela stránky do `<head>` cez [voľbu v šablóne](frontend/templates/templates.md) s podporou globálnej konfiguračnej premennej `showDocMoveStyleToHead`. Bloky v IE podmienkach, `noscript` a `script` zostávajú na mieste (#231).
 
-![](redactor/apps/htmlbox/editor-block.png)
+![](frontend/templates/templates-edit-advanced.png)
 
-- [Anketa ľahko](redactor/apps/inquiry/inquiry-simple.md)
+- V dialógu vkladania obrázkov pridaná karta **Miniatúra** pre nastavenie parametrov [generovania zmenšených obrázkov](redactor/webpages/working-in-editor/README.md#karta-miniatúra) `thumbnail`. Podporovaný je voľný režim nastavenia rozmerov, ale aj režim [presne definovaných rozmerov](frontend/thumb-servlet/README.md#obmedzenia) výberom z možností (#58317,#58758).
+- Výber rozmeru zobrazuje názov režimu aj číslo `ip`. Režimy `learn/check/allow` ponúkajú aj vlastný rozmer, `strict` vyžaduje povolenú kombináciu a pri `deny` je karta skrytá. Existujúca nepovolená miniatúra sa v režime `strict` označí a vyžaduje výber náhrady (#353).
 
-![](redactor/apps/inquiry/inquiry-simple-tab-basic.png)
+![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
-- [Mapa](redactor/apps/map/README.md)
+- V dialógu vkladania odkazu pridaná karta [Manažér dokumentov](redactor/files/file-archive/README.md) pre jednoduché vkladanie odkazov na súbory v manažérovi dokumentov, nahrávanie nových súborov a ich správu. Viac sa dozviete v časti [Odkazy na súbory a nahrávanie súborov](redactor/webpages/working-in-editor/README.md#odkazy-na-súbory-a-nahrávanie-súborov) (#58593).
 
-![](redactor/apps/map/map-editor.png)
+![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
-- [Odporúčania](redactor/apps/app-testimonials/README.md)
+- Súbory Manažéra dokumentov v priečinku `/files/archiv` sú v dialógoch vkladania odkazu a obrázka dostupné iba na zobrazenie a výber. Nahrávanie, premenovanie, mazanie a ostatné úpravy je možné vykonať len cez [Manažér dokumentov](redactor/files/file-archive/README.md) (#298,#313,#317).
 
-![](redactor/apps/app-testimonials/editor-style.png)
+![](redactor/webpages/working-in-editor/link_dialog-read-only-archive.png)
 
-- [Predpripravené bloky](redactor/apps/htmlbox/README.md)
+- [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - pri sťahovaní obrázka z fotobanky je možné nastaviť názov súboru. Názov sa automaticky predvyplní a očistí, prípona sa určí podľa zdrojového obrázka a existujúci súbor sa neprepíše. Pridaná aj podpora výberu typu a kategórie obrázku a možnosť hľadať video súbory (#58645).
 
-![](redactor/apps/htmlbox/editor-block.png)
+![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
-- Video - pridaná možnosť nastaviť [CSS triedy pre pomer strán videa](redactor/apps/video/README.md#konfigurácia), možnosti zobrazené v aplikácii sa nastavujú cez konfiguračné premenné `videoClasses`, `videoWrapperClass` a `videoItemClass` (#osk496).
+- Page Builder - elementy označené CSS triedou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovateľný-element-oranžová-farba) je možné v rámci rovnakého rodiča presúvať, duplikovať a zmazať. Vlastné alebo viaceré selektory je možné nastaviť cez `pbCustomSettings` (#58750).
+- Page Builder - pridaná možnosť vytvoriť [div.pb-section](frontend/page-builder/settings.md), ktorý získa bežné ovládanie sekcie. Naviac aplikácie `!INCLUDE(...)!` vložené priamo v sekcii, alebo kontajnery, zobrazujú náhľad aj napriek tomu, že sú vložené mimo bežného stĺpca (#osk711).
+- Page Builder - upravené [ovládanie editora](redactor/webpages/pagebuilder.md). Pridaná pevná horná lišta s cestou k vybranému bloku, panel **Štruktúra**, rýchle akcie a režim vkladania sekcií, kontajnerov a stĺpcov priamo do stránky. Rámiky je možné skryť alebo zobraziť pre celú hierarchiu bloku. Knižnica blokov má kompaktné okno s náhľadmi, kategóriami a kombinovaným vyhľadávaním so štítkami. Nastavenie štýlu používa rozbaľovacie skupiny vlastností a označuje práve upravovaný blok (#308).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Page Builder - zlepšená detekcia zmien v HTML kóde stránky, aby sa nezobrazilo hlásenie "V editore pravdepodobne máte neuložený text" aj keď ste reálne žiaden text v stránke nezmenili (#317).
+- Page Builder - opravené ukladanie stránok s neúplnou HTML štruktúrou a neplatnými odkazmi na staršie inštancie editora. Obsah takýchto prvkov sa zachová spolu s aktuálnymi úpravami ostatných blokov (#400).
+- [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + v žltej čiare v okne **Vložiť blok** na karte **Základné** pribudli možnosti **Obrázok** a **Aplikácia**. Otvoria príslušný dialóg editora a umožnia vložiť obsah na zvolené miesto (#339).
+- Page Builder - pridané [kopírovanie blokov medzi stránkami](redactor/webpages/pagebuilder.md#kopírovanie-blokov-medzi-stránkami). Voľby **Skopírovať** a **Vložiť** prenášajú sekcie, kontajnery a stĺpce aj s obsahom a vlastnými štýlmi. Editor ponúkne iba miesta vhodné pre typ bloku. Schránka má platnosť 30 minút od skopírovania (#353).
+- Šablóny - na karte Pokročilé môžete nastaviť [odstraňovanie spojok z URL stránky](frontend/templates/templates.md#karta-pokročilé): podľa `urlRemoveSpojky`, vždy odstrániť alebo ponechať. Blog tak môže ponechať spojky aj pri zapnutom odstraňovaní pre zvyšok webu (#353).
+- Zmena URL priečinka s aplikovaním na podpriečinky a podstránky aktualizuje aj nezobrazované stránky, naplánované verzie, verzie čakajúce na schválenie a poslednú pracovnú verziu. Zachováva ich obsah, stav a termín publikovania; naplánované publikovanie už nevráti pôvodnú URL (#353).
+- SEO - nastavenie **Prehľadávať** ponúka samostatné voľby povoliť (`index`) a zakázať (`noindex`). Sekcia **HTTP hlavičky** na karte Základné zobrazuje aktuálny náhľad `X-Robots-Tag`, `Referrer-Policy` a pri nastavenom presmerovaní aj `Location` podľa neuložených nastavení stránky a konfigurácie servera (#353).
+- História - používatelia s oprávnením **Čistenie databázy** môžu [mazať historické verzie](redactor/webpages/history.md) priamo v editore stránky, aj hromadným výberom. Aktuálne publikovaná verzia a verzie čakajúce na schválenie sú chránené. Bez tohto oprávnenia zostáva dostupné rušenie budúceho naplánovaného publikovania (#353).
+- Plánované publikovanie - pri zapnutí `plannedPublishingEnabled` možno pripraviť budúcu verziu stránky s chránenými obrázkami, dokumentmi a samostatnou sadou médií [postup a podmienky nasadenia](redactor/webpages/planned-publishing.md) (#362).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Webové stránky - nové menu [Ďalšie akcie](redactor/webpages/README.md#ďalšie-akcie-a-hromadná-zmena-skupín) v pravej časti nástrojovej lišty obsahuje hromadné pridanie a odobratie značky aj skupiny používateľov bez prepísania ostatných skupín. Skupiny práv a e-mailové skupiny sa vyberajú spoločne. Presunuli sme doň aj kontrolu odkazov, štatistiku stránky, uloženie ako AB test a Import/Export (#368).
+
+![Ponuka Ďalšie akcie v zozname webových stránok](redactor/webpages/more-actions.png)
+
+- Webové stránky - [predvolené nastavenie stromu](redactor/webpages/README.md#predvolené-nastavenie-pre-používateľov) pre nového používateľa je možné nastaviť cez konfiguračnú premennú `webpagesTreeDefaultSettings` (#368).
+- Editor stránok - v úzkom okne sa skupiny nástrojov presunú do [panela Ďalšie nástroje](redactor/webpages/working-in-editor/README.md#panel-nástrojov-v-úzkom-okne). Lišta sa nezalamuje do ďalšieho pásu a neprekrýva prepínač editora a rozmerov. Tlačidlo s tromi bodkami je priamo za poslednou skupinou ikon a má bublinovú nápovedu. Rovnaké ovládanie funguje v Štandardnom editore aj v Page Builderi (#372).
+
+![Panel Ďalšie nástroje v mobilnom náhľade Page Buildera](redactor/webpages/working-in-editor/toolbar-overflow.png)
+
+- Page Builder - dialógy, ktoré sa nezmestia do šírky náhľadu, sa automaticky rozšíria na veľkosť okna prehliadača. Po potvrdení alebo zatvorení sa obnoví pôvodná šírka náhľadu a posun stránky. Ovládacie prvky Page Buildera používajú jazyk administrácie (#372).
+- Obrázky - pridaná podpora obrázkov a animácií vo [formáte AVIF](frontend/thumb-servlet/README.md#obrázky-avif). Serverové úpravy, vodotlač a miniatúry cez `/thumb` zachovávajú snímky, priehľadnosť a časovanie animácie. Spracovanie vyžaduje `ImageMagick` 7.1.2-34 alebo novší s `libheif` 1.22.0 alebo novším. Editor obrázkov ukladá statický obrázok (#371).
+
+- Zrkadlenie štruktúry - pred zmazaním stránky alebo priečinka sa zobrazí [zoznam zrkadlených položiek](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov), ktoré sa tiež zmažú.
+
+![](redactor/webpages/mirroring/delete-groups.png)
+
+- Zrkadlenie štruktúry - voľba **Zobraziť zrkadlenie** v nastavení zobrazenia stromovej štruktúry pridáva do stromu [odkazy na jazykové verzie](redactor/webpages/README.md#prechod-medzi-zrkadlenými-priečinkami) a [upozornenia na chybné mapovania](redactor/webpages/mirroring/groups.md#upozornenia-v-stromovej-štruktúre) (#370).
+
+![](redactor/webpages/mirroring/tree-navigation.png)
+
+- AI Čet pri poli - pridaná ukladaná história filtrovaná podľa rovnakého poľa a záznamu. Starší rozhovor môžete vyhľadať, otvoriť a pokračovať v ňom aj po zatvorení editora; odpovede zostávajú dostupné na vloženie do poľa.
+- AI Čet pri poli a v editore stránky - pridané nahrávanie obrázkov a dokumentov pre asistentov s podporou histórie. Súbory môžete vybrať ikonou plus, pretiahnuť do správy alebo vložiť obrázok zo schránky - asistent ich spracuje spolu s obsahom stránky (#386).
+
+![](redactor/ai/datatables/pb-chat-preview.png)
+
+### Headless režim
+
+Pridaná [podpora headless režimu](frontend/headless/README.md), v ktorom WebJET CMS slúži čisto ako `backend` CMS. Obsah, navigácia, vyhľadávanie a formuláre sú dostupné cez REST API. Frontend aplikácia (napr. Astro, Next.js, Vue, React alebo akýkoľvek HTTP klient) si dáta stiahne a zobrazuje ich podľa vlastných šablón (#258).
+
+![](frontend/headless/home.png)
+
+V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať menšie web stránky vytvorené v rôznych technológiách, ktoré konzumujú a zobrazujú obsah z CMS systému. Podporované je aj vkladanie štandardný aplikácií ako foto galéria, formuláre, GDPR cookies a podobne.
+
+![](frontend/headless/gallery.png)
+
+- Presmerovania - pridané [čistenie a optimalizácia presmerovaní](redactor/webpages/redirects/README.md#čistenie-presmerovaní) s náhľadom zmien pred vykonaním. Čistenie odstraňuje staré, duplicitné a cyklické presmerovania a skracuje reťazce presmerovaní (#58629).
+
+![](redactor/webpages/redirects/redirect-cleaning-analyzed.png)
 
 ### Formuláre
 
-- Pridaná karta [Štatistika](redactor/apps/multistep-form/stat.md) pre zobrazenie odpovedí formulárov vo forme grafov (#58333).
+- Viackrokové formuláre - v editore každej položky pribudlo za názvom poľa voliteľné pole **Nápoveda**. Podporuje viacriadkový formátovaný text a rozsiahlejší HTML obsah. Zobrazuje sa za názvom poľa vo formulári cez značku `${hint}` a prenáša sa aj pri kopírovaní položky (#396).
+- Formulár ľahko a viackrokové formuláre - jednoriadkový editor názvu poľa a vysvetlivky nepovoľuje nadpisy, zoznamy ani zalomenia riadkov. Vložený text a HTML sa prevedú na jeden riadok so zachovaním zvýraznenia, farieb a odkazov (#396).
+- Nastavenia formulárov - pridaná karta **Voliteľné polia** s poľami A–F. Polia sú dostupné aj v editore aplikácie Formulár ľahko a cez `FormSettingsEntity`. V HTML prekladových kľúčov možno použiť [značky `${settings.*}`](redactor/apps/formsimple/README.md#polia-z-nastavení-formuláru) pre A–F, emailové nastavenia, presmerovania, limity súborov a vzhľad. Podporuje ich aj náhľad a emailová podoba viackrokových formulárov. A–F aj text pred a za emailom umožňujú HTML (#364).
+- Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.multistep.form.back_button` (#osk782).
+- Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
+- Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).
+- Viackrokové formuláre - pri [návrate na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) sa zachovajú rozpracované hodnoty aj dokončené nahrávania (#58794).
+- Viackrokové formuláre - pridaná predvolene zapnutá [validácia pri opustení poľa](redactor/apps/multistep-form/README.md#validácia-pri-opustení-poľa). Vypnete ju nastavením konfiguračnej premennej `multistepform_validateOnBlur` na `false` (#58794).
+- [Formuláre](redactor/apps/form/README.md#možné-konfiguračné-premenné) - klasické aj viackrokové formuláre rešpektujú `sendMailSaveEmail` a ukladajú emaily ako súbory `.eml` do `sendMailSaveEmailPath` namiesto SMTP odoslania. Ak sa zápis nepodarí, formulár oznámi chybu.
+- Viackrokové formuláre - pridaný [návrat na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) s obnovením uložených hodnôt a súborov a [výber CSS šablóny](redactor/apps/multistep-form/README.md#css-šablóny) pre každú vloženú inštanciu a náhľad v administrácii (#58742).
 
-![](redactor/apps/multistep-form/stat-section.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
-- Pre viackrokové formuláre pridaný stĺpec **Trvanie vyplnenia**, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie) (#58333).
+- Viackrokové formuláre - opravené vyhodnocovanie podmienok po odškrtnutí políčka pri návrate na predchádzajúci krok. Skryté alebo už nepovinné pole nezablokuje pokračovanie kvôli pôvodne uloženej hodnote (#58742).
+- [Štatistiky viackrokových formulárov](redactor/apps/multistep-form/stat.md) boli rozšírené o dátumový filter a pokročilé metriky zobrazení/pokusov/jazykov etc. (#58509).
+
+![](redactor/apps/multistep-form/stat-section-advanced.png)
+
+- Viackrokové formuláre - [prázdna možnosť](redactor/apps/multistep-form/README.md#prázdna-možnosť) v skupine výberových polí zobrazuje nastaviteľný text **Bez zvolenej možnosti** (#381).
+- Do viackrokových formulárov pridaná možnosť jednoducho nastavovať výberové polia a skupiny zaškrtávacích / výberových polí (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Do viackrokových formulárov pridaná možnosť prepojenia výberového poľa a skupiny zaškrtávacích / výberových polí na číselník (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- Pridaná možnosť vo formulári nastaviť maximálnu kombinovaná veľkosť súboru, pôvodne sa dala nastavovať len veľkosť pre súbor, ak formulár obsahuje viac súborov je možné nastaviť maximálnu veľkosť pre všetky súbory spoločne (#58517).
+- [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridané duplikovanie celého formulára vrátane nastavení, krokov a položiek. Editor položiek zobrazuje ich automaticky vytvorený identifikátor a podporuje vlastnú chybovú správu, orezanie medzier, prázdnu možnosť vo výberovom zozname a nový typ poľa automatické dopĺňanie s vyhľadávaním bez rozlíšenia diakritiky (#osk573).
+- [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - do úvodného textu kroku a [stránky s verziou pre email](redactor/apps/form/README.md#karta---nastavenia) je možné vložiť hodnoty položiek pomocou značiek. Opravené bolo rozpoznávanie polí mena a emailu podľa začiatku identifikátora, spracovanie jazyka, reCAPTCHA v3, nezávislé vloženie viacerých inštancií formulára na jednu stránku a vymazanie všetkých odpovedí bez odstránenia definície formulára (#osk573).
+- [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridaná možnosť zadať vlastnú chybovú správu a orezať medzery na začiatku a konci textu zadaného návštevníkom (#osk573).
+- Formulár ľahko a viackrokové formuláre - [vlastný HTML kód tooltipu](redactor/apps/formsimple/README.md#vlastný-html-kód-tooltipu) v prekladovom kľúči `components.formsimple.tooltipCode` podporuje značky s identifikátormi poľa, položky a kroku vrátane unikátneho `${tooltipId}`. Ovládací prvok je tak možné pomocou `aria-describedby` jednoznačne prepojiť s obsahom tooltipu aj pri opakovanom vložení formulára na stránku. Viackrokový formulár po každom zobrazení kroku publikuje na objekte `window` [udalosť `WJ.multistepForm.stepShown`](redactor/apps/multistep-form/README.md#javascript-udalosť-po-zobrazení-kroku) s odkazmi na jeho HTML elementy a identifikátormi formulára a kroku (#306).
+- Formulár ľahko a viackrokové formuláre - predvolený tooltip je po novom dostupný myšou aj klávesnicou, poskytuje stabilný kontextový názov a opis, zostáva zobrazený pri presune kurzora na jeho obsah a je možné ho zatvoriť klávesom `Escape` (#306).
+- Viackrokové formuláre - pridané [kopírovanie polí medzi formulármi a krokmi](redactor/apps/multistep-form/README.md#kopírovanie-polí-medzi-formulármi). Vloženie otvorí editor s uloženými nastaveniami poľa; podmienky zobrazenia a povinnosti sa neprenášajú. Interná schránka funguje medzi kartami prehliadača a umožňuje opakované vloženie počas 30 minút (#58826).
+- Viackrokové formuláre - pridaná možnosť [Zobraziť obsah bez presmerovania](redactor/apps/form/README.md#karta---nastavenia). Prepínač  použije webovú stránku z poľa **Presmerovanie po vyplnení** a po úspešnom odoslaní nahradí prednastavenu hlášku jej obsahom bez zmeny URL adresy. Ak návštevník nemá oprávnenie na zobrazenie webovej stránky, zobrazí sa prednastavená hláška o úspešnom odoslaní (#58826).
+- Viackrokové formuláre - nová karta [Väzby](redactor/apps/multistep-form/README.md#väzby) v editore poľa zobrazuje samostatné zoznamy polí, ktoré jeho hodnotu používajú v podmienkach zobrazenia a povinnosti (#377).
+
+![](redactor/apps/multistep-form/tab-relations.png)
+
+- Viackrokové formuláre - pri nastavovaní podmienok zobrazenia a povinnosti sa porovnávaná hodnota pre výberové polia vyberá z ich možností vrátane číselníkov a spoločných rádiových skupín. Nie je potrebné zadávať hodnoty ručne (#391).
+- Viackrokové formuláre - výber **Krok formuláru** v editore položky zobrazuje aktuálne číslo kroku aj po zmene poradia krokov potiahnutím myšou (#392).
+- Regulárne výrazy - zoznam zobrazuje preložený názov podľa jazyka administrácie a pôvodný názov označuje ako **Prekladový kľúč**. Výber **Povolená hodnota** vo viackrokových formulároch používa formát **kód - názov** (#387).
+- Viackrokové formuláre - opravený preklep v prekladových kľúčoch z `components.mustistep.*` na `components.multistep.*` (#378).
+- Viackrokové formuláre - pomocné zápisy štatistiky na [verejnom uzle clustra s obmedzenými databázovými právami](install/config/ro-user.md#viackrokové-formuláre) už neblokujú zobrazenie, validáciu ani odoslanie formulára. Pri chybe sa návštevníkovi zobrazí názov aplikácie namiesto názvu Java triedy (#384).
+- Odložené odosielanie emailov - zväčšený stĺpec `emails.message` na `LONGTEXT` v MySQL/MariaDB, aby uloženie veľkého HTML emailu nezlyhalo. Doplnený [návod na menšie CSS pre email a PDF](redactor/apps/form/README.md#css-štýly-pre-email-a-pdf) (#374).
+
+### Sémantické vyhľadávanie
+
+- Pridaná podpora **MariaDB Vector** ako alternatívy k `PostgreSQL/pgvector` pre sémantické a hybridné vyhľadávanie aj RAG odpovede. Minimálna podporovaná verzia je **MariaDB 11.8 LTS**, odporúčame **11.8.9 alebo novšiu opravnú verziu**.Verzia od **12.3 LTS** obsahuje zrýchlenie vyhľadávania. Minimálne a odporúčané verzie PostgreSQL, pgvector a MariaDB aj ich výhody sú v [prehľade databázových požiadaviek](custom-apps/apps/rag/semantic-search/README.md#podporované-databázy-a-verzie) (#232).
+- Nedostupná samostatná RAG databáza už neblokuje štart CMS. RAG perzistencia sa inicializuje až pri prvom použití a po neúspešnom pripojení umožňuje ďalší pokus bez reštartu CMS (#232).
+
+- Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov (#211).
+- Doplnený hybridný režim sémantického vyhľadávania a voliteľná RAG odpoveď z indexovaného obsahu. Aplikácia **Vyhľadávanie** má nové nastavenia pre typ vyhľadávania, hybridné správanie, výber AI asistenta a limity kontextu odpovede (#58521).
+
+![](redactor/apps/semantic-search/rag-result.png)
+
+- Embedding indexovanie a vyhľadávanie používa poskytovateľa a model nastavený v systémovom AI asistentovi. Indexy rôznych poskytovateľov a modelov môžu existovať súčasne; stránka **Sémantický index** zobrazuje aktuálne nastavenie a pri opätovnom indexovaní zachová ostatné kombinácie. Jadro embedding požiadaviek, odpovedí a komunikácie s poskytovateľmi bolo vyčlenené do knižnice `webjet-ai`; WebJET CMS naďalej zabezpečuje výber asistenta, indexovanie a uloženie vektorov (#58694).
+- AI asistenti a **sémantické vyhľadávanie** - pridaná podpora [lokálnych modelov](redactor/ai/settings/README.md#lokálne-modely) na generovanie textu, preklad a tvorbu embeddingov priamo na serveri bez odosielania obsahu externej AI službe. Tieto modely je možné **spustiť na bežnom hardvéri** (CPU), **nevyžadujú špeciálne grafické karty** (#58561).
+- Sémantické vyhľadávanie - lokálny [reranking výsledkov](custom-apps/apps/rag/semantic-search/README.md#reranking-výsledkov) zlepšuje poradie výsledkov aj výber RAG kontextu podľa textovej zhody s otázkou. Nevyžaduje ďalšie AI volanie ani opätovné indexovanie (#58778).
+- Sémantické vyhľadávanie - textové chunky majú maximum o 50 % vyššie než cieľová veľkosť (predvolene `1500` znakov). Markdown zachováva celé sekcie a bloky, ktoré sa zmestia do maxima, a spája krátke sekcie so spoločným kontextom nadpisov. Väčší obsah sa rozdelí podľa viet a slov. Zmeny sa použijú po opätovnom indexovaní. Viac v [popise indexovania](custom-apps/apps/rag/semantic-search/README.md#1-indexovanie) (#58778).
+- Sémantické vyhľadávanie - pridaná [podpora Markdown dokumentácie](custom-apps/apps/rag/markdown-search.md) z webových aj lokálnych priečinkov (`file:`), plánovaná indexácia zmien, vyhľadávanie Docsify podľa jazyka a adresára a voliteľná RAG odpoveď. Nová karta **Markdown dokumenty** umožňuje indexáciu a odstránenie cez stromový výber priečinka. Jazyk sa odvodzuje z cesty súboru. Index je spoločný pre všetky domény; AI asistenti a spotreba patria doméne vykonávanej operácie. Vyhľadávanie rešpektuje limity ochrany pred SPAMom ešte pred volaním AI a pri ich prekročení zobrazí správu. Nastavenie aliasu `file:/docs`, parametre úlohy `koreň|doména` a migrácia starších indexov sú opísané v návode (#58778).
+
+### Aplikácie
+
+- AI asistenti - nová karta [Limity tokenov](redactor/ai/settings/README.md#karta---limity-tokenov) umožňuje obmedziť spotrebu asistenta a zobraziť jej vývoj za posledných 14 dní. Na zadaný notifikačný e-mail sa odošlú upozornenia pri dosiahnutí 75 % a 100 % limitu. Po dosiahnutí limitu sa ďalšie požiadavky zablokujú. Spotrebu možno vynulovať ručne pre vybraných asistentov alebo aktuálnu doménu, prípadne pravidelne pre všetky domény úlohou `AiTokenUsageReset`, ktorá sa predvolene spúšťa každý deň o polnoci (#400).
+- AI asistenti - opravené spracovanie priebežných textových odpovedí vrátane Gemini. Počet tokenov a chybové správy sa správne spracujú aj pri rozdelení alebo spojení sieťových blokov; technické údaje sa nevkladajú do generovaného textu. Prerušená odpoveď sa už neoznačí ako úspešne dokončená.
+- Číselníky - výber a správa typov sa presunuli do stromu v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Číselníkov](redactor/apps/enumeration/README.md) (#58786).
+- Blog - výber a pridávanie sekcií sú dostupné v strome v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Blogu](redactor/apps/blog/README.md) (#58786).
+- Novinky - výber priečinka sa presunul do stromu v ľavom paneli s vyhľadávaním, dostupného aj v editore aplikácie. Automatické hľadanie priečinkov vynecháva korene blogerov aj ich podpriečinky. Viac v [dokumentácii Noviniek](redactor/apps/news/README.md) (#58786).
+- Elektronický obchod - pridané voliteľné [zaokrúhľovanie cien](redactor/apps/basket/rounding.md), aby sa košík počítal zo zobrazenej ceny za kus. Počet desatinných miest určuje `currencyFormat`; šablóny so značkou `iway:curr` prevezmú nové formátovanie automaticky (#316).
+- Číselníky - pre pomenované reťazcové polia je možné v novej karte [Typy reťazcových polí](redactor/apps/enumeration/README.md#karta-typy-reťazcových-polí) nastaviť typ poľa, možnosti výberu, povinnosť, pomocný text a obmedzenia dĺžky rovnako ako pri voliteľných poliach. Ponuka a názvy konfigurácií vychádzajú z poslednej uloženej verzie typu číselníka. Nepomenované polia zostávajú skryté, nevyhodnocujú sa ako povinné a polia bez špecifickej konfigurácie sa zobrazia ako bežný text. Staršie vlastné Excel šablóny a integrácie REST API je potrebné upraviť z atribútov `string1` až `string12` na `fieldA` až `fieldL` (#58641).
+
+![](redactor/apps/enumeration/editor_stringFieldTypes.png)
+
+- Elektronický obchod - pridaná aplikácia [Štatistiky](redactor/apps/eshop/stats/README.md) so súhrnnými ukazovateľmi, filtrovaním podľa stavu, meny a obdobia a grafmi tržieb, produktov, kategórií, spôsobov doručenia a platobných metód (#58065).
+
+![](redactor/apps/eshop/stats/stats.png)
+
+- Pridaná nová aplikácia [Presmerovanie podľa jazyka](redactor/apps/language-redirect/README.md) na automatické presmerovanie návštevníkov na jazykovú verziu stránky podľa detekcie jazyka z HTTP hlavičky `Accept-Language`. Podporuje až 8 priradení jazykov na URL adresy, rešpektovanie jazykového cookie a možnosť presmerovania len na koreňovej URL (#58497).
+
+![](redactor/apps/language-redirect/editor-basic.png)
+
+- Rezervácie - aplikácie **Rezervácia času** a **Rezervácia dní** majú zjednotený vizuálny štýl podľa kalendára `Vanilla Calendar`, upravené kontrastné farby buniek podľa `WCAG`, oddelené vizuálne CSS štýly do samostatných súborov a **Rezervácia času** zobrazuje v hodinových bunkách skutočnú cenu podľa cenníka rezervačného objektu (#58565).
+- Rezervácie - pridaná nová aplikácia [Moje rezervácie](redactor/apps/reservation/my-reservations-app/README.md), ktorá prihlásenému používateľovi zobrazí prehľad jeho rezervácií, stavom rezervácie a možnosťou zmazania povolených budúcich rezervácií (#58565).
+
+![](redactor/apps/reservation/my-reservations-app/app-page.png)
+
+- Manažér dokumentov - pridané zobrazenie stromovej štruktúry priečinkov (#58593).
+
+![](redactor/files/file-archive/datatable.png)
+
+- Manažér dokumentov - pridaná možnosť nahrať viac súborov naraz cez `drag&drop` (#58593).
+
+![](redactor/files/file-archive/drag-drop-upload-dialog.png)
+
+- Manažér dokumentov - pri [hromadnom nahrávaní súborov](redactor/files/file-archive/README.md#hromadné-nahrávanie-súborov) je možné na kartách **Základné** a **Pokročilé** nastaviť spoločnú platnosť, naplánovať neskoršie nahratie s e-mailovou notifikáciou a zadať rozšírené metadáta dokumentov (#58754).
+
+![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
+
+- Manažér dokumentov - vylepšená kontrola práv na súborový systém. Ikona pre pridanie priečinka sa zobrazuje len ak používateľ má právo zápisu, pri výbere priečinka sa kontrolujú práva, ak používateľ nemá právo zápisu súborov do `/files/archiv` zobrazí sa chybová správa (#osk802).
+- Výber priečinka - zakázané priečinky v stromovej štruktúre sa zobrazujú ikonou priečinka s krížikom (#osk802).
+- Manažér dokumentov - strom priečinkov má minimálnu šírku 200 px, aby vyhľadávacie pole s tlačidlami nepresahovalo do tabuľky ani pri nastavení menšieho pomeru. Nastavenia šírky v pixeloch preto ponúkajú hodnoty od 200 px (#360).
+- Manažér dokumentov - polia **Produkt** a **Kategória** pri uložení, premenovaní a hromadnom nahrávaní normalizujú tvrdé medzery, tabulátory a zalomenia riadkov, zlúčia opakované medzery a odstránia okrajové medzery aj rušivé neviditeľné znaky z kopírovaného textu. **Upozornenie:** pri opätovnom uložení existujúceho dokumentu sa odstránia tvrdé medzery v názve, produktoch a podobne. Filtre v aplikácii vo webových stránkach sa automaticky neaktualizujú. Ak používajú pôvodný názov s tvrdými alebo opakovanými medzerami či neviditeľnými znakmi, dokument sa po uložení nemusí vo filtrovanom zozname zobraziť. Opravte názvy vo všetkých dotknutých dokumentoch a v aplikáciách nastavte filtre podľa nových hodnôt. Uloženie jedného dokumentu neopraví ostatné dokumenty s rovnakým názvom produktu alebo kategórie (#360).
+- Manažér dokumentov - v [aplikácii na webovej stránke](redactor/files/file-archive/file-archive-app.md#karta---rozšírené) pridané radenie podľa začiatku a konca platnosti, kódu produktu, produktu, kategórie, mena súboru a veľkosti dokumentu (#359, #osk791).
+- Manažér dokumentov - konfiguračnou premennou `fileArchivCheckHistoryValid=false` možno povoliť sťahovanie historických verzií aj mimo rozsahu platnosti; historické verzie dokumentov sa vtedy zobrazia aj v aplikácii na webovej stránke. Dátumy zostávajú zobrazené v archíve; predvolená hodnota `true` zachováva kontrolu platnosti od aj do. Viac v [dokumentácii](redactor/files/file-archive/README.md#platnosť-a-sťahovanie-historických-verzií) (#380).
 
 ### Galéria
 
-- Pridaná možnosť presúvať priečinky galérie priamo v editore zmenou nadradeného priečinka. Podrobnosti nájdete v časti [správa štruktúry](redactor/apps/gallery/structure.md) (#58433).
-- Vylepšené spracovanie presunu priečinkov galérie s cieľom zabrániť vzniku neplatných odkazov. Viac informácií v časti [premiestnenie priečinku Galérie](redactor/apps/gallery/structure.md#premiestnenie-priečinku-galérie) (#58433).
-- Pridaná podpora pre filtrovanie priečinkov galérií podľa aktuálneho ale aj pôvodného/súborového názvu priečinka galérie v stromovej štruktúre (#58445).
-- Pridaná podpora pre [zobrazenie pôvodného/súborového názvu priečinka](redactor/apps/gallery/structure.md#nastavenie-zobrazenia-stromovej-štruktúry) galérie v stromovej štruktúre. Meno priečinka na disku môže byť iné ako pekné meno zadané vo vlastnostiach galérie (#58445).
+- Pridaná možnosť nastaviť samostatný spôsob [zmeny veľkosti pre veľký obrázok](redactor/apps/gallery/structure.md#karta-rozmery) nezávisle od malého obrázka. Predvolene sa použije spôsob zmeny veľkosti rovnako ako je nastavené pre malý obrázok. Nastavenie je možné voliteľne prekopírovať aj do podpriečinkov (#58633).
 
-![](redactor/apps/gallery/jstree-settings.png)
+![](redactor/apps/gallery/dir-sizes-tab.png)
 
-### Manažér dokumentov
+### Dátové tabuľky
 
-- Pridané zobrazenie hodnoty **Globálne Id** pre dokumenty (#58357).
-- Pridaná možnosť zvoliť dokumenty k zobrazeniu v aplikácii pomocou ich `globalId` hodnoty vo vnorenej tabuľke, viac v časti [Karta - Vybrané dokumenty](redactor/files/file-archive/file-archive-app.md#karta---vybrané-dokumenty) (#58357).
+- Sekcia **Nastavenia → Dátové tabuľky** združuje [Nastavenia polí](frontend/datatables/fields-settings.md), [Nastavenia kariet](frontend/datatables/tabs-settings.md) a [Voliteľné polia](frontend/datatables/custom-fields-settings.md). Pre jednotlivé entity a domény môžete meniť názvy, poradie a zobrazenie polí či zakázať ich úpravy. Môžete tiež upravovať karty editora a vytvárať vlastné karty s voliteľnými poľami. **Upozornenie:** Pôvodné oprávnenie **Voliteľné polia** (`customFields`) bolo odstránené. Po aktualizácii je potrebné príslušným používateľom alebo skupinám práv prideliť nové oprávnenie **Dátové tabuľky** (`dataTablesConfig`). Pôvodné oprávnenia sa automaticky neprenesú (#366).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Webové stránky - pri ukladaní sa zachovajú hodnoty polí skrytých v editore a polí so zakázanými úpravami podľa rovnakých pravidiel ako v ostatných dátových tabuľkách. Pri úprave z histórie sa použijú hodnoty z vybranej verzie stránky (#366).
+
+### Voliteľné polia
+
+- Kompletne implementovaná funkčnosť [nastavenia voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálne nastaviť vlastnosti polí bez editácie prekladových kľúčov. Podporované sú všetky typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázok, odkaz, JSON a ďalšie) s typovo špecifickými nastaveniami ako maximálna dĺžka textu, možnosti výberu, prepojenie na číselníky alebo závislosť na iných poliach. Používateľské rozhranie ponúka aj jednoduchý spôsob nastavenia možných hodnôt pre výberové/autocomplete polia (#58529).
+
+![](frontend/webpages/customfields/custom-fields-settings-editor.png)
+
+- Pridaná možnosť nastaviť voliteľné pole ako povinné (#58413).
+- Pridané nové typy voliteľných polí [prepínač a zaškrtávacie pole](frontend/webpages/customfields/custom-fields-settings.md#rozdiel-medzi-selectmultiselect-a-radiocheckbox) s podporou statických možností aj prepojenia na číselník. Typ `multiselect` teraz tiež podporuje [prepojenie na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Pôvodný typ `enumeration` bol nahradený prepínačom zdroja možností pri typoch `select`, `multiselect`, `radio` a `checkbox` kde sa pre všetky tieto typy polí načítajú možnosti z prepojeného číselníka (#58637).
+- Pridaný typ [Editor JSON](developer/datatables-editor/customfields.md#json-editor) (`jsoneditor`) pre priame zadávanie JSON objektu s číslami riadkov a tlačidlom na formátovanie (#311).
+
+![](frontend/webpages/customfields/webpages-jsoneditor.png)
 
 ### Prístupnosť
 
-- Pridané [automatizované testovanie prístupnosti](developer/testing/a11y.md) (a11y / WCAG) pomocou `axe-core` integrovaných do CodeceptJS. Testy pokrývajú úrovne WCAG 2.0/2.1/2.2 AA (#58389).
-- Zlepšená prístupnosť / opravené WCAG chyby na stránkach:
-  - Prihlásenie do administrácie (#58389-2).
-  - Úvod / menu položky / hlavička (#58389-3).
-  - Zlepšené kontrasty farieb v chybových správach a hláseniach (#58389-4).
-  - Dátové tabuľky, editor (#58389-4).
-- Rozšírené a11y testy o nové scenáre pre správcu súborov, monitorovanie, štatistiky, nahrávanie súborov, správu používateľov a webové stránky. Metóda `a11y.check()` podporuje parameter `context` pre obmedzenie kontroly na konkrétnu časť stránky vrátane vnorených `iframe` elementov (#58389-5).
+- Administrácia - rozšírené ovládanie klávesnicou a podpora čítačiek obrazovky pre dátové tabuľky, modálne okná a notifikácie, bublinová nápoveda, výber dátumu a farby a HTML editor. Upravené bolo presúvanie a vracanie zamerania, výber riadkov a buniek, prístupné názvy a ARIA stavy, označenie povinných polí, kontrasty ovládacích prvkov a odkaz na preskočenie na hlavný obsah. Doplnené boli automatizované regresné `a11y` testy pre tieto scenáre (#235).
+
+### Multiweb
+
+- Pridaná možnosť [vytvoriť novú doménu](install/multiweb/config.md) z riadiacej domény, vytvorí aj používateľa, skupinu šablón, šablónu a systémové stránky (#58525).
+- Pridané zobrazenie zoznamu skupín šablón (#58525).
+- V riadiacej doméne je možné upravovať všetky presmerovania domén.
+- V riadiacej doméne pridaná možnosť zobraziť všetky súbory.
+- GDPR - opravené pridávanie a úprava cookies v ostatných doménach bez oprávnenia na úpravu všetkých prekladových kľúčov. Poskytovateľ, účel a platnosť sa ukladajú a zobrazujú pre aktuálnu doménu (#344).
 
 ### Iné menšie zmeny
 
-- Galéria - pridaná podpora priesvitnosti v `png/webp/gif` obrázkoch pri zmene ich veľkosti, ak sa nepoužíva [ImageMagick](redactor/apps/gallery/README.md#možné-konfiguračné-premenné) (#osk396).
-- GitHub pipeline - po `merge pull request` sa automaticky vygeneruje príspevok na sociálne siete pomocou LLM (GitHub Copilot / Google Gemini) a pridá sa ako komentár k danému `pull request` spolu s prípadnými fotkami obrazovky z dokumentácie (#177).
-- Skripty - pridaná možnosť nastaviť, či sa má skript vkladať v editore stránok v režime PageBuilder (#58349).
-- Skripty - pridaný atribút [Poradie vkladania](redactor/apps/insert-script/README.md) pre nastavenie poradia vkladania skriptov v rámci rovnakej pozície. Predvolená hodnota pre existujúce skripty je 10, pri novom skripte sa automaticky nastaví na najvyššiu hodnotu + 10 (#osk387).
-- Editor stránok - opravené určenie priečinka pre nahrávanie obrázkov/súborov pri novej/ešte neuloženej web stránke s duplicitným názvom: priečinok teraz zodpovedá skutočnej URL adrese stránky vrátane prípony `-2`, `-3` atď (#58361).
-- Zrkadlenie štruktúry - pridaná možnosť generovať [odkazy na jazykové mutácie](redactor/apps/docmirroring/README.md#nastavenie-atribútu-hreflang) v hlavičke stránky pomocou aplikácie `hreflang.jsp`, odkazy obsahujú atribút `hreflang` pre lepšiu SEO optimalizáciu jazykových verzií (#58357).
-- Stromová štruktúra - pridané automatické posunutie na aktuálne zvolený prvok v stromové štruktúre (#58433).
-- Aplikácie - pridaná možnosť skryť polia/karty v editore aplikácie pomocou konfiguračnej premennej `appHideFields`. Viac sa dočítate v časti [Skrývanie polí/kariet](custom-apps/appstore/README.md#skrývanie-políkariet) (#58433).
-- `imageradio` - pridaná možnosť nastaviť pole typu `imageradio` ako `disabled` (#58333).
-- Dizajn všetkých grafov v celom projekte bol prerobený z tmavého na svetlý režim pre lepšie zladenie dizajnu (#58333).
+- Monitorovanie servera - v aktuálnych hodnotách bola pridaná sekcia [Kódovanie znakov](sysadmin/monitoring/README.md#kódovanie-znakov), ktorá zobrazuje kódovanie HTTP odpovedí, JVM a locale prostredie bežiaceho procesu aplikačného servera (#305).
+- Konfigurácia - pridaný hierarchický strom konfiguračných premenných s pohľadmi **Zmenené**, **Zákaznícke**, **Všetky** a modulovými vetvami (#293).
+- Konfigurácia - pridaná možnosť **Nastaviť dočasne**, ktorá nastaví hodnotu konfiguračnej premennej len na aktuálnom uzle bez uloženia do databázy. Po reštarte sa obnoví hodnota uložená v databáze (#291).
 
-![](developer/frameworks/charts/frontend/line-chart.png)
+![](admin/setup/configuration/page.png)
 
-- Aplikácia `Tooltip` premenovaná na Nápovedy (#205).
-- Štatistika návštevnosti - upravené filtrovanie podľa priečinka. Používateľ môže zvoliť ľubovoľný priečinok aj z iných domén, ak nemá obmedzené práva na priečinky alebo ak má právo **Zobraziť štatistiku pre všetky priečinky** (#58453).
-- Používatelia - upravená možnosť vidieť všetky priečinky v nastavení **Práva na adresáre a stránky**, ak má administrátor právo **Správa administrátorov**. Priečinky sú zobrazené aj v prípade, že administrátor má sám obmedzené práva na priečinky (#58453).
+- Automatizované úlohy - pridaná možnosť [manuálne spustiť úlohu](admin/settings/cronjob/README.md) na uzle alebo skupine uzlov nastavenej v poli **Beží na uzle**. Pôvodné lokálne spustenie na aktuálnom uzle zostáva dostupné samostatným tlačidlom (#58718).
+
+- Prekladové kľúče - pridaná stromová štruktúra prefixov prekladových kľúčov s filtrovaním zoznamu podľa zvoleného prefixu (#58714).
+
+![](admin/settings/translation-keys/dataTable.png)
+
+- Prieskumník - vo vlastnostiach priečinka pridaná karta [Nepoužívané súbory](redactor/files/fbrowser/folder-settings/README.md#nepoužívané-súbory) na vyhľadanie a zmazanie nepoužívaných súborov (#58621).
+
+![](redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
+
+- Prieskumník - pridané právo **Povoliť nahrávanie súborov s diakritikou**, ktoré umožňuje zachovať diakritiku pri nahrávaní, vytváraní a premenovaní súborov a priečinkov v priečinkoch `/files`, `/images` a `/shared`. Bez tohto práva sa názvy naďalej automaticky upravia bez diakritiky (#58589).
+- Prihlásenie - zrýchlené načítanie úvodnej stránky v administrácii - pridaná vyrovnávacia pamäť pre zoznam posledných stránok, zmenených stránok a auditných záznamov (#58589).
+- Export/import súborov - upravený dizajn dialógového okna a responzívne zobrazenie formulárových polí podľa aktuálneho dizajnu administrácie (#58581).
+- Grafy - pridaný nový stromový graf [`TreeChartForm`](developer/frameworks/charts/frontend/statjs.md#graf-typu-tree) pre vizualizáciu hierarchických dát s približovaním, rozbaľovaním a maximalizovaním (#58065).
+- Google reCaptcha - doplnená podpora vkladania viacerých viac krokových formulárov do stránky, podporovaný je režim `invisible/reCaptcha/reCaptchaV3`, upravené chybové hlásenie na zrozumiteľnejší text (#osk573).
+- Webové stránky - doplnené zvýraznenie elementu nad ktorým je vyvolané kontextové menu. Dôležité ak chcete vykonať akciu Zmazať element, aby ste presne videli ktorý element je označený (#OSK675).
+- Multiweb - doplnená možnosť premenovať existujúcu doménu + presmerovanie po premenovaní (#58317-15).
+- Multiweb - upravené [zobrazenie skupín šablón](install/multiweb/README.md) podľa dostupných šablón a aliasu aktuálnej domény (#58317-17).
+- Štatistika - nastavený dátum/rozsah od-do sa ukladá v prehliadači a je zapamätaný aj po odhlásení/reštarte prehliadača (#58065).
+- Štatistika - prehliadače sa ukladajú bez často sa meniaceho čísla verzie. Doplnená je ručne spúšťaná dávková migrácia v sekcii Aktualizácia WebJET, ktorá zlúči historické záznamy bez výpadku webu. Na stránke `/admin/v9/settings/stat-browser-migration/` kliknite na Analyzovať a potom spustite migráciu. Po úspešnej migrácii kliknite na Finalizovať. Finalizácia pred mazaním overuje používanie identifikátorov vrátane operačných systémov a ich verzií, zachováva používané hodnoty a zobrazuje priebeh kontroly po tabuľkách. Aktualizovaný je zoznam `User-Agent` prehliadačov pre lepšiu detekciu (#303).
+
+![](sysadmin/update/stat-browser-migration.png)
+
+- Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
+- Prieskumník - pri aktualizácii súboru je výber obmedzený na jeden súbor a hlásenie upozorní na nesprávny typ (#317).
+- Prieskumník - v informáciách o priečinku sa už nezobrazuje nepresná rekurzívna veľkosť (#317).
+- Proxy - [výnimky `proxyHostsException`](install/config/README.md#httphttps-proxy) podporujú zástupné vzory ako `*.firma.sk` a `127.*`, oddeľovače čiarka aj `|` a porovnávanie bez rozlišovania veľkosti písmen. Rovnaký normalizovaný zoznam sa používa pre HTTP/HTTPS aj JVM nastavenie `http.nonProxyHosts`. Zmena konfigurácie vyžaduje reštart (#361).
 
 ### Oprava chýb
 
-- `imageradio` - opravené zobrazenie poľa typu `imageradio` v editore datatabuľky (#58333).
-- Webové stránky - opravené obnovenie stránky, ktorá bola vytvorená cez zrkadlenie a nemala historický záznam, ktorý sa dal použiť na obnovenie (#208).
-- Webové stránky - pri obnovení stránky z koša sa použije historická verzia aby sa zachoval jej pôvodný stav pred vymazaním (#208).
-- Tlačidlo - opravená možnosť nastaviť vlastnosti tlačidla ktoré je zakázané (atribút `disabled=disabled`) (#209).
-- Fotogaléria - opravené vyhľadávanie v priečinkoch (#58433).
-- Súbory - doplnené zachovanie `.min.js` a `.min.css` v názve súboru pri nahratí do `/files,/images` priečinkov (#213).
+- Zrkadlenie štruktúry - pri zlyhaní prekladu, napríklad po vyčerpaní kvóty DeepL, používateľ dostane upozornenie s konkrétnym dôvodom z výnimky prekladača vrátane HTTP kódu a dostupnej chybovej správy DeepL. Pevné medzery a ich HTML entity sa normalizujú v názvoch priečinkov a generovaných URL, aby nevznikali adresy s textom `nbsp` ani zbytočné presmerovania (#402).
+- Dátové tabuľky - po úprave jedného záznamu sa pri vynútenom obnovení údajov zobrazí strana s upraveným záznamom podľa aktuálneho triedenia. V konfigurácii sa premenná vyhľadáva podľa názvu aj pri zmene jej ID. Pri mazaní sa zachová aktuálna strana, prípadne sa zobrazí posledná platná strana. Pri vytvorení záznamu sa stránkovanie naďalej resetuje (#400).
+- Viackrokové formuláre - identifikátor položky sa generuje z textu názvu poľa bez HTML značiek, aby formátovanie názvu neovplyvňovalo identifikátor  (#396).
+- Viackrokové formuláre - pri zmazaní položky, kroku alebo formulára sa odstránia aj príslušné podmienky zobrazenia a povinnosti. Podmienky už zmazaných položiek neblokujú odstránenie polí, na ktoré odkazovali (#395).
+- Viackrokové formuláre - pravidlá **Povolená hodnota** už neodmietnu prázdne nepovinné pole. Pri povinnom poli sa regulárne výrazy kontrolujú aj pre prázdnu hodnotu; pri odoslaní kroku sa zohľadňujú aj podmienky povinnosti (#394).
+- Page Builder - vložené karty dostanú vlastné ID aj pri kopírovaní pred dokončením inicializácie, aby sa ich odkazy neprepájali s pôvodným blokom.
+- Dátové tabuľky - zadanie ID otvorí záznam aj po predchádzajúcom filtrovaní bez výsledkov.
+- Webové stránky - opravený [export do ZIP archívu](redactor/webpages/import-export.md) pre obrázky vložené cez `/thumb/`, ktoré sa pôvodne do exportu nepridali (#389).
+- Webové stránky - dialóg na vloženie obrázka obmedzuje výber súborov na obrázky, videá a zvukové súbory aj v priečinku Súbory. Nepodporované typy rozpoznané prehliadačom odmietne ešte pred odoslaním. Server navyše overí príponu pred uložením (#375).
+- Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránky (#372).
+- Spring aplikácie - [chyba pri vytvorení alebo vykonaní aplikácie](custom-apps/spring-mvc/README.md#chyba-pri-vykonávaní-aplikácie) nahradí iba jej značku `INCLUDE`. Okolitý text, JSP aplikácie aj ostatné Spring aplikácie zostanú na stránke zachované a hláška uvedie názov aplikácie, ktorá zlyhala (#384).
+- Redis session - opravené nahrávanie súborov po častiach, spotrebovanie jednorazových CSRF tokenov a aktualizácia údajov prihláseného používateľa po úprave profilu cez registračný formulár. Zmenené objekty sa zapíšu späť do session.
+- Editor stránok - opravená chyba pri otvorení náhľadu po obnovení session zo serializovaného úložiska, napríklad Redis. Chýbajúce údaje editora sa obnovia z náhľadovej verzie stránky.
+- Šablóny - audit vytvorenia, úpravy a zmazania používa jednotné prefixy `CREATE:`, `UPDATE:` a `DELETE:` s ID a názvom šablóny.
+- Editor stránok - pri prepínaní stránok čaká na dokončenie obnovy CKEditora, aby sa nezobrazil a neuložil obsah predchádzajúcej stránky.
+- Webové stránky - lomky v názve stránky, názve v menu a vo výbere hlavičky, pätičky či navigácie sa zobrazujú ako `/` namiesto `&#47;`.
+- AI asistenti - pri HTTP chybe generovania obrázka sa zobrazí chyba a ukončí indikátor spracovania. Požiadavku možno zopakovať.
+- Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) - ponuky nadpisov, zarovnania a farieb sa už neorezávajú na spodnom okraji dialógového okna a zostávajú dostupné aj v nízkom okne prehliadača (#376).
+- Elektronický obchod - opravené pridanie kategórie produktov bez označeného produktu v tabuľke (#373).
+- Webové stránky - URL stránky, presmerovania a perex obrázka zachovávajú parametre aj po načítaní cez JPA vrátane histórie. HTML sanitizér už neprepisuje znaky `&` a `=` v URL na HTML entity (#373).
+- Webové stránky - presmerovanie stránky sa prihlásenému administrátorovi neukladá do cache prehliadača, aby sa jeho zmena alebo zrušenie prejavili pri ďalšom otvorení stránok (#372).
+- Editor stránok - pri automatickej maximalizácii v nízkom alebo úzkom okne zostáva celý panel nástrojov nad obsahom stránky. Obsah už nepresvitá pod ikonami a názvami skupín (#372).
+- Editor stránok - pri zlyhaní získania obsahu alebo hodnote `undefined` sa zobrazí chyba a uloženie sa zastaví, aby sa neprepísal pôvodný obsah. Atribúty `contenteditable` sa odstraňujú pri načítaní aj ukladaní HTML vrátane kódu vloženého v HTML režime (#369).
+- Page Builder - pri zlyhaní načítania obsahu možno prepnúť do HTML režimu obnovením posledného dostupného HTML. Obnova vyžaduje potvrdenie, pretože nemusí obsahovať najnovšie zmeny (#369).
+- Page Builder - opravené zamrznutie editora pri otvorení HTML so zvyšným atribútom `contenteditable="true"`. CKEditor sa na rovnakom bloku už neinicializuje dvakrát.
+- Page Builder - obnovenie fokusu po vložení obsahu alebo štrukturálneho bloku, presune, duplikovaní a zatvorení vlastností či knižnice neposúva stránku k začiatku editora. Oprava funguje aj v šablónach s plynulým posúvaním (`scroll-behavior: smooth`) (#389).
+- Page Builder - nepodporované elementy označené `pb-editable`, napríklad položky zoznamu `li`, už nezablokujú prepnutie z HTML editora. Ich obsah zostáva zachovaný a možno ho upravovať cez nadradenú editovateľnú oblasť (#382).
+- Page Builder - vnorené značky `pb-editable` a `pb-content` sa odstránia pred spustením editora. V jednom bloku nevznikajú vnorené CKEditory a pri vytváraní odsekov či zoznamov sa nekopíruje nadbytočné označenie. Text a ostatné CSS triedy zostávajú zachované (#382).
+- Email - opravené ovplyvňovanie SMTP nastavení medzi aplikáciami na spoločnom aplikačnom serveri. Každé odoslanie používa vlastné properties a mailovú session, takže sa neprenáša SSL port, autentifikácia ani nastavenia Amazon SES z inej aplikácie (#367).
+- Page Builder - opravené hromadenie prázdnych riadkov v HTML vnorených blokov. Pri ukladaní a prepnutí do HTML editora sa odstránia aj staré nadbytočné riadky medzi elementmi. Obsah `pre`, `textarea` a medzery zachovávané cez CSS `white-space` zostávajú nezmenené (#367).
+- Webové stránky - opravené zasekávanie a skákanie pri [porovnávaní verzií](redactor/webpages/history.md), ak šablóna stránky používa plynulé posúvanie (`scroll-behavior: smooth`) (#367).
+- Webové stránky - editor JSON prijíma aj polia a jednoduché hodnoty s komentármi. Opravené rozdelenie stĺpcov a posúvanie v Page Builderi a zatváranie tooltipu pri úprave z histórie (#346).
+- Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
+- Formuláre - opravené archivovanie formulárov (#305).
+- Formuláre - oddelené mazanie odoslaných dát od nastavení a položiek. Ak formulár používa zobrazovaná stránka alebo má dáta v archíve, definícia zostane zachovaná a notifikácia uvedie dôvod aj docId stránok. Pri úplnom odstránení sa zmažú aj kroky, položky a ich podmienky (#393).
+- Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
+- Webové stránky - opravené pridávanie prázdneho `P` elementu na koniec stránky (#58317-13).
+- Webové stránky - opravené načítanie hodnoty `ckeditor_button_sizes` pre tlačidlo typu `A` (#OSK674).
+- Monitorovanie SQL - opravená správa životného cyklu meraní `PreparedStatement`. Záznam sa odstráni aj pri zatvorení pred spustením merania a jednotlivé objekty `PreparedStatement` sa rozlišujú podľa identity bez volania JDBC `hashCode()` a `equals()`. Súbežný prístup používa `ConcurrentHashMap` a atomický stav bez globálneho `synchronized` bloku, takže vlákna nečakajú na spoločný zámok a merania sa nespoja ani pri kolízii identitných hashov.
+- Page Builder - opravené zbytočné posúvanie stránky hore/dole ak ste upravovali aplikáciu v stránke (#343).
+- Page Builder - opravené zobrazenie nástrojovej lišty ak stránka neobsahuje žiadnu sekciu (#343).
+- Page Builder - pridaná možnosť nastaviť [šírku okna štruktúra](frontend/page-builder/settings.md) (#343)
+- Administrácia - opravené zobrazenie ikony zaškrtnutia pri vybranej položke v ponuke automatického dopĺňania (#osk800).
+- Zrkadlenie štruktúry - [pracovná verzia](redactor/apps/docmirroring/README.md#úprava-existujúcej-web-stránky) už neprepisuje zverejnené preklady a [hromadné mazanie](redactor/webpages/README.md#zmazanie-zrkadlených-stránok-a-priečinkov) nespracuje tú istú položku opakovane. Presun nevytvára duplicitné jazykové verzie. Pri presune priečinka sa aktualizujú generované a zdedené URL. Dočasné nastavenia klonovania a stav administrácie zrkadlenia sa nezdieľajú medzi súbežnými požiadavkami (#370).
 
 ### Výkon
 
-- Upravený `PkeyGenerator` pre režim cluster `auto`. Metóda `allocate` obalená do transakcie (`setAutoCommit(false)`) s opakovaním pri `deadlock`. Zlepšené získanie bloku aj v režime cluster `auto`, čím sa znižuje počet prístupov do databázy a riziko `deadlock`. Navýšenie a čítanie hodnoty `pkey_generator` prebieha v jednom atomickom SQL dotaze, čo zabraňuje prideleniu rovnakého bloku viacerým uzlom clustra. Používajú sa databázovo špecifické SQL príkazy (#213):
-
-| Databáza | SQL príkaz | Minimálna verzia |
-| --- | --- | --- |
-| MySQL | `LAST_INSERT_ID(expr)` | 3.23+ |
-| MariaDB | `LAST_INSERT_ID(expr)` | 5.1+ (všetky GA) |
-| Microsoft SQL Server | `UPDATE ... OUTPUT inserted` | 2005+ |
-| PostgreSQL | `UPDATE ... RETURNING` | 8.2+ |
-| Oracle | `RETURNING value INTO` | 10g+ |
-
-- `SeoManager` a `ClusterRefresher` tolerujú databázový `deadlock` pri `UPDATE/DELETE` operáciách bez chybového logu (#213).
-- Režim cluster `auto` - pridaná konfiguračná premenná `clusterAutoRandomDelay` pre [náhodné oneskorenie štartu](install/config/README.md#režim-auto) niektorých úloh, aby sa znížilo riziko súbežných databázových konfliktov medzi uzlami clustra (#213).
+- Viackrokové formuláre - zrýchlené opakované kontroly polí počas vypĺňania (#58794).
+- Optimalizované načítanie skupiny šablón pri zobrazení stránky a hľadaní voliteľných polí. Skupina je uložená do cache a znova použitá bez potreby jej čítania z databázy (#311).
 
 ### Bezpečnosť
 
-- Pridaný súbor `.github/SECURITY.md` so [zodpovedným oznamovaním zraniteľností](sysadmin/responsible-disclosure/README.md) (#187).
-- Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
-- Verzia `SpringSecurity` zvýšená na verziu 7 (#56665).
-- Pridaná možnosť prihlasovania sa cez [OAuth2/Keycloak/Google/Facebook...](install/oauth2/oauth2.md) (#56665).
-
-<div class="video-container">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
-
-- Odstránené nepoužívané knižnice `lodash,pdfmake`, aktualizovaný zoznam `dependency-check-suppressions`, opravená prvotná inštalácia (#204).
-- Opravené spracovanie neplatného hesla pri API/BASIC autentifikácii po prechode na `Spring Security 7`, aby sa chyba `password encoder` nepremenila na internú výnimku a požiadavka sa korektne zamietla (#58369).
-- Pridaná podpora prihlasovania do administrácie cez [Prístupové kľúče](redactor/admin/logon.md#použiť-prístupový-kľúč) `PassKey/WebAuthn` (#58369).
-
-![](redactor/admin/passkey-logon.png)
-
-- Používatelia - ak vytváraní nového používateľa alebo jeho editácii do poľa heslo zadáte znak `*` vygeneruje sa nové bezpečné heslo a zobrazí sa vám v notifikácii (#58369).
-- [Skupiny práv](admin/users/perm-groups.md) - pridaná možnosť nastaviť príznak **Prístup ku všetkým adresárom web stránok** a **Prístup ku všetkým priečinkom súborového systému**, ktoré pri prihlásení prepíšu sčítané práva z ostatných skupín a poskytnú používateľovi neobmedzený prístup k web stránkam, alebo súborom (#osk422).
-- Aktualizovaná knižnica `Datatables.net/Editor` z verzie `2.2.2/2.3.2` na `2.3.7/2.5.2` (#206).
+- AI asistenti - vyhľadávanie v štatistike a grafy používania zobrazujú iba záznamy a asistentov aktuálnej domény (#58850).
+- Webové stránky - mazanie overuje práva ku všetkým zrkadleným stránkam a pri priečinkoch vyžaduje aj `deleteDir`. [Zrušenie zrkadlenia](redactor/apps/clone-structure/README.md#zrušenie-zrkadlenia) kontroluje oprávnenia pre celý podstrom vrátane nakonfigurovaných obmedzení domény a používateľských skupín (#370).
+- Dependency Check - aktualizované knižnice `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizácia Jackson sprísňuje kontrolu typov pri polymorfnej deserializácii; vlastné integrácie používajúce názvy Java tried v JSON je potrebné overiť (#385).
+- Dependency Check - výnimky pre `CVE-2026-116802`, `CVE-2026-116803` a `CVE-2026-116804` v `DOMPurify 3.4.16` boli overené a obmedzené na presný hash dodávaného `Swagger UI 5.34.0` bundle. Integrácia ošetruje HTML reťazce bez XHTML režimu, `IN_PLACE`, `SAFE_FOR_TEMPLATES` a vracania DOM; jej hook neodstraňuje uzly. Výnimky potvrdzujú nepoužitie dotknutých režimov, nie opravu knižnice DOMPurify (#385).
+- Dependency Check - aktualizované knižnice `Hibernate Validator 9.0.0.Final → 9.0.2.Final` s opravou `CVE-2026-93879`, tranzitívna závislosť `ASM 9.7.1 → 9.11.1` s opravami spracovania Java bytecode a závislosť zostavenia administrácie `ip-address 10.7.1 → 10.7.4` s opravou `CVE-2026-111997`. Aktualizácie nevyžadujú zmenu verzie Java ani úpravu aplikačných API (#385).
+- Dependency Check - doplnená výnimka pre `CVE-2026-104828` v `neko-htmlunit 4.5.0`, existujúca výnimka pre `CVE-2026-47842` bola opätovne overená pre `spring-security-crypto 7.1.2`. Overené integrácie nepoužívajú `HTMLWriterFilter` ani staré AES API. Výnimky sú obmedzené na konkrétne verzie; pri zmene integrácií ich treba prehodnotiť. Nejde o opravu týchto knižníc (#385).
+- Formuláre - zamedzené prepísanie šifrovacieho kľúča parametrom `encryptKey` v požiadavke. Podvrhnutý, prázdny alebo poškodený parameter nezmení šifrovanie uložených hodnôt ani HTML podoby formulára (#376).
+- Node.js - verzia pre vývoj a zostavenie projektu v `.nvmrc` a `devcontainer` aktualizovaná na `22.23.4`, ktorá opravuje zraniteľnosť Brotli dekodéra CVE-2026-111497. Lokálne aj v build prostrediach aktualizujte Node.js podľa [návodu na inštaláciu](developer/install/README.md#rspack-build-js-css-a-pug-súborov) (#373).
+- Web stránky - pri ukladaní sa overujú práva k pôvodnej stránke aj k cieľovému priečinku pri presune. Zmenou ID a priečinka v požiadavke nemožno prevziať cudziu stránku (#373).
+- Web stránky - názov stránky a názov v menu sa čistia od nebezpečného HTML pri ukladaní aj načítaní (#373).
+- HTML sanitizácia - pridaný zdieľaný `AllowSafeHtmlAttributeConverterWithSave` na čistenie HTML pri ukladaní aj načítaní. Používa sa na cestu z názvov priečinkov v stránkach a histórii; ošetrené sú aj staršie JDBC zápisy.
+- Datatabuľky - pri vykresľovaní odkazov a obrázkov sa escapujú URL v HTML atribútoch, aby vložené úvodzovky nemohli vytvoriť ďalší atribút. Samotná URL v dátach zostáva nezmenená (#373).
+- Dependency Check - aktualizované knižnice `Jackson 2.22.3/3.2.3`, `jsoup 1.23.2`, `logback-core/classic 1.6.5`, `slf4j-api 2.0.19`, `mariadb-java-client 3.5.10`, `postgresql 42.7.14`, `Swagger UI 5.32.15` (s `DOMPurify 3.4.13`), `moment 2.31.0` vrátane statickej kópie, `@tootallnate/once 2.0.1`, `@xmldom/xmldom 0.9.12`, `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` a `undici 6.28.1`. Zostavenie vyžaduje Node.js 20 alebo 22 a novší (#349).
+- Dependency Check - pridané výnimky pre `kotlin-stdlib 2.4.0`, `webjet-ai/webjet-ai-local 2.0.4`, `spring-security-crypto 7.1.1`, `http-cache-semantics 4.2.0`, `fabric 5.2.4/5.5.2` a `jQuery 3.3.1` v testovacej šablóne eshopu. Výnimky pre `ai.djl:api 0.36.0` a `tar 6.2.1` predstavujú schválené prijatie zvyškového rizika. Podrobnosti sú v `dependency-check-suppressions-project.xml` (#349).
+- Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
+- AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).
+- HTML sanitizácia - `AllowSafeHtmlAttributeConverter` zachováva na všetkých doteraz povolených HTML elementoch atribúty `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) a `tabindex` (`-1`, `0`). Umožňuje tak používať atribúty prístupnosti a vlastné dátové atribúty (#317).
 
 ### Dokumentácia
 
-- Upravený automatický prekladač pre použitie Google Translator API v3 (#58301).
-- Anglická verzia dokumentácie nanovo preložená (#58301).
+- AI skills - doplnený [prehľad WebJET skillov](developer/guidelines/ai-skills.md#prehľad-webjet-skills) s účelom a príkladmi použitia. Rovnaká tabuľka sa automaticky prenáša do README distribúcie `webjetcms/skills`. Export kontroluje úplnosť zoznamu (#376).
+- Formuláre - doplnený návod [Šifrovanie formulárov](redactor/apps/form/encryption.md) s vytvorením a nastavením kľúčov, dešifrovaním záznamov, rozsahom ochrany a technickým opisom algoritmov (#376).
+- Datatabuľky - doplnené vysvetlenie [upozornení na neuložené zmeny](redactor/datatables/README.md#upozornenia-na-neuložené-zmeny) pri obnovení alebo opustení stránky a pri zatvorení editora tlačidlom Zrušiť (#339).
+- Vytvorená nová sekcia [Prehľad nových vlastností](sales/README.md) ktorá obsahuje opisy nových vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií (#58505).
+- Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
 
 ### Pre programátora
 
-- AI - nový `AI skill` pre opravu A11Y/WCAG chýb, stačí použiť nástroj `/wj-accessibility`.
-- Aktualizované závislosti na minimálne požiadavky pre Tomcat 11 (Tomcat 10 už nie je podporovaný). `Stripes` validácie - upravené vykonávanie EL výrazov z odstráneného `jakarta.servlet.jsp.el` na `jakarta.el` kvôli kompatibilite s `jakarta.servlet.jsp-api:4.0.0` (#58385).
-- Aktualizovaný spôsob zobrazenia API dokumentácie na štandard [OpenAPI 3.0](https://www.openapis.org/). Dokumentácia je dostupná na adrese `/admin/swagger-ui/index.html` pre používateľov, ktorí majú právo na editáciu administrátorov (#57793).
-- Administrácia - zmenený `build` súborov administrácie z `webpack` na `rspack`, ktorý je výrazne rýchlejší (#206).
-- Administrácia - zjednotené generovanie `PUG` šablón pre `watch` a `prod`, odstránené nepoužívané `npm` build závislosti a historické `webpack` skripty (#206).
-- Administrácia - doplnené automatické obnovenie otvorenej stránky pri `npm run watch` po zmene `JS/CSS/PUG` súborov (#206).
-- Administrácia - pridaný skript `npm run analyze` s HTML reportom veľkosti použitých knižníc (#206).
-- Datatabuľky - pridaný nový typ udalosti `DatatableColumnsEvent`, na ktorý je možné počúvať a dynamicky upraviť definíciu stĺpcov pred inicializáciou tabuľky. Viac sa dozviete v časti [Udalosť DatatableColumnsEvent](developer/backend/events-datatable.md#udalosť-DatatableColumnsEvent) (#58433).
-- Doplnená knižnica `Jackson v3`, niektoré JSON objekty nemusí serializovať správne pokiaľ nemajú správne `Java Bean` meno (napr. `setcookieId` bez veľkého `C`, alebo `set__rowNum__`). Najlepšie riešenie je správne nastaviť meno premennej, prípadne použiť anotáciu typu `@JsonProperty("__rowNum__")` aj na `getter/setter` (#58369).
-- Galéria - upravené volanie knižnice ImageMagick, zmenené API pre jeho volanie na `ImageTools.executeImageMagick(...)` (#osk396).
-- Grafy - nástroj/knižnica [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na prácu s `amcharts` grafmi bol aktualizovaný, priali sa nové funkcionality, nové grafy a vylepšila sa logika (#58333).
-- Grafy - pridaná nová trieda/knižnica [stats-by-charts.js](../../src/main/webapp/apps/_common/charts/stats-by-charts.js) na rýchle vytváranie celých sekcií štatistík s využitím [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na vytváranie grafov (#58333).
-- Hlavičkové záložky - pridaná podpora pod-kariet cez funkciu `WJ.headerSubTabs()` pre vnorené karty v zozname Neschválené vo webových stránkach (#58405).
-- Odstránená anotácia `@Temporal` na dátumových stĺpcoch v databázových entitách, odporúčané riešenie je pre nové entity používať `java.time.*` typy. Zdá sa, že Eclipselink/JPA správne deteguje typ `Date` ako dátum a čas a anotácia nie je potrebná. Odporúčame po aktualizácii skontrolovať správanie dátumových polí (#57793).
-- Trieda `PageListHolder/MutableSortDefinition` je v Spring 7 `Deprecated`, ako priamu náhradu môžete použiť našu implementáciu `PagedListHolder/SortDefinition` z package `sk.iway.iwcm.system.datatable` (#57793).
-- Webové stránky - obnovenie z koša - doplnené [publikovanie udalostí](developer/backend/events.md) `ON_RECOVER` a `AFTER_RECOVER` pre obnovu stránok a priečinkov z koša (#161).
-- Webové stránky - doplnená možnosť upraviť karty okne [Štýl pri použití PageBuilder](frontend/page-builder/blocks.md#podporný-javascript-kód) volaním funkcie `window.pbBuildTabMenu`. Viete tak pre zákazníka zobraziť len relevantné karty a nastavenia bloku (#58345).
-- Webové stránky - doplnená možnosť volať [vlastnú funkciu pre čistenie HTML kódu](frontend/page-builder/blocks.md#podporný-javascript-kód) po vložení z `Microsoft Office` alebo pri získaní HTML kódu (#OSK49).
-- `WebjetEvent` – pridaná možnosť nastaviť používateľa typu `Identity` priamo do udalosti. Vhodné pri spracovaní udalostí, kde je potrebný používateľ, ale nie je dostupný `context` alebo `request` (#OSK423).
-- `WJ.openIframeModal` - pridaná možnosť presúvať dialógové okno uchopením za hlavičku (drag & drop), maximalizovať/minimalizovať okno a definovať vlastné tlačidlá v pätičke cez parameter `buttons` (#58405).
+#### Prelomové zmeny
 
-![meme](_media/meme/2026-18.jpg ":no-zoom")
+- Formuláre - šifrovací kľúč sa pri klasických formulároch a aplikácii Formulár ľahko načítava výhradne zo serverových nastavení formulára. Ak bol doteraz zadaný iba v HTML poli `encryptKey`, preneste ho do poľa **Šifrovací kľúč** v administrácii. Parameter odoslaný návštevníkom už šifrovanie neovplyvňuje. Viac v návode [Šifrovanie formulárov](redactor/apps/form/encryption.md#nastavenie-verejného-kľúča-pre-formulár) (#376).
+- Databázy - minimálna podporovaná verzia je MariaDB 10.11 LTS alebo MySQL 8.4 LTS. Pred aktualizáciou WebJET CMS na staršom serveri aktualizujte databázu podľa postupu jej výrobcu. Podrobnosti a požiadavky aktualizovaného JDBC ovládača sú v [návode na inštaláciu](install/setup/README.md#základné-požiadavky-na-server) (#349).
+- Štatistika - prehliadače sa po aktualizácii ukladajú bez čísla verzie, ktoré sa v dnešnej dobe veľmi často menia. Po nasadení tejto verzie je potrebné spustiť migráciu historických štatistík na URL `/admin/v9/settings/stat-browser-migration/`, bez jej dokončenia zostanú historické údaje rozdelené podľa čísla verzie prehliadačov (#303).
+- Z administrácie bola odstránená závislosť na knižnici [Vue.js](https://vuejs.org). Pred aktualizáciou odporúčame overiť kompatibilitu vlastných aplikácií. Veľkosť JavaScript súborov sa zmenšila o cca 170kB, čo má dopad aj na rýchlosť inicializácie administrácie. Viac v [sekcii pre programátora](#ďalšie-zmeny).
+- AspectJ - z distribúcie bola odstránená podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vstavané aspekty sa spracujú už pri kompilácii, viac v [sekcii pre programátora](#ďalšie-zmeny). Pri použití v MultiWeb inštalácii môžete odstrániť `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavenie z `JAVA_OPTS` v aplikačnom serveri (#290).
+- Export obsahu pre Flash - odstránená bola historická funkcia generovania XML súborov `/flash_xml/{docId}.xml` pri publikovaní stránky. Konfiguračná premenná `exportFlash` už nie je podporovaná a jej definovanie v `SpringConfig` funkciu neobnoví (#293).
+- Microsoft SQL Server - ukončená bola podpora verzií starších ako 2012 a odstránená konfiguračná premenná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 alebo novší, starý spôsob stránkovania pomocou `TOP` už nie je podporovaný (#293).
+- Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
+- Galéria - metóda `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` vracia namiesto `void` výsledok spracovania typu `int`: `0` pri úspechu, inak kód chyby. Po aktualizácii je potrebné prekompilovať závislý Java kód aj JSP súbory, napríklad vyčistením pracovného priečinka konkrétnej aplikácie v Tomcat (#371).
+- Viackrokové formuláre - metódy `validateStep` a `runStepInterceptor` rozhrania [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) dostávajú za `formName` nový parameter `FormSettingsEntity formSettings`. Ak používate vlastnú Java triedu na spracovanie formulárov je potrebné ju upraviť a znova skompilovať. Nastavenia už nemusia načítavať podľa mena formulára, ale dostanete ho priamo (#364).
+- Viackrokové formuláre - identifikátor polí sa už generuje z názvu s odstráneným HTML kódom (použije sa len text). Ak máte v názve poľa použité HTM formátovanie pre rádio skupiny, tak znovu uložte **všetky jej možnosti**. Aktualizujte aj podmienky a odkazy na zmenené identifikátory (#396).
+
+#### Ďalšie zmeny
+
+- Datatabuľky - tabuľky nastavení majú spoločný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Existujúca tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje so zachovaním údajov; vlastné SQL dotazy treba upraviť na `dt_customfields` (#58830).
+- Datatabuľky - triedy pre [systémové nastavenia](developer/datatables/README.md#systémové-nastavenia) voliteľných polí, polí a kariet boli presunuté pod `sk.iway.iwcm.system.datatable.settings` do podbalíkov `customfields`, `fields` a `tabs`. Vlastný kód a šablóny používajúce tieto triedy vyžadujú aktualizáciu importov a úplných názvov tried (#58830).
+- Datatabuľky - pridaný typ poľa [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) pre výber jednej možnosti zo skupiny tlačidiel. Používa štýly administrácie a podporuje aj voľbu **Bez zmeny** pri trojstavových nastaveniach (#58830).
+- SBOM - pridané [generovanie spoločného zoznamu Java a npm závislostí](developer/install/sbom.md) vo formáte CycloneDX JSON príkazom `ant -f ant/build.xml sbom`, vrátane tranzitívnych závislostí a validácie reportu.
+- [Centrálny generátor noviniek](developer/install/social-media-feed.md) po úspešnom publikovaní odstráni nepoužívané náhľady s 30-dňovou ochrannou lehotou. Zachová obrázky aktuálnych príspevkov aj záložných údajov pre výpadok zdroja (#358).
+- Editor stránok - [nastavenie ponuky Štýly](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) podporuje metadáta v komentároch `editor.scss` / `editor.css` pre kategórie a ich ikony, vzájomne sa nahrádzajúce skupiny, povolené elementy a základné triedy zachované pri obnovení vzhľadu. Nová ponuka je predvolene zapnutá; nastavením `ckeditor_styleComboEnabled=false` sa obnoví pôvodný výber štýlov (#OSK764).
+- AI agenti - pripravená distribúcia WebJET CMS skills cez `npx skills`, vrátane spoločných konvencií a nastavenia projektových pokynov pre Codex, GitHub Copilot a Claude Code. [Návod](custom-apps/skills/README.md) opisuje inštaláciu, aktualizáciu a použitie v starších klientskych projektoch. Pokyny v `AGENTS.md` a tematické referencie v `.github/agents/` boli overené podľa aktuálneho kódu; opisujú používané frameworky, postupy vývoja a testovania aj rozdiely medzi jadrom CMS a klientskymi projektmi (#357).
+- Dashboard - pridaný register widgetov, responzívny grid a REST rozhranie na transakčné ukladanie nastavení do `user_settings_admin`. Existujúca tabuľka MySQL/MariaDB sa pri aktualizácii konvertuje na InnoDB. Používanie opisuje [dokumentácia úvodnej obrazovky](redactor/admin/welcome.md), pozadie a označenie prostredia jej [konfigurácia](admin/setup/configuration/dashboard.md). Pravidlá vývoja, kontrakt a dôvody rozhodnutí udržiava projektový skill `wj-dashboard-widget` v `.agents/skills/wj-dashboard-widget/` (#58806).
+- Administrácia - odstránená závislosť od [Vue.js](https://vuejs.org). Stromové polia, úvodná stránka, výber oblasti obrázka a monitorovanie servera používajú natívne [web komponenty](developer/frameworks/web-components.md). Globálny objekt `window.VueTools` ani balíky pre Vue už nie sú súčasťou administrácie. Vlastné rozšírenia ich musia nahradiť web komponentmi alebo si Vue zostaviť samostatne (#58722).
+- AI asistenti - klientska logika nezávislá od poskytovateľa pre OpenAI, Gemini a OpenRouter, spracovanie streamov, typy požiadaviek/odpovedí a ochrana promptov boli vyčlenené do samostatného artefaktu `com.webjetcms:webjet-ai` a externého [repozitára webjet-ai](https://github.com/webjetcms/webjet-ai). WebJET CMS odovzdáva konfiguráciu cez typovaný adaptér a naďalej zabezpečuje auditovanie, perzistenciu a integráciu používateľského rozhrania. Ide o nekompatibilnú zmenu: pôvodné CMS SPI pre vlastných poskytovateľov a jeho transportné a streamovacie podporné triedy boli odstránené. Vlastných poskytovateľov je nutné migrovať na rozhranie `AiProvider` knižnice a CMS adaptér `LibrarySupportLogic`  (#58670).
+- AI poskytovatelia - vlastnú implementáciu je možné [pridať do projektu](custom-apps/apps/ai/assistants/README.md) ako Spring bean `AiProvider`; CMS ju automaticky spojí so vstavanými poskytovateľmi. Konfigurácia a polia editora sú sústredené v jednom adaptéri `LibrarySupportLogic`/`AiAssitantsInterface`. Možnosti generovania obrázkov sa načítajú podľa poskytovateľa, modelu a operácie z knižnice `webjet-ai`, takže sa dynamicky zobrazí iba podporovaný počet, rozmer, kvalita a pomer strán (#58694).
+- Dátové tabuľky - pridaný nový typ poľa `OPTIONS` pre [dynamický zoznam hodnôt](developer/datatables-editor/standard-fields.md#options) v editore. Každý riadok obsahuje dva textové polia (kľúč a hodnota), podporuje pridávanie, odoberanie a zmenu poradia pomocou `drag & drop` (#58517).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced.png)
+
+- Dátové tabuľky - rozšírená funkcionalita poľa typu [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) o možnosť pridať prázdnu hodnotu pomocou `allowEmptyOption` (#osk573).
+- Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) pri úprave zdrojového kódu odstraňuje nadbytočné prázdne odseky (#osk573).
+- Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zachováva vnorené obalové elementy `div`. Čistenie prázdnych odsekov sa po novom vykonáva iba na konci ukladanej hodnoty; prázdne odseky medzi obsahom zostávajú zachované (#osk782).
+- Dátové tabuľky - pridaný nový typ poľa `ENUMERATION` pre [napojenie na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editore. Pole ukladá konfiguráciu vo formáte `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastaviť zdroj hodnôt (#58517).
+- Dátové tabuľky - [výber priečinka](developer/datatables-editor/field-json.md#možnosti-classname) cez pole `dt-tree-dir-simple` pri obmedzených právach správne zobrazuje nastavený koreňový priečinok aj neaktívnych rodičov povolených priečinkov a rešpektuje konfiguračnú premennú `fbrowserShowOnlyWritableFolders`. Pridaný atribút `data-dt-field-writableOnly` umožňuje obmedziť výber iba na priečinky s právom na zápis (#58317-17).
+
+![](redactor/apps/multistep-form/form-item-editor-advanced-enum.png)
+
+- AspectJ - historické aspekty `CloudFilter`, `SqlPerformance` a `AspectException` vo formáte `.aj` boli migrované na Java triedy s anotáciou `@Aspect`. Gradle najskôr skompiluje zdrojové kódy cez `javac`, ktorý spustí anotačné procesory Lombok/MapStruct, a plugin `io.freefair.aspectj.post-compile-weaving` následne spracuje bajtový kód pomocou `AspectJ weaving`. Odstránená bola duplicitná Ant/AJC kompilácia aj lokálne kópie build knižníc; Ant balenie používa výstup z Gradle a úlohy `Delombok`. `CloudFilter` používa `execution pointcut` a príslušný `advice` sa pri kompilácii vloží do `GroupsDB` a `DocDB`, takže sa filtrovanie aplikuje aj pri volaní z JSP skompilovaných bez LTW. Doplnené boli regresné testy a aktualizovaná [dokumentácia nasadenia](developer/install/deployment.md#kompilácia-java-a-aspectj) (#290).
+- Logovanie - do [Logback MDC](https://logback.qos.ch/manual/mdc.html) doplnený atribút `sessionId` a prihlasovacieho mena používateľa `userLogin` (#OSK526).
+- Aktualizovaná knižnica [Tabler Icons](https://tabler.io/icons) na verziu 3.44.0, vyriešený problém so súčasným používaním `Outline` a `Filled` sád (#58509).
+- Web stránky - ak potrebujete mať prázdny prvý riadok v konfiguračnej premennej `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` zadajte hodnotu `---`.
+- Prekladové kľúče - upravené auditovanie chýbajúcich prekladových kľúčov - vylúčené auditovanie ak sa neskôr testuje, či kľúč skutočne existuje (#261).
+- Testovanie - pridané [automatizované nahrávanie prezentačných videí](developer/testing/video.md) pomocou CodeceptJS a Playwright. Video scenáre vytvárajú kvalitný WebM výstup so syntetickým kurzorom, prirodzenou dráhou pohybu a reprodukovateľným priebehom kliknutí. Hovorené slovo je možné zo scenára automaticky vygenerovať cez ElevenLabs API ako MP3 súbor s nastaviteľným modelom a hlasom (#299).
+- Konfigurácia - z tried `Constants` a `ConstantsV9` boli odstránené zastarané konfiguračné premenné. Ak ich vo svojom projekte používate môžete si do vášho `SpringConfig` pridať potrebnú definíciu:
+
+```java
+		setString("smsSendCmd", "", MOD_SMS,
+				"Format pre odosielanie SMS, pre Orange:email e2sms@e2sms.orange.sk smtp.iway.sk tomas.kosec@interway.sk, pre T-Mobile:email sms.eurotel.sk obsidian.interway.sk");
+		setString("smsSendInternational", "", MOD_SMS, "Format cisla pre SMS, moze mat hodnoty ++42, +42, 42");
+		setInt("smsSendMaxlength", 140, MOD_SMS, "maximalna dlzka SMS spravy");
+		setString("syncRemoteServer", "", "sync", "Adresa servera, s ktorym sa tento synchronizuje");
+		setString("multilang", "", MOD_CONFIG, "overwrite string na ziskanie moznych hodnot MultilangDB");
+		setBoolean("editorEnableXHTML", true, MOD_OBSOLETE, "xhtml mode for Struts framework");
+		setBoolean("usrLogonRequireSMS", false, "user;security",
+				"ak je true, tak prihlasenie na stranke vyzaduje SMS autorizaciu, vyzaduje nastavenie modulu SMS");
+		setString("fbrowserFileEditor", "editarea", MOD_OBSOLETE, "typ editora suborov - normal, alebo editarea");
+		setString("chartColors", "#5C5CF7,#F75C5C,#5CF75C,#FFC165,#E463E4,#A13600,#55FFFF,#FFAFAF,#B10505,#065BD8",
+				"stat;config", "farby ciar a textov pre grafy statistiky (Open Flash Chart)");
+		setString("mapGoogleLicense", "", "map", "predvoleny licencny kluc pre google mapy");
+		setBoolean("magzillaChangeEmailRecipients", true, MOD_MAGZILLA,
+				"flag ci sa v magzille pri commente k bugu zobrazi moznost zmenit komu sa posle email, alebo sa nezobrazi a maily sa poslu podla default nastaveni");
+		setString("magzilla_mail_sufix", "interway.sk", MOD_MAGZILLA, "suffix emailu pre komunikaciu s magzillou");
+		setString("magzilla_web", "", MOD_MAGZILLA,
+				"base URL adresa pre magzilla stranky (napr. http://www.interway.sk/helpdesk)");
+		setString("magzilla_attachments_dir", "/files/helpdesk/", MOD_MAGZILLA, "adresar pre prilohy magzilly");
+		setString("mgz_mailbox", "INBOX", MOD_MAGZILLA, "udaje pre mail parser helpdesku - priecinok s inboxom");
+		setString("mgz_user_name", "", MOD_MAGZILLA, "udaje pre mail parser helpdesku - prihlasovacie meno");
+		setString("mgz_host", "", MOD_MAGZILLA, "udaje pre mail parser helpdesku - adresa POP3 servera");
+		setInt("mgz_port", -1, MOD_MAGZILLA, "udaje pre mail parser helpdesku - port POP3 servera");
+		setBoolean("mgz_use_ssl", false, MOD_MAGZILLA,
+				"udaje pre mail parser helpdesku - pouzitie SSL pri pristupe k POP3 serveru");
+		setString("mgz_password", "", MOD_MAGZILLA, "udaje pre mail parser helpdesku - heslo");
+		setString("mgz_client_type", "pop3", MOD_MAGZILLA, "udaje pre mail parser helpdesku - typ pripojenia");
+		setString("mgz_strings",
+				"__________ Informacia od ESET NOD32 Antivirus|--\nS pozdravom|<br>--\n<br>|<pre class=\"moz-signature\"|<p class=MsoAutoSig>",
+				MOD_MAGZILLA, "zoznam retazcov oddelenych znakom | za ktorymi sa povazuje sprava za ukoncenu");
+		setString("mgz_subjects", "Re:|Fwd:|FW:", MOD_MAGZILLA, "prefixy, ktore sa odstranuje z predmetu spravy");
+		setString("mgzManagerGroupName", "Prava-manazeri", MOD_MAGZILLA, "Nazov hlavnej skupiny manazerov");
+		setString("mgzClientGroupName", "HD Klienti", MOD_MAGZILLA, "Nazov hlavnej skupiny klientov");
+		setString("mgzSolverGroupName", "Prava-solveri", MOD_MAGZILLA, "Nazov hlavnej skupiny solverov");
+		setString("mgzTesterGroupName", "Prava-testeri", MOD_MAGZILLA, "Nazov hlavnej skupiny testerov");
+		setString("mgzManagerBugViews", "managerAllBugs,managerWaitingBugs,allNewBugs,allBugs,notSolvedBugs,solvedBugs",
+				MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia - pre manazera");
+		setString("mgzClientBugViews", "clientAllBugs,clientWaitingBugs,clientSolvedBugs", MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia -  pre klienta");
+		setString("mgzSolverBugViews", "assignedSolverBugs,allNewBugs,notSolvedBugs,solvedBugs", MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia - pre solvera");
+		setString("mgzTesterBugViews", "assignedTesterBugs,newTesterBugs,allTesterBugs,notSolvedBugs,solvedBugs",
+				MOD_MAGZILLA,
+				"predvolene pohlady bugov generovane do selectBoxu v MagZille pri parametri allowBugs=all, generuju sa do selectBoxu podla poradia - pre testera");
+		setString("microsite_web", "", MOD_MICROSITE,
+				"base URL adresa pre microsite stranky (napr. http://www.interway.sk/microsite)");
+		setInt("KurzyDBCacheInMinutes", 60, "kurzy;performance", "default nastavenie poctu minut, pre KurzyDB");
+		setBoolean("magmaSaveAttendance", false, "magma",
+				"Nastavenim na true sa bude zaznamenavat prihlasenie pouzivatela do prace");
+		setString("magma_defaultApproverEmail", "", "magma",
+				"email adresa pre schvalovanie dovoleniek ak nie je nikto nastaveny");
+		setString("magma_holidaysApproveCC", "", "magma",
+				"CC email so spravou o schvaleni dovolenky (napr. email ekonomky)");
+		setString("magmaCalendarLoginEnabled", "", "magma",
+				"ciarkou oddeleny zoznam IP adries z ktorych sa zaznamena prichod a odchod do prace (aby sa nezaznamenal prichod do prace napr. z domu");
+		setString("usersPositionListReport", "", MOD_MAGZILLA,
+				"Pre helpdesk definuje zoznam pozicii zamestnanca, pre ktore sa budu generovat reporty. Jednotlive pozicie sa oddeluju znakom |.");
+		setString("magma_meetingUserGroup", "", "magma",
+				"Názov skupiny z ktorej sa budú zobrazovat pouzivatelia pri vytvarani schodzky");
+		setString("magzilla_private_web", "", MOD_MAGZILLA,
+				"interna base URL adresa pre magzilla stranky(napr. http://intra.iway.sk/helpdesk)");
+		setString("magzillaNotifyOnTicket", "", MOD_MAGZILLA,
+				"Zoznam bodkociarkou oddelenych zaznamov v tvare id ticketu:email napr. (5555:helpdesk@iway.sk;). Nasledne ak si pouzivatel prida ticket 5555 do kalendara, odosle sa mail na helpdesk@iway.sk");
+		setBoolean("webdavActive", false, "webdav", "Určuje či je prístup cez WebDav aktívny");
+		setString("webdavUrlPrefix", "webdav", "webdav", "Určuje prefix cez ktorý je WebDav pristupny napr 'webdav' ");
+		setString("webdavSharedDirectories", "/css/;/jscripts/;/files/;/images/", "webdav",
+				"Urcuje, ktore adresare su pristupne cez WebDav. Priklad : /images/;/files/;");
+		setString("mgzAutoreplyWords", "Out Of Office|Automatická odpoveď|AutoReply", MOD_MAGZILLA,
+				"Slovička, ktorými sa definujú autoreply maily v predmete správy. Takéto správy sa odstraňujú. Pokiaľ je hodnota prázdna, tak sa funkcia odstraňovania takýchto e-mailov vypne.");
+		setString("magzillaAutomaticChangeStatus", "RIESI SA,In progress", MOD_MAGZILLA,
+				"Automatická zmena statusu ticketu pri vytvorení nového záznamu do kalendára z prostredia helpdesk v intranete");
+		setBoolean("dragDropUploadEnabled", true, MOD_OBSOLETE,
+				"Povolenia Drag & Drop nahrávania súborov z desktopu do WebJETu vo FireFoxe");
+		setBoolean("googleDocsEnabled", false, "Googel Docs",
+				"Ak je nastavene na true, spristupni sa upload a otvorenie prilohy v ticketoch cez Google Docs.");
+		setString("googleDocsConsumerKey", "", "Googel Docs",
+				"Kluc pre domenu, cez ktoru sa bude ku Google Docs pristupovat. Ak je prazdne, Google Docs v tiketoch nie je pristupny.");
+		setString("googleDocsConsumerSecret", "", "Googel Docs",
+				"Secret pre domenu, cez ktoru sa bude ku Google Docs pristupovat. Ak je prazdne, Google Docs v tiketoch nie je pristupny.");
+		setString("mgzBugErrorStrings", "bug,chyba", MOD_MAGZILLA, " Vyhladavane texty pri nefakturovanom case");
+		setBoolean("zmluvyApprovEditChanges", false, "zmluvy",
+				"Pokial je nastavena hodnota na true, tak editovanu zmluvu bude treba opatovne schvalit na publikaciu. E-mail o zmene sa posle schvalovatelom ci je hodnota true alebo false.");
+		setBoolean("portalStartup", false, "portal", "Spustanie portalu pri starte WJ");
+		setString("AngularCDNVersion", "2.0.0-beta.0");
+		setBoolean("sassCompilerEnabled", false, MOD_CONFIG,
+				"nastavenim na true, sa zapne kompilacia sass a scss suborov");
+		setString("AngularCDNVersion", "", "angular", "Verzia angular.io ktora sa ma vlozit do stranky");
+		setString("emailAttachmentsPublisher.pop3.host", "", "emailAttachmentsPublisher", "adresa na pop3");
+		setString("emailAttachmentsPublisher.pop3.user", "", "emailAttachmentsPublisher", "pouzivatel na pop3");
+		setString("emailAttachmentsPublisher.pop3.password", "", "emailAttachmentsPublisher", "heslo na pop3");
+		setBoolean("zmluvyEnableVo", false, "zmluvy",
+				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
+```
+
+- Dátové tabuľky - upravená validácia povinných polí typu [`DATE` a `DATETIME`](developer/datatables-editor/standard-fields.md#date). Umožňuje to vymazať nastavenú hodnotu dátumu alebo čísla v editore - pôvodne sa pri prázdnej hodnote zachovala hodnota v uloženej entite (#58770).
+- Dátové tabuľky - validačná chyba poľa [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zároveň zvýrazní okraj nástrojovej lišty aj editora (#58770).
+- Dátové tabuľky - pri duplicitnej hodnote, pokuse vymazať či zmeniť záznam, na ktorý odkazujú ďalšie záznamy, prázdnej hodnote pre `NOT NULL` stĺpec sa zobrazí zrozumiteľnejšia chybová správa (#58770).
+
+![meme](_media/meme/2026-40.jpg ":no-zoom")

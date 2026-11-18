@@ -16,7 +16,7 @@ Git worktree je samostatná pracovní složka pro jednu větev (branch). Worktre
 
 Ve VS Code otevřete původní složku **`webjetcms`**. Vlevo dole ověřte větev **`main`**, otevřete paletu příkazů a zvolte **Git: Pull**.
 
-Terminálová alternativa, která povolí pouze aktualizaci bez merge commitu:
+Terminálová alternativa, která povolí pouze aktualizaci bez `merge commit`:
 
 ```shell
 git pull --ff-only
@@ -65,7 +65,7 @@ Terminálová alternativa: v původním `webjetcms` spusťte `git pull --ff-only
 
 Aktualizovaná větev `main` je společná pro všechny worktrees, její změny do své větve přenesete až přes merge.
 
-V Codex přidejte každou složku worktree jako **samostatný projekt** a povolte k ní přístup. Pojmenujte jej podle úkolu, například `123-fix-menu`, abyste snadno našli související chaty.
+V Codex přidejte každou složku worktree jako **samostatný projekt** a povolte k ní přístup. Pojmenujte jej podle úkolu, například `123-fix-menu`, abyste snadno našli související čety.
 
 ## Souběžné spuštění a testy
 

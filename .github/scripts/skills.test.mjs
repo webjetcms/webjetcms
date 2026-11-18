@@ -125,6 +125,19 @@ test('catalog exports maintained descriptions and prompts, rewrites links, and a
     assert.equal(outside.contentHash, changed.contentHash);
 });
 
+test('catalog export preserves translated header wording', async (t) => {
+    const root = await sourceFixture(t);
+    const document = catalogDocument()
+        .replace('What is it for and when to use it?', 'Purpose and usage')
+        .replace('Example of chat entry', 'Example of entry into the chat');
+    await put(root, catalogPath, document);
+    const output = join(root, 'export');
+    await exportSkills({ root, output, revision: 'a'.repeat(40) });
+    const readme = await readFile(join(output, 'README.md'), 'utf8');
+    assert.ok(readme.includes('| Skill | Purpose and usage | Example of entry into the chat |'));
+    assert.ok(readme.includes('| [`wj-example`](skills/wj-example/SKILL.md) |'));
+});
+
 test('incomplete, duplicate, unknown and malformed catalog entries fail before export', async (t) => {
     const root = await sourceFixture(t);
     const output = join(root, 'invalid');
@@ -136,7 +149,10 @@ test('incomplete, duplicate, unknown and malformed catalog entries fail before e
         [catalogDocument().replace('Purpose of wj-example.', ''), /Invalid skill catalog row/],
         [catalogDocument().replace('<!-- webjet-skills-catalog:end -->', ''), /catalog markers/],
         [catalogDocument() + '<!-- webjet-skills-catalog:start -->', /catalog markers/],
-        [catalogDocument().replace('| --- | --- | --- |', '| --- | --- |'), /catalog table header/]
+        [catalogDocument().replace('| --- | --- | --- |', '| --- | --- |'), /catalog table header/],
+        [catalogDocument().replace('What is it for and when to use it?', ''), /catalog table header/],
+        [catalogDocument().replace('Example of chat entry', '   '), /catalog table header/],
+        [catalogDocument().replace('Example of chat entry', 'Example | Extra column'), /catalog table header/]
     ]) {
         await put(root, catalogPath, document);
         await assert.rejects(exportSkills({ root, output, revision: 'a'.repeat(40) }), error);

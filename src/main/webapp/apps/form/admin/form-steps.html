@@ -206,7 +206,7 @@
         const storageKey = 'webjet.multistepform.clipboard.' + userId + '.' + encodeURIComponent(domain);
         const lifetime = 30 * 60 * 1000;
         const fields = {
-            fieldType: 'string', label: 'string', required: 'boolean', trimValue: 'boolean',
+            fieldType: 'string', label: 'string', hint: 'string', required: 'boolean', trimValue: 'boolean',
             regexValidationArr: 'array', value: 'string', placeholder: 'string', tooltip: 'string',
             customError: 'string', useValueAsEnumeration: 'boolean', valueAsOptions: 'string', valueAsEnumeration: 'string',
             showStat: 'boolean', chartType: 'string', topCount: 'number', showOtherCount: 'boolean',

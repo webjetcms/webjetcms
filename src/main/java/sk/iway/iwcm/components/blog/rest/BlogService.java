@@ -74,7 +74,7 @@ public class BlogService {
 
 		//Plus our groupId logic
 		List<Integer> bloggersGroupIds = getBloggerDataList(user, Tools.getIntValue(params.get("groupId"), -1));
-		predicates.add(root.get("groupId").in(bloggersGroupIds == null ? List.of(-1) : bloggersGroupIds));
+		predicates.add(JpaTools.in(root.get("groupId"), bloggersGroupIds == null ? List.of(-1) : bloggersGroupIds, builder));
 	}
 
     /** Builds the folder tree within the current blogger's or blogger administrator's scope. */

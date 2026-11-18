@@ -518,6 +518,7 @@
             <arg value="-e"/>
             <arg value="-X"/>
             <arg value="gpg:sign-and-deploy-file"/>
+            <arg value="-Daether.connector.basic.parallelPut=false"/>
             <arg value="-Dgpg.keyname=0x36F2327F"/>
             <arg value="-Dgpg.useagent=true"/>
             <arg value="-Dgpg.options=--pinentry-mode loopback"/>
