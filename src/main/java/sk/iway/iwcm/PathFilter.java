@@ -65,6 +65,8 @@ public class PathFilter implements Filter
 	private static String customPath = null;
 	private static Map<String, EditForm> passwordProtected;
 	public static final String REQUEST_START_TIME = "pathFilet.requestStartTime";
+	/** Original named-call URI for a request pinned to a registered MVC handler. */
+	public static final String AI_TOOL_ENTRY_PATH = PathFilter.class.getName() + ".aiToolEntryPath";
 
 	private static String[] bypassPath = null;
 	//pocet sekund cache pre staticky obsah
@@ -447,6 +449,10 @@ public class PathFilter implements Filter
                 {
                     if (df.isValid(path))
                     {
+                        if (req.getAttribute(AI_TOOL_ENTRY_PATH) != null) {
+                            res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                            return;
+                        }
                         if (adminAccessAllowed && privateAccessAllowed)
                         {
 									boolean returnAfterForward = df.forward(path, req, res);
@@ -651,7 +657,7 @@ public class PathFilter implements Filter
 				}
 			}
 
-			if (!checkCSRFToken(path, req)) {
+			if (!checkCSRFToken(path, req) || (req.getAttribute(AI_TOOL_ENTRY_PATH) instanceof String entryPath && !checkCSRFToken(entryPath, req))) {
 				Logger.debug(PathFilter.class, "CSRF token missing - header param X-CSRF-Token");
 				res.setStatus(HttpServletResponse.SC_FORBIDDEN);
 				forwardSafely("/403.jsp", req, res);

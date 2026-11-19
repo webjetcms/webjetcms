@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.webjetcms.ai.AiErrorCategory;
 
@@ -11,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 
 /**
  * DTO for AI assistant response
@@ -19,6 +21,13 @@ import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 @Setter
 public class AssistantResponseDTO {
     private String response;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private AiToolProtocol.Call toolCall;
+    /** Feedback for the next provider attempt after WebJET rejects a tool decision. */
+    @JsonIgnore
+    private String toolCorrection;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean noToolAction;
     private String error;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String errorCategory;
@@ -27,6 +36,8 @@ public class AssistantResponseDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean retryable;
     private String conversationId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String attachmentContextId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String threadId;
     @JsonInclude(JsonInclude.Include.NON_NULL)

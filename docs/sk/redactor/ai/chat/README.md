@@ -18,6 +18,8 @@ V AI Čete môžete postupne spresňovať zadanie, pýtať sa na obsah priložen
 
 Ak má asistent zapnuté postupné načítanie, odpoveď pribúda po častiach. Tlačidlom **Zastaviť** so štvorcovou ikonou prerušíte generovanie. Už prijatý text zostane zobrazený. Samotné zatvorenie dialógu ani prepnutie karty generovanie nezastaví.
 
+Ak v uloženom čete nástroj čaká na zápis, tlačidlo **Zastaviť** ho zruší aj z inej karty prehliadača. Už spustený zápis sa môže dokončiť.
+
 Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy, pod odpoveďou údaj **Použité tokeny**. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
 
 Ak asistent vráti HTML kód, napríklad pri tvorbe PageBuilder stránky, zobrazí sa karta **Návrh obsahu**. Po dokončení odpovede sa automaticky otvorí jej **Náhľad** a starší návrh sa zbalí. Vysvetlenie mimo HTML bloku zostáva viditeľné.
@@ -132,6 +134,6 @@ Zatvorenie okna AI zachová rozpísanú správu a neodoslané prílohy, kým zos
 - **Nie je dostupný žiadny asistent:** správca musí povoliť asistenta s typom požiadavky **Čet**, nakonfigurovať jeho poskytovateľa a pridať `top-search-field` medzi cieľové polia alebo `CHAT_SEARCH` medzi entity. Postup je v [nastavení četového asistenta](../settings/README.md#nastavenie-četového-asistenta).
 - **Tlačidlo na pridanie príloh je neaktívne:** asistent nepodporuje prílohy, čet práve spracúva požiadavku alebo je dostupný iba na čítanie. Na karte AI Čet v rýchlom vyhľadávaní musí byť navyše zapnuté ukladanie rozhovoru.
 - **Prílohu nemožno spracovať:** overte formát, veľkosť a čitateľnosť textu; pri obrázku aj podporu obrazového vstupu modelom.
-- **Odpoveď sa nepodarilo dokončiť:** čet zobrazí dôvod a podľa typu chyby ponúkne opakovanie požiadavky alebo nový čet. Požiadavky sa automaticky neopakujú.
+- **Neplatný krok pri práci s nástrojmi** znamená, že WebJET nedokázal spracovať krok navrhnutý modelom. Model dostane dôvod odmietnutia a môže krok najviac dvakrát opraviť. Ak už nástroj vyhľadal alebo uložil záznam, model pri oprave pracuje s výsledkom jeho volania. Každá oprava cez poskytovateľa spotrebúva tokeny. Ak sa odpoveď nepodarí dokončiť, čet podľa typu chyby ponúkne opakovanie požiadavky alebo nový čet. Pri opakovaní sa nová odpoveď zobrazí pod pôvodnou otázkou na mieste predošlého pokusu.
 
 Podrobnosti ukladania a REST rozhrania sú v [dokumentácii pre programátora](../../../custom-apps/apps/ai/assistants/README.md#ukladané-rozhovory).

@@ -2,17 +2,15 @@ extends ../../partials/layout
 
 block content
 
+    - const includeSkills = true
+    include ../../partials/ai-instructions-field
+
     script.
         window.helpLink = "/redactor/ai/settings/README";
         var aiAssistantsDataTable;
 
-        var fieldsWereSet = false;
-        var hideOnCreate = [];
-        var hideOnEdit = [];
-
-        let url = "/admin/rest/ai/assistant-definition/";
-
         window.domReady.add(function () {
+            const url = "/admin/rest/ai/assistant-definition/";
             let tokenUsageChart = null;
             let lastTokenReset = null;
 
@@ -20,34 +18,22 @@ block content
 
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity')})];
 
-            for(let i = 0; i < columns.length; i++) {
-                var columnClassName = columns[i]?.className;
-                if(columnClassName == undefined || columnClassName == null) {
-                    columnClassName = "";
+            const providerFields = {create: [], edit: []};
+            for (const column of columns) {
+                for (const [action, marker] of [ ["create", "hideOnCreate"], ["edit", "hideOnEdit"] ]) {
+                    if (column.className?.includes(marker)) {
+                        providerFields[action].push(column.data);
+                        column.className = column.className.replace(marker, "");
+                    }
                 }
-
-                if(columnClassName.indexOf("hideOnCreate") != -1) {
-                    hideOnCreate.push(columns[i].data);
-                    columnClassName = columnClassName.replace("hideOnCreate", "");
-                }
-
-                if(columnClassName.indexOf("hideOnEdit") != -1) {
-                    hideOnEdit.push(columns[i].data);
-                    columnClassName = columnClassName.replace("hideOnEdit", "");
-                }
-
-                columns[i].className = columnClassName;
             }
 
-            let order = [];
-            order.push([columns.findIndex(column => column.data === "name"), 'asc']);
-
             aiAssistantsDataTable = WJ.DataTable({
-                url: "/admin/rest/ai/assistant-definition/",
-                columns: columns,
+                url,
+                columns,
                 serverSide: true,
-                tabs: tabs,
-                order: order,
+                tabs,
+                order: [ [columns.findIndex(column => column.data === "name"), "asc"] ],
                 fetchOnCreate: true,
                 fetchOnEdit: true,
                 onXhr: function(TABLE, e, settings, json) {
@@ -95,47 +81,42 @@ block content
                 }
             });
 
-            var eventsBinded = false;
-            aiAssistantsDataTable.EDITOR.on( 'open', function ( e, data, action ) {
-                if (eventsBinded==false) {
-                    $("#DTE_Field_provider").on("change", function() {
-                        changeFieldsVisibility($(this).val(), action);
+            const editor = aiAssistantsDataTable.EDITOR;
+            editor.on("open", initAiInstructionsField);
+            const editorFields = editor.fields();
+            editor.one("open", function() {
+                $("#DTE_Field_provider").on("change", function() {
+                    const provider = $(this).val();
+                    changeFieldsVisibility(provider, editor.mode());
+                    if (editor.currentJson.provider != provider) {
+                        $("#DTE_Field_model").val("").trigger("change");
+                    }
+                });
 
-                        let oldValue = aiAssistantsDataTable.EDITOR.currentJson["provider"];
-                        let newValue = $("#DTE_Field_provider").val();
-                        if((oldValue == null && newValue != null) || (oldValue != null && newValue == null) || (oldValue != newValue)) {
-                            //Provider was changed and oldValue != newValue ... so remove value from model
-                            $("#DTE_Field_model").val("").trigger("change");
-                        }
-                    });
+                $("#DTE_Field_description, #DTE_Field_model").on("blur change", function() {
+                    getTranslatedKey($("#DTE_Field_description").val(), "editorFields-translatedDescription");
+                });
 
-                    $("#DTE_Field_description, #DTE_Field_model").on("blur change", function() {
-                        getTranslatedKey($("#DTE_Field_description").val(), "editorFields-translatedDescription");
-                    });
+                $("#DTE_Field_userPromptLabel").on("blur", function() {
+                    getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "editorFields-translatedUserPromptLabel");
+                });
 
-                    $("#DTE_Field_userPromptLabel").on("blur", function() {
-                        getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "editorFields-translatedUserPromptLabel");
-                    });
-
-                    $("#DTE_Field_useTokenLimits_0").on("change", updateTokenLimitsVisibility);
-
-                    eventsBinded = true;
-                }
+                $("#DTE_Field_useTokenLimits_0").on("change", updateTokenLimitsVisibility);
+            });
+            editor.on("open", function(e, data, action) {
                 clearTokenUsageChart();
-                if (action === "edit" && aiAssistantsDataTable.EDITOR.ids().length === 1) {
-                    $("#tokenUsageTemplate").contents().clone().insertAfter(aiAssistantsDataTable.EDITOR.field("notifEmail").node());
+                if (action === "edit" && editor.ids().length === 1) {
+                    $("#tokenUsageTemplate").contents().clone().insertAfter(editor.field("notifEmail").node());
                 }
                 updateTokenLimitsVisibility();
-                initInstructionsEnhancements();
             });
 
-            aiAssistantsDataTable.EDITOR.on("opened", loadTokenUsageChart);
-            aiAssistantsDataTable.EDITOR.on("close", clearTokenUsageChart);
+            editor.on("opened", loadTokenUsageChart);
+            editor.on("close", clearTokenUsageChart);
             $(document).on("shown.bs.tab", "#pills-dt-datatableInit-tokenLimits-tab", loadTokenUsageChart);
 
             function updateTokenLimitsVisibility() {
                 var enabled = $("#DTE_Field_useTokenLimits_0").is(":checked");
-                var editor = aiAssistantsDataTable.EDITOR;
                 if (enabled) {
                     editor.field("usedTokens").show();
                     editor.field("tokenLimit").show();
@@ -206,59 +187,14 @@ block content
                 }
             }
 
-            function initInstructionsEnhancements() {
-                var textarea = document.getElementById("DTE_Field_instructions");
-                var lines = WJ.initTextareaLineNumbers(textarea);
-                if (!textarea || $(textarea).data("instructions-enhanced")) return;
-
-                // Preserve the instructions editor's existing keyboard and wrapping shortcuts.
-                $(textarea).on("keydown", function(event) {
-                    if (event.key !== "Tab") return;
-                    event.preventDefault();
-                    var start = this.selectionStart;
-                    var end = this.selectionEnd;
-                    this.value = this.value.substring(0, start) + "\t" + this.value.substring(end);
-                    this.selectionStart = this.selectionEnd = start + 1;
-                    lines.refresh();
-                });
-                $(textarea).on("dblclick", function() {
-                    $(this.parentElement).toggleClass("instructions-editor-wrapped");
-                });
-                $(textarea).data("instructions-enhanced", true);
-            }
-
             function changeFieldsVisibility(provider, action) {
-                $.ajax({
-                    type: "GET",
-                    url: url + "provider-fields",
-                    data: {
-                        "provider": provider,
-                        "action": action
-                    },
-                    success: function(res)
-                    {
-                        var toShow = Object.values(res);
-
-                        if("create" == action) {
-                            hideOnCreate.forEach(function(fieldName) {
-                                if(toShow.includes(fieldName)) {
-                                    aiAssistantsDataTable.EDITOR.field(fieldName).show();
-                                } else {
-                                    aiAssistantsDataTable.EDITOR.field(fieldName).hide();
-                                }
-                            });
-                        } else if("edit" == action) {
-                            hideOnEdit.forEach(function(fieldName) {
-                                if(toShow.includes(fieldName)) {
-                                    aiAssistantsDataTable.EDITOR.field(fieldName).show();
-                                } else {
-                                    aiAssistantsDataTable.EDITOR.field(fieldName).hide();
-                                }
-                            });
-                        }
-                    },
-                    error: function(xhr, ajaxOptions, thrownError) {
-
+                const fields = providerFields[action];
+                if (!fields) return;
+                $.getJSON(url + "provider-fields", {provider, action}, visible => {
+                    for (const name of fields) {
+                        if (!editorFields.includes(name)) continue;
+                        if (visible.includes(name)) editor.field(name).show();
+                        else editor.field(name).hide();
                     }
                 });
             }
@@ -283,11 +219,6 @@ block content
 
     style.
         .pg-ai-token-usage div.amcharts { isolation: isolate; }
-
-        div.DTE_Field_Name_instructions label { display: none; }
-        div.DTE_Field_Name_instructions .md-textarea-editor { height: 502px; }
-        .DTE .DTE_Field .instructions-editor-wrapped > textarea { white-space: break-spaces; overflow-wrap: normal; }
-        .instructions-editor-wrapped > .md-textarea-editor__lines { display: none; }
 
         label[for='DTE_Field_editorFields-translatedDescription'] { visibility: hidden; }
         div.DTE_Field_Name_editorFields\.translatedDescription div.form-group-tooltip { display: none; }

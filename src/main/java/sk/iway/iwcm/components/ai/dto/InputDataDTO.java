@@ -25,6 +25,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.components.ai.rest.AiChatAttachments;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 import sk.iway.iwcm.i18n.Prop;
 
 import org.apache.http.entity.ContentType;
@@ -59,6 +60,7 @@ public class InputDataDTO {
 
     /** Session-owned continuation returned by the last successful chat turn. */
     String conversationId;
+    private String attachmentContextId;
 
     /** Validated multipart attachments, retained only for this assistant request. */
     @JsonIgnore
@@ -71,6 +73,23 @@ public class InputDataDTO {
     /** Provider continuation resolved on the server, never accepted from JSON. */
     @JsonIgnore
     String previousResponseId;
+
+    private List<AiToolProtocol.Result> toolResults = List.of();
+
+    /** Set by authenticated admin entry points before dispatching to the provider worker. */
+    @JsonIgnore
+    private AiToolProtocol toolProtocol;
+
+    /** Structured server feedback containing the rejected decision and its validation error; sent as untrusted input. */
+    @JsonIgnore
+    private String toolCorrection;
+
+    /** Replays all current-turn observations when resuming a transcript written before tool continuation tracking. */
+    @JsonIgnore
+    private boolean replayToolResults;
+
+    @JsonIgnore
+    private boolean interactiveAssistant;
 
     /** Server-owned cancellation signal shared by provider calls belonging to this task. */
     @JsonIgnore
@@ -107,6 +126,11 @@ public class InputDataDTO {
      */
     @JsonIgnore
     boolean structuredInput = false;
+
+    /** Retries from the last accepted continuation with the original task, attachments and endpoint evidence. */
+    public void prepareToolCorrection(String feedback) {
+        toolCorrection = feedback;
+    }
 
     public void removeHtml() {
         if(Tools.isEmpty(inputValue)) return;

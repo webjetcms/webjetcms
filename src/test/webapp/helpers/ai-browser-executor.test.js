@@ -9,13 +9,30 @@ const source = ['ai-execution-result.js', 'ai-browser-executor.js'].map(file =>
     fs.readFileSync(path.join(directory, file), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')
 ).join('\n');
 
-function executor(api, ui) {
+function executor(api, ui, apiName = 'Rewriter') {
     const Executor = vm.runInNewContext(source + '\nAiBrowserExecutor', {
-        self: { Rewriter: api }, navigator: { userActivation: { isActive: true } },
+        self: { [apiName]: api }, navigator: { userActivation: { isActive: true } }, AbortController,
         WJ: { translate: (key, ...params) => [key, ...params].join(':') }
     });
     return new Executor(null, ui);
 }
+
+test('browser sessions are reused only while the configured instructions match', async t => {
+    const destroy = t.mock.fn();
+    const model = { prompt: async message => message, destroy };
+    const create = t.mock.fn(async () => model);
+    const instance = executor({ availability: async () => 'available', create }, null, 'LanguageModel');
+    const output = [];
+    for (const content of ['Speak Slovak', 'Speak Slovak', 'Speak English']) {
+        const instructions = 'LanguageModel: ' + JSON.stringify({ initialPrompts: [{ role: 'system', content }] });
+        const reply = await instance.execute({ instructions }, { inputValue: 'Hello' }, true, text => output.push(text));
+        assert.equal(reply.success, true);
+    }
+    assert.deepEqual(create.mock.calls.map(call => call.arguments[0].initialPrompts[0].content),
+        ['Speak Slovak', 'Speak English']);
+    assert.equal(destroy.mock.callCount(), 1);
+    assert.deepEqual(output, ['Hello', 'Hello', 'Hello']);
+});
 
 test('an unavailable model reports its status without attempting to create a session', async () => {
     let creates = 0;

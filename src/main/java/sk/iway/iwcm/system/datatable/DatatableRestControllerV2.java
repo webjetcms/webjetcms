@@ -148,12 +148,15 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @param entityClass
 	 */
 	protected DatatableRestControllerV2(JpaRepository<T, Long> repo, Class<T> entityClass) {
+		this(repo, entityClass, false);
+	}
+
+	/** Allows a domain-owned table to retain its scope even in a single-domain installation. */
+	protected DatatableRestControllerV2(JpaRepository<T, Long> repo, Class<T> entityClass, boolean alwaysScopeByDomain) {
 		this.repo = repo;
 
-		//over, ci maju byt pouzite automaticke podmienky so stlpcom domain_id
-		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
-			if (repo instanceof DomainIdRepository) checkDomainId = true;
-		}
+		checkDomainId = repo instanceof DomainIdRepository
+				&& (alwaysScopeByDomain || InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir"));
 
 		this.entityClass = entityClass;
 	}
@@ -240,8 +243,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		Object value = bw.getPropertyValue(propertyName);
 		Expression exp = builder.get(propertyName).equal(value);
 
-		//pridaj domainId podmienku ak entita obsahuje domainId stlpec (aby sa neaktualizovali entity v inej domene)
-		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
+		// A controller can require domain-scoped import matches even when installation-wide scoping is off.
+		if (checkDomainId || InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")) {
 			if (bw.getPropertyType("domainId")!=null) {
 				exp = exp.and(builder.get("domainId").equal(getDomainId()));
 			}

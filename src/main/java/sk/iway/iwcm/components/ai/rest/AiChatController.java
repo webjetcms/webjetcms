@@ -125,7 +125,12 @@ public class AiChatController {
         } catch (IOException exception) {
             // prepare() has already reserved a turn, but execute() has not yet taken responsibility for finishing it.
             if (!prepared.turn().duplicate()) store.finish(prepared.scope(), prepared.turn().thread().getId(), prepared.turn().message().getId(),
-                "", "stopped", 0, "CANCELLED", null);
+                "", "stopped", prepared.turn().message().getTotalTokens(), "CANCELLED", null);
+            try {
+                writer.close();
+            } catch (IOException closeException) {
+                exception.addSuppressed(closeException);
+            }
             throw exception;
         }
         try {

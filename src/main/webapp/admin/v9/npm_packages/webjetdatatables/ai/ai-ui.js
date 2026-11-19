@@ -188,19 +188,12 @@ export class AiUserInterface {
             let aiCol = column.ai[i];
             //console.log("aiCol=", aiCol);
 
-            //check value in input, if empty remove if there is no userPromptEnabled
-            let hasInput = false;
-            if (aiCol.action === "live_chat" || (true === aiCol.userPromptEnabled && "edit_image" !== aiCol.action)) hasInput = true;
-            else {
-                let inputFieldName = aiCol.from;
-                if (inputFieldName == null || inputFieldName === "") inputFieldName = aiCol.to;
-                let inputValue = this.EDITOR.get(inputFieldName);
-                if (inputValue != null && inputValue !== "") hasInput = true;
-                else {
-                    //console.log("inputFieldName=", inputFieldName, "inputValue=", inputValue, "asistent=", aiCol.description, "aiCol=", aiCol);
-                }
+            const acceptsEmptyInput = aiCol.hasInstructionContext || aiCol.action === "live_chat" ||
+                (aiCol.userPromptEnabled === true && aiCol.action !== "edit_image");
+            if (!acceptsEmptyInput) {
+                const value = this.EDITOR.get(aiCol.from || aiCol.to);
+                if (value == null || value === "") continue;
             }
-            if (hasInput === false) continue;
 
             currentGroup = aiCol.groupName;
             if (currentGroup !== null && currentGroup !== "" && currentGroup !== lastGroup) {
@@ -404,11 +397,12 @@ export class AiUserInterface {
         this.setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
     }
 
-    setExplanatoryText(text) {
+    setExplanatoryText(text, plainText = false) {
         if (!this.isActive() || this.currentChat != null) return;
         if (typeof text != "undefined" && text != null) {
             let explanatoryTextContainer = $("#toast-container-ai").find(".explanatory-text-container");
-            explanatoryTextContainer.html(WJ.parseMarkdown(text));
+            if (plainText) explanatoryTextContainer.text(text);
+            else explanatoryTextContainer.html(WJ.parseMarkdown(text));
             explanatoryTextContainer.show();
         } else {
             this.hideExplanatoryText();

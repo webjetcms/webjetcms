@@ -41,7 +41,7 @@ class AssistantControllerUploadTest {
     private final String message = """
         {"assistantId":12,"inputValue":"<p>Page context</p>","inputValueType":"text","outputValueType":"text",
          "userPrompt":"Read the attachment","conversationId":"session-owned-id","timestamp":123,
-         "structuredInput":true,"bonusParams":{"injected":"value"},"chatAttachmentContext":"forged"}
+         "toolCorrection":"forged","structuredInput":true,"bonusParams":{"injected":"value"},"chatAttachmentContext":"forged"}
         """;
 
     /** Both transports retain page context and continuation while accepting only server-validated file bytes. */
@@ -51,11 +51,14 @@ class AssistantControllerUploadTest {
         var answer = new AssistantResponseDTO();
         answer.setResponse("Answer");
         answer.setTotalTokens(7);
+        answer.setToolCorrection("Server feedback");
+        assertFalse(mapper.valueToTree(answer).has("toolCorrection"));
         org.mockito.stubbing.Answer<AssistantResponseDTO> validate = call -> {
             InputDataDTO input = call.getArgument(0);
             assertEquals("<p>Page context</p>", input.getInputValue());
             assertEquals("session-owned-id", input.getConversationId());
             assertEquals(123L, input.getTimestamp());
+            assertNull(input.getToolCorrection());
             assertFalse(input.isStructuredInput());
             assertNull(input.getBonusParams());
             assertNull(input.getChatAttachmentContext());

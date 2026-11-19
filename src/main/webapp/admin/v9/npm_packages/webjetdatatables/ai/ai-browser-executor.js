@@ -5,9 +5,8 @@ import {AiExecutionResult} from './ai-execution-result';
  */
 export class AiBrowserExecutor {
 
-    //TODO: cache API created with _apiInitialize
-    localApiCache = {};
     lastApiInstance = null;
+    lastConfigKey = null;
     languageDetector = null;
     isDestroyed = false;
 
@@ -59,14 +58,18 @@ export class AiBrowserExecutor {
                 executionResult.statusKey = "components.ai_assistants.browser.unknownApi.js";
                 executionResult.statusKeyParams = ["NULL"];
             } else {
-                let config = this._getConfig(instructions);
+                const config = this._getConfig(instructions);
+                const configKey = JSON.stringify([apiName, config]);
                 let apiInstance = null;
 
-                if (reuseApiInstance === true && this.lastApiInstance != null) {
+                if (reuseApiInstance && this.lastApiInstance && this.lastConfigKey === configKey) {
                     apiInstance = this.lastApiInstance;
                 } else {
+                    this.lastApiInstance?.destroy();
+                    this.lastApiInstance = null;
                     apiInstance = await this._apiInitialize(apiName, config, inputData);
                     this.lastApiInstance = apiInstance; //store last instance for destroy
+                    this.lastConfigKey = configKey;
                 }
 
                 //console.log("Initialized API instance:", apiInstance, "apiName=", apiName, "config=", config);
@@ -269,7 +272,7 @@ export class AiBrowserExecutor {
                 }
             }
 
-            if (navigator.userActivation.isActive || skipIsActive === true) {
+            if (availability === "available" || navigator.userActivation.isActive || skipIsActive === true) {
                 apiInstance = await self[apiName].create(config);
                 if (this.isDestroyed) {
                     apiInstance.destroy();

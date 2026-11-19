@@ -407,10 +407,17 @@ public class ContactRestController extends DatatableRestControllerV2<ContactEnti
 ### Critical Rules for REST Controllers
 
 - **Always use `@Datatable` annotation** - ensures correct error response handling.
+- **Declare frontend paging with `@Datatable(clientSidePaging = true)`** when the controller returns the complete matching list and ignores `page` and `size`, typically paired with frontend `serverSide: false`. The default is `false` for server-side paging. Verify that the target CMS version supports this attribute before using it.
 - **Always use `@PreAuthorize`** - controls access permissions.
 - **URL pattern**: `/admin/rest/apps/{appname}/` for custom apps, `/admin/rest/components/{name}` for components, `/admin/rest/settings/{name}` for settings.
 - **Constructor** must call `super(repository)` or `super(repository, EntityClass.class)`. Passing the entity class enables `fetchOnCreate` (default values for new records from server).
 - **Never override REST endpoint methods** with `@Override` - always override the `xxxItem` methods instead.
+
+### Paging Metadata for AI Tools
+
+On controllers exposed through `@AiTool`, `@Datatable(clientSidePaging = true)` makes handlers accepting `Pageable` omit `page` and `size` from tool schemas and examples, reject those arguments (including through filter maps), and skip the default `size=20`. The tool description automatically explains that paging happens in the frontend and the full matching list is returned. Keep controller-specific descriptions focused on the operation; do not repeat this paging warning. The `sort` argument remains available.
+
+This annotation describes the controller's existing behavior. It does not change REST paging or set the frontend's `serverSide` option. Leave the default `false` for controllers supporting server paging; their `/all` tools retain the default size of 20. Handlers without `Pageable` are unaffected.
 
 ### Override Methods (Life Cycle Hooks)
 
@@ -829,7 +836,7 @@ jUnit tests are in `src/test/java`. When testing JPA entities:
 1. [ ] Create JPA entity with `@DataTableColumn` annotations (use `Long` not `long`)
 2. [ ] Create Spring DATA repository extending `JpaRepository` + `JpaSpecificationExecutor`
 3. [ ] Create REST controller extending `DatatableRestControllerV2` with `@Datatable`, `@PreAuthorize`, `@RequestMapping`
-4. [ ] Create frontend HTML in `apps/{name}/admin/index.html`
+4. [ ] Create frontend HTML in `apps/{name}/admin/index.html` and verify that its paging mode matches the controller; use `@Datatable(clientSidePaging = true)` when lists do not support `page` and `size`.
 5. [ ] Create `modinfo.properties` in `apps/{name}/`
 6. [ ] Add translation keys to the project's existing language bundles.
 7. [ ] Add a test using the project's available infrastructure. For CodeceptJS, use the installed `wj-codeceptjs` skill; if it or the project's helpers are missing, report the missing prerequisite rather than creating a non-runnable test.

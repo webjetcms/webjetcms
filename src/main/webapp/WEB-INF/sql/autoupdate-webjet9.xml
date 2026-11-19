@@ -4544,5 +4544,59 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>13.11.2026</string></void>
+                <void property="desc"><string>ai - shared assistant skills</string></void>
+                <void property="mysql"><string>
+                    CREATE TABLE ai_skills (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        instructions MEDIUMTEXT NOT NULL,
+                        domain_id INT DEFAULT 1 NOT NULL
+                    ) ENGINE=InnoDB;
+                    CREATE INDEX ix_ai_skills_domain ON ai_skills (domain_id, name);
+                </string></void>
+                <void property="mssql"><string>
+                    CREATE TABLE ai_skills (
+                        id INT IDENTITY(1,1) PRIMARY KEY,
+                        name NVARCHAR(255) NOT NULL,
+                        instructions NVARCHAR(MAX) NOT NULL,
+                        domain_id INT DEFAULT 1 NOT NULL
+                    );
+                    CREATE INDEX ix_ai_skills_domain ON ai_skills (domain_id, name);
+                </string></void>
+                <void property="oracle"><string>
+                    CREATE TABLE ai_skills (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        name NVARCHAR2(255) NOT NULL,
+                        instructions CLOB NOT NULL,
+                        domain_id INTEGER DEFAULT 1 NOT NULL
+                    );
+                    CREATE INDEX ix_ai_skills_domain ON ai_skills (domain_id, name);
+                    CREATE SEQUENCE S_ai_skills START WITH 1;
+                    CREATE TRIGGER T_ai_skills BEFORE INSERT ON ai_skills
+                        FOR EACH ROW
+                        BEGIN
+                            IF :new.id IS NULL THEN
+                                SELECT S_ai_skills.nextval INTO :new.id FROM dual|
+                            END IF|
+                        END|
+                    ;
+                </string></void>
+                <void property="pgsql"><string>
+                    CREATE SEQUENCE S_ai_skills START WITH 1;
+                    CREATE TABLE ai_skills (
+                        id INT DEFAULT NEXTVAL('S_ai_skills') PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        instructions TEXT NOT NULL,
+                        domain_id INT DEFAULT 1 NOT NULL
+                    );
+                    CREATE INDEX ix_ai_skills_domain ON ai_skills (domain_id, name);
+                </string></void>
+            </object>
+        </void>
+
     </object>
 </java>

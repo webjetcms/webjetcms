@@ -218,6 +218,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
+- AI asistenti - na karte [Inštrukcie](redactor/ai/settings/README.md#karta---inštrukcie) môžete vyhľadať a vložiť odkaz na zručnosť, nástroj alebo celú skupinu nástrojov. Pri spustení asistent načíta aktuálne zručnosti a nástroje dostupné používateľovi (#401).
+- AI asistenti - v [audite](sysadmin/audit/README.md) môžete podľa názvu nástroja vyhľadať jeho volania aj zmeny, ktoré vykonal. Pri každom volaní vidíte asistenta, cieľovú REST operáciu a stavový kód HTTP (#401).
+- AI asistenti - [nástroje webových stránok a priečinkov](developer/datatables/restcontroller.md#ai_tools) umožňujú čítať, vytvárať, upravovať a mazať záznamy cez existujúce REST operácie s oprávneniami prihláseného používateľa.
+- AI asistenti - nová karta [Limity tokenov](redactor/ai/settings/README.md#karta---limity-tokenov) umožňuje obmedziť spotrebu asistenta a zobraziť jej vývoj za posledných 14 dní. Na zadaný notifikačný e-mail sa odošlú upozornenia pri dosiahnutí 75 % a 100 % limitu. Po dosiahnutí limitu sa ďalšie požiadavky zablokujú. Spotrebu možno vynulovať ručne pre vybraných asistentov alebo aktuálnu doménu, prípadne pravidelne pre všetky domény úlohou `AiTokenUsageReset`, ktorá sa predvolene spúšťa každý deň o polnoci (#58814).
 - AI asistenti - nová karta [Limity tokenov](redactor/ai/settings/README.md#karta---limity-tokenov) umožňuje obmedziť spotrebu asistenta a zobraziť jej vývoj za posledných 14 dní. Na zadaný notifikačný e-mail sa odošlú upozornenia pri dosiahnutí 75 % a 100 % limitu. Po dosiahnutí limitu sa ďalšie požiadavky zablokujú. Spotrebu možno vynulovať ručne pre vybraných asistentov alebo aktuálnu doménu, prípadne pravidelne pre všetky domény úlohou `AiTokenUsageReset`, ktorá sa predvolene spúšťa každý deň o polnoci (#400).
 - AI asistenti - opravené spracovanie priebežných textových odpovedí vrátane Gemini. Počet tokenov a chybové správy sa správne spracujú aj pri rozdelení alebo spojení sieťových blokov; technické údaje sa nevkladajú do generovaného textu. Prerušená odpoveď sa už neoznačí ako úspešne dokončená.
 - Číselníky - výber a správa typov sa presunuli do stromu v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Číselníkov](redactor/apps/enumeration/README.md) (#58786).
@@ -419,6 +423,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
 
 ### Pre programátora
+
+- Datatabuľky - anotácia `@AiTool` sprístupňuje vybrané REST operácie v [katalógu AI_TOOLS](developer/datatables/restcontroller.md#ai_tools). Klient môže vypísať anglické popisy a vstupné schémy a zavolať operáciu s oprávneniami prihláseného používateľa. Nastavenie `@Datatable(clientSidePaging = true)` označuje stránkovanie v prehliadači: AI nástroje vynechajú a odmietnu parametre `page` a `size` a automaticky vysvetlia, že vracajú celý zodpovedajúci zoznam.
 
 #### Prelomové zmeny
 

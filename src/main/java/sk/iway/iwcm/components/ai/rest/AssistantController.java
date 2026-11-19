@@ -36,6 +36,7 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.system.datatable.json.DataTableAi;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 
@@ -70,6 +71,7 @@ public class AssistantController {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
+            inputData.setInteractiveAssistant(true);
             responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
         } catch (Exception e) {
             responseDto = errorResponse(e, "AI response error: ");
@@ -135,6 +137,7 @@ public class AssistantController {
             // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
             inputData.setBonusParams(null);
 
+            inputData.setInteractiveAssistant(true);
             responseDto = aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request);
         } catch(Exception e) {
             responseDto = errorResponse(e, "AI streamed response error: ");
@@ -261,6 +264,13 @@ public class AssistantController {
     @GetMapping("/chat-assistants/")
     public List<DataTableAi> getChatAssistants(HttpServletRequest request) {
         return aiService.getChatAssistants(assistantRepo, sk.iway.iwcm.i18n.Prop.getInstance(request));
+    }
+
+    /** Returns current tool permissions and browser instructions immediately before an assistant runs. */
+    @GetMapping("/runtime/")
+    public AiToolService.RuntimeMetadata runtime(@RequestParam long assistantId, HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return aiService.runtimeMetadata(assistantId, request);
     }
 
     @GetMapping(value = "/stop-assistant/")

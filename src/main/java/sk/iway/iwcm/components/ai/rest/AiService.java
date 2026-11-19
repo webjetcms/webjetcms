@@ -16,6 +16,8 @@ import java.util.concurrent.Callable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -33,9 +35,12 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.json.DataTableAi;
@@ -51,6 +56,8 @@ public class AiService {
     private final List<AiInterface> aiInterfaces;
     private final AiTaskRegistry aiTaskRegistry;
     private final WebjetAiConfigurationService configurationService;
+    @Autowired
+    private AiToolService tools;
 
     private static final String CACHE_OPTION_KEYS = "AiService.ProviderOptions.";
     private static final int CACHE_MODELS_TIME = 24 * 60;
@@ -172,11 +179,14 @@ public class AiService {
         Prop prop = Prop.getInstance(request);
         inputData.prepareData(request);
 
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
-
-        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
+        AssistantDefinitionEntity stored = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
+        if(doesSupportAction(stored, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
+        var runtime = inputData.isInteractiveAssistant()
+            ? tools.resolve(stored, CloudToolsForCore.getDomainId(), request)
+            : tools.resolveForBackend(stored, CloudToolsForCore.getDomainId(), request);
+        AssistantDefinitionEntity assistant = runtime.assistant();
         checkTokenLimit(assistant.getId(), assistantRepo, prop);
         validateChatAttachments(assistant, inputData, prop);
 
@@ -186,6 +196,12 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
+                if (inputData.isInteractiveAssistant()) {
+                    inputData.setToolProtocol(AiToolProtocol.prepare(runtime, inputData.getToolResults()));
+                    if (inputData.getToolProtocol() != null && !(aiInterface instanceof LibrarySupportLogic)) {
+                        throw new IllegalArgumentException("This provider adapter cannot run assistant tools.");
+                    }
+                }
                 if (writer != null && aiInterface.isStreamingEnabled(assistant) == false) {
                     throw new IllegalStateException(getNotSupportedAction(prop));
                 }
@@ -194,7 +210,6 @@ public class AiService {
                     if (writer == null) return aiInterface.getAiResponse(assistant, inputData, prop, statRepo, request);
                     return aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request);
                 };
-                // Run task
                 return aiTaskRegistry.runAssistantTask(task, inputData, request);
             }
         }
@@ -414,6 +429,10 @@ public class AiService {
             .toList();
     }
 
+    public AiToolService.RuntimeMetadata runtimeMetadata(long assistantId, HttpServletRequest request) {
+        return tools.runtimeMetadata(assistantId, request);
+    }
+
     private static DataTableAi toClientAssistant(AssistantDefinitionEntity assistant, Prop prop, AiService aiService) {
         DataTableAi ai = new DataTableAi();
         ai.setAssistantId(assistant.getId());
@@ -427,6 +446,11 @@ public class AiService {
 
         ai.setUseStreaming(aiService == null ? Tools.isTrue(assistant.getUseStreaming()) : aiService.isStreamingEnabled(assistant));
         ai.setPersistentChat(aiService != null && aiService.isPersistentChatEnabled(assistant));
+        if ("generate_text".equals(assistant.getAction()) && !Tools.isTrue(assistant.getUserPromptEnabled())
+                && aiService != null && aiService.tools != null
+                && RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes context) {
+            ai.setHasInstructionContext(aiService.tools.hasInstructionContext(assistant, context.getRequest()));
+        }
         ai.setAction(assistant.getAction());
         ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + assistant.getGroupName()));
         ai.setUserPromptEnabled(Tools.isTrue(assistant.getUserPromptEnabled()));
@@ -434,8 +458,8 @@ public class AiService {
         ai.setIcon(assistant.getIcon());
         if (Tools.isEmpty(ai.getIcon())) ai.setIcon("clipboard-text");
 
-        if ("browser".equals(ai.getProvider())) {
-            // Browser execution needs the configured instructions locally.
+        // Text and chat fetch the effective browser instructions immediately before execution.
+        if ("browser".equals(ai.getProvider()) && !"generate_text".equals(ai.getAction()) && !"live_chat".equals(ai.getAction())) {
             ai.setInstructions(assistant.getInstructions());
         }
         return ai;

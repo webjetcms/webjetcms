@@ -22,6 +22,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.tools.AiTool;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -44,6 +45,7 @@ import sk.iway.iwcm.users.UserGroupsDB;
 @RestController
 @RequestMapping(value = "/admin/rest/web-pages")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
+@AiTool(description = "components.ai.tools.webpages.context", exclude = {"getSum", "rowReorder"})
 public class WebpagesRestController extends WebpagesDatatable {
 
     private final DeleteMirrorsService deleteMirrorsService;

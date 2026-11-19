@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import { AiChatTransport } from './ai-chat-transport';
+import { formatWriteOutcome } from './ai-tool-transport';
 import { splitChatResponse } from './ai-response-parser';
 import { HtmlPreview } from './html-preview';
 import { chatRequestId, chatAttachmentUrl, fetchChatAttachment, historyText } from './chat-history-api';
@@ -134,13 +135,18 @@ export class AiChat {
 
         // Saved attempts use server IDs and retry metadata; local request snapshots are no longer needed.
         const questions = new Map(detail.messages.filter(message => message.role === 'user').map(message => [message.id, message.text]));
-        state.messages = detail.messages.map(message => {
+        // Only the latest reply can be retried, so attempts for a turn are consecutive.
+        state.messages = detail.messages.filter((message, index, messages) => message.role !== 'assistant'
+            || !message.turnId || message.turnId !== messages[index + 1]?.turnId).map(message => {
             let error = null;
             if (message.status === 'error') {
                 if (message.errorCategory === 'TOKEN_LIMIT_REACHED') error = WJ.translate('components.ai_assistants.token_limit.reached.js');
+                else if (message.errorCategory === 'TOOL_LIMIT_REACHED') error = WJ.translate('components.ai.tools.limit.js');
+                else if (message.errorCategory === 'INVALID_TOOL_STEP') error = WJ.translate('components.ai.tools.invalidStep.js');
                 else error = historyText(message.errorCategory === 'ATTACHMENT_INVALID' ? 'attachmentUnreadable' : 'generationFailed');
             }
             return { ...message, confirmed: true,
+                toolWriteStatus: message.writeOutcomes?.map(formatWriteOutcome).join('\n'),
                 userPrompt: questions.get(message.turnId),
                 error,
                 retryable: message.retryable ?? (message.errorCategory === 'ATTACHMENT_INVALID' ? false : null)
@@ -303,11 +309,11 @@ export class AiChat {
             state.threadId ||= inputData.requestId;
         }
 
-        // Keep saved attempts visible; reuse the local answer placeholder only while delivery is unconfirmed.
+        // A retry has its own delivery ID but occupies the same reply in the conversation.
         let message = retryMessage;
         if (message && this.options.persistent && message.confirmed) {
-            message = { role: 'assistant', userPrompt: prompt };
-            state.messages.push(message);
+            message = { role: 'assistant', turnId: retryMessage.turnId, userPrompt: prompt };
+            state.messages[state.messages.length - 1] = message;
         }
         if (message == null) {
             state.messages.push({ role: "user", text: prompt, created: Date.now(), attachments: [...state.attachments] });
@@ -316,7 +322,9 @@ export class AiChat {
         }
         Object.assign(message, {
             text: "", status: "pending", created: Date.now(), totalTokens: null, error: null,
-            errorCategory: null, providerStatusCode: null, retryable: null, inputData: { ...inputData }
+            errorCategory: null, providerStatusCode: null, retryable: null, toolWriteStatus: null, toolMayHaveSaved: false,
+            toolCalls: [], activeTool: null,
+            inputData: { ...inputData }
         });
         if (retryMessage == null) {
             state.draft = "";
@@ -344,6 +352,18 @@ export class AiChat {
                     state.notice = text;
                     this._changed();
                 },
+                onWrite: (status, mayHaveSaved) => {
+                    if (!current()) return;
+                    message.toolWriteStatus = status;
+                    message.toolMayHaveSaved = mayHaveSaved;
+                    if (this.options.persistent) this.refresh();
+                },
+                onToolActivity: (name, dispatched = true) => {
+                    if (!current()) return;
+                    if (name === null && dispatched) message.toolCalls = [...message.toolCalls, message.activeTool];
+                    message.activeTool = name;
+                    this.refresh();
+                },
                 onMetadata: metadata => {
                     if (!current()) return;
                     state.threadId = metadata.threadId;
@@ -365,16 +385,18 @@ export class AiChat {
             state.notice = null;
             message.errorCategory = result.errorCategory;
             message.providerStatusCode = result.providerStatusCode;
-            message.retryable = result.retryable;
+            message.retryable = message.toolMayHaveSaved ? false : result.retryable;
             if (result.stopped) message.status = "stopped";
             else if (result.success) {
                 message.text = result.response ?? message.text;
                 message.status = "complete";
+                message.noToolAction = result.noToolAction;
                 message.totalTokens = result.totalTokens;
                 if (Array.isArray(result.attachments)) message.attachments = result.attachments;
                 state.conversationId = result.conversationId || null;
             } else {
                 message.status = "error";
+                if (message.toolWriteStatus && !this.options.persistent) message.text = result.response || message.toolWriteStatus;
                 message.error = result.errorText || this._text("unavailable");
                 state.needsNewChat = !this.options.persistent && result.errorCategory === "INVALID_CONTINUATION";
             }
@@ -401,6 +423,10 @@ export class AiChat {
         if (request == null) return;
         this.state.pending = null;
         request.message.status = "stopped";
+        if (request.message.toolWriteStatus) {
+            if (!this.options.persistent) request.message.text = request.message.toolWriteStatus;
+            if (request.message.toolMayHaveSaved) request.message.retryable = false;
+        }
         this.state.notice = null;
         this.state.confirmation?.resolve(false);
         request.transport?.cancel();
@@ -793,12 +819,15 @@ export class AiChat {
         const $usage = $('<div class="ai-chat-usage"></div>').hide();
         const $actions = $('<div class="ai-chat-message-actions"></div>').hide();
         const $footer = $('<div class="ai-chat-message-footer"></div>').append($actions, $usage).hide();
-        if (message.role === "assistant") {
-            $article.append($('<span class="ai-chat-avatar" aria-hidden="true"><i class="ti ti-sparkles"></i></span>'));
-        }
+        const view = { $article, $label, $time, $text, $attachments, $status, $usage, $actions, $footer, text: null, parts: [], actionKey: null, actions: [] };
         $heading.append($label, $time);
-        $article.append($heading, $attachments, $text, $status, $footer);
-        return { $article, $label, $time, $text, $attachments, $status, $usage, $actions, $footer, text: null, parts: [], actionKey: null, actions: [] };
+        $article.append($heading);
+        if (message.role === "assistant") {
+            $article.prepend('<span class="ai-chat-avatar" aria-hidden="true"><i class="ti ti-sparkles"></i></span>');
+            view.$toolActivity = $('<details class="ai-chat-tool-activity"><summary></summary><ol></ol></details>').hide().appendTo($article);
+        }
+        $article.append($attachments, $text, $status, $footer);
+        return view;
     }
 
     /** Displays the message creation time without inventing dates for older transcripts. */
@@ -812,14 +841,29 @@ export class AiChat {
     }
 
     _updateAssistant(message, view, isLast) {
+        const activeTool = message.status === "pending" ? message.activeTool : null;
+        if (view.toolCalls !== message.toolCalls || view.activeTool !== activeTool) {
+            const completed = message.toolCalls || [];
+            const names = activeTool ? [...completed, activeTool] : completed;
+            view.$toolActivity.toggle(names.length > 0);
+            view.$toolActivity.children('summary').text(activeTool ? this._text("callingTool", activeTool) : this._text("toolCalls", names.length));
+            view.$toolActivity.children('ol').empty().append(names.map(name => $('<li></li>').text(name)));
+            view.toolCalls = message.toolCalls;
+            view.activeTool = activeTool;
+        }
         let status = "";
-        if (message.status === "pending") status = this._text("working");
+        if (message.status === "pending" && !activeTool) status = this._text("working");
         else if (message.status === "stopped") status = this._text("stopped");
         else if (message.status === "error") {
             const hint = message.errorCategory === "INVALID_CONTINUATION" ? "invalidContinuation"
                 : message.errorCategory === "UNSUPPORTED_OPERATION" ? "unsupportedOperation"
                 : message.retryable === false ? "changeRequest" : null;
             status = hint ? this._text(hint) + " " + (message.error || "") : message.error || this._text("unavailable");
+        }
+        if (message.status === "complete" && message.noToolAction) {
+            status = WJ.translate("components.ai_assistants.tools.no_action_executed.js");
+        } else if ((this.options.persistent || message.status === "complete") && message.toolWriteStatus) {
+            status = [status, message.toolWriteStatus].filter(Boolean).join('\n');
         }
         view.$status.text(status).toggle(Boolean(status)).toggleClass("text-danger", message.status === "error");
         const hasUsage = message.status === "complete" && message.totalTokens != null;
@@ -842,8 +886,8 @@ export class AiChat {
     }
 
     _canRetry(message) {
-        if (this.state.readOnlyReason || this.state.serverBusy) return false;
-        return message.status === "stopped" || (message.status === "error" && message.retryable !== false
+        if (this.state.readOnlyReason || this.state.serverBusy || message.retryable === false) return false;
+        return message.status === "stopped" || (message.status === "error"
             && !["INVALID_CONTINUATION", "UNSUPPORTED_OPERATION"].includes(message.errorCategory));
     }
 

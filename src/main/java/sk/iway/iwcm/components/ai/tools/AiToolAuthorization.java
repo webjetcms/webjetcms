@@ -1,0 +1,227 @@
+package sk.iway.iwcm.components.ai.tools;
+
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Optional;
+
+import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.expression.spel.SpelNode;
+import org.springframework.expression.spel.ast.VariableReference;
+import org.springframework.expression.spel.standard.SpelExpression;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationResult;
+import org.springframework.security.authorization.method.PreAuthorizeAuthorizationManager;
+import org.springframework.security.authorization.method.SecuredAuthorizationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.SecurityAnnotationScanners;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
+import jakarta.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.rest.AiChatStore;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
+import sk.iway.iwcm.users.UsersDB;
+
+/** Evaluates existing controller and handler permissions without executing a mapped operation. */
+@Component
+public class AiToolAuthorization {
+
+    enum Access {
+        /** Inspect metadata using the current user's endpoint permissions. */
+        CATALOG,
+        /** Also check the assistant assignment when the request identifies an assistant. */
+        ASSIGNED,
+        /** Start the audit after granting dispatch and defer record-dependent rules to the secured MVC handler. */
+        INVOKE
+    }
+
+    static final String ASSISTANT_HEADER = "X-WebJET-AI-Assistant";
+    static final String CHAT_HEADER = "X-WebJET-AI-Chat";
+    private final AiChatStore chats;
+    private final AssistantDefinitionRepository assistants;
+    private final AiToolRegistry registry;
+    private final AiSkillRepository skills;
+    private final WebjetSecurityService security;
+    private final MethodSecurityExpressionHandler expressions;
+    private final PreAuthorizeAuthorizationManager preAuthorize = new PreAuthorizeAuthorizationManager();
+    private final SecuredAuthorizationManager secured = new SecuredAuthorizationManager();
+
+    public AiToolAuthorization(ApplicationContext context, AssistantDefinitionRepository assistants, WebjetSecurityService security,
+            AiToolRegistry registry, AiSkillRepository skills, AiChatStore chats) {
+        this.chats = chats;
+        this.assistants = assistants;
+        this.registry = registry;
+        this.skills = skills;
+        this.security = security;
+        expressions = context.getBeanProvider(MethodSecurityExpressionHandler.class).getIfUnique(() -> {
+            DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+            handler.setApplicationContext(context);
+            return handler;
+        });
+        preAuthorize.setExpressionHandler(expressions);
+        preAuthorize.setApplicationContext(context);
+    }
+
+    Optional<AiAssistantRuntime> assistant(long id, HttpServletRequest request) {
+        if (id < 1 || !security.hasPermission("cmp_ai_button")) return Optional.empty();
+        int domainId = CloudToolsForCore.getDomainId();
+        return assistants.findByIdAndDomainId(id, domainId)
+                .filter(a -> !Boolean.FALSE.equals(a.getActive()))
+                .map(a -> resolve(a, domainId, request));
+    }
+
+    AiAssistantRuntime resolve(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        String key = runtimeKey(assistant, domainId);
+        if (request.getAttribute(key) instanceof AiAssistantRuntime cached) return cached;
+        var runtime = AiAssistantRuntime.compose(skills, assistant, domainId, registry,
+                entry -> mayList(entry, request, Access.CATALOG), true);
+        request.setAttribute(key, runtime);
+        return runtime;
+    }
+
+    AiAssistantRuntime resolveForBackend(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        return AiAssistantRuntime.compose(skills, assistant, domainId, registry,
+                entry -> mayList(entry, request, Access.CATALOG), false);
+    }
+
+    private static String runtimeKey(AssistantDefinitionEntity assistant, int domainId) {
+        return AiAssistantRuntime.class.getName() + "." + domainId + "." + assistant.getId();
+    }
+
+    boolean hasInstructionContext(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        String key = runtimeKey(assistant, domainId);
+        if (request.getAttribute(key) instanceof AiAssistantRuntime runtime) {
+            return !runtime.skillInstructions().isEmpty() || !runtime.tools().isEmpty();
+        }
+        String contextKey = key + ".hasContext";
+        if (request.getAttribute(contextKey) instanceof Boolean cached) return cached;
+        boolean hasContext = findInstructionContext(assistant, domainId, request);
+        request.setAttribute(contextKey, hasContext);
+        return hasContext;
+    }
+
+    private boolean findInstructionContext(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
+        if (!AiAssistantRuntime.canHaveReferences(assistant)) return false;
+        var template = AiInstructionTemplate.parse(assistant.getInstructions());
+        var names = template.skillNames();
+        if (!names.isEmpty() && skills.findLinkedNames(domainId, names).stream().anyMatch(names::contains)) return true;
+        return registry.assignedEntries(template.toolNames(), template.groupNames()).stream()
+                .anyMatch(entry -> mayList(entry, request, Access.CATALOG));
+    }
+
+    boolean mayList(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {
+        return AiToolServletRoutes.mayList(request.getServletContext(), entry) && isAllowed(entry, request, access);
+    }
+
+    static boolean hasAdminIdentity(HttpServletRequest request) {
+        Identity user = UsersDB.getCurrentUser(request.getSession(false));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return user != null && user.isAdmin() && auth != null && auth.isAuthenticated()
+                && !(auth instanceof AnonymousAuthenticationToken);
+    }
+
+    public boolean isAllowed(AiToolRegistry.Entry entry, HttpServletRequest request) {
+        return isAllowed(entry, request, Access.ASSIGNED);
+    }
+
+    boolean isAllowed(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {
+        if (!hasAdminIdentity(request)) return false;
+        Object previous = request.getAttribute(AiToolRequest.CHECKING_PERMISSION);
+        request.setAttribute(AiToolRequest.CHECKING_PERMISSION, Boolean.TRUE);
+        try {
+            String assistantId = request.getHeader(ASSISTANT_HEADER);
+            AssistantDefinitionEntity assigned = null;
+            if (access != Access.CATALOG && assistantId != null) {
+                assigned = assistant(Long.parseLong(assistantId), request)
+                        .filter(runtime -> runtime.tools().stream().anyMatch(tool -> tool.name().equals(entry.definition().name())))
+                        .map(AiAssistantRuntime::assistant).orElse(null);
+                if (assigned == null) return false;
+            }
+            if (!hasHandlerPermission(entry, request, access)) return false;
+            if (access == Access.INVOKE) {
+                if (entry.definition().writes() && !allowWrite(request, assigned)) return false;
+                AiToolAudit.begin(request, entry, assigned);
+            }
+            return true;
+        } catch (RuntimeException cannotEstablishPermission) {
+            // A record-dependent expression cannot grant catalog visibility without a record.
+            return false;
+        } finally {
+            if (previous == null) request.removeAttribute(AiToolRequest.CHECKING_PERMISSION);
+            else request.setAttribute(AiToolRequest.CHECKING_PERMISSION, previous);
+        }
+    }
+
+    private boolean allowWrite(HttpServletRequest request, AssistantDefinitionEntity assistant) {
+        String chat = request.getHeader(CHAT_HEADER);
+        if (assistant == null) return chat == null; // Manual tool call.
+        if ("unsaved".equals(chat)) return true;
+        // Older tabs carry no chat context and cannot safely dispatch a delayed assistant write.
+        if (chat == null || !(request.getAttribute(AiToolService.WRITE) instanceof AiToolProtocol.Call call)) return false;
+        String[] ids = chat.split("/", -1);
+        if (ids.length != 2) return false;
+        var scope = new AiChatStore.Scope(UsersDB.getCurrentUser(request).getUserId(),
+                CloudToolsForCore.getDomainId(), CloudToolsForCore.getDomainName());
+        return chats.claimPendingWrite(scope, ids[0], ids[1], assistant.getId(), call);
+    }
+
+    private boolean hasHandlerPermission(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {
+        Object bean = entry.handler().createWithResolvedBean().getBean();
+        Class<?> type = entry.handler().getBeanType();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        PermissionInvocation invocation = new PermissionInvocation(bean, entry.handler().getMethod());
+        // A handler annotation can replace Spring's type-level annotation. Tool access requires both.
+        PreAuthorize classRule = AnnotatedElementUtils.findMergedAnnotation(type, PreAuthorize.class);
+        if (classRule != null) {
+            var expression = expressions.getExpressionParser().parseExpression(classRule.value());
+            if (expression instanceof SpelExpression spel && requiresArguments(spel.getAST())) return false;
+            if (!Boolean.TRUE.equals(expression.getValue(expressions.createEvaluationContext(() -> auth, invocation), Boolean.class))) return false;
+        }
+        Secured classRoles = AnnotatedElementUtils.findMergedAnnotation(type, Secured.class);
+        if (classRoles != null && auth.getAuthorities().stream()
+                .noneMatch(a -> Arrays.asList(classRoles.value()).contains(a.getAuthority()))) return false;
+        if (DatatableRestControllerV2.class.isAssignableFrom(type)
+                && (!(bean instanceof DatatableRestControllerV2<?, ?> table) || !table.checkAccessAllowed(request))) return false;
+        if (!grants(secured.authorize(() -> auth, invocation))) return false;
+        PreAuthorize handlerRule = SecurityAnnotationScanners.requireUnique(PreAuthorize.class).scan(invocation.getMethod(), type);
+        if (handlerRule != null && expressions.getExpressionParser().parseExpression(handlerRule.value()) instanceof SpelExpression spel
+                && requiresArguments(spel.getAST())) {
+            // Only Spring MVC has the bound Java arguments. Its secured proxy evaluates this rule when invoking.
+            return access == Access.INVOKE;
+        }
+        return grants(preAuthorize.authorize(() -> auth, invocation));
+    }
+
+    private static boolean grants(AuthorizationResult result) {
+        return result == null || result.isGranted();
+    }
+
+    private static boolean requiresArguments(SpelNode node) {
+        if (node instanceof VariableReference) return true;
+        for (int i = 0; i < node.getChildCount(); i++) {
+            if (requiresArguments(node.getChild(i))) return true;
+        }
+        return false;
+    }
+
+    private record PermissionInvocation(Object target, Method method) implements MethodInvocation {
+        @Override public Object getThis() { return target; }
+        @Override public Method getMethod() { return method; }
+        @Override public AccessibleObject getStaticPart() { return method; }
+        @Override public Object[] getArguments() { return new Object[method.getParameterCount()]; }
+        @Override public Object proceed() { throw new UnsupportedOperationException(); }
+    }
+}
