@@ -1,4 +1,5 @@
 import {icon, node as element} from './dashboard/widget-utils';
+import {createBranchPageContent} from './branch-page-content';
 
 const commonKeys = {close: 'button.close', cancel: 'button.cancel', yes: 'button.yes', no: 'button.no', revert: 'branches.revert.js', viewItem: 'button.show', edit: 'button.edit', showPage: 'history.showPage'};
 const tr = (key, args = []) => WJ.translate(commonKeys[key] || `branches.merge.${key}.js`, ...args);
@@ -117,7 +118,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     let tabClickId;
     let conflictNoticeShown = false;
     let activeTab = modal.querySelector('[role="tab"].active')?.dataset.tabId;
-    let detailDialog, detailItem, expanded, confirmation, detailTab;
+    let detailDialog, detailItem, expanded, confirmation, detailTab, pageContent, contentHighlight;
     let scheduleForm, scheduleButton, scheduleKey;
     const settings = () => ['name', 'color', 'description'].map(name => editor.field(name).val());
     const savedSettings = settings();
@@ -653,6 +654,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         detailItem = item;
         expanded = false;
         detailTab = 'fields';
+        contentHighlight = false;
         detailError.classList.add('d-none');
         const dialog = detailDialog = element('dialog', 'pg-branch-merge');
         dialog.id = 'branch-merge-detail';
@@ -678,12 +680,11 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         windowActions.append(size);
         header.append(title, close);
         header.append(windowActions);
-        const hasHtml = ['base', 'live', 'work'].some(version => Object.keys(item[version]?.fields || {}).some(field => htmlFields.has(field)));
-        if (hasHtml) {
+        if (item.type === 'DOCUMENT') {
             const tabs = element('div', 'md-tabs');
             const nav = element('ul', 'nav');
             nav.setAttribute('role', 'tablist');
-            for (const name of ['fields', 'html']) {
+            for (const name of ['fields', 'html', 'content']) {
                 const entry = element('li', 'nav-item');
                 entry.setAttribute('role', 'presentation');
                 const tab = element('a', `nav-link${name === detailTab ? ' active' : ''}`, tr(`${name}Tab`));
@@ -693,7 +694,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
                 tab.setAttribute('aria-controls', `branch-merge-${name}`);
                 tab.setAttribute('aria-selected', String(name === detailTab));
                 tab.addEventListener('click', event => { event.preventDefault(); bootstrap.Tab.getOrCreateInstance(tab).show(); });
-                tab.addEventListener('shown.bs.tab', () => { detailTab = name; });
+                tab.addEventListener('shown.bs.tab', () => { detailTab = name; activateDetailTab(); });
                 entry.append(tab);
                 nav.append(entry);
             }
@@ -716,6 +717,8 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
             event.stopPropagation();
         });
         dialog.addEventListener('close', () => {
+            pageContent?.dispose();
+            pageContent = null;
             detailDialog = null;
             dialog.querySelectorAll('[role="tab"]').forEach(tab => bootstrap.Tab.getInstance(tab)?.dispose());
             dialog.querySelectorAll('[data-branch-hint]').forEach(control => bootstrap.Tooltip.getInstance(control)?.dispose());
@@ -745,14 +748,25 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         const content = detailDialog.querySelector('.pg-branch-merge__item');
         const focused = detailDialog.contains(document.activeElement) ? document.activeElement.id : null;
         detailDialog.querySelectorAll('[data-branch-hint]').forEach(control => bootstrap.Tooltip.getInstance(control)?.dispose());
+        pageContent?.dispose();
+        pageContent = null;
         content.replaceChildren(detail(item));
         detailDialog.querySelector('.pg-branch-merge__footer')?.remove();
         detailDialog.append(detailFooter(item, pendingChoice));
         const hints = detailDialog.querySelectorAll('[data-branch-hint]');
         hints.forEach(control => control.setAttribute('data-bs-container', '#branch-merge-detail'));
         WJ.initTooltip($(hints));
+        activateDetailTab();
         updateControls();
         if (focused) detailDialog.querySelector('#' + CSS.escape(focused))?.focus();
+    }
+
+    function activateDetailTab() {
+        const active = detailTab === 'content';
+        detailDialog.classList.toggle('pg-branch-merge--content', active);
+        const options = detailDialog.querySelector('.pg-branch-merge__field-options');
+        if (options) options.hidden = active;
+        if (active) pageContent?.load();
     }
 
     async function edit(item) {
@@ -806,7 +820,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
             .filter(key => versions.some(name => Object.hasOwn(item[name]?.fields || {}, key)));
         const differing = key => !equal(comparisonValue(item.live?.fields?.[key]), comparisonValue(item.work?.fields?.[key]));
         if (!workOnly) {
-            const show = element('label', 'form-check-label mb-3');
+            const show = element('label', 'pg-branch-merge__field-options form-check-label mb-3');
             const check = element('input', 'form-check-input me-2'); check.id = 'branch-merge-all-fields'; check.type = 'checkbox'; check.checked = expanded;
             check.onchange = () => { expanded = check.checked; renderDetail(true); detailDialog?.querySelector('#branch-merge-all-fields').focus(); };
             show.append(check, document.createTextNode(tr('allFields'))); section.append(show);
@@ -814,14 +828,23 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         const visibleFields = workOnly ? allFields.filter(key => comparisonValue(item.work.fields[key]) !== null)
             : allFields.filter(key => expanded || differing(key));
         const tabs = element('div', 'tab-content');
-        const hasHtml = allFields.some(field => htmlFields.has(field));
-        for (const name of hasHtml ? ['fields', 'html'] : ['fields']) {
+        const isPage = item.type === 'DOCUMENT';
+        for (const name of isPage ? ['fields', 'html', 'content'] : ['fields']) {
             const pane = element('div', `tab-pane${name === detailTab ? ' active' : ''}`);
             pane.id = `branch-merge-${name}`;
-            if (hasHtml) {
+            if (isPage) {
                 pane.setAttribute('role', 'tabpanel');
                 pane.setAttribute('aria-labelledby', `branch-merge-${name}-tab`);
                 pane.tabIndex = 0;
+            }
+            if (name === 'content') {
+                pageContent = createBranchPageContent(item, id, {tr, actions: versionActions, highlight: contentHighlight,
+                    onHighlight: value => { contentHighlight = value; }, refresh: async () => {
+                        if (await perform('/progress', undefined, detailError)) renderDetail(true);
+                    }});
+                pane.append(pageContent.element);
+                tabs.append(pane);
+                continue;
             }
             const columns = element('div', 'pg-branch-merge__versions');
             columns.style.setProperty('--branch-merge-columns', versions.length);
@@ -852,14 +875,14 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
                     body.append(link(tr('openFile'), url));
                 }
                 const fields = element('dl', 'mb-0');
-                for (const field of visibleFields.filter(field => htmlFields.has(field) === (name === 'html'))) {
+                for (const field of visibleFields.filter(field => !isPage || htmlFields.has(field) === (name === 'html'))) {
                     const changed = !workOnly && version !== 'base' && differing(field);
                     const label = report.fieldLabels?.[item.type]?.[field] || field.replaceAll('_', ' ');
                     const dt = element('dt', 'small mt-3', `${label}${changed ? ` · ${tr('changed')}` : ''}`);
                     const dd = element('dd', changed ? 'pg-branch-merge__changed' : '');
                     const value = comparisonValue(snapshot.fields?.[field]);
                     if (snapshot.state === 'ABSENT' || value === null) dd.textContent = '—';
-                    else if (htmlFields.has(field)) {
+                    else if (isPage && htmlFields.has(field)) {
                         // Readable text is never inserted as HTML; scripts and remote resources cannot run here.
                         const doc = new DOMParser().parseFromString(String(value), 'text/html');
                         doc.querySelectorAll('script,style,template').forEach(node => node.remove());

@@ -152,6 +152,12 @@
     &__text { color: inherit; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 28rem; overflow: auto; }
     &__image { display: block; max-width: 100%; max-height: 160px; object-fit: contain; margin-bottom: 12px; }
 
+    &--content {
+        .pg-branch-merge__content, .pg-branch-merge__item, .pg-branch-merge__detail, .tab-content,
+        #branch-merge-content.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+        .pg-branch-merge__content { overflow: hidden; }
+    }
+
     @media (max-width: 1199.98px) {
         width: calc(100vw - 24px);
         height: calc(100dvh - 24px);
@@ -172,5 +178,28 @@
         height: 100dvh;
         margin: 0;
         border-radius: 0;
+    }
+}
+
+.pg-branch-page-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+
+    &__versions { display: grid; grid-template-columns: repeat(var(--branch-merge-columns, 2), minmax(0, 1fr)); gap: 16px; flex: 1; min-height: 0; }
+    &__version { display: flex; flex-direction: column; min-height: 0; min-width: 0; border: 1px solid $nice-gray-100; border-radius: $border-radius; overflow: hidden; }
+    &__header { padding: 12px 16px 0; border-bottom: 1px solid $nice-gray-100; background: $nice-gray; }
+    &__header h3 { margin-bottom: 8px; }
+    &__status { padding: 16px; }
+    &__frame { width: 100%; flex: 1; min-height: 0; border: 0; background: $white; }
+
+    @media (max-width: 1199.98px) {
+        &__versions { gap: 8px; }
+        &__header { padding: 12px 12px 0; }
+    }
+    @media (max-width: 767.98px) {
+        &__versions { grid-template-columns: minmax(0, 1fr); overflow: auto; }
+        &__version { min-height: 60dvh; }
     }
 }

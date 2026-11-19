@@ -12,6 +12,7 @@ const reportRoute = new RegExp(`/admin/rest/branches/${id}/(?:progress|resolve|s
 const rowRoute = new RegExp(`/admin/rest/branches/${id}$`);
 const changesRoute = new RegExp(`/admin/rest/branches/${id}/changes/all(?:\\?.*)?$`);
 const listRoute = /\/admin\/rest\/branches\/all\?/;
+const pageRoute = new RegExp(`/admin/rest/branches/${id}/page-content\\?`);
 
 Before(({ login }) => login('admin'));
 After(({ I }) => {
@@ -19,6 +20,7 @@ After(({ I }) => {
     I.stopMockingRoute(changesRoute);
     I.stopMockingRoute(rowRoute);
     I.stopMockingRoute(listRoute);
+    I.stopMockingRoute(pageRoute);
 });
 
 Scenario('Working version editor filters conflicts and keeps scheduling separate from publishing', async ({ I, DT }) => {
@@ -46,10 +48,24 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
                 base: snapshot('autotest removed'), live: {...snapshot('autotest removed'), state: 'TRASH'},
                 work: {...snapshot('autotest removed'), state: 'TRASH'}, writeRequired: false},
             {type: 'GROUP', objectKey: '15', label: 'autotest folder', operation: 'UPSERT', workHash: 'autotest-folder', writeRequired: true,
+                base: absent, live: absent, work: {state: 'ACTIVE', fields: {group_name: 'autotest folder', html_head: '<meta name="autotest">'}},
                 folderPath: sectionPath}
         ]
     };
     const requests = [];
+    const pageRequests = [];
+    let rejectFirstPage = true;
+    await I.mockRoute(pageRoute, route => {
+        const query = new URL(route.request().url()).searchParams;
+        pageRequests.push(Object.fromEntries(query));
+        if (rejectFirstPage) {
+            rejectFirstPage = false;
+            return route.fulfill({status: 503, json: {message: 'autotest temporary render failure'}});
+        }
+        const version = query.get('version');
+        const diff = query.get('highlight') === 'true';
+        return route.fulfill({contentType: 'text/html', body: `<!doctype html><html><head><style>html {scroll-behavior: smooth} body {margin:0} main {height:${version === 'LIVE' ? 4200 : 3000}px}</style></head><body><main><h1>autotest ${version} rendered page</h1>${diff ? '<ins>autotest highlighted difference</ins>' : ''}<a href="/autotest-away">autotest link</a><script>parent.autotestPreviewScriptExecuted=true</script></main></body></html>`});
+    });
     let rejectFirstResolution = true;
     const resolutionError = 'autotest resolution failed';
     await I.mockRoute(listRoute, route => route.fulfill({json: {content: [branch], totalElements: 1}}));
@@ -126,6 +142,13 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.see('Zobraziť stránku', '#branch-merge-fields [data-branch-version="WORK"] .pg-branch-merge__actions');
     I.dontSeeElement(`${detail} [data-branch-version="BASE"]`);
     I.dontSeeElement(`${detail} [data-branch-version="LIVE"]`);
+    I.clickCss('#branch-merge-content-tab');
+    I.waitForText('Obsah stránky sa nepodarilo načítať.', 5, '.pg-branch-page-content__status');
+    I.click('Obnoviť zmeny', '.pg-branch-page-content__status');
+    I.waitForVisible('#branch-merge-content iframe', 5);
+    I.dontSeeElement('#branch-merge-content [data-branch-page-version="LIVE"]');
+    I.dontSeeElement('#branch-merge-highlight');
+    I.clickCss('#branch-merge-fields-tab');
     I.see('Vynechať položku z publikovania', detail);
     I.pressKey('Escape');
     I.waitForInvisible(detail, 10);
@@ -141,6 +164,45 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
             && Math.abs(panels[0].left - grid.left) <= 1 && Math.abs(panels[1].right - grid.right) <= 1;
     });
     I.assertTrue(twoColumnsFillWidth);
+    I.assertEqual(pageRequests.length, 2);
+    I.checkOption('#branch-merge-choice-live');
+    I.clickCss('#branch-merge-content-tab');
+    I.waitForVisible('#branch-merge-content.active', 5);
+    // Frame readiness and scroll coordinates have no standard CodeceptJS text/visibility assertion.
+    I.waitForFunction(() => [...document.querySelectorAll('#branch-merge-content iframe')].every(frame =>
+        frame.contentDocument?.querySelector('h1')?.textContent.includes('rendered page')), 5);
+    I.dontSeeElement('#branch-merge-all-fields');
+    const rendered = await I.executeScript(() => [...document.querySelectorAll('#branch-merge-content iframe')].map(frame => ({
+        title: frame.title, text: frame.contentDocument.querySelector('h1').textContent, sandbox: frame.getAttribute('sandbox')
+    })));
+    I.assertEqual(rendered.length, 2);
+    I.assertEqual(rendered[0].text, 'autotest LIVE rendered page');
+    I.assertEqual(rendered[1].text, 'autotest WORK rendered page');
+    I.assertTrue(rendered.every(frame => frame.title && frame.sandbox === 'allow-same-origin'));
+    I.assertFalse(Boolean(await I.executeScript(() => window.autotestPreviewScriptExecuted)));
+    I.executeScript(() => document.querySelector('#branch-merge-content iframe').contentWindow.scrollTo({top: 900, behavior: 'instant'}));
+    I.waitForFunction(() => [...document.querySelectorAll('#branch-merge-content iframe')].every(frame => frame.contentWindow.scrollY === 900), 5);
+    I.executeScript(() => document.querySelectorAll('#branch-merge-content iframe')[1].contentWindow.scrollTo({top: 500, behavior: 'instant'}));
+    I.waitForFunction(() => [...document.querySelectorAll('#branch-merge-content iframe')].every(frame => frame.contentWindow.scrollY === 500), 5);
+    I.checkOption('#branch-merge-highlight');
+    await I.waitForFunction(() => document.querySelectorAll('#branch-merge-content iframe')[1].contentDocument?.querySelector('ins'), 5);
+    I.seeCheckboxIsChecked('#branch-merge-choice-live');
+    I.assertEqual(pageRequests.filter(query => query.version === 'LIVE').length, 1);
+    I.assertEqual(pageRequests.filter(query => query.version === 'WORK' && query.highlight === 'true').length, 1);
+    I.executeScript(() => document.querySelector('#branch-merge-content iframe').contentWindow.scrollTo({top: 10000, behavior: 'instant'}));
+    I.waitForFunction(() => {
+        const [live, work] = [...document.querySelectorAll('#branch-merge-content iframe')];
+        return live.contentWindow.scrollY === live.contentDocument.scrollingElement.scrollHeight - live.contentDocument.scrollingElement.clientHeight
+            && work.contentWindow.scrollY === work.contentDocument.scrollingElement.scrollHeight - work.contentDocument.scrollingElement.clientHeight;
+    }, 5);
+    I.resizeWindow(390, 844);
+    const previewFits = await I.executeScript(() => {
+        const panes = [...document.querySelectorAll('.pg-branch-page-content__version')].map(panel => panel.getBoundingClientRect());
+        return panes.every(panel => panel.left >= 0 && panel.right <= innerWidth) && panes[1].top >= panes[0].bottom;
+    });
+    I.assertTrue(previewFits);
+    I.wjSetDefaultWindowSize();
+    I.clickCss('#branch-merge-fields-tab');
     I.checkOption('#branch-merge-choice-work');
     I.clickCss('#branch-merge-html-tab');
     I.waitForVisible('#branch-merge-html.active', 5);
@@ -180,11 +242,18 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.waitForInvisible(detail, 10);
     DT.filterSelect('type', 'Priečinky', changesWrapper);
     I.see('autotest folder', changesTable);
+    I.clickCss(`${changesTable} [data-branch-compare="15"]`);
+    I.waitForVisible(detail, 5);
+    I.dontSeeElement('#branch-merge-html-tab');
+    I.dontSeeElement('#branch-merge-content-tab');
+    I.see('<meta name="autotest">', '#branch-merge-fields');
+    I.click('Zatvoriť', `${detail} footer`);
+    I.waitForInvisible(detail, 5);
     I.dontSee('autotest conflict', changesTable);
     DT.clearFilter('type');
     I.clickCss('label[for="branch-merge-problems"]');
     await I.dontSee('autotest folder', changesTable);
-    I.assertEqual(loads.length, loaded + 1);
+    I.assertEqual(loads.length, loaded + 2);
     I.clickCss('[data-branch-compare="12"]');
     I.waitForVisible('dialog.pg-branch-merge', 10);
     const editHint = 'Po uložení v editore sa sem vráťte a znova skontrolujte zmeny. Uloženie zruší starú voľbu výsledku.';

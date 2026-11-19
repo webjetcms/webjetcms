@@ -16,11 +16,17 @@ import sk.iway.iwcm.users.UsersDB;
 @RequestMapping("/admin/rest/branches/{id}")
 @PreAuthorize("@WebjetSecurityService.hasPermission('menuBranches')")
 public class BranchMergeRestController {
-    private final BranchMergeService merge=new BranchMergeService();
-    private final BranchAccess access=new BranchAccess();
+    private final BranchMergeService merge;
+    private final BranchAccess access;
     private final BranchFileRepository files;
+    private final BranchPageContent pageContent;
 
-    public BranchMergeRestController(BranchFileRepository files) { this.files=files; }
+    @org.springframework.beans.factory.annotation.Autowired
+    public BranchMergeRestController(BranchFileRepository files) { this(files,new BranchMergeService(),new BranchAccess(),new BranchPageContent()); }
+
+    BranchMergeRestController(BranchFileRepository files,BranchMergeService merge,BranchAccess access,BranchPageContent pageContent) {
+        this.files=files;this.merge=merge;this.access=access;this.pageContent=pageContent;
+    }
 
     public record Revision(long expectedRevision) { }
     public record Resolution(long expectedRevision,BranchType type,String objectKey,BranchDecision.Source choice,String liveHash,String workHash) { }
@@ -76,6 +82,31 @@ public class BranchMergeRestController {
         var user=UsersDB.getUser(current.getUserId());
         if(user==null||!user.isAdmin()||!user.isAuthorized())throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         return new Identity(user);
+    }
+
+    /** Authorizes the item and validates both snapshots before rendering a read-only page comparison. */
+    @GetMapping(value="/page-content",produces="text/html;charset=UTF-8")
+    public ResponseEntity<String> pageContent(@PathVariable long id,@RequestParam int docId,@RequestParam BranchDecision.Source version,
+            @RequestParam String liveHash,@RequestParam String workHash,@RequestParam(defaultValue="false") boolean highlight,
+            HttpServletRequest request,HttpServletResponse response)throws Exception {
+        Identity user=access.requireUser(request);String domain=access.requireDomain(request,user);
+        try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {
+            var item=merge.detail(id,domain,user).items().stream()
+                .filter(row->"DOCUMENT".equals(row.type())&&Integer.toString(docId).equals(row.objectKey())).findFirst()
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
+            if(!Objects.equals(liveHash,item.liveHash())||!Objects.equals(workHash,item.workHash()))
+                throw new ResponseStatusException(HttpStatus.CONFLICT,sk.iway.iwcm.i18n.Prop.getInstance(request).getText("branches.merge.pageStale.js"));
+            var snapshot=version==BranchDecision.Source.LIVE?item.live():item.work();
+            if(!"ACTIVE".equals(snapshot.state()))throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            String html=pageContent.render(id,domain,user.getUserId(),docId,version,request,response);
+            if(highlight&&version==BranchDecision.Source.WORK&&"ACTIVE".equals(item.live().state())) {
+                String live=pageContent.render(id,domain,user.getUserId(),docId,BranchDecision.Source.LIVE,request,response);
+                html=sk.iway.iwcm.common.DocTools.getHtmlDiff(html.replace("&nbsp;"," "),live.replace("&nbsp;"," "),false);
+            }
+            if(version==BranchDecision.Source.WORK)html=pageContent.prepareWork(html,id,domain,user.getUserId(),request);
+            return ResponseEntity.ok().header("Cache-Control","private, no-store").header("X-Content-Type-Options","nosniff")
+                .header("X-Robots-Tag","noindex, nofollow").header("Content-Security-Policy","sandbox allow-same-origin").body(html);
+        }
     }
 
     /** Serves the three actual binary versions, without applying the chosen preview result. */
