@@ -338,6 +338,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Spring integrácia - opravené poradie URL pravidiel prístupu, spracovanie chýb bezpečnostnej konfigurácie a ukončenie prihlásenia cez API token aj pri výnimke. Formulár na zmenu licencie blokuje opakované neúspešné pokusy, nevracia heslo do stránky a správne aktualizuje čas prihlásenia.
+- Spring aplikácie - opravené renderovanie JSP komponentov s vlastným priečinkom, spracovanie prípon šablón a preklady validačných správ. Opravené nastavenie jazyka vo vnorených Stripes požiadavkách a HTTP 304 pri načítaní súborov z cache.
+- Spring integrácia - opravené načítanie pôvodných údajov pre JPA audit a vyčistenie Spring kontextu pri ukončení. Inicializácia sa pri chybe databázy preruší.
 - Vloženie HTML kódu - obsah sa dekóduje v UTF-8 bez závislosti od predvoleného kódovania JVM, aby sa na serveri nepoškodila diakritika a ďalšie znaky Unicode.
 - Zrkadlenie štruktúry - pri zlyhaní prekladu, napríklad po vyčerpaní kvóty DeepL, používateľ dostane upozornenie s konkrétnym dôvodom z výnimky prekladača vrátane HTTP kódu a dostupnej chybovej správy DeepL. Pevné medzery a ich HTML entity sa normalizujú v názvoch priečinkov a generovaných URL, aby nevznikali adresy s textom `nbsp` ani zbytočné presmerovania (#402).
 - Dátové tabuľky - po úprave jedného záznamu sa pri vynútenom obnovení údajov zobrazí strana s upraveným záznamom podľa aktuálneho triedenia. V konfigurácii sa premenná vyhľadáva podľa názvu aj pri zmene jej ID. Pri mazaní sa zachová aktuálna strana, prípadne sa zobrazí posledná platná strana. Pri vytvorení záznamu sa stránkovanie naďalej resetuje (#400).
