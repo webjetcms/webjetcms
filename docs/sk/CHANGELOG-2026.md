@@ -32,6 +32,7 @@
 - Dátové tabuľky - opravené generovanie podmienok pri filtrovaní polí odkazujúcich na inú entitu. Textové vyhľadávanie sa pre tieto polia preskočí, aby nevznikali neplatné SQL podmienky (#397).
 - Šablóny - [Ninja objekt](frontend/ninja-starter-kit/ninja-jv/temp-group/README.md) `${ninja.temp.group.textPrefix}` vráti prefix textových kľúčov skupiny šablón. Predtým getter volal sám seba a použitie v šablóne skončilo chybou `StackOverflowError` (#409).
 - Súbory - opravený názov konfiguračnej premennej `elfinderMetadataAutopopup`, ktorá po nahratí súboru automaticky zobrazí dialóg metadát. Premenná bola deklarovaná s preklepom ako `elfinerMetadataAutopopup`, ktorý sa nikde nečítal, preto jej zmena v administrácii nemala efekt. Predvolená hodnota `false` zostáva. Ak ste si nastavili premennú s preklepom, nastavte namiesto nej `elfinderMetadataAutopopup` (#410).
+- Opravené zacyklenie pri HTTP presmerovaniach počas sťahovania súborov, načítaní nastavení používateľa, inicializácii generátora primárnych kľúčov a obnove cache súborov uložených v databáze. Doplnené ukončovacie podmienky opakovaných pokusov. Ak generátor primárnych kľúčov zostane nedostupný aj po jednom pokuse o vytvorenie záznamu a obnove cache, metódy `PkeyGenerator.getNextValue(String)` a `getNextValueAsLong(String)` vyhodia `IllegalStateException`. Volajúci musí prerušiť operáciu vyžadujúcu identifikátor a odovzdať chybu svojmu spracovaniu výnimiek (#412).
 
 ## 2026.0.40
 

@@ -1902,7 +1902,7 @@ public class UsersDB
 			{
 			}
 		}
-		while (!success && countDown>0)
+		if (!success && countDown>0)
 		{
 			try
 			{
