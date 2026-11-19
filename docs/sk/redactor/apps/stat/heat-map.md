@@ -80,7 +80,9 @@ Náhľad predvolene zobrazuje publikovaný obsah ku koncu obdobia. Ak nie je dos
 
 ![Výber konkrétnej publikovanej verzie stránky](heat-map-version.png)
 
-Kliknutia sa priraďujú po celých dňoch. Verzie publikované v rovnaký deň preto môžu obsahovať rovnaké kliknutia; **Všetky verzie** započíta každé raz. Verziu bez kliknutí možno prezerať s nulovým počtom. Čas plánovaného publikovania je približný.
+Výber verzie mení obsah náhľadu aj mapu kliknutí. Za výberom verzie sa zobrazuje **Obdobie** s rozsahom dní použitým na filtrovanie kliknutí. Pri porovnávaní má každá verzia vlastný rozsah. Mapa zahŕňa iba dni, počas ktorých bola vybraná verzia zverejnená v rámci zvoleného obdobia, a kliknutia pre zvolenú šírku. Ak kliknutia chýbajú, hlásenie uvedie rozsah týchto dní a šírku mapy. Verziu možno ďalej prezerať s nulovým počtom kliknutí.
+
+Kliknutia sa priraďujú po celých dňoch. Verzie publikované v rovnaký deň preto môžu obsahovať rovnaké kliknutia; **Všetky verzie** započíta každé raz. Čas plánovaného publikovania je približný.
 
 Šablóna, hlavička, päta, ponuky, aplikácie a obrázky používajú aktuálne zdroje. Zmeny rozloženia či výšky obsahu môžu posunúť mapu oproti pôvodným kliknutiam.
 

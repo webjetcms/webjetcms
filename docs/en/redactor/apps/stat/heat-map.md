@@ -38,7 +38,9 @@ Colors from blue to red indicate increasing click density. The scale adapts to t
 
 The preview defaults to published content at the end of the period. If unavailable, a notice explains whether current content is shown or no preview is available. Use **Page version** to select a specific version or **All versions**. The list contains up to 100 of the latest published versions in the period; select an earlier period for older versions.
 
-Clicks are assigned by whole days. Versions published on the same day can therefore include the same clicks; **All versions** counts each click once. Versions without clicks remain available with a zero count. Scheduled publication times are approximate.
+Selecting a version changes both the preview content and the click map. **Period** beside the version selector shows the days used to filter clicks. When comparing versions, each version shows its own date range. The map includes clicks at the selected width for the days when that version was published within the reporting period. If no clicks are available, the message shows this date range and the map width. The version remains available with a zero click count.
+
+Clicks are assigned by whole days. Versions published on the same day can therefore include the same clicks; **All versions** counts each click once. Scheduled publication times are approximate.
 
 Templates, headers, footers, menus, applications and images use current resources. Changes to layout or content height can shift the map relative to the original clicks.
 

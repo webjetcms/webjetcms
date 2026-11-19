@@ -5,8 +5,8 @@
         title: /*[[#{stat_menu.heat_map}]]*/ "Click map",
         loading: /*[[#{components.stat.heatmap.loading}]]*/ "Loading…",
         empty: /*[[#{components.stat.heatmap.empty}]]*/ "No clicks in this period.",
-        emptyVersion: /*[[#{components.stat.heatmap.emptyVersion}]]*/ "No clicks were recorded on the days this version was live in the selected period.",
-        emptyWidth: /*[[#{components.stat.heatmap.emptyWidth}]]*/ "No clicks were recorded for this version at the selected width.",
+        emptyVersion: /*[[#{components.stat.heatmap.emptyVersion}]]*/ "No clicks were recorded for this page version at width {width} px from {from} to {to}.",
+        emptyWidth: /*[[#{components.stat.heatmap.emptyWidth}]]*/ "No clicks were recorded for this page version at width {width} px.",
         error: /*[[#{components.stat.heatmap.error}]]*/ "The click map could not be loaded.",
         previewError: /*[[#{components.stat.heatmap.previewError}]]*/ "The page preview is unavailable.",
         tileError: /*[[#{components.stat.heatmap.tileError}]]*/ "Some map tiles could not be loaded. Reload the preview.",
@@ -23,6 +23,7 @@
         version: /*[[#{components.stat.heatmap.version}]]*/ "Page version",
         versionA: /*[[#{components.stat.heatmap.versionA}]]*/ "Version A",
         versionB: /*[[#{components.stat.heatmap.versionB}]]*/ "Version B",
+        period: /*[[#{components.stat.heatmap.period}]]*/ "Period: {from} – {to}",
         container: /*[[#{components.stat.heatmap.container}]]*/ "Container",
         window: /*[[#{components.stat.heatmap.window}]]*/ "Window",
         containerMissing: /*[[#{components.stat.heatmap.containerMissing}]]*/ "The click map cannot be displayed: the preview has no matching centered container of width {width} px.",
@@ -100,6 +101,7 @@
                 <select id="heatMapVersion" class="form-select form-select-sm no-picker">
                     <option value="" data-th-text="#{components.stat.heatmap.allVersions}"></option>
                 </select>
+                <span id="heatMapPeriod" class="pg-heatmap-period" aria-live="polite" hidden></span>
             </div>
             <div id="heatMapStatus" class="alert alert-info" role="status" aria-live="polite" data-th-text="#{components.stat.heatmap.loading}"></div>
             <div id="heatMapViewport" class="pg-heatmap-viewport d-none">

@@ -15,6 +15,7 @@ export class HeatMapViewer {
         this.revision = 0;
         this.requestController = new AbortController();
         this.reportWidths = [];
+        this.versions = [];
         this.comparing = false;
         this.selectingArea = false;
         this.overlayVisible = true;
@@ -184,6 +185,7 @@ export class HeatMapViewer {
 
     setVersions(metadata) {
         const versions = metadata.versions || [];
+        this.versions = versions;
         const select = this.nodes.Version;
         const selectedId = select.value;
         const comparisonId = this.nodes.CompareVersion.value;
@@ -291,10 +293,12 @@ export class HeatMapViewer {
             preview.width = Number(selected.dataset.previewWidth);
             preview.previewOnly = !preview.widths.some(item => item.width === preview.groupWidth && (item.mode || "DOCUMENT") === preview.mode);
             if (preview.previewOnly) {
+                preview.setClickRange(this.versions.find(version => String(version.historyId) === preview.versionId)?.range);
                 preview.updateSummary(0);
             } else {
                 const metadata = await this.getJson("/metadata", preview.versionId, {width: preview.groupWidth, mode: preview.mode}, signal);
                 if (revision !== preview.revision) return;
+                preview.setClickRange(metadata.clickRange);
                 preview.updateSummary(metadata.clicks);
                 if (preview === this.previews[0]) {
                     if (!this.comparing) this.setVersions(metadata);
@@ -307,7 +311,7 @@ export class HeatMapViewer {
                 const notes = [];
                 if (metadata.historicalUnavailable && metadata.source === "current") notes.push(this.texts.fallback);
                 if (metadata.multipleVersions) notes.push(this.texts.multiple);
-                if (notes.length > 0) WJ.notifyWarning(this.texts.title, notes.join(" "), 5000);
+                if (notes.length > 0) WJ.notifyWarning(this.texts.title, notes.join(" "), 10000);
                 if (metadata.source === "unavailable") {
                     preview.status(this.texts.unavailable, true);
                     return;
@@ -374,7 +378,7 @@ class HeatMapPreview {
         this.revision = 0;
         this.requestController = new AbortController();
         this.nodes = {};
-        ["PaneLabel", "VersionLabel", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Summary", "TotalClicks", "ScaleSummary",
+        ["PaneLabel", "VersionLabel", "Period", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Summary", "TotalClicks", "ScaleSummary",
             "AreaLayer", "AreaBox", "AreaResult", "AreaCount", "ClearArea"].forEach(name => {
             this.nodes[name] = element.querySelector("#" + prefix + name);
         });
@@ -388,6 +392,7 @@ class HeatMapPreview {
         this.requestController.abort();
         this.requestController = new AbortController();
         this.versionId = versionId;
+        this.setClickRange(null);
         clearTimeout(this.previewTimer);
         cancelAnimationFrame(this.animationFrame);
         this.animationFrame = null;
@@ -417,6 +422,25 @@ class HeatMapPreview {
         this.nodes.Summary.hidden = false;
     }
 
+    /** Shows the inclusive statistics days beside a selected version, including previews without clicks. */
+    setClickRange(range) {
+        this.clickRange = range;
+        const show = Boolean(this.versionId && range);
+        this.nodes.Period.hidden = !show;
+        this.nodes.Period.textContent = show ? this.texts.period
+            .replace("{from}", WJ.formatDate(range.from))
+            .replace("{to}", WJ.formatDate(range.until - 1)) : "";
+    }
+
+    /** Formats the selected width and inclusive statistics days for an empty preview. */
+    emptyMessage() {
+        if (!this.clickRange) return this.texts.emptyWidth.replace("{width}", this.groupWidth);
+        return this.texts.emptyVersion
+            .replace("{from}", WJ.formatDate(this.clickRange.from))
+            .replace("{to}", WJ.formatDate(this.clickRange.until - 1))
+            .replace("{width}", this.groupWidth);
+    }
+
     openPreview() {
         this.nodes.Frame.style.width = this.width + "px";
         this.nodes.Stage.style.width = this.width + "px";
@@ -443,7 +467,7 @@ class HeatMapPreview {
             this.frameReady = true;
             this.nodes.Viewport.classList.remove("d-none");
             let message = "";
-            if (this.previewOnly) message = this.viewer.comparing ? this.texts.emptyWidth : this.texts.emptyVersion;
+            if (this.previewOnly) message = this.emptyMessage();
             this.status(message);
             frameWindow.addEventListener("scroll", () => this.scheduleTiles(), {passive: true});
             frameWindow.addEventListener("resize", () => this.scheduleTiles());

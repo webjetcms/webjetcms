@@ -16,6 +16,11 @@ After(({ I }) => {
 
 /** Install bounded response fixtures to test rendering independently of visitor data. */
 function mockMap(I, {listRequests, multipleVersions = false, comparison = false, comparisonFailure = false}) {
+    const versions = [
+        {historyId: 123, effectiveFrom: 1788300000000, range: {from: 1788300000000, until: 1789509600000}},
+        {historyId: 122, effectiveFrom: 1788213600000, range: {from: 1788213600000, until: 1788300000000}},
+        {historyId: 121, effectiveFrom: 1788127200000, range: {from: 1788213600000, until: 1788220800000}}
+    ];
     const comparisonWidths = {
         "": [{width: 1280, mode: "DOCUMENT", clicks: 32}, {width: 1024, mode: "DOCUMENT", clicks: 5}, {width: 960, mode: "CONTAINER", clicks: 40, previewWidth: 1440}],
         "123": [{width: 1280, mode: "DOCUMENT", clicks: 20}, {width: 960, mode: "CONTAINER", clicks: 18, previewWidth: 1366}],
@@ -56,7 +61,7 @@ function mockMap(I, {listRequests, multipleVersions = false, comparison = false,
                 if (!group) return route.fulfill({status: 404, body: "No clicks at this width"});
                 return route.fulfill({json: {
                     ...group, title: "autotest comparison", tileSize: 1024, source: "history", containerSelector: ".container",
-                    versions: [123, 122, 121].map((historyId, index) => ({historyId, effectiveFrom: 1788300000000 - index * 86400000}))
+                    versions, clickRange: versions.find(version => String(version.historyId) === versionId)?.range
                 }});
             }
             const fallback = multipleVersions && !versionId;
@@ -69,7 +74,8 @@ function mockMap(I, {listRequests, multipleVersions = false, comparison = false,
                 historyId: fallback ? null : Number(versionId || 123), effectiveFrom: 1788213600000,
                 source: fallback ? "current" : "history",
                 historicalUnavailable: fallback, multipleVersions: fallback,
-                versions: multipleVersions ? [{historyId: 123, effectiveFrom: 1788300000000}, {historyId: 122, effectiveFrom: 1788213600000}] : []
+                clickRange: versions.find(version => String(version.historyId) === versionId)?.range,
+                versions: multipleVersions ? versions.slice(0, 2) : []
             }});
         }
         if (url.pathname.endsWith("/area")) {
@@ -175,22 +181,25 @@ Scenario("shows historical fallback and mixed-version notices", ({ I }) => {
     I.seeAttributesOnElements("#heatMapReload", {"data-bs-original-title": "Obnoviť náhľad"});
     I.dontSeeElement(".pg-heatmap-controls .bootstrap-select");
     I.seeElement("#heatMapVersion");
+    I.dontSeeElement("#heatMapPeriod");
     I.dontSeeElement("#heatMapNotice");
     I.waitForVisible("#toast-container-webjet .toast-warning", 5);
     I.see("Mapa kliknutí", "#toast-container-webjet .toast-warning .toast-title");
     I.see("Historickú verziu sa nepodarilo určiť", "#toast-container-webjet .toast-warning");
     I.see("Mapa spája kliknutia z viacerých verzií", "#toast-container-webjet .toast-warning");
-    I.waitToHide("#toast-container-webjet .toast-warning", 7);
+    I.waitToHide("#toast-container-webjet .toast-warning", 12);
     I.selectOption("#heatMapVersion", "122");
     I.waitForElement('#heatMapTiles img[src*="versionId=122"]', 10);
     I.seeElement('#heatMapFrame[src*="versionId=122"]');
     I.see("Kliknutia: 10", "#heatMapTotalClicks");
+    I.see("Obdobie: 01.09.2026 – 01.09.2026", "#heatMapPeriod");
     I.selectOption("#heatMapVersion", "123");
     I.waitForVisible("#heatMapViewport", 10);
     I.waitForText("Kliknutia: 0", 10, "#heatMapTotalClicks");
-    I.see("sa nezaznamenali žiadne kliknutia", "#heatMapStatus");
+    I.see("Obdobie: 02.09.2026 – 15.09.2026", "#heatMapPeriod");
+    I.see("Pre túto verziu stránky a šírku 1280 px neboli v období od 02.09.2026 do 15.09.2026 zaznamenané žiadne kliknutia.", "#heatMapStatus");
     I.dontSeeElement("#heatMapTiles img");
-    I.see("nie sú zaznamenané kliknutia", "#heatMapHotspotStatus");
+    I.see("Pre túto verziu stránky a šírku 1280 px neboli v období od 02.09.2026 do 15.09.2026 zaznamenané žiadne kliknutia.", "#heatMapHotspotStatus");
     I.dontSeeElement("#heatMapHotspotList button");
 });
 
@@ -243,6 +252,8 @@ Scenario("selects an area and compares versions at the same width and scale", as
     I.dontSeeElement("#heatMapAreaLayer, #heatMapAreaResult");
     I.see("Kliknutia: 20", "#heatMapTotalClicks");
     I.see("Kliknutia: 12", "#heatMapCompareTotalClicks");
+    I.see("Obdobie: 02.09.2026 – 15.09.2026", "#heatMapPeriod");
+    I.see("Obdobie: 01.09.2026 – 01.09.2026", "#heatMapComparePeriod");
     I.seeElement('#heatMapTiles img[src*="versionId=123"][src*="width=1280"]');
     I.seeElement('#heatMapCompareTiles img[src*="versionId=122"][src*="width=1280"]');
     I.seeElementInDOM('#heatMapVersion option[value="122"]:disabled');
@@ -274,7 +285,7 @@ Scenario("selects an area and compares versions at the same width and scale", as
     I.waitForVisible("#heatMapCompareViewport", 10);
     I.waitForVisible("#heatMapViewport", 10);
     await checkComparisonGeometry(I, 1024);
-    I.see("Pre túto verziu a vybranú šírku nie sú zaznamenané kliknutia.", "#heatMapStatus");
+    I.see("Pre túto verziu stránky a šírku 1024 px neboli v období od 02.09.2026 do 15.09.2026 zaznamenané žiadne kliknutia.", "#heatMapStatus");
     I.dontSeeElement("#heatMapOverlay");
     I.seeElement("#heatMapCompareOverlay");
     I.selectOption("#heatMapWidth", "container:960");
@@ -293,6 +304,8 @@ Scenario("selects an area and compares versions at the same width and scale", as
     I.waitForVisible("#heatMapViewport", 10);
     I.waitForVisible("#heatMapCompareViewport", 10);
     await checkComparisonGeometry(I, 1440);
+    I.see("Pre túto verziu stránky a šírku 960 px neboli v období od 01.09.2026 do 01.09.2026 zaznamenané žiadne kliknutia.", "#heatMapStatus");
+    I.see("Obdobie: 01.09.2026 – 01.09.2026", "#heatMapPeriod");
     I.see("Kliknutia: 22", "#heatMapCompareTotalClicks");
     I.assertTrue(await I.executeScript(() => {
         const frame = document.getElementById("heatMapCompareFrame");
@@ -306,6 +319,7 @@ Scenario("selects an area and compares versions at the same width and scale", as
     I.see("Verzia stránky", "#heatMapVersionLabel");
     I.see("Kliknutia: 40", "#heatMapTotalClicks");
     I.seeInField("#heatMapVersion", "");
+    I.dontSeeElement("#heatMapPeriod");
     I.seeElement("#heatMapSelectArea:enabled");
     I.waitForVisible("#heatMapHotspotList button", 10);
 });

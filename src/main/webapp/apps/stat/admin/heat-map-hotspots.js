@@ -130,7 +130,7 @@ export class HeatMapHotspots {
             button.setAttribute("aria-pressed", String(index === this.selected));
         });
         this.nodes.Layer.hidden = !available || this.viewer.selectingArea || !this.report?.hotspots.length;
-        if (preview.previewOnly && active) this.status(this.viewer.texts.emptyWidth);
+        if (preview.previewOnly && active) this.status(preview.emptyMessage());
         if (this.nodes.Layer.hidden) return;
         const view = preview.nodes.Frame.contentWindow;
         const offset = preview.containerOffset(view);

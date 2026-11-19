@@ -44,6 +44,7 @@
 .pg-heatmap-pane-label:not([hidden]) { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
 .pg-heatmap-pane-label label { margin: 0; white-space: nowrap; }
 .pg-heatmap-pane-label select { width: 225px; max-width: 100%; }
+.pg-heatmap-period { color: var(--wj-gray-text); font-variant-numeric: tabular-nums; }
 .pg-heatmap-pane > .alert { margin: 10px 15px; flex-shrink: 0; }
 .pg-heatmap-pane .pg-heatmap-summary { margin-top: auto; }
 .pg-heatmap-viewport {

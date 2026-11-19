@@ -38,7 +38,9 @@ Barvy od modré po červenou vyjadřují rostoucí hustotu kliknutí. Škála se
 
 Náhled ve výchozím nastavení zobrazuje publikovaný obsah ke konci období. Pokud není dostupný, upozorní na použití aktuálního obsahu nebo nedostupnost náhledu. V poli **Verze stránky** vyberte konkrétní verzi nebo **Všechny verze**. Seznam obsahuje nejvýše 100 nejnovějších publikovaných verzí za období; starší hledejte v dřívějším období.
 
-Kliknutí se přiřazují po celých dnech. Verze publikované ve stejný den proto mohou obsahovat stejná kliknutí; **Všechny verze** započítá každé jednou. Verzi bez kliknutí lze prohlížet s nulovým počtem. Čas plánovaného publikování je přibližný.
+Výběr verze mění obsah náhledu i mapu kliknutí. Za výběrem verze se zobrazuje **Období** s rozsahem dnů použitým k filtrování kliknutí. Při porovnávání má každá verze vlastní rozsah. Mapa zahrnuje pouze dny, během kterých byla vybraná verze zveřejněna v rámci zvoleného období, a kliknutí pro zvolenou šířku. Pokud kliknutí chybí, hlášení uvede rozsah těchto dnů a šířku mapy. Verzi lze dále prohlížet s nulovým počtem kliknutí.
+
+Kliknutí se přiřazují po celých dnech. Verze publikované ve stejný den proto mohou obsahovat stejná kliknutí; **Všechny verze** započítá každé jednou. Čas plánovaného publikování je přibližný.
 
 Šablona, hlavička, patička, nabídky, aplikace a obrázky používají aktuální zdroje. Změny rozložení či výšky obsahu mohou posunout mapu oproti původním kliknutím.
 
