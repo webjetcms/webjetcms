@@ -58,7 +58,7 @@ class AiToolProtocolTest {
         var protocol = new AiToolProtocol(List.of(save), List.of());
         assertFalse(protocol.instructions().contains("\"title\"") || protocol.instructions().contains("\"$defs\""));
         assertTrue(protocol.instructions().contains("name and version match"));
-        assertTrue(protocol.instructions().contains("Reload it if the version changes"));
+        assertTrue(protocol.instructions().contains("inputSchema from a loaded skill"));
         var answer = new AssistantResponseDTO();
         protocol.apply("Hello!", answer, mock(Prop.class));
         assertEquals("Hello!", answer.getResponse());

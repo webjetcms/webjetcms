@@ -293,18 +293,20 @@ class AiToolDiscoveryTest {
                 .map(AiToolDefinition::name).collect(java.util.stream.Collectors.toSet()));
         assertTrue(runtime.hasWriteTool());
 
-        var response = mvc.perform(post(BASE + "/ai_tools_load_skill/call").session(session)
-                .header(AiToolAuthorization.ASSISTANT_HEADER, "7")
-                .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Quiz\"}"))
-                .andExpect(status().isOk()).andReturn().getResponse();
-        var loaded = json.readTree(response.getContentAsByteArray());
+        var loaded = loadQuizSkill();
+        assertFalse(loaded.has("directTools"));
         assertEquals("Quiz", loaded.path("name").asText());
         assertEquals(skill.getInstructions().replace("@tool(audit_probe_batch)", "audit_probe_batch"),
                 loaded.path("instructions").asText());
         assertFalse(loaded.path("version").asText().isBlank());
         assertTrue(catalog.contains(loaded.path("version").asText()));
-        assertFalse(loaded.has("tools"));
-        skill.setInstructions(skill.getInstructions() + " Updated guidance.");
+        var tool = context.getBean(AiToolRegistry.class).lookup("audit_probe_batch").definition();
+        assertEquals(json.valueToTree(List.of(Map.of("name", tool.name(), "description", tool.description(),
+                "version", tool.version(), "write", true, "inputSchema", tool.inputSchema()))), loaded.required("tools"));
+        skill.setInstructions("a".repeat(1024 * 1024 - 220) + " @tool(audit_probe_batch)");
+        var large = loadQuizSkill();
+        assertFalse(large.has("tools"));
+        assertEquals(skill.getInstructions().replace("@tool(audit_probe_batch)", "audit_probe_batch"), large.required("instructions").asText());
         var updated = service.resolve(assistant, domain, adminRequest());
         assertFalse(updated.skills().get("Quiz").version().equals(loaded.path("version").asText()));
         mvc.perform(get(BASE + "/load-skill").session(session).param("name", "Unrelated")
@@ -321,9 +323,11 @@ class AiToolDiscoveryTest {
         when(security.hasPermission("menuConfig")).thenReturn(true);
         var skill = new AiSkillEntity();
         skill.setName("Configuration");
-        skill.setInstructions("Configuration guidance. " + "Description. ".repeat(20) + "@tool(configuration_add)");
+        skill.setInstructions("Configuration guidance. " + "Description. ".repeat(20)
+                + "@tool(configuration_add) @tool(configuration_add) @group(configuration) @tool(audit_probe_batch)");
         when(context.getBean(AiSkillRepository.class).findByDomainIdAndNameInOrderByNameAsc(anyInt(), eq(Set.of("Configuration"))))
                 .thenReturn(List.of(skill));
+        when(security.hasPermission("cmp_quiz")).thenReturn(false);
         var runtime = context.getBean(AiToolService.class).resolve(assistant, CloudToolsForCore.getDomainId(), adminRequest());
         String prompt = AiToolProtocol.prepare(runtime, List.of()).instructions();
         var summaries = json.readTree(prompt.split("Assigned tool summaries:\n", 2)[1].split("\nLoader input schemas:", 2)[0]);
@@ -350,6 +354,12 @@ class AiToolDiscoveryTest {
         assertTrue(details.toString().contains("\"encrypt\""));
         assertEquals(List.of("ai_tools_details"), runtime.tools().stream().filter(t -> t.name().equals("ai_tools_details"))
                 .map(AiToolDefinition::name).toList());
+        if (references.startsWith("@skill")) {
+            String arguments = "{\"name\":\"Configuration\"}";
+            assertEquals(json.valueToTree(List.of(tool.callSchema())), call(AiAssistantRuntime.LOAD_SKILL, arguments, 200));
+            when(security.hasPermission("menuConfig")).thenReturn(false);
+            assertNull(call(AiAssistantRuntime.LOAD_SKILL, arguments, 200));
+        }
     }
 
     /** Assistant discovery cannot expand assignments; direct administrative browsing remains permission-based. */
@@ -409,6 +419,14 @@ class AiToolDiscoveryTest {
         assertEquals(List.of(preview.definition(), details.definition(), probe.definition()), next.tools());
         assertTrue(next.assistant().getInstructions().endsWith("[tool unavailable]"));
         verifyNoInteractions(skills);
+    }
+
+    private JsonNode loadQuizSkill() throws Exception {
+        byte[] bytes = mvc.perform(post(BASE + "/ai_tools_load_skill/call").session(session)
+                .header(AiToolAuthorization.ASSISTANT_HEADER, "7").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Quiz\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        assertTrue(bytes.length <= 1024 * 1024);
+        return json.readTree(bytes);
     }
 
     private JsonNode call(String tool, String arguments, int expectedStatus) throws Exception {

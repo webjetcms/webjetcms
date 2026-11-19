@@ -19,6 +19,13 @@ public record AiToolDefinition(String name, String description, Map<String, Obje
 
     public record Preview(String name, String description, String httpMethod, String path, boolean write, String version) {}
 
+    /** The fields needed to invoke a tool directly from a loaded skill. */
+    public record CallSchema(String name, String description, Map<String, Object> inputSchema, boolean write, String version) {}
+
+    CallSchema callSchema() {
+        return new CallSchema(name, description, inputSchema, writes(), version());
+    }
+
     public Preview preview() {
         String excerpt = description == null ? "" : description.strip();
         if (excerpt.length() > 160) excerpt = excerpt.substring(0, 160) + "…";

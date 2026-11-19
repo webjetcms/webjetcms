@@ -26,6 +26,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.tools.AiToolAuthorization.Access;
 import sk.iway.iwcm.i18n.Prop;
+import tools.jackson.databind.json.JsonMapper;
 
 /** Provides the English tool catalog and dispatches calls in an authenticated CMS request. */
 @Service
@@ -34,6 +35,9 @@ public class AiToolService {
 
     static final String TARGET = AiToolService.class.getName() + ".target";
     static final String WRITE = AiToolService.class.getName() + ".write";
+    // The browser accepts up to 1 MiB per catalog response in ai-tool-transport.js.
+    private static final int MAX_CATALOG_BYTES = 1024 * 1024;
+    private static final JsonMapper JSON = JsonMapper.builder().build();
     private final AiToolRegistry registry;
     private final AiToolAuthorization authorization;
 
@@ -66,8 +70,12 @@ public class AiToolService {
             String header = request.getHeader(AiToolAuthorization.ASSISTANT_HEADER);
             try {
                 var skill = authorization.assistant(Long.parseLong(header), request)
-                        .map(runtime -> runtime.skills().get(name));
-                if (skill.isPresent()) return skill.get();
+                        .map(runtime -> runtime.skills().get(name)).orElse(null);
+                if (skill != null) {
+                    if (skill.directTools().isEmpty() || JSON.writeValueAsBytes(skill).length <= MAX_CATALOG_BYTES) return skill;
+                    // Keep the guidance readable. The model can fetch large schemas individually through ai_tools_details.
+                    return new AiAssistantRuntime.Skill(skill.name(), skill.version(), skill.instructions());
+                }
             } catch (NumberFormatException invalidAssistant) {
                 // Direct calls without a valid assistant cannot access skill contents.
             }
@@ -85,12 +93,13 @@ public class AiToolService {
         var runtime = authorization.assistant(assistantId, request)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         var assistant = runtime.assistant();
-        boolean browser = "browser".equals(assistant.getProvider());
-        var definitions = runtime.tools();
-        return new RuntimeMetadata(assistant.getProvider(), assistant.getAction(), !definitions.isEmpty(), runtime.hasWriteTool(),
-                browser ? assistant.getInstructions() : null, browser ? runtime.skillInstructions() : null,
-                browser ? definitions.stream().map(tool -> new BrowserTool(tool.name(), tool.writes())).toList() : null,
-                browser && !definitions.isEmpty() ? AiToolProtocol.instructions(definitions) : null);
+        // Browser assistants do not resolve references, but their runtime response includes the original instructions.
+        if ("browser".equals(assistant.getProvider())) {
+            return new RuntimeMetadata(assistant.getProvider(), assistant.getAction(), false, false,
+                    assistant.getInstructions(), "", List.of(), null);
+        }
+        return new RuntimeMetadata(assistant.getProvider(), assistant.getAction(), !runtime.tools().isEmpty(),
+                runtime.hasWriteTool(), null, null, null, null);
     }
 
     /** An editor can offer a preset on an empty field when its skills or visible tools supply context. */

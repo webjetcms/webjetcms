@@ -57,18 +57,19 @@ export async function requestAiText(inputData, { toolsEnabled, allowWrites = tru
             totalTokens += result.totalTokens;
             result.totalTokens = totalTokens;
         }
-        if (result.toolCall && result.threadId) {
+        if (!result.toolCall) return result;
+        if (result.threadId) {
             options.onMetadata?.(result);
             message.threadId = result.threadId;
             message.revision = result.revision ?? message.revision;
-            delete message.files;
-        } else if (result.toolCall && result.conversationId) {
+        } else if (result.conversationId) {
             message.conversationId = result.conversationId;
-            delete message.files;
-        } else if (result.toolCall && result.attachmentContextId) {
+        } else if (result.attachmentContextId) {
             message.attachmentContextId = result.attachmentContextId;
-            delete message.files;
+        } else {
+            return result;
         }
+        delete message.files;
         return result;
     }, options.signal, onWrite, onToolActivity);
 }

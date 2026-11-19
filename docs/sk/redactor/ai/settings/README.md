@@ -120,9 +120,9 @@ Ak chcete nástroj alebo zručnosť odobrať, vymažte odkazy, ktoré ich prira�
 
 Ak na tú istú zručnosť odkážete viackrát, v zozname priradených zručností sa objaví iba raz. Aj nástroj, na ktorý odkážete priamo, cez skupinu alebo cez viacero zručností, sa v zozname dostupných nástrojov objaví iba raz.
 
-Asistent dostane pri spustení iba stručný zoznam nástrojov: názov, krátky opis, HTTP metódu, REST cestu, príznak zápisu a verziu definície. Úplné vstupné a výstupné schémy si vyžiada nástrojom `ai_tools_details` až pred použitím konkrétnej operácie. Tento nástroj sa sprístupní automaticky; do inštrukcií ho nemusíte pridávať. Viacero súvisiacich definícií môže načítať jedným volaním.
+Asistent dostane pri spustení iba stručný zoznam nástrojov: názov, krátky opis, HTTP metódu, REST cestu, príznak zápisu a verziu definície. Pri načítaní zručnosti dostane aj vstupné schémy povolených nástrojov, ktoré zručnosť uvádza cez `@tool(...)`. Chýbajúce schémy, napríklad pre nástroje priradené iba cez `@group(...)`, alebo úplné definície s opisom výstupu si vyžiada nástrojom `ai_tools_details`. Tento nástroj sa sprístupní automaticky; do inštrukcií ho nemusíte pridávať. Viacero súvisiacich definícií môže načítať jedným volaním.
 
-V pokračujúcom čete môže asistent použiť úplnú definíciu, ktorú už má v kontexte a ktorej verzia sa nezmenila. Ak sa definícia zmení alebo jej text už nie je dostupný, načíta ju znova. Samostatné požiadavky bez histórie opätovne posielajú výsledky predchádzajúcich krokov. Rovnaký postup platí aj pre nástroje priradené cez zručnosti: načítanie zručnosti samo osebe nenačíta ich schémy.
+V pokračujúcom čete môže asistent použiť úplnú definíciu, ktorú už má v kontexte a ktorej verzia sa nezmenila. Ak sa definícia zmení alebo jej text už nie je dostupný, načíta ju znova. Samostatné požiadavky bez histórie opätovne posielajú výsledky predchádzajúcich krokov.
 
 Ak chcete pridať aj nástroj `ai_tools_preview`, vložte `@group(ai)` alebo `@tool(ai_tools_preview)`. Pri volaní asistentom katalóg aj detaily obsahujú iba jeho priradené nástroje povolené prihlásenému používateľovi. Na stránke **AI nástroje → Nástroje** naďalej vidíte všetky operácie dostupné podľa svojich oprávnení. Načítanie definície nepridáva oprávnenia na vykonanie operácie.
 

@@ -190,25 +190,34 @@ class AiChatServiceTest {
         assertEquals("id-5", store.get(first.getThreadId(), scope).thread().getLastResponseId());
     }
 
-    /** Transcripts predating validated continuation tracking replay their original attachments and actual results. */
-    @Test
-    void restoresAttachmentContextForLegacyToolContinuation() throws Exception {
+    /** Only a response from the same turn can supply the attachment when continuing after a tool call. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void reusesAttachmentFromTheAcceptedToolResponse(boolean legacyReplay) throws Exception {
+        var previous = execute(prepare(null, null));
         stubToolDecisions("{\"type\":\"call\",\"name\":\"add_record\",\"arguments\":{}}",
             "{\"type\":\"final\",\"text\":\"Saved 1596\"}");
         var uploads = AiChatAttachments.read(List.of(new MockMultipartFile("files", "notes.txt", "text/plain",
             "Original attachment context".getBytes(StandardCharsets.UTF_8))));
-        var initial = new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Read these", null);
+        var initial = new AiChatRequest(previous.getThreadId(), 12L, UUID.randomUUID().toString(), previous.getRevision(), "Read these", null);
         var pending = execute(service.prepare(initial, scope, uploads));
-        Path path = root.resolve("7/42").resolve(pending.getThreadId()).resolve("ai_chat.json");
-        var document = AiChatFiles.read(path);
-        document.getMessages().get(1).setToolResponseId(null);
-        AiChatFiles.write(path, document);
+        verify(provider).getPersistentChatResponse(any(), argThat(input -> "response-one".equals(input.getPreviousResponseId())
+            && input.getToolProtocol().results().isEmpty() && input.getChatAttachmentContext().contains("Original attachment context")),
+            any(), anyBoolean(), any(), any());
+        if (legacyReplay) {
+            Path path = root.resolve("7/42").resolve(pending.getThreadId()).resolve("ai_chat.json");
+            var document = AiChatFiles.read(path);
+            document.getMessages().stream().filter(entry -> pending.getMessageId().equals(entry.getId()))
+                .findFirst().orElseThrow().setToolResponseId(null);
+            AiChatFiles.write(path, document);
+        }
         var result = new AiToolProtocol.Result("add_record", Map.of(), 200, Map.of("id", 1596), false);
         var next = new AiChatRequest(pending.getThreadId(), 12L, initial.requestId(), pending.getRevision(), "Read these",
             null, null, null, false, List.of(result));
         assertEquals("Saved 1596", execute(service.prepare(next, scope)).getResponse());
-        verify(provider).getPersistentChatResponse(any(), argThat(input -> input.isReplayToolResults()
-            && input.getPreviousResponseId() == null && input.getChatAttachmentContext().contains("Original attachment context")
+        verify(provider).getPersistentChatResponse(any(), argThat(input -> input.isReplayToolResults() == legacyReplay
+            && (legacyReplay ? "response-one" : "id-1").equals(input.getPreviousResponseId())
+            && (legacyReplay ? input.getChatAttachmentContext().contains("Original attachment context") : input.getChatAttachmentContext() == null)
             && input.getToolProtocol().results().equals(List.of(result))), any(), anyBoolean(), any(), any());
     }
 

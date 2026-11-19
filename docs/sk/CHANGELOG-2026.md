@@ -218,7 +218,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
-- AI asistenti - na karte [Inštrukcie](redactor/ai/settings/README.md#karta---inštrukcie) môžete vyhľadať a vložiť odkaz na zručnosť, nástroj alebo celú skupinu nástrojov. Pri spustení asistent načíta aktuálne zručnosti a nástroje dostupné používateľovi (#401).
+- AI asistenti - na karte [Inštrukcie](redactor/ai/settings/README.md#karta---inštrukcie) môžete vyhľadať a vložiť odkaz na zručnosť, nástroj alebo celú skupinu nástrojov. Pri načítaní zručnosti asistent dostane aj vstupné schémy priamo odkazovaných nástrojov dostupných používateľovi. Pri ďalších krokoch tej istej správy uložený čet použije prílohy z histórie poskytovateľa (#401).
 - AI asistenti - v [audite](sysadmin/audit/README.md) môžete podľa názvu nástroja vyhľadať jeho volania aj zmeny, ktoré vykonal. Pri každom volaní vidíte asistenta, cieľovú REST operáciu a stavový kód HTTP (#401).
 - AI asistenti - [nástroje webových stránok a priečinkov](developer/datatables/restcontroller.md#ai_tools) umožňujú čítať, vytvárať, upravovať a mazať záznamy cez existujúce REST operácie s oprávneniami prihláseného používateľa.
 - AI asistenti - nová karta [Limity tokenov](redactor/ai/settings/README.md#karta---limity-tokenov) umožňuje obmedziť spotrebu asistenta a zobraziť jej vývoj za posledných 14 dní. Na zadaný notifikačný e-mail sa odošlú upozornenia pri dosiahnutí 75 % a 100 % limitu. Po dosiahnutí limitu sa ďalšie požiadavky zablokujú. Spotrebu možno vynulovať ručne pre vybraných asistentov alebo aktuálnu doménu, prípadne pravidelne pre všetky domény úlohou `AiTokenUsageReset`, ktorá sa predvolene spúšťa každý deň o polnoci (#58814).
