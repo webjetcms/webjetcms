@@ -18,7 +18,9 @@ V páse pracovnej verzie kliknite na **Náhľad**. V novej karte môžete prejs�
 
 Odkaz **Pracovné zmeny** v hlavičke otvorí priamo kartu **Zmeny** aktívnej pracovnej verzie. V zozname pracovných verzií môžete označiť ľubovoľný riadok a použiť rovnakú akciu. Zoznam zúžite filtrom v stĺpci **Typ** alebo prepínačom **Len problémy** v lište. Po úpravách v inej karte prehliadača použite obnovenie tabuľky.
 
-Akciou **Porovnať** otvoríte pôvodný stav, hlavnú verziu a pracovnú verziu položky. Karta **Polia** zobrazuje údaje položky, karta **HTML kód** jej obsah a úplný HTML zdroj. Prepínač **Zobraziť aj nezmenené polia** rozšíri porovnanie o ostatné údaje. Tlačidlo **Zobraziť stránku** pod nadpisom **Hlavná verzia** otvorí stránku v hlavnej verzii. Pod nadpisom **Pracovná verzia** nájdete jej náhľad a úpravu. Akcie sú dostupné na oboch kartách aj pri zobrazení verzií pod sebou na mobile. Ikonou v hlavičke môžete okno maximalizovať a vrátiť na pôvodnú veľkosť.
+Akciou **Porovnať** otvoríte východiskový stav, hlavnú verziu a pracovnú verziu položky. Karta **Polia** zobrazuje údaje položky, karta **HTML kód** jej obsah a úplný HTML zdroj. Prepínač **Zobraziť aj nezmenené polia** rozšíri porovnanie o ostatné údaje. Tlačidlo **Zobraziť stránku** pod nadpisom **Hlavná verzia** otvorí stránku v hlavnej verzii. Pod nadpisom **Pracovná verzia** nájdete jej náhľad a úpravu. Akcie sú dostupné na oboch kartách aj pri zobrazení verzií pod sebou na mobile. Ikonou v hlavičke môžete okno maximalizovať a vrátiť na pôvodnú veľkosť.
+
+**Východiskový stav** zachytáva hlavnú verziu položky pri prvom uložení jej úpravy v pracovnej verzii. Pri ďalších úpravách sa nemení. **Hlavná verzia** zobrazuje aktuálny stav, ktorý sa mohol medzitým zmeniť. Tento rozdiel vysvetľuje aj tooltip pri nadpise **Východiskový stav**, dostupný myšou aj klávesnicou.
 
 Tlačidlom **Upraviť** v bloku **Pracovná verzia** otvoríte pracovný obsah v editore. Po uložení sa vráťte do porovnania a znova skontrolujte zmeny. Uloženie obsahu zruší predchádzajúcu voľbu výslednej verzie. Pokyny k úprave sú dostupné aj v tooltipe tlačidla; vysvetlenie voľby verzie nájdete pri **Uložiť riešenie**.
 

@@ -822,7 +822,16 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
                 const panel = element('section', 'pg-branch-merge__version');
                 panel.dataset.branchVersion = version.toUpperCase();
                 const header = element('div', 'pg-branch-merge__version-header');
-                header.append(element('h3', 'h6', tr(version)));
+                const heading = element('h3', 'h6', tr(version));
+                if (version === 'base') {
+                    heading.id = `branch-merge-${name}-base-title`;
+                    heading.classList.add('pg-branch-merge__base-title', 'd-inline-flex', 'align-items-center', 'gap-1');
+                    heading.tabIndex = 0;
+                    heading.title = tr('baseHint');
+                    heading.dataset.branchHint = '';
+                    heading.append(icon('ti-info-circle'));
+                }
+                header.append(heading);
                 const actions = versionActions(item, version);
                 if (actions.childElementCount) header.append(actions);
                 header.append(element('p', 'small text-muted mb-0', tr(`existence.${snapshot.state}`)));

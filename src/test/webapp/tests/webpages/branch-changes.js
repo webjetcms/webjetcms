@@ -113,6 +113,13 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.waitForVisible('dialog.pg-branch-merge', 10);
     const editHint = 'Po uložení v editore sa sem vráťte a znova skontrolujte zmeny. Uloženie zruší starú voľbu výsledku.';
     const saveHint = 'Zvolená verzia sa použije pre celú položku.';
+    const baseHint = 'Stav hlavnej verzie zachytený pri prvom uložení úpravy tejto položky v pracovnej verzii. Pri ďalších úpravách sa nemení.';
+    I.see('Východiskový stav', '#branch-merge-fields [data-branch-version="BASE"]');
+    I.focus('#branch-merge-fields-base-title');
+    I.waitForText(baseHint, 5, `${detail} .tooltip.show`);
+    I.pressKey('Escape');
+    I.waitForInvisible(`${detail} .tooltip.show`, 5);
+    I.seeElement(detail);
     I.dontSee(editHint, detail);
     I.dontSee(saveHint, detail);
     const fieldsWork = '#branch-merge-fields [data-branch-version="WORK"]';
@@ -148,6 +155,12 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.checkOption(`${detail} footer input[name="branch-merge-choice"][value="WORK"]`);
     I.clickCss('#branch-merge-html-tab');
     I.waitForVisible('#branch-merge-html.active', 5);
+    I.see('Východiskový stav', '#branch-merge-html [data-branch-version="BASE"]');
+    I.focus('#branch-merge-html-base-title');
+    I.waitForText(baseHint, 5, `${detail} .tooltip.show`);
+    I.pressKey('Escape');
+    I.waitForInvisible(`${detail} .tooltip.show`, 5);
+    I.seeElement(detail);
     I.see('Upraviť', '#branch-merge-html [data-branch-version="WORK"] .pg-branch-merge__actions');
     I.see('Zobraziť stránku', '#branch-merge-html [data-branch-version="LIVE"] .pg-branch-merge__actions');
     I.see('autotest draft HTML', '#branch-merge-html [data-branch-version="WORK"]');

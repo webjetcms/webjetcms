@@ -145,6 +145,7 @@
         border-radius: $border-radius;
     }
     &__version-header, &__version-body { min-width: 0; }
+    &__base-title { cursor: help; }
     &__version dd { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
     &__changed { border-left: 3px solid $primary; padding-left: 8px; background: $nice-gray; }
     &__text { color: inherit; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 28rem; overflow: auto; }
