@@ -108,6 +108,7 @@ function fixture(t, editExisting = false) {
             const Editor = vm.runInContext(fs.readFileSync(source, 'utf8')
                 .replace('import WJ from "./webjet";', '')
                 .replace('import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";', '')
+                .replace('import { configureBranchImageUrl } from "./ckeditor-branch-image";', '')
                 .replace('export class DatatablesCkEditor', 'class DatatablesCkEditor') + '\nDatatablesCkEditor;', context);
             let hiddenHtml = '<p>Stale hidden content</p>';
             conf.wjeditor = Object.assign(Object.create(Editor.prototype), {

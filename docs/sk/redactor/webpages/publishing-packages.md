@@ -12,6 +12,8 @@ Publikačný balík spojí prípravu viacerých stránok, priečinkov, médií a
 
 Zvolenú pracovnú verziu ukazuje prepínač v hlavičke administrácie. Editor zobrazí upozornenie, ak konkrétnu stránku nemožno upravovať, napríklad pri zdieľanej System stránke alebo multigroup kópii. Individuálne plány publikovania, história, atribúty a multigroup väzby sa v pracovnej verzii nemenia; spravujú sa mimo balíka.
 
+Obrázky môžete vyberať priamo cez dialóg CKEditora. Zobrazia sa z pracovnej verzie, pričom v poli **URL adresa** aj v HTML zostáva bežná cesta `/images/...`. Nový obrázok pridaný iba do balíka bude na verejnej adrese dostupný až po publikovaní.
+
 ## Náhľad a konflikt
 
 V páse pracovnej verzie kliknite na **Náhľad**. V novej karte môžete prejsť menu, Novinky, detaily, obrázky a prílohy. Náhľad vyžaduje prihlásenie do administrácie. Lišta uvádza logickú doménu a čas použitý Novinkami.

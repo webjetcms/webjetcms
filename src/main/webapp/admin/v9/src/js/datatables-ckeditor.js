@@ -1,5 +1,6 @@
 import WJ from "./webjet";
 import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";
+import { configureBranchImageUrl } from "./ckeditor-branch-image";
 
 export class DatatablesCkEditor {
 
@@ -607,6 +608,9 @@ export class DatatablesCkEditor {
 
 				if ( dialogName == 'image')
 				{
+					if (window.branchScreen?.enabled && window.branchScreen.branchId) {
+						configureBranchImageUrl(dialogDefinition.getContents('info').get('txtUrl'), window.branchAssetUrl, window.branchLogicalAssetUrl);
+					}
 
 					dialogDefinition.minWidth = 800;
 					dialogDefinition.minHeight = 460;

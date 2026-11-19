@@ -9,6 +9,7 @@ const filename = path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/d
 const Editor = vm.runInNewContext(fs.readFileSync(filename, 'utf8')
     .replace('import WJ from "./webjet";', '')
     .replace('import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";', '')
+    .replace('import { configureBranchImageUrl } from "./ckeditor-branch-image";', '')
     .replace('export class DatatablesCkEditor', 'class DatatablesCkEditor') + '\nDatatablesCkEditor;', { console });
 
 test('A new page write waits for the previous iframe restoration and its own dataReady', async () => {
