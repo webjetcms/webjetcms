@@ -43,6 +43,7 @@
         "bootstrap-select": "1.14.0-beta3",
         "cropperjs": "^2.1.1",
         "datatables.net-rowreorder-bs5": "^1.5.0",
+        "diff": "^9.0.0",
         "dropzone": "^5.9.3",
         "jquery": "^3.7.1",
         "jquery-ui": "^1.14.1",

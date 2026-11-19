@@ -1,38 +1,19 @@
 import {node as element} from './dashboard/widget-utils';
 
 /** Lazily loads sandboxed server-rendered pages and synchronizes their scroll positions. */
-export function createBranchPageContent(item, branchId, {tr, actions, highlight, onHighlight, refresh}) {
+export function createBranchPageContent(item, branchId, {tr, versionHeader, highlight, refresh}) {
     const root = element('div', 'pg-branch-page-content');
     const panes = [];
     const lifetime = new AbortController();
-    const bothActive = item.live?.state === 'ACTIVE' && item.work?.state === 'ACTIVE';
     let started = false;
 
-    if (bothActive) {
-        const label = element('label', 'form-check-label mb-3');
-        const check = element('input', 'form-check-input me-2');
-        check.type = 'checkbox';
-        check.id = 'branch-merge-highlight';
-        check.checked = highlight;
-        check.addEventListener('change', () => {
-            highlight = check.checked;
-            onHighlight(highlight);
-            load(panes.find(pane => pane.version === 'work'));
-        });
-        label.append(check, document.createTextNode(tr('highlight')));
-        root.append(label);
-    }
     const columns = element('div', 'pg-branch-page-content__versions');
     const versions = item.workOnly ? ['work'] : ['live', 'work'];
     columns.style.setProperty('--branch-merge-columns', versions.length);
     for (const version of versions) {
         const panel = element('section', 'pg-branch-page-content__version');
         panel.dataset.branchPageVersion = version.toUpperCase();
-        const header = element('div', 'pg-branch-page-content__header');
-        header.append(element('h3', 'h6', tr(version)));
-        const controls = actions(item, version);
-        if (controls.childElementCount) header.append(controls);
-        panel.append(header);
+        panel.append(versionHeader(item, version, 'content'));
         const pane = {version, panel};
         if (item[version]?.state === 'ACTIVE') {
             pane.status = element('div', 'pg-branch-page-content__status small text-muted');
@@ -123,6 +104,9 @@ export function createBranchPageContent(item, branchId, {tr, actions, highlight,
         if (started) return;
         started = true;
         panes.forEach(pane => load(pane));
+    }, setHighlight(value) {
+        highlight = value;
+        load(panes.find(pane => pane.version === 'work'));
     }, dispose() {
         lifetime.abort();
         panes.forEach(pane => pane.request?.abort());

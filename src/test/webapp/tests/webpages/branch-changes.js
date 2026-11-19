@@ -159,9 +159,11 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.see('autotest draft', '#branch-merge-fields [data-branch-version="WORK"]');
     const twoColumnsFillWidth = await I.executeScript(() => {
         const grid = document.querySelector('#branch-merge-fields .pg-branch-merge__versions').getBoundingClientRect();
+        const labels = document.querySelector('#branch-merge-fields .pg-branch-merge__labels').getBoundingClientRect();
         const panels = [...document.querySelectorAll('#branch-merge-fields [data-branch-version]')].map(panel => panel.getBoundingClientRect());
         return panels.length === 2 && Math.abs(panels[0].width - panels[1].width) <= 1
-            && Math.abs(panels[0].left - grid.left) <= 1 && Math.abs(panels[1].right - grid.right) <= 1;
+            && Math.abs(grid.left - labels.left) <= 1 && Math.abs(labels.right - panels[0].left) <= 1
+            && Math.abs(panels[0].right - panels[1].left) <= 1 && Math.abs(panels[1].right - grid.right) <= 1;
     });
     I.assertTrue(twoColumnsFillWidth);
     I.assertEqual(pageRequests.length, 2);
@@ -209,7 +211,8 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.dontSeeElement('#branch-merge-html [data-branch-version="BASE"]');
     I.see('autotest original HTML', '#branch-merge-html [data-branch-version="LIVE"]');
     I.see('autotest original HTML', '#branch-merge-html [data-branch-version="LIVE"] .pg-branch-merge__changed');
-    I.see('autotest draft HTML', '#branch-merge-html [data-branch-version="WORK"] .pg-branch-merge__changed');
+    I.see('<p>autotest draft HTML</p>', '#branch-merge-html [data-branch-version="WORK"] .is-added');
+    I.see('<p>autotest original HTML</p>', '#branch-merge-html [data-branch-version="LIVE"] .is-removed');
     I.checkOption('#branch-merge-all-fields');
     I.seeCheckboxIsChecked('#branch-merge-choice-work');
     I.dontSeeElement('#branch-merge-html [data-branch-version="BASE"]');
@@ -256,7 +259,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.assertEqual(loads.length, loaded + 2);
     I.clickCss('[data-branch-compare="12"]');
     I.waitForVisible('dialog.pg-branch-merge', 10);
-    const editHint = 'Po uložení v editore sa sem vráťte a znova skontrolujte zmeny. Uloženie zruší starú voľbu výsledku.';
+    const editHint = 'Po uložení v editore sa sem vráťte a znova skontrolujte zmeny.';
     const saveHint = 'Zvolená verzia sa použije pre celú položku.';
     const baseHint = 'Stav hlavnej verzie zachytený pri prvom uložení úpravy tejto položky v pracovnej verzii. Pri ďalších úpravách sa nemení.';
     I.see('Východiskový stav', '#branch-merge-fields [data-branch-version="BASE"]');
@@ -287,7 +290,8 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     });
     I.assertTrue(aligned);
     I.focus(`${fieldsWork} [data-branch-edit]`);
-    I.waitForText(editHint, 5, `${detail} .tooltip.show`);
+    I.waitForVisible(`${detail} .tooltip.show .tooltip-inner`, 5);
+    I.seeTextEquals(editHint, `${detail} .tooltip.show .tooltip-inner`);
     I.pressKey('Escape');
     I.waitForInvisible(`${detail} .tooltip.show`, 5);
     I.seeElement(detail);

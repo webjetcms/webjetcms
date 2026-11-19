@@ -99,15 +99,47 @@
     &__header.modal-header {
         position: relative;
         flex-shrink: 0;
-        padding: 8px 16px 0;
+        padding: 10px 16px 0;
+        background: $white;
 
-        .modal-title { margin-right: 80px; }
-        &.pg-branch-merge__header--no-tabs { padding-bottom: 8px; }
+        .modal-title { padding: 0; margin: 0; font-size: 22px; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
     }
+    &__title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 78px 8px 0;
 
-    &__content { flex: 1; min-height: 0; overflow: auto; padding: 16px; }
+        > .ti { display: grid; place-items: center; flex: none; width: 38px; height: 38px; color: $primary; background: tint-color($primary, 94%); border-radius: $border-radius; font-size: 20px; }
+        small { font-size: 12px; }
+    }
+    &__toolbar.md-tabs {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0 12px;
+        flex-wrap: wrap;
 
-    &__actions .ti { font-size: 18px; vertical-align: text-bottom; }
+        .nav-link .ti { vertical-align: -2px; }
+        .nav { min-width: 0; }
+    }
+    &__options {
+        margin-left: auto;
+        font-size: 14px;
+        label { padding-block: 6px; cursor: pointer; }
+        input { cursor: pointer; }
+        &:empty { display: none; }
+    }
+    &__content { flex: 1; min-height: 0; overflow: auto; }
+    &__content > .alert, &__detail > .alert, [data-branch-retry] { margin: 12px 16px; }
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-left: auto;
+        .btn { padding: 3px 6px; }
+        .ti { font-size: 17px; vertical-align: -2px; }
+    }
     &__save-hint button:disabled { pointer-events: none; }
 
     &__footer.modal-footer {
@@ -125,32 +157,89 @@
     &__choices {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px 24px;
+        gap: 2px 20px;
         min-width: 0;
         margin-right: auto !important;
         font-size: 14px;
 
+        legend { float: none; width: 100%; margin: 0; font-size: 12px; color: $gray-text; }
         label { display: flex; align-items: center; }
         input { flex-shrink: 0; margin-top: 0; }
     }
 
-    &__versions { display: grid; grid-template-columns: repeat(var(--branch-merge-columns, 3), minmax(0, 1fr)); gap: 16px; }
+    &__versions {
+        display: grid;
+        grid-template-columns: repeat(var(--branch-merge-columns), minmax(0, 1fr));
+    }
     &__version {
         display: grid;
         grid-template-rows: subgrid;
         grid-row: span 2;
-        row-gap: 0;
         min-width: 0;
-        padding: 16px;
-        border: 1px solid $nice-gray-100;
-        border-radius: $border-radius;
+        & + & { border-left: 1px solid $nice-gray-100; }
     }
-    &__version-header, &__version-body { min-width: 0; }
-    &__base-title { cursor: help; }
-    &__version dd { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
-    &__changed { border-left: 3px solid $primary; padding-left: 8px; background: $nice-gray; }
-    &__text { color: inherit; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 28rem; overflow: auto; }
+    &__version-header, &__field-heading {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 62px;
+        padding: 10px 16px;
+        border-bottom: 1px solid $nice-gray-100;
+        background: $white;
+    }
+    &__version-header {
+        flex-wrap: wrap;
+        > .ti { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: $border-radius; background: $nice-gray; color: $gray-text; font-size: 18px; }
+        &[data-version="live"] > .ti { background: tint-color($success, 90%); color: $green-60; }
+        &[data-version="work"] > .ti { background: tint-color($primary, 92%); color: $primary; }
+    }
+    &__version-title {
+        min-width: 0;
+        h3 { font-size: 16px; font-weight: 700; }
+        small { display: block; font-size: 12px; }
+        [data-branch-hint] { cursor: help; }
+    }
+    &__labels { display: none; }
+    &__field {
+        min-width: 0;
+        padding: 12px 16px;
+        border-bottom: 1px solid $nice-gray-100;
+        dt { color: $gray-text; font-size: 13px; margin-bottom: 3px; }
+        dd { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+    }
+    &__changed { font-weight: 700; }
+    &__text, &__code { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    &__code { font: 13px/1.65 $font-family-monospace; }
+    &__line { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; }
+    &__line-number { min-width: 4ch; text-align: right; font-size: 12px; user-select: none; color: $gray-text; }
+    &__line.is-added { background: tint-color($success, 90%); border-left: 2px solid $green-60; }
+    &__line.is-removed { background: tint-color($danger, 95%); border-left: 2px solid $danger; }
+    &__line code { color: inherit; font: inherit; }
+    &__tag { color: $primary-hover; }
+    &__field details { margin-bottom: 8px; font-weight: 400; }
+    &__source details[open] + pre { display: none; }
     &__image { display: block; max-width: 100%; max-height: 160px; object-fit: contain; margin-bottom: 12px; }
+
+    @media (min-width: 768px) {
+        // Shared grid tracks keep labels and values aligned when a neighbouring value wraps.
+        &__versions--fields {
+            grid-template-columns: minmax(8rem, 16%) repeat(var(--branch-merge-columns), minmax(0, 1fr));
+
+            .pg-branch-merge__labels, .pg-branch-merge__version {
+                display: grid;
+                grid-template-rows: subgrid;
+                grid-row: span var(--branch-merge-rows);
+            }
+            .pg-branch-merge__version { border-left: 1px solid $nice-gray-100; }
+            .pg-branch-merge__version-body { display: grid; grid-row: 2 / -1; grid-template-rows: subgrid; }
+            .pg-branch-merge__labels > div { padding: 12px 16px; background: tint-color($nice-gray, 40%); border-bottom: 1px solid $nice-gray-100; color: $gray-text; font-size: 14px; overflow-wrap: anywhere; }
+            .pg-branch-merge__field dt { @include visually-hidden(); }
+            [data-branch-version="LIVE"] .pg-branch-merge__changed { font-weight: 400; }
+        }
+    }
 
     &--content {
         .pg-branch-merge__content, .pg-branch-merge__item, .pg-branch-merge__detail, .tab-content,
@@ -161,11 +250,14 @@
     @media (max-width: 1199.98px) {
         width: calc(100vw - 24px);
         height: calc(100dvh - 24px);
-        &__versions { gap: 8px; }
-        &__version { padding: 12px; }
+        &__version-header, &__field { padding-inline: 12px; }
     }
     @media (max-width: 767.98px) {
-        &__versions { grid-template-columns: minmax(0, 1fr); }
+        &__versions, &__version { display: block; }
+        &__version + &__version { border-left: 0; border-top: 2px solid $nice-gray-200; }
+        &__options { margin-left: 0; }
+        &__title { padding-right: 65px; }
+        &__toolbar.md-tabs .nav-link { margin-right: 10px; }
         &__choices { flex-basis: 100%; }
     }
 
@@ -187,19 +279,17 @@
     flex: 1;
     min-height: 0;
 
-    &__versions { display: grid; grid-template-columns: repeat(var(--branch-merge-columns, 2), minmax(0, 1fr)); gap: 16px; flex: 1; min-height: 0; }
-    &__version { display: flex; flex-direction: column; min-height: 0; min-width: 0; border: 1px solid $nice-gray-100; border-radius: $border-radius; overflow: hidden; }
-    &__header { padding: 12px 16px 0; border-bottom: 1px solid $nice-gray-100; background: $nice-gray; }
-    &__header h3 { margin-bottom: 8px; }
+    &__versions { display: grid; grid-template-columns: repeat(var(--branch-merge-columns), minmax(0, 1fr)); flex: 1; min-height: 0; }
+    &__version {
+        display: flex; flex-direction: column; min-height: 0; min-width: 0;
+        & + & { border-left: 1px solid $nice-gray-100; }
+    }
     &__status { padding: 16px; }
     &__frame { width: 100%; flex: 1; min-height: 0; border: 0; background: $white; }
 
-    @media (max-width: 1199.98px) {
-        &__versions { gap: 8px; }
-        &__header { padding: 12px 12px 0; }
-    }
     @media (max-width: 767.98px) {
         &__versions { grid-template-columns: minmax(0, 1fr); overflow: auto; }
         &__version { min-height: 60dvh; }
+        &__version + &__version { border-left: 0; border-top: 2px solid $nice-gray-200; }
     }
 }
