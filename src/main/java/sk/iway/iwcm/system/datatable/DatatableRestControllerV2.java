@@ -59,6 +59,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Query;
@@ -1201,6 +1202,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 							predicates.add(builder.equal(root.get(field), Long.valueOf(value)));
 						} else if (simpleName.equalsIgnoreCase("Double")) {
 							predicates.add(builder.equal(root.get(field), Double.valueOf(value)));
+						} else if (((Class<?>) path.getJavaType()).isAnnotationPresent(Entity.class)) {
+							//relation to another entity (e.g. @ManyToOne) - LIKE/unaccent is not possible, search must be handled in addSpecSearch
+							Logger.debug(DatatableRestControllerV2.class, "Skipping text search for entity field "+field);
 						} else {
 
 							// In case of Enum we need to convert String value to Enum constant

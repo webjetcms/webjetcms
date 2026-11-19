@@ -8,6 +8,7 @@ const toggle = '.md-dashboard-widget__news-toggle';
 const title = '.md-dashboard-widget__news-title';
 const preferenceRoute = '**/admin/rest/admin-settings/';
 const socialNewsRoute = '**/wjnews.*.json';
+let release;
 
 Before(async ({ I, login }) => {
     login('admin');
@@ -22,7 +23,9 @@ Before(async ({ I, login }) => {
         const dashboard = document.querySelector('webjet-overview-dashboard');
         dashboard.configure({ data: dashboard.data, labels: dashboard.labels, config: { ...dashboard.config, socialRefreshHours: 0 } });
     });
-    await I.waitForText('Čo je nové (5)', 10, news);
+    release = await I.executeScript(() => WJ.getReleaseNews());
+    await I.assertAbove(release.items.length, 0, 'The deployed release must contain news.');
+    await I.waitForText(`Čo je nové (${release.items.length})`, 10, news);
 });
 
 Scenario('Header configuration accepts CSS gradients and image paths and falls back for invalid values', async ({ I }) => {
@@ -67,14 +70,14 @@ Scenario('Release carousel keeps its size and expands over the unchanged welcome
     await waitForWidgets(I);
     I.dontSeeElementInDOM('.md-dashboard__sessions');
     I.dontSeeElementInDOM(`${hero} [data-widget-type="sessions"]`);
-    I.see('Verzia 2026.18', news);
+    I.see(`Verzia ${release.version}`, news);
     const original = await I.executeScript(() => ({
         welcome: document.querySelector('.md-dashboard__welcome').innerHTML,
         height: document.querySelector('.md-dashboard__hero').getBoundingClientRect().height,
         background: getComputedStyle(document.querySelector('.md-dashboard__hero')).backgroundImage
     }));
     I.assertEqual(original.background, 'linear-gradient(111.7deg, rgb(3, 29, 70) 0%, rgb(7, 55, 128) 76.92%)');
-    for (let index = 0; index < 5; index++) {
+    for (let index = 0; index < release.items.length; index++) {
         I.clickCss('.md-dashboard-widget__news-control[aria-label="Nasledujúca novinka"]');
         I.assertEqual(await I.grabNumberOfVisibleElements(`${news} [aria-current="true"]`), 1);
         I.assertEqual(await I.executeScript(() => document.querySelector('.md-dashboard__hero').getBoundingClientRect().height), original.height);
@@ -84,9 +87,9 @@ Scenario('Release carousel keeps its size and expands over the unchanged welcome
     I.clickCss(toggle);
     I.waitForVisible('.md-dashboard__hero.is-news-expanded', 10);
     I.dontSeeElement('.md-dashboard__welcome');
-    I.seeNumberOfVisibleElements('.md-dashboard-widget__news-highlights li', 5);
+    I.seeNumberOfVisibleElements('.md-dashboard-widget__news-highlights li', release.items.length);
     I.assertTrue(await I.executeScript(() => document.activeElement.classList.contains('md-dashboard-widget__news-close')));
-    I.see('OAuth2', '.md-dashboard-widget__news-highlights');
+    I.see(release.items[0].title, '.md-dashboard-widget__news-highlights');
     I.saveScreenshot('dashboard-news-expanded.png');
     I.pressKey('Escape');
     I.waitForVisible('.md-dashboard__welcome', 10);

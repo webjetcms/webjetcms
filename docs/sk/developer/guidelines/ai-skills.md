@@ -1,10 +1,10 @@
 # Použitie AI skills
 
-Skilly dávajú AI asistentovi postup pre konkrétnu úlohu. Najprv dokončite [inštaláciu a nastavenie skillov](../install/README.md#nastavenie-ai-asistenta-codex). Nasledujúce zadania píšte do **chatu Codexu otvoreného v projekte**, nie do terminálu. Text v hranatých zátvorkách nahraďte vlastným obsahom.
+Skilly dávajú AI asistentovi postup pre konkrétnu úlohu. Najprv dokončite [inštaláciu a nastavenie skillov](../install/README.md#nastavenie-ai-asistenta-codex). Nasledujúce zadania píšte do **četu Codex otvoreného v projekte**, nie do terminálu. Text v hranatých zátvorkách nahraďte vlastným obsahom.
 
 ## Nová požiadavka z e-mailu alebo dokumentu
 
-1. Založte chat pre požiadavku. Vložte text e-mailu a priložte obrázky alebo dokument. Doplňte, čo sa má zmeniť a pre koho.
+1. Založte čet pre požiadavku. Vložte text e-mailu a priložte obrázky alebo dokument. Doplňte, čo sa má zmeniť a pre koho.
 2. Spustite **`grill-me`** na vyjasnenie zadania:
 
    ```text
@@ -21,7 +21,7 @@ Po vyjasnení zadania si vyberte jednu z nasledujúcich možností.
 
 ### Uložiť zadanie do GitHub issue
 
-1. V tom istom chate vytvorte GitHub issue pomocou projektového skillu:
+1. V tom istom čete vytvorte GitHub issue pomocou projektového skillu:
 
    ```text
    Použi skill wj-gh-issue-from-chat. Najprv over, či už v
@@ -31,18 +31,18 @@ Po vyjasnení zadania si vyberte jednu z nasledujúcich možností.
 
 2. Skontrolujte návrh a potvrďte vytvorenie issue. Skill použije anglický názov, telo ponechá v jazyku diskusie a navrhne názov vetvy. Vetvu nevytvára. Pokračujte časťou [Implementácia a kontrola](#implementácia-a-kontrola).
 
-### Implementovať priamo z chatu bez issue
+### Implementovať priamo z četu bez issue
 
 1. Vyberte pracovnú vetvu alebo worktree podľa časti [Implementácia a kontrola](#implementácia-a-kontrola). Ak už pracujete v správnom priečinku a vetve, pokračujte v nich.
-2. **V tom istom chate**, ktorý obsahuje požiadavku, prílohy a odsúhlasené závery z `grill-me`, zadajte:
+2. **V tom istom čete**, ktorý obsahuje požiadavku, prílohy a odsúhlasené závery z `grill-me`, zadajte:
 
    ```text
    Použi skill implement podľa odsúhlaseného zadania, akceptačných kritérií,
-   plánu a testov v tomto chate. Nevytváraj GitHub issue.
+   plánu a testov v tomto čete. Nevytváraj GitHub issue.
    ```
 
-   Skill `implement` prijíma aj zadanie priamo z konverzácie; číslo issue nepotrebuje. Ak prechádzate do nového chatu alebo inej worktree, preneste do nového chatu odsúhlasené zhrnutie a potrebné prílohy.
-3. Po implementácii pokračujte kontrolou kódu a výsledku v krokoch 3 a 4 časti [Implementácia a kontrola](#implementácia-a-kontrola). Pri kontrole namiesto odkazu na issue uveďte zadanie odsúhlasené v chate.
+   Skill `implement` prijíma aj zadanie priamo z konverzácie; číslo issue nepotrebuje. Ak prechádzate do nového četu alebo inej worktree, preneste do nového četu odsúhlasené zhrnutie a potrebné prílohy.
+3. Po implementácii pokračujte kontrolou kódu a výsledku v krokoch 3 a 4 časti [Implementácia a kontrola](#implementácia-a-kontrola). Pri kontrole namiesto odkazu na issue uveďte zadanie odsúhlasené v čete.
 
 ## Požiadavka alebo chyba už existuje v GitHub Issues
 
@@ -65,7 +65,7 @@ Po vyjasnení zadania si vyberte jednu z nasledujúcich možností.
    Pred samotnou opravou počkaj na moje potvrdenie. Nevytváraj nové issue.
    ```
 
-3. Potvrďte vyjasnené zadanie alebo navrhnutú opravu. Potom **v tom istom chate** preneste dohodnuté závery do existujúceho issue:
+3. Potvrďte vyjasnené zadanie alebo navrhnutú opravu. Potom **v tom istom čete** preneste dohodnuté závery do existujúceho issue:
 
    ```text
    Použi skill wj-gh-issue-from-grill pre issue [URL].
@@ -73,7 +73,7 @@ Po vyjasnení zadania si vyberte jednu z nasledujúcich možností.
    ```
 
    Skill zachová pôvodné zadanie a doplní alebo aktualizuje rozhodnutia, akceptačné kritériá, implementačný plán, testovanie a prípadné otvorené otázky. Nahradí prekonané časti plánu bez vytvorenia nového issue a nezačne implementáciu. `wj-gh-issue-from-chat` používajte iba na vytvorenie nového issue.
-4. Otvorte vrátený odkaz a skontrolujte aktualizovaný popis. Plán je teraz uložený v issue. Pri implementácii môžete pokračovať aj v novom chate iba s jeho odkazom.
+4. Otvorte vrátený odkaz a skontrolujte aktualizovaný popis. Plán je teraz uložený v issue. Pri implementácii môžete pokračovať aj v novom čete iba s jeho odkazom.
 
 ## Implementácia a kontrola
 
@@ -86,7 +86,7 @@ Po vyjasnení zadania si vyberte jednu z nasledujúcich možností.
    ID a popis nahraďte podľa issue. Skript vytvorí novú vetvu z `origin/main`, pripraví worktree so závislosťami a otvorí ju vo VS Code.
 
    Pre release hotfix najprv vytvorte vetvu `hotfix/<číslo-issue>-<popis>` zo zodpovedajúcej vetvy `hotfix/YEAR.0-main` podľa [pravidiel projektu](gitlab.md), potom spustite `./worktree-add.sh hotfix/<číslo-issue>-<popis>` bez `--new`. Parameter `--new` vždy vychádza z `origin/main`, aj keď názov novej vetvy začína na `hotfix/`.
-2. V Codexe otvorte zvolený pracovný priečinok. Ak máte GitHub issue, v rovnakom alebo novom chate spustite skill `implement` s jeho číslom (bez issue použite [zadanie priamo z chatu](#implementovať-priamo-z-chatu-bez-issue)):
+2. V Codexe otvorte zvolený pracovný priečinok. Ak máte GitHub issue, v rovnakom alebo novom čete spustite skill `implement` s jeho číslom (bez issue použite [zadanie priamo z četu](#implementovať-priamo-z-četu-bez-issue)):
 
    ```text
    /implement ID
@@ -114,16 +114,16 @@ Po vyjasnení zadania si vyberte jednu z nasledujúcich možností.
 
 **Pre náš bežný postup použite `implement`**, aj keď issue obsahuje podrobný plán z `grill-me`. Samotná dĺžka plánu ani viac menších issues v jednej vetve nevyžadujú `implement-spec`.
 
-`implement-spec` je určený na koordináciu väčšej práce rozdelenej na závislé tickety. Jeho predvolený postup vytvára vetvy a worktree, zlučuje zmeny a podľa spôsobu práce s issue trackerom rieši aj PR alebo uzatváranie ticketov. Vo WebJET CMS ho treba vopred prispôsobiť pravidlám projektu, najmä zákazu commitov agentom a voľbe vetvy programátorom. Pre jednotlivé issue alebo zadanie v chate použite postup v časti [Implementácia a kontrola](#implementácia-a-kontrola).
+`implement-spec` je určený na koordináciu väčšej práce rozdelenej na závislé tickety. Jeho predvolený postup vytvára vetvy a worktree, zlučuje zmeny a podľa spôsobu práce s issue trackerom rieši aj PR alebo uzatváranie ticketov. Vo WebJET CMS ho treba vopred prispôsobiť pravidlám projektu, najmä zákazu commitov agentom a voľbe vetvy programátorom. Pre jednotlivé issue alebo zadanie v čete použite postup v časti [Implementácia a kontrola](#implementácia-a-kontrola).
 
 ## Prehľad WebJET skills
 
-Vyberte skill podľa úlohy a skopírujte príklad zadania do chatu AI asistenta otvoreného v projekte. Údaje v hranatých zátvorkách nahraďte vlastnými. Názov skillu odkazuje na jeho úplný postup a požiadavky. Asistent môže skill vybrať aj automaticky podľa zadania; výslovné uvedenie názvu určí požadovaný postup.
+Vyberte skill podľa úlohy a skopírujte príklad zadania do četu AI asistenta otvoreného v projekte. Údaje v hranatých zátvorkách nahraďte vlastnými. Názov skillu odkazuje na jeho úplný postup a požiadavky. Asistent môže skill vybrať aj automaticky podľa zadania; výslovné uvedenie názvu určí požadovaný postup.
 
 Prehľad obsahuje WebJET skilly z tohto repozitára. Všeobecné skilly ako `grill-me` alebo `implement` sa inštalujú samostatne podľa [návodu na nastavenie](../install/README.md#nastavenie-ai-asistenta-codex). Skill označený **Iba core** nie je súčasťou distribúcie `webjetcms/skills`.
 
 <!-- webjet-skills-catalog:start -->
-| Skill | Na čo slúži a kedy ho použiť | Príklad zadania do chatu |
+| Skill | Na čo slúži a kedy ho použiť | Príklad zadania do četu |
 | --- | --- | --- |
 | [`wj-accessibility`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-accessibility/SKILL.md) | Kontroluje a zlepšuje prístupnosť webu podľa WCAG 2.2, napríklad ovládanie klávesnicou, popisy prvkov a podporu čítačiek obrazovky. | Použi skill wj-accessibility na kontrolu prístupnosti formulára [URL]. |
 | [`wj-add-javadoc`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-add-javadoc/SKILL.md) | Dopĺňa a opravuje anglický JavaDoc tried a metód vrátane parametrov, návratových hodnôt a výnimiek. Mení iba komentáre. | Použi skill wj-add-javadoc pre triedu [cesta k Java súboru]. |
@@ -142,8 +142,8 @@ Prehľad obsahuje WebJET skilly z tohto repozitára. Všeobecné skilly ako `gri
 | [`wj-datatable`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-datatable/SKILL.md) | Vytvára a upravuje administračné CRUD aplikácie: JPA entitu, repository, REST controller, DataTable stránku a testy. | Použi skill wj-datatable na vytvorenie evidencie [polia, pravidlá a oprávnenia]. |
 | [`wj-dependencycheck`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-dependencycheck/SKILL.md) | Vyhodnocuje nálezy OWASP Dependency Check podľa závažnosti a použiteľnosti vo WebJET CMS. Pred zmenou závislostí alebo výnimiek predloží návrh na rozhodnutie. | Použi skill wj-dependencycheck na report [cesta], spracuj závažnosti HIGH a CRITICAL. |
 | [`wj-docs-pr`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-docs-pr/SKILL.md) | Aktualizuje vybraný Markdown dokument podľa všetkých relevantných zmien v PR alebo podľa lokálnych zmien. | Použi skill wj-docs-pr na aktualizáciu [cesta k dokumentu] podľa PR [URL]. |
-| [`wj-gh-issue-from-chat`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-gh-issue-from-chat/SKILL.md) | Vytvorí návrh nového GitHub issue z diskusie, rozhodnutí a plánu, po potvrdení ho uloží a navrhne názov vetvy. Vetvu nevytvára. | Použi skill wj-gh-issue-from-chat a priprav issue z odsúhlaseného zadania v tomto chate. |
-| [`wj-gh-issue-from-grill`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-gh-issue-from-grill/SKILL.md) | Prenáša odsúhlasené závery diskusie do existujúceho issue vrátane kritérií, plánu a testov. Nevytvára nové issue ani nezačína implementáciu. | Použi skill wj-gh-issue-from-grill pre issue [URL] a zapracuj odsúhlasené závery tohto chatu. |
+| [`wj-gh-issue-from-chat`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-gh-issue-from-chat/SKILL.md) | Vytvorí návrh nového GitHub issue z diskusie, rozhodnutí a plánu, po potvrdení ho uloží a navrhne názov vetvy. Vetvu nevytvára. | Použi skill wj-gh-issue-from-chat a priprav issue z odsúhlaseného zadania v tomto čete. |
+| [`wj-gh-issue-from-grill`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-gh-issue-from-grill/SKILL.md) | Prenáša odsúhlasené závery diskusie do existujúceho issue vrátane kritérií, plánu a testov. Nevytvára nové issue ani nezačína implementáciu. | Použi skill wj-gh-issue-from-grill pre issue [URL] a zapracuj odsúhlasené závery tohto četu. |
 | [`wj-page-builder`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-page-builder/SKILL.md) | Vytvára a upravuje HTML bloky PageBuildera vrátane vnorenia, editovateľných oblastí, stĺpcov a duplikovateľných prvkov. | Použi skill wj-page-builder na vytvorenie bloku referencií s tromi stĺpcami a duplikovateľnými položkami. |
 | [`wj-project-context`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-project-context/SKILL.md) | Načíta architektúru a konvencie WebJET CMS a overí ich použiteľnosť pre verziu konkrétneho core alebo zákazníckeho projektu. | Použi skill wj-project-context a over, ako v tomto projekte správne čítať konfiguráciu a preklady. |
 | [`wj-sales-features`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-sales-features/SKILL.md) | Pripravuje slovenský obchodný opis funkcií z PR, vetvy alebo príloh: prínosy, výhody a hodnotu pre zákazníka. | Použi skill wj-sales-features pre PR [URL] a opíš prínosy pre zákazníka. |

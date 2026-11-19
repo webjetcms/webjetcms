@@ -74,6 +74,7 @@ export class BarChartForm {
             chartDivId: config.chartDivId,
             chartData: config.chartData,
             horizontal: config.horizontal == null ? true : config.horizontal,
+            colorByValue: config.colorByValue === true,
             colorScheme: config.colorScheme
         });
     }
@@ -88,6 +89,7 @@ Jednotlivé parametre triedy slúžia na:
 - `chartDivId` je textová hodnota reprezentujúca ID elementu `div`, v ktorom sa graf vykreslí.
 - `chartData` je pole objektov reprezentujúcich dáta grafu. Každý objekt musí obsahovať premennú kategórie (`yAxeName`) aj premennú hodnoty kategórie (`xAxeName`).
 - `horizontal` je logická hodnota, ktorá určuje, či bude graf horizontálny alebo vertikálny.
+- `colorByValue` (predvolene `false`) pri hodnote `true` priraďuje farbu podľa veľkosti hodnoty, od prvej po poslednú farbu palety. Pri `colorScheme: "set_red"` je najmenšia nenulová hodnota svetločervená a najväčšia tmavočervená. Rozsah sa pri každej aktualizácii prepočíta z aktuálnych dát. Nulové hodnoty zostávajú na osi, ale neovplyvňujú farebný rozsah; rovnaké hodnoty majú rovnakú farbu.
 - `colorScheme` je textová hodnota určujúca farebnú schému grafu (povolené hodnoty sú popísané v sekcii [Farebné schémy](#farebné-schémy)).
 
 !>**Upozornenie:** Povinné parametre sú `yAxeName`, `xAxeName`, `chartDivId` a `chartData`.

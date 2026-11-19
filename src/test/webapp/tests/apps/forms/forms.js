@@ -335,7 +335,7 @@ Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
 
     // The EML scenario uses the same published form. Delete only this run's two submissions.
     for (const suffix of [randomNumber2, randomNumber]) {
-        DT.filterEquals("col_meno-a-priezvisko", "Form-autotest-" + suffix);
+        DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-" + suffix);
         I.see("Form-autotest-" + suffix, "#formDetailDataTable tbody");
         I.see("Záznamy 1 až 1 z 1", "#formDetailDataTable_wrapper .dt-info");
         I.clickCss("#formDetailDataTable tbody td.dt-select-td");

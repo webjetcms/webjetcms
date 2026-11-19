@@ -57,6 +57,8 @@ class JsonEditorValidatorTest {
         when(prop.getText(anyString(), anyString(), anyString())).thenAnswer(invocation ->
             invocation.getArgument(0) + " " + invocation.getArgument(1) + ":" + invocation.getArgument(2));
         when(prop.getText(anyString(), org.mockito.ArgumentMatchers.anyBoolean())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(prop.getText(anyString(), org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyBoolean()))
+            .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     /** Verifies complete JSON objects, including values unsafe to round-trip through JavaScript numbers. */
@@ -166,8 +168,8 @@ class JsonEditorValidatorTest {
         posted.setFieldsDefinitionKeyPrefix("attacker");
         posted.setFieldsDefinition(List.of());
         bean.setEditorFields(posted);
-        when(prop.getText("test.field_a.type")).thenReturn("jsoneditor");
-        when(prop.getText("test.field_b.type")).thenReturn("json_doc");
+        when(prop.getText("test.field_a.type", false, true)).thenReturn("jsoneditor");
+        when(prop.getText("test.field_b.type", false, true)).thenReturn("json_doc");
 
         try (MockedStatic<Constants> constants = mockStatic(Constants.class);
                 MockedStatic<Prop> props = mockStatic(Prop.class);
@@ -206,7 +208,7 @@ class JsonEditorValidatorTest {
         parent.setString1Name("");
         EnumerationTypeRepository repository = mock(EnumerationTypeRepository.class);
         when(repository.getNonHiddenByEnumId(5, false)).thenReturn(parent);
-        when(prop.getText("enumeration.field_a.type")).thenReturn("jsoneditor");
+        when(prop.getText("enumeration.field_a.type", false, true)).thenReturn("jsoneditor");
         try (MockedStatic<Constants> constants = mockStatic(Constants.class);
                 MockedStatic<Prop> props = mockStatic(Prop.class);
                 MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS);

@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -21,11 +22,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import com.webjetcms.ai.EmbeddingInputType;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
@@ -33,6 +37,7 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -203,10 +208,13 @@ class SemanticIndexServiceTest {
     }
 
     /**
-     * Verifies that document indexing uses its owning domain and assistant, initializes shared schema globally, and restores the caller context.
+     * Verifies domain ownership, context restoration, and preservation of queued work and chunks at the token limit.
+     *
+     * @param limitReached whether the embedding call is rejected by its token limit
      */
-    @Test
-    void indexesDocumentUsingQueuedDomainAndRestoresRequestContext() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void indexesDocumentUsingQueuedDomainAndRestoresRequestContext(boolean limitReached) throws Exception {
         String domainName = "tenant-two.example";
         TestContext context = new TestContext();
         IndexQueueEntity item = queueItem(13L, 125, 2);
@@ -245,7 +253,10 @@ class SemanticIndexServiceTest {
             domainName,
             EmbeddingInputType.DOCUMENT
         ))
-            .thenReturn(new EmbeddingBatchResult(List.of(new float[] {0.1f, 0.2f, 0.3f}), 7));
+            .thenAnswer(invocation -> {
+                if (limitReached) throw new ProviderCallException("The assistant has reached its token limit.");
+                return new EmbeddingBatchResult(List.of(new float[] {0.1f, 0.2f, 0.3f}), 7);
+            });
         when(context.embeddingChunkRepository.saveAllAndFlush(anyList())).thenAnswer(invocation -> {
             List<EmbeddingChunkEntity> chunks = invocation.getArgument(0);
             chunks.get(0).setId(91L);
@@ -271,6 +282,7 @@ class SemanticIndexServiceTest {
 
         try (MockedStatic<Cache> cacheStatic = mockStatic(Cache.class);
              MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
+             MockedStatic<Adminlog> ignoredAudit = mockStatic(Adminlog.class);
              MockedStatic<DocDB> docDbStatic = mockStatic(DocDB.class);
              MockedStatic<GroupsDB> groupsDbStatic = mockStatic(GroupsDB.class)) {
             cacheStatic.when(Cache::getInstance).thenReturn(context.cache);
@@ -290,6 +302,13 @@ class SemanticIndexServiceTest {
             assertSame(ambientRequestBean, SetCharacterEncodingFilter.getCurrentRequestBean());
         } finally {
             SetCharacterEncodingFilter.setCurrentRequestBean(previousRequestBean);
+        }
+
+        if (limitReached) {
+            verify(context.embeddingService).embedWithUsage(List.of("Indexed text"), assistant, domainName, EmbeddingInputType.DOCUMENT);
+            verifyNoInteractions(context.embeddingChunkRepository);
+            verify(context.queueRepository, never()).deleteAllByIdInBatch(anyList());
+            return;
         }
 
         verify(context.vectorStore).isAvailable();

@@ -98,6 +98,8 @@ When creating a page, the translator searches the folders recursively towards th
 
 The **Website name**, menu item name, URL address, and **Content** of the website are translated.
 
+If the translation fails, for example after running out of DeepL quota, the mirroring continues with the current title and content in the original language. After saving, a notification **Automatic translation failed** will be displayed, informing that the original language was used. The notification also includes the specific reason for the translator exception; for an HTTP error, DeepL will display the HTTP code and the response message, if available, for example about an exhausted quota, an unsupported language combination, or an internal service error. The editor can translate the language version manually or, after restarting the translator, re-save the original page.
+
 ### New page
 
 When creating a page, automatic translation is always triggered. If you create a new page called "good morning" in the `preklad_sk` folder, where the Slovak language is set, then the page `good morning` will be created in the `preklad_en` directory, the page content will also be translated into English.

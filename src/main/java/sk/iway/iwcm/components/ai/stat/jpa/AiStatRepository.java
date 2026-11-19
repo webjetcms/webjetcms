@@ -7,4 +7,6 @@ import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
 public interface AiStatRepository extends DomainIdRepository<AiStatEntity, Long>{
     List<AiStatEntity> findAllByCreatedBetweenAndDomainId(Date from, Date to, Integer domainId);
+
+    List<AiStatEntity> findAllByAssistantIdAndDomainIdAndCreatedGreaterThanEqualAndCreatedLessThan(Long assistantId, Integer domainId, Date from, Date to);
 }

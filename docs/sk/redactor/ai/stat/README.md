@@ -4,7 +4,7 @@ Sekcia **Štatistika** poskytuje prehľad o využívaní AI asistentov v systém
 
 Údaje sa zobrazujú za obdobie, ktoré si zvolíte (predvolený rozsah je posledných 30 dní). Filter v hlavičke umožňuje obmedziť zobrazenie podľa:
 
-- **Typ požiadavky** (napr. Vygenerovať text, Vygenerovať obrázok, Chat)
+- **Typ požiadavky** (napr. Vygenerovať text, Vygenerovať obrázok, Čet)
 - **Poskytovateľ** (napr. Prehliadač, OpenAI, Gemini)
 - **Skupina** (napr. Generovanie, Analýza, Úprava)
 

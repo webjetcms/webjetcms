@@ -77,6 +77,9 @@ public class FileBrowserTools {
         {
             return null;
         }
+        //prevents to list ai-chat private paths in the file browser
+        if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(name)) return "ai-chat";
+
         //in html folder we have valid files with name showdoc.dodocid=1234.html, allow this
         name = name.replace("showdoc.dodocid=" , "");
 

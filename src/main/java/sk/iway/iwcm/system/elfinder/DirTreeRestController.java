@@ -86,6 +86,11 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             if (showOnlyWritableFolders == false || isFolderVisible(user, parentPath, writableFolderRoots, alwaysShownFolderRoots)) {
                 IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));
                 files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -> {
+                    //prevents to show ai-chats in elfinder
+                    if (FileBrowserTools.hasForbiddenSymbol(file.getVirtualPath())) {
+                        return false;
+                    }
+
                     if (file.isFile()) return false;
 
                     //System.out.println("path="+file.getVirtualPath()+" isRoot="+isRoot+" isJarPackaging="+file.isJarPackaging());

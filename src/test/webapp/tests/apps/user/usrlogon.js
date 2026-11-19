@@ -73,7 +73,8 @@ Scenario('prihlasenie zablokovane @singlethread', ({ I }) => {
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
 
     //over zablokovanie na 60 sekund po neuspesnom prihlaseni
-    for (var i=2; i<=6; i++) {
+    // Generate all six failures here without depending on the counter from the previous phase.
+    for (var i=1; i<=6; i++) {
         I.say("Loggin attempt "+i);
         loginIN(I, defaultPassword, false);
 

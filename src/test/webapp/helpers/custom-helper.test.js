@@ -49,7 +49,7 @@ test('screenshots after a failed named session ignore closed pages from the prev
         else delete global.output_dir;
     });
     let screenshots = 0;
-    const page = { screenshot: async () => { screenshots++; } };
+    const page = { on() {}, screenshot: async () => { screenshots++; } };
     const playwright = {
         page, options: {}, debug() {},
         activeSessionName: 'failed session',

@@ -274,6 +274,8 @@ async function textAnswerTest(I, DTE, aiProviderId) {
         I.assertEqual(defaultValue, valueB);
 
     I.say("TRY the TEXT answer WITH stream");
+        I.clickCss('#toast-container-ai .toast-close-button');
+        I.waitForInvisible('#toast-container-ai', 10);
         I.clickCss("#pills-dt-datatableInit-perex-tab");
         I.fillField("#DTE_Field_htmlData", defaultValue);
 
@@ -705,7 +707,8 @@ function waiToEndText(I) {
     I.say("waiToEndText");
 
     I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 180 );
-    I.seeElement( locate(containerAiContent + " > .current-status > span").withText("Hotovo! Bolo použitých") );
+    // Include the provider's error text in the assertion when the request fails.
+    I.see("Hotovo! Bolo použitých", containerAiContent + " > .current-status > span");
     I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-circle-check") );
 }
 

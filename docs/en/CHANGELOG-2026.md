@@ -1,22 +1,16 @@
 # List of changes version 2026
 
-## 2026.0-SNAPSHOT
+## 2026.40
 
-> Development version updated from the main repository.
+> WebJET CMS 2026.40 brings [**new version of PageBuilder**](#websites) with a Structure panel, a clearer block library, and copying blocks between pages. [**Scheduled publishing of pages and files**](#websites) allows you to prepare future content with images and documents that will remain protected until the publication date. The feature is enabled by the administrator.
+>
+> [**Multi-step forms**](#forms) have improved setting of display conditions and field requirements, returning to the previous step while preserving filled-in data, copying fields between forms, and linking selection fields to code lists.
+>
+> You can customize the [**New home screen**](#home-screen) by selecting widgets, their size and order. This way you have the necessary data in one place. [**Quick search**](#home-screen) available throughout the administration via Ctrl+K / ⌘K will help you find pages, files and settings.
+>
+> [**Semantic Search**](#semantic-search) allows visitors to find pages based on the meaning of a question and optionally display an AI answer compiled from the content of the site. The new [**headless mode**](#headless-mode) makes content, navigation, search, and forms accessible via REST APIs for web applications with their own frontend.
 
-### Groundbreaking changes
-
-- Forms - for classic forms and the Form application, the encryption key is easily loaded exclusively from the form's server settings. If it was previously entered only in the HTML field `encryptKey`, transfer it to the **Encryption key** field in the administration. The parameter sent by the visitor no longer affects encryption. More in the [Form encryption] guide (redactor/apps/form/encryption.md#setting-up-the-public-key-for-a-form) (#376).
-- Databases - the minimum supported version is MariaDB 10.11 LTS or MySQL 8.4 LTS. Before updating WebJET CMS on an older server, update the database according to the manufacturer's instructions. Details and requirements for the updated JDBC driver are in the [installation guide](install/setup/README.md#basic-requirements-for-server) (#349).
-- Statistics - browsers are saved without version numbers after updating, which change very often these days. After deploying this version, it is necessary to start the migration of historical statistics to URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser version number (#303).
-- The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
-- AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
-- Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
-- Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
-- Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
-- Gallery - method `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` returns processing result of type `int` instead of `void`: `0` on success, otherwise error code. After the update, it is necessary to recompile dependent Java code and JSP files, for example by cleaning the working folder of a specific application in Tomcat (#371).
-- Multi-step forms - methods `validateStep` and `runStepInterceptor` of the [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) interface receive a new parameter `FormSettingsEntity formSettings` instead of `formName`. If you use your own Java class for processing forms, you need to modify it and recompile it. Settings no longer need to be loaded by form name, but you will get it directly (#364).
-- Multi-step forms - field identifier is now generated from the name with HTML code removed (only text is used). If you have HTM formatting used in the field name for radio groups, then re-save **all its options**. Also update the conditions and references to the changed identifiers (#396).
+!>**Before updating:** Review [breaking changes](#breaking-changes) and requirements for modifying the environment, configuration, or custom extensions.
 
 ### Home screen
 
@@ -29,6 +23,10 @@
 - [Quick search](redactor/admin/search/README.md) is available from the header of the entire administration by the **Search…** button or the shortcut **Ctrl+K / ⌘K**. It offers page suggestions by name and URL, results from page content, files, users, text keys and menu items. You can transfer the selected term to the appropriate section with additional filters (#348).
 
 ![](redactor/admin/search/quick-search.png)
+
+- New [AI Chat](redactor/admin/search/README.md#ai-chat) tab in quick search allows you to chat with an AI assistant. It supports assistant selection, continuous display and pausing of replies, Markdown with tables, and text copying. For saved OpenAI and Gemini chats, you can add images and documents by dragging anywhere into the chat area, search the history, and download attachments from the **Chat Files** panel. History and attachments are only available to the chat owner in the respective domain. Switching assistants preserves written messages and unsent attachments; you can zoom in or maximize the window. The magnifying glass in the history header displays chat search; attachments are added with the plus icon. The Slovak interface and documentation use the "chat" label (#386).
+
+![](redactor/ai/chat/chat-history.png)
 
 - The [What's New] panel (redactor/admin/welcome.md#What-is-new) supplements the news of the installed version with videos and posts from YouTube and Facebook of WebJET CMS. The **New** label is hidden after expanding the panel and again notifies about new content (#358).
 
@@ -101,6 +99,7 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 </div>
 
 - Page Builder - improved detection of changes in the HTML code of the page so that the message "You probably have unsaved text in the editor" is not displayed even if you have not actually changed any text on the page (#317).
+- Page Builder - fixed saving pages with incomplete HTML structure and invalid links to older editor instances. The content of such elements will be preserved along with current edits to other blocks (#400).
 - [Page Builder](redactor/webpages/pagebuilder.md) - after clicking on the + in the yellow line in the **Insert Block** window on the **Basic** tab, the **Image** and **Application** options have been added. They will open the corresponding editor dialog and allow you to insert content at the selected location (#339).
 - Page Builder - added [block copying between pages](redactor/webpages/pagebuilder.md#block-copying-between-pages). The **Copy** and **Paste** options transfer sections, containers, and columns with content and custom styles. The editor will only offer locations suitable for the block type. The clipboard is valid for 30 minutes from the time of copying (#353).
 - Templates - on the Advanced tab you can set [removing links from page URL](frontend/templates/templates.md#advanced-tab): according to `urlRemoveSpojky`, always remove or keep. This way, the blog can keep links even when removal is enabled for the rest of the site (#353).
@@ -132,6 +131,11 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 - Structure mirroring - the **Show mirroring** option in the tree structure display settings adds [language version links](redactor/webpages/README.md#navigation-between-mirrored-folders) and [warnings about incorrect mappings](redactor/webpages/mirroring/groups.md#warnings-in-tree-structure) to the tree (#370).
 
 ![](redactor/webpages/mirroring/tree-navigation.png)
+
+- AI Chat by field - added saved history filtered by the same field and record. You can search, open and continue an older conversation even after closing the editor; replies remain available for insertion into the field.
+- AI Chat in the field and in the page editor - added image and document upload for assistants with history support. You can select files with the plus icon, drag and drop into the message, or insert an image from the clipboard - the assistant will process them along with the page content (#386).
+
+![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless mode
 
@@ -215,6 +219,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- AI assistants - new tab [Token limits](redactor/ai/settings/README.md#karta---limity-tokenov) allows you to limit the assistant's consumption and view its development over the last 14 days. Notifications will be sent to the specified notification email when the 75% and 100% limit is reached. After the limit is reached, further requests will be blocked. Consumption can be reset manually for selected assistants or the current domain, or regularly for all domains with the `AiTokenUsageReset` task, which runs every day at midnight (#400) by default.
 - AI assistants - fixed handling of continuous text responses including Gemini. Token counts and error messages are now handled correctly even when splitting or merging network blocks; technical data is not inserted into the generated text. An interrupted response is no longer marked as successfully completed.
 - Enumerations - type selection and management moved to the tree in the left panel with search. More in [Enumerations documentation](redactor/apps/enumeration/README.md) (#58786).
 - Blog - selecting and adding sections are available in the tree in the left panel with search. More in [Blog documentation](redactor/apps/blog/README.md) (#58786).
@@ -334,6 +339,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Structure mirroring - when a translation fails, for example after running out of DeepL quota, the user will receive a notification with the specific reason for the translator exception, including the HTTP code and available DeepL error message. Hard spaces and their HTML entities are normalized in folder names and generated URLs to avoid `nbsp` addresses and unnecessary redirects (#402).
+- Data tables - after editing a single record, when forced to refresh the data, the page with the edited record is displayed according to the current sorting. In the configuration, the variable is searched by name even when its ID is changed. When deleting, the current page is preserved, or the last valid page is displayed. When creating a record, the pagination is still reset (#400).
 - Multi-step forms - the item identifier is generated from the field name text without HTML tags so that name formatting does not affect the identifier (#396).
 - Multi-step forms - when an item, step, or form is deleted, the corresponding display conditions and obligations are also deleted. Conditions for already deleted items do not block the deletion of the fields they referenced (#395).
 - Multi-step forms - **Allowed Value** rules no longer reject empty optional fields. For required fields, regular expressions are also checked for empty values; mandatory conditions are also taken into account when submitting a step (#394).
@@ -376,6 +383,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
 - Administration - fixed display of check mark icon when an item is selected in the autocomplete menu (#osk800).
 - Structure mirroring - [draft version](redactor/apps/docmirroring/README.md#edit-existing-webpage) no longer overwrites published translations and [bulk delete](redactor/webpages/README.md#delete-mirrored-pages-and-folders) no longer processes the same item repeatedly. Moving does not create duplicate language versions. When moving a folder, generated and inherited URLs are updated. Temporary cloning settings and mirror administration state are not shared between concurrent requests (#370).
+- HTML code insertion - empty application no longer displays corrupted text in the editor or on the page. The empty value of the parameter `html` is retained (#407).
 
 ### Performance
 
@@ -384,6 +392,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- AI assistants - search in statistics and usage graphs only show records and assistants of the current domain (#58850).
 - Websites - deletion checks permissions for all mirrored pages and also requires `deleteDir` for folders. [Unmirroring](redactor/apps/clone-structure/README.md#unmirroring) checks permissions for the entire subtree including configured domain and user group restrictions (#370).
 - Dependency Check - updated libraries `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` with fix `CVE-2026-110879` and `undici 6.28.1 → 6.29.1` with fix `CVE-2026-109383`. Jackson update tightens type checking during polymorphic deserialization; custom integrations using Java class names in JSON need to be verified (#385).
 - Dependency Check - exceptions for `CVE-2026-116802`, `CVE-2026-116803` and `CVE-2026-116804` in `DOMPurify 3.4.16` have been verified and constrained to the exact hash of the supplied `Swagger UI 5.34.0` bundle. The integration handles HTML strings without XHTML mode, `IN_PLACE`, `SAFE_FOR_TEMPLATES` and DOM returns; its hook does not remove nodes. The exceptions confirm the non-use of the affected modes, not a fix for the DOMPurify library (#385).
@@ -411,6 +420,24 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+#### Groundbreaking changes
+
+- Forms - for classic forms and the Form application, the encryption key is easily loaded exclusively from the form's server settings. If it was previously entered only in the HTML field `encryptKey`, transfer it to the **Encryption key** field in the administration. The parameter sent by the visitor no longer affects encryption. More in the [Form encryption] guide (redactor/apps/form/encryption.md#setting-up-the-public-key-for-a-form) (#376).
+- Databases - the minimum supported version is MariaDB 10.11 LTS or MySQL 8.4 LTS. Before updating WebJET CMS on an older server, update the database according to the manufacturer's instructions. Details and requirements for the updated JDBC driver are in the [installation guide](install/setup/README.md#basic-requirements-for-server) (#349).
+- Statistics - browsers are saved without version numbers after updating, which change very often these days. After deploying this version, it is necessary to start the migration of historical statistics to URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser version number (#303).
+- The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#further-changes).
+- AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#other-changes). When used in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
+- Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
+- Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
+- Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
+- Gallery - method `sk.iway.iwcm.gallery.GalleryDB.resizePicture(String realPath, String dir)` returns processing result of type `int` instead of `void`: `0` on success, otherwise error code. After the update, it is necessary to recompile dependent Java code and JSP files, for example by cleaning the working folder of a specific application in Tomcat (#371).
+- Multi-step forms - methods `validateStep` and `runStepInterceptor` of the [FormProcessorInterface](custom-apps/apps/multistep-forms/README.md#rozhranie-formprocessorinterface) interface receive a new parameter `FormSettingsEntity formSettings` instead of `formName`. If you use your own Java class for processing forms, you need to modify it and recompile it. Settings no longer need to be loaded by form name, but you will get it directly (#364).
+- Multi-step forms - field identifier is now generated from the name with HTML code removed (only text is used). If you have HTM formatting used in the field name for radio groups, then re-save **all its options**. Also update the conditions and references to the changed identifiers (#396).
+
+#### Other changes
+
+- Font Awesome - shared CSS updated from version 4.2.0 to 4.7.0, GridEditor uses the same CSS and WOFF2 font from `/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css`. Old links to GridEditor CSS will be redirected to shared CSS for logged in administrators (#405).
+- Deleted older unused files/images, check for 404 page calls and if necessary, upload the necessary files from an older version to your project (#405).
 - Datatables - settings tables have a common prefix `dt_`: `dt_customfields`, `dt_fields` and `dt_tabs`. The existing table `custom_fields` is automatically renamed during the update, preserving the data; custom SQL queries must be modified to `dt_customfields` (#58830).
 - Datatables - Classes for [system settings](developer/datatables/README.md#system-settings) optional fields, fields, and cards have been moved under `sk.iway.iwcm.system.datatable.settings` to subpackages `customfields`, `fields`, and `tabs`. Custom code and templates using these classes require updating imports and full class names (#58830).
 - Datatables - added field type [`BUTTON_GROUP`](developer/datatables-editor/standard-fields.md#button_group) for selecting a single option from a group of buttons. It uses administration styles and also supports the **No change** option for three-state settings (#58830).
@@ -541,6 +568,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Data tables - modified validation of required fields of type [`DATE` and `DATETIME`](developer/datatables-editor/standard-fields.md#date). This allows you to delete the set date or number value in the editor - originally, when the value was empty, the value in the saved entity was preserved (#58770).
 - Data tables - field validation error [`QUILL`](developer/datatables-editor/standard-fields.md#quill) highlights both the toolbar and editor border (#58770).
 - Data tables - a clearer error message will be displayed for a duplicate value, an attempt to delete or change a record referenced by other records, or an empty value for the `NOT NULL` column (#58770).
+
+![meme](_media/meme/2026-40.jpg ":no-zoom")
 
 ## 2026.18
 
@@ -736,12 +765,15 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Search - the deleted web page is removed by ID from all existing local language Lucene indexes even without data in the database or cache. With continuous indexing enabled, retained notifications of changes to specific pages are processed even after a cluster node restart. In case of a deletion error, the cluster notification is not confirmed and processing is repeated (#403).
 - Database - fixed generation of SQL conditions `IN` and `NOT IN` with a large number of values ​​by dividing the lists into smaller parts. Fixed errors when exceeding the limit of 1000 values ​​in the Oracle database, for example when loading the page history or working with an extensive folder tree. The maximum number of values ​​in one part is determined by the configuration variable `dbInClauseMaxItems` (default 1000, in Oracle no more than 1000).
+- Database - unified date types in SQL scripts for new installations: PostgreSQL uses `TIMESTAMP WITHOUT TIME ZONE`, fixed incorrect use of `TIMESTAMP` in MariaDB and Microsoft SQL. Existing databases are not automatically converted (#399).
 - Web pages - fixed limiting search and replace in folder names to the selected folder tree and setting the parent when fixing erroneously deleted folders during moving a page to the trash (#390).
 - Event Calendar - fixed filtering by multiple perex groups when setting `perexGroupUseJoin=true` without duplicate events. Fixed limit on number of results also for Oracle and Microsoft SQL (#390).
 - Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
 - Cluster - optimized writing of changes in the cluster when starting a new node (#337).
 - Redis - improved transfer of information about the uploaded file in the session (#342).
+- Applications - fixed respecting the `domainName` setting in the `modinfo.properties` file when displaying the left menu and verifying access to the module, including the REST API. In the rights settings, modules are filtered by domain only when separating users by domain (MultiWeb or `usersSplitByDomain=true`), for shared users, module rights from all domains are displayed.
 - Security - updated library `FreeMarker` from version `2.3.34` to `2.3.35`.
 - Security - updated library `Hibernate Validator` from version `6.2.5.Final` to `6.2.6.Final` with fix `CVE-2026-93879`. Maintained compatibility with `javax.validation`.
 - Security - updated administration build dependencies `PostCSS` from version `8.5.12` to `8.5.23` and `source-map-js` from version `1.2.1` to `1.2.2` with fixes `GHSA-r28c-9q8g-f849`, `GHSA-fxqj-rqcc-2cmp` and `CVE-2026-93749`.
@@ -754,6 +786,8 @@ Redesigned application properties settings in the editor from the old code in `J
 - Security - disabled compilation of SpringEL expressions in Thymeleaf templates and by default in Spring as protection against [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Standard template syntax and allowed method calls remain supported, no template modification is required. Templates with a large number of repeatedly evaluated expressions may take longer to render.
 - Security - disabled saving protected files from `/files/protected/` to browser cache and proxy servers by setting HTTP headers before sending the file. Fixed setting response length when sending the entire file and its scope so that Spring Security writes security headers in time.
 - Security - added reasoned exceptions in `dependency-check-suppressions.xml` for vulnerabilities in unused Spring parts and for the vulnerability addressed by the SpringEL setting above. The exception for [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) takes into account the above protected file protection and file submission fix; it represents application precautions and accepted residual risk, not a library fix or confirmation of the safety of all response submission methods. The default deferred writing of Spring Security headers is retained. Versions `Spring Framework 5.3.39` and `Spring Security 5.8.16` are retained.
+- AI assistants - when updating, OpenAI models will be replaced with newer ones: `gpt-image-2` by the `gpt-image-2.6-sunburst` model for image generation and editing, `gpt-5`, `gpt-5-pro`, `o3` and `o3-pro` by the `gpt-5.6-sol` model, `gpt-5-mini` by the `gpt-5.6-terra` model and `gpt-5-nano` by the `gpt-5.6-luna` model. OpenAI will shut down the original text models on December 11, 2026 and the image model on February 10, 2027. Assistants with the original Pro models will switch to the standard Sol mode.
+- Data tables - fixed condition generation when filtering fields that reference another entity. Text search is skipped for these fields to avoid invalid SQL conditions (#397).
 
 ## 2026.0.40
 

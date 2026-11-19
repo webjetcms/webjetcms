@@ -13,6 +13,8 @@ block content
         let url = "/admin/rest/ai/assistant-definition/";
 
         window.domReady.add(function () {
+            let tokenUsageChart = null;
+            let lastTokenReset = null;
 
             var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity')})];
 
@@ -38,7 +40,7 @@ block content
             }
 
             let order = [];
-            order.push([1, 'asc']);
+            order.push([columns.findIndex(column => column.data === "name"), 'asc']);
 
             aiAssistantsDataTable = WJ.DataTable({
                 url: "/admin/rest/ai/assistant-definition/",
@@ -47,7 +49,50 @@ block content
                 tabs: tabs,
                 order: order,
                 fetchOnCreate: true,
-                fetchOnEdit: true
+                fetchOnEdit: true,
+                onXhr: function(TABLE, e, settings, json) {
+                    if (!json?.summary || !("nextTokenReset" in json.summary)) return;
+                    let nextReset = json.summary.nextTokenReset;
+                    if (nextReset === lastTokenReset) return;
+                    lastTokenReset = nextReset;
+                    if (nextReset) {
+                        let message = '[[\#{components.ai_assistants.token_reset.next}]]'.replace("{1}", WJ.formatDateTimeSeconds(nextReset));
+                        WJ.notifyInfo('[[\#{components.ai_assistants.token_reset.title}]]', message, 10000);
+                    }
+                }
+            });
+
+            aiAssistantsDataTable.button().add(null, {
+                text: '<i class="ti ti-restore" aria-hidden="true"></i>',
+                className: 'btn btn-outline-secondary buttons-reset-token-usage buttons-divider-left',
+                init: function(dt) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                action: function() {
+                    aiAssistantsDataTable.executeAction("resetTokenUsage", false, "[[\#{components.ai_assistants.token_reset.title}]]", "[[\#{components.ai_assistants.token_reset.selected.confirm}]]");
+                },
+                attr: {
+                    title: '[[\#{components.ai_assistants.token_reset.selected}]]',
+                    'aria-label': '[[\#{components.ai_assistants.token_reset.selected}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+
+            aiAssistantsDataTable.button().add(null, {
+                text: '<i class="ti ti-restore" aria-hidden="true"></i>',
+                className: 'btn btn-outline-secondary buttons-reset-all-token-usage',
+                init: function(dt) {
+                    $.fn.dataTable.Buttons.showIfRowUnselected(this, dt);
+                },
+                action: function() {
+                    if (aiAssistantsDataTable.rows({selected: true}).any()) return;
+                    aiAssistantsDataTable.executeAction("resetAllTokenUsage", true, "[[\#{components.ai_assistants.token_reset.title}]]", "[[\#{components.ai_assistants.token_reset.all.confirm}]]");
+                },
+                attr: {
+                    title: '[[\#{components.ai_assistants.token_reset.all}]]',
+                    'aria-label': '[[\#{components.ai_assistants.token_reset.all}]]',
+                    'data-toggle': 'tooltip'
+                }
             });
 
             var eventsBinded = false;
@@ -60,11 +105,11 @@ block content
                         let newValue = $("#DTE_Field_provider").val();
                         if((oldValue == null && newValue != null) || (oldValue != null && newValue == null) || (oldValue != newValue)) {
                             //Provider was changed and oldValue != newValue ... so remove value from model
-                            $("#DTE_Field_model").val("");
+                            $("#DTE_Field_model").val("").trigger("change");
                         }
                     });
 
-                    $("#DTE_Field_description").on("blur", function() {
+                    $("#DTE_Field_description, #DTE_Field_model").on("blur change", function() {
                         getTranslatedKey($("#DTE_Field_description").val(), "editorFields-translatedDescription");
                     });
 
@@ -72,10 +117,94 @@ block content
                         getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "editorFields-translatedUserPromptLabel");
                     });
 
+                    $("#DTE_Field_useTokenLimits_0").on("change", updateTokenLimitsVisibility);
+
                     eventsBinded = true;
                 }
+                clearTokenUsageChart();
+                if (action === "edit" && aiAssistantsDataTable.EDITOR.ids().length === 1) {
+                    $("#tokenUsageTemplate").contents().clone().insertAfter(aiAssistantsDataTable.EDITOR.field("notifEmail").node());
+                }
+                updateTokenLimitsVisibility();
                 initInstructionsEnhancements();
             });
+
+            aiAssistantsDataTable.EDITOR.on("opened", loadTokenUsageChart);
+            aiAssistantsDataTable.EDITOR.on("close", clearTokenUsageChart);
+            $(document).on("shown.bs.tab", "#pills-dt-datatableInit-tokenLimits-tab", loadTokenUsageChart);
+
+            function updateTokenLimitsVisibility() {
+                var enabled = $("#DTE_Field_useTokenLimits_0").is(":checked");
+                var editor = aiAssistantsDataTable.EDITOR;
+                if (enabled) {
+                    editor.field("usedTokens").show();
+                    editor.field("tokenLimit").show();
+                    editor.field("notifEmail").show();
+                } else {
+                    editor.field("usedTokens").hide();
+                    editor.field("tokenLimit").hide();
+                    editor.field("notifEmail").hide();
+                    editor.field("tokenLimit").error("");
+                }
+                $("#DTE_Field_tokenLimit").prop("required", enabled);
+                $("#tokenUsagePanel").toggleClass("d-none", !enabled);
+                if (enabled) loadTokenUsageChart();
+            }
+
+            function clearTokenUsageChart() {
+                if ($("#tokenUsagePanel").data("loading")) WJ.hideLoader();
+                if (tokenUsageChart) ChartTools.destroyChart(tokenUsageChart);
+                tokenUsageChart = null;
+                $("#tokenUsagePanel").remove();
+            }
+
+            async function loadTokenUsageChart() {
+                const panel = $("#tokenUsagePanel");
+                if (!panel.is(":visible") || tokenUsageChart || panel.data("loading")) return;
+                panel.data("loading", true);
+                const chartContainer = panel.find(".amcharts");
+                WJ.showLoader(null, "#tokenUsagePanel #graphsDiv");
+                try {
+                    const [, result] = await Promise.all([
+                        window.initAmcharts(),
+                        $.getJSON(url + "token-usage", {assistantId: aiAssistantsDataTable.EDITOR.currentJson.id})
+                    ]);
+                    if (!panel[0].isConnected) return;
+                    const chartData = Object.entries(result).map(([day, tokens]) => ({
+                        day: WJ.formatDate(Number(day)),
+                        tokens
+                    }));
+
+                    chartContainer.show();
+                    tokenUsageChart = new ChartTools.BarChartForm({
+                        yAxeName: "day",
+                        xAxeName: "tokens",
+                        chartTitle: '[[\#{components.ai_assistants.token_usage.title}]]',
+                        chartDivId: "ai-assistant-token-usage",
+                        chartData,
+                        horizontal: false,
+                        colorScheme: "set_red",
+                        colorByValue: true
+                    });
+
+                    await ChartTools.createAmchart(tokenUsageChart, true);
+                    const chart = tokenUsageChart.chart;
+                    chart.xAxes.getIndex(0).get("renderer").set("minGridDistance", 90);
+                    chart.yAxes.getIndex(0).set("maxPrecision", 0);
+                    chart.series.getIndex(0).columns.template.setAll({
+                        focusable: true,
+                        ariaLabel: "{day}: {tokens} [[\#{components.ai_assistants.stats.used_tokens}]]"
+                    });
+                } catch {
+                    if (!panel[0].isConnected) return;
+                    if (tokenUsageChart) ChartTools.destroyChart(tokenUsageChart);
+                    tokenUsageChart = null;
+                    chartContainer.hide();
+                } finally {
+                    panel.data("loading", false);
+                    if (panel[0].isConnected) WJ.hideLoader();
+                }
+            }
 
             function initInstructionsEnhancements() {
                 var textarea = document.getElementById("DTE_Field_instructions");
@@ -137,11 +266,14 @@ block content
             function getTranslatedKey(keyToTranslate, fieldId) {
                 if(keyToTranslate == undefined || keyToTranslate == null || keyToTranslate == "") return;
 
+                let data = { key: keyToTranslate };
+                if (fieldId === "editorFields-translatedDescription") data.model = $("#DTE_Field_model").val() || "";
+
                 $.ajax({
                     url: url + "translate-key",
                     method: "get",
                     contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-                    data: { key: keyToTranslate },
+                    data: data,
                     success: function(response) {
                         $("#DTE_Field_" + fieldId).val(response);
                     }
@@ -150,6 +282,8 @@ block content
         });
 
     style.
+        .pg-ai-token-usage div.amcharts { isolation: isolate; }
+
         div.DTE_Field_Name_instructions label { display: none; }
         div.DTE_Field_Name_instructions .md-textarea-editor { height: 502px; }
         .DTE .DTE_Field .instructions-editor-wrapped > textarea { white-space: break-spaces; overflow-wrap: normal; }
@@ -169,12 +303,17 @@ block content
             color: var(--bs-danger) !important;
         }
 
-        tr.not-init td {
+        tr.not-init td, tr.out-of-tokens td {
             color: var(--bs-warning) !important;
         }
 
-        tr.not-init td div a {
+        tr.not-init td div a, tr.out-of-tokens td div a {
             color: var(--bs-warning) !important;
         }
+
+    template#tokenUsageTemplate
+        section#tokenUsagePanel.pg-ai-token-usage.mt-3.mx-3.d-none
+            div#graphsDiv.hide-while-loading
+                div#ai-assistant-token-usage.amcharts
 
     table.datatableInit.table

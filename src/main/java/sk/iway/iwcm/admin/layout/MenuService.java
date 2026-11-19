@@ -196,6 +196,8 @@ public class MenuService {
         }
         String[][] linkReplaces = {
             //{ "", ""},
+            //static assets
+            { "/components/grideditor/support/font-awesome-4.7.0/css/font-awesome.min.css", "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css?v=4.7.0"},
             //welcome
             { "/admin/", "/admin/v9/"},
             //apps

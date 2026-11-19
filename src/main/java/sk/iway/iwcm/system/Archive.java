@@ -18,6 +18,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.doc.RelatedPagesDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.zip.ZipEntry;
@@ -92,6 +93,7 @@ public class Archive
 		if (realPath != null)
 		{
 			File file = new File(realPath);
+			if (AiChatPaths.isPrivate(file)) return;
 			int size;
 			int i;
 			try
@@ -103,6 +105,7 @@ public class Archive
 					for (i=0; i<size; i++)
 					{
 						file = files[i];
+						if (AiChatPaths.isPrivate(file)) continue;
 						if (file.isDirectory())
 						{
 							if (!file.getName().equalsIgnoreCase("cvs"))

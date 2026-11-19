@@ -98,6 +98,8 @@ Prekladač pri vytvorení stránky hľadá v priečinkoch rekurzívne smerom ku 
 
 Prekladá sa **Názov web stránky**, názov položky v menu, URL adresa a **Obsah** web stránky.
 
+Ak preklad zlyhá, napríklad po vyčerpaní kvóty DeepL, zrkadlenie pokračuje s aktuálnym názvom a obsahom v pôvodnom jazyku. Po uložení sa zobrazí upozornenie **Automatický preklad zlyhal** s informáciou, že bol použitý pôvodný jazyk. Upozornenie obsahuje aj konkrétny dôvod z výnimky prekladača; pri HTTP chybe DeepL zobrazí HTTP kód a správu z odpovede, ak je dostupná, napríklad o vyčerpanej kvóte, nepodporovanej kombinácii jazykov alebo internej chybe služby. Redaktor môže jazykovú verziu preložiť ručne alebo po obnovení prekladača zopakovať uloženie pôvodnej stránky.
+
 ### Nová stránka
 
 Pri vytváraní stránky sa vždy spustí automatický preklad. Ak vytvoríte novú stránku s názvom "dobré ráno" v priečinku `preklad_sk`, kde je nastavený Slovenský jazyk, tak v adresári `preklad_en` vznikne stránka `good morning`, obsah stránky bude tiež preložený do Anglického jazyka.

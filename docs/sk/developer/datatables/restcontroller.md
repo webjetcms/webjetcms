@@ -487,6 +487,8 @@ Volaním metódy ```setForceReload(true);``` je možné vynútiť obnovenie úda
 
 Je to potrebné ak sa uložený objekt presunie do iného adresára a podobne. Ukážka je vo [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
 
+Pri datatabuľke s `serverSide: false` sa po úprave jedného záznamu zobrazí strana, na ktorej sa nachádza podľa aktuálneho triedenia a filtrovania. Záznam sa vyhľadá podľa poľa `reloadRowKey`, predvolene podľa `editorId`. Ak po úprave prestane vyhovovať filtru alebo už nie je v načítaných údajoch, zachová sa pôvodná strana, prípadne posledná platná strana. Rovnako sa zachová strana pri hromadnej editácii a mazaní. Ak zmazaním posledného riadka zanikne posledná strana, zobrazí sa predchádzajúca platná strana. Pri prázdnom zozname sa zobrazí prvá strana s prázdnym stavom. Po vytvorení záznamu sa vynúteným obnovením stránkovanie resetuje na prvú stranu.
+
 ## Číselníky pre select boxy
 
 Pre select boxy v editore a automatickú konverziu ID na hodnota (napr. ```templateId``` na meno šablóny) je vo WebJETe pridané rozšírenie ```PageImpl``` objektu [DatatablePageImpl.java](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java), ktoré umožňuje posielať číselníkové dáta.

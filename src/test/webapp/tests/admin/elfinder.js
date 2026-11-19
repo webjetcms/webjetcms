@@ -215,20 +215,21 @@ Scenario('search webpages', ({I}) => {
     I.dontSeeElement("#iwcm_doc_group_volume_L2dyb3VwOjQ5MzM0");
 })
 
-Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
+Scenario('remember last elfinder dir in webpages', ({I, DTE}) => {
+    const imageButton = '.cke_button__image:not(.cke_button_disabled):visible';
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=16");
     DTE.waitForEditor();
-    I.wait(3);
+    DTE.waitForCkeditor();
 
     I.clickCss('#trEditor');
-    if (Browser.isFirefox()) I.wait(2);
     I.clickCss('#trEditor');
     I.pressKey('ArrowDown');
 
     //
     I.say("Opening image dialog and navigating to test folder");
 
-    I.clickCss('.cke_button.cke_button__image.cke_button_off');
+    I.waitForVisible(imageButton, 20);
+    I.clickCss(imageButton);
     I.waitForText('Vlastnosti obrázka', 20);
     I.switchTo('#wjImageIframeElement');
     I.waitForLoader(".WJLoaderDiv");
@@ -251,7 +252,8 @@ Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
     //
     I.say("Checking if test folder is selected after reopening image dialog");
 
-    I.clickCss('.cke_button.cke_button__image.cke_button_off');
+    I.waitForVisible(imageButton, 20);
+    I.clickCss(imageButton);
     I.waitForText('Vlastnosti obrázka', 20);
     I.switchTo('#wjImageIframeElement');
     I.waitForLoader(".WJLoaderDiv");
@@ -269,13 +271,14 @@ Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
 
     I.click("Trhy sú naďalej vydesené");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
 
     I.click(locate('#trEditor'), null, { position: { x: 50, y: 250 } });
-    if (Browser.isFirefox()) I.wait(2);
     I.click(locate('#trEditor'), null, { position: { x: 50, y: 250 } });
     I.pressKey('ArrowDown');
 
-    I.clickCss('.cke_button.cke_button__image.cke_button_off');
+    I.waitForVisible(imageButton, 20);
+    I.clickCss(imageButton);
     I.waitForText('Vlastnosti obrázka', 20);
     I.switchTo('#wjImageIframeElement');
     I.waitForLoader(".WJLoaderDiv");
@@ -568,6 +571,14 @@ async function deleteFile(I, fileName) {
 
 Scenario('BUG 57669 - file size in dir', async ({ I }) => {
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9nYWxsZXJ5L3Rlc3QtdmVsYS1mb3Rv");
-    I.waitForText("Súčet: 27.09 MB", 10, ".elfinder-statusbar .elfinder-stat-size.elfinder-stat-size-recursive");
-    I.waitForText("Položky: 327", 10, ".elfinder-statusbar .elfinder-stat-size");
+    I.waitForText("Položky: 327", 20, ".elfinder-statusbar .elfinder-stat-size");
+    // Image processing can change fixture sizes; compare the total with the listed files.
+    const expected = await I.executeScript(() => {
+        const finder = $('#finder').elfinder('instance');
+        const files = Object.values(finder.files(finder.cwd().hash));
+        const bytes = files.reduce((sum, file) => sum + Number(file.size), 0);
+        return { bytes, formatted: finder.formatSize(bytes) };
+    });
+    I.assertAbove(expected.bytes, 0);
+    I.waitForText("Súčet: " + expected.formatted, 10, ".elfinder-statusbar .elfinder-stat-size.elfinder-stat-size-recursive");
 });
