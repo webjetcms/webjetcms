@@ -304,6 +304,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Server monitoring - in the current values, the [Character encoding] section has been added (sysadmin/monitoring/README.md#character-encoding), which displays the encoding of HTTP responses, JVM and locale environment of the running application server process (#305).
 - Configuration - added hierarchical tree of configuration variables with **Changed**, **Custom**, **All** views and module branches (#293).
+- Configuration - variables are sorted by name from A to Z by default in all branches of the tree, so after editing the value, the variable will remain in its place. If you have saved your own sorting, it takes precedence throughout the tree.
 - Configuration - added **Set Temporarily** option, which sets the value of the configuration variable only on the current node without saving it to the database. After a restart, the value saved in the database will be restored (#291).
 
 ![](admin/setup/configuration/page.png)
@@ -338,6 +339,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- HTML code embedding - content is decoded in UTF-8 without depending on the default JVM encoding, so that diacritics and other Unicode characters are not corrupted on the server.
 - Structure mirroring - when a translation fails, for example after running out of DeepL quota, the user will receive a notification with the specific reason for the translator exception, including the HTTP code and available DeepL error message. Hard spaces and their HTML entities are normalized in folder names and generated URLs to avoid `nbsp` addresses and unnecessary redirects (#402).
 - Data tables - after editing a single record, when forced to refresh the data, the page with the edited record is displayed according to the current sorting. In the configuration, the variable is searched by name even when its ID is changed. When deleting, the current page is preserved, or the last valid page is displayed. When creating a record, the pagination is still reset (#400).
 - Multi-step forms - the item identifier is generated from the field name text without HTML tags so that name formatting does not affect the identifier (#396).
@@ -764,7 +766,10 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- `/thumb` - ​​fixed generation of previews at `ip=1/2` when only width or height is specified in the URL. The limit `imageMaxThumbsWidth` or `imageMaxThumbsHeight` for the second dimension is checked only after it is calculated from the aspect ratio, before generating the image. The format of cache keys and allowed dimensions records is unchanged (#408).
 - Search - the deleted web page is removed by ID from all existing local language Lucene indexes even without data in the database or cache. With continuous indexing enabled, retained notifications of changes to specific pages are processed even after a cluster node restart. In case of a deletion error, the cluster notification is not confirmed and processing is repeated (#403).
+- Search - preparing an application preview for the index as part of cluster synchronization will prepare a replacement `request` object for a better way to display applications for the search index (#404).
+- Search - when removing HTML tags, the content is no longer truncated after 100,000 characters. The maximum length of processed HTML is determined by the configuration variable `fulltextMaxHtmlLength` (2,000,000 characters by default). When the limit is exceeded, only the beginning of the content is processed and a warning is written to the log. Optimized processing of long HTML tag attributes (#404).
 - Database - fixed generation of SQL conditions `IN` and `NOT IN` with a large number of values ​​by dividing the lists into smaller parts. Fixed errors when exceeding the limit of 1000 values ​​in the Oracle database, for example when loading the page history or working with an extensive folder tree. The maximum number of values ​​in one part is determined by the configuration variable `dbInClauseMaxItems` (default 1000, in Oracle no more than 1000).
 - Database - unified date types in SQL scripts for new installations: PostgreSQL uses `TIMESTAMP WITHOUT TIME ZONE`, fixed incorrect use of `TIMESTAMP` in MariaDB and Microsoft SQL. Existing databases are not automatically converted (#399).
 - Web pages - fixed limiting search and replace in folder names to the selected folder tree and setting the parent when fixing erroneously deleted folders during moving a page to the trash (#390).
@@ -787,6 +792,9 @@ Redesigned application properties settings in the editor from the old code in `J
 - Security - added reasoned exceptions in `dependency-check-suppressions.xml` for vulnerabilities in unused Spring parts and for the vulnerability addressed by the SpringEL setting above. The exception for [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) takes into account the above protected file protection and file submission fix; it represents application precautions and accepted residual risk, not a library fix or confirmation of the safety of all response submission methods. The default deferred writing of Spring Security headers is retained. Versions `Spring Framework 5.3.39` and `Spring Security 5.8.16` are retained.
 - AI assistants - when updating, OpenAI models will be replaced with newer ones: `gpt-image-2` by the `gpt-image-2.6-sunburst` model for image generation and editing, `gpt-5`, `gpt-5-pro`, `o3` and `o3-pro` by the `gpt-5.6-sol` model, `gpt-5-mini` by the `gpt-5.6-terra` model and `gpt-5-nano` by the `gpt-5.6-luna` model. OpenAI will shut down the original text models on December 11, 2026 and the image model on February 10, 2027. Assistants with the original Pro models will switch to the standard Sol mode.
 - Data tables - fixed condition generation when filtering fields that reference another entity. Text search is skipped for these fields to avoid invalid SQL conditions (#397).
+- Templates - [Ninja object](frontend/ninja-starter-kit/ninja-jv/temp-group/README.md) `${ninja.temp.group.textPrefix}` returns the prefix of the template group text keys. Previously, the getter called itself and using it in a template ended with error `StackOverflowError` (#409).
+- Files - fixed the name of the configuration variable `elfinderMetadataAutopopup`, which automatically displays the metadata dialog after uploading a file. The variable was declared with a typo as `elfinerMetadataAutopopup`, which was not read anywhere, so changing it in the administration had no effect. The default value `false` remains. If you set a variable with a typo, set it to `elfinderMetadataAutopopup` instead (#410).
+- Fixed looping in HTTP redirects during file downloads, user settings loading, primary key generator initialization, and database file cache refresh. Added retry exit conditions. If the primary key generator remains unavailable after one attempt to create a record and refresh the cache, the `PkeyGenerator.getNextValue(String)` and `getNextValueAsLong(String)` methods throw `IllegalStateException`. The caller must abort the operation requiring the identifier and pass the error to its exception handler (#412).
 
 ## 2026.0.40
 
