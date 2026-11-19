@@ -239,16 +239,19 @@ public class PkeyGenerator
 		long value = 1;
 		PkeyGenerator pkGen = PkeyGenerator.getInstance();
 		int INCREMENT_OFFSET = Constants.getInt("pkeyGenOffset");
-		try
+		PkeyBean p = pkGen.getPkeyBean(keyName);
+		if (p == null)
 		{
-			PkeyBean p = pkGen.getPkeyBean(keyName);
+			createNewRecord(keyName);
+			pkGen.pkeyReloadAll();
+			p = pkGen.getPkeyBean(keyName);
 			if (p == null)
 			{
-				createNewRecord(keyName);
-				PkeyGenerator pkg = PkeyGenerator.getInstance();
-				pkg.pkeyReloadAll();
-				return getNextValueAsLong(keyName);
+				throw new IllegalStateException("Cannot initialize primary key generator: " + keyName);
 			}
+		}
+		try
+		{
 			int INCREMENT = Constants.getInt("pkeyGenIncrement");
 
 			if ((p.getValue()+INCREMENT+INCREMENT_OFFSET) > p.getMaxValue())
