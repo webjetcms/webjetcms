@@ -18,6 +18,8 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.ModuleInfo;
+import sk.iway.iwcm.system.Modules;
 
 /** Request-boundary checks; content readers/renderers have separate real DB/JSP coverage. */
 class BranchFilterTest {
@@ -31,6 +33,7 @@ class BranchFilterTest {
     private MockedStatic<Constants> constants;
     private MockedStatic<GroupsDB> groups;
     private MockedStatic<BranchSelection> selection;
+    private MockedStatic<Modules> modules;
 
     @BeforeEach void requestBoundary() {
         constants=mockStatic(Constants.class);constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(true);constants.when(()->Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
@@ -43,9 +46,15 @@ class BranchFilterTest {
         doReturn(true).when(admin).isEnabledItem(BranchAccess.PERMISSION);
         request.setMethod("GET");request.setServerName("admin.example");request.getSession().setAttribute(Constants.USER_KEY,admin);request.getSession().setAttribute("preview.editorDomainName",DOMAIN);
         selection=mockStatic(BranchSelection.class);selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(BranchContext.live(DOMAIN,1));
+        modules = mockStatic(Modules.class);
+        Modules menu = mock(Modules.class);modules.when(Modules::getInstance).thenReturn(menu);
+        when(menu.getModules()).thenReturn(List.of(
+            menuItem("/admin/temps_list.jsp"), menuItem("/admin/restart.jsp"),
+            menuItem("/admin/v9/apps/image-editor/"), menuItem("/apps/contact/admin/"),
+            menuItem("/components/catalog/custom_admin.jsp"), menuItem("/apps/catalog/administration/")));
         bean.setRequest(request);bean.setDomain("old.example");bean.setUrl("/old.html");SetCharacterEncodingFilter.setCurrentRequestBean(bean);
     }
-    @AfterEach void cleanBoundary(){selection.close();groups.close();constants.close();SetCharacterEncodingFilter.setCurrentRequestBean(null);}
+    @AfterEach void cleanBoundary(){modules.close();selection.close();groups.close();constants.close();SetCharacterEncodingFilter.setCurrentRequestBean(null);}
 
     /** The preview bootstrap and its form POST must render WORK even without Fetch Metadata headers. */
     @Test void componentPreviewKeepsTheWorkingVersionForDocumentAndFrameRequests() throws Exception {
@@ -87,14 +96,14 @@ class BranchFilterTest {
         assertEquals(409, response.getStatus());
     }
 
-    @Test void everyNonBranchAdminDocumentRequiresConsentBeforeDispatch() throws Exception {
+    @Test void mappedProductionScreensRequireConsentBeforeDispatch() throws Exception {
         selected();
         var pkg = new BranchEntity();
         pkg.setName("Autumn");
         selection.when(() -> BranchSelection.requireBranch(42, DOMAIN)).thenReturn(pkg);
         request.addHeader("Sec-Fetch-Dest", "document");
         for (String path : List.of("/admin/v9/templates/temps-list/", "/admin/v9/files/folder_prop/",
-                "/admin/v9/future-section/", "/apps/contact/admin/", "/components/news/admin_save.jsp",
+                "/admin/v9/apps/image-editor/", "/apps/contact/admin/",
                 "/components/catalog/custom_admin.jsp", "/apps/catalog/administration/")) {
             request.setRequestURI(path);
             request.setQueryString("id=7&view=edit");
@@ -232,7 +241,7 @@ class BranchFilterTest {
         filter.doFilter(request,response,(in,out)->fail("Stale branch iframe fell back to LIVE")); assertEquals(409,response.getStatus());
     }
 
-    @Test void fileManagerLoadsOnlyStaticDependenciesAndChecksItsFrozenScreenContext() throws Exception {
+    @Test void fileManagerDependenciesAndUploadsKeepTheirScreenContext() throws Exception {
         selected();
         for(String path:List.of("/admin/elFinder/js/elfinder.full.js","/admin/elFinder/css/elfinder.full.css","/admin/codemirror/lib/codemirror.js")) {
             request.setRequestURI(path);response=new MockHttpServletResponse();
@@ -330,7 +339,7 @@ class BranchFilterTest {
         request.addHeader("Accept", "text/html");
         for (String path : List.of("/components/_common/combine.jsp", "/components/_common/javascript/page_functions.js.jsp",
                 "/components/catalog/list.jsp", "/apps/catalog/data.action", "/apps/catalog/", "/templates/site/theme.jsp",
-                "/components/catalog/app.js", "/apps/catalog/style.css", "/templates/site/main.css")) {
+                "/components/catalog/app.js", "/apps/catalog/style.css", "/templates/site/main.css", "/templates/site/admin-theme.jsp")) {
             request.setRequestURI(path);
             for (String destination : List.of("style", "script", "iframe", "document", "")) {
                 request.removeHeader("Sec-Fetch-Dest");
@@ -406,6 +415,64 @@ class BranchFilterTest {
     @Test void anAssetSuffixOnARestRouteDoesNotBypassWriteProtection()throws Exception {
         selected();headers(42,DOMAIN);request.setMethod("POST");request.setRequestURI("/admin/rest/elfinder/connector.js");filter.doFilter(request,response,(in,out)->fail("REST asset suffix bypass dispatched"));assertEquals(409,response.getStatus());
         response=new MockHttpServletResponse();request.setMethod("GET");request.setRequestURI("/admin/v9/dist/scripts/app.js");AtomicBoolean dispatched=new AtomicBoolean();filter.doFilter(request,response,(in,out)->dispatched.set(true));assertTrue(dispatched.get());
+    }
+
+    /** CKEditor loads this JSP as JavaScript, so it must never receive a production confirmation response. */
+    @Test void ckeditorDialogScriptLoadsWhileAWorkingVersionIsSelected() throws Exception {
+        selected();
+        request.setRequestURI("/admin/skins/webjet8/ckeditor/dist/plugins/webjet/js/fck_dialog_common.jsp");
+        request.addHeader("Sec-Fetch-Dest", "script");
+        request.addHeader("Referer", "http://admin.example/admin/v9/files/wj_image/?branchId=42&branchDomain=1");
+        AtomicBoolean dispatched = new AtomicBoolean();
+        filter.doFilter(request, response, (in, out) -> {
+            dispatched.set(true);
+            out.setContentType("text/javascript");
+            out.getWriter().write("function GetE(id) { return document.getElementById(id); }");
+        });
+        assertTrue(dispatched.get(), "The CKEditor dialog script returned " + response.getStatus());
+        assertEquals(200, response.getStatus());
+        assertEquals("text/javascript", response.getContentType());
+        assertTrue(response.getContentAsString().contains("function GetE("));
+        assertNull(response.getForwardedUrl());
+    }
+
+    /** Helper requests retain WORK and their original response even when opened as a document or nested frame. */
+    @Test void helperUrlsOutsideTheMenuDoNotRequireProductionConsent() throws Exception {
+        selected();
+        request.setParameter("set", "customEditorAssets");
+        for (String path : List.of("/admin/skins/webjet8/ckeditor/config.jsp",
+                "/admin/skins/webjet8/ckeditor/dist/plugins/custom/dialog.jsp",
+                "/admin/scripts/combine.jsp", "/admin/elFinder/helper.jsp", "/admin/v9/future-section/",
+                "/apps/catalog/admin/helper.jsp")) {
+            assertFalse(BranchProductionSection.needsConfirmation(path), path);
+            for (String destination : List.of("script", "iframe", "document", "")) {
+                request.setRequestURI(path);
+                request.removeHeader("Sec-Fetch-Dest");
+                request.addHeader("Accept", "text/html");
+                if (!destination.isEmpty()) request.addHeader("Sec-Fetch-Dest", destination);
+                for (String method : List.of("GET", "HEAD")) {
+                    request.setMethod(method);
+                    response = new MockHttpServletResponse();
+                    AtomicBoolean dispatched = new AtomicBoolean();
+                    filter.doFilter(request, response, (in, out) -> {
+                        dispatched.set(true);
+                        assertEquals(branch, BranchContexts.current());
+                    });
+                    assertTrue(dispatched.get(), method + " " + path + " / " + destination);
+                    assertEquals(200, response.getStatus());
+                    assertNull(response.getForwardedUrl());
+                    assertNull(response.getHeader("Location"));
+                }
+            }
+        }
+        assertFalse(BranchContexts.current().isBranch());
+    }
+
+    private static ModuleInfo menuItem(String path) {
+        ModuleInfo item = new ModuleInfo();
+        item.setPath(path);
+        item.setItemKey("test-menu");
+        return item;
     }
 
     private void selected(){request.getSession().setAttribute(BranchSelection.SESSION_KEY,new BranchSelection.Selected(42,1));selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(branch);}

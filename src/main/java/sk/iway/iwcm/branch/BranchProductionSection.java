@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.admin.layout.MenuService;
 
 /** Identifies WORK screens and carries explicit production consent through a single browser document and its requests. */
 public final class BranchProductionSection {
@@ -18,13 +19,15 @@ public final class BranchProductionSection {
     private static final String PARAMETER = "wjProductionPage";
     private static final Pattern TOKEN = Pattern.compile("(?:^|&)" + PARAMETER + "=([a-f0-9-]{36})(?=&|$)");
 
-    // Screens usable with a working version selected, including its metadata management. Unknown screens use the production dialog.
+    // Screens usable with a working version selected, including its metadata management.
     private static final Set<String> BRANCH_PAGES = Set.of(
         "/admin/v9/", "/admin/v9/webpages/web-pages-list/", "/admin/v9/webpages/branches/", "/admin/v9/webpages/media/",
         "/admin/v9/webpages/component/", "/apps/news/admin/", "/admin/v9/files/index/",
-        "/admin/v9/files/dialog/", "/admin/v9/files/wj_link/", "/admin/v9/files/wj_image/",
-        "/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp"
+        "/admin/v9/files/dialog/", "/admin/v9/files/wj_link/", "/admin/v9/files/wj_image/"
     );
+
+    // Folder properties edit shared metadata and have no menu entry of their own.
+    private static final Set<String> PRODUCTION_PAGES = Set.of("/admin/v9/files/folder_prop/");
 
     private BranchProductionSection() { }
 
@@ -39,18 +42,20 @@ public final class BranchProductionSection {
     }
 
     static boolean supportsBranch(String path) {
-        return BRANCH_PAGES.contains(path) || BRANCH_PAGES.contains(path + "/");
+        return path.startsWith("/admin/skins/webjet8/ckeditor/")
+            || BRANCH_PAGES.contains(path) || BRANCH_PAGES.contains(path + "/");
     }
 
     static boolean adminDocumentPath(String path) {
-        return (path.startsWith("/admin/")
-                || (path.startsWith("/components/") || path.startsWith("/apps/")) && path.contains("admin"))
-            && !path.startsWith("/admin/rest/");
+        if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/admin/rest/")) return false;
+        return supportsBranch(path) || PRODUCTION_PAGES.contains(path) || PRODUCTION_PAGES.contains(path + "/")
+            || MenuService.getPerms(path) != null;
     }
 
     /** Public application resources, including dynamic CSS/JS, do not select an administration content version. */
     static boolean publicApplicationPath(String path) {
-        return (path.startsWith("/components/") || path.startsWith("/apps/") || path.startsWith("/templates/"))
+        return (path.startsWith("/templates/")
+                || (path.startsWith("/components/") || path.startsWith("/apps/")) && !path.contains("admin"))
             && !adminDocumentPath(path);
     }
 

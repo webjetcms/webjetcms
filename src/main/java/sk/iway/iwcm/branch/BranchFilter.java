@@ -23,8 +23,7 @@ public final class BranchFilter implements Filter {
         boolean navigation = isDocumentNavigation(request);
         String destination = request.getHeader("Sec-Fetch-Dest");
         boolean frame = "iframe".equals(destination) || "frame".equals(destination);
-        boolean frameScreen = frame && "GET".equals(request.getMethod())
-            && (!isSupportedBranchAdminPath(path) || path.startsWith("/admin/v9/") || path.startsWith("/apps/"));
+        boolean frameScreen = frame && "GET".equals(request.getMethod());
         boolean adminScreen = (navigation || frameScreen) && BranchProductionSection.adminDocumentPath(path);
         // Fresh top-level navigation chooses its own mode. Embedded dialogs inherit their calling screen.
         if (navigation && !"0".equals(request.getParameter("branchId"))) source = null;
@@ -175,10 +174,7 @@ public final class BranchFilter implements Filter {
                     access.requireUser(request);
                     boolean readPost="POST".equals(request.getMethod()) && Set.of("/admin/rest/groups/tree/tree","/admin/rest/news/news-list/tree","/admin/rest/news/news-list/convertIdsToNamePair","/admin/elFinder/gethash.jsp").contains(path);
                     if(!Set.of("GET","HEAD").contains(request.getMethod())&&!readPost&&!supportedPost(path)) {response.sendError(409,"This write is unavailable in a publishing branch");return;}
-                    if (path.equals("/admin/scripts/combine.jsp") && !Set.of("adminStandardJs","adminStandardCss","adminStandardCssWj9","adminJqueryJs","adminJqueryJs2","adminInlineJs","adminInlineCss").contains(java.util.Objects.toString(request.getParameter("set"),""))) {
-                        response.sendError(409,"This script set is unavailable in a publishing branch"); return;
-                    }
-                    if(!isSupportedBranchAdminPath(path)) {response.sendError(409,"This function is unavailable in a publishing branch; select production");return;}
+                    if(BranchProductionSection.needsConfirmation(path)) {response.sendError(409,"This function is unavailable in a publishing branch; select production");return;}
                 }
             }
             try(BranchContexts.Scope ignored=BranchContexts.open(request,context)) {
@@ -271,25 +267,6 @@ public final class BranchFilter implements Filter {
             "/admin/v9/webpages/component/","/admin/rest/components","/admin/rest/branch-content/revert",
             "/admin/rest/web-pages/deletion-preview","/admin/rest/groups/deletion-preview","/admin/rest/web-pages/http-headers",
             "/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp").contains(path);
-    }
-
-    private static boolean isSupportedBranchAdminPath(String path) {
-        return path.startsWith("/admin/v9/webpages/")||path.startsWith("/apps/news/admin/")
-            ||path.startsWith("/admin/rest/media")||path.startsWith("/admin/v9/files/")||path.equals("/admin/elfinder-connector/")
-            ||path.equals("/admin/upload/chunk")||path.equals("/admin/upload/overwrite")||path.equals("/admin/upload/keepboth")||path.equals("/admin/upload/skipkey")
-            ||path.equals("/admin/web-pages/upload/")||path.equals("/admin/elFinder/gethash.jsp")
-            ||path.startsWith("/admin/rest/web-pages")||path.startsWith("/admin/rest/groups/tree")
-            ||path.startsWith("/admin/rest/groups/parents/")||path.equals("/admin/rest/groups")||path.equals("/admin/rest/groups/editor")||path.matches("/admin/rest/groups/(-?[0-9]+|all|search/findByColumns)")||path.equals("/admin/rest/groups/deletion-preview")
-            ||path.startsWith("/admin/rest/branch-content")||path.equals("/admin/rest/components")
-            ||path.equals("/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp")
-            ||path.equals("/admin/skins/webjet8/ckeditor/config.jsp")||path.equals("/admin/skins/webjet8/ckeditor/editor_magicline.jsp")
-            ||path.equals("/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/component_preview.jsp")
-            ||path.equals("/admin/scripts/combine.jsp")||path.equals("/admin/scripts/common.jsp")
-            ||path.equals("/components/_common/javascript/page_functions.js.jsp")
-            ||path.equals("/admin/webpages/webpages.js.jsp")||path.equals("/admin/webpages/page-builder/scripts/ninja-page-builder.js.jsp")
-            ||path.equals("/admin/iframe_blank.jsp")||path.equals("/admin/rest/forms-list/regexps")
-            ||path.startsWith("/admin/rest/news")||path.startsWith("/admin/rest/branches")
-            ||path.equals("/admin/v9/")||path.startsWith("/admin/layout/");
     }
 
     private static final class LogicalRequest extends HttpServletRequestWrapper {
