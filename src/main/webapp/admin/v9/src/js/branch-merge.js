@@ -794,7 +794,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         if (item.applyPhase === 'FILE_STARTED') section.append(element('p', 'alert alert-warning', tr('fileStateNote')));
         if (item.type === 'DOCUMENT' && item.choice === 'LIVE' && item.writeRequired) section.append(element('p', 'alert alert-info', tr('liveMoveNote')));
         if (item.base?.state !== 'ABSENT' && item.base?.fields?.virtual_path !== item.work?.fields?.virtual_path && item.type === 'DOCUMENT') section.append(element('p', 'alert alert-warning', tr('redirectNote')));
-        const versions = workOnly ? ['work'] : ['base', 'live', 'work'];
+        const versions = workOnly ? ['work'] : equal(item.base, item.live) ? ['live', 'work'] : ['base', 'live', 'work'];
         const allFields = [...new Set(['title', 'group_name', 'data', ...versions.flatMap(name => Object.keys(item[name]?.fields || {}))])]
             .filter(key => versions.some(name => Object.hasOwn(item[name]?.fields || {}, key)));
         const differing = key => !equal(item.base?.fields?.[key], item.live?.fields?.[key]) || !equal(item.base?.fields?.[key], item.work?.fields?.[key]);
@@ -817,6 +817,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
                 pane.tabIndex = 0;
             }
             const columns = element('div', 'pg-branch-merge__versions');
+            columns.style.setProperty('--branch-merge-columns', versions.length);
             for (const version of versions) {
                 const snapshot = item[version] || {state: 'ABSENT', fields: {}};
                 const panel = element('section', 'pg-branch-merge__version');

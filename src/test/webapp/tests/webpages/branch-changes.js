@@ -35,6 +35,12 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
             {type: 'DOCUMENT', objectKey: '18', label: 'autotest new page', operation: 'UPSERT',
                 base: absent, live: absent, work: snapshot('autotest new page'), workOnly: true, writeRequired: true, resolvable: true,
                 folderPath: sectionPath + '/autotest folder'},
+            {type: 'DOCUMENT', objectKey: '21', label: 'autotest unchanged main', operation: 'UPSERT', conflict: false,
+                base: snapshot('autotest original'), live: snapshot('autotest original'), work: snapshot('autotest draft'),
+                writeRequired: true, resolvable: true, editable: true},
+            {type: 'DOCUMENT', objectKey: '22', label: 'autotest matching deletion', operation: 'DELETE', conflict: false,
+                base: snapshot('autotest removed'), live: {...snapshot('autotest removed'), state: 'TRASH'},
+                work: {...snapshot('autotest removed'), state: 'TRASH'}, writeRequired: false},
             {type: 'GROUP', objectKey: '15', label: 'autotest folder', operation: 'UPSERT', workHash: 'autotest-folder', writeRequired: true,
                 folderPath: sectionPath}
         ]
@@ -101,6 +107,41 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.dontSeeElement(`${detail} [data-branch-version="LIVE"]`);
     I.see('Vynechať položku z publikovania', detail);
     I.pressKey('Escape');
+    I.waitForInvisible(detail, 10);
+    I.clickCss(`${changesTable} [data-branch-compare="21"]`);
+    I.waitForVisible(detail, 10);
+    I.dontSeeElement(`${detail} [data-branch-version="BASE"]`);
+    I.see('autotest original', '#branch-merge-fields [data-branch-version="LIVE"]');
+    I.see('autotest draft', '#branch-merge-fields [data-branch-version="WORK"]');
+    const twoColumnsFillWidth = await I.executeScript(() => {
+        const grid = document.querySelector('#branch-merge-fields .pg-branch-merge__versions').getBoundingClientRect();
+        const panels = [...document.querySelectorAll('#branch-merge-fields [data-branch-version]')].map(panel => panel.getBoundingClientRect());
+        return panels.length === 2 && Math.abs(panels[0].width - panels[1].width) <= 1
+            && Math.abs(panels[0].left - grid.left) <= 1 && Math.abs(panels[1].right - grid.right) <= 1;
+    });
+    I.assertTrue(twoColumnsFillWidth);
+    I.checkOption('#branch-merge-choice-work');
+    I.clickCss('#branch-merge-html-tab');
+    I.waitForVisible('#branch-merge-html.active', 5);
+    I.dontSeeElement('#branch-merge-html [data-branch-version="BASE"]');
+    I.see('autotest original HTML', '#branch-merge-html [data-branch-version="LIVE"]');
+    I.see('autotest draft HTML', '#branch-merge-html [data-branch-version="WORK"] .pg-branch-merge__changed');
+    I.checkOption('#branch-merge-all-fields');
+    I.seeCheckboxIsChecked('#branch-merge-choice-work');
+    I.dontSeeElement('#branch-merge-html [data-branch-version="BASE"]');
+    I.click('Zatvoriť', `${detail} footer`);
+    I.waitForInvisible(detail, 10);
+    I.clickCss(`${changesTable} [data-branch-compare="22"]`);
+    I.waitForVisible(detail, 10);
+    // A state-only difference still needs the baseline, even when LIVE and WORK agree.
+    I.see('Východiskový stav', '#branch-merge-fields [data-branch-version="BASE"]');
+    I.see('Položka existuje', '#branch-merge-fields [data-branch-version="BASE"]');
+    I.see('Hlavná verzia', '#branch-merge-fields [data-branch-version="LIVE"]');
+    I.see('Pracovná verzia', '#branch-merge-fields [data-branch-version="WORK"]');
+    I.clickCss('#branch-merge-html-tab');
+    I.waitForVisible('#branch-merge-html.active', 5);
+    I.see('Východiskový stav', '#branch-merge-html [data-branch-version="BASE"]');
+    I.click('Zatvoriť', `${detail} footer`);
     I.waitForInvisible(detail, 10);
     DT.filterSelect('type', 'Priečinky', changesWrapper);
     I.see('autotest folder', changesTable);
@@ -197,6 +238,10 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.wjSetDefaultWindowSize();
     I.clickCss('#branch-merge-save-choice');
     I.waitForEnabled('#branch-merge-publish', 10);
+    I.see('Východiskový stav', '#branch-merge-fields [data-branch-version="BASE"]');
+    I.clickCss('#branch-merge-html-tab');
+    I.waitForVisible('#branch-merge-html.active', 5);
+    I.see('Východiskový stav', '#branch-merge-html [data-branch-version="BASE"]');
     I.click('Zatvoriť', `${detail} footer`);
     I.waitForInvisible('dialog.pg-branch-merge', 10);
     I.seeElement(modal);

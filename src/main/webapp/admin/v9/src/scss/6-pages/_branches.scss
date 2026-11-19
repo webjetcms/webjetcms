@@ -133,7 +133,7 @@
         input { flex-shrink: 0; margin-top: 0; }
     }
 
-    &__versions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    &__versions { display: grid; grid-template-columns: repeat(var(--branch-merge-columns, 3), minmax(0, 1fr)); gap: 16px; }
     &__version {
         display: grid;
         grid-template-rows: subgrid;
@@ -164,7 +164,6 @@
 
     &--single {
         width: min(#{$modal-lg}, calc(100vw - 24px));
-        .pg-branch-merge__versions { grid-template-columns: minmax(0, 1fr); }
     }
 
     &--maximized {
