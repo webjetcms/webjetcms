@@ -383,7 +383,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.see('Publikovanie zlyhalo', '#branch-merge-title');
         I.see(`Dokončené: ${completed.length} z ${before.items.length} · chyby: ${errors.length} · zostáva: ${pending}`, '#branch-merge-progress');
         I.see('Už dokončené zmeny sú verejné.', '#branch-merge-progress');
-        I.dontSee('Otvoriť pracovnú verziu v editore', detail);
+        I.dontSeeElement(`${detail} [data-branch-edit]`);
         const writtenError = errors.find(item => ['DATA', 'REFERENCES', 'TRASH_WAIT', 'TRASH_ROOT', 'EFFECTS'].includes(item.applyPhase));
         I.assertTrue(Boolean(writtenError), 'The prepared failure must identify its already-written content phase.');
         const errorRow = `${dialog} tr[data-branch-type="${writtenError.type}"][data-branch-key="${writtenError.objectKey}"]`;

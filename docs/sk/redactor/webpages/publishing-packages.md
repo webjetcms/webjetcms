@@ -18,7 +18,11 @@ V páse pracovnej verzie kliknite na **Náhľad**. V novej karte môžete prejs�
 
 Odkaz **Pracovné zmeny** v hlavičke otvorí priamo kartu **Zmeny** aktívnej pracovnej verzie. V zozname pracovných verzií môžete označiť ľubovoľný riadok a použiť rovnakú akciu. Zoznam zúžite filtrom v stĺpci **Typ** alebo prepínačom **Len problémy** v lište. Po úpravách v inej karte prehliadača použite obnovenie tabuľky.
 
-Akciou **Porovnať** otvoríte pôvodný stav, hlavnú verziu a pracovnú verziu položky. Pri konflikte kliknite na **Vyriešiť**, vyberte verziu, ktorú chcete použiť, a uložte voľbu. Pri stránke môžete z porovnania otvoriť konkrétnu verejnú stránku aj jej náhľad.
+Akciou **Porovnať** otvoríte pôvodný stav, hlavnú verziu a pracovnú verziu položky. Karta **Polia** zobrazuje údaje položky, karta **HTML kód** jej obsah a úplný HTML zdroj. Prepínač **Zobraziť aj nezmenené polia** rozšíri porovnanie o ostatné údaje. Tlačidlo **Zobraziť stránku** pod nadpisom **Hlavná verzia** otvorí stránku v hlavnej verzii. Pod nadpisom **Pracovná verzia** nájdete jej náhľad a úpravu. Akcie sú dostupné na oboch kartách aj pri zobrazení verzií pod sebou na mobile. Ikonou v hlavičke môžete okno maximalizovať a vrátiť na pôvodnú veľkosť.
+
+Tlačidlom **Upraviť** v bloku **Pracovná verzia** otvoríte pracovný obsah v editore. Po uložení sa vráťte do porovnania a znova skontrolujte zmeny. Uloženie obsahu zruší predchádzajúcu voľbu výslednej verzie. Pokyny k úprave sú dostupné aj v tooltipe tlačidla; vysvetlenie voľby verzie nájdete pri **Uložiť riešenie**.
+
+Pri konflikte kliknite na **Vyriešiť**. V pätičke porovnania vyberte **Použiť hlavnú verziu** alebo **Použiť pracovnú verziu** a kliknite na **Uložiť riešenie**. Voľba platí pre celú položku a zostáva zachovaná pri prepínaní kariet. Pätička je dostupná aj pri posúvaní dlhého obsahu; tlačidlom **Zatvoriť** sa vrátite do zoznamu zmien.
 
 Ak chcete odstrániť pracovnú zmenu stránky alebo priečinka, označte položku a použite **Vrátiť zmenu** v lište tabuľky. Pri zmazanom priečinku sa obnovia aj položky zmazané spolu s ním.
 

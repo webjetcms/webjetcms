@@ -149,7 +149,7 @@ if (process.env.WEBJET_P08_BROWSER === 'true') {
             I.checkOption(`${dialog} input[name="branch-merge-choice"][value="WORK"]`);
             I.click('#branch-merge-save-choice');
             I.waitForInvisible(busy, 30);
-            I.click('Zatvoriť', dialog+' dialog.pg-branch-merge header');
+            I.click('Zatvoriť', dialog+' dialog.pg-branch-merge footer');
             I.waitForInvisible(dialog+' dialog.pg-branch-merge', 10);
         }
         I.waitForEnabled('#branch-merge-publish', 30);

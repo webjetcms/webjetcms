@@ -22,7 +22,7 @@ After(({ I }) => {
 });
 
 Scenario('Working version editor filters conflicts and keeps scheduling separate from publishing', async ({ I, DT }) => {
-    const snapshot = title => ({state: 'ACTIVE', fields: {title}});
+    const snapshot = title => ({state: 'ACTIVE', fields: {title, navbar: 'autotest unchanged navigation', data: `<p>${title} HTML</p>`}});
     const absent = {state: 'ABSENT', fields: {}};
     const sectionPath = '/Autotest & redakcia';
     const branch = {id, name, color: 'mint', state: 'DRAFT', revision: 1, description: 'autotest'};
@@ -31,7 +31,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
         items: [
             {type: 'DOCUMENT', objectKey: '12', label: 'autotest conflict', operation: 'UPSERT', conflict: true,
                 base: snapshot('autotest original'), live: snapshot('autotest live'), work: snapshot('autotest draft'),
-                liveHash: 'autotest-live', workHash: 'autotest-work', writeRequired: true, resolvable: true},
+                liveHash: 'autotest-live', workHash: 'autotest-work', writeRequired: true, resolvable: true, editable: true},
             {type: 'DOCUMENT', objectKey: '18', label: 'autotest new page', operation: 'UPSERT',
                 base: absent, live: absent, work: snapshot('autotest new page'), workOnly: true, writeRequired: true, resolvable: true,
                 folderPath: sectionPath + '/autotest folder'},
@@ -96,6 +96,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     const detail = 'dialog.pg-branch-merge[open]';
     I.waitForVisible(detail, 10);
     I.see('autotest new page', `${detail} [data-branch-version="WORK"]`);
+    I.see('Zobraziť stránku', '#branch-merge-fields [data-branch-version="WORK"] .pg-branch-merge__actions');
     I.dontSeeElement(`${detail} [data-branch-version="BASE"]`);
     I.dontSeeElement(`${detail} [data-branch-version="LIVE"]`);
     I.see('Vynechať položku z publikovania', detail);
@@ -110,10 +111,80 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.assertEqual(loads.length, loaded);
     I.clickCss('[data-branch-compare="12"]');
     I.waitForVisible('dialog.pg-branch-merge', 10);
-    I.checkOption('input[name="branch-merge-choice"][value="WORK"]');
+    const editHint = 'Po uložení v editore sa sem vráťte a znova skontrolujte zmeny. Uloženie zruší starú voľbu výsledku.';
+    const saveHint = 'Zvolená verzia sa použije pre celú položku.';
+    I.dontSee(editHint, detail);
+    I.dontSee(saveHint, detail);
+    const fieldsWork = '#branch-merge-fields [data-branch-version="WORK"]';
+    const fieldsLive = '#branch-merge-fields [data-branch-version="LIVE"]';
+    I.see('Upraviť', `${fieldsWork} .pg-branch-merge__actions`);
+    I.see('Zobraziť stránku', `${fieldsWork} .pg-branch-merge__actions`);
+    I.see('Zobraziť stránku', `${fieldsLive} .pg-branch-merge__actions`);
+    I.seeElement(`${fieldsLive} a[href="/showdoc.do?docid=12"]`);
+    I.dontSeeElement(`${fieldsLive} [data-branch-edit]`);
+    I.dontSeeElement('#branch-merge-fields [data-branch-version="BASE"] .pg-branch-merge__actions');
+    const aligned = await I.executeScript(() => {
+        const tops = [...document.querySelectorAll('#branch-merge-fields .pg-branch-merge__version-body')].map(body => body.getBoundingClientRect().top);
+        return Math.max(...tops) - Math.min(...tops) <= 1;
+    });
+    I.assertTrue(aligned);
+    I.focus(`${fieldsWork} [data-branch-edit]`);
+    I.waitForText(editHint, 5, `${detail} .tooltip.show`);
+    I.pressKey('Escape');
+    I.waitForInvisible(`${detail} .tooltip.show`, 5);
+    I.seeElement(detail);
+    I.moveCursorTo('#branch-merge-save-hint');
+    I.waitForText(saveHint, 5, `${detail} .tooltip.show`);
+    I.seeElement('#branch-merge-save-choice:disabled');
+    I.pressKey('Escape');
+    I.waitForInvisible(`${detail} .tooltip.show`, 5);
+    I.seeElement(detail);
+    I.seeElement('#branch-merge-fields.active');
+    I.dontSeeElement('#branch-merge-html');
+    I.dontSee('autotest unchanged navigation', detail);
+    I.see('Použiť hlavnú verziu', `${detail} footer`);
+    I.see('Použiť pracovnú verziu', `${detail} footer`);
+    I.seeElement('#branch-merge-save-choice:disabled');
+    I.checkOption(`${detail} footer input[name="branch-merge-choice"][value="WORK"]`);
+    I.clickCss('#branch-merge-html-tab');
+    I.waitForVisible('#branch-merge-html.active', 5);
+    I.see('Upraviť', '#branch-merge-html [data-branch-version="WORK"] .pg-branch-merge__actions');
+    I.see('Zobraziť stránku', '#branch-merge-html [data-branch-version="LIVE"] .pg-branch-merge__actions');
+    I.see('autotest draft HTML', '#branch-merge-html [data-branch-version="WORK"]');
+    I.seeCheckboxIsChecked('#branch-merge-choice-work');
+    I.checkOption('#branch-merge-all-fields');
+    I.seeElement('#branch-merge-html.active');
+    I.seeCheckboxIsChecked('#branch-merge-choice-work');
+    I.dontSeeElement(`${detail} .tooltip`);
+    I.clickCss('#branch-merge-fields-tab');
+    I.see('autotest unchanged navigation', '#branch-merge-fields');
+    I.clickCss(`${detail} header button[aria-label="Maximalizovať okno"]`);
+    I.seeElement('dialog.pg-branch-merge--maximized');
+    I.clickCss(`${detail} header button[aria-label="Zmenšiť okno"]`);
+    I.dontSeeElement('dialog.pg-branch-merge--maximized');
+    I.resizeWindow(390, 844);
+    const footerFits = await I.executeScript(() => {
+        const dialog = document.querySelector('dialog.pg-branch-merge');
+        const footer = dialog.querySelector('footer').getBoundingClientRect();
+        const save = dialog.querySelector('#branch-merge-save-choice').getBoundingClientRect();
+        const versions = [...dialog.querySelectorAll('#branch-merge-fields [data-branch-version]')];
+        const actionsFit = versions.every(version => {
+            const bounds = version.getBoundingClientRect();
+            return [...version.querySelectorAll('.pg-branch-merge__actions a, .pg-branch-merge__actions button')].every(action => {
+                const rect = action.getBoundingClientRect();
+                return rect.left >= bounds.left && rect.right <= bounds.right;
+            });
+        });
+        const stacked = versions.every((version, index) => index === 0 || versions[index - 1].getBoundingClientRect().bottom <= version.getBoundingClientRect().top);
+        return footer.top > 0 && footer.bottom <= innerHeight && save.left >= 0 && save.right <= innerWidth
+            && dialog.scrollWidth <= dialog.clientWidth && actionsFit && stacked;
+    });
+    I.assertTrue(footerFits);
+    I.seeCheckboxIsChecked('#branch-merge-choice-work');
+    I.wjSetDefaultWindowSize();
     I.clickCss('#branch-merge-save-choice');
     I.waitForEnabled('#branch-merge-publish', 10);
-    I.pressKey('Escape');
+    I.click('Zatvoriť', `${detail} footer`);
     I.waitForInvisible('dialog.pg-branch-merge', 10);
     I.seeElement(modal);
     I.clickCss('label[for="branch-merge-problems"]');
