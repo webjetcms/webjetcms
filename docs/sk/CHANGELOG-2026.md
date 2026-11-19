@@ -32,6 +32,7 @@
 - Dátové tabuľky - opravené generovanie podmienok pri filtrovaní polí odkazujúcich na inú entitu. Textové vyhľadávanie sa pre tieto polia preskočí, aby nevznikali neplatné SQL podmienky (#397).
 - Šablóny - [Ninja objekt](frontend/ninja-starter-kit/ninja-jv/temp-group/README.md) `${ninja.temp.group.textPrefix}` vráti prefix textových kľúčov skupiny šablón. Predtým getter volal sám seba a použitie v šablóne skončilo chybou `StackOverflowError` (#409).
 - Archív súborov - opravený názov konfiguračnej premennej `fileArchivCacheTime` pre čas cache výpisu súborov na frontende v minútach. Premenná bola deklarovaná ako `fileArchivatorCacheTime` s hodnotou 400, ktorá sa nikde nečítala, preto sa vždy použila hodnota 120 minút a zmena v administrácii nemala efekt. Predvolená hodnota je teraz 120, správanie sa nemení. Ak ste si nastavili `fileArchivatorCacheTime`, nastavte namiesto nej `fileArchivCacheTime` (#411).
+- Súbory - opravený názov konfiguračnej premennej `elfinderMetadataAutopopup`, ktorá po nahratí súboru automaticky zobrazí dialóg metadát. Premenná bola deklarovaná s preklepom ako `elfinerMetadataAutopopup`, ktorý sa nikde nečítal, preto jej zmena v administrácii nemala efekt. Predvolená hodnota `false` zostáva. Ak ste si nastavili premennú s preklepom, nastavte namiesto nej `elfinderMetadataAutopopup` (#410).
 
 ## 2026.0.40
 
