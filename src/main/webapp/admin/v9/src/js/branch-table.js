@@ -117,6 +117,7 @@ export function initBranchTable(columns, screen, api) {
     });
     table.EDITOR.on('open', (event, mode, action) => {
         if (mode !== 'main' || !['edit', 'create'].includes(action)) return;
+        $('#branchesDataTable_modal > .modal-dialog').addClass('modal-xl');
         const editor = table.EDITOR;
         if (action === 'edit' && editor.ids().length === 1) {
             closeChanges = mountBranchChanges(editor, api, screen, confirmOnOpen);

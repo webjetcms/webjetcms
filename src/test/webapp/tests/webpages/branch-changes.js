@@ -22,7 +22,8 @@ After(({ I }) => {
 });
 
 Scenario('Working version editor filters conflicts and keeps scheduling separate from publishing', async ({ I, DT }) => {
-    const snapshot = title => ({state: 'ACTIVE', fields: {title, navbar: 'autotest unchanged navigation', data: `<p>${title} HTML</p>`}});
+    const snapshot = (title, fields = {}) => ({state: 'ACTIVE', fields: {title, navbar: 'autotest unchanged navigation', data: `<p>${title} HTML</p>`, ...fields}});
+    const sharedFields = {author_id: 18, field_o: false, login_doc_id: 0, html_head: '<p>autotest shared HTML</p>'};
     const absent = {state: 'ABSENT', fields: {}};
     const sectionPath = '/Autotest & redakcia';
     const branch = {id, name, color: 'mint', state: 'DRAFT', revision: 1, description: 'autotest'};
@@ -30,13 +31,16 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
         ...branch, ready: false, preparationHash: 'autotest-plan', errors: [], timeZone: 'Europe/Bratislava',
         items: [
             {type: 'DOCUMENT', objectKey: '12', label: 'autotest conflict', operation: 'UPSERT', conflict: true,
-                base: snapshot('autotest original'), live: snapshot('autotest live'), work: snapshot('autotest draft'),
+                base: snapshot('autotest original', {author_id: 1, login_doc_id: -1, base_only: 'autotest baseline context', html_head: '<p>autotest baseline HTML</p>'}),
+                live: snapshot('autotest live', {...sharedFields, external_link: '', empty_list: [], blank_text: ' \t', available: false, sort_priority: 0, live_only: 'autotest main-only value'}),
+                work: snapshot('autotest draft', {...sharedFields, external_link: null, blank_text: null, available: null, sort_priority: null, work_only: 'autotest work-only value'}),
                 liveHash: 'autotest-live', workHash: 'autotest-work', writeRequired: true, resolvable: true, editable: true},
             {type: 'DOCUMENT', objectKey: '18', label: 'autotest new page', operation: 'UPSERT',
                 base: absent, live: absent, work: snapshot('autotest new page'), workOnly: true, writeRequired: true, resolvable: true,
                 folderPath: sectionPath + '/autotest folder'},
-            {type: 'DOCUMENT', objectKey: '21', label: 'autotest unchanged main', operation: 'UPSERT', conflict: false,
+            {type: 'DOCUMENT', objectKey: '21', label: 'autotest unchanged main with a long title that keeps comparison actions visible on narrow screens', operation: 'UPSERT', conflict: false,
                 base: snapshot('autotest original'), live: snapshot('autotest original'), work: snapshot('autotest draft'),
+                liveHash: 'autotest-original', workHash: 'autotest-draft',
                 writeRequired: true, resolvable: true, editable: true},
             {type: 'DOCUMENT', objectKey: '22', label: 'autotest matching deletion', operation: 'DELETE', conflict: false,
                 base: snapshot('autotest removed'), live: {...snapshot('autotest removed'), state: 'TRASH'},
@@ -46,6 +50,8 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
         ]
     };
     const requests = [];
+    let rejectFirstResolution = true;
+    const resolutionError = 'autotest resolution failed';
     await I.mockRoute(listRoute, route => route.fulfill({json: {content: [branch], totalElements: 1}}));
     await I.mockRoute(rowRoute, route => route.fulfill({json: branch}));
     const loads = [];
@@ -58,7 +64,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
             comparison: item.workOnly ? 'viewItem' : item.conflict ? 'resolve' : 'compareItem', problem: Boolean(item.conflict),
             revertible: report.state === 'DRAFT'
         }));
-        const options = {type: [{label: 'Stránky', value: 'DOCUMENT'}, {label: 'Priečinky', value: 'GROUP'}]};
+        const options = {type: [{label: 'Stránky', value: 'DOCUMENT'}, {label: 'Priečinky', value: 'GROUP'}, {label: 'Médiá', value: 'MEDIA'}, {label: 'Súbory', value: 'FILE'}]};
         return route.fulfill({json: {content, options, totalElements: content.length, report}});
     });
     await I.mockRoute(reportRoute, route => {
@@ -67,6 +73,10 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
         if (request.method() === 'POST') {
             const payload = request.postDataJSON();
             requests.push({action, payload});
+            if (action === 'resolve' && rejectFirstResolution) {
+                rejectFirstResolution = false;
+                return route.fulfill({status: 409, json: {message: resolutionError}});
+            }
             report.revision++;
             if (action === 'resolve') {
                 Object.assign(report.items[0], {conflict: false, choice: payload.choice});
@@ -94,6 +104,17 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.seeElement('#branch-merge-publish:disabled');
     I.see(sectionPath + '/autotest folder', `${changesTable} tr[data-branch-key="18"] .pg-branch-change-path`);
     I.see(sectionPath, `${changesTable} tr[data-branch-key="15"] .pg-branch-change-path`);
+    I.resizeWindow(390, 844);
+    // Column sizing after a resize is asynchronous; visibility alone does not check clipping.
+    I.waitForFunction(() => {
+        const body = document.querySelector('#datatableFieldDTE_Field_changes_wrapper .dt-scroll-body');
+        const bounds = body.getBoundingClientRect();
+        return body.scrollLeft === 0 && [...body.querySelectorAll('[data-branch-compare]')].every(action => {
+            const rect = action.getBoundingClientRect();
+            return rect.left >= bounds.left && rect.right <= bounds.right;
+        });
+    }, 5);
+    I.wjSetDefaultWindowSize();
     const conflictWarning = 'Pred publikovaním vyriešte konflikty na karte Zmeny.';
     I.waitForText(conflictWarning, 5, '#toast-container-webjet .toast-warning');
     I.dontSee(conflictWarning, modal);
@@ -125,10 +146,20 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.waitForVisible('#branch-merge-html.active', 5);
     I.dontSeeElement('#branch-merge-html [data-branch-version="BASE"]');
     I.see('autotest original HTML', '#branch-merge-html [data-branch-version="LIVE"]');
+    I.see('autotest original HTML', '#branch-merge-html [data-branch-version="LIVE"] .pg-branch-merge__changed');
     I.see('autotest draft HTML', '#branch-merge-html [data-branch-version="WORK"] .pg-branch-merge__changed');
     I.checkOption('#branch-merge-all-fields');
     I.seeCheckboxIsChecked('#branch-merge-choice-work');
     I.dontSeeElement('#branch-merge-html [data-branch-version="BASE"]');
+    I.clickCss('#branch-merge-save-choice');
+    I.waitForText(resolutionError, 5, `${detail} [role="alert"]`);
+    I.seeElement(detail);
+    I.seeCheckboxIsChecked('#branch-merge-choice-work');
+    I.seeElement('#branch-merge-save-choice:disabled');
+    I.clickCss(`${detail} [data-branch-retry]`);
+    I.waitForEnabled('#branch-merge-save-choice', 10);
+    I.dontSee(resolutionError, detail);
+    I.seeCheckboxIsChecked('#branch-merge-choice-work');
     I.click('Zatvoriť', `${detail} footer`);
     I.waitForInvisible(detail, 10);
     I.clickCss(`${changesTable} [data-branch-compare="22"]`);
@@ -138,9 +169,13 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.see('Položka existuje', '#branch-merge-fields [data-branch-version="BASE"]');
     I.see('Hlavná verzia', '#branch-merge-fields [data-branch-version="LIVE"]');
     I.see('Pracovná verzia', '#branch-merge-fields [data-branch-version="WORK"]');
+    I.dontSee('autotest removed', '#branch-merge-fields .pg-branch-merge__version-body');
+    I.dontSeeElement('#branch-merge-fields .pg-branch-merge__changed');
     I.clickCss('#branch-merge-html-tab');
     I.waitForVisible('#branch-merge-html.active', 5);
     I.see('Východiskový stav', '#branch-merge-html [data-branch-version="BASE"]');
+    I.dontSee('autotest removed HTML', '#branch-merge-html .pg-branch-merge__version-body');
+    I.dontSeeElement('#branch-merge-html .pg-branch-merge__changed');
     I.click('Zatvoriť', `${detail} footer`);
     I.waitForInvisible(detail, 10);
     DT.filterSelect('type', 'Priečinky', changesWrapper);
@@ -149,7 +184,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     DT.clearFilter('type');
     I.clickCss('label[for="branch-merge-problems"]');
     await I.dontSee('autotest folder', changesTable);
-    I.assertEqual(loads.length, loaded);
+    I.assertEqual(loads.length, loaded + 1);
     I.clickCss('[data-branch-compare="12"]');
     I.waitForVisible('dialog.pg-branch-merge', 10);
     const editHint = 'Po uložení v editore sa sem vráťte a znova skontrolujte zmeny. Uloženie zruší starú voľbu výsledku.';
@@ -165,6 +200,12 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.dontSee(saveHint, detail);
     const fieldsWork = '#branch-merge-fields [data-branch-version="WORK"]';
     const fieldsLive = '#branch-merge-fields [data-branch-version="LIVE"]';
+    const sharedLabels = ['author id', 'field o', 'login doc id', 'external link', 'empty list', 'blank text', 'base only'];
+    for (const panel of [fieldsLive, fieldsWork]) {
+        for (const label of sharedLabels) I.dontSee(label, `${panel} dl`);
+        for (const label of ['available', 'sort priority', 'live only', 'work only']) I.see(`${label} · zmenené`, `${panel} dl`);
+    }
+    I.dontSee('autotest baseline context', '#branch-merge-fields');
     I.see('Upraviť', `${fieldsWork} .pg-branch-merge__actions`);
     I.see('Zobraziť stránku', `${fieldsWork} .pg-branch-merge__actions`);
     I.see('Zobraziť stránku', `${fieldsLive} .pg-branch-merge__actions`);
@@ -205,13 +246,34 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.see('Upraviť', '#branch-merge-html [data-branch-version="WORK"] .pg-branch-merge__actions');
     I.see('Zobraziť stránku', '#branch-merge-html [data-branch-version="LIVE"] .pg-branch-merge__actions');
     I.see('autotest draft HTML', '#branch-merge-html [data-branch-version="WORK"]');
+    I.see('autotest live HTML', '#branch-merge-html [data-branch-version="LIVE"] .pg-branch-merge__changed');
+    I.dontSee('html head', '#branch-merge-html');
     I.seeCheckboxIsChecked('#branch-merge-choice-work');
     I.checkOption('#branch-merge-all-fields');
     I.seeElement('#branch-merge-html.active');
+    for (const version of ['LIVE', 'WORK']) {
+        const panel = `#branch-merge-html [data-branch-version="${version}"]`;
+        I.see('autotest shared HTML', panel);
+        I.dontSee('html head · zmenené', panel);
+    }
     I.seeCheckboxIsChecked('#branch-merge-choice-work');
     I.dontSeeElement(`${detail} .tooltip`);
     I.clickCss('#branch-merge-fields-tab');
     I.see('autotest unchanged navigation', '#branch-merge-fields');
+    I.see('autotest baseline context', '#branch-merge-fields [data-branch-version="BASE"]');
+    for (const panel of [fieldsLive, fieldsWork]) {
+        for (const label of sharedLabels) {
+            I.see(label, `${panel} dl`);
+            I.dontSee(`${label} · zmenené`, `${panel} dl`);
+        }
+    }
+    const normalizedValues = await I.executeScript(() => Object.fromEntries(['LIVE', 'WORK'].map(version => {
+        const panel = document.querySelector(`#branch-merge-fields [data-branch-version="${version}"]`);
+        const labels = ['author id', 'field o', 'login doc id', 'external link', 'empty list', 'blank text'];
+        return [version, Object.fromEntries([...panel.querySelectorAll('dt')].filter(dt => labels.includes(dt.textContent)).map(dt => [dt.textContent, dt.nextElementSibling.textContent]))];
+    })));
+    const expectedSharedValues = {'author id': '18', 'field o': 'Nie', 'login doc id': '0', 'external link': '—', 'empty list': '—', 'blank text': '—'};
+    I.assertDeepEqual(normalizedValues, {LIVE: expectedSharedValues, WORK: expectedSharedValues});
     I.clickCss(`${detail} header button[aria-label="Maximalizovať okno"]`);
     I.seeElement('dialog.pg-branch-merge--maximized');
     I.clickCss(`${detail} header button[aria-label="Zmenšiť okno"]`);
@@ -238,6 +300,18 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.wjSetDefaultWindowSize();
     I.clickCss('#branch-merge-save-choice');
     I.waitForEnabled('#branch-merge-publish', 10);
+    I.saveScreenshot('branch-save-result.png');
+    I.waitForInvisible(detail, 5);
+    I.seeElement(modal);
+    I.dontSee('autotest conflict', changesTable);
+    I.seeCheckboxIsChecked('#branch-merge-problems');
+    I.clickCss('label[for="branch-merge-problems"]');
+    I.waitForText('autotest conflict', 10, changesTable);
+    I.see('Pripravené na publikovanie', `${changesTable} tr[data-branch-key="12"]`);
+    I.see('Porovnať', `${changesTable} [data-branch-compare="12"]`);
+    I.clickCss(`${changesTable} [data-branch-compare="12"]`);
+    I.waitForVisible(detail, 10);
+    I.seeCheckboxIsChecked('#branch-merge-choice-work');
     I.see('Východiskový stav', '#branch-merge-fields [data-branch-version="BASE"]');
     I.clickCss('#branch-merge-html-tab');
     I.waitForVisible('#branch-merge-html.active', 5);
@@ -245,7 +319,6 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.click('Zatvoriť', `${detail} footer`);
     I.waitForInvisible('dialog.pg-branch-merge', 10);
     I.seeElement(modal);
-    I.clickCss('label[for="branch-merge-problems"]');
     I.clickCss(`${changesWrapper} [data-dtbtn="reload"]`);
     I.waitForInvisible('#panel-body-dt-branchesDataTable-changes[aria-busy=true]', 10);
     I.waitForText('autotest folder', 10, changesTable);
@@ -253,7 +326,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.waitForEnabled(`${changesWrapper} .buttons-branch-revert`, 10);
     I.clickCss(`${changesWrapper} .buttons-branch-revert`);
     await I.waitForText('autotest folder', 10, '#branch-merge-confirmation');
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve']);
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve']);
     I.clickCss('#branch-merge-revert-confirm');
     I.waitForInvisible(`${changesTable} tr[data-branch-key="15"]`, 10);
 
@@ -293,17 +366,17 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.clickCss('.buttons-branch-publish');
     I.waitForVisible(`${changesTab}[aria-selected="true"]`, 10);
     await I.waitForVisible('#branch-merge-confirmation', 10);
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'revert', 'schedule', 'unschedule']);
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'schedule', 'unschedule']);
     I.click('Zrušiť', '#branch-merge-confirmation');
     I.waitForInvisible('#branch-merge-confirmation', 10);
     I.waitForEnabled('#branch-merge-publish', 10);
     I.clickCss('#branch-merge-publish');
     await I.waitForVisible('#branch-merge-confirmation', 10);
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'revert', 'schedule', 'unschedule']);
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'schedule', 'unschedule']);
     I.clickCss('#branch-merge-confirm');
     await I.waitForVisible('#branch-merge-progress', 10);
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'revert', 'schedule', 'unschedule', 'merge']);
-    I.assertDeepEqual(requests[1].payload, {type: 'GROUP', id: 15, hash: 'autotest-folder'});
-    I.assertEqual(requests[2].payload.publishAt, Date.parse('2036-06-04T07:30:00Z'));
-    I.assertEqual(requests[4].payload.preparationHash, 'autotest-plan');
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'schedule', 'unschedule', 'merge']);
+    I.assertDeepEqual(requests[2].payload, {type: 'GROUP', id: 15, hash: 'autotest-folder'});
+    I.assertEqual(requests[3].payload.publishAt, Date.parse('2036-06-04T07:30:00Z'));
+    I.assertEqual(requests[5].payload.preparationHash, 'autotest-plan');
 });

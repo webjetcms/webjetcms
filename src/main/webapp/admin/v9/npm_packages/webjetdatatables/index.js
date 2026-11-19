@@ -714,8 +714,8 @@ export const dataTableInit = options => {
             $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').addClass("form-check-input");
             $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').siblings("label").addClass("form-check-label");
 
-            //refresh selectpickers
-            $('#' + DATA.id + '_modal .DTE_Form_Content').find('select').selectpicker('refresh');
+            // Nested tables manage their own filter pickers, including hidden sizing copies.
+            $('#' + DATA.id + '_modal .DTE_Form_Content').find('select').not('.dt-container select').selectpicker('refresh');
         }, 100);
     }
 
@@ -2095,7 +2095,7 @@ export const dataTableInit = options => {
 
                     WJ.initTooltip($('#' + DATA.id + '_modal .DTE_Body [data-toggle*="tooltip"]'));
 
-                    $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').each(function () {
+                    $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').not('.dt-container select').each(function () {
                         const $select = $(this);
                         const separator = $select.attr('separator');
                         let opts = { ...DT_SELECTPICKER_OPTS_EDITOR };
@@ -2165,7 +2165,7 @@ export const dataTableInit = options => {
                     });
                 } else {
                     //console.log("Refreshing selectpicker");
-                    $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').selectpicker('refresh');
+                    $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').not('.dt-container select').selectpicker('refresh');
                 }
 
                 if ("remove"===action) {

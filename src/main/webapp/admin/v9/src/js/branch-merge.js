@@ -24,6 +24,13 @@ function link(text, href) {
 }
 
 function equal(left, right) { return JSON.stringify(left ?? null) === JSON.stringify(right ?? null); }
+
+/** Normalizes empty field values for comparison and display without changing stored snapshots. */
+function comparisonValue(value) {
+    const text = Array.isArray(value) ? value.join(', ') : value;
+    return text == null || (typeof text === 'string' && text.trim() === '') ? null : value;
+}
+
 const itemKey = item => `${item.type}:${item.objectKey}`;
 const showError = error => WJ.notifyError(WJ.escapeHtml(error.message));
 
@@ -797,15 +804,15 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         const versions = workOnly ? ['work'] : equal(item.base, item.live) ? ['live', 'work'] : ['base', 'live', 'work'];
         const allFields = [...new Set(['title', 'group_name', 'data', ...versions.flatMap(name => Object.keys(item[name]?.fields || {}))])]
             .filter(key => versions.some(name => Object.hasOwn(item[name]?.fields || {}, key)));
-        const differing = key => !equal(item.base?.fields?.[key], item.live?.fields?.[key]) || !equal(item.base?.fields?.[key], item.work?.fields?.[key]);
+        const differing = key => !equal(comparisonValue(item.live?.fields?.[key]), comparisonValue(item.work?.fields?.[key]));
         if (!workOnly) {
             const show = element('label', 'form-check-label mb-3');
             const check = element('input', 'form-check-input me-2'); check.id = 'branch-merge-all-fields'; check.type = 'checkbox'; check.checked = expanded;
             check.onchange = () => { expanded = check.checked; renderDetail(true); detailDialog?.querySelector('#branch-merge-all-fields').focus(); };
             show.append(check, document.createTextNode(tr('allFields'))); section.append(show);
         }
-        const visibleFields = workOnly ? allFields.filter(key => item.work.fields[key] != null && item.work.fields[key] !== '')
-            : allFields.filter(key => expanded || differing(key) || ['title', 'group_name', 'data'].includes(key));
+        const visibleFields = workOnly ? allFields.filter(key => comparisonValue(item.work.fields[key]) !== null)
+            : allFields.filter(key => expanded || differing(key));
         const tabs = element('div', 'tab-content');
         const hasHtml = allFields.some(field => htmlFields.has(field));
         for (const name of hasHtml ? ['fields', 'html'] : ['fields']) {
@@ -846,12 +853,12 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
                 }
                 const fields = element('dl', 'mb-0');
                 for (const field of visibleFields.filter(field => htmlFields.has(field) === (name === 'html'))) {
-                    const changed = !workOnly && version !== 'base' && !equal(item.base?.fields?.[field], snapshot.fields?.[field]);
+                    const changed = !workOnly && version !== 'base' && differing(field);
                     const label = report.fieldLabels?.[item.type]?.[field] || field.replaceAll('_', ' ');
                     const dt = element('dt', 'small mt-3', `${label}${changed ? ` · ${tr('changed')}` : ''}`);
                     const dd = element('dd', changed ? 'pg-branch-merge__changed' : '');
-                    const value = snapshot.fields?.[field];
-                    if (snapshot.state === 'ABSENT' || value === null || value === undefined || value === '') dd.textContent = '—';
+                    const value = comparisonValue(snapshot.fields?.[field]);
+                    if (snapshot.state === 'ABSENT' || value === null) dd.textContent = '—';
                     else if (htmlFields.has(field)) {
                         // Readable text is never inserted as HTML; scripts and remote resources cannot run here.
                         const doc = new DOMParser().parseFromString(String(value), 'text/html');
@@ -901,7 +908,9 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
                 if (busy || stale) return;
                 const choice = choices.querySelector('input:checked')?.value;
                 if (!choice) return;
-                await perform('/resolve', {expectedRevision: report.revision, type: item.type, objectKey: item.objectKey, choice, liveHash: item.liveHash, workHash: item.workHash}, detailError);
+                const dialog = detailDialog;
+                const saved = await perform('/resolve', {expectedRevision: report.revision, type: item.type, objectKey: item.objectKey, choice, liveHash: item.liveHash, workHash: item.workHash}, detailError);
+                if (saved) dialog?.close();
             }, true);
             save.classList.remove('btn-sm');
             save.prepend(icon('ti-check'), ' ');

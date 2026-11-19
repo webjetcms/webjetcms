@@ -22,7 +22,7 @@ public final class BranchChangeRow {
     private final String operation;
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "branches.merge.status.js", filter = false)
     private final String status;
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "branches.merge.action.js", filter = false, orderable = false)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "branches.merge.action.js", sortAfter = "type", filter = false, orderable = false)
     private final String comparison;
 
     private final String objectKey;
