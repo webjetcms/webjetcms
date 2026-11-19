@@ -160,15 +160,18 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     }
 
     /**
-     * Removes the deleted step's items and regenerates form metadata.
+     * Removes the deleted step's items and their conditions, then regenerates form metadata.
      *
      * @param entity deleted step entity
      * @param id deleted step identifier
      */
     @Override
     public void afterDelete(FormStepEntity entity, long id) {
+        int domainId = CloudToolsForCore.getDomainId();
+        List<Long> itemIds = formItemsRepository.getAllStepItems(id, domainId).stream().map(FormItemEntity::getId).toList();
+        FormConditionsHandler.deleteItemConditions(itemIds, domainId);
         // After delete remove all step items binded to this form step
-        formItemsRepository.deleteAllByStepIdAndDomainId(id, CloudToolsForCore.getDomainId());
+        formItemsRepository.deleteAllByStepIdAndDomainId(id, domainId);
 
         MultistepFormsService.clearValidationFieldsCache(entity.getFormName(), CloudToolsForCore.getDomainId());
         // Now update form pattern

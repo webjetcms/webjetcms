@@ -6,7 +6,9 @@ Pomocí Klonování struktury můžeme naklonovat celý obsah adresáře ve str�
 
 Pro provedení akce klonování je třeba zadat ID zdrojové složky (kterou složku klonujeme) a ID cílové složky (kam na naklonuje zdrojovou složku). ID složek můžete zadat přímo, pokud si je pamatujete, nebo může využít možnosti **Vybrat**, která otevře nové okno se stromovou strukturou složek, kde si konkrétní složku volíte kliknutím na její název.
 
-Samotné klonování využívá [Zrcadlení struktury](../docmirroring/README.md) a [Automatický překlad](../../../admin/setup/translation.md). To znamená, že při spuštění klonování se vybrané složky (pokud již nejsou) automaticky propojí konfigurační proměnnou ```structureMirroringConfig```. Ze zdrojové složky se naklonují všechny podsložky (i jejich všechna vnoření) is web stránkami do cílové složky s tím, že originální a klonované složky/stránky se mezi sebou propojí. Jazyk je stažen z nastavení zdrojové a cílové složky. Tyto složky/stránky se také automaticky přeloží, pokud je nastaven překladač.
+Klonování využívá [Zrcadlení struktury](../docmirroring/README.md) a [Automatický překlad](../../../admin/setup/translation.md). Na dobu klonování se vytvoří dočasné propojení zdrojové a cílové složky platné pouze pro tuto operaci. Do konfigurační proměnné `structureMirroringConfig` se uloží pouze při zvolení možnosti **Po naklonování ponechat aktivní zrcadlení struktury**. Souběžné úpravy jiných stránek používají původní nastavení zrcadlení.
+
+Do cílové složky se naklonují všechny podsložky is web stránkami. Pokud je nastaven překladač, obsah se přeloží podle jazyků zdrojové a cílové složky. Klonované stránky přebírají nastavení zobrazování ze zdroje a složky přebírají způsob zobrazení v menu; volba `structureMirroringDisabledOnCreate` je při klonování neskrývá.
 
 ## Možnosti
 
@@ -45,6 +47,8 @@ Jelikož klonování využívá [Automatický překlad](../../../admin/setup/tra
 ## Zrušení zrcadlení
 
 Okno nabízí možnost [zrušit zrcadlení](../docmirroring/README.md) zvolené složky. Stačí a v dolní části okna zvolíte složku a stisknete tlačítko <button class="btn btn-sm btn-outline-secondary" type="button">Zrušit zrcadlení</button> . Následně se pro zvolenou složku, všechny podsložky jako jejich stránky vymaže hodnota `sync_id`, která zajišťovala zrcadlení.
+
+Na zrušení zrcadlení potřebujete právo na **Klonování struktury** a právo upravovat zvolenou složku i všechny její podsložky. Při zapnutém oddělení domén musí celá vybraná struktura patřit do aktuálně zvolené domény. Pokud je zapnuta kontrola přístupu ke stránkám podle uživatelských skupin, ověří se i přístup ke každé stránce v této struktuře. Pokud některá kontrola selže, operace se odmítne a propojení zůstanou zachovány.
 
 ![](clone_structure_undo_sync.png)
 

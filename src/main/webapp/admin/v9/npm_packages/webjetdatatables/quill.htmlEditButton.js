@@ -139,7 +139,11 @@ function launchPopupEditor(quill, options) {
   buttonOk.onclick = function() {
     const output = textArea.value.split(/\r?\n/g).map(el => el.trim());
     const htmlCode = output.join("");
-    quill.container.querySelector(".ql-editor").innerHTML =  window.quillFromHtmlFormat(htmlCode);
+    if (options.oneLine) {
+      quill.setContents(quill.clipboard.convert({ html: window.quillFromHtmlFormat(htmlCode) }));
+    } else {
+      quill.container.querySelector(".ql-editor").innerHTML = window.quillFromHtmlFormat(htmlCode);
+    }
     document.body.removeChild(overlayContainer);
   };
 }

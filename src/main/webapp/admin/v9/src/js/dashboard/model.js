@@ -21,6 +21,12 @@
 
 export const MAX_WIDGETS = 48;
 
+// Legacy bookmark destinations may already be persisted in account settings.
+const SHORTCUT_URL_REPLACEMENTS = [
+    { from: "/admin/v9/webpages/web-pages-list", to: "/admin/v9/webpages/web-pages-list/" },
+    { from: "/admin/v9/apps/forms-list", to: "/apps/form/admin/" }
+];
+
 export function cloneSettings(value) {
     return JSON.parse(JSON.stringify(value));
 }
@@ -43,7 +49,13 @@ export function createInstanceId() {
 export function normalizeSettings(settings = {}) {
     const items = Array.isArray(settings.items) ? cloneSettings(settings.items) : [];
     // Older profiles can contain the removed minimization preference.
-    items.forEach(item => { delete item.collapsed; });
+    items.forEach(item => {
+        delete item.collapsed;
+        if (item.type === "shortcut" && item.options) {
+            const replacement = SHORTCUT_URL_REPLACEMENTS.find(entry => entry.from === item.options.href);
+            if (replacement) item.options.href = replacement.to;
+        }
+    });
     return {
         version: 1,
         configured: settings.configured === true,

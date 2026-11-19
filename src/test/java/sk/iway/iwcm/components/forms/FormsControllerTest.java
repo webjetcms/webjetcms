@@ -82,7 +82,8 @@ class FormsControllerTest {
             mock(FormsDuplicationService.class),
             mock(FormSettingsRepository.class),
             mock(FormStepsRepository.class),
-            mock(FormItemsRepository.class)
+            mock(FormItemsRepository.class),
+            mock(FormsDeletionService.class)
         ) {
             @Override
             public Identity getUser() {

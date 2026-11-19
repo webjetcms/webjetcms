@@ -56,6 +56,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     private final FormsServiceImpl formsService;
     private final FormsDuplicationService formsDuplicationService;
+    private final FormsDeletionService formsDeletionService;
     private final FormSettingsRepository formSettingsRepository;
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
@@ -67,11 +68,13 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         FormsDuplicationService formsDuplicationService,
         FormSettingsRepository formSettingsRepository,
         FormStepsRepository formStepsRepository,
-        FormItemsRepository formItemsRepository
+        FormItemsRepository formItemsRepository,
+        FormsDeletionService formsDeletionService
     ) {
         super(formsRepository);
         this.formsService = formsService;
         this.formsDuplicationService = formsDuplicationService;
+        this.formsDeletionService = formsDeletionService;
         this.formSettingsRepository = formSettingsRepository;
         this.formStepsRepository = formStepsRepository;
         this.formItemsRepository = formItemsRepository;
@@ -239,7 +242,11 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @Override
     public boolean deleteItem(FormsEntity entity, long id) {
-        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository, formSettingsRepository);
+        FormsDeletionService.DeletionResult result = formsDeletionService.delete(id, false);
+        NotifyBean notification = result.notification(getProp());
+        if (notification != null) addNotify(notification);
+        if (result.definition()) setForceReload(true);
+        return result.deleted();
     }
 
     @Override

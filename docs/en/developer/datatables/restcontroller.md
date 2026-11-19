@@ -487,6 +487,8 @@ By calling the ```setForceReload(true);``` method, it is possible to force the d
 
 This is necessary if the saved object is moved to another directory, etc. The example is in [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
 
+In a data table with `serverSide: false`, after editing a single record, the page it is on is displayed according to the current sorting and filtering. The record is searched for by field `reloadRowKey`, by default by `editorId`. If after editing it no longer matches the filter or is no longer in the loaded data, the original page or the last valid page is preserved. The page is also preserved during bulk editing and deletion. If the last page disappears by deleting the last row, the previous valid page is displayed. In an empty list, the first page with an empty status is displayed. After creating a record, the pagination is reset to the first page by forcing a refresh.
+
 ## Dials for select boxes
 
 For select boxes in the editor and automatic conversion of ID to value (e.g. ```templateId``` to template name), an extension ```PageImpl``` of the [DatatablePageImpl.java](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java) object has been added to WebJET, which allows sending codebook data.

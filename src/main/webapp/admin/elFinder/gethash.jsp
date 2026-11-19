@@ -19,7 +19,7 @@
         return;
     }
 
-    if (url.contains("stock") || url.contains("placeholder"))
+    if (url.contains("stock") || url.contains("placeholder") || url.contains("default-image") || url.contains("/templates/"))
     {
        url = "/images:default";
     }

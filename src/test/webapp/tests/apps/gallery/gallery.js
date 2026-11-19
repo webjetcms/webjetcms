@@ -860,7 +860,7 @@ function openEditor(I, DTE, imageName, imageType) {
     I.click(locate("td.dt-row-edit a").withText(imageName + imageType));
     DTE.waitForEditor("galleryTable");
     I.clickCss("#pills-dt-galleryTable-photoeditor-tab");
-    I.waitForElement("li.tie-btn-crop.tui-image-editor-item", 10);
+    waitForImageEditor(I, imageName + imageType);
 }
 
 function waitForUpload(I) {

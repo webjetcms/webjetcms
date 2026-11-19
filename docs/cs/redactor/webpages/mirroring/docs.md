@@ -32,6 +32,16 @@ Jelikož provázané by měly být pouze stránky se stejným obsahem jen v jin�
 
 Protože provázané by měly být stejné struktury, rozdílné hloubky rodičovských adresářů provázaných stránek indikují chybu mezi strukturami. Oproti **špatnému mapování** nemusí jít hned o chybu, taková provázání jsou označena pro lepší hledání případných chyb.
 
+### Upozornění ve stromové struktuře
+
+Pokud v nastavení stromu zapnete **Web Stránky** i **Zobrazit zrcadlení**, u stránek s problémem se zobrazí červené nebo žluté upozornění.
+
+![](../jstree-settings.png)
+
+Klepnutím na něj otevřete editor příslušného mapování na kartě **Stránky** v sekci **Zrcadlení**. Při souběhu obou problémů má červené upozornění na špatné mapování přednost.
+
+![](tree-problems.png)
+
 ## Vymazání/zrušení převázání
 
 Při vymazání/zrušení celého provázání zaniká existující synchronizační parametr `syncId`, protože už nemá co provázat.

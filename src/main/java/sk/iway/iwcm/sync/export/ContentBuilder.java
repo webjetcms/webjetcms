@@ -270,11 +270,17 @@ public class ContentBuilder
 		{
 			virtualPath = virtualPath.substring(0, pos);
 		}
-		//zrusime ?v=timestamp
-		pos = virtualPath.indexOf("?v=");
+		// Query parameters configure thumbnails or cache busting, not the source file path.
+		pos = virtualPath.indexOf('?');
 		if (0 <= pos)
 		{
 			virtualPath = virtualPath.substring(0, pos);
+		}
+
+		// Export the original image used by the thumbnail servlet.
+		if (virtualPath.startsWith("/thumb/"))
+		{
+			virtualPath = virtualPath.substring(6);
 		}
 
 		if (Tools.isEmpty(virtualPath)) return;

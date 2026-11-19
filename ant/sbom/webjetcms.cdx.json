@@ -16,7 +16,7 @@
                 {
                     "type": "application",
                     "name": "npm",
-                    "version": "10.9.0"
+                    "version": "10.9.9"
                 },
                 {
                     "type": "application",
@@ -2425,43 +2425,43 @@
         },
         {
             "type": "library",
-            "bom-ref": "pkg:maven/com.webjetcms/webjet-ai@2.0.4?type=jar",
+            "bom-ref": "pkg:maven/com.webjetcms/webjet-ai@2.1.2?type=jar",
             "group": "com.webjetcms",
             "name": "webjet-ai",
-            "version": "2.0.4",
+            "version": "2.1.2",
             "description": "Framework-neutral Java client for OpenAI, Google Gemini, and OpenRouter",
             "hashes": [
                 {
                     "alg": "MD5",
-                    "content": "fec8a25a688be229a570318559ef410a"
+                    "content": "98933cf1af736f9caaa8706adfc96e66"
                 },
                 {
                     "alg": "SHA-1",
-                    "content": "a4cfbefd099595954b14a98b704b0772b4c2f42f"
+                    "content": "024c0bf736a6df932ababd733be22fb10b7f4294"
                 },
                 {
                     "alg": "SHA-256",
-                    "content": "026e820056b83bf905be9666e9c1b9f6eba330ac219797b3ec4d8bea0a5907e9"
+                    "content": "c78eb92e4b0a0deb2a9cbddc190d079526c04bbbf84335922ff9dd940720646a"
                 },
                 {
                     "alg": "SHA-512",
-                    "content": "8b3364b1c17589b8c4fcdaefbdcbb0b29cc1a983e26bedd24f316cb26ea4820734132a86b00cda08b0d44943c39e085b7ab37e8253f1540481f9d50bb97ca2fe"
+                    "content": "167548d47dcbf309f7ab798a5e1a5a4d3b067a926aee56c9dab2e7a3375a9da8f2b3730344ee570b42d60909b721f7cd03dfe88d61ce73aac267eba7cf274620"
                 },
                 {
                     "alg": "SHA3-256",
-                    "content": "e794961c8ab36205651f311dad259cfeb52ddd6f23d8ab21de917c722763ae1b"
+                    "content": "bd7c93197b7aa69d3fcdc4f00e309579abd1fe0cac65404651af21a140a7bd93"
                 },
                 {
                     "alg": "SHA3-512",
-                    "content": "431204af58ea926a0f12c8783a5eae4656453d6080cf27049b91b3fecb5a5dcdbd6349630e78650049399d6d47af12aecfeb56890b2db8bdd156257c3aa146bd"
+                    "content": "a3bdfca6e5ca58f49f1d9c85a08427618722e456a84f24f5e5d01f75867c2b0db5921e0f9382ad7d899fa10278325e9849cd637281856548edbcabe1808a6aa0"
                 },
                 {
                     "alg": "SHA-384",
-                    "content": "561c7b8036bd8e5efed4b8a835e300d56cd23dbc1944ceb69dbd18283295df7f6804549e8ba91748cec48cd479325fcc"
+                    "content": "4df5c16519a0710d5d4e0556855ed7137aca7bd9c77a31bad16adac2783ee454cf82a79aa1f069986e1180f500ce4929"
                 },
                 {
                     "alg": "SHA3-384",
-                    "content": "6ea60cc2aebef444216126518e23736f34cac92b25cc5672e0d3a4da37080d1fad4a9c2f7fe29932196ccf799b72304f"
+                    "content": "378f9bc02d812da03ab3d06ec49e5eacae84e691c8b2aee95635fed83707d36d4bcaba03beb08b8858acafffa9092547"
                 }
             ],
             "licenses": [
@@ -2471,7 +2471,7 @@
                     }
                 }
             ],
-            "purl": "pkg:maven/com.webjetcms/webjet-ai@2.0.4?type=jar",
+            "purl": "pkg:maven/com.webjetcms/webjet-ai@2.1.2?type=jar",
             "modified": false,
             "externalReferences": [
                 {
@@ -32388,13 +32388,13 @@
         {
             "ref": "pkg:maven/ch.qos.logback/logback-core@1.6.5?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.adobe.xmp/xmpcore@6.1.11?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32406,7 +32406,7 @@
         {
             "ref": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.22?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32471,19 +32471,19 @@
         {
             "ref": "pkg:maven/com.fasterxml.jackson/jackson-bom@2.22.4?type=pom",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.fasterxml/classmate@1.7.3?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.github.cliftonlabs/json-simple@3.0.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32503,7 +32503,7 @@
         {
             "ref": "pkg:maven/com.github.stephenc.jcip/jcip-annotations@1.0-1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32522,13 +32522,13 @@
         {
             "ref": "pkg:maven/com.github.virtuald/curvesapi@1.08?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32549,13 +32549,13 @@
         {
             "ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.41.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.google.protobuf/protobuf-java@4.36.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32567,7 +32567,7 @@
         {
             "ref": "pkg:maven/com.googlecode.owasp-java-html-sanitizer/java8-shim@20260102.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32580,19 +32580,19 @@
         {
             "ref": "pkg:maven/com.nimbusds/content-type@2.3?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.nimbusds/lang-tag@1.7?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.nimbusds/nimbus-jose-jwt@10.9.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32608,25 +32608,25 @@
         {
             "ref": "pkg:maven/com.oracle.database.jdbc/ojdbc8@23.26.3.0.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.pd4ml/pd4ml@4.0.21?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.sun.istack/istack-commons-runtime@4.1.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/com.sun.xml.bind/jaxb-xjc@4.0.9?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32638,7 +32638,7 @@
             ]
         },
         {
-            "ref": "pkg:maven/com.webjetcms/webjet-ai@2.0.4?type=jar",
+            "ref": "pkg:maven/com.webjetcms/webjet-ai@2.1.2?type=jar",
             "dependsOn": [
                 "pkg:maven/org.apache.httpcomponents/httpmime@4.5.14?type=jar",
                 "pkg:maven/org.apache.commons/commons-text@1.14.0?type=jar",
@@ -32655,7 +32655,6 @@
                 "pkg:maven/com.google.crypto.tink/tink@1.22.0?type=jar",
                 "pkg:maven/org.json/json@20231013?type=jar",
                 "pkg:maven/net.sourceforge.jexcelapi/jxl@2.6.10?type=jar",
-                "pkg:maven/com.webjetcms/webjet-ai@2.0.4?type=jar",
                 "pkg:maven/org.apache.poi/poi-scratchpad@5.4.1?type=jar",
                 "pkg:maven/jakarta.annotation/jakarta.annotation-api@3.0.0?type=jar",
                 "pkg:maven/com.drewnoakes/metadata-extractor@2.19.0?type=jar",
@@ -32748,7 +32747,7 @@
         {
             "ref": "pkg:maven/com.zaxxer/SparseBitSet@1.3?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32760,25 +32759,25 @@
         {
             "ref": "pkg:maven/commons-chain/commons-chain@1.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/commons-codec/commons-codec@1.21.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/commons-collections/commons-collections@3.2.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/commons-io/commons-io@2.19.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32800,13 +32799,13 @@
         {
             "ref": "pkg:maven/io.github.classgraph/classgraph@4.8.184?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/io.github.duckasteroid.cdb/sg-cdb-library@1.0.3?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32825,7 +32824,7 @@
         {
             "ref": "pkg:maven/io.swagger.core.v3/swagger-annotations-jakarta@2.2.52?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32874,31 +32873,31 @@
         {
             "ref": "pkg:maven/jakarta-regexp/jakarta-regexp@1.4?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/jakarta.activation/jakarta.activation-api@2.1.4?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/jakarta.annotation/jakarta.annotation-api@3.0.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/jakarta.el/jakarta.el-api@6.0.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32910,7 +32909,7 @@
         {
             "ref": "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.2.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32923,31 +32922,31 @@
         {
             "ref": "pkg:maven/jakarta.servlet.jsp/jakarta.servlet.jsp-api@4.0.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/jakarta.servlet/jakarta.servlet-api@6.1.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/jakarta.transaction/jakarta.transaction-api@2.0.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/jakarta.validation/jakarta.validation-api@3.1.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/jakarta.ws.rs/jakarta.ws.rs-api@4.0.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32959,7 +32958,7 @@
         {
             "ref": "pkg:maven/net.bytebuddy/byte-buddy@1.18.15?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -32977,37 +32976,37 @@
         {
             "ref": "pkg:maven/net.sf.trove4j/trove4j@2.1.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/net.sourceforge.jexcelapi/jxl@2.6.10?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/net.sourceforge.jtds/jtds@1.3.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/net.sourceforge.stripes/stripes@1.6.0-JakartaEE10?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.antlr/antlr4-runtime@4.13.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.apache.commons/commons-collections4@4.4?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33040,13 +33039,13 @@
         {
             "ref": "pkg:maven/org.apache.commons/commons-lang3@3.20.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.apache.commons/commons-math3@3.6.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33071,7 +33070,7 @@
         {
             "ref": "pkg:maven/org.apache.httpcomponents/httpcore@4.4.16?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33083,7 +33082,7 @@
         {
             "ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.26.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33102,7 +33101,7 @@
         {
             "ref": "pkg:maven/org.apache.lucene/lucene-core@3.6.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33142,7 +33141,7 @@
         {
             "ref": "pkg:maven/org.apache.pdfbox/pdfbox-io@3.0.7?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33195,13 +33194,13 @@
         {
             "ref": "pkg:maven/org.apache.tomcat.embed/tomcat-embed-core@11.0.27?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.apache.tomcat.embed/tomcat-embed-el@11.0.27?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33231,31 +33230,31 @@
         {
             "ref": "pkg:maven/org.apache.xmlbeans/xmlbeans@5.3.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.aspectj/aspectjrt@1.9.25.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.aspectj/aspectjweaver@1.9.25.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.attoparser/attoparser@2.0.7.RELEASE?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.checkerframework/checker-qual@3.55.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33283,7 +33282,7 @@
         {
             "ref": "pkg:maven/org.freemarker/freemarker@2.3.35?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33305,13 +33304,13 @@
         {
             "ref": "pkg:maven/org.glassfish.jaxb/txw2@4.0.9?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.glassfish.web/jakarta.servlet.jsp.jstl@3.0.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33338,7 +33337,7 @@
         {
             "ref": "pkg:maven/org.hibernate.orm/hibernate-platform@7.4.13.Final?type=pom",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33352,19 +33351,19 @@
         {
             "ref": "pkg:maven/org.htmlunit/neko-htmlunit@4.5.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.javassist/javassist@3.30.2-GA?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.jboss.logging/jboss-logging@3.6.3.Final?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33376,43 +33375,43 @@
         {
             "ref": "pkg:maven/org.jetbrains/annotations@13.0?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.json/json@20231013?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.jsoup/jsoup@1.23.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.jspecify/jspecify@1.0.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.mapstruct/mapstruct@1.6.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.mariadb.jdbc/mariadb-java-client@3.5.10?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.ow2.asm/asm@9.11.1?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33442,7 +33441,7 @@
         {
             "ref": "pkg:maven/org.slf4j/slf4j-api@2.0.20?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33471,7 +33470,7 @@
         {
             "ref": "pkg:maven/org.springframework.boot/spring-boot-dependencies@4.1.2?type=pom",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33729,7 +33728,7 @@
         {
             "ref": "pkg:maven/org.springframework.security/spring-security-crypto@7.1.2?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33892,31 +33891,31 @@
         {
             "ref": "pkg:maven/org.unbescape/unbescape@1.1.6.RELEASE?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/org.yaml/snakeyaml@2.6?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/sk.iway/wjcron4j@2.2.5-SNAPSHOT?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/sk.iway/wjdaisydiff@1.1-SNAPSHOT-shaded?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
             "ref": "pkg:maven/sk.iway/wjjcaptcha@1.0-SNAPSHOT?type=jar",
             "dependsOn": [
-                
+
             ]
         },
         {
@@ -33944,7 +33943,7 @@
         {
             "ref": "pkg:maven/tools.jackson/jackson-bom@3.2.4?type=pom",
             "dependsOn": [
-                
+
             ]
         },
         {

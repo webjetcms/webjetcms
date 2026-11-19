@@ -37,6 +37,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormsEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
@@ -208,9 +209,9 @@ class FormHtmlHandlerTest {
         verifyNoInteractions(prop);
     }
 
-    /** Exercises source-template replacement across a complete step and its email representation. */
+    /** Preserves settings and multiline field hints across a complete step and its email representation. */
     @Test
-    void rendersSettingsInAllStepWrappersAndEmail() {
+    void rendersSettingsAndHintsInAllStepWrappersAndEmail() {
         FormStepsRepository steps = mock(FormStepsRepository.class);
         FormItemsRepository items = mock(FormItemsRepository.class);
         FormItemsConditionsRepository conditions = mock(FormItemsConditionsRepository.class);
@@ -237,7 +238,13 @@ class FormHtmlHandlerTest {
         when(steps.findById(2L)).thenReturn(Optional.of(step));
         when(steps.getStepByPosition("contact", 1, 7)).thenReturn(Optional.of(previous));
         when(steps.findAllByFormNameAndDomainIdOrderBySortPriorityAsc("contact", 7)).thenReturn(List.of(step));
-        when(items.getAllStepItems(2L, 7)).thenReturn(List.of());
+        FormItemEntity field = new FormItemEntity();
+        field.setFieldType("meno");
+        field.setLabel("Name");
+        field.setItemFormId("name-1");
+        field.setHint("<p><strong>Hint autotest</strong> &amp; details</p><p>Second paragraph</p>"
+            + "<ul><li>First instruction</li><li><a href=\"/help\">Help</a></li></ul>");
+        when(items.getAllStepItems(2L, 7)).thenReturn(List.of(field));
         Map<String, String> templates = Map.ofEntries(
             Map.entry("components.multistep.form.start", "<form action=\"${formActionSrc}\" data-title=\"${settings.subject}\">${settings.fieldA}"),
             Map.entry("components.multistep.step.start", "<section data-title=\"${settings.subject}\">"),
@@ -248,7 +255,9 @@ class FormHtmlHandlerTest {
             Map.entry("components.multistep.form.back_button", "<button type=\"button\" data-multistep-back-step=\"${previousStepId}\" title=\"${settings.subject}\">${backButtonText}${settings.fieldA}</button>"),
             Map.entry("components.multistep.form.end", "<button type=\"submit\" title=\"${settings.subject}\">${submitButtonText}</button>{tech-info}</form>"),
             Map.entry("components.multistep.form.loader", "<div class=\"loader\">${settings.fieldA}</div>"),
-            Map.entry("components.formsimple.techinfo", "<div class=\"techinfo\">${settings.subject} ${settings.fieldA}</div>")
+            Map.entry("components.formsimple.techinfo", "<div class=\"techinfo\">${settings.subject} ${settings.fieldA}</div>"),
+            Map.entry("components.formsimple.input.meno", "<div class=\"form-group\"><label for=\"${id}\">${label}</label>"
+                + "<div class=\"form-hint\">${hint}</div><input id=\"${id}\" name=\"${id}\" value=\"${value}\"></div>")
         );
         Prop prop = mock(Prop.class);
         when(prop.getText(anyString())).thenAnswer(invocation -> templates.getOrDefault(invocation.getArgument(0), ""));
@@ -284,18 +293,33 @@ class FormHtmlHandlerTest {
             assertEquals(5, page.select("b").size());
             page.select("b").forEach(element -> assertEquals("${formActionSrc}|${submitButtonText}|${settings.subject}", element.text()));
             assertFalse(page.select("form .loader").isEmpty());
+            assertHintMarkup(page);
+            assertEquals("Name", page.selectFirst("label").text());
+            assertEquals("f1-name-1", page.selectFirst("input").id());
 
             FormsEntity form = new FormsEntity();
             form.setFormName("contact");
-            handler.setFormHtml(form, Map.of(), request, 10);
+            handler.setFormHtml(form, Map.of("name-1", "Alice"), request, 10);
             org.jsoup.nodes.Document email = Jsoup.parseBodyFragment(handler.getFormHtmlBeforeCss());
             assertEquals("Before", email.select("em").first().text());
             assertEquals("After", email.select("em").last().text());
             assertEquals("A & B", email.selectFirst(".techinfo").ownText());
             assertTrue(email.select(".loader, [data-multistep-back-step]").isEmpty());
+            assertHintMarkup(email);
+            assertTrue(email.select("input").isEmpty());
+            assertTrue(email.text().contains("Alice"));
             email.select("b").forEach(element -> assertEquals("${formActionSrc}|${submitButtonText}|${settings.subject}", element.text()));
             verify(settingsRepository).findByFormNameAndDomainId("contact", 7);
         }
+    }
+
+    private void assertHintMarkup(org.jsoup.nodes.Document document) {
+        assertEquals(1, document.select(".form-hint").size());
+        assertEquals(2, document.select(".form-hint > p").size());
+        assertEquals("Hint autotest", document.selectFirst(".form-hint strong").text());
+        assertEquals(2, document.select(".form-hint ul > li").size());
+        assertEquals("/help", document.selectFirst(".form-hint a").attr("href"));
+        assertFalse(document.html().contains("${hint}"));
     }
 
     /** Resolves selected and unselected options from exact or legacy values containing commas. */

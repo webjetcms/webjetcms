@@ -70,6 +70,8 @@ Druhý sloupec obsahuje položky formuláře (nebo položky kroku formuláře), 
 
 ![](form-item-editor.png)
 
+Pole **Název pole** používá jednořádkový editor. Text můžete zvýraznit, změnit jeho barvu nebo přidat odkaz. Nadpisy, seznamy a zalomení řádků nejsou povoleny. Při vložení víceřádkového textu nebo úpravě HTML se řádky spojí mezerami a blokové formátování se odstraní.
+
 ### Kopírování polí mezi formuláři
 
 Nastavené pole můžete použít v jiném formuláři nebo kroku bez opětovného vyplňování jeho nastavení:
@@ -94,7 +96,10 @@ Editor pro přidávání a úpravu položek je speciální tím, že mění svů
 - **Povolená hodnota** - pro pokročilou validaci vstupu uživatele umíte zvolit libovolný počet regulárních výrazů, které musí být splněny, aby byl vstup platný. Každá možnost používá formát **kód - název**, například **alphabetLowercase - povoleno jen malé znaky**. Název se zobrazuje v jazyce administrace. Podle názvu i kódu můžete vyhledávat. Kód odpovídá sloupci **Kód** v sekci [Regulární výrazy](../form/regexps.md).
 - **Oříznout mezery** - pokud je zvoleno, úvodní a koncové mezery se z hodnoty odstraní ještě před validací a uložením. Nastavení je dostupné pro podporovaná textová pole; nepoužívá se pro výběrová pole a formátované textové pole.
 - **Název pole** - název, který se zobrazí uživateli. Pokud není zadán použije se název shodný s typem pole.
-- **Identifikátor položky ve formuláři** - technický identifikátor se automaticky vytvoří z názvu položky a doplní se rozlišující příponou tak, aby byl ve formuláři jedinečný. Zobrazuje se až při úpravě uložené položky a nelze jej měnit. Používá se v podmínkách, uložených datech a v [značkách hodnot položek](#značky-hodnot-položek).
+- **Nápověda** - volitelný víceřádkový formátovaný text, který se ve formuláři zobrazuje za názvem pole. Editor podporuje odstavce, seznamy, odkazy a rozsáhlejší HTML obsah. Pole je dostupné pro všechny typy položek hned za názvem pole a přenáší se i při kopírování položky. Vlastní HTML šablony polí mohou nápovědu vložit značkou `${hint}`.
+- **Identifikátor položky ve formuláři** - technický identifikátor se automaticky vytvoří z názvu položky bez HTML značek a doplní se rozlišující příponou tak, aby byl ve formuláři jedinečný. Zobrazuje se až při úpravě uložené položky a nelze jej měnit. Používá se v podmínkách, uložených datech a v [značkách hodnot položek](#značky-hodnot-položek).
+
+Pravidla **Povolená hodnota** se u povinného pole kontrolují i ​​pro prázdnou hodnotu. U nepovinného pole se kontrolují pouze tehdy, když je pole vyplněno. Při odeslání kroku se povinnost určí podle karty **Povinnost**, pokud obsahuje podmínky, jinak podle přepínače **Povinné pole**.
 
 V kartě **Pokročilé** můžete nastavit další volitelné parametry jako:
 
@@ -221,7 +226,7 @@ Jedná se o plochou strukturu (bez závorek), takže není podpořeno vnořován
 
 Každá podmínka obsahuje tyto parametry:
 
-- **Pole formuláře** - položka, jejíž hodnota se použije při vyhodnocení podmínky. Možnosti jsou seřazeny stejně jako ve formuláři.
+- **Pole formuláře** - položka, jejíž hodnota se použije při vyhodnocení podmínky. Možnosti jsou seřazeny stejně jako ve formuláři. Rádiová tlačítka se stejným názvem pole a nastavením **Povinné pole** se nabízejí jako jedna skupina na pozici prvního tlačítka, i když jsou mezi nimi jiná pole. Upravovaná položka se v seznamu nenabízí. Při úpravě rádiového tlačítka se nenabízí celá jeho skupina, protože tlačítka sdílejí stejný identifikátor položky.
 - **Podmínka porovnání** - způsob porovnání hodnoty pole:
   - **rovná se**
   - **nerovná se**
@@ -231,8 +236,8 @@ Každá podmínka obsahuje tyto parametry:
   - **končí na**
   - **je prázdné**
   - **není prázdné**
-- **Srovnávaná hodnota** - hodnota, vůči které se porovná obsah vybraného pole.
-- **Ignorovat velikost písmen** - porovnání nebude citlivé na velká/malá písmena.
+- **Srovnávaná hodnota** - hodnota, vůči které se porovná obsah vybraného pole. U výběrových seznamů, skupin výběrových a zaškrtávacích polí a samostatných rádiových tlačítek vybíráte pro podmínky **rovná se** a **nerovná se** z možností daného pole. Zobrazuje se text možnosti, uloží se její hodnota. Podporovány jsou i možnosti z číselníku. Při podmínkách **obsahuje**, **neobsahuje**, **začíná na** a **končí na** iu ostatních polí zadáváte text. Prázdnou hodnotu ověříte podmínkou **je prázdné** nebo **není prázdné**.
+- **Ignorovat velikost písmen** - porovnání nebude citlivé na velká/malá písmena. Volba se zobrazuje pouze při ručním zadávání srovnávané hodnoty, při výběru z předdefinovaných možností je skrytá.
 - **Logický operátor** - spojení s následující podmínkou:
   - `AND` - ​​musí platit obě podmínky,
   - `OR` - ​​stačí, pokud platí alespoň jedna podmínka.
@@ -253,11 +258,27 @@ Každá podmínka obsahuje tyto parametry:
 
 - Podmínka nemůže odkazovat sama na sebe. Jedná se o nepovolený stav a podmínka nebude možné uložit.
 - Položku, která je použita v podmínkách jiných položek, nelze odstranit.
+- Při odstranění položky se odstraní i její podmínky zobrazení a povinnosti. Pole, na která tyto podmínky odkazovaly, pak můžete odstranit, pokud je nepoužívá podmínka další existující položky. Podmínky se odstraní i při smazání celého kroku nebo formuláře.
 - Při úpravě takové položky editor zobrazí upozornění na závislé položky. Uložení můžete povolit v kartě **Pokročilé** volbou **Uložit iu existujících závislých položek**.
 
 Při pokusu o úpravu nebo odstranění položky, která je použita v podmínce jiné položky, se zobrazí chyba i notifikace se seznamem závislých položek.
 
 ![](save-condition-error.png)
+
+### Vazby
+
+Karta **Vazby** při úpravě stávajícího pole ukazuje, která další pole používají jeho hodnotu.
+
+- **Zobrazení polí** – pole, jejichž zobrazení závisí na tomto poli.
+- **Povinné vyplnění polí** – pole, jejichž povinné vyplnění závisí na tomto poli.
+
+![Karta Vazby se seznamy polí používaných v podmínkách zobrazení a povinnosti.](tab-relations.png)
+
+Každé pole se v příslušném seznamu zobrazí jednou, i když se na něj odkazuje ve více částech podmínky.
+
+Klepnutím na název otevřete editor daného pole. Pokud je v jiném kroku, přepne se i vybraný krok formuláře. Při neuložených změnách si před přechodem můžete vybrat, zda je chcete zahodit, nebo zůstat v původním editoru.
+
+Například u pravidla „Telefonní číslo je povinné, pokud Jméno a příjmení obsahuje text“ naleznete v kartě **Vazby** pole **Jméno a příjmení** položku **Telefonní číslo** v seznamu podmínek povinnosti. Samotné pravidlo nadále upravujete v kartě **Povinnost** pole **Telefonní číslo**.
 
 ### Statistika
 

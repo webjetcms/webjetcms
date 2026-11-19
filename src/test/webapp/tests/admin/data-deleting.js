@@ -37,7 +37,8 @@ Scenario('cache-objects', ({ I, DT }) => {
   DT.filterContains("name", "browser");
   I.see("browserDetector-");
   DT.filterContains("name", "AdminlogNotifyEmail");
-  I.see("AdminlogNotifyEmails.type230");
+  // Audit cache keys depend on the activity performed before this scenario.
+  I.see("AdminlogNotifyEmails.type", "#datatableInit tbody");
 
   I.amOnPage("/admin/v9/settings/persistent-cache-objects/");
   I.waitForText('Persistent cache objekty', 10, '.nav-link.active');

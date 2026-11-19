@@ -51,6 +51,7 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -128,7 +129,7 @@ public class OfflineService {
 		if (groupId == -1 || searchGroups == null)
 			query = "SELECT doc_id, title, virtual_path FROM documents WHERE available=? ORDER BY doc_id";
 		else
-			query = "SELECT doc_id, title, virtual_path FROM documents WHERE available=? AND group_id IN ("+ searchGroups.toString() +") ORDER BY doc_id";
+			query = "SELECT doc_id, title, virtual_path FROM documents WHERE available=? AND " + DB.getInCondition("group_id", searchGroups.toString()) + " ORDER BY doc_id";
 		try
 		{
 			db_conn = DBPool.getConnection();
@@ -1008,6 +1009,7 @@ public class OfflineService {
 		if (realPath != null)
 		{
 			File file = new File(realPath);
+			if (AiChatPaths.isPrivate(file)) return;
 			int size;
 			int i;
 
@@ -1022,6 +1024,7 @@ public class OfflineService {
 					{
 						file = files[i];
 
+						if (AiChatPaths.isPrivate(file)) continue;
 						if (file.isDirectory())
 						{
 							if (!file.getName().equalsIgnoreCase("cvs"))

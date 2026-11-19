@@ -136,6 +136,7 @@ The following tags can be used in the code, which will be replaced when the form
 - ```${stepId}``` - ​​multi-step form step identifier; for easy forms the value is empty
 - ```${label}``` - ​​text for label element, value from name field in administration
 - ```${labelSanitized}``` - ​​text for label element, value from name field in administration, special characters modified so it can be used in HTML attribute
+- ```${hint}``` - ​​HTML content of the **Help** field of a multi-step form item. It is inserted after the field name in `<div class="form-hint">${hint}</div>`. If help is not specified, the tag is replaced with empty text.
 - ```${value}``` - ​​text from the value field in the administration
 - ```${valueSanitized}``` - ​​field value edited without spaces, diacritics and special characters for use in HTML attribute
 - ```${placeholder}``` - ​​placeholder text, displayed when the field has an empty value

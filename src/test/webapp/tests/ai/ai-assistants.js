@@ -91,13 +91,11 @@ Scenario('ai_assistants editor logic', async ({I, DTE}) => {
 
         DTE.selectOption("provider", openAiId);
         I.seeElement("#DTE_Field_model");
-        let optionsD = ["gpt-4.1", "gpt-4.1-nano", "gpt-4.1-mini"];
-        checkAutocomplete(I, "DTE_Field_model", "gpt-4.1", null, optionsD);
+        await checkModelAutocomplete(I, "gpt");
 
         DTE.selectOption("provider", geminiId);
         I.seeElement("#DTE_Field_model");
-        let optionsE = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.5-flash-lite"];
-        checkAutocomplete(I, "DTE_Field_model", "gemini-2.5", null, optionsE);
+        await checkModelAutocomplete(I, "gemini");
 });
 
 Scenario('AI instructions textarea preserves shared gutter and keyboard behavior', async ({I, DT, DTE}) => {
@@ -276,6 +274,8 @@ async function textAnswerTest(I, DTE, aiProviderId) {
         I.assertEqual(defaultValue, valueB);
 
     I.say("TRY the TEXT answer WITH stream");
+        I.clickCss('#toast-container-ai .toast-close-button');
+        I.waitForInvisible('#toast-container-ai', 10);
         I.clickCss("#pills-dt-datatableInit-perex-tab");
         I.fillField("#DTE_Field_htmlData", defaultValue);
 
@@ -630,6 +630,25 @@ async function deleteLocalAssistants(I, DT) {
     }
 }
 
+/** Checks real provider suggestions without depending on a fixed model catalogue. */
+async function checkModelAutocomplete(I, term) {
+    const field = "#DTE_Field_model";
+    // Scope assertions to this field's menu and let its initial focus search finish first.
+    const menuId = await I.executeScript(() => window.jQuery("#DTE_Field_model").autocomplete("widget").attr("id"));
+    const menu = "#" + menuId;
+    I.click(field);
+    I.waitForVisible(menu, 10);
+    I.fillField(field, term);
+    I.waitForText(term, 10, menu);
+    // The open menu can still contain the previous query during autocomplete's debounce.
+    await I.retry({ retries: 10, minTimeout: 500, maxTimeout: 500 }).seeNumberOfElements(
+        menu + ' li.ui-menu-item:not(:has-text("' + term + '"))', 0);
+    const suggestions = await I.grabTextFromAll(menu + " li.ui-menu-item");
+    I.assertAbove(suggestions.length, 0, "The provider must return matching models");
+    I.click(locate(menu + " li.ui-menu-item").first());
+    I.seeInField(field, suggestions[0].trim());
+}
+
 function checkAutocomplete(I, id, value, valueToSelect, options) {
     I.fillField("#" + id, value);
     I.waitForVisible('ul.dt-autocomplete-select:not([style*="display: none"])');
@@ -688,7 +707,8 @@ function waiToEndText(I) {
     I.say("waiToEndText");
 
     I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 180 );
-    I.seeElement( locate(containerAiContent + " > .current-status > span").withText("Hotovo! Bolo použitých") );
+    // Include the provider's error text in the assertion when the request fails.
+    I.see("Hotovo! Bolo použitých", containerAiContent + " > .current-status > span");
     I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-circle-check") );
 }
 

@@ -35,4 +35,12 @@ public interface FormsRepositoryInterface<E> extends DomainIdRepository<E, Long>
 
     @Transactional
     void deleteByFormNameAndDomainId(String formName, Integer domainId);
+
+    /** Deletes submitted responses while preserving the form's management records. */
+    @Transactional
+    void deleteAllByFormNameAndDomainIdAndCreateDateNotNull(String formName, Integer domainId);
+
+    /** Deletes management records only after response deletion and any required definition cleanup succeed. */
+    @Transactional
+    void deleteAllByFormNameAndDomainIdAndCreateDateNull(String formName, Integer domainId);
 }

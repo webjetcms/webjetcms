@@ -182,6 +182,8 @@ Scenario('Over importovanie web stránok z Excel súboru', async ({ I, DT, DTE }
     I.waitForElement("body.closeTableBody");
     I.see("Importujem súbor, čakajte prosím...");
     I.waitForText("Import dokončený");
+    const importErrors = await I.grabTextFromAll('font[color="red"], span.error');
+    I.assertEmpty(importErrors, 'Excel import must complete without row errors.');
 
     I.say("Do all Excel import checks");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + folderId);

@@ -70,6 +70,8 @@ The second column contains form items (or form step items) that are only visible
 
 ![](form-item-editor.png)
 
+The **Field Name** field uses a single-line editor. You can highlight the text, change its color, or add a link. Headings, lists, and line breaks are not allowed. When you insert multi-line text or edit HTML, the lines are joined with spaces and block formatting is removed.
+
 ### Copy fields between forms
 
 You can use a configured field in another form or step without re-filling its settings:
@@ -94,7 +96,10 @@ The editor for adding and editing items is special in that it changes its conten
 - **Allowed value** - for advanced user input validation, you can select any number of regular expressions that must be met for the input to be valid. Each option uses the format **code - name**, for example **alphabetLowercase - only lowercase characters allowed**. The name is displayed in the administration language. You can search by both name and code. The code corresponds to the **Code** column in the [Regular expressions] section (../form/regexps.md).
 - **Trim spaces** - if selected, leading and trailing spaces will be removed from the value before validation and saving. The setting is available for supported text fields; it is not used for select fields and formatted text fields.
 - **Field name** - the name that will be displayed to the user. If not specified, the name matching the field type will be used.
-- **Item identifier in the form** - the technical identifier is automatically created from the item name and supplemented with a distinctive suffix so that it is unique in the form. It is only displayed when editing a saved item and cannot be changed. It is used in conditions, saved data, and [item value tags](#item-value-tags).
+- **Help** - optional multi-line formatted text that appears after the field name in the form. The editor supports paragraphs, lists, links, and more extensive HTML content. The field is available for all item types immediately after the field name and is also carried over when copying the item. Custom HTML field templates can insert the help with the `${hint}` tag.
+- **Item identifier in the form** - the technical identifier is automatically created from the item name without HTML tags and is supplemented with a distinctive suffix so that it is unique in the form. It is only displayed when editing a saved item and cannot be changed. It is used in conditions, saved data and [item value tags](#item-value-tags).
+
+**Allowed Value** rules are checked for a mandatory field even if it is empty. For an optional field, they are checked only if the field is filled in. When submitting a step, the obligation is determined by the **Requirement** card, if it contains conditions, otherwise by the **Required Field** radio button.
 
 In the **Advanced** tab, you can set additional optional parameters such as:
 
@@ -221,7 +226,7 @@ This is a flat structure (without parentheses), so nesting of conditions is not 
 
 Each condition contains the following parameters:
 
-- **Form field** - an item whose value will be used when evaluating a condition. The options are ordered the same as in a form.
+- **Form Field** - an item whose value is used when evaluating a condition. The options are ordered the same as in the form. Radio buttons with the same field name and the **Required Field** setting are offered as one group in the first button position, even if there are other fields between them. The item being edited is not offered in the list. When editing a radio button, its entire group is not offered because the buttons share the same item identifier.
 - **Comparison condition** - method of comparing field values:
   - **equals**
   - **does not equal**
@@ -231,8 +236,8 @@ Each condition contains the following parameters:
   - **ends on**
   - **is empty**
   - **not empty**
-- **Compared value** - the value against which the contents of the selected field will be compared.
-- **Ignore case** - the comparison will not be case sensitive.
+- **Compared value** - the value against which the contents of the selected field are compared. For picklists, groups of selection and checkboxes, and individual radio buttons, you select from the options of the given field for the conditions **equals** and **not equals**. The text of the option is displayed, and its value is saved. Options from the code list are also supported. For the conditions **contains**, **does not contain**, **starts with**, and **ends with**, you enter text for the other fields as well. You can check for an empty value with the condition **is empty** or **is not empty**.
+- **Ignore case** - the comparison will not be case sensitive. The option is only displayed when manually entering the value to be compared, it is hidden when selecting from predefined options.
 - **Logical operator** - connection with the following condition:
   - `AND` - ​​both conditions must apply,
   - `OR` - ​​it is enough if at least one condition applies.
@@ -253,11 +258,27 @@ Each condition contains the following parameters:
 
 - A condition cannot refer to itself. This is an illegal state and the condition will not be saved.
 - An item that is used in the conditions of other items cannot be deleted.
+- When you delete an item, its display conditions and obligations are also deleted. You can then delete the fields that these conditions referenced, unless they are used by a condition on another existing item. Conditions are also deleted when you delete an entire step or form.
 - When editing such an item, the editor will display a warning about dependent items. You can enable saving in the **Advanced** tab by selecting **Save even with existing dependent items**.
 
 When you try to edit or delete an item that is used in a condition of another item, an error and a notification with a list of dependent items will appear.
 
 ![](save-condition-error.png)
+
+### Bindings
+
+The **Links** tab shows which other fields use its value when editing an existing field.
+
+- **Field Display** – fields whose display depends on this field.
+- **Mandatory fields** – fields whose mandatory completion depends on this field.
+
+![Relations tab with lists of fields used in display conditions and obligations.](tab-relations.png)
+
+Each field appears once in the corresponding list, even if it is referenced in multiple parts of the condition.
+
+Clicking on the name will open the editor for that field. If it is in a different step, the selected form step will also be switched. If you have unsaved changes, you can choose to discard them or stay in the original editor before switching.
+
+For example, for the rule "Phone number is required if First and Last name contains text", you will find **Phone number** in the list of requirement conditions on the **First and Last name** field's **Relationships** tab. You continue to edit the rule itself on the **Requirement** tab of the **Phone number** field.
 
 ### Statistics
 

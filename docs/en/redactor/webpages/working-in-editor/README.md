@@ -215,7 +215,9 @@ After clicking on the icon, a dialog box for inserting an image will appear:
 
 ![](image_dialog.png)
 
-When navigating through the tree structure, only image or video files are displayed, other files are filtered.
+When navigating through the tree structure, only images, videos, and audio files are displayed. The same restriction applies to uploading, including the **Files** folder. The selection of files on your computer is limited to these types. For example, if you drag a PDF or ZIP file into the dialog, you will see an **Unallowed file type** error before the file is sent. Files whose type the browser does not recognize will be checked by the server before being saved. When uploading multiple files, supported files will be uploaded and a warning will be displayed for the others.
+
+You can upload PDFs and other documents through the insert link dialog, the **Media** tab, or the **Explorer**.
 
 ### Contents tab
 

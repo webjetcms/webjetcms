@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -21,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
@@ -114,9 +116,20 @@ class RagEmbeddingStatServiceTest extends BaseWebjetTest {
         assistant.setId(42L);
         assistant.setDomainId(domainId);
         AiStatRepository statRepository = mock(AiStatRepository.class);
-        RagEmbeddingStatService service = new RagEmbeddingStatService(mock(AssistantDefinitionRepository.class), statRepository);
+        AssistantDefinitionRepository assistantRepository = mock(AssistantDefinitionRepository.class);
+        when(assistantRepository.incrementUsedTokens(42L, domainId, 123L)).thenReturn(1);
+        RagEmbeddingStatService service = new RagEmbeddingStatService(assistantRepository, statRepository);
 
-        service.recordIndexingTokens(assistant, 123, domainId);
+        try (MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
+             MockedStatic<AiAssistantsService> assistants = mockStatic(AiAssistantsService.class)) {
+            tools.when(() -> Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class))
+                .thenReturn(assistantRepository);
+
+            service.recordIndexingTokens(assistant, 123, domainId);
+
+            verify(assistantRepository).incrementUsedTokens(42L, domainId, 123L);
+            assistants.verify(() -> AiAssistantsService.notifyUsage(eq(42L), eq(domainId), any()));
+        }
 
         ArgumentCaptor<AiStatEntity> captor = ArgumentCaptor.forClass(AiStatEntity.class);
         verify(statRepository).save(captor.capture());

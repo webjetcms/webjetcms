@@ -1285,6 +1285,29 @@ test("Loading an empty shortcut section restores all defaults without replacing 
     }
 });
 
+test("Loading saved shortcuts repairs legacy destinations before rendering without changing other preferences", async t => {
+    for (const source of ["url", "menu"]) {
+        const paths = [
+            ["/admin/v9/webpages/web-pages-list", "/admin/v9/webpages/web-pages-list/"],
+            ["/admin/v9/apps/forms-list", "/apps/form/admin/"],
+            ["/admin/v9/webpages/web-pages-list/", "/admin/v9/webpages/web-pages-list/"],
+            ["/apps/form/admin/", "/apps/form/admin/"],
+            ["/admin/v9/webpages/web-pages-list/?groupid=42", "/admin/v9/webpages/web-pages-list/?groupid=42"],
+            ["https://example.com/admin/v9/apps/forms-list", "https://example.com/admin/v9/apps/forms-list"]
+        ];
+        const items = paths.map(([href], index) => item(`link-${index}`, "shortcut", "1x1", { source, href, title: `Link ${index}`, color: "blue", icon: "ti-link" }));
+        items.push(item("grid", "test", "2x2", { href: paths[0][0] }));
+        const { controller, host, stored, requests } = fixture(t, { items, legacyBookmarksHandled: true, definitions: [shortcutDefinition] });
+        await controller.start();
+        assert.deepEqual([...host.querySelectorAll(".md-dashboard__shortcuts a")].map(link => link.getAttribute("href")), paths.map(([, href]) => href));
+        const expected = copy(items);
+        paths.forEach(([, href], index) => { expected[index].options.href = href; });
+        assert.deepEqual(copy(controller.settings.items), expected);
+        assert.deepEqual(stored().items, items, "Loading must not rewrite persisted settings");
+        assert.equal(requests.length, 0);
+    }
+});
+
 test("Legacy bookmarks automatically replace shortcuts in original order and clear only the migrated source", async t => {
     const { controller, window, stored, requests, host } = fixture(t, { items: [item("grid"), item("existing", "shortcut", "1x1", { href: "/apps/form/admin/", title: "New label" }), item("extra", "shortcut", "1x1", { href: "/extra/", title: "My extra" })], definitions: [shortcutDefinition] });
     await controller.start();

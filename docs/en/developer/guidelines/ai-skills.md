@@ -31,18 +31,18 @@ After clarifying the assignment, choose one of the following options.
 
 2. Review the suggestion and confirm the issue creation. The skill will use the English title, leave the body in the language of the discussion, and suggest a branch name. It will not create a branch. Continue with the [Implementation and Control](#implementation-and-control) section.
 
-### Implement directly from chat without issue
+### Implement directly from the chat without issue
 
 1. Select a working branch or worktree according to the [Implementation and Review](#implementation-and-review) section. If you are already working in the correct folder and branch, continue in them.
 2. **In the same chat** that contains the request, attachments, and agreed conclusions from `grill-me`, enter:
 
    ```text
    Použi skill implement podľa odsúhlaseného zadania, akceptačných kritérií,
-   plánu a testov v tomto chate. Nevytváraj GitHub issue.
+   plánu a testov v tomto čete. Nevytváraj GitHub issue.
    ```
 
    Skill `implement` also accepts input directly from the conversation; it does not need an issue number. If you are moving to a new chat or another worktree, transfer the agreed summary and necessary attachments to the new chat.
-3. After implementation, continue checking the code and result in steps 3 and 4 of the [Implementation and review](#implementation-and-review). When checking, instead of a link to the issue, include the assignment agreed in the chat.
+3. After implementation, continue checking the code and result in steps 3 and 4 of the [Implementation and review](#implementation-and-review). When checking, instead of a link to the issue, include the assignment agreed upon in the chat.
 
 ## The request or bug already exists in GitHub Issues
 
@@ -65,7 +65,7 @@ After clarifying the assignment, choose one of the following options.
    Pred samotnou opravou počkaj na moje potvrdenie. Nevytváraj nové issue.
    ```
 
-3. Confirm the clarified assignment or suggested correction. Then **in the same chat** transfer the agreed conclusions to the existing issue:
+3. Confirm the clarified assignment or suggested correction. Then **in the same chat**, transfer the agreed conclusions to the existing issue:
 
    ```text
    Použi skill wj-gh-issue-from-grill pre issue [URL].
@@ -86,7 +86,7 @@ After clarifying the assignment, choose one of the following options.
    Replace the ID and description with the issue. The script will create a new branch from `origin/main`, prepare a worktree with dependencies, and open it in VS Code.
 
    For a hotfix release, first create branch `hotfix/<číslo-issue>-<popis>` from the corresponding branch `hotfix/YEAR.0-main` according to [project rules](gitlab.md), then run `./worktree-add.sh hotfix/<číslo-issue>-<popis>` without `--new`. The `--new` parameter always comes from `origin/main`, even if the new branch name starts with `hotfix/`.
-2. Open the selected working folder in Codex. If you have a GitHub issue, in the same or a new chat, run the skill `implement` with its number (without an issue, use [direct input from chat](#implement-direct-from-chat-without-issue)):
+2. Open the selected working folder in Codex. If you have a GitHub issue, in the same or a new chat, run the skill `implement` with its number (without an issue, use [direct entry from the chat](#implement-direct-from-chat-without-issue)):
 
    ```text
    /implement ID
@@ -114,7 +114,7 @@ After clarifying the assignment, choose one of the following options.
 
 **For our normal procedure, use `implement`** even if the issue contains a detailed plan from `grill-me`. The length of the plan itself and multiple smaller issues in one branch do not require `implement-spec`.
 
-`implement-spec` is designed to coordinate larger work divided into dependent tickets. Its default procedure creates branches and worktrees, merges changes and, depending on the way you work with the issue tracker, also handles PR or ticket closing. In WebJET CMS, it must be adapted in advance to the project rules, especially the prohibition of commits by agents and the choice of branch by programmers. For individual issues or chat assignments, use the procedure in the [Implementation and control](#implementation-and-control) section.
+`implement-spec` is designed to coordinate larger work divided into dependent tickets. Its default procedure creates branches and worktrees, merges changes and, depending on the way you work with the issue tracker, also handles PR or ticket closing. In WebJET CMS, it must be adapted in advance to the project rules, especially the prohibition of commits by agents and the choice of branch by programmers. For individual issues or tasks in the chat, use the procedure in the [Implementation and control](#implementation-and-control) section.
 
 ## WebJET skills overview
 
@@ -124,7 +124,7 @@ The overview contains WebJET skills from this repository. General skills like `g
 
 <!-- webjet-skills-catalog:start -->
 
-| Skill | What is it for and when to use it? | Example of chat entry |
+| Skill | What is it for and when to use it? | Example of entry into the chat |
 | --- | --- | --- |
 | [`wj-accessibility`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-accessibility/SKILL.md) | Checks and improves web accessibility according to WCAG 2.2, such as keyboard controls, element descriptions, and screen reader support. | Use the wj-accessibility skill to check the accessibility of the form [URL]. |
 | [`wj-add-javadoc`](https://github.com/webjetcms/webjetcms/blob/main/.agents/skills/wj-add-javadoc/SKILL.md) | It adds and corrects the English JavaDoc of classes and methods, including parameters, return values, and exceptions. It only changes comments. | Use the skill wj-add-javadoc for class [path to Java file]. |

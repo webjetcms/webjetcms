@@ -274,10 +274,11 @@ jobs:
         echo "Legacy Commons FileUpload multipart POST succeeded on external Tomcat 11."
 
   dependency-submission:
-    # Skip workflow for WIP pull requests (same logic as build job)
+    # Skip WIP pull requests and fork pull requests, whose tokens cannot submit dependencies.
     if: |
       github.event_name == 'push' || (
         github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
         github.event.pull_request.draft == false &&
         !contains(github.event.pull_request.title, 'wip:') &&
         !contains(github.event.pull_request.title, 'WIP:')

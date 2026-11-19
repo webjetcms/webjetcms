@@ -43,6 +43,20 @@ The website list remembers the last opened folder within a single login, and whe
 
 At the same time, when browsing the tree structure, the browser address bar displays the page address with the parameter `groupid`, which represents the folder ID. When refreshing the page or sending a link, the folder structure is opened according to the ID in the address bar. On the home page, you can [add the page address with the folder ID](https://youtu.be/G5Ts04jSMX8) to the Bookmarks block and thus create a link to the nested folder structure on the home page.
 
+### Switching between mirrored folders
+
+After enabling the **Show mirroring** option in the tree structure settings
+
+![](jstree-settings.png)
+
+For folders linked by [structure mirroring](../apps/docmirroring/README.md), the language abbreviations of the other linked folders will be displayed on the right edge of the line, for example **DE** and **EN**.
+
+![](mirroring/tree-navigation.png)
+
+The linked folders of the current selection are highlighted in the loaded part of the tree. If tree search is active, when you hover over a language link, it is canceled to show the target folder.
+
+Links are available to users with the **Mirror Structure** right and only show folders and pages they have access to within the selected domain. Language links are not displayed on the **System**, **Deleted** tabs, or in folder selection boxes.
+
 ### Show pages from subdirectories as well
 
 If necessary, you can also display web pages from subdirectories by switching the **Display pages from subdirectories as well** switch in the data table header. After switching to the mode of displaying pages from subdirectories, pages from the currently selected directory will be displayed in the tree structure, including its subdirectories. You can click on another directory in the tree structure, which will again cause the pages from the selected directory and its subdirectories to be displayed.
@@ -50,6 +64,20 @@ If necessary, you can also display web pages from subdirectories by switching th
 In the table settings, you can enable the display of the **Parent folder** column, in which you will see the directory in which the page is located.
 
 ![](recursive-list.png)
+
+### Deleting mirrored pages and folders
+
+When deleting a page or folder with active [structure mirroring](../apps/docmirroring/README.md), a confirmation window will also display a list of mirrored items that will be deleted along with the selection. For each item, you can see its full path and domain.
+
+![Confirm page deletion with a list of its mirrored versions](mirroring/delete-pages.png)
+
+The same warning appears when deleting folders from both the tree and the **Folders** tab. When deleting in bulk, each mirrored item appears only once, and items that you have already marked for deletion yourself are not repeated in the additional list.
+
+If you select multiple mirrored pages or folders at once, each item is deleted only once. An item that has already been moved to the trash as part of this operation is not deleted again when the next selected row is processed.
+
+![Confirm deletion of mirrored folder list](mirroring/delete-groups.png)
+
+The list contains directly linked pages or folders without subfolders.
 
 ### Restoring web pages and directories from the trash
 
@@ -96,6 +124,8 @@ The following types of icons and colors can be displayed in the folder and page 
 -<i class="ti ti-map-pin" role="presentation"></i> the page is displayed in the menu
 -<i class="ti ti-map-pin-off" role="presentation"></i> the page is not displayed in the menu
 -<i class="ti ti-folder-x" role="presentation"></i> you do not have rights to edit/delete the folder, you will not see any list of websites in this folder (even if the folder actually contains websites). It is used in the case when you have rights allowed only for one of the subfolders.
+-<i class="ti ti-exclamation-circle" style="color: #E00028;" role="presentation"></i> multiple mirrored folders in the same language. Appears when **Show Mirroring** is enabled.
+-<i class="ti ti-alert-triangle" style="color: #fabd00;" role="presentation"></i> mirrored folders have different nesting depths. Appears when **Show mirroring** is enabled.
 -<i class="ti ti-lock" role="presentation"></i> lock = only available to logged in visitors
 - <span style="color: #E00028">red color</span> = unavailable to the public (internal directory) or page with display disabled
 -<i class="ti ti-star"></i> , **bold** = main page of the directory
@@ -111,6 +141,7 @@ If necessary, you can click the icon in the tree structure<i class="ti ti-adjust
 - **Sort order** - Displays the sort order in the form (order) after the name.
 - **Web Pages** - Displays web pages in the tree structure. **Warning:** reduces performance and data loading speed. We recommend enabling this option only if you need to move web pages using the `Drag&Drop` function.
 - **Tree Folders as Table** - Displays the Folders tab in the datasheet. Allows you to use datasheet features like bulk operations, duplicate, edit in grid view, etc. with tree folders.
+- **Show mirroring** - Displays links to language versions and a warning about [bad mapping or uneven nesting](mirroring/groups.md#status-of-bindings) on the right margin. A red icon indicates multiple mappings of the same language, yellow indicates different nesting depths. If both problems occur, the red icon takes precedence. The option is available to users with the **Structure Mirroring** right and is remembered for the logged in user. It is disabled by default.
 - **Tree Width** - Select the ratio of the width of the tree to the table (default 4:8) or a fixed tree width of 120px, 150px, 200px, 250px, 300px, 400px or 500px. With a fixed width, the tree does not expand when the window is enlarged and the table uses the remaining space. Warning: with some widths and inappropriate monitor sizes, the toolbar/buttons may not be displayed correctly.
 - **Sort tree by** - Select the directory parameter by which the folder tree should be sorted. The selection box supports the following parameters
   - **Priority**

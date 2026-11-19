@@ -64,7 +64,7 @@ Otvorí často používanú časť administrácie, priečinok alebo vlastnú URL
 
 ### Pokračujte v práci
 
-Zobrazuje najviac šesť vašich naposledy upravovaných stránok. Kliknutím na stránku sa vrátite do jej editora, kliknutím na nadpis widgetu otvoríte celý zoznam webových stránok.
+Zobrazuje najviac šesť vašich naposledy upravovaných stránok. Kliknutím na stránku sa vrátite do jej editora, kliknutím na nadpis widgetu otvoríte kartu **Naposledy upravené** v zozname webových stránok.
 
 ### Na schválenie
 

@@ -1,6 +1,7 @@
 package sk.iway.iwcm.editor;
 
 import java.io.File;
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,6 +19,11 @@ import java.util.StringTokenizer;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import net.sourceforge.stripes.mock.MockHttpServletRequest;
+import net.sourceforge.stripes.mock.MockHttpSession;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -25,7 +31,9 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -1651,7 +1659,7 @@ public class EditorDB
 						//http://intra.iway.sk/helpdesk/?bugID=7713
 
 						//musime im ale aktualizovat (mozne) zmenene hodnoty poradia usporiadania
-						String sql2 = "UPDATE documents_history SET sort_priority=?, temp_id=?, group_id=? WHERE history_id IN (" + historyIds + ") AND approved_by=-1";
+						String sql2 = "UPDATE documents_history SET sort_priority=?, temp_id=?, group_id=? WHERE " + DB.getInCondition("history_id", historyIds.toString()) + " AND approved_by=-1";
 
 						Logger.debug(EditorDB.class, "sql2="+sql2);
 
@@ -1664,7 +1672,7 @@ public class EditorDB
 					}
 					else
 					{
-						String sql2 = "DELETE FROM documents_history WHERE history_id IN (" + historyIds + ") AND approved_by=-1 AND author_id=?";
+						String sql2 = "DELETE FROM documents_history WHERE " + DB.getInCondition("history_id", historyIds.toString()) + " AND approved_by=-1 AND author_id=?";
 						//Logger.println(this,sql2+author_id);
 						ps = db_conn.prepareStatement(sql2);
 						ps.setInt(1, user.getUserId());
@@ -1706,7 +1714,7 @@ public class EditorDB
 
 				if (historyIds.length() > 0 )
 				{
-					ps = db_conn.prepareStatement("UPDATE documents_history SET actual=?, awaiting_approve=?, sync_status=1 WHERE history_id IN (" + historyIds + ")");
+					ps = db_conn.prepareStatement("UPDATE documents_history SET actual=?, awaiting_approve=?, sync_status=1 WHERE " + DB.getInCondition("history_id", historyIds.toString()));
 					ps.setBoolean(1, false);
 					ps.setNull(2, Types.VARCHAR);
 					//ps.setInt(3, user.getUserId());
@@ -1910,6 +1918,7 @@ public class EditorDB
 		}
 
 		//publishEvent(EditorAfterSaveEvent.class, my_form);
+		my_form.setPublish(requestPublish ? "1" : "0");
 		(new WebjetEvent<>(my_form, WebjetEventType.AFTER_SAVE)).publishEvent();
 
 		return(history_id);
@@ -1976,7 +1985,7 @@ public class EditorDB
 						{
 							GroupDetails group = groupsDB.getGroup(doc.getGroupId());
 							domain = group.getDomainName();
-							inSql = " AND group_id IN ("+groupsDB.getSubgroupsIds(domain)+")";
+							inSql = " AND " + DB.getInCondition("group_id", groupsDB.getSubgroupsIds(domain));
 						}
 					}
 
@@ -2093,7 +2102,7 @@ public class EditorDB
 			if (Constants.getBoolean("multiDomainEnabled")==true && Tools.isNotEmpty(domain))
 			{
 				GroupsDB groupsDB = GroupsDB.getInstance();
-				inSql = " AND group_id IN ("+groupsDB.getSubgroupsIds(domain)+")";
+				inSql = " AND " + DB.getInCondition("group_id", groupsDB.getSubgroupsIds(domain));
 			}
 
 			String sql = "SELECT doc_id, title, data FROM documents WHERE data LIKE ? "+inSql;
@@ -2529,7 +2538,59 @@ public class EditorDB
 
 	public static String getDataAsc(String data, EditorForm ef, boolean isLucene)
 	{
-		return getDataAsc(data, ef, isLucene, null);
+		RequestBean originalBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (isLucene == false && originalBean != null && originalBean.getRequest() != null)
+		{
+			return getDataAsc(data, ef, isLucene, originalBean.getRequest());
+		}
+
+		String virtualPath = "/LuceneFulltextSearch";
+		if (ef != null && Tools.isNotEmpty(ef.getVirtualPath())) virtualPath = ef.getVirtualPath();
+		MockHttpServletRequest request = new MockHttpServletRequest("", virtualPath) {
+			@Override
+			public boolean isAsyncSupported() { return false; }
+
+			@Override
+			public boolean isAsyncStarted() { return false; }
+		};
+		request.setMethod("GET");
+		request.setSession(new MockHttpSession(Constants.getServletContext()));
+		request.setAttribute("path_filter_orig_path", virtualPath);
+		String serverName = "";
+		if (ef != null && ef.getGroupId() > 0)
+		{
+			GroupDetails group = GroupsDB.getInstance().getGroup(ef.getGroupId());
+			if (group != null && Tools.isNotEmpty(group.getDomainName())) serverName = group.getDomainName();
+		}
+		if (Tools.isEmpty(serverName))
+		{
+			String configuredServerName = Constants.getString("httpServerName");
+			if (Tools.isNotEmpty(configuredServerName))
+			{
+				String url = configuredServerName.trim();
+				if (url.contains("://") == false) url = "http://" + url;
+				try
+				{
+					String configuredHost = URI.create(url).getHost();
+					if (Tools.isNotEmpty(configuredHost)) serverName = configuredHost;
+				}
+				catch (IllegalArgumentException ex)
+				{
+					Logger.debug(EditorDB.class, "Invalid httpServerName configuration: " + configuredServerName, ex);
+				}
+			}
+		}
+		request.setServerName(serverName);
+		SecurityContext originalSecurityContext = SecurityContextHolder.getContext();
+		SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
+		try (SetCharacterEncodingFilter.IsolatedDataContext context = SetCharacterEncodingFilter.openIsolatedDataContext(request))
+		{
+			return getDataAsc(data, ef, isLucene, request);
+		}
+		finally
+		{
+			SecurityContextHolder.setContext(originalSecurityContext);
+		}
 	}
 
     /**

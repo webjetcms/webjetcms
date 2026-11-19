@@ -64,7 +64,7 @@ Opens a frequently used part of the administration, a folder, or a custom URL. T
 
 ### Keep working.
 
-It displays up to six of your most recently edited pages. Clicking on a page will take you back to its editor, or clicking on the widget title will open the full list of websites.
+It displays up to six of your most recently edited pages. Clicking on a page will return you to its editor, clicking on the widget title will open the **Recently edited** tab in the website list.
 
 ### For approval
 

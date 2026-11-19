@@ -23,6 +23,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
@@ -276,7 +277,7 @@ public class SemanticIndexService {
      *
      * Content is extracted and chunked, unchanged embeddings are reused by content hash, changed chunks are embedded,
      * and chunk rows and vectors are replaced. If indexing fails before chunk rows are stored, a document-level error
-     * marker is persisted before the failure is rethrown.
+     * marker is persisted before the failure is rethrown. Provider-call failures preserve existing chunks for retry.
      *
      * @param doc document to index
      * @param domainName domain used to resolve provider configuration
@@ -427,7 +428,7 @@ public class SemanticIndexService {
             Logger.error(SemanticIndexService.class, "Error indexing doc " + entityId + ": " + e.getMessage());
 
             try {
-                if (chunkRowsSaved == false) {
+                if (chunkRowsSaved == false && (e instanceof ProviderCallException) == false) {
                     // No chunk rows exist yet, so store one document-level error marker.
                     embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingProviderAndEmbeddingModelAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, provider, model, domainId);
 

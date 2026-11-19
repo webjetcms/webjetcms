@@ -136,6 +136,7 @@ V kóde je možné použiť nasledovné značky, ktoré sa pri zobrazení formul
 - ```${stepId}``` - identifikátor kroku viackrokového formulára; pri formulári ľahko je hodnota prázdna
 - ```${label}``` - text pre label element, hodnota z poľa názov v administrácii
 - ```${labelSanitized}``` - text pre label element, hodnota z poľa názov v administrácii, upravené špeciálne znaky aby ho bolo možné použiť v HTML atribúte
+- ```${hint}``` - HTML obsah poľa **Nápoveda** položky viackrokového formulára. Vkladá sa za názov poľa do `<div class="form-hint">${hint}</div>`. Ak nápoveda nie je zadaná, značka sa nahradí prázdnym textom.
 - ```${value}``` - text z poľa hodnota v administrácii
 - ```${valueSanitized}``` - hodnota poľa upravená bez medzier, diakritiky a špeciálnych znakov na použitie v HTML atribúte
 - ```${placeholder}``` - zástupný text, zobrazí sa keď má pole prázdnu hodnotu

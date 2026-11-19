@@ -27,6 +27,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.system.translation.TranslationService;
+import sk.iway.iwcm.system.translation.TranslationException;
 
 /**
  * Zabezpecuje zrkadlenie web stranky podla sync_id v databaze
@@ -62,6 +63,29 @@ public class DocMirroringServiceV9 {
          if (doc.getSyncId()>1) {
             //najdi k tomu mirror verziu
             List<DocDetails> syncedDocs = getDocBySyncId(doc.getSyncId(), doc.getDocId());
+            GroupDetails group = groupsDB.getGroup(doc.getGroupId());
+
+            // Move existing mirrors before deciding which destinations need a new copy.
+            if (syncedDocs.size()>0 && group != null) {
+               List<GroupDetails> syncedGroups = GroupMirroringServiceV9.getGroupsBySyncId(group.getSyncId(), group.getGroupId());
+               for (DocDetails syncedDoc : syncedDocs) {
+                  GroupDetails syncedGroup = groupsDB.getGroup(syncedDoc.getGroupId());
+                  GroupDetails syncedCorrectGroup = MirroringService.selectMappedGroup(syncedGroup, syncedGroups);
+                  if (syncedCorrectGroup != null) {
+                     if (syncedGroup.getGroupId()!=syncedCorrectGroup.getGroupId()) {
+                        Logger.debug(DocMirroringServiceV9.class, "NESEDI PARENT GROUP, syncedGroup="+syncedGroup.toString()+" syncedCorrectGroup="+syncedCorrectGroup.toString());
+                        DocDetails docToSave = docDB.getDoc(syncedDoc.getDocId());
+                        docToSave.setGroupId(syncedCorrectGroup.getGroupId());
+                        docToSave.setAuthorId(doc.getAuthorId());
+                        if (!DocDB.saveDoc(docToSave, false)) return;
+                        // Keep the detached list current without changing its author-based translation decisions.
+                        syncedDoc.setGroupId(docToSave.getGroupId());
+                        MirroringService.forceReloadTree();
+                     }
+                  }
+               }
+            }
+
             List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(doc.getGroupId());
             List<GroupDetails> mappedGroupsListNotExisting = new ArrayList<>();
 
@@ -85,14 +109,22 @@ public class DocMirroringServiceV9 {
 
                if (MirroringService.isEnabled(doc.getGroupId())==false) return;
 
-               GroupDetails group = groupsDB.getGroup(doc.getGroupId());
                //vytvor kopie adresara v ostatnych mapovanych adresaroch
 
                TranslationService translator = new TranslationService(GroupMirroringServiceV9.getLanguage(group), null);
 
                for (GroupDetails mappedGroup : mappedGroupsList) {
                   translator.setToLanguage(GroupMirroringServiceV9.getLanguage(mappedGroup));
-                  String translatedTitle = translator.translate(doc.getTitle());
+                  String translatedTitle;
+                  boolean translateContent = true;
+                  try {
+                     translatedTitle = Tools.removeNbsp(translator.translateOrThrow(doc.getTitle()));
+                  } catch (TranslationException ex) {
+                     Logger.error(DocMirroringServiceV9.class, "Using source content for page mirror after translation failure, docId=" + doc.getDocId() + ", targetGroupId=" + mappedGroup.getGroupId(), ex);
+                     MirroringService.notifyTranslationFailure(ex);
+                     translatedTitle = Tools.removeNbsp(doc.getTitle());
+                     translateContent = false;
+                  }
 
                   DocDetails existing = docDB.getDocByTitle(translatedTitle, mappedGroup.getGroupId());
                   if (existing != null) {
@@ -112,13 +144,15 @@ public class DocMirroringServiceV9 {
                   DocDetails mirror = new DocDetails();
                   NullAwareBeanUtils.copyProperties(doc, mirror);
                   mirror.setDocId(-1);
-                  if (Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setAvailable(false);
+                  // Clones preserve source visibility without changing the setting for ordinary mirrors.
+                  if (!MirroringService.isCloneAction() && Constants.getBoolean("structureMirroringDisabledOnCreate")) mirror.setAvailable(false);
                   mirror.setGroupId(mappedGroup.getGroupId());
                   mirror.setSyncId(doc.getSyncId());
 
                   if (autoTranslatorUserId > 0) mirror.setAuthorId(autoTranslatorUserId);
 
-                  tranlateDoc(doc, mirror, translator);
+                  if (translateContent) translateDoc(doc, mirror, translator);
+                  else copySourceContent(doc, mirror);
 
                   //CloneStructure - keepVirtualPath
                   RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -159,31 +193,6 @@ public class DocMirroringServiceV9 {
             }
 
             if (syncedDocs.size()>0) {
-               //uz existuje, skontroluj ostatne kopie ci sa nepresunuli a podobne
-
-               //overenie zmeny parent adresara
-               GroupDetails group = groupsDB.getGroup(doc.getGroupId());
-               if (group != null) {
-                  List<GroupDetails> syncedGroups = GroupMirroringServiceV9.getGroupsBySyncId(group.getSyncId(), group.getGroupId());
-                  //ok mame zoznam parent adresarov, over ci su mapovane spravne
-                  for (DocDetails syncedDoc : syncedDocs) {
-                     GroupDetails syncedGroup = groupsDB.getGroup(syncedDoc.getGroupId());
-                     GroupDetails syncedCorrectGroup = MirroringService.selectMappedGroup(syncedGroup, syncedGroups);
-                     if (syncedCorrectGroup != null) {
-                        //porovnaj IDecko voci aktualnemu parentu
-                        if (syncedGroup.getGroupId()!=syncedCorrectGroup.getGroupId()) {
-                           Logger.debug(DocMirroringServiceV9.class, "NESEDI PARENT GROUP, syncedGroup="+syncedGroup.toString()+" syncedCorrectGroup="+syncedCorrectGroup.toString());
-                           //presun web stranku do spravneho adresara
-                           DocDetails docToSave = docDB.getDoc(syncedDoc.getDocId());
-                           docToSave.setGroupId(syncedCorrectGroup.getGroupId());
-                           docToSave.setAuthorId(doc.getAuthorId());
-                           DocDB.saveDoc(docToSave, false);
-                           MirroringService.forceReloadTree();
-                        }
-                     }
-                  }
-               }
-
                //overenie sort priority
                for (DocDetails syncedDoc : syncedDocs) {
                   if (syncedDoc.getSortPriority()!=doc.getSortPriority()) {
@@ -198,6 +207,9 @@ public class DocMirroringServiceV9 {
 
                //Set same, but translated data text to syncedDoc's
                for (DocDetails syncedDoc : syncedDocs) {
+                  // Drafts may update hidden mirrors, but must not replace published content.
+                  if (syncedDoc.isAvailable() && doc.getEditorFields() != null && !doc.getEditorFields().isRequestPublish()) continue;
+
                   //Indicate if we will translate body (data) of doc
                   boolean doTranslate = false;
 
@@ -218,8 +230,8 @@ public class DocMirroringServiceV9 {
                      TranslationService translator = new TranslationService(GroupMirroringServiceV9.getLanguage(group), GroupMirroringServiceV9.getLanguage(mappedGroup));
 
                      DocDetails docToSave = docDB.getDoc(syncedDoc.getDocId());
+                     translateDoc(doc, docToSave, translator);
                      if (autoTranslatorUserId>0) docToSave.setAuthorId(autoTranslatorUserId);
-                     tranlateDoc(doc, docToSave, translator);
                      DocDB.saveDoc(docToSave, false);
 
                      if(GroupsService.canSyncTitle(docToSave.getDocId(), mappedGroup.getGroupId()))
@@ -270,21 +282,37 @@ public class DocMirroringServiceV9 {
     * @param source - source doc (translated from)
     * @param doc - target doc
     * @param translator
+    * @return true when every field was translated successfully, false when source content was used
     */
-   private static void tranlateDoc(DocDetails source, DocDetails doc, TranslationService translator) {
+   static boolean translateDoc(DocDetails source, DocDetails doc, TranslationService translator) {
+      try {
+         // Prepare every field before changing the target, including failures after a partial translation.
+         String title = Tools.removeNbsp(translator.translateOrThrow(source.getTitle()));
+         String navbar = Tools.removeNbsp(translator.translateOrThrow(source.getNavbar()));
+         String perex = translator.translateOrThrow(source.getHtmlData());
+         String data = translator.translateOrThrow(source.getData());
 
-      doc.setTitle(translator.translate(source.getTitle()));
+         doc.setTitle(title);
+         doc.setNavbar(navbar);
+         doc.setHtmlData(perex);
+         doc.setData(data);
+         doc.setVirtualPath("");
+         return true;
+      } catch (TranslationException ex) {
+         Logger.error(DocMirroringServiceV9.class, "Using source content for page mirror after translation failure, docId=" + source.getDocId() + ", targetGroupId=" + doc.getGroupId(), ex);
+         copySourceContent(source, doc);
+         MirroringService.notifyTranslationFailure(ex);
+         return false;
+      }
+   }
 
-      doc.setNavbar(translator.translate(source.getNavbar()));
-
-      // translate perex
-      doc.setHtmlData(translator.translate(source.getHtmlData()));
-
-      //regenerate URL based on title
+   /** Copies current source content while keeping the destination's identity and regenerating its URL. */
+   private static void copySourceContent(DocDetails source, DocDetails doc) {
+      doc.setTitle(Tools.removeNbsp(source.getTitle()));
+      doc.setNavbar(Tools.removeNbsp(source.getNavbar()));
+      doc.setHtmlData(source.getHtmlData());
+      doc.setData(source.getData());
       doc.setVirtualPath("");
-
-      //translate doc body
-      doc.setData(translator.translate(source.getData()));
    }
 
    /**

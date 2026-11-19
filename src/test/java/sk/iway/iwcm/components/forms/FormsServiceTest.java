@@ -32,6 +32,7 @@ import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.doc.DocDB;
@@ -107,6 +108,33 @@ class FormsServiceTest {
             "field-${stepId}|${unknown}|${unknown:-fallback}|$field-${stepId}",
             FormsService.replaceFields("${id}|${unknown}|${unknown:-fallback}|$${id}", fields)
         );
+    }
+
+    /** Renders entity hints as HTML in page and email templates without expanding their contents again. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void replaceFieldsRendersHintHtmlAndDefaultsMissingHintsToEmpty(boolean isEmailRender) {
+        Prop prop = mock(Prop.class);
+        FormItemEntity entity = new FormItemEntity();
+        entity.setFieldType("text");
+        entity.setLabel("Name");
+        entity.setItemFormId("name-1");
+        entity.setHint("<p><strong>First paragraph</strong> &amp; text</p><p>&lt;em&gt; ${id} ${settings.subject}</p>");
+        String template = "<label for=\"${id}\">${label}</label><div class=\"form-hint\">${hint}</div>";
+
+        String html = FormsService.replaceFields(template, "contact", "", new JSONObject(entity),
+            "", isEmailRender, false, new HashSet<>(), prop, null);
+
+        assertEquals("<label for=\"name-1\">Name</label><div class=\"form-hint\">" + entity.getHint() + "</div>", html);
+
+        entity.setHint(null);
+        html = FormsService.replaceFields(template, "contact", "", new JSONObject(entity),
+            "", isEmailRender, false, new HashSet<>(), prop, null);
+        assertEquals("<label for=\"name-1\">Name</label><div class=\"form-hint\"></div>", html);
+
+        entity.setHint("");
+        assertEquals(html, FormsService.replaceFields(template, "contact", "", new JSONObject(entity),
+            "", isEmailRender, false, new HashSet<>(), prop, null));
     }
 
     @Test

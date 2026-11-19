@@ -6,7 +6,9 @@ Pomocou Klonovania štruktúry môžeme naklonovať celý obsah adresára v str�
 
 Pre vykonanie akcie klonovania je potrebné zadať ID zdrojového priečinka (ktorý priečinok klonujeme) a ID cieľového priečinka (kam na naklonuje zdrojový priečinok). ID priečinkov môžete zadať priamo, ak si ich pamätáte, alebo môže využiť možnosť **Vybrať**, ktorá otvorí nové okno so stromovou štruktúrou priečinkov, kde si konkrétny priečinok volíte kliknutím na jeho názov.
 
-Samotné klonovanie využíva [Zrkadlenie štruktúry](../docmirroring/README.md) a [Automatický preklad](../../../admin/setup/translation.md). To znamená, že pri spustení klonovania sa vybrané priečinky (ak už nie sú) automatický prepoja konfiguračnou premennou ```structureMirroringConfig```. Zo zdrojového priečinka sa naklonujú všetky pod-priečinky (aj ich všetky vnorenia) aj s web stránkami do cieľového priečinka s tým, že originálne a klonované priečinky/stránky sa medzi sebou prepoja. Jazyk sa preberie z nastavenia zdrojového a cieľového priečinka. Taktiež sa tieto priečinky/stránky aj automatický preložia, ak je nastavený prekladač.
+Klonovanie využíva [Zrkadlenie štruktúry](../docmirroring/README.md) a [Automatický preklad](../../../admin/setup/translation.md). Na čas klonovania sa vytvorí dočasné prepojenie zdrojového a cieľového priečinka platné iba pre túto operáciu. Do konfiguračnej premennej `structureMirroringConfig` sa uloží len pri zvolení možnosti **Po naklonovaní ponechať aktívne zrkadlenie štruktúry**. Súbežné úpravy iných stránok používajú pôvodné nastavenia zrkadlenia.
+
+Do cieľového priečinka sa naklonujú všetky podpriečinky aj s web stránkami. Ak je nastavený prekladač, obsah sa preloží podľa jazykov zdrojového a cieľového priečinka. Klonované stránky preberajú nastavenie zobrazovania zo zdroja a priečinky preberajú spôsob zobrazenia v menu; voľba `structureMirroringDisabledOnCreate` ich pri klonovaní neskrýva.
 
 ## Možnosti
 
@@ -45,6 +47,8 @@ Nakoľko klonovanie využíva [Automatický preklad](../../../admin/setup/transl
 ## Zrušenie zrkadlenia
 
 Okno ponúka možnosť [zrušiť zrkadlenie](../docmirroring/README.md) zvoleného priečinka. Stačí a v dolnej časti okna zvolíte priečinok a stlačíte tlačidlo <button class="btn btn-sm btn-outline-secondary" type="button">Zrušiť zrkadlenie</button>. Následne sa pre zvolený priečinok, všetky podpriečinky ako ich stránky vymaže hodnota `sync_id`, ktorá zabezpečovala zrkadlenie.
+
+Na zrušenie zrkadlenia potrebujete právo na **Klonovanie štruktúry** a právo upravovať zvolený priečinok aj všetky jeho podpriečinky. Pri zapnutom oddelení domén musí celá vybraná štruktúra patriť do aktuálne zvolenej domény. Ak je zapnutá kontrola prístupu k stránkam podľa používateľských skupín, overí sa aj prístup ku každej stránke v tejto štruktúre. Ak niektorá kontrola zlyhá, operácia sa odmietne a prepojenia zostanú zachované.
 
 ![](clone_structure_undo_sync.png)
 

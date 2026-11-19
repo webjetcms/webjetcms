@@ -26,11 +26,13 @@ Při události ```WebjetEventType.ON_START``` se kontroluje, zda adresář již 
 
 Při události ```WebjetEventType.AFTER_SAVE```, tedy po uložení adresáře podle ```syncId``` hledáme zrcadlené adresáře. Pokud žádné neexistují, vytvoří se nové adresáře. Je využito API ```groupsDB.setGroup(mirror, false);``` s druhým ```false``` atributem, který **nevyvolá** znovu událost po uložení adresáře (což by způsobilo rekurzi).
 
-Při existenci odkazu se ověřuje, zda nastala změna rodičovského adresáře. To je poměrně komplikovaná detekce. Nejprve se získá seznam propojených adresářů pro aktuální adresář. Následně se ověřuje, zda skutečně propojené adresáře mají rodiče z uvedeného seznamu. Pokud ne, tak se provede přesun adresáře do korektního.
+Při existenci odkazu se ověřuje rodičovský adresář každé zrcadlené verze. Pokud neodpovídá mapování nového rodiče, stávající verze se přesune. Až po aktualizaci jejího umístění se zjišťuje, zda je třeba vytvořit chybějící kopie. Tím se při přesunu zachovají ID a nevzniknou duplicitní složky.
+
+Uložení zrcadlené složky s parametrem `publishEvents=false` nevyvolá `SaveGroupListener`. Proto `GroupMirroringServiceV9` po přesunu v HTTP požadavku samostatně volá `WebpagesService.regenerateUrl(groupId, currentUser, request, true)`. Obnoví se automaticky generované nebo zděděné URL stránek v přesunuté složce a její podsložkách podle nového umístění.
 
 Ověření priority uspořádání je jednoduché - ověřují se propojené adresáře a shoda hodnoty priority uspořádání. Pokud není stejná, nastaví se.
 
-Při události ```WebjetEventType.AFTER_DELETE``` se voláním ```GroupsDB.deleteGroup``` vymažou i zrcadlené adresáře. Ty se typicky přesunou do koše. Zůstane jim sice nastaveno ```syncId```, ale jelikož se nacházejí mimo zrcadlenou strukturu, tak jejich následné změny již nejsou zrcadlené.
+Při události ```WebjetEventType.ON_DELETE``` se voláním ```GroupsDB.deleteGroup``` vymažou i zrcadlené adresáře. Událost se zpracuje před přesunem zdrojového adresáře do koše. Zrcadlení se provede pouze tehdy, pokud pro zdrojový adresář platí `MirroringService.isEnabled(groupId)`. Samotná zachovaná hodnota `syncId` v koši proto nestačí; výjimkou může být například kořenový adresář, jehož ID zůstalo v konfiguraci zrcadlení.
 
 ## Propojení web stránek
 
@@ -40,9 +42,57 @@ Podobně jako pro adresář při události ```WebjetEventType.ON_START``` se pro
 
 Při události ```WebjetEventType.AFTER_SAVE``` se získají propojené stránky. Pokud žádné neexistují vytvoří se voláním ```DocDB.saveDoc(mirror, false)```, atribut ```false``` řeší problém s rekurzí (nevyvolá znovu události). Jediný problém, který může nastat jsou práva a schvalování, to aktuální implementace neřeší. Pokud redaktor nemá práva na jinou jazykovou mutaci web stránka se stejně vytvoří.
 
-Pokud již aktuálně ukládaná stránka má propojené stránky podobně jako pro adresář se ověřuje správnost rodičovského adresáře a priority uspořádání.
+Pokud již aktuálně ukládaná stránka má propojené stránky, podobně jako u adresáře se nejprve přesunou stávající verze do správných složek. Jejich nové umístění se zohlední při zjišťování chybějících kopií, aby se místo přesunu nevytvořila další stránka. Následně se ověří priorita uspořádání.
 
-Mazání stránky se detekuje v ```SaveListener.handleDocSave(final WebjetEvent<DocDetails> event)```. Při události ```WebjetEventType.AFTER_DELETE``` se získá seznam zrcadlených stránek a vyvolá se ```DeleteServlet.deleteDoc```.
+Při ukládání pracovní verze (`doc.getEditorFields().isRequestPublish() == false`) se přeskočí překlad obsahu zrcadlených stránek s `available=true`. Nezveřejněné verze mohou být přeloženy podle stávajících pravidel pro `structureMirroringAutoTranslatorLogin`. Při publikování se tato pravidla vyhodnotí i pro zveřejněné verze. Ve starém postupu přes `EditorForm` předává `EditorDB` skutečný stav publikování do události `AFTER_SAVE` a `SaveListener.handleEditorSave` ho přenese do `DocEditorFields`.
+
+Mazání stránky se detekuje v ```SaveListener.handleDocSave(final WebjetEvent<DocDetails> event)```. Při události ```WebjetEventType.ON_DELETE``` se získá seznam zrcadlených stránek a pro každou se zavolá `EditorService.deleteWebpage(syncedDoc, false)`. Zrcadlení musí být aktivní pro složku zdrojové stránky.
+
+Před vyvoláním `ON_DELETE` ověří `EditorService.deleteWebpageLogic` přes `checkPermissions(currentUser, mirror, true)` práva ke všem zrcadleným stránkám, které se ještě v tomto požadavku nesmazaly. Pokud kontrola selže, mazání zdrojové stránky a jejích zrcadlených verzí se nezačne. Kontrola se provádí ve větvi, která již může mazání provést; požadavky čekající na schválení nadále používají schvalovací postup. `GroupsRestController.deleteItem` při mazání složky vyžaduje také právo `deleteDir`.
+
+`DeleteRequestContext` eviduje dokončená smazání včetně přesunu do koše v atributech aktuálního požadavku. Klíč rozlišuje typ položky a její ID. `EditorService` a `GroupsDB` zaznamenají položky až po dokončení mazání; neúspěšná operace ani žádost o schválení se za smazání nepovažují. Při hromadném výběru více zrcadlených položek se již zpracované položky přeskočí, takže se po přesunu do koše podruhé nesmažou.
+
+## Náhled zrcadlených položek před smazáním
+
+Služba `sk.iway.iwcm.editor.service.DeleteMirrorsService` poskytuje údaje pro potvrzovací okno mazání. Data pouze načte, samotné mazání nadále provádí existující postup přes události `ON_DELETE`.
+
+| Požadavek | Výsledek |
+| --- | --- |
+| `POST /admin/rest/web-pages/deletion-preview` | Přímo zrcadlené verze vybraných web stránek. |
+| `POST /admin/rest/groups/deletion-preview` | Přímo zrcadlené složky bez rozpisu jejich stránek a podsložek. |
+
+Oba požadavky přijímají formulářový parametr `ids`, tedy kladné ID oddělené čárkou. Vyžadují přihlášení, právo `menuWebpages` a přístup k vybraným položkám. U stránek se ověřuje `EditorService.isPageEditable(user, doc, true)`, u složek práva `editDir`, `deleteDir` a `GroupsDB.isGroupEditable`. V MultiWeb režimu se kontroluje i doména nájemce.
+
+Odpověď `DeleteMirrorsResult` obsahuje:
+
+- `items` – seznam položek s poli `id`, `fullPath` a `domainName`. Vybrané položky a duplicity jsou vyloučeny.
+- `hiddenMirrors` – hodnota `true`, pokud existuje i zrcadlená položka, jejíž cestu uživatel nesmí vidět. Klient zobrazí obecné upozornění bez její identifikace.
+
+Úspěšné načtení náhledu nepotvrzuje oprávnění smazat všechny zrcadlené stránky. Klient po načtení povolí potvrzení iu `hiddenMirrors=true`, ale samotné mazání stránky ještě provede výše uvedenou kontrolu práv ke všem jejím verzím.
+
+Náhled vychází z `syncId > 1` az `MirroringService.isEnabled(...)` pro zdrojovou položku, stejně jako mazání. Neplatné ID se odmítne stavem `400`, neexistující položka stavem `404` a nepřístupná zdrojová položka stavem `403`.
+
+Funkce `bindDeleteMirrors` v `admin/v9/src/js/pages/web-pages-list/delete-mirrors.js` během načítání blokuje potvrzení mazání. Při chybě požadavku nebo neplatném formátu odpovědi jej ponechá zablokováno. Po zavření nebo opětovném otevření okna se starý požadavek zruší a jeho opožděná odpověď se ignoruje.
+
+## Klonování a zrušení zrcadlení
+
+`CloneStructureService` během klonování uloží dočasné mapování do atributu `RequestBean` s názvem `structureMirroringConfig`. Metody `MirroringService.isEnabled` a `getRootIds` použijí toto mapování pouze v daném požadavku. `MirroringService.isCloneAction()` rozpozná klonování podle přítomnosti atributu. Ověřené ID zdrojové a cílové složky se čtou z parametrů `srcGroupId` a `destGroupId` v `RequestBean`.
+
+Klonování nemění globální hodnoty `structureMirroringDisabledOnCreate` ani `syncGroupAndWebpageTitle`. Zrcadlící služby při klonování zachovají zobrazování zdrojových stránek a způsob zobrazení složek v menu; `GroupsService.canSyncTitle` během tohoto požadavku vypne synchronizaci názvu složky s hlavní stránkou. Souběžné požadavky používají běžná nastavení.
+
+Původní hodnota atributu se obnoví v bloku `finally`. Při `keepMirroring=true` se mapování následně sloučí s aktuální sdílenou konfigurací a uloží přes `ConfDB.setName`. Metoda `saveMirroringConfig` je synchronizována v rámci jedné JVM, aby souběžná klonování navzájem nepřepsala přidaná mapování. U `keepMirroring=false` se sdílená konfigurace nemění; odstraní se `syncId` v cíli i ve zdroji, pokud zdroj před klonováním neměl vlastní `syncId`.
+
+`POST /apps/clone_structure/admin/cancel_sync` přijímá parametr `rootGroupId` a vyžaduje právo `cmp_clone_structure`. Neplatné nebo neexistující ID se odmítne stavem `400`. Před voláním `MirroringService.clearSyncId` se pro celý podstrom včetně kořene ověří `GroupsDB.isGroupEditable` ; u `multiDomainEnabled=true` i příslušnost k aktuální doméně. U `adminCheckUserGroups=true` se navíc ověří `DocDB.canAccess(doc, user, true)` pro každou stránku. Při nedostatečných právech nebo nesprávné doméně se vrátí `403` beze změny propojení.
+
+## Zrcadlení ve stromové struktuře administrace
+
+`GroupsTreeService` doplňuje do uzlů `GroupsJsTreeItem` seznam `mirrors`. Každý odkaz obsahuje `groupId`, `language` a `path`. Údaje se přidávají pouze do hlavního stromu web stránek, při zapnuté volbě **Zobrazit zrcadlení**, při prvním vykreslení nebo při požadavku s `showMirrorLinks=true`, a pouze uživatelům s právy `menuWebpages` a `cmp_mirroring`. Systémový strom, koš a výběrová pole složek tyto odkazy nedostávají.
+
+Odkazy se vyhledávají podle `syncId` ; cílové složky se filtrují podle domény, koše a oprávnění. Jazyk se určí přes `GroupMirroringServiceV9.getLanguage`, normalizuje se na malá písmena se spojovníkem a kód `cz` se změní na `cs`. Odkazy jsou seřazeny podle jazyka a ID. Index složek i výsledky vyhledávání se sdílejí pouze v rámci jednoho HTTP požadavku, takže další požadavek znovu vyhodnotí aktuální oprávnění a data.
+
+Zobrazení jazykových odkazů i diagnostických ikon řídí uživatelské nastavení `showMirrorings` v `jstreeSettings_web-pages-list` ; při načítání stromu se přenáší parametrem `showMirrorings`. Metoda `sk.iway.iwcm.doc.mirroring.rest.MirroringService.getGroupProblems(request)` používá stejné kontroly jako tabulka zrcadlení a pro každé volání vlastní instanci služby. Vícenásobné mapování má přednost před nerovnoměrným vnořením. Diagnostika se přenáší v `mirroringProblem` s poli `icon` a `title`. Frontend ji zobrazí vpravo před jazykovými odkazy; běžná ikona složky se nemění. Složky s ikonou `ti ti-folder-x`, která označuje omezený přístup, diagnostiku nedostávají.
+
+Služba `sk.iway.iwcm.doc.mirroring.rest.MirroringService` pro administrační tabulky má rozsah `@RequestScope`. Doména, typ operace, nalezené jazyky, mapování jazyků na pole a validační chyby se uchovávají pouze po dobu jednoho požadavku, aby se nepřenášely mezi souběžnými operacemi.
 
 ## Vynucení obnovení stromové struktury
 

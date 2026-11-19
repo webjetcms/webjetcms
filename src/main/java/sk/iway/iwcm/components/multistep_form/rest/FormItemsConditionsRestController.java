@@ -31,6 +31,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
 @RequestMapping("/admin/rest/form-items-conditions")
@@ -54,8 +55,11 @@ public class FormItemsConditionsRestController extends DatatableRestControllerV2
 
         String formName = Tools.getStringValue(getRequest().getParameter("formName"), null);
         long stepId = Tools.getLongValue(getRequest().getParameter("stepId"), -1L);
+        long itemId = Tools.getLongValue(getRequest().getParameter("itemId"), -1L);
 
-        page.addOptions("itemFormId", multistepFormsService.getAvailableConditionFields(formName, stepId, getProp()), "label", "value", true);
+        Map<String, List<LabelValue>> valueOptions = multistepFormsService.getConditionValueOptions(formName, stepId, getProp());
+        page.addOptions("itemFormId", multistepFormsService.getAvailableConditionFields(formName, stepId, itemId, getProp()), "label", "value", false);
+        page.getOptions().get("itemFormId").forEach(option -> option.setOriginal(valueOptions.get(option.getValue())));
         page.addOptions("operator", OperatorType.getLabelValues(getProp()), "label", "value", true);
         page.addOptions("joinOperatorType", JoinOperatorType.getLabelValues(), "label", "value", true);
 

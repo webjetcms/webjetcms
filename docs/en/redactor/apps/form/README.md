@@ -16,7 +16,13 @@ In the form editor, you can change the note field (in which you can record the p
 
 ![](detail-editnote.png)
 
-Deleting all submitted records in a form's details does not delete its definition, settings, or items. You can only delete the form itself by deleting its controlling record in the form list.
+Deleting all submitted records in a form detail does not delete its definition, settings, or items.
+
+The **Delete** button in the form list will delete submitted records. If the form is used by a web page with display enabled or contains data in the archive, its settings, steps, items, and conditions will be preserved.
+
+If the form is not used by any displayed page and has no data in the archive, it will be deleted in its entirety, including settings, steps, items, and conditions. A notification will confirm the complete deletion.
+
+Deleting a form from the archive list only removes its archive records. Settings and items are preserved if the form remains in the active list or is used by a displayed page.
 
 ## Create a form
 
