@@ -3,12 +3,13 @@ package sk.iway.iwcm.branch;
 import java.util.*;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.media.MediaGroupRepository;
-import sk.iway.iwcm.components.media.MediaRepository;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.system.jpa.XssAttributeConverter;
 import sk.iway.spirit.model.*;
 
 /** Detached document media over the same whole-object selection used by pages and files. */
 public final class BranchMedia {
+    private static final XssAttributeConverter DISPLAY_TEXT=new XssAttributeConverter();
     private final BranchView view;
     private final Map<Integer,Map<String,Object>> details=new HashMap<>();
     private Map<Integer,MediaGroupBean> definitions;
@@ -45,22 +46,15 @@ public final class BranchMedia {
     }
 
     private List<Map<String,Object>> read(int owner,int mediaId,List<MediaGroupBean> categories) {
-        Map<Integer,Map<String,Object>> rows=new LinkedHashMap<>();
-        MediaRepository repository=Tools.getSpringBean("mediaRepository",MediaRepository.class);
         int domainId=view.context().domainId();
-        List<Media> liveMedia;
-        if(mediaId>0) liveMedia=repository.findFirstByIdAndDomainId((long)mediaId,domainId).stream().filter(media->"documents".equals(media.getMediaFkTableName())).toList();
-        else if(owner>0) liveMedia=repository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(owner,"documents",domainId);
-        else liveMedia=repository.findAllByMediaFkTableNameAndDomainId("documents",domainId);
-        for(Media media:liveMedia) rows.put(media.getMediaId(),row(media));
+        Map<Integer,Map<String,Object>> rows=BranchMediaRows.read(owner,mediaId,domainId);
         for(Map<String,Object> work:view.workRows(BranchType.MEDIA)) {
             int id=number(work,"media_id");
             if(mediaId>0&&id!=mediaId) continue;
             if(owner>0&&number(work,"media_fk_id")!=owner&&!rows.containsKey(id)) continue;
             Map<String,Object> live=rows.get(id);
             // Include a moved-in record's actual LIVE owner when resolving whole-object conflicts.
-            if(owner>0&&live==null) live=repository.findFirstByIdAndDomainId((long)id,domainId)
-                .filter(media->"documents".equals(media.getMediaFkTableName())).map(BranchMedia::row).orElse(null);
+            if(owner>0&&live==null) live=BranchMediaRows.read(-1,id,domainId).get(id);
             BranchSnapshot snapshot=live==null?BranchSnapshot.absent():BranchStore.snapshot(BranchType.MEDIA,live);
             if(!view.selectWork(BranchType.MEDIA,work,snapshot)) continue;
             if("DELETE".equals(work.get("operation"))) {rows.remove(id);continue;}
@@ -85,14 +79,8 @@ public final class BranchMedia {
         result.sort(Comparator.comparingInt((Map<String,Object> row)->number(row,"media_sort_order")).thenComparingInt(row->number(row,"media_id")));return result;
     }
     private Media bean(Map<String,Object> row) { return bean(row,BranchFields.normalizedIds(row.get("group_ids_snapshot")),definitions()); }
-    private static Map<String,Object> row(Media media) {
-        Map<String,Object> row=BranchEditorRows.media(media,BranchMediaMapper.initialValues(media.getMediaId(),media.getMediaFkId(),media.getDomainId()));
-        row.put("last_update",media.getLastUpdate());
-        row.put("group_ids_snapshot",media.getGroups().stream().map(MediaGroupBean::getMediaGroupId).toList());
-        return row;
-    }
     private static int number(Map<String,?> row,String column){Object value=row.get(column);return value instanceof Number n?n.intValue():0;}
-    private static String text(Map<String,?> row,String column){return (String)row.get(column);}
+    private static String text(Map<String,?> row,String column){return DISPLAY_TEXT.convertToEntityAttribute((String)row.get(column));}
     private static Media bean(Map<String,Object> row,List<Integer> ids,Map<Integer,MediaGroupBean> definitions) {
         Media media=new Media();media.setMediaId(number(row,"media_id"));media.setMediaFkId(number(row,"media_fk_id"));media.setDomainId(number(row,"domain_id"));
         media.setMediaFkTableName(text(row,"media_fk_table_name"));media.setMediaLink(text(row,"media_link"));media.setMediaThumbLink(text(row,"media_thumb_link"));media.setMediaSortOrder(number(row,"media_sort_order"));media.setMediaGroup(text(row,"media_group"));

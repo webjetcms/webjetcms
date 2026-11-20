@@ -22,6 +22,11 @@ import sk.iway.iwcm.PkeyGenerator;
  * All row writes use one JDBC connection and increment the package revision.
  */
 public final class BranchStore {
+    /** Distinguishes a genuine concurrent edit from other storage or validation failures. */
+    static final class StaleContentException extends IllegalStateException {
+        StaleContentException(String source) { super(source+" changed; reload the object"); }
+    }
+
     @FunctionalInterface interface Connections { Connection open() throws SQLException; }
     private final Connections connections;
     public BranchStore() { this(DBPool::getConnection); }
@@ -57,12 +62,12 @@ public final class BranchStore {
         if (existing.isPresent()) {
             Map<String, Object> old = existing.get();
             BranchSnapshot oldWork = "DELETE".equals(old.get("operation")) ? deletedSnapshot(type, old) : snapshot(type, old);
-            if (!oldWork.hash().equals(expectedHash)) throw new IllegalStateException("WORK changed; reload the object");
+            if (!oldWork.hash().equals(expectedHash)) throw new StaleContentException("WORK");
             base = BranchSnapshot.fromJson((String)old.get("base_snapshot"));
         } else {
             Map<String, Object> live = readLive(connection, type, id).orElseThrow(() -> new IllegalStateException("LIVE object is absent"));
             base = snapshot(type, live);
-            if (!base.hash().equals(expectedHash)) throw new IllegalStateException("LIVE changed; reload the object");
+            if (!base.hash().equals(expectedHash)) throw new StaleContentException("LIVE");
         }
         Map<String, Object> row = new LinkedHashMap<>(values);
         row.put(type.idColumn(), id);
@@ -123,7 +128,7 @@ public final class BranchStore {
 
     void remove(Connection connection, BranchContext context, BranchType type, int id, String expectedHash) throws SQLException {
         Map<String,Object> row = readWork(connection,context.branchId(),type,id).orElseThrow(() -> new IllegalStateException("No working change"));
-        if (!change(type,row).work().hash().equals(expectedHash)) throw new IllegalStateException("WORK changed; reload the object");
+        if (!change(type,row).work().hash().equals(expectedHash)) throw new StaleContentException("WORK");
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM `"+type.workTable()+"` WHERE branch_id=? AND "+type.idColumn()+"=?")) {
             statement.setLong(1,context.branchId()); statement.setInt(2,id); statement.executeUpdate();
         }

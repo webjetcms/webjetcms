@@ -8,10 +8,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.sql.Connection;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -25,6 +27,40 @@ import sk.iway.spirit.model.Media;
 
 /** Guards the query scope of branch media reads independently of the domain's media count. */
 class BranchMediaReadTest {
+    /** Display escaping must not manufacture a concurrent LIVE edit for unchanged stored content. */
+    @Test
+    void editorHashMatchesStoredMediaBeforeJpaDisplayEscaping() {
+        try (Fixture f = new Fixture(); var db = mockStatic(DB.class, CALLS_REAL_METHODS)) {
+            db.when(() -> DB.isHtmlAllowed("jpaentity")).thenReturn(false);
+            String storedTitle = "<img src=x onerror=alert(2)>";
+            f.stored.setMediaTitleSk(storedTitle);
+            Map<String,Object> raw = BranchEditorRows.media(f.stored, BranchMediaMapper.initialValues(7,42,1));
+            raw.put("group_ids_snapshot", List.of());
+            f.rows.when(() -> BranchMediaRows.read(-1,7,1)).thenReturn(new LinkedHashMap<>(Map.of(7,raw)));
+
+            Media displayed = BranchMedia.one(7);
+
+            assertNotEquals(storedTitle, displayed.getMediaTitleSk());
+            assertEquals(BranchStore.snapshot(BranchType.MEDIA,raw).hash(), displayed.getEditorFields().getBranchHash());
+        }
+    }
+
+    /** A real change after opening the editor must still be rejected before writing WORK. */
+    @Test
+    void changedRawMediaStillRejectsTheDisplayedHash() throws Exception {
+        try(Fixture f=new Fixture();var store=mockStatic(BranchStore.class,CALLS_REAL_METHODS)) {
+            String displayedHash=BranchMedia.one(7).getEditorFields().getBranchHash();
+            Map<String,Object> changed=row(f.stored);changed.put("media_title_sk","Another user's update");
+            Connection connection=mock(Connection.class);
+            store.when(()->BranchStore.readWork(connection,1,BranchType.MEDIA,7)).thenReturn(Optional.empty());
+            store.when(()->BranchStore.readLive(connection,BranchType.MEDIA,7)).thenReturn(Optional.of(changed));
+            clearInvocations(connection);
+
+            assertThrows(BranchStore.StaleContentException.class,()->new BranchStore().put(connection,f.context,BranchType.MEDIA,7,changed,displayedHash,false));
+            verifyNoInteractions(connection);
+        }
+    }
+
     /** Loading and rechecking one editor record must not materialize every medium in the domain. */
     @Test
     void repeatedDetailReadsDoNotLoadTheDomainMediaList() {
@@ -33,8 +69,8 @@ class BranchMediaReadTest {
             displayed.setMediaTitleSk("Unsaved edit"); displayed.setMediaFkId(999);
             assertEquals("Attachment", BranchMedia.one(7).getMediaTitleSk());
             assertEquals(42, BranchMedia.one(7).getMediaFkId());
-            verify(f.repository, never()).findAllByMediaFkTableNameAndDomainId(anyString(), anyInt());
-            verify(f.repository, times(1)).findFirstByIdAndDomainId(7L, 1);
+            verifyNoInteractions(f.repository);
+            f.rows.verify(() -> BranchMediaRows.read(-1,7,1), times(1));
             verify(f.groups, atMostOnce()).findAllByOrderByIdAsc();
         }
     }
@@ -64,8 +100,8 @@ class BranchMediaReadTest {
 
             assertEquals(7, controller.getOne(7).getMediaId());
 
-            verify(f.repository, times(1)).findFirstByIdAndDomainId(7L, 1);
-            verify(f.repository, never()).findAllByMediaFkTableNameAndDomainId(anyString(), anyInt());
+            f.rows.verify(() -> BranchMediaRows.read(-1,7,1), times(1));
+            verifyNoInteractions(f.repository);
         }
     }
 
@@ -74,9 +110,9 @@ class BranchMediaReadTest {
     void ownerListDoesNotReadUnrelatedPages() {
         try (Fixture f = new Fixture()) {
             Media second = media(8, 42);
-            when(f.repository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(42, "documents", 1)).thenReturn(List.of(f.stored, second));
+            f.rows.when(() -> BranchMediaRows.read(42,0,1)).thenReturn(new LinkedHashMap<>(Map.of(7,row(f.stored),8,row(second))));
             assertEquals(List.of(7, 8), BranchMedia.list(42, null).stream().map(Media::getMediaId).toList());
-            verify(f.repository, never()).findAllByMediaFkTableNameAndDomainId(anyString(), anyInt());
+            verifyNoInteractions(f.repository);
             verify(f.view, times(1)).document(42, true);
         }
     }
@@ -100,7 +136,7 @@ class BranchMediaReadTest {
             f.views.when(BranchView::current).thenReturn(next);
             assertNull(BranchMedia.one(9));
             assertNull(BranchMedia.one(9));
-            verify(f.repository, times(2)).findFirstByIdAndDomainId(9L, 1);
+            f.rows.verify(() -> BranchMediaRows.read(-1,9,1), times(2));
         }
     }
 
@@ -109,12 +145,18 @@ class BranchMediaReadTest {
     void rejectsOtherMediaSetsAndMissingOwners() {
         try (Fixture f = new Fixture()) {
             f.stored.setMediaFkTableName("planned_documents");
+            f.rows.when(() -> BranchMediaRows.read(-1,7,1)).thenReturn(new LinkedHashMap<>());
             assertNull(BranchMedia.one(7));
             Media orphan = media(8, 999);
-            when(f.repository.findFirstByIdAndDomainId(8L, 1)).thenReturn(Optional.of(orphan));
+            f.rows.when(() -> BranchMediaRows.read(-1,8,1)).thenReturn(new LinkedHashMap<>(Map.of(8,row(orphan))));
             assertNull(BranchMedia.one(8));
             verifyNoInteractions(f.groups);
         }
+    }
+
+    private static Map<String,Object> row(Media media) {
+        Map<String,Object> row=BranchEditorRows.media(media,BranchMediaMapper.initialValues(media.getMediaId(),media.getMediaFkId(),media.getDomainId()));
+        row.put("last_update",media.getLastUpdate());row.put("group_ids_snapshot",List.of());return row;
     }
 
     private static Media media(int id, int owner) {
@@ -131,6 +173,7 @@ class BranchMediaReadTest {
         final MediaGroupRepository groups = mock(MediaGroupRepository.class);
         final BranchContext context = new BranchContext(1, "media.example", 5, BranchContext.Mode.ADMIN);
         final Media stored = media(7, 42);
+        final MockedStatic<BranchMediaRows> rows = mockStatic(BranchMediaRows.class);
         final MockedStatic<BranchView> views = mockStatic(BranchView.class);
         final MockedStatic<BranchContexts> contexts = mockStatic(BranchContexts.class);
         final MockedStatic<BranchDomains> domains = mockStatic(BranchDomains.class);
@@ -142,8 +185,12 @@ class BranchMediaReadTest {
             doReturn(List.of()).when(view).workRows(BranchType.MEDIA);
             doReturn(null).when(view).document(anyInt(), eq(true));
             doReturn(page).when(view).document(42, true);
-            when(repository.findAllByMediaFkTableNameAndDomainId("documents", 1)).thenReturn(List.of(stored));
-            when(repository.findFirstByIdAndDomainId(7L, 1)).thenReturn(Optional.of(stored));
+            rows.when(() -> BranchMediaRows.read(anyInt(),anyInt(),anyInt())).thenAnswer(call -> {
+                int owner=call.getArgument(0), id=call.getArgument(1);
+                Map<Integer,Map<String,Object>> result=new LinkedHashMap<>();
+                if ((id==7 || id==0 && owner==42) && "documents".equals(stored.getMediaFkTableName())) result.put(7,row(stored));
+                return result;
+            });
             views.when(BranchView::current).thenReturn(view);
             contexts.when(BranchContexts::current).thenReturn(context);
             domains.when(() -> BranchDomains.id("media.example")).thenReturn(1);
@@ -151,6 +198,6 @@ class BranchMediaReadTest {
             tools.when(() -> Tools.getSpringBean("mediaGroupRepository", MediaGroupRepository.class)).thenReturn(groups);
         }
 
-        @Override public void close() { tools.close(); domains.close(); contexts.close(); views.close(); }
+        @Override public void close() { tools.close(); domains.close(); contexts.close(); views.close(); rows.close(); }
     }
 }

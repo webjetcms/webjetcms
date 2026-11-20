@@ -10,6 +10,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.spirit.model.*;
 
 /** Document-owned media edits use WORK only; the owning page is never saved as a side effect. */
@@ -103,6 +104,7 @@ public final class BranchMediaEditor {
     private <T>T write(BranchStore.Work<T> work) {
         try {return store.write(context,work);}
         catch(SQLException ex) {throw new IllegalStateException("Cannot save branch media",ex);}
+        catch(BranchStore.StaleContentException ex) {throw new ResponseStatusException(HttpStatus.CONFLICT,Prop.getInstance(request).getText("branches.media.stale"),ex);}
         catch(IllegalStateException ex) {throw new ResponseStatusException(HttpStatus.CONFLICT,ex.getMessage(),ex);}
         finally {BranchView.invalidate();}
     }
