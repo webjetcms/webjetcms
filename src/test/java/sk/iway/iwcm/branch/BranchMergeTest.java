@@ -424,6 +424,25 @@ class BranchMergeTest extends BranchJpaTest {
         assertEquals("autotest P06 restored category",query("SELECT perex_group_name FROM perex_groups WHERE perex_group_id="+f.perex));
     }
 
+    /** The shared merge action schedules the stored date and rejects a review from before a date edit. */
+    @Test void publicationUsesTheStoredDateAndNeverPublishesItImmediately()throws Exception {
+        var before=ready();var live=productionInputs();
+        long at=System.currentTimeMillis()/1000*1000+120_000;
+        var branch=branchService().find(f.branch,DOMAIN).orElseThrow();
+        branch.setPublishAt(new Timestamp(at));branch.setRevision(branch.getRevision()+1);
+        sk.iway.iwcm.Tools.getSpringBean("branchRepository",BranchRepository.class).saveAndFlush(branch);
+        assertEquals("DRAFT",detail().state());assertEquals(live,productionInputs());
+        assertThrows(ResponseStatusException.class,()->service.enqueue(f.branch,DOMAIN,user,before.revision(),before.preparationHash(),false));
+        var reviewed=ready();
+        var scheduled=service.enqueue(f.branch,DOMAIN,user,reviewed.revision(),reviewed.preparationHash(),false);
+        assertEquals("SCHEDULED",scheduled.state());assertEquals(at,scheduled.publishAt());
+        assertEquals(user.getUserId(),scheduled.scheduledBy());assertEquals(live,productionInputs());
+        assertThrows(ResponseStatusException.class,()->service.claimScheduled(f.branch,DOMAIN,user,scheduled.revision(),scheduled.preparationHash()));
+        service.unschedule(f.branch,DOMAIN,user,scheduled.revision());
+        var immediate=ready();
+        assertEquals("MERGING",service.enqueue(f.branch,DOMAIN,user,immediate.revision(),immediate.preparationHash(),false).state());
+    }
+
     /** T12: one term is versioned atomically and returning to draft preserves every WORK input. */
     @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07ScheduleMoveCancelAndRejectStaleInputs()throws Exception {
         var initial=ready();Map<String,String> work=workInputs();Map<String,String> live=productionInputs();

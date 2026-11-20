@@ -39,7 +39,7 @@ export function initBranchTable(columns, screen, api) {
         tabs: [
             {id: 'basic', title: WJ.translate('datatable.tab.basic'), selected: true},
             {id: 'changes', title: tr('merge.changesTab'), hideOnCreate: true},
-            {id: 'publishing', title: tr('merge.publishingTab'), hideOnCreate: true, content: '<div class="pg-branch-panel" id="branch-publishing-panel"></div>'}
+            {id: 'publishing', title: tr('merge.publishingTab'), hideOnCreate: true}
         ],
         onEdit: (dt, row, branch) => {
             const showChanges = opening && Number(opening.id) === Number(branch.id);

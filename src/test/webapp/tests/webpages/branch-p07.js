@@ -1,6 +1,7 @@
 Feature('webpages.branch-p07').tag('@singlethread');
 
 if (process.env.WEBJET_P07_BROWSER === 'true') {
+    const { DTE } = inject();
     const fs = require('fs');
     const path = require('path');
     const read = file => Object.fromEntries(fs.readFileSync(file, 'utf8').trim().split('\n').filter(line => line && !line.startsWith('#')).map(line => {
@@ -43,9 +44,7 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
     }
 
     async function open(I, f) {
-        I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${f.groupId}#branchCompare=${f.branchId}`);
-        // A fragment-only navigation does not initialize the screen again.
-        I.refreshPage();
+        I.amOnPage(`/admin/v9/webpages/branches/?id=${f.branchId}&tab=changes`);
         I.waitForVisible(dialog, 30);
         I.waitForElement(`${dialog} [data-branch-compare="${f.pageId}"]`, 30);
         I.waitForInvisible(busy, 30);
@@ -75,19 +74,25 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
 
     async function schedule(I, f, instant, keyboard = false) {
         I.clickCss(scheduleTab);
-        I.waitForEnabled('#branch-merge-schedule-confirm', 30);
-        const value = await I.executeScript(at => {
-            const parts = new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Bratislava', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date(at));
-            const part = type => parts.find(item => item.type === type).value;
-            return `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}`;
-        }, instant);
-        // CodeceptJS fillField types by segments into native datetime-local; Playwright fill uses its ISO value.
-        await I.usePlaywrightTo('fill native scheduling date and time', async ({page}) => { await page.locator('#branch-merge-publish-at').fill(value); });
-        if (keyboard) { I.focus('#branch-merge-schedule-confirm'); I.pressKey('Enter'); }
-        else I.click('#branch-merge-schedule-confirm');
-        I.waitForInvisible(busy, 30);
+        if ((await report(I, f)).state === 'SCHEDULED') {
+            I.click('#branch-merge-unschedule');
+            I.waitForVisible('#branch-merge-unschedule-confirm', 10);
+            I.click('#branch-merge-unschedule-confirm');
+            I.waitForInvisible('#branch-merge-scheduled', 30);
+        }
+        I.waitForEnabled('#DTE_Field_publishAt', 30);
+        I.fillField('#DTE_Field_publishAt', I.formatDateTime(instant));
+        DTE.save('branchesDataTable', true);
+        I.assertEqual((await report(I, f)).state, 'DRAFT');
+        await open(I, f);
+        I.waitForEnabled('#branch-merge-publish', 30);
+        I.click('#branch-merge-publish');
+        I.waitForVisible('#branch-merge-confirm', 10);
+        if (keyboard) { I.focus('#branch-merge-confirm'); I.pressKey('Enter'); }
+        else I.click('#branch-merge-confirm');
+        I.waitForInvisible('#branch-merge-confirmation', 30);
+        I.clickCss(scheduleTab);
         I.waitForVisible('#branch-merge-scheduled', 30);
-        I.waitForEnabled('#branch-merge-schedule-confirm', 30);
         const result = await report(I, f);
         I.assertEqual(result.state, 'SCHEDULED');
         I.assertEqual(result.publishAt, Math.floor(instant / 60000) * 60000);
@@ -145,16 +150,16 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
         I.assertFalse(shifted.news.ids.includes(Number(f.secondPageId)));
         I.assertNotEqual(shifted.banner, first.banner);
         I.assertNotEqual(shifted.news.markup, first.news.markup);
-        I.focus('#branch-merge-publish-at');
+        I.seeElement('#DTE_Field_publishAt:disabled');
         const mobile = await I.executeScript(() => {
             const dialog = document.querySelector('#branchesDataTable_modal .modal-dialog').getBoundingClientRect();
-            const form = document.querySelector('#branch-merge-schedule-form').getBoundingClientRect();
-            const input = document.querySelector('#branch-merge-publish-at');
+            const form = document.querySelector('#panel-body-dt-branchesDataTable-publishing').getBoundingClientRect();
+            const input = document.querySelector('#DTE_Field_publishAt');
             const bounds = input.getBoundingClientRect();
             return {fits: dialog.left >= 0 && dialog.right <= innerWidth && form.right <= dialog.right && bounds.right <= form.right,
-                label: document.querySelector(`label[for="${input.id}"]`)?.textContent, describedBy: input.getAttribute('aria-describedby'), focused: document.activeElement === input};
+                label: document.querySelector(`label[for="${input.id}"]`)?.textContent, describedBy: input.getAttribute('aria-describedby'), disabled: input.disabled};
         });
-        I.assertTrue(mobile.fits); I.assertTrue(mobile.focused); I.assertTrue(Boolean(mobile.label)); I.assertTrue(Boolean(mobile.describedBy));
+        I.assertTrue(mobile.fits); I.assertTrue(mobile.disabled); I.assertTrue(Boolean(mobile.label)); I.assertTrue(Boolean(mobile.describedBy));
         I.saveScreenshot('branch-p07-mobile-schedule.png');
         I.click('#branch-merge-unschedule'); I.waitForVisible('#branch-merge-unschedule-confirm', 10);
         I.focus('#branch-merge-unschedule-confirm'); I.pressKey('Enter');

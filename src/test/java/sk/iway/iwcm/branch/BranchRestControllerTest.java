@@ -86,7 +86,7 @@ class BranchRestControllerTest extends BaseWebjetTest {
         stored.setState("SCHEDULED");stored.setRevision(12L);stored.setCreatedBy(3);
         stored.setCreatedAt(new Timestamp(1000));stored.setUpdatedAt(new Timestamp(2000));stored.setPublishAt(new Timestamp(3000));
         var input=new BranchEntity();input.setId(42L);input.setDomainId(1);input.setName("  Campaign  ");input.setDescription("Note");input.setColor("lavender");
-        input.setState("MERGED");input.setRevision(999L);input.setCreatedBy(99);input.setPublishAt(new Timestamp(9999));
+        input.setState("MERGED");input.setRevision(999L);input.setCreatedBy(99);input.setPublishAt(new Timestamp(3000));
         when(repository.existsById(42L)).thenReturn(true);
         when(repository.findFirstByIdAndDomainId(42L,1)).thenReturn(Optional.of(stored));
         when(repository.save(any())).thenAnswer(call->call.getArgument(0));
@@ -225,6 +225,25 @@ class BranchRestControllerTest extends BaseWebjetTest {
             var order=inOrder(merge,worker);
             order.verify(merge).enqueue(eq(42L),eq("a.example.sk"),any(Identity.class),eq(5L),eq("reviewed"),eq(false),eq(true));
             order.verify(worker).wakeUp();
+        }
+    }
+
+    /** A future publication is committed without waking the immediate publication worker. */
+    @Test void scheduledPublicationDoesNotStartTheWorker() {
+        BranchMergeService merge=mock(BranchMergeService.class);
+        BranchPublicationWorker worker=mock(BranchPublicationWorker.class);
+        var publisher=new BranchMergeRestController(null,merge,access,null,worker);
+        Identity user=new Identity();user.setUserId(7);user.setAdmin(true);user.setAuthorized(true);
+        when(access.requireUser(request)).thenReturn(user);
+        when(access.requireDomain(eq(request),any(Identity.class))).thenReturn("a.example.sk");
+        var scheduled=mock(BranchMergeService.Report.class);
+        when(scheduled.state()).thenReturn("SCHEDULED");
+        when(merge.enqueue(eq(42L),eq("a.example.sk"),any(Identity.class),eq(5L),eq("reviewed"),eq(false),eq(false))).thenReturn(scheduled);
+        try(var users=mockStatic(UsersDB.class)) {
+            users.when(()->UsersDB.getUser(7)).thenReturn(user);
+            var response=publisher.publish(42L,new BranchMergeRestController.Execution(5L,"reviewed",false),request);
+            assertEquals(HttpStatus.OK,response.getStatusCode());assertSame(scheduled,response.getBody());
+            verifyNoInteractions(worker);
         }
     }
 

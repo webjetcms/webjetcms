@@ -88,7 +88,7 @@ public final class BranchMergeService {
         return claim(id,domain,user,revision,hash,resume,false,false,false);
     }
 
-    /** Commits the immutable plan and its publication request together before background processing. */
+    /** Schedules the stored date or commits the reviewed plan for immediate background publication. */
     public Report enqueue(long id,String domain,Identity user,long revision,String hash,boolean resume) {
         return enqueue(id,domain,user,revision,hash,resume,false);
     }
@@ -123,20 +123,24 @@ public final class BranchMergeService {
                 if(!Objects.equals(hash,plan.hash)) throw conflict("Podklad porovnania sa zmenil. Znova overte balík.");
                 if(scheduled) requireAcknowledgedPagePlans(plan);
                 else requirePagePlanConfirmation(plan,keepPagePlans);
-                for(Entry e:plan.entries) {
-                    if(resume) continue;
-                    try(PreparedStatement s=c.prepareStatement("UPDATE `"+e.type.workTable()+"` SET resolved_snapshot=?,resolved_live_hash=?,resolved_work_hash=?,apply_state='PENDING',apply_phase=?,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
-                        s.setString(1,e.target.json());s.setString(2,e.live.hash());s.setString(3,e.change.work().hash());s.setString(4,Boolean.TRUE.equals(e.row.get("_derived_write"))?"DERIVED":null);s.setObject(5,e.row.get("row_id"));s.setLong(6,id);s.executeUpdate();
+                if(queued && !resume && branch.get("publish_at") instanceof java.util.Date at) {
+                    schedule(c,id,user,revision,at.getTime(),plan);
+                } else {
+                    for(Entry e:plan.entries) {
+                        if(resume) continue;
+                        try(PreparedStatement s=c.prepareStatement("UPDATE `"+e.type.workTable()+"` SET resolved_snapshot=?,resolved_live_hash=?,resolved_work_hash=?,apply_state='PENDING',apply_phase=?,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
+                            s.setString(1,e.target.json());s.setString(2,e.live.hash());s.setString(3,e.change.work().hash());s.setString(4,Boolean.TRUE.equals(e.row.get("_derived_write"))?"DERIVED":null);s.setObject(5,e.row.get("row_id"));s.setLong(6,id);s.executeUpdate();
+                        }
                     }
-                }
-                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='MERGING',revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=COALESCE(merge_started_at,CURRENT_TIMESTAMP),last_error=NULL,publish_requested_by=?,acknowledged_page_plans=? WHERE id=? AND revision=? AND state=?")) {
-                    s.setInt(1,user.getUserId());s.setObject(2,queued?user.getUserId():null);s.setString(3,acknowledgedPagePlans(plan));s.setLong(4,id);s.setLong(5,revision);s.setString(6,state);
-                    if(s.executeUpdate()!=1) throw conflict("Balík už prevzal iný beh.");
+                    try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='MERGING',revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=COALESCE(merge_started_at,CURRENT_TIMESTAMP),last_error=NULL,publish_requested_by=?,acknowledged_page_plans=? WHERE id=? AND revision=? AND state=?")) {
+                        s.setInt(1,user.getUserId());s.setObject(2,queued?user.getUserId():null);s.setString(3,acknowledgedPagePlans(plan));s.setLong(4,id);s.setLong(5,revision);s.setString(6,state);
+                        if(s.executeUpdate()!=1) throw conflict("Balík už prevzal iný beh.");
+                    }
                 }
                 c.commit();
             } catch(SQLException|RuntimeException ex) {c.rollback();throw ex;}
         } catch(SQLException ex) {throw failure(ex);}
-        return detail(id,domain,user);
+        BranchView.invalidate();return detail(id,domain,user);
     }
 
     /** Scheduling and moving a term use one locked package update; individual plans are untouched. */
@@ -156,14 +160,19 @@ public final class BranchMergeService {
                 if(plan.entries.stream().anyMatch(Entry::conflict)) throw conflict(Prop.getInstance().getText("branches.schedule.conflict"));
                 if(!Objects.equals(hash,plan.hash)) throw conflict("Podklad porovnania sa zmenil. Znova overte balík.");
                 requirePagePlanConfirmation(plan,keepPagePlans);
-                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='SCHEDULED',publish_at=?,scheduled_by=?,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,last_error=NULL,acknowledged_page_plans=? WHERE id=? AND revision=?")) {
-                    s.setTimestamp(1,new Timestamp(publishAt));s.setInt(2,user.getUserId());s.setInt(3,user.getUserId());s.setString(4,acknowledgedPagePlans(plan));s.setLong(5,id);s.setLong(6,revision);
-                    if(s.executeUpdate()!=1)throw conflict("Balík sa zmenil. Obnovte porovnanie.");
-                }
+                schedule(c,id,user,revision,publishAt,plan);
                 c.commit();
             }catch(SQLException|RuntimeException ex){c.rollback();throw ex;}
         }catch(SQLException ex){throw failure(ex);}
         BranchView.invalidate();return detail(id,domain,user);
+    }
+
+    private void schedule(Connection c,long id,Identity user,long revision,long publishAt,Plan plan)throws SQLException {
+        BranchService.validatePublishAt(new Timestamp(publishAt));
+        try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='SCHEDULED',publish_at=?,scheduled_by=?,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,last_error=NULL,acknowledged_page_plans=? WHERE id=? AND revision=?")) {
+            s.setTimestamp(1,new Timestamp(publishAt));s.setInt(2,user.getUserId());s.setInt(3,user.getUserId());s.setString(4,acknowledgedPagePlans(plan));s.setLong(5,id);s.setLong(6,revision);
+            if(s.executeUpdate()!=1)throw conflict("Balík sa zmenil. Obnovte porovnanie.");
+        }
     }
 
     public Report unschedule(long id,String domain,Identity user,long revision) {return returnToDraft(id,domain,user,revision,"SCHEDULED");}

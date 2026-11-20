@@ -69,7 +69,9 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.seeElement('#branch-merge-problems:disabled');
         I.seeElement('#branch-merge-publish:disabled');
         I.clickCss('#pills-dt-branchesDataTable-publishing-tab');
-        I.seeElement('#branch-merge-schedule-confirm:disabled');
+        I.seeElement('#branch-merge-publish:disabled');
+        I.seeElement('#DTE_Field_publishAt');
+        I.dontSeeElement('#branch-merge-schedule-form');
         I.clickCss(modal+' .DTE_Footer .btn-close-editor');
         I.waitForInvisible('#branchesDataTable_modal', 10);
         I.clickCss('.buttons-branch-open');

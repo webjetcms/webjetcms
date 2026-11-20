@@ -57,7 +57,8 @@ public class BranchEntity
     @DataTableColumn(hidden = true, hiddenEditor = true)
     private Long revision;
     @Column(name = "publish_at")
-    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "branches.merge.publishAt.js", hiddenEditor = true, visible = false)
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "branches.merge.publishAt.js", tab = "publishing", visible = false, alwaysCopyProperties = true,
+        editor = @DataTableColumnEditor(message = "branches.merge.scheduleHint.js"))
     private java.sql.Timestamp publishAt;
     @Column(name = "scheduled_by")
     @DataTableColumn(hidden = true, hiddenEditor = true)

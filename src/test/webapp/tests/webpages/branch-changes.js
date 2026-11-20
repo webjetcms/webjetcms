@@ -8,7 +8,8 @@ const changesTab = '#pills-dt-branchesDataTable-changes-tab';
 const changesTable = '#datatableFieldDTE_Field_changes';
 const changesWrapper = changesTable + '_wrapper';
 const scheduleTab = '#pills-dt-branchesDataTable-publishing-tab';
-const reportRoute = new RegExp(`/admin/rest/branches/${id}/(?:progress|resolve|schedule|unschedule|merge|changes/revert)$`);
+const reportRoute = new RegExp(`/admin/rest/branches/${id}/(?:progress|resolve|unschedule|merge|changes/revert)$`);
+const editorRoute = /\/admin\/rest\/branches\/editor$/;
 const rowRoute = new RegExp(`/admin/rest/branches/${id}$`);
 const changesRoute = new RegExp(`/admin/rest/branches/${id}/changes/all(?:\\?.*)?$`);
 const listRoute = /\/admin\/rest\/branches\/all\?/;
@@ -19,11 +20,12 @@ After(({ I }) => {
     I.stopMockingRoute(reportRoute);
     I.stopMockingRoute(changesRoute);
     I.stopMockingRoute(rowRoute);
+    I.stopMockingRoute(editorRoute);
     I.stopMockingRoute(listRoute);
     I.stopMockingRoute(pageRoute);
 });
 
-Scenario('Working version editor filters conflicts and keeps scheduling separate from publishing', async ({ I, DT }) => {
+Scenario('Working version editor filters conflicts and publishes immediately or at its saved date', async ({ I, DT, DTE }) => {
     const snapshot = (title, fields = {}) => ({state: 'ACTIVE', fields: {title, navbar: 'autotest unchanged navigation', data: `<p>${title} HTML</p>`, ...fields}});
     const sharedFields = {author_id: 18, field_o: false, login_doc_id: 0, html_head: '<p>autotest shared HTML</p>'};
     const absent = {state: 'ABSENT', fields: {}};
@@ -71,6 +73,14 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     const resolutionError = 'autotest resolution failed';
     await I.mockRoute(listRoute, route => route.fulfill({json: {content: [branch], totalElements: 1}}));
     await I.mockRoute(rowRoute, route => route.fulfill({json: branch}));
+    const saves = [];
+    await I.mockRoute(editorRoute, route => {
+        const input = route.request().postDataJSON().data[id];
+        saves.push(input);
+        Object.assign(branch, input, {publishAt: Number(input.publishAt) || null, revision: report.revision + 1});
+        Object.assign(report, {publishAt: branch.publishAt, revision: branch.revision});
+        return route.fulfill({json: {data: [branch]}});
+    });
     const loads = [];
     await I.mockRoute(changesRoute, route => {
         loads.push(new URL(route.request().url()).search);
@@ -101,9 +111,9 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
                 report.pagePlanWarnings = [pagePlanWarning];
             }
             if (action === 'revert') report.items = report.items.filter(item => item.objectKey !== String(payload.id));
-            if (action === 'schedule') Object.assign(report, {state: 'SCHEDULED', publishAt: payload.publishAt});
             if (action === 'unschedule') Object.assign(report, {state: 'DRAFT', publishAt: null});
-            if (action === 'merge') report.state = 'MERGING';
+            if (action === 'merge') report.state = report.publishAt ? 'SCHEDULED' : 'MERGING';
+            Object.assign(branch, {state: report.state, publishAt: report.publishAt, revision: report.revision});
         }
         return route.fulfill({json: report});
     });
@@ -411,23 +421,42 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.see('Uložiť', `${modal} .DTE_Footer`);
     I.fillField(`${modal} #DTE_Field_name`, name);
     I.clickCss(scheduleTab);
-    I.waitForEnabled('#branch-merge-schedule-confirm', 10);
+    I.waitForEnabled('#branch-merge-publish', 10);
+    I.dontSeeElement('#branch-merge-schedule-form');
     I.see(pagePlanWarning, '#panel-body-dt-branchesDataTable-publishing ul.alert-warning');
+    await I.retry({retries: 10, minTimeout: 100, maxTimeout: 100}).seeCssPropertiesOnElements('#pills-dt-branchesDataTable-publishing', {opacity: '1'});
+    I.saveScreenshot('branch-publish-at-desktop.png');
     I.resizeWindow(390, 844);
     I.see(name, `${modal} .modal-title`);
     const inputFits = await I.executeScript(() => {
         const dialog = document.querySelector('#branchesDataTable_modal .modal-dialog').getBoundingClientRect();
-        const input = document.querySelector('#branch-merge-publish-at').getBoundingClientRect();
+        const input = document.querySelector('#DTE_Field_publishAt').getBoundingClientRect();
         return innerWidth === 390 && input.left >= dialog.left && input.right <= dialog.right;
     });
     I.assertTrue(inputFits);
-    // Native datetime-local values need an ISO wall time to fill all segments together.
-    await I.usePlaywrightTo('enter a publication date', async ({page}) => {
-        await page.locator('#branch-merge-publish-at').fill('2036-06-04T09:30');
-    });
+    I.fillField('#DTE_Field_publishAt', 'invalid');
+    I.pressKey('Tab');
+    I.seeElement('#branch-merge-publish:disabled');
+    I.fillField('#DTE_Field_publishAt', '04.06.2036 09:30');
+    I.pressKey('Tab');
+    I.seeElement('#branch-merge-publish:disabled');
     I.saveScreenshot('branch-changes-mobile-schedule.png');
-    I.clickCss('#branch-merge-schedule-confirm');
+    DTE.save('branchesDataTable', true);
+    await I.waitForInvisible(modal, 10);
+    I.assertEqual(saves.length, 1);
+    I.assertEqual(report.state, 'DRAFT');
+    I.assertEqual(report.publishAt, Date.parse('2036-06-04T07:30:00Z'));
+    I.clickCss('.buttons-branch-compare');
+    I.waitForVisible(`${changesTab}[aria-selected="true"]`, 10);
+    I.waitForEnabled('#branch-merge-publish', 10);
+    I.clickCss('#branch-merge-publish');
+    I.waitForVisible('#branch-merge-confirmation', 10);
+    I.see('Naplánovať publikovanie', '#branch-merge-confirmation');
+    I.clickCss('#branch-merge-confirm');
+    I.waitForInvisible('#branch-merge-confirmation', 10);
+    I.clickCss(scheduleTab);
     I.waitForVisible('#branch-merge-scheduled', 10);
+    I.seeElement('#DTE_Field_publishAt:disabled');
     I.dontSeeElement('#branch-merge-publish');
     I.clickCss('#branch-merge-unschedule');
     I.clickCss('#branch-merge-unschedule-confirm');
@@ -447,19 +476,19 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.seeElement('#branch-merge-confirmation-note > p.fw-semibold + ul');
     I.seeNumberOfElements('#branch-merge-confirmation-note > ul > li', 3);
     I.seeElement(locate('#panel-body-dt-branchesDataTable-changes ul.alert-warning').withText(pagePlanWarning));
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'schedule', 'unschedule']);
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'merge', 'unschedule']);
     I.pressKey('Escape');
     I.waitForInvisible('#branch-merge-confirmation', 10);
     I.seeElement('#branch-merge-publish:focus');
     I.waitForEnabled('#branch-merge-publish', 10);
     I.clickCss('#branch-merge-publish');
     await I.waitForVisible('#branch-merge-confirmation', 10);
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'schedule', 'unschedule']);
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'merge', 'unschedule']);
     I.clickCss('#branch-merge-confirm');
     await I.waitForVisible('#branch-merge-progress', 10);
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'schedule', 'unschedule', 'merge']);
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'merge', 'unschedule', 'merge']);
     I.assertDeepEqual(requests[2].payload, {type: 'GROUP', id: 15, hash: 'autotest-folder'});
-    I.assertEqual(requests[3].payload.publishAt, Date.parse('2036-06-04T07:30:00Z'));
+    I.assertFalse(Object.hasOwn(requests[3].payload, 'publishAt'));
     I.assertTrue(requests[3].payload.keepPagePlans);
     I.assertEqual(requests[5].payload.preparationHash, 'autotest-plan');
     I.assertTrue(requests[5].payload.keepPagePlans);

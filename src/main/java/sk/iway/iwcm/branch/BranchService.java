@@ -41,6 +41,11 @@ public class BranchService {
         return repository.findFirstByIdAndDomainId(id, domainId);
     }
 
+    static void validatePublishAt(Timestamp at) {
+        if(at!=null && at.getTime()<=System.currentTimeMillis())
+            throw new ResponseStatusException(HttpStatus.CONFLICT,sk.iway.iwcm.i18n.Prop.getInstance().getText("branches.schedule.future"));
+    }
+
     /** Deletes a domain-scoped version in any state, including its private files and cascading WORK data. */
     public void delete(long id, int domainId) {
         BranchReadiness.requireEnabled();

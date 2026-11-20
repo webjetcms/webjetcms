@@ -147,7 +147,7 @@ class BranchStorageTest extends BranchJpaTest {
     @Test @Order(2) void standardCreateRejectsOperationalStateFromThePayload() {
         var input=new BranchEntity();input.setId(999L);input.setDomainId(BranchDomains.id("p02.other"));input.setName("autotest standard create");
         input.setState("MERGED");input.setRevision(999L);input.setCreatedBy(999);input.setCreatedAt(new java.sql.Timestamp(1000));
-        input.setPublishAt(new java.sql.Timestamp(2000));input.setScheduledBy(999);input.setMergeStartedAt(new java.sql.Timestamp(3000));
+        input.setPublishAt(new java.sql.Timestamp(System.currentTimeMillis()/1000*1000+120_000));input.setScheduledBy(999);input.setMergeStartedAt(new java.sql.Timestamp(3000));
         input.setMergeFinishedAt(new java.sql.Timestamp(4000));input.setLastError("forged");
         var controller=editor(metadataRepository);
         var request=new DatatableRequest<Long,BranchEntity>();request.setAction("create");request.setData(Map.of(-1L,input));
@@ -156,8 +156,35 @@ class BranchStorageTest extends BranchJpaTest {
         var reloaded=branchService().find(saved.getId(),BranchDomains.id("p02.example")).orElseThrow();
         assertEquals("DRAFT",reloaded.getState());assertEquals(0L,reloaded.getRevision());assertEquals(1,reloaded.getCreatedBy());
         assertTrue(reloaded.getCreatedAt().after(new java.sql.Timestamp(1000)));
-        assertNull(reloaded.getPublishAt());assertNull(reloaded.getScheduledBy());assertNull(reloaded.getMergeStartedAt());
+        assertEquals(input.getPublishAt(),reloaded.getPublishAt());assertNull(reloaded.getScheduledBy());assertNull(reloaded.getMergeStartedAt());
         assertNull(reloaded.getMergeFinishedAt());assertNull(reloaded.getLastError());
+    }
+
+    /** Saving or clearing the standard date field persists a draft without arming the scheduler. */
+    @Test @Order(2) void editorSavesAndClearsPublicationDateWithoutScheduling() {
+        var original=createBranch("p02.example","autotest publication date",null,1);
+        branches.add(original.getId());
+        var controller=editor(metadataRepository);
+        var input=new BranchEntity();input.setId(original.getId());input.setDomainId(original.getDomainId());input.setName(original.getName());
+        var at=new java.sql.Timestamp(System.currentTimeMillis()/1000*1000+120_000);
+        input.setPublishAt(at);
+        controller.edit(input.getId(),input);
+        var reloaded=branchService().find(input.getId(),input.getDomainId()).orElseThrow();
+        assertEquals(at,reloaded.getPublishAt());assertEquals("DRAFT",reloaded.getState());assertNull(reloaded.getScheduledBy());
+        assertEquals(original.getRevision()+1,reloaded.getRevision());
+        assertTrue(branchService().due(new java.sql.Timestamp(at.getTime()+1)).stream().noneMatch(b->b.getId().equals(input.getId())));
+        input.setPublishAt(null);
+        controller.edit(input.getId(),input);
+        reloaded=branchService().find(input.getId(),input.getDomainId()).orElseThrow();
+        assertNull(reloaded.getPublishAt());assertEquals("DRAFT",reloaded.getState());assertEquals(original.getRevision()+2,reloaded.getRevision());
+        input.setPublishAt(new java.sql.Timestamp(System.currentTimeMillis()-60_000));
+        assertThrows(RuntimeException.class,()->controller.edit(input.getId(),input));
+        assertNull(branchService().find(input.getId(),input.getDomainId()).orElseThrow().getPublishAt());
+        original=branchService().find(input.getId(),input.getDomainId()).orElseThrow();
+        original.setState("SCHEDULED");original.setPublishAt(at);original.setScheduledBy(1);metadataRepository.saveAndFlush(original);
+        input.setPublishAt(null);
+        assertThrows(RuntimeException.class,()->controller.edit(input.getId(),input));
+        assertEquals(at,branchService().find(input.getId(),input.getDomainId()).orElseThrow().getPublishAt());
     }
 
     /** Entity callbacks supply a single CREATE and UPDATE audit for metadata persistence. */

@@ -80,6 +80,7 @@ public class BranchMergeRestController {
         try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {
             report=merge.enqueue(id,domain,user,input.expectedRevision(),input.preparationHash(),resume,input.keepPagePlans());
         }
+        if("SCHEDULED".equals(report.state())) return ResponseEntity.ok(report);
         publicationWorker.wakeUp();
         return ResponseEntity.accepted().body(report);
     }

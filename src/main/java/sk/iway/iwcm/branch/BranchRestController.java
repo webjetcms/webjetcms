@@ -1,6 +1,7 @@
 package sk.iway.iwcm.branch;
 
 import java.util.List;
+import java.util.Objects;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -62,7 +63,7 @@ public class BranchRestController extends DatatableRestControllerV2<BranchEntity
             entity.setRevision(0L);
             entity.setCreatedBy(user.getUserId());
             entity.setCreatedAt(now);
-            entity.setPublishAt(null);
+            BranchService.validatePublishAt(entity.getPublishAt());
             entity.setScheduledBy(null);
             entity.setPublishRequestedBy(null);
             entity.setMergeStartedAt(null);
@@ -72,6 +73,18 @@ public class BranchRestController extends DatatableRestControllerV2<BranchEntity
         if (entity.getName() != null) entity.setName(entity.getName().strip());
         entity.setUpdatedBy(user.getUserId());
         entity.setUpdatedAt(now);
+    }
+
+    @Override
+    protected void copyEntityIntoOriginal(BranchEntity entity, BranchEntity stored) {
+        Timestamp previous=stored.getPublishAt();
+        super.copyEntityIntoOriginal(entity,stored);
+        if(!Objects.equals(previous,stored.getPublishAt())) {
+            if(!"DRAFT".equals(stored.getState()))
+                throw new ResponseStatusException(HttpStatus.CONFLICT,getProp().getText("branches.merge.schedulingUnavailable.js"));
+            BranchService.validatePublishAt(stored.getPublishAt());
+            stored.setRevision(stored.getRevision()+1);
+        }
     }
 
     @Override

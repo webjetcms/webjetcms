@@ -114,7 +114,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     const {id, state: initialState, revision: initialRevision} = editor.currentJson;
     const modal = document.getElementById('branchesDataTable_modal');
     const changes = document.getElementById('panel-body-dt-branchesDataTable-changes');
-    const publishing = document.getElementById('branch-publishing-panel');
+    const publishing = document.getElementById('panel-body-dt-branchesDataTable-publishing');
     const events = new AbortController();
     const {signal} = events;
     let report, timer, busy = false, stale = false, table, tableLoading = false, problemCheck;
@@ -123,8 +123,10 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     let activeTab = modal.querySelector('[role="tab"].active')?.dataset.tabId;
     let detailDialog, detailItem, expanded, confirmation, detailTab, pageContent, contentHighlight;
     const pendingSources = [];
-    let scheduleForm, scheduleButton, scheduleKey;
-    const settings = () => ['name', 'color', 'description'].map(name => editor.field(name).val());
+    let scheduleKey;
+    const publishAt = editor.field('publishAt');
+    // Invalid date text must also count as an unsaved change.
+    const settings = () => [...['name', 'color', 'description'].map(name => editor.field(name).val()), $(publishAt.input()).val() || ''];
     const savedSettings = settings();
     const dirty = () => !equal(settings(), savedSettings);
     const ready = () => Boolean(report?.ready && report.preparationHash && !stale);
@@ -170,7 +172,11 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     const scheduleSummary = element('div');
     scheduleSummary.append(loading);
     const scheduleBody = element('div');
-    publishing.replaceChildren(scheduleError, scheduleWarnings, scheduleSummary, scheduleBody);
+    const scheduleSettingsPending = element('p', 'alert alert-warning', tr('settingsPending'));
+    scheduleSettingsPending.hidden = true;
+    const schedulePanel = element('div', 'form-group');
+    schedulePanel.append(scheduleError, scheduleSettingsPending, scheduleWarnings, scheduleSummary, scheduleBody);
+    publishing.append(schedulePanel);
 
     function connectChangesTable(nested) {
         table = nested;
@@ -299,22 +305,23 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         const state = report?.state || initialState;
         const basic = activeTab === 'branchesDataTable-basic';
         const hasDraftSettings = dirty();
-        save.hidden = !basic;
+        save.hidden = !basic && activeTab !== 'branchesDataTable-publishing';
         save.disabled = busy;
         cancelLabel.textContent = basic || hasDraftSettings ? defaultCancel : ' ' + tr('close');
-        publish.hidden = !publishStates.includes(state) || activeTab === 'branchesDataTable-publishing';
+        publish.hidden = !publishStates.includes(state);
         publish.disabled = busy || tableLoading || !ready() || hasDraftSettings;
         publish.title = hasDraftSettings ? tr('settingsPending') : ready() ? '' : tr('publicationBlocked');
-        publish.classList.toggle('btn-outline-secondary', basic);
-        publish.classList.toggle('btn-primary', !basic);
+        const settingsTab = basic || activeTab === 'branchesDataTable-publishing';
+        publish.classList.toggle('btn-outline-secondary', settingsTab);
+        publish.classList.toggle('btn-primary', !settingsTab);
         if (basic && publish.parentNode === footer) footer.querySelector('.buttons-footer-left').append(publish);
         if (!basic && publish.parentNode !== footer) cancel.after(publish);
-        publishLabel.textContent = ' ' + tr(state === 'MERGE_FAILED' ? 'resume' : 'publish');
-        settingsPending.hidden = !hasDraftSettings;
-        if (scheduleButton) {
-            scheduleButton.disabled = busy || tableLoading || !ready() || hasDraftSettings;
-            scheduleForm.querySelector('.pg-branch-panel__settings-pending').hidden = !hasDraftSettings;
-        }
+        let publicationLabel = state === 'MERGE_FAILED' ? 'resume' : 'publish';
+        if (state === 'DRAFT' && report?.publishAt) publicationLabel = 'schedule';
+        publishLabel.textContent = ' ' + tr(publicationLabel);
+        if (state === 'DRAFT' && !busy) publishAt.enable();
+        else publishAt.disable();
+        settingsPending.hidden = scheduleSettingsPending.hidden = !hasDraftSettings;
         const saveChoice = detailDialog?.querySelector('#branch-merge-save-choice');
         if (saveChoice) {
             saveChoice.disabled = busy || stale || !detailDialog.querySelector('input[name="branch-merge-choice"]:checked');
@@ -327,7 +334,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     modal.addEventListener('input', updateControls, {signal});
     modal.addEventListener('change', updateControls, {signal});
-    editor.on('preSubmit.branchChanges', () => activeTab === 'branchesDataTable-basic' && !busy);
+    editor.on('preSubmit.branchChanges', () => ['branchesDataTable-basic', 'branchesDataTable-publishing'].includes(activeTab) && !busy);
 
     function setError(error, box) {
         box.textContent = error.message;
@@ -373,9 +380,14 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     }
 
     function acceptReport(nextReport) {
+        if (signal.aborted) return;
         const previousState = report?.state ?? initialState;
         const previousRevision = report?.revision ?? initialRevision;
         if (Number(nextReport.revision) < Number(previousRevision)) return;
+        if (settings()[3] === savedSettings[3]) {
+            publishAt.val(nextReport.publishAt);
+            savedSettings[3] = settings()[3];
+        }
         report = nextReport;
         if (previousState !== report.state || previousRevision !== report.revision) {
             window.dispatchEvent(new CustomEvent('WJ.Branch.updated', {detail: report}));
@@ -428,6 +440,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         const {state} = report;
         messages.replaceChildren();
         renderPagePlanWarnings(messages);
+        if (state === 'SCHEDULED') notice(messages, 'info', tr('scheduledAt', [formatTerm(report.publishAt)]));
         if (state === 'NEEDS_ATTENTION') {
             const warning = notice(messages, 'warning', tr('attentionNote'));
             const reopen = button(tr('reopen'), () => confirmState('reopen', messages, reopen));
@@ -521,9 +534,12 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     function confirmPublication() {
         const resume = report.state === 'MERGE_FAILED';
+        const scheduled = !resume && report.publishAt != null;
         const {revision: expectedRevision, preparationHash} = report;
         const keepPagePlans = Boolean(report.pagePlanWarnings?.length);
-        const confirmLabel = resume ? 'resumeConfirm' : 'publishConfirm';
+        const publicationAction = resume ? 'resume' : 'publish';
+        const confirmLabel = scheduled ? 'schedule' : publicationAction + 'Confirm';
+        const pagePlanLabel = scheduled ? 'scheduleWithPagePlans' : 'publishWithPagePlans';
         const count = items().filter(item => item.writeRequired && item.applyState !== 'DONE').length;
         const locale = (window.userLng === 'cz' ? 'cs' : window.userLng) || 'sk';
         const plural = new Intl.PluralRules(locale).select(count);
@@ -535,11 +551,13 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
             element('li', 'mt-1', tr('publishNote'))
         );
         if (keepPagePlans) notes.append(element('li', 'mt-1', tr('keepPagePlansNote')));
-        description.append(summary, notes);
+        description.append(summary);
+        if (scheduled) description.append(element('p', 'fw-semibold', tr('scheduledAt', [formatTerm(report.publishAt)])));
+        description.append(notes);
         confirmAction(messages, publish, {
-            heading: tr(resume ? 'resume' : 'publish'),
+            heading: tr(scheduled ? 'schedule' : publicationAction),
             description,
-            label: tr(keepPagePlans ? 'publishWithPagePlans' : confirmLabel),
+            label: tr(keepPagePlans ? pagePlanLabel : confirmLabel),
             confirmId: 'branch-merge-confirm',
             action: () => perform(resume ? '/resume' : '/merge', {
                 expectedRevision, preparationHash, keepPagePlans
@@ -586,112 +604,25 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         return `${new Date(value).toLocaleString(document.documentElement.lang || undefined, {timeZone: report.timeZone})} (${report.timeZone})`;
     }
 
-    // Native datetime-local fields contain a wall time without an offset. Resolve it in the publisher's zone.
-    function wallTime(value) {
-        const parts = new Intl.DateTimeFormat('en-CA', {
-            timeZone: report.timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
-        }).formatToParts(new Date(value));
-        const part = type => parts.find(item => item.type === type).value;
-        return `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}`;
-    }
-
-    function scheduledInstant(value) {
-        const utc = Date.parse(`${value}:00Z`);
-        if (!Number.isFinite(utc)) return null;
-        let instant = utc;
-        for (let i = 0; i < 3; i++) instant += utc - Date.parse(`${wallTime(instant)}:00Z`);
-        // Repeated or missing local times around a DST change need an unambiguous term.
-        if (wallTime(instant) !== value || [-7200000, -3600000, 3600000, 7200000].some(offset => wallTime(instant + offset) === value)) return null;
-        return instant;
-    }
-
     function renderSchedule() {
         scheduleWarnings.replaceChildren();
         renderPagePlanWarnings(scheduleWarnings);
         const scheduled = report.state === 'SCHEDULED';
-        const canSchedule = scheduled || report.state === 'DRAFT';
         const key = `${report.state}:${report.publishAt}`;
-        if (scheduleKey !== key) {
-            scheduleKey = key;
-            scheduleBody.replaceChildren();
-            scheduleSummary.replaceChildren();
-            scheduleForm = scheduleButton = null;
-            if (scheduled) {
-                const plan = notice(scheduleSummary, 'info', tr('scheduledNote'));
-                plan.id = 'branch-merge-scheduled';
-                plan.prepend(element('strong', 'd-block mb-1', tr('scheduledAt', [formatTerm(report.publishAt)])));
-                const unschedule = button(tr('unschedule'), () => confirmState('unschedule', scheduleSummary, unschedule));
-                unschedule.id = 'branch-merge-unschedule';
-                scheduleBody.append(unschedule);
-            }
-            if (canSchedule) {
-                scheduleForm = makeScheduleForm(scheduled);
-                scheduleBody.prepend(scheduleForm);
-            } else {
-                notice(scheduleSummary, 'secondary', tr('schedulingUnavailable'));
-            }
+        if (scheduleKey === key) return;
+        scheduleKey = key;
+        scheduleBody.replaceChildren();
+        scheduleSummary.replaceChildren();
+        if (scheduled) {
+            const plan = notice(scheduleSummary, 'info', tr('scheduledNote'));
+            plan.id = 'branch-merge-scheduled';
+            plan.prepend(element('strong', 'd-block mb-1', tr('scheduledAt', [formatTerm(report.publishAt)])));
+            const unschedule = button(tr('unschedule'), () => confirmState('unschedule', scheduleSummary, unschedule));
+            unschedule.id = 'branch-merge-unschedule';
+            scheduleBody.append(unschedule);
+        } else if (report.state !== 'DRAFT') {
+            notice(scheduleSummary, 'secondary', tr('schedulingUnavailable'));
         }
-        if (scheduleForm) {
-            const defaultLabel = scheduled ? 'reschedule' : 'schedule';
-            scheduleButton.textContent = tr(report.pagePlanWarnings?.length ? 'scheduleWithPagePlans' : defaultLabel);
-            const reason = scheduleForm.querySelector('.pg-branch-panel__schedule-reason');
-            reason.hidden = ready();
-            scheduleForm.querySelector('input').disabled = !ready();
-        }
-    }
-
-    function makeScheduleForm(scheduled) {
-        const form = element('form', 'pg-branch-panel__schedule');
-        form.id = 'branch-merge-schedule-form';
-        const label = element('label', 'form-label fw-semibold', tr('publishAt'));
-        const input = element('input', 'form-control');
-        input.type = 'datetime-local';
-        input.required = true;
-        input.step = '60';
-        input.id = 'branch-merge-publish-at';
-        label.htmlFor = input.id;
-        if (report.publishAt) input.value = wallTime(report.publishAt);
-        const zone = element('p', 'form-text mb-0', tr('timeZone', [report.timeZone]));
-        zone.id = 'branch-merge-time-zone';
-        input.setAttribute('aria-describedby', zone.id);
-        const feedback = element('p', 'text-danger mb-0');
-        feedback.setAttribute('role', 'alert');
-        input.addEventListener('input', () => {
-            input.setCustomValidity('');
-            input.removeAttribute('aria-invalid');
-            feedback.textContent = '';
-        });
-        const fields = element('div', 'pg-branch-panel__schedule-fields mb-3');
-        fields.append(label, input, zone, feedback);
-        const reason = element('p', 'alert alert-warning pg-branch-panel__schedule-reason', tr('publicationBlocked') + ' ');
-        const review = button(tr('changesTab'), selectChanges);
-        reason.append(review);
-        scheduleButton = button(tr(scheduled ? 'reschedule' : 'schedule'), () => {}, true);
-        scheduleButton.type = 'submit';
-        scheduleButton.id = 'branch-merge-schedule-confirm';
-        const settingsPending = element('p', 'alert alert-warning pg-branch-panel__settings-pending', tr('settingsPending'));
-        form.append(reason, settingsPending, fields, element('p', 'text-muted', tr('scheduleHint')), scheduleButton);
-        form.addEventListener('submit', async event => {
-            event.preventDefault();
-            if (busy || !ready() || dirty()) return;
-            const publishAt = scheduledInstant(input.value);
-            if (publishAt === null || publishAt <= Date.now()) {
-                const message = tr(publishAt === null ? 'invalidWallTime' : 'futureTime');
-                feedback.textContent = message;
-                input.setCustomValidity(message);
-                input.setAttribute('aria-invalid', 'true');
-                input.reportValidity();
-                input.focus();
-                return;
-            }
-            const result = await perform('/schedule', {
-                expectedRevision: report.revision, preparationHash: report.preparationHash, publishAt,
-                keepPagePlans: Boolean(report.pagePlanWarnings?.length)
-            }, scheduleError);
-            if (result && !signal.aborted) scheduleSummary.focus();
-        });
-        return form;
     }
 
     function openDetail(key, invoker) {
@@ -1070,7 +1001,8 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         table?.button('branchRevert:name').action(() => {});
         changesNotices.remove();
         changes.removeAttribute('aria-busy');
-        publishing.replaceChildren();
+        schedulePanel.remove();
+        publishAt.enable();
         editor.off('preSubmit.branchChanges');
     };
 }
