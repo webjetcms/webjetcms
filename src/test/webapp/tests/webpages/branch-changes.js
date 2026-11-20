@@ -8,7 +8,7 @@ const changesTab = '#pills-dt-branchesDataTable-changes-tab';
 const changesTable = '#datatableFieldDTE_Field_changes';
 const changesWrapper = changesTable + '_wrapper';
 const scheduleTab = '#pills-dt-branchesDataTable-publishing-tab';
-const reportRoute = new RegExp(`/admin/rest/branches/${id}/(?:progress|resolve|unschedule|merge|changes/revert)$`);
+const reportRoute = new RegExp(`/admin/rest/branches/${id}/(?:progress|prepare|resolve|unschedule|merge|changes/revert)$`);
 const editorRoute = /\/admin\/rest\/branches\/editor$/;
 const rowRoute = new RegExp(`/admin/rest/branches/${id}$`);
 const changesRoute = new RegExp(`/admin/rest/branches/${id}/changes/all(?:\\?.*)?$`);
@@ -25,7 +25,7 @@ After(({ I }) => {
     I.stopMockingRoute(pageRoute);
 });
 
-Scenario('Working version editor filters conflicts and publishes immediately or at its saved date', async ({ I, DT, DTE }) => {
+Scenario('Working version editor filters conflicts and publishes immediately or at its saved date', async ({ I, DT }) => {
     const snapshot = (title, fields = {}) => ({state: 'ACTIVE', fields: {title, navbar: 'autotest unchanged navigation', data: `<p>${title} HTML</p>`, ...fields}});
     const sharedFields = {author_id: 18, field_o: false, login_doc_id: 0, html_head: '<p>autotest shared HTML</p>'};
     const absent = {state: 'ABSENT', fields: {}};
@@ -74,9 +74,15 @@ Scenario('Working version editor filters conflicts and publishes immediately or 
     await I.mockRoute(listRoute, route => route.fulfill({json: {content: [branch], totalElements: 1}}));
     await I.mockRoute(rowRoute, route => route.fulfill({json: branch}));
     const saves = [];
+    let rejectFirstSave = true;
+    const saveError = 'autotest publication settings could not be saved';
     await I.mockRoute(editorRoute, route => {
         const input = route.request().postDataJSON().data[id];
         saves.push(input);
+        if (rejectFirstSave) {
+            rejectFirstSave = false;
+            return route.fulfill({json: {fieldErrors: [{name: 'publishAt', status: saveError}]}});
+        }
         Object.assign(branch, input, {publishAt: Number(input.publishAt) || null, revision: report.revision + 1});
         Object.assign(report, {publishAt: branch.publishAt, revision: branch.revision});
         return route.fulfill({json: {data: [branch]}});
@@ -104,7 +110,7 @@ Scenario('Working version editor filters conflicts and publishes immediately or 
                 rejectFirstResolution = false;
                 return route.fulfill({status: 409, json: {message: resolutionError}});
             }
-            report.revision++;
+            if (action !== 'prepare') report.revision++;
             if (action === 'resolve') {
                 Object.assign(report.items[0], {conflict: false, choice: payload.choice});
                 report.ready = true;
@@ -417,7 +423,7 @@ Scenario('Working version editor filters conflicts and publishes immediately or 
 
     I.clickCss(basicTab);
     I.fillField(`${modal} #DTE_Field_name`, 'autotest unsaved name');
-    I.seeElement('#branch-merge-publish:disabled');
+    I.seeElement('#branch-merge-publish:enabled');
     I.see('Uložiť', `${modal} .DTE_Footer`);
     I.fillField(`${modal} #DTE_Field_name`, name);
     I.clickCss(scheduleTab);
@@ -439,21 +445,33 @@ Scenario('Working version editor filters conflicts and publishes immediately or 
     I.seeElement('#branch-merge-publish:disabled');
     I.fillField('#DTE_Field_publishAt', '04.06.2036 09:30');
     I.pressKey('Tab');
-    I.seeElement('#branch-merge-publish:disabled');
-    I.saveScreenshot('branch-changes-mobile-schedule.png');
-    DTE.save('branchesDataTable', true);
-    await I.waitForInvisible(modal, 10);
+    I.seeElement('#branch-merge-publish:enabled');
+    I.dontSee('Najprv uložte rozpracované nastavenia pracovnej verzie.', modal);
+    I.saveScreenshot('branch-publish-feedback-after.png');
+    I.clickCss('#branch-merge-publish');
+    await I.waitForText(saveError, 10, modal);
     I.assertEqual(saves.length, 1);
     I.assertEqual(report.state, 'DRAFT');
-    I.assertEqual(report.publishAt, Date.parse('2036-06-04T07:30:00Z'));
-    I.clickCss('.buttons-branch-compare');
-    I.waitForVisible(`${changesTab}[aria-selected="true"]`, 10);
-    I.waitForEnabled('#branch-merge-publish', 10);
+    I.dontSeeElement('#branch-merge-confirmation');
+    I.dontSeeElement('.toast.toast-warning');
+    I.seeInField('#DTE_Field_publishAt', '04.06.2036 09:30');
     I.clickCss('#branch-merge-publish');
-    I.waitForVisible('#branch-merge-confirmation', 10);
+    await I.waitForVisible('#branch-merge-confirmation', 10);
+    I.assertEqual(saves.length, 2);
+    I.assertEqual(report.state, 'DRAFT');
+    I.assertEqual(report.publishAt, Date.parse('2036-06-04T07:30:00Z'));
+    I.dontSeeElement('.toast.toast-warning');
     I.see('Naplánovať publikovanie', '#branch-merge-confirmation');
     I.clickCss('#branch-merge-confirm');
     I.waitForInvisible('#branch-merge-confirmation', 10);
+    I.waitForText('Pracovné verzie', 10, '.toast.toast-warning .toast-title');
+    I.see('Naplánované na', '.toast.toast-warning .toast-message');
+    I.see('Naplánované na 04.06.2036 09:30:00', '.toast.toast-warning .toast-message');
+    I.dontSee('Europe/Bratislava', '.toast.toast-warning');
+    await I.retry({retries: 10, minTimeout: 100, maxTimeout: 100}).seeCssPropertiesOnElements('.toast.toast-warning', {opacity: '1'});
+    I.saveElementScreenshot('.toast.toast-warning', 'branch-publish-notification-after.png');
+    I.clickCss('.toast.toast-warning .toast-close-button');
+    I.waitForInvisible('.toast.toast-warning', 10);
     I.clickCss(scheduleTab);
     I.waitForVisible('#branch-merge-scheduled', 10);
     I.seeElement('#DTE_Field_publishAt:disabled');
@@ -476,20 +494,20 @@ Scenario('Working version editor filters conflicts and publishes immediately or 
     I.seeElement('#branch-merge-confirmation-note > p.fw-semibold + ul');
     I.seeNumberOfElements('#branch-merge-confirmation-note > ul > li', 3);
     I.seeElement(locate('#panel-body-dt-branchesDataTable-changes ul.alert-warning').withText(pagePlanWarning));
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'merge', 'unschedule']);
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'prepare', 'merge', 'unschedule']);
     I.pressKey('Escape');
     I.waitForInvisible('#branch-merge-confirmation', 10);
     I.seeElement('#branch-merge-publish:focus');
     I.waitForEnabled('#branch-merge-publish', 10);
     I.clickCss('#branch-merge-publish');
     await I.waitForVisible('#branch-merge-confirmation', 10);
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'merge', 'unschedule']);
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'prepare', 'merge', 'unschedule']);
     I.clickCss('#branch-merge-confirm');
     await I.waitForVisible('#branch-merge-progress', 10);
-    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'merge', 'unschedule', 'merge']);
+    I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'prepare', 'merge', 'unschedule', 'merge']);
     I.assertDeepEqual(requests[2].payload, {type: 'GROUP', id: 15, hash: 'autotest-folder'});
-    I.assertFalse(Object.hasOwn(requests[3].payload, 'publishAt'));
-    I.assertTrue(requests[3].payload.keepPagePlans);
-    I.assertEqual(requests[5].payload.preparationHash, 'autotest-plan');
-    I.assertTrue(requests[5].payload.keepPagePlans);
+    I.assertFalse(Object.hasOwn(requests[4].payload, 'publishAt'));
+    I.assertTrue(requests[4].payload.keepPagePlans);
+    I.assertEqual(requests[6].payload.preparationHash, 'autotest-plan');
+    I.assertTrue(requests[6].payload.keepPagePlans);
 });

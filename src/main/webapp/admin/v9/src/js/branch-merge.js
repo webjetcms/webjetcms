@@ -1,4 +1,5 @@
 import {icon, node as element} from './dashboard/widget-utils';
+import moment from 'moment';
 import {changedSourceLines, htmlSource} from './branch-html-source';
 import {createBranchPageContent} from './branch-page-content';
 
@@ -123,23 +124,19 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     let activeTab = modal.querySelector('[role="tab"].active')?.dataset.tabId;
     let detailDialog, detailItem, expanded, confirmation, detailTab, pageContent, contentHighlight;
     const pendingSources = [];
-    let scheduleKey;
+    let scheduleKey, savingForPublication = false;
     const publishAt = editor.field('publishAt');
     // Invalid date text must also count as an unsaved change.
     const settings = () => [...['name', 'color', 'description'].map(name => editor.field(name).val()), $(publishAt.input()).val() || ''];
     const savedSettings = settings();
     const dirty = () => !equal(settings(), savedSettings);
+    const validDate = () => !$(publishAt.input()).val() || moment($(publishAt.input()).val(), publishAt.s.opts.format).isValid();
     const ready = () => Boolean(report?.ready && report.preparationHash && !stale);
     const items = () => report?.items || [];
 
     const footer = modal.querySelector('.DTE_Form_Buttons');
     const save = footer.querySelector('button.btn-primary');
-    const publish = button(tr('publish'), () => {
-        if (!ready() || busy || dirty()) return;
-        confirmOnOpen = true;
-        selectChanges();
-        confirmWhenReady();
-    });
+    const publish = button(tr('publish'), startPublication);
     publish.id = 'branch-merge-publish';
     publish.classList.remove('btn-sm');
     const publishLabel = document.createTextNode('');
@@ -157,8 +154,6 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     const changesNotices = element('div', 'form-group pg-branch-changes-notices d-none');
     const messages = element('div', 'pg-branch-panel__messages');
-    const settingsPending = element('p', 'alert alert-warning', tr('settingsPending'));
-    settingsPending.hidden = true;
     messages.setAttribute('aria-live', 'polite');
     const loading = element('p', 'text-muted mb-0', tr('loading'));
     loading.setAttribute('role', 'status');
@@ -166,16 +161,14 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     const scheduleError = element('div', 'alert alert-danger d-none');
     const detailError = element('div', 'alert alert-danger d-none');
     for (const box of [changesError, scheduleError, detailError]) box.setAttribute('role', 'alert');
-    changesNotices.append(changesError, messages, settingsPending);
+    changesNotices.append(changesError, messages);
     changes.prepend(changesNotices);
     const scheduleWarnings = element('div');
     const scheduleSummary = element('div');
     scheduleSummary.append(loading);
     const scheduleBody = element('div');
-    const scheduleSettingsPending = element('p', 'alert alert-warning', tr('settingsPending'));
-    scheduleSettingsPending.hidden = true;
-    const schedulePanel = element('div', 'form-group');
-    schedulePanel.append(scheduleError, scheduleSettingsPending, scheduleWarnings, scheduleSummary, scheduleBody);
+    const schedulePanel = element('div', 'form-group mx-3');
+    schedulePanel.append(scheduleError, scheduleWarnings, scheduleSummary, scheduleBody);
     publishing.append(schedulePanel);
 
     function connectChangesTable(nested) {
@@ -309,19 +302,20 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         save.disabled = busy;
         cancelLabel.textContent = basic || hasDraftSettings ? defaultCancel : ' ' + tr('close');
         publish.hidden = !publishStates.includes(state);
-        publish.disabled = busy || tableLoading || !ready() || hasDraftSettings;
-        publish.title = hasDraftSettings ? tr('settingsPending') : ready() ? '' : tr('publicationBlocked');
+        publish.disabled = busy || tableLoading || !ready() || !validDate();
+        publish.title = '';
+        if (!ready()) publish.title = tr('publicationBlocked');
+        if (!validDate()) publish.title = tr('invalidDate');
         const settingsTab = basic || activeTab === 'branchesDataTable-publishing';
         publish.classList.toggle('btn-outline-secondary', settingsTab);
         publish.classList.toggle('btn-primary', !settingsTab);
         if (basic && publish.parentNode === footer) footer.querySelector('.buttons-footer-left').append(publish);
         if (!basic && publish.parentNode !== footer) cancel.after(publish);
         let publicationLabel = state === 'MERGE_FAILED' ? 'resume' : 'publish';
-        if (state === 'DRAFT' && report?.publishAt) publicationLabel = 'schedule';
+        if (state === 'DRAFT' && $(publishAt.input()).val()) publicationLabel = 'schedule';
         publishLabel.textContent = ' ' + tr(publicationLabel);
         if (state === 'DRAFT' && !busy) publishAt.enable();
         else publishAt.disable();
-        settingsPending.hidden = scheduleSettingsPending.hidden = !hasDraftSettings;
         const saveChoice = detailDialog?.querySelector('#branch-merge-save-choice');
         if (saveChoice) {
             saveChoice.disabled = busy || stale || !detailDialog.querySelector('input[name="branch-merge-choice"]:checked');
@@ -334,7 +328,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     modal.addEventListener('input', updateControls, {signal});
     modal.addEventListener('change', updateControls, {signal});
-    editor.on('preSubmit.branchChanges', () => ['branchesDataTable-basic', 'branchesDataTable-publishing'].includes(activeTab) && !busy);
+    editor.on('preSubmit.branchChanges', () => savingForPublication || (['branchesDataTable-basic', 'branchesDataTable-publishing'].includes(activeTab) && !busy));
 
     function setError(error, box) {
         box.textContent = error.message;
@@ -354,6 +348,9 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
             const nextReport = await api(`/${id}${path}`, body);
             stale = false;
             acceptReport(nextReport);
+            if (!signal.aborted && path === '/merge' && nextReport.state === 'SCHEDULED') {
+                WJ.notifyWarning(WJ.translate('branches.title.js'), tr('scheduledAt', [WJ.formatDateTimeSeconds(nextReport.publishAt)]), 30000);
+            }
             if (!signal.aborted && table && activeTab === 'branchesDataTable-changes') {
                 table.ajax.reload(null, false);
             }
@@ -440,7 +437,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         const {state} = report;
         messages.replaceChildren();
         renderPagePlanWarnings(messages);
-        if (state === 'SCHEDULED') notice(messages, 'info', tr('scheduledAt', [formatTerm(report.publishAt)]));
+        if (state === 'SCHEDULED') notice(messages, 'info', tr('scheduledAt', [WJ.formatDateTimeSeconds(report.publishAt)]));
         if (state === 'NEEDS_ATTENTION') {
             const warning = notice(messages, 'warning', tr('attentionNote'));
             const reopen = button(tr('reopen'), () => confirmState('reopen', messages, reopen));
@@ -469,7 +466,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     }
 
     function updateChangesNotices() {
-        changesNotices.classList.toggle('d-none', !messages.childElementCount && settingsPending.hidden &&
+        changesNotices.classList.toggle('d-none', !messages.childElementCount &&
             changesError.classList.contains('d-none'));
     }
 
@@ -532,6 +529,44 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     for (const node of [changesError, scheduleError, messages, scheduleSummary]) node.tabIndex = -1;
 
+    /** Saves pending editor values without closing the modal before reviewing publication. */
+    async function startPublication() {
+        if (!ready() || busy || !validDate()) return;
+        if (dirty()) {
+            savingForPublication = busy = true;
+            updateControls();
+            let saved;
+            try {
+                saved = await new Promise(resolve => {
+                    const action = editor.s.action;
+                    editor.on('processing.branchPublish', (event, processing) => {
+                        if (processing) return;
+                        editor.off('processing.branchPublish');
+                        resolve(saved);
+                    });
+                    editor.submit(json => {
+                        saved = json?.data?.find(branch => Number(branch.id) === Number(id)) || editor.currentJson;
+                        editor.s.action = action;
+                    }, null, null, false);
+                });
+            } catch (error) {
+                if (!signal.aborted) setError(error, activeTab === 'branchesDataTable-publishing' ? scheduleError : changesError);
+                return;
+            } finally {
+                savingForPublication = busy = false;
+                editor.off('processing.branchPublish');
+                if (!signal.aborted) updateControls();
+            }
+            if (!saved || signal.aborted) return;
+            editor.currentJson = saved;
+            savedSettings.splice(0, savedSettings.length, ...settings());
+            if (!await perform('/prepare', {expectedRevision: saved.revision}) || !ready()) return;
+        }
+        confirmOnOpen = true;
+        selectChanges();
+        confirmWhenReady();
+    }
+
     function confirmPublication() {
         const resume = report.state === 'MERGE_FAILED';
         const scheduled = !resume && report.publishAt != null;
@@ -552,7 +587,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         );
         if (keepPagePlans) notes.append(element('li', 'mt-1', tr('keepPagePlansNote')));
         description.append(summary);
-        if (scheduled) description.append(element('p', 'fw-semibold', tr('scheduledAt', [formatTerm(report.publishAt)])));
+        if (scheduled) description.append(element('p', 'fw-semibold', tr('scheduledAt', [WJ.formatDateTimeSeconds(report.publishAt)])));
         description.append(notes);
         confirmAction(messages, publish, {
             heading: tr(scheduled ? 'schedule' : publicationAction),
@@ -600,10 +635,6 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         });
     }
 
-    function formatTerm(value) {
-        return `${new Date(value).toLocaleString(document.documentElement.lang || undefined, {timeZone: report.timeZone})} (${report.timeZone})`;
-    }
-
     function renderSchedule() {
         scheduleWarnings.replaceChildren();
         renderPagePlanWarnings(scheduleWarnings);
@@ -616,7 +647,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         if (scheduled) {
             const plan = notice(scheduleSummary, 'info', tr('scheduledNote'));
             plan.id = 'branch-merge-scheduled';
-            plan.prepend(element('strong', 'd-block mb-1', tr('scheduledAt', [formatTerm(report.publishAt)])));
+            plan.prepend(element('strong', 'd-block mb-1', tr('scheduledAt', [WJ.formatDateTimeSeconds(report.publishAt)])));
             const unschedule = button(tr('unschedule'), () => confirmState('unschedule', scheduleSummary, unschedule));
             unschedule.id = 'branch-merge-unschedule';
             scheduleBody.append(unschedule);
@@ -1004,5 +1035,6 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         schedulePanel.remove();
         publishAt.enable();
         editor.off('preSubmit.branchChanges');
+        editor.off('processing.branchPublish');
     };
 }
