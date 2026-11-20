@@ -569,11 +569,11 @@ block content
                             }, 200);
                         }
                     });
-                    groupsDatatable.EDITOR.on('postSubmit', function (e, json, data) {
-                        setTimeout(()=>{
-                            //console.log("postSubmit");
+                    groupsDatatable.EDITOR.on('submitSuccess', function (e, json) {
+                        // Forced reloads are handled below. A second refresh can lose the tree state.
+                        if (json.forceReload !== true) {
                             $('#SomStromcek').jstree(true).refresh();
-                        }, 1000);
+                        }
                     });
                     groupsDatatable.EDITOR.on('remove', function (e, json, ids) {
                         //console.log("AFTER REMOVE");
@@ -586,7 +586,7 @@ block content
                         if (e.detail.TABLE.DATA.id=="groups-datatable") {
                             //toto sa vyvola, ked sa zmeni domena na adresari
                             //console.log("e.detail.data=", e.detail.data);
-                            if (e.detail.data.editorFields.forceDomainNameChange === true) {
+                            if (e.detail.data?.editorFields?.forceDomainNameChange === true) {
                                 let returnedGroupId = e.detail.data.groupId;
                                 if (returnedGroupId > 0) {
                                     //console.log("FORCE RELOAD, reloading page with groupId=", returnedGroupId);
@@ -604,13 +604,10 @@ block content
                                 } else {
                                     window.location="/admin/v9/";
                                 }
+                                return;
                             }
-                            //window.location=window.location.pathname;
-                            setTimeout(()=>{
-                                //console.log("Reloading jstree 1");
-                                $('#SomStromcek').jstree(true).refresh();
-                                webpagesDatatable.ajax.reload();
-                            }, 1000);
+                            $('#SomStromcek').jstree(true).refresh();
+                            webpagesDatatable.ajax.reload();
                         } else {
                             //console.log("Reloading jstree 2");
                             $('#SomStromcek').jstree(true).refresh();
