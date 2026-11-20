@@ -426,7 +426,8 @@ public class AiChatStore {
                     || !Objects.equals(assistantId, thread.getAssistantId())) return false;
             AiChatEntry answer = entry(document, messageId);
             Call pending = answer.getPendingToolCall();
-            if (Boolean.TRUE.equals(answer.getPendingWriteClaimed()) || pending == null || !pending.write() || !pending.name().equals(call.name())
+            // Older transcripts have no claim flag and their pending write may already have run.
+            if (!Boolean.FALSE.equals(answer.getPendingWriteClaimed()) || pending == null || !pending.write() || !pending.name().equals(call.name())
                     || !AiToolProtocol.sameJson(pending.arguments(), call.arguments())) return false;
             answer.setPendingWriteClaimed(true);
             answer.setToolWriteIssued(true);

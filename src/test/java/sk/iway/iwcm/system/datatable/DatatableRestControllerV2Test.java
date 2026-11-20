@@ -46,6 +46,7 @@ import sk.iway.iwcm.test.TestRequest;
 import sk.iway.spring.SpringApplication;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -518,54 +519,37 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
 
     @Test
     void testHandleEditor() {
-        // Call the REST method to handle the editor
-        DatatableRequest<Long, Object> datatableRequest = new DatatableRequest<>();
-        Map<Long, Object> data = new HashMap<>();
-        data.put(1L, new Object());
-        datatableRequest.setData(data);
-        Object result;
+        var request = new TestRequest("", "/admin/rest/test/editor");
+        var batch = new DatatableRequest<Long, Object>();
+        batch.setData(Map.of(1L, new Object()));
+        batch.setAction("edit");
+        controller.handleEditor(request, batch);
 
-        datatableRequest.setAction("edit");
-        result = controller.handleEditor(controller.getRequest(), datatableRequest);
+        batch.setAction("create");
+        batch.setData(Map.of(-1L, new Object(), -2L, new Object()));
+        batch.setDztotalchunkcount(1);
+        batch.setImportedColumns(Set.of("title"));
+        controller.initBinder(request, new WebDataBinder(batch));
+        try {
+            controller.handleEditor(request, batch);
+            assertEquals(Set.of("title"), controller.getImportedColumns());
+            assertEquals(2, DatatableRestControllerV2.getLastImportedRow());
+        } finally {
+            controller.initBinder(new TestRequest("", "/admin/rest/test/add"), new WebDataBinder(new Object()));
+        }
+        assertFalse(controller.isImporting());
+        assertNull(DatatableRestControllerV2.getLastImportedRow());
 
-        // Verify that the result is not null
-        assertEquals(true, result != null, "handleEditor should return a non-null result");
-
-        assertEquals(1, controller.getEditItemCounter(), "editItem should be called once");
-        assertEquals(0, controller.getInsertItemCounter(), "insertItem should not be called");
-        assertEquals(0, controller.getDeleteItemCounter(), "deleteItem should not be called");
-
-        assertEquals(1, controller.getBeforeSaveCounter(), "beforeSave should be called once");
-        assertEquals(1, controller.getAfterSaveCounter(), "afterSave should be called once");
-        assertEquals(0, controller.getBeforeDeleteCounter(), "beforeDelete should not be called");
-        assertEquals(0, controller.getAfterDeleteCounter(), "afterDelete should not be called");
-
-        data.clear();
-        data.put(-1L, new Object());
-        datatableRequest.setData(data);
-        datatableRequest.setAction("create");
-        result = controller.handleEditor(controller.getRequest(), datatableRequest);
-
-        assertEquals(1, controller.getEditItemCounter(), "editItem should be called once");
-        assertEquals(1, controller.getInsertItemCounter(), "insertItem should be called once");
-        assertEquals(0, controller.getDeleteItemCounter(), "deleteItem should not be called");
-
-        assertEquals(2, controller.getBeforeSaveCounter(), "beforeSave should be called twice");
-        assertEquals(2, controller.getAfterSaveCounter(), "afterSave should be called twice");
-        assertEquals(0, controller.getBeforeDeleteCounter(), "beforeDelete should not be called");
-        assertEquals(0, controller.getAfterDeleteCounter(), "afterDelete should not be called");
-
-        datatableRequest.setAction("remove");
-        result = controller.handleEditor(controller.getRequest(), datatableRequest);
-
-        assertEquals(1, controller.getEditItemCounter(), "editItem should be called once");
-        assertEquals(1, controller.getInsertItemCounter(), "insertItem should be called once");
-        assertEquals(1, controller.getDeleteItemCounter(), "deleteItem should be called once");
-
-        assertEquals(2, controller.getBeforeSaveCounter(), "beforeSave should be called twice");
-        assertEquals(2, controller.getAfterSaveCounter(), "afterSave should be called twice");
-        assertEquals(1, controller.getBeforeDeleteCounter(), "beforeDelete should be called once");
-        assertEquals(1, controller.getAfterDeleteCounter(), "afterDelete should be called once");
+        batch.setAction("remove");
+        batch.setData(Map.of(1L, new Object()));
+        controller.handleEditor(request, batch);
+        assertEquals(1, controller.getEditItemCounter());
+        assertEquals(2, controller.getInsertItemCounter());
+        assertEquals(1, controller.getDeleteItemCounter());
+        assertEquals(3, controller.getBeforeSaveCounter());
+        assertEquals(3, controller.getAfterSaveCounter());
+        assertEquals(1, controller.getBeforeDeleteCounter());
+        assertEquals(1, controller.getAfterDeleteCounter());
     }
 
     @Test

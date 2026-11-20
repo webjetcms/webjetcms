@@ -97,8 +97,9 @@ function rejected(observation, call) {
 
 export function formatWriteOutcome({ name, status, uncertain, rejected, ids = [] }) {
     const prefix = name ? name + ' — ' : '';
-    if (uncertain) return prefix + WJ.translate('components.ai.tools.uncertain.js');
-    return prefix + 'HTTP ' + status + (ids.length ? ' (ID ' + ids.join(', ') + ')' : '') +
+    const records = ids.length ? ' (ID ' + ids.join(', ') + ')' : '';
+    if (uncertain) return prefix + WJ.translate('components.ai.tools.uncertain.js') + records;
+    return prefix + 'HTTP ' + status + records +
         (rejected ? ' · ' + WJ.translate('components.ai.tools.unverified.js') : '');
 }
 
@@ -107,29 +108,29 @@ function validCall(call) {
         typeof call.arguments === 'object' && !Array.isArray(call.arguments);
 }
 
-function writeStatus(observation, failed) {
-    const { result } = observation;
+function writeOutcome(observation, call) {
+    const { name, status, uncertain, result } = observation;
     const ids = (Array.isArray(result?.data) ? result.data : [result]).map(row => row?.id).filter(id => Number.isSafeInteger(id) && id > 0);
-    return formatWriteOutcome({ ...observation, ids, rejected: failed });
+    return { name, status, uncertain, ids, rejected: rejected(observation, call) };
 }
 
 /** Alternates one model request with one HTTP request until the model returns its final answer. */
 export async function runToolSteps(assistantId, next, signal, onWrite = () => {}, onToolActivity) {
     const results = [];
     const writes = new Map();
+    const writeStatus = () => Array.from(writes.values(), formatWriteOutcome).join('\n');
+    const mayHaveSaved = () => [...writes.values()].some(outcome => outcome.uncertain || !outcome.rejected || outcome.ids.length > 0);
     let previous;
-    let uncertain = false;
-    let mayHaveSaved = false;
-    let writeProblem = false;
     try {
         for (;;) {
             signal?.throwIfAborted();
             const answer = await next(results);
             if (!answer.toolCall || answer.error) {
                 if (writes.size) {
-                    answer.toolStatus = [...writes.values()].join('\n');
-                    answer.toolProblem = writeProblem;
-                    answer.toolUncertain = uncertain;
+                    const outcomes = [...writes.values()];
+                    answer.toolStatus = writeStatus();
+                    answer.toolUncertain = outcomes.some(outcome => outcome.uncertain);
+                    answer.toolProblem = answer.toolUncertain || outcomes.some(outcome => outcome.rejected);
                 }
                 return answer;
             }
@@ -142,9 +143,10 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
             if (results.length >= maxCalls || key === previous || writes.has(key)) throw new Error(WJ.translate('components.ai.tools.limit.js'));
             const write = call.write !== false;
             if (write) {
-                if (uncertain) throw new Error(WJ.translate('components.ai.tools.uncertain.js'));
-                writes.set(key, formatWriteOutcome({ name: call.name, uncertain: true }));
-                onWrite([...writes.values()].join('\n'), true);
+                const blocked = [...writes.values()].find(outcome => outcome.uncertain || (outcome.rejected && outcome.ids.length > 0));
+                if (blocked) throw new Error(WJ.translate(blocked.uncertain ? 'components.ai.tools.uncertain.js' : 'components.ai.tools.unverified.js'));
+                writes.set(key, { name: call.name, uncertain: true });
+                onWrite(writeStatus(), true);
             }
             onToolActivity?.(call.name);
             const observation = await callEndpoint(assistantId, call, signal);
@@ -152,17 +154,13 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
             previous = key;
             results.push(observation);
             if (write) {
-                uncertain ||= observation.uncertain;
-                const failed = rejected(observation, call);
-                writeProblem ||= failed || observation.uncertain;
-                mayHaveSaved ||= observation.uncertain || !failed || Boolean(observation.result?.data?.length);
-                writes.set(key, writeStatus(observation, failed));
-                onWrite([...writes.values()].join('\n'), mayHaveSaved);
+                writes.set(key, writeOutcome(observation, call));
+                onWrite(writeStatus(), mayHaveSaved());
             }
         }
     } catch (error) {
         if (!writes.size) throw error;
-        throw Object.assign(new Error(error.message || String(error)), { toolStatus: [...writes.values()].join('\n'), retryable: !mayHaveSaved });
+        throw Object.assign(new Error(error.message || String(error)), { toolStatus: writeStatus(), retryable: !mayHaveSaved() });
     }
 }
 

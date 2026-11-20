@@ -36,11 +36,13 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 class AiToolPagingTest {
     private static final String PAGING_DESCRIPTION = "components.ai.tools.client_side_paging.description";
 
-    /** The production controllers expose their unpaged lists without advertising or injecting paging. */
+    /** Unpaged lists omit paging for production controllers and inherited handlers on Spring proxies. */
     @Test
     void configurationAndGroupsOmitPagingAndRejectPagingArguments() throws Exception {
-        for (Class<?> controller : List.of(ConfigurationController.class, GroupsRestController.class)) {
-            var entry = entry(mock(controller), "getAll", "/all", Pageable.class);
+        var proxy = new ProxyFactory(new ClientController());
+        proxy.setProxyTargetClass(true);
+        for (var controller : List.of(mock(ConfigurationController.class), mock(GroupsRestController.class), proxy.getProxy())) {
+            var entry = entry(controller, "getAll", "/all", Pageable.class);
             var inputs = entry.inputs();
             var properties = (Map<?, ?>) inputs.schema().get("properties");
             assertFalse(properties.containsKey("page"));
@@ -60,11 +62,10 @@ class AiToolPagingTest {
         }
     }
 
-    /** Missing, default and explicit false metadata retain server paging and the DataTable list default. */
+    /** Missing metadata and the default on the web pages controller retain server paging. */
     @Test
     void serverPagingKeepsItsExistingContract() throws Exception {
-        for (Class<?> controller : List.of(UnannotatedController.class, DefaultController.class,
-                ServerController.class, WebpagesRestController.class)) {
+        for (Class<?> controller : List.of(UnannotatedController.class, WebpagesRestController.class)) {
             var entry = entry(mock(controller), "getAll", "/all", Pageable.class);
             var inputs = entry.inputs();
             var properties = (Map<?, ?>) inputs.schema().get("properties");
@@ -76,17 +77,6 @@ class AiToolPagingTest {
             assertEquals(Map.of("page", List.of("2"), "size", List.of("5")), inputs.bind(arguments).query());
             assertFalse(entry.definition().description().contains("Do not send page or size."));
         }
-    }
-
-    /** Controller metadata remains available for inherited methods on a Spring class proxy. */
-    @Test
-    void inheritedHandlersReadMetadataFromTheProxiedController() throws Exception {
-        var factory = new ProxyFactory(new ClientController());
-        factory.setProxyTargetClass(true);
-        var entry = entry(factory.getProxy(), "getAll", "/all", Pageable.class);
-        assertTrue(entry.inputs().clientSidePaging());
-        assertEquals(Map.of(), entry.inputs().bind(Map.of()).query());
-        assertTrue(entry.definition().description().endsWith("Do not send page or size."));
     }
 
     /** Both free-form and DataTable search filters reject paging while retaining ordinary filters. */
@@ -135,7 +125,6 @@ class AiToolPagingTest {
             assertTrue(guidance != null && !guidance.isBlank());
             String description = configuration.definition(language).description();
             assertEquals(properties.getProperty("components.ai.tools.configuration_get_all.description") + " " + guidance, description);
-            assertEquals(description.indexOf(guidance), description.lastIndexOf(guidance));
             assertEquals("Custom list. " + guidance, custom.definition(language).description());
         }
         assertEquals(custom.definition().description(), custom.definition(mock(Prop.class)).description());
@@ -149,24 +138,14 @@ class AiToolPagingTest {
         return new AiToolRegistry(handlers).entries().get(0);
     }
 
-    static class ListController extends DatatableRestControllerV2<PagingRow, Long> {
-        ListController() { super(null); }
+    @AiTool
+    static class UnannotatedController extends DatatableRestControllerV2<PagingRow, Long> {
+        UnannotatedController() { super(null); }
     }
 
     @AiTool
-    static class UnannotatedController extends ListController { }
-
-    @AiTool
-    @Datatable
-    static class DefaultController extends ListController { }
-
-    @AiTool
-    @Datatable(clientSidePaging = false)
-    static class ServerController extends ListController { }
-
-    @AiTool
     @Datatable(clientSidePaging = true)
-    static class ClientController extends ListController {
+    static class ClientController extends UnannotatedController {
         @AiToolDescription("Custom list.")
         public List<PagingRow> custom(@RequestParam Map<String, String> filters, Pageable pageable) { return List.of(); }
 

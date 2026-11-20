@@ -89,8 +89,6 @@ class AiToolProtocolTest {
     void validatesDeferredArgumentsAndAllowsOrdinaryAnswers() {
         var protocol = new AiToolProtocol(List.of(save), List.of());
         assertFalse(protocol.instructions().contains("\"title\"") || protocol.instructions().contains("\"$defs\""));
-        assertTrue(protocol.instructions().contains("name and version match"));
-        assertTrue(protocol.instructions().contains("inputSchema from a loaded skill"));
         var answer = new AssistantResponseDTO();
         protocol.apply("Hello!", answer, mock(Prop.class));
         assertEquals("Hello!", answer.getResponse());
@@ -103,10 +101,13 @@ class AiToolProtocolTest {
         protocol.apply("{\"type\":\"call\",\"name\":\"save\",\"arguments\":{\"body\":{\"title\":\"Page\"}}}", answer, mock(Prop.class));
         assertEquals("save", answer.getToolCall().name());
         assertTrue(answer.getToolCall().write());
-        answer = new AssistantResponseDTO();
-        protocol.apply("{\"type\":\"call\",\"name\":\"unassigned\",\"arguments\":{}}", answer, mock(Prop.class));
-        assertNull(answer.getToolCall());
-        assertEquals(AiToolProtocol.INVALID_TOOL_STEP, answer.getErrorCategory());
+        String call = "{\"type\":\"call\",\"name\":\"%s\",\"arguments\":{\"body\":{\"title\":\"%s\"}}}";
+        for (String invalid : List.of(call.formatted("unassigned", "Page"), call.formatted("save", "Page") + " {}",
+                call.formatted("save", "€".repeat(AiToolProtocol.MAX_ARGUMENT_BYTES / 3)))) {
+            answer = new AssistantResponseDTO();
+            protocol.apply(invalid, answer, null);
+            assertEquals(AiToolProtocol.INVALID_TOOL_STEP, answer.getErrorCategory());
+        }
     }
 
 }

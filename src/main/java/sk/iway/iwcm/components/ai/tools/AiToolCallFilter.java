@@ -15,6 +15,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import tools.jackson.core.JacksonException;
+import tools.jackson.core.StreamReadFeature;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -27,8 +28,8 @@ public class AiToolCallFilter extends GenericFilterBean {
     private static final String PREFIX = "/admin/rest/ai/tools/";
     private static final String SUFFIX = "/call";
     private static final String FAILURE = AiToolCallFilter.class.getName() + ".failure";
-    private static final int MAX_ENVELOPE_BYTES = 1024 * 1024;
     private static final JsonMapper JSON = JsonMapper.builder()
+            .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS, DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
             .build();
     private static final TypeReference<Map<String, Object>> ARGUMENTS = new TypeReference<>() {};
@@ -55,12 +56,12 @@ public class AiToolCallFilter extends GenericFilterBean {
         Map<String, Object> arguments = null;
         try {
             if (http.getContentType() != null && MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.parseMediaType(http.getContentType()))) {
-                if (http.getContentLengthLong() > MAX_ENVELOPE_BYTES) {
+                if (http.getContentLengthLong() > AiToolProtocol.MAX_ARGUMENT_BYTES) {
                     ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
                     return;
                 }
-                byte[] bytes = http.getInputStream().readNBytes(MAX_ENVELOPE_BYTES + 1);
-                if (bytes.length > MAX_ENVELOPE_BYTES) {
+                byte[] bytes = http.getInputStream().readNBytes(AiToolProtocol.MAX_ARGUMENT_BYTES + 1);
+                if (bytes.length > AiToolProtocol.MAX_ARGUMENT_BYTES) {
                     ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
                     return;
                 }

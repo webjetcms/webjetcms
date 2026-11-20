@@ -1002,6 +1002,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	protected void initBinder(HttpServletRequest request, WebDataBinder binder)
 	{
 		String requestURI = request.getRequestURI();
+		// A direct create starts a request. Editor creates share the state of their batch.
+		if (requestURI.endsWith("/add")) threadData.remove();
 		if (requestURI.endsWith("/editor")) {
 			@SuppressWarnings("unchecked")
 			DatatableRequest<Long, T> target = (DatatableRequest<Long, T>) binder.getTarget();
@@ -1720,7 +1722,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping("/add")
 	public ResponseEntity<T> add(@Valid @RequestBody T entity) {
-		clearThreadData();
 		prepareEntityForCreate(entity);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();

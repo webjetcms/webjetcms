@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,9 +22,11 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import sk.iway.iwcm.components.ai.dto.AiChatRequest;
+import sk.iway.iwcm.components.ai.chat.AiChatFiles;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
+import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol.Call;
 import sk.iway.iwcm.i18n.Prop;
 
 /** Covers persistent conversation lifecycle, isolation and history lookup. */
@@ -61,6 +64,28 @@ class AiChatStoreTest {
             assertEquals("Čet gpt-6.1-sol", new AiChatStore().get(turn.thread().getId(), scope).thread().getAssistantName());
             assertEquals(1, store.list(scope, 0, "gpt-6.1-sol").items().size());
         }
+    }
+
+    @Test
+    void pendingWriteFromBeforeClaimTrackingCannotBeDispatchedAgain() throws IOException {
+        var turn = store.begin(request(null, null, "Save"), scope, assistant, "config");
+        String thread = turn.thread().getId();
+        String message = turn.message().getId();
+        var call = new Call("save", Map.of("id", 42), true);
+        store.awaitToolResult(scope, thread, message, call, 0);
+
+        Path file = root.resolve("7/42").resolve(thread).resolve("ai_chat.json");
+        var document = AiChatFiles.read(file);
+        var answer = document.getMessages().get(1);
+        answer.setPendingWriteClaimed(null);
+        answer.setToolWriteIssued(true);
+        AiChatFiles.write(file, document);
+
+        assertFalse(store.claimPendingWrite(scope, thread, message, assistant.getId(), call));
+        store.stop(thread, scope, false);
+        var stopped = store.get(thread, scope).messages().get(1);
+        assertEquals("TOOL_OUTCOME_UNKNOWN", stopped.getErrorCategory());
+        assertEquals(Boolean.FALSE, stopped.getRetryable());
     }
 
     @Test

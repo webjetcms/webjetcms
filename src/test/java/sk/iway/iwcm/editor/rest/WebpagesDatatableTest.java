@@ -10,12 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletContext;
 
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -124,10 +126,15 @@ class WebpagesDatatableTest {
         hideFieldA();
         when(settings.getFieldsSettings(DocEditorFields.class.getName(), 9)).thenReturn(new FieldsSettingsEntity[0]);
         doReturn(page("Folder default")).when(facade).getDocForEditor(-1, -1, 25);
-        var request = controller.getRequest();
+        var request = (MockHttpServletRequest) controller.getRequest();
+        request.getSession().setAttribute(Constants.USER_KEY, new Identity());
+        request.getSession().setAttribute(Constants.SESSION_GROUP_ID, "10");
+        request.setParameter("groupId", "25");
         var user = controller.getUser();
         try (var dispatch = mockStatic(AiToolService.class); var pages = mockStatic(WebpagesService.class)) {
             dispatch.when(() -> AiToolService.isToolRequest(request, WebpagesRestController.class)).thenReturn(true);
+            assertEquals(25, controller.getDefaultOptions(Pageable.unpaged(), false).getGroupId());
+            assertEquals("10", request.getSession().getAttribute(Constants.SESSION_GROUP_ID));
             pages.when(() -> WebpagesService.requireCreateFolder(user, 25)).thenReturn(folder);
             assertSame(submitted, controller.insertItem(submitted));
             assertEquals("Folder default", submitted.getFieldA());

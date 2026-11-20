@@ -78,13 +78,16 @@ public class AiToolAuthorization {
     Optional<AiAssistantRuntime> assistant(long id, HttpServletRequest request) {
         if (id < 1 || !security.hasPermission("cmp_ai_button")) return Optional.empty();
         int domainId = CloudToolsForCore.getDomainId();
+        if (request.getAttribute(runtimeKey(id, domainId)) instanceof AiAssistantRuntime cached) {
+            return Boolean.FALSE.equals(cached.assistant().getActive()) ? Optional.empty() : Optional.of(cached);
+        }
         return assistants.findByIdAndDomainId(id, domainId)
                 .filter(a -> !Boolean.FALSE.equals(a.getActive()))
                 .map(a -> resolve(a, domainId, request));
     }
 
     AiAssistantRuntime resolve(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
-        String key = runtimeKey(assistant, domainId);
+        String key = runtimeKey(assistant.getId(), domainId);
         if (request.getAttribute(key) instanceof AiAssistantRuntime cached) return cached;
         var runtime = AiAssistantRuntime.compose(skills, assistant, domainId, registry,
                 entry -> mayList(entry, request, Access.CATALOG), true);
@@ -97,12 +100,12 @@ public class AiToolAuthorization {
                 entry -> mayList(entry, request, Access.CATALOG), false);
     }
 
-    private static String runtimeKey(AssistantDefinitionEntity assistant, int domainId) {
-        return AiAssistantRuntime.class.getName() + "." + domainId + "." + assistant.getId();
+    private static String runtimeKey(Long assistantId, int domainId) {
+        return AiAssistantRuntime.class.getName() + "." + domainId + "." + assistantId;
     }
 
     boolean hasInstructionContext(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
-        String key = runtimeKey(assistant, domainId);
+        String key = runtimeKey(assistant.getId(), domainId);
         if (request.getAttribute(key) instanceof AiAssistantRuntime runtime) {
             return !runtime.skillInstructions().isEmpty() || !runtime.tools().isEmpty();
         }

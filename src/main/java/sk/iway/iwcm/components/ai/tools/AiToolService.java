@@ -159,9 +159,9 @@ public class AiToolService {
 
     /**
      * Binds arguments to one registered mapping and continues through the server's native REST filter chain.
-     * Start the remaining authentication, security and MVC chain with the translated request.
+     * Unresolved calls continue on the original route so its admin filters and error handler still run.
      */
-    public void call(String name, Map<String, Object> arguments, HttpServletRequest request, HttpServletResponse response,
+    void call(String name, Map<String, Object> arguments, HttpServletRequest request, HttpServletResponse response,
             FilterChain chain) throws IOException, ServletException {
         if (!AiToolServletRoutes.usesDispatcher(request)) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -169,7 +169,7 @@ public class AiToolService {
         }
         AiToolRegistry.Entry entry = registry.lookup(name);
         if (entry == null) {
-            reject(request, response, chain);
+            chain.doFilter(request, response);
             return;
         }
         AiToolRequest target;
@@ -182,7 +182,7 @@ public class AiToolService {
         } catch (IllegalArgumentException invalidArguments) {
             String correction = invalidArguments instanceof AiToolArgumentValidator.InvalidArguments ? invalidArguments.getMessage() : null;
             AiToolCallFilter.invalid(request, entry, authorization, correction);
-            reject(request, response, chain);
+            chain.doFilter(request, response);
             return;
         }
         if (!AiToolServletRoutes.permits(request, target)) {
@@ -204,16 +204,6 @@ public class AiToolService {
             request.removeAttribute(PathFilter.AI_TOOL_ENTRY_PATH);
             ServletRequestPathUtils.setParsedRequestPath(originalPath, request);
             AiToolAudit.finish(request, status);
-        }
-    }
-
-    private static void reject(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        // The public HTTP facade still needs the ordinary admin filters on an unresolved call.
-        if (request.getRequestURI().startsWith(request.getContextPath() + "/admin/rest/ai/tools/")
-                && request.getRequestURI().endsWith("/call") && "POST".equals(request.getMethod())) {
-            chain.doFilter(request, response);
-        } else {
-            AiToolCallFilter.rejectUntranslated(request, response);
         }
     }
 }

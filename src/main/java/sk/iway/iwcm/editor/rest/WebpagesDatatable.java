@@ -411,7 +411,9 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());
 
         int groupId = getGroupIdParam();
-        getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
+        if (!AiToolService.isToolRequest(getRequest(), WebpagesRestController.class)) {
+            getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
+        }
 
         options.setGroupId(groupId);
         options.setUserGroupId(Tools.getIntValue(getRequest().getParameter("userGroupId"), -1));

@@ -58,7 +58,9 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
             return;
         }
 
-        getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(id));
+        if (!item.isWritableOnly()) {
+            getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(id));
+        }
 
         boolean showPages = true;
 

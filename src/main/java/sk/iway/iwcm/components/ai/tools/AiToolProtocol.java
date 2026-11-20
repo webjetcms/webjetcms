@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.ai.tools;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -11,6 +10,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -50,9 +50,9 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, Set<String> dir
     public static final String INVALID_TOOL_MESSAGE = "components.ai.tools.invalidStep.js";
     private static final Pattern JSON_BLOCK = Pattern.compile("\\A```(?:json)?[ \\t]*\\R(.*)\\R```\\z", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern TOOL_ENVELOPE = Pattern.compile("\\{\\s*\"(?:type|name|arguments)\"\\s*:");
-    private static final int MAX_ARGUMENT_BYTES = 1024 * 1024;
-    private static final ObjectMapper JSON = new ObjectMapper().enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY,
-            DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+    static final int MAX_ARGUMENT_BYTES = 1024 * 1024;
+    private static final ObjectMapper JSON = new ObjectMapper().enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS, DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     private static final TypeReference<Map<String, Object>> ARGUMENTS = new TypeReference<>() {};
 
     public record Call(String name, Map<String, Object> arguments, boolean write,
@@ -257,21 +257,28 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, Set<String> dir
     }
 
     private void applyDecision(String modelResponse, AssistantResponseDTO target, Prop prop, Map<String, String> includes) {
-        String text = modelResponse == null ? "" : modelResponse.strip();
+        if (modelResponse == null || modelResponse.length() > MAX_ARGUMENT_BYTES || modelResponse.isBlank()) {
+            invalidDecision(target, prop, "Return a nonempty answer or a single tool decision within the size limit.");
+            return;
+        }
+        String text = modelResponse.strip();
         var block = JSON_BLOCK.matcher(text);
         String decisionText = block.matches() ? block.group(1).strip() : text;
-        if (!text.isEmpty() && text.length() <= MAX_ARGUMENT_BYTES && !decisionText.startsWith("{")
-                && !TOOL_ENVELOPE.matcher(decisionText).find()) {
+        if (!decisionText.startsWith("{") && !TOOL_ENVELOPE.matcher(decisionText).find()) {
             target.setResponse(text);
             return;
         }
         JsonNode decision;
-        try { decision = readDecision(modelResponse); }
-        catch (IllegalArgumentException invalid) {
-            invalidDecision(target, prop, invalid.getMessage());
+        try {
+            decision = JSON.readTree(decisionText);
+        } catch (JsonProcessingException invalid) {
+            var location = invalid.getLocation();
+            String at = location == null ? "" : " at line " + location.getLineNr() + ", column " + location.getColumnNr();
+            invalidDecision(target, prop, "Return exactly one JSON object. Invalid tool JSON" + at
+                + ": " + invalid.getOriginalMessage() + ". Escape quotes and newlines inside string values.");
             return;
         }
-        if (decision == null || !decision.isObject()) {
+        if (!decision.isObject()) {
             invalidDecision(target, prop, "Return exactly one JSON object: a call with name and arguments, or a final with text.");
             return;
         }
@@ -296,8 +303,8 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, Set<String> dir
         try {
             if (!includes.isEmpty()) {
                 args.replaceAll((key, value) -> restoreArgument(value, includes));
-                checkArgumentSize(json(args));
             }
+            checkArgumentSize(json(args));
             tool = validateCall(name, args);
         } catch (IllegalArgumentException invalid) {
             invalidDecision(target, prop, invalid.getMessage());
@@ -372,26 +379,8 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, Set<String> dir
     }
 
     private static boolean isFinal(JsonNode decision) {
-        return decision != null && decision.size() == 2 && "final".equals(decision.path("type").textValue())
+        return decision.size() == 2 && "final".equals(decision.path("type").textValue())
                 && decision.path("text").isTextual() && !decision.get("text").textValue().isBlank();
-    }
-
-    private JsonNode readDecision(String response) {
-        if (response == null || response.length() > MAX_ARGUMENT_BYTES) return null;
-        String text = response.strip();
-        var block = JSON_BLOCK.matcher(text);
-        try (var parser = JSON.createParser(block.matches() ? block.group(1) : text)) {
-            JsonNode first = JSON.readTree(parser);
-            // Accepting the first part would also retain fabricated later results in provider-side history.
-            if (parser.nextToken() != null) throw new IllegalArgumentException("Return only one tool decision. Do not append a predicted result to a call.");
-            return first;
-        } catch (JsonProcessingException invalid) {
-            throw new IllegalArgumentException("Invalid tool JSON at line " + invalid.getLocation().getLineNr()
-                + ", column " + invalid.getLocation().getColumnNr() + ": " + invalid.getOriginalMessage()
-                + ". Escape quotes and newlines inside HTML/string values and close every object and array.", invalid);
-        } catch (IOException invalid) {
-            return null;
-        }
     }
 
     private static void invalidDecision(AssistantResponseDTO target, Prop prop, String reason) {

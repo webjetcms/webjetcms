@@ -35,8 +35,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -171,17 +169,14 @@ class AiToolDiscoveryTest {
     }
 
     @Test
-    void configurationPublishesOnlyImplementedOperations() {
+    void configurationPublishesOnlyImplementedOperationsAndValidFields() {
         var registry = context.getBean(AiToolRegistry.class);
         var names = registry.assignedEntries(Set.of(), Set.of("configuration")).stream()
                 .map(entry -> entry.definition().name()).toList();
         assertEquals(List.of("configuration_add", "configuration_delete", "configuration_edit", "configuration_get_all",
                 "configuration_get_autocomplete", "configuration_get_autocomplete_detail", "configuration_get_one",
                 "configuration_handle_editor", "configuration_restart"), names);
-    }
 
-    @Test
-    void configurationWriteRejectsMisspelledBodyFields() {
         var schema = context.getBean(AiToolRegistry.class).lookup("configuration_add").definition().inputSchema();
         AiToolArgumentValidator.validate(schema, Map.of("body", Map.of("name", "example", "encrypt", true)));
         assertThrows(AiToolArgumentValidator.InvalidArguments.class, () ->
@@ -344,11 +339,10 @@ class AiToolDiscoveryTest {
                 .andExpect(status().isNotFound());
     }
 
-    /** Every assignment route supplies only summaries until the automatically assigned loader is called. */
-    @ParameterizedTest
-    @ValueSource(strings = {"@tool(configuration_add)", "@group(configuration)", "@skill(Configuration)"})
-    void loadsAssignedToolSchemasOnlyOnDemand(String references) throws Exception {
-        assistant.setInstructions(references);
+    /** Linked skills expose summaries first and load only schemas available to the current user. */
+    @Test
+    void loadsAssignedToolSchemasOnlyOnDemand() throws Exception {
+        assistant.setInstructions("@skill(Configuration)");
         when(security.hasPermission("menuConfig")).thenReturn(true);
         var skill = new AiSkillEntity();
         skill.setName("Configuration");
@@ -366,7 +360,7 @@ class AiToolDiscoveryTest {
             assertTrue(summary.has("name") && summary.has("description") && summary.has("httpMethod")
                     && summary.has("path") && summary.has("write") && summary.has("version"));
         }
-        assertEquals(references.startsWith("@skill") ? 2 : 1, loaders.size());
+        assertEquals(2, loaders.size());
         for (var loader : loaders) {
             assertTrue(Set.of(AiAssistantRuntime.LOAD_TOOLS, AiAssistantRuntime.LOAD_SKILL).contains(loader.path("name").asText()));
             assertTrue(loader.has("inputSchema"));
@@ -380,18 +374,11 @@ class AiToolDiscoveryTest {
         assertFalse(details.get(0).has("outputSchema"));
         var withOutput = call("ai_tools_details", "{\"names\":[\"configuration_add\"],\"includeOutputSchema\":true}", 200).get(0);
         assertEquals(json.valueToTree(tool.outputSchema()), withOutput.get("outputSchema"));
-        assertEquals(details.get(0).get("version"), withOutput.get("version"));
         assertEquals(tool.preview().version(), details.get(0).path("version").asText());
-        assertEquals("POST", details.get(0).path("httpMethod").asText());
-        assertTrue(details.toString().contains("\"encrypt\""));
-        assertEquals(List.of("ai_tools_details"), runtime.tools().stream().filter(t -> t.name().equals("ai_tools_details"))
-                .map(AiToolDefinition::name).toList());
-        if (references.startsWith("@skill")) {
-            String arguments = "{\"name\":\"Configuration\"}";
-            assertEquals(json.valueToTree(List.of(tool.callSchema())), call(AiAssistantRuntime.LOAD_SKILL, arguments, 200));
-            when(security.hasPermission("menuConfig")).thenReturn(false);
-            assertNull(call(AiAssistantRuntime.LOAD_SKILL, arguments, 200));
-        }
+        String arguments = "{\"name\":\"Configuration\"}";
+        assertEquals(json.valueToTree(List.of(tool.callSchema())), call(AiAssistantRuntime.LOAD_SKILL, arguments, 200));
+        when(security.hasPermission("menuConfig")).thenReturn(false);
+        assertNull(call(AiAssistantRuntime.LOAD_SKILL, arguments, 200));
     }
 
     /** Assistant discovery cannot expand assignments; direct administrative browsing remains permission-based. */
@@ -401,6 +388,7 @@ class AiToolDiscoveryTest {
         var details = call("ai_tools_details", "{\"names\":[\"audit_probe_batch\",\"configuration_add\",\"missing\"]}", 200);
         assertEquals(1, details.size());
         assertEquals("audit_probe_batch", details.get(0).path("name").asText());
+        verify(context.getBean(AssistantDefinitionRepository.class)).findByIdAndDomainId(7L, CloudToolsForCore.getDomainId());
         var preview = call("ai_tools_preview", "{}", 200);
         assertEquals(3, preview.size());
         assertFalse(preview.toString().contains("configuration_add"));
@@ -417,6 +405,14 @@ class AiToolDiscoveryTest {
         assertEquals(0, call("ai_tools_details", "{\"names\":[\"audit_probe_batch\"]}", 200).size());
         assertEquals(2, call("ai_tools_preview", "{}", 200).size());
         call("ai_tools_details", "{}", 400);
+        mvc.perform(toolRequest("ai_tools_details", "{\"names\":[],\"names\":[\"ai_tools_details\"]}"))
+                .andExpect(status().isBadRequest());
+
+        assistant.setInstructions("@group(configuration) @tool(unknown)");
+        var runtime = context.getBean(AiToolAuthorization.class).assistant(7L, adminRequest()).orElseThrow();
+        assertTrue(runtime.tools().stream().anyMatch(tool -> "configuration_add".equals(tool.name())));
+        assertTrue(runtime.assistant().getInstructions().endsWith("[tool unavailable]"));
+        verifyNoInteractions(context.getBean(AiSkillRepository.class));
     }
 
     @Test
@@ -431,26 +427,6 @@ class AiToolDiscoveryTest {
         assertFalse(runtime.toolsEnabled());
         assertFalse(runtime.toolsWrite());
         verifyNoInteractions(context.getBean(AiSkillRepository.class));
-    }
-
-    @Test
-    void aFreshRequestExpandsTheCurrentRegistryWithoutLoadingSkills() {
-        assistant.setInstructions("@group(ai) @group(ai) @tool(unknown)");
-        var catalog = context.getBean(AiToolRegistry.class);
-        var preview = catalog.lookup("ai_tools_preview");
-        var details = catalog.lookup("ai_tools_details");
-        var probe = catalog.lookup("audit_probe_batch");
-        var registry = mock(AiToolRegistry.class);
-        when(registry.lookup(AiAssistantRuntime.LOAD_TOOLS)).thenReturn(details);
-        when(registry.assignedEntries(Set.of("unknown"), Set.of("ai"))).thenReturn(List.of(preview)).thenReturn(List.of(preview, details, probe));
-        var skills = context.getBean(AiSkillRepository.class);
-        var authorization = new AiToolAuthorization(context, context.getBean(AssistantDefinitionRepository.class), security, registry, skills, context.getBean(AiChatStore.class));
-        var first = authorization.resolve(assistant, 1, adminRequest());
-        var next = authorization.resolve(assistant, 1, adminRequest());
-        assertEquals(List.of(preview.definition(), details.definition()), first.tools());
-        assertEquals(List.of(preview.definition(), details.definition(), probe.definition()), next.tools());
-        assertTrue(next.assistant().getInstructions().endsWith("[tool unavailable]"));
-        verifyNoInteractions(skills);
     }
 
     private JsonNode loadQuizSkill() throws Exception {

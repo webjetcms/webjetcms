@@ -101,24 +101,19 @@ test('a lost saved-chat response resumes the second read with the first result i
     assert.equal(answer.response, 'Done');
 });
 
-test('tool writes cannot be dispatched twice, even after a known rejection', async t => {
-    for (const status of [200, 400]) {
-        const fetch = t.mock.fn(() => Response.json({ id: 42 }, { status }));
-        const steps = [toolCall('save'), toolCall('save')];
-        await assert.rejects(loadTransport(fetch).runToolSteps(7, () => steps.shift()), {
-            message: /limit/, retryable: status === 400
-        });
+test('a second write stops on a duplicate call, invalid arguments or a partially applied first write', async t => {
+    for (const [status, body, args, message, retryable] of [
+        [200, { id: 42 }, {}, /limit/, false],
+        [400, { error: 'Invalid' }, {}, /limit/, true],
+        [200, { id: 42 }, [], /invalidStep/, false],
+        [200, { result: false, data: [{ id: 42 }] }, { id: 43 }, /unverified/, false],
+        [400, { id: 42 }, { id: 43 }, /unverified/, false]
+    ]) {
+        const fetch = t.mock.fn(() => Response.json(body, { status }));
+        const steps = [toolCall('save'), toolCall('save', args)];
+        await assert.rejects(loadTransport(fetch).runToolSteps(7, () => steps.shift()), { message, retryable });
         assert.equal(fetch.mock.callCount(), 1);
     }
-});
-
-test('a malformed decision after a successful write makes the error non-retryable', async t => {
-    const fetch = t.mock.fn(() => Response.json({ id: 42 }));
-    const steps = [toolCall('save'), toolCall('save', [])];
-    const task = loadTransport(fetch).runToolSteps(7, () => steps.shift());
-    await assert.rejects(task, { message: /invalidStep/, retryable: false });
-    assert.equal(steps.length, 0);
-    assert.equal(fetch.mock.callCount(), 1);
 });
 
 test('generation errors and cancellation stop before dispatch', async () => {
