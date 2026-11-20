@@ -7,13 +7,16 @@ import org.springframework.beans.BeanWrapperImpl;
 import jakarta.persistence.Id;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.system.datatable.settings.customfields.rest.CustomFieldsService;
 
 /**
  * DTO used to pass entity identification data for custom fields lookup.
  *
  * <p>It can be created directly from class name and entity ID, or from an entity-like object.
- * In object mode it resolves the field annotated by {@link Id} and an optional bonus parameter configured
+ * In object mode it resolves the field annotated by {@link Id}, {@code groupId} for {@link GroupDetails},
+ * or {@code tempId} for {@link TemplateDetails}, and an optional bonus parameter configured
  * in {@link CustomFieldsService#BONUS_PARAMS}.</p>
  */
 public class CustomFieldsSearchDto {
@@ -39,7 +42,7 @@ public class CustomFieldsSearchDto {
 
     public CustomFieldsSearchDto(Object object) {
         if(isLikeEntity(object) == false) {
-            Logger.error(CustomFieldsSearchDto.class, "Provided object is not like an entity, cannot extract class name and id. Object class: " + (object != null ? object.getClass().getName() : "null"));
+            Logger.warn(CustomFieldsSearchDto.class, "Provided object is not like an entity, cannot extract class name and id. Object class: " + (object != null ? object.getClass().getName() : "null"));
             return;
         }
 
@@ -54,7 +57,7 @@ public class CustomFieldsSearchDto {
                 this.entityId = entityIdValue.longValue();
             }
         } catch (Exception ex) {
-            Logger.error(CustomFieldsSearchDto.class, "Could not extract entity id from object of class " + objectClass.getName() + " using @Id field '" + entityIdColumnName + "'.", ex);
+            Logger.error(CustomFieldsSearchDto.class, "Could not extract entity id from object of class " + objectClass.getName() + " using ID field '" + entityIdColumnName + "'.", ex);
         }
 
         String bonusParamName = CustomFieldsService.BONUS_PARAMS.get(this.className);
@@ -73,9 +76,9 @@ public class CustomFieldsSearchDto {
      * Checks whether the provided object looks like a domain entity candidate.
      *
      * <p>This is a lightweight guard that filters out primitive wrappers, strings, numbers,
-        * enums and {@code null}, and verifies an {@link Id} annotated field exists.
-        * Passing this check does not guarantee that the object is a JPA entity, but indicates
-        * it is suitable for reflective ID extraction.</p>
+     * enums and {@code null}, and verifies an {@link Id} annotated field exists or the object
+     * is a {@link GroupDetails} or {@link TemplateDetails} with a supported ID property. Passing this check does not
+     * guarantee that the object is a JPA entity, but indicates it is suitable for reflective ID extraction.</p>
      *
      * @param obj object to verify
      * @return {@code true} when the object is a non-null, non-primitive-like candidate
@@ -100,6 +103,9 @@ public class CustomFieldsSearchDto {
     }
 
     private String getIdColumnName(Class<?> entityClass) {
+        if(GroupDetails.class.isAssignableFrom(entityClass)) return "groupId";
+        if(TemplateDetails.class.isAssignableFrom(entityClass)) return "tempId";
+
         for (Field field : entityClass.getDeclaredFields()) {
             if (field.isAnnotationPresent(Id.class)) {
                 return field.getName();

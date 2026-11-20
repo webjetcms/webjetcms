@@ -21,6 +21,7 @@ import sk.iway.iwcm.system.datatable.settings.fields.jpa.FieldsSettingsEntity;
 import sk.iway.iwcm.system.datatable.settings.fields.jpa.FieldsSettingsRepository;
 import sk.iway.iwcm.system.datatable.settings.tabs.jpa.TabsSettingsEntity;
 import sk.iway.iwcm.system.datatable.settings.tabs.rest.TabsSettingsService;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
@@ -90,6 +91,7 @@ class FieldsSettingsServiceTest {
         assertEquals(List.of(CustomOnlyEntity.class.getName(), CLASS_NAME),
             service.getCustomFieldClassOptions(" FIELDSSETTINGSSERVICETEST "));
         assertEquals(List.of(TemplateDetails.class.getName()), service.getCustomFieldClassOptions("TemplateDetails"));
+        assertEquals(List.of(GroupDetails.class.getName()), service.getCustomFieldClassOptions("GroupDetails"));
         assertEquals(List.of(CLASS_NAME), service.getClassOptions(" EXAMPLEENTITY "));
         assertTrue(service.getClassOptions(" ").isEmpty());
         assertTrue(service.getCustomFieldClassOptions(" ").isEmpty());
