@@ -180,6 +180,7 @@ public class InitServlet extends HttpServlet
 
 		//automaticke nastavenie JarPackaging ak existuje JAR subor (aby sa dala DB pouzivat aj pri standardnom vyvoji vo WJ)
 		JarPackaging.initialize();
+		loadVersion();
 
 		Connection db_conn = null;
 		try
@@ -739,8 +740,6 @@ public class InitServlet extends HttpServlet
 			}
 
 			Constants.setServletContext(servletContext);
-
-			loadVersion();
 
 			//override web.xml value with Constants property because now Spring is loaded before SetCharacterEncodingFilter and we need the value in WebjetComponentSpringConfig to initialize resolvers
 			SetCharacterEncodingFilter.encoding = Constants.getString("defaultEncoding");

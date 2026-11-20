@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.endsWith;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -16,6 +19,7 @@ import static org.mockito.Mockito.when;
 import jakarta.servlet.ServletContext;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.MockedStatic;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
@@ -30,6 +34,7 @@ import sk.iway.iwcm.Logger;
 
 class SpringAppInitializerTest {
 
+    private static final String STARTED_LINE = "=============== WebJET CMS started ================";
     private final SpringAppInitializer springAppInitializer = new SpringAppInitializer();
 
     @Test
@@ -176,15 +181,17 @@ class SpringAppInitializerTest {
         try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
             readyListener.onApplicationEvent(applicationReadyEvent(applicationContext));
 
-            logger.verify(() -> Logger.info(
+            InOrder order = inOrder(Logger.class);
+            order.verify(logger, () -> Logger.info(
                 SpringBootStarter.class, "Spring Boot context started successfully"
             ));
-            logger.verify(() -> Logger.info(
-                SpringBootStarter.class, SpringAppInitializer.WEBJET_STARTED_MESSAGE
-            ));
-            logger.verify(() -> Logger.info(
+            order.verify(logger, () -> Logger.info(
                 SpringBootStarter.class, SpringAppInitializer.SETUP_STARTUP_INSTRUCTIONS
             ));
+            order.verify(logger, () -> Logger.info(
+                eq(SpringBootStarter.class), endsWith("\n" + STARTED_LINE)
+            ));
+            order.verifyNoMoreInteractions();
         }
     }
 
@@ -210,17 +217,20 @@ class SpringAppInitializerTest {
     }
 
     @Test
-    void productionModeDoesNotLogSetupInstructions() {
+    void productionModeLogsStartedBannerWithBuildVersion() {
         WebjetBootstrapState bootstrapState = WebjetBootstrapState.initialized(WebjetBootstrapMode.PRODUCTION, true);
         ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
         ApplicationListener<ApplicationReadyEvent> readyListener =
             springAppInitializer.webjetApplicationReadyListener(bootstrapState, applicationContext);
 
-        try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+        String version = "2026.0.48 30.09.2026 16:16:09 Enterprise";
+        try (MockedStatic<Logger> logger = mockStatic(Logger.class);
+                MockedStatic<InitServlet> initServlet = mockStatic(InitServlet.class)) {
+            initServlet.when(InitServlet::getActualVersionLong).thenReturn(version);
             readyListener.onApplicationEvent(applicationReadyEvent(applicationContext));
 
             logger.verify(() -> Logger.info(
-                SpringBootStarter.class, SpringAppInitializer.WEBJET_STARTED_MESSAGE
+                eq(SpringBootStarter.class), endsWith("\n" + version + "\n" + STARTED_LINE)
             ));
             logger.verify(() -> Logger.info(
                 SpringBootStarter.class, SpringAppInitializer.SETUP_STARTUP_INSTRUCTIONS
@@ -265,9 +275,7 @@ class SpringAppInitializerTest {
         try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
             readyListener.onApplicationEvent(applicationReadyEvent(otherApplicationContext));
 
-            logger.verify(() -> Logger.info(
-                SpringBootStarter.class, SpringAppInitializer.WEBJET_STARTED_MESSAGE
-            ), never());
+            logger.verifyNoInteractions();
         }
 
         verify(initializationActions, never()).initializeAfterSpring();

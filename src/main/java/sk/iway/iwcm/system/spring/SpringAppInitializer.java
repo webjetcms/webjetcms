@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 
 /**
@@ -31,7 +32,14 @@ import sk.iway.iwcm.Logger;
 @Configuration(proxyBeanMethods = false)
 public class SpringAppInitializer
 {
-	static final String WEBJET_STARTED_MESSAGE = "=== WebJET CMS started ===";
+	private static final String WEBJET_BANNER = """
+
+		__      __   _       _ ___ _____    ___ __  __ ___
+		\\ \\    / /__| |__ _ | | __|_   _|  / __|  \\/  / __|
+		 \\ \\/\\/ / -_) '_ \\ || | _|  | |   | (__| |\\/| \\__ \\
+		  \\_/\\_/\\___|_.__/\\__/|___| |_|    \\___|_|  |_|___/
+		%s
+		=============== WebJET CMS started ================""";
 	static final String SETUP_STARTUP_INSTRUCTIONS = """
 		WebJET setup is running:
 		  URL path: /wjerrorpages/setup/setup
@@ -148,12 +156,12 @@ public class SpringAppInitializer
 
 	private void logApplicationReady(WebjetBootstrapState bootstrapState) {
 		Logger.info(SpringBootStarter.class, "Spring Boot context started successfully");
-		Logger.info(SpringBootStarter.class, WEBJET_STARTED_MESSAGE);
 		if (bootstrapState.getMode() == WebjetBootstrapMode.SETUP) {
 			Logger.info(SpringBootStarter.class, SETUP_STARTUP_INSTRUCTIONS);
 		} else if (bootstrapState.getMode() == WebjetBootstrapMode.LICENSE_RECOVERY) {
 			Logger.info(SpringBootStarter.class, LICENSE_RECOVERY_STARTUP_INSTRUCTIONS);
 		}
+		Logger.info(SpringBootStarter.class, WEBJET_BANNER.formatted(InitServlet.getActualVersionLong()));
 	}
 
 	static void startDebugTimer() {
