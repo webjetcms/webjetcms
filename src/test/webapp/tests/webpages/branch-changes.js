@@ -54,6 +54,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     };
     const requests = [];
     const pageRequests = [];
+    const pagePlanWarning = 'Stránka „autotest conflict“ (ID 12) má naplánovanú verziu.';
     let rejectFirstPage = true;
     await I.mockRoute(pageRoute, route => {
         const query = new URL(route.request().url()).searchParams;
@@ -97,6 +98,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
             if (action === 'resolve') {
                 Object.assign(report.items[0], {conflict: false, choice: payload.choice});
                 report.ready = true;
+                report.pagePlanWarnings = [pagePlanWarning];
             }
             if (action === 'revert') report.items = report.items.filter(item => item.objectKey !== String(payload.id));
             if (action === 'schedule') Object.assign(report, {state: 'SCHEDULED', publishAt: payload.publishAt});
@@ -410,6 +412,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.fillField(`${modal} #DTE_Field_name`, name);
     I.clickCss(scheduleTab);
     I.waitForEnabled('#branch-merge-schedule-confirm', 10);
+    I.see(pagePlanWarning, '#panel-body-dt-branchesDataTable-publishing ul.alert-warning');
     I.resizeWindow(390, 844);
     I.see(name, `${modal} .modal-title`);
     const inputFits = await I.executeScript(() => {
@@ -439,6 +442,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.clickCss('.buttons-branch-publish');
     I.waitForVisible(`${changesTab}[aria-selected="true"]`, 10);
     await I.waitForVisible('#branch-merge-confirmation', 10);
+    I.see(pagePlanWarning, '#panel-body-dt-branchesDataTable-changes ul.alert-warning');
     I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'schedule', 'unschedule']);
     I.click('Zrušiť', '#branch-merge-confirmation');
     I.waitForInvisible('#branch-merge-confirmation', 10);
@@ -451,5 +455,7 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'schedule', 'unschedule', 'merge']);
     I.assertDeepEqual(requests[2].payload, {type: 'GROUP', id: 15, hash: 'autotest-folder'});
     I.assertEqual(requests[3].payload.publishAt, Date.parse('2036-06-04T07:30:00Z'));
+    I.assertTrue(requests[3].payload.keepPagePlans);
     I.assertEqual(requests[5].payload.preparationHash, 'autotest-plan');
+    I.assertTrue(requests[5].payload.keepPagePlans);
 });

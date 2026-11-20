@@ -4484,6 +4484,7 @@ CREATE TABLE IF NOT EXISTS branches (
     `publish_at` DATETIME NULL,
     `scheduled_by` INT NULL,
     `publish_requested_by` INT NULL,
+    `acknowledged_page_plans` LONGTEXT NULL,
     `created_by` INT NOT NULL,
     `updated_by` INT NOT NULL,
     `created_at` DATETIME NOT NULL,

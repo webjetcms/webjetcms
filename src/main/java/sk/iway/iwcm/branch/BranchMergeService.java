@@ -26,10 +26,10 @@ public final class BranchMergeService {
         }
     }
     public record Report(long id,String name,String domainName,String state,long revision,String preparationHash,
-            boolean ready,List<String> errors,List<Item> items,String lastError,Map<String,Map<String,String>> fieldLabels,Long publishAt,Integer scheduledBy,String timeZone) { }
+            boolean ready,List<String> errors,List<String> pagePlanWarnings,List<Item> items,String lastError,Map<String,Map<String,String>> fieldLabels,Long publishAt,Integer scheduledBy,String timeZone) { }
     private record Entry(BranchType type,Map<String,Object> row,BranchChange change,BranchSnapshot live,
             BranchSnapshot target,boolean conflict,boolean write,String error) { }
-    private record Plan(Map<String,Object> branch,List<Entry> entries,List<String> errors,String hash) { }
+    private record Plan(Map<String,Object> branch,List<Entry> entries,List<String> errors,Map<String,String> pagePlans,String hash) { }
 
     public Report prepare(long id,String domain,Identity user,long revision) {
         try(Connection c=DBPool.getConnection()) { return report(plan(c,id,domain,user,revision)); }
@@ -85,19 +85,23 @@ public final class BranchMergeService {
 
     /** Persists the complete reviewed plan together with the conditional state transition. */
     public Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume) {
-        return claim(id,domain,user,revision,hash,resume,false,false);
+        return claim(id,domain,user,revision,hash,resume,false,false,false);
     }
 
     /** Commits the immutable plan and its publication request together for the fixed cron job. */
     public Report enqueue(long id,String domain,Identity user,long revision,String hash,boolean resume) {
-        return claim(id,domain,user,revision,hash,resume,false,true);
+        return enqueue(id,domain,user,revision,hash,resume,false);
+    }
+
+    public Report enqueue(long id,String domain,Identity user,long revision,String hash,boolean resume,boolean keepPagePlans) {
+        return claim(id,domain,user,revision,hash,resume,false,true,keepPagePlans);
     }
 
     Report claimScheduled(long id,String domain,Identity user,long revision,String hash) {
-        return claim(id,domain,user,revision,hash,false,true,false);
+        return claim(id,domain,user,revision,hash,false,true,false,false);
     }
 
-    private Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume,boolean scheduled,boolean queued) {
+    private Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume,boolean scheduled,boolean queued,boolean keepPagePlans) {
         try(Connection c=DBPool.getConnection()) {
             c.setAutoCommit(false);
             try {
@@ -117,14 +121,16 @@ public final class BranchMergeService {
                     throw conflict(String.join("; ",reasons)+" Obnovte porovnanie a vyriešte konflikty.");
                 }
                 if(!Objects.equals(hash,plan.hash)) throw conflict("Podklad porovnania sa zmenil. Znova overte balík.");
+                if(scheduled) requireAcknowledgedPagePlans(plan);
+                else requirePagePlanConfirmation(plan,keepPagePlans);
                 for(Entry e:plan.entries) {
                     if(resume) continue;
                     try(PreparedStatement s=c.prepareStatement("UPDATE `"+e.type.workTable()+"` SET resolved_snapshot=?,resolved_live_hash=?,resolved_work_hash=?,apply_state='PENDING',apply_phase=?,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
                         s.setString(1,e.target.json());s.setString(2,e.live.hash());s.setString(3,e.change.work().hash());s.setString(4,Boolean.TRUE.equals(e.row.get("_derived_write"))?"DERIVED":null);s.setObject(5,e.row.get("row_id"));s.setLong(6,id);s.executeUpdate();
                     }
                 }
-                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='MERGING',revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=COALESCE(merge_started_at,CURRENT_TIMESTAMP),last_error=NULL,publish_requested_by=? WHERE id=? AND revision=? AND state=?")) {
-                    s.setInt(1,user.getUserId());s.setObject(2,queued?user.getUserId():null);s.setLong(3,id);s.setLong(4,revision);s.setString(5,state);
+                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='MERGING',revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=COALESCE(merge_started_at,CURRENT_TIMESTAMP),last_error=NULL,publish_requested_by=?,acknowledged_page_plans=? WHERE id=? AND revision=? AND state=?")) {
+                    s.setInt(1,user.getUserId());s.setObject(2,queued?user.getUserId():null);s.setString(3,acknowledgedPagePlans(plan));s.setLong(4,id);s.setLong(5,revision);s.setString(6,state);
                     if(s.executeUpdate()!=1) throw conflict("Balík už prevzal iný beh.");
                 }
                 c.commit();
@@ -135,6 +141,10 @@ public final class BranchMergeService {
 
     /** Scheduling and moving a term use one locked package update; individual plans are untouched. */
     public Report schedule(long id,String domain,Identity user,long revision,String hash,long publishAt) {
+        return schedule(id,domain,user,revision,hash,publishAt,false);
+    }
+
+    public Report schedule(long id,String domain,Identity user,long revision,String hash,long publishAt,boolean keepPagePlans) {
         if(publishAt<=System.currentTimeMillis()) throw conflict(Prop.getInstance().getText("branches.schedule.future"));
         try(Connection c=DBPool.getConnection()) {
             c.setAutoCommit(false);
@@ -145,8 +155,9 @@ public final class BranchMergeService {
                 if(!plan.errors.isEmpty()) throw conflict(String.join("; ",plan.errors));
                 if(plan.entries.stream().anyMatch(Entry::conflict)) throw conflict(Prop.getInstance().getText("branches.schedule.conflict"));
                 if(!Objects.equals(hash,plan.hash)) throw conflict("Podklad porovnania sa zmenil. Znova overte balík.");
-                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='SCHEDULED',publish_at=?,scheduled_by=?,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,last_error=NULL WHERE id=? AND revision=?")) {
-                    s.setTimestamp(1,new Timestamp(publishAt));s.setInt(2,user.getUserId());s.setInt(3,user.getUserId());s.setLong(4,id);s.setLong(5,revision);
+                requirePagePlanConfirmation(plan,keepPagePlans);
+                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='SCHEDULED',publish_at=?,scheduled_by=?,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,last_error=NULL,acknowledged_page_plans=? WHERE id=? AND revision=?")) {
+                    s.setTimestamp(1,new Timestamp(publishAt));s.setInt(2,user.getUserId());s.setInt(3,user.getUserId());s.setString(4,acknowledgedPagePlans(plan));s.setLong(5,id);s.setLong(6,revision);
                     if(s.executeUpdate()!=1)throw conflict("Balík sa zmenil. Obnovte porovnanie.");
                 }
                 c.commit();
@@ -171,7 +182,7 @@ public final class BranchMergeService {
                         s.setObject(1,row.get("row_id"));s.setLong(2,id);s.executeUpdate();
                     }
                 }
-                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='DRAFT',publish_at=NULL,scheduled_by=NULL,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=NULL,last_error=NULL WHERE id=? AND revision=? AND state=?")) {
+                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='DRAFT',publish_at=NULL,scheduled_by=NULL,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=NULL,last_error=NULL,acknowledged_page_plans=NULL WHERE id=? AND revision=? AND state=?")) {
                     s.setInt(1,user.getUserId());s.setLong(2,id);s.setLong(3,revision);s.setString(4,state);
                     if(s.executeUpdate()!=1)throw conflict("Balík sa zmenil. Obnovte porovnanie.");
                 }
@@ -182,9 +193,29 @@ public final class BranchMergeService {
     }
 
     static void validatePublisher(long id,String domain,Identity user) {
-        Report report=new BranchMergeService().detail(id,domain,user);
-        if(!report.errors().isEmpty() || report.items().stream().anyMatch(Item::conflict))
-            throw conflict(String.join("; ",report.errors())+" Zmenený podklad publikovania.");
+        try(Connection c=DBPool.getConnection()) {
+            Plan plan=new BranchMergeService().plan(c,id,domain,user,-1);
+            if(!plan.errors.isEmpty() || plan.entries.stream().anyMatch(Entry::conflict))
+                throw conflict(String.join("; ",plan.errors)+" Zmenený podklad publikovania.");
+            requireAcknowledgedPagePlans(plan);
+        } catch(SQLException ex) {throw failure(ex);}
+    }
+
+    private static String acknowledgedPagePlans(Plan plan) {
+        return plan.pagePlans.isEmpty() ? null : String.join("\n",plan.pagePlans.keySet());
+    }
+
+    private static void requirePagePlanConfirmation(Plan plan,boolean confirmed) {
+        if(!confirmed && !plan.pagePlans.isEmpty())
+            throw conflict(Prop.getInstance().getText("branches.merge.confirmPagePlans"));
+    }
+
+    private static void requireAcknowledgedPagePlans(Plan plan) {
+        Set<String> acknowledged=new HashSet<>(Arrays.asList(Objects.toString(plan.branch.get("acknowledged_page_plans"),"").split("\n")));
+        for(var pagePlan:plan.pagePlans.entrySet()) {
+            if(!acknowledged.contains(pagePlan.getKey()))
+                throw conflict(Prop.getInstance().getText("branches.merge.changedPagePlan")+" "+pagePlan.getValue());
+        }
     }
 
     private Plan plan(Connection c,long id,String domain,Identity user,long revision)throws SQLException {
@@ -246,16 +277,18 @@ public final class BranchMergeService {
         // The exact permissions are rechecked even for LIVE/no-op rows of the reviewed package.
         for(Entry e:entries) try {authorize(c,e.type,e.row,user,domain,true);}
         catch(ResponseStatusException ex) {errors.add(e.change.identity()+": "+ex.getReason());}
-        try {validate(c,entries,domain,user,frozen);}
+        Map<String,String> pagePlans=new LinkedHashMap<>();
+        try {validate(c,entries,domain,user,frozen,pagePlans);}
         catch(IllegalArgumentException|IllegalStateException ex) {errors.add(ex.getMessage());}
         if(entries.isEmpty()) errors.add("Balík neobsahuje žiadne zmeny.");
+        pagePlans.keySet().forEach(key->fingerprint.append("|page-plan:").append(key));
         String hash=new BranchSnapshot(BranchSnapshot.State.ACTIVE,Map.of("inputs",fingerprint.toString())).hash();
-        return new Plan(branch,entries,List.copyOf(errors),hash);
+        return new Plan(branch,entries,List.copyOf(errors),pagePlans,hash);
     }
 
     private Report report(Plan p) {
         List<Item> items=p.entries.stream().map(e->new Item(e.type.name(),e.change.objectKey(),label(e),e.change.operation().name(),Version.of(e.change.base()),Version.of(e.live),Version.of(e.change.work()),e.live.hash(),e.change.work().hash(),Objects.toString(e.row.get("resolved_choice"),null),e.conflict,e.write,Objects.toString(e.row.get("apply_state"),"PENDING"),Objects.toString(e.row.get("apply_phase"),null),e.error!=null?e.error:Objects.toString(e.row.get("apply_error"),null),"DRAFT".equals(p.branch.get("state")),"DRAFT".equals(p.branch.get("state")) || "MERGE_FAILED".equals(p.branch.get("state")) && e.row.get("applied_hash")==null && Set.of("PENDING","ERROR").contains(e.row.get("apply_state")))).toList();
-        return new Report(((Number)p.branch.get("id")).longValue(),Objects.toString(p.branch.get("name")),BranchDomains.name(((Number)p.branch.get("domain_id")).intValue()),Objects.toString(p.branch.get("state")),((Number)p.branch.get("revision")).longValue(),p.hash,p.errors.isEmpty()&&items.stream().noneMatch(Item::conflict),p.errors,items,Objects.toString(p.branch.get("last_error"),null),BranchMergeLabels.translate(Prop.getInstance()),p.branch.get("publish_at") instanceof java.util.Date at?at.getTime():null,(Integer)p.branch.get("scheduled_by"),java.time.ZoneId.systemDefault().getId());
+        return new Report(((Number)p.branch.get("id")).longValue(),Objects.toString(p.branch.get("name")),BranchDomains.name(((Number)p.branch.get("domain_id")).intValue()),Objects.toString(p.branch.get("state")),((Number)p.branch.get("revision")).longValue(),p.hash,p.errors.isEmpty()&&items.stream().noneMatch(Item::conflict),p.errors,List.copyOf(p.pagePlans.values()),items,Objects.toString(p.branch.get("last_error"),null),BranchMergeLabels.translate(Prop.getInstance()),p.branch.get("publish_at") instanceof java.util.Date at?at.getTime():null,(Integer)p.branch.get("scheduled_by"),java.time.ZoneId.systemDefault().getId());
     }
 
     private static BranchSnapshot derivedFields(Map<String,Object> row,Set<String> projected) {
@@ -269,7 +302,7 @@ public final class BranchMergeService {
         return e.change.identity();
     }
 
-    private void validate(Connection c,List<Entry> entries,String domain,Identity user,boolean frozen)throws SQLException {
+    private void validate(Connection c,List<Entry> entries,String domain,Identity user,boolean frozen,Map<String,String> pagePlans)throws SQLException {
         Map<Integer,Map<String,Object>> liveGroups=table(c,"groups","group_id"),groups=new LinkedHashMap<>(liveGroups);
         Map<Integer,Map<String,Object>> liveDocs=table(c,"documents","doc_id"),docs=new LinkedHashMap<>(liveDocs);
         Map<Integer,Map<String,Object>> media=table(c,"media","media_id");
@@ -291,7 +324,10 @@ public final class BranchMergeService {
             if(e.type==BranchType.GROUP&&e.target.state()==BranchSnapshot.State.TRASH || e.type==BranchType.DOCUMENT&&e.target.state()==BranchSnapshot.State.TRASH) {
                 if(existingTrash(liveGroups,domain)==0) throw new IllegalStateException("Chýba existujúci kôš domény; pripravte ho bežnou administráciou.");
             }
-            if(!"DONE".equals(e.row.get("apply_state"))) checkIndividualPlans(c,e);
+            if(!"DONE".equals(e.row.get("apply_state"))) {
+                if(e.type==BranchType.DOCUMENT) checkPagePlans(c,e,pagePlans);
+                else checkIndividualPlans(c,e);
+            }
         }
         checkFilePlans(c,domain,paths);
         for(int id:changedGroups) if(groups.containsKey(id)) {
@@ -434,7 +470,35 @@ public final class BranchMergeService {
         String sql=e.type==BranchType.GROUP?"SELECT 1 FROM groups_scheduler WHERE group_id=? AND ((when_to_publish IS NOT NULL AND date_published IS NULL) OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')) LIMIT 1":"SELECT 1 FROM documents_history WHERE doc_id=? AND (publicable=true OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')) LIMIT 1";
         int id=e.type==BranchType.MEDIA?number(e.row,"media_fk_id"):Integer.parseInt(e.change.objectKey());
         try(PreparedStatement s=c.prepareStatement(sql)){s.setInt(1,id);try(ResultSet r=s.executeQuery()){if(r.next())throw new IllegalStateException("Individuálny plán alebo čakajúce schválenie: "+e.change.identity());}}
-        if(e.type==BranchType.DOCUMENT)try(PreparedStatement s=c.prepareStatement("SELECT 1 FROM documents WHERE doc_id=? AND (publish_after_start=true OR disable_after_end=true) LIMIT 1")){s.setInt(1,id);try(ResultSet r=s.executeQuery()){if(r.next())throw new IllegalStateException("Individuálny termín stránky #"+id);}}
+    }
+
+    private static void checkPagePlans(Connection c,Entry entry,Map<String,String> warnings)throws SQLException {
+        String id=entry.change.objectKey();
+        String title=Objects.toString(entry.live.fields().get("title"),label(entry));
+        Prop prop=Prop.getInstance();
+        String sql="SELECT history_id,save_date,publish_start,awaiting_approve FROM documents_history "
+            +"WHERE doc_id=? AND (publicable=true OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')) ORDER BY history_id";
+        try(PreparedStatement statement=c.prepareStatement(sql)) {
+            statement.setInt(1,Integer.parseInt(id));
+            try(ResultSet history=statement.executeQuery()) {
+                while(history.next()) {
+                    if(Tools.isNotEmpty(history.getString("awaiting_approve")))
+                        throw new IllegalStateException(prop.getText("branches.merge.pageAwaitingApproval",title,id));
+                    if(entry.live.state()!=BranchSnapshot.State.ACTIVE || entry.target.state()!=BranchSnapshot.State.ACTIVE)
+                        throw new IllegalStateException(prop.getText("branches.merge.removedPagePlan",title,id));
+                    Timestamp date=history.getTimestamp("publish_start");
+                    String term=date==null ? "" : " "+prop.getText("branches.merge.pagePlanDate",Tools.formatDateTime(date));
+                    String key=history.getLong("history_id")+":"+history.getString("save_date")+":"+history.getString("publish_start");
+                    warnings.put(key,prop.getText("branches.merge.pagePlan",title,id,term));
+                }
+            }
+        }
+        try(PreparedStatement statement=c.prepareStatement("SELECT 1 FROM documents WHERE doc_id=? AND (publish_after_start=true OR disable_after_end=true) LIMIT 1")) {
+            statement.setInt(1,Integer.parseInt(id));
+            try(ResultSet result=statement.executeQuery()) {
+                if(result.next()) throw new IllegalStateException(prop.getText("branches.merge.pageTiming",title,id));
+            }
+        }
     }
 
     /** Enforces item visibility and existing direct-publication rules, including source and destination. */

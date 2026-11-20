@@ -166,10 +166,11 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     for (const box of [changesError, scheduleError, detailError]) box.setAttribute('role', 'alert');
     changesNotices.append(changesError, messages, settingsPending);
     changes.prepend(changesNotices);
+    const scheduleWarnings = element('div');
     const scheduleSummary = element('div');
     scheduleSummary.append(loading);
     const scheduleBody = element('div');
-    publishing.replaceChildren(scheduleError, scheduleSummary, scheduleBody);
+    publishing.replaceChildren(scheduleError, scheduleWarnings, scheduleSummary, scheduleBody);
 
     function connectChangesTable(nested) {
         table = nested;
@@ -414,10 +415,19 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         return message;
     }
 
+    function renderPagePlanWarnings(parent) {
+        if (!report.pagePlanWarnings?.length) return;
+        const list = element('ul', 'alert alert-warning ps-5');
+        list.setAttribute('aria-label', tr('pagePlans'));
+        report.pagePlanWarnings.forEach(warning => list.append(element('li', '', warning)));
+        parent.append(list);
+    }
+
     function renderReport() {
         const rows = items();
         const {state} = report;
         messages.replaceChildren();
+        renderPagePlanWarnings(messages);
         if (state === 'NEEDS_ATTENTION') {
             const warning = notice(messages, 'warning', tr('attentionNote'));
             const reopen = button(tr('reopen'), () => confirmState('reopen', messages, reopen));
@@ -504,15 +514,18 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     function confirmPublication() {
         const resume = report.state === 'MERGE_FAILED';
+        const {revision: expectedRevision, preparationHash} = report;
+        const keepPagePlans = Boolean(report.pagePlanWarnings?.length);
+        const confirmLabel = resume ? 'resumeConfirm' : 'publishConfirm';
         const count = items().filter(item => item.writeRequired && item.applyState !== 'DONE').length;
         confirmAction(messages, publish, {
             heading: tr(resume ? 'resume' : 'publish'),
-            note: tr('publishNote'),
+            note: tr('publishNote') + (keepPagePlans ? ' ' + tr('keepPagePlansNote') : ''),
             summary: tr('publishCount', [count]),
-            label: tr(resume ? 'resumeConfirm' : 'publishConfirm'),
+            label: tr(keepPagePlans ? 'publishWithPagePlans' : confirmLabel),
             confirmId: 'branch-merge-confirm',
             action: () => perform(resume ? '/resume' : '/merge', {
-                expectedRevision: report.revision, preparationHash: report.preparationHash
+                expectedRevision, preparationHash, keepPagePlans
             })
         });
     }
@@ -572,6 +585,8 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     }
 
     function renderSchedule() {
+        scheduleWarnings.replaceChildren();
+        renderPagePlanWarnings(scheduleWarnings);
         const scheduled = report.state === 'SCHEDULED';
         const canSchedule = scheduled || report.state === 'DRAFT';
         const key = `${report.state}:${report.publishAt}`;
@@ -596,6 +611,8 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
             }
         }
         if (scheduleForm) {
+            const defaultLabel = scheduled ? 'reschedule' : 'schedule';
+            scheduleButton.textContent = tr(report.pagePlanWarnings?.length ? 'scheduleWithPagePlans' : defaultLabel);
             const reason = scheduleForm.querySelector('.pg-branch-panel__schedule-reason');
             reason.hidden = ready();
             scheduleForm.querySelector('input').disabled = !ready();
@@ -646,7 +663,10 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
                 input.focus();
                 return;
             }
-            const result = await perform('/schedule', {expectedRevision: report.revision, preparationHash: report.preparationHash, publishAt}, scheduleError);
+            const result = await perform('/schedule', {
+                expectedRevision: report.revision, preparationHash: report.preparationHash, publishAt,
+                keepPagePlans: Boolean(report.pagePlanWarnings?.length)
+            }, scheduleError);
             if (result && !signal.aborted) scheduleSummary.focus();
         });
         return form;

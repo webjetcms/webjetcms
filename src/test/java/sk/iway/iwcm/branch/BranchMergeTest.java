@@ -257,6 +257,59 @@ class BranchMergeTest extends BranchJpaTest {
         assertTrue(detail().ready(),detail().errors().toString());
     }
 
+    /** A confirmed page plan remains pending after the queued package publishes. */
+    @Test void canPublishAndKeepAnIndividuallyScheduledPageVersion() throws Exception {
+        int page=f.pages.get(0);
+        addPagePlan(page);
+        sql("UPDATE documents_history SET awaiting_approve=',1,' WHERE doc_id="+page);
+        var awaitingApproval=detail();
+        assertFalse(awaitingApproval.ready());
+        assertTrue(awaitingApproval.errors().stream().anyMatch(error -> error.contains("autotest P06 LIVE 0") && error.contains(Integer.toString(page))));
+        assertThrows(ResponseStatusException.class,()->service.enqueue(f.branch,DOMAIN,user,awaitingApproval.revision(),awaitingApproval.preparationHash(),false,true));
+        sql("UPDATE documents_history SET awaiting_approve=NULL WHERE doc_id="+page);
+
+        var report=ready();
+        assertEquals(1,report.pagePlanWarnings().size());
+        assertTrue(report.pagePlanWarnings().get(0).contains("autotest P06 LIVE 0"));
+        assertTrue(report.pagePlanWarnings().get(0).contains(Integer.toString(page)));
+        assertThrows(ResponseStatusException.class,()->service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false));
+        var queued=service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false,true);
+        new BranchPublishService().runRequested(f.branch,user.getUserId(),queued.revision());
+
+        assertEquals("MERGED",detail().state(),detail().lastError());
+        assertEquals("autotest P06 WORK 0",live(BranchType.DOCUMENT,page).get("title"));
+        assertEquals(1,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+page+" AND publicable=true AND title='autotest P06 LIVE 0'"));
+    }
+
+    /** A page plan created after the package was scheduled needs a new confirmation. */
+    @Test void scheduledPublicationRechecksThePagePlansTheUserConfirmed() throws Exception {
+        addPagePlan(f.pages.get(0));
+        var report=ready();
+        long dueAt=System.currentTimeMillis()+120_000;
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),dueAt));
+        service.schedule(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),dueAt,true);
+        sql("UPDATE branches SET publish_at=CURRENT_TIMESTAMP-INTERVAL 1 MINUTE WHERE id="+f.branch);
+        addPagePlan(f.pages.get(1));
+        var changed=ready();
+        assertThrows(ResponseStatusException.class,()->service.claimScheduled(f.branch,DOMAIN,user,changed.revision(),changed.preparationHash()));
+        assertEquals("SCHEDULED",detail().state());
+
+        sql("UPDATE documents_history SET publicable=false WHERE doc_id="+f.pages.get(1));
+        var reviewed=ready();
+        service.claimScheduled(f.branch,DOMAIN,user,reviewed.revision(),reviewed.preparationHash());
+        new BranchPublishService().run(f.branch,user.getUserId());
+        assertEquals("MERGED",detail().state(),detail().lastError());
+    }
+
+    private void addPagePlan(int docId) throws Exception {
+        try(Connection connection=DBPool.getConnection()) {
+            connection.setAutoCommit(false);
+            BranchPublishRows.documentHistory(connection,live(BranchType.DOCUMENT,docId),false);
+            connection.commit();
+        }
+        sql("UPDATE documents_history SET actual=false,publicable=true,publish_start=CURRENT_TIMESTAMP+INTERVAL 1 DAY WHERE doc_id="+docId);
+    }
+
     @Test void subtreeTrashKeepsNestingAndMandatorySnapshotsWhenHistoryDisabled()throws Exception {
         Constants.setBoolean("editorDisableHistory",true);
         // Replace this fixture's WORK edits with the normal branch editor's explicit subtree DELETE set.

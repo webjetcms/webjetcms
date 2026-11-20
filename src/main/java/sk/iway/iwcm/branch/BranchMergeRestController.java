@@ -30,8 +30,8 @@ public class BranchMergeRestController {
 
     public record Revision(long expectedRevision) { }
     public record Resolution(long expectedRevision,BranchType type,String objectKey,BranchDecision.Source choice,String liveHash,String workHash) { }
-    public record Execution(long expectedRevision,String preparationHash) { }
-    public record Schedule(long expectedRevision,String preparationHash,long publishAt) { }
+    public record Execution(long expectedRevision,String preparationHash,boolean keepPagePlans) { }
+    public record Schedule(long expectedRevision,String preparationHash,long publishAt,boolean keepPagePlans) { }
 
     @GetMapping("/progress")
     public BranchMergeService.Report detail(@PathVariable long id,HttpServletRequest request) {
@@ -57,7 +57,7 @@ public class BranchMergeRestController {
     @PostMapping("/schedule")
     public BranchMergeService.Report schedule(@PathVariable long id,@RequestBody Schedule input,HttpServletRequest request) {
         Identity user=fresh(request);String domain=access.requireDomain(request,user);
-        try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {return merge.schedule(id,domain,user,input.expectedRevision(),input.preparationHash(),input.publishAt());}
+        try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {return merge.schedule(id,domain,user,input.expectedRevision(),input.preparationHash(),input.publishAt(),input.keepPagePlans());}
     }
     @PostMapping("/unschedule")
     public BranchMergeService.Report unschedule(@PathVariable long id,@RequestBody Revision input,HttpServletRequest request) {
@@ -73,7 +73,7 @@ public class BranchMergeRestController {
     private ResponseEntity<BranchMergeService.Report> execute(long id,Execution input,HttpServletRequest request,boolean resume) {
         Identity user=fresh(request);String domain=access.requireDomain(request,user);
         try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {
-            BranchMergeService.Report report=merge.enqueue(id,domain,user,input.expectedRevision(),input.preparationHash(),resume);
+            BranchMergeService.Report report=merge.enqueue(id,domain,user,input.expectedRevision(),input.preparationHash(),resume,input.keepPagePlans());
             return ResponseEntity.accepted().body(report);
         }
     }
