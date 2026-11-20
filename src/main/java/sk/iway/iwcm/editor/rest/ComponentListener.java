@@ -8,7 +8,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.ModelMap;
 
-import sk.iway.iwcm.branch.BranchApps;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
@@ -32,7 +31,6 @@ public class ComponentListener {
             HttpServletRequest request = event.getSource().getRequest();
 
             String className = request.getParameter("name");
-            BranchApps.checkEditorSupport(className);
             if (Tools.isNotEmpty(className)) {
                 Class<?> cl = Class.forName(className);
                 if (cl.isAnnotationPresent(WebjetAppStore.class)) {

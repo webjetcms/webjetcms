@@ -5,7 +5,6 @@ import org.springframework.aop.framework.Advised;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContext;
-import sk.iway.iwcm.branch.BranchApps;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
@@ -43,7 +42,6 @@ public class ComponentsService {
         Map<String, Object> result = new HashMap<>();
 
         String className = componentRequest.getClassName();
-        BranchApps.checkEditorSupport(className);
         if (Tools.isEmpty(className)) {
             result.put("error", "Class name empty");
             return result;
