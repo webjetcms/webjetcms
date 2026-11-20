@@ -110,9 +110,10 @@ public final class BranchEditor {
                 Map<String,Object> groupRow=row(connection,BranchType.GROUP,group.getGroupId());
                 groupRow.put("default_doc_id",id);
                 store.put(connection,context,BranchType.GROUP,group.getGroupId(),groupRow,currentHash(connection,BranchType.GROUP,group.getGroupId()),false);
+                after=BranchView.reload(connection);
             }
-            validateResult(before,BranchView.reload(connection));
-            return BranchView.current().document(id,false);
+            validateResult(before,after);
+            return after.document(id,false);
         });
         WebpagesService.processFromEntity(result,ProcessItemAction.GETONE,request,true);
         attachHash(result);
@@ -364,54 +365,55 @@ public final class BranchEditor {
     }
 
     /** Validate new inconsistencies while tolerating unrelated legacy URLs and empty folders. */
-    private void validateResult(BranchView before,BranchView after) {
+    static void validateResult(BranchView before,BranchView after) {
+        List<GroupDetails> beforeGroups=before.groups(),afterGroups=after.groups();
         Map<String,Integer> folders=new HashMap<>();
-        for(GroupDetails group:after.groups()) {
-            String path=DocDB.getGroupDiskPath(after.groups(),group.getGroupId()).toLowerCase(Locale.ROOT);
+        for(GroupDetails group:afterGroups) {
+            String path=DocDB.getGroupDiskPath(afterGroups,group.getGroupId()).toLowerCase(Locale.ROOT);
             Integer duplicate=folders.putIfAbsent(path,group.getGroupId());
             if(duplicate!=null) {
                 boolean existed=before.group(group.getGroupId())!=null && before.group(duplicate)!=null;
-                if(!existed || !DocDB.getGroupDiskPath(before.groups(),group.getGroupId()).equalsIgnoreCase(DocDB.getGroupDiskPath(before.groups(),duplicate)))
+                if(!existed || !DocDB.getGroupDiskPath(beforeGroups,group.getGroupId()).equalsIgnoreCase(DocDB.getGroupDiskPath(beforeGroups,duplicate)))
                     throw invalid("Folder URL collision: "+path);
             }
         }
         Map<String,Integer> urls=new HashMap<>();
-        for (DocDetails doc:after.documents(true)) {
+        for (DocDetails doc:after.metadataDocuments()) {
             String path=DocDB.normalizeVirtualPath(doc.getVirtualPath());
             if (path==null || path.isBlank()) continue;
             Integer duplicate=urls.putIfAbsent(path.toLowerCase(Locale.ROOT),doc.getDocId());
             if (duplicate!=null) {
-                DocDetails old=before.document(doc.getDocId(),true),other=before.document(duplicate,true);
+                DocDetails old=before.metadataDocument(doc.getDocId()),other=before.metadataDocument(duplicate);
                 if(old==null || other==null || !Objects.equals(old.getVirtualPath(),other.getVirtualPath())) throw invalid("URL collision: "+path);
             }
         }
-        for (DocDetails doc:after.documents(true)) {
-            DocDetails old=before.document(doc.getDocId(),true);
+        for (DocDetails doc:after.metadataDocuments()) {
+            DocDetails old=before.metadataDocument(doc.getDocId());
             int[] refs=documentReferences(doc),oldRefs=old==null?new int[refs.length]:documentReferences(old);
-            for(int i=0;i<refs.length;i++) if(refs[i]>0 && after.document(refs[i],true)==null
-                    && (old==null || refs[i]!=oldRefs[i] || before.document(refs[i],true)!=null))
+            for(int i=0;i<refs.length;i++) if(refs[i]>0 && after.metadataDocument(refs[i])==null
+                    && (old==null || refs[i]!=oldRefs[i] || before.metadataDocument(refs[i])!=null))
                 throw invalid("Page "+doc.getDocId()+" references a removed page "+refs[i]);
         }
-        for(GroupDetails group:after.groups()) {
+        for(GroupDetails group:afterGroups) {
             GroupDetails old=before.group(group.getGroupId());
             int[] refs={group.getLogonPageDocId(),group.getNewPageDocIdTemplate()};
             int[] oldRefs=old==null?new int[2]:new int[]{old.getLogonPageDocId(),old.getNewPageDocIdTemplate()};
-            for(int i=0;i<refs.length;i++) if(refs[i]>0 && after.document(refs[i],true)==null
-                    && (old==null || refs[i]!=oldRefs[i] || before.document(refs[i],true)!=null)) throw invalid("Folder references a removed page "+refs[i]);
+            for(int i=0;i<refs.length;i++) if(refs[i]>0 && after.metadataDocument(refs[i])==null
+                    && (old==null || refs[i]!=oldRefs[i] || before.metadataDocument(refs[i])!=null)) throw invalid("Folder references a removed page "+refs[i]);
             if(group.getLinkGroupId()>0 && after.group(group.getLinkGroupId())==null
                     && (old==null || group.getLinkGroupId()!=old.getLinkGroupId() || before.group(group.getLinkGroupId())!=null)) throw invalid("Folder references a removed folder");
         }
-        for(GroupDetails group:after.groups()) if(group.getDefaultDocId()>0) {
-            DocDetails doc=after.document(group.getDefaultDocId(),true);
+        for(GroupDetails group:afterGroups) if(group.getDefaultDocId()>0) {
+            DocDetails doc=after.metadataDocument(group.getDefaultDocId());
             GroupDetails old=before.group(group.getGroupId());
-            DocDetails oldDoc=old==null?null:before.document(old.getDefaultDocId(),true);
+            DocDetails oldDoc=old==null?null:before.metadataDocument(old.getDefaultDocId());
             boolean previouslyValid=oldDoc!=null && oldDoc.getGroupId()==group.getGroupId();
             if((doc==null || doc.getGroupId()!=group.getGroupId()) && (old==null || old.getDefaultDocId()!=group.getDefaultDocId() || previouslyValid))
                 throw invalid("Invalid default page in folder "+group.getGroupId());
         }
     }
 
-    private int[] documentReferences(DocDetails doc) {
+    private static int[] documentReferences(DocDetails doc) {
         return new int[]{doc.getHeaderDocId(),doc.getFooterDocId(),doc.getMenuDocId(),doc.getRightMenuDocId(),doc.getLogonPageDocId(),doc.getTempFieldADocId(),doc.getTempFieldBDocId(),doc.getTempFieldCDocId(),doc.getTempFieldDDocId()};
     }
 

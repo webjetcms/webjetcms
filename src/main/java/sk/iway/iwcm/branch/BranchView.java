@@ -275,6 +275,8 @@ public final class BranchView {
     }
 
     DocDetails metadataDocument(int id) { return metadata().get(id); }
+    /** Already loaded metadata belonging to this view; consumers must leave the beans unchanged. */
+    Collection<DocDetails> metadataDocuments() { return Collections.unmodifiableCollection(metadata().values()); }
     int docIdFromUrl(String path) {
         String normalized=DocDB.normalizeVirtualPath(path);
         for (DocDetails doc:metadata().values()) if (normalized.equals(DocDB.normalizeVirtualPath(doc.getVirtualPath()))) return doc.getDocId();
