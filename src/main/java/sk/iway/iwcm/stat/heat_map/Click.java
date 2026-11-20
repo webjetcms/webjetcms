@@ -3,11 +3,8 @@ package sk.iway.iwcm.stat.heat_map;
 
 
 /**
- *  Click.java
- *  
- *  	Represents a click event captured by tracking javascript. 
- *  	Used to recreate a heat map made of those clicks.  
- *  
+ * Stores a click position and the number of events it represents for the legacy heatmap renderer.
+ *
  *@Title        webjet7
  *@Company      Interway s.r.o. (www.interway.sk)
  *@Copyright    Interway s.r.o. (c) 2001-2010
@@ -22,6 +19,7 @@ class Click
 	int dayOfMonth;
 	int x;
 	int y;
+	int count = 1;
 	
 	public int getDocumentId()
 	{

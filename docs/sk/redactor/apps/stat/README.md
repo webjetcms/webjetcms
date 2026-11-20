@@ -115,3 +115,9 @@ Zoznam aktuálnych sedení na web stránke, obsahuje aj zoznam neprihlásených 
  Kliknutím na meno používateľa zobrazíte podrobnú štatistiku prihlásení zvoleného používateľa.
 
 ![](logon-current-page.png)
+
+## Mapa kliknutí
+
+Mapa kliknutí zobrazuje miesta, na ktoré návštevníci klikajú, podľa šírky pevného kontajnera alebo presnej šírky okna. Umožňuje porovnať verzie stránky a zistiť počet kliknutí vo vybranej oblasti.
+
+Zapnutie merania a používanie mapy opisuje samostatná dokumentácia [Mapa kliknutí](./heat-map.md).

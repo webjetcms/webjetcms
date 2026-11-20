@@ -25,6 +25,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.HistoryDB;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -118,6 +119,7 @@ public class DocHistoryRestController extends DatatableRestControllerV2<DocHisto
         boolean deleted = docHistoryRepository.deleteDeletableById(history.getId(), history.getDocId(),
             getUser().isEnabledItem("cmp_data_deleting"), new Date(Tools.getNow())) > 0;
         if (deleted) {
+            HeatMapHistoryService.historyDeleted(history.getDocId());
             Adminlog.add(Adminlog.TYPE_DATA_DELETING, getUser().getUserId(),
                 "Deleted page history: docId=" + history.getDocId() + ", historyId=" + history.getId(),
                 history.getDocId(), history.getHistoryId());

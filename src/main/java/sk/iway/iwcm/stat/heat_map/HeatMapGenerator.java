@@ -27,19 +27,8 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmOutputStream;
 
 /**
- *  HeatMapGenerator.java
- *  
- *  
- *  	Generates a heat map image into a given file, created from data from given clicks.
- *  	Called from {@link HeatMapDB}.
- *  
- *   Creating the image comes in 3 phases:
- *   	1. Create a monochrome black and white image. Black and white is chosen so that multiple circles do NOT override each other. Instead, they add
- *   		up in intensity 
- *   	2. Create a gradient coloring table that maps shades of black and white into an appropriate color
- *   	3. Use gradient transformation filter to create the colored image
- *   	4. Transform black background to transparent black
- *   
+ * Renders weighted click positions as a transparent heatmap for {@link HeatMapDB}.
+ *
  *@Title        webjet7
  *@Company      Interway s.r.o. (www.interway.sk)
  *@Copyright    Interway s.r.o. (c) 2001-2010
@@ -51,17 +40,26 @@ import sk.iway.iwcm.io.IwcmOutputStream;
 class HeatMapGenerator
 {
 	private IwcmFile outFile;
-	List<Click> clicks;
+	private final List<Click> clicks;
+	final long totalClicks;
 	private int xLimit;
 	private int yLimit;
 	private GeneratorSizeAdjustment sizeAdjustment;
 	
+	/**
+	 * Prepares the legacy renderer and totals the click weights used to size each circle.
+	 *
+	 * @param clicks weighted click positions to render
+	 * @param output destination PNG file
+	 * @throws NoRecordException if the list of clicks is empty
+	 */
 	public HeatMapGenerator(List<Click> clicks, IwcmFile output)
 	{
 		if (clicks.size() == 0)
 			throw new NoRecordException();
 		outFile = output;
-		this.clicks = clicks; 
+		this.clicks = clicks;
+		this.totalClicks = clicks.stream().mapToLong(click -> click.count).sum();
 		this.sizeAdjustment = new LogarithmicDecreasingWithSizeAdjustment(this);
 	}
 
@@ -100,6 +98,11 @@ class HeatMapGenerator
 	}
 	
 	
+	/**
+	 * Blends circles at the click positions and maps the accumulated intensity to heatmap colors.
+	 *
+	 * @return the colorized heatmap with a transparent background
+	 */
 	public BufferedImage generateImage()
 	{
 		//adjust circle size to the number of clicks. THe bigger the number, the lower the circles radius
@@ -107,7 +110,7 @@ class HeatMapGenerator
 		xLimit += CIRCLE_SIZE / 2;
 		yLimit += CIRCLE_SIZE / 2;
 		
-		sk.iway.iwcm.Logger.println(HeatMapGenerator.class, "About to generate image from "+clicks.size()+" clicks");
+		sk.iway.iwcm.Logger.println(HeatMapGenerator.class, "About to generate image from "+totalClicks+" clicks");
 		sk.iway.iwcm.Logger.println(HeatMapGenerator.class, String.format("Size: [%d, %d]", xLimit, yLimit));
 		BufferedImage monochromeImage = new BufferedImage(xLimit, yLimit, BufferedImage.TRANSLUCENT);
 		
@@ -132,7 +135,9 @@ class HeatMapGenerator
 			int xCoordinate = (int)x - CIRCLE_SIZE/2;
 			int yCoordinate = (int)y - CIRCLE_SIZE/2;
 			Logger.debug(HeatMapGenerator.class, "drawing circle: x="+x+" y="+y+" size="+CIRCLE_SIZE);
-			graphics.drawImage(circle, null, xCoordinate, yCoordinate);
+			// Each multiply pass decreases each nonzero 8-bit color channel by at least one.
+			int passes = Math.min(point.count, 255);
+			for (int i = 0; i < passes; i++) graphics.drawImage(circle, null, xCoordinate, yCoordinate);
 		}
 		
 		sk.iway.iwcm.Logger.println(HeatMapGenerator.class, "Crayoning image");

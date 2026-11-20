@@ -1,7 +1,7 @@
 package sk.iway.iwcm.stat.heat_map;
 
 /**
- *  DecreasingWithSizeAdjustment.java
+ * Adjusts the circle diameter and radial fade using the total number of clicks represented in the image.
  *
  *@Title        webjet7
  *@Company      Interway s.r.o. (www.interway.sk)
@@ -24,17 +24,17 @@ class LogarithmicDecreasingWithSizeAdjustment implements GeneratorSizeAdjustment
 	@Override
 	public int calculateCircleSize()
 	{
-		int size = (int) (80.0 - 10.0* Math.log(generator.clicks.size()) / Math.log(15.0));
+		int size = (int) (80.0 - 10.0* Math.log(generator.totalClicks) / Math.log(15.0));
 		if (size < 30) size = 30;
 		return size;
 	}
 	@Override
 	public float calculateMaximumAlphaForOneCircle()
 	{
-		if (generator.clicks.size() < 100)
+		if (generator.totalClicks < 100)
 			return 1.0f;
-		else if (generator.clicks.size() < 500)
+		else if (generator.totalClicks < 500)
 			return 0.6f;
-		return (float) (1.0 / Math.log(generator.clicks.size()) * Math.log(15.0));
+		return (float) (1.0 / Math.log(generator.totalClicks) * Math.log(15.0));
 	}
 }

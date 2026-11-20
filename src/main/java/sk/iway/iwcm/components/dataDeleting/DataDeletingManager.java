@@ -26,6 +26,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService;
 import sk.iway.iwcm.system.ConfDB;
 
 /**
@@ -111,17 +112,17 @@ public class DataDeletingManager
 			if (sql.indexOf("week") == -1)
 			{
 				if (table.indexOf("stat_clicks") != -1){
-					if(("stat_clicks_"+startYear+"_"+startMonth).compareTo(("stat_clicks_"+endYear+"_"+endMonth))==0){	//ak sa jedna o jeden mesiac a rok
+					if(startYear == endYear && startMonth == endMonth){	//ak sa jedna o jeden mesiac a rok
 						//Logger.debug(null, "Jeden mesiac a rok");
 						ps.setInt(psCounter++, startDay);
 						ps.setInt(psCounter++, endDay);
 					}
-					else if(table.compareTo("stat_clicks_"+startYear+"_"+startMonth)==0){	//prvy mesiac
+					else if(table.equals("stat_clicks_"+startYear+"_"+startMonth)){	//prvy mesiac
 						//Logger.debug(null, "Mazem prvy mesiac v prvom roku: "+sql+startYear+startMonth+startDay);
 						ps.setInt(psCounter++, startDay);
 						ps.setInt(psCounter++, 32);	//zvysok mesiaca
 					}
-					else if(table.compareTo("stat_clicks_"+endYear+"_"+endMonth)==0){	//posledny mesiac
+					else if(table.equals("stat_clicks_"+endYear+"_"+endMonth)){	//posledny mesiac
 						//Logger.debug(null, "mazem posledny mesiac posledneho roku: "+sql+endYear+endMonth+endDay);
 						ps.setInt(psCounter++, 0);
 						ps.setInt(psCounter++, endDay);
@@ -158,6 +159,7 @@ public class DataDeletingManager
 			try
 			{
 				retValue = ps.executeUpdate();
+				if (retValue > 0 && "documents_history".equals(table)) HeatMapHistoryService.historyDeleted(null);
 
 				if (
 						(
@@ -514,15 +516,15 @@ public class DataDeletingManager
 			try
 			{
 				if (table.indexOf("stat_clicks") != -1){
-					if(("stat_clicks_"+startYear+"_"+startMonth).compareTo(("stat_clicks_"+endYear+"_"+endMonth))==0){	//ak sa jedna o jeden mesiac a rok
+					if(startYear == endYear && startMonth == endMonth){	//ak sa jedna o jeden mesiac a rok
 						//Logger.debug(null, "Jeden mesiac a rok");
 						return query.forInt(sql, startDay, endDay);
 					}
-					else if(table.compareTo("stat_clicks_"+startYear+"_"+startMonth)==0){	//prvy mesiac
+					else if(table.equals("stat_clicks_"+startYear+"_"+startMonth)){	//prvy mesiac
 						//Logger.debug(null, "Overujem prvy mesiac v prvom roku: "+sql+startYear+startMonth+startDay);
 						return query.forInt(sql, startDay, 32);
 					}
-					else if(table.compareTo("stat_clicks_"+endYear+"_"+endMonth)==0){	//posledny mesiac
+					else if(table.equals("stat_clicks_"+endYear+"_"+endMonth)){	//posledny mesiac
 						//Logger.debug(null, "Overujem posledny mesiac posledneho roku: "+sql+endYear+endMonth+endDay);
 						return query.forInt(sql, 0, endDay);
 					}

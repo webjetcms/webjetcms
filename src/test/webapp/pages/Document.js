@@ -22,8 +22,9 @@ module.exports = {
   highlightElement(selector) {
     if (typeof selector != "undefined" && selector != null && selector != "") {
       I.say("Highlighting element");
-      I.executeScript((selector) => {
-          document.querySelector(selector).classList.add('screenshotHighlight');
+      I.executeScript((selector, frameSelector) => {
+          // CodeceptJS passes the iframe root before the argument when evaluating in a frame.
+          document.querySelector(frameSelector ?? selector).classList.add('screenshotHighlight');
       }, selector);
       I.wait(1);
     }
@@ -36,8 +37,9 @@ module.exports = {
   unhighlightElement(selector) {
     if (typeof selector != "undefined" && selector != null && selector != "") {
       I.say("un-Highlighting element");
-      I.executeScript((selector) => {
-          document.querySelector(selector).classList.remove('screenshotHighlight');
+      I.executeScript((selector, frameSelector) => {
+          // CodeceptJS passes the iframe root before the argument when evaluating in a frame.
+          document.querySelector(frameSelector ?? selector).classList.remove('screenshotHighlight');
       }, selector);
       I.wait(1);
     }

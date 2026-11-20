@@ -335,6 +335,11 @@ BEGIN
     lv_table_name := 'stat_clicks' || iSuffix;
     lv_table := 'CREATE TABLE ' || lv_table_name || '( ' ||
                 ' stat_click_id INT NOT NULL, ' ||
+                ' event_id CHAR(32), domain_name VARCHAR(255), ' ||
+                ' viewport_width INT DEFAULT 1920 NOT NULL, ' ||
+                ' coordinate_mode INT DEFAULT 0 NOT NULL, ' ||
+                ' source_viewport_width INT DEFAULT 0 NOT NULL, ' ||
+                ' count INT DEFAULT 1 NOT NULL, ' ||
                 ' document_id INTEGER, ' ||
                 ' x INTEGER, ' ||
                 ' y INTEGER, ' ||
@@ -360,11 +365,17 @@ BEGIN
 
   IF (lv_table IS NOT NULL) THEN
     EXECUTE IMMEDIATE lv_table;
-    EXECUTE IMMEDIATE 'GRANT SELECT, UPDATE, INSERT, DELETE ON ' || lv_table || ' TO WEB_WJ_APP';
+    EXECUTE IMMEDIATE 'GRANT SELECT, UPDATE, INSERT, DELETE ON ' || lv_table_name || ' TO WEB_WJ_APP';
   END IF;
 
   IF (lv_index IS NOT NULL) THEN
     EXECUTE IMMEDIATE lv_index;
+  END IF;
+
+  IF (UPPER(iName) = 'STAT_CLICKS') THEN
+    EXECUTE IMMEDIATE 'CREATE UNIQUE INDEX hm_event' || iSuffix || ' ON ' || lv_table_name || ' (event_id)';
+    EXECUTE IMMEDIATE 'CREATE INDEX hm_page_v2' || iSuffix || ' ON ' || lv_table_name ||
+                      ' (domain_name, document_id, coordinate_mode, viewport_width, day_of_month)';
   END IF;
 
   IF (lv_sequence IS NOT NULL) THEN

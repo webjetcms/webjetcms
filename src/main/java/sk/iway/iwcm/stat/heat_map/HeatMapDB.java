@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -29,7 +30,7 @@ import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stat.StatWriteBuffer;
 
 /**
- *  HeatMapDB.java
+ * Records legacy tracking cookies and reads monthly click data for reports and heatmap images.
  *
  *@Title        webjet7
  *@Company      Interway s.r.o. (www.interway.sk)
@@ -49,8 +50,9 @@ public class HeatMapDB
 	}
 
 	/**
-	 * Tranforms cookie values into corresponding clicks
-	 * @param
+	 * Queues the coordinates from a legacy tracking cookie when click tracking is enabled.
+	 *
+	 * @param value document ID followed by bracketed coordinate pairs
 	 */
 	public static void recordCookie(String value)
 	{
@@ -114,6 +116,16 @@ public class HeatMapDB
 		throw new IllegalStateException("Unexpected code path in.");
 	}
 
+	/**
+	 * Writes a heatmap from weighted click positions within the requested calendar days.
+	 *
+	 * @param out destination PNG file
+	 * @param documentId page whose clicks are rendered
+	 * @param from start time in milliseconds since the epoch
+	 * @param to end time in milliseconds since the epoch
+	 * @throws IOException if the image cannot be written
+	 * @throws NoRecordException if the selected partitions contain no renderable clicks
+	 */
 	public static void createHeatMap(IwcmFile out, int documentId, long from, long to) throws IOException
 	{
 		//caller gets table names starting with table creation date unless null is supplied
@@ -133,7 +145,7 @@ public class HeatMapDB
 
 		List<Click> clicks = new ArrayList<>();
 
-		clicks.addAll(clicksFor(startSuffix, documentId, dayFrom, NO_DATE));
+		clicks.addAll(clicksFor(startSuffix, documentId, dayFrom, endSuffix == null ? dayTo : NO_DATE));
 		for (String suffix : middleSuffices)
 			clicks.addAll(clicksFor(suffix, documentId, NO_DATE, NO_DATE));
 		if (endSuffix != null)
@@ -149,12 +161,21 @@ public class HeatMapDB
 		return cal.get(Calendar.DAY_OF_MONTH);
 	}
 
+	/**
+	 * Loads weighted click positions within the configured image bounds for one monthly table.
+	 *
+	 * @param tableSuffix partition suffix including its leading underscore
+	 * @param documentId page whose clicks are loaded
+	 * @param dayFrom first day to include, or {@code -1} for no lower bound
+	 * @param dayTo last day to include, or {@code -1} for no upper bound
+	 * @return positions and the number of clicks represented by each row
+	 */
 	private static Collection<Click> clicksFor(String tableSuffix, int documentId, int dayFrom, int dayTo)
 	{
 		if (isEmpty(tableSuffix)) return new ArrayList<>();
 		List<Object> params = new ArrayList<>();
 		StringBuilder sql = new StringBuilder().
-			append("SELECT x, y FROM stat_clicks").append(tableSuffix).append(" WHERE document_id = ?");
+			append("SELECT x, y, count AS click_weight FROM stat_clicks").append(tableSuffix).append(" WHERE document_id = ?");
 
 		params.add(documentId);
 
@@ -183,88 +204,42 @@ public class HeatMapDB
 			if (x>statHeatMapMaxWidth) continue;
 			if (y>statHeatMapMaxHeight) continue;
 
-			clicks.add(new Click().setX(x).setY(y));
+			Click click = new Click().setX(x).setY(y);
+			click.count = ((Number) dynaBean.get("click_weight")).intValue();
+			clicks.add(click);
 		}
 
 		return clicks;
 	}
 
-	/**
-	 * Prida k zadanej HashMap-e dokumenty podla zadaneho datumu
-	 * ak sa tableSuffix rovna null, vrati uz nacitanu hashmapu clicksMap
-	 * @param tableSuffix
-	 * @param dayFrom
-	 * @param dayTo
-	 * @param clicks
-	 * @return
-	 */
-	public static Map<Integer, Integer> getClicksInDate(String tableSuffix, int dayFrom, int dayTo, Map<Integer, Integer> clicks){
-		if(tableSuffix == null) return clicksMap;
-
-		clicksMap = clicks;
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try
-		{
-			String sql = "SELECT DISTINCT document_id FROM stat_clicks_"+tableSuffix+" WHERE day_of_month >= ? AND day_of_month <= ?";
-			Logger.debug(HeatMapDB.class, "sql=" + sql +" from=" + dayFrom+" to="+dayTo);
-			db_conn = DBPool.getConnection();
-
-			ps = db_conn.prepareStatement(sql);
-			if (dayFrom != NO_DATE)
-			{
-				ps.setInt(1, dayFrom);
-			}
-			else ps.setInt(1, 1);
-			if (dayTo != NO_DATE)
-			{
-				ps.setInt(2, dayTo);
-			}
-			else ps.setInt(2, 31);
-			rs = ps.executeQuery();
-			List<Integer> documentList = new ArrayList<>();
-			while (rs.next())
-			{
-				documentList.add(rs.getInt("document_id"));
-			}
-			rs.close();
-			ps.close();
-			for(Integer id: documentList)
-			{
-				sql = "SELECT COUNT(document_id) FROM stat_clicks_"+tableSuffix+" WHERE document_id=?";
-				Logger.debug(HeatMapDB.class, "sql="+sql);
-				ps = db_conn.prepareStatement(sql);
-				ps.setInt(1, id);
-				rs = ps.executeQuery();
-				while(rs.next())
-				{
-					if(!clicksMap.containsKey(id)){
-						clicksMap.put(id, rs.getInt(1));	//count
-					}
-					else {
-						int count = clicksMap.get(id);
-						clicksMap.put(id, count+rs.getInt(1));	//ak uz existuje - napr. v inom mesiaci - pripocitam
-					}
-				}
-				rs.close();
-				ps.close();
-			}
-
-			db_conn.close();
-			rs = null;
-			ps = null;
-			db_conn = null;
-		}
-		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}
-		finally{
-			try{
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-				if (db_conn != null)	db_conn.close();
-			}
-			catch (Exception ex2){sk.iway.iwcm.Logger.error(ex2);}
-		}
-		return clicksMap;
-	}
+    /**
+     * Adds weighted click totals by document, capping each total at {@link Integer#MAX_VALUE}.
+     *
+     * @param tableSuffix month in {@code YYYY_M} format, or {@code null} to retrieve the cached map
+     * @param dayFrom first day to include, or {@code -1} for day one
+     * @param dayTo last day to include, or {@code -1} for day 31
+     * @param clicks accumulator keyed by document ID
+     * @return the supplied accumulator, or the cached map when the suffix is null
+     */
+    public static Map<Integer, Integer> getClicksInDate(String tableSuffix, int dayFrom, int dayTo, Map<Integer, Integer> clicks) {
+        if (tableSuffix == null) return clicksMap;
+        clicksMap = clicks;
+        if (!tableSuffix.matches("[0-9]{4}_(?:0?[1-9]|1[0-2])")) return clicks;
+        String sql = "SELECT document_id, " + HeatMapStorage.SUM_CLICKS + " FROM stat_clicks_" + tableSuffix
+                + " WHERE day_of_month BETWEEN ? AND ? GROUP BY document_id";
+        try (Connection db = DBPool.getConnection(); PreparedStatement statement = db.prepareStatement(sql)) {
+            statement.setInt(1, dayFrom == NO_DATE ? 1 : dayFrom);
+            statement.setInt(2, dayTo == NO_DATE ? 31 : dayTo);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    int docId = rows.getInt(1);
+                    long total = rows.getLong(2) + clicks.getOrDefault(docId, 0);
+                    clicks.put(docId, (int) Math.min(Integer.MAX_VALUE, total));
+                }
+            }
+        } catch (SQLException exception) {
+            Logger.error(HeatMapDB.class, exception);
+        }
+        return clicks;
+    }
 }

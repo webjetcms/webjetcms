@@ -42,8 +42,10 @@ public class AspectException
 
 		if (exception instanceof SQLException)
 		{
+			Signature signature = location.getSignature();
+			if (Logger.logMissingStatisticsTable(signature.getDeclaringType(), exception)) return;
+
 			if (exception.toString().contains("adminlog_notify")) return;
-			if (exception.toString().contains("stat_views_")) return;
 			if (exception.toString().contains("timed out")) return;
 			if (exception.toString().contains("Network is down")) return;
 			if (exception.toString().contains("Host is down")) return;
@@ -54,7 +56,6 @@ public class AspectException
 			if (exception.toString().contains("Data too long for column 'description'")) return;
 			if (exception.toString().contains("already has more than 'max_user_connections' active connections")) return;
 
-			Signature signature = location.getSignature();
 			String source = signature.getDeclaringTypeName() + ":" + enclosing.getSourceLocation().getLine();
 
 			Cache cache = Cache.getInstance();

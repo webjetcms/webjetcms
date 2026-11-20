@@ -37,6 +37,20 @@ The remote execution request is transmitted through the cluster and is executed 
 
 Changes to task timing are applied immediately, but tasks that have already started will continue to run until they finish.
 
+### Aggregate historical clicks
+
+In **Settings → Automated tasks**, add a task with the class `sk.iway.iwcm.stat.heat_map.HeatMapAggregationCronJob`. To process only October 2025, enter `year=2025|month=10` (or `2025_10` or `2025|10`) in **Task parameters**. Save and select the task, then use the play button to run it on the current node.
+
+With no arguments, the task selects all completed months. The scheduler treats an empty field, whitespace, or just `|` separators as no arguments. A month becomes eligible 24 hours after it ends, giving browsers time to deliver pending clicks. For a recurring run, set day of month to `3`, hour to `2`, minute and second to `0`, and the other timing fields to `*`.
+
+The job combines clicks from the same day, domain and page in each heatmap cell. The `statHeatMapCellSize` configuration setting defines its size: the default `5` means 5 × 5 CSS pixels, `4` means 4 × 4, and `10` means 10 × 10. Valid values are 1 to 1024; invalid values fall back to 4. Rendering uses the same size. Changes apply to the next job run and map request without a server restart. A running job finishes using the size it started with.
+
+The job keeps coordinate modes, layout widths and source viewport widths separate. Each merged row stores the total clicks it represents. Larger cells allow more rows to merge but reduce positional detail. Reducing the cell size cannot restore coordinates of clicks already merged. The server log reports the number of rows merged per table.
+
+During a WebJET update, existing MySQL/MariaDB monthly click tables using MyISAM are converted to InnoDB so aggregation can use transactions on older tables too. The job does not check transaction support beforehand; database errors are recorded in the server log.
+
+If your installation uses `statTableCreateProcedureName`, update the custom procedure to create the `count` column with a default of one in future partitions. See the [Oracle procedure example](../../../install/config/ro-user.md#oracle).
+
 ## Standard tasks
 
 [sk.iway.iwcm.system.cron.Echo](../../../../../src/main/java/sk/iway/iwcm/system/cron/Echo.java) - Diagnostic task - prints its first parameter to the console.

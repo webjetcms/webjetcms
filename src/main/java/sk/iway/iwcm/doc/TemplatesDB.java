@@ -172,6 +172,7 @@ public class TemplatesDB extends DB
 				tmpDetails.setDisableSpamProtection(rs.getBoolean("disable_spam_protection"));
 				tmpDetails.setUrlRemoveSpojkyMode(rs.getInt("url_remove_spojky_mode"));
 				tmpDetails.setMoveStyleToHead(rs.getInt("move_style_to_head"));
+                tmpDetails.setStatisticsMode(rs.getInt("statistics_mode"));
 
 				// tmpDetails.setPocetPouziti(rs.getInt("doc_count"));
 
@@ -588,10 +589,10 @@ public class TemplatesDB extends DB
 
 			TemplateDetails oldTemplate = t_form.getTempId() > 0 ? getTemplate(t_form.getTempId()) : null;
 
-			sql = "INSERT INTO templates (temp_name, forward, header_doc_id, footer_doc_id, menu_doc_id, after_body_data, css, lng, right_menu_doc_id, base_css_path, object_a_doc_id, object_b_doc_id, object_c_doc_id, object_d_doc_id, available_groups, template_install_name, disable_spam_protection, move_style_to_head, templates_group_id, inline_editing_mode, url_remove_spojky_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			sql = "INSERT INTO templates (temp_name, forward, header_doc_id, footer_doc_id, menu_doc_id, after_body_data, css, lng, right_menu_doc_id, base_css_path, object_a_doc_id, object_b_doc_id, object_c_doc_id, object_d_doc_id, available_groups, template_install_name, disable_spam_protection, move_style_to_head, templates_group_id, inline_editing_mode, url_remove_spojky_mode, statistics_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			if (t_form.getTempId() > 0)
-				sql = "UPDATE templates SET temp_name=?, forward=?, header_doc_id=?, footer_doc_id=?, menu_doc_id=?, after_body_data=?, css=?, lng=?, right_menu_doc_id=?, base_css_path=?, object_a_doc_id=?, object_b_doc_id=?, object_c_doc_id=?, object_d_doc_id=?, available_groups=?, template_install_name=?, disable_spam_protection=?, move_style_to_head=?, templates_group_id=?, inline_editing_mode=?, url_remove_spojky_mode=? WHERE temp_id=?";
+				sql = "UPDATE templates SET temp_name=?, forward=?, header_doc_id=?, footer_doc_id=?, menu_doc_id=?, after_body_data=?, css=?, lng=?, right_menu_doc_id=?, base_css_path=?, object_a_doc_id=?, object_b_doc_id=?, object_c_doc_id=?, object_d_doc_id=?, available_groups=?, template_install_name=?, disable_spam_protection=?, move_style_to_head=?, templates_group_id=?, inline_editing_mode=?, url_remove_spojky_mode=?, statistics_mode=? WHERE temp_id=?";
 
 			ps = db_conn.prepareStatement(sql);
 			ps.setString(1, t_form.getTempName());
@@ -617,10 +618,11 @@ public class TemplatesDB extends DB
 			ps.setLong(19, tempGroupId);
 			ps.setString(20, t_form.getInlineEditingMode());
 			ps.setInt(21, Tools.getIntValue(t_form.getUrlRemoveSpojkyMode(), 0));
+			ps.setInt(22, Tools.getIntValue(t_form.getStatisticsMode(), 0));
 
 			if (t_form.getTempId() > 0)
 			{
-				ps.setInt(22, t_form.getTempId());
+				ps.setInt(23, t_form.getTempId());
 			}
 			ps.execute();
 			ps.close();

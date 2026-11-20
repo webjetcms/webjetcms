@@ -48,6 +48,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Štatistika - obnovená [Mapa kliknutí](redactor/apps/stat/heat-map.md) s podporou rôznych šírok okna, pevných kontajnerov a náhľadom historických verzií stránky. Meranie sa zapína v šablóne alebo skupine šablón a rešpektuje súhlas so štatistickými cookies (#318).
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">
@@ -339,6 +340,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Štatistika - pri chýbajúcej tabuľke sa v celej sekcii zapisuje stručná chybová správa bez výpisu zásobníka výnimky. Ostatné databázové chyby si zachovávajú podrobný výpis (#318).
 - Vloženie HTML kódu - obsah sa dekóduje v UTF-8 bez závislosti od predvoleného kódovania JVM, aby sa na serveri nepoškodila diakritika a ďalšie znaky Unicode.
 - Zrkadlenie štruktúry - pri zlyhaní prekladu, napríklad po vyčerpaní kvóty DeepL, používateľ dostane upozornenie s konkrétnym dôvodom z výnimky prekladača vrátane HTTP kódu a dostupnej chybovej správy DeepL. Pevné medzery a ich HTML entity sa normalizujú v názvoch priečinkov a generovaných URL, aby nevznikali adresy s textom `nbsp` ani zbytočné presmerovania (#402).
 - Dátové tabuľky - po úprave jedného záznamu sa pri vynútenom obnovení údajov zobrazí strana s upraveným záznamom podľa aktuálneho triedenia. V konfigurácii sa premenná vyhľadáva podľa názvu aj pri zmene jej ID. Pri mazaní sa zachová aktuálna strana, prípadne sa zobrazí posledná platná strana. Pri vytvorení záznamu sa stránkovanie naďalej resetuje (#400).
