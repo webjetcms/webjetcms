@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
@@ -323,6 +324,24 @@ class ShowDocForwardProcessingTest extends BaseWebjetTest {
         assertTrue(html.contains("<meta name=\"webjet-heatmap-preview\" content=\"123\">"));
         assertFalse(html.contains("wj-heatmap-tracker"));
         assertEquals("no-store", response.getHeader("Cache-Control"));
+        assertEquals(List.of("sandbox allow-same-origin"), response.getHeaders("Content-Security-Policy"));
+    }
+
+    /** Direct preview responses enforce the sandbox alongside the site's nonce policy. */
+    @Test
+    void testHeatMapPreviewPreservesNoncePolicyAlongsideSandbox() throws Exception {
+        Constants.setString("contentSecurityPolicy", "script-src {nonce}");
+        DispatchCapturingRequest request = new DispatchCapturingRequest("<html><head></head><body>Page</body></html>");
+        request.setAttribute("heatMapPreview", Boolean.TRUE);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        RequestBean requestBean = new RequestBean();
+        requestBean.setCspNonce("preview-test");
+        try (MockedStatic<SetCharacterEncodingFilter> context = Mockito.mockStatic(SetCharacterEncodingFilter.class)) {
+            context.when(SetCharacterEncodingFilter::getCurrentRequestBean).thenReturn(requestBean);
+            invoke(request, response);
+        }
+        assertEquals(List.of("script-src 'nonce-preview-test'", "sandbox allow-same-origin"),
+                response.getHeaders("Content-Security-Policy"));
     }
 
     /** A template-defined base element keeps its established URL resolution behavior. */
@@ -368,6 +387,7 @@ class ShowDocForwardProcessingTest extends BaseWebjetTest {
         String html = response.getContentAsString();
         assertTrue(html.contains("id=\"wj-heatmap-tracker\""));
         assertTrue(html.contains("nonce=\"heatmap-test-nonce\""));
+        assertFalse(response.getHeaders("Content-Security-Policy").contains("sandbox allow-same-origin"));
         assertTrue(html.indexOf("wj-heatmap-tracker") < html.indexOf("</body>"));
         assertTrue(request.includeCalled);
     }

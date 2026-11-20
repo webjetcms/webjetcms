@@ -1852,6 +1852,11 @@ private static String combineCss(String cssStyle)
             }
         }
 
+        if (heatMapPreview) {
+            // Apply the sandbox to direct visits too, alongside the site's final CSP (including its nonce).
+            response.addHeader("Content-Security-Policy", "sandbox allow-same-origin");
+        }
+
         if (capturedContent != null) {
             byte[] bytes = capturedContent.getBytes(response.getCharacterEncoding() != null ? response.getCharacterEncoding() : SetCharacterEncodingFilter.getEncoding());
             response.setContentLength(bytes.length);

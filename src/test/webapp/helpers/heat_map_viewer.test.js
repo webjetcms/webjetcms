@@ -48,10 +48,14 @@ test("container groups restore their offset at the representative viewport and h
                 {x1: 440, y1: 2240, x2: 560, y2: 2360, x: 487, y: 2300, clicks: 5}
             ]}});
         }
-        if (url.pathname.endsWith("/html/preview")) return route.fulfill({contentType: "text/html", body:
+        if (url.pathname.endsWith("/html/preview")) return route.fulfill({contentType: "text/html",
+            // Exercise the iframe attribute on its own and the response policy on a direct visit.
+            headers: route.request().frame() === page.mainFrame() ? {"Content-Security-Policy": "sandbox allow-same-origin"} : {},
+            body:
             '<!doctype html><meta name="webjet-heatmap-preview" content="11"><style>html{scrollbar-width:none}body{margin:0;background:white}header,nav{top:0;height:64px;background:white}'
             + 'header{position:fixed;left:20%;width:20%}nav{position:sticky;margin-left:60%;width:20%}.container{' + sizing + ';margin:auto;height:3000px}</style>'
-            + '<header></header><nav></nav><div class="' + (matching ? "container" : "changed") + '">Content</div>'});
+            + '<header></header><nav></nav><div id="article" class="' + (matching ? "container" : "changed") + '">Content</div>'
+            + '<script>document.getElementById("article").textContent = "Script ran";</script>'});
         if (url.pathname.endsWith("/binary/tile")) {
             tiles.push(url);
             return route.fulfill({contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><rect width="100%" height="100%" fill="red"/></svg>'});
@@ -66,6 +70,8 @@ test("container groups restore their offset at the representative viewport and h
     assert.deepEqual(await page.locator("#heatMapWidth option").allTextContents(), [
         "Container 1140 px · Clicks: 20", "Window 1140 px · Clicks: 2"]);
     const frame = page.frames().find(item => item.url().includes("/html/preview"));
+    const previewUrl = frame.url();
+    assert.equal(await frame.locator("#article").textContent(), "Content", "Scripts are blocked in the preview iframe");
     assert.equal(await page.locator("#heatMapVersion").isVisible(), false);
     assert.equal(await frame.evaluate(() => innerWidth), 1369);
     assert.equal(await page.locator("#heatMapTiles").evaluate(el => el.style.transform), "translate(114.5px, 0px)");
@@ -149,6 +155,8 @@ test("container groups restore their offset at the representative viewport and h
     await page.locator("#heatMapReload").click();
     await page.locator("#heatMapHotspotStatus").getByText("No clicks", {exact: true}).waitFor();
     assert.equal(await page.locator("#heatMapHotspotList button").count(), 0, "An empty report clears the ranking and loading status");
+    await page.goto(previewUrl);
+    assert.equal(await page.locator("#article").textContent(), "Content", "Scripts are blocked on direct preview visits");
 });
 
 test("returning from a preview restores open and empty date ranges without saved endpoints", () => {
