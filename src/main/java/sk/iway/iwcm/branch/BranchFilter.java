@@ -116,11 +116,13 @@ public final class BranchFilter implements Filter {
                 String domain=access.requireDomain(request,user);
                 boolean management=(path.equals("/admin/rest/branches")||path.startsWith("/admin/rest/branches/"))||path.equals("/admin/rest/refresher")
                     || ("GET".equals(request.getMethod()) && path.matches("/admin/rest/properties/[a-zA-Z_-]+/"));
-                context=management?BranchContext.live(domain,user.getUserId()):BranchSelection.selected(request,user,domain);
                 String explicit=request.getHeader(BranchSelection.ID_HEADER),expectedDomain=request.getHeader(BranchSelection.DOMAIN_HEADER);
                 if (explicit==null && request.getParameter("branchId")!=null) {
                     explicit=request.getParameter("branchId"); expectedDomain=request.getParameter("branchDomain");
                 }
+                boolean clearClosed = navigation && !productionRequest && explicit == null && expectedDomain == null
+                    && BranchProductionSection.isBranchPage(path);
+                context=management?BranchContext.live(domain,user.getUserId()):BranchSelection.selected(request,user,domain,clearClosed);
                 if (!management && (productionRequest || adminScreen && context.isBranch())) {
                     boolean confirmed = document != null && document.authorize(request, context, true);
                     boolean inherited = source != null && source.authorize(request, context, false);

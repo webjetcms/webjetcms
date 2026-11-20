@@ -42,8 +42,11 @@ public final class BranchProductionSection {
     }
 
     static boolean supportsBranch(String path) {
-        return path.startsWith("/admin/skins/webjet8/ckeditor/")
-            || BRANCH_PAGES.contains(path) || BRANCH_PAGES.contains(path + "/");
+        return path.startsWith("/admin/skins/webjet8/ckeditor/") || isBranchPage(path);
+    }
+
+    static boolean isBranchPage(String path) {
+        return BRANCH_PAGES.contains(path) || BRANCH_PAGES.contains(path + "/");
     }
 
     static boolean adminDocumentPath(String path) {

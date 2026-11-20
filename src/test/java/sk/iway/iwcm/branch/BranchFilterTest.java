@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.servlet.ServletException;
@@ -46,6 +47,8 @@ class BranchFilterTest {
         doReturn(true).when(admin).isEnabledItem(BranchAccess.PERMISSION);
         request.setMethod("GET");request.setServerName("admin.example");request.getSession().setAttribute(Constants.USER_KEY,admin);request.getSession().setAttribute("preview.editorDomainName",DOMAIN);
         selection=mockStatic(BranchSelection.class);selection.when(()->BranchSelection.selected(request,admin,DOMAIN)).thenReturn(BranchContext.live(DOMAIN,1));
+        selection.when(() -> BranchSelection.selected(eq(request), eq(admin), eq(DOMAIN), anyBoolean()))
+            .thenAnswer(call -> BranchSelection.selected(request, admin, DOMAIN));
         modules = mockStatic(Modules.class);
         Modules menu = mock(Modules.class);modules.when(Modules::getInstance).thenReturn(menu);
         when(menu.getModules()).thenReturn(List.of(
@@ -54,7 +57,7 @@ class BranchFilterTest {
             menuItem("/components/catalog/custom_admin.jsp"), menuItem("/apps/catalog/administration/")));
         bean.setRequest(request);bean.setDomain("old.example");bean.setUrl("/old.html");SetCharacterEncodingFilter.setCurrentRequestBean(bean);
     }
-    @AfterEach void cleanBoundary(){modules.close();selection.close();groups.close();constants.close();SetCharacterEncodingFilter.setCurrentRequestBean(null);}
+    @AfterEach void cleanBoundary(){modules.close();selection.closeOnDemand();groups.close();constants.close();SetCharacterEncodingFilter.setCurrentRequestBean(null);}
 
     /** The preview bootstrap and its form POST must render WORK even without Fetch Metadata headers. */
     @Test void componentPreviewKeepsTheWorkingVersionForDocumentAndFrameRequests() throws Exception {
@@ -320,6 +323,53 @@ class BranchFilterTest {
         filter.doFilter(request,response,(in,out)->fail("Stale LIVE domain dispatched"));assertEquals(409,response.getStatus());
         response=new MockHttpServletResponse();request.removeHeader(BranchSelection.ID_HEADER);request.removeHeader(BranchSelection.DOMAIN_HEADER);request.setMethod("POST");
         filter.doFilter(request,response,(in,out)->fail("Unscoped LIVE write dispatched"));assertEquals(409,response.getStatus());
+    }
+
+    @Test void reloadingBranchManagementAfterPublicationReturnsToLive() throws Exception {
+        selection.close();
+        var published = new BranchEntity();
+        published.setId(42L);
+        published.setDomainId(1);
+        published.setState("MERGED");
+        var service = mock(BranchService.class);
+        when(service.find(42L, DOMAIN)).thenReturn(Optional.of(published));
+        var previous = new BranchSelection.Selected(42, 1);
+        request.getSession().setAttribute(BranchSelection.SESSION_KEY, previous);
+        request.getSession().setAttribute(BranchProductionSection.ATTRIBUTE, new Object());
+        request.setRequestURI("/admin/v9/webpages/branches/");
+        request.setParameter("id", "42");
+        request.setParameter("tab", "changes");
+        request.addHeader("Sec-Fetch-Dest", "document");
+        try (var readiness = mockStatic(BranchReadiness.class); var services = mockStatic(BranchService.class)) {
+            services.when(BranchService::getInstance).thenReturn(service);
+            request.setParameter("branchId", "42");
+            request.setParameter("branchDomain", "1");
+            filter.doFilter(request, response, (in, out) -> fail("An explicit WORK request must never switch to LIVE"));
+            assertEquals(409, response.getStatus());
+            assertEquals(previous, request.getSession().getAttribute(BranchSelection.SESSION_KEY));
+
+            request.removeParameter("branchId");
+            request.removeParameter("branchDomain");
+            response = new MockHttpServletResponse();
+            AtomicBoolean rendered = new AtomicBoolean();
+            filter.doFilter(request, response, (in, out) -> {
+                rendered.set(true);
+                assertEquals(BranchContext.live(DOMAIN, 1), BranchContexts.current());
+                assertEquals("42", in.getParameter("id"));
+                assertEquals("changes", in.getParameter("tab"));
+            });
+            assertEquals(200, response.getStatus(), response.getErrorMessage());
+            assertTrue(rendered.get());
+            assertNull(request.getSession().getAttribute(BranchSelection.SESSION_KEY));
+            assertNull(request.getSession().getAttribute(BranchProductionSection.ATTRIBUTE));
+
+            request.setMethod("POST");
+            request.setRequestURI("/admin/rest/web-pages/all");
+            headers(42, DOMAIN);
+            response = new MockHttpServletResponse();
+            filter.doFilter(request, response, (in, out) -> fail("An old WORK form must never write to LIVE"));
+            assertEquals(409, response.getStatus());
+        }
     }
 
     @Test void activeBranchRequiresMatchingHeadersAndBlocksMutations()throws Exception {

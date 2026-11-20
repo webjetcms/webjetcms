@@ -50,7 +50,7 @@ Na karte **Plán publikovania** zadajte dátum a čas v zobrazenom časovom pás
 
 Spoločná úloha kontroluje termíny predvolene každých päť minút aj po odhlásení redaktora. Presný interval nastavuje správca. Znovu preverí používateľa, práva, konflikty a individuálne plány. Nový problém zastaví balík a prehľad uvedie dôvod. Po oprave použite **Obnoviť prípravu** a nové porovnanie.
 
-Publikovanie prebieha po položkách. Pri chybe už dokončené položky môžu byť verejné. Skontrolujte priebeh a dôvod; po odstránení príčiny overte **Pokračovať**. Balík ani jeho hotové položky neprepisujte ručne bez posúdenia správcu. Úspešný balík je uzavretý; pre ďalšiu kampaň vytvorte nový. Na návrat do bežnej editácie vyberte v prepínači **Hlavná verzia**.
+Publikovanie prebieha po položkách. Pri chybe už dokončené položky môžu byť verejné. Skontrolujte priebeh a dôvod; po odstránení príčiny overte **Pokračovať**. Balík ani jeho hotové položky neprepisujte ručne bez posúdenia správcu. Úspešný balík je uzavretý; pre ďalšiu kampaň vytvorte nový. Ak máte publikovanú pracovnú verziu stále vybranú, WebJET pri najbližšom otvorení alebo obnovení správy pracovných verzií či zoznamu webových stránok prepne na **Hlavnú verziu**.
 
 ## Zmazanie pracovnej verzie
 

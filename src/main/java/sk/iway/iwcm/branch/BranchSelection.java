@@ -19,11 +19,29 @@ public final class BranchSelection {
     public record Selected(long branchId, int domainId) implements java.io.Serializable { }
 
     public static BranchContext selected(HttpServletRequest request, Identity user, String domain) {
-        Object value = request.getSession().getAttribute(SESSION_KEY);
+        return selected(request, user, domain, false);
+    }
+
+    static BranchContext selected(HttpServletRequest request, Identity user, String domain, boolean clearClosed) {
+        var session = request.getSession();
+        Object value = session.getAttribute(SESSION_KEY);
         if (!(value instanceof Selected selected) || BranchDomains.id(domain) != selected.domainId())
             return BranchContext.live(domain, user.getUserId());
         if (selected.branchId() == 0) return BranchContext.live(domain, user.getUserId());
-        RequestBean.setAttribute(SCREEN_BRANCH, requireBranch(selected.branchId(), domain));
+        BranchEntity branch = findBranch(selected.branchId(), domain);
+        if (isClosed(branch)) {
+            if (!clearClosed) throw closedBranch();
+            synchronized (session) {
+                // Another tab may already have changed the selection while we were reading the package.
+                if (selected.equals(session.getAttribute(SESSION_KEY))) {
+                    session.removeAttribute(SESSION_KEY);
+                    session.removeAttribute(BranchProductionSection.ATTRIBUTE);
+                    return BranchContext.live(domain, user.getUserId());
+                }
+            }
+            return selected(request, user, domain);
+        }
+        RequestBean.setAttribute(SCREEN_BRANCH, branch);
         return new BranchContext(selected.branchId(), domain, user.getUserId(), BranchContext.Mode.ADMIN);
     }
 
@@ -34,13 +52,24 @@ public final class BranchSelection {
     }
 
     public static BranchEntity requireBranch(long id, String domain) {
+        BranchEntity branch = findBranch(id, domain);
+        if (isClosed(branch)) throw closedBranch();
+        return branch;
+    }
+
+    private static boolean isClosed(BranchEntity branch) {
+        return "MERGED".equals(branch.getState()) || "CANCELLED".equals(branch.getState());
+    }
+
+    private static ResponseStatusException closedBranch() {
+        return new ResponseStatusException(HttpStatus.CONFLICT, "Publishing package is closed; reload the administration screen");
+    }
+
+    private static BranchEntity findBranch(long id, String domain) {
         try {BranchReadiness.verify();}
         catch(SQLException|IllegalStateException ex) {throw new ResponseStatusException(HttpStatus.CONFLICT,"Branch prerequisites failed: "+ex.getMessage(),ex);}
-        BranchEntity branch = BranchService.getInstance().find(id, domain).orElseThrow(() ->
+        return BranchService.getInstance().find(id, domain).orElseThrow(() ->
             new ResponseStatusException(HttpStatus.NOT_FOUND, "Publishing package not found"));
-        if ("MERGED".equals(branch.getState()) || "CANCELLED".equals(branch.getState()))
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Publishing package is closed; explicitly select production");
-        return branch;
     }
 
     /** The gateway resolves the logical domain from server metadata, never from its query string. */
