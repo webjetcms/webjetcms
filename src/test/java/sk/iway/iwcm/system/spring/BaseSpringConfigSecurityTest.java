@@ -9,6 +9,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -169,13 +172,35 @@ class BaseSpringConfigSecurityTest {
         }
     }
 
-    /** Verifies URL permission failures with Basic support enabled. */
+    /** Verifies that URL and method permission checks reject access without requesting credentials. */
     @Test
     void authenticatedAccessDenialNeverChallengesForBasicAuthentication() throws Exception {
         try (AnnotationConfigWebApplicationContext applicationContext = createContext(true)) {
             MockMvc mockMvc = createMockMvc(applicationContext);
 
             mockMvc.perform(get(ADMIN_URL).with(user("wrong-role").roles("USER")))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist(HttpHeaders.WWW_AUTHENTICATE));
+
+            mockMvc.perform(get(ADMIN_URL + "/restricted").with(user("admin").roles("Group_admin")))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist(HttpHeaders.WWW_AUTHENTICATE))
+                .andExpect(jsonPath("$.status").value(403));
+            mockMvc.perform(get(ADMIN_URL + "/restricted").with(httpBasic("api-admin", "valid-password")))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist(HttpHeaders.WWW_AUTHENTICATE));
+            mockMvc.perform(get("/restricted-page").with(user("admin").roles("Group_admin"))
+                    .header(HttpHeaders.ACCEPT, "text/html"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist(HttpHeaders.WWW_AUTHENTICATE))
+                .andExpect(forwardedUrl("/403.jsp"));
+        }
+    }
+
+    @Test
+    void privateRestWithoutCredentialsNeverChallengesForBasicAuthentication() throws Exception {
+        try (AnnotationConfigWebApplicationContext applicationContext = createContext(true)) {
+            createMockMvc(applicationContext).perform(get(PRIVATE_URL).header(HttpHeaders.ACCEPT, "application/json"))
                 .andExpect(status().isForbidden())
                 .andExpect(header().doesNotExist(HttpHeaders.WWW_AUTHENTICATE));
         }
@@ -238,6 +263,7 @@ class BaseSpringConfigSecurityTest {
     @Configuration(proxyBeanMethods = false)
     @EnableWebMvc
     @EnableWebSecurity
+    @EnableMethodSecurity
     @Import({SecurityProbeController.class, GlobalExceptionHandler.class})
     static class TestConfiguration {
 
@@ -293,6 +319,12 @@ class BaseSpringConfigSecurityTest {
         @GetMapping(ADMIN_URL)
         String adminProbe() {
             return "admin";
+        }
+
+        @GetMapping({ADMIN_URL + "/restricted", "/restricted-page"})
+        @PreAuthorize("hasAuthority('welcomeShowLoggedAdmins')")
+        String restrictedProbe() {
+            return "restricted";
         }
 
         @GetMapping(SWAGGER_URL)

@@ -109,30 +109,27 @@ public class SpringSecurityConf {
 		//for /admin/rest/ return SC_FORBIDDEN instead of redirect to /admin/logon/
 		String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
 		boolean allowBasicAuth = springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic");
-		AuthenticationEntryPoint adminRestEntryPoint = (request, response, authException) -> {
+		AuthenticationEntryPoint forbiddenEntryPoint = (request, response, authException) -> {
 			// Write the response directly: sendError would dispatch to the application's error pages.
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			response.setContentType("application/json");
 			response.getWriter().write("{\"error\":\"Access Denied\",\"status\":403}");
 		};
-		RequestMatcher adminSessionRequest = request -> {
-			String path = request.getRequestURI().substring(request.getContextPath().length());
-			String authorization = request.getHeader("Authorization");
-			boolean explicitBasicAuth = authorization != null && authorization.regionMatches(true, 0, "Basic ", 0, 6);
-			return path.startsWith("/admin/rest/") && !(allowBasicAuth && explicitBasicAuth);
-		};
+		RequestMatcher adminRestRequest = request ->
+			request.getRequestURI().substring(request.getContextPath().length()).startsWith("/admin/rest/");
 		// Register before login mechanisms so admin REST always returns 403 instead of an OAuth2
 		// login redirect, including when Basic auth is disabled. The UI handles expired sessions.
 		http.exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
-			adminRestEntryPoint, adminSessionRequest));
+			forbiddenEntryPoint, adminRestRequest));
 
 		// Enable Basic authentication for explicit API clients without prompting session-based admin requests.
 		if (allowBasicAuth) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
 			basicAuthEnabled = true; //NOSONAR
 			http.httpBasic(customizer -> customizer.authenticationEntryPoint((request, response, authException) -> {
-				if (adminSessionRequest.matches(request)) {
-					adminRestEntryPoint.commence(request, response, authException);
+				String authorization = request.getHeader("Authorization");
+				if (authorization == null || !authorization.regionMatches(true, 0, "Basic ", 0, 6)) {
+					forbiddenEntryPoint.commence(request, response, authException);
 					return;
 				}
 				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

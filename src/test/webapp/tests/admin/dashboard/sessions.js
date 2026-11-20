@@ -534,8 +534,7 @@ Scenario('Administrator list and logout enforce independent permissions through 
         });
         return { list: list.status, logout: logout.status };
     });
-    // Basic authentication reports denied REST access as 401 instead of 403.
-    I.assertTrue([401, 403].includes(result.list), 'Management alone must not expose the administrator list.');
+    I.assertEqual(result.list, 403, 'Management alone must not expose the administrator list.');
     I.assertEqual(result.logout, 400, 'An own-account logout must still be rejected.');
     await openDashboardSessions(I);
     waitForSessionDialog(I);
@@ -554,5 +553,5 @@ Scenario('Administrator list and logout enforce independent permissions through 
         return { list: list.status, logout: logout.status };
     });
     I.assertEqual(result.list, 200, 'List permission must allow administrator summaries.');
-    I.assertTrue([401, 403].includes(result.logout), 'Displaying administrator summaries must not grant logout access.');
+    I.assertEqual(result.logout, 403, 'Displaying administrator summaries must not grant logout access.');
 });
