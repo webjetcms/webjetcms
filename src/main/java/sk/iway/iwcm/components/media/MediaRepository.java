@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.media;
 
 import java.util.List;
+import java.util.Optional;
 import jakarta.persistence.QueryHint;
 
 import org.springframework.data.domain.Page;
@@ -18,6 +19,11 @@ import sk.iway.spirit.model.Media;
 @Repository
 public interface MediaRepository extends DomainIdRepository<Media, Long> {
 
+    @Override
+    @QueryHints(@QueryHint(name="eclipselink.refresh", value="true"))
+    @Query("SELECT DISTINCT m FROM Media m LEFT JOIN FETCH m.groups WHERE m.id=:id AND m.domainId=:domainId")
+    Optional<Media> findFirstByIdAndDomainId(@Param("id") Long id, @Param("domainId") int domainId);
+
     @QueryHints(@QueryHint(name="eclipselink.refresh", value="true"))
     @Query("SELECT DISTINCT m FROM Media m LEFT JOIN FETCH m.groups WHERE m.mediaFkTableName=:tableName AND m.domainId=:domainId")
     List<Media> findAllByMediaFkTableNameAndDomainId(@Param("tableName") String mediaFkTableName, @Param("domainId") Integer domainId);
@@ -28,7 +34,9 @@ public interface MediaRepository extends DomainIdRepository<Media, Long> {
     //finding by mediaFkId(docId) and mediaFkTableName("documents")
     Page<Media> findAllByMediaFkIdAndMediaFkTableNameAndDomainId(Integer mediaFkId, String mediaFkTableName, Integer domainId, Pageable pageable);
 
-    List<Media> findAllByMediaFkIdAndMediaFkTableNameAndDomainId(Integer mediaFkId, String mediaFkTableName, Integer domainId);
+    @QueryHints(@QueryHint(name="eclipselink.refresh", value="true"))
+    @Query("SELECT DISTINCT m FROM Media m LEFT JOIN FETCH m.groups WHERE m.mediaFkId=:owner AND m.mediaFkTableName=:tableName AND m.domainId=:domainId")
+    List<Media> findAllByMediaFkIdAndMediaFkTableNameAndDomainId(@Param("owner") Integer mediaFkId, @Param("tableName") String mediaFkTableName, @Param("domainId") Integer domainId);
 
     //
     @Query(value = "SELECT distinct(media_fk_id) FROM media WHERE media_link = ?1 AND media_fk_table_name = ?2", nativeQuery=true)

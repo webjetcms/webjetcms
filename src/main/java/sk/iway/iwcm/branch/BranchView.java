@@ -24,8 +24,15 @@ public final class BranchView {
     private final Map<Integer, GroupDetails> groups = new LinkedHashMap<>();
     private GroupsDB groupsDb;
     private Map<Integer,DocDetails> metadata;
+    private BranchMedia media;
 
     private BranchView(BranchContext context) { this.context = context; }
+
+    /** Media reads share only this request's view and are discarded on reload or context change. */
+    BranchMedia media() {
+        if(media==null) media=new BranchMedia(this);
+        return media;
+    }
 
     /** Returns null for LIVE; a failed branch load never falls back to production. */
     public static BranchView current() {

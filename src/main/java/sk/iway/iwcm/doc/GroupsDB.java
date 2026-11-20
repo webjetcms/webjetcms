@@ -6,8 +6,6 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.common.UserTools;
-import sk.iway.iwcm.database.ComplexQuery;
-import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.GroupsService;
@@ -3315,19 +3313,20 @@ public class GroupsDB extends DB
 	}
 
 	/**
-	 * Vrati korenove adresare
+	 * Returns detached production root folders from the existing folder cache.
 	 * @return
 	 */
 	public static List<GroupDetails> getRootGroups()
 	{
-		return new ComplexQuery().setSql("SELECT * FROM groups WHERE parent_group_id <= 0 ORDER BY sort_priority ASC, group_name ASC").list(new Mapper<GroupDetails>()
-		{
-			public GroupDetails map(ResultSet rs) throws SQLException
-			{
-				return fillFieldsByResultSet(rs);
+		// Domain selectors and access checks need all production domains, including inside a branch.
+		try (var ignored = sk.iway.iwcm.branch.BranchContexts.live(null, "", 0)) {
+			List<GroupDetails> roots = new ArrayList<>();
+			for (GroupDetails group : getInstance().getGroupsAll()) {
+				if (group.getParentGroupId() <= 0) roots.add(new GroupDetails(group));
 			}
-
-		});
+			roots.sort(Comparator.comparingInt(GroupDetails::getSortPriority).thenComparing(nameSorter));
+			return roots;
+		}
 	}
 
 	public void resetGroupsTreeAllCache()

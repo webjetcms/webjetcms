@@ -9,33 +9,58 @@ import sk.iway.spirit.model.*;
 
 /** Detached document media over the same whole-object selection used by pages and files. */
 public final class BranchMedia {
-    private BranchMedia() { }
+    private final BranchView view;
+    private final Map<Integer,Map<String,Object>> details=new HashMap<>();
+    private Map<Integer,MediaGroupBean> definitions;
+
+    BranchMedia(BranchView view) { this.view=view; }
+
     public static List<MediaGroupBean> categories(int folder) {
-        List<MediaGroupBean> groups=sk.iway.spirit.MediaDB.filterDomainId(new ArrayList<>(definitions().values()),true);
+        List<MediaGroupBean> groups=sk.iway.spirit.MediaDB.filterDomainId(new ArrayList<>(BranchView.current().media().definitions().values()),true);
         if(folder<1) return groups;
         Set<Integer> ancestors=new HashSet<>();
         for(sk.iway.iwcm.doc.GroupDetails group=BranchView.current().group(folder);group!=null&&ancestors.add(group.getGroupId());group=BranchView.current().group(group.getParentGroupId())) { }
         return groups.stream().filter(group->group.getAvailableGroups()==null||group.getAvailableGroups().isBlank()||BranchFields.normalizedIds(group.getAvailableGroups()).stream().anyMatch(ancestors::contains)).toList();
     }
-    private static Map<Integer,MediaGroupBean> definitions() {
-        Map<Integer,MediaGroupBean> definitions=new LinkedHashMap<>();
-        for(MediaGroupBean group:Tools.getSpringBean("mediaGroupRepository",MediaGroupRepository.class).findAllByOrderByIdAsc())
-            definitions.put(group.getMediaGroupId(),group);
+    private Map<Integer,MediaGroupBean> definitions() {
+        if(definitions==null) {
+            definitions=new LinkedHashMap<>();
+            for(MediaGroupBean group:Tools.getSpringBean("mediaGroupRepository",MediaGroupRepository.class).findAllByOrderByIdAsc())
+                definitions.put(group.getMediaGroupId(),group);
+        }
         return definitions;
     }
     public static List<Media> list(int owner,List<MediaGroupBean> categories) {
-        BranchView view=BranchView.current();
+        BranchMedia reader=BranchView.current().media();
+        return reader.read(owner,0,categories).stream().map(reader::bean).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+    }
+
+    /** Reuses the displayed record for permission checks within the same verified view. */
+    public static Media one(int id) {
+        if(id<1) return null;
+        BranchMedia reader=BranchView.current().media();
+        if(!reader.details.containsKey(id)) reader.details.put(id,reader.read(-1,id,null).stream().findFirst().orElse(null));
+        Map<String,Object> row=reader.details.get(id);
+        return row==null?null:reader.bean(row);
+    }
+
+    private List<Map<String,Object>> read(int owner,int mediaId,List<MediaGroupBean> categories) {
         Map<Integer,Map<String,Object>> rows=new LinkedHashMap<>();
-        Map<Integer,MediaGroupBean> definitions=definitions();
-        for(Media media:Tools.getSpringBean("mediaRepository",MediaRepository.class)
-                .findAllByMediaFkTableNameAndDomainId("documents",BranchContexts.current().domainId())) {
-            Map<String,Object> row=BranchEditorRows.media(media,BranchMediaMapper.initialValues(media.getMediaId(),media.getMediaFkId(),media.getDomainId()));
-            row.put("last_update",media.getLastUpdate());
-            row.put("group_ids_snapshot",media.getGroups().stream().map(MediaGroupBean::getMediaGroupId).toList());
-            rows.put(media.getMediaId(),row);
-        }
+        MediaRepository repository=Tools.getSpringBean("mediaRepository",MediaRepository.class);
+        int domainId=view.context().domainId();
+        List<Media> liveMedia;
+        if(mediaId>0) liveMedia=repository.findFirstByIdAndDomainId((long)mediaId,domainId).stream().filter(media->"documents".equals(media.getMediaFkTableName())).toList();
+        else if(owner>0) liveMedia=repository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(owner,"documents",domainId);
+        else liveMedia=repository.findAllByMediaFkTableNameAndDomainId("documents",domainId);
+        for(Media media:liveMedia) rows.put(media.getMediaId(),row(media));
         for(Map<String,Object> work:view.workRows(BranchType.MEDIA)) {
-            int id=number(work,"media_id");Map<String,Object> live=rows.get(id);
+            int id=number(work,"media_id");
+            if(mediaId>0&&id!=mediaId) continue;
+            if(owner>0&&number(work,"media_fk_id")!=owner&&!rows.containsKey(id)) continue;
+            Map<String,Object> live=rows.get(id);
+            // Include a moved-in record's actual LIVE owner when resolving whole-object conflicts.
+            if(owner>0&&live==null) live=repository.findFirstByIdAndDomainId((long)id,domainId)
+                .filter(media->"documents".equals(media.getMediaFkTableName())).map(BranchMedia::row).orElse(null);
             BranchSnapshot snapshot=live==null?BranchSnapshot.absent():BranchStore.snapshot(BranchType.MEDIA,live);
             if(!view.selectWork(BranchType.MEDIA,work,snapshot)) continue;
             if("DELETE".equals(work.get("operation"))) {rows.remove(id);continue;}
@@ -46,18 +71,26 @@ public final class BranchMedia {
             Map<String,Object> projected=new LinkedHashMap<>(BranchMediaMapper.project(work,live,BranchMediaMapper.initialValues(id,page.getDocId(),number(work,"domain_id")),java.time.Instant.ofEpochMilli(page.getDateCreated())));
             projected.put("group_ids_snapshot",work.get("group_ids_snapshot"));rows.put(id,projected);
         }
-        List<Media> result=new ArrayList<>();
+        List<Map<String,Object>> result=new ArrayList<>();
+        Map<Integer,DocDetails> owners=new HashMap<>();
         for(Map<String,Object> row:rows.values()) {
             int pageId=number(row,"media_fk_id");
             if(owner>0&&pageId!=owner) continue;
-            if(view.document(pageId,true)==null) continue;
+            if(!owners.containsKey(pageId)) owners.put(pageId,view.document(pageId,true));
+            if(owners.get(pageId)==null) continue;
             List<Integer> ids=BranchFields.normalizedIds(row.get("group_ids_snapshot"));
             if(categories!=null&&!categories.isEmpty()&&categories.stream().noneMatch(group->ids.contains(group.getMediaGroupId())))continue;
-            result.add(bean(row,ids,definitions));
+            result.add(row);
         }
-        result.sort(Comparator.comparing(Media::getMediaSortOrder).thenComparing(Media::getMediaId));return result;
+        result.sort(Comparator.comparingInt((Map<String,Object> row)->number(row,"media_sort_order")).thenComparingInt(row->number(row,"media_id")));return result;
     }
-    public static Media one(int id) {return list(-1,null).stream().filter(media->media.getMediaId()==id).findFirst().orElse(null);}
+    private Media bean(Map<String,Object> row) { return bean(row,BranchFields.normalizedIds(row.get("group_ids_snapshot")),definitions()); }
+    private static Map<String,Object> row(Media media) {
+        Map<String,Object> row=BranchEditorRows.media(media,BranchMediaMapper.initialValues(media.getMediaId(),media.getMediaFkId(),media.getDomainId()));
+        row.put("last_update",media.getLastUpdate());
+        row.put("group_ids_snapshot",media.getGroups().stream().map(MediaGroupBean::getMediaGroupId).toList());
+        return row;
+    }
     private static int number(Map<String,?> row,String column){Object value=row.get(column);return value instanceof Number n?n.intValue():0;}
     private static String text(Map<String,?> row,String column){return (String)row.get(column);}
     private static Media bean(Map<String,Object> row,List<Integer> ids,Map<Integer,MediaGroupBean> definitions) {
