@@ -7,6 +7,8 @@ Sekcia konfigurácia slúži na zobrazenie a správu konfiguračných premennýc
 - **Všetky** - všetky evidované premenné vrátane ich predvolených hodnôt a vlastných premenných uložených iba v databáze.
 - **Moduly** - hierarchické skupiny, napríklad `apps.gallery` alebo `security.oauth2`. Výber rodičovského uzla zobrazí aj premenné zo všetkých jeho poduzlov. Jedna premenná môže byť zaradená vo viacerých vetvách.
 
+Vo všetkých pohľadoch sú premenné predvolene zoradené podľa názvu od A po Z. Ak kliknutím na hlavičku stĺpca zvolíte iné radenie, prehliadač si ho zapamätá pre celý strom. K abecednému radeniu sa môžete vrátiť cez **Nastavenia** nad tabuľkou → **Zobrazenie stĺpcov** → **Obnoviť**.
+
 Strom je možné prehľadávať. Názvy modulov sú technické názvy a neprekladajú sa. Vo vybranom module je možné existujúcu premennú upraviť, ale nie vytvoriť novú ani spustiť import, pretože vlastná databázová premenná nemá informáciu o zaradení do modulu.
 
 Tlačidlom **Nastavenia** nad stromom môžete zmeniť pomer šírky stromu a tabuľky alebo nastaviť pevnú šírku stromu v pixeloch. Predvolená šírka je 200px. Vlastná voľba sa uloží pre prihláseného používateľa samostatne pre konfiguráciu.
