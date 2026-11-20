@@ -468,6 +468,54 @@ class BranchFilterTest {
         assertFalse(BranchContexts.current().isBranch());
     }
 
+    /** Unsaved editor previews use private WORK rendering and retain the frozen screen selection. */
+    @Test void editorPreviewUsesWorkAssetsWithoutSavingThePage() throws Exception {
+        selected();
+        headers(42, DOMAIN);
+        request.setMethod("POST");
+        request.setRequestURI("/admin/rest/web-pages/preview/");
+        AtomicBoolean dispatched = new AtomicBoolean();
+        filter.doFilter(request, response, (in, out) -> {
+            dispatched.set(true);
+            assertEquals(branch, BranchContexts.current());
+        });
+        assertTrue(dispatched.get());
+
+        request.setMethod("GET");
+        request.setRequestURI("/admin/webpages/preview/");
+        request.removeHeader(BranchSelection.ID_HEADER);
+        request.removeHeader(BranchSelection.DOMAIN_HEADER);
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (in, out) -> fail("An unfrozen preview was rendered"));
+        assertEquals(409, response.getStatus());
+
+        request.setParameter("branchId", "42");
+        request.setParameter("branchDomain", "1");
+        response = new MockHttpServletResponse();
+        try (var views = mockStatic(BranchView.class); var properties = mockStatic(sk.iway.iwcm.i18n.Prop.class)) {
+            var prop = mock(sk.iway.iwcm.i18n.Prop.class);
+            properties.when(() -> sk.iway.iwcm.i18n.Prop.getInstance(request)).thenReturn(prop);
+            when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+            filter.doFilter(request, response, (in, out) -> {
+                assertEquals(BranchContext.Mode.PREVIEW, BranchContexts.current().mode());
+                assertEquals(42, BranchContexts.current().branchId());
+                request.setAttribute(BranchPreviewUrls.LOGICAL_PATH, "/autotest.html");
+                out.setContentType("text/html");
+                out.getWriter().write("<p>Unsaved content</p><img src='/images/autotest.png'>");
+            });
+        }
+        assertEquals(200, response.getStatus());
+        assertTrue(response.getContentAsString().contains("Unsaved content"));
+        assertTrue(response.getContentAsString().contains("/admin/webpages/branch-preview/42/images/autotest.png"));
+        assertTrue(response.getHeader("Cache-Control").contains("no-store"));
+        assertFalse(BranchContexts.current().isBranch());
+
+        request.setParameter("branchId", "43");
+        response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (in, out) -> fail("A stale preview was rendered"));
+        assertEquals(409, response.getStatus());
+    }
+
     private static ModuleInfo menuItem(String path) {
         ModuleInfo item = new ModuleInfo();
         item.setPath(path);

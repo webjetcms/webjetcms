@@ -247,7 +247,6 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public void afterSave(DocDetails entity, DocDetails saved) {
-        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return;
         setPreviewObject(saved, getRequest());
     }
 
@@ -258,6 +257,10 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
      */
     private void setPreviewObject(DocDetails entity, HttpServletRequest request) {
         request.getSession().setAttribute("ShowdocAction.showDocData", entity);
+        var context = sk.iway.iwcm.branch.BranchContexts.current(request);
+        if (context.isBranch()) request.getSession().setAttribute(PreviewController.BRANCH_SELECTION,
+            new sk.iway.iwcm.branch.BranchSelection.Selected(context.branchId(), context.domainId()));
+        else request.getSession().removeAttribute(PreviewController.BRANCH_SELECTION);
     }
 
     @Override

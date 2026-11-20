@@ -166,7 +166,7 @@ public final class BranchFilter implements Filter {
                     try {BranchContexts.requireSameSelection(context,Long.parseLong(explicit),expectedDomain);}
                     catch(RuntimeException ex) {response.sendError(409,"Branch context changed; reload the screen");return;}
                 } else if(!management && BranchProductionSection.currentSelection() == null && (path.startsWith("/admin/rest/") || path.startsWith("/admin/upload/")
-                        || path.equals("/admin/web-pages/upload/") || path.equals("/admin/elfinder-connector/"))
+                        || path.equals("/admin/web-pages/upload/") || path.equals("/admin/elfinder-connector/") || path.equals("/admin/webpages/preview/"))
                         && (context.isBranch() || !Set.of("GET","HEAD").contains(request.getMethod()))) {
                     response.sendError(409,"Missing screen branch context; reload the screen");return;
                 }
@@ -177,6 +177,8 @@ public final class BranchFilter implements Filter {
                     if(BranchProductionSection.needsConfirmation(path)) {response.sendError(409,"This function is unavailable in a publishing branch; select production");return;}
                 }
             }
+            boolean editorPreview = context.isBranch() && path.equals("/admin/webpages/preview/");
+            if (editorPreview) context = new BranchContext(context.branchId(), context.domainName(), context.userId(), BranchContext.Mode.PREVIEW);
             try(BranchContexts.Scope ignored=BranchContexts.open(request,context)) {
                 if(bean!=null) {bean.setDomain(context.domainName());bean.setUrl(logicalPath);}
                 if(preview) {
@@ -190,6 +192,10 @@ public final class BranchFilter implements Filter {
                         if(!asset && BranchReadService.docIdFromUrl(logicalPath)<=0) wrapped.sendError(404);
                         else chain.doFilter(logical,wrapped);
                     }
+                    wrapped.finish();
+                } else if (editorPreview) {
+                    BranchPreviewResponseWrapper wrapped = new BranchPreviewResponseWrapper(response, request);
+                    chain.doFilter(request, wrapped);
                     wrapped.finish();
                 } else chain.doFilter(request,response);
             }
@@ -262,7 +268,7 @@ public final class BranchFilter implements Filter {
 
     private static boolean supportedPost(String path) {
         return Set.of("/admin/rest/web-pages/editor","/admin/rest/groups/editor","/admin/rest/news/news-list/editor",
-            "/admin/rest/media/editor","/admin/upload/chunk","/admin/upload/overwrite","/admin/upload/keepboth","/admin/upload/skipkey",
+            "/admin/rest/media/editor","/admin/rest/web-pages/preview/","/admin/upload/chunk","/admin/upload/overwrite","/admin/upload/keepboth","/admin/upload/skipkey",
             "/admin/web-pages/upload/","/admin/elfinder-connector/",
             "/admin/v9/webpages/component/","/admin/rest/components","/admin/rest/branch-content/revert",
             "/admin/rest/web-pages/deletion-preview","/admin/rest/groups/deletion-preview","/admin/rest/web-pages/http-headers",

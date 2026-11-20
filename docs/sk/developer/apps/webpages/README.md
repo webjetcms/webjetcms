@@ -210,7 +210,11 @@ Pre tabuľku naposledy upravené aj čakajúce na schválenie sa schovanú tlač
 
 Náhľad stránky implementuje trieda ```EditorPreview``` v súbore ```src/js/pages/web-pages-list/preview.js```. Funkcia ```window.previewPage``` nastavuje atribút ```isPreviewClicked``` a vykoná API volanie pre uloženie editora. Zároveň počúva udalosť ```preSubmit``` pri ktorej deteguje stav atribútu ```isPreviewClicked```.
 
+Pre náhľad sa dočasne použije režim odoslania všetkých polí (`submit: 'all'`), aby udalosť `preSubmit` prebehla aj bez zmeny formulára a náhľad dostal celý obsah. Po skončení validácie sa obnoví pôvodný režim ukladania. Bežný zápis stránky sa pri náhľade zruší; rovnaký postup sa používa aj v pracovnej verzii.
+
 Ak je nastavený na ```true``` získa JSON dáta z editora a uloží ich do session objektu ```session.setAttribute("ShowdocAction.showDocData", entity)``` volaním ```/admin/rest/web-pages/preview/```. Následne otvorí novú kartu v prehliadači s adresou ```/admin/webpages/preview/?docid=+jsonData.id```, ktorú obsluhuje trieda ```PreviewController.java```. Tá získa zo session DocDetails objekt ```DocDetails doc = (DocDetails)request.getSession().getAttribute("ShowdocAction.showDocData");```, nastaví potrebné ```request``` objekty a vykoná volanie ```/showdoc.do``` pre zobrazenie web stránky. Toto ale nezíska aktuálny objekt z databázy, ale použije objekt ```request.getAttribute("ShowdocAction.showDocData")``` pre zobrazenie údajov.
+
+V pracovnej verzii sa okno otvorí už pri kliknutí a po príprave náhľadu dostane URL s `branchId` a `branchDomain`. Session uchováva spolu s obsahom aj overený výber verzie a domény. `BranchFilter` vykresľuje toto okno v režime `PREVIEW` a prekladá odkazy aj obrázky cez súkromný gateway; `PreviewController` odmietne použitie session obsahu v inom kontexte. Pri chybe prípravy alebo validácie sa prázdne okno zatvorí. Pri obsahu iba na čítanie sa používa existujúci odkaz na výsledok balíka.
 
 Zároveň počúva udalosť ```webpagesDatatable.EDITOR.on('postSubmit'```, pomocou ktorej aktualizuje obsah okna náhľadu pri uložení web stránky (entita sa uloží do ```session``` volaním ```WebpagesRestController.afterSave```). Toto sa vykoná len ak je okno náhľadu stále otvorené, to sa testuje pomocou ```self.previewWindow.name != ""```. Toto zostane prázdne, ak okno používateľ zatvorí.
 
