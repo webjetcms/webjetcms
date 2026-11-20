@@ -338,7 +338,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
-- Spring integrácia - opravené poradie URL pravidiel prístupu, spracovanie chýb bezpečnostnej konfigurácie a ukončenie prihlásenia cez API token aj pri výnimke. Formulár na zmenu licencie blokuje opakované neúspešné pokusy, nevracia heslo do stránky a správne aktualizuje čas prihlásenia.
+- Spring integrácia - opravené spracovanie chýb bezpečnostnej konfigurácie a ukončenie prihlásenia cez API token aj pri výnimke. Prihlásený používateľ bez oprávnenia dostane pri volaní REST služby odpoveď HTTP 403 bez zobrazenia dialógu Basic prihlásenia. Formulár na zmenu licencie blokuje opakované neúspešné pokusy, nevracia heslo do stránky a správne aktualizuje čas prihlásenia.
 - Spring aplikácie - opravené renderovanie JSP komponentov s vlastným priečinkom, spracovanie prípon šablón a preklady validačných správ. Opravené nastavenie jazyka vo vnorených Stripes požiadavkách a HTTP 304 pri načítaní súborov z cache.
 - Spring integrácia - opravené načítanie pôvodných údajov pre JPA audit a vyčistenie Spring kontextu pri ukončení. Inicializácia sa pri chybe databázy preruší.
 - Vloženie HTML kódu - obsah sa dekóduje v UTF-8 bez závislosti od predvoleného kódovania JVM, aby sa na serveri nepoškodila diakritika a ďalšie znaky Unicode.
