@@ -16,7 +16,9 @@ Scenario("overenie prvotneho zoznamu", async ({ I, DT, DTE }) => {
   I.seeElement("div.toast-message");
   I.toastrClose();
   I.click({css: "#dateDependentEntriesTable_extfilter button.filtrujem"});
-  DT.waitForLoader();
+  // Counting records across all cleanup tables can exceed the generic 40-second wait on production data.
+  I.waitForInvisible("#dateDependentEntriesTable_processing", 90);
+  DT.waitForLoader("dateDependentEntriesTable");
   I.dontSeeElement("div.toast-message");
 
   //chybne stranky
@@ -35,9 +37,12 @@ Scenario('cache-objects', ({ I, DT }) => {
   I.waitForText('Čistenie databázy', 10);
   I.waitForText('Cache objekty', 10, '.nav-link.active');
   DT.filterContains("name", "browser");
-  I.see("browserDetector-");
-  DT.filterContains("name", "AdminlogNotifyEmail");
-  I.see("AdminlogNotifyEmails.type230");
+  I.see("browserDetector-", "#datatableInit tbody");
+  // Audit notification caches can be cleared by other tests and are not a fixture of this screen.
+  DT.filterContains("name", "missing-cache-autotest-" + I.getRandomText());
+  I.seeElement("#datatableInit tbody td.dt-empty");
+  DT.filterContains("name", "browserDetector-");
+  I.see("browserDetector-", "#datatableInit tbody");
 
   I.amOnPage("/admin/v9/settings/persistent-cache-objects/");
   I.waitForText('Persistent cache objekty', 10, '.nav-link.active');

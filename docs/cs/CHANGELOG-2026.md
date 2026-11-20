@@ -304,6 +304,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 - Monitorování serveru - v aktuálních hodnotách byla přidána sekce [Kódování znaků](sysadmin/monitoring/README.md#kódování-znaků), která zobrazuje kódování HTTP odpovědí, JVM a locale prostředí běžícího procesu aplikačního serveru (#305).
 - Konfigurace - přidán hierarchický strom konfiguračních proměnných s pohledy **Změněno**, **Zákaznické**, **Všechny** a modulovými větvemi (#293).
+- Konfigurace - proměnné se ve všech větvích stromu ve výchozím nastavení řadí podle názvu od A do Z, takže po úpravě hodnoty zůstane proměnná na svém místě. Máte-li uloženo vlastní řazení, má přednost v celém stromu.
 - Konfigurace - přidána možnost **Nastavit dočasně**, která nastaví hodnotu konfigurační proměnné pouze na aktuálním uzlu bez uložení do databáze. Po restartu se obnoví hodnota uložená v databázi (#291).
 
 ![](admin/setup/configuration/page.png)
@@ -338,6 +339,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Vložení HTML kódu - obsah se dekóduje v UTF-8 bez závislosti na výchozím kódování JVM, aby se na serveru nepoškodila diakritika a další znaky Unicode.
 - Zrcadlení struktury - při selhání překladu, například po vyčerpání kvóty DeepL, uživatel obdrží upozornění s konkrétním důvodem z výjimky překladače včetně HTTP kódu a dostupné chybové zprávy DeepL. Pevné mezery a jejich HTML entity se normalizují v názvech složek a generovaných URL, aby nevznikaly adresy s textem `nbsp` ani zbytečná přesměrování (#402).
 - Datové tabulky - po úpravě jednoho záznamu se při vynuceném obnovení údajů zobrazí strana s upraveným záznamem podle aktuálního třídění. V konfiguraci se proměnná vyhledává podle názvu i při změně jejího ID. Při mazání se zachová aktuální strana, případně se zobrazí poslední platná strana. Při pořizování záznamu se stránkování nadále resetuje (#400).
 - Vícekrokové formuláře - identifikátor položky se generuje z textu názvu pole bez HTML značek, aby formátování názvu neovlivňovalo identifikátor (#396).
@@ -764,7 +766,10 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- `/thumb` - ​​opraveno generování náhledů u `ip=1/2`, když se v URL zadává pouze šířka nebo výška. Limit `imageMaxThumbsWidth` nebo `imageMaxThumbsHeight` se pro druhý rozměr ověří až po jeho výpočtu z poměru stran, před generováním obrázku. Formát klíčů cache a záznamů povolených rozměrů se nemění (#408).
 - Vyhledávání - smazaná webová stránka se odstraňuje podle ID ze všech stávajících lokálních jazykových Lucene indexů i bez údajů v databázi nebo cache. Při zapnutém průběžném indexování se i po restartu uzlu clusteru zpracují zachované notifikace změn konkrétních stránek. Při chybě mazání se cluster notifikace nepotvrdí a zpracování se zopakuje (#403).
+- Vyhledávání - příprava náhledu aplikace do indexu v rámci synchronizace clusteru připraví náhradní `request` objekt pro lepší způsob zobrazení aplikací pro index vyhledávání (#404).
+- Vyhledávání - při odstraňování HTML značek se obsah nezkracuje již po 100 000 znacích. Maximální délku zpracovaného HTML určuje konfigurační proměnná `fulltextMaxHtmlLength` (výchozí 2 000 000 znaků). Při překročení limitu se zpracuje pouze začátek obsahu a zapíše se upozornění do logu. Optimalizované zpracování dlouhých atributů HTML značek (#404).
 - Databáze - opraveno generování SQL podmínek `IN` a `NOT IN` s velkým počtem hodnot rozdělením seznamů na menší části. Odstraněny chyby při překročení limitu 1000 hodnot v Oracle databázi, například při načítání historie stránky nebo práci s rozsáhlým stromem složek. Maximální počet hodnot v jedné části určuje konfigurační proměnná `dbInClauseMaxItems` (výchozí 1000, v Oracle nejvýše 1000).
 - Databáze - sjednocené datové typy v SQL skriptech pro nové instalace: PostgreSQL používá `TIMESTAMP WITHOUT TIME ZONE`, opraveno nesprávné použití `TIMESTAMP` v MariaDB a Microsoft SQL. Stávající databáze se automaticky nekonvertují (#399).
 - Webové stránky - opraveno omezení hledání a nahrazování v názvech složek na vybraný strom složek a nastavení rodiče při opravě chybně smazaných složek během přesunu stránky do koše (#390).
@@ -787,6 +792,9 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Bezpečnost - doplněné zdůvodněné výjimky v `dependency-check-suppressions.xml` pro zranitelnosti nevyužívaných částí Spring a pro zranitelnost ošetřenou výše uvedeným nastavením SpringEL. Výjimka pro [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) zohledňuje výše uvedenou ochranu chráněných souborů a opravu odesílání souborů; představuje aplikační opatření a akceptované zbytkové riziko, nikoli opravu knihovny ani potvrzení bezpečnosti všech způsobů odesílání odpovědí. Výchozí odložené zapisování hlaviček Spring Security zůstává zachováno. Verze `Spring Framework 5.3.39` a `Spring Security 5.8.16` zůstávají zachovány.
 - AI asistenti - při aktualizaci se modely OpenAI nahradí novějšími: `gpt-image-2` modelem `gpt-image-2.6-sunburst` pro generování a úpravu obrázků, `gpt-5`, `gpt-5-pro`, `o3` a `o3-pro` modelem `gpt-5.6-sol`, `gpt-5-mini` modelem @@ `gpt-5.6-luna`. OpenAI vypne původní textové modely 11. prosince 2026 a obrazový model 10. února 2027. Asistenti s původními modely Pro přejdou na standardní režim Sol.
 - Datové tabulky - opraveno generování podmínek při filtrování polí odkazujících na jinou entitu. Textové vyhledávání se pro tato pole přeskočí, aby nevznikaly neplatné SQL podmínky (#397).
+- Šablony - [Ninja objekt](frontend/ninja-starter-kit/ninja-jv/temp-group/README.md) `${ninja.temp.group.textPrefix}` vrátí prefix textových klíčů skupiny šablon. Dříve getter volal sám sebe a použití v šabloně skončilo chybou `StackOverflowError` (#409).
+- Soubory - opravený název konfigurační proměnné `elfinderMetadataAutopopup`, která po nahrání souboru automaticky zobrazí dialog metadat. Proměnná byla deklarována s překlepem jako `elfinerMetadataAutopopup`, který se nikde nečetl, proto její změna v administraci neměla efekt. Výchozí hodnota `false` zůstává. Pokud jste si nastavili proměnnou s překlepem, nastavte místo ní `elfinderMetadataAutopopup` (#410).
+- Opraveno zacyklení při HTTP přesměrování během stahování souborů, načtení nastavení uživatele, inicializaci generátoru primárních klíčů a obnově cache souborů uložených v databázi. Doplněny ukončovací podmínky opakovaných pokusů. Pokud generátor primárních klíčů zůstane nedostupný i po jednom pokusu o vytvoření záznamu a obnovení paměti cache, metody `PkeyGenerator.getNextValue(String)` a `getNextValueAsLong(String)` vyhodí `IllegalStateException`. Volající musí přerušit operaci vyžadující identifikátor a předat chybu svému zpracování výjimek (#412).
 
 ## 2026.0.40
 

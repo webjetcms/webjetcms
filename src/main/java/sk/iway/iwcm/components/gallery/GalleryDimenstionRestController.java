@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +33,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/components/gallery-dimension")
+@PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuGallery')")
 public class GalleryDimenstionRestController extends DatatableRestControllerV2<GalleryDimension, Long> {
 
     private final GalleryDimensionRepository repository;
@@ -79,23 +82,19 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
     @Override
     public GalleryDimension insertItem(GalleryDimension entity) {
-        //If DB return entity, path is allready in use throw error, or set new path to entity
         String path = getPathForNewEntity(entity.getPath(), entity.getName());
         Identity user = getUser();
+        if (!isFolderEditable(path, user) || !user.isFolderWritable(entity.getPath()+"/")) {
+            throwError("user.rights.no_folder_rights");
+        }
 
         Optional<GalleryDimension> tmp = repository.findFirstByPathAndDomainId(path, CloudToolsForCore.getDomainId());
         if(tmp.isPresent()) {
             throwError("components.gallery.path_error");
             return null;
         }
-        if (!user.isFolderWritable(entity.getPath()+"/")) {
-            throwError("user.rights.no_folder_rights");
-        }
-
+        ensureDirectoryExists(path, user);
         entity.setPath(path);
-
-        IwcmFile file = new IwcmFile(Tools.getRealPath(entity.getPath()));
-        file.mkdirs();
 
         //domain id and date must by fill, cant be null
         if(entity.getDomainId() == null) {
@@ -113,7 +112,8 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
     @Override
     public GalleryDimension editItem(GalleryDimension entity, long id) {
-        if (!getUser().isFolderWritable(entity.getPath()+"/")) {
+        Identity user = getUser();
+        if (!isFolderEditable(entity.getPath(), user)) {
             throwError("user.rights.no_folder_rights");
         }
 
@@ -136,12 +136,26 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             }
         }
 
-        // Allow change path of folder
-        String movePathFrom = null;
         if (saved == null) {
-            GalleryDimension original = repository.findById(id).orElse(null);
-            if(original != null && original.getPath() != null && original.getPath().equals(entity.getPath()) == false) {
-                movePathFrom = original.getPath();
+            GalleryDimension original = repository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
+            if (original == null || !isFolderEditable(original.getPath(), user)) {
+                throwError("user.rights.no_folder_rights");
+                return null;
+            }
+            if (original.getPath().equals(entity.getPath())) {
+                ensureDirectoryExists(original.getPath(), user);
+            } else {
+                // A move keeps the source folder name. Authorize exactly the destination the service will use.
+                if (!entity.getPath().equals(entity.getParentPath() + "/" + original.getNameFromPath())) {
+                    throwError("user.rights.no_folder_rights");
+                }
+                Map<String, Object> result = new HashMap<>();
+                boolean updateInDoc = Tools.isTrue(entity.getUpdateInDoc());
+                galleryTreeService.findAndMoveGalleryFolder(original.getPath(), entity.getParentPath(), result, updateInDoc);
+                if (!Boolean.TRUE.equals(result.get("result"))) {
+                    throwError((String) result.get("error"));
+                }
+                if (updateInDoc) addNotify(galleryTreeService.updateInDocWarning(getProp()));
             }
 
             saved = super.editItem(entity, id);
@@ -151,21 +165,6 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
         Dimension largeDimension = new Dimension(saved.getNormalWidth(), saved.getNormalHeight());
         Dimension[] dimensions = new Dimension[] { smallDimension, largeDimension };
         String resizeModeNormal = saved.getResizeModeNormal();
-
-        if (movePathFrom != null) {
-            // Folder was moved
-            Map<String, Object> result = new HashMap<>();
-
-            boolean isUpdateInDoc = Tools.isTrue(saved.getUpdateInDoc());
-            if(isUpdateInDoc) { addNotify( galleryTreeService.updateInDocWarning(getProp()) ); }
-            //do not use saved.getParentPath() because it is read only and not updated yet, use original entity.getParentPath() instead
-            galleryTreeService.findAndMoveGalleryFolder(movePathFrom, entity.getParentPath(), result, isUpdateInDoc);
-
-            if(result.containsKey("result") == false || Boolean.FALSE.equals(result.get("result"))) {
-                throwError((String) result.get("error"));
-                return null;
-            }
-        }
 
         if (forceResizeModeToSubgroups) {
             GalleryDB.updateDirectoryDimToSubfolders(saved.getPath(), smallDimension, largeDimension, saved.getResizeMode(), resizeModeNormal);
@@ -256,9 +255,6 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
     @Override
     public void beforeSave(GalleryDimension entity) {
-        IwcmFile file = new IwcmFile(Tools.getRealPath(entity.getPath()));
-        file.mkdirs();
-
         //domain id and date must by fill, cant be null
         if(entity.getDomainId() == null) {
             int domainId = CloudToolsForCore.getDomainId();
@@ -269,6 +265,18 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             Date date = new Date(System.currentTimeMillis());
             entity.setDate(date);
         }
+    }
+
+    private void ensureDirectoryExists(String path, Identity user) {
+        IwcmFile directory = new IwcmFile(Tools.getRealPath(path));
+        if (directory.exists() && directory.isDirectory()) return;
+
+        // mkdirs also creates missing parents. Check them all before creating the first one.
+        for (IwcmFile parent = directory.getParentFile(); !"/".equals(parent.getVirtualPath()) && !parent.exists(); parent = parent.getParentFile()) {
+            if (!isFolderEditable(parent.getVirtualPath(), user)) throwError("user.rights.no_folder_rights");
+        }
+        directory.mkdirs();
+        if (!directory.exists() || !directory.isDirectory()) throwError("sync.groups.create_failed");
     }
 
     @Override
@@ -365,7 +373,10 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
      * @return
      */
     private static String getPathForNewEntity(String parent, String name) {
-        return parent + "/" + DocTools.removeCharsDir(name, true).toLowerCase(); //NOSONAR
+        if (Tools.isEmpty(parent) || Tools.isEmpty(name)) return null;
+        String folderName = DocTools.removeCharsDir(name, true).toLowerCase();
+        if (Tools.isEmpty(folderName) || folderName.contains("/") || ".".equals(folderName)) return null;
+        return parent.endsWith("/") ? parent + folderName : parent + "/" + folderName;
     }
 
     /**
@@ -375,16 +386,13 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
      * @return
      */
     public static boolean isFolderEditable(String path, Identity user) {
+        if (user == null || Tools.isEmpty(path) || !path.startsWith("/") || !path.trim().equals(path)
+                || path.indexOf('\\') >= 0 || path.indexOf('\0') >= 0 || FileBrowserTools.hasForbiddenSymbol(path)) return false;
+        String folder = FilenameUtils.normalizeNoEndSeparator(path, true);
+        if (folder == null) return false;
         String domainAlias = AdminTools.getDomainNameFileAliasAppend();
-        if (Tools.isNotEmpty(domainAlias)) {
-            if (path.equals("/images"+domainAlias)) {
-                return false;
-            }
-        }
-        if (!user.isFolderWritable(path+"/")) {
-            return false;
-        }
-        return true;
+        if (Tools.isNotEmpty(domainAlias) && folder.equals("/images" + domainAlias)) return false;
+        return user.isFolderWritable(folder + "/");
     }
 
 }

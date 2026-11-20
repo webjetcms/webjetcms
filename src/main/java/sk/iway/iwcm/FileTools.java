@@ -728,9 +728,14 @@ public class FileTools
 				conn.connect();
 
 				int responseCode = conn.getResponseCode();
-				if ((responseCode / 100) == 3 && redirectCounter < 10) {
+				if ((responseCode / 100) == 3) {
+					if (redirectCounter >= 10) {
+						conn.disconnect();
+						return false;
+					}
 					String newLocation = conn.getHeaderField( "Location" );
-					return downloadFile(newLocation, localPath, reqProperty, redirectCounter++, timeOutSeconds);
+					conn.disconnect();
+					return downloadFile(newLocation, localPath, reqProperty, redirectCounter + 1, timeOutSeconds);
 				}
 
 				BufferedInputStream is = new BufferedInputStream(conn.getInputStream());

@@ -17,8 +17,7 @@ taglib
 	pageContext.setAttribute("lng", lng);
 	PageParams pageParams = new PageParams(request);
 	String encoded = pageParams.getValue("html", "");
-	Base64 b64 = new Base64();
-	String htmlCode = new String(b64.decode(encoded.getBytes()));
+	String htmlCode = new String(Base64.decodeBase64(encoded), java.nio.charset.StandardCharsets.UTF_8);
 
 	if (htmlCode.startsWith("utf8:"))
 	{

@@ -1547,7 +1547,7 @@ public class Constants {
 
 		setBoolean("elfinderMetadataEnabled", false, mods(MOD_SECURITY, MOD_ELFINDER),
 				"Ak je nastavene na true, tak sa povoli metadata plugin pre elfinder (nastavenie opravneni na subory)");
-		setBoolean("elfinerMetadataAutopopup", false, mods(MOD_SECURITY, MOD_ELFINDER),
+		setBoolean("elfinderMetadataAutopopup", false, mods(MOD_SECURITY, MOD_ELFINDER),
 				"Ak je nastavene na true, tak sa automaticky po uploade suboru zobrazi dialog metadát");
 
 		setString("uploadFileActionReflectionLoader", "", MOD_UPLOAD,

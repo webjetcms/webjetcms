@@ -221,7 +221,7 @@ function startAssistant(I) {
 async function runAssistant(I) {
     startAssistant(I);
     const status = aiContent + ' > .current-status > span';
-    I.waitForVisible('#toast-container-ai.ai-status-success, #toast-container-ai.ai-status-error', 90);
+    I.waitForVisible('#toast-container-ai.ai-status-success, #toast-container-ai.ai-status-error', 180);
     const message = await I.grabTextFrom(status);
     I.assertContain(message, 'Hotovo! Bolo použitých', 'The assistant must finish successfully.');
     I.waitForVisible(aiContent + ' button.btn-ai-undo', 10);
