@@ -13,6 +13,7 @@ public final class BranchView {
     private long previewAt = System.currentTimeMillis();
     private boolean scheduledPreview;
     private String name;
+    private String color=BranchEntity.DEFAULT_COLOR;
     private boolean conflicts;
     private final Map<Integer, Map<String, Object>> liveGroups = new LinkedHashMap<>();
     private final Map<Integer, Map<String, Object>> groupRows = new LinkedHashMap<>();
@@ -64,12 +65,13 @@ public final class BranchView {
     }
 
     private void load(Connection connection) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("SELECT state,publish_at,name FROM branches WHERE id=? AND domain_id=?")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT state,publish_at,name,color FROM branches WHERE id=? AND domain_id=?")) {
             statement.setLong(1, context.branchId()); statement.setInt(2, context.domainId());
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next()) throw new IllegalStateException("Branch is absent in the verified domain");
                 Timestamp date = result.getTimestamp(2);
                 name = result.getString(3);
+                color = Objects.toString(result.getString(4),BranchEntity.DEFAULT_COLOR);
                 scheduledPreview = "SCHEDULED".equals(result.getString(1)) && date != null && date.getTime() > previewAt;
                 if (scheduledPreview) previewAt = date.getTime();
             }
@@ -171,6 +173,7 @@ public final class BranchView {
     public long previewAt() { return previewAt; }
     public boolean scheduledPreview() { return scheduledPreview; }
     public String name() { return name; }
+    public String color() { return color; }
     public boolean hasConflicts() { return conflicts; }
     public List<Map<String,Object>> workRows(BranchType type) { return Collections.unmodifiableList(work.get(type)); }
     public List<Map<String,Object>> documentRows() { return Collections.unmodifiableList(documentRows); }

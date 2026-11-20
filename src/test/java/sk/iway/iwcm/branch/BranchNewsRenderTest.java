@@ -45,6 +45,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.PerexGroupBean;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.Tools;
 
 /** Real DB -> NewsActionBean -> Velocity rendering; no mocked content lists or SQL. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P03_DB",matches="true")
@@ -165,7 +166,7 @@ class BranchNewsRenderTest extends BranchJpaTest {
         }
     }
 
-    /** N12: refreshing after a term change updates News filters and the visible preview clock. */
+    /** N12: refreshing after a term change updates News filters and the publication date in the preview. */
     @Test void n12MovedCancelledAndStoppedScheduleUsesOneRequestTime() throws Exception {
         long first=System.currentTimeMillis()/1000*1000+86_400_000;
         long second=first+86_400_000;
@@ -176,8 +177,8 @@ class BranchNewsRenderTest extends BranchJpaTest {
         assertEquals(first,initial.previewAt());assertTrue(initial.scheduledPreview());
         assertIds(render(a->a.setPublishType("new")),B,fresh);
         String firstBanner=Jsoup.parse(BranchPreviewUrls.rewriteHtml("<html><body></body></html>",request)).selectFirst("#branch-preview-status").text();
-        assertTrue(firstBanner.contains(Prop.getInstance("sk").getText("components.branches.preview.newsPrediction")),firstBanner);
-        assertTrue(firstBanner.contains(java.time.ZoneId.systemDefault().getId()),firstBanner);
+        assertTrue(firstBanner.contains(Tools.formatDateTimeSeconds(first)),firstBanner);
+        assertFalse(firstBanner.contains(java.time.ZoneId.systemDefault().getId()),firstBanner);
 
         update("UPDATE branches SET publish_at=? WHERE id=?",new Timestamp(second),branch.branchId());
         // A page with several News components retains one instant until the next request.
@@ -196,7 +197,7 @@ class BranchNewsRenderTest extends BranchJpaTest {
             assertFalse(current.scheduledPreview());assertTrue(current.previewAt()>=before);assertTrue(current.previewAt()<=System.currentTimeMillis());
             assertIds(render(a->a.setPublishType("new")),B,fresh);
             String banner=Jsoup.parse(BranchPreviewUrls.rewriteHtml("<html><body></body></html>",request)).selectFirst("#branch-preview-status").text();
-            assertFalse(banner.contains(Prop.getInstance("sk").getText("components.branches.preview.newsPrediction")),banner);
+            assertFalse(banner.contains(Tools.formatDateTimeSeconds(second)),banner);
         }
         update("UPDATE branches SET state='SCHEDULED',publish_at=? WHERE id=?",new Timestamp(first-172_800_000),branch.branchId());
         long before=System.currentTimeMillis();open(branch);

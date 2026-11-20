@@ -48,6 +48,8 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Pracovné verzie - náhľad webu zobrazuje kompaktný plávajúci panel vpravo dole s názvom verzie a prípadným termínom publikovania. Používa farbu verzie z administrácie a jeho vzhľad možno prepísať v CSS šablóny. Panel neprekrýva sticky hlavička a nezobrazuje priebežne sa meniaci čas Noviniek.
+
 - Pracovné verzie - editor stránok a priečinkov už nezobrazuje všeobecný modrý informačný banner. Zvolenú verziu ukazuje prepínač v hlavičke; v editore zostávajú konkrétne upozornenia pri obsahu iba na čítanie.
 
 - Pracovné verzie - odkaz v hlavičke otvára kartu Zmeny s filtrovaním položiek podľa typu a problémov. Termín sa nastavuje štandardným dátumovým poľom na karte Plán publikovania. Samotné uloženie termínu nechá verziu rozpracovanú. Spoločná akcia publikovania automaticky uloží rozpracované nastavenia; bez termínu spustí merge ihneď, s termínom pripraví verziu pre CRON a zobrazí štandardné žlté oznámenie s nadpisom Pracovné verzie, dátumom a časom. Akcia je dostupná z nástrojov tabuľky aj z editora.

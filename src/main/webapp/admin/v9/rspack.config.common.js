@@ -210,6 +210,13 @@ const config = {
         new rspack.CopyRspackPlugin({
             patterns:[
                 {
+                    from: 'src/scss/branch-preview.scss',
+                    to: 'css/branch-preview.css',
+                    transform: content => sassImplementation.compileString(content.toString(), {
+                        loadPaths: [path.resolve(__dirname, 'src/scss')]
+                    }).css
+                },
+                {
                     from: 'src/scss/5-modules/_md-environment.scss',
                     to: 'css/environment.css',
                     transform: content => sassImplementation.compileString(content.toString()).css

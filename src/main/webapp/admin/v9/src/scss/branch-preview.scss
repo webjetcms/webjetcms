@@ -1,0 +1,35 @@
+@use "sass:map";
+@use "2-helpers/shortcut-colors" as colors;
+
+// The stylesheet is loaded before template CSS so clients can override this selector normally.
+#branch-preview-status {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 2147483647;
+    display: block;
+    width: max-content;
+    max-width: min(360px, calc(100vw - 32px));
+    box-sizing: border-box;
+    margin: 0;
+    padding: 12px 16px;
+    border: 1px solid var(--wj-branch-preview-border-color, color-mix(in srgb, var(--wj-branch-color, #{map.get(colors.$shortcut-colors, "cyan")}) 25%, white));
+    border-radius: 6px;
+    background: var(--wj-branch-preview-background, color-mix(in srgb, var(--wj-branch-color, #{map.get(colors.$shortcut-colors, "cyan")}) 11%, white));
+    color: var(--wj-branch-preview-color, color-mix(in srgb, var(--wj-branch-color, #{map.get(colors.$shortcut-colors, "cyan")}) 45%, #13151b));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+    font: 14px/1.5 system-ui, sans-serif;
+    text-align: start;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+@each $name, $color in colors.$shortcut-colors {
+    // Keep the same specificity as the base selector for simple client CSS overrides.
+    #branch-preview-status:where([data-branch-color="#{$name}"]) { --wj-branch-color: #{$color}; }
+}
+
+#branch-preview-status .wj-branch-preview-details {
+    margin-top: 4px;
+    font-size: .875em;
+}

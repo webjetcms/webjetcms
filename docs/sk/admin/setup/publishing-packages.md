@@ -41,6 +41,23 @@ Na proxy vypnite zdieľanú cache pre celý gateway a admin REST, zachovajte `Ca
 
 Pri TLS terminácii nastavte existujúce `serverBeyoundProxy=true` a `requestIsSecureHeaderName=X-Forwarded-Proto`; `Tools.isSecure` očakáva hodnotu `https`. Dôveryhodná proxy musí **prepísať** `X-Forwarded-Host`/`X-Forwarded-Proto` zo svojho overeného hostiteľa/protokolu a nesmie veriť rovnomenným hlavičkám od návštevníka. Testujte presmerovanie na HTTPS aj priame odmietnutie anonymného assetu. Konkrétna proxy/CDN nebola v lokálnom POC spustená.
 
+## Vzhľad panela náhľadu
+
+Plávajúci panel `#branch-preview-status` používa farbu pracovnej verzie nastavenú v administrácii. Názov farby je dostupný v atribúte `data-branch-color`, napríklad `lavender`. Paleta je spoločná s administráciou.
+
+Predvolený štýl `/admin/v9/dist/css/branch-preview.css` sa vkladá na začiatok `<head>`, pred CSS šablóny. Vlastný CSS súbor šablóny tak môže prepísať farby aj polohu panela bez `!important` a bez úpravy Java kódu:
+
+```css
+#branch-preview-status {
+    --wj-branch-preview-background: #fff;
+    --wj-branch-preview-color: #222;
+    --wj-branch-preview-border-color: #666;
+    bottom: 24px;
+}
+```
+
+Premenná `--wj-branch-color` obsahuje základnú farbu pracovnej verzie. Ak nenastavíte samostatné premenné pre pozadie, text a okraj, ich odtiene sa z nej odvodia automaticky. Prepísaním `--wj-branch-color` môžete zmeniť celú farebnú schému panela; selektorom `#branch-preview-status[data-branch-color="lavender"]` môžete upraviť iba konkrétnu farbu.
+
 ## Cron
 
 Použite jedinú trvalú úlohu `sk.iway.iwcm.branch.BranchScheduler`, predvolene každých päť minút (`*/5 * * * *`). Interval môžete upraviť v Úlohách na pozadí. V poli **Beží na uzle** nastavte **`CronTask.clusterNode=all-admin`**, alebo konkrétny stabilný admin uzol. Presné meno uzla nie je povinné. Admin/public rolu určuje existujúce `clusterMyNodeType`; public uzol scheduler odmietne aj pri chybnej konfigurácii úlohy.

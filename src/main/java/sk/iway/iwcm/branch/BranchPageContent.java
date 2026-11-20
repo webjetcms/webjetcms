@@ -34,7 +34,7 @@ class BranchPageContent {
             String html = capture.getStrWriterAsString();
             var document = Jsoup.parse(html);
             document.outputSettings().prettyPrint(false);
-            document.select("#branch-preview-status, meta[http-equiv=refresh], base, noscript").remove();
+            document.select("#branch-preview-status, #branch-preview-styles, meta[http-equiv=refresh], base, noscript").remove();
             // Static previews must not keep content hidden until an animation script runs.
             document.select("[data-aos]").removeAttr("data-aos");
             document.select("form button, form input[type=submit], form input[type=image]").attr("disabled", "");
@@ -60,7 +60,7 @@ class BranchPageContent {
         try (var ignored = BranchContexts.open(request, new BranchContext(branchId, domain, userId, BranchContext.Mode.PREVIEW))) {
             document = Jsoup.parse(BranchPreviewUrls.rewriteHtml(html, request));
             document.outputSettings().prettyPrint(false);
-            document.select("#branch-preview-status, base").remove();
+            document.select("#branch-preview-status, #branch-preview-styles, base").remove();
             document.head().prependElement("base").attr("href", pagePath);
             return document.outerHtml();
         } finally { restore(request, BranchPreviewUrls.LOGICAL_PATH, path); }

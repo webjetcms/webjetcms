@@ -63,7 +63,7 @@ class BranchPageRendererTest {
                 assertSame(version == BranchDecision.Source.LIVE ? live : work, request.getAttribute("ShowdocAction.showDocData"));
                 assertEquals(version == BranchDecision.Source.LIVE ? BranchContext.Mode.LIVE : BranchContext.Mode.ADMIN, BranchContexts.current().mode());
                 assertEquals(Boolean.TRUE, request.getAttribute("isPreview"));
-                ((HttpServletResponse)call.getArgument(1)).getWriter().write("<html><head><style>.page{color:red}</style><meta http-equiv=refresh content=0></head><body><aside id=branch-preview-status>banner</aside><main data-aos=fade-down>rendered include</main><noscript>enable scripts</noscript><form><button>submit</button></form></body></html>");
+                ((HttpServletResponse)call.getArgument(1)).getWriter().write("<html><head><link id=branch-preview-styles rel=stylesheet href='/admin/v9/dist/css/branch-preview.css'><style>.page{color:red}</style><meta http-equiv=refresh content=0></head><body><aside id=branch-preview-status>banner</aside><main data-aos=fade-down>rendered include</main><noscript>enable scripts</noscript><form><button>submit</button></form></body></html>");
                 return null;
             }).when(dispatcher).include(same(request), any());
             String html = new BranchPageContent().render(42, "example.sk", 7, 12, version, request, response);
@@ -71,6 +71,7 @@ class BranchPageRendererTest {
             assertTrue(html.contains("rendered include"));assertTrue(html.contains(".page{color:red}"));
             assertTrue(html.contains(version == BranchDecision.Source.LIVE ? "/main/page.html" : "/work/page.html"));
             assertFalse(html.contains("http-equiv=\"refresh\""));assertFalse(html.contains("branch-preview-status"));
+            assertFalse(html.contains("branch-preview-styles"));
             assertFalse(html.contains("data-aos"));assertFalse(html.contains("enable scripts"));
             assertTrue(html.contains("<button disabled>"));
             assertEquals(selected, BranchContexts.current(request));

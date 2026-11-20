@@ -10,7 +10,8 @@ $admin-font-family: "Asap", sans-serif;
 $input-btn-focus-width: 0;
 
 $white: #fff;
-$primary: #0063fb;
+@import "2-helpers/shortcut-colors";
+$primary: map-get($shortcut-colors, "blue");
 $primary-hover: #0054d5;
 $nice-primary: #0090FC;
 $secondary: #13151B;

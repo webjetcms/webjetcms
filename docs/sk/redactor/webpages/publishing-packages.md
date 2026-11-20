@@ -20,7 +20,7 @@ Obrázky môžete vyberať priamo cez dialóg CKEditora. Zobrazia sa z pracovnej
 
 Tlačidlo **Náhľad** v pätičke editora zobrazí aj neuložené úpravy stránky bez ich uloženia do balíka. Funguje aj bez zmeny formulára. Obrázky a odkazy sa načítajú v kontexte zvolenej pracovnej verzie.
 
-V páse pracovnej verzie kliknite na **Náhľad**. V novej karte môžete prejsť menu, Novinky, detaily, obrázky a prílohy. Náhľad vyžaduje prihlásenie do administrácie. Lišta uvádza logickú doménu a čas použitý Novinkami.
+V páse pracovnej verzie kliknite na **Náhľad**. V novej karte môžete prejsť menu, Novinky, detaily, obrázky a prílohy. Náhľad vyžaduje prihlásenie do administrácie. Plávajúci panel vpravo dole uvádza názov pracovnej verzie a používa jej nastavenú farbu. Jeho [vzhľad možno upraviť v CSS šablóny](../../admin/setup/publishing-packages.md#vzhľad-panela-náhľadu). Pri naplánovanom balíku zobrazí aj termín publikovania; Novinky pri náhľade používajú tento termín na vyhodnotenie dátumových filtrov. Pri rozpracovanej verzii sa priebežne meniaci aktuálny čas nezobrazuje.
 
 Odkaz **Pracovné zmeny** v hlavičke otvorí priamo kartu **Zmeny** aktívnej pracovnej verzie. V zozname pracovných verzií môžete označiť ľubovoľný riadok a použiť rovnakú akciu. Širší dialóg poskytuje viac miesta pre zoznam zmien. Stĺpec **Akcia** je hneď za stĺpcom **Typ**, aby boli tlačidlá dostupné aj na užšej obrazovke. Zoznam zúžite filtrom v stĺpci **Typ** alebo prepínačom **Len problémy** v lište. Po úpravách v inej karte prehliadača použite obnovenie tabuľky.
 

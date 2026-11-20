@@ -142,8 +142,8 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
         const first = await render(I, f, true);
         I.assertFalse(first.news.ids.includes(Number(f.pageId)));
         I.assertTrue(first.news.ids.includes(Number(f.secondPageId)));
-        I.assertContain(first.banner, 'Europe/Bratislava');
-        I.assertContain(first.banner, 'Novinky vyhodnotené k');
+        I.assertNotContain(first.banner, 'Europe/Bratislava');
+        I.assertContain(first.banner, 'Naplánované na');
         const shiftedTerm = await schedule(I, f, Number(f.publishCutoff)+60000, true);
         const shifted = await render(I, f, true);
         I.assertTrue(shifted.news.ids.includes(Number(f.pageId)));
@@ -172,7 +172,7 @@ if (process.env.WEBJET_P07_BROWSER === 'true') {
         const afterCancel = await render(I, f, true);
         I.assertDeepEqual(afterCancel.news, current.news, 'N12: cancelled schedule evaluates News at current time again.');
         I.assertNotEqual(afterCancel.banner, shifted.banner);
-        I.assertNotContain(afterCancel.banner, 'Budúci termín');
+        I.assertNotContain(afterCancel.banner, 'Naplánované na');
         save('browser-preview-time', {f, firstTerm, shiftedTerm, current, first, shifted, mobile, cancelled, afterCancel});
         I.clickCss(dialog+' .DTE_Footer .btn-close-editor'); I.waitForInvisible(dialog, 10); I.wjSetDefaultWindowSize();
     });
