@@ -47,6 +47,8 @@ Môžu nastať 3 situácie:
   - ak zmenený názov, za názov **existujúcej** konfiguračnej premennej, tak sa **vykoná úprava**
   - ak zmenený názov, za názov **neexistujúcej** konfiguračnej premennej, tak sa **vykoná pridanie** novej premennej
 
+V editore môžete zobraziť históriu premennej a zrušiť jej naplánovanú zmenu, kým nenastane čas vykonania.
+
 ## Dočasné nastavenie hodnoty
 
 Ak potrebujete zmeniť hodnotu konfiguračnej premennej iba na overenie jej správania, v editore zapnite možnosť **Nastaviť dočasne**. Hodnota sa nastaví iba v pamäti aktuálneho uzla, neuloží sa do databázy ani sa neprenesie na ostatné uzly klastra. Po reštarte aplikačného servera sa opäť použije hodnota uložená v databáze.
