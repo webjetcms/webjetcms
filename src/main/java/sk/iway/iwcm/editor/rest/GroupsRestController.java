@@ -45,6 +45,7 @@ import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.service.DeleteMirrorsService;
 import sk.iway.iwcm.editor.service.DeleteRequestContext;
+import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -73,16 +74,18 @@ import sk.iway.iwcm.users.UsersDB;
 public class GroupsRestController extends DatatableRestControllerV2<GroupDetails, Long> {
 
     private final GroupSchedulerDtoRepository groupSchedulerDtoRepository;
-    private TranslationKeyRepository translationKeyRepository;
-    private EditorFacade editorFacade;
+    private final TranslationKeyRepository translationKeyRepository;
+    private final EditorFacade editorFacade;
+    private final EditorService editorService;
     private final ApproveService approveService;
     private final DeleteMirrorsService deleteMirrorsService;
 
-    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService, DeleteMirrorsService deleteMirrorsService) {
+    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService, DeleteMirrorsService deleteMirrorsService, EditorService editorService) {
         super(null);
         this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;
         this.translationKeyRepository = translationKeyRepository;
         this.editorFacade = editorFacade;
+        this.editorService = editorService;
         this.approveService = approveService;
         this.deleteMirrorsService = deleteMirrorsService;
     }
@@ -269,7 +272,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     public GroupDetails editItem(GroupDetails entity, long id) { //NOSONAR
         if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
             setForceReload(true);
-            return new sk.iway.iwcm.branch.BranchEditor(getRequest()).saveGroup(entity);
+            return new sk.iway.iwcm.branch.BranchEditor(getRequest()).saveGroup(entity, editorService);
         }
         entity.getEditorFields().toGroupDetails(entity);
         GroupsDB groupsDB = GroupsDB.getInstance();

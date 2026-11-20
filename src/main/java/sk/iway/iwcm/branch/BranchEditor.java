@@ -77,41 +77,11 @@ public final class BranchEditor {
     }
 
     public DocDetails saveDocument(DocDetails doc, EditorService editor) {
-        if (doc.getEditorFields()==null) throw invalid("Missing editor fields");
         new BranchAccess().requireCsrf(request);
-        String expected=doc.getEditorFields().getBranchHash();
         DocDetails result=write(connection -> {
             BranchView before=BranchView.reload(connection);
-            DocDetails original=doc.getDocId()>0 ? before.document(doc.getDocId(),false) : null;
-            if (doc.getDocId()>0 && original==null) throw invalid("Page no longer exists");
-            rejectUnsupported(doc,original);
-            doc.getEditorFields().toDocDetails(doc);
-            GroupDetails destination=folder(doc.getGroupId(),false);
-            if(doc.getSortPriority()<0) editor.setSortPriority(doc,destination);
-            editor.checkSavePermissions(user,doc);
-            if (original==null || original.getGroupId()!=doc.getGroupId()) folder(doc.getGroupId(),true);
-            if (original!=null) {
-                folder(original.getGroupId(),false);
-                multigroup(original.getDocId());
-            }
-            if (original!=null && original.getGroupId()!=doc.getGroupId() && before.group(original.getGroupId()).getDefaultDocId()==doc.getDocId())
-                replaceDefault(connection,before,original.getGroupId(),doc.getDocId());
-            validateDocument(doc);
-            editor.normalizeEditableContent(doc);
-            doc.setDateCreated(System.currentTimeMillis()); doc.setAuthorId(user.getUserId());
-            Map<String,Object> stable=original==null ? new LinkedHashMap<>(BranchDocumentMapper.initialValues(1,user.getUserId(),Instant.now(),Constants.getBoolean("editorAutoFillPublishStart"))) : row(connection,BranchType.DOCUMENT,doc.getDocId());
-            Map<String,Object> values=BranchEditorRows.document(doc,stable);
-            Map<String,Object> saved=doc.getDocId()<1 ? store.create(connection,context,BranchType.DOCUMENT,values)
-                : store.put(connection,context,BranchType.DOCUMENT,doc.getDocId(),values,expected,false);
-            int id=((Number)saved.get("doc_id")).intValue();
+            int id=saveDocument(connection,before,doc,editor);
             BranchView after=BranchView.reload(connection);
-            GroupDetails group=after.group(doc.getGroupId());
-            if ((original==null || original.getGroupId()!=doc.getGroupId()) && group.getDefaultDocId()<1) {
-                Map<String,Object> groupRow=row(connection,BranchType.GROUP,group.getGroupId());
-                groupRow.put("default_doc_id",id);
-                store.put(connection,context,BranchType.GROUP,group.getGroupId(),groupRow,currentHash(connection,BranchType.GROUP,group.getGroupId()),false);
-                after=BranchView.reload(connection);
-            }
             validateResult(before,after);
             return after.document(id,false);
         });
@@ -120,7 +90,40 @@ public final class BranchEditor {
         return result;
     }
 
-    public GroupDetails saveGroup(GroupDetails group) {
+    private int saveDocument(Connection connection, BranchView before, DocDetails doc, EditorService editor) throws SQLException {
+        if (doc.getEditorFields()==null) throw invalid("Missing editor fields");
+        String expected=doc.getEditorFields().getBranchHash();
+        DocDetails original=doc.getDocId()>0 ? before.document(doc.getDocId(),false) : null;
+        if (doc.getDocId()>0 && original==null) throw invalid("Page no longer exists");
+        rejectUnsupported(doc,original);
+        doc.getEditorFields().toDocDetails(doc);
+        GroupDetails destination=folder(doc.getGroupId(),false);
+        if (doc.getSortPriority()<0) editor.setSortPriority(doc,destination);
+        editor.checkSavePermissions(user,doc);
+        boolean newToFolder=original==null || original.getGroupId()!=doc.getGroupId();
+        if (newToFolder) folder(doc.getGroupId(),true);
+        if (original!=null) {
+            folder(original.getGroupId(),false);
+            multigroup(original.getDocId());
+            if (newToFolder && before.group(original.getGroupId()).getDefaultDocId()==doc.getDocId())
+                replaceDefault(connection,before,original.getGroupId(),doc.getDocId());
+        }
+        validateDocument(doc);
+        editor.normalizeEditableContent(doc);
+        doc.setDateCreated(System.currentTimeMillis());
+        doc.setAuthorId(user.getUserId());
+        Map<String,Object> stable=original==null
+            ? BranchDocumentMapper.initialValues(1,user.getUserId(),Instant.now(),Constants.getBoolean("editorAutoFillPublishStart"))
+            : row(connection,BranchType.DOCUMENT,doc.getDocId());
+        Map<String,Object> values=BranchEditorRows.document(doc,stable);
+        Map<String,Object> saved=original==null ? store.create(connection,context,BranchType.DOCUMENT,values)
+            : store.put(connection,context,BranchType.DOCUMENT,doc.getDocId(),values,expected,false);
+        int id=((Number)saved.get("doc_id")).intValue();
+        if (newToFolder && destination.getDefaultDocId()<1) setDefaultDocument(connection,destination.getGroupId(),id);
+        return id;
+    }
+
+    public GroupDetails saveGroup(GroupDetails group, EditorService editor) {
         new BranchAccess().requireCsrf(request);
         if (group.getEditorFields()==null) throw invalid("Missing editor fields");
         String expected=group.getEditorFields().getBranchHash();
@@ -154,6 +157,14 @@ public final class BranchEditor {
             Map<String,Object> saved=old==null ? store.create(connection,context,BranchType.GROUP,values)
                 : store.put(connection,context,BranchType.GROUP,group.getGroupId(),values,expected,false);
             int id=((Number)saved.get("group_id")).intValue();
+            if (old==null && Constants.getBoolean("groupCreateBlankWebpageAfterCreate") && !user.isDisabledItem("addPage")) {
+                BranchView withNewGroup=BranchView.reload(connection);
+                DocDetails page=loadDocument(-1,-1,id,editor);
+                String title=Tools.replace(group.getGroupName(),"&#47;","/");
+                page.setTitle(title);
+                page.setNavbar(title);
+                saveDocument(connection,withNewGroup,page,editor);
+            }
             if (old!=null && (old.getParentGroupId()!=group.getParentGroupId() || !old.getUrlDirName().equals(group.getUrlDirName()) || !old.getGroupName().equals(group.getGroupName())))
                 materializeDescendants(connection,before,id);
             validateResult(before,BranchView.reload(connection));
@@ -201,8 +212,12 @@ public final class BranchEditor {
         folder(groupId,true);
         int replacement=view.documents(true).stream().filter(doc -> doc.getGroupId()==groupId && doc.getDocId()!=removedPage)
             .sorted(Comparator.comparingInt(DocDetails::getSortPriority).thenComparingInt(DocDetails::getDocId)).mapToInt(DocDetails::getDocId).findFirst().orElse(0);
+        setDefaultDocument(connection,groupId,replacement);
+    }
+
+    private void setDefaultDocument(Connection connection, int groupId, int docId) throws SQLException {
         Map<String,Object> values=row(connection,BranchType.GROUP,groupId);
-        values.put("default_doc_id",replacement);
+        values.put("default_doc_id",docId);
         store.put(connection,context,BranchType.GROUP,groupId,values,currentHash(connection,BranchType.GROUP,groupId),false);
     }
 

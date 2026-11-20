@@ -10,12 +10,14 @@ import java.security.MessageDigest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.*;
+import sk.iway.iwcm.editor.rest.GroupsRestController;
 import sk.iway.iwcm.editor.service.EditorService;
 
 /** Exercises the actual authorized WORK editor and verifies production tables byte for byte. */
@@ -30,7 +32,7 @@ class BranchEditorTest extends BranchJpaTest {
 
     @BeforeEach void fixture() throws Exception {
         try(Connection c=DBPool.getConnection()) { assertEquals("webjet_p01",c.getCatalog()); assertTrue(c.getMetaData().getURL().contains(":33316/")); }
-        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder","fulltextExecuteApps","linkType")) configuration.put(key,Constants.getString(key));
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder","fulltextExecuteApps","linkType","groupCreateBlankWebpageAfterCreate")) configuration.put(key,Constants.getString(key));
         Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private")); Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
         Constants.setBoolean("multiDomainEnabled",true); Constants.setBoolean("templatesUseRecursiveSystemFolder",false); Constants.setBoolean("fulltextExecuteApps",true);
@@ -51,12 +53,57 @@ class BranchEditorTest extends BranchJpaTest {
         } finally { configuration.forEach(Constants::setString); }
     }
 
+    /** A new WORK folder gets its main page according to configuration and page creation rights. */
+    @ParameterizedTest
+    @CsvSource({"true, true", "false, true", "true, false"})
+    void createsDefaultPageForNewFolderWhenConfigured(boolean autoCreate, boolean canAddPage) throws Exception {
+        Constants.setBoolean("groupCreateBlankWebpageAfterCreate",autoCreate);
+        boolean createPage=autoCreate && canAddPage;
+        in((request,editor) -> {
+            if (!canAddPage) {
+                Identity user=(Identity)request.getSession().getAttribute(Constants.USER_KEY);
+                user.addDisabledItem("addPage");
+            }
+            GroupsRestController controller=new GroupsRestController(null,null,null,null,null,editor);
+            controller.setRequest(request);
+            GroupDetails group=new GroupDetails();
+            group.setGroupId(-1);
+            group.setGroupName("autotest P04 folder with main page");
+            group.setNavbar("autotest P04 navigation");
+            group.setUrlDirName("main-page");
+            group.setParentGroupId(root);
+            group=new GroupEditorField().fromGroupDetails(group);
+            group.getEditorFields().setBranchHash("new");
+
+            GroupDetails saved=controller.insertItem(group);
+            int groupId=saved.getGroupId();
+            int defaultDocId=saved.getDefaultDocId();
+            assertEquals(createPage,defaultDocId>0);
+            if (createPage) {
+                assertEquals(defaultDocId,saved.getEditorFields().getDefaultDocDetails().getDocId());
+                DocDetails mainPage=new BranchEditor(request).loadDocument(defaultDocId,-1,groupId,editor);
+                assertEquals(groupId,mainPage.getGroupId());
+                assertEquals(group.getGroupName(),mainPage.getTitle());
+                assertEquals(group.getGroupName(),mainPage.getNavbar());
+                assertEquals(Constants.getBoolean("editorNewDocDefaultAvailableChecked"),mainPage.isAvailable());
+            }
+
+            saved.setNavbar("autotest P04 updated navigation");
+            assertEquals(defaultDocId,controller.editItem(saved,groupId).getDefaultDocId());
+            assertEquals(createPage ? 1 : 0,BranchView.current().documents(true).stream()
+                .filter(doc -> doc.getGroupId()==groupId).count());
+            return null;
+        });
+        assertEquals(production,fingerprint());
+    }
+
     @Test void createEditMoveDeleteRevertAndIsolation() throws Exception {
+        Constants.setBoolean("groupCreateBlankWebpageAfterCreate",false);
         in((request,editor) -> {
             BranchEditor service=new BranchEditor(request);
             GroupDetails group=new GroupDetails(); group.setGroupId(-1); group.setGroupName("autotest P04 new"); group.setNavbar("autotest P04 new"); group.setUrlDirName("new"); group.setParentGroupId(root); group.setDomainName(DOMAIN);
             group=new GroupEditorField().fromGroupDetails(group); group.getEditorFields().setBranchHash("new");
-            GroupDetails saved=service.saveGroup(group); int groupId=saved.getGroupId(); assertTrue(groupId>0);
+            GroupDetails saved=service.saveGroup(group,editor); int groupId=saved.getGroupId(); assertTrue(groupId>0);
             DocDetails fresh=service.loadDocument(-1,-1,groupId,editor); fresh.setUrlInheritGroup(true); fresh.setTitle("autotest P04 article"); fresh.setNavbar("autotest P04 article"); fresh.setAvailable(true); fresh.setHtmlData("autotest perex");
             fresh.setData("<section class=\"pb-section\"><div class=\"container\"><p>autotest WORK !INCLUDE(/autotest-never-execute.jsp)!</p></div></section>");
             DocDetails created=service.saveDocument(fresh,editor); int id=created.getDocId(); assertTrue(id>0); assertTrue(created.isAvailable()); assertEquals("autotest perex",created.getHtmlData()); assertTrue(created.getData().contains("pb-section"));
@@ -65,7 +112,7 @@ class BranchEditorTest extends BranchJpaTest {
             created=service.saveDocument(created,editor); assertEquals(id,created.getDocId());
             GroupDetails renamed=new GroupEditorField().fromGroupDetails(BranchView.current().group(groupId)); BranchEditor.attachHash(renamed);
             renamed.setGroupName("autotest renamed folder"); renamed.setNavbar("autotest renamed folder"); renamed.setUrlDirName("renamed"); renamed.getEditorFields().setParentGroupDetails(BranchView.current().group(other));
-            renamed=service.saveGroup(renamed); assertEquals(groupId,renamed.getGroupId());
+            renamed=service.saveGroup(renamed,editor); assertEquals(groupId,renamed.getGroupId());
             assertTrue(BranchView.current().document(id,false).getVirtualPath().contains("/other/renamed/"));
             // Removing a non-default page and undoing an existing LIVE change are independent operations.
             DocDetails edit=service.loadDocument(page,-1,root,editor); String initial=edit.getEditorFields().getBranchHash();
@@ -100,11 +147,11 @@ class BranchEditorTest extends BranchJpaTest {
             GroupDetails group=new GroupDetails();group.setGroupId(-1);group.setGroupName("autotest new child");
             group.setNavbar("autotest new child");group.setUrlDirName("new-child");group.setParentGroupId(inheritedChild);
             group=new GroupEditorField().fromGroupDetails(group);group.getEditorFields().setBranchHash("new");
-            assertTrue(service.saveGroup(group).getGroupId()>0);
+            assertTrue(service.saveGroup(group,editor).getGroupId()>0);
 
             GroupDetails rootEdit=new GroupEditorField().fromGroupDetails(BranchView.current().group(inheritedRoot));
             BranchEditor.attachHash(rootEdit);rootEdit.setNavbar("autotest edited root navigation");
-            assertEquals("autotest edited root navigation",service.saveGroup(rootEdit).getNavbarName());
+            assertEquals("autotest edited root navigation",service.saveGroup(rootEdit,editor).getNavbarName());
             return null;
         });
         assertEquals(production,fingerprint());
@@ -119,8 +166,8 @@ class BranchEditorTest extends BranchJpaTest {
             DocDetails plan=service.loadDocument(page,-1,root,editor); plan.setPublishEndDate(new java.util.Date()); assertThrows(ResponseStatusException.class,()->service.saveDocument(plan,editor));
             DocDetails foreign=service.loadDocument(page,-1,root,editor); foreign.getEditorFields().getGroupDetails().setGroupId(Integer.MAX_VALUE); assertThrows(ResponseStatusException.class,()->service.saveDocument(foreign,editor));
             DocDetails collision=service.loadDocument(-1,-1,root,editor); collision.setGenerateUrlFromTitle(false); collision.setVirtualPath("/autotest-p04/existing.html"); assertThrows(ResponseStatusException.class,()->service.saveDocument(collision,editor));
-            GroupDetails cycle=new GroupEditorField().fromGroupDetails(BranchView.current().group(root)); BranchEditor.attachHash(cycle); cycle.getEditorFields().setParentGroupDetails(BranchView.current().group(other)); assertThrows(ResponseStatusException.class,()->service.saveGroup(cycle));
-            GroupDetails invalid=new GroupEditorField().fromGroupDetails(BranchView.current().group(other)); BranchEditor.attachHash(invalid); invalid.getEditorFields().setDefaultDocDetails(BranchView.current().document(page,true)); assertThrows(ResponseStatusException.class,()->service.saveGroup(invalid));
+            GroupDetails cycle=new GroupEditorField().fromGroupDetails(BranchView.current().group(root)); BranchEditor.attachHash(cycle); cycle.getEditorFields().setParentGroupDetails(BranchView.current().group(other)); assertThrows(ResponseStatusException.class,()->service.saveGroup(cycle,editor));
+            GroupDetails invalid=new GroupEditorField().fromGroupDetails(BranchView.current().group(other)); BranchEditor.attachHash(invalid); invalid.getEditorFields().setDefaultDocDetails(BranchView.current().document(page,true)); assertThrows(ResponseStatusException.class,()->service.saveGroup(invalid,editor));
             Identity user=(Identity)request.getSession().getAttribute(Constants.USER_KEY); user.setEditableGroups(String.valueOf(other));
             var denied=assertThrows(ResponseStatusException.class,()->service.loadDocument(page,-1,root,editor));
             String reason=sk.iway.iwcm.i18n.Prop.getInstance(request).getText("branches.editor.permission");

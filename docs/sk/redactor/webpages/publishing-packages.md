@@ -12,6 +12,8 @@ Publikačný balík spojí prípravu viacerých stránok, priečinkov, médií a
 
 Zvolenú pracovnú verziu ukazuje prepínač v hlavičke administrácie. Editor zobrazí upozornenie, ak konkrétnu stránku nemožno upravovať, napríklad pri zdieľanej System stránke alebo multigroup kópii. Individuálne plány publikovania, história, atribúty a multigroup väzby sa v pracovnej verzii nemenia; spravujú sa mimo balíka.
 
+Pri vytvorení priečinka WebJET pridá do pracovnej verzie aj jeho hlavnú stránku s názvom priečinka, ak je zapnuté automatické vytváranie stránok a máte právo pridávať stránky.
+
 Obrázky môžete vyberať priamo cez dialóg CKEditora. Zobrazia sa z pracovnej verzie, pričom v poli **URL adresa** aj v HTML zostáva bežná cesta `/images/...`. Nový obrázok pridaný iba do balíka bude na verejnej adrese dostupný až po publikovaní.
 
 ## Náhľad a konflikt
