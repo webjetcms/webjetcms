@@ -38,6 +38,24 @@ public final class BranchMergeService {
 
     public Report detail(long id,String domain,Identity user) { return prepare(id,domain,user,-1); }
 
+    record PageVersions(Version live,Version work) { }
+
+    /** Reads the requested page's actual versions with the same item permissions as the report. */
+    PageVersions pageVersions(long id,String domain,Identity user,int docId) {
+        if(docId<1) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        try(Connection c=DBPool.getConnection()) {
+            BranchReadiness.verify(c);
+            branch(c,id,domain,-1,false);
+            if(user==null || !GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,Prop.getInstance().getText("branches.schedule.permission"));
+            Map<String,Object> row=BranchStore.readWork(c,id,BranchType.DOCUMENT,docId)
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
+            authorize(c,BranchType.DOCUMENT,row,user,domain,false);
+            BranchChange change=BranchStore.change(BranchType.DOCUMENT,row);
+            return new PageVersions(Version.of(BranchPublishRows.liveSnapshot(c,BranchType.DOCUMENT,row)),Version.of(change.work()));
+        } catch(SQLException ex) {throw failure(ex);}
+    }
+
     public Report resolve(long id,String domain,Identity user,long revision,BranchType type,String key,
             BranchDecision.Source source,String liveHash,String workHash) {
         try(Connection c=DBPool.getConnection()) {

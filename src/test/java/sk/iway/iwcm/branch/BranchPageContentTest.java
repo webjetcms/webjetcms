@@ -3,7 +3,6 @@ package sk.iway.iwcm.branch;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,8 +24,7 @@ class BranchPageContentTest {
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final MockHttpServletResponse response = new MockHttpServletResponse();
     private final Identity user = new Identity();
-    private final BranchMergeService.Item item = mock(BranchMergeService.Item.class);
-    private final BranchMergeService.Report report = mock(BranchMergeService.Report.class);
+    private final BranchMergeService.PageVersions item = mock(BranchMergeService.PageVersions.class);
     private final BranchMergeRestController controller = new BranchMergeRestController(null, merge, access, renderer);
 
     @BeforeEach void prepare() throws Exception {
@@ -34,10 +32,7 @@ class BranchPageContentTest {
         user.setUserId(7);
         when(access.requireUser(request)).thenReturn(user);
         when(access.requireDomain(request, user)).thenReturn("example.sk");
-        when(merge.detail(42, "example.sk", user)).thenReturn(report);
-        when(report.items()).thenReturn(List.of(item));
-        when(item.type()).thenReturn("DOCUMENT");when(item.objectKey()).thenReturn("12");
-        when(item.liveHash()).thenReturn("live");when(item.workHash()).thenReturn("work");
+        when(merge.pageVersions(42, "example.sk", user,12)).thenReturn(item);
         when(item.live()).thenReturn(new BranchMergeService.Version("ACTIVE", java.util.Map.of(), "live"));
         when(item.work()).thenReturn(new BranchMergeService.Version("ACTIVE", java.util.Map.of(), "work"));
         when(renderer.render(eq(42L), eq("example.sk"), eq(7), eq(12), any(), same(request), same(response)))
@@ -47,8 +42,13 @@ class BranchPageContentTest {
 
     @AfterEach void clean() { SetCharacterEncodingFilter.setCurrentRequestBean(null); }
 
-    @Test void workingContentIgnoresSavedLiveChoiceAndRestoresContext() throws Exception {
-        when(item.choice()).thenReturn("LIVE");
+    /** Reading one page comparison must not run a complete publication preflight for the package. */
+    @Test void pageComparisonDoesNotPrepareTheWholePackage() throws Exception {
+        controller.pageContent(42,12,BranchDecision.Source.WORK,"live","work",false,request,response);
+        verify(merge,never()).detail(anyLong(),anyString(),any());
+    }
+
+    @Test void workingContentUsesRawWorkAndRestoresContext() throws Exception {
         var result = controller.pageContent(42, 12, BranchDecision.Source.WORK, "live", "work", false, request, response);
         assertEquals("<html>WORK</html>", result.getBody());
         assertEquals("private, no-store", result.getHeaders().getFirst("Cache-Control"));
@@ -77,8 +77,8 @@ class BranchPageContentTest {
         }
     }
 
-    @Test void foldersNeverReachThePageRendererEvenWithHtmlFields() {
-        when(item.type()).thenReturn("GROUP");
+    @Test void missingPageNeverReachesTheRenderer() {
+        when(merge.pageVersions(42,"example.sk",user,12)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
         var error = assertThrows(ResponseStatusException.class,
             () -> controller.pageContent(42, 12, BranchDecision.Source.LIVE, "live", "work", false, request, response));
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());verifyNoInteractions(renderer);
@@ -92,7 +92,7 @@ class BranchPageContentTest {
     }
 
     @Test void domainAndItemPermissionsAreCheckedBeforeRendering() {
-        when(merge.detail(42, "example.sk", user)).thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+        when(merge.pageVersions(42, "example.sk", user,12)).thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
         assertThrows(ResponseStatusException.class,
             () -> controller.pageContent(42, 12, BranchDecision.Source.WORK, "live", "work", false, request, response));
         verifyNoInteractions(renderer);

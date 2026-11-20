@@ -91,10 +91,8 @@ public class BranchMergeRestController {
             HttpServletRequest request,HttpServletResponse response)throws Exception {
         Identity user=access.requireUser(request);String domain=access.requireDomain(request,user);
         try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {
-            var item=merge.detail(id,domain,user).items().stream()
-                .filter(row->"DOCUMENT".equals(row.type())&&Integer.toString(docId).equals(row.objectKey())).findFirst()
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
-            if(!Objects.equals(liveHash,item.liveHash())||!Objects.equals(workHash,item.workHash()))
+            var item=merge.pageVersions(id,domain,user,docId);
+            if(!Objects.equals(liveHash,item.live().hash())||!Objects.equals(workHash,item.work().hash()))
                 throw new ResponseStatusException(HttpStatus.CONFLICT,sk.iway.iwcm.i18n.Prop.getInstance(request).getText("branches.merge.pageStale.js"));
             var snapshot=version==BranchDecision.Source.LIVE?item.live():item.work();
             if(!"ACTIVE".equals(snapshot.state()))throw new ResponseStatusException(HttpStatus.NOT_FOUND);
