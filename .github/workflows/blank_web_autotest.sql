@@ -4863,6 +4863,7 @@ UPDATE `documents_history` SET `follow_links` = 0 WHERE `follow_links` IS NULL;
 ALTER TABLE templates_group ADD COLUMN seo_image VARCHAR(255) NULL;
 ALTER TABLE documents_history ADD COLUMN is_delete TINYINT(1) NOT NULL DEFAULT 0;
 ALTER TABLE templates ADD COLUMN url_remove_spojky_mode TINYINT NOT NULL DEFAULT 0;
+ALTER TABLE gallery_dimension ADD COLUMN resize_mode_normal VARCHAR(1) NULL;
 
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
