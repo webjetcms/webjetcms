@@ -442,10 +442,15 @@ Scenario('Working version editor filters conflicts and keeps scheduling separate
     I.clickCss('.buttons-branch-publish');
     I.waitForVisible(`${changesTab}[aria-selected="true"]`, 10);
     await I.waitForVisible('#branch-merge-confirmation', 10);
-    I.see(pagePlanWarning, '#panel-body-dt-branchesDataTable-changes ul.alert-warning');
+    I.seeElement('dialog#branch-merge-confirmation:modal');
+    I.seeElement('#branch-merge-confirmation .btn-white:focus');
+    I.seeElement('#branch-merge-confirmation-note > p.fw-semibold + ul');
+    I.seeNumberOfElements('#branch-merge-confirmation-note > ul > li', 3);
+    I.seeElement(locate('#panel-body-dt-branchesDataTable-changes ul.alert-warning').withText(pagePlanWarning));
     I.assertDeepEqual(requests.map(({action}) => action), ['resolve', 'resolve', 'revert', 'schedule', 'unschedule']);
-    I.click('Zrušiť', '#branch-merge-confirmation');
+    I.pressKey('Escape');
     I.waitForInvisible('#branch-merge-confirmation', 10);
+    I.seeElement('#branch-merge-publish:focus');
     I.waitForEnabled('#branch-merge-publish', 10);
     I.clickCss('#branch-merge-publish');
     await I.waitForVisible('#branch-merge-confirmation', 10);

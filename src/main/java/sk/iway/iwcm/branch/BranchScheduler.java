@@ -4,29 +4,46 @@ import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.users.UsersDB;
 
-/** Fixed WebJET cron task that publishes queued requests and due packages on administrative nodes. */
+/** Publishes queued requests and due packages on administrative nodes. */
 public final class BranchScheduler {
-    private static final AtomicBoolean RUNNING=new AtomicBoolean();
+    private static final AtomicBoolean CRON_RUNNING=new AtomicBoolean();
+    private static final ReentrantLock PUBLICATION_LOCK=new ReentrantLock(true);
     private BranchScheduler() { }
 
     public static void main(String[] args) {
-        if(!BranchAccess.isEnabled() || ClusterDB.isPublicNode())return;
-        if(!RUNNING.compareAndSet(false,true))return;
-        try {publish();}
-        finally {RUNNING.set(false);}
-    }
-
-    private static void publish() {
+        if(!canPublish() || !CRON_RUNNING.compareAndSet(false,true))return;
         try {
             // Stagger dynamic admin nodes; the database claim remains the protection against duplicate execution.
             Thread.sleep(ThreadLocalRandom.current().nextInt(10000));
+            publish(true);
+        }catch(InterruptedException ex){Thread.currentThread().interrupt();}
+        finally {CRON_RUNNING.set(false);}
+    }
+
+    static void publishRequested() {
+        if(canPublish())publish(false);
+    }
+
+    private static boolean canPublish() {
+        return BranchAccess.isEnabled() && !ClusterDB.isPublicNode();
+    }
+
+    private static void publish(boolean includeScheduled) {
+        try {
+            PUBLICATION_LOCK.lockInterruptibly();
         }catch(InterruptedException ex){Thread.currentThread().interrupt();return;}
+        try {processQueue(includeScheduled);}
+        finally {PUBLICATION_LOCK.unlock();}
+    }
+
+    private static void processQueue(boolean includeScheduled) {
         RequestBean previous=SetCharacterEncodingFilter.getCurrentRequestBean();
         try {
             BranchReadiness.verify();
@@ -36,26 +53,33 @@ public final class BranchScheduler {
                 catch(Exception ex){Logger.error(BranchScheduler.class,ex);}
                 finally{SetCharacterEncodingFilter.setCurrentRequestBean(previous);BranchView.invalidate();}
             }
-            for(BranchEntity item:branches.due(new Timestamp(System.currentTimeMillis()))) {
-                try {
-                    String domain = BranchDomains.name(item.getDomainId());
-                    var details=UsersDB.getUser(item.getScheduledBy());
-                    if(details==null||!details.isAdmin()||!details.isAuthorized())throw new IllegalStateException(Prop.getInstance().getText("branches.schedule.user_unavailable"));
-                    Identity user=new Identity(details);
-                    if(!user.isEnabledItem(BranchAccess.PERMISSION))throw new IllegalStateException(Prop.getInstance().getText("branches.schedule.permission"));
-                    RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(domain);
-                    SetCharacterEncodingFilter.setCurrentRequestBean(bean);
-                    try(BranchContexts.Scope ignored=BranchContexts.live(null,domain,item.getScheduledBy())) {
-                        BranchMergeService merge=new BranchMergeService();
-                        var report=merge.prepare(item.getId(),domain,user,item.getRevision());
-                        merge.claimScheduled(item.getId(),domain,user,item.getRevision(),report.preparationHash());
-                        new BranchPublishService().run(item.getId(),item.getScheduledBy());
-                    }
-                }catch(Exception ex){attention(item,ex);}
-                finally{SetCharacterEncodingFilter.setCurrentRequestBean(previous);BranchView.invalidate();}
-            }
+            if(includeScheduled)publishScheduled(branches,previous);
         }catch(Exception ex){Logger.error(BranchScheduler.class,ex);}
-        finally {try {SetCharacterEncodingFilter.unRegisterDataContext();}finally {SetCharacterEncodingFilter.setCurrentRequestBean(previous);}}
+        finally {
+            try {SetCharacterEncodingFilter.unRegisterDataContext();}
+            finally {SetCharacterEncodingFilter.setCurrentRequestBean(previous);}
+        }
+    }
+
+    private static void publishScheduled(BranchService branches,RequestBean previous) {
+        for(BranchEntity item:branches.due(new Timestamp(System.currentTimeMillis()))) {
+            try {
+                String domain = BranchDomains.name(item.getDomainId());
+                var details=UsersDB.getUser(item.getScheduledBy());
+                if(details==null||!details.isAdmin()||!details.isAuthorized())throw new IllegalStateException(Prop.getInstance().getText("branches.schedule.user_unavailable"));
+                Identity user=new Identity(details);
+                if(!user.isEnabledItem(BranchAccess.PERMISSION))throw new IllegalStateException(Prop.getInstance().getText("branches.schedule.permission"));
+                RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(domain);
+                SetCharacterEncodingFilter.setCurrentRequestBean(bean);
+                try(BranchContexts.Scope ignored=BranchContexts.live(null,domain,item.getScheduledBy())) {
+                    BranchMergeService merge=new BranchMergeService();
+                    var report=merge.prepare(item.getId(),domain,user,item.getRevision());
+                    merge.claimScheduled(item.getId(),domain,user,item.getRevision(),report.preparationHash());
+                    new BranchPublishService().run(item.getId(),item.getScheduledBy());
+                }
+            }catch(Exception ex){attention(item,ex);}
+            finally{SetCharacterEncodingFilter.setCurrentRequestBean(previous);BranchView.invalidate();}
+        }
     }
 
     private static void attention(BranchEntity item,Exception error) {

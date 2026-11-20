@@ -47,7 +47,7 @@ Použite jedinú trvalú úlohu `sk.iway.iwcm.branch.BranchScheduler`, predvolen
 
 Náhodné oneskorenie 0–10 sekúnd rozloží admin behy. Pred dvojitým spracovaním chráni transakčné prevzatie `SCHEDULED → MERGING` podľa revízie, nie oneskorenie. Skontrolujte, že migrácia nevytvorila duplicitnú úlohu. POC úloha má ID 14; toto ID nekopírujte do cudzej DB. Nastavenie `all-admin` samo nepotvrdzuje otestovanie Kubernetes/failover. Cron používa čerstvé práva účtu uloženého v `scheduled_by` a nepotrebuje online redaktorskú session.
 
-Úloha vyhľadá splatné naplánované balíky a uložené požiadavky na ručné publikovanie alebo pokračovanie priamo v tabuľke `branches`. Balíky spracuje postupne vo svojom cron vlákne, podobne ako `GroupPublisher` spracúva plánované zmeny priečinkov. Pre jednotlivé balíky sa nevytvárajú nové cron úlohy. Aj ručné publikovanie čaká na najbližší beh; pri predvolenom intervale môže začať približne o päť minút alebo neskôr, ak pred ním beží iný balík. Požiadavka zostáva uložená aj po reštarte. Po prevzatí sa jej príznak vymaže, takže chyba alebo pád nespustí automatické opakovanie. Vtedy použite kontrolu priebehu a pokračovanie podľa časti Obnova.
+Pri ručnom publikovaní alebo pokračovaní sa požiadavka uloží do tabuľky `branches` a spustí sa spracovanie na pozadí. Balíky sa spracúvajú postupne, takže požiadavka môže počkať na dokončenie iného balíka. Cron vyhľadáva splatné naplánované balíky a preberá aj ručné požiadavky, ktoré ostali vo fronte napríklad po reštarte. Po prevzatí sa príznak požiadavky vymaže. Ak sa potom spracovanie preruší, skontrolujte priebeh a použite pokračovanie podľa časti Obnova.
 
 ## Vypnutie
 

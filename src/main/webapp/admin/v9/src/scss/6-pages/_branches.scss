@@ -80,6 +80,21 @@
     @media (max-width: 767.98px) { padding: 16px; }
 }
 
+.pg-branch-confirmation {
+    width: min(34rem, calc(100% - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 20px;
+    overflow: auto;
+    overflow-wrap: anywhere;
+    border: 1px solid $nice-gray-100;
+    border-radius: $border-radius;
+    color: $secondary;
+    background: $white;
+
+    &::backdrop { background: rgba($secondary, .45); }
+}
+
 .pg-branch-merge {
     width: min(#{$modal-xl}, calc(100vw - 56px));
     max-width: none;

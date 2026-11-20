@@ -88,7 +88,7 @@ public final class BranchMergeService {
         return claim(id,domain,user,revision,hash,resume,false,false,false);
     }
 
-    /** Commits the immutable plan and its publication request together for the fixed cron job. */
+    /** Commits the immutable plan and its publication request together before background processing. */
     public Report enqueue(long id,String domain,Identity user,long revision,String hash,boolean resume) {
         return enqueue(id,domain,user,revision,hash,resume,false);
     }

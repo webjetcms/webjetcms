@@ -457,7 +457,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     function updateChangesNotices() {
         changesNotices.classList.toggle('d-none', !messages.childElementCount && settingsPending.hidden &&
-            changesError.classList.contains('d-none') && confirmation?.panel.parentElement !== changesNotices);
+            changesError.classList.contains('d-none'));
     }
 
     function focusItem(type, key) {
@@ -468,46 +468,53 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     function clearConfirmation(restoreFocus = true) {
         if (!confirmation) return;
-        const {panel, invoker} = confirmation;
+        const {dialog, invoker} = confirmation;
         confirmation = null;
-        panel.remove();
-        updateChangesNotices();
+        dialog.close();
+        dialog.remove();
         if (restoreFocus) {
             (invoker.isConnected && !invoker.disabled ? invoker : table?.button('reload:name').node()[0])?.focus();
             poll();
         }
     }
 
-    function confirmAction(parent, invoker, {heading, note, summary, label, confirmId, action}) {
-        if (confirmation) return confirmation.panel.focus();
+    function confirmAction(resultTarget, invoker, {heading, description, summary, label, confirmId, action}) {
+        if (confirmation) return;
         clearTimeout(timer);
-        const panel = element('section', 'alert alert-warning pg-branch-panel__confirmation');
-        panel.id = 'branch-merge-confirmation';
-        panel.tabIndex = -1;
-        panel.setAttribute('aria-labelledby', 'branch-merge-confirmation-title');
-        const title = element('h3', 'h5', heading);
+        const dialog = element('dialog', 'pg-branch-confirmation');
+        dialog.id = 'branch-merge-confirmation';
+        dialog.setAttribute('aria-labelledby', 'branch-merge-confirmation-title');
+        dialog.setAttribute('aria-describedby', 'branch-merge-confirmation-note');
+        const title = element('h2', 'h5', heading);
         title.id = 'branch-merge-confirmation-title';
-        const actions = element('div', 'd-flex flex-wrap gap-2');
+        description.id = 'branch-merge-confirmation-note';
+        const actions = element('div', 'd-flex flex-wrap justify-content-end gap-2');
         const cancel = button(tr('cancel'), () => clearConfirmation());
+        cancel.classList.replace('btn-outline-secondary', 'btn-white');
+        cancel.autofocus = true;
         const confirm = button(label, async () => {
             if (busy) return;
             confirm.disabled = cancel.disabled = true;
             const result = await action();
             if (signal.aborted) return;
             clearConfirmation(false);
-            if (!result) (parent === scheduleSummary ? scheduleError : changesError).focus();
-            else (parent === scheduleSummary ? scheduleSummary : messages).focus();
+            const error = resultTarget === scheduleSummary ? scheduleError : changesError;
+            (result ? resultTarget : error).focus();
             poll();
         }, true);
         confirm.id = confirmId;
         actions.append(cancel, confirm);
-        panel.append(title, element('p', '', note));
-        if (summary) panel.append(element('p', 'fw-semibold', summary));
-        panel.append(actions);
-        parent.before(panel);
-        confirmation = {panel, invoker};
-        updateChangesNotices();
-        panel.focus();
+        dialog.append(title, description);
+        if (summary) dialog.append(element('p', 'fw-semibold', summary));
+        dialog.append(actions);
+        dialog.addEventListener('keydown', event => event.stopPropagation());
+        dialog.addEventListener('cancel', event => {
+            event.preventDefault();
+            if (!busy) clearConfirmation();
+        });
+        modal.append(dialog);
+        confirmation = {dialog, invoker};
+        dialog.showModal();
     }
 
     for (const node of [changesError, scheduleError, messages, scheduleSummary]) node.tabIndex = -1;
@@ -518,10 +525,20 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         const keepPagePlans = Boolean(report.pagePlanWarnings?.length);
         const confirmLabel = resume ? 'resumeConfirm' : 'publishConfirm';
         const count = items().filter(item => item.writeRequired && item.applyState !== 'DONE').length;
+        const locale = (window.userLng === 'cz' ? 'cs' : window.userLng) || 'sk';
+        const plural = new Intl.PluralRules(locale).select(count);
+        const description = element('div');
+        const summary = element('p', 'fw-semibold mb-2', tr(`publishCount.${plural}`, [count]));
+        const notes = element('ul', 'ps-4');
+        notes.append(
+            element('li', '', tr('publishTransferNote')),
+            element('li', 'mt-1', tr('publishNote'))
+        );
+        if (keepPagePlans) notes.append(element('li', 'mt-1', tr('keepPagePlansNote')));
+        description.append(summary, notes);
         confirmAction(messages, publish, {
             heading: tr(resume ? 'resume' : 'publish'),
-            note: tr('publishNote') + (keepPagePlans ? ' ' + tr('keepPagePlansNote') : ''),
-            summary: tr('publishCount', [count]),
+            description,
             label: tr(keepPagePlans ? 'publishWithPagePlans' : confirmLabel),
             confirmId: 'branch-merge-confirm',
             action: () => perform(resume ? '/resume' : '/merge', {
@@ -532,15 +549,20 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     function confirmWhenReady() {
         if (!confirmOnOpen || !report || busy || tableLoading || activeTab !== 'branchesDataTable-changes') return;
+        // Let the editor finish its initial focus before stacking another modal.
+        if (modal.dataset.dteFocusState !== 'ready') return;
         confirmOnOpen = false;
         if (ready() && publishStates.includes(report.state)) confirmPublication();
         else if (messages.childElementCount) messages.focus();
     }
 
+    const editorFocus = new MutationObserver(confirmWhenReady);
+    editorFocus.observe(modal, {attributeFilter: ['data-dte-focus-state']});
+
     function confirmRevert(item, invoker) {
         confirmAction(messages, invoker, {
             heading: tr('revert'),
-            note: tr('revertConfirm', [item.label || item.objectKey]),
+            description: element('p', '', tr('revertConfirm', [item.label || item.objectKey])),
             summary: item.type === 'GROUP' && item.operation === 'DELETE' ? tr('revertFolderNote') : '',
             label: tr('revert'),
             confirmId: 'branch-merge-revert-confirm',
@@ -550,13 +572,13 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         });
     }
 
-    function confirmState(action, parent, invoker) {
-        confirmAction(parent, invoker, {
+    function confirmState(action, resultTarget, invoker) {
+        confirmAction(resultTarget, invoker, {
             heading: tr(action),
-            note: tr(action + 'Note'),
+            description: element('p', '', tr(action + 'Note')),
             label: tr(action),
             confirmId: `branch-merge-${action}-confirm`,
-            action: () => perform('/' + action, {expectedRevision: report.revision}, parent === scheduleSummary ? scheduleError : changesError)
+            action: () => perform('/' + action, {expectedRevision: report.revision}, resultTarget === scheduleSummary ? scheduleError : changesError)
         });
     }
 
@@ -1040,7 +1062,9 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     if (activeTab !== 'branchesDataTable-changes') perform();
     return () => {
         events.abort();
+        editorFocus.disconnect();
         clearTimeout(timer);
+        clearConfirmation(false);
         detailDialog?.close();
         table?.off('.branchChanges');
         table?.button('branchRevert:name').action(() => {});

@@ -20,12 +20,16 @@ public class BranchMergeRestController {
     private final BranchAccess access;
     private final BranchFileRepository files;
     private final BranchPageContent pageContent;
+    private final BranchPublicationWorker publicationWorker;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public BranchMergeRestController(BranchFileRepository files) { this(files,new BranchMergeService(),new BranchAccess(),new BranchPageContent()); }
+    public BranchMergeRestController(BranchFileRepository files,BranchPublicationWorker publicationWorker) {
+        this(files,new BranchMergeService(),new BranchAccess(),new BranchPageContent(),publicationWorker);
+    }
 
-    BranchMergeRestController(BranchFileRepository files,BranchMergeService merge,BranchAccess access,BranchPageContent pageContent) {
+    BranchMergeRestController(BranchFileRepository files,BranchMergeService merge,BranchAccess access,BranchPageContent pageContent,BranchPublicationWorker publicationWorker) {
         this.files=files;this.merge=merge;this.access=access;this.pageContent=pageContent;
+        this.publicationWorker=publicationWorker;
     }
 
     public record Revision(long expectedRevision) { }
@@ -72,10 +76,12 @@ public class BranchMergeRestController {
 
     private ResponseEntity<BranchMergeService.Report> execute(long id,Execution input,HttpServletRequest request,boolean resume) {
         Identity user=fresh(request);String domain=access.requireDomain(request,user);
+        BranchMergeService.Report report;
         try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {
-            BranchMergeService.Report report=merge.enqueue(id,domain,user,input.expectedRevision(),input.preparationHash(),resume,input.keepPagePlans());
-            return ResponseEntity.accepted().body(report);
+            report=merge.enqueue(id,domain,user,input.expectedRevision(),input.preparationHash(),resume,input.keepPagePlans());
         }
+        publicationWorker.wakeUp();
+        return ResponseEntity.accepted().body(report);
     }
     private Identity fresh(HttpServletRequest request) {
         Identity current=access.requireUser(request);access.requireCsrf(request);

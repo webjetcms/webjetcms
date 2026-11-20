@@ -25,7 +25,7 @@ class BranchPageContentTest {
     private final MockHttpServletResponse response = new MockHttpServletResponse();
     private final Identity user = new Identity();
     private final BranchMergeService.PageVersions item = mock(BranchMergeService.PageVersions.class);
-    private final BranchMergeRestController controller = new BranchMergeRestController(null, merge, access, renderer);
+    private final BranchMergeRestController controller = new BranchMergeRestController(null, merge, access, renderer, mock(BranchPublicationWorker.class));
 
     @BeforeEach void prepare() throws Exception {
         RequestBean bean = new RequestBean();bean.setRequest(request);SetCharacterEncodingFilter.setCurrentRequestBean(bean);

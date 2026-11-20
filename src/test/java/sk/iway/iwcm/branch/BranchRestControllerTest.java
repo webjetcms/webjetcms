@@ -29,6 +29,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.test.BaseWebjetTest;
+import sk.iway.iwcm.users.UsersDB;
 
 /** Working version DataTable CRUD, switcher context and REST routing. */
 class BranchRestControllerTest extends BaseWebjetTest {
@@ -197,12 +198,34 @@ class BranchRestControllerTest extends BaseWebjetTest {
     /** Both controllers register together, with the standard ID route reserved for DataTable metadata. */
     @Test
     void dataTableAndPublicationRoutesDoNotCollide() throws Exception {
-        var mvc=MockMvcBuilders.standaloneSetup(controller,new BranchMergeRestController(mock(BranchFileRepository.class)))
+        var mvc=MockMvcBuilders.standaloneSetup(controller,new BranchMergeRestController(mock(BranchFileRepository.class),mock(BranchPublicationWorker.class)))
             .setControllerAdvice(new DatatableExceptionHandlerV2()).build();
         var response=mvc.perform(get("/admin/rest/branches/-1"))
             .andExpect(status().isOk()).andReturn().getResponse();
         assertEquals("cyan",new org.json.JSONObject(response.getContentAsString()).getString("color"));
         verifyNoInteractions(repository);
+    }
+
+    @Test
+    void manualPublicationSubmitsBackgroundWorkAfterEnqueue() {
+        BranchMergeService merge=mock(BranchMergeService.class);
+        BranchPublicationWorker worker=mock(BranchPublicationWorker.class);
+        var publisher=new BranchMergeRestController(null,merge,access,null,worker);
+        Identity user=new Identity();user.setUserId(7);user.setAdmin(true);user.setAuthorized(true);
+        when(access.requireUser(request)).thenReturn(user);
+        when(access.requireDomain(eq(request),any(Identity.class))).thenReturn("a.example.sk");
+        var accepted=mock(BranchMergeService.Report.class);
+        when(merge.enqueue(eq(42L),eq("a.example.sk"),any(Identity.class),eq(5L),eq("reviewed"),eq(false),eq(true))).thenReturn(accepted);
+
+        try(var users=mockStatic(UsersDB.class)) {
+            users.when(()->UsersDB.getUser(7)).thenReturn(user);
+            var response=publisher.publish(42L,new BranchMergeRestController.Execution(5L,"reviewed",true),request);
+            assertEquals(HttpStatus.ACCEPTED,response.getStatusCode());
+            assertSame(accepted,response.getBody());
+            var order=inOrder(merge,worker);
+            order.verify(merge).enqueue(eq(42L),eq("a.example.sk"),any(Identity.class),eq(5L),eq("reviewed"),eq(false),eq(true));
+            order.verify(worker).wakeUp();
+        }
     }
 
     /** Context selection retains its HTTP conflict status even with the DataTable exception advice installed. */

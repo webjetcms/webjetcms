@@ -37,7 +37,7 @@ class BranchMergeTest extends BranchJpaTest {
         var request=new MockHttpServletRequest(Constants.getServletContext());
         request.getSession().setAttribute(Constants.USER_KEY,user);
         request.getSession().setAttribute("preview.editorDomainName",DOMAIN);
-        var controller=new BranchMergeRestController(files);
+        var controller=new BranchMergeRestController(files,mock(BranchPublicationWorker.class));
         for(String version:List.of("BASE","LIVE","WORK")) {
             var response=new MockHttpServletResponse();
             controller.file(f.branch,f.file,version,request,response);
