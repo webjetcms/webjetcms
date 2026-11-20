@@ -129,7 +129,7 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         const before = await assets(I);
         for (const item of Object.values(before)) I.assertEqual(item.status, 200);
         await openFiles(I, DTE);
-        I.waitForElement('#branch-upload-button:enabled', 20);
+        I.waitForElement('input.dz-hidden-input', 20);
         // The file input is the existing Dropzone control, populated through the browser file chooser API.
         I.attachFile('input.dz-hidden-input', uploadSource('proof.png'));
         I.waitForVisible('.toast .btn-toast-overwrite', 20);
@@ -254,7 +254,7 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
         I.waitForElement('#modalIframeIframeElement', 15);
         I.switchTo('#modalIframeIframeElement');
         I.retry({retries:30,minTimeout:100,maxTimeout:200}).seeTextEquals('Všetky súbory\n/\nfiles\n/\nbranch-p05-autotest', '.elfinder-path');
-        I.waitForElement('#branch-upload-button:enabled', 20);
+        I.waitForElement('input.dz-hidden-input', 20);
         I.attachFile('input.dz-hidden-input', uploadSource(pdfName));
         I.waitForElement('.toast[data-upload-status="success"]', 30);
         I.waitForElement(file(pdfName), 20);
@@ -346,7 +346,7 @@ if (process.env.WEBJET_P05_BROWSER === 'true') {
 
     Scenario('P05 restore the retained review image through the modern UI', async ({ I, DTE }) => {
         await openFiles(I, DTE, false);
-        I.waitForElement('#branch-upload-button:enabled', 20);
+        I.waitForElement('input.dz-hidden-input', 20);
         I.attachFile('input.dz-hidden-input', uploadSource('proof.png'));
         I.waitForElement('.toast[data-upload-status="success"]', 30);
         I.waitForElement(file('proof.png'), 20);

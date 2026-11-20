@@ -19,19 +19,15 @@ window.initBranchFileUpload = finder => {
     const picker = new URLSearchParams(window.location.search).get('volumes');
     const uploader = window.AdminUpload({element: '#dt-upload', uploadType: picker === 'images' ? 'image' : 'file', writeDirectlyToDestination: true});
     window.branchAdminUpload = uploader;
-    const button = document.getElementById('branch-upload-button');
-    button.classList.remove('d-none');
     const updateDestination = (folder = finder.cwd()) => {
         uploader.setDestinationFolder(folder.virtualPath || '');
         const types = finder.option('uploadMime')?.allow;
         uploader.options.acceptedFiles = Array.isArray(types) && !types.includes('all') ? types.map(type => type.endsWith('/') ? type+'*' : type).join(',') : null;
         const disabled = !folder.write || !/^\/(images|files)(\/|$)/.test(folder.virtualPath || '');
         uploader.setFileSelectionDisabled(disabled);
-        button.disabled = disabled;
     };
     finder.bind('open', event => updateDestination(event.data.cwd));
     finder.bind('lazydone', () => updateDestination());
-    button.addEventListener('click', () => { updateDestination(); uploader.hiddenFileInput.click(); });
     uploader.on('addedfile', file => {
         file.wjAdminUploadRequestParams = {destinationFolder: finder.cwd().virtualPath};
     });
