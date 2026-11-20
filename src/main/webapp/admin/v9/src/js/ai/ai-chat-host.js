@@ -37,8 +37,21 @@ export class AiChatHost {
         this.select = node('select', 'form-control ai-chat-assistant-picker');
         this.select.id = options.context ? `${idPrefix}-assistant` : 'admin-quick-search-chat-assistant';
         label.htmlFor = this.select.id;
-        this.select.addEventListener('change', () => this.selectAssistant(this.select.value));
-        this.assistantRow.append(label, this.select);
+        this.select.addEventListener('change', () => {
+            if (this.select.disabled) {
+                this.select.value = String(this.chat.assistant.assistantId);
+                return;
+            }
+            const previous = this.lastConversationByAssistant.get(this.select.value);
+            this.selectAssistant(this.select.value, Boolean(previous?.state.messages.length || previous?.state.threadId));
+        });
+        this.lockedAssistant = node('span', 'ai-chat-host__locked-assistant');
+        this.lockedAssistant.hidden = true;
+        this.lockedAssistant.tabIndex = 0;
+        this.lockedAssistantName = node('span');
+        this.lockedAssistant.append(icon('ti-lock'), this.lockedAssistantName);
+        setChatTooltip(this.lockedAssistant, WJ.translate('components.ai_assistants.chat.assistantLocked.js'));
+        this.assistantRow.append(label, this.select, this.lockedAssistant);
         this.status = node('div', 'ai-chat-host__status');
         this.status.setAttribute('role', 'status');
         this.status.tabIndex = -1;
@@ -245,7 +258,10 @@ export class AiChatHost {
                 || (this.historyOpen ? WJ.translate('components.ai_assistants.chat.new.js') : ''),
             getToolbarActions: () => [...this.toolbarActions(chat), ...(options.getToolbarActions?.(chat) || [])],
             onChange: current => {
-                if (this.chat === current) this.renderFiles();
+                if (this.chat === current) {
+                    this.updateAssistantLock();
+                    this.renderFiles();
+                }
                 options.onChange?.(current);
             },
             onNewChat: persistent ? current => {
@@ -299,8 +315,21 @@ export class AiChatHost {
                 picker.$button.trigger('focus');
             });
         }
+        this.updateAssistantLock();
         this.renderHistory();
         this.renderFiles();
+    }
+
+    updateAssistantLock() {
+        const locked = Boolean(this.chat.state.threadId || this.chat.state.messages.length);
+        if (this.select.disabled !== locked) {
+            this.select.disabled = locked;
+            const $select = window.jQuery(this.select);
+            if ($select.data('selectpicker')) $select.selectpicker('refresh');
+        }
+        this.assistantRow.classList.toggle('ai-chat-host__assistant--locked', locked);
+        this.lockedAssistant.hidden = !locked;
+        this.lockedAssistantName.textContent = this.chat.assistant.description || this.chat.assistant.providerTitle;
     }
 
     toolbarActions(chat) {
@@ -522,7 +551,10 @@ export class AiChatHost {
     applyDetail(chat, detail) {
         if (!this.matchesContext(detail.thread.context)) throw new Error(historyText('requestChanged'));
         if (!chat.restoreHistory(detail)) return;
-        if (this.chat === chat) this.renderFiles();
+        if (this.chat === chat) {
+            this.updateAssistantLock();
+            this.renderFiles();
+        }
         clearTimeout(chat.historyRefreshTimer);
         // A stopped stream can settle before the server worker finishes; poll while that work or deletion remains active.
         if (detail.thread.busy || ((detail.thread.status === 'DELETE_PENDING' || chat.deletionRequested) && !detail.thread.deletionError)) {

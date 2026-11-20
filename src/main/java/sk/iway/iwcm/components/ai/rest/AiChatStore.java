@@ -36,6 +36,7 @@ import sk.iway.iwcm.components.ai.chat.AiChatThread;
 import sk.iway.iwcm.components.ai.chat.AiChatAttachment;
 import sk.iway.iwcm.components.ai.rest.AiChatAttachments.Upload;
 import sk.iway.iwcm.components.ai.dto.AiChatRequest;
+import sk.iway.iwcm.components.ai.dto.TokenBreakdown;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
@@ -390,15 +391,26 @@ public class AiChatStore {
 
     /** Releases the provider worker while the browser invokes this call through its authenticated session. */
     public boolean awaitToolResult(Scope scope, String threadId, String messageId, Call call, int tokens) {
+        return awaitToolResult(scope, threadId, messageId, call, null, tokens, null);
+    }
+
+    public boolean awaitToolResult(Scope scope, String threadId, String messageId, Call call, String callId, int tokens) {
+        return awaitToolResult(scope, threadId, messageId, call, callId, tokens, null);
+    }
+
+    /** Saves the accepted native call ID and its provider response ID in the same transcript update. */
+    public boolean awaitToolResult(Scope scope, String threadId, String messageId, Call call, String callId, int tokens, TokenBreakdown breakdown) {
         return update(threadId, scope, true, document -> {
             AiChatThread thread = document.getThread();
             if (!messageId.equals(thread.getActiveMessageId()) || thread.isStopRequested()) return false;
             AiChatEntry answer = entry(document, messageId);
             answer.setPendingToolCall(call);
             answer.setToolResponseId(answer.getProviderResponseId());
+            answer.setToolCallId(callId);
             answer.setPendingWriteClaimed(call.write() ? Boolean.FALSE : null);
             if (call.write()) answer.getWriteOutcomes().add(WriteOutcome.pending(call.name()));
             answer.setTotalTokens(tokens);
+            answer.setTokenBreakdown(breakdown);
             answer.setUpdated(new Date());
             thread.setLeaseUntil(lease());
             return true;
@@ -435,6 +447,16 @@ public class AiChatStore {
 
     public void finish(Scope scope, String threadId, String messageId, String text, String status, int tokens,
         String category, Integer providerStatus, Boolean retryable, boolean noToolAction) {
+        finish(scope, threadId, messageId, text, status, tokens, category, providerStatus, retryable, noToolAction, false, null);
+    }
+
+    public void finish(Scope scope, String threadId, String messageId, String text, String status, int tokens,
+        String category, Integer providerStatus, Boolean retryable, boolean noToolAction, boolean folderRequested) {
+        finish(scope, threadId, messageId, text, status, tokens, category, providerStatus, retryable, noToolAction, folderRequested, null);
+    }
+
+    public void finish(Scope scope, String threadId, String messageId, String text, String status, int tokens,
+        String category, Integer providerStatus, Boolean retryable, boolean noToolAction, boolean folderRequested, TokenBreakdown breakdown) {
         update(threadId, scope, false, document -> {
             if (document == null) return null;
             AiChatThread thread = document.getThread();
@@ -444,11 +466,14 @@ public class AiChatStore {
             message.setText(text);
             message.setStatus(stopped ? "stopped" : status);
             boolean complete = "complete".equals(message.getStatus());
+            // A queued cancellation can finish a pending round with its previously recorded total.
+            if (breakdown != null || tokens != message.getTotalTokens()) message.setTokenBreakdown(breakdown);
             message.setTotalTokens(tokens);
             message.setErrorCategory(stopped ? "CANCELLED" : category);
             message.setProviderStatus(providerStatus);
             message.setRetryable(message.isToolWriteIssued() && !complete ? Boolean.FALSE : retryable);
             message.setNoToolAction(complete && noToolAction);
+            message.setFolderRequested(complete && folderRequested);
             message.setPendingToolCall(null);
             message.setUpdated(new Date());
             // Failed/stopped attempts remain in history and cleanup tracking, but never become continuation points.

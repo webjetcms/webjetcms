@@ -197,7 +197,7 @@ public class AiService {
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
                 if (inputData.isInteractiveAssistant()) {
-                    inputData.setToolProtocol(AiToolProtocol.prepare(runtime, inputData.getToolResults()));
+                    inputData.setToolProtocol(AiToolProtocol.prepare(runtime, inputData.getToolResults(), stored.getInstructions()));
                     if (inputData.getToolProtocol() != null && !(aiInterface instanceof LibrarySupportLogic)) {
                         throw new IllegalArgumentException("This provider adapter cannot run assistant tools.");
                     }

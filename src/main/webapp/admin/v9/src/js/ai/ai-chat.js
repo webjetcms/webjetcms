@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import { emptyTokenUsage, sumTokenUsage } from './ai-token-usage';
 import { AiChatTransport } from './ai-chat-transport';
 import { formatWriteOutcome } from './ai-tool-transport';
 import { splitChatResponse } from './ai-response-parser';
@@ -25,7 +26,7 @@ export class AiChat {
 
     _initialState() {
         return {
-            messages: [], draft: "", attachments: [], conversationId: null, pending: null, needsNewChat: false,
+            messages: [], usage: emptyTokenUsage, draft: "", attachments: [], conversationId: null, pending: null, needsNewChat: false,
             threadId: null, revision: null, serverBusy: false, readOnlyReason: null,
             scrollTop: 0, followLatest: true, notice: null, confirmation: null, disposed: false
         };
@@ -84,6 +85,14 @@ export class AiChat {
                 }
             });
         }
+        this.$tokenUsage = this._iconButton(this._text("tokenUsageTitle"), "gauge", "btn-outline-secondary ai-chat-token-usage")
+            .attr("data-bs-animation", "false")
+            .on("inserted.bs.tooltip", () => this._renderTokenPreview())
+            .on("click", event => {
+                event.currentTarget.focus();
+                window.bootstrap.Tooltip.getInstance(event.currentTarget)?.show();
+            });
+        $composerActions.append(this.$tokenUsage);
         this.$composerControls = $('<div class="ai-chat-composer-controls"></div>');
         this.$send = this._iconButton(this._text("send"), "arrow-up", "btn-primary")
             .addClass("btn-ai-chat-send").on("click", () => this._sendDraft());
@@ -135,6 +144,7 @@ export class AiChat {
 
         // Saved attempts use server IDs and retry metadata; local request snapshots are no longer needed.
         const questions = new Map(detail.messages.filter(message => message.role === 'user').map(message => [message.id, message.text]));
+        state.usage = detail.messages.filter(message => message.role === 'assistant').reduce(sumTokenUsage, emptyTokenUsage);
         // Only the latest reply can be retried, so attempts for a turn are consecutive.
         state.messages = detail.messages.filter((message, index, messages) => message.role !== 'assistant'
             || !message.turnId || message.turnId !== messages[index + 1]?.turnId).map(message => {
@@ -145,12 +155,17 @@ export class AiChat {
                 else if (message.errorCategory === 'INVALID_TOOL_STEP') error = WJ.translate('components.ai.tools.invalidStep.js');
                 else error = historyText(message.errorCategory === 'ATTACHMENT_INVALID' ? 'attachmentUnreadable' : 'generationFailed');
             }
-            return { ...message, confirmed: true,
+            const restored = { ...message, confirmed: true,
                 toolWriteStatus: message.writeOutcomes?.map(formatWriteOutcome).join('\n'),
                 userPrompt: questions.get(message.turnId),
                 error,
                 retryable: message.retryable ?? (message.errorCategory === 'ATTACHMENT_INVALID' ? false : null)
             };
+            // Keep the user's tree selection if a history refresh returns the same pending folder question.
+            if (this.folderPicker?.message.id && this.folderPicker.message.id === message.id) {
+                return Object.assign(this.folderPicker.message, restored);
+            }
+            return restored;
         });
         this.refresh();
         return true;
@@ -200,6 +215,7 @@ export class AiChat {
             this.state.draft = this.$input.val();
             this._saveScroll();
         }
+        this._closeFolderPicker();
         this.mounted = false;
         this.$dropTarget?.off('.aiChatAttachments');
         this.$dropTarget = null;
@@ -227,6 +243,7 @@ export class AiChat {
         this.$toolbarTitle.text(title || "").prop("hidden", !title);
         setChatTooltip(this.$toolbarTitle[0], title);
         this.$empty.toggle(state.messages.length === 0);
+        if (this.folderPicker && this.folderPicker.message !== lastMessage) this._closeFolderPicker();
         for (const [message, view] of this.messageViews) {
             if (!state.messages.includes(message)) {
                 view.parts.forEach(part => part.preview?.destroy());
@@ -235,13 +252,16 @@ export class AiChat {
                 this.messageViews.delete(message);
             }
         }
+        let previousArticle = this.$empty[0];
         for (const message of state.messages) {
             let view = this.messageViews.get(message);
             if (view == null) {
                 view = this._createMessage(message);
                 this.messageViews.set(message, view);
-                this.$history.append(view.$article);
             }
+            const article = view.$article[0];
+            if (previousArticle.nextElementSibling !== article) previousArticle.after(article);
+            previousArticle = article;
             view.$label.text(message.role === "user" ? this._text("you") : this.assistant?.providerTitle || this.assistant?.description || "");
             this._updateMessageTime(message, view);
             if (view.text !== message.text || view.status !== message.status) {
@@ -263,6 +283,12 @@ export class AiChat {
             this.$input.val(state.draft);
             this._resizeInput();
         }
+        const usage = this._text("conversationTokens", this._formatTokens(state.usage.totalTokens));
+        if (this.previewUsage !== state.usage) {
+            this.$tokenUsage.attr("aria-label", usage);
+            this.previewUsage = state.usage;
+            this._renderTokenPreview();
+        }
         this._updateSendButton();
         this._renderAttachments(this.$attachments, state.attachments, true);
         this._releaseAttachmentUrls();
@@ -274,10 +300,11 @@ export class AiChat {
     }
 
     /** Sends a new prompt, or retries the last failed/stopped answer with its original input. */
-    async send(prompt, retryMessage = null) {
+    async send(prompt, retryMessage = null, keepDraft = false) {
         const state = this.state;
         if (state.disposed || state.pending != null || state.needsNewChat || state.serverBusy || state.readOnlyReason
             || typeof prompt !== "string" || (!prompt.trim() && !state.attachments.length)) return;
+        const attachments = keepDraft ? [] : state.attachments;
         if (!prompt.trim()) prompt = this._text('attachmentPrompt');
         if (retryMessage != null && (state.messages.at(-1) !== retryMessage || !this._canRetry(retryMessage))) return;
 
@@ -287,7 +314,7 @@ export class AiChat {
             inputData = retryMessage?.inputData ? { ...retryMessage.inputData } : {
                 inputValue: "", inputValueType: "text", outputValueType: "text",
                 ...this.options.getInputData?.(prompt), userPrompt: prompt,
-                ...(state.attachments.length ? { files: state.attachments.map(item => item.file) } : {})
+                ...(attachments.length ? { files: attachments.map(item => item.file) } : {})
             };
         } catch (error) {
             state.notice = error.message || this._text("unavailable");
@@ -305,7 +332,7 @@ export class AiChat {
                     requestId: chatRequestId(), userPrompt: prompt, retryMessageId: retryMessage?.id || null,
                     ...(this.options.context ? { context: this.options.context, inputValue: inputData.inputValue,
                         inputIsSelectedTextInEditor: inputData.inputIsSelectedTextInEditor === true } : {}),
-                    ...(retryMessage == null && state.attachments.length ? { files: state.attachments.map(item => item.file) } : {}) };
+                    ...(retryMessage == null && attachments.length ? { files: attachments.map(item => item.file) } : {}) };
             state.threadId ||= inputData.requestId;
         }
 
@@ -316,7 +343,7 @@ export class AiChat {
             state.messages[state.messages.length - 1] = message;
         }
         if (message == null) {
-            state.messages.push({ role: "user", text: prompt, created: Date.now(), attachments: [...state.attachments] });
+            state.messages.push({ role: "user", text: prompt, created: Date.now(), attachments: [...attachments] });
             message = { role: "assistant", userPrompt: prompt };
             state.messages.push(message);
         }
@@ -326,7 +353,7 @@ export class AiChat {
             toolCalls: [], activeTool: null,
             inputData: { ...inputData }
         });
-        if (retryMessage == null) {
+        if (retryMessage == null && !keepDraft) {
             state.draft = "";
             state.attachments = [];
         }
@@ -380,6 +407,7 @@ export class AiChat {
                 onConfirm: (text, buttonText) => this._requestConfirmation(request, text, buttonText)
             });
             if (!current()) return;
+            state.usage = sumTokenUsage(state.usage, result);
             message.confirmed = result.persisted === true;
             // Only a completed reply advances session continuation. Errors and stops retain the last good response.
             state.notice = null;
@@ -391,6 +419,7 @@ export class AiChat {
                 message.text = result.response ?? message.text;
                 message.status = "complete";
                 message.noToolAction = result.noToolAction;
+                message.folderRequested = result.folderRequested;
                 message.totalTokens = result.totalTokens;
                 if (Array.isArray(result.attachments)) message.attachments = result.attachments;
                 state.conversationId = result.conversationId || null;
@@ -505,6 +534,33 @@ export class AiChat {
 
     _text(key, ...params) {
         return WJ.translate("components.ai_assistants.chat." + key + ".js", params);
+    }
+
+    _formatTokens(tokens) {
+        return tokens.toLocaleString(window.userLng === "cz" ? "cs" : window.userLng || "sk");
+    }
+
+    _renderTokenPreview() {
+        const button = this.$tokenUsage[0];
+        const tooltip = button.ownerDocument.getElementById(button.getAttribute("aria-describedby"));
+        if (!tooltip) return;
+        const $body = $(tooltip).addClass("ai-chat-token-preview").find(".tooltip-inner").empty();
+        const { totalTokens, tokenBreakdown } = this.state.usage;
+        const $rows = $("<dl></dl>");
+        $body.append($('<div class="ai-chat-token-title"></div>').text(this._text("tokenUsageTitle")), $rows);
+        for (const [label, count] of [
+            ["tokenUsageInput", tokenBreakdown?.inputTokens],
+            ["tokenUsageOutput", tokenBreakdown?.outputTokens],
+            ["tokenUsageTotal", totalTokens]
+        ]) {
+            const $value = $("<dd></dd>");
+            if (count == null) {
+                $value.append($('<span aria-hidden="true">—</span>'),
+                    $('<span class="visually-hidden"></span>').text(this._text("tokenUsageUnavailable")));
+            } else $value.text(this._formatTokens(count));
+            $rows.append($("<div></div>").append($("<dt></dt>").text(this._text(label)), $value));
+        }
+        window.bootstrap.Tooltip.getInstance(button)?.update();
     }
 
     _button(label, icon, classes = "btn-outline-secondary btn-sm") {
@@ -816,10 +872,9 @@ export class AiChat {
         const $text = $('<div class="ai-chat-message-text"></div>');
         const $attachments = $('<div class="ai-chat-attachments" role="list"></div>').hide();
         const $status = $('<div class="ai-chat-message-status"></div>').hide();
-        const $usage = $('<div class="ai-chat-usage"></div>').hide();
         const $actions = $('<div class="ai-chat-message-actions"></div>').hide();
-        const $footer = $('<div class="ai-chat-message-footer"></div>').append($actions, $usage).hide();
-        const view = { $article, $label, $time, $text, $attachments, $status, $usage, $actions, $footer, text: null, parts: [], actionKey: null, actions: [] };
+        const $footer = $('<div class="ai-chat-message-footer"></div>').append($actions).hide();
+        const view = { $article, $label, $time, $text, $attachments, $status, $actions, $footer, text: null, parts: [], actionKey: null, actions: [] };
         $heading.append($label, $time);
         $article.append($heading);
         if (message.role === "assistant") {
@@ -866,12 +921,19 @@ export class AiChat {
             status = [status, message.toolWriteStatus].filter(Boolean).join('\n');
         }
         view.$status.text(status).toggle(Boolean(status)).toggleClass("text-danger", message.status === "error");
-        const hasUsage = message.status === "complete" && message.totalTokens != null;
-        view.$usage.text(hasUsage ? this._text("tokens", message.totalTokens) : "").toggle(hasUsage);
+        const canChooseFolder = message.folderRequested && message.status === "complete" && isLast
+            && !this.state.pending && !this.state.serverBusy && !this.state.readOnlyReason && !this.state.needsNewChat;
+        if (this.folderPicker?.message === message && !canChooseFolder) this._closeFolderPicker();
 
         let actions = [];
         if (message.status === "complete") {
             actions = [
+                ...(canChooseFolder ? [{ id: "folder", label: this._text("selectFolder"), icon: "folders",
+                    run: $button => {
+                        view.folderCollapsed = Boolean(this.folderPicker);
+                        if (view.folderCollapsed) this._closeFolderPicker();
+                        else this._openFolderPicker(message, view, $button, true);
+                    } }] : []),
                 ...(this.options.getAnswerActions?.(message) || []),
                 { id: "copy", label: this._text("copy"), icon: "copy", iconOnly: true, run: $button => this._copy(message.text, $button) }
             ];
@@ -881,8 +943,58 @@ export class AiChat {
             actions.push({ id: "retry", label: this._text("retry"), icon: "refresh", run: () => this.send(message.userPrompt, message) });
         }
         this._renderActions(view.$actions, view, actions);
+        if (canChooseFolder && !this.folderPicker && !view.folderCollapsed) {
+            this._openFolderPicker(message, view, view.$actions.find('[data-ai-action="folder"]'), false);
+        }
         view.$actions.toggle(actions.length > 0);
-        view.$footer.toggle(hasUsage || actions.length > 0);
+        view.$footer.toggle(actions.length > 0);
+    }
+
+    _openFolderPicker(message, view, $button, focusTree) {
+        const $panel = $('<div class="ai-chat-folder-picker"></div>').appendTo(view.$article);
+        const $tree = $('<div class="jsTree-wrapper"></div>').attr("id", "ai-chat-folder-" + chatRequestId())
+            .attr({ "data-rest-url": "/admin/rest/groups/tree?click=dt-tree-groupid&writableOnly=true",
+                "data-rest-param-name": "id", "data-rest-root": "-1" }).appendTo($panel);
+        const $path = $('<span class="ai-chat-folder-path" role="status"></span>');
+        const $confirm = this._button(this._text("useFolder"), "check", "btn-primary btn-sm").prop("disabled", true);
+        const tree = new window.WebjetJsTree($tree[0].id, { selectionOnly: true });
+        this.folderPicker = { message, tree, $panel, $button };
+        $button.attr({ "aria-expanded": "true", "aria-controls": $tree[0].id });
+        let selectedId;
+        $tree.on("webjet-jstree-select", event => {
+            const { node } = event.originalEvent.detail;
+            const folder = node.original.groupDetails;
+            selectedId = Number(folder?.groupId);
+            const valid = Number.isSafeInteger(selectedId) && selectedId > 0 && !node.state.disabled;
+            $path.text(valid ? (folder.fullPath || folder.groupName || String(selectedId)).replaceAll("&#47;", "/") : "");
+            $confirm.prop("disabled", !valid);
+        });
+        $confirm.on("click", () => {
+            if (this.state.messages.at(-1) !== message || $confirm.prop("disabled")) return;
+            this.send(this._text("folderReply", selectedId), null, true);
+            this.$input[0].focus({ preventScroll: true });
+        });
+        $panel.append($('<div class="ai-chat-message-actions"></div>').append($path, $confirm));
+        $panel.on("keydown", event => {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                view.folderCollapsed = true;
+                this._closeFolderPicker();
+                $button.trigger("focus");
+            }
+        });
+        $tree.attr("aria-label", this._text("selectFolder"));
+        if (focusTree) $tree.trigger("focus");
+    }
+
+    _closeFolderPicker() {
+        if (!this.folderPicker) return;
+        const { tree, $panel, $button } = this.folderPicker;
+        tree.destroy();
+        $panel.remove();
+        $button.attr("aria-expanded", "false").removeAttr("aria-controls");
+        this.folderPicker = null;
     }
 
     _canRetry(message) {

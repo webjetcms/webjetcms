@@ -28,6 +28,8 @@ public class AssistantResponseDTO {
     private String toolCorrection;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private boolean noToolAction;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean folderRequested;
     private String error;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String errorCategory;
@@ -45,6 +47,8 @@ public class AssistantResponseDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long revision;
     private int totalTokens;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private TokenBreakdown tokenBreakdown;
     private List<String> tempFiles = new ArrayList<>();
     private String generatedFileName;
 

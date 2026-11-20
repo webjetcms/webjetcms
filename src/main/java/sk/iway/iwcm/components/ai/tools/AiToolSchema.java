@@ -64,6 +64,23 @@ final class AiToolSchema {
         return describe(MAPPER.constructType(type), false);
     }
 
+    /** Copies just the affected branch so another use of the same model keeps its own requirements. */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> require(Map<String, Object> schema, String path) {
+        String[] parts = path.split("\\.", 2);
+        Map<String, Object> object = new LinkedHashMap<>(schema);
+        if (object.remove("$ref") instanceof String ref) object.putAll(definitions.get(ref.substring(8)));
+        Map<String, Object> properties = new LinkedHashMap<>((Map<String, Object>) object.getOrDefault("properties", Map.of()));
+        if (!(properties.get(parts[0]) instanceof Map<?, ?> field))
+            throw new IllegalArgumentException("Unknown required AI tool body field: " + path);
+        List<String> required = new ArrayList<>((List<String>) object.getOrDefault("required", List.of()));
+        if (!required.contains(parts[0])) required.add(parts[0]);
+        if (parts.length > 1) properties.put(parts[0], require((Map<String, Object>) field, parts[1]));
+        object.put("properties", properties);
+        object.put("required", required);
+        return object;
+    }
+
     static Map<String, Object> output(JavaType type, Class<?> controller) {
         AiToolSchema builder = new AiToolSchema(controller);
         Map<String, Object> schema = new LinkedHashMap<>(builder.describe(type, true));
@@ -118,7 +135,8 @@ final class AiToolSchema {
             AnnotatedMember member = prop.getPrimaryMember();
             if (output && (omitted.contains(prop.getName()) || member.hasAnnotation(JsonBackReference.class))) continue;
             Map<String, Object> field = new LinkedHashMap<>(memberSchema(prop.getPrimaryType(), output ? member.getAnnotation(JsonFormat.class) : null));
-            field.put("description", label(prop));
+            String fieldLabel = label(prop, output ? AiToolRegistry.words(prop.getName()) : null);
+            if (fieldLabel != null) field.put("description", fieldLabel);
             if (!output) addChoiceValues(prop, field);
             if (!output && raw == DatatableRequest.class && "action".equals(prop.getName())) {
                 field.put("enum", List.of("create", "edit", "remove"));
@@ -168,7 +186,7 @@ final class AiToolSchema {
             values.put(value, AiToolRegistry.translated(option.key(), option.key()));
         }
         field.put("enum", List.copyOf(values.keySet()));
-        field.put("description", field.get("description") + ". " + values.entrySet().stream()
+        field.put("description", field.getOrDefault("description", AiToolRegistry.words(prop.getName())) + ". " + values.entrySet().stream()
                 .map(entry -> entry.getKey() + " = " + entry.getValue()).collect(Collectors.joining(", ")));
     }
 
@@ -215,7 +233,8 @@ final class AiToolSchema {
         for (BeanPropertyDefinition prop : properties(MAPPER.constructType(model))) {
             if (!prop.couldDeserialize() || !BeanUtils.isSimpleValueType(prop.getRawPrimaryType())) continue;
             String name = prop.getName();
-            Map<String, Object> filter = Map.of("type", "string", "description", label(prop));
+            String fieldLabel = label(prop, null);
+            Map<String, Object> filter = fieldLabel == null ? Map.of("type", "string") : Map.of("type", "string", "description", fieldLabel);
             fields.put(name, filter);
             if (search) fields.put("search" + Character.toUpperCase(name.charAt(0)) + name.substring(1), filter);
         }
@@ -226,9 +245,8 @@ final class AiToolSchema {
         return MAPPER.getDeserializationConfig().introspect(type).findProperties();
     }
 
-    private static String label(BeanPropertyDefinition prop) {
+    private static String label(BeanPropertyDefinition prop, String fallback) {
         DataTableColumn column = prop.getPrimaryMember().getAnnotation(DataTableColumn.class);
-        String fallback = AiToolRegistry.words(prop.getName());
         if (column == null) return fallback;
         String key = column.title();
         if (key.isBlank()) {

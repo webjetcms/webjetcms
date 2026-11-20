@@ -93,8 +93,6 @@ import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.events.DatatableEvent;
 import sk.iway.iwcm.system.datatable.events.DatatableEventType;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
@@ -1722,6 +1720,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping("/add")
 	public ResponseEntity<T> add(@Valid @RequestBody T entity) {
+		clearThreadData();
 		prepareEntityForCreate(entity);
 		beforeSave(entity);
 		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
@@ -2222,7 +2221,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * Toto je potrebne pri REST volaniach, kedy sa posiela nazad len zakladna entita
 	 * @param entity
 	 */
-	private void addNotifyToEditorFields(T entity) {
+	protected void addNotifyToEditorFields(T entity) {
 		try {
 			List<NotifyBean> notifyList = getThreadData().getNotify();
 			if (notifyList!=null && notifyList.isEmpty()==false) {
@@ -2402,6 +2401,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @return property names whose stored values must be preserved
 	 */
 	protected List<String> getNonEditableProperties(T entity) {
+		return getNonEditableFields(ClassUtils.getUserClass(entity));
+	}
+
+	protected List<String> getNonEditableFields(Class<?> entityType) {
 		List<String> ignoreProperties = new ArrayList<>();
 
 		// Match DataTableColumnsFactory's current domain, even when the controller uses a shared repository domain.
@@ -2409,7 +2412,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		Map<String, Boolean> disabledOverrides = new HashMap<>();
 		FieldsSettingsService fieldsSettingsService = Tools.getSpringBean("fieldsSettingsService", FieldsSettingsService.class);
 		if (fieldsSettingsService != null) {
-			for (FieldsSettingsEntity setting : fieldsSettingsService.getFieldsSettings(ClassUtils.getUserClass(entity).getName(), CloudToolsForCore.getDomainId())) {
+			for (FieldsSettingsEntity setting : fieldsSettingsService.getFieldsSettings(entityType.getName(), CloudToolsForCore.getDomainId())) {
 				if (setting.getHiddenEditor() != null) {
 					hiddenEditorOverrides.put(setting.getFieldName(), setting.getHiddenEditor());
 				}
@@ -2419,45 +2422,25 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 		}
 
-		Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass());
-		for (Field field : declaredFields) {
-			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
-				sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
-				boolean[] hiddenEditor = annotation.hiddenEditor();
-				// Settings can expose a field declared hiddenEditor=true, such as FileArchivatorBean.orderId.
-				// Checking only the annotation would show an editable field but silently discard its submitted value.
-				// Absent or null ("Unchanged") overrides preserve the annotation's original behavior.
-				boolean isHiddenEditor = hiddenEditorOverrides.getOrDefault(field.getName(), hiddenEditor.length > 0 && hiddenEditor[0]);
-				if (isHiddenEditor) {
-					ignoreProperties.add(field.getName());
-					continue;
-				}
+		for (Field field : AuditEntityListener.getDeclaredFieldsTwoLevels(entityType)) {
+			DataTableColumn column = field.getAnnotation(DataTableColumn.class);
+			if (column == null) continue;
 
-				Boolean disabledOverride = disabledOverrides.get(field.getName());
-				if (Boolean.TRUE.equals(disabledOverride)) {
-					ignoreProperties.add(field.getName());
-					continue;
-				}
-
-				// An explicit saved false enables copying; unchanged settings retain the legacy rules.
-				DataTableColumnEditor[] editor = annotation.editor();
-				if (disabledOverride == null && editor.length > 0) {
-					boolean isDisabled = false;
-					DataTableColumnEditorAttr[] attrs = editor[0].attr();
-					if (attrs.length > 0) {
-						for (DataTableColumnEditorAttr attr : attrs) {
-							if ("disabled".equals(attr.key())) {
-								isDisabled = true;
-								break;
-							}
-						}
-					}
-					//we allow updateDate, for others you can set alwaysCopyProperties=true in annotation
-					if (isDisabled && field.getName().equals("lastUpdate")==false) {
-						ignoreProperties.add(field.getName());
-					}
-				}
+			String name = field.getName();
+			boolean[] hidden = column.hiddenEditor();
+			if (hiddenEditorOverrides.getOrDefault(name, hidden.length > 0 && hidden[0])) {
+				ignoreProperties.add(name);
+				continue;
 			}
+
+			// A saved setting overrides the annotation, including an explicit false.
+			Boolean disabled = disabledOverrides.get(name);
+			if (disabled == null) {
+				var editor = column.editor();
+				disabled = !"lastUpdate".equals(name) && editor.length > 0
+						&& Arrays.stream(editor[0].attr()).anyMatch(attr -> "disabled".equals(attr.key()));
+			}
+			if (disabled) ignoreProperties.add(name);
 		}
 		return ignoreProperties;
 	}

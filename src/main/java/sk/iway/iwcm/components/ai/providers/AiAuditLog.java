@@ -2,10 +2,11 @@ package sk.iway.iwcm.components.ai.providers;
 
 import java.util.Map;
 
+import com.webjetcms.ai.AiToolStep;
 import com.webjetcms.ai.TokenUsage;
 
-import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -59,6 +60,13 @@ public final class AiAuditLog {
         if (maxLength > 0 && Tools.isNotEmpty(redactedMessage)) {
             audit.append("\nProvider diagnostic:\n").append(DB.prepareString(redactedMessage, maxLength));
         }
+    }
+
+    public static void rejectedToolDecision(AssistantDefinitionEntity assistant, String threadId, String messageId,
+        AiToolStep step, String reason, WebjetAiConfigurationService configuration) {
+        if (reason == null) return;
+        String rejected = step.toolCall() == null ? step.response().text() : step.toolCall().arguments();
+        rejectedToolDecision(assistant, threadId, messageId, step.response().responseId(), reason, rejected, configuration.auditMaxLength());
     }
 
     /** Logs each rejected decision separately, including its bounded reason and output even when a later retry succeeds. */

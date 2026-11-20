@@ -17,6 +17,9 @@ import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.webjetcms.ai.AiCancellationToken;
+import com.webjetcms.ai.AiTool;
+import com.webjetcms.ai.AiToolResult;
+import com.webjetcms.ai.AiToolStep;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -80,7 +83,13 @@ public class InputDataDTO {
     @JsonIgnore
     private AiToolProtocol toolProtocol;
 
-    /** Structured server feedback containing the rejected decision and its validation error; sent as untrusted input. */
+    /** Functions offered for this provider step. A null list selects the text protocol. */
+    @JsonIgnore
+    private List<AiTool> nativeTools;
+    @JsonIgnore
+    private AiToolResult nativeToolResult;
+
+    /** Validation feedback for a text-protocol retry, sent as untrusted input. */
     @JsonIgnore
     private String toolCorrection;
 
@@ -130,6 +139,16 @@ public class InputDataDTO {
     /** Retries from the last accepted continuation with the original task, attachments and endpoint evidence. */
     public void prepareToolCorrection(String feedback) {
         toolCorrection = feedback;
+    }
+
+    /** Returns rejected native calls to the provider as unexecuted results on the same branch. */
+    public void prepareToolCorrection(String feedback, AiToolStep step) {
+        if (step == null || step.toolCall() == null) {
+            prepareToolCorrection(feedback);
+        } else {
+            previousResponseId = step.response().responseId();
+            nativeToolResult = new AiToolResult(step.toolCall().callId(), feedback);
+        }
     }
 
     public void removeHtml() {

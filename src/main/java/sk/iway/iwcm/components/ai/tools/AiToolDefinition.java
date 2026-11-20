@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +20,15 @@ public record AiToolDefinition(String name, String description, Map<String, Obje
 
     public record Preview(String name, String description, String httpMethod, String path, boolean write, String version) {}
 
+    public record Details(String name, String description, Map<String, Object> inputSchema,
+            String path, String httpMethod, Map<String, List<String>> conditions, String responseType,
+            @JsonInclude(JsonInclude.Include.NON_NULL) Map<String, Object> outputSchema, String version) {}
+
+    public Details details(boolean includeOutputSchema) {
+        return new Details(name, description, inputSchema, path, httpMethod, conditions, responseType,
+                includeOutputSchema ? outputSchema : null, version());
+    }
+
     /** The fields needed to invoke a tool directly from a loaded skill. */
     public record CallSchema(String name, String description, Map<String, Object> inputSchema, boolean write, String version) {}
 
@@ -26,10 +36,13 @@ public record AiToolDefinition(String name, String description, Map<String, Obje
         return new CallSchema(name, description, inputSchema, writes(), version());
     }
 
-    public Preview preview() {
+    String shortDescription() {
         String excerpt = description == null ? "" : description.strip();
-        if (excerpt.length() > 160) excerpt = excerpt.substring(0, 160) + "…";
-        return new Preview(name, excerpt, httpMethod, path, writes(), version());
+        return excerpt.length() > 160 ? excerpt.substring(0, 160) + "…" : excerpt;
+    }
+
+    public Preview preview() {
+        return new Preview(name, shortDescription(), httpMethod, path, writes(), version());
     }
 
     /** Fingerprints the complete contract independently of map iteration order for conversation reuse. */

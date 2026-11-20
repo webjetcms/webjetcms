@@ -23,7 +23,8 @@ import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiProviderConfig;
 import com.webjetcms.ai.AiRequestLifecycle;
 import com.webjetcms.ai.AiRequestLifecycle.State;
-import com.webjetcms.ai.AiResponse;
+import com.webjetcms.ai.AiToolStep;
+import com.webjetcms.ai.AiLifecycleListener;
 import com.webjetcms.ai.TokenUsage;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -69,9 +70,9 @@ public class AiChatService implements DisposableBean {
         Date created, Date updated, String status, long revision, boolean busy, boolean canContinue,
         String unavailableReason, String deletionError, AiChatContext context) { }
     public record MessageView(String id, String turnId, String requestId, String role, String text, String status,
-        Date created, int totalTokens, String errorCategory, Integer providerStatusCode, Boolean retryable,
+        Date created, int totalTokens, TokenBreakdown tokenBreakdown, String errorCategory, Integer providerStatusCode, Boolean retryable,
         List<AttachmentView> attachments, List<WriteOutcome> writeOutcomes, List<String> toolCalls, String activeTool,
-        boolean noToolAction) { }
+        boolean noToolAction, boolean folderRequested) { }
     public record AttachmentView(String id, String name, String mediaType, long size, String url) { }
     public record HistoryPage(List<ThreadView> items, boolean hasMore) { }
     public record Detail(ThreadView thread, List<MessageView> messages) { }
@@ -124,7 +125,7 @@ public class AiChatService implements DisposableBean {
             try {
                 var runtime = tools.resolve(prepared.assistant(), prepared.scope().domainId(), request);
                 var invocation = new Prepared(turn, runtime.assistant(), prepared.scope());
-                input.setToolProtocol(AiToolProtocol.prepare(runtime, turn.message().getToolResults()));
+                input.setToolProtocol(AiToolProtocol.prepare(runtime, turn.message().getToolResults(), prepared.assistant().getInstructions()));
                 result = tasks.runChatTask(turn.thread().getId(), prepared.scope(), () -> {
                     started.set(true);
                     return generate(invocation, input, output, streaming, request, runtime.hasWriteTool());
@@ -143,6 +144,11 @@ public class AiChatService implements DisposableBean {
             }
         }
         if (result == null) result = failure("UNKNOWN", null, request);
+        // Replays and failures before generation retain any completed tool rounds.
+        if (turn.duplicate() || (result.getTotalTokens() == 0 && turn.message().getTotalTokens() > 0)) {
+            result.setTotalTokens(turn.message().getTotalTokens());
+            result.setTokenBreakdown(turn.message().getTokenBreakdown());
+        }
         result.setThreadId(turn.thread().getId());
         result.setMessageId(turn.message().getId());
         result.setRevision(turn.thread().getRevision());
@@ -158,6 +164,8 @@ public class AiChatService implements DisposableBean {
         StringBuilder text = new StringBuilder();
         Pair<String, String> inputPair = new Pair<>(input.getInputValue(), input.getUserPrompt());
         TokenUsage usage = TokenUsage.EMPTY;
+        TokenBreakdown breakdown = answer.getTokenBreakdown();
+        if (breakdown == null && answer.getTotalTokens() == 0) breakdown = TokenBreakdown.ZERO;
         AssistantResponseDTO result = new AssistantResponseDTO();
         int tokensSentToStatistics = 0;
         String status = "error";
@@ -189,6 +197,7 @@ public class AiChatService implements DisposableBean {
                 input.removeHtml();
             }
             AiToolProtocol protocol = input.getToolProtocol();
+            provider.prepareNativeTools(prepared.assistant(), input, answer.getToolCallId());
             // An accepted tool response already carries this turn's attachment in provider history.
             if (answer.getToolResults().isEmpty() || input.isReplayToolResults()) {
                 AiChatEntry source = prepared.turn().question();
@@ -208,6 +217,7 @@ public class AiChatService implements DisposableBean {
                             new AiChatAttachments.Upload(attachment, bytes));
                         // Keep already incurred image costs even when a later attachment is unreadable.
                         usage = usage.plus(preparedAttachment.usage());
+                        breakdown = TokenBreakdown.add(breakdown, preparedAttachment.usage());
                         preparedAttachment.appendTo(context);
                     }
                     attachmentContext = context.toString();
@@ -220,26 +230,23 @@ public class AiChatService implements DisposableBean {
                     } else input.setInputValue(input.getInputValue() + attachmentContext);
                 }
             }
-            for (int attempt = 1; attempt <= AiToolProtocol.MAX_DECISION_ATTEMPTS; attempt++) {
+            AiToolStep step;
+            AiLifecycleListener observer = responseId -> store.lifecycle(prepared.scope(), threadId, messageId,
+                new AiRequestLifecycle(State.RESPONSE_OBSERVED, responseId));
+            for (int attempt = 1; ; attempt++) {
                 if (input.getCancellationToken().isCancelled()) throw new CancellationException();
                 // Each provider response, including a rejected decision, owns a cleanup ID.
                 store.submitted(prepared.scope(), threadId, messageId);
                 submitted = true;
                 providerStage = "generation";
-                AiResponse response = provider.getPersistentChatResponse(prepared.assistant(), input, onText, streaming, providerConfig,
-                    responseId -> store.lifecycle(prepared.scope(), threadId, messageId, new AiRequestLifecycle(State.RESPONSE_OBSERVED, responseId)));
+                step = provider.getPersistentChatStep(prepared.assistant(), input, onText, streaming, providerConfig, observer);
                 submitted = false;
-                usage = usage.plus(response.usage());
+                usage = usage.plus(step.response().usage());
+                breakdown = TokenBreakdown.add(breakdown, step.response().usage());
                 if (input.getCancellationToken().isCancelled()) throw new CancellationException();
-                if (protocol == null) {
-                    result.setResponse(String.valueOf(response.text()));
-                    break;
-                }
-                protocol.apply(response.text(), result, Prop.getInstance(request));
-                if (result.getToolCorrection() != null) {
-                    AiAuditLog.rejectedToolDecision(prepared.assistant(), threadId, messageId, response.responseId(),
-                        result.getToolCorrection(), response.text(), configuration.auditMaxLength());
-                }
+                if (protocol == null) result.setResponse(String.valueOf(step.response().text()));
+                else AiToolProtocol.applyStep(step, input, result, Prop.getInstance(request), Map.of());
+                AiAuditLog.rejectedToolDecision(prepared.assistant(), threadId, messageId, step, result.getToolCorrection(), configuration);
                 if (result.getToolCorrection() == null || attempt == AiToolProtocol.MAX_DECISION_ATTEMPTS) break;
 
                 // Charge only the new usage before deciding whether the assistant can afford another model call.
@@ -253,7 +260,7 @@ public class AiChatService implements DisposableBean {
                 }
                 Long limit = prepared.assistant().getTokenLimit();
                 if (!recorded && limit != null && limit > 0) break;
-                input.prepareToolCorrection(result.getToolCorrection());
+                input.prepareToolCorrection(result.getToolCorrection(), step);
                 result = new AssistantResponseDTO();
             }
             // The completed provider response is authoritative; streamed text may contain only a partial answer.
@@ -264,12 +271,13 @@ public class AiChatService implements DisposableBean {
             }
             if (result.getToolCall() != null) {
                 awaitingTool = store.awaitToolResult(prepared.scope(), threadId, messageId, result.getToolCall(),
-                    cumulativeTokens(answer, tokenCount(usage)));
+                    step.toolCall() == null ? null : step.toolCall().callId(), cumulativeTokens(answer, tokenCount(usage)), breakdown);
                 if (!awaitingTool) throw new CancellationException();
                 status = "pending";
                 category = null;
                 return result;
             }
+            if (protocol != null) AiToolProtocol.resolveFolderRequest(result, Prop.getInstance(request));
             text.append(result.getResponse());
             if (protocol != null && streaming) output.accept(text.toString());
             status = "complete";
@@ -306,6 +314,7 @@ public class AiChatService implements DisposableBean {
                 // Account for completed calls even if a later attachment or the main generation failed.
                 int tokens = tokenCount(usage);
                 result.setTotalTokens(cumulativeTokens(answer, tokens));
+                result.setTokenBreakdown(breakdown);
                 if ("complete".equals(status) || tokens > tokensSentToStatistics) recordUsage(prepared, tokens - tokensSentToStatistics, request);
                 auditResponse(prepared, inputPair, streaming, result, text.toString(), usage, providerStage, providerDiagnostic);
                 try {
@@ -314,7 +323,7 @@ public class AiChatService implements DisposableBean {
                 } finally {
                     if (!awaitingTool) {
                         store.finish(prepared.scope(), threadId, messageId, text.toString(), status,
-                            result.getTotalTokens(), category, providerStatus, retryable, result.isNoToolAction());
+                            result.getTotalTokens(), category, providerStatus, retryable, result.isNoToolAction(), result.isFolderRequested(), breakdown);
                     }
                 }
                 cleanup(threadId, prepared.scope());
@@ -508,12 +517,12 @@ public class AiChatService implements DisposableBean {
 
     private MessageView view(String threadId, AiChatEntry message) {
         return new MessageView(message.getId(), message.getTurnId(), message.getRequestId(), message.getRole(), message.getText(),
-            message.getStatus(), message.getCreated(), message.getTotalTokens(), message.getErrorCategory(), message.getProviderStatus(),
+            message.getStatus(), message.getCreated(), message.getTotalTokens(), message.getTokenBreakdown(), message.getErrorCategory(), message.getProviderStatus(),
             message.getRetryable(),
             message.getAttachments().stream().map(attachment -> new AttachmentView(attachment.id(), attachment.name(), attachment.mediaType(),
                 attachment.size(), "/admin/rest/ai/chat/threads/" + threadId + "/attachments/" + attachment.id())).toList(),
             writeOutcomes(message), message.getToolResults().stream().map(AiToolProtocol.Result::name).toList(),
-            message.getPendingToolCall() == null ? null : message.getPendingToolCall().name(), message.isNoToolAction());
+            message.getPendingToolCall() == null ? null : message.getPendingToolCall().name(), message.isNoToolAction(), message.isFolderRequested());
     }
 
     private List<WriteOutcome> writeOutcomes(AiChatEntry message) {
@@ -585,8 +594,8 @@ public class AiChatService implements DisposableBean {
         AssistantResponseDTO result = new AssistantResponseDTO();
         result.setToolCall(pending);
         result.setResponse(pending == null ? message.getText() : "");
-        result.setTotalTokens(message.getTotalTokens());
         result.setNoToolAction(message.isNoToolAction());
+        result.setFolderRequested(message.isFolderRequested());
         return result;
     }
 

@@ -20,7 +20,9 @@ Ak má asistent zapnuté postupné načítanie, odpoveď pribúda po častiach. 
 
 Ak v uloženom čete nástroj čaká na zápis, tlačidlo **Zastaviť** ho zruší aj z inej karty prehliadača. Už spustený zápis sa môže dokončiť.
 
-Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy, pod odpoveďou údaj **Použité tokeny**. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
+Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy. Ikona merača vedľa poľa správy zobrazí po prejdení myšou, zameraní klávesnicou alebo ťuknutí počet tokenov spotrebovaných v tomto čete. V prehľade sú vstupné tokeny, výstupné tokeny a celková spotreba. Ak sa v histórii uložil iba súčet, pri vstupných a výstupných tokenoch sa zobrazí pomlčka. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
+
+Ak asistent potrebuje cieľový priečinok webovej stránky, v odpovedi otvorí strom priečinkov. Vyberte priečinok, skontrolujte cestu a potvrďte ju tlačidlom **Použiť priečinok**. Čet odošle jeho ID ako ďalšiu správu.
 
 Ak asistent vráti HTML kód, napríklad pri tvorbe PageBuilder stránky, zobrazí sa karta **Návrh obsahu**. Po dokončení odpovede sa automaticky otvorí jej **Náhľad** a starší návrh sa zbalí. Vysvetlenie mimo HTML bloku zostáva viditeľné.
 
@@ -39,7 +41,7 @@ Prezeranie návrhu nemení obsah poľa ani stránky. Vložíte ho až tlačidlom
 
 Ak sa ešte generuje odpoveď, **Nový čet** ju zastaví. Uložený rozhovor tým nevymažete: zostáva v histórii.
 
-Prepnutie asistenta obnoví jeho naposledy otvorený rozhovor vrátane rozpísanej správy a neodoslaných príloh. Rovnaké údaje sa zachovajú pri prepnutí karty a zatvorení a opätovnom otvorení dialógu, kým neopustíte aktuálnu stránku administrácie. Rozpísané správy a neodoslané prílohy sa na server neukladajú.
+Po odoslaní prvej správy sa výber asistenta uzamkne. Iného asistenta si vyberiete cez **Nový čet**. Rozpísaná správa a neodoslané prílohy sa zachovajú pri prepnutí karty a zatvorení a opätovnom otvorení dialógu, kým neopustíte aktuálnu stránku administrácie. Rozpísané správy a neodoslané prílohy sa na server neukladajú.
 
 ### Ukladané a dočasné rozhovory
 

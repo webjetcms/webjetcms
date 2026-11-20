@@ -9,6 +9,7 @@ import java.util.UUID;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -53,29 +54,15 @@ final class AiChatSession {
         return continuation;
     }
 
-    /**
-     * Stores a completed turn as a new snapshot, preserving older tokens for concurrent branches.
-     *
-     * @param assistant assistant configuration used for the completed turn
-     * @param request authenticated request carrying the conversation's session
-     * @param responseId successful provider response ID
-     * @param includes protected INCLUDE mappings needed by subsequent turns
-     * @return opaque token for continuing from this response
-     * @throws IllegalStateException if the resolved request scope changed or the response ID is unusable
-     */
-    static String remember(AssistantDefinitionEntity assistant, HttpServletRequest request, String responseId,
-        Map<String, String> includes) {
-        if (responseId == null || responseId.isBlank()) {
+    static String rememberAttachments(AssistantDefinitionEntity assistant, HttpServletRequest request, String attachmentContext) {
+        return remember(assistant, request, new Continuation(null, Map.of(), attachmentContext, null));
+    }
+
+    /** Stores the completed turn under a new session token, preserving older branches. */
+    static String remember(AssistantDefinitionEntity assistant, HttpServletRequest request, Continuation continuation) {
+        if (continuation.attachmentContext() == null && (continuation.responseId() == null || continuation.responseId().isBlank())) {
             throw new IllegalStateException("The chat provider did not return a completed response ID.");
         }
-        return remember(assistant, request, new Continuation(responseId, includes));
-    }
-
-    static String rememberAttachments(AssistantDefinitionEntity assistant, HttpServletRequest request, String attachmentContext) {
-        return remember(assistant, request, new Continuation(null, Map.of(), attachmentContext));
-    }
-
-    private static String remember(AssistantDefinitionEntity assistant, HttpServletRequest request, Continuation continuation) {
         Object captured = request == null ? null : request.getAttribute(TURN_ATTRIBUTE);
         if (captured instanceof TurnContext == false) {
             throw new IllegalStateException("Resolve the chat conversation before storing its response.");
@@ -117,13 +104,25 @@ final class AiChatSession {
     }
 
     /** A completed provider response and a defensive copy of its protected INCLUDE mappings. */
-    record Continuation(String responseId, Map<String, String> includes, String attachmentContext) implements Serializable {
+    record Continuation(String responseId, Map<String, String> includes, String attachmentContext, Pending pending) implements Serializable {
         Continuation(String responseId, Map<String, String> includes) {
-            this(responseId, includes, null);
+            this(responseId, includes, null, null);
         }
 
         Continuation {
             includes = includes == null ? Map.of() : Map.copyOf(includes);
+        }
+    }
+
+    /** Binds the provider call ID to the endpoint and arguments actually returned to this session. */
+    record Pending(String id, String name, Map<String, Object> arguments) implements Serializable {
+        String match(AiToolProtocol protocol) {
+            if (protocol == null || protocol.results().isEmpty()) throw new IllegalStateException("Missing tool result.");
+            var last = protocol.results().get(protocol.results().size() - 1);
+            if (!name.equals(last.name()) || !AiToolProtocol.sameJson(arguments, last.arguments())) {
+                throw new IllegalStateException("Tool result does not match the pending call.");
+            }
+            return id;
         }
     }
 

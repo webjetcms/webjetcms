@@ -95,7 +95,7 @@ final class AiToolRequest extends HttpServletRequestWrapper {
         throw new IllegalArgumentException("Unsupported request body");
     }
 
-    private static boolean isReservedParameter(String name) {
+    static boolean isReservedParameter(String name) {
         // These names are read by the global filters before a mapped controller can authorize the operation.
         return Set.of("_logLevel", "_packagerMode", "doFilterLogon", "doShowdocAction", "jspFileName", "showPathFilterTime",
                 "docid", "historyid", "fHistoryId", "extURL", "_method", "_printAsPdf").contains(name)

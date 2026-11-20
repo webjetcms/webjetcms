@@ -19,6 +19,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.nio.file.Path;
@@ -50,6 +51,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -77,6 +79,8 @@ import sk.iway.iwcm.components.ai.rest.AiToolsController;
 import sk.iway.iwcm.components.configuration.ConfigurationController;
 import sk.iway.iwcm.components.configuration.ConfigurationService;
 import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
+import sk.iway.iwcm.editor.rest.GroupsRestController;
+import sk.iway.iwcm.editor.rest.WebpagesRestController;
 import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
 import sk.iway.iwcm.system.datatable.events.DatatableEvent;
 import sk.iway.iwcm.system.datatable.events.DatatableEventType;
@@ -122,6 +126,8 @@ class AiToolDiscoveryTest {
         @Bean ConfigurationService configurationService() { return mock(ConfigurationService.class); }
         @Bean ConfigurationController configuration(ConfigurationService service) { return new ConfigurationController(service); }
         @Bean AuditProbeController probe() { return new AuditProbeController(); }
+        @Bean WebpagesRestController webpages() { return new WebpagesRestController(null, null, null, null, null); }
+        @Bean GroupsRestController groups() { return new GroupsRestController(null, null, null, null, null); }
         @Bean MappedInterceptor guard(AiToolAuthorization authorization) {
             return new MappedInterceptor(null, new AiToolInterceptor(authorization));
         }
@@ -216,6 +222,31 @@ class AiToolDiscoveryTest {
         assertEquals(json.readTree(json.writeValueAsBytes(password)), json.readTree(direct.getContentAsByteArray()));
     }
 
+    @Test
+    void existenceToolsReturnJsonBooleans() throws Exception {
+        assistant.setInstructions("@tool(webpages_exists) @tool(groups_exists)");
+        when(security.hasPermission("menuWebpages")).thenReturn(true);
+        for (String name : List.of("webpages_exists", "groups_exists")) {
+            mvc.perform(toolRequest(name, "{\"id\":-1}")).andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(content().string("false"));
+        }
+    }
+
+    @Test
+    void inheritedEndpointsForwardDeclaredQueriesAndValidateNestedFields() {
+        var registry = context.getBean(AiToolRegistry.class);
+        var get = registry.lookup("webpages_get_one").inputs();
+        assertEquals(Map.of("groupId", List.of("25")), get.bind(Map.of("id", -1, "groupId", 25)).query());
+        assertTrue(get.bind(Map.of("id", 8)).query().isEmpty());
+        var list = registry.lookup("webpages_get_all").inputs().bind(Map.of("recursive", true, "tempId", 4)).query();
+        assertEquals(List.of("true"), list.get("recursive"));
+        assertEquals(List.of("4"), list.get("tempId"));
+        assertThrows(IllegalArgumentException.class, () -> registry.lookup("groups_get_all").inputs().bind(Map.of("recursive", true)));
+        var edit = registry.lookup("webpages_edit").definition().inputSchema();
+        assertFeedback(edit, Map.of("id", 1, "body", Map.of("title", "A", "navbar", "A", "editorFields", Map.of("groupDetails", Map.of("groupName", "Test", "navbarName", "Test")))),
+                "arguments.body.editorFields.groupDetails.groupId is required.");
+    }
+
     private static ConfDetailsDto configurationRow(String name, String value, String displayValue, String oldValue) {
         var row = new ConfDetailsDto();
         row.setName(name);
@@ -226,9 +257,7 @@ class AiToolDiscoveryTest {
     }
 
     private JsonNode configurationCall(String operation, Map<String, ?> arguments) throws Exception {
-        var response = mvc.perform(post(BASE + "/configuration_" + operation + "/call").session(session)
-                .header(AiToolAuthorization.ASSISTANT_HEADER, "7").header(AiToolAuthorization.CHAT_HEADER, "unsaved")
-                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(arguments)))
+        var response = mvc.perform(toolRequest("configuration_" + operation, json.writeValueAsString(arguments)))
                 .andExpect(status().isOk()).andReturn().getResponse();
         assertFalse(response.getContentAsString().contains("private-"));
         return json.readTree(response.getContentAsByteArray());
@@ -348,7 +377,10 @@ class AiToolDiscoveryTest {
         assertEquals(1, details.size());
         var tool = runtime.tools().stream().filter(t -> t.name().equals("configuration_add")).findFirst().orElseThrow();
         assertEquals(json.valueToTree(tool.inputSchema()), details.get(0).get("inputSchema"));
-        assertEquals(json.valueToTree(tool.outputSchema()), details.get(0).get("outputSchema"));
+        assertFalse(details.get(0).has("outputSchema"));
+        var withOutput = call("ai_tools_details", "{\"names\":[\"configuration_add\"],\"includeOutputSchema\":true}", 200).get(0);
+        assertEquals(json.valueToTree(tool.outputSchema()), withOutput.get("outputSchema"));
+        assertEquals(details.get(0).get("version"), withOutput.get("version"));
         assertEquals(tool.preview().version(), details.get(0).path("version").asText());
         assertEquals("POST", details.get(0).path("httpMethod").asText());
         assertTrue(details.toString().contains("\"encrypt\""));
@@ -429,11 +461,14 @@ class AiToolDiscoveryTest {
         return json.readTree(bytes);
     }
 
-    private JsonNode call(String tool, String arguments, int expectedStatus) throws Exception {
-        var response = mvc.perform(post(BASE + "/" + tool + "/call").session(session)
+    private MockHttpServletRequestBuilder toolRequest(String tool, String arguments) {
+        return post(BASE + "/" + tool + "/call").session(session)
                 .header(AiToolAuthorization.CHAT_HEADER, "unsaved")
-                .header(AiToolAuthorization.ASSISTANT_HEADER, "7").contentType(MediaType.APPLICATION_JSON).content(arguments))
-                .andExpect(status().is(expectedStatus)).andReturn().getResponse();
+                .header(AiToolAuthorization.ASSISTANT_HEADER, "7").contentType(MediaType.APPLICATION_JSON).content(arguments);
+    }
+
+    private JsonNode call(String tool, String arguments, int expectedStatus) throws Exception {
+        var response = mvc.perform(toolRequest(tool, arguments)).andExpect(status().is(expectedStatus)).andReturn().getResponse();
         String type = response.getHeader(AiToolCallFilter.TOOL_RESPONSE_HEADER);
         assertEquals(Map.of(200, "json", 207, "empty", 400, "invalid-arguments").get(expectedStatus), type);
         if (expectedStatus == 400) assertEquals("arguments.names is required.", response.getContentAsString());
@@ -531,7 +566,7 @@ class AiToolDiscoveryTest {
     @Test
     void correctionsExcludeUntrustedPropertyNamesAndValues() {
         var details = context.getBean(AiToolRegistry.class).lookup("ai_tools_details").definition().inputSchema();
-        assertFeedback(details, Map.of("names", List.of(), "secret", true), "arguments contains an unknown field. Allowed fields are [names].");
+        assertFeedback(details, Map.of("names", List.of(), "secret", true), "arguments contains an unknown field. Allowed fields are [names, includeOutputSchema].");
         var number = Map.of("minimum", 1);
         var dynamic = Map.<String, Object>of("patternProperties", Map.of("^search", number), "additionalProperties", number);
         for (String key : List.of("search secret", "secret")) assertFeedback(dynamic, Map.of(key, -12345), "arguments.* must be at least 1.");

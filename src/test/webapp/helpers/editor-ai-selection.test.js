@@ -11,9 +11,9 @@ const source = fs.readFileSync(path.resolve(__dirname,
 for (const persistent of [false, true]) {
     test(`sending and retrying an HTML selection preserves its mode and original prompt (saved=${persistent})`, async () => {
         const sent = [];
-        const chatSource = fs.readFileSync(path.resolve(__dirname,
-            '../../../main/webapp/admin/v9/src/js/ai/ai-chat.js'), 'utf8')
-            .replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '');
+        const chatSource = ['ai-token-usage.js', 'ai-chat.js'].map(file => fs.readFileSync(path.resolve(__dirname,
+            '../../../main/webapp/admin/v9/src/js/ai', file), 'utf8')
+            .replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')).join('\n');
         const AiChat = vm.runInNewContext(chatSource + '\nAiChat', {
             chatRequestId: () => 'request-id',
             AiChatTransport: class {

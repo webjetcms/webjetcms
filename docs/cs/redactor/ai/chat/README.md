@@ -18,7 +18,9 @@ V AI Četu můžete postupně zpřesňovat zadání, ptát se na obsah přilože
 
 Pokud má asistent zapnuto postupné načítání, odpověď přibývá po částech. Tlačítkem **Zastavit** se čtvercovou ikonou přerušíte generování. Již přijatý text zůstane zobrazen. Samotné zavření dialogu ani přepnutí karty generování nezastaví.
 
-Odpovědi zobrazují Markdown včetně nadpisů, seznamů, zvýraznění a tabulek. U jména odesílatele je čas zprávy, pod odpovědí údaj **Použité tokeny**. Tlačítko **Kopírovat** zkopíruje původní text is Markdown značkami. Názvy tlačítek s ikonami se zobrazí v bublině po najetí myší nebo zaměření klávesnicí.
+Odpovědi zobrazují Markdown včetně nadpisů, seznamů, zvýraznění a tabulek. U jména odesílatele je čas zprávy. Ikona měřidla vedle pole zprávy zobrazí po najetí myší, zaměření klávesnicí nebo klepnutí počet tokenů spotřebovaných v tomto chatu. Přehled uvádí vstupní tokeny, výstupní tokeny a celkovou spotřebu. Pokud se v historii uložil pouze součet, u vstupních a výstupních tokenů se zobrazí pomlčka. Tlačítko **Kopírovat** zkopíruje původní text is Markdown značkami. Názvy tlačítek s ikonami se zobrazí v bublině po najetí myší nebo zaměření klávesnicí.
+
+Pokud asistent potřebuje cílovou složku webové stránky, v odpovědi otevře strom složek. Vyberte složku, zkontrolujte cestu a potvrďte ji tlačítkem **Použít složku**. Chat odešle její ID jako další zprávu.
 
 Pokud asistent vrátí HTML kód, například při tvorbě PageBuilder stránky, zobrazí se karta **Návrh obsahu**. Po dokončení odpovědi se automaticky otevře její **Náhled** a starší návrh se sbalí. Vysvětlení mimo HTML bloku zůstává viditelné.
 
@@ -37,7 +39,7 @@ Prohlížení návrhu nemění obsah pole ani stránky. Vložíte jej až tlač�
 
 Pokud se ještě generuje odpověď, **Nový čet** ji zastaví. Uložený rozhovor tím nevymažete: zůstává v historii.
 
-Přepnutí asistenta obnoví jeho naposledy otevřený rozhovor včetně rozepsané zprávy a neodeslaných příloh. Stejné údaje se zachovají při přepnutí karty a zavření a opětovném otevření dialogu, dokud neopustíte aktuální stránku administrace. Rozepsané zprávy a neodeslané přílohy se na server neukládají.
+Po odeslání první zprávy se výběr asistenta uzamkne. Jiného asistenta si vyberete přes **Nový čet**. Rozepsaná zpráva a neodeslané přílohy se zachovají při přepnutí karty a zavření a opětovném otevření dialogu, dokud neopustíte aktuální stránku administrace. Rozepsané zprávy a neodeslané přílohy se na server neukládají.
 
 ### Ukládané a dočasné rozhovory
 

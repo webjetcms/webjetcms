@@ -33,31 +33,18 @@ import sk.iway.iwcm.system.datatable.json.DataTableColumnEditor;
 
 /** Verifies that the tool detail exposes nested requirements without changing the AI contract. */
 class AiToolEntityTest {
-    /** Webpage creation and DataTable editing retain required body fields and resolvable definitions. */
+    /** The add tool accepts a full editor record and shares its nested requirements with manual calls. */
     @Test
-    void webpagesAddShowsRequiredBodyFields() throws Exception {
-        var controller = mock(WebpagesRestController.class);
-        var handler = new HandlerMethod(controller, WebpagesRestController.class.getMethod("add", Object.class));
-        var inputs = new AiToolInputs(handler, RequestMappingInfo.paths("/admin/rest/web-pages/add").build(), "/admin/rest/web-pages/add");
-        var schema = inputs.schema();
-        var detail = detail(schema);
-
-        assertEquals("body, body.title, body.navbar", detail.getRequired());
-        JsonNode root = Json.mapper().valueToTree(schema);
-        assertEquals(Json.pretty(schema), detail.getInputSchema());
-        assertTrue(root.path("properties").path("body").has("$ref"));
-        assertReferencesResolve(root, root);
-        assertEquals(Map.of("body", Map.of("title", "string", "navbar", "string")),
-                Json.mapper().readValue(detail.getExample(), Map.class));
-
-        AiToolArgumentValidator.validate(schema, Map.of("body", Map.of("title", "Page", "navbar", "Page")));
-        for (String field : List.of("title", "navbar")) {
-            var body = new LinkedHashMap<>(Map.of("title", "Page", "navbar", "Page"));
-            body.remove(field);
-            var missing = assertThrows(AiToolArgumentValidator.InvalidArguments.class,
-                    () -> AiToolArgumentValidator.validate(schema, Map.of("body", body)));
-            assertEquals("arguments.body." + field + " is required.", missing.getMessage());
-        }
+    void webpagesAddUsesFullEditorBody() throws Exception {
+        var handler = new HandlerMethod(mock(WebpagesRestController.class), WebpagesRestController.class.getMethod("add", Object.class));
+        var inputs = new AiToolInputs(handler, RequestMappingInfo.paths("/add").build(), "/add");
+        var folder = Map.of("groupId", 25, "groupName", "News", "navbarName", "News");
+        var body = Map.of("title", "Article", "navbar", "Article", "data", "<p>Content</p>", "available", false,
+                "editorFields", Map.of("groupDetails", folder, "requestPublish", false));
+        var arguments = Map.<String, Object>of("body", body);
+        AiToolArgumentValidator.validate(inputs.schema(), arguments);
+        assertEquals(body, inputs.bind(arguments).body());
+        assertTrue(detail(inputs.schema()).getRequired().contains("body.editorFields.groupDetails.groupId"));
         assertEquals("body, body.action, body.data, body.data.*.title, body.data.*.navbar",
                 detail(inputs("editor", DatatableRequest.class)).getRequired());
     }

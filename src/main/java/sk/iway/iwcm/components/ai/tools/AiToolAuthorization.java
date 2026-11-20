@@ -168,7 +168,7 @@ public class AiToolAuthorization {
     private boolean allowWrite(HttpServletRequest request, AssistantDefinitionEntity assistant) {
         String chat = request.getHeader(CHAT_HEADER);
         if (assistant == null) return chat == null; // Manual tool call.
-        if ("unsaved".equals(chat)) return true;
+        if ("unsaved".equals(chat) || (chat != null && chat.matches("unsaved:[0-9a-f-]{36}"))) return true;
         // Older tabs carry no chat context and cannot safely dispatch a delayed assistant write.
         if (chat == null || !(request.getAttribute(AiToolService.WRITE) instanceof AiToolProtocol.Call call)) return false;
         String[] ids = chat.split("/", -1);

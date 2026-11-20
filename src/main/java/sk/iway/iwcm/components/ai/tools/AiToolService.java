@@ -41,6 +41,12 @@ public class AiToolService {
     private final AiToolRegistry registry;
     private final AiToolAuthorization authorization;
 
+    /** True while the named tool dispatcher is invoking a handler of this controller. */
+    public static boolean isToolRequest(HttpServletRequest request, Class<?> controller) {
+        return request != null && request.getAttribute(TARGET) instanceof AiToolRegistry.Entry entry
+                && controller.isAssignableFrom(entry.controllerType());
+    }
+
     public List<AiToolDefinition> list(HttpServletRequest request) {
         return list(request, null);
     }
@@ -169,7 +175,7 @@ public class AiToolService {
         AiToolRequest target;
         try {
             if (arguments == null) throw new IllegalArgumentException("Expected an object");
-            if (request.getHeader(AiToolAuthorization.ASSISTANT_HEADER) != null) {
+            if (entry.inputs().requiresBodyValidation() || request.getHeader(AiToolAuthorization.ASSISTANT_HEADER) != null) {
                 AiToolArgumentValidator.validate(entry.definition().inputSchema(), arguments);
             }
             target = new AiToolRequest(request, entry, entry.inputs().bind(arguments));

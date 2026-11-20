@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,14 +19,17 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.system.datatable.settings.fields.jpa.FieldsSettingsEntity;
 import sk.iway.iwcm.system.datatable.settings.fields.rest.FieldsSettingsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.DocEditorFields;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Verifies that page edits merge field settings before entering the editor save workflow. */
@@ -36,11 +39,11 @@ class WebpagesDatatableTest {
     private DocDetailsRepository repository;
     private FieldsSettingsService settings;
     private DocDetails published;
-    private MockedStatic<Constants> constants;
-    private MockedStatic<InitServlet> initServlet;
-    private MockedStatic<DocDB> documents;
-    private MockedStatic<Tools> tools;
-    private MockedStatic<CloudToolsForCore> cloud;
+    @AutoClose private MockedStatic<Constants> constants;
+    @AutoClose private MockedStatic<InitServlet> initServlet;
+    @AutoClose private MockedStatic<DocDB> documents;
+    @AutoClose private MockedStatic<Tools> tools;
+    @AutoClose private MockedStatic<CloudToolsForCore> cloud;
 
     @BeforeEach
     void setUp() {
@@ -69,23 +72,11 @@ class WebpagesDatatableTest {
         when(facade.save(any())).thenAnswer(call -> call.getArgument(0));
     }
 
-    @AfterEach
-    void tearDown() {
-        cloud.close();
-        tools.close();
-        documents.close();
-        initServlet.close();
-        constants.close();
-    }
-
     /** Omitted optional values come from the selected version, for work saves and publication alike. */
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void preservesHiddenFieldFromSelectedHistory(boolean publish) {
-        FieldsSettingsEntity hidden = new FieldsSettingsEntity();
-        hidden.setFieldName("fieldA");
-        hidden.setHiddenEditor(true);
-        when(settings.getFieldsSettings(DocDetails.class.getName(), 9)).thenReturn(new FieldsSettingsEntity[] {hidden});
+        hideFieldA();
         DocDetails history = page("Work version value");
         when(facade.getExistingDocForEditor(123, 456)).thenReturn(history);
         DocDetails submitted = JsonMapper.builder().build().readValue(
@@ -119,6 +110,37 @@ class WebpagesDatatableTest {
         DocDetails saved = controller.editItem(page("Submitted replacement"), 123);
 
         assertEquals(storedValue, saved.getFieldA());
+    }
+
+    /** A full page from the tool uses the stored destination and preserves protected folder defaults on insert. */
+    @Test
+    void insertsFullToolBodyUsingFolderDefaults() {
+        var folder = new GroupDetails();
+        folder.setGroupId(25);
+        var submitted = page("Submitted value");
+        submitted.setDocId(-1);
+        submitted.getEditorFields().setGroupDetails(folder);
+        submitted.getEditorFields().setRequestPublish(false);
+        hideFieldA();
+        when(settings.getFieldsSettings(DocEditorFields.class.getName(), 9)).thenReturn(new FieldsSettingsEntity[0]);
+        doReturn(page("Folder default")).when(facade).getDocForEditor(-1, -1, 25);
+        var request = controller.getRequest();
+        var user = controller.getUser();
+        try (var dispatch = mockStatic(AiToolService.class); var pages = mockStatic(WebpagesService.class)) {
+            dispatch.when(() -> AiToolService.isToolRequest(request, WebpagesRestController.class)).thenReturn(true);
+            pages.when(() -> WebpagesService.requireCreateFolder(user, 25)).thenReturn(folder);
+            assertSame(submitted, controller.insertItem(submitted));
+            assertEquals("Folder default", submitted.getFieldA());
+            assertFalse(submitted.getEditorFields().isRequestPublish());
+            verify(facade).save(submitted);
+        }
+    }
+
+    private void hideFieldA() {
+        var hidden = new FieldsSettingsEntity();
+        hidden.setFieldName("fieldA");
+        hidden.setHiddenEditor(true);
+        when(settings.getFieldsSettings(DocDetails.class.getName(), 9)).thenReturn(new FieldsSettingsEntity[] {hidden});
     }
 
     /** Empty strings still clear editable optional fields. */

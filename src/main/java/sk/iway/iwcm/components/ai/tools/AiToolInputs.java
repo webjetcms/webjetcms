@@ -55,12 +55,18 @@ public final class AiToolInputs {
     private final Set<NameValueExpression<String>> conditions;
     private final Map<String, Object> schema;
     private final boolean clientSidePaging;
+    private final List<String> requiredBody;
+    private final Set<String> declaredQueries = new java.util.HashSet<>();
 
     AiToolInputs(HandlerMethod handler, RequestMappingInfo mapping, String path) {
         conditions = mapping.getParamsCondition().getExpressions();
-        Datatable datatable = ClassUtils.getUserClass(handler.getBeanType()).getAnnotation(Datatable.class);
+        Class<?> controller = ClassUtils.getUserClass(handler.getBeanType());
+        Datatable datatable = controller.getAnnotation(Datatable.class);
         clientSidePaging = datatable != null && datatable.clientSidePaging()
                 && Arrays.stream(handler.getMethodParameters()).anyMatch(param -> Pageable.class.isAssignableFrom(param.getParameterType()));
+        var endpoints = Arrays.stream(controller.getDeclaredAnnotationsByType(AiToolEndpoint.class))
+                .filter(endpoint -> endpoint.method().equals(handler.getMethod().getName())).toList();
+        requiredBody = endpoints.stream().flatMap(endpoint -> Arrays.stream(endpoint.requiredBody())).distinct().toList();
         AiToolSchema types = new AiToolSchema();
         Map<String, Object> filterFields = new LinkedHashMap<>();
         boolean queryMap = false;
@@ -79,7 +85,9 @@ public final class AiToolInputs {
                     add(Location.PATH, name, true, types.describe(type), AiToolRegistry.words(name));
                 }
             } else if (body != null) {
-                add(Location.BODY, "body", body.required() && !param.isOptional(), types.describe(type), "JSON request body.");
+                Map<String, Object> bodySchema = types.describe(type);
+                for (String field : requiredBody) bodySchema = types.require(bodySchema, field);
+                add(Location.BODY, "body", body.required() && !param.isOptional(), bodySchema, "JSON request body.");
             } else if (query != null && query.value().isEmpty() && query.name().isEmpty() && Map.class.isAssignableFrom(raw)) {
                 queryMap = true;
             } else if (query != null) {
@@ -120,6 +128,18 @@ public final class AiToolInputs {
         while (variables.find()) {
             String name = variables.group(1);
             add(Location.PATH, name, true, Map.of("type", "string"), AiToolRegistry.words(name));
+        }
+        for (AiToolEndpoint endpoint : endpoints) {
+            for (AiToolEndpoint.Query query : endpoint.query()) {
+                String name = query.name();
+                if (!name.matches("[a-zA-Z][a-zA-Z0-9_]*") || inputs.containsKey(name)
+                        || (clientSidePaging && pagingParameter(name)) || AiToolRequest.isReservedParameter(name)
+                        || conditions.stream().anyMatch(c -> c.getName().equals(name)))
+                    throw new IllegalStateException("Conflicting AI query parameter " + name + " on " + handler);
+                if (!BeanUtils.isSimpleProperty(query.type())) throw new IllegalStateException("Expected a scalar query parameter or array for " + name);
+                declaredQueries.add(name);
+                add(Location.QUERY, name, query.required(), types.describe(query.type()), query.description());
+            }
         }
         for (NameValueExpression<String> condition : conditions) {
             String name = condition.getName();
@@ -186,6 +206,10 @@ public final class AiToolInputs {
         return schema;
     }
 
+    boolean requiresBodyValidation() {
+        return !requiredBody.isEmpty();
+    }
+
     boolean clientSidePaging() {
         return clientSidePaging;
     }
@@ -234,7 +258,8 @@ public final class AiToolInputs {
             if (!(field.getKey() instanceof String key) || key.isBlank() || key.chars().anyMatch(Character::isISOControl)) {
                 throw new IllegalArgumentException("Invalid query field name.");
             }
-            if (inputs.values().stream().anyMatch(input -> input.location() == Location.QUERY && input.wireName().equals(key))) {
+            if (!declaredQueries.contains(key) && inputs.values().stream()
+                    .anyMatch(input -> input.location() == Location.QUERY && input.wireName().equals(key))) {
                 throw new IllegalArgumentException("Use the declared argument for query field: " + key);
             }
             if (!known.containsKey(key) && !freeForm && !(filterSchema.containsKey("patternProperties") && key.matches(SEARCH_KEY))) {

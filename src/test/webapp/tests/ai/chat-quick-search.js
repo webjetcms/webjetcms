@@ -21,6 +21,7 @@ Scenario('A standalone chat can be reopened from history after a page reload', a
     // Keep the simulated assistant and sidebar preferences local to this scenario.
     I.mockRoute('**/admin/rest/admin-settings/', route => route.fulfill({ json: {} }));
     I.mockRoute('**/admin/rest/ai/assistant/chat-assistants/', route => route.fulfill({ json: [assistant] }));
+    I.mockRoute('**/admin/rest/ai/assistant/runtime/?*', route => route.fulfill({ json: assistant }));
     I.mockRoute('**/admin/rest/ai/chat/threads?*', route => route.fulfill({ json: { items: thread ? [thread] : [], hasMore: false } }));
     I.mockRoute('**/admin/rest/ai/chat/messages', route => {
         const { requestId, userPrompt, assistantId } = route.request().postDataJSON();
@@ -49,4 +50,50 @@ Scenario('A standalone chat can be reopened from history after a page reload', a
     I.click(locate(`${chat} .ai-chat-host__history-select`).withText(question));
     I.waitForText(question, 10, `${chat} .ai-chat-user`);
     I.waitForText(answer, 10, `${chat} .ai-chat-assistant`);
+});
+
+
+Scenario('Folder confirmation continues the locked chat and the gauge shows recorded usage', async ({ I }) => {
+    const assistant = { assistantId: 7, description: 'Folder autotest', provider: 'gemini', action: 'live_chat', toolsEnabled: true };
+    const second = { ...assistant, assistantId: 8, description: 'Second autotest' };
+    const prompts = [];
+    I.mockRoute('**/admin/rest/admin-settings/', route => route.fulfill({ json: {} }));
+    I.mockRoute('**/admin/rest/ai/assistant/chat-assistants/', route => route.fulfill({ json: [assistant, second] }));
+    I.mockRoute('**/admin/rest/ai/assistant/runtime/?*', route => route.fulfill({ json: assistant }));
+    I.mockRoute('**/admin/rest/ai/chat/threads?*', route => route.fulfill({ json: { items: [], hasMore: false } }));
+    I.mockRoute('**/admin/rest/ai/assistant/response/', route => {
+        prompts.push(route.request().postDataJSON().userPrompt);
+        const first = prompts.length === 1;
+        return route.fulfill({ json: { response: first ? 'Choose a folder' : 'Folder received', folderRequested: first,
+            totalTokens: first ? 17 : 25, tokenBreakdown: { inputTokens: first ? 10 : 20, outputTokens: first ? 7 : 5 }, conversationId: 'folder-autotest' } });
+    });
+    I.mockRoute('**/admin/rest/groups/tree/tree?*', route => route.fulfill({ json: { result: true, items: [
+        { id: '42', text: '<span class="jstree-text-icon ti ti-lock-filled"></span> Folder autotest', icon: 'ti ti-folder-filled', children: false,
+            groupDetails: { groupId: 42, fullPath: '/Folder autotest' } }
+    ] } }));
+    I.amOnPage('/admin/v9/');
+    openChat(I);
+    I.fillField(`${chat} .ai-chat-input`, 'Create a page autotest');
+    I.clickCss(`${chat} .btn-ai-chat-send`);
+    I.waitForVisible(`${chat} .ai-chat-host__locked-assistant`, 10);
+    I.dontSeeElement(`${chat} .ai-chat-host__assistant .dropdown-toggle`);
+    const tree = `${chat} .ai-chat-folder-picker`;
+    I.waitForVisible(`${tree} .jstree-anchor`, 10);
+    I.seeElement(`${tree} .jstree-anchor .ti-lock-filled`);
+    I.fillField(`${chat} .ai-chat-input`, 'Keep this unsent draft');
+    I.click(locate(`${tree} .jstree-anchor`).withText('Folder autotest'));
+    I.waitForText('/Folder autotest', 5, `${tree} .ai-chat-folder-path`);
+    I.clickCss(`${tree} .btn-primary`);
+    I.waitForText('Folder received', 10, chat);
+    I.assertEqual(prompts.length, 2);
+    I.assertContain(prompts[1], '42');
+    I.seeInField(`${chat} .ai-chat-input`, 'Keep this unsent draft');
+    I.dontSeeElement(tree);
+    I.moveCursorTo(`${chat} button.ai-chat-token-usage`);
+    I.waitForText('30', 5, '.tooltip.show dd');
+    I.see('12', '.tooltip.show dd');
+    I.see('42', '.tooltip.show dd');
+    if (await I.grabNumberOfVisibleElements(`${chat} .ai-chat-host__new`)) I.clickCss(`${chat} .ai-chat-host__new`);
+    else I.clickCss(`${chat} [data-ai-action="new"]`);
+    I.waitForVisible(`${chat} .ai-chat-host__assistant .dropdown-toggle`, 5);
 });

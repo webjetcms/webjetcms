@@ -18,7 +18,9 @@ There are two ways to open a chat:
 
 If the assistant has progressive loading enabled, the answer will be added in parts. The **Stop** button with the square icon will interrupt the generation. The text already received will remain displayed. Closing the dialog or switching tabs will not stop the generation.
 
-Replies display Markdown including headings, lists, highlighting, and tables. The sender's name displays the time of the message, and **Tokens Used** appears below the reply. The **Copy** button copies the original text, including Markdown tags. The names of the button icons appear in a bubble upon mouseover or keyboard focus.
+Replies display Markdown including headings, lists, highlighting, and tables. The message time appears next to the sender’s name. Hover over, focus, or tap the gauge in the composer to see recorded token usage for this conversation. The preview shows input tokens, output tokens, and the conversation total. If the history contains only a total, a dash appears for input and output. The **Copy** button copies the original text, including Markdown tags. The names of the button icons appear in a bubble upon mouseover or keyboard focus.
+
+When the assistant asks for a webpage destination folder, a folder tree opens in the reply. Select a folder, check its path, and choose **Use folder** to send its ID as the next message.
 
 If the assistant returns HTML code, for example when creating a PageBuilder page, the **Content Draft** tab will appear. When the answer is complete, its **Preview** will automatically open and the older draft will be collapsed. Explanation outside the HTML block remains visible.
 
@@ -37,7 +39,7 @@ Previewing the design does not change the content of the field or page. You inse
 
 If a reply is still being generated, **New Chat** will stop it. This does not delete the saved conversation: it remains in the history.
 
-Switching an assistant restores their last opened conversation, including the drafted message and unsent attachments. The same data is preserved when switching tabs and closing and reopening the dialog until you leave the current administration page. Drafted messages and unsent attachments are not saved to the server.
+Sending the first message locks the assistant for that conversation. Choose **New Chat** to select a different assistant. Your unsent message and attachments are preserved when switching tabs or reopening the dialog until you leave the current administration page. Drafted messages and unsent attachments are not saved to the server.
 
 ### Saved and temporary conversations
 

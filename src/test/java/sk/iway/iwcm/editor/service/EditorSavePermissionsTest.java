@@ -7,7 +7,7 @@ import java.util.List;
 
 import jakarta.validation.ConstraintViolationException;
 
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,22 +15,29 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.components.basket.rest.ProductListRestController;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.MultigroupMapping;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.rest.GroupsRestController;
 import sk.iway.iwcm.editor.rest.WebpagesDatatable;
+import sk.iway.iwcm.editor.rest.WebpagesRestController;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEventPublisher;
 
@@ -41,10 +48,10 @@ class EditorSavePermissionsTest {
     private DocDB documents;
     private GroupsDB groups;
     private DocDetails original;
-    private MockedStatic<GroupsDB> groupAccess;
-    private MockedStatic<DocDB> docAccess;
-    private MockedStatic<MultigroupMappingDB> mappings;
-    private MockedStatic<Constants> constants;
+    @AutoClose private MockedStatic<GroupsDB> groupAccess;
+    @AutoClose private MockedStatic<DocDB> docAccess;
+    @AutoClose private MockedStatic<MultigroupMappingDB> mappings;
+    @AutoClose private MockedStatic<Constants> constants;
 
     @BeforeEach
     void setUp() {
@@ -84,14 +91,6 @@ class EditorSavePermissionsTest {
         ReflectionTestUtils.setField(editor, "prop", prop);
     }
 
-    @AfterEach
-    void tearDown() {
-        constants.close();
-        mappings.close();
-        docAccess.close();
-        groupAccess.close();
-    }
-
     /** A permitted destination cannot grant access to a foreign page, even for a draft. */
     @Test
     void rejectsForeignPageBeforeEventsOrPersistence() {
@@ -107,6 +106,81 @@ class EditorSavePermissionsTest {
         }
         assertEquals(10, original.getGroupId());
         assertEquals("autotest original", original.getTitle());
+    }
+
+    /** Preparing defaults for a folder with a template preserves its HTML and leaves the template untouched. */
+    @Test
+    void copiesConfiguredTemplateForNewPage() {
+        EditorService service = spy(editor);
+        GroupDetails folder = groups.getGroup(25);
+        folder.setTempId(4);
+        folder.setNewPageDocIdTemplate(1);
+        original.setDocId(1);
+        original.setData("<section>Template content</section>");
+        doReturn(original).when(service).getDoc(1, -1);
+        doReturn(false).when(service).setSortPriority(any(), any());
+        try (var defaults = mockStatic(WebpagesService.class); var facade = mockStatic(EditorFacade.class)) {
+            DocDetails page = service.prepareNewDocForEditor(-1, folder);
+            assertEquals(-1, page.getDocId());
+            assertEquals(25, page.getGroupId());
+            assertEquals(4, page.getTempId());
+            assertEquals(original.getData(), page.getData());
+            assertEquals(1, original.getDocId());
+            assertEquals(10, original.getGroupId());
+        }
+    }
+
+    /** Preparing a named-tool page leaves temporary media and the open editor's preview domain intact. */
+    @Test
+    void preparingPagePreservesOpenEditor() {
+        var request = new MockHttpServletRequest();
+        request.getSession().setAttribute("preview.editorDomainName", "original.example");
+        groups.getGroup(25).setDomainName("folder.example");
+        var saves = mock(EditorService.class);
+        DocDetails defaults = page(-1, 25);
+        defaults.setEditorFields(new DocEditorFields());
+        when(saves.prepareNewDocForEditor(-1, groups.getGroup(25))).thenReturn(defaults);
+        var media = mock(MediaService.class);
+        var facade = new EditorFacade(saves, null, media, null, request);
+        try (var tools = mockStatic(AiToolService.class)) {
+            tools.when(() -> AiToolService.isToolRequest(request, WebpagesRestController.class)).thenReturn(true);
+            facade.getDocForEditor(-1, -1, 25);
+            assertFalse(defaults.getEditorFields().isRequestPublish());
+            verifyNoInteractions(media);
+            assertEquals("original.example", request.getSession().getAttribute("preview.editorDomainName"));
+        }
+        facade.getDocForEditor(-1, -1, 25);
+        verify(media).deleteTempMedia();
+        assertEquals("folder.example", request.getSession().getAttribute("preview.editorDomainName"));
+    }
+
+    /** The incomplete editor payload from a draft create is rejected before touching the editor or media. */
+    @Test
+    void rejectsMissingEditorDestinationBeforeSaving() {
+        EditorService saves = mock(EditorService.class);
+        EditorFacade facade = new EditorFacade(saves, null, null, null, null);
+        DocDetails doc = page(-1, 25);
+        for (DocEditorFields fields : new DocEditorFields[] {null, new DocEditorFields()}) {
+            doc.setEditorFields(fields);
+            assertEquals(400, assertThrows(ResponseStatusException.class, () -> facade.save(doc)).getStatusCode().value());
+        }
+        verifyNoInteractions(saves);
+    }
+
+    /** A new editor page reaches JPA without its temporary ID and uses the ID from that insert. */
+    @Test
+    void persistsNewPageWithGeneratedId() {
+        DocDetails draft = page(-1, 25);
+        var pages = mock(DocDetailsRepository.class);
+        ReflectionTestUtils.setField(editor, "docRepo", pages);
+        when(pages.save(draft)).thenAnswer(call -> {
+            assertEquals(0, draft.getDocId());
+            return page(88, 25);
+        });
+        ReflectionTestUtils.invokeMethod(editor, "docSave", draft, true, mock(DebugTimer.class));
+        assertEquals(88, draft.getDocId());
+        verify(pages).save(draft);
+        verifyNoMoreInteractions(pages);
     }
 
     /** A page-specific grant authorizes editing in place, but not moving into another restricted folder. */
@@ -176,15 +250,33 @@ class EditorSavePermissionsTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void checksRestAccessAgainstStoredPage(boolean cloud) {
-        WebpagesDatatable controller = mock(WebpagesDatatable.class, CALLS_REAL_METHODS);
+        var controller = mock(WebpagesRestController.class, CALLS_REAL_METHODS);
+        var folders = mock(GroupsRestController.class, CALLS_REAL_METHODS);
         doReturn(user).when(controller).getUser();
+        doReturn(user).when(folders).getUser();
+        when(documents.getBasicDocDetails(42, false)).thenReturn(original);
+        when(documents.getBasicDocDetails(43, false)).thenReturn(page(43, 10));
+        when(user.getEditablePages()).thenReturn("43");
         try (var deployment = mockStatic(InitServlet.class)) {
             deployment.when(InitServlet::isTypeCloud).thenReturn(cloud);
             assertFalse(controller.checkItemPerms(page(42, 25), 42L));
             assertFalse(controller.checkItemPerms(page(999, 25), 999L));
+            assertFalse(controller.exists(42));
+            assertFalse(folders.exists(10));
+            for (int id : List.of(-1, 0, 999)) {
+                assertFalse(controller.exists(id));
+                assertFalse(folders.exists(id));
+            }
+            assertEquals(!cloud, controller.exists(43));
             original.setGroupId(25);
+            groups.getGroup(25).setDomainName(CloudToolsForCore.getDomainName());
             when(user.isDisabledItem("pageSave")).thenReturn(true);
             assertTrue(controller.checkItemPerms(page(42, 10), 42L));
+            assertTrue(controller.exists(42));
+            assertTrue(folders.exists(25));
+            groups.getGroup(25).setDomainName("other.example");
+            assertEquals(!cloud, controller.exists(42));
+            assertEquals(!cloud, folders.exists(25));
         }
     }
 

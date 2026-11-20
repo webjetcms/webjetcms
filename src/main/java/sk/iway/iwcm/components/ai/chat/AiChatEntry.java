@@ -8,6 +8,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.components.ai.dto.TokenBreakdown;
 import sk.iway.iwcm.components.ai.tools.AiToolProtocol.Call;
 import sk.iway.iwcm.components.ai.tools.AiToolProtocol.Result;
 
@@ -28,6 +29,8 @@ public class AiChatEntry {
     private Date created;
     private Date updated;
     private int totalTokens;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private TokenBreakdown tokenBreakdown;
     private String errorCategory;
     private Integer providerStatus;
     private Boolean retryable;
@@ -43,12 +46,17 @@ public class AiChatEntry {
     private boolean toolWriteIssued;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private boolean noToolAction;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean folderRequested;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<WriteOutcome> writeOutcomes = new ArrayList<>();
     private String providerResponseId;
     /** Last validated tool decision; later rejected provider responses are retained only for cleanup. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String toolResponseId;
+    /** Provider function call being answered on the next round, paired with toolResponseId. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String toolCallId;
     /** Earlier provider rounds for this answer that still need remote deletion. */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<String> earlierProviderResponseIds = new ArrayList<>();

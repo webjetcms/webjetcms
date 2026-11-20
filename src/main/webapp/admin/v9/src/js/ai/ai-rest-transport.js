@@ -1,3 +1,4 @@
+import { emptyTokenUsage, sumTokenUsage } from './ai-token-usage';
 import { readAiStream } from './ai-stream';
 import { historyText, checkAiResponse } from './chat-history-api';
 import { runToolSteps } from './ai-tool-transport';
@@ -37,7 +38,7 @@ export async function requestAiText(inputData, { toolsEnabled, allowWrites = tru
         return result;
     }
     const message = { ...inputData };
-    let totalTokens = 0;
+    let usage = emptyTokenUsage;
     return runToolSteps(message.assistantId, async toolResults => {
         const step = { ...message, toolResults };
         const sendStep = () => generate(step, { ...options, streaming: false });
@@ -51,12 +52,15 @@ export async function requestAiText(inputData, { toolsEnabled, allowWrites = tru
             if (!result.threadId || !result.messageId) throw new Error("Invalid AI response.");
             result.toolCall.chat = result.threadId + '/' + result.messageId;
         }
+        if (options.endpoint) {
+            // Saved turns already include all previous tool rounds for this answer.
+            if (Number.isSafeInteger(result.totalTokens)) usage = { totalTokens: result.totalTokens, tokenBreakdown: result.tokenBreakdown };
+        } else {
+            usage = sumTokenUsage(usage, result);
+            Object.assign(result, usage);
+        }
         // The assignment may change after PageBuilder chooses to process each block separately.
         if (result.toolCall && result.toolCall.write !== false && !allowWrites) throw new Error(WJ.translate('components.ai_assistants.settings_changed.js'));
-        if (!options.endpoint && Number.isInteger(result.totalTokens)) {
-            totalTokens += result.totalTokens;
-            result.totalTokens = totalTokens;
-        }
         if (!result.toolCall) return result;
         if (result.threadId) {
             options.onMetadata?.(result);
@@ -71,7 +75,11 @@ export async function requestAiText(inputData, { toolsEnabled, allowWrites = tru
         }
         delete message.files;
         return result;
-    }, options.signal, onWrite, onToolActivity);
+    }, options.signal, onWrite, onToolActivity).catch(error => {
+        // Keep completed model calls if a later tool or network request fails.
+        if (usage.totalTokens > 0) Object.assign(error, usage);
+        throw error;
+    });
 }
 
 async function generate(inputData, { streaming = false, signal, onDelta = () => {}, endpoint, onMetadata = () => {} }) {

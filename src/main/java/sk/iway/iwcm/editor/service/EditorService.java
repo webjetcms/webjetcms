@@ -11,6 +11,7 @@ import java.util.StringTokenizer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.annotation.RequestScope;
 
@@ -448,23 +449,20 @@ public class EditorService {
 	 * @return
 	 */
 	public DocDetails prepareNewDocForEditor(int docId, GroupDetails group) {
-		//ak je to admin
-		DocDetails editedDoc = null;
-		//-1 je cisty dokument
-		if (docId < -1) {
-			editedDoc = getDoc(-docId, -1);
-			if (editedDoc != null) {
-				editedDoc.setDocId(-1);
-			}
-		}
-
-		if (editedDoc == null) {
-			editedDoc = new DocDetails();
+		int templateId = docId == -1 ? group.getNewPageDocIdTemplate() : -docId;
+		DocDetails template = templateId > 0 ? getDoc(templateId, -1) : null;
+		DocDetails editedDoc = new DocDetails();
+		if (template == null) {
 			editedDoc.setData("<p>&nbsp;</p>");
 			editedDoc.setSearchable(true);
 			editedDoc.setAvailable(Constants.getBoolean("editorNewDocDefaultAvailableChecked"));
 			editedDoc.setShowInMenu(true);
 		} else {
+			// Copy stored defaults without invoking presentation getters or changing the managed template.
+			ReflectionUtils.doWithFields(DocBasic.class, field -> {
+				ReflectionUtils.makeAccessible(field);
+				field.set(editedDoc, field.get(template));
+			}, field -> field.isAnnotationPresent(jakarta.persistence.Column.class));
 			editedDoc.setVirtualPath("");
 			editedDoc.setExternalLink("");
 			editedDoc.setEventDateString("");
@@ -558,6 +556,8 @@ public class EditorService {
 		DocDetails editedDoc = null;
 		if (historyId > 0) {
 			editedDoc = getDoc(-1, historyId);
+			if (editedDoc != null && docId > 0 && editedDoc.getDocId() != docId && editedDoc.getDocId() != docIdOriginal)
+				throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND);
 		} else {
 			editedDoc = getDoc(docId, -1);
 		}
@@ -1422,19 +1422,11 @@ public class EditorService {
 
 		if (Tools.isEmpty(editedDoc.getNavbar())) editedDoc.setNavbar(editedDoc.getTitle());
 
-		if(isInsert) {
-			// Insert new doc entity via DocDeailsRepository
-			docRepo.save(editedDoc);
-			dt.diff("after insert");
-
-			// Set docId into entity (get id from DB)
-			editedDoc.setDocId(docRepo.findMaxIdByGroupIdAndTitle(editedDoc.getGroupId(), editedDoc.getTitle()));
-			dt.diff("after setDocId");
-		} else {
-			//Update webpage via DocDeailsRepository
-			docRepo.save(editedDoc);
-			dt.diff("after update");
-		}
+		// JPA expects a null generated ID on insert. The editor uses -1.
+		if (isInsert) editedDoc.setId(null);
+		DocDetails saved = docRepo.save(editedDoc);
+		if (isInsert) editedDoc.setDocId(saved.getDocId());
+		dt.diff(isInsert ? "after insert" : "after update");
 
 		//aktualizuj pripadne aj tab. perex_group_doc
 		DocDB.udpdatePerexGroupDoc(editedDoc.getDocId(), editedDoc.getPerexGroupIdsString());

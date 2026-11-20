@@ -1,5 +1,6 @@
 export class WebjetJsTree {
-    constructor(id) {
+    constructor(id, { selectionOnly = false } = {}) {
+        this.selectionOnly = selectionOnly;
         this.id = $(`#${id}`);
         this.jstree = null;
 
@@ -14,7 +15,9 @@ export class WebjetJsTree {
     createJsTree() {
         this.jstree = this.id.jstree({
             'core': {
+                ...(this.selectionOnly ? { multiple: false } : {}),
                 'check_callback': (operation, node, parent) => {
+                    if (this.selectionOnly && (operation === 'move_node' || operation === 'copy_node')) return false;
                     return !(operation === 'copy_node' || operation === 'move_node' && parent.id === '#');
                 },
                 'data': (obj, callback) => {
@@ -90,9 +93,7 @@ export class WebjetJsTree {
                     });
                 }
             },
-            "plugins": [
-                "dnd"
-            ],
+            "plugins": this.selectionOnly ? [] : ["dnd"],
             "types": {
                 "#": {
                     "max_children": 1,

@@ -56,7 +56,8 @@ export class AiChatTransport {
             return { ...executionResult, ...result };
         } catch (error) {
             if (!current()) return { ...executionResult, response: request.text, stopped: true };
-            return { ...executionResult, response: error.toolStatus || request.text, errorText: error.message || String(error), retryable: error.retryable ?? null };
+            return { ...executionResult, totalTokens: error.totalTokens ?? 0, tokenBreakdown: error.tokenBreakdown,
+                response: error.toolStatus || request.text, errorText: error.message || String(error), retryable: error.retryable ?? null };
         } finally {
             this._destroyBrowser(request);
             if (this.request === request) this.request = null;
@@ -92,6 +93,8 @@ export class AiChatTransport {
         if (result.error) {
             return {
                 persisted: Boolean(result.threadId),
+                totalTokens: result.totalTokens,
+                tokenBreakdown: result.tokenBreakdown,
                 response: result.toolStatus || result.response || request.text,
                 errorText: result.error,
                 errorCategory: typeof result.errorCategory === "string" ? result.errorCategory : null,
@@ -106,6 +109,8 @@ export class AiChatTransport {
             response: result.response ?? request.text,
             noToolAction: persistent ? result.noToolAction === true : assistant.toolsWrite === true && !result.toolStatus,
             totalTokens: result.totalTokens,
+            tokenBreakdown: result.tokenBreakdown,
+            folderRequested: result.folderRequested === true,
             attachments: Array.isArray(result.attachments) ? result.attachments : [],
             conversationId: typeof result.conversationId === "string" && result.conversationId.length > 0 ? result.conversationId : null
         };

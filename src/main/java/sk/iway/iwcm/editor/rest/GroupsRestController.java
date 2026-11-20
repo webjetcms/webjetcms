@@ -10,13 +10,16 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
@@ -33,6 +36,9 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.components.ai.tools.AiTool;
+import sk.iway.iwcm.components.ai.tools.AiToolEndpoint;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
+import sk.iway.iwcm.components.ai.tools.AiToolEndpoint.Query;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyRepository;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -72,6 +78,15 @@ import sk.iway.iwcm.users.UsersDB;
 @RequestMapping(value = "/admin/rest/groups")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
 @AiTool(description = "components.ai.tools.groups.context", exclude = {"findByColumns", "getSum", "rowReorder"})
+@AiToolEndpoint(method = "getAll", query = {
+    @Query(name = "groupId", description = "Parent folder to list."),
+    @Query(name = "userGroupId", description = "List folders restricted to this user group."),
+    @Query(name = "tempId", description = "List folders using this template.")
+})
+@AiToolEndpoint(method = "getOne", query = {
+    @Query(name = "groupId", description = "Parent folder when loading defaults with id=-1."),
+    @Query(name = "schedulerId", description = "Scheduled version of the selected existing folder.")
+})
 public class GroupsRestController extends DatatableRestControllerV2<GroupDetails, Long> {
 
     private final GroupSchedulerDtoRepository groupSchedulerDtoRepository;
@@ -87,6 +102,12 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         this.editorFacade = editorFacade;
         this.approveService = approveService;
         this.deleteMirrorsService = deleteMirrorsService;
+    }
+
+    /** Checks a folder ID without loading its editor fields. */
+    @GetMapping("/exists/{id}")
+    public boolean exists(@PathVariable("id") int id) {
+        return WebpagesService.isExistingGroupEditable(getUser(), id);
     }
 
     /**
@@ -108,16 +129,16 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         int tempId = Tools.getIntValue(getRequest().getParameter("tempId"), -1);
         int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), 0);
 
-        if(userGroupId != -1) {
-            //chceme vratit adresare podla zadaneho ID skupiny pouzivatelov, pouziva sa na zoznam adresarov s danou skupinou
-            DatatablePageImpl<GroupDetails> page = getAllItemsByUserGroupId(groupId, getRequest(), userGroupId);
-            return page;
-        }
-
-        if(tempId != -1) {
-            //Return Groups that are using this template (by template id)
-            DatatablePageImpl<GroupDetails> page = getAllItemsByTempId(groupId, getRequest(), tempId);
-            return page;
+        if (userGroupId != -1 || tempId != -1) {
+            var results = userGroupId != -1 ? getAllItemsByUserGroupId(groupId, getRequest(), userGroupId)
+                    : getAllItemsByTempId(groupId, getRequest(), tempId);
+            if (AiToolService.isToolRequest(getRequest(), GroupsRestController.class)) {
+                for (GroupDetails folder : results) {
+                    if (!WebpagesService.isInCurrentDomain(folder) || !GroupsDB.isGroupEditable(getUser(), folder.getGroupId()))
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "List folders within an accessible folder.");
+                }
+            }
+            return results;
         }
 
         DatatablePageImpl<GroupDetails> page = getAllItems(groupId, getRequest());
@@ -216,7 +237,9 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         } else {
             if(schedulerId > 0) {
                 Optional<GroupSchedulerDto> dto = groupSchedulerDtoRepository.findById((long) schedulerId);
-                if (dto.isPresent()) group = GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup( dto.get() );
+                group = dto.filter(version -> version.getGroupId() != null && version.getGroupId().longValue() == id)
+                        .map(GroupSchedulerDtoMapper.INSTANCE::groupSchedulerDtoToGroup).orElse(null);
+                if (group == null) throwError("datatables.error.recordIsNotEditable");
             } else {
                 // Edit exist group
                 group = groupsDB.getGroup((int) id);

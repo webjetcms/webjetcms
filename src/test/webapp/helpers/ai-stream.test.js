@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const sourceDirectory = path.resolve(__dirname, '../../../main/webapp/admin/v9/npm_packages/webjetdatatables/ai');
-const sources = ['../../../src/js/ai/chat-history-api.js', '../../../src/js/ai/ai-stream.js',
+const sources = ['../../../src/js/ai/ai-token-usage.js', '../../../src/js/ai/chat-history-api.js', '../../../src/js/ai/ai-stream.js',
     '../../../src/js/ai/ai-tool-transport.js', '../../../src/js/ai/ai-rest-transport.js',
     '../../../src/js/ai/ai-response-parser.js',
     'ai-execution-result.js', 'ai-rest-executor.js', '../../../src/js/ai/ai-chat-transport.js'].map(filename =>
@@ -61,6 +61,23 @@ test('saved tool writes identify the issuing thread and message at dispatch', as
     const result = await requestAiText({ assistantId: 7 }, { endpoint, toolsEnabled: true });
     assert.equal(result.toolStatus, 'save — HTTP 200 (ID 42)');
 });
+
+for (const saved of [false, true]) {
+    test(`tool rounds count each reported token once (saved=${saved})`, async () => {
+        const endpoint = saved ? '/admin/rest/ai/chat/messages' : undefined;
+        const steps = [
+            { ...toolCall('find'), conversationId: 'turn', threadId: saved ? 'thread' : null, messageId: 'answer',
+                totalTokens: 10, tokenBreakdown: { inputTokens: 8, outputTokens: 2 } },
+            { response: 'Done', totalTokens: saved ? 16 : 6, tokenBreakdown: { inputTokens: saved ? 12 : 4, outputTokens: saved ? 4 : 2 } }
+        ];
+        const { requestAiText } = loadTransport(url => Response.json(url.includes('/tools/') ? [] : steps.shift()));
+        const answer = await requestAiText({ assistantId: 7 }, { endpoint, toolsEnabled: true });
+        assert.equal(answer.totalTokens, 16);
+        assert.equal(answer.tokenBreakdown.inputTokens, 12);
+        assert.equal(answer.tokenBreakdown.outputTokens, 4);
+        assert.equal(steps.length, 0);
+    });
+}
 
 test('a lost saved-chat response resumes the second read with the first result intact', async () => {
     const endpoint = '/admin/rest/ai/chat/messages';
@@ -142,7 +159,7 @@ for (const [persistentChat, streaming] of [[true, true], [true, false], [false, 
     test(`chat uploads preserve context, CSRF and multipart data (saved=${persistentChat}, streaming=${streaming})`, async () => {
         let request;
         const file = new File(['Private attachment'], 'notes.txt', { type: 'text/plain' });
-        const payload = { response: 'Answer', totalTokens: 7, conversationId: 'next-turn' };
+        const payload = { response: 'Answer', totalTokens: 7, tokenBreakdown: { inputTokens: 4, outputTokens: 3 }, conversationId: 'next-turn' };
         const accept = streaming ? 'application/x-ndjson' : 'application/json';
         const input = persistentChat ? { requestId: 'request', inputValue: '<p>Existing page</p>', inputIsSelectedTextInEditor: true,
             context: { entityType: '/admin/rest/web-pages', entityId: '42', fieldName: 'data' } } : {
@@ -159,6 +176,8 @@ for (const [persistentChat, streaming] of [[true, true], [true, false], [false, 
         assert.equal(response.success, true);
         assert.equal(response.response, 'Answer');
         assert.equal(response.conversationId, 'next-turn');
+        assert.equal(response.tokenBreakdown.inputTokens, 4);
+        assert.equal(response.tokenBreakdown.outputTokens, 3);
         assert.equal(request.url, persistentChat ? '/admin/rest/ai/chat/messages'
             : `/admin/rest/ai/assistant/${streaming ? 'response-stream' : 'response'}/`);
         assert.equal(request.headers['X-CSRF-Token'], 'test-csrf');

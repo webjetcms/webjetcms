@@ -120,9 +120,11 @@ Ak chcete nástroj alebo zručnosť odobrať, vymažte odkazy, ktoré ich prira�
 
 Ak na tú istú zručnosť odkážete viackrát, v zozname priradených zručností sa objaví iba raz. Aj nástroj, na ktorý odkážete priamo, cez skupinu alebo cez viacero zručností, sa v zozname dostupných nástrojov objaví iba raz.
 
-Asistent dostane pri spustení iba stručný zoznam nástrojov: názov, krátky opis, HTTP metódu, REST cestu, príznak zápisu a verziu definície. Pri načítaní zručnosti dostane aj vstupné schémy povolených nástrojov, ktoré zručnosť uvádza cez `@tool(...)`. Chýbajúce schémy, napríklad pre nástroje priradené iba cez `@group(...)`, alebo úplné definície s opisom výstupu si vyžiada nástrojom `ai_tools_details`. Tento nástroj sa sprístupní automaticky; do inštrukcií ho nemusíte pridávať. Viacero súvisiacich definícií môže načítať jedným volaním.
+Asistent dostane na začiatku stručný zoznam pridelených nástrojov s názvom a krátkym opisom. Pri načítaní zručnosti dostane aj vstupné schémy povolených nástrojov, ktoré zručnosť uvádza cez `@tool(...)`. Chýbajúce vstupné schémy, napríklad pre nástroje priradené iba cez `@group(...)`, si vyžiada nástrojom `ai_tools_details`. Výstupnú schému dostane iba s parametrom `includeOutputSchema=true`. Tento nástroj sa sprístupní automaticky; do inštrukcií ho nemusíte pridávať. Viacero súvisiacich definícií môže načítať jedným volaním.
 
-V pokračujúcom čete môže asistent použiť úplnú definíciu, ktorú už má v kontexte a ktorej verzia sa nezmenila. Ak sa definícia zmení alebo jej text už nie je dostupný, načíta ju znova. Samostatné požiadavky bez histórie opätovne posielajú výsledky predchádzajúcich krokov.
+Do zručnosti **Webpages Management** vložte `@tool(webpages_get_one)` a `@tool(webpages_add)`. Keď poznáte cieľový priečinok, zavolajte `webpages_get_one` s `{"id":-1,"groupId":25}`. Nástroj vráti predvyplnený záznam editora. Upravte požadované polia, napríklad názov a HTML obsah, a do argumentu `body` nástroja `webpages_add` vložte celý zapisovateľný záznam vrátane `editorFields.groupDetails`. Pri pracovnej verzii nastavte `available`, `editorFields.requestPublish`, `editorFields.publishAfterStart` a `editorFields.disableAfterEnd` na `false`. ID stránky a prípadné ID verzie nájdete v odpovedi po uložení.
+
+V čete s uchovávaním konverzácie používajú OpenAI a Gemini natívne volania funkcií. Ak v inštrukciách asistenta uvediete `@tool(...)`, asistent dostane vstupnú schému nástroja už v prvom kroku, pokiaľ má používateľ oprávnenie nástroj použiť. WebJET po načítaní zručnosti alebo definície ponúkne modelu aktuálnu schému nástroja vo všetkých ďalších krokoch tej istej otázky. Pri novej otázke sa výber začína znova. Pri textovom protokole môže asistent opätovne použiť definíciu, ktorú už má v kontexte a ktorej verzia sa nezmenila. Samostatné požiadavky bez histórie opätovne posielajú výsledky predchádzajúcich krokov.
 
 Ak chcete pridať aj nástroj `ai_tools_preview`, vložte `@group(ai)` alebo `@tool(ai_tools_preview)`. Pri volaní asistentom katalóg aj detaily obsahujú iba jeho priradené nástroje povolené prihlásenému používateľovi. Na stránke **AI nástroje → Nástroje** naďalej vidíte všetky operácie dostupné podľa svojich oprávnení. Načítanie definície nepridáva oprávnenia na vykonanie operácie.
 
@@ -205,7 +207,7 @@ Ak má aspoň jeden asistent v aktuálnej doméne nastavený limit tokenov väč
 
 Na stránke **AI nástroje → Nástroje** vidíte REST operácie, ku ktorým máte prístup. Kliknutím na názov nástroja otvoríte jeho opis, vstupné argumenty a očakávanú odpoveď.
 
-Na karte **Vstupné argumenty** zoznam **Povinné argumenty** uvádza aj povinné vnorené polia. Pri nástroji `webpages_add` uvidíte `body`, `body.title` a `body.navbar`: do objektu `body` teda patrí názov stránky aj názov v navigácii.
+Na karte **Vstupné argumenty** zoznam **Povinné argumenty** uvádza aj povinné vnorené polia. Pri nástroji `webpages_edit` medzi nimi nájdete aj `body.editorFields.groupDetails.groupId`.
 
 Voľba **Príklad hodnoty** ukazuje vzor JSON údajov. Voľba **Schéma** zobrazuje rozbaľovaciu štruktúru s názvami polí, typmi, opismi a označením povinných polí. Objekt alebo zoznam rozbaľte, keď chcete vidieť jeho vnorené polia. Označenie povinnosti platí v rámci nadradeného objektu; ak je tento objekt voliteľný, nemusíte ho odoslať. Voľba **JSON** zobrazí úplnú pôvodnú schému vrátane definícií a odkazov. Rovnako môžete preskúmať štruktúru na karte **Očakávaná odpoveď**.
 

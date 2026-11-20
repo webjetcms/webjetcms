@@ -7,10 +7,13 @@ import java.util.List;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
@@ -24,6 +27,7 @@ import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.rest.WebpagesRestController;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.MediaService;
@@ -75,10 +79,13 @@ public class EditorFacade {
 	 * @return
 	 */
 	public DocDetails save(DocDetails entity) {
-
-		if (entity.getSortPriority() == -1 && entity.getEditorFields() != null && entity.getEditorFields().getGroupDetails() != null) {
+		DocEditorFields fields = entity.getEditorFields();
+		if (fields == null || fields.getGroupDetails() == null || fields.getGroupDetails().getGroupId() < 1) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A positive editorFields.groupDetails.groupId is required to save a webpage.");
+		}
+		if (entity.getSortPriority() == -1) {
 			//if sort priority is 0/empty calculate new one
-			editorService.setSortPriority(entity, entity.getEditorFields().getGroupDetails());
+			editorService.setSortPriority(entity, fields.getGroupDetails());
 		}
 
 		//najskor over multigroup mapping
@@ -108,9 +115,10 @@ public class EditorFacade {
 		}
 
 		//prenesme nazad hodnoty z editorFields do DocDetails
-		entity.getEditorFields().toDocDetails(entity);
+		fields.toDocDetails(entity);
 
 		int historyId = editorService.saveEditedDoc(entity);
+		if (Constants.getBoolean("editorDisableHistory")) historyId = -1;
 		Logger.debug(EditorFacade.class, "Page saved, historyId=" + historyId);
 
 		// skipApproving is set for newly created default pages for group, we dont want to create duplicate approve request for such pages (approved will be by group itself)
@@ -122,7 +130,7 @@ public class EditorFacade {
 			TemplatesDB.getInstance(true);
 
 		//ak sa jedna o novu stranku je potrebne zmenit mediam hodnotu -user_id na novo ulozene docId
-		if(docIdOriginal < 1) {
+		if(docIdOriginal < 1 && !AiToolService.isToolRequest(request, WebpagesRestController.class)) {
 			mediaService.assignDocIdToMedia(entity.getDocId());
 		}
 
@@ -232,17 +240,19 @@ public class EditorFacade {
 
 		DocDetails editedDoc;
 
-		// vymazem docasne ulozene media (uzivatel neulozil novu stranku po
-		mediaService.deleteTempMedia();
-
-        if (docId == -1 && group.getNewPageDocIdTemplate() > 0) {
-			//je potrebne pouzit sablonu namiesto -1
-			docId = -group.getNewPageDocIdTemplate();
-		}
+		boolean toolRequest = AiToolService.isToolRequest(request, WebpagesRestController.class);
+		if (!toolRequest) mediaService.deleteTempMedia();
 
         //sablona nemoze byt -1 (to je blank page)
 		if (docId < 0 && historyId < 0) {
 			editedDoc = editorService.prepareNewDocForEditor(docId, group);
+			if (toolRequest) {
+				editedDoc.setAvailable(false);
+				DocEditorFields fields = editedDoc.getEditorFields();
+				fields.setRequestPublish(false);
+				fields.setPublishAfterStart(false);
+				fields.setDisableAfterEnd(false);
+			}
 		} else {
 			editedDoc = getExistingDocForEditor(docId, historyId);
 
@@ -253,13 +263,10 @@ public class EditorFacade {
 			editedDoc.setPublishStartDate(new Date(Tools.getNow()));
 		}
 
-		if (request != null) {
-			editedDoc.setHistoryId(historyId);
-
-			String domainName = DocDB.getDomain(request);
+		if (request != null) editedDoc.setHistoryId(historyId);
+		if (request != null && !toolRequest) {
 			GroupDetails editorGroup = groupsDB.getGroup(editedDoc.getGroupId());
-
-			if (editorGroup != null && Tools.isNotEmpty(editorGroup.getDomainName())) domainName = editorGroup.getDomainName();
+			String domainName = editorGroup != null && Tools.isNotEmpty(editorGroup.getDomainName()) ? editorGroup.getDomainName() : DocDB.getDomain(request);
 			request.getSession().setAttribute("preview.editorDomainName", domainName);
 		}
 

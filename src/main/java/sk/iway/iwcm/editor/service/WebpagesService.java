@@ -18,6 +18,8 @@ import jakarta.servlet.http.HttpSession;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -112,6 +114,30 @@ public class WebpagesService {
 			this.groupId = rootGroupId;
 		}
 		this.prop = prop;
+    }
+
+	/** Checks a persisted folder against the current tenant and the user's editable folders. */
+	public static boolean isExistingGroupEditable(Identity user, int groupId) {
+		return groupId > 0 && isInTenant(GroupsDB.getInstance().getGroup(groupId)) && GroupsDB.isGroupEditable(user, groupId);
+	}
+
+	static boolean isInTenant(GroupDetails group) {
+		return group != null && (InitServlet.isTypeCloud() == false
+				|| CloudToolsForCore.getDomainName().equals(group.getDomainName()));
+	}
+
+    public static boolean isInCurrentDomain(GroupDetails folder) {
+        return isInTenant(folder) && (!Constants.getBoolean("multiDomainEnabled") || Tools.isEmpty(folder.getDomainName())
+                || folder.getDomainName().equalsIgnoreCase(CloudToolsForCore.getDomainName()));
+    }
+
+    /** Resolve the actual destination before exposing its defaults or inserting a page into it. */
+    public static GroupDetails requireCreateFolder(Identity user, int groupId) {
+        GroupDetails folder = groupId > 0 ? GroupsDB.getInstance().getGroup(groupId) : null;
+        if (!isInCurrentDomain(folder) || !GroupsDB.isGroupEditable(user, groupId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (user.isDisabledItem("addPage")) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        if (GroupsDB.getInstance().isInTrash(groupId)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a destination outside the Trash.");
+        return folder;
     }
 
 	/**

@@ -39,10 +39,11 @@ public class AiToolsController {
     }
 
     @GetMapping(value = "/details", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, List<AiToolDefinition>> details(@RequestParam("names") List<String> names,
+    public Map<String, List<AiToolDefinition.Details>> details(@RequestParam("names") List<String> names,
+            @RequestParam(name = "includeOutputSchema", defaultValue = "false") boolean includeOutputSchema,
             HttpServletRequest request, HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store");
-        return Map.of("tools", tools.details(names, request));
+        return definitions(tools.details(names, request), includeOutputSchema);
     }
 
     /** Returns the full guidance for one linked skill after the model chooses to use it. */
@@ -56,9 +57,15 @@ public class AiToolsController {
     }
 
     @GetMapping(params = "!assistantId", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, List<AiToolDefinition>> list(HttpServletRequest request, HttpServletResponse response) {
+    public Map<String, List<AiToolDefinition.Details>> list(
+            @RequestParam(name = "includeOutputSchema", defaultValue = "false") boolean includeOutputSchema,
+            HttpServletRequest request, HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store");
-        return Map.of("tools", tools.list(request));
+        return definitions(tools.list(request), includeOutputSchema);
+    }
+
+    private Map<String, List<AiToolDefinition.Details>> definitions(List<AiToolDefinition> definitions, boolean includeOutputSchema) {
+        return Map.of("tools", definitions.stream().map(tool -> tool.details(includeOutputSchema)).toList());
     }
 
     /** Valid calls reach the target MVC handler. Unresolved calls still pass normal admin security. */
