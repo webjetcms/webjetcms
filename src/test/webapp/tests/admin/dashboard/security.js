@@ -42,8 +42,10 @@ Scenario('Preserve preferences and install all permission-controlled widgets', a
                 settings.items.push({ id: `autotest-security-${type}`, type, size: sizes[type] || '1x1', options: {} });
             }
         }
-        settings.items.push({ id: 'autotest-security-menu', type: 'shortcut', size: '1x1',
-            options: { source: 'menu', href: '/apps/stat/admin/', title: 'autotest statistics' } });
+        if (!settings.items.some(item => item.id === 'autotest-security-menu')) {
+            settings.items.push({ id: 'autotest-security-menu', type: 'shortcut', size: '1x1',
+                options: { source: 'menu', href: '/apps/stat/admin/', title: 'autotest statistics' } });
+        }
         settings.legacyBookmarksHandled = true;
         return controller._commit(settings);
     }, { types: permissionCases.flatMap(item => item.types), sizes });
@@ -70,9 +72,11 @@ for (const { permission, types } of permissionCases) {
         I.assertFalse(await I.executeScript(permission => WJ.hasPermission(permission), permission));
         if (permission === 'welcomeShowLoggedAdmins') {
             I.assertFalse(Object.prototype.hasOwnProperty.call(await I.executeScript(readDashboardBootstrap), 'loggedAdmins'), 'Administrator data must never be injected.');
-            // Basic authentication reports denied REST access as 401 instead of 403.
-            I.assertTrue([401, 403].includes(await I.executeScript(async () => (await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } })).status)),
-                'The REST service must reject missing list permission even if administrator management remains allowed.');
+            const denied = await I.executeScript(async () => {
+                const response = await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } });
+                return { status: response.status, challenge: response.headers.get('WWW-Authenticate') };
+            });
+            I.assertDeepEqual(denied, { status: 403, challenge: null }, 'Revoking list permission must deny access without prompting for credentials.');
         }
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         I.dontSeeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);

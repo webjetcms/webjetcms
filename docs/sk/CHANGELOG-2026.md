@@ -393,6 +393,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Inštalácia - [setup režim](install/setup/README.md#aktivácia-setup-režimu) sa aktivuje iba explicitne a je chránený samostatným tokenom. Výpadok databázy už aplikáciu neprepne do setup režimu; po dokončení je potrebné setup vypnúť a reštartovať aplikačný server (#58569).
 - AI asistenti - vyhľadávanie v štatistike a grafy používania zobrazujú iba záznamy a asistentov aktuálnej domény (#58850).
 - Webové stránky - mazanie overuje práva ku všetkým zrkadleným stránkam a pri priečinkoch vyžaduje aj `deleteDir`. [Zrušenie zrkadlenia](redactor/apps/clone-structure/README.md#zrušenie-zrkadlenia) kontroluje oprávnenia pre celý podstrom vrátane nakonfigurovaných obmedzení domény a používateľských skupín (#370).
 - Dependency Check - aktualizované knižnice `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizácia Jackson sprísňuje kontrolu typov pri polymorfnej deserializácii; vlastné integrácie používajúce názvy Java tried v JSON je potrebné overiť (#385).
@@ -438,6 +439,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 #### Ďalšie zmeny
 
+- Logovanie - pri prechode na Spring Boot 4 bol súbor `src/main/resources/logback.xml` premenovaný na `src/main/resources/logback-spring.xml` bez zmeny jeho obsahu. Načítanie konfigurácie tak riadi Spring Boot; súbor s pôvodným názvom si Logback môže načítať samostatne už pri prvom použití loggera, ešte pred prípravou Spring prostredia. Spring Boot naďalej podporuje aj názov `logback.xml`, ale odporúča variant `logback-spring.xml`, aby mal inicializáciu logovania pod kontrolou. V zákazníckych projektoch premenujte aj vlastný konfiguračný súbor a zachovajte jeho nastavenia (#58569).
+- Maven artefakt WebJET CMS je určený pre zákaznícky WAR nasadený do externého Tomcatu 11. Embedded Tomcat sa už neprenáša ako runtime/compile závislosť: kontajnerové balíky a Jakarta serverové API sú publikované so scope `provided` a tranzitívne Tomcat vetvy sú vylúčené. Embedded runtime zostáva dostupný iba pre lokálny vývoj a executable WAR v `WEB-INF/lib-provided` (#58569).
 - Font Awesome - spoločné CSS aktualizované z verzie 4.2.0 na 4.7.0, GridEditor používa rovnaké CSS a WOFF2 font z `/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css`. Staré odkazy na CSS GridEditora sa pre prihlásených administrátorov presmerujú na spoločné CSS (#405).
 - Zmazané staršie nepoužívané súbory/obrázky, skontrolujte si volania stránky 404 a v prípade potreby si potrebné súbory nahrajte zo staršej verzie do vášho projektu (#405)..
 - Datatabuľky - tabuľky nastavení majú spoločný prefix `dt_`: `dt_customfields`, `dt_fields` a `dt_tabs`. Existujúca tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje so zachovaním údajov; vlastné SQL dotazy treba upraviť na `dt_customfields` (#58830).

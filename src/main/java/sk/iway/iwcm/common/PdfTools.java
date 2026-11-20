@@ -73,8 +73,6 @@ public class PdfTools {
 
              if (request.getParameter("forward")==null) url.append("&forceBrowserDetector=pdfprint");
 
-             //http://testvubcms:8080/showdoc.do?isPdfVersion=true&docid=2401&forward=pdf_cennik.jsp&date=04.01.2010&forIntranet=true
-
              String data = Tools.downloadUrl(url.toString(), SetCharacterEncodingFilter.getEncoding());
 
              if (Tools.isEmpty(data)) return false;

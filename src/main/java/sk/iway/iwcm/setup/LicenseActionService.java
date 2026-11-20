@@ -14,7 +14,6 @@ import org.springframework.ui.Model;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
-import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
@@ -48,18 +47,31 @@ public class LicenseActionService {
 	 */
 	public static String updateLicense(LicenseFormBean licenseForm, Model model, HttpServletRequest request, HttpServletResponse response) {
 		Map<String, String> errors = new Hashtable<>();
+		if (LogonTools.isLoginBlocked(request)) {
+			clearPassword(licenseForm);
+			setModel(model, licenseForm, true, Prop.getInstance().getText("logon.error.blocked"), true, false);
+			return ERROR;
+		}
 
 		//Validate user data and right to do this action
 		UserDetails user = validateUserLogin(licenseForm, errors);
 
 		if (errors.get("ERROR_KEY") != null) {
+			clearPassword(licenseForm);
+			LogonTools.setLoginBlocked(request);
 			Logger.error(LicenseActionService.class,"su nejake chyby v logovacom formulari");
 			setModel(model, licenseForm, true, errors.get("ERROR_KEY"), true, false);
 			return ERROR;
 		}
+		clearPassword(licenseForm);
 
 		String license = licenseForm.getLicense();
-		if (user != null && license != null && user.getUserId() > 0 && user.isAdmin()) {
+		if (license == null) {
+			//empty license is allowed - switch to free version
+			setModel(model, licenseForm, true, Prop.getInstance().getText("setup.license.invalid_license"), true, false);
+			return ERROR;
+		}
+		if (user != null && user.getUserId() > 0 && user.isAdmin()) {
 			//Update existing license
 			int result = (new SimpleQuery()).executeWithUpdateCount("UPDATE " + ConfDB.CONF_TABLE_NAME + " SET value=? WHERE name='license'", license.toLowerCase());
 
@@ -70,9 +82,11 @@ public class LicenseActionService {
 
 			//Set refresh
 			if (Tools.getIntValue(result, 0) > 0) {
-				HttpSession session = request.getSession();
-				session.setAttribute("pageRefresh", "");
-				InitServlet.restart();
+				SetupCompletionState.markCompleted(request);
+				HttpSession session = request.getSession(false);
+				if (session != null) {
+					session.invalidate();
+				}
 			}
 		}
 
@@ -107,20 +121,24 @@ public class LicenseActionService {
 
 		//Get user from DB based on login from form
 		UserDetails user = UsersDB.getUser(username);
+		if (user != null && user.getUserId() < 1) {
+			errors.put("ERROR_KEY", prop.getText("approveAction.err.badPass"));
+			return null;
+		}
 
 		//Check if user exist
 		if (user != null) {
 			//Check password
 			String passwordInDb = null;
 			try {
-				passwordInDb = (new SimpleQuery()).forString("SELECT password FROM users WHERE login=?", username);
+				passwordInDb = (new SimpleQuery()).forString("SELECT password FROM users WHERE user_id=?", user.getUserId());
 			} catch(IllegalStateException ex) {
 				//Salt fiel does not EXIST yet -> in case when we run setup without license (it's not inicialized yet)
 			}
 
 			String salt = null;
 			try {
-				salt = (new SimpleQuery()).forString("SELECT password_salt FROM users WHERE login=?", username);
+				salt = (new SimpleQuery()).forString("SELECT password_salt FROM users WHERE user_id=?", user.getUserId());
 			} catch(IllegalStateException ex) {
 				//Salt fiel does not EXIST yet -> in case when we run setup without license (it's not inicialized yet)
 			}
@@ -130,7 +148,7 @@ public class LicenseActionService {
 					if (!user.isAdmin()) {
                         //User is no admin, he has no right o do this action
 						Logger.error(LicenseActionService.class,"user nie je administrator");
-                        errors.put("ERROR_KEY", prop.getText("setup.license.no_right"));
+						errors.put("ERROR_KEY", prop.getText("approveAction.err.badPass"));
 						return null;
 					}
 
@@ -160,11 +178,15 @@ public class LicenseActionService {
                 return null;
 			} else {
 				//Update user last logon value
-				(new SimpleQuery()).execute("UPDATE  users SET last_logon=? WHERE user_id=?", new Date());
+				(new SimpleQuery()).execute("UPDATE  users SET last_logon=? WHERE user_id=?", new Date(), user.getUserId());
 			}
 		}
 
 		return user;
+	}
+
+	private static void clearPassword(LicenseFormBean licenseForm) {
+		if (licenseForm != null) licenseForm.setPassword(null);
 	}
 
 	/**

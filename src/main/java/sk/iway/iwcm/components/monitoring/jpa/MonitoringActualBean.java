@@ -82,6 +82,7 @@ public class MonitoringActualBean {
     private String swServerOsVersion;
     private String licenseExpirationDate;
     private String swSpringVersion;
+    private String swSpringBootVersion;
     private String swSpringDataVersion;
     private String swSpringSecurityVersion;
 
@@ -197,6 +198,7 @@ public class MonitoringActualBean {
         }
 
         //get spring version
+        swSpringBootVersion = org.springframework.boot.SpringBootVersion.getVersion();
         try {
             swSpringVersion = org.springframework.core.SpringVersion.getVersion();
         } catch (Throwable e) {

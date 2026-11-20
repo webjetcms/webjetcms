@@ -1,6 +1,6 @@
 #!/bin/bash
-# Stops this checkout's application server, with a scoped fallback if Gradle fails.
-# Use --force to skip Gradle and kill only this checkout's marked Java process.
+# Stops this checkout's Spring Boot application server using its worktree marker.
+# Use --force to skip graceful shutdown and kill this checkout's marked Java process.
 
 set -euo pipefail
 
@@ -49,17 +49,6 @@ signal_servers() {
     done
 }
 
-GRADLE_STATUS=0
-if [[ "${1:-}" != "--force" ]]; then
-    if ./gradlew appStop; then
-        GRADLE_STATUS=0
-    else
-        GRADLE_STATUS=$?
-        # Cancelling the Gradle command must not trigger a forced shutdown.
-        if (( GRADLE_STATUS == 130 || GRADLE_STATUS == 143 )); then exit "$GRADLE_STATUS"; fi
-    fi
-fi
-
 SERVER_PIDS=()
 PROCESS_LIST="$(ps -axww -o pid=,args=)"
 while read -r PID COMMAND; do
@@ -76,15 +65,8 @@ fi
 if [[ "${1:-}" == "--force" ]]; then
     signal_servers KILL
 else
-    # Gretty returns after sending the stop command, before Java has exited.
-    if (( GRADLE_STATUS == 0 )); then
-        if wait_for_servers 15; then exit 0; fi
-        echo "The server did not exit after appStop; using the worktree-specific fallback."
-    else
-        echo "Gradle appStop failed (exit $GRADLE_STATUS); using the worktree-specific fallback."
-    fi
     signal_servers TERM
-    if wait_for_servers 10; then exit 0; fi
+    if wait_for_servers 8; then exit 0; fi
     signal_servers KILL
 fi
 

@@ -23,8 +23,12 @@ public class IwayStripesUtils
 	{
 		if (request.getLocale() != null && request.getLocale().getLanguage().equalsIgnoreCase(lng)) return;
 
-		if (request instanceof StripesRequestWrapper)
-		{
+		try {
+			//StripesRequestWrapper may be wrapped by Spring Security layers
+			//findStripesWrapper() unwraps all wrapper layers to find it
+			StripesRequestWrapper sRequest = StripesRequestWrapper.findStripesWrapper(request);
+			if (sRequest == null) return;
+
 			//aby sme mali normalne datumy
 			//if ("en".equals(lng)) lng = "en_GB";
 			//if ("en".equals(lng)) lng = "sk";
@@ -32,13 +36,13 @@ public class IwayStripesUtils
 			//inak boli problemy s formatmi datumov
 			//lng = "sk";
 
-			StripesRequestWrapper sRequest = (StripesRequestWrapper)request;
-
 			String isoLocale[] = Tools.getTokens(PageLng.getUserLngIso(lng), "-");
 			if (isoLocale.length==2)
 			{
 				sRequest.setLocale(new Locale(isoLocale[0], isoLocale[1]));
 			}
+		} catch (IllegalStateException e) {
+			// StripesRequestWrapper not found in wrapper chain, skip setting locale
 		}
 	}
 }

@@ -101,6 +101,18 @@ public class WJResponseWrapper extends HttpServletResponseWrapper
 
 // ----------------------------------------------------------- Constructors
 
+   /**
+    * Creates an isolated wrapper for capturing rendered content without
+    * mutating the client response.
+    *
+    * @param req current request
+    * @return isolated response wrapper
+    */
+   public static WJResponseWrapper forCapture(HttpServletRequest req)
+   {
+		return new WJResponseWrapper(new MockHttpServletResponse(), req);
+   }
+
 
    /**
     * Construct a new response wrapper according to the specified parameters.

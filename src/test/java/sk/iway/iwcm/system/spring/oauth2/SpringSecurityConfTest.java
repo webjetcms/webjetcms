@@ -2,9 +2,12 @@ package sk.iway.iwcm.system.spring.oauth2;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -94,6 +97,7 @@ class SpringSecurityConfTest extends BaseWebjetTest {
      * Test konfigurácie s OAuth2
      */
     @Test
+    @SuppressWarnings("unchecked")
     void testOAuth2Configuration() throws Exception {
         // Nastavenie OAuth2 clients
         Constants.setString("oauth2_clients", "google,facebook");
@@ -114,7 +118,13 @@ class SpringSecurityConfTest extends BaseWebjetTest {
 
         // Overenie
         assertNotNull(filterChain);
-        verify(httpSecurity).oauth2Login(any());
+        ArgumentCaptor<Customizer<OAuth2LoginConfigurer<HttpSecurity>>> customizerCaptor =
+            ArgumentCaptor.forClass(Customizer.class);
+        verify(httpSecurity).oauth2Login(customizerCaptor.capture());
+
+        OAuth2LoginConfigurer<HttpSecurity> oauth2Configurer = mock(OAuth2LoginConfigurer.class);
+        customizerCaptor.getValue().customize(oauth2Configurer);
+        verify(oauth2Configurer).loginPage("/admin/logon/");
     }
 
     /**

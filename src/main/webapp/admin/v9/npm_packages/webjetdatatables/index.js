@@ -3338,6 +3338,22 @@ export const dataTableInit = options => {
                     "type": "GET",
                     "url": url,
                     "data": restParams,
+                    "statusCode": {
+                        403: function(xhr, textStatus, errorThrown) {
+                        const error = xhr.responseJSON?.error;
+                        if (["Access is denied", "Access Denied", "exception: Access is denied"].includes(error)) {
+                            finishWithError(
+                                WJ.translate("datatables.accessDenied.title.js"),
+                                WJ.translate("datatables.accessDenied.desc.js")
+                            );
+                        } else {
+                            const handler = $.ajaxSettings.statusCode?.[403];
+                            if (typeof handler === "function") {
+                                handler.call(this, xhr, textStatus, errorThrown);
+                            }
+                        }
+                    }
+                    },
                     "success": function (sourceData) {
                         // DataTables emits xhr and replaces its JSON before checking draw, so filter obsolete responses here.
                         if (!isCurrentRequest()) return;
@@ -3347,7 +3363,7 @@ export const dataTableInit = options => {
                         }
 
                         if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
-                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
+                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error || "exception: Access is denied" === sourceData.error) {
                                 finishWithError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
                                 return;
                             } else {

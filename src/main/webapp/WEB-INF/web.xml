@@ -85,6 +85,11 @@
   </mime-mapping>
 
   <mime-mapping>
+     <extension>properties</extension>
+     <mime-type>text/plain</mime-type>
+  </mime-mapping>
+
+  <mime-mapping>
      <extension>avif</extension>
      <mime-type>image/avif</mime-type>
   </mime-mapping>
