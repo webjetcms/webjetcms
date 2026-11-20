@@ -878,6 +878,7 @@ export class AiChat {
         $heading.append($label, $time);
         $article.append($heading);
         if (message.role === "assistant") {
+            view.$usage = $('<span class="ai-chat-usage"></span>').hide().appendTo($footer);
             $article.prepend('<span class="ai-chat-avatar" aria-hidden="true"><i class="ti ti-sparkles"></i></span>');
             view.$toolActivity = $('<details class="ai-chat-tool-activity"><summary></summary><ol></ol></details>').hide().appendTo($article);
         }
@@ -896,6 +897,12 @@ export class AiChat {
     }
 
     _updateAssistant(message, view, isLast) {
+        const totalTokens = message.status === "complete" ? message.totalTokens : null;
+        if (view.totalTokens !== totalTokens) {
+            view.totalTokens = totalTokens;
+            const hasUsage = Number.isSafeInteger(totalTokens) && totalTokens >= 0;
+            view.$usage.text(hasUsage ? this._text("tokens", this._formatTokens(totalTokens)) : "").toggle(hasUsage);
+        }
         const activeTool = message.status === "pending" ? message.activeTool : null;
         if (view.toolCalls !== message.toolCalls || view.activeTool !== activeTool) {
             const completed = message.toolCalls || [];

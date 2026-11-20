@@ -164,8 +164,9 @@ class AiChatServiceTest {
 
     /** Drives both a directly callable tool and the skill-discovery and repair path through the production adapters. */
     @ParameterizedTest
-    @CsvSource({"openai,true", "gemini,true", "openai,false", "gemini,false"})
-    void continuesNativeToolsFromSavedChat(String providerId, boolean direct) throws Exception {
+    @CsvSource({"openai,true,none", "gemini,true,none", "openai,false,schema", "gemini,false,schema",
+        "openai,false,malformedJson", "openai,false,duplicateField", "openai,false,missingCallId"})
+    void continuesNativeToolsFromSavedChat(String providerId, boolean direct, String rejection) throws Exception {
         boolean gemini = "gemini".equals(providerId);
         int skippedReplies = direct ? 2 : 0; // The scripted replies end with a valid lookup and its final answer.
         var requests = new CopyOnWriteArrayList<JsonNode>();
@@ -173,7 +174,7 @@ class AiChatServiceTest {
         var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext(gemini ? "/interactions" : "/responses", exchange -> {
             requests.add(json.readTree(exchange.getRequestBody()));
-            byte[] bytes = nativeReply(json, gemini, requests.size() + skippedReplies);
+            byte[] bytes = nativeReply(json, gemini, requests.size() + skippedReplies, rejection);
             exchange.sendResponseHeaders(200, bytes.length);
             try (var out = exchange.getResponseBody()) { out.write(bytes); }
         });
@@ -208,6 +209,7 @@ class AiChatServiceTest {
                     Map.of("instructions", "Load the record", "tools", List.of(lookup)), false));
                 step = continueTools(step, id, observations);
             }
+            assertNull(step.getError(), step.getErrorCategory());
             assertEquals("lookup", step.getToolCall().name());
             assertEquals(Map.of("id", 42), step.getToolCall().arguments());
             observations.add(new AiToolProtocol.Result("lookup", Map.of("id", 42), 200, Map.of("title", "Welcome"), false));
@@ -216,6 +218,12 @@ class AiChatServiceTest {
             assertEquals(direct ? 10 : 20, last.getTotalTokens());
             assertEquals(direct ? new TokenBreakdown(8, 2) : null, last.getTokenBreakdown());
             assertEquals("turn-4", store.get(id, scope).thread().getLastResponseId());
+            assertEquals(observations.stream().map(AiToolProtocol.Result::name).toList(),
+                service.detail(step.getThreadId(), scope).messages().get(1).toolCalls());
+            if (!direct) {
+                audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), argThat(value -> value.startsWith("TOOL_DECISION_REJECTED")
+                    && value.contains("Provider response ID: turn-2") && value.contains("decision_validation")), eq(-1), eq(-1)));
+            }
             assertEquals(direct ? 2 : 4, requests.size());
             assertTrue(requests.get(0).required("input").toString().contains("attachment-marker"));
             assertEquals(direct ? List.of(details.name(), "lookup", "count") : List.of(skill.name(), details.name()),
@@ -225,6 +233,11 @@ class AiChatServiceTest {
             for (int i = 1; i < requests.size(); i++) {
                 int n = i + skippedReplies;
                 var wire = requests.get(i);
+                if (n == 2 && "missingCallId".equals(rejection)) {
+                    // Resubmit the last skill result to the provider without dispatching the skill again.
+                    assertEquals(requests.get(i - 1), wire);
+                    continue;
+                }
                 assertEquals("turn-" + n, wire.required(gemini ? "previous_interaction_id" : "previous_response_id").textValue());
                 assertEquals(1, wire.required("input").size());
                 assertEquals("call-" + n, wire.at("/input/0/call_id").textValue());
@@ -233,12 +246,16 @@ class AiChatServiceTest {
                 assertTrue(data.contains(List.of("Load the record", "decision_validation", "Welcome").get(n - 1)));
                 assertFalse(json.readTree(data).has("arguments"));
                 assertFalse(data.contains("inputSchema"));
-                if (n == 2) assertFalse(json.readTree(data).has("rejectedDecision"));
+                if (n == 2) {
+                    assertFalse(json.readTree(data).required("executed").booleanValue());
+                    assertFalse(json.readTree(data).has("rejectedDecision"));
+                    if ("malformedJson".equals(rejection) || "duplicateField".equals(rejection)) assertTrue(data.contains("single JSON object"));
+                }
             }
         } finally { server.stop(0); }
     }
 
-    private static byte[] nativeReply(ObjectMapper json, boolean gemini, int n) throws java.io.IOException {
+    private static byte[] nativeReply(ObjectMapper json, boolean gemini, int n, String rejection) throws java.io.IOException {
         var reply = json.createObjectNode().put("id", "turn-" + n).put("status", gemini && n < 4 ? "requires_action" : "completed");
         var usage = reply.putObject("usage").put("total_tokens", 5);
         if (n >= 3) usage.put(gemini ? "total_input_tokens" : "input_tokens", 4).put(gemini ? "total_output_tokens" : "output_tokens", 1);
@@ -249,6 +266,11 @@ class AiChatServiceTest {
                 .put(gemini ? "id" : "call_id", "call-" + n);
             if (gemini) step.set("arguments", json.valueToTree(args));
             else step.put("arguments", json.writeValueAsString(args));
+            if (n == 2 && "malformedJson".equals(rejection)) step.put("arguments", "{\"id\":");
+            if (n == 2 && "duplicateField".equals(rejection)) {
+                step.put("arguments", "{\"body\":{\"editorFields\":{\"plannedPublishingEnabled\":true,\"plannedPublishingEnabled\":true}}}");
+            }
+            if (n == 2 && "missingCallId".equals(rejection)) step.remove("call_id");
         } else {
             step.put("type", gemini ? "model_output" : "message").putArray("content").addObject()
                 .put("type", gemini ? "text" : "output_text").put("text", "Welcome");
@@ -891,6 +913,8 @@ class AiChatServiceTest {
         boolean unknown = state == State.UNKNOWN || (state == State.RESPONSE_OBSERVED && responseId == null);
         assertEquals(unknown, saved.messages().get(3).isStorageUnknown());
         assertEquals(!unknown, service.delete(id, scope).deleted());
+        if (unknown) assertTrue(service.deleteLocal(id, scope).deleted());
+        assertTrue(store.list(scope, 0).items().isEmpty());
         verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
     }
 }

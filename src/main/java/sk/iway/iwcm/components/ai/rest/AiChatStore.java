@@ -598,13 +598,32 @@ public class AiChatStore {
                     throw conflict("cleanupUnknown");
                 }
             }
-            try (var files = Files.newDirectoryStream(path.getParent())) {
-                for (Path file : files) if (!file.equals(path)) Files.delete(file);
-            }
-            Files.delete(path);
-            Files.delete(path.getParent());
+            deleteFiles(path);
             return null;
         });
+    }
+
+    /** Removes the owner's local files after a failed deletion and returns its recorded reason for the audit. */
+    public String removeLocalAfterFailure(Scope scope, String id) {
+        return locked(scope, directory -> {
+            Path path = threadPath(directory, id);
+            AiChatThread thread = read(path, scope, true).getThread();
+            if (!"DELETE_PENDING".equals(thread.getStatus()) || thread.getDeletionError() == null
+                    || thread.getActiveMessageId() != null || thread.getDeletionLeaseId() != null) {
+                throw conflict("localDeleteUnavailable");
+            }
+            deleteFiles(path);
+            return thread.getDeletionError();
+        });
+    }
+
+    private static void deleteFiles(Path transcript) throws IOException {
+        Path directory = transcript.getParent();
+        try (var files = Files.newDirectoryStream(directory)) {
+            for (Path file : files) if (!file.equals(transcript)) Files.delete(file);
+        }
+        Files.delete(transcript);
+        Files.delete(directory);
     }
 
     private <T> T update(String id, Scope scope, boolean required, Function<AiChatDocument, T> action) {

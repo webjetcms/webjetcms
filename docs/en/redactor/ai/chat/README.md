@@ -18,7 +18,7 @@ There are two ways to open a chat:
 
 If the assistant has progressive loading enabled, the answer will be added in parts. The **Stop** button with the square icon will interrupt the generation. The text already received will remain displayed. Closing the dialog or switching tabs will not stop the generation.
 
-Replies display Markdown including headings, lists, highlighting, and tables. The message time appears next to the sender’s name. Hover over, focus, or tap the gauge in the composer to see recorded token usage for this conversation. The preview shows input tokens, output tokens, and the conversation total. If the history contains only a total, a dash appears for input and output. The **Copy** button copies the original text, including Markdown tags. The names of the button icons appear in a bubble upon mouseover or keyboard focus.
+Replies display Markdown including headings, lists, highlighting, and tables. The message time appears next to the sender’s name. The count beside **Copy** shows how many tokens that reply used. Hover over, focus, or tap the gauge in the composer to see recorded token usage for this conversation. The preview shows input tokens, output tokens, and the conversation total. If the history contains only a total, a dash appears for input and output. The **Copy** button copies the original text, including Markdown tags. The names of the button icons appear in a bubble upon mouseover or keyboard focus.
 
 When the assistant asks for a webpage destination folder, a folder tree opens in the reply. Select a folder, check its path, and choose **Use folder** to send its ID as the next message.
 
@@ -61,7 +61,7 @@ The continuation uses the context stored with the provider. If the provider is n
 
 In a conversation, click the **Delete** trash icon and confirm the deletion. WebJET will first ask the provider to delete the saved responses, and then delete the local history and attachments.
 
-If the provider does not confirm the deletion, the conversation will remain marked for deletion. You can repeat the action using the button in the conversation. In the case of an aborted request without a response ID returned, it may not be possible to confirm a complete deletion; the interface will display the appropriate status.
+If provider deletion fails, you can retry or choose **Delete from WebJET**. If an interrupted request has no response ID, choose **Delete from WebJET**. Confirming removes the local history and attachments. Responses may remain with the provider, and WebJET can no longer delete them.
 
 ## Attachments
 

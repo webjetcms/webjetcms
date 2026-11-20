@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,14 +24,18 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.tools.AiTool;
+import sk.iway.iwcm.components.ai.tools.AiToolDescription;
 import sk.iway.iwcm.components.ai.tools.AiToolEndpoint;
 import sk.iway.iwcm.components.ai.tools.AiToolEndpoint.Query;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -56,7 +61,7 @@ import sk.iway.iwcm.users.UserGroupsDB;
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
 @AiTool(description = "components.ai.tools.webpages.context", exclude = {"getSum", "rowReorder"})
 @AiToolEndpoint(method = "getOne", query = {
-    @Query(name = "groupId", description = "Destination folder ID. Required with id=-1 to prepare a new page for webpages_add."),
+    @Query(name = "groupId", description = "Folder ID. Required with id=-1 to inspect new-page defaults."),
     @Query(name = "historyId", description = "Revision of an existing page."),
     @Query(name = "newPageTitleKey", type = String.class, description = "Optional translation key for the initial title of a new page.")
 })
@@ -74,6 +79,8 @@ import sk.iway.iwcm.users.UserGroupsDB;
     @Query(name = "userGroupId", description = "Find pages restricted to this user group.")
 })
 @AiToolEndpoint(method = "add", requiredBody = "editorFields.groupDetails.groupId")
+@AiToolEndpoint(method = "createFromFolder", requiredBody = "title", query =
+    @Query(name = "groupId", required = true, description = "Positive ID of the destination webpage folder."))
 @AiToolEndpoint(method = "edit", requiredBody = "editorFields.groupDetails.groupId")
 public class WebpagesRestController extends WebpagesDatatable {
 
@@ -85,6 +92,26 @@ public class WebpagesRestController extends WebpagesDatatable {
         super(docDetailsRepository, editorFacade, docAtrDefRepository);
         this.deleteMirrorsService = deleteMirrorsService;
         this.editorService = editorService;
+    }
+
+    public record NewPage(@NotBlank String title, String data, String navbar, Boolean publish) {}
+
+    /** Creates a page from the destination's editor defaults using the regular insert and approval workflow. */
+    @AiToolDescription(value = "components.ai.tools.webpages_add.description", replaces = "add")
+    @PreAuthorize("@WebjetSecurityService.checkAccessAllowedOnController(this)")
+    @PostMapping("/add-from-folder")
+    public ResponseEntity<DocDetails> createFromFolder(@Valid @RequestBody NewPage changes) {
+        if (!AiToolService.isToolRequest(getRequest(), WebpagesRestController.class))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        DocDetails page = getOneItem(-1);
+        page.setTitle(changes.title());
+        page.setNavbar(Tools.isEmpty(changes.navbar()) ? changes.title() : changes.navbar());
+        if (changes.data() != null) page.setData(changes.data().isBlank() ? "<p>&nbsp;</p>" : changes.data());
+        if (changes.publish() != null) {
+            page.setAvailable(changes.publish());
+            page.getEditorFields().setRequestPublish(changes.publish());
+        }
+        return add(page);
     }
 
     /** Checks a page ID using cached permission metadata without loading HTML or editor fields. */

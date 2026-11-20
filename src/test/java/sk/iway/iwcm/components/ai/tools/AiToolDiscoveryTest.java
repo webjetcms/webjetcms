@@ -39,6 +39,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -54,6 +55,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.handler.MappedInterceptor;
 
@@ -79,6 +81,7 @@ import sk.iway.iwcm.components.configuration.ConfigurationService;
 import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
 import sk.iway.iwcm.editor.rest.GroupsRestController;
 import sk.iway.iwcm.editor.rest.WebpagesRestController;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
 import sk.iway.iwcm.system.datatable.events.DatatableEvent;
 import sk.iway.iwcm.system.datatable.events.DatatableEventType;
@@ -240,6 +243,42 @@ class AiToolDiscoveryTest {
         var edit = registry.lookup("webpages_edit").definition().inputSchema();
         assertFeedback(edit, Map.of("id", 1, "body", Map.of("title", "A", "navbar", "A", "editorFields", Map.of("groupDetails", Map.of("groupName", "Test", "navbarName", "Test")))),
                 "arguments.body.editorFields.groupDetails.groupId is required.");
+    }
+
+    @Test
+    void pageCreationPublishesOnlyTheCompactSchemaUnderTheExistingToolName() throws Exception {
+        assistant.setInstructions("@tool(webpages_add)");
+        when(security.hasPermission("menuWebpages")).thenReturn(true);
+        var registry = context.getBean(AiToolRegistry.class);
+        var create = registry.lookup("webpages_add");
+        assertNull(registry.lookup("webpages_create_from_folder"));
+        var schema = create.definition().inputSchema();
+        assertEquals(json.readTree("""
+                {"groupId":1,"body":{"title":"string"}}
+                """), json.readTree(AiToolExample.forInput(schema)));
+        var body = json.valueToTree(schema).at("/properties/body/properties");
+        assertEquals(Set.of("title", "navbar", "data", "publish"), body.propertyNames());
+        Map<String, Object> compact = Map.of("groupId", 25, "body", Map.of("title", "About"));
+        assertEquals(create, registry.validateCall(create, compact));
+        assertEquals(Map.of("groupId", List.of("25")), create.inputs().bind(compact).query());
+        Map<String, Object> legacy = Map.of("body", Map.of("title", "About", "navbar", "About",
+                "editorFields", Map.of("groupDetails", Map.of("groupId", 25, "groupName", "Site", "navbarName", "Site"))));
+        assertEquals("/admin/rest/web-pages/add", registry.validateCall(create, legacy).path());
+
+        var bad = mvc.perform(toolRequest("webpages_add", """
+                {"groupId":25,"body":{"title":"About","editorFields":{"plannedPublishingEnabled":true}}}
+                """)).andExpect(status().isBadRequest()).andReturn().getResponse();
+        assertEquals("invalid-arguments", bad.getHeader(AiToolCallFilter.TOOL_RESPONSE_HEADER));
+        assertTrue(bad.getContentAsString().contains("arguments.body contains an unknown field"));
+        var user = (Identity) session.getAttribute(Constants.USER_KEY);
+        try (var pages = mockStatic(WebpagesService.class)) {
+            pages.when(() -> WebpagesService.requireCreateFolder(user, 25)).thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+            mvc.perform(toolRequest("webpages_add", json.writeValueAsString(compact))).andExpect(status().isForbidden());
+            pages.verify(() -> WebpagesService.requireCreateFolder(user, 25));
+        }
+        when(security.hasPermission("menuWebpages")).thenReturn(false);
+        mvc.perform(toolRequest("webpages_add", json.writeValueAsString(compact))).andExpect(status().isNotFound());
+        mvc.perform(toolRequest("webpages_add", json.writeValueAsString(legacy))).andExpect(status().isNotFound());
     }
 
     private static ConfDetailsDto configurationRow(String name, String value, String displayValue, String oldValue) {

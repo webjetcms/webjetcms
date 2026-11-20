@@ -444,6 +444,13 @@ public class AiChatService implements DisposableBean {
         return cleanup(id, scope);
     }
 
+    /** Finishes a failed deletion locally when the owner accepts that provider responses may remain. */
+    public Deletion deleteLocal(String id, Scope scope) {
+        String reason = store.removeLocalAfterFailure(scope, id);
+        audit(id, "deleted_locally", reason);
+        return new Deletion(true, null);
+    }
+
     /** Removes inactive conversations older than the cutoff and retries pending deletions in this owner scope.
      * @return number of conversations whose remote responses and local files were removed
      */

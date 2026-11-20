@@ -63,7 +63,7 @@ public class AiToolRegistry {
         }
     }
 
-    private record Index(List<Entry> entries, Map<String, Entry> byName, Map<String, List<Entry>> byGroup) {}
+    private record Index(List<Entry> entries, Map<String, Entry> byName, Map<String, List<Entry>> byGroup, Map<String, Entry> previous) {}
 
     private final RequestMappingHandlerMapping handlerMapping;
     private Index index;
@@ -78,6 +78,18 @@ public class AiToolRegistry {
 
     public Entry lookup(String name) {
         return index().byName().get(name);
+    }
+
+    /** A pending call issued before a schema change can still dispatch to its original secured handler. */
+    Entry validateCall(Entry current, Map<String, Object> arguments) {
+        try {
+            AiToolArgumentValidator.validate(current.definition().inputSchema(), arguments);
+            return current;
+        } catch (AiToolArgumentValidator.InvalidArguments invalid) {
+            Entry previous = index().previous().get(current.definition().name());
+            if (previous != null && AiToolArgumentValidator.matches(previous.definition().inputSchema(), arguments)) return previous;
+            throw invalid;
+        }
     }
 
     /** Named links follow instruction order. Including a group orders the combined tools by catalog name. */
@@ -107,6 +119,7 @@ public class AiToolRegistry {
         for (Operation op : operations) counts.merge(op.baseName(), 1, Integer::sum);
 
         Map<String, Entry> result = new TreeMap<>();
+        Map<String, Entry> replacements = new HashMap<>();
         for (Operation op : operations) {
             String name = op.baseName();
             if (counts.get(name) > 1 || name.length() > 64) {
@@ -122,15 +135,29 @@ public class AiToolRegistry {
                 Logger.warn(AiToolRegistry.class, "Cannot describe the response for AI tool {}", name, unsupportedModel);
                 output = new AiToolOutput("dynamic", null);
             }
+            var description = op.handler().getMethodAnnotation(AiToolDescription.class);
+            boolean replaces = description != null && !description.replaces().isEmpty();
+            if (replaces) {
+                name = resource(ClassUtils.getUserClass(op.handler().getBeanType())) + "_" + identifier(description.replaces());
+            }
             AiToolDefinition definition = new AiToolDefinition(name, operationDescription(op.handler(), null, inputs), inputs.schema(), op.path(),
                     op.verb().name(), conditions(op.mapping(), true), output.responseType(), output.schema());
-            if (result.put(name, new Entry(op.handler(), op.mapping(), op.verb(), op.path(), definition, inputs)) != null) {
+            var entry = new Entry(op.handler(), op.mapping(), op.verb(), op.path(), definition, inputs);
+            if ((replaces ? replacements : result).put(name, entry) != null) {
                 throw new IllegalStateException("Duplicate AI tool name: " + name);
             }
         }
+        Map<String, Entry> previous = new HashMap<>();
+        replacements.forEach((name, replacement) -> {
+            Entry original = result.put(name, replacement);
+            if (original == null || original.controllerType() != replacement.controllerType() || original.method() != replacement.method()) {
+                throw new IllegalStateException("No matching AI tool to replace: " + name);
+            }
+            previous.put(name, original);
+        });
         var entries = List.copyOf(result.values());
         var byGroup = entries.stream().collect(Collectors.groupingBy(Entry::assignmentGroup, Collectors.toUnmodifiableList()));
-        index = new Index(entries, Map.copyOf(result), Map.copyOf(byGroup));
+        index = new Index(entries, Map.copyOf(result), Map.copyOf(byGroup), Map.copyOf(previous));
         return index;
     }
 

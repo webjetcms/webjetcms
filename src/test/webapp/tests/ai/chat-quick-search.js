@@ -31,7 +31,7 @@ Scenario('A standalone chat can be reopened from history after a page reload', a
     I.mockRoute('**/admin/rest/ai/chat/threads/*', route => route.fulfill({ json: {
         thread, messages: [
             { id: 'question', role: 'user', text: thread.title, status: 'complete' },
-            { id: 'answer', turnId: 'question', role: 'assistant', text: answer, status: 'complete' }
+            { id: 'answer', turnId: 'question', role: 'assistant', text: answer, status: 'complete', totalTokens: 7 }
         ]
     } }));
 
@@ -50,8 +50,32 @@ Scenario('A standalone chat can be reopened from history after a page reload', a
     I.click(locate(`${chat} .ai-chat-host__history-select`).withText(question));
     I.waitForText(question, 10, `${chat} .ai-chat-user`);
     I.waitForText(answer, 10, `${chat} .ai-chat-assistant`);
+    I.see('Použité tokeny: 7', `${chat} .ai-chat-assistant .ai-chat-usage`);
 });
 
+
+Scenario('An owner can finish a stuck deletion from saved chat history', async ({ I }) => {
+    const assistant = { assistantId: 7, description: 'Deletion autotest', provider: 'openai', action: 'live_chat', persistentChat: true };
+    const thread = { id: 'interrupted-autotest', title: 'Interrupted request autotest', status: 'DELETE_PENDING', deletionError: 'cleanupUnknown' };
+    let deleted = false;
+    I.mockRoute('**/admin/rest/admin-settings/', route => route.fulfill({ json: {} }));
+    I.mockRoute('**/admin/rest/ai/assistant/chat-assistants/', route => route.fulfill({ json: [assistant] }));
+    I.mockRoute('**/admin/rest/ai/chat/threads?*', route => route.fulfill({ json: { items: deleted ? [] : [thread], hasMore: false } }));
+    I.mockRoute('**/admin/rest/ai/chat/threads/' + thread.id + '/local', route => {
+        deleted = route.request().method() === 'DELETE';
+        return route.fulfill({ json: { deleted } });
+    });
+
+    I.amOnPage('/admin/v9/');
+    openChat(I);
+    if (!await I.grabNumberOfVisibleElements(`${chat} .ai-chat-host__history`)) I.clickCss(`${chat} button[aria-controls$="-history"]`);
+    I.amAcceptingPopups();
+    I.click(locate(`${chat} button`).withAttr({ 'aria-label': 'Vymazať z WebJETu: ' + thread.title }));
+    I.seeInPopup('U poskytovateľa môžu zostať uložené odpovede.');
+    I.acceptPopup();
+    await I.waitForInvisible(locate(`${chat} .ai-chat-host__history-select`).withText(thread.title), 5);
+    I.assertTrue(deleted);
+});
 
 Scenario('Folder confirmation continues the locked chat and the gauge shows recorded usage', async ({ I }) => {
     const assistant = { assistantId: 7, description: 'Folder autotest', provider: 'gemini', action: 'live_chat', toolsEnabled: true };
@@ -84,7 +108,9 @@ Scenario('Folder confirmation continues the locked chat and the gauge shows reco
     I.click(locate(`${tree} .jstree-anchor`).withText('Folder autotest'));
     I.waitForText('/Folder autotest', 5, `${tree} .ai-chat-folder-path`);
     I.clickCss(`${tree} .btn-primary`);
-    I.waitForText('Folder received', 10, chat);
+    await I.waitForText('Folder received', 10, chat);
+    I.see('Použité tokeny: 17', locate(`${chat} .ai-chat-assistant`).withText('Choose a folder'));
+    I.see('Použité tokeny: 25', locate(`${chat} .ai-chat-assistant`).withText('Folder received'));
     I.assertEqual(prompts.length, 2);
     I.assertContain(prompts[1], '42');
     I.seeInField(`${chat} .ai-chat-input`, 'Keep this unsent draft');

@@ -348,8 +348,7 @@ export class AiChatHost {
             } });
         }
         if (chat.threadInfo?.status === 'DELETE_PENDING') {
-            actions.push({ id: 'delete-retry', label: historyText('retryDelete'), icon: 'trash',
-                disabled: this.deleting.has(chat.state.threadId), run: () => this.deleteThread(chat.threadInfo) });
+            actions.push(...this.deletionActions(chat.threadInfo));
         }
         return actions;
     }
@@ -502,10 +501,13 @@ export class AiChatHost {
             const pending = item.status === 'DELETE_PENDING';
             if (pending) select.append(node('small', 'text-danger', historyText('deletePending')));
             if (item.deletionError) select.append(node('small', 'text-danger', historyText(item.deletionError)));
-            const remove = this.iconButton(historyText(pending ? 'retryDelete' : 'delete'), pending ? 'refresh' : 'trash', () => this.deleteThread(item));
-            remove.disabled = this.deleting.has(item.id);
-            remove.setAttribute('aria-label', `${historyText(pending ? 'retryDelete' : 'delete')}: ${item.title}`);
-            row.append(select, remove);
+            row.append(select);
+            for (const action of this.deletionActions(item)) {
+                const button = this.iconButton(action.label, action.icon, action.run);
+                button.disabled = action.disabled;
+                button.setAttribute('aria-label', `${action.label}: ${item.title}`);
+                row.append(button);
+            }
             list.append(row);
         }
         this.historyList.append(list);
@@ -584,9 +586,24 @@ export class AiChatHost {
         }
     }
 
-    async deleteThread(item) {
+    deletionActions(item) {
+        const disabled = this.deleting.has(item.id);
+        if (item.status !== 'DELETE_PENDING') {
+            return [{ id: 'delete', label: historyText('delete'), icon: 'trash', disabled, run: () => this.deleteThread(item) }];
+        }
+        const actions = [];
+        if (item.deletionError !== 'cleanupUnknown') {
+            actions.push({ id: 'delete-retry', label: historyText('retryDelete'), icon: 'refresh', disabled, run: () => this.deleteThread(item) });
+        }
+        if (item.deletionError) {
+            actions.push({ id: 'delete-local', label: historyText('deleteLocal'), icon: 'trash', disabled, run: () => this.deleteThread(item, true) });
+        }
+        return actions;
+    }
+
+    async deleteThread(item, localOnly = false) {
         if (this.deleting.has(item.id)) return;
-        if (item.status !== 'DELETE_PENDING' && !window.confirm(historyText('confirmDelete'))) return;
+        if ((localOnly || item.status !== 'DELETE_PENDING') && !window.confirm(historyText(localOnly ? 'confirmDeleteLocal' : 'confirmDelete'))) return;
         this.deleting.add(item.id);
         const chat = this.findThread(item.id);
         if (chat) {
@@ -598,7 +615,7 @@ export class AiChatHost {
         this.renderHistory();
         let failure;
         try {
-            const result = await chatHistoryRequest(`/threads/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+            const result = await chatHistoryRequest(`/threads/${encodeURIComponent(item.id)}${localOnly ? '/local' : ''}`, { method: 'DELETE' });
             if (this.disposed) return;
             if (result.deleted) this.removeChat(item.id);
             else if (chat) await this.refreshConversation(chat);

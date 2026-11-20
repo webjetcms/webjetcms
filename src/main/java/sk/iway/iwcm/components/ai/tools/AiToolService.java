@@ -176,7 +176,7 @@ public class AiToolService {
         try {
             if (arguments == null) throw new IllegalArgumentException("Expected an object");
             if (entry.inputs().requiresBodyValidation() || request.getHeader(AiToolAuthorization.ASSISTANT_HEADER) != null) {
-                AiToolArgumentValidator.validate(entry.definition().inputSchema(), arguments);
+                entry = registry.validateCall(entry, arguments);
             }
             target = new AiToolRequest(request, entry, entry.inputs().bind(arguments));
         } catch (IllegalArgumentException invalidArguments) {

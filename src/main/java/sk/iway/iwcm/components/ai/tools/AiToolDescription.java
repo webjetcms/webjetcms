@@ -11,4 +11,7 @@ import java.lang.annotation.Target;
 public @interface AiToolDescription {
     /** Translation key or English text describing what the endpoint does. */
     String value();
+
+    /** Publish this handler under an existing handler's tool name on the same controller and HTTP verb. */
+    String replaces() default "";
 }

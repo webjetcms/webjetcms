@@ -155,7 +155,7 @@ Kontroléry `WebpagesRestController` a `GroupsRestController` sprístupňujú sp
 
 Ak stačí overiť existenciu stránky alebo priečinka, priraďte asistentovi `@tool(webpages_exists)` alebo `@tool(groups_exists)`. Oba nástroje sú aj súčasťou príslušnej skupiny kontroléra. Volanie s argumentom `{"id":42}` vráti iba `true`, ak má používateľ k záznamu prístup. Pri chýbajúcom či neprístupnom zázname alebo nekladnom ID vráti `false`.
 
-Pred úpravou načítajte úplný záznam pomocou `webpages_get_one` alebo `groups_get_one` a zachovajte jeho `editorFields`; zoznam stránok nemusí obsahovať HTML. Katalóg vynecháva súčty a presúvanie riadkov, pri priečinkoch aj generické vyhľadávanie podľa stĺpcov, ktoré vyžaduje JPA repozitár.
+Pri vytváraní stránky nástroj `webpages_add` vyžaduje iba cieľový `groupId` a `body.title`. WebJET načíta predvolené nastavenia priečinka, doplní voliteľné `body.data`, `body.navbar` a `body.publish` podľa požiadavky a uloží stránku cez editor. Pred úpravou existujúceho záznamu načítajte úplný záznam pomocou `webpages_get_one` alebo `groups_get_one` a zachovajte jeho `editorFields`. Zoznam stránok nemusí obsahovať HTML. Katalóg vynecháva súčty a presúvanie riadkov, pri priečinkoch aj generické vyhľadávanie podľa stĺpcov, ktoré vyžaduje JPA repozitár.
 
 ```java
 import sk.iway.iwcm.components.ai.tools.AiTool;
@@ -261,6 +261,8 @@ Povinnosť polí sa odvodzuje z anotácií `@NotBlank`, `@NotEmpty` a `@NotNull`
 Prehliadač vykoná volanie nástroja a odošle WebJETu jeho názov, argumenty, HTTP stav a odpoveď backendu. WebJET určí výsledok `success`, `validation_error`, `rejected`, `unknown` alebo `partial`. Argumenty overuje pred každým novým volaním. Asistent tak dostane aj chybu už vykonaného pokusu.
 
 Pri natívnom volaní v trvalom čete WebJET uloží identifikátor odpovede a identifikátor volania OpenAI alebo Gemini. Výsledok priradí k volaniu podľa identifikátora. Poskytovateľ už má pôvodné argumenty v histórii, takže ich WebJET pri odoslaní výsledku vynechá. Pri chybe validácie odošle dôvod odmietnutia a `executed=false`. Záverečná textová odpoveď môže obsahovať JSON.
+
+Ak OpenAI vráti neplatný JSON v argumentoch ponúknutej funkcie, WebJET požiada model o opravu ešte pred spustením nástroja. Ak vo volaní chýba identifikátor, WebJET zopakuje poslednú požiadavku na model vrátane už získaného výsledku nástroja. Na jedno rozhodnutie pripadajú najviac dve opravy. Spotreba tokenov sa započíta za každý pokus.
 
 Pri textovom protokole musí volanie nástroja obsahovať práve jedno rozhodnutie vo formáte JSON. Otázka alebo záverečná odpoveď môže byť obyčajný text. Ak model spojí volanie s predpovedaným výsledkom, WebJET odmietne celú odpoveď. Pri neplatnom JSON alebo argumentoch dostane asistent štruktúrovanú spätnú väzbu s chybou, odmietnutým rozhodnutím a údajom `executed=false`. Obsah odmietnutého rozhodnutia je obmedzený na 32 768 znakov a prípadné skrátenie označuje `responseTruncated`. Spätná väzba je vstupným údajom, nie novou požiadavkou používateľa ani systémovou inštrukciou.
 

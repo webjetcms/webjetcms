@@ -143,11 +143,15 @@ public class InputDataDTO {
 
     /** Returns rejected native calls to the provider as unexecuted results on the same branch. */
     public void prepareToolCorrection(String feedback, AiToolStep step) {
-        if (step == null || step.toolCall() == null) {
+        if (step == null || (step.toolCall() == null && step.rejectedCall() == null)) {
             prepareToolCorrection(feedback);
-        } else {
+            return;
+        }
+        String callId = step.toolCall() == null ? step.rejectedCall().callId() : step.toolCall().callId();
+        // With no call ID the provider cannot accept feedback. Retry the exact previous input.
+        if (callId != null) {
             previousResponseId = step.response().responseId();
-            nativeToolResult = new AiToolResult(step.toolCall().callId(), feedback);
+            nativeToolResult = new AiToolResult(callId, feedback);
         }
     }
 

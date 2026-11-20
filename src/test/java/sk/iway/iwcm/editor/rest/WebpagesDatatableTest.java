@@ -8,11 +8,13 @@ import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
@@ -36,7 +38,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /** Verifies that page edits merge field settings before entering the editor save workflow. */
 class WebpagesDatatableTest {
-    private WebpagesDatatable controller;
+    private WebpagesRestController controller;
     private EditorFacade facade;
     private DocDetailsRepository repository;
     private FieldsSettingsService settings;
@@ -67,7 +69,7 @@ class WebpagesDatatableTest {
         when(database.getDoc(123, -1, false)).thenReturn(published);
         facade = mock(EditorFacade.class);
         repository = mock(DocDetailsRepository.class);
-        controller = spy(new WebpagesDatatable(repository, facade, mock(DocAtrDefRepository.class)));
+        controller = spy(new WebpagesRestController(repository, facade, mock(DocAtrDefRepository.class), null, null));
         controller.setRequest(new MockHttpServletRequest());
         doNothing().when(controller).addInsertEditNotify(anyBoolean(), anyList());
         doReturn(false).when(controller).isRefreshMenuRequired(any(), any());
@@ -140,6 +142,75 @@ class WebpagesDatatableTest {
             assertEquals("Folder default", submitted.getFieldA());
             assertFalse(submitted.getEditorFields().isRequestPublish());
             verify(facade).save(submitted);
+        }
+    }
+
+    /** The compact call saves a draft from folder defaults or requests publication through the same editor. */
+    @ParameterizedTest
+    @CsvSource({
+        ", , , <p>Folder template</p>, About",
+        "'', Menu label, false, <p>&nbsp;</p>, Menu label",
+        "<p>New content</p>, Menu label, true, <p>New content</p>, Menu label"
+    })
+    void createsPageFromFolderWithOnlyRequestedChanges(String html, String navbar, Boolean publish, String expectedHtml, String expectedNavbar) {
+        var folder = new GroupDetails();
+        folder.setGroupId(25);
+        folder.setGroupName("Site");
+        folder.setNavbarName("Site");
+        var defaults = page("Inherited value");
+        defaults.setDocId(-1);
+        defaults.setGroupId(25);
+        defaults.setTempId(17);
+        defaults.setSortPriority(80);
+        defaults.setData("<p>Folder template</p>");
+        defaults.setAvailable(false);
+        defaults.getEditorFields().setGroupDetails(folder);
+        defaults.getEditorFields().setRequestPublish(false);
+        var request = (MockHttpServletRequest) controller.getRequest();
+        request.setParameter("groupId", "25");
+        request.getSession().setAttribute(Constants.USER_KEY, new Identity());
+        var user = controller.getUser();
+        doReturn(page("Inherited value")).when(facade).getDocForEditor(-1, -1, 25);
+        when(settings.getFieldsSettings(DocEditorFields.class.getName(), 9)).thenReturn(new FieldsSettingsEntity[0]);
+        try (var dispatch = mockStatic(AiToolService.class); var pages = mockStatic(WebpagesService.class);
+                var factory = Validation.buildDefaultValidatorFactory()) {
+            controller.setValidator(factory.getValidator());
+            dispatch.when(() -> AiToolService.isToolRequest(request, WebpagesRestController.class)).thenReturn(true);
+            pages.when(() -> WebpagesService.requireCreateFolder(user, 25)).thenReturn(folder);
+            pages.when(() -> WebpagesService.getOneItem(eq(-1L), eq(25), eq(-1), eq(facade), any(), anyList(), eq(request)))
+                    .thenReturn(defaults);
+            var changes = new WebpagesRestController.NewPage("About", html, navbar, publish);
+            var response = controller.createFromFolder(changes);
+
+            assertEquals(201, response.getStatusCode().value());
+            var saved = response.getBody();
+            assertEquals("About", saved.getTitle());
+            assertEquals(expectedNavbar, saved.getNavbar());
+            assertEquals(expectedHtml, saved.getData());
+            assertEquals(Boolean.TRUE.equals(publish), saved.isAvailable());
+            assertEquals(Boolean.TRUE.equals(publish), saved.getEditorFields().isRequestPublish());
+            assertEquals(25, saved.getGroupId());
+            assertSame(folder, saved.getEditorFields().getGroupDetails());
+            assertEquals(17, saved.getTempId());
+            assertEquals(80, saved.getSortPriority());
+            assertEquals("Inherited value", saved.getFieldA());
+            verify(facade).save(saved);
+        }
+    }
+
+    /** An invalid tool destination cannot fall back to the current editor folder. */
+    @Test
+    void compactCreateRequiresExplicitPositiveFolder() {
+        var request = (MockHttpServletRequest) controller.getRequest();
+        request.setParameter("groupId", "0");
+        request.getSession().setAttribute(Constants.USER_KEY, new Identity());
+        request.getSession().setAttribute(Constants.SESSION_GROUP_ID, "25");
+        try (var dispatch = mockStatic(AiToolService.class); var pages = mockStatic(WebpagesService.class)) {
+            dispatch.when(() -> AiToolService.isToolRequest(request, WebpagesRestController.class)).thenReturn(true);
+            assertEquals(400, assertThrows(ResponseStatusException.class, () -> controller.createFromFolder(
+                    new WebpagesRestController.NewPage("About", null, null, null))).getStatusCode().value());
+            pages.verifyNoInteractions();
+            verifyNoInteractions(facade);
         }
     }
 

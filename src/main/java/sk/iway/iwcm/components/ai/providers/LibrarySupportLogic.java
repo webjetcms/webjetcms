@@ -990,7 +990,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             .previousResponseId(operation == AiOperation.CHAT ? inputData.getPreviousResponseId() : null)
             .imageOptions(imageOptions);
 
-        if (inputData.getNativeTools() != null) builder.tools(inputData.getNativeTools());
+        if (inputData.getNativeTools() != null) builder.tools(inputData.getNativeTools()).reportRejectedToolCalls(true);
         if (inputData.getNativeToolResult() != null) return builder.toolResult(inputData.getNativeToolResult()).build();
 
         builder.userPrompt(userPrompt);

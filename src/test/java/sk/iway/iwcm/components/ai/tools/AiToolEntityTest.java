@@ -33,9 +33,9 @@ import sk.iway.iwcm.system.datatable.json.DataTableColumnEditor;
 
 /** Verifies that the tool detail exposes nested requirements without changing the AI contract. */
 class AiToolEntityTest {
-    /** The add tool accepts a full editor record and shares its nested requirements with manual calls. */
+    /** Calls issued under the original add schema still validate a full editor record. */
     @Test
-    void webpagesAddUsesFullEditorBody() throws Exception {
+    void legacyWebpagesAddAcceptsFullEditorBody() throws Exception {
         var handler = new HandlerMethod(mock(WebpagesRestController.class), WebpagesRestController.class.getMethod("add", Object.class));
         var inputs = new AiToolInputs(handler, RequestMappingInfo.paths("/add").build(), "/add");
         var folder = Map.of("groupId", 25, "groupName", "News", "navbarName", "News");

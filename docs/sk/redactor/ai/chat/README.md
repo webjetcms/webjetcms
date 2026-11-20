@@ -20,7 +20,7 @@ Ak má asistent zapnuté postupné načítanie, odpoveď pribúda po častiach. 
 
 Ak v uloženom čete nástroj čaká na zápis, tlačidlo **Zastaviť** ho zruší aj z inej karty prehliadača. Už spustený zápis sa môže dokončiť.
 
-Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy. Ikona merača vedľa poľa správy zobrazí po prejdení myšou, zameraní klávesnicou alebo ťuknutí počet tokenov spotrebovaných v tomto čete. V prehľade sú vstupné tokeny, výstupné tokeny a celková spotreba. Ak sa v histórii uložil iba súčet, pri vstupných a výstupných tokenoch sa zobrazí pomlčka. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
+Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy. Vedľa tlačidla **Kopírovať** vidíte počet tokenov spotrebovaných na danú odpoveď. Ikona merača vedľa poľa správy zobrazí po prejdení myšou, zameraní klávesnicou alebo ťuknutí počet tokenov spotrebovaných v tomto čete. V prehľade sú vstupné tokeny, výstupné tokeny a celková spotreba. Ak sa v histórii uložil iba súčet, pri vstupných a výstupných tokenoch sa zobrazí pomlčka. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
 
 Ak asistent potrebuje cieľový priečinok webovej stránky, v odpovedi otvorí strom priečinkov. Vyberte priečinok, skontrolujte cestu a potvrďte ju tlačidlom **Použiť priečinok**. Čet odošle jeho ID ako ďalšiu správu.
 
@@ -63,7 +63,7 @@ Pokračovanie používa kontext uchovaný u poskytovateľa. Ak už nie je dostup
 
 Pri rozhovore kliknite na ikonu koša **Vymazať** a potvrďte vymazanie. WebJET najskôr požiada poskytovateľa o odstránenie uložených odpovedí a potom odstráni lokálnu históriu aj prílohy.
 
-Ak poskytovateľ vymazanie nepotvrdí, rozhovor zostane označený na vymazanie. Akciu môžete zopakovať tlačidlom pri rozhovore. Pri prerušenej požiadavke bez vráteného ID odpovede nemusí byť možné potvrdiť úplné vymazanie; rozhranie zobrazí príslušný stav.
+Ak poskytovateľ vymazanie nepotvrdí, môžete ho skúsiť znova alebo zvoliť **Vymazať z WebJETu**. Ak pri prerušenej požiadavke chýba ID odpovede, zvoľte **Vymazať z WebJETu**. Po potvrdení sa vymažú história aj prílohy. Odpovede môžu zostať u poskytovateľa a cez WebJET ich už nebude možné odstrániť.
 
 ## Prílohy
 

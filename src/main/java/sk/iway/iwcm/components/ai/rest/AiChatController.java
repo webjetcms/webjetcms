@@ -66,6 +66,11 @@ public class AiChatController {
         return service.delete(id, scope(request));
     }
 
+    @DeleteMapping("/threads/{id}/local")
+    public AiChatService.Deletion deleteLocal(@PathVariable String id, HttpServletRequest request) {
+        return service.deleteLocal(id, scope(request));
+    }
+
     @PostMapping(value = "/messages", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void send(@RequestBody AiChatRequest input, HttpServletRequest request, HttpServletResponse response) throws IOException {
         AiChatService.Prepared prepared = service.prepare(input, scope(request));

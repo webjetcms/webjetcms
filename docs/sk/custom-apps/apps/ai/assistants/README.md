@@ -353,6 +353,7 @@ Ukladaný čet obsluhujú `AiChatController`, `AiChatService` a `AiChatStore` v 
 | `POST /messages` | Nová správa alebo pokračovanie. JSON obsahuje `assistantId`, `requestId`, `userPrompt`, pri pokračovaní aj `threadId` a `revision` a pri opakovaní dokončeného pokusu `retryMessageId`. |
 | `POST /threads/{id}/stop` | Zastavenie aktívnej požiadavky vlastníka rozhovoru. |
 | `DELETE /threads/{id}` | Odstránenie odpovedí u poskytovateľa a následne lokálnej histórie s prílohami. |
+| `DELETE /threads/{id}/local` | Po zlyhaní vymazania u poskytovateľa môže vlastník samostatne potvrdiť vymazanie lokálnej histórie a príloh. Audit zaznamená `deleted_locally` aj dôvod zlyhania. |
 | `GET /threads/{id}/attachments/{attachmentId}` | Autorizované načítanie prílohy; `download=true` vynúti stiahnutie. |
 
 Ak sa stratí odpoveď s pokynom na čítanie, klient môže zopakovať rovnakú požiadavku `POST /messages` s pôvodným `requestId` a rovnakými `toolResults`. Kým správa čaká na výsledok a používateľ má stále prístup k nástroju, server vráti uložený `toolCall` bez ďalšieho volania modelu.
@@ -369,7 +370,7 @@ Na pravidelné mazanie starých rozhovorov pridajte do plánovaných úloh tried
 
 Na čistenie chatovej histórie používajte `AiChatCleanup` alebo `AiChatService.deleteOlderThan(scope, cutoff)`, aby sa zachovali zámky a odstránili aj odpovede u poskytovateľa.
 
-Knižnica `webjet-ai` od verzie `2.1.0` oznamuje ID cez `AiLifecycleListener` už počas spracovania odpovede. CMS ho uloží na neskoršie odstránenie aj pri chybe alebo zastavení generovania; pokračovanie rozhovoru posunie iba po úspešnom dokončení. Pri chybe používa `AiProviderException.lifecycle()`: stavy `NOT_SUBMITTED` a `REJECTED` potvrdzujú, že nevznikla odpoveď na odstránenie. Stav `UNKNOWN` alebo `RESPONSE_OBSERVED` bez dostupného ID zostáva nevyriešený a bráni odstráneniu lokálnej histórie, pokiaľ CMS nezachytil ID skôr. Samotný HTTP stav ani možnosť opakovania požiadavky nepotvrdzujú odmietnutie poskytovateľom.
+Knižnica `webjet-ai` od verzie `2.1.0` oznamuje ID cez `AiLifecycleListener` už počas spracovania odpovede. CMS ho uloží na neskoršie odstránenie aj pri chybe alebo zastavení generovania; pokračovanie rozhovoru posunie iba po úspešnom dokončení. Pri chybe používa `AiProviderException.lifecycle()`: stavy `NOT_SUBMITTED` a `REJECTED` potvrdzujú, že nevznikla odpoveď na odstránenie. Stav `UNKNOWN` alebo `RESPONSE_OBSERVED` bez dostupného ID zostáva nevyriešený a bráni potvrdeniu vymazania u poskytovateľa, pokiaľ CMS nezachytil ID skôr. Samotný HTTP stav ani možnosť opakovania požiadavky nepotvrdzujú odmietnutie poskytovateľom.
 
 Čet pri poli používa pre uložený záznam hostiteľský komponent `AiChatHost` s kontextom `AiChatContext`: `entityType` je cesta REST zdroja tabuľky bez koncového lomítka a query parametrov, `entityId` je ID upravovaného záznamu a `fieldName` je cieľové pole. `EditorAi` dodáva asistentov priamo z definície stĺpca, obsah poľa alebo označeného textu a akcie na vloženie odpovede. Globálny zoznam asistentov sa pri poli nenačítava. Nové záznamy a hromadná úprava používajú `AiChat` bez perzistencie. Editor pristupuje k obom variantom cez `conversation.view` s metódami `mount`, `unmount`, `destroy` a `isPending`; pri hostiteľovi zahŕňa `isPending` aj rozhovory bežiace na pozadí po prepnutí asistenta.
 

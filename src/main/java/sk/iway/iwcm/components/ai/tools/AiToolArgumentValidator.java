@@ -23,6 +23,10 @@ final class AiToolArgumentValidator {
         if (error != null) throw new InvalidArguments(error);
     }
 
+    static boolean matches(Map<String, Object> schema, Object arguments) {
+        return firstError(arguments, schema, schema, "arguments", 0) == null;
+    }
+
     /** Returns correction feedback using only paths and constraints declared by the registered schema. */
     private static String firstError(Object value, Object rule, Map<String, Object> root, String path, int depth) {
         if (rule instanceof Boolean permitted) return permitted ? null : path + " is not allowed.";

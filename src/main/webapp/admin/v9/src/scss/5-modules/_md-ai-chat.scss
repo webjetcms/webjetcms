@@ -265,13 +265,15 @@
         .ai-chat-number:not(.text-start):not(.text-center) { text-align: right; font-variant-numeric: tabular-nums; }
     }
 
-    .ai-chat-message-status {
-        margin-top: 6px;
+    .ai-chat-message-status, .ai-chat-usage {
         font-size: 13px;
         color: var(--wj-gray-text);
     }
 
-    .ai-chat-message-status { white-space: pre-line; }
+    .ai-chat-message-status {
+        margin-top: 6px;
+        white-space: pre-line;
+    }
 
     .ai-chat-tool-activity {
         margin: 4px 0;
