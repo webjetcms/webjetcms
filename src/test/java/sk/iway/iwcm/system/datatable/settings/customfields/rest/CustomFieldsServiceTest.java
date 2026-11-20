@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -56,14 +57,14 @@ class CustomFieldsServiceTest {
     private static final int COMMON_DOMAIN_ID = 17;
     private static final long ENTITY_ID = 42L;
 
-    /** Verifies folder IDs resolve global and specific configuration for field generation and validation. */
+    /** Verifies folder configuration validates saves without blocking deletion for missing required fields. */
     @ParameterizedTest
-    @ValueSource(ints = { -1, 42 })
-    void resolvesGroupDetailsConfiguration(int groupId) {
+    @CsvSource({ "-1, text", "42, text", "42, jsoneditor" })
+    void resolvesGroupDetailsConfiguration(int groupId, String type) {
         GroupDetails group = new GroupDetails();
         group.setGroupId(groupId);
         CustomFieldsEntity globalField = folderField("text", "Global folder field");
-        CustomFieldsEntity specificField = folderField("jsoneditor", "Specific folder field");
+        CustomFieldsEntity specificField = folderField(type, "Specific folder field");
         CustomFieldsRepository repository = mock(CustomFieldsRepository.class);
         when(repository.findAllGlobalCustomFields(GroupDetails.class.getName(), CURRENT_DOMAIN_ID))
             .thenReturn(List.of(globalField));
@@ -93,7 +94,7 @@ class CustomFieldsServiceTest {
             assertEquals((long) groupId, context.getEntityId());
 
             Field definition = new BaseEditorFields().getFields(group, "groupedit", 'A').get(0);
-            assertEquals(groupId > 0 ? "jsoneditor" : "text", definition.getType());
+            assertEquals(type, definition.getType());
             assertEquals(groupId > 0 ? "Specific folder field" : "Global folder field", definition.getLabel());
             assertTrue(definition.isRequired());
 
@@ -108,10 +109,16 @@ class CustomFieldsServiceTest {
             controller.validateEditorForCustomFields(null, request, null, errors, (long) groupId, group);
             assertTrue(errors.hasFieldErrors("errorField.fieldA"));
 
-            group.setFieldA(groupId > 0 ? "{}" : "Folder value");
+            group.setFieldA("jsoneditor".equals(type) ? "{}" : "Folder value");
             errors = new BeanPropertyBindingResult(request, "request");
             controller.validateEditorForCustomFields(null, request, null, errors, (long) groupId, group);
             assertFalse(errors.hasErrors());
+
+            request.setAction("remove");
+            group.setFieldA("");
+            errors = new BeanPropertyBindingResult(request, "request");
+            controller.validateEditorForCustomFields(null, request, null, errors, (long) groupId, group);
+            assertFalse(errors.hasErrors(), "Missing required custom fields must not block deletion");
 
             verify(repository, atLeastOnce()).findAllGlobalCustomFields(GroupDetails.class.getName(), CURRENT_DOMAIN_ID);
             verify(repository, atLeastOnce()).findAllByClassNameAndEntityId(GroupDetails.class.getName(), (long) groupId, CURRENT_DOMAIN_ID);
