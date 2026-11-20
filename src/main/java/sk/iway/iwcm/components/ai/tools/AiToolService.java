@@ -1,34 +1,25 @@
 package sk.iway.iwcm.components.ai.tools;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.springframework.http.server.RequestPath;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.ServletRequestPathUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.tools.AiToolAuthorization.Access;
 import sk.iway.iwcm.i18n.Prop;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Provides the English tool catalog and dispatches calls in an authenticated CMS request. */
+/** Provides tool catalogs and assistant runtime metadata in an authenticated CMS request. */
 @Service
 @RequiredArgsConstructor
 public class AiToolService {
@@ -52,13 +43,12 @@ public class AiToolService {
     }
 
     public List<AiToolDefinition.Preview> preview(HttpServletRequest request) {
-        return visibleEntries(request, Access.ASSIGNED)
+        return authorization.visibleEntries(request)
                 .map(entry -> entry.definition().preview()).toList();
     }
 
     public List<AiToolDefinition> details(List<String> names, HttpServletRequest request) {
-        return names.stream().distinct().map(registry::lookup).filter(Objects::nonNull)
-                .filter(entry -> authorization.mayList(entry, request, Access.ASSIGNED)).map(AiToolRegistry.Entry::definition).toList();
+        return names.stream().distinct().flatMap(name -> findVisible(name, request, null).stream()).toList();
     }
 
     public AiAssistantRuntime resolve(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
@@ -72,21 +62,11 @@ public class AiToolService {
 
     /** Loads only a skill linked to the active assistant in the current user's domain. */
     public AiAssistantRuntime.Skill loadSkill(String name, HttpServletRequest request) {
-        if (AiToolAuthorization.hasAdminIdentity(request)) {
-            String header = request.getHeader(AiToolAuthorization.ASSISTANT_HEADER);
-            try {
-                var skill = authorization.assistant(Long.parseLong(header), request)
-                        .map(runtime -> runtime.skills().get(name)).orElse(null);
-                if (skill != null) {
-                    if (skill.directTools().isEmpty() || JSON.writeValueAsBytes(skill).length <= MAX_CATALOG_BYTES) return skill;
-                    // Keep the guidance readable. The model can fetch large schemas individually through ai_tools_details.
-                    return new AiAssistantRuntime.Skill(skill.name(), skill.version(), skill.instructions());
-                }
-            } catch (NumberFormatException invalidAssistant) {
-                // Direct calls without a valid assistant cannot access skill contents.
-            }
-        }
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        var skill = authorization.assignedAssistant(request).map(runtime -> runtime.skills().get(name))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (skill.directTools().isEmpty() || JSON.writeValueAsBytes(skill).length <= MAX_CATALOG_BYTES) return skill;
+        // Large schemas remain available individually through ai_tools_details.
+        return new AiAssistantRuntime.Skill(skill.name(), skill.version(), skill.instructions());
     }
 
     public record BrowserTool(String name, boolean write) {}
@@ -124,14 +104,14 @@ public class AiToolService {
     }
 
     public List<AiToolDefinition> list(HttpServletRequest request, Prop language) {
-        return visibleEntries(request, Access.ASSIGNED).map(entry -> entry.definition(language)).toList();
+        return authorization.visibleEntries(request).map(entry -> entry.definition(language)).toList();
     }
 
     /** Tool and group metadata for the instruction link picker. */
     public record AssignmentTool(String name, String description, String group, String groupLabel, String httpMethod, String path) {}
 
     public List<AssignmentTool> assignmentTools(HttpServletRequest request, Prop language) {
-        return visibleEntries(request, Access.ASSIGNED).map(entry -> {
+        return authorization.visibleEntries(request).map(entry -> {
             Class<?> type = entry.controllerType();
             String group = entry.assignmentGroup();
             String resource = group.equals(type.getName()) ? AiToolRegistry.resource(type) : group;
@@ -143,67 +123,13 @@ public class AiToolService {
     }
 
     public List<AiToolGroup> listGroups(HttpServletRequest request, Prop language) {
-        var groups = visibleEntries(request, Access.ASSIGNED).collect(Collectors.groupingBy(AiToolRegistry.Entry::controllerType));
+        var groups = authorization.visibleEntries(request).collect(Collectors.groupingBy(AiToolRegistry.Entry::controllerType));
         return groups.entrySet().stream().map(group -> new AiToolGroup(group.getKey(), group.getValue(), language)).toList();
-    }
-
-    private Stream<AiToolRegistry.Entry> visibleEntries(HttpServletRequest request, Access access) {
-        return registry.entries().stream().filter(entry -> authorization.mayList(entry, request, access));
     }
 
     public Optional<AiToolDefinition> findVisible(String name, HttpServletRequest request, Prop language) {
         return Optional.ofNullable(registry.lookup(name))
             .filter(entry -> authorization.mayList(entry, request, Access.ASSIGNED))
             .map(entry -> entry.definition(language));
-    }
-
-    /**
-     * Binds arguments to one registered mapping and continues through the server's native REST filter chain.
-     * Unresolved calls continue on the original route so its admin filters and error handler still run.
-     */
-    void call(String name, Map<String, Object> arguments, HttpServletRequest request, HttpServletResponse response,
-            FilterChain chain) throws IOException, ServletException {
-        if (!AiToolServletRoutes.usesDispatcher(request)) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-        AiToolRegistry.Entry entry = registry.lookup(name);
-        if (entry == null) {
-            chain.doFilter(request, response);
-            return;
-        }
-        AiToolRequest target;
-        try {
-            if (arguments == null) throw new IllegalArgumentException("Expected an object");
-            if (entry.inputs().requiresBodyValidation() || request.getHeader(AiToolAuthorization.ASSISTANT_HEADER) != null) {
-                entry = registry.validateCall(entry, arguments);
-            }
-            target = new AiToolRequest(request, entry, entry.inputs().bind(arguments));
-        } catch (IllegalArgumentException invalidArguments) {
-            String correction = invalidArguments instanceof AiToolArgumentValidator.InvalidArguments ? invalidArguments.getMessage() : null;
-            AiToolCallFilter.invalid(request, entry, authorization, correction);
-            chain.doFilter(request, response);
-            return;
-        }
-        if (!AiToolServletRoutes.permits(request, target)) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-        RequestPath originalPath = (RequestPath) request.getAttribute(ServletRequestPathUtils.PATH_ATTRIBUTE);
-        request.setAttribute(TARGET, entry);
-        if (entry.definition().writes()) request.setAttribute(WRITE, new AiToolProtocol.Call(name, arguments, true));
-        request.setAttribute(PathFilter.AI_TOOL_ENTRY_PATH, "/admin/rest/ai/tools/" + entry.definition().name() + "/call");
-        int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-        try {
-            ServletRequestPathUtils.parseAndCache(target);
-            chain.doFilter(target, response);
-            status = response.getStatus();
-        } finally {
-            request.removeAttribute(TARGET);
-            request.removeAttribute(WRITE);
-            request.removeAttribute(PathFilter.AI_TOOL_ENTRY_PATH);
-            ServletRequestPathUtils.setParsedRequestPath(originalPath, request);
-            AiToolAudit.finish(request, status);
-        }
     }
 }

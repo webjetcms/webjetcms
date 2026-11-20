@@ -21,8 +21,6 @@ import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.providers.local.LocalAiAvailableCondition;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
 /**
  * Adapts the local M2M100 provider to CMS assistants and enforces explicitly configured plain-text translation.
@@ -88,10 +86,6 @@ public class LocalTranslateService extends LibrarySupportLogic implements AiAssi
         assistantEntity.setUserPromptEnabled(false);
         // Affects only response post-processing; plain-text input is enforced when building the request.
         assistantEntity.setKeepHtml(true);
-    }
-
-    @Override
-    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
     }
 
     /**

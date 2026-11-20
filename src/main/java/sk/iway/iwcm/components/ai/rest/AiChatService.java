@@ -200,13 +200,7 @@ public class AiChatService implements DisposableBean {
             provider.prepareNativeTools(prepared.assistant(), input, answer.getToolCallId());
             // An accepted tool response already carries this turn's attachment in provider history.
             if (answer.getToolResults().isEmpty() || input.isReplayToolResults()) {
-                AiChatEntry source = prepared.turn().question();
-                if (protocol != null && source.getAttachments().isEmpty()) {
-                    source = store.get(threadId, prepared.scope()).messages().stream()
-                        .filter(message -> "user".equals(message.getRole()) && !message.getAttachments().isEmpty()
-                            && message.getSortOrder() <= prepared.turn().question().getSortOrder())
-                        .max(java.util.Comparator.comparingLong(AiChatEntry::getSortOrder)).orElse(source);
-                }
+                AiChatEntry source = protocol == null ? prepared.turn().question() : prepared.turn().attachmentSource();
                 String attachmentContext = source.getPreparedAttachmentContext();
                 if (!source.getAttachments().isEmpty() && attachmentContext == null) {
                     StringBuilder context = new StringBuilder();

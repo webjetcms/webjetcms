@@ -48,38 +48,26 @@ block content
                 }
             });
 
-            aiAssistantsDataTable.button().add(null, {
-                text: '<i class="ti ti-restore" aria-hidden="true"></i>',
-                className: 'btn btn-outline-secondary buttons-reset-token-usage buttons-divider-left',
-                init: function(dt) {
-                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
-                },
-                action: function() {
-                    aiAssistantsDataTable.executeAction("resetTokenUsage", false, "[[\#{components.ai_assistants.token_reset.title}]]", "[[\#{components.ai_assistants.token_reset.selected.confirm}]]");
-                },
-                attr: {
-                    title: '[[\#{components.ai_assistants.token_reset.selected}]]',
-                    'aria-label': '[[\#{components.ai_assistants.token_reset.selected}]]',
-                    'data-toggle': 'tooltip'
-                }
-            });
-
-            aiAssistantsDataTable.button().add(null, {
-                text: '<i class="ti ti-restore" aria-hidden="true"></i>',
-                className: 'btn btn-outline-secondary buttons-reset-all-token-usage',
-                init: function(dt) {
-                    $.fn.dataTable.Buttons.showIfRowUnselected(this, dt);
-                },
-                action: function() {
-                    if (aiAssistantsDataTable.rows({selected: true}).any()) return;
-                    aiAssistantsDataTable.executeAction("resetAllTokenUsage", true, "[[\#{components.ai_assistants.token_reset.title}]]", "[[\#{components.ai_assistants.token_reset.all.confirm}]]");
-                },
-                attr: {
-                    title: '[[\#{components.ai_assistants.token_reset.all}]]',
-                    'aria-label': '[[\#{components.ai_assistants.token_reset.all}]]',
-                    'data-toggle': 'tooltip'
-                }
-            });
+            function addResetButton(all, action, className, title, confirmation) {
+                aiAssistantsDataTable.button().add(null, {
+                    text: '<i class="ti ti-restore" aria-hidden="true"></i>',
+                    className: 'btn btn-outline-secondary ' + className,
+                    init: function(dt) {
+                        const buttons = $.fn.dataTable.Buttons;
+                        if (all) buttons.showIfRowUnselected(this, dt);
+                        else buttons.showIfRowSelected(this, dt);
+                    },
+                    action: function() {
+                        if (all && aiAssistantsDataTable.rows({selected: true}).any()) return;
+                        aiAssistantsDataTable.executeAction(action, all, "[[\#{components.ai_assistants.token_reset.title}]]", confirmation);
+                    },
+                    attr: { title, 'aria-label': title, 'data-toggle': 'tooltip' }
+                });
+            }
+            addResetButton(false, "resetTokenUsage", "buttons-reset-token-usage buttons-divider-left",
+                "[[\#{components.ai_assistants.token_reset.selected}]]", "[[\#{components.ai_assistants.token_reset.selected.confirm}]]");
+            addResetButton(true, "resetAllTokenUsage", "buttons-reset-all-token-usage",
+                "[[\#{components.ai_assistants.token_reset.all}]]", "[[\#{components.ai_assistants.token_reset.all.confirm}]]");
 
             const editor = aiAssistantsDataTable.EDITOR;
             editor.on("open", initAiInstructionsField);
@@ -117,16 +105,9 @@ block content
 
             function updateTokenLimitsVisibility() {
                 var enabled = $("#DTE_Field_useTokenLimits_0").is(":checked");
-                if (enabled) {
-                    editor.field("usedTokens").show();
-                    editor.field("tokenLimit").show();
-                    editor.field("notifEmail").show();
-                } else {
-                    editor.field("usedTokens").hide();
-                    editor.field("tokenLimit").hide();
-                    editor.field("notifEmail").hide();
-                    editor.field("tokenLimit").error("");
-                }
+                const fields = ["usedTokens", "tokenLimit", "notifEmail"];
+                if (enabled) editor.show(fields);
+                else editor.hide(fields).field("tokenLimit").error("");
                 $("#DTE_Field_tokenLimit").prop("required", enabled);
                 $("#tokenUsagePanel").toggleClass("d-none", !enabled);
                 if (enabled) loadTokenUsageChart();
@@ -200,20 +181,11 @@ block content
             }
 
             function getTranslatedKey(keyToTranslate, fieldId) {
-                if(keyToTranslate == undefined || keyToTranslate == null || keyToTranslate == "") return;
-
-                let data = { key: keyToTranslate };
+                if (!keyToTranslate) return;
+                const data = { key: keyToTranslate };
                 if (fieldId === "editorFields-translatedDescription") data.model = $("#DTE_Field_model").val() || "";
 
-                $.ajax({
-                    url: url + "translate-key",
-                    method: "get",
-                    contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-                    data: data,
-                    success: function(response) {
-                        $("#DTE_Field_" + fieldId).val(response);
-                    }
-                });
+                $.get(url + "translate-key", data, response => $("#DTE_Field_" + fieldId).val(response));
             }
         });
 
@@ -226,19 +198,11 @@ block content
         label[for='DTE_Field_editorFields-translatedUserPromptLabel'] { visibility: hidden; }
         div.DTE_Field_Name_editorFields\.translatedUserPromptLabel div.form-group-tooltip { display: none; }
 
-        tr.not-active td {
+        tr.not-active td, tr.not-active td div a {
             color: var(--bs-danger) !important;
         }
 
-        tr.not-active td div a {
-            color: var(--bs-danger) !important;
-        }
-
-        tr.not-init td, tr.out-of-tokens td {
-            color: var(--bs-warning) !important;
-        }
-
-        tr.not-init td div a, tr.out-of-tokens td div a {
+        tr:is(.not-init, .out-of-tokens) td, tr:is(.not-init, .out-of-tokens) td div a {
             color: var(--bs-warning) !important;
         }
 

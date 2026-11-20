@@ -15,8 +15,6 @@ import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.providers.local.LocalAiAvailableCondition;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
 /** CMS configuration adapter for the local embedding-only provider. */
 @Service
@@ -68,10 +66,5 @@ public class LocalEmbeddingService extends LibrarySupportLogic implements AiAssi
         if (Tools.isEmpty(assistantEntity.getModel())) assistantEntity.setModel(DEFAULT_MODEL);
         assistantEntity.setUseStreaming(false);
         assistantEntity.setUseTemporal(false);
-    }
-
-    @Override
-    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
-        // The validated bundle defines the only supported model and has no UI-specific options.
     }
 }

@@ -49,16 +49,10 @@ class AiToolPagingTest {
             assertFalse(properties.containsKey("size"));
             assertTrue(properties.containsKey("sort"));
             assertEquals(Map.of(), Json.mapper().readValue(AiToolExample.forInput(inputs.schema()), Map.class));
-            assertEquals(Map.of(), inputs.bind(Map.of()).query());
+            assertQuery(inputs, Map.of(), Map.of());
             assertTrue(entry.definition().description().endsWith("Do not send page or size."));
-            AiToolArgumentValidator.validate(inputs.schema(), Map.of());
-            for (String name : List.of("page", "size")) {
-                var arguments = Map.<String, Object>of(name, 1);
-                assertThrows(AiToolArgumentValidator.InvalidArguments.class,
-                        () -> AiToolArgumentValidator.validate(inputs.schema(), arguments));
-                assertThrows(IllegalArgumentException.class, () -> inputs.bind(arguments));
-            }
-            assertEquals(Map.of("sort", List.of("name,asc")), inputs.bind(Map.of("sort", List.of("name,asc"))).query());
+            for (String name : List.of("page", "size")) assertRejected(inputs, Map.of(name, 1));
+            assertQuery(inputs, Map.of("sort", List.of("name,asc")), Map.of("sort", List.of("name,asc")));
         }
     }
 
@@ -71,10 +65,8 @@ class AiToolPagingTest {
             var properties = (Map<?, ?>) inputs.schema().get("properties");
             assertTrue(properties.containsKey("page"));
             assertEquals(20, ((Map<?, ?>) properties.get("size")).get("default"));
-            assertEquals(Map.of("size", List.of("20")), inputs.bind(Map.of()).query());
-            var arguments = Map.<String, Object>of("page", 2, "size", 5);
-            AiToolArgumentValidator.validate(inputs.schema(), arguments);
-            assertEquals(Map.of("page", List.of("2"), "size", List.of("5")), inputs.bind(arguments).query());
+            assertQuery(inputs, Map.of(), Map.of("size", List.of("20")));
+            assertQuery(inputs, Map.of("page", 2, "size", 5), Map.of("page", List.of("2"), "size", List.of("5")));
             assertFalse(entry.definition().description().contains("Do not send page or size."));
         }
     }
@@ -86,15 +78,8 @@ class AiToolPagingTest {
         var search = entry(new ClientController(), "findByColumns", "/search/findByColumns", Map.class, Pageable.class, Object.class);
         for (var entry : List.of(custom, search)) {
             var inputs = entry.inputs();
-            for (String name : List.of("page", "size")) {
-                var arguments = Map.<String, Object>of("filters", Map.of(name, "1"));
-                assertThrows(AiToolArgumentValidator.InvalidArguments.class,
-                        () -> AiToolArgumentValidator.validate(inputs.schema(), arguments));
-                assertThrows(IllegalArgumentException.class, () -> inputs.bind(arguments));
-            }
-            var arguments = Map.<String, Object>of("filters", Map.of("searchName", "Example"));
-            AiToolArgumentValidator.validate(inputs.schema(), arguments);
-            assertEquals(Map.of("searchName", List.of("Example")), inputs.bind(arguments).query());
+            for (String name : List.of("page", "size")) assertRejected(inputs, Map.of("filters", Map.of(name, "1")));
+            assertQuery(inputs, Map.of("filters", Map.of("searchName", "Example")), Map.of("searchName", List.of("Example")));
         }
         assertTrue(custom.definition().description().startsWith("Custom list. "));
     }
@@ -104,9 +89,7 @@ class AiToolPagingTest {
     void handlersWithoutPageableAreUnaffected() throws Exception {
         var entry = entry(new ClientController(), "detail", "/detail", int.class);
         assertEquals("Detail.", entry.definition().description());
-        var arguments = Map.<String, Object>of("size", 5);
-        AiToolArgumentValidator.validate(entry.inputs().schema(), arguments);
-        assertEquals(Map.of("size", List.of("5")), entry.inputs().bind(arguments).query());
+        assertQuery(entry.inputs(), Map.of("size", 5), Map.of("size", List.of("5")));
     }
 
     /** Localized operation text and explicit method descriptions both receive the shared paging guidance once. */
@@ -128,6 +111,16 @@ class AiToolPagingTest {
             assertEquals("Custom list. " + guidance, custom.definition(language).description());
         }
         assertEquals(custom.definition().description(), custom.definition(mock(Prop.class)).description());
+    }
+
+    private static void assertQuery(AiToolInputs inputs, Map<String, Object> arguments, Map<String, List<String>> query) {
+        AiToolArgumentValidator.validate(inputs.schema(), arguments);
+        assertEquals(query, inputs.bind(arguments).query());
+    }
+
+    private static void assertRejected(AiToolInputs inputs, Map<String, Object> arguments) {
+        assertThrows(AiToolArgumentValidator.InvalidArguments.class, () -> AiToolArgumentValidator.validate(inputs.schema(), arguments));
+        assertThrows(IllegalArgumentException.class, () -> inputs.bind(arguments));
     }
 
     private static AiToolRegistry.Entry entry(Object controller, String method, String path, Class<?>... parameters) throws Exception {

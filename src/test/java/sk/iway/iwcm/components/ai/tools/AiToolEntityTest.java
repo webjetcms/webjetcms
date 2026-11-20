@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -25,7 +24,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.editor.rest.WebpagesRestController;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
@@ -33,22 +31,6 @@ import sk.iway.iwcm.system.datatable.json.DataTableColumnEditor;
 
 /** Verifies that the tool detail exposes nested requirements without changing the AI contract. */
 class AiToolEntityTest {
-    /** Calls issued under the original add schema still validate a full editor record. */
-    @Test
-    void legacyWebpagesAddAcceptsFullEditorBody() throws Exception {
-        var handler = new HandlerMethod(mock(WebpagesRestController.class), WebpagesRestController.class.getMethod("add", Object.class));
-        var inputs = new AiToolInputs(handler, RequestMappingInfo.paths("/add").build(), "/add");
-        var folder = Map.of("groupId", 25, "groupName", "News", "navbarName", "News");
-        var body = Map.of("title", "Article", "navbar", "Article", "data", "<p>Content</p>", "available", false,
-                "editorFields", Map.of("groupDetails", folder, "requestPublish", false));
-        var arguments = Map.<String, Object>of("body", body);
-        AiToolArgumentValidator.validate(inputs.schema(), arguments);
-        assertEquals(body, inputs.bind(arguments).body());
-        assertTrue(detail(inputs.schema()).getRequired().contains("body.editorFields.groupDetails.groupId"));
-        assertEquals("body, body.action, body.data, body.data.*.title, body.data.*.navbar",
-                detail(inputs("editor", DatatableRequest.class)).getRequired());
-    }
-
     /** Required paths cover repeated types and arrays, stop at recursion, and exclude optional branches. */
     @Test
     void followsRequiredObjectsAndArrayItemsWithoutIncludingOptionalBranches() throws Exception {
@@ -57,6 +39,8 @@ class AiToolEntityTest {
         assertEquals(Set.of("body", "body.first", "body.first.name", "body.second", "body.second.name",
                 "body.rows", "body.rows[].name", "body.next"), Set.copyOf(Arrays.asList(detail.getRequired().split(", "))));
         assertNull(detail(inputs("optional", NestedBody.class)).getRequired());
+        assertEquals("body, body.action, body.data, body.data.*.title, body.data.*.navbar",
+                detail(inputs("editor", DatatableRequest.class)).getRequired());
     }
 
     /** The schema matches the frontend's field metadata even when Jackson exposes a transient field through accessors. */
@@ -73,7 +57,10 @@ class AiToolEntityTest {
             assertEquals(expected, Json.mapper().convertValue(nested.path("required"), List.class).contains(name), "editorFields." + name);
         }
         assertTrue(detail(schema).getRequired().contains("body.editorFields.heading"));
-        assertReferencesResolve(root, root);
+        for (String reference : root.findValuesAsText("$ref")) {
+            assertTrue(reference.startsWith("#/"));
+            assertFalse(root.at(reference.substring(1)).isMissingNode(), reference);
+        }
         var validFields = Map.<String, Object>of("heading", "Page", "values", List.of("a"), "count", 1);
         var arguments = new LinkedHashMap<>(validFields);
         arguments.put("editorFields", validFields);
@@ -92,15 +79,6 @@ class AiToolEntityTest {
     private static AiToolEntity detail(Map<String, Object> schema) {
         return AiToolEntity.detail(new AiToolDefinition("test_add", "Test", schema, "/test", "POST", Map.of(),
                 "json", Map.of("type", "object")), null);
-    }
-
-    private static void assertReferencesResolve(JsonNode node, JsonNode root) {
-        if (node.has("$ref")) {
-            String reference = node.get("$ref").asText();
-            assertTrue(reference.startsWith("#/"));
-            assertFalse(root.at(reference.substring(1)).isMissingNode(), reference);
-        }
-        for (JsonNode child : node) assertReferencesResolve(child, root);
     }
 
     static class TestController {

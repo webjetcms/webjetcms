@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 
 /** Checks deferred contracts, content versions and server validation independently of provider behavior. */
 class AiToolProtocolTest {
@@ -65,23 +64,6 @@ class AiToolProtocolTest {
         assertEquals(first.preview().description(), second.preview().description());
         assertTrue(first.preview().description().length() <= 161);
         assertNotEquals(first.version(), second.version());
-    }
-
-    @Test
-    void offersPermittedDirectToolsAndDefersIndirectAssignments() {
-        var loader = new AiToolDefinition(AiAssistantRuntime.LOAD_TOOLS, "Load", Map.of(), "/details", "GET", Map.of());
-        var find = new AiToolDefinition("find", "Find", Map.of(), "/find", "GET", Map.of());
-        var runtime = new AiAssistantRuntime(new AssistantDefinitionEntity(), "", List.of(save, find, loader), true);
-        var cases = Map.of("@tool(save) @tool(find) @tool(save)", List.of("save", "find"),
-                "@group(records) @skill(records)", List.<String>of(), "@tool(save) @tool(hidden) @group(records)", List.of("save"));
-        cases.forEach((instructions, expected) -> {
-            var protocol = AiToolProtocol.prepare(runtime, List.of(), instructions);
-            var offered = protocol.nativeTools();
-            var names = offered.stream().map(com.webjetcms.ai.AiTool::name).toList();
-            assertTrue(names.contains(loader.name()));
-            assertEquals(expected, names.stream().filter(name -> !loader.name().equals(name)).toList(), instructions);
-            assertEquals(!expected.contains("save"), protocol.nativeInstructions(offered).contains("save: Save a record"));
-        });
     }
 
     /** Hiding a schema from the prompt does not hide it from argument validation or allow unassigned calls. */

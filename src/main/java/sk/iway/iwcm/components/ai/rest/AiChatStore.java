@@ -60,7 +60,11 @@ public class AiChatStore {
             }
         }
     }
-    public record Turn(AiChatThread thread, AiChatEntry question, AiChatEntry message, boolean duplicate) { }
+    public record Turn(AiChatThread thread, AiChatEntry question, AiChatEntry message, boolean duplicate, AiChatEntry attachmentSource) {
+        public Turn(AiChatThread thread, AiChatEntry question, AiChatEntry message, boolean duplicate) {
+            this(thread, question, message, duplicate, question);
+        }
+    }
     public record Transcript(AiChatThread thread, List<AiChatEntry> messages) { }
     public record History(List<AiChatThread> items, boolean hasMore) { }
 
@@ -156,7 +160,7 @@ public class AiChatStore {
                 if (newResults > 0) {
                     resumeToolRound(duplicate, input);
                     AiChatFiles.write(path, document);
-                    return new Turn(thread, duplicate.question(), duplicate.message(), false);
+                    return activeTurn(document, duplicate.question(), answer);
                 }
                 if (recovered) AiChatFiles.write(path, document);
                 return duplicate;
@@ -170,7 +174,7 @@ public class AiChatStore {
             if (!providerScope.equals(thread.getProviderScope())) throw conflict("providerChanged");
             if (input.threadId() != null && !Objects.equals(input.revision(), thread.getRevision())) throw conflict("stale");
 
-            List<Upload> storedUploads = AiChatAttachments.numbered(path.getParent(),
+            List<Upload> storedUploads = uploads.isEmpty() ? List.of() : AiChatAttachments.numbered(path.getParent(),
                 document.getMessages().stream().flatMap(message -> message.getAttachments().stream()).toList(), uploads);
             AiChatEntry question = prepareQuestion(document, input, storedUploads);
             // Reserve the answer before provider execution so another request cannot start a competing turn.
@@ -183,8 +187,20 @@ public class AiChatStore {
             thread.setUpdated(new Date());
             // Publish JSON last so a saved message only references uploads that were written successfully.
             writeTurn(directory, path, document, storedUploads);
-            return new Turn(thread, question, answer, false);
+            return activeTurn(document, question, answer);
         });
+    }
+
+    /** Selects the source for a tool follow-up from the transcript already loaded for this turn. */
+    private static Turn activeTurn(AiChatDocument document, AiChatEntry question, AiChatEntry answer) {
+        AiChatEntry source = question;
+        if (question.getAttachments().isEmpty()) {
+            source = document.getMessages().stream()
+                .filter(message -> "user".equals(message.getRole()) && !message.getAttachments().isEmpty()
+                    && message.getSortOrder() <= question.getSortOrder())
+                .max(Comparator.comparingLong(AiChatEntry::getSortOrder)).orElse(question);
+        }
+        return new Turn(document.getThread(), question, answer, false, source);
     }
 
     /** Captures the owner and configuration that subsequent turns must continue to match. */
@@ -545,16 +561,21 @@ public class AiChatStore {
     }
 
     public String claimDeletion(String id, Scope scope) {
-        return update(id, scope, true, document -> {
-            recover(document);
+        requireUuid(id);
+        return locked(scope, directory -> {
+            Path path = threadPath(directory, id);
+            AiChatDocument document = read(path, scope, true);
+            boolean recovered = recover(document);
             AiChatThread thread = document.getThread();
-            if (!"DELETE_PENDING".equals(thread.getStatus()) || thread.getActiveMessageId() != null
-                || (thread.getDeletionLeaseId() != null && thread.getLeaseUntil() != null
-                    && thread.getLeaseUntil().after(new Date()))) return null;
-            String claim = UUID.randomUUID().toString();
-            thread.setDeletionLeaseId(claim);
-            thread.setLeaseUntil(lease());
-            thread.setDeletionError(null);
+            boolean claimed = thread.getDeletionLeaseId() != null && thread.getLeaseUntil() != null && thread.getLeaseUntil().after(new Date());
+            String claim = null;
+            if ("DELETE_PENDING".equals(thread.getStatus()) && thread.getActiveMessageId() == null && !claimed) {
+                claim = UUID.randomUUID().toString();
+                thread.setDeletionLeaseId(claim);
+                thread.setLeaseUntil(lease());
+                thread.setDeletionError(null);
+            }
+            if (recovered || claim != null) AiChatFiles.write(path, document);
             return claim;
         });
     }

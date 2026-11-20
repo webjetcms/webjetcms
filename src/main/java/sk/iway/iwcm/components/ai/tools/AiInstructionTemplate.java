@@ -2,8 +2,10 @@ package sk.iway.iwcm.components.ai.tools;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -23,9 +25,7 @@ final class AiInstructionTemplate {
 
     private final String source;
     private final List<Link> links;
-    private final Set<String> skillNames;
-    private final Set<String> toolNames;
-    private final Set<String> groupNames;
+    private final Map<Kind, Set<String>> names = new EnumMap<>(Kind.class);
 
     static AiInstructionTemplate parse(String source) {
         String text = source == null ? "" : source;
@@ -35,44 +35,26 @@ final class AiInstructionTemplate {
     private AiInstructionTemplate(String source) {
         this.source = source;
         var matcher = LINK.matcher(source);
-        if (!matcher.find()) {
-            links = List.of();
-            skillNames = Set.of();
-            toolNames = Set.of();
-            groupNames = Set.of();
-            return;
-        }
-
         var matches = new ArrayList<Link>();
-        var skills = new LinkedHashSet<String>();
-        var tools = new LinkedHashSet<String>();
-        var groups = new LinkedHashSet<String>();
-        do {
-            String name = matcher.group(2);
-            String skill = matcher.group(3);
-            Kind kind;
-            if (skill != null) {
-                kind = Kind.SKILL;
-                name = AiSkillLink.decode(skill);
-                skills.add(name);
-            } else if ("tool".equals(matcher.group(1))) {
-                kind = Kind.TOOL;
-                tools.add(name);
+        while (matcher.find()) {
+            Kind kind = Kind.SKILL;
+            String name;
+            if (matcher.group(3) != null) {
+                name = AiSkillLink.decode(matcher.group(3));
             } else {
-                kind = Kind.GROUP;
-                groups.add(name);
+                kind = "tool".equals(matcher.group(1)) ? Kind.TOOL : Kind.GROUP;
+                name = matcher.group(2);
             }
+            names.computeIfAbsent(kind, ignored -> new LinkedHashSet<>()).add(name);
             matches.add(new Link(matcher.start(), matcher.end(), kind, name));
-        } while (matcher.find());
+        }
         links = List.copyOf(matches);
-        skillNames = Collections.unmodifiableSet(skills);
-        toolNames = Collections.unmodifiableSet(tools);
-        groupNames = Collections.unmodifiableSet(groups);
+        names.replaceAll((kind, values) -> Collections.unmodifiableSet(values));
     }
 
-    Set<String> skillNames() { return skillNames; }
-    Set<String> toolNames() { return toolNames; }
-    Set<String> groupNames() { return groupNames; }
+    Set<String> skillNames() { return names.getOrDefault(Kind.SKILL, Set.of()); }
+    Set<String> toolNames() { return names.getOrDefault(Kind.TOOL, Set.of()); }
+    Set<String> groupNames() { return names.getOrDefault(Kind.GROUP, Set.of()); }
     boolean hasReferences() { return !links.isEmpty(); }
 
     /** Expands each reference at its original position. A missing resolver or replacement leaves the original link intact. */

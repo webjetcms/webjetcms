@@ -20,5 +20,5 @@ public interface AiSkillRepository extends DomainIdRepository<AiSkillEntity, Lon
 
     List<AiSkillEntity> findByDomainIdAndNameInOrderByNameAsc(int domainId, Collection<String> names);
 
-    boolean existsByDomainIdAndNameIgnoreCase(int domainId, String name);
+    boolean existsByDomainIdAndNameIgnoreCaseAndIdNot(int domainId, String name, long excludedId);
 }

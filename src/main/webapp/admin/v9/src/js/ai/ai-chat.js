@@ -228,8 +228,6 @@ export class AiChat {
     refresh() {
         if (!this.mounted || this.state.disposed) return;
         const state = this.state;
-        const followLatest = state.followLatest;
-        const scrollTop = state.scrollTop;
         const lastMessage = state.messages.at(-1);
 
         const toolbarActions = this.options.getToolbarActions?.() || [];
@@ -264,12 +262,7 @@ export class AiChat {
             previousArticle = article;
             view.$label.text(message.role === "user" ? this._text("you") : this.assistant?.providerTitle || this.assistant?.description || "");
             this._updateMessageTime(message, view);
-            if (view.text !== message.text || view.status !== message.status) {
-                if (message.role === "assistant") this._renderResponse(view, message.text || "", message.status);
-                else view.$text.text(message.text || "");
-                view.text = message.text;
-                view.status = message.status;
-            }
+            this._renderMessageText(message, view);
             view.parts.forEach(part => part.preview?.resume());
             this._renderAttachments(view.$attachments, message.attachments || [], false);
             if (message.role === "assistant") this._updateAssistant(message, view, message === lastMessage);
@@ -293,10 +286,7 @@ export class AiChat {
         this._renderAttachments(this.$attachments, state.attachments, true);
         this._releaseAttachmentUrls();
         initChatTooltips(this.element);
-        if (this.element.isConnected && this.$history[0].clientHeight > 0) {
-            this.$history[0].scrollTop = followLatest ? this.$history[0].scrollHeight : scrollTop;
-            this._saveScroll();
-        }
+        this._restoreScroll();
     }
 
     /** Sends a new prompt, or retries the last failed/stopped answer with its original input. */
@@ -372,7 +362,10 @@ export class AiChat {
                 onUpdate: text => {
                     if (!current()) return;
                     message.text = text;
-                    this.refresh();
+                    if (this.mounted) {
+                        this._renderMessageText(message, this.messageViews.get(message));
+                        this._restoreScroll();
+                    }
                 },
                 onStatus: text => {
                     if (!current()) return;
@@ -767,11 +760,26 @@ export class AiChat {
         this.$confirmation.append($("<div></div>").text(confirmation.text), $actions);
     }
 
+    _restoreScroll() {
+        const history = this.$history[0];
+        if (!this.element.isConnected || history.clientHeight === 0) return;
+        history.scrollTop = this.state.followLatest ? history.scrollHeight : this.state.scrollTop;
+        this._saveScroll();
+    }
+
     _saveScroll() {
         if (!this.mounted || !this.element.isConnected || this.$history[0].clientHeight === 0) return;
         const history = this.$history[0];
         this.state.scrollTop = history.scrollTop;
         this.state.followLatest = history.scrollHeight - history.scrollTop - history.clientHeight <= 40;
+    }
+
+    _renderMessageText(message, view) {
+        if (view.text === message.text && view.status === message.status) return;
+        if (message.role === "assistant") this._renderResponse(view, message.text || "", message.status);
+        else view.$text.text(message.text || "");
+        view.text = message.text;
+        view.status = message.status;
     }
 
     /** Separates explanations from lazy HTML previews without rebuilding their controls while streaming. */

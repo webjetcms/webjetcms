@@ -69,6 +69,16 @@ class AiAssistantsServiceTest {
             when(column.getClassName()).thenReturn("top-search-field");
             when(column.getRenderFormat()).thenReturn("dt-format-image");
             assertTrue(AiAssistantsService.getAssistantAndFieldFrom("image", column, entity).isEmpty());
+
+            chat.setClassName("%DocDetails!");
+            chat.setFieldTo("%highlight");
+            when(column.getClassName()).thenReturn("is-highlighted");
+            assertEquals(List.of(chat), AiAssistantsService.getAssistantAndFieldFrom("title", column, entity));
+            when(column.getClassName()).thenReturn("is-highlighted ai-off");
+            assertTrue(AiAssistantsService.getAssistantAndFieldFrom("title", column, entity).isEmpty());
+            chat.setClassName(entity);
+            chat.setFieldTo("title");
+            assertEquals(List.of(chat), AiAssistantsService.getAssistantAndFieldFrom("title", column, entity));
         }
     }
 

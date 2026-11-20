@@ -636,40 +636,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
     }
 
     /**
-     * Expands prompt macros, validates the expansion, and builds a provider request with supported options.
-     *
-     * @param operation requested AI operation
-     * @param assistant assistant configuration used to build the request
-     * @param inputData input data supplied to the assistant
-     * @param includesHandler handler for protected WebJET INCLUDE commands; may be {@code null}
-     * @return request ready for provider execution
-     * @throws IOException if prompt validation or input media processing fails
-     */
-    private AiRequest prepareProviderRequest(
-        AiOperation operation,
-        AssistantDefinitionEntity assistant,
-        InputDataDTO inputData,
-        IncludesHandler includesHandler
-    ) throws IOException {
-        AiPromptTemplate.ExpansionResult expansion = AiAssistantsService.expandPromptMacros(
-            assistant.getInstructions(),
-            inputData
-        );
-        validatePromptExpansion(expansion, assistant.getId());
-        if (literalTranslationOptionsResolver != null) {
-            return prepareLiteralTranslationRequest(operation, assistant, inputData, includesHandler, expansion);
-        }
-        return prepareRequest(
-            operation,
-            assistant,
-            inputData,
-            includesHandler,
-            supportedImageOptions(operation, assistant, inputData),
-            expansion
-        );
-    }
-
-    /**
      * Builds a centrally validated request for a literal translation provider.
      *
      * Literal translation accepts plain, unstructured text only. Request construction stays private so subclasses
@@ -852,16 +818,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
     }
 
     /**
-     * Builds a provider request from CMS assistant input using the provider-independent option set.
+     * Expands prompt macros, validates the expansion, and builds a provider request with supported options.
      *
      * @param operation requested AI operation
      * @param assistant assistant configuration used to build the request
      * @param inputData input data supplied to the assistant
      * @param includesHandler handler for protected WebJET INCLUDE commands; may be {@code null}
      * @return request ready for provider execution
-     * @throws IOException if prompt expansion or input media processing fails
+     * @throws IOException if prompt validation or input media processing fails
      */
-    static AiRequest prepareRequest(
+    final AiRequest prepareProviderRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
@@ -871,39 +837,11 @@ public abstract class LibrarySupportLogic implements AiInterface {
             assistant.getInstructions(),
             inputData
         );
-        return prepareRequest(
-            operation,
-            assistant,
-            inputData,
-            includesHandler,
-            isImageOperation(operation) ? basicImageOptions(inputData) : null,
-            expansion
-        );
-    }
-
-    /**
-     * Builds and audits a request from an already expanded prompt.
-     *
-     * Values consumed by prompt expansion are removed from their ordinary request fields so they are not submitted
-     * twice. Suspicious sources from both expansion and request construction are recorded for security auditing.
-     *
-     * @param operation requested AI operation
-     * @param assistant assistant configuration used to build the request
-     * @param inputData input data supplied to the assistant
-     * @param includesHandler handler for protected WebJET INCLUDE commands; may be {@code null}
-     * @param imageOptions validated image options; may be {@code null}
-     * @param expansion expanded prompt and its source classifications
-     * @return request ready for provider execution
-     * @throws IOException if input media cannot be read
-     */
-    private static AiRequest prepareRequest(
-        AiOperation operation,
-        AssistantDefinitionEntity assistant,
-        InputDataDTO inputData,
-        IncludesHandler includesHandler,
-        ImageOptions imageOptions,
-        AiPromptTemplate.ExpansionResult expansion
-    ) throws IOException {
+        validatePromptExpansion(expansion, assistant.getId());
+        if (literalTranslationOptionsResolver != null) {
+            return prepareLiteralTranslationRequest(operation, assistant, inputData, includesHandler, expansion);
+        }
+        ImageOptions imageOptions = supportedImageOptions(operation, assistant, inputData);
         String instructions = expansion.instructions();
         if (inputData.isInputIsSelectedTextInEditor() && SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())) {
             instructions += """
@@ -1003,14 +941,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
             builder.inputText(inputText);
         }
         return builder.build();
-    }
-
-    private static ImageOptions basicImageOptions(InputDataDTO inputData) {
-        return new ImageOptions(
-            inputData.getImageCount(),
-            inputData.getImageSize(),
-            inputData.getImageQuality()
-        );
     }
 
     private static boolean isImageOperation(AiOperation operation) {

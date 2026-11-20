@@ -72,11 +72,7 @@ public class AiSkillRestController extends DatatableRestControllerV2<AiSkillEnti
     }
 
     private boolean duplicateName(String name, long excludedId) {
-        if (name == null) return false;
-        return skills.exists((root, query, builder) -> builder.and(
-                builder.equal(root.get("domainId"), getDomainId()),
-                builder.equal(builder.upper(root.get("name")), builder.upper(builder.literal(name))),
-                builder.notEqual(root.get("id"), excludedId)));
+        return name != null && skills.existsByDomainIdAndNameIgnoreCaseAndIdNot(getDomainId(), name, excludedId);
     }
 
     @Override

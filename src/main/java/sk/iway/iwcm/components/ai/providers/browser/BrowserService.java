@@ -17,7 +17,6 @@ import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 /**
@@ -71,15 +70,5 @@ public class BrowserService implements AiInterface, AiAssitantsInterface {
     @Override
     public List<String> getFieldsToShow(String action) {
         return List.of("useStreaming");
-    }
-
-    @Override
-    public void prepareBeforeSave(AssistantDefinitionEntity assistantEntity) {
-        // Nothing to check.
-    }
-
-    @Override
-    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
-        // Local provider does not have provider-specific options.
     }
 }

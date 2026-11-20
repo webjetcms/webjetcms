@@ -133,9 +133,6 @@ export class AiChatTransport {
             }
         };
         request.browser = new AiBrowserExecutor(null, bridge);
-        if (!request.browser.isAvailable(assistant)) {
-            throw new Error(WJ.translate("components.ai_assistants.browser.api_not_available.js", [request.browser.getApiName(assistant)]));
-        }
         const result = await request.browser.execute(assistant, inputData, false, update);
         return {
             success: result.success,

@@ -4,8 +4,10 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.expression.spel.SpelNode;
@@ -86,6 +88,11 @@ public class AiToolAuthorization {
                 .map(a -> resolve(a, domainId, request));
     }
 
+    Optional<AiAssistantRuntime> assignedAssistant(HttpServletRequest request) {
+        return hasAdminIdentity(request)
+                ? assistant(NumberUtils.toLong(request.getHeader(ASSISTANT_HEADER), -1L), request) : Optional.empty();
+    }
+
     AiAssistantRuntime resolve(AssistantDefinitionEntity assistant, int domainId, HttpServletRequest request) {
         String key = runtimeKey(assistant.getId(), domainId);
         if (request.getAttribute(key) instanceof AiAssistantRuntime cached) return cached;
@@ -129,7 +136,24 @@ public class AiToolAuthorization {
         return AiToolServletRoutes.mayList(request.getServletContext(), entry) && isAllowed(entry, request, access);
     }
 
-    static boolean hasAdminIdentity(HttpServletRequest request) {
+    /** Lists catalog entries by name, limiting assistant requests to their resolved assignment. */
+    Stream<AiToolRegistry.Entry> visibleEntries(HttpServletRequest request) {
+        Stream<AiToolRegistry.Entry> candidates;
+        if (request.getHeader(ASSISTANT_HEADER) == null) {
+            candidates = registry.entries().stream();
+        } else {
+            try {
+                candidates = assignedAssistant(request).stream()
+                        .flatMap(runtime -> runtime.tools().stream())
+                        .map(AiToolDefinition::name).sorted().map(registry::lookup);
+            } catch (RuntimeException cannotEstablishAssignment) {
+                return Stream.empty();
+            }
+        }
+        return candidates.filter(entry -> mayList(entry, request, Access.CATALOG));
+    }
+
+    private static boolean hasAdminIdentity(HttpServletRequest request) {
         Identity user = UsersDB.getCurrentUser(request.getSession(false));
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return user != null && user.isAdmin() && auth != null && auth.isAuthenticated()

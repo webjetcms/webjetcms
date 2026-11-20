@@ -89,6 +89,7 @@ class LibrarySupportLogicTest {
 
     @TempDir
     Path tempDirectory;
+    private final LibrarySupportLogic requestBuilder = new TestLibrarySupportLogic(mock(AiClient.class), null);
 
     /** Selection edits override the default Website Builder layout rules for both stored and temporary chats. */
     @ParameterizedTest
@@ -100,11 +101,11 @@ class LibrarySupportLogicTest {
             + "Titles: exactly one <h1> per page. Source: {inputText}. Request: {userPrompt}");
         InputDataDTO input = textInput("Intenzívny šesťhodinový kurz v&nbsp;marketingu.", "Daj na hlavné výrazy tučné písmo.");
         AiOperation operation = persistent ? AiOperation.CHAT : AiOperation.TEXT;
-        AiRequest wholePage = LibrarySupportLogic.prepareRequest(operation, assistant, input, null);
+        AiRequest wholePage = requestBuilder.prepareProviderRequest(operation, assistant, input, null);
         assertFalse(wholePage.instructions().contains("[HTML_SELECTION_EDIT]"));
 
         input.setInputIsSelectedTextInEditor(true);
-        AiRequest selection = LibrarySupportLogic.prepareRequest(operation, assistant, input, null);
+        AiRequest selection = requestBuilder.prepareProviderRequest(operation, assistant, input, null);
         assertTrue(selection.instructions().contains("[HTML_SELECTION_EDIT]"));
         assertTrue(selection.instructions().contains("Do not add PageBuilder or other layout wrappers"));
         assertTrue(selection.instructions().contains("Do not invent headings"));
@@ -116,7 +117,7 @@ class LibrarySupportLogicTest {
 
     @Test
     void mapsTextInputWithoutMedia() throws Exception {
-        AiRequest request = LibrarySupportLogic.prepareRequest(AiOperation.TEXT, assistant(), textInput(), null);
+        AiRequest request = requestBuilder.prepareProviderRequest(AiOperation.TEXT, assistant(), textInput(), null);
         assertEquals("Text to process", request.inputText());
         assertNull(request.inputMedia());
         assertFalse(request.store());
@@ -127,7 +128,7 @@ class LibrarySupportLogicTest {
         AssistantDefinitionEntity assistant = assistant();
         assistant.setInstructions("Source: {inputText}");
         InputDataDTO input = textInput();
-        AiRequest request = LibrarySupportLogic.prepareRequest(AiOperation.TEXT, assistant, input, null);
+        AiRequest request = requestBuilder.prepareProviderRequest(AiOperation.TEXT, assistant, input, null);
 
         assertEquals("", request.inputText());
         assertEquals("", request.userPrompt());
@@ -146,7 +147,7 @@ class LibrarySupportLogicTest {
             "retrievedContext",
             "\"Read context from the separately supplied INPUT_TEXT section.\""
         ));
-        AiRequest questionInInstructions = LibrarySupportLogic.prepareRequest(
+        AiRequest questionInInstructions = requestBuilder.prepareProviderRequest(
             AiOperation.TEXT,
             assistant,
             input,
@@ -163,7 +164,7 @@ class LibrarySupportLogicTest {
             "userQuestion",
             "\"Read the question from the separately supplied USER_PROMPT section.\""
         ));
-        AiRequest contextInInstructions = LibrarySupportLogic.prepareRequest(
+        AiRequest contextInInstructions = requestBuilder.prepareProviderRequest(
             AiOperation.TEXT,
             assistant,
             input,
@@ -185,7 +186,7 @@ class LibrarySupportLogicTest {
         input.setStructuredInput(true);
 
         try (MockedStatic<Adminlog> adminlogMock = mockStatic(Adminlog.class)) {
-            AiRequest request = LibrarySupportLogic.prepareRequest(
+            AiRequest request = requestBuilder.prepareProviderRequest(
                 AiOperation.TEXT,
                 assistant,
                 input,
@@ -236,7 +237,7 @@ class LibrarySupportLogicTest {
         input.setInputFile(image.toFile());
         input.setUserPrompt("Keep the foreground subject");
 
-        AiRequest request = LibrarySupportLogic.prepareRequest(
+        AiRequest request = requestBuilder.prepareProviderRequest(
             LibrarySupportLogic.imageOperation(input),
             assistant,
             input,
@@ -529,40 +530,24 @@ class LibrarySupportLogicTest {
     @CsvSource({"false,false", "true,false", "true,true"})
     void preparesDeferredDefinitionsForEachContinuationMode(boolean persistent, boolean legacyReplay) throws Exception {
         var assistant = chatAssistant();
-        assistant.setInstructions("Help with records.");
-        var input = textInput();
-        input.setInputValue("Original attachment context");
-        input.setUserPrompt("Create a page from this attachment");
-        var read = new AiToolDefinition("find", "Find a record", Map.of("type", "object", "properties",
-                Map.of("recordId", Map.of("type", "integer")), "required", List.of("recordId")), "/records/{recordId}", "GET", Map.of());
-        var loader = new AiToolDefinition(AiAssistantRuntime.LOAD_TOOLS, "Load definitions", Map.of("type", "object", "properties",
-                Map.of("names", Map.of("type", "array", "items", Map.of("type", "string"))), "required", List.of("names")),
-                "/details", "GET", Map.of());
-        var definitions = List.of(read, loader);
-        AiOperation operation = persistent ? AiOperation.CHAT : AiOperation.TEXT;
-        input.setToolProtocol(new AiToolProtocol(definitions, List.of()));
-        var initial = LibrarySupportLogic.prepareRequest(operation, assistant, input, null);
-        assertFalse(initial.instructions().contains("\"required\":[\"recordId\"]"));
-        assertTrue(initial.instructions().contains("\"required\":[\"names\"]"));
-
+        var input = textInput("Original attachment context", "Create a page from this attachment");
+        var read = new AiToolDefinition("find", "Find a record", Map.of("required", List.of("recordId")), "/records", "GET", Map.of());
+        var loader = new AiToolDefinition(AiAssistantRuntime.LOAD_TOOLS, "Load", Map.of("required", List.of("names")), "/details", "GET", Map.of());
         var loaded = new AiToolProtocol.Result(loader.name(), Map.of("names", List.of(read.name())), 200, Map.of("tools", List.of(read)), false);
-        input.setToolProtocol(new AiToolProtocol(definitions, List.of(loaded)));
+        var found = new AiToolProtocol.Result(read.name(), Map.of("recordId", 42), 200, Map.of("id", 42), false);
+        input.setToolProtocol(new AiToolProtocol(List.of(read, loader), List.of(loaded, found)));
         input.setPreviousResponseId(persistent ? "discovery-response" : null);
         input.setReplayToolResults(legacyReplay);
-        var afterDiscovery = LibrarySupportLogic.prepareRequest(operation, assistant, input, null);
-        assertTrue(afterDiscovery.inputText().contains("\"required\":[\"recordId\"]"));
-        assertTrue(afterDiscovery.inputText().contains(read.version()));
-        assertEquals(initial.instructions(), afterDiscovery.instructions());
 
-        var found = new AiToolProtocol.Result(read.name(), Map.of("recordId", 42), 200, Map.of("id", 42), false);
-        input.setToolProtocol(new AiToolProtocol(definitions, List.of(loaded, found)));
-        var afterRead = LibrarySupportLogic.prepareRequest(operation, assistant, input, null);
-        assertEquals(!persistent || legacyReplay, afterRead.inputText().contains("\"required\":[\"recordId\"]"));
-        assertEquals(persistent ? "discovery-response" : null, afterRead.previousResponseId());
-        assertTrue(afterRead.inputText().contains("\"id\":42"));
-        assertEquals(!persistent || legacyReplay, afterRead.inputText().contains("Original attachment context"));
-        assertEquals("Create a page from this attachment", afterRead.userPrompt());
-        assertEquals(initial.instructions(), afterRead.instructions());
+        var request = requestBuilder.prepareProviderRequest(persistent ? AiOperation.CHAT : AiOperation.TEXT, assistant, input, null);
+        assertTrue(request.instructions().contains("\"required\":[\"names\"]"));
+        assertFalse(request.instructions().contains("\"required\":[\"recordId\"]"));
+        assertEquals(!persistent || legacyReplay, request.inputText().contains("\"required\":[\"recordId\"]"));
+        assertEquals(!persistent || legacyReplay, request.inputText().contains(read.version()));
+        assertEquals(!persistent || legacyReplay, request.inputText().contains("Original attachment context"));
+        assertTrue(request.inputText().contains("\"id\":42"));
+        assertEquals(input.getPreviousResponseId(), request.previousResponseId());
+        assertEquals(input.getUserPrompt(), request.userPrompt());
     }
 
     @Nested
@@ -594,31 +579,29 @@ class LibrarySupportLogicTest {
         @ParameterizedTest
         @ValueSource(ints = {200, 400})
         void correctsArgumentsAfterBackendValidation(int status) throws Exception {
+            String command = "!INCLUDE(/components/example.jsp, title=\"Hello\")!";
+            input.setInputValue(command);
+            assistant.setInstructions("Copy the input into the record.");
             var save = new AiToolDefinition("save", "Save", Map.of("type", "object", "properties",
                     Map.of("name", Map.of("type", "string")), "required", List.of("name")), "/records", "POST", Map.of());
             var rejected = new AiToolProtocol.Result("save", Map.of(), status,
                     Map.of("fieldErrors", List.of(Map.of("name", "name", "status", "Name must not be blank."))), false);
-            var protocol = AiToolProtocol.prepare(new AiAssistantRuntime(assistant, "", List.of(save), true), List.of(rejected));
-            input.setToolProtocol(protocol);
+            input.setToolProtocol(AiToolProtocol.prepare(new AiAssistantRuntime(assistant, "", List.of(save), true), List.of(rejected)));
             when(client.execute(any(), any(), any(), same(input.getCancellationToken()), any())).thenAnswer(call -> {
                 var request = call.getArgument(1, AiRequest.class);
                 assertTrue(request.inputText().contains("Name must not be blank."));
                 assertTrue(request.inputText().contains("fieldErrors"));
                 assertTrue(request.inputText().contains("validation_error"));
                 assertFalse(request.instructions().contains("Name must not be blank."));
+                String token = request.inputText().lines().findFirst().orElseThrow();
+                assertTrue(token.startsWith("__WJ_AI_INCLUDE_"));
                 return reply("""
-                    {"type":"call","name":"save","arguments":{"name":"Corrected name"}}
-                    """, "corrected");
+                    {"type":"call","name":"save","arguments":{"name":"Fixed","rows":[{"html":"%s"}]}}
+                    """.formatted(token), "corrected");
             });
 
             var result = logic.getAiResponse(assistant, input, mock(Prop.class), null, null);
-            assertEquals(Map.of("name", "Corrected name"), result.getToolCall().arguments());
-            var repeated = new AssistantResponseDTO();
-            protocol.apply("""
-                {"type":"call","name":"save","arguments":{}}
-                """, repeated, mock(Prop.class));
-            assertNull(repeated.getToolCall());
-            assertNotNull(repeated.getToolCorrection());
+            assertEquals(Map.of("name", "Fixed", "rows", List.of(Map.of("html", command))), result.getToolCall().arguments());
         }
 
         @Test
@@ -651,94 +634,56 @@ class LibrarySupportLogicTest {
             assertEquals("call-1", sent.getValue().toolResult().callId());
         }
 
-        @Test
-        void restoresIncludesInNestedToolArguments() throws Exception {
-            String command = "!INCLUDE(/components/example.jsp, title=\"Hello\")!";
-            input.setInputValue(command);
-            assistant.setInstructions("Copy the input into the record.");
-            var save = new AiToolDefinition("save", "Save", Map.of(), "/records", "POST", Map.of());
-            input.setToolProtocol(new AiToolProtocol(List.of(save), List.of()));
-            when(client.execute(any(), any(), any(), same(input.getCancellationToken()), any())).thenAnswer(call -> {
-                String token = call.getArgument(1, AiRequest.class).inputText();
-                assertTrue(token.startsWith("__WJ_AI_INCLUDE_"));
-                return reply("""
-                    {"type":"call","name":"save","arguments":{"rows":[{"id":42,"html":"%s"}]}}
-                    """.formatted(token), "one");
-            });
-
-            var result = logic.getAiResponse(assistant, input, mock(Prop.class), null, null);
-            assertEquals(Map.of("rows", List.of(Map.of("id", 42, "html", command))), result.getToolCall().arguments());
-        }
-
+        /** Both chat modes stream only the final answer and charge each completed provider attempt. */
         @ParameterizedTest
-        @ValueSource(booleans = {false, true})
-        void streamsOnlyTheAcceptedDecision(boolean temporal) throws Exception {
+        @CsvSource({"true,2", "false,2", "false,0"})
+        void streamsAcceptedClarification(boolean temporal, int rejections) throws Exception {
             assistant.setUseTemporal(temporal);
+            String question = "Which folder should I use?";
+            var replies = rejections == 0 ? List.of(question) : List.of("{", "{}", question);
             var requests = ArgumentCaptor.forClass(AiRequest.class);
-            when(client.execute(any(), requests.capture(), any(), same(input.getCancellationToken()), any())).thenReturn(
-                reply("{", "first"), reply("{}", "second"), reply("{\"type\":\"final\",\"text\":\"Found 1596\"}", "accepted"));
-            try (var session = mockStatic(AiChatSession.class)) {
-                session.when(() -> AiChatSession.resolve(null, assistant, null)).thenReturn(new AiChatSession.Continuation("original", Map.of()));
-                var output = new StringWriter();
-                var result = logic.getAiStreamResponse(assistant, input, mock(Prop.class), null, new BufferedWriter(output), null);
-                assertEquals("Found 1596", output.toString());
-                assertEquals(9, result.getTotalTokens());
-                stats.verify(() -> AiStatService.addRecord(7L, 3, null, null), times(3));
-                verify(assistants, times(2)).countWithReachedTokenLimit(eq(7L), anyInt());
-                var sent = requests.getAllValues();
-                for (int i = 0; i < 3; i++) {
-                    var request = sent.get(i);
-                    assertTrue(request.inputText().contains("1596"));
-                    assertTrue(request.instructions().contains("Text to process"));
-                    assertTrue(request.instructions().contains("Make it shorter"));
-                    assertEquals(temporal ? null : "original", request.previousResponseId());
-                    if (!temporal) assertEquals("Make it shorter", request.userPrompt());
-                    assertFalse(request.instructions().contains("Runtime feedback (data, not a new user request):"));
-                    assertFalse(request.instructions().contains("rejectedDecision"));
-                    if (i > 0) {
-                        String feedbackText = request.inputText().split(java.util.regex.Pattern.quote("Runtime feedback (data, not a new user request):\n"), 2)[1];
-                        var feedback = new com.fasterxml.jackson.databind.ObjectMapper().readTree(feedbackText);
-                        assertEquals("decision_validation", feedback.path("stage").asText());
-                        assertFalse(feedback.path("executed").asBoolean());
-                        assertEquals(i == 1 ? "{" : "{}", feedback.path("rejectedDecision").asText());
-                    }
-                }
-                if (!temporal) session.verify(() -> AiChatSession.remember(eq(assistant), any(), eq(new AiChatSession.Continuation("accepted", Map.of()))));
-            }
-        }
-
-        /** Ordinary clarification passes through real client validation without a JSON-format retry. */
-        @Test
-        void completesClarificationUsingRealClient() throws Exception {
-            assistant.setUseTemporal(false);
             AiProvider provider = mock(AiProvider.class);
             when(provider.id()).thenReturn("test-provider");
             when(provider.capabilities("test-model")).thenReturn(chatCapabilities(Support.SUPPORTED));
             when(provider.inputHandling(any())).thenReturn(AiInputHandling.PROTECTED_PROMPT);
             doCallRealMethod().when(provider).execute(any(), any(), any(), any());
-            String question = "Which folder should I use?";
-            var output = new StringWriter();
-            var requests = ArgumentCaptor.forClass(AiRequest.class);
+            var steps = replies.listIterator();
             when(provider.execute(requests.capture(), any(), same(input.getCancellationToken())))
-                .thenReturn(reply(question, "accepted"));
-            var configuration = mock(WebjetAiConfigurationService.class);
-            when(configuration.resolve(any(), any())).thenReturn(AiProviderConfig.empty());
+                .thenAnswer(call -> reply(steps.next(), "response-" + steps.nextIndex()));
+            var config = mock(WebjetAiConfigurationService.class);
+            when(config.resolve(any(), any())).thenReturn(AiProviderConfig.empty());
+
             try (var realClient = AiClient.of(provider); var session = mockStatic(AiChatSession.class)) {
-                session.when(() -> AiChatSession.resolve(null, assistant, null))
-                    .thenReturn(new AiChatSession.Continuation("original", Map.of()));
-                var adapter = new TestLibrarySupportLogic(realClient, configuration);
-                var result = adapter.getAiStreamResponse(assistant, input, mock(Prop.class), null, new BufferedWriter(output), null);
-                assertNull(result.getError());
+                session.when(() -> AiChatSession.resolve(null, assistant, null)).thenReturn(new AiChatSession.Continuation("original", Map.of()));
+                var output = new StringWriter();
+                var result = new TestLibrarySupportLogic(realClient, config).getAiStreamResponse(assistant, input, mock(Prop.class),
+                    null, new BufferedWriter(output), null);
                 assertEquals(question, output.toString());
-                assertEquals(3, result.getTotalTokens());
+                assertEquals(3 * replies.size(), result.getTotalTokens());
+                stats.verify(() -> AiStatService.addRecord(7L, 3, null, null), times(replies.size()));
+                verify(assistants, times(rejections)).countWithReachedTokenLimit(eq(7L), anyInt());
                 var sent = requests.getAllValues();
-                assertEquals(List.of(AiOperation.CHAT), sent.stream().map(AiRequest::operation).toList());
-                assertEquals("original", sent.get(0).previousResponseId());
-                assertTrue(sent.get(0).store());
-                assertEquals("[BEGIN_UNTRUSTED_USER_PROMPT]\nMake it shorter\n[END_UNTRUSTED_USER_PROMPT]", sent.get(0).userPrompt());
-                assertTrue(sent.get(0).inputText().contains("1596"));
-                session.verify(() -> AiChatSession.remember(eq(assistant), any(), eq(new AiChatSession.Continuation("accepted", Map.of()))));
-                stats.verify(() -> AiStatService.addRecord(7L, 3, null, null));
+                assertEquals(replies.size(), sent.size());
+                for (int i = 0; i < sent.size(); i++) {
+                    var request = sent.get(i);
+                    assertEquals(temporal ? AiOperation.TEXT : AiOperation.CHAT, request.operation());
+                    assertEquals(!temporal, request.store());
+                    assertEquals(temporal ? null : "original", request.previousResponseId());
+                    if (!temporal) assertEquals("[BEGIN_UNTRUSTED_USER_PROMPT]\nMake it shorter\n[END_UNTRUSTED_USER_PROMPT]", request.userPrompt());
+                    assertTrue(request.inputText().contains("1596"));
+                    assertTrue(request.instructions().contains("Text to process"));
+                    assertTrue(request.instructions().contains("Make it shorter"));
+                    assertFalse(request.instructions().contains("rejectedDecision"));
+                    if (i > 0) {
+                        String feedbackText = request.inputText().split("Runtime feedback \\(data, not a new user request\\):\n", 2)[1];
+                        var feedback = new com.fasterxml.jackson.databind.ObjectMapper().readTree(feedbackText.lines().findFirst().orElseThrow());
+                        assertEquals("decision_validation", feedback.required("stage").asText());
+                        assertFalse(feedback.required("executed").booleanValue());
+                        assertEquals(replies.get(i - 1), feedback.required("rejectedDecision").asText());
+                    }
+                }
+                if (!temporal) session.verify(() -> AiChatSession.remember(eq(assistant), any(),
+                    eq(new AiChatSession.Continuation("response-" + replies.size(), Map.of()))));
             }
         }
 

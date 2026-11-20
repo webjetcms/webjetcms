@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -267,5 +268,25 @@ class AiChatStoreTest {
         store.remove(scope, id, claim);
         assertEquals(HttpStatus.NOT_FOUND,
             assertThrows(ResponseStatusException.class, () -> store.get(id, scope)).getStatusCode());
+    }
+
+    /** Checking for pending deletion writes the transcript only when a lease or message actually changes. */
+    @Test
+    void deletionCheckSkipsActiveTurnWritesAndPersistsLeaseRecovery() throws IOException {
+        var turn = store.begin(request(null, null, "Question"), scope, assistant, "config");
+        String id = turn.thread().getId();
+        Path path = root.resolve("7/42").resolve(id).resolve("ai_chat.json");
+        FileTime original = FileTime.fromMillis(1000);
+        Files.setLastModifiedTime(path, original);
+        assertNull(store.claimDeletion(id, scope));
+        assertEquals(original, Files.getLastModifiedTime(path));
+
+        var document = AiChatFiles.read(path);
+        document.getThread().setLeaseUntil(new Date(0));
+        AiChatFiles.write(path, document);
+        assertNull(store.claimDeletion(id, scope));
+        var recovered = AiChatFiles.read(path);
+        assertNull(recovered.getThread().getActiveMessageId());
+        assertEquals("stopped", recovered.getMessages().get(1).getStatus());
     }
 }

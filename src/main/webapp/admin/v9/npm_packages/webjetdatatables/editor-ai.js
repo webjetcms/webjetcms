@@ -769,37 +769,15 @@ export class EditorAi {
     }
 
 
-    async _executeSingleAction(button, column, aiCol, inputData, reuseApiInstance = false, setFunction = null) {
-        let self = this;
-        let executionResult = null;
-
-        if ("browser" === aiCol.provider) {
-            if (this.aiBrowserExecutor.isAvailable(aiCol)) {
-                executionResult = await this.aiBrowserExecutor.execute(aiCol, inputData, reuseApiInstance, setFunction);
-            } else {
-                executionResult = new AiExecutionResult();
-                executionResult.statusKey = "components.ai_assistants.browser.api_not_available.js"
-                let apiName = this.aiBrowserExecutor.getApiName(aiCol);
-                executionResult.statusKeyParams = [apiName];
-            }
-        } else {
-            // IS IMAGE
-
-            if ("image"===inputData.outputValueType) {
-                //inputData.value = "/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg";
-
-                //We want IMAGE AI response, because SRC field is IMAGE
-                if(aiCol.action === "generate_image") {
-                    // We want image BUT we want generated new image from prompt (TEXT) so we set inputValueType as TEXT (we do NOT send image path od old image)
-                    inputData.inputValueType = "text"
-                }
-
-                executionResult = await this.aiRestExecutor.executeImageAction(aiCol, inputData, button);
-            } else {
-                executionResult = await this.aiRestExecutor.execute(aiCol, inputData, setFunction);
-            }
+    _executeSingleAction(button, column, aiCol, inputData, reuseApiInstance = false, setFunction = null) {
+        if (aiCol.provider === "browser") {
+            return this.aiBrowserExecutor.execute(aiCol, inputData, reuseApiInstance, setFunction);
         }
-        return executionResult;
+        if (inputData.outputValueType === "image") {
+            if (aiCol.action === "generate_image") inputData.inputValueType = "text";
+            return this.aiRestExecutor.executeImageAction(aiCol, inputData, button);
+        }
+        return this.aiRestExecutor.execute(aiCol, inputData, setFunction);
     }
 
 }

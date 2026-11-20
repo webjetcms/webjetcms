@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.ai.rest;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -18,18 +19,19 @@ class AssistantStreamWriter extends Writer {
     private final Writer output;
     private final ObjectMapper mapper = new ObjectMapper();
     private final StringBuilder pending = new StringBuilder();
+    private boolean finished;
 
     AssistantStreamWriter(Writer output) {
         this.output = output;
     }
 
     @Override
-    public void write(char[] chars, int offset, int length) {
-        pending.append(chars, offset, length);
+    public synchronized void write(char[] chars, int offset, int length) {
+        if (!finished) pending.append(chars, offset, length);
     }
 
     @Override
-    public void flush() throws IOException {
+    public synchronized void flush() throws IOException {
         if (pending.length() > 0) {
             writeMessage(Map.of("type", "delta", "text", pending.toString()));
             pending.setLength(0);
@@ -37,8 +39,21 @@ class AssistantStreamWriter extends Writer {
         output.flush();
     }
 
-    /** Writes the terminal response after all pending text has been flushed. */
-    void writeResult(AssistantResponseDTO response) throws IOException {
+    /** A saved-chat worker can deliver a late callback after the request has finished. */
+    synchronized void writeDelta(String text) {
+        if (finished) throw new CancellationException();
+        try {
+            pending.append(text);
+            flush();
+        } catch (IOException disconnected) {
+            finished = true;
+            throw new CancellationException();
+        }
+    }
+
+    synchronized void writeResult(AssistantResponseDTO response) throws IOException {
+        if (finished) return;
+        finished = true;
         flush();
         writeMessage(Map.of("type", "result", "result", response));
         output.flush();
@@ -50,7 +65,8 @@ class AssistantStreamWriter extends Writer {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
+        finished = true;
         flush();
         output.close();
     }

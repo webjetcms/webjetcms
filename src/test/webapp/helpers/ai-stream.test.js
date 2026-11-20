@@ -30,76 +30,43 @@ function loadTransport(fetch, notifications = []) {
 const toolCall = (name, args = {}) => ({ toolCall: { name, arguments: args, write: name === 'save' } });
 const done = { response: 'Done' };
 
-test('tool calls report saved IDs for writes but not for reads', async () => {
-    const calls = [];
-    const { runToolSteps } = loadTransport(async (url, options) => {
-        assert.equal(options.headers['X-WebJET-AI-Chat'], 'unsaved');
-        calls.push(url);
-        return Response.json({ data: [{ id: 42 }] });
-    });
-    const steps = [toolCall('find'), toolCall('save'), { response: 'Saved.' }];
-    const result = await runToolSteps(7, () => steps.shift());
-    assert.deepEqual(calls, ['/admin/rest/ai/tools/find/call', '/admin/rest/ai/tools/save/call']);
-    assert.equal(result.toolStatus, 'save — HTTP 200 (ID 42)');
-    assert.equal(result.response, 'Saved.');
-});
-
-test('saved tool writes identify the issuing thread and message at dispatch', async () => {
-    const endpoint = '/admin/rest/ai/chat/messages';
-    let round = 0;
-    const { requestAiText } = loadTransport(async (url, options) => {
-        if (url === endpoint) {
-            if (round++ === 0) return Response.json({ threadId: 'thread', messageId: 'message', revision: 1,
-                toolCall: { name: 'save', arguments: { id: 42 }, write: true } });
-            return Response.json({ response: 'Done', totalTokens: 1 });
-        }
-        assert.equal(url, '/admin/rest/ai/tools/save/call');
-        assert.equal(options.headers['X-WebJET-AI-Chat'], 'thread/message');
-        assert.deepEqual(JSON.parse(options.body), { id: 42 });
-        return Response.json({ id: 42 });
-    });
-    const result = await requestAiText({ assistantId: 7 }, { endpoint, toolsEnabled: true });
-    assert.equal(result.toolStatus, 'save — HTTP 200 (ID 42)');
-});
+const usage = (inputTokens, outputTokens) => ({ totalTokens: inputTokens + outputTokens, tokenBreakdown: { inputTokens, outputTokens } });
 
 for (const saved of [false, true]) {
-    test(`tool rounds count each reported token once (saved=${saved})`, async () => {
+    test(`tool rounds count tokens once, preserve completed reads and identify writes (saved=${saved})`, async () => {
         const endpoint = saved ? '/admin/rest/ai/chat/messages' : undefined;
+        const context = saved ? { threadId: 'thread', messageId: 'answer', revision: 1 } : { conversationId: 'turn' };
         const steps = [
-            { ...toolCall('find'), conversationId: 'turn', threadId: saved ? 'thread' : null, messageId: 'answer',
-                totalTokens: 10, tokenBreakdown: { inputTokens: 8, outputTokens: 2 } },
-            { response: 'Done', totalTokens: saved ? 16 : 6, tokenBreakdown: { inputTokens: saved ? 12 : 4, outputTokens: saved ? 4 : 2 } }
+            { ...toolCall('find'), ...context, ...usage(8, 2) },
+            { ...toolCall('details'), ...context, ...(saved ? usage(9, 3) : usage(1, 1)) },
+            { ...toolCall('save', { id: 42 }), ...context, ...(saved ? usage(10, 3) : usage(1, 0)) },
+            { ...done, ...(saved ? usage(12, 4) : usage(2, 1)) }
         ];
-        const { requestAiText } = loadTransport(url => Response.json(url.includes('/tools/') ? [] : steps.shift()));
-        const answer = await requestAiText({ assistantId: 7 }, { endpoint, toolsEnabled: true });
+        const calls = [], messages = [];
+        const { requestAiText } = loadTransport((url, options) => {
+            if (!url.includes('/tools/')) {
+                messages.push(options.body);
+                if (saved && messages.length === 2) throw new TypeError('Connection lost');
+                return Response.json(steps.shift());
+            }
+            calls.push([url, JSON.parse(options.body)]);
+            assert.equal(options.headers['X-WebJET-AI-Chat'], saved ? 'thread/answer' : 'unsaved');
+            return Response.json({ data: [{ id: 42 }] });
+        });
+        const answer = await requestAiText({ assistantId: 7, requestId: 'request' }, { endpoint, toolsEnabled: true });
+        if (saved) {
+            assert.equal(messages[2], messages[1], 'Resend the same model request after a lost response.');
+            assert.deepEqual(JSON.parse(messages[2]).toolResults.map(result => result.name), ['find']);
+        }
+        assert.deepEqual(calls, [['/admin/rest/ai/tools/find/call', {}], ['/admin/rest/ai/tools/details/call', {}],
+            ['/admin/rest/ai/tools/save/call', { id: 42 }]]);
+        assert.equal(answer.response, done.response);
+        assert.equal(answer.toolStatus, 'save — HTTP 200 (ID 42)');
         assert.equal(answer.totalTokens, 16);
-        assert.equal(answer.tokenBreakdown.inputTokens, 12);
-        assert.equal(answer.tokenBreakdown.outputTokens, 4);
+        assert.deepEqual([answer.tokenBreakdown.inputTokens, answer.tokenBreakdown.outputTokens], [12, 4]);
         assert.equal(steps.length, 0);
     });
 }
-
-test('a lost saved-chat response resumes the second read with the first result intact', async () => {
-    const endpoint = '/admin/rest/ai/chat/messages';
-    const messages = [], reads = [];
-    const { requestAiText } = loadTransport(async (url, { body }) => {
-        if (url !== endpoint) {
-            reads.push(url);
-            return Response.json({ id: 42 });
-        }
-        messages.push(body);
-        if (messages.length === 2) throw new TypeError('Connection lost');
-        if (messages.length === 4) return Response.json({ response: 'Done', totalTokens: 3 });
-        const name = messages.length === 1 ? 'find' : 'details';
-        return Response.json({ threadId: 'thread', messageId: 'message', revision: 1,
-            toolCall: { name, arguments: {}, write: false } });
-    });
-    const answer = await requestAiText({ assistantId: 7, requestId: 'request' }, { endpoint, toolsEnabled: true });
-    assert.equal(messages[2], messages[1]);
-    assert.deepEqual(JSON.parse(messages[2]).toolResults.map(result => result.name), ['find']);
-    assert.deepEqual(reads, ['/admin/rest/ai/tools/find/call', '/admin/rest/ai/tools/details/call']);
-    assert.equal(answer.response, 'Done');
-});
 
 test('a second write stops on a duplicate call, invalid arguments or a partially applied first write', async t => {
     for (const [status, body, args, message, retryable] of [
@@ -278,30 +245,24 @@ test('HTTP authentication failures preserve session and CSRF notifications', asy
     }
 });
 
-test('cancelling during runtime lookup does not send a stop for a task that never started', async () => {
-    const requests = [];
-    const { AiChatTransport } = loadTransport(url => { requests.push(url); return Promise.resolve(new Response()); });
-    const transport = new AiChatTransport();
-    const pending = transport.execute({ assistantId: 7 }, {});
-    transport.cancel();
-    assert.equal((await pending).stopped, true);
-    assert.deepEqual(requests, []);
-});
-
 test('chat cancellation aborts the shared fetch and stops the same server task', async () => {
     const requests = [];
-    let started;
-    const dispatched = new Promise(resolve => { started = resolve; });
+    const dispatched = Promise.withResolvers();
     const { AiChatTransport } = loadTransport((url, options) => {
-        started();
+        dispatched.resolve();
         requests.push({ url, ...options });
         if (options.method === 'GET') return Promise.resolve(new Response());
         return new Promise((resolve, reject) => options.signal.addEventListener('abort',
             () => reject(new Error('Aborted')), { once: true }));
     });
     const transport = new AiChatTransport();
+    const lookup = transport.execute({ assistantId: 7 }, {});
+    transport.cancel();
+    assert.equal((await lookup).stopped, true);
+    assert.deepEqual(requests, [], 'Cancelling runtime lookup has no server task to stop.');
+
     const pending = transport.execute({ assistantId: 7 }, {});
-    await dispatched;
+    await dispatched.promise;
     const data = JSON.parse(requests[0].body);
     transport.cancel();
     const chat = await pending;

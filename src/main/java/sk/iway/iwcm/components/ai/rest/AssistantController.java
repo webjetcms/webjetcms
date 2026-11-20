@@ -6,28 +6,26 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webjetcms.ai.AiErrorCategory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.UploadFileTools;
@@ -44,44 +42,21 @@ import sk.iway.iwcm.system.datatable.json.DataTableColumn;
  * REST controller for AI assistants - handles XHR requests from UI
  */
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/admin/rest/ai/assistant/")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_button')")
-public class AssistantController {
+public class AssistantController extends AiChatRequestSupport {
 
     private final AiService aiService;
     private final AiStatRepository statRepo;
     private final AssistantDefinitionRepository assistantRepo;
 
     private final AiTaskRegistry aiTaskRegistry;
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    @Autowired
-    public AssistantController(AiService aiService, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, AiTaskRegistry aiTaskRegistry) {
-        this.aiService = aiService;
-        this.statRepo = statRepo;
-        this.assistantRepo = assistantRepo;
-        this.aiTaskRegistry = aiTaskRegistry;
-    }
 
     @PostMapping(value = "/response/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
-        AssistantResponseDTO responseDto = null;
-
-        try {
-            // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
-            inputData.setBonusParams(null);
-
-            inputData.setInteractiveAssistant(true);
-            responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
-        } catch (Exception e) {
-            responseDto = errorResponse(e, "AI response error: ");
-        }
-
-        if (responseDto == null) {
-            responseDto = AssistantResponseDTO.fromError(null);
-        }
-
-        return responseDto;
+        return runAssistant(inputData, true, "AI response error: ",
+            () -> aiService.getAiResponse(inputData, statRepo, assistantRepo, request));
     }
 
     /** Runs a page chat turn with validated files that are not saved to chat history. */
@@ -93,22 +68,8 @@ public class AssistantController {
 
     @PostMapping(value = "/response-image/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiImageReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
-        AssistantResponseDTO responseDto = null;
-
-        try {
-            // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
-            inputData.setBonusParams(null);
-
-            responseDto = aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request);
-        } catch (Exception e) {
-            responseDto = errorResponse(e, "AI response image error: ");
-        }
-
-        if (responseDto == null) {
-            responseDto = AssistantResponseDTO.fromError(null);
-        }
-
-        return responseDto;
+        return runAssistant(inputData, false, "AI response image error: ",
+            () -> aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request));
     }
 
     @PostMapping(value="/response-stream/", consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -125,35 +86,17 @@ public class AssistantController {
 
         OutputStreamWriter output = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8);
         AssistantStreamWriter streamWriter = framed ? new AssistantStreamWriter(output) : null;
-        BufferedWriter writer = new BufferedWriter(framed ? streamWriter : output);
-
-        //5 hours of debugging, if this is not here, that writer.flush later will cause 401/403 error for REST calls
-        writer.write("");
-        writer.flush();
-
-        AssistantResponseDTO responseDto = null;
-
-        try {
-            // Safety measure - InputDataDTO.bonusParams can be set ONLY in BE
-            inputData.setBonusParams(null);
-
-            inputData.setInteractiveAssistant(true);
-            responseDto = aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request);
-        } catch(Exception e) {
-            responseDto = errorResponse(e, "AI streamed response error: ");
-        } finally {
-
-            if (responseDto == null) {
-                responseDto = AssistantResponseDTO.fromError(null);
-            }
-
+        try (BufferedWriter writer = new BufferedWriter(framed ? streamWriter : output)) {
+            // Commit the authorized response before provider work moves to a worker.
+            writer.flush();
+            AssistantResponseDTO responseDto = runAssistant(inputData, true, "AI streamed response error: ",
+                () -> aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request));
             if (streamWriter != null) {
                 writer.flush();
                 streamWriter.writeResult(responseDto);
             } else {
                 writer.write(responseDto.toJsonString());
             }
-            writer.close();
         }
     }
 
@@ -166,29 +109,14 @@ public class AssistantController {
     }
 
     private InputDataDTO uploadInput(String message, List<MultipartFile> files) {
-        InputDataDTO input;
-        try {
-            input = mapper.readValue(message, InputDataDTO.class);
-        } catch (IOException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalidInput");
-        }
+        InputDataDTO input = readMessage(message, InputDataDTO.class);
         if (input == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalidInput");
         input.setChatAttachments(AiChatAttachments.read(files));
         return input;
     }
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Map<String, String>> tooLarge() {
-        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(Map.of("error", "attachmentLimit"));
-    }
-
-    @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, String>> uploadError(ResponseStatusException exception) {
-        return ResponseEntity.status(exception.getStatusCode())
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(Map.of("error", exception.getReason() == null ? "generationFailed" : exception.getReason()));
+        return error(exception);
     }
 
     @GetMapping("/file/binary/")
@@ -225,15 +153,22 @@ public class AssistantController {
         return UploadFileTools.getPageUploadSubDir(docId, groupId, title, "/images");
     }
 
-    private AssistantResponseDTO errorResponse(Exception exception, String auditMessage) {
-        AssistantResponseDTO response = AssistantResponseDTO.fromError(exception);
-        if (AiErrorCategory.CANCELLED.name().equals(response.getErrorCategory()) == false) {
-            exception.printStackTrace();
-            if (exception instanceof ProviderCallException == false) {
-                Adminlog.add(Adminlog.TYPE_AI, auditMessage + response.getError(), 0L, -1L);
+    private AssistantResponseDTO runAssistant(InputDataDTO input, boolean interactive, String auditMessage, Callable<AssistantResponseDTO> call) {
+        try {
+            input.setBonusParams(null); // Only server-side callers can supply extra prompt parameters.
+            input.setInteractiveAssistant(interactive);
+            AssistantResponseDTO result = call.call();
+            return result == null ? AssistantResponseDTO.fromError(null) : result;
+        } catch (Exception exception) {
+            AssistantResponseDTO response = AssistantResponseDTO.fromError(exception);
+            if (!AiErrorCategory.CANCELLED.name().equals(response.getErrorCategory())) {
+                exception.printStackTrace();
+                if (!(exception instanceof ProviderCallException)) {
+                    Adminlog.add(Adminlog.TYPE_AI, auditMessage + response.getError(), 0L, -1L);
+                }
             }
+            return response;
         }
-        return response;
     }
 
     @GetMapping("/check-name-location/")

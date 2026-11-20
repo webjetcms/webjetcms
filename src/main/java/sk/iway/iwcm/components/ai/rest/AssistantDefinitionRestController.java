@@ -71,9 +71,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, AssistantDefinitionEntity> target, Identity user, Errors errors, Long id, AssistantDefinitionEntity entity) {
-        List<AssistantDefinitionEntity> sameEntities = repo.getEntitiesCount(entity.getName(), entity.getProvider(), CloudToolsForCore.getDomainId());
-
-        if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
+        if (target.isInsert() || target.isUpdate()) {
             if(Tools.isEmpty(entity.getAction())) {
                 errors.rejectValue("action", "", getProp().getText("jakarta.validation.constraints.NotNull.message"));
             }
@@ -82,20 +80,9 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
                 errors.rejectValue("errorField.tokenLimit", "", getProp().getText("components.ai_assistants.token_limit.invalid"));
             }
 
-            if(sameEntities != null && sameEntities.size() > 0) {
-                if("create".equals(target.getAction())) {
-                    //This combination already exist
-                    errors.rejectValue("name",  "", getProp().getText("components.ai_assistants.unique_name_err"));
-                } else {
-                    boolean isOneOfThem = false;
-                    for(AssistantDefinitionEntity sameEntity : sameEntities) {
-                        if(sameEntity.getId().equals(entity.getId()) == true) {
-                            isOneOfThem = true;
-                            break;
-                        }
-                    }
-                    if(isOneOfThem == false) errors.rejectValue("name",  "", getProp().getText("components.ai_assistants.unique_name_err"));
-                }
+            var matches = repo.getEntitiesCount(entity.getName(), entity.getProvider(), getDomainId());
+            if (!matches.isEmpty() && (target.isInsert() || matches.stream().noneMatch(match -> match.getId().equals(entity.getId())))) {
+                errors.rejectValue("name", "", getProp().getText("components.ai_assistants.unique_name_err"));
             }
         }
 

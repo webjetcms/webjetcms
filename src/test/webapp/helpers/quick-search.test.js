@@ -1196,15 +1196,18 @@ function selectChatAssistant(host, id) {
 
 /** Opens a saved conversation through the real history request and response path. */
 async function openSavedChat(f, id, answer, assistantId = 7) {
+    const answers = Array.isArray(answer) ? answer : [{ id: id + '-answer', text: answer }];
     const opening = f.controller.chat.openThread(id);
-    await f.respond(f.requests.at(-1), {
+    const detail = {
         thread: { id, assistantId, canContinue: true, revision: 1 },
         messages: [
             { id: `${id}-question`, role: 'user', text: 'Saved question', status: 'complete' },
-            { id: `${id}-answer`, turnId: `${id}-question`, role: 'assistant', text: answer, status: 'complete' }
+            ...answers.map(reply => ({ turnId: id + '-question', role: 'assistant', status: 'complete', ...reply }))
         ]
-    });
+    };
+    await f.respond(f.requests.at(-1), detail);
     await opening;
+    return detail;
 }
 
 test('Chat tooltips keep conversation titles literal and disappear when the chat closes', async t => {
@@ -1538,16 +1541,28 @@ test('AI Chat renders streamed Markdown tables and copies the original response 
     let copied;
     const f = fixture(t, deniedRestPermissions, { aiChat: true, clipboard: { writeText: async value => { copied = value; } } });
     const input = await openChat(f);
+    const chat = f.controller.chat.chat;
+    const firstTurn = chat.send('First question');
+    f.chatRequests[0].resolve({ success: true, response: 'First answer' });
+    await firstTurn;
+    const history = chat.$history[0];
+    const previous = history.lastElementChild;
     const prompt = '**My question** <img src=x onerror=alert(1)>';
     typeChat(input, prompt);
     sendChat(input);
-    const user = f.controller.chatPanel.querySelector('.ai-chat-user .ai-chat-message-text');
+    const user = history.lastElementChild.previousElementSibling.querySelector('.ai-chat-message-text');
     assert.equal(user.textContent, prompt);
     assert.equal(user.querySelector('b, img'), null);
-    const request = f.chatRequests[0];
+    const observer = new input.ownerDocument.defaultView.MutationObserver(() => {});
+    observer.observe(previous, { subtree: true, childList: true, attributes: true, characterData: true });
+    Object.defineProperties(history, { clientHeight: { value: 100 }, scrollHeight: { value: 600 } });
+    const request = f.chatRequests[1];
     const header = '## Boxes\n\n| Size | Count |\n| :--- | ---: |';
     request.callbacks.onUpdate(header + '\n| Small |');
-    const answer = f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-message-text');
+    assert.ok(history.scrollTop >= 500);
+    history.scrollTop = 100;
+    history.dispatchEvent(new input.ownerDocument.defaultView.Event('scroll'));
+    const answer = history.lastElementChild.querySelector('.ai-chat-message-text');
     assert.equal(answer.querySelector('h2').textContent, 'Boxes');
     assert.deepEqual([...answer.querySelectorAll('th')].map(cell => cell.textContent), ['Size', 'Count']);
     const reply = header + '\n| **Small** | 28 |\n| Large | 19 |\n\n- Total: `47`';
@@ -1556,9 +1571,21 @@ test('AI Chat renders streamed Markdown tables and copies the original response 
     assert.equal(answer.querySelector('td b').textContent, 'Small');
     assert.equal(answer.querySelector('td.text-end').textContent, '28');
     assert.equal(answer.querySelector('li code').textContent, '47');
+    assert.equal(history.scrollTop, 100);
+    assert.equal(observer.takeRecords().length, 0, 'Later deltas must leave the previous answer untouched.');
+    observer.disconnect();
+    f.controller.modal.hide();
+    request.callbacks.onUpdate(reply + '\nMore while hidden');
+    assert.doesNotMatch(answer.textContent, /More while hidden/);
+    f.controller.open();
+    f.controller.chips.get('aiChat').click();
+    assert.match(answer.textContent, /More while hidden/);
+    assert.equal(history.scrollTop, 100);
+    assert.equal(chat.$stop[0].style.display, '');
     request.resolve({ success: true, response: reply });
     await tick();
-    f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-message-actions button').click();
+    assert.equal(chat.$stop[0].style.display, 'none');
+    history.lastElementChild.querySelector('.ai-chat-message-actions button').click();
     await tick();
     assert.equal(copied, reply);
     f.controller.modal.hide();
@@ -2680,17 +2707,10 @@ test('Conversation usage includes hidden retry attempts once and resets with a n
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
     const host = f.controller.chat;
-    const opening = host.openThread('usage-thread');
-    const detail = {
-        thread: { id: 'usage-thread', assistantId: 7, revision: 3, canContinue: true },
-        messages: [
-            { id: 'q', role: 'user', text: 'Question' },
-            { id: 'failed', role: 'assistant', turnId: 'q', status: 'error', totalTokens: 11, tokenBreakdown: { inputTokens: 8, outputTokens: 3 } },
-            { id: 'done', role: 'assistant', turnId: 'q', status: 'complete', totalTokens: 28, tokenBreakdown: { inputTokens: 20, outputTokens: 8 }, text: 'Reply' }
-        ]
-    };
-    await f.respond(f.requests.at(-1), detail);
-    await opening;
+    const detail = await openSavedChat(f, 'usage-thread', [
+        { id: 'failed', status: 'error', totalTokens: 11, tokenBreakdown: { inputTokens: 8, outputTokens: 3 } },
+        { id: 'done', text: 'Reply', totalTokens: 28, tokenBreakdown: { inputTokens: 20, outputTokens: 8 } }
+    ]);
     host.applyDetail(host.chat, detail);
     assert.equal(host.chat.state.messages.length, 2);
     assert.match(host.chat.$tokenUsage.attr('aria-label'), /39$/);
@@ -2713,16 +2733,7 @@ test('A folder selection survives a saved-history refresh and only sends its ID 
     const host = f.controller.chat;
     const win = input.ownerDocument.defaultView;
     win.WebjetJsTree = class { destroy() {} };
-    const detail = {
-        thread: { id: 'folder-thread', assistantId: 7, revision: 1, canContinue: true },
-        messages: [
-            { id: 'q', role: 'user', text: 'Create a page' },
-            { id: 'a', turnId: 'q', role: 'assistant', status: 'complete', text: 'Which folder?', folderRequested: true }
-        ]
-    };
-    const opening = host.openThread(detail.thread.id);
-    await f.respond(f.requests.at(-1), detail);
-    await opening;
+    const detail = await openSavedChat(f, 'folder-thread', [{ id: 'folder', text: 'Which folder?', folderRequested: true }]);
     const chat = host.chat;
     const tree = chat.element.querySelector('.ai-chat-folder-picker .jsTree-wrapper');
     tree.dispatchEvent(new win.CustomEvent('webjet-jstree-select', { detail: {
