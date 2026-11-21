@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 
-/** Domain-scoped metadata persistence. Authorization belongs to the calling boundary. */
+/** Domain-scoped metadata persistence for working versions. */
 @Service
 public class BranchService {
     private final BranchRepository repository;
@@ -46,14 +48,17 @@ public class BranchService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,sk.iway.iwcm.i18n.Prop.getInstance().getText("branches.schedule.future"));
     }
 
-    /** Deletes a domain-scoped version in any state, including its private files and cascading WORK data. */
-    public void delete(long id, int domainId) {
+    /** Deletes the checked revision only if the user can discard every working item. */
+    @Transactional(transactionManager = "webjet2022TransactionManager")
+    public void delete(long id, int domainId, Identity user) {
         BranchReadiness.requireEnabled();
         BranchEntity branch=repository.findFirstByIdAndDomainId(id,domainId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Publishing package not found"));
+        BranchMergeService.requireDiscardPermissions(branch, user);
+        if (repository.deleteRevision(id, domainId, branch.getRevision()) != 1)
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
         try { BranchFiles.deleteBranch(id); }
         catch (IOException ex) { throw new IllegalStateException("Cannot delete working version files",ex); }
-        repository.delete(branch);
         BranchView.invalidate();
     }
 

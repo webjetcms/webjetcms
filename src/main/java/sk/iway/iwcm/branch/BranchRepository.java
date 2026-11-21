@@ -16,6 +16,10 @@ public interface BranchRepository extends DomainIdRepository<BranchEntity, Long>
     List<BranchEntity> findAllByStateAndPublishAtLessThanEqualOrderByPublishAtAscIdAsc(String state, Timestamp at);
     List<BranchEntity> findAllByStateAndPublishRequestedByIsNotNullOrderByIdAsc(String state);
 
+    @Modifying
+    @Query("DELETE FROM BranchEntity b WHERE b.id=:id AND b.domainId=:domainId AND b.revision=:revision")
+    int deleteRevision(@Param("id") long id, @Param("domainId") int domainId, @Param("revision") long revision);
+
     @Transactional(transactionManager="webjet2022TransactionManager")
     @Modifying
     @Query("UPDATE BranchEntity b SET b.publishRequestedBy=NULL WHERE b.id=:id AND b.revision=:revision AND b.state='MERGING' AND b.publishRequestedBy=:actor")

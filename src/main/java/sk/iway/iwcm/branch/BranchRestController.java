@@ -89,7 +89,7 @@ public class BranchRestController extends DatatableRestControllerV2<BranchEntity
 
     @Override
     public boolean deleteItem(BranchEntity entity, long id) {
-        branches.delete(id,getDomainId());
+        branches.delete(id, getDomainId(), getUser());
         return true;
     }
 

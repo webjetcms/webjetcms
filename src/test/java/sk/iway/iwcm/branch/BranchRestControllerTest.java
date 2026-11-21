@@ -142,7 +142,7 @@ class BranchRestControllerTest extends BaseWebjetTest {
         var input=new BranchEntity();input.setId(42L);input.setDomainId(1);
         var edit=new DatatableRequest<Long,BranchEntity>();edit.setAction("remove");edit.setData(Map.of(42L,input));
         var response=controller.handleEditor(request,edit).getBody();
-        verify(service).delete(42,1);
+        verify(service).delete(42, 1, controller.getUser());
         assertEquals(new BranchSelection.Selected(0,1),request.getSession().getAttribute(BranchSelection.SESSION_KEY));
         assertNull(request.getSession().getAttribute(BranchProductionSection.ATTRIBUTE));
         assertEquals("/admin/v9/webpages/branches/",response.getRedirect());

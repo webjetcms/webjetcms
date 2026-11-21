@@ -30,6 +30,7 @@ public final class BranchMergeService {
     private record Entry(BranchType type,Map<String,Object> row,BranchChange change,BranchSnapshot live,
             BranchSnapshot target,boolean conflict,boolean write,String error) { }
     private record Plan(Map<String,Object> branch,List<Entry> entries,List<String> errors,Map<String,String> pagePlans,String hash) { }
+    private enum ContentAccess { VIEW, DISCARD, PUBLISH }
 
     public Report prepare(long id,String domain,Identity user,long revision) {
         try(Connection c=DBPool.getConnection()) { return report(plan(c,id,domain,user,revision)); }
@@ -532,13 +533,78 @@ public final class BranchMergeService {
         }
     }
 
+    /** Checks every stored change before deleting the package or its private files. */
+    static void requireDiscardPermissions(BranchEntity branch, Identity user) {
+        requireBranchUser(user);
+        String domain = branch.getDomainName();
+        try (Connection c = DBPool.getConnection()) {
+            var liveGroups = BranchPublishRows.groups(c);
+            var workGroups = new HashMap<>(liveGroups);
+            var changedGroups = BranchPublishRows.rows(c, branch.getId(), BranchType.GROUP);
+            for (var group : changedGroups) workGroups.put(number(group, "group_id"), group);
+
+            for (BranchType type : BranchType.values()) {
+                var rows = type == BranchType.GROUP ? changedGroups : BranchPublishRows.rows(c, branch.getId(), type);
+                for (var row : rows) {
+                    if (type == BranchType.FILE) {
+                        checkFileAccess(row, user, "DIRECTORY".equals(row.get("entry_kind")));
+                        continue;
+                    }
+                    checkContentAccess(c, type, row, user, domain, ContentAccess.DISCARD, liveGroups, workGroups);
+                    if (type == BranchType.DOCUMENT) requirePermission(user, "pageSave");
+                    if (type == BranchType.GROUP) {
+                        boolean exists = liveGroups.containsKey(number(row, "group_id"));
+                        requirePermission(user, exists ? "editDir" : "deleteDir");
+                        int parent = number(row, "parent_group_id");
+                        if (parent > 0) checkFolder(c, workGroups, parent, user, domain, false, false);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            throw failure(ex);
+        }
+    }
+
+    private static void requireBranchUser(Identity user) {
+        if (user == null || !user.isAdmin() || !user.isAuthorized() || !user.isEnabledItem(BranchAccess.PERMISSION))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    private static void checkFileAccess(Map<String,Object> row, Identity user, boolean directory) {
+        String path = BranchFilePaths.normalize((String) row.get("logical_path"));
+        String folder = directory ? path : path.substring(0, path.lastIndexOf('/'));
+        if (!user.isFolderWritable(folder)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    private static void checkPageUserGroups(Map<String,Object> page, Identity user) throws SQLException {
+        try (var result = BranchRows.result(page)) {
+            if (!DocDB.canAccess(DocDB.getDocDetails(result, false, true), user, true))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+    }
+
     /** Enforces item visibility and existing direct-publication rules, including source and destination. */
     private static void authorize(Connection c,BranchType type,Map<String,Object> row,Identity user,String domain,boolean publish)throws SQLException {
-        if(user==null||!user.isAdmin()||!user.isAuthorized()||!user.isEnabledItem("menuBranches"))throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        if(type==BranchType.FILE) {String path=BranchFilePaths.normalize((String)row.get("logical_path"));if(!user.isFolderWritable(path.substring(0,path.lastIndexOf('/'))))throw new ResponseStatusException(HttpStatus.FORBIDDEN);return;}
+        requireBranchUser(user);
+        if (type == BranchType.FILE) {
+            checkFileAccess(row, user, false);
+            return;
+        }
+        var liveGroups = BranchPublishRows.groups(c);
+        var workGroups = new HashMap<>(liveGroups);
+        for (var group : BranchPublishRows.rows(c, ((Number)row.get("branch_id")).longValue(), BranchType.GROUP))
+            workGroups.put(number(group, "group_id"), group);
+        checkContentAccess(c, type, row, user, domain, publish ? ContentAccess.PUBLISH : ContentAccess.VIEW, liveGroups, workGroups);
+        if(publish && user.isDisabledItem("pageSave"))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chýba právo uložiť/publikovať stránku.");
+        if(type==BranchType.DOCUMENT) {
+            int id=number(row,"doc_id");if(MultigroupMappingDB.getMasterDocId(id)>0||!MultigroupMappingDB.getSlaveDocIds(id).isEmpty())throw conflict("Multigroup zápis nie je podporovaný: "+id);
+        }
+    }
+
+    private static void checkContentAccess(Connection c, BranchType type, Map<String,Object> row, Identity user,
+            String domain, ContentAccess access, Map<Integer,Map<String,Object>> liveGroups, Map<Integer,Map<String,Object>> workGroups) throws SQLException {
+        boolean publish = access == ContentAccess.PUBLISH;
         if(!UsersDB.checkUserPerms(user,Constants.getString("webpagesFunctionsPerms")))throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        Map<Integer,Map<String,Object>> groups=table(c,"groups","group_id");
-        for(Map<String,Object> g:BranchPublishRows.rows(c,((Number)row.get("branch_id")).longValue(),BranchType.GROUP))groups.put(number(g,"group_id"),g);
         int owner=type==BranchType.MEDIA?number(row,"media_fk_id"):0;
         Map<String,Object> ownerDoc=owner>0?BranchStore.readWork(c,((Number)row.get("branch_id")).longValue(),BranchType.DOCUMENT,owner).orElseGet(()->{try{return BranchStore.readLive(c,BranchType.DOCUMENT,owner).orElse(null);}catch(SQLException ex){throw failure(ex);}}):null;
         if(type==BranchType.MEDIA && ownerDoc==null)throw conflict("Chýbajúci vlastník média.");
@@ -547,12 +613,12 @@ public final class BranchMergeService {
         boolean pageScope=docId>0 && BranchFields.normalizedIds(user.getEditablePages()).contains(docId);
         Map<String,Object> sourceDoc=docId>0?BranchStore.readLive(c,BranchType.DOCUMENT,docId).orElse(null):null;
         boolean sameFolder=sourceDoc!=null && number(sourceDoc,"group_id")==folder;
-        checkFolder(c,groups,folder,user,domain,publish,pageScope && sameFolder);
-        if(Constants.getBoolean("adminCheckUserGroups") && docId>0) {
-            Map<String,Object> checked=type==BranchType.DOCUMENT?row:ownerDoc;
-            try(var result=BranchRows.result(checked)) {if(!DocDB.canAccess(DocDB.getDocDetails(result,false,true),user,true))throw new ResponseStatusException(HttpStatus.FORBIDDEN);}
+        checkFolder(c,workGroups,folder,user,domain,publish,pageScope && sameFolder);
+        if (Constants.getBoolean("adminCheckUserGroups") && docId > 0) {
+            checkPageUserGroups(type == BranchType.DOCUMENT ? row : ownerDoc, user);
+            if (access == ContentAccess.DISCARD && sourceDoc != null) checkPageUserGroups(sourceDoc, user);
         }
-        Map<String,Object> live=BranchStore.readLive(c,type,number(row,type.idColumn())).orElse(null);
+        Map<String,Object> live=type==BranchType.DOCUMENT?sourceDoc:BranchStore.readLive(c,type,number(row,type.idColumn())).orElse(null);
         boolean ownDelete="DELETE".equals(row.get("operation")) && row.get("applied_hash")!=null && row.get("applied_hash").equals(BranchPublishRows.liveSnapshot(c,type,row).hash());
         if(live!=null && !ownDelete) {
             int source=type==BranchType.GROUP?number(live,"group_id"):type==BranchType.DOCUMENT?number(live,"group_id"):folder;
@@ -562,11 +628,7 @@ public final class BranchMergeService {
                 source=number(originalDoc,"group_id");pageScope=BranchFields.normalizedIds(user.getEditablePages()).contains(originalOwner);
                 if(originalOwner!=owner)throw conflict("Zmena vlastníka média nie je podporovaná.");
             }
-            checkFolder(c,table(c,"groups","group_id"),source,user,domain,publish,pageScope);
-        }
-        if(publish && user.isDisabledItem("pageSave"))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chýba právo uložiť/publikovať stránku.");
-        if(type==BranchType.DOCUMENT) {
-            int id=number(row,"doc_id");if(MultigroupMappingDB.getMasterDocId(id)>0||!MultigroupMappingDB.getSlaveDocIds(id).isEmpty())throw conflict("Multigroup zápis nie je podporovaný: "+id);
+            checkFolder(c,liveGroups,source,user,domain,publish,pageScope);
         }
         if(type==BranchType.MEDIA && user.isDisabledItem("editor_edit_media_all")&&user.isDisabledItem("editor_edit_media"))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chýba právo upravovať médiá.");
     }

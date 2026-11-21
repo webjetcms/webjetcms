@@ -250,11 +250,79 @@ class BranchStorageTest extends BranchJpaTest {
         Path file=BranchFiles.workPath(branch.getId(),1);
         Files.createDirectories(file.getParent());Files.writeString(file,"Foreign WORK bytes");
         try {
-            var error=assertThrows(ResponseStatusException.class,()->branchService().delete(branch.getId(),BranchDomains.id("p02.example")));
+            var error=assertThrows(ResponseStatusException.class,()->branchService().delete(branch.getId(),BranchDomains.id("p02.example"),editor(metadataRepository).getUser()));
             assertEquals(404,error.getStatusCode().value());
             assertTrue(branchService().find(branch.getId(),branch.getDomainId()).isPresent());
             assertEquals("Foreign WORK bytes",Files.readString(file));
         } finally { BranchFiles.deleteBranch(branch.getId()); }
+    }
+
+    /** A single inaccessible page prevents deletion of the package, its other rows and its private files. */
+    @Test @Order(2) void deletionRequiresEditAccessToEveryItem() throws Exception {
+        var context = branch("autotest mixed deletion permissions");
+        var store = new BranchStore();
+        var group = store.create(context, BranchType.GROUP, BranchGroupMapper.initialValues(1, context.domainName()));
+        int allowed = ((Number)group.get("group_id")).intValue();
+        var page = new LinkedHashMap<>(BranchDocumentMapper.initialValues(1, 1, Instant.now(), false));
+        page.put("group_id", allowed);
+        store.create(context, BranchType.DOCUMENT, page);
+        page.put("group_id", context.domainId());
+        store.create(context, BranchType.DOCUMENT, page);
+        String path = "/files/autotest-package-deletion.txt";
+        var file = store.putFile(context, path, "FILE", BranchFiles.liveSnapshot(path), "a".repeat(64), 5L, "text/plain", false);
+        Path work = BranchFiles.workPath(context.branchId(), ((Number)file.get("row_id")).longValue());
+        Files.createDirectories(work.getParent());
+        Files.writeString(work, "draft");
+        try {
+            var controller = editor(metadataRepository);
+            Identity user = controller.getUser();
+            user.setEditableGroups(Integer.toString(allowed));
+            var branch = branchService().find(context.branchId(), context.domainId()).orElseThrow();
+            var request = new DatatableRequest<Long,BranchEntity>();
+            request.setAction("remove");
+            request.setData(Map.of(branch.getId(), branch));
+            var denied = assertThrows(ResponseStatusException.class, () -> controller.handleEditor(controller.getRequest(), request));
+            assertEquals(403, denied.getStatusCode().value());
+            assertTrue(branchService().find(context.branchId(), context.domainId()).isPresent());
+            try (Connection c = connect()) {
+                assertEquals(2, BranchPublishRows.rows(c, context.branchId(), BranchType.DOCUMENT).size());
+                assertEquals(1, BranchPublishRows.rows(c, context.branchId(), BranchType.GROUP).size());
+                assertEquals(1, BranchPublishRows.rows(c, context.branchId(), BranchType.FILE).size());
+            }
+            assertEquals("draft", Files.readString(work));
+
+            user.setEditableGroups(allowed + "," + context.domainId());
+            user.setWritableFolders("/files/another-folder/");
+            denied = assertThrows(ResponseStatusException.class, () -> controller.handleEditor(controller.getRequest(), request));
+            assertEquals(403, denied.getStatusCode().value());
+            assertEquals("draft", Files.readString(work));
+
+            user.setWritableFolders("/files/");
+            controller.handleEditor(controller.getRequest(), request);
+            assertTrue(branchService().find(context.branchId(), context.domainId()).isEmpty());
+            assertFalse(Files.exists(work));
+        } finally {
+            BranchFiles.deleteBranch(context.branchId());
+        }
+    }
+
+    /** Page editing rights are required only after the package contains a page. */
+    @Test @Order(2) void emptyPackageDoesNotRequirePageEditRights() throws SQLException {
+        var context = branch("autotest empty deletion permissions");
+        sk.iway.iwcm.system.Modules.getInstance(null, true);
+        Identity user = editor(metadataRepository).getUser();
+        user.addDisabledItem("pageSave");
+        branchService().delete(context.branchId(), context.domainId(), user);
+        assertTrue(branchService().find(context.branchId(), context.domainId()).isEmpty());
+
+        var withPage = branch("autotest page deletion permissions");
+        var page = new LinkedHashMap<>(BranchDocumentMapper.initialValues(1, 1, Instant.now(), false));
+        page.put("group_id", withPage.domainId());
+        new BranchStore().create(withPage, BranchType.DOCUMENT, page);
+        var denied = assertThrows(ResponseStatusException.class,
+                () -> branchService().delete(withPage.branchId(), withPage.domainId(), user));
+        assertEquals(403, denied.getStatusCode().value());
+        assertTrue(branchService().find(withPage.branchId(), withPage.domainId()).isPresent());
     }
 
     /** Repository and DataTable reads enforce the numeric domain scope. */
@@ -452,7 +520,7 @@ class BranchStorageTest extends BranchJpaTest {
 
     private BranchRestController editor(BranchRepository repository) {
         var request=new MockHttpServletRequest();
-        var user=new Identity();user.setAdmin(true);user.setUserId(1);
+        var user=new Identity();user.setAdmin(true);user.setUserId(1);user.setAuthorized(true);
         request.getSession().setAttribute(Constants.USER_KEY,user);
         var controller=new BranchRestController(repository,branchService(),mock(BranchAccess.class));
         controller.setRequest(request);
