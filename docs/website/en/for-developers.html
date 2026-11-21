@@ -1,0 +1,129 @@
+<style>
+.wj-website-content { overflow-wrap: break-word; }
+.wj-website-content [hidden] { display: none !important; }
+.wj-website-content [id] { scroll-margin-top: 110px; }
+.wj-website-content .wj-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 24px 0; }
+.wj-website-content .wj-actions .btn { margin: 0; white-space: normal; }
+.wj-website-content .wj-media { margin: 28px 0; }
+.wj-website-content .wj-media img { display: block; width: 100%; height: auto; }
+.wj-website-content .wj-hero-media { max-width: 1052px; margin: 40px auto; }
+.wj-website-content figcaption { margin-top: 12px; color: #57585c; font-size: 15px; line-height: 1.5; }
+.wj-website-content .wj-references h2 { margin: 40px 0 30px; }
+.wj-website-content .wj-references .logo-container > div { display: flex; align-items: center; justify-content: center; flex-basis: 25%; min-height: 100px; }
+.wj-website-content .wj-references img { width: auto; height: auto; max-width: 180px; max-height: 80px; }
+.wj-website-content .wj-references p { margin: 24px 0; }
+.wj-website-content .wj-roadmap { border-left: 3px solid #007b8e; padding-left: 24px; }
+.wj-website-content .wj-details > summary { cursor: pointer; list-style: none; }
+.wj-website-content .wj-details > summary::-webkit-details-marker { display: none; }
+.wj-website-content .wj-details[open] > summary::before { content: "\f056"; }
+.wj-website-content .wj-details .md-accordion__block { margin: 10px 0 0; }
+.wj-website-content .wj-section-nav ul { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 24px 0; padding: 0; list-style: none; }
+.wj-website-content .wj-section-nav li { padding: 0; }
+.wj-website-content .wj-section-nav li::before { display: none; }
+.wj-website-content a:focus-visible, .wj-website-content summary:focus-visible { outline: 2px solid #003289; outline-offset: 4px; }
+.wj-website-content .wj-news-column { display: flex; margin: 24px 0 16px; }
+.wj-website-content .wj-news-item { width: 100%; }
+.wj-website-content .wj-news-image { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; margin-bottom: 16px; background: #f6f7f9; }
+.wj-website-content .wj-news-meta { color: #57585c; font-size: 15px; margin-bottom: 10px; }
+.wj-website-content .wj-news h3 { font-size: 22px; line-height: 1.35; margin-bottom: 12px; }
+.wj-website-content .wj-news h3 a { color: inherit; }
+.wj-website-content .wj-news-item > p:last-child { font-size: 17px; line-height: 1.5; }
+@media (max-width: 767.98px) {
+  .wj-website-content .wj-actions { gap: 16px; }
+  .wj-website-content .wj-hero-media { margin: 28px 0; }
+  .wj-website-content .wj-references .logo-container > div { flex-basis: 35%; }
+  .wj-website-content .wj-references img { max-width: 135px; max-height: 65px; }
+  .wj-website-content .wj-roadmap { padding-left: 16px; }
+}
+</style>
+<div class="wj-website-content" lang="en">
+  <section class="md-banner">
+    <h1>WebJET CMS for Java developers</h1>
+    <p>Build custom web applications with Spring Framework. Use WebJET CMS for content management, content approval and access permissions.</p>
+    <div class="wj-actions">
+      <a class="btn btn-cta" href="/contact/">Request a demo</a>
+      <a href="https://docs.webjetcms.sk/latest/en/custom-apps/">Read the developer documentation</a>
+    </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-aplikacie">
+    <div class="row">
+      <div class="col-md-6">
+        <h2 id="vyvojari-aplikacie">You build the application. Editors add it to their pages.</h2>
+        <p>Build a custom catalogue, calculator or data overview as a Spring MVC application with a Thymeleaf template. Make its settings available in the WebJET CMS editor.</p>
+        <p>Editors then select the application from the catalogue, configure its parameters and place it where they need it. You manage the application's functionality; they manage the page content.</p>
+        <p><a href="https://docs.webjetcms.sk/latest/en/custom-apps/spring-mvc/">How to build a Spring MVC application</a></p>
+      </div>
+      <div class="col-md-6">
+        <figure class="wj-media">
+          <a href="/images/webjetcms-2026/en/custom-application.png"><img class="img-fluid" src="/images/webjetcms-2026/en/custom-application.png" alt="Custom application in the WebJET CMS application catalogue" width="1280" height="760" loading="lazy"></a>
+          <figcaption>Editors can select custom applications from the WebJET CMS catalogue.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-spring">
+    <h2 id="vyvojari-spring">Spring for data, administration and integrations</h2>
+    <div class="row">
+      <div class="col-md-6">
+        <h3>An administration interface for your data</h3>
+        <p>Connect a JPA entity and Spring Data repository to a REST controller and the WebJET CMS table editor. Use existing filtering, validation and audit mechanisms to build interfaces for your own records.</p>
+        <p><a href="https://docs.webjetcms.sk/latest/en/custom-apps/admin-menu-item/">See a custom administration example</a></p>
+      </div>
+      <div class="col-md-6">
+        <h3>Connect systems through REST APIs</h3>
+        <p>Connect the CMS to other systems through REST services. API keys are linked to user accounts and their permissions. Enable Swagger documentation to explore the available endpoints.</p>
+        <p><a href="https://docs.webjetcms.sk/latest/en/custom-apps/spring/api-auth">Explore API authorisation</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-headless">
+    <div class="row">
+      <div class="col-md-6">
+        <h2 id="vyvojari-headless">Your own frontend, a shared content workspace</h2>
+        <p>In headless mode, WebJET CMS provides content, navigation, news, search and forms through REST APIs. You can build the frontend with Astro, React or Vue, for example.</p>
+        <p>Editors continue working in WebJET CMS. A sample application and documentation on session handling and content previews help you get started with your first project.</p>
+        <p><a href="https://docs.webjetcms.sk/latest/en/frontend/headless/">Explore headless mode</a></p>
+      </div>
+      <div class="col-md-6">
+        <figure class="wj-media">
+          <a href="/images/webjetcms-2026/en/headless-web.png"><img class="img-fluid" src="/images/webjetcms-2026/en/headless-web.png" alt="Standalone frontend displaying WebJET CMS content through the headless API" width="1280" height="720" loading="lazy"></a>
+          <figcaption>A sample frontend displays content managed in WebJET CMS.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-ai">
+    <h2 id="vyvojari-ai">WebJET guidance for your AI coding tools</h2>
+    <p>Use WebJET CMS skills when developing with Codex, GitHub Copilot or Claude Code. They provide workflows for custom applications, DataTables, PageBuilder blocks, tests and documentation.</p>
+    <p>Your AI tool gains context on WebJET CMS architecture and conventions. Developers review its proposals and verify them against the version used in the project.</p>
+    <p><a href="https://docs.webjetcms.sk/latest/en/custom-apps/skills/">Add WebJET CMS skills to your development environment</a></p>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-zaciatok">
+    <h2 id="vyvojari-zaciatok">Start your project with basecms</h2>
+    <p>The basecms starter project is ready for your custom templates and applications. The documentation guides you through project setup and your first extension. You can also explore the core source code on GitHub.</p>
+    <div class="wj-actions">
+      <a href="https://github.com/webjetcms/basecms">Open the basecms starter project</a>
+      <a href="https://github.com/webjetcms/webjetcms">Explore the WebJET CMS source code</a>
+    </div>
+    <p>The <a href="https://github.com/webjetcms/webjetcms/blob/main/LICENSE.md">repository's licence terms</a> define how each part of the code may be used.</p>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-pripravujeme">
+    <h2 id="vyvojari-pripravujeme">In development: a Spring Boot version</h2>
+    <p>We are developing a Spring Boot version based on the current Java and Spring Framework architecture. We will announce its availability separately.</p>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-ukazka">
+    <h2 id="vyvojari-ukazka">Explore your project in a practical demo</h2>
+    <p>We will show you how editors work in WebJET CMS and discuss where to use existing applications and where to build custom extensions.</p>
+    <div class="wj-actions">
+      <a class="btn btn-cta" href="/contact/">Request a demo</a>
+      <a href="/for-agencies/">WebJET CMS for agencies</a>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,129 @@
+<style>
+.wj-website-content { overflow-wrap: break-word; }
+.wj-website-content [hidden] { display: none !important; }
+.wj-website-content [id] { scroll-margin-top: 110px; }
+.wj-website-content .wj-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 24px 0; }
+.wj-website-content .wj-actions .btn { margin: 0; white-space: normal; }
+.wj-website-content .wj-media { margin: 28px 0; }
+.wj-website-content .wj-media img { display: block; width: 100%; height: auto; }
+.wj-website-content .wj-hero-media { max-width: 1052px; margin: 40px auto; }
+.wj-website-content figcaption { margin-top: 12px; color: #57585c; font-size: 15px; line-height: 1.5; }
+.wj-website-content .wj-references h2 { margin: 40px 0 30px; }
+.wj-website-content .wj-references .logo-container > div { display: flex; align-items: center; justify-content: center; flex-basis: 25%; min-height: 100px; }
+.wj-website-content .wj-references img { width: auto; height: auto; max-width: 180px; max-height: 80px; }
+.wj-website-content .wj-references p { margin: 24px 0; }
+.wj-website-content .wj-roadmap { border-left: 3px solid #007b8e; padding-left: 24px; }
+.wj-website-content .wj-details > summary { cursor: pointer; list-style: none; }
+.wj-website-content .wj-details > summary::-webkit-details-marker { display: none; }
+.wj-website-content .wj-details[open] > summary::before { content: "\f056"; }
+.wj-website-content .wj-details .md-accordion__block { margin: 10px 0 0; }
+.wj-website-content .wj-section-nav ul { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 24px 0; padding: 0; list-style: none; }
+.wj-website-content .wj-section-nav li { padding: 0; }
+.wj-website-content .wj-section-nav li::before { display: none; }
+.wj-website-content a:focus-visible, .wj-website-content summary:focus-visible { outline: 2px solid #003289; outline-offset: 4px; }
+.wj-website-content .wj-news-column { display: flex; margin: 24px 0 16px; }
+.wj-website-content .wj-news-item { width: 100%; }
+.wj-website-content .wj-news-image { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; margin-bottom: 16px; background: #f6f7f9; }
+.wj-website-content .wj-news-meta { color: #57585c; font-size: 15px; margin-bottom: 10px; }
+.wj-website-content .wj-news h3 { font-size: 22px; line-height: 1.35; margin-bottom: 12px; }
+.wj-website-content .wj-news h3 a { color: inherit; }
+.wj-website-content .wj-news-item > p:last-child { font-size: 17px; line-height: 1.5; }
+@media (max-width: 767.98px) {
+  .wj-website-content .wj-actions { gap: 16px; }
+  .wj-website-content .wj-hero-media { margin: 28px 0; }
+  .wj-website-content .wj-references .logo-container > div { flex-basis: 35%; }
+  .wj-website-content .wj-references img { max-width: 135px; max-height: 65px; }
+  .wj-website-content .wj-roadmap { padding-left: 16px; }
+}
+</style>
+<div class="wj-website-content">
+  <section class="md-banner">
+    <h1>WebJET CMS pre Java vývojárov</h1>
+    <p>Vyvíjajte vlastné webové aplikácie na základe Spring Frameworku. Redakčnú správu, schvaľovanie obsahu a prístupové práva využijete z WebJET CMS.</p>
+    <div class="wj-actions">
+      <a class="btn btn-cta" href="/kontakt/">Dohodnúť si ukážku</a>
+      <a href="https://docs.webjetcms.sk/latest/sk/custom-apps/">Pozrieť dokumentáciu pre vývojárov</a>
+    </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-aplikacie">
+    <div class="row">
+      <div class="col-md-6">
+        <h2 id="vyvojari-aplikacie">Vy naprogramujete aplikáciu. Redaktor ju vloží do stránky.</h2>
+        <p>Vlastný katalóg, kalkulačku či prehľad údajov môžete vytvoriť ako Spring MVC aplikáciu s Thymeleaf šablónou. Jej nastavenia sprístupníte v editore WebJET CMS.</p>
+        <p>Redaktor potom vyberie aplikáciu z katalógu, nastaví jej parametre a vloží ju tam, kde ju potrebuje. Vy zostávate zodpovední za jej funkcie, on za obsah stránky.</p>
+        <p><a href="https://docs.webjetcms.sk/latest/sk/custom-apps/spring-mvc/">Ako vytvoriť Spring MVC aplikáciu</a></p>
+      </div>
+      <div class="col-md-6">
+        <figure class="wj-media wj-video">
+          !INCLUDE(/components/video/video_player.jsp, file=https://www.youtube.com/watch?v=2r6-0zk5ZNQ, width=425, height=355, percentageWidth=100, align=left, autoplay=0, controls=1, fullscreen=1, branding=0, rel=1, showinfo=0)!
+          <figcaption>Videonávod k zaradeniu vlastnej aplikácie do katalógu WebJET CMS. <a href="https://www.youtube.com/watch?v=2r6-0zk5ZNQ">Otvoriť video na YouTube</a></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-spring">
+    <h2 id="vyvojari-spring">Spring aj pri dátach, administrácii a integráciách</h2>
+    <div class="row">
+      <div class="col-md-6">
+        <h3>Administrácia nad vlastnými dátami</h3>
+        <p>Na JPA entitu a Spring Data repozitár nadviažete REST controllerom a tabuľkovým editorom WebJET CMS. Využijete existujúce mechanizmy filtrovania, validácie a auditu pri tvorbe vlastných evidencií.</p>
+        <p><a href="https://docs.webjetcms.sk/latest/sk/custom-apps/admin-menu-item/">Pozrieť ukážku zákazníckej administrácie</a></p>
+      </div>
+      <div class="col-md-6">
+        <h3>Prepojenia cez REST API</h3>
+        <p>Prepojte CMS s ďalšími systémami cez REST služby. API kľúče sa viažu na používateľské kontá a ich oprávnenia; rozhrania si môžete prezrieť po zapnutí Swagger dokumentácie.</p>
+        <p><a href="https://docs.webjetcms.sk/latest/sk/custom-apps/spring/api-auth">Pozrieť možnosti API autorizácie</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-headless">
+    <div class="row">
+      <div class="col-md-6">
+        <h2 id="vyvojari-headless">Vlastný frontend, spoločná redakcia</h2>
+        <p>V headless režime poskytuje WebJET CMS obsah, navigáciu, novinky, vyhľadávanie a formuláre cez REST API. Frontend môžete postaviť napríklad na Astro, Reacte alebo Vue.</p>
+        <p>Redaktori naďalej pracujú vo WebJET CMS. Pre prvý projekt máte k dispozícii ukážkovú aplikáciu aj dokumentáciu k prenosu relácie a náhľadom obsahu.</p>
+        <p><a href="https://docs.webjetcms.sk/latest/sk/frontend/headless/">Preskúmať headless režim</a></p>
+      </div>
+      <div class="col-md-6">
+        <figure class="wj-media">
+          <a href="/images/webjetcms-2026/sk/headless-web.png"><img class="img-fluid" src="/images/webjetcms-2026/sk/headless-web.png" alt="Ukážka samostatného frontendu, ktorý zobrazuje obsah z WebJET CMS cez headless API" width="1280" height="720" loading="lazy"></a>
+          <figcaption>Ukážkový frontend používa obsah spravovaný vo WebJET CMS.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-ai">
+    <h2 id="vyvojari-ai">WebJET postupy aj pre váš AI nástroj</h2>
+    <p>Pri vývoji s Codexom, GitHub Copilotom alebo Claude Code môžete použiť WebJET CMS skills. Obsahujú postupy pre zákaznícke aplikácie, DataTables, PageBuilder bloky, testy a dokumentáciu.</p>
+    <p>AI nástroj tak dostane podklady k architektúre a konvenciám WebJET CMS. Vývojár kontroluje návrh a overuje ho vo verzii používanej v projekte.</p>
+    <p><a href="https://docs.webjetcms.sk/latest/sk/custom-apps/skills/">Pridať WebJET CMS skills do vývojového prostredia</a></p>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-zaciatok">
+    <h2 id="vyvojari-zaciatok">Začnite zákazníckym projektom basecms</h2>
+    <p>Základný projekt basecms je pripravený na vlastné šablóny a aplikácie. Dokumentácia vás prevedie nastavením projektu a prvým rozšírením; zdrojový kód jadra môžete preskúmať na GitHube.</p>
+    <div class="wj-actions">
+      <a href="https://github.com/webjetcms/basecms">Otvoriť základný projekt basecms</a>
+      <a href="https://github.com/webjetcms/webjetcms">Preskúmať zdrojový kód WebJET CMS</a>
+    </div>
+    <p>Rozsah použitia jednotlivých častí kódu určujú <a href="https://github.com/webjetcms/webjetcms/blob/main/LICENSE.md">licenčné podmienky repozitára</a>.</p>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-pripravujeme">
+    <h2 id="vyvojari-pripravujeme">Pripravujeme verziu so Spring Boot</h2>
+    <p>Na súčasnú architektúru postavenú na Jave a Spring Frameworku nadviaže pripravovaná verzia so Spring Boot. Je vo vývoji; jej dostupnosť oznámime samostatne.</p>
+  </section>
+
+  <section class="md-intro" aria-labelledby="vyvojari-ukazka">
+    <h2 id="vyvojari-ukazka">Prejdime si váš projekt na konkrétnej ukážke</h2>
+    <p>Ukážeme vám redakčnú prácu vo WebJET CMS a preberieme, kde využiť hotové aplikácie a kde pripraviť vlastné rozšírenie.</p>
+    <div class="wj-actions">
+      <a class="btn btn-cta" href="/kontakt/">Dohodnúť si ukážku</a>
+      <a href="/pre-agentury/">WebJET CMS pre agentúry</a>
+    </div>
+  </section>
+</div>

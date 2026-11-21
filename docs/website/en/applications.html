@@ -1,0 +1,181 @@
+<style>
+.wj-website-content { overflow-wrap: break-word; }
+.wj-website-content [hidden] { display: none !important; }
+.wj-website-content [id] { scroll-margin-top: 110px; }
+.wj-website-content .wj-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 24px 0; }
+.wj-website-content .wj-actions .btn { margin: 0; white-space: normal; }
+.wj-website-content .wj-media { margin: 28px 0; }
+.wj-website-content .wj-media img { display: block; width: 100%; height: auto; }
+.wj-website-content .wj-hero-media { max-width: 1052px; margin: 40px auto; }
+.wj-website-content figcaption { margin-top: 12px; color: #57585c; font-size: 15px; line-height: 1.5; }
+.wj-website-content .wj-references h2 { margin: 40px 0 30px; }
+.wj-website-content .wj-references .logo-container > div { display: flex; align-items: center; justify-content: center; flex-basis: 25%; min-height: 100px; }
+.wj-website-content .wj-references img { width: auto; height: auto; max-width: 180px; max-height: 80px; }
+.wj-website-content .wj-references p { margin: 24px 0; }
+.wj-website-content .wj-roadmap { border-left: 3px solid #007b8e; padding-left: 24px; }
+.wj-website-content .wj-details > summary { cursor: pointer; list-style: none; }
+.wj-website-content .wj-details > summary::-webkit-details-marker { display: none; }
+.wj-website-content .wj-details[open] > summary::before { content: "\f056"; }
+.wj-website-content .wj-details .md-accordion__block { margin: 10px 0 0; }
+.wj-website-content .wj-section-nav ul { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 24px 0; padding: 0; list-style: none; }
+.wj-website-content .wj-section-nav li { padding: 0; }
+.wj-website-content .wj-section-nav li::before { display: none; }
+.wj-website-content a:focus-visible, .wj-website-content summary:focus-visible { outline: 2px solid #003289; outline-offset: 4px; }
+.wj-website-content .wj-news-column { display: flex; margin: 24px 0 16px; }
+.wj-website-content .wj-news-item { width: 100%; }
+.wj-website-content .wj-news-image { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; margin-bottom: 16px; background: #f6f7f9; }
+.wj-website-content .wj-news-meta { color: #57585c; font-size: 15px; margin-bottom: 10px; }
+.wj-website-content .wj-news h3 { font-size: 22px; line-height: 1.35; margin-bottom: 12px; }
+.wj-website-content .wj-news h3 a { color: inherit; }
+.wj-website-content .wj-news-item > p:last-child { font-size: 17px; line-height: 1.5; }
+@media (max-width: 767.98px) {
+  .wj-website-content .wj-actions { gap: 16px; }
+  .wj-website-content .wj-hero-media { margin: 28px 0; }
+  .wj-website-content .wj-references .logo-container > div { flex-basis: 35%; }
+  .wj-website-content .wj-references img { max-width: 135px; max-height: 65px; }
+  .wj-website-content .wj-roadmap { padding-left: 16px; }
+}
+</style>
+<div class="wj-website-content" lang="en">
+  <section class="md-banner">
+      <h1>WebJET CMS applications</h1>
+      <p>Collect enquiries, publish documents, manage bookings and analyse website traffic within your CMS.</p>
+      <p><a class="btn btn-cta" href="/contact/">Request a demo</a></p>
+  </section>
+
+  <section class="md-intro" aria-labelledby="aplikacie-vyber">
+      <h2 id="aplikacie-vyber">Choose applications for the work your website needs to do</h2>
+      <p>A corporate website can accept applications, provide current documents and share event information. The selection below shows practical uses for WebJET CMS applications. During a demo, we can discuss which applications fit your project and their availability.</p>
+      <nav class="wj-section-nav" aria-label="Application categories">
+        <ul>
+          <li><a href="#aplikacie-formulare">Enquiries and forms</a></li>
+          <li><a href="#aplikacie-dokumenty">Documents and content</a></li>
+          <li><a href="#aplikacie-vyhladavanie">Search and content access</a></li>
+          <li><a href="#aplikacie-marketing">Marketing and analytics</a></li>
+          <li><a href="#aplikacie-udalosti">Events and bookings</a></li>
+          <li><a href="#aplikacie-predaj">E-commerce</a></li>
+        </ul>
+      </nav>
+  </section>
+
+  <section class="md-intro" aria-labelledby="aplikacie-formulare">
+      <h2 id="aplikacie-formulare">Enquiries and forms</h2>
+      <p>Create an information request, event registration or job application form. Responses remain available in the administration interface for review and further processing.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details" open>
+          <summary class="btn--acc-toggle">Forms, conditional questions and response reports</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Forms:</strong> create single-step or multi-step forms with required fields and validation.</li>
+              <li><strong>Conditional fields:</strong> show additional questions or make them required based on earlier answers.</li>
+              <li><strong>Response management:</strong> view, filter and export submitted data. Create response charts for selected fields.</li>
+              <li><strong>Encryption:</strong> protect form values stored in the database with a configured encryption key.</li>
+              <li><strong>Polls and questionnaires:</strong> collect feedback and display voting results or responses.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/multistep-form/">Form editor documentation</a> · <a href="https://docs.webjetcms.sk/latest/en/redactor/apps/quiz/">Questionnaires</a></p>
+          </div>
+        </details>
+      </div>
+      <figure class="wj-media">
+        <a href="/images/webjetcms-2026/en/multi-step-form.png"><img class="img-fluid" src="/images/webjetcms-2026/en/multi-step-form.png" width="1360" height="720" loading="lazy" alt="Example of a multi-step form with fields grouped into individual steps"></a>
+        <figcaption>A multi-step form divides the information visitors need to provide into separate sections.</figcaption>
+      </figure>
+  </section>
+
+  <section class="md-intro" aria-labelledby="aplikacie-dokumenty">
+      <h2 id="aplikacie-dokumenty">Documents and content</h2>
+      <p>Keep annual reports, price lists and downloadable forms organised. Publish news, articles and photos in listings that fit your website structure.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Document Manager, news, blogs and galleries</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Document Manager:</strong> manage documents, versions and categories. Schedule a new version for a future date and display a selected group of documents on a page.</li>
+              <li><strong>News:</strong> create listings of news items, products or contact locations from your website content.</li>
+              <li><strong>Blog:</strong> publish articles and manage their authors.</li>
+              <li><strong>Gallery:</strong> upload photos and let the system prepare thumbnails and images at the configured sizes.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/files/file-archive/">Document Manager documentation</a> · <a href="https://docs.webjetcms.sk/latest/en/redactor/apps/news/">News</a></p>
+          </div>
+        </details>
+      </div>
+      <figure class="wj-media">
+        <a href="/images/webjetcms-2026/en/document-manager.png"><img class="img-fluid" src="/images/webjetcms-2026/en/document-manager.png" width="1400" height="850" loading="lazy" alt="WebJET CMS Document Manager with a folder tree and document list"></a>
+        <figcaption>Find and manage documents in one overview. Select the image to view it at full size.</figcaption>
+      </figure>
+  </section>
+
+  <section class="md-intro" aria-labelledby="aplikacie-vyhladavanie">
+      <h2 id="aplikacie-vyhladavanie">Search and content access</h2>
+      <p>Help visitors find information in a large portal. Make content for clients, partners or employees available after sign-in.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Search, language versions and restricted sections</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Search:</strong> extend full-text search with semantic or hybrid mode and an AI answer based on the content found. These options require indexing and an AI provider.</li>
+              <li><strong>Language versions:</strong> linked content and a language switcher take visitors to the corresponding page.</li>
+              <li><strong>Restricted area:</strong> make content available to selected groups of registered users.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/search/">Search documentation</a> · <a href="https://docs.webjetcms.sk/latest/en/redactor/zaheslovana-zona/">Restricted pages</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="aplikacie-marketing">
+      <h2 id="aplikacie-marketing">Marketing and analytics</h2>
+      <p>Publish a campaign, reach subscribers and track how visitors use your website. Marketing applications work with content managed in WebJET CMS.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Email campaigns, banners, statistics and A/B tests</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Bulk email:</strong> prepare personalised messages and manage recipients, unsubscribes and campaign progress.</li>
+              <li><strong>Banners:</strong> manage advertising placements and track impressions and clicks.</li>
+              <li><strong>Statistics:</strong> analyse traffic and page usage.</li>
+              <li><strong>A/B testing:</strong> compare page variants with a configured split of visitors.</li>
+              <li><strong>SEO:</strong> use reports to assess search visibility, including visits from search engine crawlers.</li>
+              <li><strong>Cookie consent and Scripts:</strong> let visitors choose cookie categories and load the corresponding scripts based on their choices.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/dmail/campaings/">Bulk email documentation</a> · <a href="https://docs.webjetcms.sk/latest/en/redactor/apps/abtesting/">A/B testing</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="aplikacie-udalosti">
+      <h2 id="aplikacie-udalosti">Events and bookings</h2>
+      <p>Share information about training sessions and events, or let visitors book a time slot or venue. Manage records in the administration interface and display them on the relevant pages.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Events calendar and reservation system</summary>
+          <div class="md-accordion__block">
+            <p>The <strong>Events calendar</strong> lets you record and display events. The <strong>Reservation system</strong> manages bookable resources, time slots and incoming bookings, including approval. Booking reports are also available.</p>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/calendar/">Events calendar documentation</a> · <a href="https://docs.webjetcms.sk/latest/en/redactor/apps/reservation/reservations/">Managing bookings</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="aplikacie-predaj">
+      <h2 id="aplikacie-predaj">E-commerce</h2>
+      <p>If your website also needs to sell, use applications for products, a shopping cart and orders. Store data remains available in the administration interface alongside your website content.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Products, orders, payments and sales reports</summary>
+          <div class="md-accordion__block">
+            <p>Manage products and orders and configure payment and delivery methods. Statistics show revenue, best-selling products and order breakdowns for a selected period. Payment and delivery options are configured to match the needs of each store.</p>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/eshop/invoice/">Order documentation</a> · <a href="https://docs.webjetcms.sk/latest/en/redactor/apps/eshop/stats/">E-commerce reports</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro wj-final-cta" aria-labelledby="aplikacie-ukazka">
+      <h2 id="aplikacie-ukazka">See the applications that fit your project</h2>
+      <p>Tell us what data your website needs to collect, what content you publish and which systems it needs to connect to. We will explore suitable applications and options for custom extensions together.</p>
+      <p><a class="btn btn-cta" href="/contact/">Request a demo</a></p>
+      <p><a href="https://docs.webjetcms.sk/latest/en/redactor/">Read the documentation for applications and editorial features</a> · <a href="/for-developers/">Developing custom applications</a></p>
+  </section>
+</div>
