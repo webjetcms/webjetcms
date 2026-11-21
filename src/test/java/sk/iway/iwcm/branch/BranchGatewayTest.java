@@ -162,7 +162,8 @@ class BranchGatewayTest extends BranchJpaTest {
         String depth=html(editor,base+"depth",true);evidence.put("m03-depth",depth);assertFalse(depth.contains("Renamed navigation A"),depth);assertTrue(depth.contains("New navigation A"),depth);
         String offset=html(editor,base+"offset",true);evidence.put("m03-offset",offset);assertTrue(offset.contains("Renamed navigation A"),offset);assertFalse(offset.contains(">Target<"),offset);
         String folders=html(editor,base+"folders",true);evidence.put("m03-folders",folders);assertFalse(folders.contains("Extra menu page"),folders);assertTrue(folders.contains("Nested"),folders);
-        assertTrue(html(editor,base+"force-valid",true).contains("menuULDirOpen"));assertFalse(html(editor,base+"force-invalid",true).contains("<li"));
+        assertTrue(html(editor,base+"force-valid",true).contains("menuULDirOpen"));
+        assertTrue(Jsoup.parse(html(editor,base+"force-invalid",true)).select("li").isEmpty());
         for(String classes:List.of("none","basic","full","bootstrap")) {String html=html(editor,base+"classes-"+classes,true);evidence.put("m05-"+classes,html);assertTrue(html.contains("Renamed navigation A"),html);}
         change(a,BranchType.GROUP,CHILD,Map.of("menu_type",GroupDetails.MENU_TYPE_HIDDEN),false);
         String hiddenTop=html(editor,base+"top",true);assertFalse(hiddenTop.contains("Renamed navigation A"),hiddenTop);

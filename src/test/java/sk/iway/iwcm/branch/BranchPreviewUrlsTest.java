@@ -2,6 +2,8 @@ package sk.iway.iwcm.branch;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.jsoup.Jsoup;
 import sk.iway.iwcm.i18n.Prop;
@@ -10,6 +12,67 @@ import sk.iway.iwcm.*;
 
 /** URL transport and private response boundaries independent of the database. */
 class BranchPreviewUrlsTest {
+    /** Binary downloads reach the client in blocks, with the private headers already in effect. */
+    @Test void streamsAttachmentBeforeFinish() throws Exception {
+        var target = new MockHttpServletResponse();
+        var response = new BranchPreviewResponseWrapper(target, new MockHttpServletRequest("GET", "/files/manual.pdf"));
+        var output = response.getOutputStream();
+        response.setContentType("application/pdf");
+        response.setHeader("X-Content-Type-Options", "nosniff");
+        response.setHeader("Cache-Control", "public");
+        byte[] block = {0, 1, 2, 3};
+        output.write(block, 1, 2);
+        assertArrayEquals(new byte[]{1, 2}, target.getContentAsByteArray());
+        assertTrue(target.getHeader("Cache-Control").contains("no-store"));
+        assertTrue(target.getHeader("X-Robots-Tag").contains("noindex"));
+        assertEquals("nosniff", target.getHeader("X-Content-Type-Options"));
+        output.write(255);
+        response.finish();
+        assertArrayEquals(new byte[]{1, 2, (byte)255}, target.getContentAsByteArray());
+    }
+
+    /** HEAD must suppress even the output of a handler that writes a body. */
+    @Test void headReturnsPreviewHeadersWithoutSendingBody() throws Exception {
+        for (String type : List.of("image/png", "text/html")) {
+            var target = new MockHttpServletResponse();
+            var response = new BranchPreviewResponseWrapper(target, new MockHttpServletRequest("HEAD", "/preview"));
+            response.setContentType(type);
+            response.getOutputStream().write(new byte[]{1, 2, 3});
+            response.flushBuffer();
+            response.finish();
+            assertEquals(0, target.getContentAsByteArray().length);
+            assertTrue(target.getContentType().startsWith(type));
+            assertTrue(target.getHeader("Cache-Control").contains("no-store"));
+        }
+    }
+
+    /** Untyped data streams once a block exceeds the prefix retained for a late content type. */
+    @Test void streamsUntypedDataIncludingItsInitialPrefix() throws Exception {
+        var target = new MockHttpServletResponse();
+        var response = new BranchPreviewResponseWrapper(target, new MockHttpServletRequest());
+        var output = response.getOutputStream();
+        output.write(42);
+        byte[] block = new byte[64 * 1024];
+        output.write(block);
+        assertEquals(1 + block.length, target.getContentAsByteArray().length);
+        assertEquals(42, target.getContentAsByteArray()[0]);
+        response.finish();
+        assertEquals(1 + block.length, target.getContentAsByteArray().length);
+    }
+
+    /** A forward can discard an unfinished writer and return an error without leaking the old body. */
+    @Test void discardsPendingTextOnError() throws Exception {
+        var target = new MockHttpServletResponse();
+        var response = new BranchPreviewResponseWrapper(target, new MockHttpServletRequest());
+        response.setContentType("text/html");
+        response.getWriter().write("discarded");
+        response.sendError(403, "Forbidden");
+        response.finish();
+        assertEquals(403, target.getStatus());
+        assertEquals("Forbidden", target.getContentAsString());
+        assertTrue(target.getHeader("Cache-Control").contains("no-store"));
+    }
+
     @Test void relativeAbsoluteQueryUnicodeAndExternalUrls()throws Exception {
         RequestBean bean=new RequestBean();MockHttpServletRequest request=new MockHttpServletRequest();
         request.setAttribute(BranchPreviewUrls.LOGICAL_PATH,"/section/news.html");
@@ -24,7 +87,13 @@ class BranchPreviewUrlsTest {
                 assertEquals("/admin/webpages/branch-preview/42/a.html",BranchPreviewUrls.toPreviewUrl("/admin/webpages/branch-preview/42/a.html",request));
                 assertFalse(BranchPreviewUrls.allowed("/admin/index.jsp"));assertFalse(BranchPreviewUrls.allowed("/templates/x.jsp"));assertFalse(BranchPreviewUrls.allowed("/images/../WEB-INF/config"));
                 MockHttpServletResponse target=new MockHttpServletResponse();BranchPreviewResponseWrapper response=new BranchPreviewResponseWrapper(target,request);
-                response.setHeader("Cache-Control","public,max-age=900");response.setDateHeader("Last-Modified",123);response.setHeader("ETag","bad");response.setContentType("text/css;charset=UTF-8");response.getWriter().write("a{background:url('/images/a.png')}");response.finish();
+                response.setHeader("Cache-Control","public,max-age=900");response.setDateHeader("Last-Modified",123);response.setHeader("ETag","bad");
+                response.getOutputStream().write("a{".getBytes(StandardCharsets.UTF_8));
+                response.setContentType("text/css;charset=UTF-8");
+                response.getOutputStream().write("background:url('/images/a.png')}".getBytes(StandardCharsets.UTF_8));
+                response.flushBuffer();
+                assertEquals(0,target.getContentAsByteArray().length);
+                response.finish();
                 assertTrue(target.getHeader("Cache-Control").contains("no-store"));assertNull(target.getHeader("ETag"));assertTrue(target.getContentAsString().contains("/admin/webpages/branch-preview/42/images/a.png"));
                 MockHttpServletResponse redirect=new MockHttpServletResponse();var wrapper=new BranchPreviewResponseWrapper(redirect,request);wrapper.sendRedirect("/next.html?x=1");wrapper.finish();assertEquals("/admin/webpages/branch-preview/42/next.html?x=1",redirect.getHeader("Location"));
             }
