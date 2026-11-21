@@ -48,11 +48,13 @@ public final class BranchPublishService {
         try(Connection connection=DBPool.getConnection()) {
             BranchReadiness.verify(connection);
             domain=BranchService.getInstance().publication(id).getDomainName();
+            RequestBean bean = new RequestBean();
+            bean.setDomain(domain);
+            SetCharacterEncodingFilter.setCurrentRequestBean(bean);
             var details=UsersDB.getUser(actor);
             if(details==null||!details.isAdmin()||!details.isAuthorized())throw new IllegalStateException("Publishing administrator no longer exists");
             Identity user=new Identity(details);
-            RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(domain);
-            SetCharacterEncodingFilter.setCurrentRequestBean(bean);
+            bean.setUser(user);
             try(BranchContexts.Scope ignored=BranchContexts.live(null,domain,actor)) {
                 BranchMergeService.validatePublisher(id,domain,user);
                 for(BranchType type:BranchType.values()) {

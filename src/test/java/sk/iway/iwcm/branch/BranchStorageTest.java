@@ -26,6 +26,8 @@ import sk.iway.iwcm.system.datatable.DatatableRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -38,6 +40,10 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.system.UpdateDBBean;
 import sk.iway.iwcm.system.UpdateDatabase;
 import sk.iway.webjet.v9.V9JpaDBConfig;
@@ -327,6 +333,69 @@ class BranchStorageTest extends BranchJpaTest {
                 () -> branchService().delete(withPage.branchId(), withPage.domainId(), user));
         assertEquals(403, denied.getStatusCode().value());
         assertTrue(branchService().find(withPage.branchId(), withPage.domainId()).isPresent());
+    }
+
+    /** Both publication paths reload a MultiWeb account in the package domain and restore the caller's context. */
+    @ParameterizedTest @Order(2) @ValueSource(booleans = {false, true})
+    void publishesWithAccountFromPackageDomain(boolean scheduled, @TempDir Path storage) throws Exception {
+        var context = branch("autotest MultiWeb publisher");
+        long id = context.branchId();
+        String login = "autotest-publisher-" + id;
+        String directory = "/files/autotest-package-" + id;
+        assertTrue(context.domainId() > 1);
+        RequestBean editor = SetCharacterEncodingFilter.getCurrentRequestBean();
+        Map<String, String> original = new LinkedHashMap<>();
+        for (String key : List.of("wjVersion", "multiDomainEnabled", "cloudStaticFilesDir", "branchStorageRoot", "clusterMyNodeType"))
+            original.put(key, Constants.getString(key));
+        try (Connection connection = connect();
+             var insert = connection.prepareStatement("INSERT INTO users (login, password, domain_id, is_admin, authorized) VALUES (?, SHA2(UUID(),256), ?, true, true)");
+             var cleanup = connection.prepareStatement("DELETE FROM users WHERE login=?")) {
+            insert.setString(1, login);
+            insert.setInt(2, context.domainId());
+            insert.executeUpdate();
+            try {
+                Constants.setString("wjVersion", "M");
+                Constants.setBoolean("multiDomainEnabled", true);
+                Constants.setString("cloudStaticFilesDir", storage.resolve("sites") + "/");
+                Constants.setString("branchStorageRoot", Files.createDirectory(storage.resolve("private")).toString());
+                Constants.setString("clusterMyNodeType", "admin");
+                Identity actor = new Identity(UsersDB.getUser(login));
+                assertTrue(actor.isAdmin());
+                var liveDirectory = Path.of(Tools.getRealPath(directory));
+                assertTrue(liveDirectory.startsWith(storage));
+                new BranchStore().putFile(context, directory, "DIRECTORY", BranchSnapshot.absent(), null, null, null, false);
+                var merge = new BranchMergeService();
+                var plan = merge.detail(id, context.domainName(), actor);
+                if (scheduled) {
+                    merge.schedule(id, context.domainName(), actor, plan.revision(), plan.preparationHash(), System.currentTimeMillis() + 60000);
+                    execute(connection, "UPDATE branches SET publish_at=CURRENT_TIMESTAMP-INTERVAL 1 SECOND WHERE id=" + id);
+                } else {
+                    merge.enqueue(id, context.domainName(), actor, plan.revision(), plan.preparationHash(), false);
+                }
+
+                RequestBean previous = null;
+                if (scheduled) {
+                    previous = new RequestBean();
+                    previous.setDomain("p02.other");
+                }
+                SetCharacterEncodingFilter.setCurrentRequestBean(previous);
+                assertNull(UsersDB.getUser(actor.getUserId()));
+                if (scheduled) BranchScheduler.main(new String[0]);
+                else BranchScheduler.publishRequested();
+
+                assertSame(previous, SetCharacterEncodingFilter.getCurrentRequestBean());
+                if (scheduled) assertEquals("p02.other", previous.getDomain());
+                var result = branchService().find(id, context.domainId()).orElseThrow();
+                assertEquals("MERGED", result.getState(), result.getLastError());
+                assertTrue(Files.isDirectory(liveDirectory));
+            } finally {
+                cleanup.setString(1, login);
+                cleanup.executeUpdate();
+            }
+        } finally {
+            SetCharacterEncodingFilter.setCurrentRequestBean(editor);
+            original.forEach(Constants::setString);
+        }
     }
 
     /** Rolling back the request preserves the editable package and all private copies. */

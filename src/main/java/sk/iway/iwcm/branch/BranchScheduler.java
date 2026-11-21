@@ -68,12 +68,14 @@ public final class BranchScheduler {
         for(BranchEntity item:branches.due(new Timestamp(System.currentTimeMillis()))) {
             try {
                 String domain = BranchDomains.name(item.getDomainId());
+                RequestBean bean = new RequestBean();
+                bean.setDomain(domain);
+                SetCharacterEncodingFilter.setCurrentRequestBean(bean);
                 var details=UsersDB.getUser(item.getScheduledBy());
                 if(details==null||!details.isAdmin()||!details.isAuthorized())throw new IllegalStateException(Prop.getInstance().getText("branches.schedule.user_unavailable"));
                 Identity user=new Identity(details);
                 if(!user.isEnabledItem(BranchAccess.PERMISSION))throw new IllegalStateException(Prop.getInstance().getText("branches.schedule.permission"));
-                RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(domain);
-                SetCharacterEncodingFilter.setCurrentRequestBean(bean);
+                bean.setUser(user);
                 try(BranchContexts.Scope ignored=BranchContexts.live(null,domain,item.getScheduledBy())) {
                     BranchMergeService merge=new BranchMergeService();
                     var report=merge.prepare(item.getId(),domain,user,item.getRevision());

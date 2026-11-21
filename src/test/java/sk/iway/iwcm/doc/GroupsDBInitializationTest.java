@@ -3,9 +3,11 @@ package sk.iway.iwcm.doc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
@@ -146,6 +148,36 @@ class GroupsDBInitializationTest
 			verify(statement).executeQuery();
 			verify(connection).close();
 			cluster.verifyNoInteractions();
+		}
+	}
+
+	/** Configured IDs resolve independently of folder IDs, in root order when names share an ID. */
+	@Test
+	void resolvesConfiguredDomainIdIndependentlyOfRootFolderId() throws Exception
+	{
+		Connection connection = mock(Connection.class);
+		PreparedStatement statement = mock(PreparedStatement.class);
+		ResultSet rows = mock(ResultSet.class);
+		when(connection.prepareStatement(anyString())).thenReturn(statement);
+		when(statement.executeQuery()).thenReturn(rows);
+		when(rows.next()).thenReturn(true, true, false);
+		when(rows.getString("domain_name")).thenReturn("example.com", "second.example.com");
+		when(rows.getInt("group_id")).thenReturn(7, 8);
+
+		try (var db = mockStatic(DBPool.class);
+			var config = mockStatic(Constants.class, CALLS_REAL_METHODS);
+			var cache = mockStatic(Cache.class))
+		{
+			db.when(() -> DBPool.getConnection("iwcm")).thenReturn(connection);
+			config.when(() -> Constants.getInt("domainId-example.com")).thenReturn(42);
+			config.when(() -> Constants.getInt("domainId-second.example.com")).thenReturn(42);
+			cache.when(Cache::getInstance).thenReturn(mock(Cache.class));
+
+			GroupsDB groups = GroupsDB.getInstance();
+			assertEquals(42, GroupsDB.getDomainId("example.com"));
+			assertEquals(42, GroupsDB.getDomainId("second.example.com"));
+			assertEquals("example.com", groups.getDomainNameById(42));
+			assertNull(groups.getDomainNameById(7));
 		}
 	}
 

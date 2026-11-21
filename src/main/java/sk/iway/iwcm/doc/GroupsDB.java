@@ -153,7 +153,10 @@ public class GroupsDB extends DB
         GroupsDB result = new GroupsDB(effectiveGroups);
         var context = sk.iway.iwcm.branch.BranchContexts.current();
         try (var ignored = sk.iway.iwcm.branch.BranchContexts.live(null, context.domainName(), context.userId())) {
-            result.domainIds = new HashMap<>(getInstance().domainIds);
+            Map<String, Integer> liveDomainIds = getInstance().domainIds;
+            synchronized (liveDomainIds) {
+                result.domainIds = new LinkedHashMap<>(liveDomainIds);
+            }
         }
         for (GroupDetails group : effectiveGroups) group.setFullPath(result.getPath(group.getGroupId()));
         return result;
@@ -207,7 +210,8 @@ public class GroupsDB extends DB
 		//ak existuje, tak si vopred predalokuj dost miesta pre kluce
 		Map<Integer, GroupDetails> idToGroupsHolderWhileLoading = Collections.synchronizedMap(new HashMap<Integer, GroupDetails>(idToGroups!=null?idToGroups.size():300));
 		Map<String,GroupDetails> domainIdsGroups = Collections.synchronizedMap(new HashMap<String, GroupDetails>(domainIds!=null?domainIds.size():100));
-		Map<String,Integer> domainIdsHolderWhileLoading = Collections.synchronizedMap(new HashMap<String, Integer>(domainIds!=null?domainIds.size():100));
+		// Keep root-folder order when multiple domain names have the same configured ID.
+		Map<String,Integer> domainIdsHolderWhileLoading = Collections.synchronizedMap(new LinkedHashMap<>(domainIds!=null?domainIds.size():100));
 
 		java.sql.Connection db_conn = null;
 		java.sql.PreparedStatement ps = null;
@@ -3512,6 +3516,20 @@ public class GroupsDB extends DB
 		Integer id = getInstance().domainIds.get(domain);
 		if(id == null) id = -1;
 		return id;
+	}
+
+	/** Resolves a stored domain ID, including configured IDs, before a request domain is available. */
+	public String getDomainNameById(int domainId)
+	{
+		Map<String, Integer> domains = domainIds;
+		synchronized (domains)
+		{
+			for (var entry : domains.entrySet())
+			{
+				if (entry.getValue() == domainId) return entry.getKey();
+			}
+		}
+		return null;
 	}
 
 	/**

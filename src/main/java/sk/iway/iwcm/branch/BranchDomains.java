@@ -14,10 +14,8 @@ public final class BranchDomains {
 
     public static String name(int id) {
         try (var ignored = BranchContexts.live(null, "", 0)) {
-            for (var group : GroupsDB.getInstance().getGroups(0)) {
-                String name = group.getDomainName();
-                if (name != null && !name.isBlank() && GroupsDB.getDomainId(name) == id) return name;
-            }
+            String name = GroupsDB.getInstance().getDomainNameById(id);
+            if (name != null && !name.isBlank()) return name;
             throw new IllegalArgumentException("Unknown branch domain ID: " + id);
         }
     }
