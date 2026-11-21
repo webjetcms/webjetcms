@@ -8,6 +8,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.*;
+import sk.iway.iwcm.system.spring.ApiTokenAuthFilter;
 
 /** Establishes the verified content context after authentication and before virtual routing. */
 public final class BranchFilter implements Filter {
@@ -164,10 +165,12 @@ public final class BranchFilter implements Filter {
                         return;
                     }
                 }
+                boolean restRequiresScreen = path.startsWith("/admin/rest/")
+                        && (context.isBranch() || !ApiTokenAuthFilter.isAuthenticatedByTokenOnly(request));
                 if(!management && (explicit!=null || expectedDomain!=null)) {
                     try {BranchContexts.requireSameSelection(context,Long.parseLong(explicit),expectedDomain);}
                     catch(RuntimeException ex) {response.sendError(409,"Branch context changed; reload the screen");return;}
-                } else if(!management && BranchProductionSection.currentSelection() == null && (path.startsWith("/admin/rest/") || path.startsWith("/admin/upload/")
+                } else if(!management && BranchProductionSection.currentSelection() == null && (restRequiresScreen || path.startsWith("/admin/upload/")
                         || path.equals("/admin/web-pages/upload/") || path.equals("/admin/elfinder-connector/") || path.equals("/admin/webpages/preview/"))
                         && (context.isBranch() || !Set.of("GET","HEAD").contains(request.getMethod()))) {
                     response.sendError(409,"Missing screen branch context; reload the screen");return;

@@ -29,6 +29,12 @@ import sk.iway.iwcm.users.UsersDB;
  * Pridany do chain je v V9SpringConfig.configureSecurity
  */
 public class ApiTokenAuthFilter extends GenericFilterBean {
+    private static final String TOKEN_ONLY_AUTHENTICATION = ApiTokenAuthFilter.class.getName() + ".tokenOnly";
+
+    /** True when this request authenticated with an API token without a previously signed-in session. */
+    public static boolean isAuthenticatedByTokenOnly(HttpServletRequest request) {
+        return Boolean.TRUE.equals(request.getAttribute(TOKEN_ONLY_AUTHENTICATION));
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -75,6 +81,7 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 				//because SetCharacterEncoding filter was not called yet, we need to register data context to correctly call Adminlog (set URl, userId...)
 				SetCharacterEncodingFilter.registerDataContext(request);
 
+				boolean hadSessionUser = request.getSession().getAttribute(Constants.USER_KEY) != null;
 				Map<String, String> errors = new Hashtable<>();
 				LogonTools.logon(login, token, user, errors, request, Prop.getInstance(request));
 
@@ -90,6 +97,7 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 					//set domain by webpages group permissions
 					AdminLogonController.determineRootWebPageDirectory(request.getSession(), user);
 
+					if (!hadSessionUser) request.setAttribute(TOKEN_ONLY_AUTHENTICATION, Boolean.TRUE);
 					return true;
 				}
 			}

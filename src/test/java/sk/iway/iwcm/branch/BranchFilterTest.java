@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
@@ -21,9 +22,14 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ModuleInfo;
 import sk.iway.iwcm.system.Modules;
+import sk.iway.iwcm.system.spring.ApiTokenAuthFilter;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 /** Request-boundary checks; content readers/renderers have separate real DB/JSP coverage. */
 class BranchFilterTest {
@@ -326,6 +332,43 @@ class BranchFilterTest {
         filter.doFilter(request,response,(in,out)->fail("Stale LIVE domain dispatched"));assertEquals(409,response.getStatus());
         response=new MockHttpServletResponse();request.removeHeader(BranchSelection.ID_HEADER);request.removeHeader(BranchSelection.DOMAIN_HEADER);request.setMethod("POST");
         filter.doFilter(request,response,(in,out)->fail("Unscoped LIVE write dispatched"));assertEquals(409,response.getStatus());
+    }
+
+    /** Token writes use LIVE and still respect explicit domains and existing browser sessions. */
+    @ParameterizedTest
+    @CsvSource({"false, , 200", "true, , 409", "false, b.example, 409"})
+    void tokenWriteChecksScreenContext(boolean browserSession, String screenDomain, int expectedStatus) throws Exception {
+        selection.close(); // Resolve the actual session selection in BranchFilter.
+        if (!browserSession) request.getSession().invalidate();
+        request.setMethod("POST");
+        request.setRequestURI("/admin/rest/web-pages/editor");
+        request.addHeader("X-Api-Token", "integration:test-token");
+        if (screenDomain != null) headers(0, screenDomain);
+        constants.when(() -> Constants.getString(anyString())).thenReturn("");
+        constants.when(() -> Constants.getString("springSecurityAllowedAuths")).thenReturn("api-token");
+        constants.when(() -> Constants.getString("logonTokenHeaderName")).thenReturn("X-Api-Token");
+        var account = mock(UserDetails.class);
+        when(account.isAdmin()).thenReturn(true);
+        when(account.getUserId()).thenReturn(17);
+        when(GroupsDB.getInstance().getUserRootDomainNames(any(Identity.class))).thenReturn(List.of(DOMAIN));
+
+        try (var users = mockStatic(UsersDB.class); var logon = mockStatic(LogonTools.class);
+             var props = mockStatic(Prop.class); var encoding = mockStatic(SetCharacterEncodingFilter.class)) {
+            users.when(() -> UsersDB.getUser("integration")).thenReturn(account);
+            users.when(() -> UsersDB.getCurrentUser(request)).thenAnswer(call -> request.getSession().getAttribute(Constants.USER_KEY));
+            logon.when(() -> LogonTools.setUserToSession(any(), any())).thenAnswer(call -> {
+                request.getSession().setAttribute(Constants.USER_KEY, call.getArgument(1));
+                return null;
+            });
+
+            AtomicBoolean reachedEndpoint = new AtomicBoolean();
+            new ApiTokenAuthFilter().doFilter(request, response, (in, out) -> filter.doFilter(in, out, (input, output) -> {
+                reachedEndpoint.set(true);
+                assertEquals(BranchContext.live(DOMAIN, 17), BranchContexts.current(request));
+            }));
+            assertEquals(expectedStatus, response.getStatus(), response.getErrorMessage());
+            assertEquals(expectedStatus == 200, reachedEndpoint.get());
+        }
     }
 
     @ParameterizedTest

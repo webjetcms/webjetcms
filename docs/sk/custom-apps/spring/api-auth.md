@@ -2,6 +2,8 @@
 
 Ak potrebujete pristupovať k REST službám/`API WebJET CMS` z externého systému môžete využiť možnosť autorizácie API kľúčom. Ten sa posiela v HTTP hlavičke ```x-auth-token``` pri volaní REST služby. Pri takejto autorizácii nie je potrebné posielať CSRF token.
 
+Pri zapnutých publikačných balíkoch môže externý systém prihlásený iba API kľúčom zapisovať do hlavnej verzie webu (LIVE) aj bez hlavičiek `X-WebJET-Branch` a `X-WebJET-Branch-Domain`. Platia oprávnenia používateľského účtu, ku ktorému kľúč patrí.
+
 API [autorizáciu je možné zakázať](../../sysadmin/pentests/README.md#konfigurácia) v konfiguračnej premennej `springSecurityAllowedAuths` z ktorej odstránite hodnotu `api-token`.
 
 ## Nastavenie kľúča
