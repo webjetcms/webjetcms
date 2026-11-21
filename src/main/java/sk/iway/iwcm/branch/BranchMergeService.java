@@ -283,8 +283,10 @@ public final class BranchMergeService {
                 }
             } finally {BranchView.invalidate();}
         }
-        // The exact permissions are rechecked even for LIVE/no-op rows of the reviewed package.
-        for(Entry e:entries) try {authorize(c,e.type,e.row,user,domain,true);}
+        for(Entry e:entries) try {
+            authorize(c,e.type,e.row,user,domain,true);
+            if (e.write) checkWritePermission(e, user);
+        }
         catch(ResponseStatusException ex) {errors.add(e.change.identity()+": "+ex.getReason());}
         Map<String,String> pagePlans=new LinkedHashMap<>();
         try {validate(c,entries,domain,user,frozen,pagePlans);}
@@ -507,6 +509,26 @@ public final class BranchMergeService {
             try(ResultSet result=statement.executeQuery()) {
                 if(result.next()) throw new IllegalStateException(prop.getText("branches.merge.pageTiming",title,id));
             }
+        }
+    }
+
+    private static void checkWritePermission(Entry entry, Identity user) {
+        boolean deleting = entry.target.state() == BranchSnapshot.State.TRASH;
+        boolean creating = entry.live.state() == BranchSnapshot.State.ABSENT || entry.change.base().state() == BranchSnapshot.State.ABSENT;
+        if (entry.type == BranchType.DOCUMENT) {
+            if (deleting) requirePermission(user, "deletePage");
+            else if (creating) requirePermission(user, "addPage");
+        } else if (entry.type == BranchType.GROUP) {
+            requirePermission(user, creating ? "addSubdir" : "editDir");
+            if (deleting) requirePermission(user, "deleteDir");
+        }
+    }
+
+    private static void requirePermission(Identity user, String permission) {
+        if (user.isDisabledItem(permission)) {
+            Prop prop = Prop.getInstance();
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    prop.getText("settings.tabs-settings.perms") + ": " + prop.getText("components.user.perms." + permission));
         }
     }
 

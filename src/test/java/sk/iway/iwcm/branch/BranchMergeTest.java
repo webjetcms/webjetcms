@@ -11,6 +11,8 @@ import java.util.concurrent.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.perex_groups.*;
 import sk.iway.iwcm.doc.*;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Real MariaDB manual publication, stale-input checks and checkpoint recovery on isolated P06 data. */
@@ -310,6 +313,41 @@ class BranchMergeTest extends BranchJpaTest {
         sql("UPDATE documents_history SET actual=false,publicable=true,publish_start=CURRENT_TIMESTAMP+INTERVAL 1 DAY WHERE doc_id="+docId);
     }
 
+    private int stagePageDeletion() throws Exception {
+        for (BranchType type : BranchType.values()) sql("DELETE FROM " + type.workTable() + " WHERE branch_id=" + f.branch);
+        int page = f.pages.get(2);
+        var row = live(BranchType.DOCUMENT, page);
+        store.put(admin(), BranchType.DOCUMENT, page, row, BranchStore.snapshot(BranchType.DOCUMENT, row).hash(), true);
+        return page;
+    }
+
+    /** A publisher without deletePage can keep the LIVE page, but cannot publish its staged deletion. */
+    @Test void manualPublicationChecksTheResolvedPageDeletion() throws Exception {
+        int page = stagePageDeletion();
+        var report = ready();
+        user.addDisabledItem("deletePage");
+        assertFalse(detail().ready());
+        assertThrows(ResponseStatusException.class, () ->
+                service.enqueue(f.branch, DOMAIN, user, report.revision(), report.preparationHash(), false));
+        var deletion = item(report, BranchType.DOCUMENT, Integer.toString(page));
+        var kept = service.resolve(f.branch, DOMAIN, user, report.revision(), BranchType.DOCUMENT, deletion.objectKey(),
+                BranchDecision.Source.LIVE, deletion.liveHash(), deletion.workHash());
+        assertTrue(kept.ready(), kept.errors().toString());
+        assertFalse(item(kept, BranchType.DOCUMENT, deletion.objectKey()).writeRequired());
+    }
+
+    /** The fixture adds a page and folder and moves an existing folder. */
+    @ParameterizedTest
+    @ValueSource(strings = {"addPage", "addSubdir", "editDir"})
+    void publicationRequiresTheSameCreationAndEditRightsAsTheEditor(String permission) {
+        ready();
+        user.addDisabledItem(permission);
+        var report = detail();
+        assertFalse(report.ready());
+        String label = Prop.getInstance().getText("components.user.perms." + permission);
+        assertTrue(report.errors().stream().anyMatch(reason -> reason.contains(label)), report.errors().toString());
+    }
+
     @Test void subtreeTrashKeepsNestingAndMandatorySnapshotsWhenHistoryDisabled()throws Exception {
         Constants.setBoolean("editorDisableHistory",true);
         // Replace this fixture's WORK edits with the normal branch editor's explicit subtree DELETE set.
@@ -536,6 +574,22 @@ class BranchMergeTest extends BranchJpaTest {
         sql("INSERT INTO user_disabled_items(user_id,item_name) VALUES ("+user.getUserId()+",'pageSave')");
         try {BranchScheduler.main(new String[0]);assertAttention(live);assertTrue(detail().lastError().contains("právo"),detail().lastError());}
         finally {sql("DELETE FROM user_disabled_items WHERE user_id="+user.getUserId()+" AND item_name='pageSave'");}
+    }
+
+    /** The scheduled deletion stops before any LIVE write if only deletePage has been revoked. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true")
+    void scheduledDeletionRechecksDeletePage() throws Exception {
+        stagePageDeletion();
+        scheduleDue();
+        var before = productionInputs();
+        sql("INSERT INTO user_disabled_items(user_id,item_name) VALUES (" + user.getUserId() + ",'deletePage')");
+        try {
+            BranchScheduler.main(new String[0]);
+            assertAttention(before);
+            assertTrue(detail().lastError().contains(Prop.getInstance().getText("components.user.perms.deletePage")));
+        } finally {
+            sql("DELETE FROM user_disabled_items WHERE user_id=" + user.getUserId() + " AND item_name='deletePage'");
+        }
     }
 
     /** T12: file-only packages still require current access to their administration domain. */
