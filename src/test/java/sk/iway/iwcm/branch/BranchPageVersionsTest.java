@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,6 +13,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -112,12 +112,16 @@ class BranchPageVersionsTest {
         final BranchMergeService service=new BranchMergeService();
         final Connection connection=mock(Connection.class);
         final PreparedStatement branch=mock(PreparedStatement.class);
-        final Statement tables=mock(Statement.class);
         final Identity user=mock(Identity.class);
         final GroupsDB permissions=mock(GroupsDB.class);
         Map<String,Object> live=new LinkedHashMap<>(BranchDocumentMapper.initialValues(12,7,Instant.EPOCH,false));
         final Map<String,Object> work=new LinkedHashMap<>();
         final Map<Integer,Map<String,Object>> groups=new LinkedHashMap<>();
+        final MockedConstruction<BranchPermissionRows> permissionRows = mockConstruction(BranchPermissionRows.class,(reader,context) -> {
+            when(reader.get(BranchType.DOCUMENT,12,false)).thenAnswer(call -> live);
+            when(reader.get(eq(BranchType.GROUP),anyInt(),eq(false))).thenAnswer(call -> groups.get(call.<Integer>getArgument(1)));
+            when(reader.effective(eq(BranchType.GROUP),anyInt())).thenAnswer(call -> groups.get(call.<Integer>getArgument(1)));
+        });
         final MockedStatic<DBPool> pool=mockStatic(DBPool.class);
         final MockedStatic<BranchReadiness> readiness=mockStatic(BranchReadiness.class);
         final MockedStatic<BranchStore> store=mockStatic(BranchStore.class,CALLS_REAL_METHODS);
@@ -160,17 +164,8 @@ class BranchPageVersionsTest {
                 if(selectedId.get()!=42||selectedDomain.get()!=1)result.deleteRow();
                 result.beforeFirst();return result;
             });
-            when(connection.createStatement()).thenReturn(tables);
-            when(tables.executeQuery(anyString())).thenAnswer(call->{
-                assertEquals("SELECT * FROM `groups`",call.getArgument(0));
-                var result=BranchRows.result(groups.get(10));
-                for(var group:groups.values())if(((Number)group.get("group_id")).intValue()!=10) {
-                    result.moveToInsertRow();for(var entry:group.entrySet())result.updateObject(entry.getKey(),entry.getValue());result.insertRow();result.moveToCurrentRow();
-                }
-                result.beforeFirst();return result;
-            });
         }
 
-        @Override public void close() {props.close();mappings.close();users.close();constants.close();folders.close();rows.close();store.close();readiness.close();pool.close();}
+        @Override public void close() {permissionRows.close();props.close();mappings.close();users.close();constants.close();folders.close();rows.close();store.close();readiness.close();pool.close();}
     }
 }

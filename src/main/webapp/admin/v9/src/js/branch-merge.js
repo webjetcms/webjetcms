@@ -118,7 +118,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
     const publishing = document.getElementById('panel-body-dt-branchesDataTable-publishing');
     const events = new AbortController();
     const {signal} = events;
-    let report, timer, busy = false, stale = false, table, tableLoading = false, problemCheck;
+    let report, timer, polling = false, busy = false, stale = false, table, tableLoading = false, problemCheck;
     let tabClickId;
     let conflictNoticeShown = false;
     let activeTab = modal.querySelector('[role="tab"].active')?.dataset.tabId;
@@ -336,7 +336,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         if (box === detailError) detailDialog?.querySelector('[data-branch-retry]').classList.remove('d-none');
     }
 
-    async function perform(path = '/progress', body, errorBox = changesError) {
+    async function perform(path = '/progress', body, errorBox = changesError, reloadTable = true) {
         if (busy || signal.aborted) return;
         clearTimeout(timer);
         const active = document.activeElement;
@@ -351,7 +351,7 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
             if (!signal.aborted && path === '/merge' && nextReport.state === 'SCHEDULED') {
                 WJ.notifyWarning(WJ.translate('branches.title.js'), tr('scheduledAt', [WJ.formatDateTimeSeconds(nextReport.publishAt)]), 30000);
             }
-            if (!signal.aborted && table && activeTab === 'branchesDataTable-changes') {
+            if (reloadTable && !signal.aborted && table && activeTab === 'branchesDataTable-changes') {
                 table.ajax.reload(null, false);
             }
             return report;
@@ -399,9 +399,49 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
 
     function poll() {
         clearTimeout(timer);
-        if (stale || confirmation || detailDialog) return;
-        if (report?.state === 'MERGING') timer = setTimeout(refresh, 1500);
-        if (report?.state === 'SCHEDULED') timer = setTimeout(refresh, 5000);
+        if (signal.aborted || polling || busy || tableLoading || stale || confirmation || detailDialog) return;
+        if (report?.state === 'MERGING') timer = setTimeout(readStatus, 1500);
+        if (report?.state === 'SCHEDULED') timer = setTimeout(readStatus, 5000);
+    }
+
+    async function readStatus() {
+        const previous = report;
+        polling = true;
+        try {
+            const status = await api(`/${id}/status`);
+            if (signal.aborted || previous !== report || busy || tableLoading || detailDialog || confirmation) return;
+            if (status.state !== report.state || status.revision !== report.revision) {
+                await refresh();
+                return;
+            }
+            const checkpoints = new Map(status.items.map(item => [itemKey(item), item]));
+            const changed = new Map();
+            for (const item of report.items) {
+                const next = checkpoints.get(itemKey(item));
+                if (!next || (item.applyState === next.applyState && item.applyPhase === next.applyPhase && (!next.error || item.error === next.error))) continue;
+                Object.assign(item, {applyState: next.applyState, applyPhase: next.applyPhase, error: next.error ?? item.error});
+                changed.set(itemKey(item), next);
+            }
+            if (!changed.size) return;
+            table?.rows().every(function () {
+                const row = this.data();
+                const next = changed.get(itemKey(row));
+                if (next?.status) this.data({...row, status: next.status, problem: row.problem || Boolean(next.error) || next.applyState === 'ERROR'});
+            });
+            table?.draw(false);
+            renderReport();
+            updateControls();
+        } catch (error) {
+            if (signal.aborted || previous !== report || busy || tableLoading) return;
+            stale = true;
+            setError(error, changesError);
+            setError(error, scheduleError);
+            scheduleError.append(' ', button(tr('refresh'), refresh));
+            updateControls();
+        } finally {
+            polling = false;
+            poll();
+        }
     }
 
     function render() {
@@ -656,7 +696,10 @@ export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
         }
     }
 
-    function openDetail(key, invoker) {
+    async function openDetail(key, invoker) {
+        if (busy || tableLoading) return;
+        if (['MERGING', 'SCHEDULED'].includes(report?.state) && !await perform('/progress', undefined, changesError, false)) return;
+        if (signal.aborted) return;
         const item = items().find(item => itemKey(item) === key);
         if (busy || tableLoading || !item) return;
         detailItem = item;

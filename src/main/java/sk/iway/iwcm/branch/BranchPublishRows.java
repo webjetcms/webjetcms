@@ -28,7 +28,7 @@ final class BranchPublishRows {
 
     static Map<Integer,Map<String,Object>> groups(Connection connection) throws SQLException {
         Map<Integer,Map<String,Object>> groups=new LinkedHashMap<>();
-        try(PreparedStatement statement=connection.prepareStatement("SELECT * FROM `groups`");ResultSet result=statement.executeQuery()) {
+        try(PreparedStatement statement=connection.prepareStatement("SELECT group_id,parent_group_id,group_name FROM `groups`");ResultSet result=statement.executeQuery()) {
             while(result.next()) {Map<String,Object> row=row(result);groups.put(number(row,"group_id"),row);}
         }
         return groups;
@@ -46,12 +46,18 @@ final class BranchPublishRows {
     }
 
     static BranchSnapshot liveSnapshot(Connection connection,BranchType type,Map<String,Object> work) throws SQLException {
+        return liveSnapshot(connection,type,work,new BranchPermissionRows(connection,0));
+    }
+
+    static BranchSnapshot liveSnapshot(Connection connection,BranchType type,Map<String,Object> work,BranchPermissionRows permissions) throws SQLException {
         if(type==BranchType.FILE)return BranchFiles.liveSnapshot((String)work.get("logical_path"));
         Map<String,Object> live=BranchStore.readLive(connection,type,number(work,type.idColumn())).orElse(null);
         if(live==null)return BranchSnapshot.absent();
         BranchSnapshot.State state=BranchSnapshot.State.ACTIVE;
-        if(type==BranchType.DOCUMENT&&inTrash(number(live,"group_id"),groups(connection))
-            ||type==BranchType.GROUP&&inTrash(number(live,"group_id"),groups(connection)))state=BranchSnapshot.State.TRASH;
+        if (type==BranchType.DOCUMENT || type==BranchType.GROUP) {
+            int folder = number(live,"group_id");
+            if (inTrash(folder,permissions.liveAncestors(folder))) state=BranchSnapshot.State.TRASH;
+        }
         return switch(type) {
             case DOCUMENT->BranchDocumentMapper.snapshot(live,state);
             case GROUP->BranchGroupMapper.snapshot(live,state);

@@ -77,6 +77,87 @@ class BranchMergeTest extends BranchJpaTest {
         original.forEach(Constants::setString);SetCharacterEncodingFilter.setCurrentRequestBean(null);GroupsDB.getInstance(true);DocDB.getInstance(true);sk.iway.iwcm.system.Modules.getInstance(null,true);
     }
 
+    /** Polling reads committed checkpoints and current permissions without fetching comparison content. */
+    @Test void pollsCheckpointsWithoutReadingPageBodies() throws Exception {
+        var plan = ready();
+        service.claim(f.branch,DOMAIN,user,plan.revision(),plan.preparationHash(),false);
+        int page = f.pages.get(0);
+        user.setEditablePages(Integer.toString(f.home));
+        var cachedHome = DocDB.getInstance().getBasicDocDetails(f.home,false);
+        String navbar = cachedHome.getNavbar();
+        var pageQueries = captureQueries(() -> {
+            assertEquals(List.of(f.root),DocDB.getMyPages(user).stream().map(DocDetails::getGroupId).toList());
+            assertEquals(navbar,cachedHome.getNavbar());
+        });
+        assertTrue(pageQueries.isEmpty(),pageQueries.toString());
+        var queries = captureQueries(() -> {
+            var before = service.status(f.branch,DOMAIN,user);
+            assertEquals("MERGING",before.state());
+            assertEquals(plan.items().size(),before.items().size());
+            assertTrue(before.items().stream().allMatch(item -> "PENDING".equals(item.applyState())));
+            sql("UPDATE branch_documents SET apply_state='ERROR',apply_phase='DATA',apply_error='interrupted' WHERE branch_id="+f.branch+" AND doc_id="+page);
+            var after = service.status(f.branch,DOMAIN,user);
+            var failed = after.items().stream().filter(item -> item.type().equals("DOCUMENT") && item.objectKey().equals(Integer.toString(page))).findFirst().orElseThrow();
+            assertEquals("contentWrittenError",failed.status());
+            assertEquals("interrupted",failed.error());
+        });
+        assertTrue(queries.stream().anyMatch(query -> query.contains("apply_state") && query.contains("branch_documents")));
+        assertEquals(4,queries.stream().filter(query -> query.startsWith("SELECT doc_id,group_id,password_protected FROM `documents`")).count(),
+            "Each poll needs one query for the 20 staged pages and one for the unchanged media owner");
+        assertFalse(queries.stream().anyMatch(query -> query.matches("(?is).*\\b(data|data_asc|base_snapshot|resolved_snapshot)\\b.*")
+            || query.matches("(?is).*SELECT\\s+\\*.*")),queries.toString());
+
+        user.setEditableGroups(Integer.toString(f.section));
+        assertTrue(GroupsDB.getInstance().getUserRootDomainNames(user).contains(DOMAIN));
+        assertEquals(403,assertThrows(ResponseStatusException.class,() -> service.status(f.branch,DOMAIN,user)).getStatusCode().value());
+    }
+
+    /** Empty and file-only comparisons must not read LIVE content tables, even to construct the preview. */
+    @Test void skipsContentQueriesForFileOnlyAndEmptyPackages() throws Exception {
+        for (var type : List.of(BranchType.DOCUMENT,BranchType.GROUP,BranchType.MEDIA))
+            sql("DELETE FROM "+type.workTable()+" WHERE branch_id="+f.branch);
+        for (boolean empty : List.of(false,true)) {
+            if (empty) sql("DELETE FROM branch_files WHERE branch_id="+f.branch);
+            var queries = captureQueries(() -> {
+                assertEquals(!empty,detail().ready());
+                assertEquals(empty,service.status(f.branch,DOMAIN,user).items().isEmpty());
+            });
+            assertFalse(queries.stream().anyMatch(query -> query.matches("(?is).*\\b(FROM|JOIN)\\s+`?(documents|groups|media)`?\\b.*")),queries.toString());
+        }
+    }
+
+    @FunctionalInterface
+    private interface SqlAction { void run() throws Exception; }
+
+    /** Records the JDBC statements actually executed by the service against the isolated MariaDB. */
+    private static List<String> captureQueries(SqlAction action) throws Exception {
+        List<String> queries = new ArrayList<>();
+        try (var pool = mockStatic(DBPool.class,CALLS_REAL_METHODS)) {
+            pool.when(DBPool::getConnection).thenAnswer(call -> {
+                Connection real = (Connection)call.callRealMethod();
+                Connection recording = mock(Connection.class,org.mockito.AdditionalAnswers.delegatesTo(real));
+                doAnswer(q -> {
+                    String sql = q.getArgument(0);
+                    queries.add(sql);
+                    return real.prepareStatement(sql);
+                }).when(recording).prepareStatement(anyString());
+                doAnswer(q -> {
+                    Statement statement = real.createStatement();
+                    Statement recorded = mock(Statement.class,org.mockito.AdditionalAnswers.delegatesTo(statement));
+                    doAnswer(invocation -> {
+                        String sql = invocation.getArgument(0);
+                        queries.add(sql);
+                        return statement.executeQuery(sql);
+                    }).when(recorded).executeQuery(anyString());
+                    return recorded;
+                }).when(recording).createStatement();
+                return recording;
+            });
+            action.run();
+        }
+        return queries;
+    }
+
     /** The fixed cron consumes a durable request without creating per-package cron tasks. */
     @Test void publicationCronProcessesRequestWithoutCreatingTasks()throws Exception {
         long cronTasks=count("SELECT COUNT(*) FROM crontab");
@@ -319,6 +400,19 @@ class BranchMergeTest extends BranchJpaTest {
         var row = live(BranchType.DOCUMENT, page);
         store.put(admin(), BranchType.DOCUMENT, page, row, BranchStore.snapshot(BranchType.DOCUMENT, row).hash(), true);
         return page;
+    }
+
+    /** Deletion checks include incoming references from pages and folders outside the package. */
+    @Test void rejectsIncomingReferencesFromUnchangedContent() throws Exception {
+        int page = stagePageDeletion();
+        ready();
+        sql("UPDATE documents SET footer_doc_id="+page+" WHERE doc_id="+f.home);
+        assertTrue(detail().errors().stream().anyMatch(error -> error.contains("Stránka "+f.home+" odkazuje")));
+        sql("UPDATE documents SET footer_doc_id=-1 WHERE doc_id="+f.home);
+        sql("UPDATE `groups` SET logon_page_doc_id="+page+" WHERE group_id="+f.root);
+        assertTrue(detail().errors().stream().anyMatch(error -> error.contains("Priečinok "+f.root+" odkazuje")));
+        sql("UPDATE `groups` SET logon_page_doc_id=-1 WHERE group_id="+f.root);
+        ready();
     }
 
     /** A publisher without deletePage can keep the LIVE page, but cannot publish its staged deletion. */

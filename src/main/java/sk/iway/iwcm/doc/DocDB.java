@@ -5788,17 +5788,15 @@ public class DocDB extends DB
 		int id;
 		DocDetails page;
 		DocDB docDB = DocDB.getInstance();
-		GroupsDB groupsDB = GroupsDB.getInstance();
 		while (st.hasMoreTokens())
 		{
 			id = Integer.parseInt(st.nextToken());
-			page = docDB.getDoc(id);
+			page = docDB.getBasicDocDetails(id, false);
 			if (page != null)
 			{
 				//skontroluj, ci uz nemam pristup k adresaru (aby nebola duplicita)
 				if ((","+user.getEditableGroups()+",").indexOf(","+page.getGroupId()+",")==-1)
 				{
-					page.setNavbar(groupsDB.getNavbarNoHref(page.getGroupId()));
 					myPages.add(page);
 				}
 			}

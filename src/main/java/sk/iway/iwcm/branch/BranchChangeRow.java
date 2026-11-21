@@ -44,11 +44,16 @@ public final class BranchChangeRow {
     }
 
     private static String status(BranchMergeService.Item item) {
-        if ("DONE".equals(item.applyState())) return "NOOP".equals(item.applyPhase()) ? "noop" : "done";
-        if ("ERROR".equals(item.applyState()) && item.applyPhase() != null && WRITTEN_PHASES.contains(item.applyPhase())) return "contentWrittenError";
-        if (item.error() != null || "ERROR".equals(item.applyState())) return "error";
-        if ("APPLYING".equals(item.applyState())) return "applying";
+        String checkpoint = checkpointStatus(item.applyState(),item.applyPhase(),item.error());
+        if (checkpoint != null) return checkpoint;
         if (item.conflict()) return "conflict";
         return item.writeRequired() ? "willPublish" : "noChange";
+    }
+
+    static String checkpointStatus(String state,String phase,String error) {
+        if ("DONE".equals(state)) return "NOOP".equals(phase) ? "noop" : "done";
+        if ("ERROR".equals(state) && phase != null && WRITTEN_PHASES.contains(phase)) return "contentWrittenError";
+        if (error != null || "ERROR".equals(state)) return "error";
+        return "APPLYING".equals(state) ? "applying" : null;
     }
 }

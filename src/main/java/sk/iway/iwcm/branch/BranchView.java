@@ -78,7 +78,29 @@ public final class BranchView {
                 if (scheduledPreview) previewAt = date.getTime();
             }
         }
-        for (Map<String, Object> row : read(connection, "SELECT * FROM `groups`", false)) liveGroups.put(id(row,"group_id"), row);
+        // A changed item's LIVE ancestors are also needed to recognize Trash after a move.
+        String folderSql = """
+            WITH RECURSIVE visible(group_id) AS (
+                SELECT group_id FROM `groups` WHERE parent_group_id=0 AND (domain_name IS NULL OR domain_name IN ('','default',?))
+                UNION SELECT group_id FROM branch_groups WHERE branch_id=?
+                UNION SELECT g.group_id FROM `groups` g JOIN visible ON g.parent_group_id=visible.group_id
+                    WHERE g.domain_name IS NULL OR g.domain_name IN ('','default',?)
+            ), scope(group_id) AS (
+                SELECT group_id FROM visible
+                UNION SELECT d.group_id FROM documents d JOIN branch_documents w ON w.doc_id=d.doc_id WHERE w.branch_id=?
+                UNION SELECT g.parent_group_id FROM `groups` g JOIN scope ON scope.group_id=g.group_id WHERE g.parent_group_id>0
+            )
+            SELECT g.* FROM `groups` g JOIN scope ON scope.group_id=g.group_id
+            """;
+        try (var statement = connection.prepareStatement(folderSql)) {
+            statement.setString(1,context.domainName());
+            statement.setLong(2,context.branchId());
+            statement.setString(3,context.domainName());
+            statement.setLong(4,context.branchId());
+            try (var rows = statement.executeQuery()) {
+                while (rows.next()) liveGroups.put(rows.getInt("group_id"),BranchPublishRows.row(rows));
+            }
+        }
         groupRows.putAll(liveGroups);
         for (BranchType type : BranchType.values()) {
             work.put(type, read(connection, "SELECT * FROM `" + type.workTable() + "` WHERE branch_id=? ORDER BY row_id", true));
@@ -224,7 +246,7 @@ public final class BranchView {
 
     public DocDetails document(int id, boolean noData) {
         if (id <= 0) return null;
-        BranchSql.Fragment source = BranchSql.documentSource("d");
+        BranchSql.Fragment source = noData ? BranchSql.documentSource("d",METADATA_COLUMNS) : BranchSql.documentSource("d");
         boolean editor=context.mode()==BranchContext.Mode.ADMIN;
         String rawColumns=editor ? BranchFields.DOCUMENT.supported().stream().map(column -> ",raw.`"+column+"` AS branch_raw_"+column).collect(java.util.stream.Collectors.joining()) : "";
         try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(
@@ -260,7 +282,7 @@ public final class BranchView {
 
     public List<DocDetails> documents() { return documents(false); }
     public List<DocDetails> documents(boolean noData) {
-        BranchSql.Fragment source = BranchSql.documentSource("d");
+        BranchSql.Fragment source = noData ? BranchSql.documentSource("d",METADATA_COLUMNS) : BranchSql.documentSource("d");
         try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(
             "SELECT "+documentColumns("d",noData)+",u.title AS u_title,u.first_name,u.last_name,u.email,u.photo FROM "+source.sql()+" LEFT JOIN users u ON u.user_id=d.author_id ORDER BY d.doc_id")) {
             source.bind(statement,1); List<DocDetails> result = new ArrayList<>();
@@ -321,6 +343,9 @@ public final class BranchView {
             doc.setVirtualPath(relative);
         }
     }
+
+    private static final List<String> METADATA_COLUMNS = BranchFields.DOCUMENT.columns().stream()
+        .filter(column -> !column.equals("data") && !column.equals("data_asc")).toList();
 
     private static String documentColumns(String alias,boolean noData) {
         String prefix = alias.isEmpty() ? "" : alias+".";

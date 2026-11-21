@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 /** Explicit effective SQL sources, composed before filtering, counting or paging. */
 public final class BranchSql {
+    private static final Set<String> DOCUMENT_COLUMNS = BranchFields.DOCUMENT.columns();
     private BranchSql() { }
     public record Fragment(String sql, List<Object> arguments) {
         public Fragment { arguments = Collections.unmodifiableList(new ArrayList<>(arguments)); }
@@ -14,10 +15,15 @@ public final class BranchSql {
         }
     }
     public static Fragment documentSource(String alias) {
+        return documentSource(alias,DOCUMENT_COLUMNS);
+    }
+
+    /** Projects only the requested columns through every arm of the effective document union. */
+    public static Fragment documentSource(String alias,Collection<String> columns) {
+        if (columns.isEmpty() || (columns != DOCUMENT_COLUMNS && !DOCUMENT_COLUMNS.containsAll(columns))) throw new IllegalArgumentException("Unknown document columns");
         if (!alias.matches("[a-zA-Z][a-zA-Z0-9_]*")) throw new IllegalArgumentException("Invalid internal SQL alias");
         BranchView view = BranchView.current();
         if (view == null) return new Fragment("documents "+alias,List.of());
-        List<String> columns = new ArrayList<>(BranchFields.DOCUMENT.columns());
         List<Object> arguments = new ArrayList<>();
         String projection = columns.stream().map(column->"l.`"+column+"`").collect(Collectors.joining(","));
         StringBuilder sql = new StringBuilder("(SELECT "+projection+" FROM documents l WHERE ");

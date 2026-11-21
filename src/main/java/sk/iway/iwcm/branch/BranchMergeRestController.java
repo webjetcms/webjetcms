@@ -42,6 +42,12 @@ public class BranchMergeRestController {
         Identity user=access.requireUser(request);String domain=access.requireDomain(request,user);
         try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {return merge.detail(id,domain,user);}
     }
+    @GetMapping("/status")
+    public BranchMergeService.Status status(@PathVariable long id,HttpServletRequest request) {
+        Identity user=access.requireUser(request);String domain=access.requireDomain(request,user);
+        try(BranchContexts.Scope ignored=BranchContexts.live(request,domain,user.getUserId())) {return merge.status(id,domain,user);}
+    }
+
     @PostMapping("/prepare")
     public BranchMergeService.Report prepare(@PathVariable long id,@RequestBody Revision input,HttpServletRequest request) {
         Identity user=fresh(request);String domain=access.requireDomain(request,user);
