@@ -1,0 +1,12 @@
+extends ../../partials/layout
+
+block content
+    script.
+        var branchesDataTable;
+        window.domReady.add(function () {
+            window.helpLink = "/redactor/webpages/publishing-packages";
+            const columns = [(${layout.getDataTableColumns('sk.iway.iwcm.branch.BranchEntity')})];
+            branchesDataTable = window.initBranchTable(columns);
+        });
+
+    table#branchesDataTable.datatableInit.table

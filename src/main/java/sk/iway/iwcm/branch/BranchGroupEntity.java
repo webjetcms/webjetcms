@@ -1,0 +1,77 @@
+package sk.iway.iwcm.branch;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+/** Typed working content, isolated from the LIVE persistence context. */
+@Entity
+@Table(name="branch_groups")
+@Cacheable(false)
+@Getter @Setter
+public class BranchGroupEntity extends BranchRow
+{
+    @Column(name = "group_id")
+    private Integer groupId;
+    @Column(name = "group_name")
+    private String groupName;
+    @Column(name = "internal")
+    private Integer internal;
+    @Column(name = "parent_group_id")
+    private Integer parentGroupId;
+    @Column(name = "navbar")
+    private String navbar;
+    @Column(name = "default_doc_id")
+    private Integer defaultDocId;
+    @Column(name = "temp_id")
+    private Integer tempId;
+    @Column(name = "sort_priority")
+    private Integer sortPriority;
+    @Column(name = "password_protected")
+    private String passwordProtected;
+    @Column(name = "menu_type")
+    private Integer menuType;
+    @Column(name = "url_dir_name")
+    private String urlDirName;
+    @Column(name = "sync_id")
+    private Integer syncId;
+    @Column(name = "sync_status")
+    private Integer syncStatus;
+    @Lob
+    @Column(name = "html_head")
+    private String htmlHead;
+    @Column(name = "logon_page_doc_id")
+    private Integer logonPageDocId;
+    @Column(name = "domain_name")
+    private String domainName;
+    @Column(name = "new_page_docid_template")
+    private Integer newPageDocidTemplate;
+    @Column(name = "install_name")
+    private String installName;
+    @Column(name = "field_a")
+    private String fieldA;
+    @Column(name = "field_b")
+    private String fieldB;
+    @Column(name = "field_c")
+    private String fieldC;
+    @Column(name = "field_d")
+    private String fieldD;
+    @Column(name = "logged_menu_type")
+    private Integer loggedMenuType;
+    @Column(name = "link_group_id")
+    private Integer linkGroupId;
+    @Column(name = "lng")
+    private String lng;
+    @Column(name = "hidden_in_admin")
+    private Integer hiddenInAdmin;
+    @Column(name = "force_group_template")
+    private Integer forceGroupTemplate;
+    @Column(name = "show_in_navbar")
+    private Integer showInNavbar;
+    @Column(name = "show_in_sitemap")
+    private Integer showInSitemap;
+    @Column(name = "logged_show_in_navbar")
+    private Integer loggedShowInNavbar;
+    @Column(name = "logged_show_in_sitemap")
+    private Integer loggedShowInSitemap;
+}

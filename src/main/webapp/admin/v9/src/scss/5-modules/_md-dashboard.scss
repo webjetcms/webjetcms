@@ -20,16 +20,12 @@ $dashboard-widget-colors: (
     'lavender': #f5f2ff, 'blue': #f1f3ff, 'light-blue': #f2f7ff, 'cyan': #e1f7ff,
     'mint': #dff9f1, 'green': #e4fbd2
 );
-$dashboard-shortcut-colors: (
-    'default': #eef0f4, 'red': #c4001f, 'peach': #c24e00, 'amber': #f6be3f,
-    'mint': #007e69, 'cyan': #00707f, 'blue': $primary, 'lavender': #6e00dc, 'gray': #4d5262
-);
 
 webjet-overview-dashboard, .md-dashboard-modal {
     @each $name, $color in $dashboard-widget-colors {
         --wj-dashboard-widget-#{$name}: #{$color};
     }
-    @each $name, $color in $dashboard-shortcut-colors {
+    @each $name, $color in $shortcut-colors {
         --wj-dashboard-shortcut-#{$name}: #{$color};
     }
     --wj-dashboard-surface: #{$dashboard-surface};

@@ -65,6 +65,7 @@ public class WebpagesRestController extends WebpagesDatatable {
      */
     @PostMapping("/deletion-preview")
     public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return new DeleteMirrorsResult();
         return deleteMirrorsService.getPageMirrors(ids, getUser());
     }
 

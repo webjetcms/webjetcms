@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.branch.BranchContexts;
+import sk.iway.iwcm.branch.BranchPreviewUrls;
+import sk.iway.iwcm.branch.BranchSelection;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.doc.PlannedAccess;
@@ -26,6 +29,7 @@ import sk.iway.iwcm.users.UsersDB;
 @Controller
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
 public class PreviewController {
+    static final String BRANCH_SELECTION = PreviewController.class.getName() + ".branchSelection";
 
     @GetMapping("/admin/webpages/preview/")
     public String preview(HttpServletRequest request, HttpServletResponse response) {
@@ -34,6 +38,14 @@ public class PreviewController {
         if (doc == null) {
             return "forward:/404.jsp";
         }
+        var context = BranchContexts.current(request);
+        Object selection = request.getSession().getAttribute(BRANCH_SELECTION);
+        var expected = context.isBranch() ? new BranchSelection.Selected(context.branchId(), context.domainId()) : null;
+        if (!java.util.Objects.equals(selection, expected)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+                "Preview context changed; reopen the preview");
+        }
+        if (context.isBranch()) request.setAttribute(BranchPreviewUrls.LOGICAL_PATH, doc.getVirtualPath());
 
         // Session serialization omits the transient editor fields, in redis it's null
         if (doc.getEditorFields() == null) {

@@ -27,6 +27,7 @@ async function fixture(t, html, framed = false) {
     });
     const $ = window.$ = window.jQuery = require('jquery')(window);
     window.parent.WJ = { translate: key => key, dispatchEvent() {} };
+    window.parent.bindBranchContext = () => {};
     window.parent.userLng = 'sk';
     window.ckeditorRegexps = {};
     // Grid discovery is independent of editor creation; keep only its editable-region markers.
@@ -40,6 +41,7 @@ async function fixture(t, html, framed = false) {
     window.eval(read('admin/v9/src/js/datatables-ckeditor.js')
         .replace('import WJ from "./webjet";', '')
         .replace('import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";', '')
+        .replace('import { configureBranchImageUrl } from "./ckeditor-branch-image";', '')
         .replace('export class DatatablesCkEditor', 'window.DatatablesCkEditor = class DatatablesCkEditor'));
     window.parent.datatablesCkEditorModule = { DatatablesCkEditor: window.DatatablesCkEditor };
 

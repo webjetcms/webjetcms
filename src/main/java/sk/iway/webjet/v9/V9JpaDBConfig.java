@@ -30,6 +30,7 @@ import sk.iway.iwcm.system.spring.SpringAppInitializer;
     entityManagerFactoryRef = "webjet2022EntityManager",
     transactionManagerRef = "webjet2022TransactionManager",
     basePackages = {
+        "sk.iway.iwcm.branch",
         "sk.iway.iwcm.components.gallery",
         "sk.iway.iwcm.system",
         "sk.iway.iwcm.system.audit.jpa",
@@ -106,6 +107,7 @@ public class V9JpaDBConfig {
         emf.setDataSource(DBPool.getInstance().getDataSource("iwcm"));
         emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
         emf.setPackagesToScan(
+                            "sk.iway.iwcm.branch",
                             "sk.iway.iwcm.components.gallery",
                             "sk.iway.iwcm.system",
                             "sk.iway.iwcm.system.audit.jpa",

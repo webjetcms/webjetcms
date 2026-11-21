@@ -24,6 +24,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.branch.BranchView;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.components.blog.rest.BloggerService;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -97,6 +98,13 @@ public class NewsRestController extends WebpagesDatatable {
         return docToReturn;
     }
 
+    @Override
+    public Page<DocDetails> findByColumns(@RequestParam Map<String,String> params,Pageable pageable,DocDetails search) {
+        // Preserve the News-specific root options, but avoid a JPA filter over LIVE-only documents.
+        if(BranchView.current()!=null)return getAllItems(pageable);
+        return super.findByColumns(params,pageable,search);
+    }
+
     /** Returns the permitted News roots, their children, or scoped folder search results. */
     @PostMapping(value = "/tree")
     public Map<String, Object> tree(@RequestBody JsTreeMoveItem item,
@@ -149,7 +157,15 @@ public class NewsRestController extends WebpagesDatatable {
 
                 //we dont have any ids, try to search for NEWS include in all groups
                 // -------------------------- set by GroupsDB if parent folder doesnt exists
-                List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%' AND file_name NOT LIKE '--------------------------'");
+                // Discover News includes from effective HTML so new WORK components/roots are not omitted.
+                BranchView branch = BranchView.current();
+                List<String> dataList;
+                if (branch == null) {
+                    dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%' AND file_name NOT LIKE '--------------------------'");
+                } else {
+                    dataList = branch.documents().stream().map(DocDetails::getData)
+                        .filter(data -> data != null && data.contains("!INCLUDE(/components/news/")).toList();
+                }
                 Set<String> duplicityCheck = new HashSet<>();
                 Set<Integer> bloggerGroupIds = new HashSet<>(BloggerService.getAllBloggersGroupIds());
 

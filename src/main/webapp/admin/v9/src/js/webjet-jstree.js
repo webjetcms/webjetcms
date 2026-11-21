@@ -90,9 +90,8 @@ export class WebjetJsTree {
                     });
                 }
             },
-            "plugins": [
-                "dnd"
-            ],
+            // Branch moves use the ordinary parent-folder editor; the legacy tree write is blocked.
+            "plugins": window.branchScreen?.branchId ? [] : ["dnd"],
             "types": {
                 "#": {
                     "max_children": 1,

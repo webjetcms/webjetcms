@@ -147,6 +147,10 @@ public class EditorService {
 	 * @return
 	 */
     public DocDetails getDoc(int docId, int historyId) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            if (historyId>0) throw new IllegalStateException("History is read-only in a publishing branch");
+            return sk.iway.iwcm.branch.BranchView.current().document(docId,false);
+        }
 
         DocDetails doc = null;
         DocHistory history = null;
@@ -188,6 +192,7 @@ public class EditorService {
 	 * @return historyId alebo hodnotu &lt; 1 ak nastala chyba
 	 */
     public int saveEditedDoc(DocDetails editedDoc) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) throw new IllegalStateException("Use the authorized branch editor");
 		DebugTimer dt = new DebugTimer("EditorService.saveEditedDoc");
 
 		// Authorize the stored page before events or client-supplied changes can have side effects.
@@ -241,29 +246,9 @@ public class EditorService {
 			editedDoc.setGroupId(existing.getGroupId());
 		}
 
-		//kvoli Oracle, on nedokaze mat v DB prazdny string a potom to padalo
-		if (Tools.isEmpty(editedDoc.getTitle())) editedDoc.setTitle("new web page");
-		if (Tools.isEmpty(editedDoc.getNavbar())) editedDoc.setNavbar(editedDoc.getTitle());
-		if (Tools.isEmpty(editedDoc.getData())) editedDoc.setData("<p>&nbsp;</p>");
-
-		//nastav virtual path
-		setVirtualPath(editedDoc);
-		dt.diff("after virtual path");
-
-		EditorUtils.nonBreakingSpaceReplacement(editedDoc);
-
-		//data nechceme mat ulozene s context linkami (tie nam prida filter, ak treba)
-		if (ContextFilter.isRunning(request))
-			editedDoc.setData(ContextFilter.removeContextPath(request.getContextPath(), editedDoc.getData()));
-
-		String data = EditorUtils.getCleanBody(editedDoc.getData().trim());
-		dt.diff("after getCleanBody");
-
-		String dataAsc = EditorUtils.getDataAsc(data, editedDoc, false, request);
-		dt.diff("after getDataAsc");
-
-		editedDoc.setData(data);
-		editedDoc.setDataAsc(dataAsc);
+		normalizeEditableContent(editedDoc);
+		String data = editedDoc.getData();
+		String dataAsc = editedDoc.getDataAsc();
 
 		//It's new page ?
 		if (editedDoc.getDocId() < 1) {
@@ -440,6 +425,26 @@ public class EditorService {
 
 		return(historyId);
  	}
+
+    /** Normalizes editor input without invoking publication, events, app rendering or indexes in WORK. */
+    public void normalizeEditableContent(DocDetails editedDoc) {
+        boolean branch=sk.iway.iwcm.branch.BranchContexts.current().isBranch();
+        if (branch) groupsDB=GroupsDB.getInstance();
+        if (branch && (editedDoc.getData()==null || WebpagesService.DATA_NOT_LOADED.equals(editedDoc.getData().trim()) || ("<p>"+WebpagesService.DATA_NOT_LOADED+"</p>").equals(editedDoc.getData().trim())))
+            throw new IllegalArgumentException("Page HTML has not been loaded");
+        if (Tools.isEmpty(editedDoc.getTitle())) editedDoc.setTitle("new web page");
+        if (Tools.isEmpty(editedDoc.getNavbar())) editedDoc.setNavbar(editedDoc.getTitle());
+        if (Tools.isEmpty(editedDoc.getData())) editedDoc.setData("<p>&nbsp;</p>");
+        setVirtualPath(editedDoc);
+        EditorUtils.nonBreakingSpaceReplacement(editedDoc);
+        if (ContextFilter.isRunning(request)) editedDoc.setData(ContextFilter.removeContextPath(request.getContextPath(),editedDoc.getData()));
+        String data=EditorUtils.getCleanBody(editedDoc.getData().trim());
+        String dataAsc=branch
+            ? DB.internationalToEnglish(org.jsoup.Jsoup.parse(data).text()).toLowerCase(java.util.Locale.ROOT)
+            : EditorUtils.getDataAsc(data,editedDoc,false,request);
+        editedDoc.setData(data);
+        editedDoc.setDataAsc(dataAsc);
+    }
 
 	/**
 	 * Vrati instanciu noveho DocDetails
@@ -1220,6 +1225,7 @@ public class EditorService {
 	 * @param doc proposed page state after editor fields and master/slave IDs have been resolved
 	 */
 	public void checkSavePermissions(Identity user, DocDetails doc) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) groupsDB=GroupsDB.getInstance();
 		checkPermissions(user, doc, false);
 		DocDetails original = null;
 		if (doc.getDocId() > 0) {

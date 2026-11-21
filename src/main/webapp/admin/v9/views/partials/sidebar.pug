@@ -15,12 +15,12 @@ nav.menu-wrapper(data-scrollbar data-th-aria-label="\#{templates.temps-list.main
 
     div(data-th-each="menuItem : ${layout.menu}" data-th-data-menu-id="${menuItem.group}" data-th-class="${menuItem.active} ? 'md-main-menu md-main-menu--open' : 'md-main-menu'")
         div.md-main-menu__item(data-th-each="subMenuItem : ${menuItem.childrens}" data-th-class="${subMenuItem.active} ? 'md-main-menu\\_\\_item md-main-menu\\_\\_item--active' : 'md-main-menu\\_\\_item'" data-th-classappend="${!subMenuItem.childrens.empty} ? 'md-main-menu\\_\\_item--has-children'")
-            a.md-main-menu__item__link(data-th-href="${subMenuItem.href}")
+            a.md-main-menu__item__link(data-th-href="${subMenuItem.href}" data-th-data-production-dialog="${layout.confirmProductionLink(subMenuItem.href) ? true : null}")
                 i(data-th-class="${subMenuItem.icon}" aria-hidden="true")
                 span(data-th-text="${subMenuItem.text}" data-th-remove="tag")
             div.md-main-menu__item__sub-menu(data-th-if="${!subMenuItem.childrens.empty}")
                 div.md-main-menu__item__sub-menu__item(data-th-each="thirdMenuItem : ${subMenuItem.childrens}" data-th-classappend="${thirdMenuItem.active} ? 'md-main-menu\\_\\_item\\_\\_sub-menu\\_\\_item--active'")
-                    a.md-main-menu__item__sub-menu__item__link(data-th-href="${thirdMenuItem.href}" data-th-text="${thirdMenuItem.text}")
+                    a.md-main-menu__item__sub-menu__item__link(data-th-href="${thirdMenuItem.href}" data-th-data-production-dialog="${layout.confirmProductionLink(thirdMenuItem.href) ? true : null}" data-th-text="${thirdMenuItem.text}")
 
 .js-domain-toggler(data-th-if="${layout.isTypeCloud()==false && (layout.getConstantBoolean('enableStaticFilesExternalDir') || layout.getConstantBoolean('multiDomainEnabled'))}")
     div(data-th-title="\#{overview.domain-toggler-select.tooltip}" data-bs-toggle="tooltip")

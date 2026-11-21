@@ -32,6 +32,11 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         CKEDITOR.disableAutoInline = true;
     </script>
 
+    <% if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) { %>
+    <script>
+        window.parent.bindBranchContext(window, window.parent.branchScreen);
+    </script>
+    <% } %>
     <!-- /NINJA PAGE BUILDER -->
     <style>
         :root {

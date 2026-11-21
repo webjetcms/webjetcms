@@ -64,7 +64,7 @@ class AdminUploadControllerTest {
                 "key", "/custom/archive/reports/", "document.pdf", "fileArchive", request));
 
             assertFalse(response.getBoolean("success"));
-            assertEquals(FileArchiveBulkUploadOptions.ERROR_SAVE_LATER_REPLACE,
+            assertEquals(sk.iway.iwcm.i18n.Prop.getInstance(request).getText(FileArchiveBulkUploadOptions.ERROR_SAVE_LATER_REPLACE),
                 response.getString("error"));
         } finally {
             Constants.setString("fileArchivDefaultDirPath", originalArchiveRoot);

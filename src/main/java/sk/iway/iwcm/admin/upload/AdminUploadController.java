@@ -33,6 +33,7 @@ public class AdminUploadController {
     @PostMapping(path="/skipkey", produces = MediaType.APPLICATION_JSON_VALUE)
     public String skipkey(@RequestParam String fileKey, HttpServletRequest request)
     {
+        AdminUploadServlet.requireUploadContext(fileKey, request);
         JSONObject output = new JSONObject();
 
         boolean deleted = AdminUploadServlet.deleteTempFile(fileKey);
@@ -61,6 +62,8 @@ public class AdminUploadController {
 
     public String overwrite(@RequestParam String fileKey, @RequestParam String destinationFolder, @RequestParam String fileName, @RequestParam String uploadType, HttpServletRequest request)
     {
+        AdminUploadServlet.requireUploadContext(fileKey, request);
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return processBranchFile(fileKey,destinationFolder,fileName,uploadType,false,request);
         if ("fileArchive".equals(uploadType)) {
             return processArchiveFile(fileKey, destinationFolder, fileName, false, request);
         }
@@ -81,10 +84,33 @@ public class AdminUploadController {
 
     public String keepboth(@RequestParam String fileKey, @RequestParam String destinationFolder, @RequestParam String fileName, @RequestParam String uploadType, HttpServletRequest request)
     {
+        AdminUploadServlet.requireUploadContext(fileKey, request);
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return processBranchFile(fileKey,destinationFolder,fileName,uploadType,true,request);
         if ("fileArchive".equals(uploadType)) {
             return processArchiveFile(fileKey, destinationFolder, fileName, true, request);
         }
         return processOverwrite(fileKey, destinationFolder, fileName, uploadType, true, request);
+    }
+
+    private static String processBranchFile(String key,String folder,String name,String type,boolean keepBoth,HttpServletRequest request) {
+        JSONObject output=new JSONObject();
+        try {
+            if ("fileArchive".equals(type)) throw new IllegalArgumentException("File archive is unavailable in a publishing branch");
+            folder=AdminUploadValidator.normalizeDestinationFolder(folder);
+            name=AdminUploadValidator.normalizeFileName(name);
+            String temporaryPath=AdminUploadServlet.getTempFilePath(key);
+            if (temporaryPath==null) throw new IllegalArgumentException("Upload expired; upload the file again");
+            java.nio.file.Path source=java.nio.file.Path.of(temporaryPath);
+            String error=AdminUploadValidator.validateConflict(folder,name,type,java.nio.file.Files.size(source),UsersDB.getCurrentUser(request),request);
+            if (error!=null) throw new IllegalArgumentException(Prop.getInstance(request).getText(error));
+            if (keepBoth) name=AdminUploadServlet.branchKeepBothName(folder,name);
+            sk.iway.iwcm.branch.BranchFiles.put(folder+name,source,request,type);
+            AdminUploadServlet.deleteTempFile(key);
+            output.put("success",true).put("virtualPath",folder+name);
+        } catch (Exception ex) {
+            output.put("success",false).put("error",ex.getMessage());
+        }
+        return output.toString();
     }
 
     /**

@@ -1089,14 +1089,19 @@ public class DocTools {
         return docs;
     }
 
-    private static TextNodeComparator getTextNodeComparator(String htmlCode, Locale locale) throws IOException, SAXException
+    private static TextNodeComparator getTextNodeComparator(String htmlCode, Locale locale, boolean compareLayout) throws IOException, SAXException
     {
         HtmlCleaner cleaner = new HtmlCleaner();
         DomTreeBuilder oldHandler = new DomTreeBuilder();
         InputSource oldSource = new InputSource(new StringReader(htmlCode));
         cleaner.cleanAndParse(oldSource, oldHandler);
 
-        TextNodeComparator comparator = new TextNodeComparator(oldHandler, locale);
+        TextNodeComparator comparator = compareLayout ? new TextNodeComparator(oldHandler, locale) : new TextNodeComparator(oldHandler, locale) {
+            @Override
+            public void handlePossibleChangedPart(int leftStart, int leftEnd, int rightStart, int rightEnd, TextNodeComparator other) {
+                // Rendered text comparison deliberately ignores tag/attribute descriptions.
+            }
+        };
 
         return comparator;
     }
@@ -1112,6 +1117,18 @@ public class DocTools {
 	 * @throws Exception - something went wrong.
 	 */
 	public static String getHtmlDiff(String htmlCodeNew, String htmlCodeOld) throws Exception {
+		return getHtmlDiff(htmlCodeNew, htmlCodeOld, true);
+	}
+
+    /**
+     * Compares rendered HTML, optionally including tag and attribute descriptions.
+     * @param htmlCodeNew current rendered HTML
+     * @param htmlCodeOld previous rendered HTML
+     * @param compareLayout whether unchanged text should also be marked for layout changes
+     * @return rendered HTML with additions and removals highlighted
+     * @throws Exception if HTML parsing or diff generation fails
+     */
+    public static String getHtmlDiff(String htmlCodeNew, String htmlCodeOld, boolean compareLayout) throws Exception {
 		StringWriter outStreamWriter = new StringWriter();
 
         SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory.newInstance();
@@ -1128,8 +1145,8 @@ public class DocTools {
         //todo: nejako rozumnejsie
         Locale locale = Locale.getDefault();
 
-        TextNodeComparator leftComparator = getTextNodeComparator(htmlCodeNew, locale);
-        TextNodeComparator rightComparator = getTextNodeComparator(htmlCodeOld, locale);
+        TextNodeComparator leftComparator = getTextNodeComparator(htmlCodeNew, locale, compareLayout);
+        TextNodeComparator rightComparator = getTextNodeComparator(htmlCodeOld, locale, compareLayout);
 
         postProcess.startDocument();
         postProcess.startElement("", "diffreport", "diffreport", new AttributesImpl());

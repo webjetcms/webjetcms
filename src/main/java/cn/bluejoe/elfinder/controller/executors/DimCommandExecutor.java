@@ -33,7 +33,9 @@ public class DimCommandExecutor extends AbstractJsonCommandExecutor
 		FsItemEx fsi = super.findItem(fsService, target);
 		
 		String url = fsi.getPath();
-		IwcmFile file = new IwcmFile(Tools.getRealPath(url));
+		java.nio.file.Path selected=sk.iway.iwcm.branch.BranchContexts.current().isBranch()?sk.iway.iwcm.branch.BranchFiles.read(url):null;
+        if(sk.iway.iwcm.branch.BranchContexts.current().isBranch()&&selected==null) throw new java.io.IOException("The working image does not exist");
+        IwcmFile file = new IwcmFile(selected==null?Tools.getRealPath(url):selected.toString());
 		int dim[] = GalleryDBTools.getImageSize(file);
 		
 		json.put("dim", dim[0]+"x"+dim[1]);

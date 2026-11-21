@@ -60,19 +60,26 @@
         volume = "iwcm_2_";
     }
 
+    boolean branchFile = sk.iway.iwcm.branch.BranchContexts.current(request).isBranch()
+        && (url.equals("/images") || url.startsWith("/images/") || url.equals("/files") || url.startsWith("/files/"));
+    if (branchFile) {
+        volume = "iwcm_1_";
+        hashParent = FsService.getHash(url.substring(0, url.lastIndexOf("/")));
+    }
+
     JSONObject object = new JSONObject();
 
     String hash = FsService.getHash(url);
     if (hashParent == null) hashParent =  FsService.getHash(url.substring(0, url.lastIndexOf("/")));
 
-    if (plannedAsset || ((url.startsWith(uploadSubDir) || url.startsWith(uploadSubDirGallery)) && uploadSubDir.length()>5))
+    if (!branchFile && (plannedAsset || ((url.startsWith(uploadSubDir) || url.startsWith(uploadSubDirGallery)) && uploadSubDir.length()>5)))
     {
        //je to podadresar Media aktualnej stranky
         volume = "iwcm_fs_ap_volume_";
         hash = Tools.replace(hash, "iwcm_1_", volume);
         hashParent = Tools.replace(hashParent, "iwcm_1_", volume);
     }
-    int docIdFromUrl = DocDB.getInstance().getDocIdFromURLImpl(url, DocDB.getDomain(request));
+    int docIdFromUrl = branchFile ? -1 : DocDB.getInstance().getDocIdFromURLImpl(url, DocDB.getDomain(request));
     //System.out.println("docIdFromUrl="+docIdFromUrl);
     if (docIdFromUrl > 0)
     {

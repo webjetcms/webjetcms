@@ -31,6 +31,10 @@ public class MediaEditorFields extends BaseEditorFields {
     })
     private Integer[] groups;
 
+    /** Version displayed by the branch editor; rejected if that media changed before saving. */
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
+    private String branchHash;
+
     @NotBlank
     private DocDetails docDetails;
 

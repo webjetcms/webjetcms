@@ -1,0 +1,1040 @@
+import {icon, node as element} from './dashboard/widget-utils';
+import moment from 'moment';
+import {changedSourceLines, htmlSource} from './branch-html-source';
+import {createBranchPageContent} from './branch-page-content';
+
+const commonKeys = {close: 'button.close', cancel: 'button.cancel', yes: 'button.yes', no: 'button.no', revert: 'branches.revert.js', viewItem: 'button.show', edit: 'button.edit', showPage: 'history.showPage'};
+const tr = (key, args = []) => WJ.translate(commonKeys[key] || `branches.merge.${key}.js`, ...args);
+const changeActionIcons = {viewItem: 'ti-eye', resolve: 'ti-tools', compareItem: 'ti-git-compare'};
+const tabIcons = {fields: 'ti-table', html: 'ti-code', content: 'ti-browser'};
+const versionIcons = {base: 'ti-history', live: 'ti-world', work: 'ti-git-branch'};
+const htmlFields = new Set(['data', 'html_head', 'html_data']);
+const writtenPhases = new Set(['DATA', 'REFERENCES', 'TRASH_WAIT', 'TRASH_ROOT', 'EFFECTS']);
+export const previewStates = ['DRAFT', 'SCHEDULED', 'NEEDS_ATTENTION'];
+export const publishStates = ['DRAFT', 'MERGE_FAILED'];
+
+function button(text, action, primary = false) {
+    const el = element('button', `btn btn-sm ${primary ? 'btn-primary' : 'btn-outline-secondary'}`, text);
+    el.type = 'button';
+    el.addEventListener('click', action);
+    return el;
+}
+
+function link(text, href) {
+    const el = element('a', 'btn btn-sm btn-outline-secondary', text);
+    el.href = href;
+    el.target = '_blank';
+    el.rel = 'noopener';
+    return el;
+}
+
+function equal(left, right) { return JSON.stringify(left ?? null) === JSON.stringify(right ?? null); }
+
+/** Normalizes empty field values for comparison and display without changing stored snapshots. */
+function comparisonValue(value) {
+    const text = Array.isArray(value) ? value.join(', ') : value;
+    return text == null || (typeof text === 'string' && text.trim() === '') ? null : value;
+}
+
+const itemKey = item => `${item.type}:${item.objectKey}`;
+const showError = error => WJ.notifyError(WJ.escapeHtml(error.message));
+
+/** Reserves the preview tab on the click, then navigates to the URL authorized by the server. */
+export async function openBranchPreview(api, id, docId, fallback) {
+    const tab = window.open('', '_blank');
+    if (tab) tab.opener = null;
+    try {
+        if (!docId) {
+            const report = await api(`/${id}/progress`);
+            docId = report.items.find(item => item.type === 'DOCUMENT' &&
+                (item.choice === 'LIVE' || !item.writeRequired && !item.conflict ? item.live : item.work)?.state === 'ACTIVE')?.objectKey;
+        }
+        const {url} = await api(`/${id}/preview-link${docId ? `?docId=${encodeURIComponent(docId)}` : ''}`);
+        if (tab) tab.location.href = url;
+        else if (fallback?.isConnected) {
+            const anchor = link(tr('preview'), url);
+            fallback.append(anchor);
+            anchor.focus();
+        } else {
+            location.assign(url);
+        }
+    } catch (error) {
+        tab?.close();
+        throw error;
+    }
+}
+
+/** Adds rendering for the annotation-generated changes columns. */
+export function customizeBranchChangeColumns(columns) {
+    const selection = columns.find(column => column.data === 'id');
+    selection.render = () => '';
+    selection.renderFormat = 'dt-format-none';
+    selection.width = '50px';
+    const itemColumn = columns.find(column => column.data === 'label');
+    itemColumn.width = '30%';
+    itemColumn.render = (value, type, row) => {
+        if (type !== 'display') return value;
+        const content = element('span');
+        content.append(element('span', '', value));
+        if (row.folderPath) content.append(element('small', 'pg-branch-change-path', row.folderPath));
+        return content.outerHTML;
+    };
+    columns.find(column => column.data === 'operation').render = value => tr(value);
+    const status = columns.find(column => column.data === 'status');
+    status.width = '22%';
+    status.render = (value, type, row) => {
+        if (type !== 'display') return tr(value);
+        const badge = element('span', 'md-branch-state', tr(value));
+        if (row.problem) badge.dataset.state = 'NEEDS_ATTENTION';
+        else if (value === 'done') badge.dataset.state = 'MERGED';
+        else if (value === 'applying') badge.dataset.state = 'MERGING';
+        return badge.outerHTML;
+    };
+    const comparison = columns.find(column => column.data === 'comparison');
+    comparison.searchable = false;
+    comparison.className = [comparison.className, 'text-end'].filter(Boolean).join(' ');
+    comparison.render = (value, type, row) => {
+        if (type !== 'display') return tr(value);
+        const label = tr(value);
+        const action = element('button', 'btn btn-sm btn-outline-secondary pg-branch-change-action text-nowrap');
+        action.type = 'button';
+        action.dataset.branchCompare = row.objectKey;
+        action.setAttribute('aria-label', `${label} · ${row.label}`);
+        action.append(icon(changeActionIcons[value]), ` ${label}`);
+        return action.outerHTML;
+    };
+    comparison.createdCell = (cell, value, row) => {
+        cell.parentElement.dataset.branchType = row.type;
+        cell.parentElement.dataset.branchKey = row.objectKey;
+    };
+    return columns;
+}
+
+/** Connects the version's changes and publication controls to the lifetime of one Editor session. */
+export function mountBranchChanges(editor, api, screen, confirmOnOpen) {
+    const {id, state: initialState, revision: initialRevision} = editor.currentJson;
+    const modal = document.getElementById('branchesDataTable_modal');
+    const changes = document.getElementById('panel-body-dt-branchesDataTable-changes');
+    const publishing = document.getElementById('panel-body-dt-branchesDataTable-publishing');
+    const events = new AbortController();
+    const {signal} = events;
+    let report, timer, busy = false, stale = false, table, tableLoading = false, problemCheck;
+    let tabClickId;
+    let conflictNoticeShown = false;
+    let activeTab = modal.querySelector('[role="tab"].active')?.dataset.tabId;
+    let detailDialog, detailItem, expanded, confirmation, detailTab, pageContent, contentHighlight;
+    const pendingSources = [];
+    let scheduleKey, savingForPublication = false;
+    const publishAt = editor.field('publishAt');
+    // Invalid date text must also count as an unsaved change.
+    const settings = () => [...['name', 'color', 'description'].map(name => editor.field(name).val()), $(publishAt.input()).val() || ''];
+    const savedSettings = settings();
+    const dirty = () => !equal(settings(), savedSettings);
+    const validDate = () => !$(publishAt.input()).val() || moment($(publishAt.input()).val(), publishAt.s.opts.format).isValid();
+    const ready = () => Boolean(report?.ready && report.preparationHash && !stale);
+    const items = () => report?.items || [];
+
+    const footer = modal.querySelector('.DTE_Form_Buttons');
+    const save = footer.querySelector('button.btn-primary');
+    const publish = button(tr('publish'), startPublication);
+    publish.id = 'branch-merge-publish';
+    publish.classList.remove('btn-sm');
+    const publishLabel = document.createTextNode('');
+    publish.replaceChildren(icon('ti-world-upload'), publishLabel);
+    footer.querySelector('.buttons-footer-left').append(publish);
+    const cancel = footer.querySelector('.btn-close-editor');
+    const cancelLabel = cancel.lastChild;
+    const defaultCancel = cancelLabel.textContent;
+    const title = modal.querySelector('.modal-title');
+    const stateBadge = element('span', 'md-branch-state', tr(`state.${initialState}`));
+    stateBadge.dataset.state = initialState;
+    title.after(stateBadge);
+    title.parentElement.classList.add('pg-branch-modal-heading');
+    title.parentElement.id = 'branch-merge-title';
+
+    const changesNotices = element('div', 'form-group pg-branch-changes-notices d-none');
+    const messages = element('div', 'pg-branch-panel__messages');
+    messages.setAttribute('aria-live', 'polite');
+    const loading = element('p', 'text-muted mb-0', tr('loading'));
+    loading.setAttribute('role', 'status');
+    const changesError = element('div', 'alert alert-danger d-none');
+    const scheduleError = element('div', 'alert alert-danger d-none');
+    const detailError = element('div', 'alert alert-danger d-none');
+    for (const box of [changesError, scheduleError, detailError]) box.setAttribute('role', 'alert');
+    changesNotices.append(changesError, messages);
+    changes.prepend(changesNotices);
+    const scheduleWarnings = element('div');
+    const scheduleSummary = element('div');
+    scheduleSummary.append(loading);
+    const scheduleBody = element('div');
+    const schedulePanel = element('div', 'form-group mx-3');
+    schedulePanel.append(scheduleError, scheduleWarnings, scheduleSummary, scheduleBody);
+    publishing.append(schedulePanel);
+
+    function connectChangesTable(nested) {
+        table = nested;
+        const tableNode = table.table().node();
+        tableNode.setAttribute('aria-label', tr('table'));
+        const container = table.table().container();
+        if (!container.querySelector('#branch-merge-problems')) {
+            const problemsLabel = tr('problemsOnly');
+            const label = element('label', 'form-check-label');
+            label.htmlFor = 'branch-merge-problems';
+            const input = element('input', 'form-check-input');
+            input.id = label.htmlFor;
+            input.type = 'checkbox';
+            input.setAttribute('aria-label', problemsLabel);
+            table.button().add(0, {
+                name: 'branchRevert',
+                text: icon('ti-arrow-back-up').outerHTML,
+                className: 'btn-outline-secondary buttons-branch-revert',
+                attr: {title: tr('revert'), 'aria-label': tr('revert'), 'data-toggle': 'tooltip'},
+                enabled: false
+            });
+            const filter = element('div', 'custom-control form-switch buttons-divider-left pg-branch-problems');
+            filter.title = problemsLabel;
+            filter.append(input, label);
+            table.button('branchRevert:name').node()[0].after(filter);
+            WJ.initTooltip($(filter));
+        }
+        const revertButton = table.button('branchRevert:name');
+        revertButton.action((event, dt, trigger) => {
+            const row = selectedChange();
+            if (!row?.revertible || busy || tableLoading || stale) return;
+            const item = items().find(candidate => itemKey(candidate) === itemKey(row));
+            if (item) confirmRevert(item, trigger[0]);
+        });
+        problemCheck = container.querySelector('#branch-merge-problems');
+        problemCheck.checked = false;
+        problemCheck.addEventListener('change', () => table.draw(), {signal});
+        table.search.fixed('branch-problems', (search, row) => !problemCheck.checked || row.problem);
+        table.on('select.dt.branchChanges deselect.dt.branchChanges draw.dt.branchChanges', updateTableControls);
+        table.on('preXhr.dt.branchChanges', () => {
+            tableLoading = true;
+            clearConfirmation(false);
+            updateControls();
+        });
+        table.on('xhr.dt.branchChanges', (event, settings, json, xhr) => {
+            const nextReport = xhr?.responseJSON?.report;
+            if (Number(nextReport?.id) !== Number(id)) return;
+            tableLoading = false;
+            changesError.classList.add('d-none');
+            scheduleError.classList.add('d-none');
+            stale = false;
+            acceptReport(nextReport);
+            render();
+        });
+        table.on('processing.dt.branchChanges', (event, settings, processing) => {
+            if (!processing && tableLoading) {
+                tableLoading = false;
+                stale = true;
+                setError(new Error(WJ.translate('datatables.error.network.js')), changesError);
+                render();
+            }
+        });
+        updateTableControls();
+    }
+
+    function selectedChange() {
+        const selected = table?.rows({selected: true});
+        if (selected?.count() !== 1) return null;
+        return table.row({selected: true, search: 'applied'}).data();
+    }
+
+    function updateTableControls() {
+        if (!table) return;
+        table.button('branchRevert:name').enable(Boolean(!busy && !tableLoading && !stale && report?.state === 'DRAFT' && selectedChange()?.revertible));
+        table.button('reload:name').enable(!busy);
+        problemCheck.disabled = !report?.items?.length;
+        for (const action of table.table().body().querySelectorAll('[data-branch-compare]')) {
+            action.disabled = busy || tableLoading;
+        }
+    }
+
+    window.addEventListener('WJ.DTE.innerTableInitialized', ({detail}) => {
+        if (detail.conf.id !== 'DTE_Field_changes') return;
+        tableLoading = true;
+        connectChangesTable(detail.conf.datatable);
+        updateControls();
+    }, {signal});
+    if (window.datatableInnerTable_changes) connectChangesTable(window.datatableInnerTable_changes);
+
+    changes.addEventListener('click', event => {
+        const action = event.target.closest('[data-branch-compare]');
+        if (!action) return;
+        const row = table?.row(action.closest('tr')).data();
+        if (row) openDetail(itemKey(row), action);
+    }, {signal});
+
+    function selectChanges() {
+        if (activeTab !== 'branchesDataTable-changes') modal.querySelector('#pills-dt-branchesDataTable-changes-tab').click();
+    }
+
+    window.addEventListener('WJ.DTE.tabclick', ({detail}) => {
+        if (modal.contains(detail.element)) tabClickId = detail.id;
+    }, {signal});
+    modal.addEventListener('show.bs.tab', () => { tabClickId = null; }, {signal});
+    modal.addEventListener('shown.bs.tab', event => {
+        const tab = event.target;
+        if (!tab.dataset.tabId?.startsWith('branchesDataTable-')) return;
+        if (activeTab !== tab.dataset.tabId) clearConfirmation(false);
+        activeTab = tab.dataset.tabId;
+        modal.querySelector('.DTE_Body').classList.toggle('has-content', tab.dataset.hasContent === 'true');
+        if (activeTab === 'branchesDataTable-changes') {
+            // Bootstrap keyboard navigation does not use the wrapper's click handler.
+            const id = activeTab;
+            queueMicrotask(() => {
+                if (!signal.aborted && activeTab === id && tabClickId !== id) {
+                    WJ.dispatchEvent('WJ.DTE.tabclick', {element: tab, id});
+                }
+            });
+        }
+        updateControls();
+        confirmWhenReady();
+        poll();
+    }, {signal});
+
+    function updateControls() {
+        const state = report?.state || initialState;
+        const basic = activeTab === 'branchesDataTable-basic';
+        const hasDraftSettings = dirty();
+        save.hidden = !basic && activeTab !== 'branchesDataTable-publishing';
+        save.disabled = busy;
+        cancelLabel.textContent = basic || hasDraftSettings ? defaultCancel : ' ' + tr('close');
+        publish.hidden = !publishStates.includes(state);
+        publish.disabled = busy || tableLoading || !ready() || !validDate();
+        publish.title = '';
+        if (!ready()) publish.title = tr('publicationBlocked');
+        if (!validDate()) publish.title = tr('invalidDate');
+        const settingsTab = basic || activeTab === 'branchesDataTable-publishing';
+        publish.classList.toggle('btn-outline-secondary', settingsTab);
+        publish.classList.toggle('btn-primary', !settingsTab);
+        if (basic && publish.parentNode === footer) footer.querySelector('.buttons-footer-left').append(publish);
+        if (!basic && publish.parentNode !== footer) cancel.after(publish);
+        let publicationLabel = state === 'MERGE_FAILED' ? 'resume' : 'publish';
+        if (state === 'DRAFT' && $(publishAt.input()).val()) publicationLabel = 'schedule';
+        publishLabel.textContent = ' ' + tr(publicationLabel);
+        if (state === 'DRAFT' && !busy) publishAt.enable();
+        else publishAt.disable();
+        const saveChoice = detailDialog?.querySelector('#branch-merge-save-choice');
+        if (saveChoice) {
+            saveChoice.disabled = busy || stale || !detailDialog.querySelector('input[name="branch-merge-choice"]:checked');
+            saveChoice.parentElement.tabIndex = saveChoice.disabled ? 0 : -1;
+        }
+        updateTableControls();
+        updateChangesNotices();
+        changes.setAttribute('aria-busy', String(busy || tableLoading));
+    }
+
+    modal.addEventListener('input', updateControls, {signal});
+    modal.addEventListener('change', updateControls, {signal});
+    editor.on('preSubmit.branchChanges', () => savingForPublication || (['branchesDataTable-basic', 'branchesDataTable-publishing'].includes(activeTab) && !busy));
+
+    function setError(error, box) {
+        box.textContent = error.message;
+        box.classList.remove('d-none');
+        if (box === detailError) detailDialog?.querySelector('[data-branch-retry]').classList.remove('d-none');
+    }
+
+    async function perform(path = '/progress', body, errorBox = changesError) {
+        if (busy || signal.aborted) return;
+        clearTimeout(timer);
+        const active = document.activeElement;
+        busy = true;
+        updateControls();
+        publishing.setAttribute('aria-busy', 'true');
+        for (const box of [changesError, scheduleError, detailError]) box.classList.add('d-none');
+        try {
+            const nextReport = await api(`/${id}${path}`, body);
+            stale = false;
+            acceptReport(nextReport);
+            if (!signal.aborted && path === '/merge' && nextReport.state === 'SCHEDULED') {
+                WJ.notifyWarning(WJ.translate('branches.title.js'), tr('scheduledAt', [WJ.formatDateTimeSeconds(nextReport.publishAt)]), 30000);
+            }
+            if (!signal.aborted && table && activeTab === 'branchesDataTable-changes') {
+                table.ajax.reload(null, false);
+            }
+            return report;
+        } catch (error) {
+            stale = true;
+            if (!signal.aborted) {
+                setError(error, errorBox);
+                if (!body && errorBox === changesError) {
+                    setError(error, scheduleError);
+                    const retry = button(tr('refresh'), () => refresh());
+                    retry.classList.add('ms-2');
+                    scheduleError.append(' ', retry);
+                }
+            }
+        } finally {
+            busy = false;
+            if (!signal.aborted) {
+                publishing.removeAttribute('aria-busy');
+                render();
+                if (active instanceof HTMLElement && active.isConnected && (document.activeElement === document.body || document.activeElement === modal)) active.focus();
+            }
+        }
+    }
+
+    function acceptReport(nextReport) {
+        if (signal.aborted) return;
+        const previousState = report?.state ?? initialState;
+        const previousRevision = report?.revision ?? initialRevision;
+        if (Number(nextReport.revision) < Number(previousRevision)) return;
+        if (settings()[3] === savedSettings[3]) {
+            publishAt.val(nextReport.publishAt);
+            savedSettings[3] = settings()[3];
+        }
+        report = nextReport;
+        if (previousState !== report.state || previousRevision !== report.revision) {
+            window.dispatchEvent(new CustomEvent('WJ.Branch.updated', {detail: report}));
+        }
+    }
+
+    function refresh() {
+        clearConfirmation(false);
+        if (table && activeTab === 'branchesDataTable-changes') table.ajax.reload(null, false);
+        else return perform();
+    }
+
+    function poll() {
+        clearTimeout(timer);
+        if (stale || confirmation || detailDialog) return;
+        if (report?.state === 'MERGING') timer = setTimeout(refresh, 1500);
+        if (report?.state === 'SCHEDULED') timer = setTimeout(refresh, 5000);
+    }
+
+    function render() {
+        loading.remove();
+        stateBadge.dataset.state = report?.state || initialState;
+        stateBadge.textContent = tr(`state.${stateBadge.dataset.state}`);
+        if (report) {
+            renderReport();
+            renderSchedule();
+            if (detailDialog && !stale) renderDetail();
+        }
+        updateControls();
+        confirmWhenReady();
+        poll();
+    }
+
+    function notice(parent, type, text) {
+        const message = element('p', `alert alert-${type}`, text);
+        parent.append(message);
+        return message;
+    }
+
+    function renderPagePlanWarnings(parent) {
+        if (!report.pagePlanWarnings?.length) return;
+        const list = element('ul', 'alert alert-warning ps-5');
+        list.setAttribute('aria-label', tr('pagePlans'));
+        report.pagePlanWarnings.forEach(warning => list.append(element('li', '', warning)));
+        parent.append(list);
+    }
+
+    function renderReport() {
+        const rows = items();
+        const {state} = report;
+        messages.replaceChildren();
+        renderPagePlanWarnings(messages);
+        if (state === 'SCHEDULED') notice(messages, 'info', tr('scheduledAt', [WJ.formatDateTimeSeconds(report.publishAt)]));
+        if (state === 'NEEDS_ATTENTION') {
+            const warning = notice(messages, 'warning', tr('attentionNote'));
+            const reopen = button(tr('reopen'), () => confirmState('reopen', messages, reopen));
+            reopen.id = 'branch-merge-reopen';
+            warning.append(reopen);
+        }
+        if (['MERGING', 'MERGE_FAILED', 'MERGED'].includes(state)) {
+            const done = rows.filter(item => item.applyState === 'DONE').length;
+            const errors = rows.filter(item => item.applyState === 'ERROR' || item.error).length;
+            const progress = notice(messages, state === 'MERGE_FAILED' ? 'warning' : 'info',
+                tr(state === 'MERGE_FAILED' ? 'partial' : state === 'MERGED' ? 'finished' : 'running'));
+            progress.id = 'branch-merge-progress';
+            progress.prepend(element('strong', 'd-block mb-1', tr('progress', [done, rows.length, errors, rows.length - done - errors])));
+        }
+        if (!conflictNoticeShown && rows.some(item => item.conflict)) {
+            conflictNoticeShown = true;
+            WJ.notifyWarning(WJ.translate('text.warning'), tr('resolveBeforePublish'), 7000);
+        }
+        if (rows.length && report.errors?.length) {
+            const list = element('ul', 'alert alert-danger ps-5');
+            list.setAttribute('aria-label', tr('blockers'));
+            report.errors.forEach(error => list.append(element('li', '', error)));
+            messages.append(list);
+        }
+        if (report.lastError) notice(messages, 'danger', report.lastError);
+    }
+
+    function updateChangesNotices() {
+        changesNotices.classList.toggle('d-none', !messages.childElementCount &&
+            changesError.classList.contains('d-none'));
+    }
+
+    function focusItem(type, key) {
+        const row = table?.rows({page: 'current'}).nodes().toArray()
+            .find(row => row.dataset.branchType === type && row.dataset.branchKey === key);
+        (row?.querySelector('[data-branch-compare]') || table?.button('reload:name').node()[0])?.focus();
+    }
+
+    function clearConfirmation(restoreFocus = true) {
+        if (!confirmation) return;
+        const {dialog, invoker} = confirmation;
+        confirmation = null;
+        dialog.close();
+        dialog.remove();
+        if (restoreFocus) {
+            (invoker.isConnected && !invoker.disabled ? invoker : table?.button('reload:name').node()[0])?.focus();
+            poll();
+        }
+    }
+
+    function confirmAction(resultTarget, invoker, {heading, description, summary, label, confirmId, action}) {
+        if (confirmation) return;
+        clearTimeout(timer);
+        const dialog = element('dialog', 'pg-branch-confirmation');
+        dialog.id = 'branch-merge-confirmation';
+        dialog.setAttribute('aria-labelledby', 'branch-merge-confirmation-title');
+        dialog.setAttribute('aria-describedby', 'branch-merge-confirmation-note');
+        const title = element('h2', 'h5', heading);
+        title.id = 'branch-merge-confirmation-title';
+        description.id = 'branch-merge-confirmation-note';
+        const actions = element('div', 'd-flex flex-wrap justify-content-end gap-2');
+        const cancel = button(tr('cancel'), () => clearConfirmation());
+        cancel.classList.replace('btn-outline-secondary', 'btn-white');
+        cancel.autofocus = true;
+        const confirm = button(label, async () => {
+            if (busy) return;
+            confirm.disabled = cancel.disabled = true;
+            const result = await action();
+            if (signal.aborted) return;
+            clearConfirmation(false);
+            const error = resultTarget === scheduleSummary ? scheduleError : changesError;
+            (result ? resultTarget : error).focus();
+            poll();
+        }, true);
+        confirm.id = confirmId;
+        actions.append(cancel, confirm);
+        dialog.append(title, description);
+        if (summary) dialog.append(element('p', 'fw-semibold', summary));
+        dialog.append(actions);
+        dialog.addEventListener('keydown', event => event.stopPropagation());
+        dialog.addEventListener('cancel', event => {
+            event.preventDefault();
+            if (!busy) clearConfirmation();
+        });
+        modal.append(dialog);
+        confirmation = {dialog, invoker};
+        dialog.showModal();
+    }
+
+    for (const node of [changesError, scheduleError, messages, scheduleSummary]) node.tabIndex = -1;
+
+    /** Saves pending editor values without closing the modal before reviewing publication. */
+    async function startPublication() {
+        if (!ready() || busy || !validDate()) return;
+        if (dirty()) {
+            savingForPublication = busy = true;
+            updateControls();
+            let saved;
+            try {
+                saved = await new Promise(resolve => {
+                    const action = editor.s.action;
+                    editor.on('processing.branchPublish', (event, processing) => {
+                        if (processing) return;
+                        editor.off('processing.branchPublish');
+                        resolve(saved);
+                    });
+                    editor.submit(json => {
+                        saved = json?.data?.find(branch => Number(branch.id) === Number(id)) || editor.currentJson;
+                        editor.s.action = action;
+                    }, null, null, false);
+                });
+            } catch (error) {
+                if (!signal.aborted) setError(error, activeTab === 'branchesDataTable-publishing' ? scheduleError : changesError);
+                return;
+            } finally {
+                savingForPublication = busy = false;
+                editor.off('processing.branchPublish');
+                if (!signal.aborted) updateControls();
+            }
+            if (!saved || signal.aborted) return;
+            editor.currentJson = saved;
+            savedSettings.splice(0, savedSettings.length, ...settings());
+            if (!await perform('/prepare', {expectedRevision: saved.revision}) || !ready()) return;
+        }
+        confirmOnOpen = true;
+        selectChanges();
+        confirmWhenReady();
+    }
+
+    function confirmPublication() {
+        const resume = report.state === 'MERGE_FAILED';
+        const scheduled = !resume && report.publishAt != null;
+        const {revision: expectedRevision, preparationHash} = report;
+        const keepPagePlans = Boolean(report.pagePlanWarnings?.length);
+        const publicationAction = resume ? 'resume' : 'publish';
+        const confirmLabel = scheduled ? 'schedule' : publicationAction + 'Confirm';
+        const pagePlanLabel = scheduled ? 'scheduleWithPagePlans' : 'publishWithPagePlans';
+        const count = items().filter(item => item.writeRequired && item.applyState !== 'DONE').length;
+        const locale = (window.userLng === 'cz' ? 'cs' : window.userLng) || 'sk';
+        const plural = new Intl.PluralRules(locale).select(count);
+        const description = element('div');
+        const summary = element('p', 'fw-semibold mb-2', tr(`publishCount.${plural}`, [count]));
+        const notes = element('ul', 'ps-4');
+        notes.append(
+            element('li', '', tr('publishTransferNote')),
+            element('li', 'mt-1', tr('publishNote'))
+        );
+        if (keepPagePlans) notes.append(element('li', 'mt-1', tr('keepPagePlansNote')));
+        description.append(summary);
+        if (scheduled) description.append(element('p', 'fw-semibold', tr('scheduledAt', [WJ.formatDateTimeSeconds(report.publishAt)])));
+        description.append(notes);
+        confirmAction(messages, publish, {
+            heading: tr(scheduled ? 'schedule' : publicationAction),
+            description,
+            label: tr(keepPagePlans ? pagePlanLabel : confirmLabel),
+            confirmId: 'branch-merge-confirm',
+            action: () => perform(resume ? '/resume' : '/merge', {
+                expectedRevision, preparationHash, keepPagePlans
+            })
+        });
+    }
+
+    function confirmWhenReady() {
+        if (!confirmOnOpen || !report || busy || tableLoading || activeTab !== 'branchesDataTable-changes') return;
+        // Let the editor finish its initial focus before stacking another modal.
+        if (modal.dataset.dteFocusState !== 'ready') return;
+        confirmOnOpen = false;
+        if (ready() && publishStates.includes(report.state)) confirmPublication();
+        else if (messages.childElementCount) messages.focus();
+    }
+
+    const editorFocus = new MutationObserver(confirmWhenReady);
+    editorFocus.observe(modal, {attributeFilter: ['data-dte-focus-state']});
+
+    function confirmRevert(item, invoker) {
+        confirmAction(messages, invoker, {
+            heading: tr('revert'),
+            description: element('p', '', tr('revertConfirm', [item.label || item.objectKey])),
+            summary: item.type === 'GROUP' && item.operation === 'DELETE' ? tr('revertFolderNote') : '',
+            label: tr('revert'),
+            confirmId: 'branch-merge-revert-confirm',
+            action: () => perform('/changes/revert', {
+                type: item.type, id: Number(item.objectKey), hash: item.workHash
+            })
+        });
+    }
+
+    function confirmState(action, resultTarget, invoker) {
+        confirmAction(resultTarget, invoker, {
+            heading: tr(action),
+            description: element('p', '', tr(action + 'Note')),
+            label: tr(action),
+            confirmId: `branch-merge-${action}-confirm`,
+            action: () => perform('/' + action, {expectedRevision: report.revision}, resultTarget === scheduleSummary ? scheduleError : changesError)
+        });
+    }
+
+    function renderSchedule() {
+        scheduleWarnings.replaceChildren();
+        renderPagePlanWarnings(scheduleWarnings);
+        const scheduled = report.state === 'SCHEDULED';
+        const key = `${report.state}:${report.publishAt}`;
+        if (scheduleKey === key) return;
+        scheduleKey = key;
+        scheduleBody.replaceChildren();
+        scheduleSummary.replaceChildren();
+        if (scheduled) {
+            const plan = notice(scheduleSummary, 'info', tr('scheduledNote'));
+            plan.id = 'branch-merge-scheduled';
+            plan.prepend(element('strong', 'd-block mb-1', tr('scheduledAt', [WJ.formatDateTimeSeconds(report.publishAt)])));
+            const unschedule = button(tr('unschedule'), () => confirmState('unschedule', scheduleSummary, unschedule));
+            unschedule.id = 'branch-merge-unschedule';
+            scheduleBody.append(unschedule);
+        } else if (report.state !== 'DRAFT') {
+            notice(scheduleSummary, 'secondary', tr('schedulingUnavailable'));
+        }
+    }
+
+    function openDetail(key, invoker) {
+        const item = items().find(item => itemKey(item) === key);
+        if (busy || tableLoading || !item) return;
+        detailItem = item;
+        expanded = false;
+        detailTab = 'fields';
+        contentHighlight = false;
+        detailError.classList.add('d-none');
+        const dialog = detailDialog = element('dialog', 'pg-branch-merge');
+        dialog.id = 'branch-merge-detail';
+        dialog.setAttribute('aria-labelledby', 'branch-item-title');
+        const header = element('header', 'pg-branch-merge__header modal-header');
+        const title = element('h2', 'modal-title mb-0');
+        title.id = 'branch-item-title';
+        const close = button('', () => dialog.close());
+        close.className = 'close';
+        close.title = WJ.translate('datatables.modal.close.js');
+        close.setAttribute('aria-label', close.title);
+        close.append(icon('ti-x'));
+        const size = button('', () => {
+            const maximized = dialog.classList.toggle('pg-branch-merge--maximized');
+            size.title = WJ.translate(`datatables.modal.${maximized ? 'minimize' : 'maximize'}.js`);
+            size.setAttribute('aria-label', size.title);
+            size.replaceChildren(icon(maximized ? 'ti-arrows-minimize' : 'ti-arrows-maximize'));
+        });
+        size.title = WJ.translate('datatables.modal.maximize.js');
+        size.setAttribute('aria-label', size.title);
+        size.append(icon('ti-arrows-maximize'));
+        const windowActions = element('div', 'dialog-buttons');
+        windowActions.append(size);
+        const titleRow = element('div', 'pg-branch-merge__title');
+        const titleText = element('div');
+        titleText.append(element('small', 'text-muted', tr(`type.${item.type}`)), title);
+        const conflict = element('span', 'md-branch-state', tr('conflict'));
+        conflict.dataset.state = 'NEEDS_ATTENTION';
+        titleRow.append(icon('ti-git-compare'), titleText, conflict);
+        header.append(titleRow, close);
+        header.append(windowActions);
+        const tabs = element('div', 'pg-branch-merge__toolbar md-tabs');
+        header.append(tabs);
+        if (item.type === 'DOCUMENT') {
+            const nav = element('ul', 'nav');
+            nav.setAttribute('role', 'tablist');
+            for (const name of ['fields', 'html', 'content']) {
+                const entry = element('li', 'nav-item');
+                entry.setAttribute('role', 'presentation');
+                const tab = element('a', `nav-link${name === detailTab ? ' active' : ''}`, tr(`${name}Tab`));
+                tab.id = `branch-merge-${name}-tab`;
+                tab.prepend(icon(tabIcons[name]), ' ');
+                tab.href = `#branch-merge-${name}`;
+                tab.setAttribute('role', 'tab');
+                tab.setAttribute('aria-controls', `branch-merge-${name}`);
+                tab.setAttribute('aria-selected', String(name === detailTab));
+                tab.addEventListener('click', event => { event.preventDefault(); bootstrap.Tab.getOrCreateInstance(tab).show(); });
+                tab.addEventListener('shown.bs.tab', () => { detailTab = name; activateDetailTab(); });
+                entry.append(tab);
+                nav.append(entry);
+            }
+            for (const event of ['show.bs.tab', 'shown.bs.tab', 'hide.bs.tab', 'hidden.bs.tab']) nav.addEventListener(event, event => event.stopPropagation());
+            tabs.append(nav);
+            nav.querySelectorAll('[role="tab"]').forEach(tab => bootstrap.Tab.getOrCreateInstance(tab));
+        }
+        tabs.append(element('div', 'pg-branch-merge__options'));
+        const content = element('div', 'pg-branch-merge__content');
+        const retry = button(tr('refresh'), () => perform('/progress', undefined, detailError));
+        retry.dataset.branchRetry = '';
+        retry.classList.add('d-none', 'mb-3');
+        content.append(detailError, retry, element('div', 'pg-branch-merge__item'));
+        dialog.append(header, content);
+        dialog.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && dialog.querySelector('.tooltip.show')) {
+                event.preventDefault();
+                dialog.querySelectorAll('[data-branch-hint]').forEach(control => bootstrap.Tooltip.getInstance(control)?.hide());
+            }
+            event.stopPropagation();
+        });
+        dialog.addEventListener('close', () => {
+            pageContent?.dispose();
+            pageContent = null;
+            pendingSources.length = 0;
+            detailDialog = null;
+            dialog.querySelectorAll('[role="tab"]').forEach(tab => bootstrap.Tab.getInstance(tab)?.dispose());
+            dialog.querySelectorAll('[data-branch-hint]').forEach(control => bootstrap.Tooltip.getInstance(control)?.dispose());
+            dialog.remove();
+            if (!signal.aborted) {
+                if (invoker.isConnected) invoker.focus();
+                else focusItem(item.type, item.objectKey);
+                poll();
+            }
+        }, {once: true});
+        modal.append(dialog);
+        renderDetail(true);
+        dialog.showModal();
+        close.focus();
+        poll();
+    }
+
+    function renderDetail(force = false) {
+        const item = items().find(row => itemKey(row) === itemKey(detailItem));
+        if (!item) { detailDialog.close(); return; }
+        if (!force && equal(detailItem, item)) return;
+        const pendingChoice = equal(detailItem, item) ? detailDialog.querySelector('input[name="branch-merge-choice"]:checked')?.value : null;
+        detailItem = item;
+        detailDialog.classList.toggle('pg-branch-merge--single', item.workOnly === true);
+        detailDialog.querySelector('#branch-item-title').textContent = item.label || item.objectKey;
+        detailDialog.querySelector('.pg-branch-merge__title .md-branch-state').hidden = !item.conflict;
+        detailDialog.querySelector('[data-branch-retry]').classList.add('d-none');
+        const content = detailDialog.querySelector('.pg-branch-merge__item');
+        const focused = detailDialog.contains(document.activeElement) ? document.activeElement.id : null;
+        detailDialog.querySelectorAll('[data-branch-hint]').forEach(control => bootstrap.Tooltip.getInstance(control)?.dispose());
+        pageContent?.dispose();
+        pageContent = null;
+        pendingSources.length = 0;
+        content.replaceChildren(detail(item));
+        detailDialog.querySelector('.pg-branch-merge__footer')?.remove();
+        detailDialog.append(detailFooter(item, pendingChoice));
+        const hints = detailDialog.querySelectorAll('[data-branch-hint]');
+        hints.forEach(control => control.setAttribute('data-bs-container', '#branch-merge-detail'));
+        WJ.initTooltip($(hints));
+        activateDetailTab();
+        updateControls();
+        if (focused) detailDialog.querySelector('#' + CSS.escape(focused))?.focus();
+    }
+
+    function activateDetailTab() {
+        const active = detailTab === 'content';
+        detailDialog.classList.toggle('pg-branch-merge--content', active);
+        const options = detailDialog.querySelector('.pg-branch-merge__options');
+        const canHighlight = detailItem.live?.state === 'ACTIVE' && detailItem.work?.state === 'ACTIVE';
+        options.replaceChildren();
+        if (!detailItem.workOnly && (!active || canHighlight)) {
+            const label = element('label', 'form-check form-switch mb-0');
+            const input = element('input', 'form-check-input');
+            input.type = 'checkbox';
+            input.id = active ? 'branch-merge-highlight' : 'branch-merge-all-fields';
+            input.checked = active ? contentHighlight : expanded;
+            input.onchange = () => {
+                if (active) {
+                    contentHighlight = input.checked;
+                    pageContent.setHighlight(input.checked);
+                } else {
+                    expanded = input.checked;
+                    renderDetail(true);
+                }
+            };
+            label.append(input, document.createTextNode(tr(active ? 'highlight' : 'allFields')));
+            options.append(label);
+        }
+        if (detailTab === 'html') pendingSources.splice(0).forEach(render => render());
+        if (active) pageContent?.load();
+    }
+
+    async function edit(item) {
+        if (report.state !== 'DRAFT') return;
+        try {
+            await api('/context', {branchId: id, expectedDomainId: screen.domainId});
+            const fields = item.work?.fields || {};
+            const query = item.type === 'DOCUMENT' ? `docid=${encodeURIComponent(item.objectKey)}`
+                : item.type === 'MEDIA' ? `docid=${encodeURIComponent(fields.media_fk_id)}`
+                : item.type === 'GROUP' ? `groupid=${encodeURIComponent(item.objectKey)}` : '';
+            location.href = `/admin/v9/webpages/web-pages-list/?${query}`;
+        } catch (error) { showError(error); }
+    }
+
+    function versionActions(item, version) {
+        const actions = element('div', 'pg-branch-merge__actions');
+        if (version === 'work' && report.state === 'DRAFT' && item.editable) {
+            const editAction = button('', () => edit(item));
+            editAction.dataset.branchEdit = '';
+            editAction.title = tr(item.type === 'GROUP' ? 'editGroupNote' : item.type === 'MEDIA' ? 'editMediaNote' : item.type === 'FILE' ? 'editFileNote' : 'editNote');
+            editAction.dataset.branchHint = '';
+            editAction.append(icon('ti-pencil'), element('span', 'visually-hidden', tr('edit')));
+            actions.append(editAction);
+        }
+        if (version === 'live' && item.type === 'DOCUMENT' && item.live?.state === 'ACTIVE') {
+            const live = link('', `/showdoc.do?docid=${encodeURIComponent(item.objectKey)}`);
+            live.title = tr('showPage');
+            live.append(icon('ti-eye'), element('span', 'visually-hidden', live.title));
+            actions.append(live);
+        }
+        if (version === 'work' && item.type === 'DOCUMENT' && previewStates.includes(report.state)) {
+            const preview = button('', () => openBranchPreview(api, id, item.objectKey, actions).catch(showError));
+            preview.title = tr('showPage');
+            preview.append(icon('ti-eye'), element('span', 'visually-hidden', preview.title));
+            actions.append(preview);
+        }
+        return actions;
+    }
+
+    function versionHeader(item, version, tab) {
+        const snapshot = item[version];
+        const header = element('div', 'pg-branch-merge__version-header');
+        header.dataset.version = version;
+        const heading = element('h3', 'h6 mb-0', tr(version));
+        if (version === 'base') {
+            heading.id = `branch-merge-${tab}-base-title`;
+            heading.tabIndex = 0;
+            heading.title = tr('baseHint');
+            heading.dataset.branchHint = '';
+            heading.append(' ', icon('ti-info-circle'));
+        }
+        const text = element('div', 'pg-branch-merge__version-title');
+        text.append(heading);
+        const date = snapshot?.fields?.date_created;
+        const status = tr(`existence.${snapshot?.state || 'ABSENT'}`);
+        const subtitle = typeof date === 'number' && snapshot.state === 'ACTIVE'
+            ? new Date(date).toLocaleDateString(document.documentElement.lang || undefined) : status;
+        text.append(element('small', 'text-muted', subtitle));
+        const actions = versionActions(item, version);
+        header.append(icon(versionIcons[version]), text);
+        if (actions.childElementCount) header.append(actions);
+        return header;
+    }
+
+    function detail(item) {
+        const workOnly = item.workOnly === true;
+        const section = element('section', 'pg-branch-merge__detail');
+        section.tabIndex = -1;
+        section.setAttribute('aria-label', tr(workOnly ? 'work' : 'comparison'));
+        if (item.error) section.append(element('p', 'alert alert-danger', item.error));
+        if (item.applyPhase === 'TRASH_WAIT') section.append(element('p', 'alert alert-warning', tr('trashWaitNote')));
+        else if (item.applyState === 'ERROR' && writtenPhases.has(item.applyPhase)) section.append(element('p', 'alert alert-warning', tr('contentWrittenNote')));
+        if (item.applyPhase === 'FILE_STARTED') section.append(element('p', 'alert alert-warning', tr('fileStateNote')));
+        if (item.type === 'DOCUMENT' && item.choice === 'LIVE' && item.writeRequired) section.append(element('p', 'alert alert-info', tr('liveMoveNote')));
+        if (item.base?.state !== 'ABSENT' && item.base?.fields?.virtual_path !== item.work?.fields?.virtual_path && item.type === 'DOCUMENT') section.append(element('p', 'alert alert-warning', tr('redirectNote')));
+        const versions = workOnly ? ['work'] : equal(item.base, item.live) ? ['live', 'work'] : ['base', 'live', 'work'];
+        const allFields = [...new Set(['title', 'group_name', 'data', ...versions.flatMap(name => Object.keys(item[name]?.fields || {}))])]
+            .filter(key => versions.some(name => Object.hasOwn(item[name]?.fields || {}, key)));
+        const differing = key => !equal(comparisonValue(item.live?.fields?.[key]), comparisonValue(item.work?.fields?.[key]));
+        const visibleFields = workOnly ? allFields.filter(key => comparisonValue(item.work.fields[key]) !== null)
+            : allFields.filter(key => expanded || differing(key));
+        const tabs = element('div', 'tab-content');
+        const isPage = item.type === 'DOCUMENT';
+        for (const name of isPage ? ['fields', 'html', 'content'] : ['fields']) {
+            const pane = element('div', `tab-pane${name === detailTab ? ' active' : ''}`);
+            pane.id = `branch-merge-${name}`;
+            if (isPage) {
+                pane.setAttribute('role', 'tabpanel');
+                pane.setAttribute('aria-labelledby', `branch-merge-${name}-tab`);
+                pane.tabIndex = 0;
+            }
+            if (name === 'content') {
+                pageContent = createBranchPageContent(item, id, {tr, versionHeader, highlight: contentHighlight, refresh: async () => {
+                        if (await perform('/progress', undefined, detailError)) renderDetail(true);
+                    }});
+                pane.append(pageContent.element);
+                tabs.append(pane);
+                continue;
+            }
+            const fields = visibleFields.filter(field => !isPage || htmlFields.has(field) === (name === 'html'));
+            const columns = element('div', 'pg-branch-merge__versions');
+            columns.style.setProperty('--branch-merge-columns', versions.length);
+            const fieldLabel = field => report.fieldLabels?.[item.type]?.[field] || field.replaceAll('_', ' ');
+            const hasFile = name === 'fields' && item.type === 'FILE' && versions.some(version =>
+                item[version]?.fields && item[version].state !== 'ABSENT' && item[version].fields.entry_kind !== 'DIRECTORY');
+            const marks = new Map();
+            if (name === 'fields') {
+                columns.classList.add('pg-branch-merge__versions--fields');
+                columns.style.setProperty('--branch-merge-rows', 1 + Math.max(1, fields.length + Number(hasFile)));
+                const labels = element('div', 'pg-branch-merge__labels');
+                labels.setAttribute('aria-hidden', 'true');
+                labels.append(element('div', 'pg-branch-merge__field-heading', tr('fieldName')));
+                if (hasFile) labels.append(element('div', '', tr('type.FILE')));
+                for (const field of fields) labels.append(element('div', '', fieldLabel(field)));
+                columns.append(labels);
+            }
+            for (const version of versions) {
+                const snapshot = item[version] || {state: 'ABSENT', fields: {}};
+                const panel = element('section', 'pg-branch-merge__version');
+                panel.dataset.branchVersion = version.toUpperCase();
+                const body = element('dl', 'pg-branch-merge__version-body mb-0');
+                if (hasFile) {
+                    const file = element('dd');
+                    if (snapshot.state !== 'ABSENT' && snapshot.fields.entry_kind !== 'DIRECTORY') {
+                        const url = `/admin/rest/branches/${id}/file-version?path=${encodeURIComponent(item.objectKey)}&version=${version.toUpperCase()}`;
+                        if (/\.(png|jpe?g|gif|webp|avif)$/i.test(item.objectKey)) {
+                            const image = element('img', 'pg-branch-merge__image');
+                            image.src = url; image.alt = `${tr(version)} · ${item.objectKey}`;
+                            file.append(image);
+                        }
+                        file.append(link(tr('openFile'), url));
+                    } else file.textContent = '—';
+                    const row = element('div', 'pg-branch-merge__field');
+                    row.append(element('dt', '', tr('type.FILE')), file);
+                    body.append(row);
+                }
+                for (const field of fields) {
+                    const changed = !workOnly && version !== 'base' && differing(field);
+                    const label = fieldLabel(field);
+                    const row = element('div', 'pg-branch-merge__field');
+                    const dt = element('dt', 'small', changed ? `${label} · ${tr('changed')}` : label);
+                    const dd = element('dd', changed ? 'pg-branch-merge__changed' : '');
+                    const value = comparisonValue(snapshot.fields?.[field]);
+                    if (snapshot.state === 'ABSENT' || value === null) dd.textContent = '—';
+                    else if (name === 'html') {
+                        // Build source rows once, when the HTML tab first becomes visible.
+                        pendingSources.push(() => {
+                            if (changed && !marks.has(field)) marks.set(field, changedSourceLines(item.live?.fields?.[field], item.work?.fields?.[field]));
+                            dd.append(htmlSource(value, marks.get(field)?.[version], version, tr('textPreview')));
+                        });
+                    }
+                    else if (typeof value === 'boolean') dd.textContent = tr(value ? 'yes' : 'no');
+                    else if (['date_created', 'event_date'].includes(field) && typeof value === 'number') dd.textContent = new Date(value).toLocaleString(document.documentElement.lang || undefined);
+                    else dd.textContent = Array.isArray(value) ? value.join(', ') || '—' : String(value);
+                    row.append(dt, dd);
+                    body.append(row);
+                }
+                panel.append(versionHeader(item, version, name), body);
+                columns.append(panel);
+            }
+            pane.append(columns);
+            tabs.append(pane);
+        }
+        section.append(tabs);
+        return section;
+    }
+
+    function detailFooter(item, pendingChoice) {
+        const workOnly = item.workOnly === true;
+        const footer = element('footer', 'pg-branch-merge__footer modal-footer');
+        const buttons = element('div', 'd-flex gap-3');
+        const close = button(tr('close'), () => detailDialog.close());
+        close.classList.remove('btn-sm');
+        close.prepend(icon('ti-x'), ' ');
+        buttons.append(close);
+        const canResolve = item.resolvable ?? (item.editable && report.state === 'DRAFT');
+        if (canResolve) {
+            const choices = element('fieldset', 'pg-branch-merge__choices');
+            choices.append(element('legend', '', tr('result')));
+            for (const choice of ['LIVE', 'WORK']) {
+                const label = element('label', 'form-check-label');
+                const radio = element('input', 'form-check-input me-2'); radio.type = 'radio'; radio.name = 'branch-merge-choice'; radio.value = choice; radio.checked = item.choice === choice;
+                radio.id = `branch-merge-choice-${choice.toLowerCase()}`;
+                if (pendingChoice) radio.checked = pendingChoice === choice;
+                const deleted = item[choice.toLowerCase()]?.state !== 'ACTIVE';
+                const key = workOnly ? (choice === 'LIVE' ? 'skipItem' : 'publishItem')
+                    : choice === 'LIVE' ? 'useLive' : deleted ? 'useDelete' : item.live?.state !== 'ACTIVE' ? 'useRestore' : 'useWork';
+                label.append(radio, document.createTextNode(tr(key))); choices.append(label);
+            }
+            const save = button(tr('saveChoice'), async () => {
+                if (busy || stale) return;
+                const choice = choices.querySelector('input:checked')?.value;
+                if (!choice) return;
+                const dialog = detailDialog;
+                const saved = await perform('/resolve', {expectedRevision: report.revision, type: item.type, objectKey: item.objectKey, choice, liveHash: item.liveHash, workHash: item.workHash}, detailError);
+                if (saved) dialog?.close();
+            }, true);
+            save.classList.remove('btn-sm');
+            save.prepend(icon('ti-check'), ' ');
+            save.id = 'branch-merge-save-choice';
+            const saveHint = element('span', 'pg-branch-merge__save-hint d-inline-block');
+            saveHint.id = 'branch-merge-save-hint';
+            saveHint.title = tr('wholeItem');
+            saveHint.dataset.branchHint = '';
+            saveHint.setAttribute('role', 'group');
+            saveHint.setAttribute('aria-label', tr('saveChoice'));
+            saveHint.append(save);
+            buttons.append(saveHint);
+            footer.append(choices);
+        }
+        footer.append(buttons);
+        return footer;
+    }
+
+    updateControls();
+    if (activeTab !== 'branchesDataTable-changes') perform();
+    return () => {
+        events.abort();
+        editorFocus.disconnect();
+        clearTimeout(timer);
+        clearConfirmation(false);
+        detailDialog?.close();
+        table?.off('.branchChanges');
+        table?.button('branchRevert:name').action(() => {});
+        changesNotices.remove();
+        changes.removeAttribute('aria-busy');
+        schedulePanel.remove();
+        publishAt.enable();
+        editor.off('preSubmit.branchChanges');
+        editor.off('processing.branchPublish');
+    };
+}

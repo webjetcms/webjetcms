@@ -13,11 +13,11 @@ html.pg-homepage(data-th-lang="${layout.lngIso}")
 
     a.skip-link(href="#main-content" data-th-text="\#{admin.layout.skip-to-main-content}") Preskocit na hlavny obsah
 
-    div.ly-page-wrapper
+    div.ly-page-wrapper(data-th-with="branchScreen=${layout.branchScreen}" data-th-classappend="${branchScreen.allowed} ? 'ly-page-wrapper--versions'")
 
         div(id="toast-container-logoff" class="toast-container toast-top-full-width")
 
-        div.ly-header
+        div.ly-header(data-th-classappend="${branchScreen.allowed} ? 'ly-header--versions'")
             include ./header
 
         div.ly-sidebar

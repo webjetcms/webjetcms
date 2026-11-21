@@ -24,9 +24,18 @@ public class EditorUpload {
         if(uploadFile == null) return null;
 
         try {
-            UploadFileAction.execute(request, response, uploadFile);
+            String result=UploadFileAction.execute(request, response, uploadFile);
+            if (result!=null && sk.iway.iwcm.branch.BranchContexts.current().isBranch())
+                throw new IllegalArgumentException("File type, size or upload permission is not allowed");
         } catch(Exception ex) {
             sk.iway.iwcm.Logger.error(ex);
+            if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+                response.setStatus(409);
+                try {
+                    response.setContentType("application/json");
+                    response.getWriter().write(new org.json.JSONObject().put("uploaded",0).put("error",new org.json.JSONObject().put("message",ex.getMessage())).toString());
+                } catch (java.io.IOException io) {throw new IllegalStateException(io);}
+            }
         }
 
         return null;

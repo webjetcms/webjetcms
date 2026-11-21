@@ -817,8 +817,10 @@ private static String combineCss(String cssStyle)
             }
         }
 
-        // Keep the admin inline editor on the same origin by skipping HTTP/HTTPS redirects.
-        if (inlineEditorAdmin == false && Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
+        // Keep the inline editor and branch preview on the admin transport origin; content require_ssl
+        // must not redirect the preview away from its authenticated gateway or create a redirect loop.
+        if (inlineEditorAdmin == false && sk.iway.iwcm.branch.BranchContexts.current(request).mode() != sk.iway.iwcm.branch.BranchContext.Mode.PREVIEW
+                && Constants.getBoolean("httpsAvailable") && "GET".equalsIgnoreCase(request.getMethod()))
         {
             if (doc.isRequireSsl() && !Tools.isSecure(request))
             {
@@ -1003,7 +1005,8 @@ private static String combineCss(String cssStyle)
         //NOVA STATISTIKA
         try
         {
-            if (!Constants.getBoolean("nginxProxyMode"))
+            // Preview visits must not write production traffic statistics.
+            if (!Constants.getBoolean("nginxProxyMode") && !sk.iway.iwcm.branch.BranchContexts.current(request).isBranch())
             {
                 //statistika to potrebuje
                 request.setAttribute("group_id", Integer.toString(doc.getGroupId()));

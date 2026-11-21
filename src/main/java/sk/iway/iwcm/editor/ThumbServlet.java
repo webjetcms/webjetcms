@@ -40,6 +40,8 @@ import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.branch.BranchContexts;
+import sk.iway.iwcm.branch.BranchFiles;
 
 /**
  *  Vytvara a cachuje nahladove obrazky pre editor
@@ -103,6 +105,8 @@ public class ThumbServlet extends HttpServlet
 
 	public static void getThumbImage(String imagePath, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
 	{
+		boolean branchPreview = BranchContexts.current().isBranch();
+		if (branchPreview) response.setHeader("Cache-Control", "private, no-store, max-age=0");
 		if (Tools.isEmpty(imagePath))
 		{
 			sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
@@ -228,7 +232,13 @@ public class ThumbServlet extends HttpServlet
 			}
 
 			String realPath = PathFilter.getRealPath("/"+imagePath);
-			IwcmFile imageFile = new IwcmFile(realPath);
+			BranchFiles.ThumbnailSource branchSource = branchPreview ? BranchFiles.thumbnailSource("/"+imagePath) : null;
+			if (branchPreview && branchSource == null) {
+				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				return;
+			}
+			IwcmFile imageFile = branchPreview ? branchSource.file() : new IwcmFile(realPath);
+			if (branchPreview) realPath = imageFile.getAbsolutePath();
 			if (imageFile.exists()==false)
 			{
 				//kukni ci neexistuje presmerovanie k danemu obrazku, pouzitie thumbServletMissingImg_/images/cesta/ibrazok.jpg je stary format,
@@ -325,7 +335,20 @@ public class ThumbServlet extends HttpServlet
 				return;
 			}
 
-			String realPathSmall = realPathSmall(imagePath, width, height, ip, noIp, fillColor, q);
+			GalleryBean branchCrop = null;
+			String branchResizeMode = null;
+			if (branchPreview) {
+				if (ip > 0 && !branchSource.working()) {
+					branchCrop = GalleryDB.getGalleryBean("/"+imagePath, request);
+					var original = BranchFiles.thumbnailSource(GalleryDB.getImagePathOriginal("/"+imagePath));
+					if (original != null) imageFile = original.file();
+				}
+				if (ip < 1) branchResizeMode = GalleryDB.getResizeMode("/"+imagePath.substring(0, imagePath.lastIndexOf('/')));
+				realPath = imageFile.getAbsolutePath();
+			}
+			String realPathSmall = branchPreview
+				? getImagePathCache(BranchFiles.thumbnailCachePath(imagePath, imageFile, branchCrop, branchResizeMode), width, height, ip, noIp, fillColor, q)
+				: realPathSmall(imagePath, width, height, ip, noIp, fillColor, q);
 
 			//skontroluj cache
 			IwcmFile smallImageFile = new IwcmFile(realPathSmall);
@@ -372,7 +395,7 @@ public class ThumbServlet extends HttpServlet
 					return;
 				}
 
-				if (canPost == true) {
+				if (canPost == true && !branchPreview) {
 					boolean isSizeAllowd = isSizeAllowed(realPathSmall, user);
 					if (isSizeAllowd == false)
 					{
@@ -384,7 +407,7 @@ public class ThumbServlet extends HttpServlet
 
 				String thumbWriteServer = Constants.getString("thumbWriteServer");
 				String thumbWriteNodeName = Constants.getString("thumbWriteNodeName");
-				if (Tools.isNotEmpty(thumbWriteServer) && Tools.isNotEmpty(thumbWriteNodeName) && thumbWriteNodeName.equals(Constants.getString("clusterMyNodeName"))==false)
+				if (!branchPreview && Tools.isNotEmpty(thumbWriteServer) && Tools.isNotEmpty(thumbWriteNodeName) && thumbWriteNodeName.equals(Constants.getString("clusterMyNodeName"))==false)
 				{
 					//toto sa deje na sport24 kde public nody nemaju write pravo, musim teda spravit get na CMS nod aby sa obrazok vygeneroval
 					//sprav get na thumb servlet
@@ -398,18 +421,19 @@ public class ThumbServlet extends HttpServlet
 					int ret = -1;
 					if (ip < 1)
 					{
-						ret = GalleryDB.resizePicture(realPath, realPathSmall, width, height);
+						ret = branchPreview ? GalleryDB.resizePicture(realPath, realPathSmall, width, height, branchResizeMode, false)
+							: GalleryDB.resizePicture(realPath, realPathSmall, width, height);
 					}
 					else
 					{
 						String testPath = "/"+imagePath;
 
-						GalleryBean bean = GalleryDB.getGalleryBean("/"+imagePath, request);
+						GalleryBean bean = branchPreview ? branchCrop : GalleryDB.getGalleryBean("/"+imagePath, request);
 
 						//ziskajme orig obrazok, kedze v galerii sa nastavuje crop na orig obrazku
 						String origPath = GalleryDB.getImagePathOriginal("/"+imagePath);
 						IwcmFile origPathFile = new IwcmFile(Tools.getRealPath(origPath));
-						if (origPathFile.exists())
+						if (!branchPreview && origPathFile.exists())
 						{
 							imageFile = origPathFile;
 							testPath = origPath;
@@ -420,7 +444,7 @@ public class ThumbServlet extends HttpServlet
 						int cleft = 0;
 						int ctop = 0;
 						//w a h urcime na zaklade aktualneho obrazku (akoze zvoleny cely obrazok)
-						int[] imageSize = GalleryDBTools.getImageSize(new IwcmFile(PathFilter.getRealPath(testPath)));
+						int[] imageSize = GalleryDBTools.getImageSize(branchPreview ? imageFile : new IwcmFile(PathFilter.getRealPath(testPath)));
 
 						int cwidth = imageSize[0];
 						int cheight = imageSize[1];
@@ -644,7 +668,7 @@ public class ThumbServlet extends HttpServlet
             response.setContentType(mimeType);
 
             // Cache placeholders by the same policy to avoid repeated conversion attempts on reload.
-            PathFilter.setStaticContentHeaders(imagePath, UsersDB.getCurrentUser(request), request, response);
+            if (!branchPreview) PathFilter.setStaticContentHeaders(imagePath, UsersDB.getCurrentUser(request), request, response);
 
             ServletOutputStream out = response.getOutputStream();
             byte[] buff = new byte[64000];

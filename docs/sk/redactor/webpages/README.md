@@ -2,6 +2,8 @@
 
 ## Základná práca
 
+Viacero zmien pre jednu kampaň možno pripravovať v [publikačnom balíku](publishing-packages.md). Experimentálna funkcia je dostupná až po zapnutí správcom na overenom prostredí.
+
 ### Výber domény
 
 V ľavom menu sa pre viac doménové web sídla zobrazuje výber domény. V stromovej štruktúre stránok sa zobrazujú len priečinky so zvolenej domény a priečinky, ktoré nemajú doménu nastavenú.

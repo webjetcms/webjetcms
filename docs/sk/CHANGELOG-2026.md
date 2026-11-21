@@ -48,6 +48,34 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Pracovné verzie - náhľad webu zobrazuje kompaktný plávajúci panel vpravo dole s názvom verzie a prípadným termínom publikovania. Používa farbu verzie z administrácie a jeho vzhľad možno prepísať v CSS šablóny. Panel neprekrýva sticky hlavička a nezobrazuje priebežne sa meniaci čas Noviniek.
+
+- Pracovné verzie - editor stránok a priečinkov už nezobrazuje všeobecný modrý informačný banner. Zvolenú verziu ukazuje prepínač v hlavičke; v editore zostávajú konkrétne upozornenia pri obsahu iba na čítanie.
+
+- Pracovné verzie - odkaz v hlavičke otvára kartu Zmeny s filtrovaním položiek podľa typu a problémov. Termín sa nastavuje štandardným dátumovým poľom na karte Plán publikovania. Samotné uloženie termínu nechá verziu rozpracovanú. Spoločná akcia publikovania automaticky uloží rozpracované nastavenia; bez termínu spustí merge ihneď, s termínom pripraví verziu pre CRON a zobrazí štandardné žlté oznámenie s nadpisom Pracovné verzie, dátumom a časom. Akcia je dostupná z nástrojov tabuľky aj z editora.
+
+- Pracovné verzie - správa v samostatnej tabuľke v ľavom menu, vytváranie a úprava názvu, poznámky a farby výlučne cez štandardný DataTable editor. Kontrola zmien a úprava webu sú dostupné ako akcie označeného riadka; horný prepínač obsahuje výber verzie a odkaz na správu. Správa, API, náhľad a cron používajú štandardné `domainId`; funkcia vyžaduje oddelené domény cez `enableStaticFilesExternalDir=true`. Metadáta sa ukladajú cez JPA so štandardným auditom. Pracovnú verziu možno zmazať v každom stave aj s jej pracovnými dátami a súkromnými súbormi, bez čakania na publikovanie; publikovaný web zostáva zachovaný. Publikovanie a pokračovanie spracúva jediná pevná úloha na pozadí, predvolene každých päť minút; požiadavky a termíny sú uložené pri pracovných verziách. Export a import sú skryté.
+
+- Pracovné verzie - opravené ukladanie stránok a pridávanie či úprava priečinkov pod staršími koreňmi bez vyplnenej domény alebo s hodnotou `default`. Nedostatočné oprávnenia zobrazia preložený dôvod namiesto samotného `403 FORBIDDEN`.
+
+- Pracovné verzie - zapnutie už nevyžaduje dodatočné ručné potvrdenie jednej zapisovateľnej databázy. Súkromné súbory sa predvolene ukladajú do automaticky vytvoreného `/WEB-INF/branches`; vlastná cesta je voliteľná. Pracovné súbory sa nezahŕňajú do distribučného WAR ani Gitu.
+
+- Pracovné verzie - prepínač pri chybe načítania zobrazí preložené hlásenie a umožní pokus zopakovať.
+
+- Pracovné verzie - vytvorenie a úprava priečinka už nezlyhá na starších stránkach s prázdnymi perex kategóriami uloženými ako `,null,`.
+
+- Pracovné verzie - náhľad aplikácie v CKEditore sa načíta v kontexte pracovnej verzie bez dialógu prechodu do hlavnej verzie.
+
+- Pracovné verzie - ukladanie textu stránky už neblokujú interné synchronizačné polia, ktoré sa neposielajú cez JSON. Zachovávajú sa ich serverové hodnoty. Náhľady vložených aplikácií vrátane formulárov používajú bežné vykresľovanie bez osobitného whitelistu rendererov.
+
+- Pracovné verzie - verejné volania z `/components`, `/apps` a `/templates` už neblokujú načítanie CSS/JS cez `combine.jsp` ani nezobrazujú dialóg hlavnej verzie. V `/components` a `/apps` sa administrácia rozlišuje podľa `admin` v ceste. Náhľad obrázkov používa existujúci `ThumbServlet` so všetkými jeho parametrami vrátane `ip=6`; pracovné súbory a cache zostávajú súkromné.
+
+- Pracovné verzie - pôvodná migrácia spolu s vytvorením branch tabuliek konvertuje obsahové tabuľky, histórie a mediálne väzby na InnoDB; existujúce InnoDB tabuľky a ich FULLTEXT indexy sa neprebudovávajú. Generátor ID môže zostať na MyISAM.
+
+- Pracovné verzie - porovnanie webových stránok má novú kartu **Obsah stránky** s vykreslenou hlavnou a pracovnou verziou, synchronizovaným posúvaním a voliteľným zvýraznením rozdielov. Karty **Obsah stránky** a **HTML kód** sú dostupné iba pre webové stránky.
+
+- [Publikačné balíky (POC)](redactor/webpages/publishing-packages.md) - v hlavičke administrácie môžete vybrať pracovnú verziu aktuálnej domény a cez ľavé menu ju vytvoriť alebo upraviť. Tím môže pripravovať stránky, priečinky, médiá a súbory v spoločnej pracovnej verzii, skontrolovať menu a Novinky v náhľade, vyriešiť konflikty a publikovať balík ručne alebo v jednom termíne. ID zostávajú zachované; priebeh ukáže zastavenie a umožní overené pokračovanie. Pilot s 20 stránkami a tromi účtami overil aj anonymný verejný výsledok. Funkcia zostáva **predvolene vypnutá** a obmedzená na overený MariaDB/InnoDB profil; pôvodné Novinky a LIVE schvaľovanie, zrkadlenie a multigroup pri off/on majú [doložené výsledky P08](../research/publish-packages/P08-vysledky.md#doplnenie-t16-a-t13-nad-6fb0a30c9). [Návod správcu](admin/setup/publishing-packages.md) opisuje proxy, cron `all-admin`, zapnutie/vypnutie a obnovu rezervovaných ID. Produkčné zapnutie vyžaduje samostatné overenie konkrétneho nasadenia.
+
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">
@@ -422,6 +450,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
 
 ### Pre programátora
+
+- Pracovné verzie - pridaný experimentálny náhľad pripravených stránok, menu, Noviniek a súborov na admin hostiteľovi. Funkcia je predvolene vypnutá a zatiaľ overená iba na samostatnom MariaDB 12.2/InnoDB POC profile; redakčné ukladanie ani publikovanie balíka ešte nie sú dostupné.
+
+- Publikačné balíky - pridaný vypnutý POC základ úložiska, kontextu, stabilných ID a porovnávania zmien. Podporený testovací profil a hranice ďalších etáp sú v [technických výsledkoch P02](../research/publish-packages/P02-vysledky.md).
 
 #### Prelomové zmeny
 

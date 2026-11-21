@@ -953,7 +953,8 @@ public class PathFilter implements Filter
 			//files adresar musime nechat povoleny kvoli linkam z fulltext indexu (/files/subor.xls.html) a presmerovaniu na subor.xls
 			if (path.startsWith("/images")==false && path.startsWith("/css")==false && path.startsWith("/jscripts")==false && path.startsWith("/templates")==false)
 			{
-				if (Constants.getBoolean("ABTesting")==true)
+				// A/B selection uses LIVE variants; branch URLs must resolve only through the selected effective view.
+				if (Constants.getBoolean("ABTesting")==true && !sk.iway.iwcm.branch.BranchContexts.current(req).isBranch())
 				{
 					accessDocId = ABTesting.getVirtualPathDocId(path, domain, req, res);
 				}
@@ -967,7 +968,8 @@ public class PathFilter implements Filter
 			if (accessDocId > 0)
 			{
 				//kontrola spravnosti domeny
-				if (!checkDomain(req))
+				// BranchFilter already authorized the logical domain; this legacy check compares the admin transport host.
+				if (!sk.iway.iwcm.branch.BranchContexts.current(req).isBranch() && !checkDomain(req))
 				{
 					Logger.debug(PathFilter.class, "checkDomain=false, forwarding to 404.jsp");
 					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -1492,7 +1494,29 @@ public class PathFilter implements Filter
 		return (ret);
 	}
 
-	private boolean checkAccessToAdmin(String path, HttpServletRequest request, HttpServletResponse response)
+    /**
+     * Applies the existing administration checks before an early gateway consumes or rewrites the URL.
+     * @return true when processing may continue; false when the response has already been handled
+     */
+    public static boolean checkAdminRequest(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        if (!checkAdmin(request)) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return false;
+        }
+        if (Constants.getBoolean("adminRequireSSL") && !Tools.isSecure(request)) {
+            response.sendRedirect(getHttpsRedirectUrl(request));
+            return false;
+        }
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        if (!checkAccessToAdmin(path, request, response)) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return false;
+        }
+        return true;
+    }
+
+	private static boolean checkAccessToAdmin(String path, HttpServletRequest request, HttpServletResponse response)
 	{
 		boolean isAdminUrlAccessible = true;
         Identity user = UsersDB.getCurrentUser(request.getSession());
@@ -2731,6 +2755,7 @@ public class PathFilter implements Filter
 	public static String getHttpsRedirectUrl(HttpServletRequest request)
 	{
 		String path = PathFilter.getOrigPath(request);
+        if (path == null || path.isBlank()) path = request.getRequestURI();
 		String qs = request.getQueryString();
 		StringBuilder url = new StringBuilder("https://").append(Tools.getServerName(request)).append(path);
 		if (Tools.isNotEmpty(qs)) url.append('?').append(qs);

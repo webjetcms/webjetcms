@@ -816,6 +816,7 @@ public class WebpagesService {
 			boolean loadSubQueries = ProcessItemAction.GETONE.equals(action);
 			def.fromDocDetails(entity, loadSubQueries, addFields);
 			entity.setEditorFields(def);
+            if (entity instanceof DocDetails details) sk.iway.iwcm.branch.BranchEditor.attachHash(details);
         }
         return entity;
     }
@@ -894,6 +895,8 @@ public class WebpagesService {
 	 * @return
 	 */
     public static DatatablePageImpl<DocDetails> getAllItems(GetAllItemsDocOptions options) {
+        // JPA sees only LIVE rows; combine LIVE/WORK before applying permissions, filters, count and paging.
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return preparePage(sk.iway.iwcm.branch.BranchDocumentQuery.list(options),options);
         Page<DocDetails> page = null;
 
 		if(options.getGroupId() == Constants.getInt("systemPagesRecentPages")) {
@@ -1245,6 +1248,8 @@ public class WebpagesService {
     }
 
 	public static DocDetails getOneItem(long id, int groupId, int historyId, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository, List<NotifyBean> notifyList, HttpServletRequest request) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return editorFacade.getDocForEditor((int)id,historyId,groupId);
+
 		if (groupId == Constants.getInt("systemPagesDocsToApprove")) {
             //pre tento pripad mame otocene docid a historyid, ale principialne dostavame v id hodnotu historyid, takze to potrebujeme takto nacitat
             historyId = (int)id;
