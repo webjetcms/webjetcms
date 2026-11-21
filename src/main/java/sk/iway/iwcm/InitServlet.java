@@ -806,6 +806,7 @@ public class InitServlet extends HttpServlet
 		{
 			sk.iway.iwcm.Logger.error(ex);
 			Logger.println(InitServlet.class,"   Database connection: [FAILED]");
+			return false;
 		}
 		finally
 		{

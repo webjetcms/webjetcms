@@ -34,6 +34,12 @@ Zoznam všetkých REST služieb môžete získať pri lokálnom spustení WebJET
 
 ![](swagger.png)
 
+## Zamietnutie prístupu
+
+Ak je používateľ prihlásený, ale nemá oprávnenie na požadovanú REST službu, odpoveď má HTTP stav `403 Forbidden`. Platí to aj pri prihlásení cez API kľúč alebo Basic Auth. Odpoveď neobsahuje hlavičku `WWW-Authenticate`, takže v prehliadači nevyvolá ďalší prihlasovací dialóg.
+
+Pri neprihlásenej požiadavke môže zamietnutie prístupu vrátiť `401 Unauthorized` s výzvou Basic Auth, ak je táto metóda povolená v konfiguračnej premennej `springSecurityAllowedAuths`.
+
 ## Technické informácie
 
 Autorizácia je zabezpečená pomocou ```SpringSecurity``` filtra implementovaného v triede ```sk.iway.iwcm.system.spring.ApiTokenAuthFilter```. Filter je inicializovaný v ```sk.iway.webjet.v9.V9SpringConfig.configureSecurity```. Technicky prebehne štandardné prihlásenie zadaného používateľa, následne po vykonaní HTTP požiadavky je ```session``` invalidovaná.

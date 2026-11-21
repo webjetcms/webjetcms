@@ -318,6 +318,7 @@ dependencies {
     testImplementation 'org.hamcrest:hamcrest:2.2'
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
     testImplementation 'org.mockito:mockito-core:5.18.0'
+    testImplementation "org.springframework.security:spring-security-test:${springSecurityVersion}"
     testRuntimeOnly 'org.glassfish:jakarta.el:5.0.0-M1'
     // Allure - temporarily disabled until allure-junit6 is available
     //testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
