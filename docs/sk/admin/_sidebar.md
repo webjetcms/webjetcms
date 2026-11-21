@@ -4,7 +4,7 @@
 
 - Konfigurácia
   - [Konfigurácia](/admin/setup/configuration/README.md)
-  - [Publikačné balíky: správa a obnova](/admin/setup/publishing-packages.md)
+  - [Publikačné balíky](/admin/setup/publishing-packages.md)
   - [Úvodná obrazovka](/admin/setup/configuration/dashboard.md)
   - [Jazyky](/admin/setup/languages.md)
   - [Prekladač](/admin/setup/translation.md)
