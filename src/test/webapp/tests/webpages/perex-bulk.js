@@ -51,7 +51,7 @@ Scenario('Selection, cancellation and persisted perex group deltas', async ({ I,
 Scenario('Both perex group actions require pageSave permission', async ({ I, DT, DTE }) => {
     await createPages(I, DT, DTE);
     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67&removePerm=pageSave');
-    DT.waitForLoader();
+    I.waitForVisible(menu, 20);
     I.clickCss(menu);
     I.dontSeeElement('.buttons-addPerexGroup');
     I.dontSeeElement('.buttons-removePerexGroup');
