@@ -53,7 +53,10 @@ public final class BranchScheduler {
                 catch(Exception ex){Logger.error(BranchScheduler.class,ex);}
                 finally{SetCharacterEncodingFilter.setCurrentRequestBean(previous);BranchView.invalidate();}
             }
-            if(includeScheduled)publishScheduled(branches,previous);
+            if (includeScheduled) {
+                publishScheduled(branches, previous);
+                branches.retryDeletions();
+            }
         }catch(Exception ex){Logger.error(BranchScheduler.class,ex);}
         finally {
             try {SetCharacterEncodingFilter.unRegisterDataContext();}

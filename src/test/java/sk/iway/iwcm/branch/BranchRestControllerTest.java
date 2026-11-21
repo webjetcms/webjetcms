@@ -82,11 +82,13 @@ class BranchRestControllerTest extends BaseWebjetTest {
     }
 
     @Test void inheritedEditCopiesMetadataAndPreservesOperationalFields() {
+        ReflectionTestUtils.setField(controller, "branches", new BranchService(repository));
         var stored=new BranchEntity();stored.setId(42L);stored.setDomainId(1);stored.setName("Original");
         stored.setState("SCHEDULED");stored.setRevision(12L);stored.setCreatedBy(3);
         stored.setCreatedAt(new Timestamp(1000));stored.setUpdatedAt(new Timestamp(2000));stored.setPublishAt(new Timestamp(3000));
         var input=new BranchEntity();input.setId(42L);input.setDomainId(1);input.setName("  Campaign  ");input.setDescription("Note");input.setColor("lavender");
         input.setState("MERGED");input.setRevision(999L);input.setCreatedBy(99);input.setPublishAt(new Timestamp(3000));
+        when(repository.lockMetadata(42L,1)).thenReturn(Optional.of(stored));
         when(repository.existsById(42L)).thenReturn(true);
         when(repository.findFirstByIdAndDomainId(42L,1)).thenReturn(Optional.of(stored));
         when(repository.save(any())).thenAnswer(call->call.getArgument(0));

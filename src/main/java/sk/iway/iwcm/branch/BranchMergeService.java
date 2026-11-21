@@ -653,7 +653,16 @@ public final class BranchMergeService {
     }
 
     private static Map<String,Object> branch(Connection c,long id,String domain,long revision,boolean lock)throws SQLException {
-        try(PreparedStatement s=c.prepareStatement("SELECT * FROM branches WHERE id=? AND domain_id=?"+(lock?" FOR UPDATE":""))){s.setLong(1,id);s.setInt(2,BranchDomains.id(domain));try(ResultSet r=s.executeQuery()){if(!r.next())throw new ResponseStatusException(HttpStatus.NOT_FOUND);Map<String,Object> row=new LinkedHashMap<>();for(int i=1;i<=r.getMetaData().getColumnCount();i++)row.put(r.getMetaData().getColumnName(i),r.getObject(i));if(revision>=0&&((Number)row.get("revision")).longValue()!=revision)throw conflict("Balík sa zmenil. Obnovte porovnanie.");return row;}}
+        try (PreparedStatement s = c.prepareStatement("SELECT * FROM branches WHERE id=? AND domain_id=?" + (lock ? " FOR UPDATE" : ""))) {
+            s.setLong(1, id);
+            s.setInt(2, BranchDomains.id(domain));
+            try (ResultSet r = s.executeQuery()) {
+                if (!r.next()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                BranchService.requireNotDeleting(r.getString("state"));
+                if (revision >= 0 && r.getLong("revision") != revision) throw conflict("Balík sa zmenil. Obnovte porovnanie.");
+                return BranchPublishRows.row(r);
+            }
+        }
     }
     private static void bump(Connection c,long id,int user)throws SQLException {try(PreparedStatement s=c.prepareStatement("UPDATE branches SET revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE id=?")){s.setInt(1,user);s.setLong(2,id);s.executeUpdate();}}
     private static ResponseStatusException conflict(String message){return new ResponseStatusException(HttpStatus.CONFLICT,message);}

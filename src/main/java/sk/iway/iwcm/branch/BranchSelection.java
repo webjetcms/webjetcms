@@ -29,8 +29,8 @@ public final class BranchSelection {
             return BranchContext.live(domain, user.getUserId());
         if (selected.branchId() == 0) return BranchContext.live(domain, user.getUserId());
         BranchEntity branch = findBranch(selected.branchId(), domain);
-        if (isClosed(branch)) {
-            if (!clearClosed) throw closedBranch();
+        if (isUnavailable(branch)) {
+            if (!clearClosed) throw unavailableBranch(branch);
             synchronized (session) {
                 // Another tab may already have changed the selection while we were reading the package.
                 if (selected.equals(session.getAttribute(SESSION_KEY))) {
@@ -53,23 +53,23 @@ public final class BranchSelection {
 
     public static BranchEntity requireBranch(long id, String domain) {
         BranchEntity branch = findBranch(id, domain);
-        if (isClosed(branch)) throw closedBranch();
+        if (isUnavailable(branch)) throw unavailableBranch(branch);
         return branch;
     }
 
-    private static boolean isClosed(BranchEntity branch) {
-        return "MERGED".equals(branch.getState()) || "CANCELLED".equals(branch.getState());
+    private static boolean isUnavailable(BranchEntity branch) {
+        return branch == null || "MERGED".equals(branch.getState()) || "CANCELLED".equals(branch.getState()) || "DELETING".equals(branch.getState());
     }
 
-    private static ResponseStatusException closedBranch() {
+    private static ResponseStatusException unavailableBranch(BranchEntity branch) {
+        if (branch == null) return new ResponseStatusException(HttpStatus.NOT_FOUND, "Publishing package not found");
         return new ResponseStatusException(HttpStatus.CONFLICT, "Publishing package is closed; reload the administration screen");
     }
 
     private static BranchEntity findBranch(long id, String domain) {
         try {BranchReadiness.verify();}
         catch(SQLException|IllegalStateException ex) {throw new ResponseStatusException(HttpStatus.CONFLICT,"Branch prerequisites failed: "+ex.getMessage(),ex);}
-        return BranchService.getInstance().find(id, domain).orElseThrow(() ->
-            new ResponseStatusException(HttpStatus.NOT_FOUND, "Publishing package not found"));
+        return BranchService.getInstance().find(id, domain).orElse(null);
     }
 
     /** The gateway resolves the logical domain from server metadata, never from its query string. */

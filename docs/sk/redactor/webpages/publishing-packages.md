@@ -58,6 +58,8 @@ V tabuľke **Pracovné verzie** označte jednu alebo viac verzií a kliknite na 
 
 Zmazať môžete verziu v ktoromkoľvek stave, vrátane naplánovanej a publikovanej, bez čakania na bežiace publikovanie. Po zmazaní aktívnej verzie sa administrácia prepne na **Hlavnú verziu**.
 
+Ak sa mazanie preruší, verzia zostane v tabuľke so stavom **Mazanie**. Dokončíte ho opätovným kliknutím na **Zmazať**, prípadne ho zopakuje plánovač. V tomto stave je dostupné iba mazanie.
+
 Export a import nie sú dostupné, pretože samotné metadáta verzie neobsahujú jej pracovný obsah a súbory.
 
 ## Čo v POC pripraviť mimo balíka

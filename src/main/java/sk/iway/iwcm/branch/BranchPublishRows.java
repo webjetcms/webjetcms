@@ -106,7 +106,7 @@ final class BranchPublishRows {
     }
 
     static void checkpoint(Connection connection,BranchType type,Map<String,Object> work,String state,String phase,String hash,String error) throws SQLException {
-        try(PreparedStatement statement=connection.prepareStatement("UPDATE `"+type.workTable()+"` SET apply_state=?,apply_phase=?,applied_hash=?,apply_error=? WHERE row_id=? AND branch_id=?")) {
+        try(PreparedStatement statement=connection.prepareStatement("UPDATE `"+type.workTable()+"` w SET apply_state=?,apply_phase=?,applied_hash=?,apply_error=? WHERE row_id=? AND branch_id=? AND EXISTS (SELECT 1 FROM branches b WHERE b.id=w.branch_id AND b.state='MERGING')")) {
             statement.setString(1,state);statement.setString(2,phase);statement.setString(3,hash);statement.setString(4,error);
             statement.setLong(5,((Number)work.get("row_id")).longValue());statement.setLong(6,((Number)work.get("branch_id")).longValue());
             if(statement.executeUpdate()!=1)throw new SQLException("Publication checkpoint disappeared");

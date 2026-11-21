@@ -2,9 +2,13 @@ package sk.iway.iwcm.branch;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
@@ -16,9 +20,23 @@ public interface BranchRepository extends DomainIdRepository<BranchEntity, Long>
     List<BranchEntity> findAllByStateAndPublishAtLessThanEqualOrderByPublishAtAscIdAsc(String state, Timestamp at);
     List<BranchEntity> findAllByStateAndPublishRequestedByIsNotNullOrderByIdAsc(String state);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM BranchEntity b WHERE b.id=:id AND b.domainId=:domainId")
+    Optional<BranchEntity> lockMetadata(@Param("id") long id, @Param("domainId") int domainId);
+
     @Modifying
-    @Query("DELETE FROM BranchEntity b WHERE b.id=:id AND b.domainId=:domainId AND b.revision=:revision")
-    int deleteRevision(@Param("id") long id, @Param("domainId") int domainId, @Param("revision") long revision);
+    @Query("UPDATE BranchEntity b SET b.state='DELETING', b.revision=b.revision+1, b.updatedBy=:actor, b.updatedAt=:now WHERE b.id=:id AND b.domainId=:domainId AND b.revision=:revision")
+    int markDeleting(@Param("id") long id, @Param("domainId") int domainId, @Param("revision") long revision,
+            @Param("actor") int actor, @Param("now") Timestamp now);
+
+    @Query("SELECT b.id FROM BranchEntity b WHERE b.state='DELETING' ORDER BY b.id")
+    List<Long> pendingDeletions();
+
+    // The request commits DELETING before this final delete runs in its own transaction.
+    @Transactional(transactionManager = "webjet2022TransactionManager", propagation = Propagation.REQUIRES_NEW)
+    @Modifying
+    @Query("DELETE FROM BranchEntity b WHERE b.id=:id AND b.state='DELETING'")
+    void finishDeletion(@Param("id") long id);
 
     @Transactional(transactionManager="webjet2022TransactionManager")
     @Modifying

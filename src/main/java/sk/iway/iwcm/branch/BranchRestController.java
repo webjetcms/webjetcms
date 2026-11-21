@@ -76,6 +76,11 @@ public class BranchRestController extends DatatableRestControllerV2<BranchEntity
     }
 
     @Override
+    public BranchEntity editItem(BranchEntity entity, long id) {
+        return branches.editMetadata(id, getDomainId(), () -> super.editItem(entity, id));
+    }
+
+    @Override
     protected void copyEntityIntoOriginal(BranchEntity entity, BranchEntity stored) {
         Timestamp previous=stored.getPublishAt();
         super.copyEntityIntoOriginal(entity,stored);
@@ -111,7 +116,7 @@ public class BranchRestController extends DatatableRestControllerV2<BranchEntity
 
     @Override
     public void getOptions(DatatablePageImpl<BranchEntity> page) {
-        page.addOptions("state", List.of("DRAFT", "SCHEDULED", "MERGING", "MERGE_FAILED", "NEEDS_ATTENTION", "MERGED", "CANCELLED")
+        page.addOptions("state", List.of("DRAFT", "SCHEDULED", "MERGING", "MERGE_FAILED", "NEEDS_ATTENTION", "MERGED", "CANCELLED", "DELETING")
             .stream().map(state -> new LabelValue(getProp().getText("branches.merge.state." + state + ".js"), state)).toList(), "label", "value", false);
         page.addOptions("color", List.of("default", "red", "peach", "amber", "mint", "cyan", "blue", "lavender", "gray")
             .stream().map(color -> new LabelValue(getProp().getText("admin.dashboard.shortcutColor." + color + ".js"), color)).toList(), "label", "value", false);

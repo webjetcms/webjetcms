@@ -5,12 +5,17 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
 
 /** Domain-scoped metadata persistence for working versions. */
 @Service
@@ -31,7 +36,7 @@ public class BranchService {
     public List<BranchEntity> list(int domainId, boolean includeClosed) {
         BranchReadiness.requireEnabled();
         return includeClosed ? repository.findAllByDomainIdOrderByIdDesc(domainId)
-            : repository.findAllByDomainIdAndStateNotInOrderByIdDesc(domainId, List.of("MERGED", "CANCELLED"));
+            : repository.findAllByDomainIdAndStateNotInOrderByIdDesc(domainId, List.of("MERGED", "CANCELLED", "DELETING"));
     }
 
     public Optional<BranchEntity> find(long id, String domainName) {
@@ -48,18 +53,56 @@ public class BranchService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,sk.iway.iwcm.i18n.Prop.getInstance().getText("branches.schedule.future"));
     }
 
-    /** Deletes the checked revision only if the user can discard every working item. */
+    /** Serializes DataTable metadata edits with the transition to DELETING. */
+    @Transactional(transactionManager = "webjet2022TransactionManager")
+    public BranchEntity editMetadata(long id, int domainId, Supplier<BranchEntity> edit) {
+        BranchEntity branch = repository.lockMetadata(id, domainId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        requireNotDeleting(branch.getState());
+        return edit.get();
+    }
+
+    static void requireNotDeleting(String state) {
+        if ("DELETING".equals(state)) throw deletionPending();
+    }
+
+    private static ResponseStatusException deletionPending() {
+        return new ResponseStatusException(HttpStatus.CONFLICT, Prop.getInstance().getText("branches.delete.pending.js"));
+    }
+
+    /** Commits deletion of the checked revision in two stages so a failed cleanup can be retried. */
     @Transactional(transactionManager = "webjet2022TransactionManager")
     public void delete(long id, int domainId, Identity user) {
         BranchReadiness.requireEnabled();
         BranchEntity branch=repository.findFirstByIdAndDomainId(id,domainId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Publishing package not found"));
         BranchMergeService.requireDiscardPermissions(branch, user);
-        if (repository.deleteRevision(id, domainId, branch.getRevision()) != 1)
+        if (!"DELETING".equals(branch.getState())
+                && repository.markDeleting(id, domainId, branch.getRevision(), user.getUserId(), Timestamp.from(Instant.now())) != 1)
             throw new ResponseStatusException(HttpStatus.CONFLICT);
-        try { BranchFiles.deleteBranch(id); }
-        catch (IOException ex) { throw new IllegalStateException("Cannot delete working version files",ex); }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                if (!finishDeletion(id)) throw deletionPending();
+            }
+        });
         BranchView.invalidate();
+    }
+
+    /** Retries committed deletions left by an interrupted request or a storage failure. */
+    void retryDeletions() {
+        for (long id : repository.pendingDeletions()) finishDeletion(id);
+    }
+
+    private boolean finishDeletion(long id) {
+        try {
+            BranchFiles.deleteBranch(id);
+            repository.finishDeletion(id);
+            return true;
+        } catch (IOException | RuntimeException ex) {
+            Logger.error(BranchService.class, "Deletion of publishing package " + id + " will be retried", ex);
+            return false;
+        }
     }
 
     /** Resolves server-owned routing metadata before the preview checks domain permissions. */

@@ -54,8 +54,7 @@ export function initBranchTable(columns, screen, api) {
         hideButtons: 'duplicate,export,import,celledit',
         order: [[columns.findIndex(column => column.data === 'id'), 'desc']]
     });
-    function selected() {
-        const rows = table.rows({selected: true}).data().toArray();
+    function selected(rows = table.rows({selected: true}).data().toArray()) {
         return rows.length === 1 ? rows[0] : null;
     }
     function addAction(index, name, glyph, label, action, extraClass = '') {
@@ -93,13 +92,27 @@ export function initBranchTable(columns, screen, api) {
         }
     }, 'buttons-divider');
     function updateActions() {
-        const branch = selected();
-        table.button('.buttons-branch-compare').enable(Boolean(branch));
+        const rows = table.rows({selected: true}).data().toArray();
+        const branch = selected(rows);
+        table.button('.buttons-edit').enable(rows.length > 0 && rows.every(row => row.state !== 'DELETING'));
+        table.button('.buttons-branch-compare').enable(Boolean(branch) && branch.state !== 'DELETING');
         table.button('.buttons-branch-preview').enable(previewStates.includes(branch?.state));
         table.button('.buttons-branch-publish').enable(publishStates.includes(branch?.state));
         table.button('.buttons-branch-open').enable(branch?.state === 'DRAFT' && Number(branch.id) !== Number(screen.branchId));
     }
     table.on('select deselect draw', updateActions);
+    table.EDITOR.on('preOpen', (event, mode, action) => {
+        if (action === 'edit' && table.EDITOR.ids().some(id => table.row('#' + id).data()?.state === 'DELETING')) {
+            WJ.notifyError(tr('delete.pending'));
+            return false;
+        }
+    });
+    table.EDITOR.on('submitError', (event, xhr) => {
+        if (xhr.status === 409) {
+            if (xhr.responseJSON?.detail) table.EDITOR.error(WJ.escapeHtml(xhr.responseJSON.detail));
+            table.ajax.reload(null, false);
+        }
+    });
     window.addEventListener('WJ.Branch.updated', () => table.ajax.reload(null, false));
 
     table.EDITOR.on('initCreate', () => {

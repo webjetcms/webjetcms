@@ -63,4 +63,16 @@ class BranchSchedulerTest {
             verify(writers.constructed().get(0)).runRequested(42L,7,6L);
         }
     }
+
+    /** The periodic admin job retries private-file cleanup even without publications to process. */
+    @Test void scheduledRunRetriesFileCleanup() {
+        BranchService branches = mock(BranchService.class);
+        try (var access = mockStatic(BranchAccess.class); var cluster = mockStatic(ClusterDB.class);
+                var readiness = mockStatic(BranchReadiness.class); var services = mockStatic(BranchService.class)) {
+            access.when(BranchAccess::isEnabled).thenReturn(true);
+            services.when(BranchService::getInstance).thenReturn(branches);
+            BranchScheduler.main(new String[0]);
+            verify(branches).retryDeletions();
+        }
+    }
 }

@@ -69,10 +69,12 @@ public final class BranchView {
             statement.setLong(1, context.branchId()); statement.setInt(2, context.domainId());
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next()) throw new IllegalStateException("Branch is absent in the verified domain");
+                String state = result.getString(1);
+                BranchService.requireNotDeleting(state);
                 Timestamp date = result.getTimestamp(2);
                 name = result.getString(3);
                 color = Objects.toString(result.getString(4),BranchEntity.DEFAULT_COLOR);
-                scheduledPreview = "SCHEDULED".equals(result.getString(1)) && date != null && date.getTime() > previewAt;
+                scheduledPreview = "SCHEDULED".equals(state) && date != null && date.getTime() > previewAt;
                 if (scheduledPreview) previewAt = date.getTime();
             }
         }

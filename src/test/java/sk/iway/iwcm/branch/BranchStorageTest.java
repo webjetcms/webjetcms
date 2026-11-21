@@ -25,10 +25,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Constants;
@@ -46,6 +49,7 @@ class BranchStorageTest extends BranchJpaTest {
     static final String URL="jdbc:mariadb://127.0.0.1:33316/webjet_p01";
     private final List<Long> branches=new ArrayList<>();
     @Autowired BranchRepository metadataRepository;
+    @Autowired PlatformTransactionManager transactionManager;
     @Autowired Validator validator;
 
     @BeforeEach void configure() throws Exception {
@@ -323,6 +327,111 @@ class BranchStorageTest extends BranchJpaTest {
                 () -> branchService().delete(withPage.branchId(), withPage.domainId(), user));
         assertEquals(403, denied.getStatusCode().value());
         assertTrue(branchService().find(withPage.branchId(), withPage.domainId()).isPresent());
+    }
+
+    /** Rolling back the request preserves the editable package and all private copies. */
+    @Test @Order(2) void rolledBackDeletionKeepsPrivateFiles(@TempDir Path storage) throws Exception {
+        Constants.setString("branchStorageRoot", storage.toString());
+        var context = branch("autotest rollback deletion");
+        long id = context.branchId();
+        var file = new BranchStore().putFile(context, "/files/autotest-rollback.txt", "FILE",
+                BranchSnapshot.absent(), "a".repeat(64), 5L, "text/plain", false);
+        Path work = BranchFiles.workPath(id, ((Number)file.get("row_id")).longValue());
+        Files.createDirectories(work.getParent());
+        for (String name : List.of("content", "base", "publish-backup")) Files.writeString(work.resolveSibling(name), name);
+        Identity user = editor(metadataRepository).getUser();
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            branchService().delete(id, context.domainId(), user);
+            assertTrue(metadataRepository.pendingDeletions().contains(id));
+            assertTrue(Files.exists(work));
+            status.setRollbackOnly();
+        });
+
+        assertEquals("DRAFT", branchService().find(id, context.domainId()).orElseThrow().getState());
+        try (Connection c = connect()) {
+            assertEquals(1, BranchPublishRows.rows(c, id, BranchType.FILE).size());
+        }
+        for (String name : List.of("content", "base", "publish-backup")) assertEquals(name, Files.readString(work.resolveSibling(name)));
+    }
+
+    /** A partially deleted package stays visible and the editor can retry the same Delete action. */
+    @Test @Order(2) void failedFileDeletionAllowsOnlyRetry(@TempDir Path storage) throws Exception {
+        Constants.setString("branchStorageRoot", storage.toString());
+        var context = branch("autotest retry deletion");
+        long id = context.branchId();
+        var file = new BranchStore().putFile(context, "/files/autotest-retry.txt", "FILE",
+                BranchSnapshot.absent(), "a".repeat(64), 5L, "text/plain", false);
+        Path content = BranchFiles.workPath(id, ((Number)file.get("row_id")).longValue());
+        Files.createDirectories(content.getParent());
+        Files.writeString(content, "draft");
+        Path thumbnails = storage.resolve("thumbs").resolve(Long.toString(id));
+        Files.createDirectories(thumbnails.getParent());
+        Files.writeString(thumbnails, "Not a directory");
+
+        var controller = editor(metadataRepository);
+        var entity = branchService().find(id, context.domainId()).orElseThrow();
+        var remove = new DatatableRequest<Long,BranchEntity>();
+        remove.setAction("remove");
+        remove.setData(Map.of(id, entity));
+        assertEquals(409, assertThrows(ResponseStatusException.class,
+                () -> controller.handleEditor(controller.getRequest(), remove)).getStatusCode().value());
+        assertEquals("DELETING", branchService().find(id, context.domainId()).orElseThrow().getState());
+        assertFalse(Files.exists(content));
+        assertTrue(metadataRepository.pendingDeletions().contains(id));
+        assertTrue(branchService().list(context.domainId(), false).stream().noneMatch(b -> b.getId() == id));
+        assertTrue(controller.searchItem(Map.of("searchId", Long.toString(id)), PageRequest.of(0, 10), new BranchEntity())
+                .stream().anyMatch(b -> b.getId() == id && "DELETING".equals(b.getState())));
+        assertEquals(409, assertThrows(ResponseStatusException.class,
+                () -> editMetadata(id, context.domainId(), "changed", null, "cyan")).getStatusCode().value());
+        assertEquals(409, assertThrows(ResponseStatusException.class,
+                () -> BranchSelection.requireBranch(id, context.domainName())).getStatusCode().value());
+        assertEquals(409, assertThrows(ResponseStatusException.class,
+                () -> new BranchMergeService().detail(id, context.domainName(), controller.getUser())).getStatusCode().value());
+        assertEquals(409, assertThrows(ResponseStatusException.class,
+                () -> new BranchMergeService().enqueue(id, context.domainName(), controller.getUser(), entity.getRevision(), "", false)).getStatusCode().value());
+        try (var ignored = BranchContexts.open(null, context)) {
+            assertEquals(409, assertThrows(ResponseStatusException.class, BranchView::current).getStatusCode().value());
+        }
+        try (Connection c = connect()) {
+            assertThrows(SQLException.class, () -> BranchPublishRows.checkpoint(c, BranchType.FILE, file, "DONE", "EFFECTS", null, null));
+        }
+
+        Files.delete(thumbnails);
+        Files.createDirectory(thumbnails);
+        Files.writeString(thumbnails.resolve("preview.png"), "thumbnail");
+        controller.getUser().setWritableFolders("/elsewhere/");
+        assertEquals(403, assertThrows(ResponseStatusException.class,
+                () -> controller.handleEditor(controller.getRequest(), remove)).getStatusCode().value());
+        controller.getUser().setWritableFolders("/files/");
+        controller.handleEditor(controller.getRequest(), remove);
+        assertFalse(Files.exists(thumbnails));
+        assertTrue(branchService().find(id, context.domainId()).isEmpty());
+    }
+
+    /** A failure of the final database delete leaves a durable retry even when all files are gone. */
+    @Test @Order(2) void schedulerRetriesFailedFinalDeletion(@TempDir Path storage) throws Exception {
+        Constants.setString("branchStorageRoot", storage.toString());
+        var context = branch("autotest final deletion failure");
+        long id = context.branchId();
+        Path content = BranchFiles.workPath(id, 1);
+        Files.createDirectories(content.getParent());
+        Files.writeString(content, "draft");
+        try (Connection c = connect()) {
+            String trigger = "autotest_fail_branch_delete_" + id;
+            execute(c, "CREATE TRIGGER " + trigger + " BEFORE DELETE ON branches FOR EACH ROW IF OLD.id=" + id
+                    + " THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='autotest final delete'; END IF");
+            try {
+                assertEquals(409, assertThrows(ResponseStatusException.class,
+                        () -> branchService().delete(id, context.domainId(), editor(metadataRepository).getUser())).getStatusCode().value());
+                assertFalse(Files.exists(content));
+                assertEquals("DELETING", branchService().find(id, context.domainId()).orElseThrow().getState());
+            } finally {
+                execute(c, "DROP TRIGGER " + trigger);
+            }
+        }
+        branchService().retryDeletions();
+        assertTrue(branchService().find(id, context.domainId()).isEmpty());
     }
 
     /** Repository and DataTable reads enforce the numeric domain scope. */

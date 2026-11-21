@@ -11,6 +11,9 @@ import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -325,14 +328,17 @@ class BranchFilterTest {
         filter.doFilter(request,response,(in,out)->fail("Unscoped LIVE write dispatched"));assertEquals(409,response.getStatus());
     }
 
-    @Test void reloadingBranchManagementAfterPublicationReturnsToLive() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"MERGED", "DELETING"})
+    @NullSource
+    void reloadingBranchManagementReturnsToLiveWhenTheSelectedPackageIsUnavailable(String state) throws Exception {
         selection.close();
-        var published = new BranchEntity();
-        published.setId(42L);
-        published.setDomainId(1);
-        published.setState("MERGED");
+        var stored = new BranchEntity();
+        stored.setId(42L);
+        stored.setDomainId(1);
+        stored.setState(state);
         var service = mock(BranchService.class);
-        when(service.find(42L, DOMAIN)).thenReturn(Optional.of(published));
+        when(service.find(42L, DOMAIN)).thenReturn(state == null ? Optional.empty() : Optional.of(stored));
         var previous = new BranchSelection.Selected(42, 1);
         request.getSession().setAttribute(BranchSelection.SESSION_KEY, previous);
         request.getSession().setAttribute(BranchProductionSection.ATTRIBUTE, new Object());
@@ -345,7 +351,7 @@ class BranchFilterTest {
             request.setParameter("branchId", "42");
             request.setParameter("branchDomain", "1");
             filter.doFilter(request, response, (in, out) -> fail("An explicit WORK request must never switch to LIVE"));
-            assertEquals(409, response.getStatus());
+            assertEquals(state == null ? 404 : 409, response.getStatus());
             assertEquals(previous, request.getSession().getAttribute(BranchSelection.SESSION_KEY));
 
             request.removeParameter("branchId");

@@ -246,7 +246,7 @@ public final class BranchPublishService {
     private void applyFile(Item item) throws SQLException,IOException {
         if(item.done())return;current=item;
         String path=item.key();
-        try(Connection connection=DBPool.getConnection()) {BranchMergeService.checkFilePlans(connection,domain,List.of(path));}
+        checkFilePublication(item);
         BranchSnapshot live=BranchFiles.liveSnapshot(path);
         String phase=Objects.toString(item.row.get("apply_phase"),"");
         if(item.row.get("applied_hash")!=null) {
@@ -302,8 +302,13 @@ public final class BranchPublishService {
         finish(item);
     }
 
-    private void requireUnchangedFile(Item item) throws SQLException {
+    private void checkFilePublication(Item item) throws SQLException {
+        BranchService.getInstance().publication(branchId);
         try(Connection connection=DBPool.getConnection()) {BranchMergeService.checkFilePlans(connection,domain,List.of(item.key()));}
+    }
+
+    private void requireUnchangedFile(Item item) throws SQLException {
+        checkFilePublication(item);
         if(!BranchFiles.liveSnapshot(item.key()).hash().equals(item.row.get("resolved_live_hash")))
             throw new IllegalStateException("File production changed before replacement: "+item.key());
     }
