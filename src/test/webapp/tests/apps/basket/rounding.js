@@ -134,7 +134,11 @@ Scenario('Four-decimal units preserve small prices and settle quantity totals to
     I.refreshPage();
     I.waitForText('4,8000', 10, '.basketPriceText + .basketPrice');
 
+    I.amOnPage(SL.PRODUCTS);
+    I.click(locate('.thumbnail h4 a').withText(micro.title));
+    I.waitForText('0,0001', 10, '.priceSpan');
     I.amOnPage('/showdoc.do?docid=' + micro.docId);
+    I.dontSee('Chyba 404');
     I.waitForText('0,0001', 10, '.priceSpan');
 });
 
