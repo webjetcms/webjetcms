@@ -413,7 +413,8 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         for (const old of completed) {
             const current = after.items.find(item => item.type === old.type && item.objectKey === old.objectKey);
             I.assertEqual(current.applyState, 'DONE');
-            I.assertEqual(current.applyPhase, old.applyPhase);
+            const expectedPhase = old.type === 'DOCUMENT' && old.applyPhase === 'EFFECTS' ? 'INDEXED' : old.applyPhase;
+            I.assertEqual(current.applyPhase, expectedPhase);
         }
         save('browser-partial-resume', {fixture, before, firstBefore, after, firstAfter});
         I.scrollTo('#branch-merge-progress');

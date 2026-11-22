@@ -9,8 +9,10 @@ import java.util.function.Consumer;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsService;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Fixed-order, checkpointed publication on the verified single-node local-filesystem profile. */
@@ -65,18 +67,30 @@ public final class BranchPublishService {
                 markNoops();
                 List<Item> groups=new ArrayList<>(items.get(BranchType.GROUP));
                 groups.sort(Comparator.comparingInt(this::groupDepth));
-                for(Item item:groups)if(item.upsert())applyDatabase(item,false);
-                BranchPublishEffects.refreshReaders();
+                if (groups.stream().anyMatch(Item::upsert)) {
+                    for (Item item : groups) if (item.upsert()) applyDatabase(item, false);
+                    // Later permission checks resolve the domain from the LIVE folder tree.
+                    GroupsDB.getInstance(true);
+                }
                 List<Item> files=new ArrayList<>(items.get(BranchType.FILE));
                 files.sort(Comparator.comparingInt(item->item.key().length()));
                 for(Item item:files)if(item.upsert())applyFile(item);
-                for(Item item:items.get(BranchType.DOCUMENT))if(item.upsert()) {applyDatabase(item,false);finish(item);}
+                List<Item> documents = items.get(BranchType.DOCUMENT);
+                for (Item page : documents) if (page.upsert()) {
+                    applyDatabase(page, false);
+                    syncPerexGroups(page);
+                }
                 for(Item item:items.get(BranchType.MEDIA))if(item.upsert()) {applyDatabase(item,false);finish(item);}
                 for(Item item:groups)if(item.upsert()) {completeGroupReferences(item);finish(item);}
                 for(Item item:items.get(BranchType.MEDIA))if(item.deleting()) {applyDatabase(item,false);finish(item);}
                 publishDeletes(groups);
                 for(Item item:files)if(item.deleting())applyFile(item);
-                BranchPublishEffects.refresh(rows(BranchType.DOCUMENT),rows(BranchType.FILE));
+                current = null;
+                BranchPublishEffects.refreshReaders();
+                for (Item page : documents) {
+                    // Older publishers recorded EFFECTS before the final folder tree was available to the index.
+                    if (!page.done() || "EFFECTS".equals(page.row.get("apply_phase"))) finish(page);
+                }
                 afterCommit.accept("FINAL_EFFECTS");
                 BranchService.getInstance().completePublication(id);
             }
@@ -86,8 +100,6 @@ public final class BranchPublishService {
             fail(id,ex);
         } finally {SetCharacterEncodingFilter.setCurrentRequestBean(previous);}
     }
-
-    private List<Map<String,Object>> rows(BranchType type) {return items.getOrDefault(type,List.of()).stream().map(item->item.row).toList();}
 
     private void markNoops() throws SQLException {
         try(Connection connection=DBPool.getConnection()) {
@@ -109,8 +121,8 @@ public final class BranchPublishService {
     }
 
     private void applyDatabase(Item item,boolean subtreePage) throws SQLException {
-        if(item.done())return;current=item;
-        if(item.row.get("applied_hash")!=null)return;
+        if (item.done() || item.row.get("applied_hash") != null) return;
+        current = item;
         try(Connection connection=DBPool.getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -159,6 +171,7 @@ public final class BranchPublishService {
         }
         audit(item);
         afterCommit.accept(item.type+":"+item.key());
+        current = null;
     }
 
     private void completeGroupReferences(Item item) throws SQLException {
@@ -193,7 +206,6 @@ public final class BranchPublishService {
             int groupId=((Number)page.target.fields().get("group_id")).intValue();
             boolean subtree=hasAncestor(groupId,deletedGroups,liveGroups);
             applyDatabase(page,subtree);
-            if(!subtree)finish(page);
         }
         List<Item> roots=groups.stream().filter(Item::deleting).filter(item->!item.done())
             .filter(item->!hasAncestor(BranchPublishRows.number(item.row,"parent_group_id"),deletedGroups,liveGroups)).toList();
@@ -241,7 +253,7 @@ public final class BranchPublishService {
             if(changed) audit(root);
             afterCommit.accept("TRASH_ROOT:"+root.id());
         }
-        for(Item page:items.get(BranchType.DOCUMENT))if(page.deleting())finish(page);
+        for (Item page : items.get(BranchType.DOCUMENT)) if (page.deleting()) syncPerexGroups(page);
         for(Item group:groups)if(group.deleting())finish(group);
     }
 
@@ -315,22 +327,37 @@ public final class BranchPublishService {
             throw new IllegalStateException("File production changed before replacement: "+item.key());
     }
 
-    private void finish(Item item) throws SQLException,IOException {
-        if(item.done())return;current=item;
-        if(item.row.get("applied_hash")==null)throw new SQLException("Item data step is incomplete: "+item.key());
-        if(item.type==BranchType.DOCUMENT&&Constants.getBoolean("perexGroupUseJoin")) {
-            int[] categories;
-            try(Connection connection=DBPool.getConnection()) {
-                requireHash(connection,item,(String)item.row.get("applied_hash"));
-                var document=BranchStore.readLive(connection,BranchType.DOCUMENT,item.id()).orElseThrow();
-                categories=BranchFields.normalizedIds(document.get("perex_group")).stream().mapToInt(Integer::intValue).toArray();
-            }
-            PerexGroupsService.savePerexGroupsDoc(item.id(),categories);
+    private void syncPerexGroups(Item page) throws SQLException {
+        if (!Constants.getBoolean("perexGroupUseJoin")) return;
+        current = page;
+        int[] categories;
+        try (Connection connection = DBPool.getConnection()) {
+            requireHash(connection, page, (String)page.row.get("applied_hash"));
+            var document = BranchStore.readLive(connection, BranchType.DOCUMENT, page.id()).orElseThrow();
+            categories = BranchFields.normalizedIds(document.get("perex_group")).stream().mapToInt(Integer::intValue).toArray();
         }
-        BranchPublishEffects.refresh(item.type==BranchType.DOCUMENT?List.of(item.row):List.of(),item.type==BranchType.FILE?List.of(item.row):List.of());
+        PerexGroupsService.savePerexGroupsDoc(page.id(), categories);
+        current = null;
+    }
+
+    private void finish(Item item) throws SQLException,IOException {
+        current = item;
+        String hash = (String)item.row.get("applied_hash");
+        if (hash == null) throw new SQLException("Item data step is incomplete: " + item.key());
+        String phase = "EFFECTS";
+        if (item.type == BranchType.DOCUMENT) {
+            Documents.updateSingleDocumentChecked(item.id());
+            phase = "INDEXED";
+        } else if (item.type == BranchType.FILE) {
+            BranchPublishEffects.invalidateFile(item.key());
+        }
         try(Connection connection=DBPool.getConnection()) {
             connection.setAutoCommit(false);
-            try {requireHash(connection,item,(String)item.row.get("applied_hash"));BranchPublishRows.checkpoint(connection,item.type,item.row,"DONE","EFFECTS",(String)item.row.get("applied_hash"),null);connection.commit();}
+            try {
+                requireHash(connection, item, hash);
+                BranchPublishRows.checkpoint(connection, item.type, item.row, "DONE", phase, hash, null);
+                connection.commit();
+            }
             catch(Exception ex) {connection.rollback();throw ex;}
             finally {connection.setAutoCommit(true);}
         }

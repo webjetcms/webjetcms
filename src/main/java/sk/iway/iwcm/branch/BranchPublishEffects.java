@@ -2,34 +2,22 @@ package sk.iway.iwcm.branch;
 
 import java.io.IOException;
 import java.nio.file.*;
-import java.sql.SQLException;
-import java.util.*;
 import jakarta.persistence.EntityManagerFactory;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.system.cluster.ClusterDB;
-import sk.iway.iwcm.system.fulltext.indexed.Documents;
 
-/** Explicit cache/index effects; ordinary editor listeners are not replayed by publication. */
+/** Cache invalidation for direct JDBC and filesystem publication writes. */
 final class BranchPublishEffects {
     private BranchPublishEffects() { }
 
-    static void refresh(List<Map<String,Object>> documents,List<Map<String,Object>> files) throws SQLException,IOException {
+    static void refreshReaders() {
         evictJpa();
         GroupsDB.getInstance(true);
         DocDB.getInstance(true);
         Cache.getInstance().clearAll();
-        for(Map<String,Object> row:documents)if(!"NOOP".equals(row.get("apply_phase"))&&row.get("applied_hash")!=null)
-            Documents.updateSingleDocumentChecked(BranchPublishRows.number(row,"doc_id"));
-        for(Map<String,Object> row:files)if(!"NOOP".equals(row.get("apply_phase"))&&row.get("applied_hash")!=null)
-            invalidateFile((String)row.get("logical_path"));
-        ClusterDB.addRefresh(GroupsDB.class);
-        ClusterDB.addRefresh(DocDB.class);
+        // GroupsDB and DocDB already notify the cluster on a forced refresh.
         ClusterDB.addRefresh(Cache.class);
-    }
-
-    static void refreshReaders() {
-        evictJpa();GroupsDB.getInstance(true);DocDB.getInstance(true);Cache.getInstance().clearAll();
     }
 
     private static void evictJpa() {

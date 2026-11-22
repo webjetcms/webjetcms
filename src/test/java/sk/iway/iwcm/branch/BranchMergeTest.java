@@ -8,6 +8,12 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.*;
+import org.apache.lucene.analysis.KeywordAnalyzer;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.util.Version;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.condition.EnabledIf;
@@ -21,6 +27,8 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.perex_groups.*;
 import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.fulltext.FulltextSearch;
+import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Real MariaDB manual publication, stale-input checks and checkpoint recovery on isolated P06 data. */
@@ -231,6 +239,62 @@ class BranchMergeTest extends BranchJpaTest {
         assertEquals("autotest P06 WORK attachment",Files.readString(Path.of(Tools.getRealPath(f.file))));
         long histories=count("SELECT COUNT(*) FROM documents_history WHERE doc_id IN ("+String.join(",",f.pages.stream().map(String::valueOf).toList())+")");
         new BranchPublishService().run(f.branch,user.getUserId());assertEquals(histories,count("SELECT COUNT(*) FROM documents_history WHERE doc_id IN ("+String.join(",",f.pages.stream().map(String::valueOf).toList())+")"));
+    }
+
+    /** A media-only edit publishes the row and refreshes the shared readers once. */
+    @Test void mediaOnlyPublicationRefreshesReadersOnce() throws Exception {
+        for (BranchType type : List.of(BranchType.DOCUMENT, BranchType.GROUP, BranchType.FILE))
+            sql("DELETE FROM " + type.workTable() + " WHERE branch_id=" + f.branch);
+        sql("DELETE FROM branch_media WHERE branch_id=" + f.branch + " AND media_id=" + f.newMedia);
+        Cache readers = mock(Cache.class, org.mockito.AdditionalAnswers.delegatesTo(Cache.getInstance()));
+        try (var cache = mockStatic(Cache.class, CALLS_REAL_METHODS); var index = mockStatic(Documents.class)) {
+            cache.when(Cache::getInstance).thenReturn(readers);
+            merge(ready(), new BranchPublishService());
+            assertEquals("MERGED", detail().state(), detail().lastError());
+            verify(readers, times(1)).clearAll();
+            index.verifyNoInteractions();
+        }
+        assertEquals("autotest P06 WORK media", live(BranchType.MEDIA, f.media).get("media_title_sk"));
+    }
+
+    /** Index completed pages once, using the final LIVE URLs, and resume at the failed page. */
+    @Test void indexFailureResumesWithFinalUrlsWithoutRepeatingCompletedPages() throws Exception {
+        int first = f.pages.get(0), failedPage = f.pages.get(1);
+        String previousUrl = DocDB.getInstance().getDocLink(first);
+        original.put("luceneIncrementalDocumentIndexing", Constants.getString("luceneIncrementalDocumentIndexing"));
+        Constants.setBoolean("luceneIncrementalDocumentIndexing", true);
+        try (var directory = new RAMDirectory(); var analyzer = new KeywordAnalyzer();
+             var search = mockStatic(FulltextSearch.class);
+             var index = mockStatic(Documents.class, CALLS_REAL_METHODS);
+             var effects = mockStatic(BranchPublishEffects.class, CALLS_REAL_METHODS)) {
+            try (var writer = new IndexWriter(directory, new IndexWriterConfig(Version.LUCENE_31, analyzer))) { writer.commit(); }
+            search.when(() -> FulltextSearch.getIndexDirectory(anyString()))
+                .thenReturn(directory).thenThrow(new java.io.IOException("test index unavailable")).thenReturn(directory);
+            merge(ready(), new BranchPublishService());
+            var failed = detail();
+            assertEquals("MERGE_FAILED", failed.state());
+            assertEquals("DONE", item(failed, BranchType.DOCUMENT, Integer.toString(first)).applyState());
+            assertEquals("ERROR", item(failed, BranchType.DOCUMENT, Integer.toString(failedPage)).applyState());
+            long history = count("SELECT COUNT(*) FROM documents_history WHERE doc_id=" + failedPage);
+            var retry = ready();
+            service.claim(f.branch, DOMAIN, user, retry.revision(), retry.preparationHash(), true);
+            new BranchPublishService().run(f.branch, user.getUserId());
+            assertEquals("MERGED", detail().state(), detail().lastError());
+            assertEquals(history, count("SELECT COUNT(*) FROM documents_history WHERE doc_id=" + failedPage));
+            for (int id : f.pages) index.verify(() -> Documents.updateSingleDocumentChecked(id), times(id == failedPage ? 2 : 1));
+            effects.verify(() -> BranchPublishEffects.invalidateFile(f.file), times(1));
+            try (var reader = IndexReader.open(directory, true)) {
+                Map<String, String> urls = new HashMap<>();
+                for (int i = 0; i < reader.maxDoc(); i++) if (!reader.isDeleted(i)) {
+                    var doc = reader.document(i);
+                    urls.put(doc.get("doc_id"), doc.get("url"));
+                }
+                DocDB livePages = DocDB.getInstance();
+                assertNotEquals(previousUrl, livePages.getDocLink(first));
+                assertEquals(f.pages.size(), reader.numDocs());
+                for (int id : f.pages) assertEquals(livePages.getDocLink(id), urls.get(Integer.toString(id)));
+            }
+        }
     }
 
     @Test void failureMidwayResumesWithoutRepeatingWritesAndRejectsNewerProduction()throws Exception {
@@ -537,7 +601,16 @@ class BranchMergeTest extends BranchJpaTest {
         merge(ready(),new BranchPublishService(key->{if(key.equals("FINAL_EFFECTS"))throw new IllegalStateException("autotest final effects crash");}));
         var failed=detail();assertEquals("MERGE_FAILED",failed.state());assertTrue(failed.items().stream().allMatch(x->"DONE".equals(x.applyState())));
         long history=count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0));
-        service.claim(f.branch,DOMAIN,user,failed.revision(),failed.preparationHash(),true);new BranchPublishService().run(f.branch,user.getUserId());
+        // A page completed by an older publisher still needs the index pass against the final tree.
+        int legacyPage = f.pages.get(0);
+        sql("UPDATE branch_documents SET apply_phase='EFFECTS' WHERE branch_id=" + f.branch + " AND doc_id=" + legacyPage);
+        var retry = ready();
+        service.claim(f.branch, DOMAIN, user, retry.revision(), retry.preparationHash(), true);
+        try (var index = mockStatic(Documents.class)) {
+            new BranchPublishService().run(f.branch, user.getUserId());
+            index.verify(() -> Documents.updateSingleDocumentChecked(legacyPage));
+            index.verifyNoMoreInteractions();
+        }
         assertEquals("MERGED",detail().state(),detail().lastError());assertEquals(history,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0)));
     }
 
@@ -832,8 +905,11 @@ class BranchMergeTest extends BranchJpaTest {
 
     @Test @EnabledIfEnvironmentVariable(named="WEBJET_P06_PARTIAL_FIXTURE",matches="true") void prepareRetainedPartialPublication()throws Exception {
         Path manifest=Path.of("/tmp/webjet-p06-partial.properties");assertFalse(Files.exists(manifest));
-        AtomicInteger completed=new AtomicInteger();
-        merge(ready(),new BranchPublishService(key->{if(key.startsWith("DOCUMENT:")&&completed.incrementAndGet()==10)throw new IllegalStateException("autotest P06 retained halfway for process restart");}));
+        try (var index = mockStatic(Documents.class, CALLS_REAL_METHODS)) {
+            index.when(() -> Documents.updateSingleDocumentChecked(f.pages.get(9)))
+                .thenThrow(new java.io.IOException("autotest P06 retained index failure for process restart"));
+            merge(ready(), new BranchPublishService());
+        }
         var progress=detail();assertEquals("MERGE_FAILED",progress.state());
         Files.writeString(manifest,"branchId="+f.branch+"\ngroupId="+f.root+"\nhomeId="+f.home+"\npageId="+f.pages.get(0)+"\nmediaId="+f.media+"\nnewMediaId="+f.newMedia+"\nfile="+f.file+"\nurl="+f.url+"/\nfirstHistoryCount="+count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0))+"\n");f=null;
     }
