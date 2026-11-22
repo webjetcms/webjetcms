@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import sk.iway.iwcm.Constants;
@@ -63,10 +65,80 @@ class BranchFilterTest {
         when(menu.getModules()).thenReturn(List.of(
             menuItem("/admin/temps_list.jsp"), menuItem("/admin/restart.jsp"),
             menuItem("/admin/v9/apps/image-editor/"), menuItem("/apps/contact/admin/"),
-            menuItem("/components/catalog/custom_admin.jsp"), menuItem("/apps/catalog/administration/")));
+            menuItem("/components/catalog/custom_admin.jsp"), menuItem("/apps/catalog/administration/"),
+            menuItem("/apps/catalog/settings/")));
         bean.setRequest(request);bean.setDomain("old.example");bean.setUrl("/old.html");SetCharacterEncodingFilter.setCurrentRequestBean(bean);
     }
     @AfterEach void cleanBoundary(){modules.close();selection.closeOnDemand();groups.close();constants.close();SetCharacterEncodingFilter.setCurrentRequestBean(null);}
+
+    /** Ordinary public requests bypass branch navigation and menu lookup. */
+    @ParameterizedTest
+    @CsvSource({
+        "false, admin,  true,  true",
+        "true,  public, true,  true",
+        "true,  admin,  false, true",
+        "true,  admin,  true,  false"
+    })
+    void publicRequestsSkipBranchRoutingWhenPackagesAreUnavailable(boolean enabled, String node, boolean administrator,
+                                                                   boolean modulePermission) throws Exception {
+        constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(enabled);
+        constants.when(() -> Constants.getString("clusterMyNodeType")).thenReturn(node);
+        admin.setAdmin(administrator);
+        doReturn(modulePermission).when(admin).isEnabledItem(BranchAccess.PERMISSION);
+        var visitor = spy(request);
+        visitor.setQueryString("lang=sk");
+        visitor.addHeader("Referer", "https://www.example/uvod.html");
+        try (var sections = mockStatic(BranchProductionSection.class, CALLS_REAL_METHODS)) {
+            for (String path : List.of("/kontakt.html", "/templates/site/main.css", "/apps/catalog/contact/")) {
+                visitor.setMethod(path.endsWith("/contact/") ? "POST" : "GET");
+                visitor.setRequestURI(path);
+                var chain = new MockFilterChain();
+                filter.doFilter(visitor, response, chain);
+                assertSame(visitor, chain.getRequest());
+            }
+            sections.verify(() -> BranchProductionSection.document(visitor), never());
+            sections.verify(() -> BranchProductionSection.referrer(visitor), never());
+        }
+        verify(visitor, never()).getHeader("Sec-Fetch-Dest");
+        verify(visitor, never()).getHeader("Accept");
+        if ("public".equals(node)) constants.verify(() -> Constants.getBoolean("branchesEnabled"), never());
+        if (!enabled || "public".equals(node) || !administrator) verify(admin, never()).isEnabledItem(BranchAccess.PERMISSION);
+        modules.verifyNoInteractions();
+    }
+
+    @Test void anonymousNavigationSkipsMenuWithoutCreatingASession() throws Exception {
+        request.getSession().invalidate();
+        request.setRequestURI("/kontakt.html");
+        request.addHeader("Accept", "text/html");
+        var chain = new MockFilterChain();
+        filter.doFilter(request, response, chain);
+        assertSame(request, chain.getRequest());
+        assertNull(request.getSession(false));
+        modules.verifyNoInteractions();
+    }
+
+    /** Public reads on a disabled node skip even the session and production confirmation markers. */
+    @ParameterizedTest
+    @CsvSource({"false, admin, GET, /kontakt.html", "true, public, HEAD, /templates/site/main.css"})
+    void disabledPublicReadsReturnBeforeSessionOrRouting(boolean enabled, String node, String method, String path) throws Exception {
+        constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(enabled);
+        constants.when(() -> Constants.getString("clusterMyNodeType")).thenReturn(node);
+        selected();
+        var visitor = spy(request);
+        visitor.setMethod(method);
+        visitor.setRequestURI(path);
+        visitor.addHeader("Referer", "http://admin.example/admin/?wjProductionPage=12345678-1234-1234-1234-123456789abc");
+        var chain = new MockFilterChain();
+        try (var sections = mockStatic(BranchProductionSection.class, CALLS_REAL_METHODS)) {
+            filter.doFilter(visitor, response, chain);
+            sections.verifyNoInteractions();
+        }
+        assertSame(visitor, chain.getRequest());
+        verify(visitor, never()).getSession(false);
+        verify(visitor, never()).getSession();
+        verify(visitor, never()).getHeader("Referer");
+        modules.verifyNoInteractions();
+    }
 
     /** The preview bootstrap and its form POST must render WORK even without Fetch Metadata headers. */
     @Test void componentPreviewKeepsTheWorkingVersionForDocumentAndFrameRequests() throws Exception {
@@ -355,7 +427,7 @@ class BranchFilterTest {
         try (var users = mockStatic(UsersDB.class); var logon = mockStatic(LogonTools.class);
              var props = mockStatic(Prop.class); var encoding = mockStatic(SetCharacterEncodingFilter.class)) {
             users.when(() -> UsersDB.getUser("integration")).thenReturn(account);
-            users.when(() -> UsersDB.getCurrentUser(request)).thenAnswer(call -> request.getSession().getAttribute(Constants.USER_KEY));
+            users.when(() -> UsersDB.getCurrentUser(any(HttpSession.class))).thenCallRealMethod();
             logon.when(() -> LogonTools.setUserToSession(any(), any())).thenAnswer(call -> {
                 request.getSession().setAttribute(Constants.USER_KEY, call.getArgument(1));
                 return null;
@@ -510,6 +582,38 @@ class BranchFilterTest {
         selected();constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(false);
         request.setMethod("POST");request.setRequestURI("/admin/rest/web-pages/all");filter.doFilter(request,response,(in,out)->fail("Disabled stale branch write dispatched"));assertEquals(409,response.getStatus());
         response=new MockHttpServletResponse();request.getSession().removeAttribute(BranchSelection.SESSION_KEY);headers(42,DOMAIN);request.setRequestURI("/XhrFileUpload");filter.doFilter(request,response,(in,out)->fail("Disabled explicit branch upload dispatched"));assertEquals(409,response.getStatus());
+    }
+
+    /** A previously confirmed form can carry its only WORK marker in its URL or referrer. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void disabledPackagesRejectWritesFromAConfirmedPage(boolean useReferrer) throws Exception {
+        constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(false);
+        request.setRequestURI("/admin/rest/web-pages/editor");
+        request.setMethod("POST");
+        String marker = "wjProductionPage=12345678-1234-1234-1234-123456789abc";
+        if (useReferrer) request.addHeader("Referer", "http://admin.example/admin/?" + marker);
+        else request.setQueryString(marker);
+        filter.doFilter(request, response, (in, out) -> fail("Stale form reached LIVE"));
+        assertEquals(409, response.getStatus());
+    }
+
+    /** A stale editor may submit a public form, but cannot write through a custom administration menu URL. */
+    @ParameterizedTest
+    @CsvSource({"false, admin", "true, public"})
+    void staleSelectionDistinguishesPublicFormsFromMenuActions(boolean enabled, String node) throws Exception {
+        selected();
+        constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(enabled);
+        constants.when(() -> Constants.getString("clusterMyNodeType")).thenReturn(node);
+        request.setMethod("POST");
+        request.setRequestURI("/apps/catalog/contact/");
+        var chain = new MockFilterChain();
+        filter.doFilter(request, response, chain);
+        assertSame(request, chain.getRequest());
+
+        request.setRequestURI("/apps/catalog/settings/");
+        filter.doFilter(request, response, (in, out) -> fail("Stale menu action reached LIVE"));
+        assertEquals(409, response.getStatus());
     }
     @Test void anAssetSuffixOnARestRouteDoesNotBypassWriteProtection()throws Exception {
         selected();headers(42,DOMAIN);request.setMethod("POST");request.setRequestURI("/admin/rest/elfinder/connector.js");filter.doFilter(request,response,(in,out)->fail("REST asset suffix bypass dispatched"));assertEquals(409,response.getStatus());

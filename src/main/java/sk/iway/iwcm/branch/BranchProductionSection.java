@@ -120,6 +120,14 @@ public final class BranchProductionSection {
         return source(request.getRequestURI(), request.getQueryString());
     }
 
+    /** Checks for a confirmation token before parsing a public request's query or referrer. */
+    static boolean hasProductionMarker(HttpServletRequest request) {
+        String query = request.getQueryString();
+        if (query != null && query.contains(PARAMETER + "=")) return true;
+        String referrer = request.getHeader("Referer");
+        return referrer != null && referrer.contains(PARAMETER + "=");
+    }
+
     /** Native forms, uploads, legacy frames and XMLHttpRequest all carry the document's same-origin Referer. */
     static Source referrer(HttpServletRequest request) {
         String value = request.getHeader("Referer");

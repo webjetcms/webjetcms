@@ -22,11 +22,15 @@ public class BranchAccess {
         return Constants.getBoolean("branchesEnabled") && Constants.getBoolean("enableStaticFilesExternalDir");
     }
 
+    static boolean hasPermission(Identity user) {
+        return user != null && user.isAdmin() && user.isEnabledItem(PERMISSION);
+    }
+
     public Identity requireUser(HttpServletRequest request) {
         if (!isEnabled())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Branches are disabled");
         Identity user = UsersDB.getCurrentUser(request);
-        if (user == null || !user.isAdmin() || !user.isEnabledItem(PERMISSION))
+        if (!hasPermission(user))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         return user;
     }
