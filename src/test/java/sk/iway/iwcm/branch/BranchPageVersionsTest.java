@@ -23,6 +23,8 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Targeted page-version reads retain the report's item authorization without a package preflight. */
@@ -87,10 +89,38 @@ class BranchPageVersionsTest {
         }
     }
 
+    /** Restricting LIVE after staging a page protects both its comparison and the publication decision. */
+    @Test
+    void checksCurrentLiveUserGroupsBeforeComparisonAndPublication() throws Exception {
+        try (Fixture f = new Fixture(); var groups = mockStatic(UserGroupsDB.class)) {
+            UserGroupsDB directory = mock(UserGroupsDB.class);
+            UserGroupDetails restricted = new UserGroupDetails();
+            restricted.setUserGroupType(UserGroupDetails.TYPE_PERMS);
+            groups.when(UserGroupsDB::getInstance).thenReturn(directory);
+            when(directory.getUserGroup(17)).thenReturn(restricted);
+
+            f.live.put("password_protected", "17");
+            assertEquals("LIVE", f.service.pageVersions(42, "example.sk", f.user, 12).live().fields().get("title"));
+            f.constants.when(() -> Constants.getBoolean("adminCheckUserGroups")).thenReturn(true);
+            assertStatus(HttpStatus.FORBIDDEN, () -> f.service.pageVersions(42, "example.sk", f.user, 12));
+
+            doReturn(f.branch).when(f.connection).prepareStatement("SELECT * FROM branches WHERE id=? AND domain_id=? FOR UPDATE");
+            f.rows.when(() -> BranchPublishRows.row(any())).thenCallRealMethod();
+            f.rows.when(() -> BranchPublishRows.rows(f.connection, 42, BranchType.DOCUMENT)).thenReturn(List.of(f.work));
+            assertStatus(HttpStatus.FORBIDDEN, () -> f.service.enqueue(42, "example.sk", f.user, 1, "reviewed", false));
+            verify(f.connection).rollback();
+            verify(f.connection, never()).commit();
+
+            when(f.user.getUserGroupsIds()).thenReturn("17");
+            assertEquals("LIVE", f.service.pageVersions(42, "example.sk", f.user, 12).live().fields().get("title"));
+        }
+    }
+
     /** New pages expose ABSENT LIVE plus their actual WORK snapshot. */
     @Test
     void supportsWorkOnlyPages() throws Exception {
         try(Fixture f=new Fixture()) {
+            f.constants.when(() -> Constants.getBoolean("adminCheckUserGroups")).thenReturn(true);
             f.live=null;
             f.work.put("base_exists",false);f.work.put("base_snapshot",BranchSnapshot.absent().json());f.work.put("base_hash",BranchSnapshot.absent().hash());
             f.work.remove("resolved_choice");f.work.remove("resolved_live_hash");f.work.remove("resolved_work_hash");

@@ -791,7 +791,7 @@ public final class BranchMergeService {
         checkFolder(c,permissions,true,folder,user,domain,publish,pageScope && sameFolder);
         if (Constants.getBoolean("adminCheckUserGroups") && docId > 0) {
             checkPageUserGroups(type == BranchType.DOCUMENT ? row : ownerDoc, user);
-            if (access == ContentAccess.DISCARD && sourceDoc != null) checkPageUserGroups(sourceDoc, user);
+            if (sourceDoc != null) checkPageUserGroups(sourceDoc, user);
         }
         Map<String,Object> live=type==BranchType.DOCUMENT?sourceDoc:permissions.get(type,number(row,type.idColumn()),false);
         if (live != null) {
