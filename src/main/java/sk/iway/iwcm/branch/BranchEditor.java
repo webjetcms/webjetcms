@@ -255,10 +255,11 @@ public final class BranchEditor {
         write(connection -> {
             BranchView before=BranchView.reload(connection);
             Map<String,Object> values=row(connection,type,id);
-            // Restore the candidate first, then check its actual scope. A failure rolls the transaction back.
-            if(type==BranchType.DOCUMENT && BranchStore.change(type,values).base().state()==BranchSnapshot.State.ABSENT) {
+            boolean removingNewPage = type == BranchType.DOCUMENT && BranchStore.change(type,values).base().state() == BranchSnapshot.State.ABSENT;
+            if (removingNewPage) {
                 DocDetails doc=before.document(id,false);
-                if(doc!=null && before.group(doc.getGroupId()).getDefaultDocId()==id) replaceDefault(connection,before,doc.getGroupId(),id);
+                checkPageRevertPermission(doc);
+                if (before.group(doc.getGroupId()).getDefaultDocId()==id) replaceDefault(connection,before,doc.getGroupId(),id);
             }
             store.remove(connection,context,type,id,expected);
             List<Integer> restoredGroups=new ArrayList<>(),restoredDocs=new ArrayList<>();
@@ -289,22 +290,25 @@ public final class BranchEditor {
                 if(doc==null || !EditorService.hasPagePermission(user,doc) || user.isDisabledItem("pageSave")) throw forbidden();
                 multigroup(restored);
             }
-            if (type==BranchType.DOCUMENT) {
-                DocDetails doc=after.document(id,false);
-                if (doc==null) doc=before.document(id,false);
-                if (doc==null) throw invalid("Restore the parent folder first");
-                folder(doc.getGroupId(),false);
-                if (user.isDisabledItem("pageSave") || !EditorService.hasPagePermission(user,doc)) throw forbidden();
-                multigroup(id);
-            } else {
+            if (type==BranchType.GROUP) {
                 GroupDetails group=after.group(id); boolean removedNew=group==null; if (group==null) group=before.group(id);
                 if (group==null) throw invalid("Restore the parent folder first");
                 if (group.getParentGroupId()>0) folder(group.getParentGroupId(),true);
                 if (user.isDisabledItem(removedNew ? "deleteDir" : "editDir") || (!removedNew && !GroupsDB.isGroupEditable(user,id))) throw forbidden();
                 system(group);
+            } else if (!removingNewPage) {
+                DocDetails doc=after.document(id,false);
+                checkPageRevertPermission(doc==null ? before.document(id,false) : doc);
             }
             validateResult(before,after); return null;
         });
+    }
+
+    private void checkPageRevertPermission(DocDetails doc) {
+        if (doc==null) throw invalid("Restore the parent folder first");
+        folder(doc.getGroupId(),false);
+        if (user.isDisabledItem("pageSave") || !EditorService.hasPagePermission(user,doc)) throw forbidden();
+        multigroup(doc.getDocId());
     }
 
     private Map<String,Object> row(Connection connection,BranchType type,int id) throws SQLException {

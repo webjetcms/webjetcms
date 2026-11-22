@@ -38,6 +38,8 @@ Pri konflikte kliknite na **Vyriešiť**. V pätičke porovnania vyberte **Použ
 
 Ak chcete odstrániť pracovnú zmenu stránky alebo priečinka, označte položku a použite **Vrátiť zmenu** v lište tabuľky. Pri zmazanom priečinku sa obnovia aj položky zmazané spolu s ním.
 
+Ak stránka vznikla iba v pracovnej verzii, pred jej zmazaním alebo vrátením zmeny odstráňte záznamy na karte **Médiá**. Pri mazaní celého priečinka WebJET uvedie ID stránky, ktorá ešte má médiá. Po ich odstránení môžete zmazanie priečinka zopakovať.
+
 Voľba výsledku hneď ovplyvní náhľad vrátane menu, Noviniek, médií a príloh. Editor ďalej uchováva pracovný obsah. Pri nevyriešenom konflikte lišta upozorní na pracovný predpoklad. Neskoršia zmena produkcie alebo WORK zneplatní starú voľbu a vyžiada nové porovnanie.
 
 ## Publikovanie a termín

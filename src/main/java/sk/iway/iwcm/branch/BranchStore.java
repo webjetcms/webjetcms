@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.i18n.Prop;
 
 /**
  * Internal P02 storage operations for trusted services/fixtures, not an editor API.
@@ -128,9 +129,22 @@ public final class BranchStore {
 
     void remove(Connection connection, BranchContext context, BranchType type, int id, String expectedHash) throws SQLException {
         Map<String,Object> row = readWork(connection,context.branchId(),type,id).orElseThrow(() -> new IllegalStateException("No working change"));
-        if (!change(type,row).work().hash().equals(expectedHash)) throw new StaleContentException("WORK");
+        BranchChange change = change(type,row);
+        if (!change.work().hash().equals(expectedHash)) throw new StaleContentException("WORK");
+        if (type == BranchType.DOCUMENT && change.base().state() == BranchSnapshot.State.ABSENT
+                && hasPageMedia(connection, context.branchId(), id)) {
+            throw new IllegalStateException(Prop.getInstance().getText("branches.editor.removePageMediaFirst", Integer.toString(id)));
+        }
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM `"+type.workTable()+"` WHERE branch_id=? AND "+type.idColumn()+"=?")) {
             statement.setLong(1,context.branchId()); statement.setInt(2,id); statement.executeUpdate();
+        }
+    }
+
+    private static boolean hasPageMedia(Connection connection, long branchId, int docId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT 1 FROM branch_media WHERE branch_id=? AND media_fk_id=? LIMIT 1")) {
+            statement.setLong(1, branchId);
+            statement.setInt(2, docId);
+            try (ResultSet rows = statement.executeQuery()) { return rows.next(); }
         }
     }
 

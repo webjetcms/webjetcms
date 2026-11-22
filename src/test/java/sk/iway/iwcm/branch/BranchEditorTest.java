@@ -9,6 +9,7 @@ import java.util.*;
 import java.security.MessageDigest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -19,6 +20,9 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.editor.rest.GroupsRestController;
 import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.spirit.model.Media;
+import sk.iway.spirit.model.MediaEditorFields;
 
 /** Exercises the actual authorized WORK editor and verifies production tables byte for byte. */
 @EnabledIfEnvironmentVariable(named="WEBJET_P04_DB",matches="true")
@@ -176,6 +180,53 @@ class BranchEditorTest extends BranchJpaTest {
             return null;
         });
         assertEquals(production,fingerprint());
+    }
+
+    /** Removing a page or its parent must preserve the draft until the editor removes its media. */
+    @Test void preventsRemovingDraftMediaOwners() throws Exception {
+        in((request, editor) -> {
+            BranchEditor pages = new BranchEditor(request);
+            DocDetails draft = pages.loadDocument(-1, -1, other, editor);
+            draft.setTitle("autotest draft with media");
+            draft.setNavbar(draft.getTitle());
+            DocDetails saved = pages.saveDocument(draft, editor);
+            int id = saved.getDocId();
+            String hash = saved.getEditorFields().getBranchHash();
+
+            BranchMediaEditor media = new BranchMediaEditor(request);
+            Media attachment = new Media();
+            attachment.setMediaTitleSk("autotest attachment");
+            attachment.setEditorFields(new MediaEditorFields());
+            attachment.getEditorFields().setGroups(new Integer[0]);
+            Media staged = media.save(attachment, id, "new");
+
+            GroupDetails folder = BranchView.current().group(root);
+            String reason = Prop.getInstance().getText("branches.editor.removePageMediaFirst", Integer.toString(id));
+            assertTrue(reason.contains(Integer.toString(id)));
+            for (var action : List.<Executable>of(
+                    () -> pages.deleteDocument(saved),
+                    () -> pages.revert(BranchType.DOCUMENT, id, hash),
+                    () -> pages.deleteGroup(folder))) {
+                var error = assertThrows(ResponseStatusException.class, action);
+                assertEquals(409, error.getStatusCode().value());
+                assertEquals(reason, error.getReason());
+                assertEquals(id, BranchView.current().group(other).getDefaultDocId());
+                assertNotNull(BranchView.current().document(page, false));
+                assertEquals(id, media.load(staged.getMediaId(), id).getMediaFkId());
+            }
+
+            Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);
+            user.addDisabledItem("pageSave");
+            assertEquals(403, assertThrows(ResponseStatusException.class,
+                    () -> pages.revert(BranchType.DOCUMENT, id, hash)).getStatusCode().value());
+            user.removeDisabledItem("pageSave");
+
+            assertTrue(media.delete(staged.getMediaId(), id, staged.getEditorFields().getBranchHash()));
+            assertTrue(pages.deleteDocument(saved));
+            assertNull(BranchView.current().document(id, false));
+            return null;
+        });
+        assertEquals(production, fingerprint());
     }
 
     @Test void deletingExistingSubtreeAndRevertingRestoresItsDefaultPage() throws Exception {
