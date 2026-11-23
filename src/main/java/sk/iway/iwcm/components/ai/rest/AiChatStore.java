@@ -149,7 +149,8 @@ public class AiChatStore {
                 AiChatEntry answer = duplicate.message();
                 int newResults = input.toolResults().size() - answer.getToolResults().size();
                 Call pending = answer.getPendingToolCall();
-                if (newResults > 0 || (pending != null && !pending.write())) {
+                boolean canReplay = pending != null && (!pending.write() || Boolean.FALSE.equals(answer.getPendingWriteClaimed()));
+                if (newResults > 0 || canReplay) {
                     if (!sameAssistant(thread, assistant) || !providerScope.equals(thread.getProviderScope())) throw conflict("assistantChanged");
                     if (newResults < 0 || newResults > 1 || pending == null || !"ACTIVE".equals(thread.getStatus()) || thread.isStopRequested()
                             || !answer.getId().equals(thread.getActiveMessageId())) throw conflict("stale");
@@ -196,8 +197,8 @@ public class AiChatStore {
         AiChatEntry source = question;
         if (question.getAttachments().isEmpty()) {
             source = document.getMessages().stream()
-                .filter(message -> "user".equals(message.getRole()) && !message.getAttachments().isEmpty()
-                    && message.getSortOrder() <= question.getSortOrder())
+                .filter(message -> "user".equals(message.getRole()) && message.getPreparedAttachmentContext() != null
+                    && message.getSortOrder() < question.getSortOrder())
                 .max(Comparator.comparingLong(AiChatEntry::getSortOrder)).orElse(question);
         }
         return new Turn(document.getThread(), question, answer, false, source);

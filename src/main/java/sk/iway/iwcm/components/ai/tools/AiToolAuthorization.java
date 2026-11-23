@@ -52,6 +52,7 @@ public class AiToolAuthorization {
 
     static final String ASSISTANT_HEADER = "X-WebJET-AI-Assistant";
     static final String CHAT_HEADER = "X-WebJET-AI-Chat";
+    static final String WRITE_CLAIM_REJECTED = AiToolAuthorization.class.getName() + ".writeClaimRejected";
     private final AiChatStore chats;
     private final AssistantDefinitionRepository assistants;
     private final AiToolRegistry registry;
@@ -202,7 +203,9 @@ public class AiToolAuthorization {
         if (ids.length != 2) return false;
         var scope = new AiChatStore.Scope(UsersDB.getCurrentUser(request).getUserId(),
                 CloudToolsForCore.getDomainId(), CloudToolsForCore.getDomainName());
-        return chats.claimPendingWrite(scope, ids[0], ids[1], assistant.getId(), call);
+        if (chats.claimPendingWrite(scope, ids[0], ids[1], assistant.getId(), call)) return true;
+        request.setAttribute(WRITE_CLAIM_REJECTED, Boolean.TRUE);
+        return false;
     }
 
     private boolean hasHandlerPermission(AiToolRegistry.Entry entry, HttpServletRequest request, Access access) {

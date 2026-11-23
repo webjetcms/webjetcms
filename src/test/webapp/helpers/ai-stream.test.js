@@ -91,6 +91,15 @@ test('generation errors and cancellation stop before dispatch', async () => {
     await assert.rejects(runToolSteps(7, () => { stop.abort(error); return toolCall('save'); }, stop.signal), error);
 });
 
+test('a rejected saved-write claim leaves the outcome to the delivery that claimed it', async t => {
+    const { runToolSteps } = loadTransport(() => new Response(null, {
+        status: 404, headers: { 'X-WebJET-AI-Tool-Response': 'write-claim-rejected' }
+    }));
+    const next = t.mock.fn(() => toolCall('save'));
+    await assert.rejects(runToolSteps(7, next), { message: /uncertain/, retryable: false });
+    assert.equal(next.mock.callCount(), 1);
+});
+
 test('tool calls distinguish declared empty results from unreadable JSON', async () => {
     for (const [type, body, expected] of [['empty', null, null], ['empty', '', null], ['text', null, ''], ['text', '', ''],
         ['json', null, /empty/i], ['json', '', /empty/i], ['json', 'bad JSON', /.+/]]) {

@@ -165,7 +165,11 @@ Kontroléry `WebpagesRestController` a `GroupsRestController` sprístupňujú sp
 
 Ak stačí overiť existenciu stránky alebo priečinka, priraďte asistentovi `@tool(webpages_exists)` alebo `@tool(groups_exists)`. Oba nástroje sú aj súčasťou príslušnej skupiny kontroléra. Volanie s argumentom `{"id":42}` vráti iba `true`, ak má používateľ k záznamu prístup. Pri chýbajúcom či neprístupnom zázname alebo nekladnom ID vráti `false`.
 
-Pri vytváraní stránky nástroj `webpages_add` vyžaduje iba cieľový `groupId` a `body.title`. WebJET načíta predvolené nastavenia priečinka, doplní voliteľné `body.data`, `body.navbar` a `body.publish` podľa požiadavky a uloží stránku cez editor. Pred úpravou existujúceho záznamu načítajte úplný záznam pomocou `webpages_get_one` alebo `groups_get_one` a zachovajte jeho `editorFields`. Zoznam stránok nemusí obsahovať HTML. Katalóg vynecháva súčty a presúvanie riadkov, pri priečinkoch aj generické vyhľadávanie podľa stĺpcov, ktoré vyžaduje JPA repozitár.
+Pri vytváraní stránky nástroj `webpages_add` vyžaduje iba cieľový `groupId` a `body.title`. WebJET načíta predvolené nastavenia priečinka, doplní voliteľné `body.data`, `body.navbar` a `body.publish` podľa požiadavky a uloží stránku cez editor. Odpoveď obsahuje ID stránky (`id`), stav publikovania (`publicationStatus`) a pri uložení verzie do histórie aj `historyId`.
+
+Pri vyhľadávaní podľa šablóny (`tempId`) alebo skupiny používateľov (`userGroupId`) vráti `groups_get_all` iba priečinky, ktoré môže používateľ upravovať v aktuálnej doméne. Ak zadáte aj `groupId`, zoznam obsahuje len priame podpriečinky vybraného priečinka.
+
+Pred úpravou existujúceho záznamu načítajte úplný záznam pomocou `webpages_get_one` alebo `groups_get_one` a zachovajte jeho `editorFields`. Zoznam stránok nemusí obsahovať HTML. Katalóg vynecháva súčty a presúvanie riadkov, pri priečinkoch aj generické vyhľadávanie podľa stĺpcov, ktoré vyžaduje JPA repozitár.
 
 ```java
 import sk.iway.iwcm.components.ai.tools.AiTool;

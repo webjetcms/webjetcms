@@ -26,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
@@ -96,13 +97,29 @@ public class WebpagesRestController extends WebpagesDatatable {
 
     public record NewPage(@NotBlank String title, String data, String navbar, Boolean publish) {}
 
+    public enum PublicationStatus { DRAFT, AWAITING_APPROVAL, SCHEDULED, PUBLISHED }
+
+    /** Identifies the saved page and revision without echoing the editor record to the assistant. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record CreatedPage(int id, Integer historyId, PublicationStatus publicationStatus) {
+        public static CreatedPage from(DocDetails saved, EditorFacade editor) {
+            Integer revision = saved.getHistoryId() > 0 ? saved.getHistoryId() : null;
+            PublicationStatus status = PublicationStatus.DRAFT;
+            if (editor.isPageSavedToPublic()) status = PublicationStatus.PUBLISHED;
+            else if (revision != null && !editor.getApprovers().isEmpty()) status = PublicationStatus.AWAITING_APPROVAL;
+            else if (revision != null && editor.getPublihStart() != null) status = PublicationStatus.SCHEDULED;
+            return new CreatedPage(saved.getDocId(), revision, status);
+        }
+    }
+
     /** Creates a page from the destination's editor defaults using the regular insert and approval workflow. */
     @AiToolDescription(value = "components.ai.tools.webpages_add.description", replaces = "add")
     @PreAuthorize("@WebjetSecurityService.checkAccessAllowedOnController(this)")
     @PostMapping("/add-from-folder")
-    public ResponseEntity<DocDetails> createFromFolder(@Valid @RequestBody NewPage changes) {
+    public ResponseEntity<CreatedPage> createFromFolder(@Valid @RequestBody NewPage changes) {
         if (!AiToolService.isToolRequest(getRequest(), WebpagesRestController.class))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        startCreateRequest();
         DocDetails page = getOneItem(-1);
         page.setTitle(changes.title());
         page.setNavbar(Tools.isEmpty(changes.navbar()) ? changes.title() : changes.navbar());
@@ -111,7 +128,8 @@ public class WebpagesRestController extends WebpagesDatatable {
             page.setAvailable(changes.publish());
             page.getEditorFields().setRequestPublish(changes.publish());
         }
-        return add(page);
+        var saved = add(page);
+        return ResponseEntity.status(saved.getStatusCode()).body(CreatedPage.from(saved.getBody(), editorFacade));
     }
 
     /** Checks a page ID using cached permission metadata without loading HTML or editor fields. */

@@ -152,6 +152,25 @@ class AiChatServiceTest {
         return execute(service.prepare(next, scope));
     }
 
+    /** A lost write decision can be replayed while the tool is permitted and the write is unclaimed. */
+    @Test
+    void replaysOnlyPermittedUnclaimedWrites() throws Exception {
+        var inputs = stubToolDecisions("{\"type\":\"call\",\"name\":\"add_record\",\"arguments\":{\"title\":\"Page\"}}");
+        var input = new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null);
+        var original = execute(service.prepare(input, scope));
+        var call = original.getToolCall();
+        assertNotNull(call);
+
+        var granted = toolService.resolve(assistant, scope.domainId(), request);
+        when(toolService.resolve(assistant, scope.domainId(), request))
+            .thenReturn(new AiAssistantRuntime(assistant, "", List.of(), false), granted);
+        assertEquals(AiToolProtocol.INVALID_TOOL_STEP, execute(service.prepare(input, scope)).getErrorCategory());
+        assertEquals(call, execute(service.prepare(input, scope)).getToolCall());
+        assertTrue(store.claimPendingWrite(scope, original.getThreadId(), original.getMessageId(), 12L, call));
+        assertEquals("TOOL_OUTCOME_UNKNOWN", execute(service.prepare(input, scope)).getErrorCategory());
+        assertEquals(1, inputs.size());
+    }
+
     private List<InputDataDTO> stubToolDecisions(String... decisions) throws Exception {
         assistant.setInstructions("Use @tool(add_record)");
         var write = new AiToolDefinition("add_record", "Add record", Map.of("required", List.of("title")), "/records", "POST", Map.of());
@@ -743,6 +762,11 @@ class AiChatServiceTest {
             value.startsWith("ERROR: Assistant (openai)") && value.contains("Error category: ATTACHMENT_INVALID")
                 && value.contains("input_tokens: 2") && value.contains("output_tokens: 2")
                 && value.contains("total_tokens: 4")), eq(4), eq(-1)), times(1));
+
+        var inputs = stubToolDecisions("Follow-up answer");
+        var next = execute(prepare(response.getThreadId(), response.getRevision()));
+        assertEquals("Follow-up answer", next.getResponse());
+        assertNull(inputs.get(0).getChatAttachmentContext());
     }
 
     /** Unexpected failures finish the saved turn and expose a localized error instead of provider diagnostics. */

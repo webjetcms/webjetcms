@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
@@ -79,7 +79,7 @@ import sk.iway.iwcm.users.UsersDB;
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
 @AiTool(description = "components.ai.tools.groups.context", exclude = {"findByColumns", "getSum", "rowReorder"})
 @AiToolEndpoint(method = "getAll", query = {
-    @Query(name = "groupId", description = "Parent folder to list."),
+    @Query(name = "groupId", description = "Parent folder to list. For template or user-group searches, supply it to search direct children or omit it to search all accessible folders."),
     @Query(name = "userGroupId", description = "List folders restricted to this user group."),
     @Query(name = "tempId", description = "List folders using this template.")
 })
@@ -132,13 +132,16 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         if (userGroupId != -1 || tempId != -1) {
             var results = userGroupId != -1 ? getAllItemsByUserGroupId(groupId, getRequest(), userGroupId)
                     : getAllItemsByTempId(groupId, getRequest(), tempId);
-            if (AiToolService.isToolRequest(getRequest(), GroupsRestController.class)) {
-                for (GroupDetails folder : results) {
-                    if (!WebpagesService.isInCurrentDomain(folder) || !GroupsDB.isGroupEditable(getUser(), folder.getGroupId()))
-                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "List folders within an accessible folder.");
-                }
-            }
-            return results;
+            if (!AiToolService.isToolRequest(getRequest(), GroupsRestController.class)) return results;
+
+            Identity user = getUser();
+            boolean parentSpecified = getRequest().getParameter("groupId") != null;
+            return new DatatablePageImpl<>(results.stream()
+                    .filter(folder -> !parentSpecified || folder.getParentGroupId() == groupId)
+                    .filter(folder -> tempId == -1 || folder.getTempId() == tempId)
+                    .filter(WebpagesService::isInCurrentDomain)
+                    .filter(folder -> GroupsDB.isGroupEditable(user, folder.getGroupId()))
+                    .toList());
         }
 
         DatatablePageImpl<GroupDetails> page = getAllItems(groupId, getRequest());
@@ -285,6 +288,9 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             throwError(errors);
             return entity;
         }
+
+        String parentError = getParentHierarchyError(groupsDB, entity.getGroupId(), entity.getParentGroupId());
+        if (parentError != null) throwConstraintViolation(parentError);
 
         if (entity.getSortPriority() == -1) {
             //calculate new sort priority
@@ -770,36 +776,33 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
         if ("remove".equals(target.getAction())) return;
 
-        if (entity.getEditorFields()!=null && entity.getEditorFields().getParentGroupDetails()!=null) {
-            if (GroupsDB.isGroupEditable(user, entity.getEditorFields().getParentGroupDetails().getGroupId())==false) {
-                errors.rejectValue("errorField.editorFields.parentGroupDetails", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
-            }
+        int parentGroupId = entity.getEditorFields().getParentGroupDetails().getGroupId();
+        if (!GroupsDB.isGroupEditable(user, parentGroupId)) {
+            errors.rejectValue("errorField.editorFields.parentGroupDetails", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
+            return;
         }
 
-        int groupId = entity.getGroupId();
-        int newParentGroupId = entity.getEditorFields().getParentGroupDetails().getGroupId();
-
-        //Chcek if is parentGroup ID valid
-        if(groupId == newParentGroupId) {
-            //ParentGroup can't be same group as requesting group
-            errors.rejectValue("errorField.editorFields.parentGroupDetails", "403", Prop.getInstance(request).getText("editor.parent_group_error_same_folder"));
-        } else {
-            int failsafe = 0;
-            while(failsafe++<50) {
-                GroupDetails tmpParent = groupsDB.getGroup(newParentGroupId);
-                if(tmpParent != null) {
-                    if(groupId == tmpParent.getGroupId()) {
-                        //ParentGroup can't be child group of requesting group
-                        errors.rejectValue("errorField.editorFields.parentGroupDetails", "403", Prop.getInstance(request).getText("editor.parent_group_error_child_folder"));
-                        break;
-                    } else {
-                        newParentGroupId = tmpParent.getParentGroupId();
-                    }
-                } else {
-                    break;
-                }
-            }
+        String parentError = getParentHierarchyError(groupsDB, entity.getGroupId(), parentGroupId);
+        if (parentError != null) {
+            errors.rejectValue("errorField.editorFields.parentGroupDetails", "403", Prop.getInstance(request).getText(parentError));
         }
+    }
+
+    private static String getParentHierarchyError(GroupsDB groupsDB, int groupId, int parentGroupId) {
+        if (parentGroupId <= 0) return null;
+        if (parentGroupId == groupId) return "editor.parent_group_error_same_folder";
+
+        Set<Integer> visited = new HashSet<>();
+        int ancestorId = parentGroupId;
+        while (ancestorId > 0) {
+            if (ancestorId == groupId) return "editor.parent_group_error_child_folder";
+            if (!visited.add(ancestorId)) return "editor.parent_group_error_cycle";
+
+            GroupDetails ancestor = groupsDB.getGroup(ancestorId);
+            if (ancestor == null) break;
+            ancestorId = ancestor.getParentGroupId();
+        }
+        return null;
     }
 
     @Override

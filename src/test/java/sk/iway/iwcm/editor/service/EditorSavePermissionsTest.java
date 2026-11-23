@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -277,6 +278,29 @@ class EditorSavePermissionsTest {
             groups.getGroup(25).setDomainName("other.example");
             assertEquals(!cloud, controller.exists(42));
             assertEquals(!cloud, folders.exists(25));
+        }
+    }
+
+    /** Filtered folder searches return only editable direct children of the requested parent. */
+    @ParameterizedTest
+    @ValueSource(strings = {"tempId", "userGroupId"})
+    void searchesOnlyAccessibleChildren(String filter) {
+        var candidates = List.of(groups.getGroup(10), groups.getGroup(25), groups.getGroup(26));
+        for (GroupDetails folder : candidates) {
+            folder.setParentGroupId(folder.getGroupId() == 26 ? 25 : 1);
+            folder.setTempId(8);
+            folder.setPasswordProtected("8");
+        }
+        when(groups.getGroupsAll()).thenReturn(candidates);
+        var request = new MockHttpServletRequest();
+        request.getSession().setAttribute(Constants.USER_KEY, user);
+        request.setParameter("groupId", "1");
+        request.setParameter(filter, "8");
+        var controller = new GroupsRestController(null, null, null, null, null);
+        controller.setRequest(request);
+        try (var tools = mockStatic(AiToolService.class); var translations = mockStatic(Prop.class)) {
+            tools.when(() -> AiToolService.isToolRequest(request, GroupsRestController.class)).thenReturn(true);
+            assertEquals(List.of(groups.getGroup(25)), controller.getAllItems(Pageable.unpaged()).getContent());
         }
     }
 

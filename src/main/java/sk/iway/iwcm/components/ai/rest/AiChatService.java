@@ -583,9 +583,12 @@ public class AiChatService implements DisposableBean {
         AiChatEntry message = prepared.turn().message();
         var pending = message.getPendingToolCall();
         if (pending != null) {
-            if (pending.write()) return failure("TOOL_OUTCOME_UNKNOWN", null, false, request);
+            // The dispatch endpoint atomically claims the write. A missing claim flag is ambiguous in older transcripts.
+            if (pending.write() && !Boolean.FALSE.equals(message.getPendingWriteClaimed())) {
+                return failure("TOOL_OUTCOME_UNKNOWN", null, false, request);
+            }
             var runtime = tools.resolve(prepared.assistant(), prepared.scope().domainId(), request);
-            if (runtime.tools().stream().noneMatch(tool -> tool.name().equals(pending.name()) && !tool.writes())) {
+            if (runtime.tools().stream().noneMatch(tool -> tool.name().equals(pending.name()) && tool.writes() == pending.write())) {
                 return failure(AiToolProtocol.INVALID_TOOL_STEP, null, false, request);
             }
         } else if (!"complete".equals(message.getStatus())) {

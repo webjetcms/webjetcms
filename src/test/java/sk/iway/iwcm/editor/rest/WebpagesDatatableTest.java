@@ -26,6 +26,8 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.tools.AiToolService;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.settings.fields.jpa.FieldsSettingsEntity;
 import sk.iway.iwcm.system.datatable.settings.fields.rest.FieldsSettingsService;
 import sk.iway.iwcm.doc.DocDB;
@@ -168,20 +170,23 @@ class WebpagesDatatableTest {
             draft.setData("<p>Folder template</p>");
             pages.when(() -> WebpagesService.getOneItem(eq(-1L), eq(25), eq(-1), eq(facade), any(), anyList(), eq(request)))
                     .thenReturn(draft);
+            DatatableRestControllerV2.addNotify(new NotifyBean("Previous request", "Old message", NotifyBean.NotifyType.WARNING));
+            when(facade.save(draft)).thenReturn(published);
             var response = controller.createFromFolder(new WebpagesRestController.NewPage("About", html, navbar, publish));
             assertEquals(201, response.getStatusCode().value());
-            var saved = response.getBody();
-            assertEquals("About", saved.getTitle());
-            assertEquals(expectedNavbar, saved.getNavbar());
-            assertEquals(expectedHtml, saved.getData());
-            assertEquals(Boolean.TRUE.equals(publish), saved.isAvailable());
-            assertEquals(Boolean.TRUE.equals(publish), saved.getEditorFields().isRequestPublish());
-            assertEquals(25, saved.getGroupId());
-            assertSame(folder, saved.getEditorFields().getGroupDetails());
-            assertEquals(17, saved.getTempId());
-            assertEquals(80, saved.getSortPriority());
-            assertEquals("Inherited value", saved.getFieldA());
-            verify(facade).save(saved);
+            assertEquals(published.getDocId(), response.getBody().id());
+            assertFalse(controller.hasNotify());
+            assertEquals("About", draft.getTitle());
+            assertEquals(expectedNavbar, draft.getNavbar());
+            assertEquals(expectedHtml, draft.getData());
+            assertEquals(Boolean.TRUE.equals(publish), draft.isAvailable());
+            assertEquals(Boolean.TRUE.equals(publish), draft.getEditorFields().isRequestPublish());
+            assertEquals(25, draft.getGroupId());
+            assertSame(folder, draft.getEditorFields().getGroupDetails());
+            assertEquals(17, draft.getTempId());
+            assertEquals(80, draft.getSortPriority());
+            assertEquals("Inherited value", draft.getFieldA());
+            verify(facade).save(draft);
         }
 
         @Test

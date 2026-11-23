@@ -26,6 +26,9 @@ public class AiToolInterceptor implements HandlerInterceptor {
             response.setHeader(AiToolCallFilter.TOOL_RESPONSE_HEADER, expected.definition().responseType());
             return true;
         }
+        if (Boolean.TRUE.equals(request.getAttribute(AiToolAuthorization.WRITE_CLAIM_REJECTED))) {
+            response.setHeader(AiToolCallFilter.TOOL_RESPONSE_HEADER, "write-claim-rejected");
+        }
         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         return false;
     }

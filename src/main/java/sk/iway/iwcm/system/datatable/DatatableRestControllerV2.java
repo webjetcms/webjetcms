@@ -1007,7 +1007,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	{
 		String requestURI = request.getRequestURI();
 		// A direct create starts a request. Editor creates share the state of their batch.
-		if (requestURI.endsWith("/add")) threadData.remove();
+		if (requestURI.endsWith("/add")) startCreateRequest();
 		if (requestURI.endsWith("/editor")) {
 			@SuppressWarnings("unchecked")
 			DatatableRequest<Long, T> target = (DatatableRequest<Long, T>) binder.getTarget();
@@ -2095,6 +2095,11 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 	private void clearThreadData() {
 		getThreadData().clear();
+	}
+
+	/** Starts an independent create request before any defaults, validation or notifications are collected. */
+	protected static void startCreateRequest() {
+		threadData.remove();
 	}
 
 	/**

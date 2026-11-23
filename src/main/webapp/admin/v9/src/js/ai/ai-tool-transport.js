@@ -66,6 +66,8 @@ async function callEndpoint(assistantId, call, signal) {
         });
         observation.status = response.status;
         const responseType = response.headers.get('X-WebJET-AI-Tool-Response');
+        // Another delivery or Stop owns this saved write. Its result must not be replaced by this rejection.
+        if (response.status === 404 && responseType === 'write-claim-rejected') return null;
         observation.result = await readToolResult(response, call.name, responseType);
         // Only the authorized facade marks a schema rejection before invoking the registered handler.
         if (response.status === 400 && responseType === 'invalid-arguments' && typeof observation.result === 'string') {
@@ -150,6 +152,10 @@ export async function runToolSteps(assistantId, next, signal, onWrite = () => {}
             }
             onToolActivity?.(call.name);
             const observation = await callEndpoint(assistantId, call, signal);
+            if (observation === null) {
+                onToolActivity?.(null, false);
+                throw new Error(WJ.translate('components.ai.tools.uncertain.js'));
+            }
             onToolActivity?.(null);
             previous = key;
             results.push(observation);

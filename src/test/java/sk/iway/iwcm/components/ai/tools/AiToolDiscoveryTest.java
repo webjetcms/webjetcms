@@ -10,8 +10,10 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -52,6 +54,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -83,6 +86,8 @@ import sk.iway.iwcm.components.ai.rest.AiToolsController;
 import sk.iway.iwcm.components.configuration.ConfigurationController;
 import sk.iway.iwcm.components.configuration.ConfigurationService;
 import sk.iway.iwcm.components.configuration.model.ConfDetailsDto;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.GroupsRestController;
 import sk.iway.iwcm.editor.rest.WebpagesRestController;
 import sk.iway.iwcm.editor.service.WebpagesService;
@@ -125,14 +130,15 @@ class AiToolDiscoveryTest {
     @EnableWebMvc
     @EnableSpringDataWebSupport
     @EnableMethodSecurity(proxyTargetClass = true, securedEnabled = true)
-    @Import({AiToolsController.class, AiToolRegistry.class, AiToolService.class, AiToolAuthorization.class, AiToolCallFilter.class, AiToolAudit.class, AiChatStore.class, ConfigurationToolResponseAdvice.class, ConfigurationController.class, AuditProbeController.class})
+    @Import({AiToolsController.class, AiToolRegistry.class, AiToolService.class, AiToolAuthorization.class, AiToolCallFilter.class, AiToolAudit.class, AiChatStore.class, ConfigurationToolResponseAdvice.class, WebpageCreateToolResponseAdvice.class, ConfigurationController.class, AuditProbeController.class})
     static class Config {
         @Bean(name = "WebjetSecurityService")
         WebjetSecurityService security() { return mock(WebjetSecurityService.class); }
         @Bean AssistantDefinitionRepository assistants() { return mock(AssistantDefinitionRepository.class); }
         @Bean AiSkillRepository skills() { return mock(AiSkillRepository.class); }
         @Bean ConfigurationService configurationService() { return mock(ConfigurationService.class); }
-        @Bean WebpagesRestController webpages() { return new WebpagesRestController(null, null, null, null, null); }
+        @Bean EditorFacade editor() { return mock(EditorFacade.class); }
+        @Bean WebpagesRestController webpages(EditorFacade editor) { return spy(new WebpagesRestController(null, editor, null, null, null)); }
         @Bean GroupsRestController groups() { return new GroupsRestController(null, null, null, null, null); }
         @Bean MappedInterceptor guard(AiToolAuthorization authorization) {
             return new MappedInterceptor(null, new AiToolInterceptor(authorization));
@@ -267,6 +273,21 @@ class AiToolDiscoveryTest {
         assertEquals("/admin/rest/web-pages/add", original.path());
         assertEquals(legacyBody, original.inputs().bind(legacy).body());
         assertTrue(AiToolEntity.detail(original.definition(), null).getRequired().contains("body.editorFields.groupDetails.groupId"));
+
+        var saved = new DocDetails();
+        saved.setDocId(84);
+        saved.setHistoryId(38);
+        saved.setDocLink("/about/");
+        saved.setFullPath("/Site/About");
+        saved.setData("x".repeat(64 * 1024));
+        WebpagesRestController controller = AopTestUtils.getUltimateTargetObject(context.getBean(WebpagesRestController.class));
+        doReturn(ResponseEntity.status(201).body(saved)).when(controller).add(any(DocDetails.class));
+        when(context.getBean(EditorFacade.class).getApprovers()).thenReturn(List.of(new Identity()));
+        var receipt = perform(toolRequest("webpages_add", json.writeValueAsString(legacy)), 201);
+        assertEquals(json.valueToTree(Map.of("id", 84, "historyId", 38, "publicationStatus", "AWAITING_APPROVAL")),
+                json.readTree(receipt.getContentAsByteArray()));
+        var direct = post(original.path()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(legacyBody));
+        assertEquals(saved.getData(), json.readTree(perform(direct, 201).getContentAsByteArray()).path("data").asString());
 
         var bad = perform(toolRequest("webpages_add", """
                 {"groupId":25,"body":{"title":"About","editorFields":{"plannedPublishingEnabled":true}}}
@@ -508,10 +529,10 @@ class AiToolDiscoveryTest {
                 if (stopFirst) chats.stop(id, scope, false);
                 var post = post(BASE + "/audit_probe_batch/call")
                         .header(AiToolAuthorization.ASSISTANT_HEADER, "7").contentType(MediaType.APPLICATION_JSON).content("{}");
-                perform(post, 404); // Delayed request from an older tab.
+                assertNull(perform(post, 404).getHeader(AiToolCallFilter.TOOL_RESPONSE_HEADER)); // Older tab without a chat ID.
                 post.header(AiToolAuthorization.CHAT_HEADER, id + "/" + message);
                 perform(post, stopFirst ? 404 : 207);
-                perform(post, 404);
+                assertEquals("write-claim-rejected", perform(post, 404).getHeader(AiToolCallFilter.TOOL_RESPONSE_HEADER));
                 if (!stopFirst) chats.stop(id, scope, false);
                 var stopped = chats.get(id, scope).messages().get(1);
                 assertEquals(stopFirst ? "CANCELLED" : "TOOL_OUTCOME_UNKNOWN", stopped.getErrorCategory());
