@@ -23,6 +23,7 @@ import io.swagger.v3.core.util.Json;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import com.webjetcms.ai.AiToolArgumentValidator;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;

@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -17,7 +16,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.webjetcms.ai.AiTextToolProtocol;
 import com.webjetcms.ai.AiTool;
+import com.webjetcms.ai.AiToolArgumentValidator;
 import com.webjetcms.ai.AiToolCall;
 import com.webjetcms.ai.AiToolResult;
 import com.webjetcms.ai.AiToolStep;
@@ -48,8 +49,6 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, Set<String> dir
     public static final String TOOL_LIMIT_MESSAGE = "components.ai.tools.limit.js";
     public static final String INVALID_TOOL_STEP = "INVALID_TOOL_STEP";
     public static final String INVALID_TOOL_MESSAGE = "components.ai.tools.invalidStep.js";
-    private static final Pattern JSON_BLOCK = Pattern.compile("\\A```(?:json)?[ \\t]*\\R(.*)\\R```\\z", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern TOOL_ENVELOPE = Pattern.compile("\\{\\s*\"(?:type|name|arguments)\"\\s*:");
     static final int MAX_ARGUMENT_BYTES = 1024 * 1024;
     private static final ObjectMapper JSON = new ObjectMapper().enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS, DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
@@ -124,15 +123,12 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, Set<String> dir
 
     public static String instructions(List<AiToolDefinition> definitions) {
         String rules = """
-            Work one backend step at a time from the user's request and the returned results.
-            To call a tool, return exactly {"type":"call","name":"...","arguments":{}} and wait for its result.
-            To answer or ask for a missing user decision, return ordinary text or {"type":"final","text":"..."}.
             Answer ordinary questions without loading tools or skills unless the task needs them.
             Use the inputSchema from a loaded skill's tools or a previous tool definition when its name and version match the current catalog.
             For missing or outdated schemas, call ai_tools_details with {"names":["exact_name",...]} and batch related names. Never guess arguments from a summary.
             The loader input schemas below are ready to use without discovery. Loading definitions does not assign additional tools or grant permissions. Call tools by name, not by their REST path.
             """;
-        return rules + EXECUTION_RULES + "Assigned tool summaries:\n" + json(definitions.stream().map(AiToolDefinition::preview).toList())
+        return AiTextToolProtocol.instructions() + rules + EXECUTION_RULES + "Assigned tool summaries:\n" + json(definitions.stream().map(AiToolDefinition::preview).toList())
                 + "\nLoader input schemas:\n" + json(definitions.stream()
                     .filter(tool -> isLoader(tool.name()))
                     .map(tool -> Map.of("name", tool.name(), "inputSchema", tool.inputSchema())).toList());
@@ -261,41 +257,14 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, Set<String> dir
     }
 
     private void applyDecision(String modelResponse, AssistantResponseDTO target, Prop prop, Map<String, String> includes) {
-        if (modelResponse == null || modelResponse.length() > MAX_ARGUMENT_BYTES || modelResponse.isBlank()) {
-            invalidDecision(target, prop, "Return a nonempty answer or a single tool decision within the size limit.");
-            return;
+        var decision = AiTextToolProtocol.parse(modelResponse, MAX_ARGUMENT_BYTES);
+        if (decision instanceof AiTextToolProtocol.Answer answer) {
+            target.setResponse(answer.text());
+        } else if (decision instanceof AiTextToolProtocol.Call call) {
+            applyCall(call.name(), call.arguments(), target, prop, includes);
+        } else if (decision instanceof AiTextToolProtocol.Invalid invalid) {
+            invalidDecision(target, prop, invalid.reason());
         }
-        String text = modelResponse.strip();
-        var block = JSON_BLOCK.matcher(text);
-        String decisionText = block.matches() ? block.group(1).strip() : text;
-        if (!decisionText.startsWith("{") && !TOOL_ENVELOPE.matcher(decisionText).find()) {
-            target.setResponse(text);
-            return;
-        }
-        JsonNode decision;
-        try {
-            decision = JSON.readTree(decisionText);
-        } catch (JsonProcessingException invalid) {
-            var location = invalid.getLocation();
-            String at = location == null ? "" : " at line " + location.getLineNr() + ", column " + location.getColumnNr();
-            invalidDecision(target, prop, "Return exactly one JSON object. Invalid tool JSON" + at
-                + ": " + invalid.getOriginalMessage() + ". Escape quotes and newlines inside string values.");
-            return;
-        }
-        if (!decision.isObject()) {
-            invalidDecision(target, prop, "Return exactly one JSON object: a call with name and arguments, or a final with text.");
-            return;
-        }
-        String type = decision.path("type").textValue();
-        if (isFinal(decision)) {
-            target.setResponse(decision.get("text").textValue());
-            return;
-        }
-        if (!"call".equals(type) || decision.size() != 3 || !decision.path("name").isTextual() || !decision.path("arguments").isObject()) {
-            invalidDecision(target, prop, "A call needs exactly type, name and an arguments object. A final needs exactly type and nonempty text.");
-            return;
-        }
-        applyCall(decision.get("name").textValue(), JSON.convertValue(decision.get("arguments"), ARGUMENTS), target, prop, includes);
     }
 
     private void applyCall(String name, Map<String, Object> args, AssistantResponseDTO target, Prop prop, Map<String, String> includes) {
@@ -380,11 +349,6 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, Set<String> dir
     public static boolean sameJson(Object left, Object right) {
         return JSON.valueToTree(left).equals((a, b) -> a.isNumber() && b.isNumber()
                 ? a.decimalValue().compareTo(b.decimalValue()) : a.equals(b) ? 0 : 1, JSON.valueToTree(right));
-    }
-
-    private static boolean isFinal(JsonNode decision) {
-        return decision.size() == 2 && "final".equals(decision.path("type").textValue())
-                && decision.path("text").isTextual() && !decision.get("text").textValue().isBlank();
     }
 
     private static void invalidDecision(AssistantResponseDTO target, Prop prop, String reason) {

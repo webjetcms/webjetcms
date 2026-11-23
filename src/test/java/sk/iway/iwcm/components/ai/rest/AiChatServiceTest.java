@@ -171,7 +171,8 @@ class AiChatServiceTest {
     /** Drives both a directly callable tool and the skill-discovery and repair path through the production adapters. */
     @ParameterizedTest
     @CsvSource({"openai,true,none", "gemini,true,none", "openai,false,schema", "gemini,false,schema",
-        "openai,false,malformedJson", "openai,false,duplicateField", "openai,false,missingCallId"})
+        "openai,false,malformedJson", "openai,false,duplicateField", "openai,false,missingCallId",
+        "gemini,false,nonObject", "gemini,false,missingCallId"})
     void continuesNativeToolsFromSavedChat(String providerId, boolean direct, String rejection) throws Exception {
         boolean gemini = "gemini".equals(providerId);
         int skippedReplies = direct ? 2 : 0; // The scripted replies end with a valid lookup and its final answer.
@@ -256,7 +257,7 @@ class AiChatServiceTest {
                 if (n == 2) {
                     assertFalse(json.readTree(data).required("executed").booleanValue());
                     assertFalse(json.readTree(data).has("rejectedDecision"));
-                    if ("malformedJson".equals(rejection) || "duplicateField".equals(rejection)) assertTrue(data.contains("single JSON object"));
+                    if ("malformedJson".equals(rejection) || "duplicateField".equals(rejection) || "nonObject".equals(rejection)) assertTrue(data.contains("single JSON object"));
                 }
             }
         } finally { server.stop(0); }
@@ -277,7 +278,8 @@ class AiChatServiceTest {
             if (n == 2 && "duplicateField".equals(rejection)) {
                 step.put("arguments", "{\"body\":{\"editorFields\":{\"plannedPublishingEnabled\":true,\"plannedPublishingEnabled\":true}}}");
             }
-            if (n == 2 && "missingCallId".equals(rejection)) step.remove("call_id");
+            if (n == 2 && "nonObject".equals(rejection)) step.putArray("arguments").add(42);
+            if (n == 2 && "missingCallId".equals(rejection)) step.remove(gemini ? "id" : "call_id");
         } else {
             step.put("type", gemini ? "model_output" : "message").putArray("content").addObject()
                 .put("type", gemini ? "text" : "output_text").put("text", "Welcome");

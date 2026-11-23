@@ -25,6 +25,7 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import io.swagger.v3.core.util.Json;
+import com.webjetcms.ai.AiToolArgumentValidator;
 import sk.iway.iwcm.components.configuration.ConfigurationController;
 import sk.iway.iwcm.editor.rest.GroupsRestController;
 import sk.iway.iwcm.editor.rest.WebpagesRestController;
