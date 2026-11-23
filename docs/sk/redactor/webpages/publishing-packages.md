@@ -12,6 +12,8 @@ Publikačný balík spojí prípravu viacerých stránok, priečinkov, médií a
 
 Zvolenú pracovnú verziu ukazuje prepínač v hlavičke administrácie. Editor zobrazí upozornenie, ak konkrétnu stránku nemožno upravovať, napríklad pri zdieľanej System stránke alebo multigroup kópii. Individuálne plány publikovania, história, atribúty a multigroup väzby sa v pracovnej verzii nemenia; spravujú sa mimo balíka.
 
+Ak priečinok alebo niektorý jeho podpriečinok obsahuje multigroup stránku, v pracovnej verzii je premenovanie priečinka zablokované. Ak chcete zmeniť iba popis v navigácii, upravte pole **Názov položky v menu**.
+
 Pri vytvorení priečinka WebJET pridá do pracovnej verzie aj jeho hlavnú stránku s názvom priečinka, ak je zapnuté automatické vytváranie stránok a máte právo pridávať stránky.
 
 Obrázky môžete vyberať priamo cez dialóg CKEditora. Zobrazia sa z pracovnej verzie, pričom v poli **URL adresa** aj v HTML zostáva bežná cesta `/images/...`. Nový obrázok pridaný iba do balíka bude na verejnej adrese dostupný až po publikovaní.
@@ -83,5 +85,7 @@ Vo vybranej pracovnej verzii môžete otvoriť každú časť administrácie, na
 Pri otvorení inej obrazovky, napríklad šablón stránok alebo konfigurácie, sa zobrazí dialóg s názvom pracovnej verzie. Tlačidlom **Pokračovať v hlavnej verzii** otvoríte obrazovku s údajmi hlavnej verzie. Uložené zmeny sa v nej prejavia bez publikovania balíka. Po návrate na Webové stránky pokračujete v pôvodnom balíku.
 
 Definície kategórií, atribúty, multigroup väzby, galériu a jej varianty, archív súborov, nastavenia adresárov, šablóny, CSS/JS a zdroje aplikácií pripravuje správca mimo pracovnej verzie. Spoločné System stránky sú iba na čítanie. Jazykové stránky tím pripraví explicitne; balík nevytvára skryté preklady ani zrkadlené kópie. Zmena URL nevytvorí automatické presmerovanie.
+
+V pracovnej verzii môžete nastaviť zobrazenie vloženej Fotogalérie a vybrať existujúci adresár obrázkov. Karta **Fotografie** otvorí správu v hlavnej verzii po potvrdení. Pri aplikácii Formulár ľahko môžete upraviť polia a zobrazenie vloženého formulára. Zdieľané nastavenia, napríklad adresy príjemcov, upravujte v hlavnej verzii.
 
 Overený rozsah šablón/aplikácií, konfigurácia a obnova sú v [návode pre správcu](../../admin/setup/publishing-packages.md). Pred použitím na ďalšom webe treba overiť jeho vlastné komponenty.

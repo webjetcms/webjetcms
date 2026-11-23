@@ -130,6 +130,42 @@ class BranchEditorTest extends BranchJpaTest {
         assertEquals(production,fingerprint());
     }
 
+    @Test
+    void folderUrlRegenerationUpdatesExistingLiveAndWorkPages() throws Exception {
+        int manual = liveDoc(other, "/manual-url.html");
+        try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(
+                "UPDATE `groups` SET default_doc_id=? WHERE group_id=?")) {
+            statement.setInt(1, manual);
+            statement.setInt(2, other);
+            statement.executeUpdate();
+        }
+        production = fingerprint();
+
+        in((request, editor) -> {
+            BranchEditor service = new BranchEditor(request);
+            DocDetails draft = service.loadDocument(-1, -1, other, editor);
+            draft.setTitle("New article");
+            draft.setNavbar("New article");
+            int article = service.saveDocument(draft, editor).getDocId();
+
+            // Persist the original generated URL through the same folder rename that editors already use.
+            GroupDetails folder = new GroupEditorField().fromGroupDetails(BranchView.current().group(other));
+            BranchEditor.attachHash(folder);
+            folder.setGroupName("Renamed folder");
+            folder = service.saveGroup(folder, editor);
+            assertEquals("/autotest-p04/other/new-article.html", BranchView.current().document(article, true).getVirtualPath());
+
+            folder.setUrlDirName("new-address");
+            folder.getEditorFields().setForceUrlDirNameChange(true);
+            service.saveGroup(folder, editor);
+
+            assertEquals("/autotest-p04/new-address/new-article.html", BranchView.current().document(article, true).getVirtualPath());
+            assertEquals("/autotest-p04/new-address/", BranchView.current().document(manual, true).getVirtualPath());
+            return null;
+        });
+        assertEquals(production, fingerprint());
+    }
+
     /** Legacy roots without an explicit domain support the same WORK editing as their displayed tree. */
     @ParameterizedTest
     @NullAndEmptySource

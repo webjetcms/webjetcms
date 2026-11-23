@@ -93,7 +93,13 @@ public final class BranchMedia {
             fields.setBranchHash(BranchMediaMapper.snapshot(row,ids).hash());
             media.setEditorFields(fields);
         }
-        List<MediaGroupBean> groups=new ArrayList<>();for(int id:ids){MediaGroupBean group=definitions.get(id);if(group==null)throw new IllegalStateException("Missing media category: "+id);groups.add(group);}media.setGroups(groups);
+        // A deleted category may still have a legacy membership. Keep it in the raw hash, but omit it from the display.
+        List<MediaGroupBean> groups = new ArrayList<>();
+        for (int id : ids) {
+            MediaGroupBean group = definitions.get(id);
+            if (group != null) groups.add(group);
+        }
+        media.setGroups(groups);
         return media;
     }
 }

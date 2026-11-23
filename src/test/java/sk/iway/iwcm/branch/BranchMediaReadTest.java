@@ -24,6 +24,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.spirit.model.Media;
+import sk.iway.spirit.model.MediaGroupBean;
 
 /** Guards the query scope of branch media reads independently of the domain's media count. */
 class BranchMediaReadTest {
@@ -114,6 +115,23 @@ class BranchMediaReadTest {
             assertEquals(List.of(7, 8), BranchMedia.list(42, null).stream().map(Media::getMediaId).toList());
             verifyNoInteractions(f.repository);
             verify(f.view, times(1)).document(42, true);
+        }
+    }
+
+    @Test
+    void mediaListKeepsValidCategoriesWhenAnOldCategoryIsMissing() {
+        try (Fixture f = new Fixture()) {
+            MediaGroupBean existing = new MediaGroupBean();
+            existing.setMediaGroupId(3);
+            when(f.groups.findAllByOrderByIdAsc()).thenReturn(List.of(existing));
+            Map<String, Object> raw = row(f.stored);
+            raw.put("group_ids_snapshot", List.of(3, 42));
+            f.rows.when(() -> BranchMediaRows.read(-1, 0, 1)).thenReturn(Map.of(7, raw));
+
+            Media displayed = BranchMedia.list(-1, null).get(0);
+
+            assertEquals(List.of(existing), displayed.getGroups());
+            assertEquals(BranchStore.snapshot(BranchType.MEDIA, raw).hash(), displayed.getEditorFields().getBranchHash());
         }
     }
 

@@ -308,7 +308,9 @@ class BranchFilterTest {
             request.setRequestURI(path); response=new MockHttpServletResponse();
             filter.doFilter(request,response,(in,out)->assertEquals(branch,BranchContexts.current())); assertEquals(200,response.getStatus());
         }
-        for(String path:List.of("/admin/rest/web-pages/add","/admin/rest/web-pages/action/saveAsAbTest","/admin/rest/groups/tree/save","/admin/rest/media/action/import","/admin/rest/groups/row-reorder")) {
+        for(String path:List.of("/admin/rest/web-pages/add", "/admin/rest/web-pages/action/saveAsAbTest",
+                "/admin/rest/groups/tree/save", "/admin/rest/elfinder/tree/save", "/admin/rest/media/action/import",
+                "/admin/rest/groups/row-reorder", "/admin/rest/form-settings/save_attributes")) {
             request.setRequestURI(path); response=new MockHttpServletResponse();
             filter.doFilter(request,response,(in,out)->fail("Unsupported write dispatched: "+path)); assertEquals(409,response.getStatus());
         }
@@ -571,8 +573,10 @@ class BranchFilterTest {
         response=new MockHttpServletResponse();request.setMethod("GET");request.setRequestURI("/public.html");AtomicBoolean dispatched=new AtomicBoolean();filter.doFilter(request,response,(in,out)->dispatched.set(true));assertTrue(dispatched.get());assertFalse(BranchContexts.current().isBranch());
     }
 
-    @Test void permitsReadOnlyTreePostAndRestoresScopeAfterDownstreamFailure()throws Exception {
-        selected();headers(42,DOMAIN);request.setMethod("POST");request.setRequestURI("/admin/rest/groups/tree/tree");AtomicBoolean dispatched=new AtomicBoolean();
+    @ParameterizedTest
+    @ValueSource(strings = {"/admin/rest/groups/tree/tree", "/admin/rest/elfinder/tree/tree"})
+    void permitsReadOnlyTreePostAndRestoresScopeAfterDownstreamFailure(String path)throws Exception {
+        selected();headers(42,DOMAIN);request.setMethod("POST");request.setRequestURI(path);AtomicBoolean dispatched=new AtomicBoolean();
         filter.doFilter(request,response,(in,out)->{dispatched.set(true);assertEquals(branch,BranchContexts.current());});assertTrue(dispatched.get());assertFalse(BranchContexts.current().isBranch());assertEquals("old.example",bean.getDomain());
         request.setMethod("GET");request.setRequestURI("/admin/rest/web-pages/all");
         assertThrows(ServletException.class,()->filter.doFilter(request,response,(in,out)->{assertEquals(branch,BranchContexts.current());throw new ServletException("fixture downstream error");}));

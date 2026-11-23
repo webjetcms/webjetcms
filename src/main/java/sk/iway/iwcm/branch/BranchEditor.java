@@ -165,8 +165,13 @@ public final class BranchEditor {
                 page.setNavbar(title);
                 saveDocument(connection,withNewGroup,page,editor);
             }
-            if (old!=null && (old.getParentGroupId()!=group.getParentGroupId() || !old.getUrlDirName().equals(group.getUrlDirName()) || !old.getGroupName().equals(group.getGroupName())))
-                materializeDescendants(connection,before,id);
+            if (old != null) {
+                boolean pathChanged = old.getParentGroupId() != group.getParentGroupId() || !old.getUrlDirName().equals(group.getUrlDirName());
+                boolean regenerateUrls = group.getEditorFields().isForceUrlDirNameChange();
+                if (pathChanged || regenerateUrls || !old.getGroupName().equals(group.getGroupName())) {
+                    materializeDescendants(connection, before, id, pathChanged, regenerateUrls);
+                }
+            }
             validateResult(before,BranchView.reload(connection));
             GroupDetails savedGroup=new GroupEditorField().fromGroupDetails(BranchView.current().group(id));
             attachHash(savedGroup);
@@ -176,7 +181,7 @@ public final class BranchEditor {
     }
 
     /** Materialize visible URL consequences without changing content timestamps or running synchronization. */
-    private void materializeDescendants(Connection connection, BranchView before, int root) throws SQLException {
+    private void materializeDescendants(Connection connection, BranchView before, int root, boolean pathChanged, boolean regenerateUrls) throws SQLException {
         Set<Integer> ids=subtree(before,root);
         for (GroupDetails child:before.groups()) if (ids.contains(child.getGroupId()) && child.getGroupId()!=root) {
             folder(child.getGroupId(),true);
@@ -188,6 +193,13 @@ public final class BranchEditor {
             if (!EditorService.hasPagePermission(user,doc) || user.isDisabledItem("pageSave")) throw forbidden();
             multigroup(doc.getDocId());
             DocDetails effective=after.document(doc.getDocId(),false);
+            if (pathChanged || regenerateUrls) {
+                String input = WebpagesService.getRegeneratedVirtualPathInput(doc, !regenerateUrls);
+                if (input != null) {
+                    effective.setVirtualPath(input);
+                    after.normalizeUrl(effective);
+                }
+            }
             Map<String,Object> values=row(connection,BranchType.DOCUMENT,doc.getDocId());
             values.put("virtual_path",effective.getVirtualPath());
             store.put(connection,context,BranchType.DOCUMENT,doc.getDocId(),values,currentHash(connection,BranchType.DOCUMENT,doc.getDocId()),false);

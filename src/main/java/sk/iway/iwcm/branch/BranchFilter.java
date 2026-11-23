@@ -181,7 +181,9 @@ public final class BranchFilter implements Filter {
                 }
                 if(context.isBranch()) {
                     access.requireUser(request);
-                    boolean readPost="POST".equals(request.getMethod()) && Set.of("/admin/rest/groups/tree/tree","/admin/rest/news/news-list/tree","/admin/rest/news/news-list/convertIdsToNamePair","/admin/elFinder/gethash.jsp").contains(path);
+                    boolean readPost = "POST".equals(request.getMethod()) && Set.of(
+                        "/admin/rest/groups/tree/tree", "/admin/rest/elfinder/tree/tree", "/admin/rest/news/news-list/tree",
+                        "/admin/rest/news/news-list/convertIdsToNamePair", "/admin/elFinder/gethash.jsp").contains(path);
                     if(!Set.of("GET","HEAD").contains(request.getMethod())&&!readPost&&!supportedPost(path)) {response.sendError(409,"This write is unavailable in a publishing branch");return;}
                     if(BranchProductionSection.needsConfirmation(path)) {response.sendError(409,"This function is unavailable in a publishing branch; select production");return;}
                 }
