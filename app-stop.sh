@@ -64,13 +64,13 @@ fi
 
 if [[ "${1:-}" == "--force" ]]; then
     signal_servers KILL
+    timeout=5
 else
     signal_servers TERM
-    if wait_for_servers 8; then exit 0; fi
-    signal_servers KILL
+    timeout=60
 fi
 
-if ! wait_for_servers 5; then
-    echo "Could not stop the application server in $PROJECT_ROOT" >&2
+if ! wait_for_servers "$timeout"; then
+    echo "The application server in $PROJECT_ROOT is still running after $timeout seconds" >&2
     exit 1
 fi

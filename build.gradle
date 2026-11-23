@@ -771,6 +771,15 @@ bootRun {
         '-Dwebjet.loggerUseAnsiColors=true'
     ]
     systemProperties System.getProperties()
+
+    // The JVM runs its shutdown hooks on SIGTERM (app-stop.sh) or SIGINT.
+    ignoreExitValue = true
+    doLast {
+        def result = executionResult.get()
+        if (result.exitValue != 143 && result.exitValue != 130) {
+            result.assertNormalExitValue()
+        }
+    }
 }
 
 // Generate self-signed certificate for HTTPS (migrated from gretty's auto-generated keystore)
