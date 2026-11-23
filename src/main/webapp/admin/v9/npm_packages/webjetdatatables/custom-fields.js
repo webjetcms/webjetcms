@@ -545,7 +545,7 @@ export function update(EDITOR, action) {
             const autocomplete = new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete");
             if(configuredAutocompleteUrl) autocomplete.setName("term");
             autocomplete
-                .setUrl(autocompleteUrl + querySeparator + 'keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + (json.editorFields?.fieldsDefinitionEntityId ?? json.id) + '&template=' + json.tempId + '&field=' + identifier)
+                .setUrl(autocompleteUrl + querySeparator + 'keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + (json.editorFields?.fieldsDefinitionEntityId ?? json[datatable.DATA.editorId]) + '&template=' + json.tempId + '&field=' + identifier)
                 .transform();
 
         } else if (v.type == "dir") {

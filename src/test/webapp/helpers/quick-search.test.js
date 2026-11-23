@@ -59,7 +59,7 @@ function fixture(t, denied = [], options = {}) {
         window.setTimeout = setTimeout;
         window.clearTimeout = clearTimeout;
         window.eval(fs.readFileSync(require.resolve('bootstrap/dist/js/bootstrap.bundle.js'), 'utf8'));
-        window.eval(fs.readFileSync(require.resolve('bootstrap-select/dist/js/bootstrap-select.js'), 'utf8'));
+        window.eval(readAdmin('plugins/bootstrap-select-v1.14.0-gamma1.js'));
         window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
     }
     const context = vm.createContext({
@@ -2517,6 +2517,29 @@ test('Opening cached history selects immediately and preserves later assistant s
     });
     assert.equal(host.chat, other);
     assert.equal(saved.state.messages[0].text, 'Refreshed answer');
+});
+
+test('Deleting the active chat keeps a single assistant picker across new chats', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    await openSavedChat(f, 'active-thread', 'Saved answer');
+    const host = f.controller.chat;
+    host.element.ownerDocument.defaultView.confirm = () => true;
+    const deleting = host.deleteThread(host.chat.threadInfo);
+    const request = f.requests.at(-1);
+    assert.equal(request.options.method, 'DELETE');
+    await f.respond(request, { deleted: true });
+    await f.respond(f.requests.at(-1), { items: [], hasMore: false });
+    await deleting;
+
+    const pickerButtons = () => host.content.querySelectorAll('.ai-chat-host__assistant button.dropdown-toggle');
+    assert.equal(host.chat.state.threadId, null);
+    assert.equal(pickerButtons().length, 1);
+    host.newChatButton.click();
+    assert.equal(pickerButtons().length, 1);
+    const button = pickerButtons()[0];
+    button.click();
+    assert.equal(button.getAttribute('aria-expanded'), 'true');
 });
 
 test('Persistent assistant switching starts a usable chat after its last selected thread is removed', async t => {

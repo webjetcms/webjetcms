@@ -108,10 +108,12 @@
         let maxReservationCount = 0;
         let reservationPriceMap = [];
         let checkOutOnlyDays = [];
+        let latestSupportRequest = 0;
 
         loadSupportData();
 
         function loadSupportData() {
+            const requestId = ++latestSupportRequest;
             let url = "/rest/reservation-app/calendar-support-values";
             url =  urlUpdateParam(url, "reservation-object-id", document.getElementById("reservationObjectId").value);
             let urlMonth = currentMonth + 1;
@@ -125,6 +127,7 @@
                 type: "GET",
                 url: url,
                 success: function(response) {
+                    if (requestId !== latestSupportRequest) return;
                     let object = JSON.parse(response);
 
                     currentYear = object.currentYear;

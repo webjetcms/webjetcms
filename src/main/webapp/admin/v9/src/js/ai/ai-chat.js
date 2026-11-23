@@ -444,6 +444,8 @@ export class AiChat {
         this.stop();
         this.unmount();
         for (const view of this.messageViews.values()) view.parts.forEach(part => part.preview?.destroy());
+        // The host reuses these controls, including their picker data and event handlers.
+        this.$composerControls.children().detach();
         this.$root.remove();
         this.messageViews.clear();
         Object.assign(this.state, this._initialState(), { disposed: true });

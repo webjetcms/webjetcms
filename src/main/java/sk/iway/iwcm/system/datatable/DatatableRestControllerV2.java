@@ -808,6 +808,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	 * error handling. Valid JSON values have literal angle brackets replaced with equivalent Unicode
 	 * escapes so the JPA XSS filter does not alter their syntax when the entity is loaded again.</p>
 	 *
+	 * <p>Delete requests skip custom-field validation.</p>
+	 *
 	 * <p>If a field property is not readable on the entity, the method logs the issue and continues
 	 * without failing the whole validation pass.</p>
 	 *
@@ -819,6 +821,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable> exte
 	 * @param entity entity instance to validate
 	 */
 	public void validateEditorForCustomFields(HttpServletRequest request, DatatableRequest<Long, T> target, Identity user, Errors errors, Long id, T entity) {
+		if (target.isDelete()) return;
+
 		boolean validateJson = target.isInsert() || target.isUpdate();
 		CustomFieldsSearchDto customFields = getCustomFieldsSearchDto(entity);
 		Map<String, Boolean> jsonRules = JsonEditorValidator.getRules(entity, customFields);
