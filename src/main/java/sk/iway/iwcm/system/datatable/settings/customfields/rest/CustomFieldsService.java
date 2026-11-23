@@ -91,7 +91,7 @@ public class CustomFieldsService {
      */
     public static String getConfiguredFieldType(CustomFieldsEntity customField, String labelKey, Prop typeProp) {
         if (customField != null) return customField.getValue();
-        return Tools.isEmpty(labelKey) ? "" : typeProp.getText(labelKey + ".type");
+        return Tools.isEmpty(labelKey) ? "" : typeProp.getText(labelKey + ".type", false, true);
     }
 
     /**
@@ -106,7 +106,7 @@ public class CustomFieldsService {
      */
     public static List<CustomFieldsEntity> getCustomFields(CustomFieldsSearchDto main) {
         if(main == null || main.isValid() == false) {
-            Logger.error(CustomFieldsService.class, "Bad params for getRequiredFieldsAlphabets. Returning empty list.");
+            Logger.debug(CustomFieldsService.class, "Invalid custom fields search context for getCustomFields. Returning empty list.");
             return List.of();
         }
 
@@ -131,7 +131,7 @@ public class CustomFieldsService {
     public static List<CustomFieldsEntity> getCustomFields(CustomFieldsSearchDto main, CustomFieldsSearchDto bonus) {
 
         if(main == null || main.isValid() == false) {
-            Logger.error(CustomFieldsService.class, "Bad params for getRequiredFieldsAlphabets. Returning empty list.");
+            Logger.debug(CustomFieldsService.class, "Invalid custom fields search context for getCustomFields. Returning empty list.");
             return List.of();
         }
 
@@ -345,7 +345,7 @@ public class CustomFieldsService {
      * @return the localized label, retrieved using key "settings.custom-fields.type.{fieldKey}"
      */
     public static String getFieldTypeLabel(Prop prop, String fieldKey) {
-        return prop.getText(FIELD_TYPE_KEY_PREFIX + fieldKey);
+        return prop.getText(FIELD_TYPE_KEY_PREFIX + fieldKey, false, true);
     }
 
     /**
@@ -381,7 +381,7 @@ public class CustomFieldsService {
      */
     public static List<Character> getRequiredFieldsAlphabets(CustomFieldsSearchDto main) {
         if(main == null || main.isValid() == false) {
-            Logger.error(CustomFieldsService.class, "Bad params for getRequiredFieldsAlphabets. Returning empty list.");
+            Logger.debug(CustomFieldsService.class, "Invalid custom fields search context for getRequiredFieldsAlphabets. Returning empty list.");
             return List.of();
         }
 

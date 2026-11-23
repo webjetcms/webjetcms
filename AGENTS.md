@@ -21,7 +21,7 @@ Task-specific workflows live in `.agents/skills/`. Use the applicable installed 
 ## Git workflow
 
 - Agents MUST NOT create Git commits under any circumstances, on `main` or any other branch. Leave all changes uncommitted for the user to review and commit.
-- Each feature or hotfix should normally use a dedicated branch named `feature/<id>-<short-description>` or `hotfix/<id>-<short-description>`. Continue on a suitable existing task branch.
+- Agents MUST NEVER create, switch, rename or delete Git branches. Always work on the currently checked-out branch, whether `main`, `hotfix/*`, `feature/*` or any other branch. Creating and managing branches is exclusively the developer's responsibility.
 - Preserve unrelated local changes. Follow the root [contribution guide](CONTRIBUTING.md) for PR targets and release bookkeeping.
 
 ## Agent skills

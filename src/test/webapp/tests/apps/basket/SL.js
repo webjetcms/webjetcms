@@ -84,55 +84,30 @@ module.exports = {
 
         I.say("GoPay payment");
 
-        I.waitForElement('iframe[data-cy="cardCommIframe"]', 10)
+        await I.usePlaywrightTo('Enter the card details in the GoPay sandbox frame', async ({ page }) => {
+            // GoPay navigates its iframe to the secure origin after attaching it.
+            const secureUrl = /^https:\/\/secure\.sandbox\.gopay\.com\//;
+            const frame = page.frame({ url: secureUrl }) || await page.waitForEvent('framenavigated', {
+                predicate: frame => secureUrl.test(frame.url()), timeout: 15000
+            });
+            await frame.locator('#cardPan').fill(GOPAY_CARD_PAN);
+            await frame.locator('#cardExp').fill(GOPAY_CARD_EXP);
+            await frame.locator('#cardCvc').fill(GOPAY_CARD_CVC);
+            await frame.locator('#cardCvc').blur();
+            await page.getByTestId('card.submit').click({ timeout: 15000 });
+        });
 
-        I.say("Entering card details");
-        I.switchTo('iframe[data-cy="cardCommIframe"]');
-        I.waitForElement("#cardPan", 10);
-        I.wait(2);
-        I.fillField("#cardPan", GOPAY_CARD_PAN);
-        I.fillField("#cardExp", GOPAY_CARD_EXP);
-        I.fillField("#cardCvc", GOPAY_CARD_CVC);
-        I.switchTo();
-        I.clickCss("button[data-cy=cardSubmit]");
-
-        // Payment is in process of authorization
-        I.waitForVisible(locate("div").withText("Prebieha komunikácia s vašou bankou…"), 10);
-        I.waitForInvisible(locate("div").withText("Prebieha komunikácia s vašou bankou…"), 15);
-
-        // Now, there is change, that payment test gate give us chnace to allow/blockk payment
-        I.wait(5);
-
-        I.say("Check, if bonus approval / denial is needed");
-        const num = await I.grabNumberOfVisibleElements("button#confirm");
-        if(num > 0) {
-            I.say("neede, do bonus logic.");
-
-            if(shouldBeSuccess == true) {
-                I.say("Approving payment");
-                I.clickCss("button#confirm");
-            } else {
-                I.say("Denying payment");
-                I.clickCss("button#deny");
-            }
-
-            I.wait(5);
-            I.waitForInvisible(locate("div").withText("Overovanie platby…"), 20);
-            I.wait(5);
-            I.waitForInvisible(locate("div").withText("Dokončovanie platby…"), 20);
+        const challengeButton = shouldBeSuccess ? 'button#confirm' : 'button#deny';
+        const returnButton = 'button:has-text("Späť do obchodu"), a:has-text("Späť do obchodu")';
+        const resultAlert = shouldBeSuccess ? '.alert-success' : '.alert-danger';
+        const resultText = shouldBeSuccess ? 'Platba prebehla úspešne.' : 'Platba sa nepodarila!';
+        I.waitForVisible([challengeButton, returnButton, resultAlert].join(', '), 40);
+        if (await I.grabNumberOfVisibleElements(challengeButton)) {
+            I.clickCss(challengeButton);
+            I.waitForVisible(returnButton + ', ' + resultAlert, 40);
         }
-
-        I.say("Waiting for bank response");
-        //Just in case
-        I.wait(2);
-        await I.clickIfVisible('button[data-cy="submitRedirectButton"]');
-
-        I.say("Check payment returned message");
-        if(shouldBeSuccess == true) {
-            I.waitForText("Platba prebehla úspešne", 20);
-        } else {
-            I.waitForText("Platba sa nepodarila", 20);
-        }
+        await I.clickIfVisible(returnButton);
+        I.waitForText(resultText, 30, resultAlert);
     },
 
     selectCurrency(I, currency) {

@@ -520,7 +520,7 @@ export const dataTableInit = options => {
 
         //console.log("RefreshRow, url=", url, "id=", id);
 
-        $.ajax({
+        return $.ajax({
             url: url,
             success: function (json) {
                 //console.log("refreshSuccess, TABLE=", TABLE, "row=", TABLE.row, "id=", DATA.editorId);
@@ -539,7 +539,7 @@ export const dataTableInit = options => {
                 } catch (e) {console.log(e);}
 
                 //toto sa nemoze volat, pretoze to vyvola ajax request na server (pri serverSide: true) TABLE.draw(false);
-                callback(json);
+                callback?.(json);
             }
         });
     }
@@ -1380,33 +1380,26 @@ export const dataTableInit = options => {
         $.fn.dataTable.ext.buttons.editRefresh = {
             extend: 'edit',
             text: WJ.translate('button.edit'),
-            action: function (e, dt, node, config) {
+            action: async function (e, dt, node, config) {
+                const ids = dt.rows({selected: true}).ids().toArray();
+                if (!ids.length) return;
                 this.processing(true);
 
-                // Get currently selected row ids
-                const selectedRows = dt.rows({selected: true}).ids();
-                //console.log("selectedRows=", selectedRows);
-                const that = this;
-                const rowsLength = selectedRows.length;
-
-                for (let i=0; i<rowsLength; i++) {
-                    refreshRow(selectedRows[i], function (json) {
-                        //console.log("fetched, i=", i, "json=", json);
-                        if ((i+1)>=rowsLength) {
-                            //console.log("Finished, opening editor");
-                            that.processing(false);
-                            const event = new CustomEvent('WJ.DTE.xhrfetch', {
-                                detail: {
-                                    json: json
-                                }
-                            });
-                            //console.log("Dispatching event: ", event);
-                            window.dispatchEvent(event);
-                            setTimeout(()=> {
-                                $.fn.dataTable.ext.buttons.edit.action.call(that, e, dt, node, config);
-                            }, 100);
-                        }
-                    });
+                try {
+                    const results = await Promise.allSettled(ids.map(id => refreshRow(id)));
+                    if (results.some(result => result.status === 'rejected')) {
+                        WJ.notifyError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"));
+                        return;
+                    }
+                    // refreshRow already reported any application error in a successful HTTP response.
+                    if (results.some(result => result.value.error)) return;
+                    const json = results[results.length - 1].value;
+                    window.dispatchEvent(new CustomEvent('WJ.DTE.xhrfetch', { detail: { json } }));
+                    setTimeout(() => {
+                        $.fn.dataTable.ext.buttons.edit.action.call(this, e, dt, node, config);
+                    }, 100);
+                } finally {
+                    this.processing(false);
                 }
             }
         };

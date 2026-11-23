@@ -804,13 +804,14 @@ function disApproveDelete(I, pageName) {
 function deletePage(I, DT, pageName, checkDelete) {
     I.say("deletePage "+pageName)
     //Filter page
-    DT.filterContains("title", pageName);
-    //Check we see page
-    I.see(pageName);
-    //Bevare of delete, normal selector will delete whole folder
-    I.clickCss("#datatableInit_wrapper div.dt-scroll-head button.buttons-select-all.dt-filter-id");
+    DT.filterEquals("title", pageName);
+    const row = locate("#datatableInit tbody tr").withText(pageName);
+    I.waitForVisible(row, 10);
+    I.click(row.find("td.dt-select-td"));
     I.click(DT.btn.delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
+    // Wait for the server to acknowledge the request before logging out as the requester.
+    I.waitForInvisible("#datatableInit_modal", 30);
 
     if(checkDelete) {
         //Check we dont see page

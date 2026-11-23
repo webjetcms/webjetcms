@@ -89,7 +89,7 @@ Scenario('limit blocks further calls and selected reset restores usage', async (
     closeAssistantToast(I);
 
     // Reuse the page's cached assistant definition to verify the database limit check.
-    startAssistant(I);
+    await startAssistant(I);
     I.waitForText('Asistent dosiahol limit tokenov a nie je možné ho ďalej používať.', 30, aiContent);
     I.dontSeeElement(aiContent + ' button.btn-ai-undo');
     closeAssistantToast(I);
@@ -205,10 +205,17 @@ function openWebPage(I, DTE) {
     I.fillField('#DTE_Field_fieldS', 'autotest');
 }
 
-function startAssistant(I) {
+async function startAssistant(I) {
     I.clickCss('.DTE_Field_Name_fieldS button.btn-ai');
     I.waitForVisible('#toast-container-ai', 10);
-    I.click(locate('#toast-container-ai button.btn-ai-action').withText(assistantName));
+    return I.retry(0).usePlaywrightTo('wait for the non-streaming assistant response', async ({ page }) => {
+        const [response] = await Promise.all([
+            page.waitForResponse(response => response.request().method() === 'POST' &&
+                new URL(response.url()).pathname === '/admin/rest/ai/assistant/response/', { timeout: 180000 }),
+            page.locator('#toast-container-ai button.btn-ai-action').filter({ hasText: assistantName }).click()
+        ]);
+        return response.status();
+    });
 }
 
 /**
@@ -219,9 +226,9 @@ function startAssistant(I) {
  * @returns {Promise<number>} Token total parsed from the successful response message.
  */
 async function runAssistant(I) {
-    startAssistant(I);
+    I.assertEqual(await startAssistant(I), 200, 'The token-limit assistant request must succeed.');
     const status = aiContent + ' > .current-status > span';
-    I.waitForVisible('#toast-container-ai.ai-status-success, #toast-container-ai.ai-status-error', 90);
+    I.waitForVisible('#toast-container-ai.ai-status-success, #toast-container-ai.ai-status-error', 10);
     const message = await I.grabTextFrom(status);
     I.assertContain(message, 'Hotovo! Bolo použitých', 'The assistant must finish successfully.');
     I.waitForVisible(aiContent + ' button.btn-ai-undo', 10);

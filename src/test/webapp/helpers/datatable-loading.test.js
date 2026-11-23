@@ -68,11 +68,50 @@ function fixture(t, serverSide, initialData) {
     table.DATA = context.DATA;
     context.TABLE = table;
     events.length = 0;
-    return { table, requests, notifications, events, onXhr, optionsUpdates, serverNotifications, statusMessages, timers,
+    return { table, requests, notifications, events, onXhr, optionsUpdates, serverNotifications, statusMessages, timers, context, source,
         loading: () => dom.window.document.querySelector('.dt-processing').style.display !== 'none',
         emptyMessage: () => $(table.table().body()).find('td.dt-empty').text(),
         footer: () => $(table.table().footer()).text().trim() };
 }
+
+test('Bulk edit waits for every selected row before opening the editor', async t => {
+    const { context, source, table, requests, timers, notifications } = fixture(t, false);
+    const rows = [1, 2].map(id => ({ id, DT_RowId: String(id), title: 'List row', amount: 10 }));
+    requests.shift().respond({ content: rows });
+    context.DATA.editorId = 'id';
+    context.CustomEvent = context.window.CustomEvent;
+    const buttons = context.$.fn.dataTable.ext.buttons;
+    const opened = [];
+    buttons.edit = { action: () => opened.push(table.rows().data().toArray().map(row => row.title)) };
+    const refreshStart = source.indexOf('    function refreshRow(');
+    vm.runInContext(source.slice(refreshStart, source.indexOf('    function showNotify(', refreshStart)), context);
+    const actionStart = source.indexOf('        $.fn.dataTable.ext.buttons.editRefresh =');
+    vm.runInContext(source.slice(actionStart, source.indexOf('\n        };', actionStart) + 11), context);
+    const state = [];
+    const edit = () => buttons.editRefresh.action.call({ processing: active => state.push(active) }, {}, table);
+    const fetched = [];
+    context.window.addEventListener('WJ.DTE.xhrfetch', event => fetched.push(event.detail.json.id));
+    const result = edit();
+    const second = requests.pop();
+    second.respond({ ...rows[1], title: 'Full content' });
+    assert.deepEqual(fetched, [], 'The last selected row can finish first');
+    requests.pop().respond({ ...rows[0], title: 'Full content' });
+    await result;
+    timers.splice(0).forEach(timer => timer.callback());
+    assert.deepEqual(fetched, [2]);
+    assert.deepEqual(opened, [['Full content', 'Full content']]);
+    assert.deepEqual(state, [true, false]);
+
+    for (const [body, status] of [[{ error: 'Row unavailable' }, 200], [{}, 503]]) {
+        const retry = edit();
+        requests.pop().respond(rows[1]);
+        requests.pop().respond(body, status);
+        await retry;
+        assert.deepEqual(fetched, [2], 'A partial refresh must not open the editor');
+        assert.equal(state.at(-1), false);
+    }
+    assert.equal(notifications.length, 2);
+});
 
 const products = (title, amount = 100) => ({
     content: [{ title, amount }], totalElements: 1, size: 10,

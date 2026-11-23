@@ -107,12 +107,17 @@ public class ConfDB
 		return conf;
 	}
 
+	/** Whether the configured key prefixes leave this user unrestricted. */
+	public static boolean canViewAllKeys(Identity user, String configEnabledKeys) {
+		return Tools.isEmpty(configEnabledKeys) || user.isEnabledItem("conf.show_all_variables");
+	}
+
 	public static List<ConfDetails> filterConfDetailsByPerms(Identity user, List<ConfDetails> confList)
 	{
 		//odfiltruj zoznam podla prav
 		String configEnabledKeys = Constants.getStringExecuteMacro("configEnabledKeys");
 
-		if (Tools.isEmpty(configEnabledKeys) || user.isEnabledItem("conf.show_all_variables")) return confList;
+		if (canViewAllKeys(user, configEnabledKeys)) return confList;
 
 		List<ConfDetails> filtered = new ArrayList<>();
 		String[] enabledKeys = Tools.getTokens(configEnabledKeys, ",");
@@ -132,7 +137,7 @@ public class ConfDB
 		//odfiltruj zoznam podla prav
 		String configEnabledKeys = Constants.getStringExecuteMacro("configEnabledKeys");
 
-		if (Tools.isEmpty(configEnabledKeys) || user.isEnabledItem("conf.show_all_variables")) return confList;
+		if (canViewAllKeys(user, configEnabledKeys)) return confList;
 
 		List<String> filtered = new ArrayList<>();
 		String[] enabledKeys = Tools.getTokens(configEnabledKeys, ",");
@@ -151,7 +156,7 @@ public class ConfDB
 		//odfiltruj zoznam podla prav
 		String configEnabledKeys = Constants.getStringExecuteMacro("configEnabledKeys");
 
-		if (Tools.isEmpty(configEnabledKeys) || user.isEnabledItem("conf.show_all_variables")) return true;
+		if (canViewAllKeys(user, configEnabledKeys)) return true;
 
 		String[] enabledKeys = Tools.getTokens(configEnabledKeys, ",");
 		return isKeyVisibleToUser(user, enabledKeys, key);

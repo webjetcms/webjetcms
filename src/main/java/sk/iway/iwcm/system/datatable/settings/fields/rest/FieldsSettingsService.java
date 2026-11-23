@@ -30,6 +30,7 @@ import sk.iway.iwcm.system.datatable.settings.fields.jpa.FieldsSettingsEntity;
 import sk.iway.iwcm.system.datatable.settings.fields.jpa.FieldsSettingsRepository;
 import sk.iway.iwcm.system.datatable.settings.tabs.jpa.TabsSettingsEntity;
 import sk.iway.iwcm.system.datatable.settings.tabs.rest.TabsSettingsService;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
@@ -290,13 +291,14 @@ public class FieldsSettingsService {
     /**
      * Scans configured application packages for classes annotated with {@link Entity} or {@link DataTableTabs}.
      * Custom-field entities retain Spring's default candidate restrictions and need nested {@link BaseEditorFields},
-     * even when they have no annotated columns. {@link TemplateDetails} remains an unconditional custom-field option.
+     * even when they have no annotated columns. {@link GroupDetails} and {@link TemplateDetails}
+     * remain unconditional custom-field options.
      *
      * @return field/tab metadata and eligible custom-field class names from the same scan
      */
     private DiscoveredClasses findClassesWithAnnotation() {
         Map<String, ClassOptions> foundClasses = new HashMap<>();
-        Set<String> customFieldClasses = new HashSet<>(Set.of(TemplateDetails.class.getName()));
+        Set<String> customFieldClasses = new HashSet<>(Set.of(GroupDetails.class.getName(), TemplateDetails.class.getName()));
         Set<String> customFieldCandidates = new HashSet<>();
         ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false) {
             @Override

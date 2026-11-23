@@ -6,8 +6,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
@@ -153,6 +155,9 @@ public class DemoComponent extends WebjetComponentAbstract {
 
         model.addAttribute("test", "Toto je test");
 		model.addAttribute("demoComponent", this);
+		model.addAttribute("domainName", DocDB.getDomain(request));
+		model.addAttribute("path", request.getRequestURI());
+		model.addAttribute("origPath", PathFilter.getOrigPath(request));
 
 		if ("npe".equals(request.getParameter("act"))) {
 			String npe = null;

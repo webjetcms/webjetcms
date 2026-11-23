@@ -3,6 +3,7 @@ package sk.iway.iwcm;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -70,16 +71,18 @@ class ToolsTest extends BaseWebjetTest {
 
     @Test
     void testGetServerNameWithAlias() {
+        String defaultDomainName = System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME");
+        assumeTrue(Tools.isNotEmpty(defaultDomainName), "CODECEPT_DEFAULT_DOMAIN_NAME is not configured");
         Constants.setBoolean("multiDomainEnabled", true);
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getServerName()).thenReturn("iwcm.interway.sk");
 
         String domainAlias = DomainRedirectDB.getDomainFromAlias(request.getServerName());
         System.out.println("domainAlias: " + domainAlias);
-        assertEquals(System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME"), domainAlias);
+        assertEquals(defaultDomainName, domainAlias);
 
         String serverName = Tools.getServerName(request, true);
-        assertEquals(System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME"), serverName);
+        assertEquals(defaultDomainName, serverName);
     }
 
     @Test

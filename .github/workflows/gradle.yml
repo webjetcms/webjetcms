@@ -123,10 +123,11 @@ jobs:
         webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
 
   dependency-submission:
-    # Skip workflow for WIP pull requests (same logic as build job)
+    # Skip WIP pull requests and fork pull requests, whose tokens cannot submit dependencies.
     if: |
       github.event_name == 'push' || (
         github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
         github.event.pull_request.draft == false &&
         !contains(github.event.pull_request.title, 'wip:') &&
         !contains(github.event.pull_request.title, 'WIP:')

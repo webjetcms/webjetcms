@@ -360,31 +360,55 @@ public class PkeyGenerator
 		return value;
 	}
 
-   /**
-    * Ziskanie dalsej hodnoty kluca
-    * @param keyName
-    * @return
-    */
+	/**
+	 * Returns the next primary key value converted to an {@code int}.
+	 * Delegates to {@link #getNextValueAsLong(String)}, including its initialization
+	 * failure handling requirements for callers.
+	 *
+	 * @param keyName name of the primary key generator
+	 * @return the next primary key value converted to an {@code int}
+	 * @throws IllegalStateException if the generator is still missing after one
+	 *         record creation attempt and a cache reload
+	 */
 	public static synchronized int getNextValue(String keyName)
 	{
 		return (int) getNextValueAsLong(keyName);
 	}
 
+	/**
+	 * Returns the next primary key value, including the configured {@code pkeyGenOffset}.
+	 * <p>
+	 * If the generator is not cached, attempts to create its database record once
+	 * and reloads the generator cache. If it is still missing, initialization fails
+	 * with {@link IllegalStateException}.
+	 * <p>
+	 * On initialization failure, callers must abort the operation requiring the
+	 * identifier and propagate the failure to their error handler. Substituting a
+	 * fixed identifier could cause duplicate keys; retries must remain bounded.
+	 *
+	 * @param keyName name of the primary key generator
+	 * @return the next primary key value with the configured offset
+	 * @throws IllegalStateException if the generator is still missing after one
+	 *         record creation attempt and a cache reload
+	 */
 	public static synchronized long getNextValueAsLong(String keyName)
 	{
 		long value = 1;
 		PkeyGenerator pkGen = PkeyGenerator.getInstance();
 		int INCREMENT_OFFSET = Constants.getInt("pkeyGenOffset");
-		try
+		PkeyBean p = pkGen.getPkeyBean(keyName);
+		if (p == null)
 		{
-			PkeyBean p = pkGen.getPkeyBean(keyName);
+			createNewRecord(keyName);
+			pkGen.pkeyReloadAll();
+			p = pkGen.getPkeyBean(keyName);
 			if (p == null)
 			{
-				createNewRecord(keyName);
-				PkeyGenerator pkg = PkeyGenerator.getInstance();
-				pkg.pkeyReloadAll();
-				return getNextValueAsLong(keyName);
+				throw new IllegalStateException("Cannot initialize primary key generator: " + keyName);
 			}
+		}
+		try
+		{
 			int INCREMENT = Constants.getInt("pkeyGenIncrement");
 
 			if ((p.getValue()+INCREMENT+INCREMENT_OFFSET) > p.getMaxValue())
