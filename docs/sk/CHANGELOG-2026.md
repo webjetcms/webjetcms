@@ -50,7 +50,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 - Správa všetkých médií sa v pracovnej verzii načíta aj pri starších väzbách na zmazané kategórie. Pri úprave priečinka funguje pregenerovanie adries podstránok. Formulár ľahko ukladá nastavenia zobrazenia do stránky a Fotogaléria umožňuje vybrať existujúci adresár obrázkov.
 
-- Pracovné verzie - náhľad webu zobrazuje kompaktný plávajúci panel vpravo dole s názvom verzie a prípadným termínom publikovania. Používa farbu verzie z administrácie a jeho vzhľad možno prepísať v CSS šablóny. Panel neprekrýva sticky hlavička a nezobrazuje priebežne sa meniaci čas Noviniek.
+- Pracovné verzie - odkaz **Náhľad** v páse otvorí úvodnú stránku na adrese `/`, ak je v balíku dostupná. Náhľad webu zobrazuje kompaktný plávajúci panel vpravo dole s názvom verzie a prípadným termínom publikovania. Používa farbu verzie z administrácie a jeho vzhľad možno prepísať v CSS šablóny. Panel neprekrýva sticky hlavička a nezobrazuje priebežne sa meniaci čas Noviniek.
 
 - Pracovné verzie - editor stránok a priečinkov už nezobrazuje všeobecný modrý informačný banner. Zvolenú verziu ukazuje prepínač v hlavičke; v editore zostávajú konkrétne upozornenia pri obsahu iba na čítanie.
 

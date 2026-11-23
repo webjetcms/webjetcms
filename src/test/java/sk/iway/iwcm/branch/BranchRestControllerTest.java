@@ -19,6 +19,8 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -26,6 +28,8 @@ import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.test.BaseWebjetTest;
@@ -158,6 +162,42 @@ class BranchRestControllerTest extends BaseWebjetTest {
         domains.when(() -> BranchDomains.name(1)).thenReturn("a.example.sk");
     }
     @AfterEach void closeDomainIds() { domains.close(); }
+
+    /** The demo site's first root folder points to a different page than the home navigation link. */
+    @ParameterizedTest
+    @CsvSource(nullValues = "missing", value = {
+        "true,    0, /",
+        "false,   0, /jet-portal/",
+        "missing, 0, /jet-portal/",
+        "true,   13, /jet-portal/"
+    })
+    void previewLinkSelectsTheAvailableHomepageOrTheRequestedPage(Boolean homeAvailable, int docId, String expectedPath) {
+        String domain = "a.example.sk";
+        Identity user = controller.getUser();
+        when(access.requireUser(request)).thenReturn(user);
+        var folder = new GroupDetails();
+        folder.setDomainName(domain);
+        folder.setParentGroupId(0);
+        folder.setDefaultDocId(13);
+        var landing = new DocDetails();
+        landing.setDocId(13);
+        landing.setAvailable(true);
+        landing.setVirtualPath("/jet-portal/");
+        var home = new DocDetails();
+        home.setDocId(27);
+        home.setVirtualPath("/");
+        home.setAvailable(Boolean.TRUE.equals(homeAvailable));
+
+        var view = mock(BranchView.class, CALLS_REAL_METHODS);
+        doReturn(List.of(folder)).when(view).groups();
+        doReturn(homeAvailable == null ? List.of(landing) : List.of(landing, home)).when(view).documents(true);
+        doReturn(landing).when(view).document(13, true);
+        try (var selection = mockStatic(BranchSelection.class); var views = mockStatic(BranchView.class)) {
+            selection.when(() -> BranchSelection.previewDomain(6, user)).thenReturn(domain);
+            views.when(BranchView::current).thenReturn(view);
+            assertEquals("/admin/webpages/branch-preview/6" + expectedPath, controller.previewLink(6, docId, request).get("url"));
+        }
+    }
 
 
     @Test

@@ -1,6 +1,7 @@
 package sk.iway.iwcm.branch;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -161,14 +163,23 @@ public class BranchRestController extends DatatableRestControllerV2<BranchEntity
     }
 
     @GetMapping("/{id}/preview-link")
-    public java.util.Map<String,String> previewLink(@PathVariable long id,@RequestParam(defaultValue="0") int docId,HttpServletRequest request) {
-        Identity user=access.requireUser(request);
-        String domain=BranchSelection.previewDomain(id,user);
-        try(BranchContexts.Scope ignored=BranchContexts.open(request,new BranchContext(id,domain,user.getUserId(),BranchContext.Mode.PREVIEW))) {
-            if(docId==0) docId=BranchView.current().groups().stream().filter(group->domain.equals(group.getDomainName())&&group.getParentGroupId()==0&&group.getDefaultDocId()>0).mapToInt(sk.iway.iwcm.doc.GroupDetails::getDefaultDocId).findFirst().orElse(0);
-            var doc=BranchReadService.getDoc(docId);
-            if(doc==null||!doc.isAvailable()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Page unavailable in selected result");
-            return java.util.Map.of("url",request.getContextPath()+BranchPreviewUrls.PREFIX+id+doc.getVirtualPath());
+    public Map<String, String> previewLink(@PathVariable long id, @RequestParam(defaultValue = "0") int docId, HttpServletRequest request) {
+        Identity user = access.requireUser(request);
+        String domain = BranchSelection.previewDomain(id, user);
+        try (BranchContexts.Scope ignored = BranchContexts.open(request, new BranchContext(id, domain, user.getUserId(), BranchContext.Mode.PREVIEW))) {
+            BranchView view = BranchView.current();
+            String prefix = request.getContextPath() + BranchPreviewUrls.PREFIX + id;
+            if (docId == 0) {
+                var home = view.metadataDocument(view.docIdFromUrl("/"));
+                if (home != null && home.isAvailable()) return Map.of("url", prefix + "/");
+
+                docId = view.groups().stream()
+                    .filter(group -> domain.equals(group.getDomainName()) && group.getParentGroupId() == 0 && group.getDefaultDocId() > 0)
+                    .mapToInt(GroupDetails::getDefaultDocId).findFirst().orElse(0);
+            }
+            var doc = view.document(docId, true);
+            if (doc == null || !doc.isAvailable()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Page unavailable in selected result");
+            return Map.of("url", prefix + doc.getVirtualPath());
         }
     }
 
