@@ -595,7 +595,13 @@ public final class BranchMergeService {
     }
 
     private static boolean changed(List<Entry> entries,BranchType type,int id) {return entries.stream().anyMatch(e->e.type==type&&e.change.objectKey().equals(Integer.toString(id)));}
-    private static boolean structural(Entry e) {if(e.target.state()!=BranchSnapshot.State.ACTIVE)return true;for(String f:List.of("parent_group_id","group_name","url_dir_name"))if(!Objects.equals(e.change.base().fields().get(f),e.target.fields().get(f)))return true;return false;}
+    private static boolean structural(Entry e) {
+        if (e.target.state() != BranchSnapshot.State.ACTIVE) return true;
+        var base = e.change.base().fields();
+        var target = e.target.fields();
+        return !Objects.equals(base.get("parent_group_id"), target.get("parent_group_id"))
+            || !BranchGroupMapper.urlDirectory(base).equals(BranchGroupMapper.urlDirectory(target));
+    }
     static Set<Integer> descendants(Map<Integer,Map<String,Object>> groups,int root) {Set<Integer> result=new HashSet<>();result.add(root);boolean added;do{added=false;for(var g:groups.values())if(result.contains(number(g,"parent_group_id")))added|=result.add(number(g,"group_id"));}while(added);return result;}
     static int existingTrash(Map<Integer,Map<String,Object>> groups,String domain) {
         String trash=sk.iway.iwcm.i18n.Prop.getInstance(Constants.getString("defaultLanguage")).getText("config.trash_dir");
@@ -771,8 +777,14 @@ public final class BranchMergeService {
         }
         checkContentAccess(c, type, row, user, domain, publish ? ContentAccess.PUBLISH : ContentAccess.VIEW, permissions);
         if(publish && user.isDisabledItem("pageSave"))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chýba právo uložiť/publikovať stránku.");
-        if(type==BranchType.DOCUMENT) {
-            int id=number(row,"doc_id");if(MultigroupMappingDB.getMasterDocId(id)>0||!MultigroupMappingDB.getSlaveDocIds(id).isEmpty())throw conflict("Multigroup zápis nie je podporovaný: "+id);
+        if (publish && type == BranchType.DOCUMENT) {
+            int id = number(row, "doc_id");
+            BranchMultigroup links = BranchMultigroup.read(c, id);
+            links.checkUnchanged(row);
+            var live = permissions.get(type, id, false);
+            if (!links.copies().isEmpty() && ("DELETE".equals(row.get("operation"))
+                    || live == null || number(live, "group_id") != number(row, "group_id")))
+                throw conflict(Prop.getInstance().getText("branches.multigroup.linksReadOnly", " " + BranchMultigroup.label((String) row.get("title"), id)));
         }
     }
 

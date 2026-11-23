@@ -4502,6 +4502,7 @@ CREATE TABLE IF NOT EXISTS branch_documents (
     `operation` VARCHAR(8) NOT NULL DEFAULT 'UPSERT',
     `base_exists` BOOLEAN NOT NULL,
     `base_snapshot` LONGTEXT NULL,
+    `multigroup_hash` CHAR(64) NULL,
     `base_hash` CHAR(64) NOT NULL,
     `updated_by` INT NOT NULL,
     `updated_at` DATETIME NOT NULL,

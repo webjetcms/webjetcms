@@ -32,7 +32,7 @@ class BranchEditorValidationTest {
             contexts.when(() -> BranchContexts.current(request)).thenReturn(new BranchContext(1,"example.sk",1,BranchContext.Mode.ADMIN));
             BranchEditor editor = new BranchEditor(request);
             DocDetails stored = new DocDetails();stored.setSyncId(7);stored.setSyncStatus(1);
-            DocDetails submitted = JsonMapper.builder().build().readValue("{\"docId\":12,\"data\":\"<p>Changed text</p>\",\"syncId\":99,\"syncStatus\":99}",DocDetails.class);
+            DocDetails submitted = JsonMapper.builder().build().readValue("{\"docId\":12,\"title\":\"Test page\",\"data\":\"<p>Changed text</p>\",\"syncId\":99,\"syncStatus\":99}",DocDetails.class);
             submitted.setEditorFields(new DocEditorFields());
             assertEquals(0,submitted.getSyncStatus());assertEquals(0,submitted.getSyncId());
             assertDoesNotThrow(() -> ReflectionTestUtils.invokeMethod(editor,"rejectUnsupported",submitted,stored));

@@ -148,6 +148,7 @@ window.applyBranchEditor = (table, group = false) => {
             record.editorFields ||= {};
             record.editorFields.branchHash = original.editorFields.branchHash;
             if (!group) {
+                delete record.editorFields.groupCopyDetails;
                 record.editorFields.publishAfterStart = original.editorFields.publishAfterStart;
                 record.editorFields.disableAfterEnd = original.editorFields.disableAfterEnd;
             }

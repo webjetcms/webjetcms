@@ -21,7 +21,6 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
@@ -41,8 +40,6 @@ class BranchPageVersionsTest {
             f.rows.verify(()->BranchPublishRows.rows(f.connection,42,BranchType.DOCUMENT),never());
             f.rows.verify(()->BranchPublishRows.rows(f.connection,42,BranchType.MEDIA),never());
             f.rows.verify(()->BranchPublishRows.rows(f.connection,42,BranchType.FILE),never());
-            f.mappings.verify(()->MultigroupMappingDB.getMasterDocId(12),times(1));
-            f.mappings.verify(()->MultigroupMappingDB.getSlaveDocIds(12),times(1));
             verify(f.branch).setLong(1,42);
             verify(f.branch).setInt(2,1);
         }
@@ -159,7 +156,6 @@ class BranchPageVersionsTest {
         final MockedStatic<GroupsDB> folders=mockStatic(GroupsDB.class);
         final MockedStatic<Constants> constants=mockStatic(Constants.class);
         final MockedStatic<UsersDB> users=mockStatic(UsersDB.class);
-        final MockedStatic<MultigroupMappingDB> mappings=mockStatic(MultigroupMappingDB.class);
         final MockedStatic<Prop> props=mockStatic(Prop.class);
 
         Fixture() throws Exception {
@@ -196,6 +192,6 @@ class BranchPageVersionsTest {
             });
         }
 
-        @Override public void close() {permissionRows.close();props.close();mappings.close();users.close();constants.close();folders.close();rows.close();store.close();readiness.close();pool.close();}
+        @Override public void close() {permissionRows.close();props.close();users.close();constants.close();folders.close();rows.close();store.close();readiness.close();pool.close();}
     }
 }

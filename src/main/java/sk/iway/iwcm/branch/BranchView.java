@@ -145,7 +145,7 @@ public final class BranchView {
             documentRows.add(projection);
         }
         // Recompute only metadata of pages below changed ancestors; HTML remains in LIVE SQL.
-        List<Integer> affected = groups.values().stream().map(GroupDetails::getGroupId).filter(this::changedAncestor).toList();
+        List<Integer> affected = groups.values().stream().map(GroupDetails::getGroupId).filter(id -> changedAncestor(id, true)).toList();
         if (!affected.isEmpty()) {
             String ids = affected.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
             for (Map<String,Object> live : read(connection,"SELECT "+documentColumns("",true)+" FROM documents WHERE group_id IN ("+ids+")",false)) {
@@ -165,11 +165,17 @@ public final class BranchView {
     }
 
 
-    private boolean changedAncestor(int groupId) {
+    private boolean changedAncestor(int groupId, boolean includeDefaultPage) {
         Set<Integer> visited = new HashSet<>();
         while (groupId > 0 && visited.add(groupId)) {
-            if (usesWork(BranchType.GROUP,Integer.toString(groupId))) return true;
-            GroupDetails group = groups.get(groupId); groupId = group == null ? 0 : group.getParentGroupId();
+            GroupDetails group = groups.get(groupId);
+            if (group == null) return false;
+            Map<String,Object> live = liveGroups.get(groupId);
+            if (usesWork(BranchType.GROUP,Integer.toString(groupId)) && (live == null
+                    || (includeDefaultPage && group.getDefaultDocId() != id(live,"default_doc_id"))
+                    || group.getParentGroupId() != id(live,"parent_group_id")
+                    || !group.getUrlDirName().equals(BranchGroupMapper.urlDirectory(live)))) return true;
+            groupId = group.getParentGroupId();
         }
         return false;
     }
@@ -238,7 +244,7 @@ public final class BranchView {
         for (int level=1;level<=3;level++) result.put("root_group_l"+level,roots[level-1] > 0 ? roots[level-1] : null);
         try (var rs = BranchRows.result(row)) {
             DocDetails doc = DocDB.getDocDetails(rs,false,true);
-            if (movedDocument || changedUrlAncestor(doc.getGroupId())) prepareInheritedUrl(doc);
+            if (movedDocument || changedAncestor(doc.getGroupId(), false)) prepareInheritedUrl(doc);
             result.put("file_name",DocDB.getURL(doc,groups.get(doc.getGroupId()),DocDB.getGroupDiskPath(groups(),doc.getGroupId())));
         }
         return result;
@@ -315,22 +321,6 @@ public final class BranchView {
         if (group != null) {
             doc.setVirtualPath(DocDB.getURL(doc,group,DocDB.getGroupDiskPath(groups(),doc.getGroupId())));
         }
-    }
-
-    private boolean changedUrlAncestor(int groupId) throws SQLException {
-        Set<Integer> visited = new HashSet<>();
-        while (groupId > 0 && visited.add(groupId)) {
-            GroupDetails group = groups.get(groupId); if (group == null) return false;
-            Map<String,Object> original = liveGroups.get(groupId);
-            if (original == null || group.getParentGroupId() != id(original,"parent_group_id")
-                || !Objects.equals(group.getUrlDirName(),liveUrlDir(original))) return true;
-            groupId = group.getParentGroupId();
-        }
-        return false;
-    }
-
-    private static String liveUrlDir(Map<String,Object> row) throws SQLException {
-        try (var result=BranchRows.result(row)) { return GroupsDB.fillFieldsByResultSet(result,false).getUrlDirName(); }
     }
 
     private static void prepareInheritedUrl(DocDetails doc) {

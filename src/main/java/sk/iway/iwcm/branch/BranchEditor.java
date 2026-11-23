@@ -42,16 +42,32 @@ public final class BranchEditor {
             doc.setPublishAfterStart(false); doc.setDisableAfterEnd(false);
             doc.getEditorFields().setPublishAfterStart(false); doc.getEditorFields().setDisableAfterEnd(false);
         } else {
-            doc = BranchView.current().document(id,false);
-            if (doc==null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-            if (!EditorService.hasPagePermission(user,doc)) throw forbidden();
+            doc = editableDocument(BranchView.current(), id);
             WebpagesService.processFromEntity(doc,ProcessItemAction.GETONE,request,true);
             String reason=null;
             if(systemFolder(BranchView.current().group(doc.getGroupId()))) reason=sk.iway.iwcm.i18n.Prop.getInstance(request).getText("branches.system.readonly");
-            else if(MultigroupMappingDB.getMasterDocId(id)>0 || !MultigroupMappingDB.getSlaveDocIds(id).isEmpty()) reason=sk.iway.iwcm.i18n.Prop.getInstance(request).getText("branches.multigroup.readonly");
             doc.getEditorFields().setBranchReadOnlyReason(reason);
         }
         attachHash(doc);
+        return doc;
+    }
+
+    private DocDetails editableDocument(BranchView view, int id) {
+        DocDetails doc = view.document(id,false);
+        if (doc==null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (!EditorService.hasPagePermission(user,doc)) throw forbidden();
+        int masterId = MultigroupMappingDB.getMasterDocId(id);
+        if (masterId > 0 && masterId != id) {
+            DocDetails master = view.document(masterId, false);
+            if (master == null || !EditorService.hasPagePermission(user, master)) throw forbidden();
+            usePageLocation(master, doc);
+            master.setEditorFields(doc.getEditorFields());
+            master.setPublishStartDate(doc.getPublishStartDate());
+            master.setPublishEndDate(doc.getPublishEndDate());
+            master.setPublishAfterStart(doc.isPublishAfterStart());
+            master.setDisableAfterEnd(doc.isDisableAfterEnd());
+            doc = master;
+        }
         return doc;
     }
 
@@ -83,7 +99,7 @@ public final class BranchEditor {
             int id=saveDocument(connection,before,doc,editor);
             BranchView after=BranchView.reload(connection);
             validateResult(before,after);
-            return after.document(id,false);
+            return editableDocument(after, id);
         });
         WebpagesService.processFromEntity(result,ProcessItemAction.GETONE,request,true);
         attachHash(result);
@@ -104,23 +120,89 @@ public final class BranchEditor {
         if (newToFolder) folder(doc.getGroupId(),true);
         if (original!=null) {
             folder(original.getGroupId(),false);
-            multigroup(original.getDocId());
+            BranchMultigroup links = BranchMultigroup.read(connection, doc.getDocId());
+            if (!links.copies().isEmpty()) {
+                if (newToFolder || !links.matchesFolders(doc.getEditorFields().getGroupCopyDetails(), before))
+                    throw mappingReadOnly(original);
+                saveLinkedPages(connection, before, doc, expected, links, editor);
+                return doc.getDocId();
+            }
             if (newToFolder && before.group(original.getGroupId()).getDefaultDocId()==doc.getDocId())
                 replaceDefault(connection,before,original.getGroupId(),doc.getDocId());
         }
-        validateDocument(doc);
-        editor.normalizeEditableContent(doc);
-        doc.setDateCreated(System.currentTimeMillis());
-        doc.setAuthorId(user.getUserId());
+        if (doc.getEditorFields().getGroupCopyDetails() != null && !doc.getEditorFields().getGroupCopyDetails().isEmpty())
+            throw mappingReadOnly(original);
         Map<String,Object> stable=original==null
             ? BranchDocumentMapper.initialValues(1,user.getUserId(),Instant.now(),Constants.getBoolean("editorAutoFillPublishStart"))
             : row(connection,BranchType.DOCUMENT,doc.getDocId());
-        Map<String,Object> values=BranchEditorRows.document(doc,stable);
+        Map<String,Object> values=prepareDocumentRow(doc,stable,editor);
         Map<String,Object> saved=original==null ? store.create(connection,context,BranchType.DOCUMENT,values)
             : store.put(connection,context,BranchType.DOCUMENT,doc.getDocId(),values,expected,false);
         int id=((Number)saved.get("doc_id")).intValue();
         if (newToFolder && destination.getDefaultDocId()<1) setDefaultDocument(connection,destination.getGroupId(),id);
         return id;
+    }
+
+    private Map<String,Object> prepareDocumentRow(DocDetails page, Map<String,Object> stored, EditorService editor) {
+        validateDocument(page);
+        editor.normalizeEditableContent(page);
+        page.setDateCreated(System.currentTimeMillis());
+        page.setAuthorId(user.getUserId());
+        return BranchEditorRows.document(page, stored);
+    }
+
+    /**
+     * Applies one multigroup page's ID, folder and URL settings to the shared content in {@code edited}.
+     * When opening a copy, the editor shows the master's content at the selected copy's location.
+     * When saving, each linked page receives the edited content under its own ID and in its own folder.
+     * Its sort priority is copied only when {@code multiGroupKeepSortPriority} is enabled.
+     *
+     * @param edited working document whose location fields are updated in memory
+     * @param location existing master or copy that supplies the location fields
+     */
+    private static void usePageLocation(DocDetails edited, DocDetails location) {
+        edited.setDocId(location.getDocId());
+        edited.setGroupId(location.getGroupId());
+        edited.setVirtualPath(location.getVirtualPath());
+        edited.setEditorVirtualPath(location.getEditorVirtualPath());
+        edited.setUrlInheritGroup(location.getUrlInheritGroup());
+        edited.setGenerateUrlFromTitle(location.getGenerateUrlFromTitle());
+        if (Constants.getBoolean("multiGroupKeepSortPriority")) edited.setSortPriority(location.getSortPriority());
+    }
+
+    private void saveLinkedPages(Connection connection, BranchView view, DocDetails edited, String expected,
+            BranchMultigroup links, EditorService editor) throws SQLException {
+        // Save the master first so redirecting copies receive its resulting URL.
+        Set<Integer> ids = new LinkedHashSet<>();
+        ids.add(links.masterId());
+        ids.addAll(links.copies().keySet());
+        String masterUrl = null;
+        String externalLink = edited.getExternalLink();
+        for (int id : ids) {
+            DocDetails location = view.document(id, false);
+            if (location == null || !EditorService.hasPagePermission(user, location)) throw forbidden();
+            folder(location.getGroupId(), false);
+            Map<String, Object> stored = row(connection, BranchType.DOCUMENT, id);
+            links.recordLinks(stored);
+            DocDetails page = edited;
+            if (id != edited.getDocId()) {
+                try (var fields = BranchRows.result(BranchEditorRows.document(edited, stored))) {
+                    page = DocDB.getDocDetails(fields, false, true);
+                }
+                usePageLocation(page, location);
+                if (Boolean.TRUE.equals(edited.getGenerateUrlFromTitle())) {
+                    page.setGenerateUrlFromTitle(true);
+                    page.setEditorVirtualPath("");
+                    page.setVirtualPath("");
+                }
+            }
+            page.setExternalLink(id != links.masterId() && Boolean.TRUE.equals(links.copies().get(id)) ? masterUrl : externalLink);
+            editor.checkSavePermissions(user, page);
+            Map<String, Object> values = prepareDocumentRow(page, stored, editor);
+            if (id == links.masterId()) masterUrl = page.getVirtualPath();
+            store.put(connection, context, BranchType.DOCUMENT, id, values,
+                id == edited.getDocId() ? expected : location.getEditorFields().getBranchHash(), false);
+        }
     }
 
     public GroupDetails saveGroup(GroupDetails group, EditorService editor) {
@@ -168,8 +250,8 @@ public final class BranchEditor {
             if (old != null) {
                 boolean pathChanged = old.getParentGroupId() != group.getParentGroupId() || !old.getUrlDirName().equals(group.getUrlDirName());
                 boolean regenerateUrls = group.getEditorFields().isForceUrlDirNameChange();
-                if (pathChanged || regenerateUrls || !old.getGroupName().equals(group.getGroupName())) {
-                    materializeDescendants(connection, before, id, pathChanged, regenerateUrls);
+                if (pathChanged || regenerateUrls) {
+                    materializeDescendants(connection, before, id, regenerateUrls);
                 }
             }
             validateResult(before,BranchView.reload(connection));
@@ -180,8 +262,8 @@ public final class BranchEditor {
         return result;
     }
 
-    /** Materialize visible URL consequences without changing content timestamps or running synchronization. */
-    private void materializeDescendants(Connection connection, BranchView before, int root, boolean pathChanged, boolean regenerateUrls) throws SQLException {
+    /** Stage inherited URLs and redirects without changing the content timestamps. */
+    private void materializeDescendants(Connection connection, BranchView before, int root, boolean regenerateUrls) throws SQLException {
         Set<Integer> ids=subtree(before,root);
         for (GroupDetails child:before.groups()) if (ids.contains(child.getGroupId()) && child.getGroupId()!=root) {
             folder(child.getGroupId(),true);
@@ -189,20 +271,32 @@ public final class BranchEditor {
             store.put(connection,context,BranchType.GROUP,child.getGroupId(),values,currentHash(connection,BranchType.GROUP,child.getGroupId()),false);
         }
         BranchView after=BranchView.reload(connection);
-        for (DocDetails doc:before.documents()) if (ids.contains(doc.getGroupId())) {
+        for (DocDetails doc:before.metadataDocuments()) if (ids.contains(doc.getGroupId())) {
             if (!EditorService.hasPagePermission(user,doc) || user.isDisabledItem("pageSave")) throw forbidden();
-            multigroup(doc.getDocId());
             DocDetails effective=after.document(doc.getDocId(),false);
-            if (pathChanged || regenerateUrls) {
-                String input = WebpagesService.getRegeneratedVirtualPathInput(doc, !regenerateUrls);
-                if (input != null) {
-                    effective.setVirtualPath(input);
-                    after.normalizeUrl(effective);
-                }
+            String input = WebpagesService.getRegeneratedVirtualPathInput(doc, !regenerateUrls);
+            if (input != null) {
+                effective.setVirtualPath(input);
+                after.normalizeUrl(effective);
             }
             Map<String,Object> values=row(connection,BranchType.DOCUMENT,doc.getDocId());
+            BranchMultigroup links = BranchMultigroup.read(connection, doc.getDocId());
+            links.recordLinks(values);
             values.put("virtual_path",effective.getVirtualPath());
             store.put(connection,context,BranchType.DOCUMENT,doc.getDocId(),values,currentHash(connection,BranchType.DOCUMENT,doc.getDocId()),false);
+            if (doc.getDocId() == links.masterId() && !doc.getVirtualPath().equals(effective.getVirtualPath())) {
+                for (var copy : links.copies().entrySet()) {
+                    if (!copy.getValue() || copy.getKey() == links.masterId()) continue;
+                    DocDetails target = before.metadataDocument(copy.getKey());
+                    if (target == null || !EditorService.hasPagePermission(user, target)) throw forbidden();
+                    folder(target.getGroupId(), false);
+                    var copyRow = row(connection, BranchType.DOCUMENT, target.getDocId());
+                    links.recordLinks(copyRow);
+                    copyRow.put("external_link", effective.getVirtualPath());
+                    store.put(connection, context, BranchType.DOCUMENT, target.getDocId(), copyRow,
+                        currentHash(connection, BranchType.DOCUMENT, target.getDocId()), false);
+                }
+            }
         }
     }
 
@@ -212,8 +306,9 @@ public final class BranchEditor {
             BranchView before=BranchView.reload(connection);
             DocDetails doc=before.document(submitted.getDocId(),false);
             if (doc==null) throw invalid("Page no longer exists");
-            folder(doc.getGroupId(),false); multigroup(doc.getDocId());
+            folder(doc.getGroupId(),false);
             if (user.isDisabledItem("deletePage") || !EditorService.hasPagePermission(user,doc)) throw forbidden();
+            requireUnlinked(connection, doc);
             if (before.group(doc.getGroupId()).getDefaultDocId()==doc.getDocId()) replaceDefault(connection,before,doc.getGroupId(),doc.getDocId());
             removeOrDelete(connection,BranchType.DOCUMENT,doc.getDocId(),submitted.getEditorFields()==null?null:submitted.getEditorFields().getBranchHash());
             validateResult(before,BranchView.reload(connection)); return true;
@@ -243,7 +338,7 @@ public final class BranchEditor {
             Set<Integer> ids=subtree(before,submitted.getGroupId());
             for (DocDetails doc:before.documents()) if (ids.contains(doc.getGroupId())) {
                 if (user.isDisabledItem("deletePage") || !EditorService.hasPagePermission(user,doc)) throw forbidden();
-                multigroup(doc.getDocId());
+                requireUnlinked(connection, doc);
                 removeOrDelete(connection,BranchType.DOCUMENT,doc.getDocId(),currentHash(connection,BranchType.DOCUMENT,doc.getDocId()));
             }
             for (GroupDetails child:before.groups()) if (ids.contains(child.getGroupId())) {
@@ -300,7 +395,6 @@ public final class BranchEditor {
             for(int restored:restoredDocs) {
                 DocDetails doc=after.document(restored,false);
                 if(doc==null || !EditorService.hasPagePermission(user,doc) || user.isDisabledItem("pageSave")) throw forbidden();
-                multigroup(restored);
             }
             if (type==BranchType.GROUP) {
                 GroupDetails group=after.group(id); boolean removedNew=group==null; if (group==null) group=before.group(id);
@@ -320,7 +414,6 @@ public final class BranchEditor {
         if (doc==null) throw invalid("Restore the parent folder first");
         folder(doc.getGroupId(),false);
         if (user.isDisabledItem("pageSave") || !EditorService.hasPagePermission(user,doc)) throw forbidden();
-        multigroup(doc.getDocId());
     }
 
     private Map<String,Object> row(Connection connection,BranchType type,int id) throws SQLException {
@@ -349,9 +442,13 @@ public final class BranchEditor {
         return false;
     }
 
-    private void multigroup(int id) {
-        if (MultigroupMappingDB.getMasterDocId(id)>0 || !MultigroupMappingDB.getSlaveDocIds(id).isEmpty())
-            throw invalid("Multigroup pages are read-only in a publishing branch");
+    private void requireUnlinked(Connection connection, DocDetails doc) throws SQLException {
+        if (!BranchMultigroup.read(connection, doc.getDocId()).copies().isEmpty()) throw mappingReadOnly(doc);
+    }
+
+    private ResponseStatusException mappingReadOnly(DocDetails doc) {
+        String page = doc == null ? "" : " " + BranchMultigroup.label(doc.getTitle(), doc.getDocId());
+        return invalid(Prop.getInstance(request).getText("branches.multigroup.linksReadOnly", page));
     }
 
     private void validateDocument(DocDetails doc) {
@@ -372,8 +469,8 @@ public final class BranchEditor {
 
     private void rejectUnsupported(DocDetails doc,DocDetails old) {
         DocEditorFields fields=doc.getEditorFields();
-        if ((fields.getGroupCopyDetails()!=null && !fields.getGroupCopyDetails().isEmpty()) || (fields.getAttrs()!=null && !fields.getAttrs().isEmpty()) || Tools.isNotEmpty(fields.getRedactorNote()))
-            throw invalid("Multigroup, attributes and editor notes are unavailable in a publishing branch");
+        if ((fields.getAttrs()!=null && !fields.getAttrs().isEmpty()) || Tools.isNotEmpty(fields.getRedactorNote()))
+            throw invalid("Attributes and editor notes are unavailable in a publishing branch");
         if (fields.isPublishAfterStart()!=(old!=null&&old.isPublishAfterStart()) || fields.isDisableAfterEnd()!=(old!=null&&old.isDisableAfterEnd()) || (doc.isPublishAfterStart() && (old==null || !old.isPublishAfterStart())) || (doc.isDisableAfterEnd() && (old==null || !old.isDisableAfterEnd()))) throw invalid("Individual publishing plans are read-only");
         // Synchronization fields are @JsonIgnore; BranchEditorRows retains their server values.
         if (old!=null && (!Objects.equals(doc.getPublishStartDate(),old.getPublishStartDate()) || !Objects.equals(doc.getPublishEndDate(),old.getPublishEndDate())))

@@ -10,9 +10,11 @@ Publikačný balík spojí prípravu viacerých stránok, priečinkov, médií a
 4. Pridajte médiá a obrázky/prílohy mimo galérie. Možno vytvoriť prázdny súborový adresár a pracovať s jednotlivými súbormi. Súbor spoločný viacerým doménam po publikovaní ovplyvní všetky jeho použitia.
 5. Pred zmenou verzie alebo domény uložte rozpracovaný formulár. Ak kolega či druhá záložka zmení kontext alebo obsah, staré uloženie server odmietne. Zachovajte si text a otvorte čerstvý editor.
 
-Zvolenú pracovnú verziu ukazuje prepínač v hlavičke administrácie. Editor zobrazí upozornenie, ak konkrétnu stránku nemožno upravovať, napríklad pri zdieľanej System stránke alebo multigroup kópii. Individuálne plány publikovania, história, atribúty a multigroup väzby sa v pracovnej verzii nemenia; spravujú sa mimo balíka.
+Zvolenú pracovnú verziu ukazuje prepínač v hlavičke administrácie. Editor zobrazí upozornenie, ak konkrétnu stránku nemožno upravovať, napríklad pri zdieľanej System stránke. Individuálne plány publikovania, históriu a atribúty spravujete mimo balíka.
 
-Ak priečinok alebo niektorý jeho podpriečinok obsahuje multigroup stránku, v pracovnej verzii je premenovanie priečinka zablokované. Ak chcete zmeniť iba popis v navigácii, upravte pole **Názov položky v menu**.
+Ak je stránka uložená vo viacerých priečinkoch, môžete otvoriť originál alebo ktorúkoľvek jeho kópiu. Uložený obsah sa v pracovnej verzii zobrazí na všetkých prepojených stránkach. Každá má vlastnú URL. Priečinok s kópiou môžete premenovať. Ak zmeníte aj jeho URL, prepočíta sa cesta stránok, ktoré ju dedia.
+
+Kópie pridávajte, presúvajte do iných priečinkov a odpájajte v hlavnej verzii. Platí to aj pre odstránenie prepojenej stránky alebo priečinka, ktorý ju obsahuje. Ak sa po uložení obsahu v balíku zmenia väzby v hlavnej verzii, kontrola pred publikovaním vás upozorní na dotknutú stránku.
 
 Pri vytvorení priečinka WebJET pridá do pracovnej verzie aj jeho hlavnú stránku s názvom priečinka, ak je zapnuté automatické vytváranie stránok a máte právo pridávať stránky.
 

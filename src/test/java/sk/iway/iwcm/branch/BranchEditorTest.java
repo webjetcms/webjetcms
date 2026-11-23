@@ -36,7 +36,7 @@ class BranchEditorTest extends BranchJpaTest {
 
     @BeforeEach void fixture() throws Exception {
         try(Connection c=DBPool.getConnection()) { assertEquals("webjet_p01",c.getCatalog()); assertTrue(c.getMetaData().getURL().contains(":33316/")); }
-        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder","fulltextExecuteApps","linkType","groupCreateBlankWebpageAfterCreate")) configuration.put(key,Constants.getString(key));
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","templatesUseRecursiveSystemFolder","fulltextExecuteApps","linkType","groupCreateBlankWebpageAfterCreate","fulltextDataAscMethod","multiGroupKeepSortPriority")) configuration.put(key,Constants.getString(key));
         Constants.setBoolean("branchesEnabled",true); Constants.setBoolean("enableStaticFilesExternalDir",true);
         Files.createDirectories(Path.of("/tmp/webjet-p02-private")); Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
         Constants.setBoolean("multiDomainEnabled",true); Constants.setBoolean("templatesUseRecursiveSystemFolder",false); Constants.setBoolean("fulltextExecuteApps",true);
@@ -319,31 +319,148 @@ class BranchEditorTest extends BranchJpaTest {
         assertEquals(production,fingerprint());
     }
 
-    @Test void rejectsForeignDomainSystemAndMultigroupWrites() throws Exception {
+    @Test void rejectsForeignDomainAndSystemWrites() throws Exception {
         int foreign=liveGroup("autotest foreign",0,"autotest-foreign");
         int system=liveGroup("System",root,"system");
         int systemPage=liveDoc(system,"/autotest-p04/system/shared.html");
         try(Connection c=DBPool.getConnection();Statement statement=c.createStatement()) {
             statement.executeUpdate("UPDATE `groups` SET domain_name='foreign-p04.example' WHERE group_id="+foreign);
-            statement.executeUpdate("INSERT INTO multigroup_mapping(doc_id,master_id,redirect) VALUES ("+page+","+page+",0)");
         }
         production=fingerprint();
-        try {
-            in((request,editor) -> {
-                BranchEditor service=new BranchEditor(request);
-                DocDetails doc=service.loadDocument(page,-1,root,editor);
-                assertThrows(ResponseStatusException.class,()->service.saveDocument(doc,editor));
-                assertThrows(ResponseStatusException.class,()->service.loadDocument(-1,-1,foreign,editor));
-                assertThrows(ResponseStatusException.class,()->service.loadDocument(-1,-1,system,editor));
-                DocDetails shared=service.loadDocument(systemPage,-1,system,editor);
-                assertNotNull(shared.getEditorFields().getBranchReadOnlyReason());
-                assertThrows(ResponseStatusException.class,()->service.saveDocument(shared,editor));
-                assertNotNull(doc.getEditorFields().getBranchReadOnlyReason());
-                return null;
-            });
-            assertEquals(production,fingerprint());
-        } finally {
-            try(Connection c=DBPool.getConnection();Statement statement=c.createStatement()) { statement.executeUpdate("DELETE FROM multigroup_mapping WHERE doc_id="+page); }
+        in((request,editor) -> {
+            BranchEditor service=new BranchEditor(request);
+            assertThrows(ResponseStatusException.class,()->service.loadDocument(-1,-1,foreign,editor));
+            assertThrows(ResponseStatusException.class,()->service.loadDocument(-1,-1,system,editor));
+            DocDetails shared=service.loadDocument(systemPage,-1,system,editor);
+            assertNotNull(shared.getEditorFields().getBranchReadOnlyReason());
+            assertThrows(ResponseStatusException.class,()->service.saveDocument(shared,editor));
+            return null;
+        });
+        assertEquals(production,fingerprint());
+    }
+
+    /** Redirecting copies follow the master's URL and cannot change the master's own external link. */
+    @Test void keepsExistingMultigroupRedirectsWhenTheMasterUrlChanges() throws Exception {
+        int master = liveDoc(other, "/autotest-p04/other/master.html");
+        try (Connection c = DBPool.getConnection(); Statement sql = c.createStatement()) {
+            sql.executeUpdate("UPDATE documents SET url_inherit_group=1, editor_virtual_path='master.html' WHERE doc_id=" + master);
+            sql.executeUpdate("UPDATE documents SET external_link='/autotest-p04/other/master.html' WHERE doc_id=" + page);
+            sql.executeUpdate("INSERT INTO multigroup_mapping(doc_id,master_id,redirect) VALUES (" + page + "," + master + ",1)");
+            production = fingerprint();
+            try {
+                in((request, editor) -> {
+                    var pages = new BranchEditor(request);
+                    var folder = new GroupEditorField().fromGroupDetails(BranchView.current().group(other));
+                    BranchEditor.attachHash(folder);
+                    folder.setUrlDirName("renamed");
+                    pages.saveGroup(folder, editor);
+                    String masterUrl = "/autotest-p04/renamed/master.html";
+                    assertEquals(masterUrl, BranchView.current().document(page, true).getExternalLink());
+                    var copy = pages.loadDocument(page, -1, root, editor);
+                    assertEquals("", copy.getExternalLink());
+                    copy.setVirtualPath("/autotest-p04/manual.html");
+                    var saved = pages.saveDocument(copy, editor);
+                    assertEquals("", saved.getExternalLink());
+                    assertEquals("/autotest-p04/manual.html", BranchView.current().document(page, true).getVirtualPath());
+                    assertEquals(masterUrl, BranchView.current().document(master, true).getVirtualPath());
+                    assertEquals(masterUrl, BranchView.current().document(page, true).getExternalLink());
+                    return null;
+                });
+                assertEquals(production, fingerprint());
+            } finally {
+                sql.executeUpdate("DELETE FROM multigroup_mapping WHERE doc_id=" + page);
+            }
+        }
+    }
+
+    /** A copy edits shared content while each document keeps its own URL and publication identity. */
+    @Test void editsExistingMultigroupPagesAndPublishesFolderRenames() throws Exception {
+        int copy = liveDoc(other, "/autotest-p04/other/copy.html");
+        Constants.setBoolean("fulltextExecuteApps", false);
+        Constants.setString("fulltextDataAscMethod", "");
+        Constants.setBoolean("multiGroupKeepSortPriority", true);
+        sk.iway.iwcm.system.Modules.getInstance(null, true);
+        long branch = context.branchId();
+        try (Connection c = DBPool.getConnection(); Statement sql = c.createStatement()) {
+            sql.executeUpdate("INSERT INTO multigroup_mapping(doc_id,master_id,redirect) VALUES (" + copy + "," + page + ",0)");
+            sql.executeUpdate("UPDATE documents SET url_inherit_group=1, editor_virtual_path='copy.html', sort_priority=123 WHERE doc_id=" + copy);
+            sql.executeUpdate("INSERT INTO users(login,is_admin,authorized,editable_groups,editable_pages,disabled_items) VALUES ('autotest-branch-multigroup-" + branch + "',1,1,'','','')", Statement.RETURN_GENERATED_KEYS);
+            int publisherId;
+            try (var keys = sql.getGeneratedKeys()) {
+                assertTrue(keys.next());
+                publisherId = keys.getInt(1);
+            }
+            production = fingerprint();
+            try {
+                in((request, editor) -> {
+                    var pages = new BranchEditor(request);
+                    var merge = new BranchMergeService();
+                    var user = new Identity(sk.iway.iwcm.users.UsersDB.getUser(publisherId));
+                    assertTrue(user.isEnabledItem("menuBranches"));
+                    var group = new GroupEditorField().fromGroupDetails(BranchView.current().group(other));
+                    BranchEditor.attachHash(group);
+                    group.setGroupName("Kontakt QA");
+                    group = pages.saveGroup(group, editor);
+                    var renamed = merge.prepare(branch, DOMAIN, user, -1);
+                    assertTrue(renamed.ready(), renamed.errors().toString());
+                    assertEquals(1, renamed.items().size());
+                    assertEquals("/autotest-p04/other/copy.html", BranchView.current().document(copy, true).getVirtualPath());
+
+                    group.setUrlDirName("contact");
+                    pages.saveGroup(group, editor);
+                    var linked = pages.loadDocument(copy, -1, other, editor);
+                    assertNull(linked.getEditorFields().getBranchReadOnlyReason());
+                    assertEquals("/autotest-p04/contact/copy.html", linked.getVirtualPath());
+                    linked.setData("<p>Edited via copy</p>");
+                    pages.saveDocument(linked, editor);
+                    DocDetails master = pages.loadDocument(page, -1, root, editor);
+                    assertEquals(linked.getData(), master.getData());
+                    assertEquals("/autotest-p04/existing.html", master.getVirtualPath());
+                    master.setTitle("Shared title");
+                    pages.saveDocument(master, editor);
+                    assertEquals("Shared title", BranchView.current().document(copy, false).getTitle());
+                    assertEquals(123, BranchView.current().document(copy, false).getSortPriority());
+                    assertEquals(production, fingerprint());
+
+                    master = pages.loadDocument(page, -1, root, editor);
+                    final DocDetails form = master;
+                    form.getEditorFields().setGroupCopyDetails(List.of());
+                    assertThrows(ResponseStatusException.class, () -> pages.saveDocument(form, editor));
+                    form.getEditorFields().setGroupCopyDetails(List.of(BranchView.current().group(root)));
+                    assertThrows(ResponseStatusException.class, () -> pages.saveDocument(form, editor));
+                    var rejected = assertThrows(ResponseStatusException.class, () -> pages.deleteDocument(linked));
+                    assertTrue(rejected.getReason().contains("Shared title (#" + copy + ")"));
+                    final GroupDetails folder = group;
+                    assertThrows(ResponseStatusException.class, () -> pages.deleteGroup(folder));
+                    assertEquals(production, fingerprint());
+
+                    sql.executeUpdate("UPDATE multigroup_mapping SET redirect=1 WHERE doc_id=" + copy);
+                    var changed = merge.prepare(branch, DOMAIN, user, -1);
+                    assertFalse(changed.ready());
+                    assertTrue(changed.errors().stream().anyMatch(error -> error.contains("#" + copy)), changed.errors().toString());
+                    sql.executeUpdate("UPDATE multigroup_mapping SET redirect=0 WHERE doc_id=" + copy);
+                    var ready = merge.prepare(branch, DOMAIN, user, -1);
+                    assertTrue(ready.ready(), ready.errors().toString());
+                    merge.claim(branch, DOMAIN, user, ready.revision(), ready.preparationHash(), false);
+                    return null;
+                });
+                new BranchPublishService().run(branch, publisherId);
+                try (var result = sql.executeQuery("SELECT state,last_error FROM branches WHERE id=" + branch)) {
+                    assertTrue(result.next());
+                    assertEquals("MERGED", result.getString(1), result.getString(2));
+                }
+                for (int id : List.of(page, copy)) {
+                    var live = BranchStore.readLive(c, BranchType.DOCUMENT, id).orElseThrow();
+                    assertEquals("<p>Edited via copy</p>", live.get("data"));
+                    assertEquals("Shared title", live.get("title"));
+                    assertEquals(id == page ? "/autotest-p04/existing.html" : "/autotest-p04/contact/copy.html", live.get("virtual_path"));
+                }
+                assertEquals(Map.of(copy, false), BranchMultigroup.read(c, page).copies());
+            } finally {
+                sql.executeUpdate("DELETE FROM users WHERE user_id=" + publisherId);
+                sql.executeUpdate("DELETE FROM multigroup_mapping WHERE doc_id=" + copy);
+                sql.executeUpdate("DELETE FROM documents_history WHERE doc_id IN (" + page + "," + copy + ")");
+            }
         }
     }
 

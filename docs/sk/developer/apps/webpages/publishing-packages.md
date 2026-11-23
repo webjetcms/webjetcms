@@ -72,6 +72,6 @@ Testujte skutočný JSP/Velocity render, preklik cez menu a Novinky, dve vetvy/L
 
 ## Zápisy a rozšírenia
 
-Bežné ukladanie stránok musí ísť cez `EditorFacade` a branch editor, upload cez existujúce adaptované vstupy. Priamy SQL/JPA zápis v komponente obíde izoláciu, práva a históriu. Náhľad nie je sandbox pre ľubovoľné JSP: formulárové objednávky, emaily a zákaznícke zápisy sa v ňom nepovoľujú. Pred publikovaním sa odmietajú aj nepodporované fulltext hooky a multigroup zápisy.
+Bežné ukladanie stránok musí ísť cez `EditorFacade` a branch editor, upload cez existujúce adaptované vstupy. Priamy SQL/JPA zápis v komponente obíde izoláciu, práva a históriu. Náhľad nie je sandbox pre ľubovoľné JSP: formulárové objednávky, emaily a zákaznícke zápisy sa v ňom nepovoľujú. Pri úprave multigroup stránky editor načíta existujúce väzby a uloží originál aj kópie do `branch_documents`. Odtlačok `multigroup_hash` slúži pri publikovaní na kontrolu, či sa medzitým v produkcii zmenil originál, množina kópií alebo ich presmerovanie. Väzby v `multigroup_mapping` spravuje bežný editor v hlavnej verzii. Kontrola pred publikovaním odmieta aj nepodporované fulltext hooky.
 
 Jadro má štyri typy `DOCUMENT`, `GROUP`, `MEDIA`, `FILE`, spoločný `BranchChange`/`BranchDecision`, prípravu a priebeh. Každý typ má jediné WORK úložisko; súborové bajty sa nepublikujú v DB transakcii. Neznámy typ REST odmietne, nesmie sa preskočiť. Nový modul potrebuje vlastný dohodnutý kontrakt a testy; banner/galéria ani generický register/JSON storage nie sú súčasťou P08.

@@ -33,7 +33,6 @@ public final class BranchMediaEditor {
         if(doc==null) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Media owner is absent in this domain");
         if(user.isDisabledItem("editor_edit_media_all")&&!EditorService.hasPagePermission(user,doc)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         if(write) {
-            if(MultigroupMappingDB.getMasterDocId(id)>0||!MultigroupMappingDB.getSlaveDocIds(id).isEmpty()) throw invalid("Multigroup pages are read-only in a publishing branch");
             for(GroupDetails group=BranchView.current().group(doc.getGroupId());group!=null;group=BranchView.current().group(group.getParentGroupId()))
                 if(group.isInternal()||"system".equalsIgnoreCase(group.getGroupName())) throw invalid("System pages are read-only in a publishing branch");
         }

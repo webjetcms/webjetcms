@@ -2,6 +2,8 @@ package sk.iway.iwcm.branch;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
+import sk.iway.iwcm.doc.GroupDetails;
 
 /** Explicit folder content mapping, with domain and synchronization values kept LIVE. */
 public final class BranchGroupMapper {
@@ -18,6 +20,15 @@ public final class BranchGroupMapper {
 
     public static Map<String, Object> project(Map<String, ?> work, Map<String, ?> live, Map<String, ?> initial) {
         return BranchFields.project(BranchFields.GROUP, work, live, initial, Map.of());
+    }
+
+    /** Match the legacy fallback to the navigation label when the URL directory is empty. */
+    static String urlDirectory(Map<String, ?> row) {
+        GroupDetails group = new GroupDetails();
+        group.setGroupName(Objects.toString(row.get("group_name"), ""));
+        group.setNavbar(Objects.toString(row.get("navbar"), ""));
+        group.setUrlDirName(Objects.toString(row.get("url_dir_name"), ""));
+        return group.getUrlDirName();
     }
 
     public static Map<String, Object> initialValues(int id, String domainName) {

@@ -219,6 +219,7 @@ public final class BranchStore {
             if (!row.containsKey(column)) throw new IllegalArgumentException("Missing typed field " + column);
             columns.put(column,"perex_group".equals(column) ? BranchFields.idTokens(row.get(column)) : row.get(column));
         }
+        if (type == BranchType.DOCUMENT && row.containsKey("multigroup_hash")) columns.put("multigroup_hash", row.get("multigroup_hash"));
         if (type==BranchType.MEDIA) columns.put("group_ids_snapshot",BranchFields.normalizedIds(row.get("group_ids_snapshot")).toString());
         Object key = row.get(type.idColumn());
         Optional<Map<String, Object>> old = readWork(connection,context.branchId(),type,key);
