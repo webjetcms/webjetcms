@@ -1,18 +1,88 @@
+import { emptyTokenUsage, sumTokenUsage } from './ai-token-usage';
 import { readAiStream } from './ai-stream';
 import { historyText, checkAiResponse } from './chat-history-api';
+import { runToolSteps } from './ai-tool-transport';
+
+/** Loads the current user's execution settings for one editor action or chat turn. */
+export async function refreshAssistantRuntime(assistant, signal) {
+    const response = await fetch('/admin/rest/ai/assistant/runtime/?assistantId=' + encodeURIComponent(assistant.assistantId), {
+        credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal,
+        headers: { Accept: 'application/json', 'X-CSRF-Token': window.csrfToken }
+    });
+    checkAiResponse(response, 'HTTP ' + response.status);
+    const runtime = await response.json();
+    if ((assistant.provider && runtime.provider !== assistant.provider) || (assistant.action && runtime.action !== assistant.action)) {
+        throw new Error(WJ.translate('components.ai_assistants.settings_changed.js'));
+    }
+    return { ...assistant, ...runtime };
+}
 
 /**
  * Sends a text request and returns the CMS response before editor or chat formatting.
  * @param {object} inputData Request data, including the caller's assistant ID and timestamp.
  * @param {object} [options={}] HTTP and streaming options.
  * @param {boolean} [options.streaming=false] Requests newline-delimited streaming responses.
+ * @param {boolean} [options.toolsEnabled=false] Uses one JSON model response per step.
+ * @param {boolean} [options.allowWrites=true] Whether this action was prepared for write operations.
  * @param {AbortSignal} [options.signal] Cancels the browser's HTTP request.
  * @param {function(string): void} [options.onDelta] Receives raw text fragments as they arrive.
+ * @param {function(string|null, boolean=): void} [options.onToolActivity] Receives the tool name on submission, then null. A false second argument marks a rejection before dispatch.
  * @param {string} [options.endpoint] Overrides the assistant endpoint for saved chat requests.
  * @param {function(object): void} [options.onMetadata] Receives saved thread/message IDs and the thread revision.
  * @returns {Promise<object>} CMS response containing text, usage, continuation and error metadata.
  */
-export async function requestAiText(inputData, { streaming = false, signal, onDelta = () => {}, endpoint, onMetadata = () => {} } = {}) {
+export async function requestAiText(inputData, { toolsEnabled, allowWrites = true, onWrite, onToolActivity, ...options } = {}) {
+    if (!toolsEnabled) {
+        const result = await generate(inputData, options);
+        if (result.toolCall) throw new Error(WJ.translate('components.ai_assistants.settings_changed.js'));
+        return result;
+    }
+    const message = { ...inputData };
+    let usage = emptyTokenUsage;
+    return runToolSteps(message.assistantId, async toolResults => {
+        const step = { ...message, toolResults };
+        const sendStep = () => generate(step, { ...options, streaming: false });
+        const result = await sendStep().catch(error => {
+            // A saved turn deduplicates this exact request, including the completed tool results.
+            if (!options.endpoint || !step.requestId || options.signal?.aborted ||
+                !['TypeError', 'SyntaxError'].includes(error.name)) throw error;
+            return sendStep();
+        });
+        if (options.endpoint && result.toolCall) {
+            if (!result.threadId || !result.messageId) throw new Error("Invalid AI response.");
+            result.toolCall.chat = result.threadId + '/' + result.messageId;
+        }
+        if (options.endpoint) {
+            // Saved turns already include all previous tool rounds for this answer.
+            if (Number.isSafeInteger(result.totalTokens)) usage = { totalTokens: result.totalTokens, tokenBreakdown: result.tokenBreakdown };
+        } else {
+            usage = sumTokenUsage(usage, result);
+            Object.assign(result, usage);
+        }
+        // The assignment may change after PageBuilder chooses to process each block separately.
+        if (result.toolCall && result.toolCall.write !== false && !allowWrites) throw new Error(WJ.translate('components.ai_assistants.settings_changed.js'));
+        if (!result.toolCall) return result;
+        if (result.threadId) {
+            options.onMetadata?.(result);
+            message.threadId = result.threadId;
+            message.revision = result.revision ?? message.revision;
+        } else if (result.conversationId) {
+            message.conversationId = result.conversationId;
+        } else if (result.attachmentContextId) {
+            message.attachmentContextId = result.attachmentContextId;
+        } else {
+            return result;
+        }
+        delete message.files;
+        return result;
+    }, options.signal, onWrite, onToolActivity).catch(error => {
+        // Keep completed model calls if a later tool or network request fails.
+        if (usage.totalTokens > 0) Object.assign(error, usage);
+        throw error;
+    });
+}
+
+async function generate(inputData, { streaming = false, signal, onDelta = () => {}, endpoint, onMetadata = () => {} }) {
     let body = JSON.stringify(inputData);
     const headers = {
         "Accept": streaming ? "application/x-ndjson" : "application/json",
@@ -57,6 +127,7 @@ export async function requestAiText(inputData, { streaming = false, signal, onDe
         result = await response.json();
     }
     if (result != null && typeof result.error === "string" && result.error.length > 0) return result;
+    if (!streaming && result?.toolCall) return result;
     if (result == null || !Number.isInteger(result.totalTokens) || result.totalTokens < 0
         || (result.error != null && typeof result.error !== "string")
         || (result.response != null && typeof result.response !== "string")

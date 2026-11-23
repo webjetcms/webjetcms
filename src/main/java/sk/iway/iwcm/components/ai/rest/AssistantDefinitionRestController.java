@@ -22,12 +22,16 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEditorFields;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
+import sk.iway.iwcm.components.ai.tools.AiAssistantRuntime;
+import sk.iway.iwcm.components.ai.tools.AiSkillLink;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -48,23 +52,26 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     private final AssistantDefinitionRepository repo;
     private final AiService aiService;
     private final AiAssistantsService aiAssistantsService;
+    private final AiToolService toolService;
+    private final AiSkillRepository skillRepository;
     private final AiStatRepository aiStatRepository;
     public static final String GROUPS_PREFIX = "components.ai_assistants.groups.";
 
     @Autowired
-    public AssistantDefinitionRestController(AssistantDefinitionRepository repo, AiService aiService, AiAssistantsService aiAssistantsService, AiStatRepository aiStatRepository) {
+    public AssistantDefinitionRestController(AssistantDefinitionRepository repo, AiService aiService, AiAssistantsService aiAssistantsService,
+            AiToolService toolService, AiStatRepository aiStatRepository, AiSkillRepository skillRepository) {
         super(repo);
         this.repo = repo;
         this.aiService = aiService;
         this.aiAssistantsService = aiAssistantsService;
+        this.toolService = toolService;
+        this.skillRepository = skillRepository;
         this.aiStatRepository = aiStatRepository;
     }
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, AssistantDefinitionEntity> target, Identity user, Errors errors, Long id, AssistantDefinitionEntity entity) {
-        List<AssistantDefinitionEntity> sameEntities = repo.getEntitiesCount(entity.getName(), entity.getProvider(), CloudToolsForCore.getDomainId());
-
-        if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
+        if (target.isInsert() || target.isUpdate()) {
             if(Tools.isEmpty(entity.getAction())) {
                 errors.rejectValue("action", "", getProp().getText("jakarta.validation.constraints.NotNull.message"));
             }
@@ -73,20 +80,9 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
                 errors.rejectValue("errorField.tokenLimit", "", getProp().getText("components.ai_assistants.token_limit.invalid"));
             }
 
-            if(sameEntities != null && sameEntities.size() > 0) {
-                if("create".equals(target.getAction())) {
-                    //This combination already exist
-                    errors.rejectValue("name",  "", getProp().getText("components.ai_assistants.unique_name_err"));
-                } else {
-                    boolean isOneOfThem = false;
-                    for(AssistantDefinitionEntity sameEntity : sameEntities) {
-                        if(sameEntity.getId().equals(entity.getId()) == true) {
-                            isOneOfThem = true;
-                            break;
-                        }
-                    }
-                    if(isOneOfThem == false) errors.rejectValue("name",  "", getProp().getText("components.ai_assistants.unique_name_err"));
-                }
+            var matches = repo.getEntitiesCount(entity.getName(), entity.getProvider(), getDomainId());
+            if (!matches.isEmpty() && (target.isInsert() || matches.stream().noneMatch(match -> match.getId().equals(entity.getId())))) {
+                errors.rejectValue("name", "", getProp().getText("components.ai_assistants.unique_name_err"));
             }
         }
 
@@ -124,13 +120,41 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
             nextTokenReset = aiAssistantsService.getNextTokenReset();
         }
         page.addSummary("nextTokenReset", nextTokenReset == null ? 0L : nextTokenReset);
-        page.addOptions("provider", aiService.getProviders(getProp()), "label", "value", false);
-        page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
+        var actions = SupportedActions.getSupportedActions(getProp());
+        page.addOptions("action", actions, "label", "value", false);
+        for (var provider : aiService.getProviders(getProp())) {
+            var referenceActions = actions.stream().map(action -> action.getValue())
+                    .filter(action -> AiAssistantRuntime.supportsReferences(provider.getValue(), action)).toList();
+            page.addOption("provider", provider.getLabel(), provider.getValue(), referenceActions);
+        }
         page.addOptions("groupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
+        page.addOptions("toolNames", toolService.assignmentTools(getRequest(), getProp()), "description", "name", true);
+        for (var skill : skillRepository.findPreviews(getDomainId())) {
+            page.addOption("skillNames", skill.name(), AiSkillLink.token(skill.name()), skill.excerpt());
+        }
         page.addOptions("editorFields.statusIcons", aiAssistantsService.getStatusIconOptions(getProp()), "label", "value", false);
 
         //Every assistant should set their specific selects
         aiAssistantsService.getProviderSpecificOptions(page, getProp());
+    }
+
+    @Override
+    protected void copyEntityIntoOriginal(AssistantDefinitionEntity entity, AssistantDefinitionEntity original) {
+        if (original == null) throwError("datatables.error.domainId");
+        super.copyEntityIntoOriginal(entity, original);
+    }
+
+    @Override
+    public AssistantDefinitionEntity processToEntity(AssistantDefinitionEntity entity, ProcessItemAction action) {
+        if ("browser".equals(entity.getProvider()) && AiAssistantRuntime.hasReferences(entity.getInstructions())) {
+            throwError("components.ai_assistants.references.browser_unsupported");
+        }
+        var names = AiAssistantRuntime.referencedSkillNames(entity.getInstructions());
+        if (!names.isEmpty() && !skillRepository.findLinkedNames(getDomainId(), names).containsAll(names)) {
+            throwError("components.ai_assistants.skills.unavailable");
+        }
+        entity.setDomainId(getDomainId());
+        return entity;
     }
 
     @Override

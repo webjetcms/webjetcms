@@ -17,7 +17,6 @@ import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.providers.local.LocalAiAvailableCondition;
 import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
 /**
  * Adapts the local EuroLLM text-generation provider to CMS assistant configuration and prompt validation.
@@ -97,9 +96,5 @@ public class LocalTextService extends LibrarySupportLogic implements AiAssitants
         if (text == null || text.isBlank()) {
             throw new IOException(prop.getText("components.ai_assistants.provider.local-generation.empty_response"));
         }
-    }
-
-    @Override
-    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
     }
 }

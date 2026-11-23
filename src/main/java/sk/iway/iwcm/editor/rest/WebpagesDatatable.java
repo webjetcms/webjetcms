@@ -17,11 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
@@ -32,11 +34,13 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.WebpagesService;
@@ -86,7 +90,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     public Page<DocDetails> getAllItems(Pageable pageable) {
         GetAllItemsDocOptions options = getDefaultOptions(pageable, true);
 
-        return WebpagesService.getAllItems(options);
+        return checkListAccess(WebpagesService.getAllItems(options));
     }
 
     @Override
@@ -97,16 +101,9 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         // are omitted from the request, so their defaults (e.g. fieldA = "") would overwrite stored content.
         // Restore hidden/disabled fields using the shared DataTable rules and the version being edited,
         // including history selection and multigroup mapping, rather than always using the published page.
-        List<String> nonEditableProperties = getNonEditableProperties(entity);
         DocDetails one = editorFacade.getExistingDocForEditor((int) id, entity.getHistoryId());
         if (one == null) throwError("datatables.error.recordIsNotEditable");
-        // DocBasic setters ignore empty strings, so restore protected fields directly, including empty values.
-        // Keep the other submitted fields intact: merging them into the stored bean would prevent clearing them.
-        DirectFieldAccessor submittedFields = new DirectFieldAccessor(entity);
-        DirectFieldAccessor storedFields = new DirectFieldAccessor(one);
-        for (String property : nonEditableProperties) {
-            submittedFields.setPropertyValue(property, storedFields.getPropertyValue(property));
-        }
+        restoreNonEditableFields(entity, one, getNonEditableProperties(entity));
         DocDetails saved = editorFacade.save(entity);
 
         List<UserDetails> approveByUsers = editorFacade.getApprovers();
@@ -123,14 +120,24 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         return saved;
     }
 
+    private static void restoreNonEditableFields(Object entity, Object defaults, List<String> fields) {
+        // Direct access preserves empty defaults even for setters that ignore empty strings.
+        var target = new DirectFieldAccessor(entity);
+        var source = new DirectFieldAccessor(defaults);
+        for (String name : fields) target.setPropertyValue(name, source.getPropertyValue(name));
+    }
+
     @Override
     public DocDetails insertItem(DocDetails entity) {
-        //Cant insert in TRASH group
-        Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
-        String trashDirName = propSystem.getText("config.trash_dir");
-        if(entity.getEditorFields() != null && entity.getEditorFields().getGroupDetails() != null && entity.getEditorFields().getGroupDetails().getFullPath().startsWith(trashDirName) ) { //starts with so it block insert in trash and child folders
-            addNotify( new NotifyBean(getProp().getText("webpage.insert_into_trash.title"), getProp().getText("webpage.insert_into_trash.text"), NotifyBean.NotifyType.ERROR, 60000) );
-            return null;
+        boolean toolRequest = AiToolService.isToolRequest(getRequest(), WebpagesRestController.class);
+        if (toolRequest) {
+            validateToolCreate(entity); // Checks the persisted folder, including Trash.
+        } else if (entity.getEditorFields() != null && entity.getEditorFields().getGroupDetails() != null) {
+            String trash = Prop.getInstance(Constants.getString("defaultLanguage")).getText("config.trash_dir");
+            if (entity.getEditorFields().getGroupDetails().getFullPath().startsWith(trash)) {
+                addNotify(new NotifyBean(getProp().getText("webpage.insert_into_trash.title"), getProp().getText("webpage.insert_into_trash.text"), NotifyBean.NotifyType.ERROR, 60000));
+                return null;
+            }
         }
 
         DocDetails saved = editorFacade.save(entity);
@@ -142,16 +149,50 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
         List<UserDetails> approveByUsers = editorFacade.getApprovers();
         addInsertEditNotify(true, approveByUsers);
+        if (toolRequest) addNotifyToEditorFields(saved);
 
         if (RequestBean.getAttribute("forceReloadTree")!=null) setForceReload(true);
 
         return saved;
     }
 
+    private void validateToolCreate(DocDetails entity) {
+        var fields = entity.getEditorFields();
+        if (fields == null || fields.getGroupDetails() == null || fields.getGroupDetails().getGroupId() < 1)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A positive editorFields.groupDetails.groupId is required.");
+        var folder = WebpagesService.requireCreateFolder(getUser(), fields.getGroupDetails().getGroupId());
+        var defaults = editorFacade.getDocForEditor(-1, -1, folder.getGroupId());
+        restoreNonEditableFields(entity, defaults, getNonEditableProperties(entity));
+        restoreNonEditableFields(fields, defaults.getEditorFields(), getNonEditableFields(DocEditorFields.class));
+        fields.setGroupDetails(folder);
+        if (fields.getGroupCopyDetails() != null)
+            for (var copy : fields.getGroupCopyDetails()) WebpagesService.requireCreateFolder(getUser(), copy.getGroupId());
+        if (fields.getAttrs() != null) {
+            for (var attr : fields.getAttrs()) {
+                var value = attr.getDocAtrEntityFirst();
+                if (value == null) continue;
+                var definition = docAtrDefRepository.findFirstByIdAndDomainId(attr.getId(), CloudToolsForCore.getDomainId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown page attribute."));
+                value.setAtrDef(definition);
+                value.setDocId(null);
+                value.setId(null);
+            }
+        }
+    }
+
     @Override
     public DocDetails getOneItem(long id) {
         int groupId = getGroupIdParam();
         int historyId = Tools.getIntValue(getRequest().getParameter("historyId"), -1);
+
+        boolean tool = AiToolService.isToolRequest(getRequest(), WebpagesRestController.class);
+        if (tool && id == -1) {
+            if (Tools.getIntValue(getRequest().getParameter(GROUP_ID_PARAM_NAME), 0) < 1 || getRequest().getParameter("historyId") != null)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Use id=-1 with a positive groupId and no historyId.");
+            WebpagesService.requireCreateFolder(getUser(), groupId);
+        } else if (tool && (id < 1 || id > Integer.MAX_VALUE || groupId < 1 || groupId == Constants.getInt("systemPagesDocsToApprove"))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Use a page ID and optional historyId.");
+        }
 
         List<NotifyBean> notifyList = new ArrayList<>();
         DocDetails docToReturn = WebpagesService.getOneItem(id, groupId, historyId, editorFacade, docAtrDefRepository, notifyList, getRequest());
@@ -216,11 +257,20 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
             options.setColumnsSpecification(columnsSpecification);
 
             //If second param columnsSpecification is set, method will join columnsSpecification to created specification by method
-            Page<DocDetails> page = WebpagesService.getAllItems(options);
-            return page;
+            return checkListAccess(WebpagesService.getAllItems(options));
         }
 
-        return super.findByColumns(params, pageable, search);
+        return checkListAccess(super.findByColumns(params, pageable, search));
+    }
+
+    private Page<DocDetails> checkListAccess(Page<DocDetails> pages) {
+        if (AiToolService.isToolRequest(getRequest(), WebpagesRestController.class)) {
+            for (DocDetails page : pages) {
+                if (!WebpagesService.isInCurrentDomain(GroupsDB.getInstance().getGroup(page.getGroupId())) || !EditorService.hasPagePermission(getUser(), page))
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "List pages within an accessible folder.");
+            }
+        }
+        return pages;
     }
 
     /**
@@ -243,7 +293,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public void afterSave(DocDetails entity, DocDetails saved) {
-        setPreviewObject(saved, getRequest());
+        if (!AiToolService.isToolRequest(getRequest(), WebpagesRestController.class)) setPreviewObject(saved, getRequest());
     }
 
     /**
@@ -370,7 +420,9 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());
 
         int groupId = getGroupIdParam();
-        getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
+        if (!AiToolService.isToolRequest(getRequest(), WebpagesRestController.class)) {
+            getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
+        }
 
         options.setGroupId(groupId);
         options.setUserGroupId(Tools.getIntValue(getRequest().getParameter("userGroupId"), -1));

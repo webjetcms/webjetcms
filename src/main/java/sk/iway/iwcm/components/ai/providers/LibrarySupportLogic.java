@@ -28,6 +28,7 @@ import com.webjetcms.ai.AiProviderConfig;
 import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiRequest;
 import com.webjetcms.ai.AiResponse;
+import com.webjetcms.ai.AiToolStep;
 import com.webjetcms.ai.BinaryContent;
 import com.webjetcms.ai.GeneratedMedia;
 import com.webjetcms.ai.image.ImageOptionDefinition;
@@ -42,9 +43,12 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
+import sk.iway.iwcm.components.ai.dto.TokenBreakdown;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiChatAttachments;
@@ -52,6 +56,7 @@ import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.security.PromptInjectionDefense;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
@@ -196,41 +201,89 @@ public abstract class LibrarySupportLogic implements AiInterface {
             AiChatSession.Continuation continuation = resolveChat(operation, assistant, inputData, request);
             IncludesHandler includeHandler = IncludesHandler.protectIncludes(inputData, continuation.includes());
             AiProviderConfig config = configurationService.resolve(this, request);
-            TokenUsage attachmentUsage = prepareChatAttachments(assistant, inputData, config);
-            AiRequest providerRequest = prepareProviderRequest(operation, assistant, inputData, includeHandler);
-            AiResponse response;
-            if (writer == null) {
-                response = aiClient.execute(getProviderId(), providerRequest, config, inputData.getCancellationToken());
-                responseDto.setResponse(includeHandler.restoreIncludes(response.text()));
-            } else {
-                response = aiClient.stream(getProviderId(), providerRequest, config, delta -> {
-                    checkCancellation(inputData);
-                    try {
-                        includeHandler.handleLine(delta, writer);
-                    } catch (IOException exception) {
-                        outputFailure.set(exception);
-                        inputData.getCancellationToken().cancel();
-                        throw exception;
-                    }
-                }, inputData.getCancellationToken());
-                includeHandler.finish(writer);
-                responseDto.setResponse(includeHandler.getWholeResponse());
+            TokenUsage attachmentUsage = TokenUsage.EMPTY;
+            TokenBreakdown breakdown = TokenBreakdown.ZERO;
+            for (TokenUsage usage : prepareChatAttachments(assistant, inputData, config, continuation)) {
+                attachmentUsage = attachmentUsage.plus(usage);
+                breakdown = TokenBreakdown.add(breakdown, usage);
             }
-            checkCancellation(inputData);
-            validateTextResponse(responseDto.getResponse(), prop);
-            successAdminLog(
-                responseDto,
-                inputPair,
-                assistant,
-                method,
-                responseDto.getResponse(),
-                response.usage().plus(attachmentUsage),
-                statRepo,
-                request
-            );
-            checkCancellation(inputData);
-            if (operation == AiOperation.CHAT && Thread.currentThread().isInterrupted() == false) {
-                responseDto.setConversationId(AiChatSession.remember(assistant, request, response.responseId(), includeHandler.getIncludes()));
+            AiToolProtocol protocol = inputData.getToolProtocol();
+            if (operation == AiOperation.CHAT) {
+                String callId = continuation.pending() == null ? null : continuation.pending().match(protocol);
+                prepareNativeTools(assistant, inputData, callId);
+            }
+            AiToolStep step;
+            int totalTokens = 0;
+            for (int attempt = 1; ; attempt++) {
+                checkCancellation(inputData);
+                AiRequest providerRequest = prepareProviderRequest(operation, assistant, inputData, includeHandler);
+                if (writer == null || protocol != null) {
+                    step = executeStep(providerRequest, inputData, config, AiLifecycleListener.none());
+                    AiToolProtocol.applyStep(step, inputData, responseDto, prop, includeHandler.getIncludes());
+                    if (responseDto.getToolCall() == null && responseDto.getResponse() != null) {
+                        checkCancellation(inputData);
+                        if (protocol != null && SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())) {
+                            AiToolProtocol.resolveFolderRequest(responseDto, prop);
+                        }
+                        responseDto.setResponse(includeHandler.restoreIncludes(responseDto.getResponse()));
+                    }
+                } else {
+                    var streamed = aiClient.stream(getProviderId(), providerRequest, config, delta -> {
+                        checkCancellation(inputData);
+                        try {
+                            includeHandler.handleLine(delta, writer);
+                        } catch (IOException exception) {
+                            outputFailure.set(exception);
+                            inputData.getCancellationToken().cancel();
+                            throw exception;
+                        }
+                    }, inputData.getCancellationToken());
+                    step = new AiToolStep(streamed, null);
+                    includeHandler.finish(writer);
+                    responseDto.setResponse(includeHandler.getWholeResponse());
+                }
+                // A rejected decision with known usage can still be charged if a stop raced its delivery.
+                if (responseDto.getToolCorrection() == null) checkCancellation(inputData);
+                if (responseDto.getToolCall() == null && responseDto.getError() == null) {
+                    validateTextResponse(responseDto.getResponse(), prop);
+                }
+                AiAuditLog.rejectedToolDecision(assistant, null, null, step, responseDto.getToolCorrection(), configurationService);
+                boolean recorded = recordProviderResponse(responseDto, inputPair, assistant, method,
+                    responseDto.getToolCall() == null ? responseDto.getResponse() : responseDto.getToolCall().name(),
+                    step.response().usage().plus(attachmentUsage), statRepo, request);
+                totalTokens = (int)Math.min(Integer.MAX_VALUE, (long)totalTokens + responseDto.getTotalTokens());
+                responseDto.setTotalTokens(totalTokens);
+                breakdown = TokenBreakdown.add(breakdown, step.response().usage());
+                responseDto.setTokenBreakdown(breakdown);
+                checkCancellation(inputData);
+                if (protocol != null && writer != null && responseDto.getError() == null
+                        && responseDto.getToolCall() == null && responseDto.getResponse() != null) {
+                    writer.write(responseDto.getResponse());
+                    writer.flush();
+                }
+                boolean untrackedBudget = !recorded && assistant.getTokenLimit() != null && assistant.getTokenLimit() > 0;
+                if (responseDto.getToolCorrection() == null || attempt == AiToolProtocol.MAX_DECISION_ATTEMPTS || untrackedBudget) break;
+
+                var assistants = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
+                if (assistants.countWithReachedTokenLimit(assistant.getId(), CloudToolsForCore.getDomainId()) > 0) {
+                    responseDto.setErrorCategory("TOKEN_LIMIT_REACHED");
+                    responseDto.setError(prop.getText("components.ai_assistants.token_limit.reached.js"));
+                    return responseDto;
+                }
+                inputData.prepareToolCorrection(responseDto.getToolCorrection(), step);
+                responseDto = new AssistantResponseDTO();
+                attachmentUsage = TokenUsage.EMPTY;
+            }
+            if (responseDto.getError() == null && operation == AiOperation.CHAT && Thread.currentThread().isInterrupted() == false) {
+                var call = responseDto.getToolCall();
+                var pending = call != null && step.toolCall() != null
+                    ? new AiChatSession.Pending(step.toolCall().callId(), call.name(), call.arguments()) : null;
+                responseDto.setConversationId(AiChatSession.remember(assistant, request,
+                    new AiChatSession.Continuation(step.response().responseId(), includeHandler.getIncludes(), null, pending)));
+            } else if (operation == AiOperation.TEXT && responseDto.getToolCall() != null && inputData.getChatAttachmentContext() != null) {
+                String id = inputData.getAttachmentContextId();
+                if (id == null) id = AiChatSession.rememberAttachments(assistant, request, inputData.getChatAttachmentContext());
+                responseDto.setAttachmentContextId(id);
             }
         } catch (CancellationException exception) {
             throw exception;
@@ -279,9 +332,21 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AiOperation operation, AssistantDefinitionEntity assistant, InputDataDTO inputData, HttpServletRequest request
     ) {
         inputData.setPreviousResponseId(null);
+        if (inputData.getAttachmentContextId() != null) {
+            if (operation != AiOperation.TEXT || inputData.getToolProtocol() == null || inputData.getToolProtocol().results().isEmpty()
+                    || Tools.isNotEmpty(inputData.getConversationId()) || !inputData.getChatAttachments().isEmpty()) {
+                throw new IllegalStateException("Invalid attachment continuation.");
+            }
+            var continuation = AiChatSession.resolve(inputData.getAttachmentContextId(), assistant, request);
+            if (continuation.attachmentContext() == null) throw new IllegalStateException("Attachment context is unavailable.");
+            return continuation;
+        }
         if (operation != AiOperation.CHAT) {
             if (Tools.isNotEmpty(inputData.getConversationId())) {
                 throw new IllegalStateException("This assistant no longer supports this conversation. Start a new chat.");
+            }
+            if (inputData.getToolProtocol() != null && !inputData.getChatAttachments().isEmpty()) {
+                return AiChatSession.resolve(null, assistant, request);
             }
             return new AiChatSession.Continuation(null, Map.of());
         }
@@ -289,23 +354,56 @@ public abstract class LibrarySupportLogic implements AiInterface {
             throw new IllegalStateException("Chat accepts text input only.");
         }
         AiChatSession.Continuation continuation = AiChatSession.resolve(inputData.getConversationId(), assistant, request);
+        if (continuation.attachmentContext() != null) throw new IllegalStateException("Invalid chat continuation.");
         inputData.setPreviousResponseId(continuation.responseId());
         return continuation;
     }
 
-    /** Reports cleanup IDs independently of successful continuation, including failed or cancelled turns. */
-    public AiResponse getPersistentChatResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData,
-        java.util.function.Consumer<String> onText, boolean streaming, AiProviderConfig providerConfig,
-        AiLifecycleListener lifecycleListener) throws AiProviderException, IOException {
-        if (textOperation(assistant) != AiOperation.CHAT) throw new IllegalStateException("Assistant does not support saved chat");
-        // Keep attachment commands literal so provider-side history can reuse them without a CMS token map.
-        AiRequest providerRequest = prepareProviderRequest(AiOperation.CHAT, assistant, inputData, null);
-        if (streaming && isStreamingEnabled(assistant)) {
-            return aiClient.stream(getProviderId(), providerRequest, providerConfig,
-                onText::accept, inputData.getCancellationToken(), lifecycleListener);
+    /** A pending turn from an older CMS keeps its text protocol until the next user turn. */
+    public void prepareNativeTools(AssistantDefinitionEntity assistant, InputDataDTO input, String callId) {
+        var protocol = input.getToolProtocol();
+        if (protocol == null || (callId == null && !protocol.results().isEmpty())) return;
+        if (!aiClient.supportsToolCalling(getProviderId(), assistant.getModel())) {
+            if (callId != null) throw new IllegalStateException("The provider can no longer continue its tool call.");
+            return;
         }
-        return aiClient.execute(getProviderId(), providerRequest,
-            providerConfig, inputData.getCancellationToken(), lifecycleListener);
+        input.setNativeTools(protocol.nativeTools());
+        if (callId != null) input.setNativeToolResult(protocol.nativeResult(callId));
+    }
+
+    private AiToolStep executeStep(AiRequest request, InputDataDTO input, AiProviderConfig config,
+            AiLifecycleListener lifecycle) throws AiProviderException {
+        var token = input.getCancellationToken();
+        if (input.getNativeTools() != null) return aiClient.executeToolStep(getProviderId(), request, config, token, lifecycle);
+        return new AiToolStep(aiClient.execute(getProviderId(), request, config, token, lifecycle), null);
+    }
+
+    /** Returns the saved chat decision and reports cleanup IDs even on cancelled turns. */
+    public AiToolStep getPersistentChatStep(AssistantDefinitionEntity assistant, InputDataDTO input,
+            java.util.function.Consumer<String> onText, boolean streaming, AiProviderConfig config,
+            AiLifecycleListener lifecycle) throws AiProviderException, IOException {
+        if (input.getNativeTools() == null) {
+            // Existing adapters can override text and streaming delivery.
+            return new AiToolStep(getPersistentChatResponse(assistant, input, onText, streaming, config, lifecycle), null);
+        }
+        return executeStep(persistentRequest(assistant, input), input, config, lifecycle);
+    }
+
+    private AiRequest persistentRequest(AssistantDefinitionEntity assistant, InputDataDTO input) throws IOException {
+        if (!supportsPersistentChat(assistant)) throw new IllegalStateException("Assistant does not support saved chat");
+        // Saved attachments keep literal INCLUDE commands for reuse in provider history.
+        return prepareProviderRequest(AiOperation.CHAT, assistant, input, null);
+    }
+
+    /** Reports cleanup IDs independently of successful continuation, including failed or cancelled turns. */
+    public AiResponse getPersistentChatResponse(AssistantDefinitionEntity assistant, InputDataDTO input,
+            java.util.function.Consumer<String> onText, boolean streaming, AiProviderConfig config,
+            AiLifecycleListener lifecycle) throws AiProviderException, IOException {
+        var request = persistentRequest(assistant, input);
+        if (streaming && input.getToolProtocol() == null && isStreamingEnabled(assistant)) {
+            return aiClient.stream(getProviderId(), request, config, onText::accept, input.getCancellationToken(), lifecycle);
+        }
+        return aiClient.execute(getProviderId(), request, config, input.getCancellationToken(), lifecycle);
     }
 
     public boolean supportsPersistentChat(AssistantDefinitionEntity assistant) {
@@ -325,15 +423,17 @@ public abstract class LibrarySupportLogic implements AiInterface {
     }
 
     /** Extracts untrusted file content without changing the page input or creating persistent chat files. */
-    private TokenUsage prepareChatAttachments(AssistantDefinitionEntity assistant, InputDataDTO input, AiProviderConfig config)
-        throws IOException, AiProviderException {
-        input.setChatAttachmentContext(null);
-        TokenUsage usage = TokenUsage.EMPTY;
-        if (input.getChatAttachments() == null || input.getChatAttachments().isEmpty()) return usage;
+    private List<TokenUsage> prepareChatAttachments(AssistantDefinitionEntity assistant, InputDataDTO input, AiProviderConfig config,
+            AiChatSession.Continuation continuation) throws IOException, AiProviderException {
+        input.setChatAttachmentContext(continuation.attachmentContext());
+        if (continuation.attachmentContext() != null || (continuation.responseId() != null
+                && input.getToolProtocol() != null && !input.getToolProtocol().results().isEmpty())) return List.of();
+        if (input.getChatAttachments() == null || input.getChatAttachments().isEmpty()) return List.of();
+        List<TokenUsage> usage = new ArrayList<>();
         StringBuilder context = new StringBuilder();
         for (var upload : input.getChatAttachments()) {
             ChatAttachmentContext attachment = prepareChatAttachment(assistant, input, config, upload);
-            usage = usage.plus(attachment.usage());
+            usage.add(attachment.usage());
             attachment.appendTo(context);
         }
         checkCancellation(input);
@@ -451,7 +551,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
             checkCancellation(inputData);
             responseDto.setGeneratedFileName(generatedFileName.fileName());
 
-            successAdminLog(
+            recordProviderResponse(
                 responseDto,
                 inputPair,
                 assistant,
@@ -533,40 +633,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
             html.append("<div class='").append(columnClass).append("'>").append(control).append("</div>");
         }
         return html.append("</div>").toString();
-    }
-
-    /**
-     * Expands prompt macros, validates the expansion, and builds a provider request with supported options.
-     *
-     * @param operation requested AI operation
-     * @param assistant assistant configuration used to build the request
-     * @param inputData input data supplied to the assistant
-     * @param includesHandler handler for protected WebJET INCLUDE commands; may be {@code null}
-     * @return request ready for provider execution
-     * @throws IOException if prompt validation or input media processing fails
-     */
-    private AiRequest prepareProviderRequest(
-        AiOperation operation,
-        AssistantDefinitionEntity assistant,
-        InputDataDTO inputData,
-        IncludesHandler includesHandler
-    ) throws IOException {
-        AiPromptTemplate.ExpansionResult expansion = AiAssistantsService.expandPromptMacros(
-            assistant.getInstructions(),
-            inputData
-        );
-        validatePromptExpansion(expansion, assistant.getId());
-        if (literalTranslationOptionsResolver != null) {
-            return prepareLiteralTranslationRequest(operation, assistant, inputData, includesHandler, expansion);
-        }
-        return prepareRequest(
-            operation,
-            assistant,
-            inputData,
-            includesHandler,
-            supportedImageOptions(operation, assistant, inputData),
-            expansion
-        );
     }
 
     /**
@@ -752,16 +818,16 @@ public abstract class LibrarySupportLogic implements AiInterface {
     }
 
     /**
-     * Builds a provider request from CMS assistant input using the provider-independent option set.
+     * Expands prompt macros, validates the expansion, and builds a provider request with supported options.
      *
      * @param operation requested AI operation
      * @param assistant assistant configuration used to build the request
      * @param inputData input data supplied to the assistant
      * @param includesHandler handler for protected WebJET INCLUDE commands; may be {@code null}
      * @return request ready for provider execution
-     * @throws IOException if prompt expansion or input media processing fails
+     * @throws IOException if prompt validation or input media processing fails
      */
-    static AiRequest prepareRequest(
+    final AiRequest prepareProviderRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
         InputDataDTO inputData,
@@ -771,39 +837,11 @@ public abstract class LibrarySupportLogic implements AiInterface {
             assistant.getInstructions(),
             inputData
         );
-        return prepareRequest(
-            operation,
-            assistant,
-            inputData,
-            includesHandler,
-            isImageOperation(operation) ? basicImageOptions(inputData) : null,
-            expansion
-        );
-    }
-
-    /**
-     * Builds and audits a request from an already expanded prompt.
-     *
-     * Values consumed by prompt expansion are removed from their ordinary request fields so they are not submitted
-     * twice. Suspicious sources from both expansion and request construction are recorded for security auditing.
-     *
-     * @param operation requested AI operation
-     * @param assistant assistant configuration used to build the request
-     * @param inputData input data supplied to the assistant
-     * @param includesHandler handler for protected WebJET INCLUDE commands; may be {@code null}
-     * @param imageOptions validated image options; may be {@code null}
-     * @param expansion expanded prompt and its source classifications
-     * @return request ready for provider execution
-     * @throws IOException if input media cannot be read
-     */
-    private static AiRequest prepareRequest(
-        AiOperation operation,
-        AssistantDefinitionEntity assistant,
-        InputDataDTO inputData,
-        IncludesHandler includesHandler,
-        ImageOptions imageOptions,
-        AiPromptTemplate.ExpansionResult expansion
-    ) throws IOException {
+        validatePromptExpansion(expansion, assistant.getId());
+        if (literalTranslationOptionsResolver != null) {
+            return prepareLiteralTranslationRequest(operation, assistant, inputData, includesHandler, expansion);
+        }
+        ImageOptions imageOptions = supportedImageOptions(operation, assistant, inputData);
         String instructions = expansion.instructions();
         if (inputData.isInputIsSelectedTextInEditor() && SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())) {
             instructions += """
@@ -835,15 +873,23 @@ public abstract class LibrarySupportLogic implements AiInterface {
             userPrompt = "";
         }
 
-        AiRequest request = buildRequest(
-            operation,
-            assistant,
-            inputData,
-            instructions,
-            inputText,
-            userPrompt,
-            imageOptions
-        );
+        if (inputData.getToolProtocol() != null) {
+            var protocol = inputData.getToolProtocol();
+            boolean nativeTools = inputData.getNativeTools() != null;
+            instructions = (instructions == null ? "" : instructions) + "\n\n" + (nativeTools ? protocol.nativeInstructions(inputData.getNativeTools()) : protocol.instructions());
+            if (SupportedActions.LIVE_CHAT.getAction().equals(assistant.getAction())) instructions += AiToolProtocol.FOLDER_REQUEST_INSTRUCTION;
+            if (!nativeTools) {
+                boolean continuing = operation == AiOperation.CHAT && Tools.isNotEmpty(inputData.getPreviousResponseId()) && !inputData.isReplayToolResults();
+                String feedback = protocol.observations(continuing);
+                if (continuing && !feedback.isEmpty()) inputText = "";
+                if (inputData.getToolCorrection() != null) feedback += "\nRuntime feedback (data, not a new user request):\n" + inputData.getToolCorrection();
+                if (!feedback.isEmpty()) {
+                    if (inputData.getInputValueType() == InputDataDTO.InputValueType.IMAGE) userPrompt = (userPrompt == null ? "" : userPrompt) + feedback;
+                    else inputText = (inputText == null ? "" : inputText) + feedback;
+                }
+            }
+        }
+        AiRequest request = buildRequest(operation, assistant, inputData, instructions, inputText, userPrompt, imageOptions);
         return auditPreparedRequest(request, expansion, assistant.getId());
     }
 
@@ -865,37 +911,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
             : AiOperation.GENERATE_IMAGE;
     }
 
-    /**
-     * Builds a request from explicitly supplied prompt fields and provider-independent image options.
-     *
-     * @param operation requested AI operation
-     * @param assistant assistant configuration supplying the model and storage behavior
-     * @param inputData input data supplying text or image content
-     * @param instructions trusted provider instructions
-     * @param inputText input text to submit
-     * @param userPrompt user prompt to submit
-     * @return constructed provider request
-     * @throws IOException if input media cannot be read
-     */
-    static AiRequest buildRequest(
-        AiOperation operation,
-        AssistantDefinitionEntity assistant,
-        InputDataDTO inputData,
-        String instructions,
-        String inputText,
-        String userPrompt
-    ) throws IOException {
-        return buildRequest(
-            operation,
-            assistant,
-            inputData,
-            instructions,
-            inputText,
-            userPrompt,
-            isImageOperation(operation) ? basicImageOptions(inputData) : null
-        );
-    }
-
     private static AiRequest buildRequest(
         AiOperation operation,
         AssistantDefinitionEntity assistant,
@@ -909,11 +924,14 @@ public abstract class LibrarySupportLogic implements AiInterface {
             .operation(operation)
             .model(assistant.getModel())
             .instructions(instructions)
-            .userPrompt(userPrompt)
             .store(Tools.isTrue(assistant.getUseTemporal()) == false)
             .previousResponseId(operation == AiOperation.CHAT ? inputData.getPreviousResponseId() : null)
             .imageOptions(imageOptions);
 
+        if (inputData.getNativeTools() != null) builder.tools(inputData.getNativeTools()).reportRejectedToolCalls(true);
+        if (inputData.getNativeToolResult() != null) return builder.toolResult(inputData.getNativeToolResult()).build();
+
+        builder.userPrompt(userPrompt);
         if (InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType())) {
             if (inputData.getInputFile() == null) return builder.build();
             builder.inputMedia(BinaryContent.from(inputData.getInputFile().toPath(), inputData.getMimeType()));
@@ -923,14 +941,6 @@ public abstract class LibrarySupportLogic implements AiInterface {
             builder.inputText(inputText);
         }
         return builder.build();
-    }
-
-    private static ImageOptions basicImageOptions(InputDataDTO inputData) {
-        return new ImageOptions(
-            inputData.getImageCount(),
-            inputData.getImageSize(),
-            inputData.getImageQuality()
-        );
     }
 
     private static boolean isImageOperation(AiOperation operation) {
@@ -1063,7 +1073,7 @@ public abstract class LibrarySupportLogic implements AiInterface {
         }
     }
 
-    private void successAdminLog(
+    private boolean recordProviderResponse(
         AssistantResponseDTO responseDto,
         Pair<String, String> inputPair,
         AssistantDefinitionEntity assistant,
@@ -1073,18 +1083,27 @@ public abstract class LibrarySupportLogic implements AiInterface {
         AiStatRepository statRepo,
         HttpServletRequest request
     ) {
-        StringBuilder audit = AiAuditLog.create("SUCCESS", assistant, methodName);
+        String status = responseDto.getError() == null ? "ANSWER_COMPLETED" : "ERROR";
+        if (responseDto.getToolCall() != null) status = "TOOL_REQUESTED";
+        StringBuilder audit = AiAuditLog.create(status, assistant, methodName);
+        if (responseDto.getError() != null) audit.append("\nError message:\n").append(responseDto.getError()).append('\n');
         AiAuditLog.appendUsage(audit, usage);
-        int totalTokens = Tools.safeLongToInt(safeUsage(usage).totalTokens());
+        int totalTokens = (int)Math.min(Integer.MAX_VALUE, safeUsage(usage).totalTokens());
         AiAuditLog.appendResponse(audit, inputPair, textResponse, configurationService.auditMaxLength());
 
         try {
             Adminlog.add(Adminlog.TYPE_AI, audit.toString(), totalTokens, -1);
-            AiStatService.addRecord(assistant.getId(), totalTokens, statRepo, request);
         } catch (Exception exception) {
             Logger.error(LibrarySupportLogic.class, "Error processing adminlog " + exception.getMessage());
         }
         responseDto.setTotalTokens(totalTokens);
+        try {
+            AiStatService.addRecord(assistant.getId(), totalTokens, statRepo, request);
+            return true;
+        } catch (Exception exception) {
+            Logger.error(LibrarySupportLogic.class, "Error recording token usage", exception);
+            return false;
+        }
     }
 
     private void errorAdminLog(

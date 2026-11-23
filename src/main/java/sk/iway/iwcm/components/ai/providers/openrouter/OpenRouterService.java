@@ -11,12 +11,9 @@ import com.webjetcms.ai.AiProviderConfig;
 import com.webjetcms.ai.provider.openrouter.OpenRouterProvider;
 
 import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
 /** WebJET UI and lifecycle adapter for the standalone OpenRouter provider. */
 @Service
@@ -60,15 +57,5 @@ public class OpenRouterService extends LibrarySupportLogic implements AiAssitant
     public List<String> getFieldsToShow(String action) {
         if ("create".equals(action) || "edit".equals(action)) return List.of("model", "useStreaming");
         return new ArrayList<>();
-    }
-
-    @Override
-    public void prepareBeforeSave(AssistantDefinitionEntity assistantEntity) {
-        // Nothing to do.
-    }
-
-    @Override
-    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
-        // Nothing to set.
     }
 }

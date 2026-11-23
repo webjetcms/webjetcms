@@ -18,7 +18,11 @@ V AI Čete môžete postupne spresňovať zadanie, pýtať sa na obsah priložen
 
 Ak má asistent zapnuté postupné načítanie, odpoveď pribúda po častiach. Tlačidlom **Zastaviť** so štvorcovou ikonou prerušíte generovanie. Už prijatý text zostane zobrazený. Samotné zatvorenie dialógu ani prepnutie karty generovanie nezastaví.
 
-Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy, pod odpoveďou údaj **Použité tokeny**. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
+Ak v uloženom čete nástroj čaká na zápis, tlačidlo **Zastaviť** ho zruší aj z inej karty prehliadača. Už spustený zápis sa môže dokončiť.
+
+Odpovede zobrazujú Markdown vrátane nadpisov, zoznamov, zvýraznenia a tabuliek. Pri mene odosielateľa je čas správy. Vedľa tlačidla **Kopírovať** vidíte počet tokenov spotrebovaných na danú odpoveď. Ikona merača vedľa poľa správy zobrazí po prejdení myšou, zameraní klávesnicou alebo ťuknutí počet tokenov spotrebovaných v tomto čete. V prehľade sú vstupné tokeny, výstupné tokeny a celková spotreba. Ak sa v histórii uložil iba súčet, pri vstupných a výstupných tokenoch sa zobrazí pomlčka. Tlačidlo **Kopírovať** skopíruje pôvodný text aj s Markdown značkami. Názvy tlačidiel s ikonami sa zobrazia v bubline po prejdení myšou alebo zameraní klávesnicou.
+
+Ak asistent potrebuje cieľový priečinok webovej stránky, v odpovedi otvorí strom priečinkov. Vyberte priečinok, skontrolujte cestu a potvrďte ju tlačidlom **Použiť priečinok**. Čet odošle jeho ID ako ďalšiu správu.
 
 Ak asistent vráti HTML kód, napríklad pri tvorbe PageBuilder stránky, zobrazí sa karta **Návrh obsahu**. Po dokončení odpovede sa automaticky otvorí jej **Náhľad** a starší návrh sa zbalí. Vysvetlenie mimo HTML bloku zostáva viditeľné.
 
@@ -37,7 +41,7 @@ Prezeranie návrhu nemení obsah poľa ani stránky. Vložíte ho až tlačidlom
 
 Ak sa ešte generuje odpoveď, **Nový čet** ju zastaví. Uložený rozhovor tým nevymažete: zostáva v histórii.
 
-Prepnutie asistenta obnoví jeho naposledy otvorený rozhovor vrátane rozpísanej správy a neodoslaných príloh. Rovnaké údaje sa zachovajú pri prepnutí karty a zatvorení a opätovnom otvorení dialógu, kým neopustíte aktuálnu stránku administrácie. Rozpísané správy a neodoslané prílohy sa na server neukladajú.
+Po odoslaní prvej správy sa výber asistenta uzamkne. Iného asistenta si vyberiete cez **Nový čet**. Rozpísaná správa a neodoslané prílohy sa zachovajú pri prepnutí karty a zatvorení a opätovnom otvorení dialógu, kým neopustíte aktuálnu stránku administrácie. Rozpísané správy a neodoslané prílohy sa na server neukladajú.
 
 ### Ukladané a dočasné rozhovory
 
@@ -59,7 +63,7 @@ Pokračovanie používa kontext uchovaný u poskytovateľa. Ak už nie je dostup
 
 Pri rozhovore kliknite na ikonu koša **Vymazať** a potvrďte vymazanie. WebJET najskôr požiada poskytovateľa o odstránenie uložených odpovedí a potom odstráni lokálnu históriu aj prílohy.
 
-Ak poskytovateľ vymazanie nepotvrdí, rozhovor zostane označený na vymazanie. Akciu môžete zopakovať tlačidlom pri rozhovore. Pri prerušenej požiadavke bez vráteného ID odpovede nemusí byť možné potvrdiť úplné vymazanie; rozhranie zobrazí príslušný stav.
+Ak poskytovateľ vymazanie nepotvrdí, môžete ho skúsiť znova alebo zvoliť **Vymazať z WebJETu**. Ak pri prerušenej požiadavke chýba ID odpovede, zvoľte **Vymazať z WebJETu**. Po potvrdení sa vymažú história aj prílohy. Odpovede môžu zostať u poskytovateľa a cez WebJET ich už nebude možné odstrániť.
 
 ## Prílohy
 
@@ -132,6 +136,6 @@ Zatvorenie okna AI zachová rozpísanú správu a neodoslané prílohy, kým zos
 - **Nie je dostupný žiadny asistent:** správca musí povoliť asistenta s typom požiadavky **Čet**, nakonfigurovať jeho poskytovateľa a pridať `top-search-field` medzi cieľové polia alebo `CHAT_SEARCH` medzi entity. Postup je v [nastavení četového asistenta](../settings/README.md#nastavenie-četového-asistenta).
 - **Tlačidlo na pridanie príloh je neaktívne:** asistent nepodporuje prílohy, čet práve spracúva požiadavku alebo je dostupný iba na čítanie. Na karte AI Čet v rýchlom vyhľadávaní musí byť navyše zapnuté ukladanie rozhovoru.
 - **Prílohu nemožno spracovať:** overte formát, veľkosť a čitateľnosť textu; pri obrázku aj podporu obrazového vstupu modelom.
-- **Odpoveď sa nepodarilo dokončiť:** čet zobrazí dôvod a podľa typu chyby ponúkne opakovanie požiadavky alebo nový čet. Požiadavky sa automaticky neopakujú.
+- **Neplatný krok pri práci s nástrojmi** znamená, že WebJET nedokázal spracovať krok navrhnutý modelom. Model dostane dôvod odmietnutia a môže krok najviac dvakrát opraviť. Ak už nástroj vyhľadal alebo uložil záznam, model pri oprave pracuje s výsledkom jeho volania. Každá oprava cez poskytovateľa spotrebúva tokeny. Ak sa odpoveď nepodarí dokončiť, čet podľa typu chyby ponúkne opakovanie požiadavky alebo nový čet. Pri opakovaní sa nová odpoveď zobrazí pod pôvodnou otázkou na mieste predošlého pokusu.
 
 Podrobnosti ukladania a REST rozhrania sú v [dokumentácii pre programátora](../../../custom-apps/apps/ai/assistants/README.md#ukladané-rozhovory).

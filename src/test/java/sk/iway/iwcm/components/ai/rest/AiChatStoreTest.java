@@ -3,12 +3,17 @@ package sk.iway.iwcm.components.ai.rest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webjetcms.ai.AiRequestLifecycle;
 import com.webjetcms.ai.AiRequestLifecycle.State;
 
@@ -18,9 +23,11 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import sk.iway.iwcm.components.ai.dto.AiChatRequest;
+import sk.iway.iwcm.components.ai.chat.AiChatFiles;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
+import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol.Call;
 import sk.iway.iwcm.i18n.Prop;
 
 /** Covers persistent conversation lifecycle, isolation and history lookup. */
@@ -61,7 +68,29 @@ class AiChatStoreTest {
     }
 
     @Test
-    void persistsAndContinuesConversationUntilProviderHistoryExpires() {
+    void pendingWriteFromBeforeClaimTrackingCannotBeDispatchedAgain() throws IOException {
+        var turn = store.begin(request(null, null, "Save"), scope, assistant, "config");
+        String thread = turn.thread().getId();
+        String message = turn.message().getId();
+        var call = new Call("save", Map.of("id", 42), true);
+        store.awaitToolResult(scope, thread, message, call, 0);
+
+        Path file = root.resolve("7/42").resolve(thread).resolve("ai_chat.json");
+        var document = AiChatFiles.read(file);
+        var answer = document.getMessages().get(1);
+        answer.setPendingWriteClaimed(null);
+        answer.setToolWriteIssued(true);
+        AiChatFiles.write(file, document);
+
+        assertFalse(store.claimPendingWrite(scope, thread, message, assistant.getId(), call));
+        store.stop(thread, scope, false);
+        var stopped = store.get(thread, scope).messages().get(1);
+        assertEquals("TOOL_OUTCOME_UNKNOWN", stopped.getErrorCategory());
+        assertEquals(Boolean.FALSE, stopped.getRetryable());
+    }
+
+    @Test
+    void persistsAndContinuesConversationUntilProviderHistoryExpires() throws IOException {
         var input = request(null, null, "First");
         var first = store.begin(input, scope, assistant, "config");
         String id = first.thread().getId(), message = first.message().getId();
@@ -71,6 +100,11 @@ class AiChatStoreTest {
         store.finish(scope, id, message, "Answer", "complete", 2, null, null);
         store.finish(scope, id, message, "", "stopped", 0, "CANCELLED", null);
         assertEquals("Answer", new AiChatStore().get(id, scope).messages().get(1).getText());
+        var messages = new ObjectMapper().readTree(root.resolve("7/42").resolve(id).resolve("ai_chat.json").toFile()).required("messages");
+        for (String field : List.of("pendingToolCall", "pendingWriteClaimed", "toolResults", "toolWriteIssued",
+                "noToolAction", "writeOutcomes", "earlierProviderResponseIds")) {
+            assertNull(messages.findValue(field), field);
+        }
         var next = store.begin(request(id, 1L, "Next"), scope, assistant, "config");
         assertEquals("response-one", next.thread().getLastResponseId());
         store.finish(scope, id, next.message().getId(), "", "error", 0, "INVALID_CONTINUATION", 404);
@@ -234,5 +268,25 @@ class AiChatStoreTest {
         store.remove(scope, id, claim);
         assertEquals(HttpStatus.NOT_FOUND,
             assertThrows(ResponseStatusException.class, () -> store.get(id, scope)).getStatusCode());
+    }
+
+    /** Checking for pending deletion writes the transcript only when a lease or message actually changes. */
+    @Test
+    void deletionCheckSkipsActiveTurnWritesAndPersistsLeaseRecovery() throws IOException {
+        var turn = store.begin(request(null, null, "Question"), scope, assistant, "config");
+        String id = turn.thread().getId();
+        Path path = root.resolve("7/42").resolve(id).resolve("ai_chat.json");
+        FileTime original = FileTime.fromMillis(1000);
+        Files.setLastModifiedTime(path, original);
+        assertNull(store.claimDeletion(id, scope));
+        assertEquals(original, Files.getLastModifiedTime(path));
+
+        var document = AiChatFiles.read(path);
+        document.getThread().setLeaseUntil(new Date(0));
+        AiChatFiles.write(path, document);
+        assertNull(store.claimDeletion(id, scope));
+        var recovered = AiChatFiles.read(path);
+        assertNull(recovered.getThread().getActiveMessageId());
+        assertEquals("stopped", recovered.getMessages().get(1).getStatus());
     }
 }

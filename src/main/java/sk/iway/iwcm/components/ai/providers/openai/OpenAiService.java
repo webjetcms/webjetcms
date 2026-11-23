@@ -15,8 +15,6 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
 /** WebJET UI and lifecycle adapter for the standalone OpenAI provider. */
 @Service
@@ -56,16 +54,10 @@ public class OpenAiService extends LibrarySupportLogic implements AiAssitantsInt
     }
 
     @Override
-    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
-        // Image options are resolved per model when the assistant is invoked.
-    }
-
-    @Override
     public List<String> getFieldsToShow(String action) {
         if ("create".equals(action) || "edit".equals(action)) {
             return List.of("model", "useStreaming", "useTemporal");
         }
         return new ArrayList<>();
     }
-
 }

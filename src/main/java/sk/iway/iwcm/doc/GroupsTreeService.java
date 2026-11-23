@@ -67,10 +67,11 @@ public class GroupsTreeService {
 
         //Special case -> if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RETURN ALL ITEMS
         String uri = request.getRequestURI();
+        boolean writableOnly = Tools.getBooleanValue(request.getParameter("writableOnly"), false);
         final boolean checkGroupsPerms;
         //Referer -> that we call from stat section
         //Uri -> that it's called from GroupTreeRestController NOT from WebPagesListener
-        if(GroupsTreeService.canSeeAllGroups(request, user) && uri != null && uri.contains("/admin/rest/groups/tree/tree")) {
+        if (!writableOnly && GroupsTreeService.canSeeAllGroups(request, user) && uri != null && uri.contains("/admin/rest/groups/tree/tree")) {
             checkGroupsPerms = false;
         } else {
             checkGroupsPerms = true;
@@ -194,6 +195,14 @@ public class GroupsTreeService {
             List<DocDetails> approve = docDB.getDocsForApprove(user.getUserId());
             if (approve != null && approve.size() > 0) {
                 items.addAll(approve.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));
+            }
+        }
+
+        if (writableOnly) {
+            for (JsTreeItem item : items) {
+                if (!(item instanceof GroupsJsTreeItem folder) || !GroupsDB.isGroupEditable(user, folder.getGroup().getGroupId())) {
+                    item.getState().setDisabled(true);
+                }
             }
         }
 

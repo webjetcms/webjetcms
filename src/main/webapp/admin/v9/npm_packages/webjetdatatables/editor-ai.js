@@ -5,6 +5,7 @@ import { AiExecutionResult } from "./ai/ai-execution-result";
 import { AiChat } from "../../src/js/ai/ai-chat";
 import { AiChatHost } from "../../src/js/ai/ai-chat-host";
 import { parseAiResponse } from "../../src/js/ai/ai-response-parser";
+import { refreshAssistantRuntime } from "../../src/js/ai/ai-rest-transport";
 import { editorPreviewContext } from "../../src/js/ai/html-preview";
 
 /**
@@ -23,6 +24,7 @@ export class EditorAi {
     //field to remember value for undo process
     undoField = null;
     stopped = false;
+    runtimeController = null;
 
     //constructor
     constructor(EDITOR, bindEvents = true) {
@@ -115,7 +117,7 @@ export class EditorAi {
                     } else if ("options"===column.type || "enumeration"===column.type || "optionsSimple"===column.type) {
                         //skip OPTIONS, ENUMERATION, OPTIONS_SIMPLE field type - AI button is not supported
                     } else {
-                        let inputField = $(field.dom.inputControl[0]).find(".form-control");
+                        let inputField = $(field.dom.inputControl[0]).find(".form-control").not(".reference-drawer input");
                         const focusedInput = inputField.filter(':focus')[0];
 
                         //console.log("inputField:", inputField, "parents=", inputField.parents(".bootstrap-select").length);
@@ -180,6 +182,7 @@ export class EditorAi {
 
     stopExecution() {
         this.stopped = true;
+        this.runtimeController?.abort();
         this.aiUserInterface.saveUserPrompt();
         this.aiUserInterface.setCurrentStatus("components.ai_assistants.stopping.js", false);
         if (this.aiBrowserExecutor != null) this.aiBrowserExecutor.destroy();
@@ -570,53 +573,9 @@ export class EditorAi {
         let from = aiCol.from;
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
 
-        let isPageBuilder = false;
-        let ckEditorRanges = null;
-        let ckEditorSelectionInstance = null;
-        if ("wysiwyg" === column.type && aiCol.to === column.name) {
-            try {
-                let wjeditor = this.EDITOR.field(aiCol.to).s.opts.wjeditor;
-                //for PageBuilder if to===pageBuilder element we need to execute function for every editor in PB page to prevent HTML structure issues
-                if (wjeditor != null) {
-                    if ("pageBuilder" === wjeditor.editingMode) {
-                        isPageBuilder = true;
-
-                        //iterate over editors and find selection (if any)
-                        let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
-                        for (let i=0; i<editors.length; i++) {
-                            let editor = editors[i];
-                            let selection = editor.getSelection();
-                            if (selection != null && selection.getSelectedText().length > 0) {
-                                let ranges = selection.getRanges();
-                                if (ranges.length > 0) {
-                                    ckEditorSelectionInstance = editor;
-                                }
-                            }
-                        }
-                    } else {
-                        //check selection in ckeditor
-                        ckEditorSelectionInstance = ckEditorInstance;
-                    }
-
-                    if (ckEditorSelectionInstance != null) {
-                        let selection = ckEditorSelectionInstance.getSelection();
-                        if (selection != null && selection.getSelectedText().length > 0) {
-                            let ranges = selection.getRanges();
-                            if (ranges.length > 0) {
-                                ckEditorRanges = ranges;
-
-                                self.undoField = {};
-                                self.undoField.type = "range";
-                                self.undoField.value = ckEditorSelectionInstance.getData();
-                                self.undoField.ckEditorSelectionInstance = ckEditorSelectionInstance;
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error("Error checking PageBuilder editor:", e);
-            }
-        }
+        const isPageBuilder = column.type === "wysiwyg" && aiCol.to === column.name &&
+            this.EDITOR.field(aiCol.to)?.s?.opts?.wjeditor?.editingMode === "pageBuilder";
+        const selection = this._captureChatSelection(column, aiCol);
 
         let totalTokens = 0;
         let executionResult = null;
@@ -634,25 +593,50 @@ export class EditorAi {
 
         self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
-        if (ckEditorRanges != null && ckEditorSelectionInstance != null) {
-
-            // Get selected HTML
-            var tempDiv = document.createElement('div');
-            for (var i = 0; i < ckEditorRanges.length; i++) {
-                var fragment = ckEditorRanges[i].cloneContents();
-                tempDiv.appendChild(fragment.$);
+        if (aiCol.action === "generate_text") {
+            this.runtimeController?.abort();
+            const controller = new AbortController();
+            this.runtimeController = controller;
+            const revision = this.aiUserInterface.viewRevision;
+            try {
+                const current = await refreshAssistantRuntime(aiCol, controller.signal);
+                controller.signal.throwIfAborted();
+                if (!this.aiUserInterface._isCurrentAssistantView(aiCol, revision)) {
+                    this._hideLoader(button);
+                    return;
+                }
+                aiCol = current;
+            } catch (error) {
+                if (this.runtimeController === controller) {
+                    if (!this.aiUserInterface._isCurrentAssistantView(aiCol, revision)) this._hideLoader(button);
+                    else if (controller.signal.aborted) this._stoppedSignalReceived(button);
+                    else {
+                        this._hideLoader(button);
+                        this.setError(error.message);
+                    }
+                }
+                return;
+            } finally {
+                if (this.runtimeController === controller) this.runtimeController = null;
             }
-            //console.log("tempDiv=", tempDiv, "html=", tempDiv.innerHTML);
+        }
 
-            inputData.inputValue = tempDiv.innerHTML;
-
+        if (aiCol.toolsWrite) {
+            // A single preset click can create records even when PageBuilder contains several editors.
+            inputData.inputValue = selection?.inputValue ?? self.EDITOR.get(from);
+            if (selection) {
+                inputData.inputValueType = "text";
+                inputData.inputIsSelectedTextInEditor = true;
+            }
+            executionResult = await this._executeSingleAction(button, column, aiCol, inputData);
+            totalTokens = executionResult?.totalTokens ?? 0;
+        } else if (selection) {
+            self.undoField = { type: "range", value: selection.value, ckEditorSelectionInstance: selection.editor };
+            inputData.inputValue = selection.inputValue;
             executionResult = await this._executeSingleAction(button, column, aiCol, inputData, false, (response, finished) => {
-                //console.log("response="+response, "setting to editor: ", ckEditorInstance, "inputData=", inputData);
-
-                // Replace selection with AI response, do not stream, wait for finished
                 if (finished === true) {
-                    ckEditorRanges[0].deleteContents();
-                    ckEditorSelectionInstance.insertHtml(response);
+                    selection.ranges[0].deleteContents();
+                    selection.editor.insertHtml(response);
                 }
             });
             if (executionResult!=null) totalTokens += executionResult.totalTokens;
@@ -749,30 +733,34 @@ export class EditorAi {
                 self._hideLoader(button);
                 self.setError(executionResult.errorText);
             } else if (executionResult.statusKey != null) {
+                self._hideLoader(button);
                 self.setCurrentStatus(executionResult.statusKey, false, ...(executionResult.statusKeyParams ?? []));
             } else if (executionResult.success === true) {
-                if (self.isUndo()==false) self._closeToast(3000);
+                if (self.isUndo()==false && !aiCol.toolsWrite) self._closeToast(3000);
                 self._hideLoader(button);
 
                 self.setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
             }
 
             if (executionResult.stopped === true || self.stopped === true) {
-                this._stoppedSignalReceived(button);
+                this._stoppedSignalReceived(button, aiCol.toolsWrite && executionResult.explanatoryText);
                 return;
             }
 
             if (executionResult.explanatoryText != null) {
-                self.aiUserInterface.setExplanatoryText(executionResult.explanatoryText);
+                self.aiUserInterface.setExplanatoryText(executionResult.explanatoryText, aiCol.toolsWrite);
             }
         }
     }
 
-    _stoppedSignalReceived(button) {
+    _stoppedSignalReceived(button, toolStatus) {
         this._hideLoader(button);
         $("#toast-container-ai").removeClass("ai-status-working");
 
-        if (this.isUndo()) {
+        if (toolStatus) {
+            this.setCurrentStatus("components.ai_assistants.chat.stopped.js", false);
+            this.aiUserInterface.setExplanatoryText(toolStatus, true);
+        } else if (this.isUndo()) {
             this.undo();
         } else {
             //return to list of AI assistants as failsafe
@@ -781,37 +769,15 @@ export class EditorAi {
     }
 
 
-    async _executeSingleAction(button, column, aiCol, inputData, reuseApiInstance = false, setFunction = null) {
-        let self = this;
-        let executionResult = null;
-
-        if ("browser" === aiCol.provider) {
-            if (this.aiBrowserExecutor.isAvailable(aiCol)) {
-                executionResult = await this.aiBrowserExecutor.execute(aiCol, inputData, reuseApiInstance, setFunction);
-            } else {
-                executionResult = new AiExecutionResult();
-                executionResult.statusKey = "components.ai_assistants.browser.api_not_available.js"
-                let apiName = this.aiBrowserExecutor.getApiName(aiCol);
-                executionResult.statusKeyParams = [apiName];
-            }
-        } else {
-            // IS IMAGE
-
-            if ("image"===inputData.outputValueType) {
-                //inputData.value = "/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg";
-
-                //We want IMAGE AI response, because SRC field is IMAGE
-                if(aiCol.action === "generate_image") {
-                    // We want image BUT we want generated new image from prompt (TEXT) so we set inputValueType as TEXT (we do NOT send image path od old image)
-                    inputData.inputValueType = "text"
-                }
-
-                executionResult = await this.aiRestExecutor.executeImageAction(aiCol, inputData, button);
-            } else {
-                executionResult = await this.aiRestExecutor.execute(aiCol, inputData, setFunction);
-            }
+    _executeSingleAction(button, column, aiCol, inputData, reuseApiInstance = false, setFunction = null) {
+        if (aiCol.provider === "browser") {
+            return this.aiBrowserExecutor.execute(aiCol, inputData, reuseApiInstance, setFunction);
         }
-        return executionResult;
+        if (inputData.outputValueType === "image") {
+            if (aiCol.action === "generate_image") inputData.inputValueType = "text";
+            return this.aiRestExecutor.executeImageAction(aiCol, inputData, button);
+        }
+        return this.aiRestExecutor.execute(aiCol, inputData, setFunction);
     }
 
 }

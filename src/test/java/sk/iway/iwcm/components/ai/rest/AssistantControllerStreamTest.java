@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.ai.rest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -10,8 +11,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.BufferedWriter;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,6 +41,23 @@ class AssistantControllerStreamTest {
     private final MockHttpServletResponse response = new MockHttpServletResponse();
     private final InputDataDTO input = new InputDataDTO();
     private final ObjectMapper mapper = new ObjectMapper();
+
+    @Test
+    void lateCallbacksCannotAppendAfterTheTerminalFrame() throws Exception {
+        var output = new StringWriter();
+        var writer = new AssistantStreamWriter(output);
+        try (var buffered = new BufferedWriter(writer)) {
+            writer.writeDelta("First");
+            writer.writeResult(result("Final"));
+            assertThrows(CancellationException.class, () -> writer.writeDelta("Late"));
+            buffered.write("Also late");
+            buffered.flush();
+        }
+        var frames = output.toString().lines().toList();
+        assertEquals(2, frames.size());
+        assertEquals("First", mapper.readTree(frames.get(0)).get("text").asText());
+        assertEquals("Final", mapper.readTree(frames.get(1)).get("result").get("response").asText());
+    }
 
     @Test
     void streamsEscapedTextBeforeTheTerminalResult() throws Exception {

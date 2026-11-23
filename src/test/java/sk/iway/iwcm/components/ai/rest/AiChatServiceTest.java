@@ -4,15 +4,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -35,6 +39,9 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.net.httpserver.HttpServer;
 import com.webjetcms.ai.AiClient;
 import com.webjetcms.ai.AiErrorCategory;
 import com.webjetcms.ai.AiLifecycleListener;
@@ -45,6 +52,8 @@ import com.webjetcms.ai.AiProviderException;
 import com.webjetcms.ai.AiResponse;
 import com.webjetcms.ai.AiResponseDeletion;
 import com.webjetcms.ai.TokenUsage;
+import com.webjetcms.ai.provider.gemini.GeminiProvider;
+import com.webjetcms.ai.provider.openai.OpenAiProvider;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Tools;
@@ -53,17 +62,25 @@ import sk.iway.iwcm.components.ai.dto.AiChatRequest;
 import sk.iway.iwcm.components.ai.dto.AiChatContext;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
+import sk.iway.iwcm.components.ai.dto.TokenBreakdown;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
+import sk.iway.iwcm.components.ai.providers.gemini.GeminiService;
+import sk.iway.iwcm.components.ai.providers.openai.OpenAiService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
+import sk.iway.iwcm.components.ai.tools.AiAssistantRuntime;
+import sk.iway.iwcm.components.ai.tools.AiToolDefinition;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.i18n.Prop;
 
 /** Verifies saved chat cleanup, retry metadata and continuation from completed turns only. */
 class AiChatServiceTest {
     @TempDir Path root;
+    private final AiToolService toolService = mock(AiToolService.class);
     private final AiChatStore store = new AiChatStore();
     private final LibrarySupportLogic provider = mock(LibrarySupportLogic.class);
     private final AiClient aiClient = mock(AiClient.class);
@@ -96,13 +113,15 @@ class AiChatServiceTest {
         when(provider.getProviderId()).thenReturn("openai");
         when(provider.isInit()).thenReturn(true);
         when(provider.supportsPersistentChat(assistant)).thenReturn(true);
+        doCallRealMethod().when(provider).getPersistentChatStep(any(), any(), any(), anyBoolean(), any(), any());
         doCallRealMethod().when(provider).prepareChatAttachment(any(), any(), any(), any());
         when(configuration.resolveForDomain(provider, scope.domainName())).thenReturn(config);
         when(configuration.chatScope(config)).thenReturn("scope");
         when(configuration.auditMaxLength()).thenReturn(2000);
         when(tasks.runChatTask(anyString(), same(scope), any(), any())).thenAnswer(call ->
             call.<Callable<AssistantResponseDTO>>getArgument(2).call());
-        service = new AiChatService(store, assistants, List.of(provider), tasks, aiClient, configuration, statistics);
+        service = new AiChatService(store, assistants, List.of(provider), tasks, aiClient, configuration, statistics, toolService);
+        when(toolService.resolve(assistant, scope.domainId(), request)).thenReturn(new AiAssistantRuntime(assistant, "", List.of(), false));
         tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
         tools.when(() -> Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class))
             .thenReturn(assistants);
@@ -128,6 +147,255 @@ class AiChatServiceTest {
         return service.execute(prepared, text -> { }, false, request);
     }
 
+    private AssistantResponseDTO continueTools(AssistantResponseDTO step, String requestId, List<AiToolProtocol.Result> results) {
+        var next = new AiChatRequest(step.getThreadId(), 12L, requestId, step.getRevision(), "Question", null, null, null, false, results);
+        return execute(service.prepare(next, scope));
+    }
+
+    /** A lost write decision can be replayed while the tool is permitted and the write is unclaimed. */
+    @Test
+    void replaysOnlyPermittedUnclaimedWrites() throws Exception {
+        var inputs = stubToolDecisions("{\"type\":\"call\",\"name\":\"add_record\",\"arguments\":{\"title\":\"Page\"}}");
+        var input = new AiChatRequest(null, 12L, UUID.randomUUID().toString(), null, "Question", null);
+        var original = execute(service.prepare(input, scope));
+        var call = original.getToolCall();
+        assertNotNull(call);
+
+        var granted = toolService.resolve(assistant, scope.domainId(), request);
+        when(toolService.resolve(assistant, scope.domainId(), request))
+            .thenReturn(new AiAssistantRuntime(assistant, "", List.of(), false), granted);
+        assertEquals(AiToolProtocol.INVALID_TOOL_STEP, execute(service.prepare(input, scope)).getErrorCategory());
+        assertEquals(call, execute(service.prepare(input, scope)).getToolCall());
+        assertTrue(store.claimPendingWrite(scope, original.getThreadId(), original.getMessageId(), 12L, call));
+        assertEquals("TOOL_OUTCOME_UNKNOWN", execute(service.prepare(input, scope)).getErrorCategory());
+        assertEquals(1, inputs.size());
+    }
+
+    private List<InputDataDTO> stubToolDecisions(String... decisions) throws Exception {
+        assistant.setInstructions("Use @tool(add_record)");
+        var write = new AiToolDefinition("add_record", "Add record", Map.of("required", List.of("title")), "/records", "POST", Map.of());
+        var loader = new AiToolDefinition(AiAssistantRuntime.LOAD_TOOLS, "Load definitions", Map.of(), "/details", "GET", Map.of());
+        when(toolService.resolve(assistant, scope.domainId(), request)).thenReturn(new AiAssistantRuntime(assistant, "", List.of(write, loader), true));
+        var inputs = new ArrayList<InputDataDTO>();
+        var steps = List.of(decisions).listIterator();
+        doAnswer(call -> {
+            int index = steps.nextIndex();
+            inputs.add(call.getArgument(1));
+            String id = "id-" + (index + 1);
+            call.<AiLifecycleListener>getArgument(5).onResponseId(id);
+            return new AiResponse(steps.next(), List.of(), new TokenUsage(1, 2, 3, Map.of()), "completed", id);
+        }).when(provider).getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any());
+        return inputs;
+    }
+
+    private List<AiChatAttachments.Upload> notes(String text) throws Exception {
+        return AiChatAttachments.read(List.of(new MockMultipartFile("files", "notes.txt", "text/plain", text.getBytes(StandardCharsets.UTF_8))));
+    }
+
+    /** Drives both a directly callable tool and the skill-discovery and repair path through the production adapters. */
+    @ParameterizedTest
+    @CsvSource({"openai,true,none", "gemini,true,none", "openai,false,schema", "gemini,false,schema",
+        "openai,false,malformedJson", "openai,false,duplicateField", "openai,false,missingCallId",
+        "gemini,false,nonObject", "gemini,false,missingCallId"})
+    void continuesNativeToolsFromSavedChat(String providerId, boolean direct, String rejection) throws Exception {
+        boolean gemini = "gemini".equals(providerId);
+        int skippedReplies = direct ? 2 : 0; // The scripted replies end with a valid lookup and its final answer.
+        var requests = new CopyOnWriteArrayList<JsonNode>();
+        var json = new ObjectMapper();
+        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext(gemini ? "/interactions" : "/responses", exchange -> {
+            requests.add(json.readTree(exchange.getRequestBody()));
+            byte[] bytes = nativeReply(json, gemini, requests.size() + skippedReplies, rejection);
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (var out = exchange.getResponseBody()) { out.write(bytes); }
+        });
+        server.start();
+        try (var client = AiClient.of(gemini ? new GeminiProvider() : new OpenAiProvider())) {
+            var endpoint = AiProviderConfig.builder("test").allowInsecureHttpForLocalTesting()
+                .baseUri(URI.create("http://127.0.0.1:" + server.getAddress().getPort())).build();
+            LibrarySupportLogic adapter = gemini ? new GeminiService(client, configuration) : new OpenAiService(client, configuration);
+            when(configuration.isConfigured(adapter)).thenReturn(true);
+            when(configuration.resolveForDomain(adapter, scope.domainName())).thenReturn(endpoint);
+            when(configuration.chatScope(endpoint)).thenReturn("scope");
+            service.destroy();
+            service = new AiChatService(store, assistants, List.of(adapter), tasks, client, configuration, statistics, toolService);
+            assistant.setProvider(providerId);
+            assistant.setInstructions(direct ? "@tool(lookup) @tool(count) @tool(lookup) @tool(hidden) @group(records)"
+                : "@skill(records) @group(records)");
+            var lookup = new AiToolDefinition("lookup", "Find record", Map.of("type", "object", "properties",
+                Map.of("id", Map.of("type", "integer")), "required", List.of("id")), "/lookup", "GET", Map.of());
+            var skill = new AiToolDefinition(AiAssistantRuntime.LOAD_SKILL, "Load skill", Map.of("type", "object"), "/skill", "GET", Map.of());
+            var details = new AiToolDefinition(AiAssistantRuntime.LOAD_TOOLS, "Load tools", Map.of("type", "object"), "/details", "GET", Map.of());
+            var count = new AiToolDefinition("count", "Count records",
+                Map.of("type", "object", "description", "Field help. ".repeat(300)), "/count", "GET", Map.of());
+            var definitions = direct ? List.of(details, lookup, count) : List.of(skill, details, lookup);
+            when(toolService.resolve(assistant, scope.domainId(), request)).thenReturn(new AiAssistantRuntime(assistant, "", definitions, false));
+            String id = UUID.randomUUID().toString();
+            var initial = new AiChatRequest(null, 12L, id, null, "Question", null);
+            var step = execute(service.prepare(initial, scope, notes("attachment-marker")));
+            var observations = new ArrayList<AiToolProtocol.Result>();
+            if (!direct) {
+                assertEquals(skill.name(), step.getToolCall().name());
+                observations.add(new AiToolProtocol.Result(skill.name(), Map.of("name", "records"), 200,
+                    Map.of("instructions", "Load the record", "tools", List.of(lookup)), false));
+                step = continueTools(step, id, observations);
+            }
+            assertNull(step.getError(), step.getErrorCategory());
+            assertEquals("lookup", step.getToolCall().name());
+            assertEquals(Map.of("id", 42), step.getToolCall().arguments());
+            observations.add(new AiToolProtocol.Result("lookup", Map.of("id", 42), 200, Map.of("title", "Welcome"), false));
+            var last = continueTools(step, id, observations);
+            assertEquals("Welcome", last.getResponse());
+            assertEquals(direct ? 10 : 20, last.getTotalTokens());
+            assertEquals(direct ? new TokenBreakdown(8, 2) : null, last.getTokenBreakdown());
+            assertEquals("turn-4", store.get(id, scope).thread().getLastResponseId());
+            assertEquals(observations.stream().map(AiToolProtocol.Result::name).toList(),
+                service.detail(step.getThreadId(), scope).messages().get(1).toolCalls());
+            if (!direct) {
+                audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), argThat(value -> value.startsWith("TOOL_DECISION_REJECTED")
+                    && value.contains("Provider response ID: turn-2") && value.contains("decision_validation")), eq(-1), eq(-1)));
+            }
+            assertEquals(direct ? 2 : 4, requests.size());
+            assertTrue(requests.get(0).required("input").toString().contains("attachment-marker"));
+            assertEquals(direct ? List.of(details.name(), "lookup", "count") : List.of(skill.name(), details.name()),
+                requests.get(0).required("tools").findValuesAsText("name"));
+            assertEquals(!direct, requests.get(0).toString().contains("lookup: Find record"));
+            if (direct) assertEquals(json.valueToTree(count.inputSchema()), requests.get(0).at("/tools/2/parameters"));
+            assertTrue(requests.get(1).required("tools").findValuesAsText("name").contains("lookup"));
+            for (int i = 1; i < requests.size(); i++) {
+                int n = i + skippedReplies;
+                var wire = requests.get(i);
+                if (n == 2 && "missingCallId".equals(rejection)) {
+                    // Resubmit the last skill result to the provider without dispatching the skill again.
+                    assertEquals(requests.get(i - 1), wire);
+                    continue;
+                }
+                assertEquals("turn-" + n, wire.required(gemini ? "previous_interaction_id" : "previous_response_id").textValue());
+                assertEquals(1, wire.required("input").size());
+                assertEquals("call-" + n, wire.at("/input/0/call_id").textValue());
+                assertEquals(gemini ? "function_result" : "function_call_output", wire.at("/input/0/type").textValue());
+                String data = wire.at("/input/0/" + (gemini ? "result" : "output")).textValue();
+                assertTrue(data.contains(List.of("Load the record", "decision_validation", "Welcome").get(n - 1)));
+                assertFalse(json.readTree(data).has("arguments"));
+                assertFalse(data.contains("inputSchema"));
+                if (n == 2) {
+                    assertFalse(json.readTree(data).required("executed").booleanValue());
+                    assertFalse(json.readTree(data).has("rejectedDecision"));
+                    if ("malformedJson".equals(rejection) || "duplicateField".equals(rejection) || "nonObject".equals(rejection)) assertTrue(data.contains("single JSON object"));
+                }
+            }
+        } finally { server.stop(0); }
+    }
+
+    private static byte[] nativeReply(ObjectMapper json, boolean gemini, int n, String rejection) throws java.io.IOException {
+        var reply = json.createObjectNode().put("id", "turn-" + n).put("status", gemini && n < 4 ? "requires_action" : "completed");
+        var usage = reply.putObject("usage").put("total_tokens", 5);
+        if (n >= 3) usage.put(gemini ? "total_input_tokens" : "input_tokens", 4).put(gemini ? "total_output_tokens" : "output_tokens", 1);
+        var step = reply.putArray(gemini ? "steps" : "output").addObject();
+        if (n < 4) {
+            var args = n == 1 ? Map.of("name", "records") : n == 2 ? Map.of() : Map.of("id", 42);
+            step.put("type", "function_call").put("name", n == 1 ? AiAssistantRuntime.LOAD_SKILL : "lookup")
+                .put(gemini ? "id" : "call_id", "call-" + n);
+            if (gemini) step.set("arguments", json.valueToTree(args));
+            else step.put("arguments", json.writeValueAsString(args));
+            if (n == 2 && "malformedJson".equals(rejection)) step.put("arguments", "{\"id\":");
+            if (n == 2 && "duplicateField".equals(rejection)) {
+                step.put("arguments", "{\"body\":{\"editorFields\":{\"plannedPublishingEnabled\":true,\"plannedPublishingEnabled\":true}}}");
+            }
+            if (n == 2 && "nonObject".equals(rejection)) step.putArray("arguments").add(42);
+            if (n == 2 && "missingCallId".equals(rejection)) step.remove(gemini ? "id" : "call_id");
+        } else {
+            step.put("type", gemini ? "model_output" : "message").putArray("content").addObject()
+                .put("type", gemini ? "text" : "output_text").put("text", "Welcome");
+        }
+        return json.writeValueAsBytes(reply);
+    }
+
+    /** Saved chat restores only missing context while repairing decisions and preserving the accepted continuation. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void continuesTextToolsWithCachedAttachments(boolean legacyReplay) throws Exception {
+        String thread = null;
+        Long revision = null;
+        for (String source : List.of("First", "Second")) {
+            var upload = new AiChatRequest(thread, 12L, UUID.randomUUID().toString(), revision, "Read " + source, null);
+            var reply = execute(service.prepare(upload, scope, notes(source)));
+            thread = reply.getThreadId();
+            revision = reply.getRevision();
+        }
+        clearInvocations(provider, assistants);
+        var plain = execute(prepare(thread, revision));
+        verify(provider).getPersistentChatResponse(any(), argThat(input -> input.getChatAttachmentContext() == null && input.getInputValue().isEmpty()),
+            any(), anyBoolean(), any(), any());
+
+        var inputs = stubToolDecisions("{\"type\":\"call\",\"name\":\"ai_tools_details\",\"arguments\":{\"names\":[\"add_record\"]}}",
+            "{", "```json\n{\"type\":\"call\",\"name\":\"add_record\",\"arguments\":{\"title\":\"Page\"}}\n```", "{", "Saved 1596");
+        var prepared = prepare(thread, plain.getRevision());
+        String requestId = prepared.turn().question().getRequestId();
+        var first = execute(prepared);
+        assertEquals(AiAssistantRuntime.LOAD_TOOLS, first.getToolCall().name());
+        assertFalse(first.getToolCall().write());
+        String source = inputs.get(0).getChatAttachmentContext();
+        assertTrue(source.contains("Read Second"));
+        assertTrue(source.contains("Attachment: notes.txt\nSecond\n"));
+        assertFalse(source.contains("First"));
+        if (legacyReplay) {
+            Path path = root.resolve("7/42").resolve(thread).resolve("ai_chat.json");
+            var doc = AiChatFiles.read(path);
+            doc.getMessages().get(doc.getMessages().size() - 1).setToolResponseId(null);
+            AiChatFiles.write(path, doc);
+        }
+
+        var loaded = new AiToolProtocol.Result(first.getToolCall().name(), first.getToolCall().arguments(), 200,
+            Map.of("tools", inputs.get(0).getToolProtocol().definitions()), false);
+        var write = continueTools(first, requestId, List.of(loaded));
+        assertEquals("add_record", write.getToolCall().name());
+        assertTrue(write.getToolCall().write());
+        var messages = service.detail(thread, scope).messages();
+        var pending = messages.get(messages.size() - 1);
+        assertEquals("add_record", pending.activeTool());
+        assertEquals("pending", pending.status());
+        assertEquals("", pending.text());
+        assertEquals(9, pending.totalTokens());
+        assertEquals(new TokenBreakdown(3, 6), pending.tokenBreakdown());
+        assertEquals(legacyReplay, inputs.get(1).isReplayToolResults());
+        assertEquals(legacyReplay ? source : null, inputs.get(1).getChatAttachmentContext());
+
+        var saved = new AiToolProtocol.Result(write.getToolCall().name(), write.getToolCall().arguments(), 200, Map.of("id", 1596), false);
+        var last = continueTools(write, requestId, List.of(loaded, saved));
+        assertEquals("Saved 1596", last.getResponse());
+        var answer = service.detail(thread, scope).messages().get(messages.size() - 1);
+        assertEquals(List.of(AiAssistantRuntime.LOAD_TOOLS, "add_record"), answer.toolCalls());
+        assertEquals(15, answer.totalTokens());
+        assertEquals(new TokenBreakdown(5, 10), answer.tokenBreakdown());
+        String afterLoader = legacyReplay ? "response-one" : "id-1";
+        assertEquals(List.of("response-one", afterLoader, afterLoader, "id-3", "id-3"), inputs.stream().map(InputDataDTO::getPreviousResponseId).toList());
+        assertTrue(inputs.stream().allMatch(input -> "Question".equals(input.getUserPrompt())));
+        assertEquals("id-5", store.get(thread, scope).thread().getLastResponseId());
+        verify(assistants, times(6)).incrementUsedTokens(12L, 7, 3L);
+        verify(provider, never()).prepareChatAttachment(any(), any(), any(), any());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"3,INVALID_TOOL_STEP", "2,TOKEN_LIMIT_REACHED", "1,INVALID_TOOL_STEP"})
+    void chargesRejectedDecisionsUntilAttemptOrQuotaLimit(int attempts, String category) throws Exception {
+        stubToolDecisions("{", "{", "{");
+        assistant.setTokenLimit(100L);
+        if (attempts == 2) when(assistants.countWithReachedTokenLimit(12L, 7)).thenReturn(0L, 0L, 1L);
+        if (attempts == 1) when(assistants.incrementUsedTokens(12L, 7, 3L)).thenThrow(new IllegalStateException("Counter unavailable"));
+        var result = execute(prepare(null, null));
+        assertEquals(category, result.getErrorCategory());
+        assertEquals(attempts * 3, result.getTotalTokens());
+        verify(assistants, times(attempts)).incrementUsedTokens(12L, 7, 3L);
+        verify(statistics, times(attempts)).save(any());
+        var saved = store.get(result.getThreadId(), scope);
+        var answer = saved.messages().get(1);
+        assertEquals(List.of("id-1", "id-2").subList(0, attempts - 1), answer.getEarlierProviderResponseIds());
+        assertEquals("id-" + attempts, answer.getProviderResponseId());
+        assertNull(answer.getPendingToolCall());
+        assertNull(saved.thread().getLastResponseId());
+    }
+
     /** Waits for an in-flight storage renewal before cleanup, preserving the shutdown caller's interrupt status. */
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
@@ -148,7 +416,7 @@ class AiChatServiceTest {
             }
         }).when(delayedStore).heartbeat(any(), anyString(), anyString());
         service.destroy();
-        service = new AiChatService(delayedStore, assistants, List.of(provider), tasks, aiClient, configuration, statistics);
+        service = new AiChatService(delayedStore, assistants, List.of(provider), tasks, aiClient, configuration, statistics, toolService);
         when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenAnswer(call -> {
             assertTrue(heartbeatStarted.await(5, TimeUnit.SECONDS));
             return new AiResponse("Answer", List.of(), TokenUsage.EMPTY, "completed", "response-one");
@@ -276,7 +544,7 @@ class AiChatServiceTest {
         service.execute(duplicate, text -> { }, streaming, request);
 
         audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), argThat(value ->
-            value.startsWith("SUCCESS: Assistant (openai)")
+            value.startsWith("ANSWER_COMPLETED: Assistant (openai)")
                 && value.contains("Assistant ID: 12") && value.contains("Assistant name: Assistant")
                 && value.contains("Provider: openai") && value.contains("Model: model")
                 && value.contains("Field from: data") && value.contains("Field to: data")
@@ -294,23 +562,34 @@ class AiChatServiceTest {
     }
 
     /** Failed and cancelled calls retain the same assistant, question and provider status metadata. */
+    /** Errors retain their category and response stage, with bounded diagnostics available only in the audit. */
     @ParameterizedTest
-    @CsvSource({"UNKNOWN,503,ERROR", "CANCELLED,0,CANCELLED"})
-    void auditsFailedAndCancelledTurns(AiErrorCategory category, int providerStatus, String auditStatus) throws Exception {
-        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any())).thenThrow(
-            new AiProviderException("openai", providerStatus, "Provider failure", null, false).withCategory(category));
-        var prepared = prepare(null, null);
-
-        assertEquals(category.name(), execute(prepared).getErrorCategory());
-
-        audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), argThat(value ->
-            value.startsWith(auditStatus + ": Assistant (openai) getPersistentChatResponse")
-                && value.contains("Assistant ID: 12") && value.contains("Model: model")
-                && value.contains("Thread ID: " + prepared.turn().thread().getId())
-                && value.contains("User prompt:\nQuestion") && value.contains("Error message:")
-                && value.contains("Error category: " + category)
-                && (providerStatus == 0 || value.contains("Provider status: " + providerStatus))), eq(0), eq(-1)));
+    @CsvSource({"UNKNOWN,503,ERROR,0", "UNKNOWN,503,ERROR,40", "UNKNOWN,503,ERROR,2000", "CANCELLED,0,CANCELLED,2000"})
+    void auditsFailedAndCancelledTurns(AiErrorCategory category, int status, String auditStatus, int limit) throws Exception {
+        when(configuration.auditMaxLength()).thenReturn(limit);
+        var failure = new AiProviderException("openai", status, "CHAT requires explicit store(true) for context; token=key", null, false);
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenThrow(failure.withCategory(category));
+        var turn = prepare(null, null);
+        var result = execute(turn);
+        assertEquals(category.name(), result.getErrorCategory());
+        assertFalse(result.getError().contains("store(true)"));
         verifyNoInteractions(statistics);
+
+        var description = org.mockito.ArgumentCaptor.forClass(String.class);
+        audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), description.capture(), eq(0), eq(-1)));
+        String value = description.getValue();
+        assertTrue(value.startsWith(auditStatus + ": Assistant (openai) getPersistentChatResponse"));
+        assertTrue(value.contains("Thread ID: " + turn.turn().thread().getId()));
+        assertTrue(value.contains("Error category: " + category));
+        assertTrue(value.contains("Failure stage: generation"));
+        assertFalse(value.contains("token=key"));
+        if (status > 0) assertTrue(value.contains("Provider status: " + status));
+        if (limit == 0) assertFalse(value.contains("Provider diagnostic:"));
+        else {
+            String diagnostic = value.split("Provider diagnostic:\n", 2)[1].split("\nInput value:", 2)[0];
+            assertTrue(diagnostic.contains("store(true)"));
+            assertTrue(diagnostic.length() <= limit);
+        }
     }
 
     /** Disabling or truncating audit content preserves assistant metadata, thread IDs and consumption. */
@@ -339,14 +618,19 @@ class AiChatServiceTest {
     }
 
     /** Audit storage errors cannot turn a completed answer into a failure or prevent saving its history. */
-    @Test
-    void auditFailurePreservesAnswerAndStatistics() {
-        audit.when(() -> Adminlog.add(eq(Adminlog.TYPE_AI), anyString(), eq(3), eq(-1)))
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void auditFailurePreservesCompletedAnswer(boolean statisticsUnavailable) {
+        audit.when(() -> Adminlog.add(eq(Adminlog.TYPE_AI), anyString(), anyInt(), eq(-1)))
             .thenThrow(new IllegalStateException("Audit unavailable"));
+        if (statisticsUnavailable) when(statistics.save(any(AiStatEntity.class))).thenThrow(new IllegalStateException("Statistics unavailable"));
         var prepared = prepare(null, null);
 
         assertEquals("Answer", execute(prepared).getResponse());
-        assertEquals("complete", store.get(prepared.turn().thread().getId(), scope).messages().get(1).getStatus());
+        var saved = store.get(prepared.turn().thread().getId(), scope);
+        assertEquals("complete", saved.messages().get(1).getStatus());
+        assertNull(saved.thread().getActiveMessageId());
+        assertNull(saved.thread().getLeaseUntil());
         verify(statistics).save(any(AiStatEntity.class));
     }
 
@@ -440,12 +724,13 @@ class AiChatServiceTest {
         assertEquals(7, result.getTotalTokens());
         var saved = new AiChatStore().get(prepared.turn().thread().getId(), scope).messages();
         assertEquals(text, saved.get(1).getText());
+        assertEquals(new TokenBreakdown(3, 4), saved.get(1).getTokenBreakdown());
         assertEquals(2, saved.get(0).getAttachments().size());
         var records = org.mockito.ArgumentCaptor.forClass(AiStatEntity.class);
         verify(statistics).save(records.capture());
         assertEquals(7, records.getValue().getUsedTokens());
         audit.verify(() -> Adminlog.add(eq(Adminlog.TYPE_AI), argThat(value ->
-            value.startsWith("SUCCESS: Assistant (openai) getPersistentChatStreamResponse")
+            value.startsWith("ANSWER_COMPLETED: Assistant (openai) getPersistentChatStreamResponse")
                 && value.contains("input_tokens: 3") && value.contains("output_tokens: 4")
                 && value.contains("total_tokens: 7")), eq(7), eq(-1)));
     }
@@ -477,6 +762,11 @@ class AiChatServiceTest {
             value.startsWith("ERROR: Assistant (openai)") && value.contains("Error category: ATTACHMENT_INVALID")
                 && value.contains("input_tokens: 2") && value.contains("output_tokens: 2")
                 && value.contains("total_tokens: 4")), eq(4), eq(-1)), times(1));
+
+        var inputs = stubToolDecisions("Follow-up answer");
+        var next = execute(prepare(response.getThreadId(), response.getRevision()));
+        assertEquals("Follow-up answer", next.getResponse());
+        assertNull(inputs.get(0).getChatAttachmentContext());
     }
 
     /** Unexpected failures finish the saved turn and expose a localized error instead of provider diagnostics. */
@@ -683,6 +973,8 @@ class AiChatServiceTest {
         boolean unknown = state == State.UNKNOWN || (state == State.RESPONSE_OBSERVED && responseId == null);
         assertEquals(unknown, saved.messages().get(3).isStorageUnknown());
         assertEquals(!unknown, service.delete(id, scope).deleted());
+        if (unknown) assertTrue(service.deleteLocal(id, scope).deleted());
+        assertTrue(store.list(scope, 0).items().isEmpty());
         verify(provider, times(2)).getPersistentChatResponse(any(), any(), any(), anyBoolean(), any(), any());
     }
 }

@@ -5,23 +5,118 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const sourceDirectory = path.resolve(__dirname, '../../../main/webapp/admin/v9/npm_packages/webjetdatatables/ai');
-const sources = ['../../../src/js/ai/chat-history-api.js', '../../../src/js/ai/ai-stream.js', '../../../src/js/ai/ai-rest-transport.js',
+const sources = ['../../../src/js/ai/ai-token-usage.js', '../../../src/js/ai/chat-history-api.js', '../../../src/js/ai/ai-stream.js',
+    '../../../src/js/ai/ai-tool-transport.js', '../../../src/js/ai/ai-rest-transport.js',
     '../../../src/js/ai/ai-response-parser.js',
     'ai-execution-result.js', 'ai-rest-executor.js', '../../../src/js/ai/ai-chat-transport.js'].map(filename =>
     fs.readFileSync(path.join(sourceDirectory, filename), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')
 ).join('\n');
 
-function loadTransport(fetch, notifications = [], AiBrowserExecutor) {
+function loadTransport(fetch, notifications = []) {
     const context = vm.createContext({
-        TextDecoder, AbortController, URLSearchParams, FormData, fetch, AiBrowserExecutor, console: { log() {}, warn() {} },
+        TextDecoder, AbortController, URLSearchParams, FormData, setTimeout, clearTimeout,
+        fetch: (url, options) => url.startsWith('/admin/rest/ai/assistant/runtime/?assistantId=')
+            ? Promise.resolve(Response.json({})) : fetch(url, options), console: { log() {}, warn() {} },
         window: { csrfToken: 'test-csrf', csrfError: 'Token expired', alert: text => notifications.push(text) },
         WJ: {
+            translate: key => key,
             keepSessionShowLogoffMessage: () => notifications.push('Session expired'),
             keepSessionShowTokenMessage: text => notifications.push(text)
         }
     });
-    return vm.runInContext(sources + '\n({ AiRestExecutor, AiChatTransport, requestAiText });', context);
+    return vm.runInContext(sources + '\n({ AiRestExecutor, AiChatTransport, requestAiText, runToolSteps });', context);
 }
+
+const toolCall = (name, args = {}) => ({ toolCall: { name, arguments: args, write: name === 'save' } });
+const done = { response: 'Done' };
+
+const usage = (inputTokens, outputTokens) => ({ totalTokens: inputTokens + outputTokens, tokenBreakdown: { inputTokens, outputTokens } });
+
+for (const saved of [false, true]) {
+    test(`tool rounds count tokens once, preserve completed reads and identify writes (saved=${saved})`, async () => {
+        const endpoint = saved ? '/admin/rest/ai/chat/messages' : undefined;
+        const context = saved ? { threadId: 'thread', messageId: 'answer', revision: 1 } : { conversationId: 'turn' };
+        const steps = [
+            { ...toolCall('find'), ...context, ...usage(8, 2) },
+            { ...toolCall('details'), ...context, ...(saved ? usage(9, 3) : usage(1, 1)) },
+            { ...toolCall('save', { id: 42 }), ...context, ...(saved ? usage(10, 3) : usage(1, 0)) },
+            { ...done, ...(saved ? usage(12, 4) : usage(2, 1)) }
+        ];
+        const calls = [], messages = [];
+        const { requestAiText } = loadTransport((url, options) => {
+            if (!url.includes('/tools/')) {
+                messages.push(options.body);
+                if (saved && messages.length === 2) throw new TypeError('Connection lost');
+                return Response.json(steps.shift());
+            }
+            calls.push([url, JSON.parse(options.body)]);
+            assert.equal(options.headers['X-WebJET-AI-Chat'], saved ? 'thread/answer' : 'unsaved');
+            return Response.json({ data: [{ id: 42 }] });
+        });
+        const answer = await requestAiText({ assistantId: 7, requestId: 'request' }, { endpoint, toolsEnabled: true });
+        if (saved) {
+            assert.equal(messages[2], messages[1], 'Resend the same model request after a lost response.');
+            assert.deepEqual(JSON.parse(messages[2]).toolResults.map(result => result.name), ['find']);
+        }
+        assert.deepEqual(calls, [['/admin/rest/ai/tools/find/call', {}], ['/admin/rest/ai/tools/details/call', {}],
+            ['/admin/rest/ai/tools/save/call', { id: 42 }]]);
+        assert.equal(answer.response, done.response);
+        assert.equal(answer.toolStatus, 'save — HTTP 200 (ID 42)');
+        assert.equal(answer.totalTokens, 16);
+        assert.deepEqual([answer.tokenBreakdown.inputTokens, answer.tokenBreakdown.outputTokens], [12, 4]);
+        assert.equal(steps.length, 0);
+    });
+}
+
+test('a second write stops on a duplicate call, invalid arguments or a partially applied first write', async t => {
+    for (const [status, body, args, message, retryable] of [
+        [200, { id: 42 }, {}, /limit/, false],
+        [400, { error: 'Invalid' }, {}, /limit/, true],
+        [200, { id: 42 }, [], /invalidStep/, false],
+        [200, { result: false, data: [{ id: 42 }] }, { id: 43 }, /unverified/, false],
+        [400, { id: 42 }, { id: 43 }, /unverified/, false]
+    ]) {
+        const fetch = t.mock.fn(() => Response.json(body, { status }));
+        const steps = [toolCall('save'), toolCall('save', args)];
+        await assert.rejects(loadTransport(fetch).runToolSteps(7, () => steps.shift()), { message, retryable });
+        assert.equal(fetch.mock.callCount(), 1);
+    }
+});
+
+test('generation errors and cancellation stop before dispatch', async () => {
+    const { runToolSteps } = loadTransport(() => assert.fail('Unexpected dispatch'));
+    const stop = new AbortController();
+    const error = new Error('Session lost');
+    await assert.rejects(runToolSteps(7, () => { throw error; }), error);
+    await assert.rejects(runToolSteps(7, () => { stop.abort(error); return toolCall('save'); }, stop.signal), error);
+});
+
+test('a rejected saved-write claim leaves the outcome to the delivery that claimed it', async t => {
+    const { runToolSteps } = loadTransport(() => new Response(null, {
+        status: 404, headers: { 'X-WebJET-AI-Tool-Response': 'write-claim-rejected' }
+    }));
+    const next = t.mock.fn(() => toolCall('save'));
+    await assert.rejects(runToolSteps(7, next), { message: /uncertain/, retryable: false });
+    assert.equal(next.mock.callCount(), 1);
+});
+
+test('tool calls distinguish declared empty results from unreadable JSON', async () => {
+    for (const [type, body, expected] of [['empty', null, null], ['empty', '', null], ['text', null, ''], ['text', '', ''],
+        ['json', null, /empty/i], ['json', '', /empty/i], ['json', 'bad JSON', /.+/]]) {
+        const { runToolSteps } = loadTransport(() => new Response(body, { headers: {
+            'Content-Type': 'application/json', 'X-WebJET-AI-Tool-Response': type } }));
+        const result = await runToolSteps(7, observations => {
+            if (!observations.length) return toolCall(type === 'json' ? 'find' : 'save');
+            const [observation] = observations;
+            assert.equal(observation.status, 200);
+            assert.equal(observation.uncertain, false);
+            if (type === 'json') assert.match(observation.result.error, expected);
+            else assert.equal(observation.result, expected);
+            return { ...done };
+        });
+        if (type !== 'json') assert.equal(result.toolStatus, 'save — HTTP 200');
+    }
+});
 
 function delta(text) {
     return JSON.stringify({ type: 'delta', text }) + '\n';
@@ -35,7 +130,7 @@ for (const [persistentChat, streaming] of [[true, true], [true, false], [false, 
     test(`chat uploads preserve context, CSRF and multipart data (saved=${persistentChat}, streaming=${streaming})`, async () => {
         let request;
         const file = new File(['Private attachment'], 'notes.txt', { type: 'text/plain' });
-        const payload = { response: 'Answer', totalTokens: 7, conversationId: 'next-turn' };
+        const payload = { response: 'Answer', totalTokens: 7, tokenBreakdown: { inputTokens: 4, outputTokens: 3 }, conversationId: 'next-turn' };
         const accept = streaming ? 'application/x-ndjson' : 'application/json';
         const input = persistentChat ? { requestId: 'request', inputValue: '<p>Existing page</p>', inputIsSelectedTextInEditor: true,
             context: { entityType: '/admin/rest/web-pages', entityId: '42', fieldName: 'data' } } : {
@@ -52,6 +147,8 @@ for (const [persistentChat, streaming] of [[true, true], [true, false], [false, 
         assert.equal(response.success, true);
         assert.equal(response.response, 'Answer');
         assert.equal(response.conversationId, 'next-turn');
+        assert.equal(response.tokenBreakdown.inputTokens, 4);
+        assert.equal(response.tokenBreakdown.outputTokens, 3);
         assert.equal(request.url, persistentChat ? '/admin/rest/ai/chat/messages'
             : `/admin/rest/ai/assistant/${streaming ? 'response-stream' : 'response'}/`);
         assert.equal(request.headers['X-CSRF-Token'], 'test-csrf');
@@ -159,14 +256,22 @@ test('HTTP authentication failures preserve session and CSRF notifications', asy
 
 test('chat cancellation aborts the shared fetch and stops the same server task', async () => {
     const requests = [];
+    const dispatched = Promise.withResolvers();
     const { AiChatTransport } = loadTransport((url, options) => {
+        dispatched.resolve();
         requests.push({ url, ...options });
         if (options.method === 'GET') return Promise.resolve(new Response());
         return new Promise((resolve, reject) => options.signal.addEventListener('abort',
             () => reject(new Error('Aborted')), { once: true }));
     });
     const transport = new AiChatTransport();
+    const lookup = transport.execute({ assistantId: 7 }, {});
+    transport.cancel();
+    assert.equal((await lookup).stopped, true);
+    assert.deepEqual(requests, [], 'Cancelling runtime lookup has no server task to stop.');
+
     const pending = transport.execute({ assistantId: 7 }, {});
+    await dispatched.promise;
     const data = JSON.parse(requests[0].body);
     transport.cancel();
     const chat = await pending;

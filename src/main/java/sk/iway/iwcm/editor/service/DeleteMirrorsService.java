@@ -10,8 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.InitServlet;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
 import sk.iway.iwcm.components.structuremirroring.MirroringService;
@@ -87,7 +85,7 @@ public class DeleteMirrorsService {
         for (int id : selectedIds) {
             GroupDetails group = groupsDB.getGroup(id);
             if (group == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-            if (isInTenant(group) == false || GroupsDB.isGroupEditable(user, id) == false) {
+            if (WebpagesService.isInTenant(group) == false || GroupsDB.isGroupEditable(user, id) == false) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
 
@@ -97,7 +95,7 @@ public class DeleteMirrorsService {
 
             for (GroupDetails mirror : GroupMirroringServiceV9.getGroupsBySyncId(syncId, id)) {
                 if (seenIds.add(mirror.getGroupId()) == false) continue;
-                if (isInTenant(mirror) == false || (GroupsDB.isGroupEditable(user, mirror.getGroupId()) == false
+                if (WebpagesService.isInTenant(mirror) == false || (GroupsDB.isGroupEditable(user, mirror.getGroupId()) == false
                         && GroupsDB.isGroupViewable(user, mirror.getGroupId()) == false)) {
                     result.setHiddenMirrors(true);
                     continue;
@@ -116,12 +114,7 @@ public class DeleteMirrorsService {
     }
 
     private boolean canAccessPage(DocDetails doc, Identity user) {
-        return user != null && isInTenant(GroupsDB.getInstance().getGroup(doc.getGroupId()))
+        return user != null && WebpagesService.isInTenant(GroupsDB.getInstance().getGroup(doc.getGroupId()))
                 && editorService.isPageEditable(user, doc, true);
-    }
-
-    private boolean isInTenant(GroupDetails group) {
-        return group != null && (InitServlet.isTypeCloud() == false
-                || CloudToolsForCore.getDomainName().equals(group.getDomainName()));
     }
 }

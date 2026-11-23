@@ -99,6 +99,7 @@ function fixture(t, denied = [], options = {}) {
     const dateStart = webjet.indexOf('    function _formatTime(');
     vm.runInContext(`{ ${webjet.slice(dateStart, webjet.indexOf('    function formatDateTimeSeconds(', dateStart))}\nWJ.formatDateTime = formatDateTime; }`, context);
     window.webjetTranslationService = { translate: key => key.endsWith('.documentationExternalNotice.js') ? `${key} {1}`
+        : /\.(conversationTokens|folderReply)\.js$/.test(key) ? key + ' {1}'
         : key.endsWith('.resultCount.js') ? `${key} {1}: {2}` : key };
     const translateStart = webjet.indexOf('    function translate(');
     vm.runInContext(`{ ${webjet.slice(translateStart, webjet.indexOf('    function showHelpWindow(', translateStart))}\nWJ.translate = (key, ...params) => translate(key, params); }`, context);
@@ -114,11 +115,13 @@ function fixture(t, denied = [], options = {}) {
         vm.runInContext(`${webjet.slice(tooltipStart, webjet.indexOf('\n    /**', tooltipStart))}\nWJ.initTooltip = initTooltip;`, context);
         vm.runInContext(readAdmin('ai/chat-history-api.js'), context);
         vm.runInContext(readAdmin('ai/chat-tooltips.js'), context);
+        vm.runInContext(readAdmin('ai/ai-token-usage.js'), context);
         vm.runInContext(readAdmin('ai/ai-response-parser.js'), context);
         vm.runInContext(`{ ${readAdmin('ai/html-preview.js')}; Object.assign(this, { HtmlPreview, editorPreviewContext }); }`, context);
         vm.runInContext(`${readAdmin('ai/ai-chat.js')}\nthis.AiChat = AiChat;`, context);
         vm.runInContext(`{ ${readAdmin('ai/ai-chat-host.js')}; Object.assign(this, { AiChatHost }); }`, context);
         if (options.editorChat) {
+            vm.runInContext(readAdmin('ai/ai-rest-transport.js'), context);
             vm.runInContext(readAdmin('../../npm_packages/webjetdatatables/ai/ai-execution-result.js'), context);
             vm.runInContext(`${readAdmin('../../npm_packages/webjetdatatables/editor-ai.js')}\nthis.EditorAi = EditorAi;`, context);
         }
@@ -1192,16 +1195,19 @@ function selectChatAssistant(host, id) {
 }
 
 /** Opens a saved conversation through the real history request and response path. */
-async function openSavedChat(f, id, answer) {
+async function openSavedChat(f, id, answer, assistantId = 7) {
+    const answers = Array.isArray(answer) ? answer : [{ id: id + '-answer', text: answer }];
     const opening = f.controller.chat.openThread(id);
-    await f.respond(f.requests.at(-1), {
-        thread: { id, assistantId: 7, canContinue: true, revision: 1 },
+    const detail = {
+        thread: { id, assistantId, canContinue: true, revision: 1 },
         messages: [
             { id: `${id}-question`, role: 'user', text: 'Saved question', status: 'complete' },
-            { id: `${id}-answer`, turnId: `${id}-question`, role: 'assistant', text: answer, status: 'complete' }
+            ...answers.map(reply => ({ turnId: id + '-question', role: 'assistant', status: 'complete', ...reply }))
         ]
-    });
+    };
+    await f.respond(f.requests.at(-1), detail);
     await opening;
+    return detail;
 }
 
 test('Chat tooltips keep conversation titles literal and disappear when the chat closes', async t => {
@@ -1505,12 +1511,26 @@ test('AI Chat sends no webpage context and completed responses expose only Copy'
     assert.deepEqual(JSON.parse(JSON.stringify(f.chatRequests[0].inputData)), {
         inputValue: '', inputValueType: 'text', outputValueType: 'text', userPrompt: 'Write a short announcement'
     });
+    const { callbacks } = f.chatRequests[0];
+    callbacks.onToolActivity('invalid_lookup');
+    callbacks.onToolActivity(null, false);
+    callbacks.onToolActivity('list_records');
+    const activity = f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-tool-activity');
+    assert.equal(activity.querySelector('li').textContent, 'list_records');
+    activity.open = true;
+    callbacks.onToolActivity(null);
+    callbacks.onToolActivity('read_record');
+    assert.deepEqual(Array.from(activity.querySelectorAll('li'), item => item.textContent), ['list_records', 'read_record']);
+    callbacks.onToolActivity(null);
     const reply = '<p>Our announcement</p>';
     f.chatRequests[0].resolve({ success: true, response: reply });
     await tick();
     const message = f.controller.chatPanel.querySelector('.ai-chat-assistant');
-    assert.equal(message.querySelector('details code').textContent, reply);
-    assert.equal(message.querySelector('details').open, true);
+    assert.equal(activity.open, true);
+    assert.equal(activity.querySelectorAll('li').length, 2);
+    const preview = message.querySelector('.ai-chat-html-response');
+    assert.equal(preview.querySelector('code').textContent, reply);
+    assert.equal(preview.open, true);
     assert.equal(message.querySelector('.ai-chat-message-text p'), null, 'Raw HTML must remain inert text.');
     const actions = message.querySelectorAll('.ai-chat-message-actions button');
     assert.equal(actions.length, 1);
@@ -1521,16 +1541,28 @@ test('AI Chat renders streamed Markdown tables and copies the original response 
     let copied;
     const f = fixture(t, deniedRestPermissions, { aiChat: true, clipboard: { writeText: async value => { copied = value; } } });
     const input = await openChat(f);
+    const chat = f.controller.chat.chat;
+    const firstTurn = chat.send('First question');
+    f.chatRequests[0].resolve({ success: true, response: 'First answer' });
+    await firstTurn;
+    const history = chat.$history[0];
+    const previous = history.lastElementChild;
     const prompt = '**My question** <img src=x onerror=alert(1)>';
     typeChat(input, prompt);
     sendChat(input);
-    const user = f.controller.chatPanel.querySelector('.ai-chat-user .ai-chat-message-text');
+    const user = history.lastElementChild.previousElementSibling.querySelector('.ai-chat-message-text');
     assert.equal(user.textContent, prompt);
     assert.equal(user.querySelector('b, img'), null);
-    const request = f.chatRequests[0];
+    const observer = new input.ownerDocument.defaultView.MutationObserver(() => {});
+    observer.observe(previous, { subtree: true, childList: true, attributes: true, characterData: true });
+    Object.defineProperties(history, { clientHeight: { value: 100 }, scrollHeight: { value: 600 } });
+    const request = f.chatRequests[1];
     const header = '## Boxes\n\n| Size | Count |\n| :--- | ---: |';
     request.callbacks.onUpdate(header + '\n| Small |');
-    const answer = f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-message-text');
+    assert.ok(history.scrollTop >= 500);
+    history.scrollTop = 100;
+    history.dispatchEvent(new input.ownerDocument.defaultView.Event('scroll'));
+    const answer = history.lastElementChild.querySelector('.ai-chat-message-text');
     assert.equal(answer.querySelector('h2').textContent, 'Boxes');
     assert.deepEqual([...answer.querySelectorAll('th')].map(cell => cell.textContent), ['Size', 'Count']);
     const reply = header + '\n| **Small** | 28 |\n| Large | 19 |\n\n- Total: `47`';
@@ -1539,9 +1571,21 @@ test('AI Chat renders streamed Markdown tables and copies the original response 
     assert.equal(answer.querySelector('td b').textContent, 'Small');
     assert.equal(answer.querySelector('td.text-end').textContent, '28');
     assert.equal(answer.querySelector('li code').textContent, '47');
+    assert.equal(history.scrollTop, 100);
+    assert.equal(observer.takeRecords().length, 0, 'Later deltas must leave the previous answer untouched.');
+    observer.disconnect();
+    f.controller.modal.hide();
+    request.callbacks.onUpdate(reply + '\nMore while hidden');
+    assert.doesNotMatch(answer.textContent, /More while hidden/);
+    f.controller.open();
+    f.controller.chips.get('aiChat').click();
+    assert.match(answer.textContent, /More while hidden/);
+    assert.equal(history.scrollTop, 100);
+    assert.equal(chat.$stop[0].style.display, '');
     request.resolve({ success: true, response: reply });
     await tick();
-    f.controller.chatPanel.querySelector('.ai-chat-assistant .ai-chat-message-actions button').click();
+    assert.equal(chat.$stop[0].style.display, 'none');
+    history.lastElementChild.querySelector('.ai-chat-message-actions button').click();
     await tick();
     assert.equal(copied, reply);
     f.controller.modal.hide();
@@ -1859,7 +1903,7 @@ test('Chat hides unavailable or invalid dates instead of displaying the current 
     }
 });
 
-test('AI Chat preserves independent conversations and drafts through tabs and reopening', async t => {
+test('AI Chat locks a started conversation across tabs and unlocks the picker for a new chat', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     const input = await openChat(f);
     typeChat(input, 'First question');
@@ -1877,25 +1921,25 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     selector.value = '8';
     selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
     let current = f.controller.chatPanel.querySelector('.ai-chat-input');
-    assert.equal($selector.data('selectpicker'), picker, 'Switching conversations must reuse the picker.');
-    assert.match(picker.$button.text(), /Second assistant/);
-    assert.equal(current.value, '');
-    assert.doesNotMatch(f.controller.chatPanel.textContent, /First reply/);
-    typeChat(current, 'Second draft');
-    selector.value = '7';
-    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
-    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
-    assert.equal(f.controller.chatPanel.querySelector('select'), selector, 'Switching conversations must retain the live selector.');
+    assert.equal(selector.disabled, true);
+    assert.equal(selector.value, '7');
+    assert.equal(current.value, 'First draft');
     assert.match(f.controller.chatPanel.textContent, /First reply/);
-    assert.match(picker.$button.text(), /First assistant/);
+    assert.match(f.controller.chat.lockedAssistant.textContent, /First assistant/);
+    f.controller.chips.get('admin').click();
+    f.controller.chips.get('aiChat').click();
+    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
+    f.controller.chat.chat.newChat();
+    assert.equal(selector.disabled, false);
+    const newPicker = $selector.data('selectpicker');
     $selector.selectpicker('toggle');
     assert.equal(selector.ownerDocument.querySelectorAll('.bs-container').length, 1);
     const escape = new selector.ownerDocument.defaultView.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
-    picker.$menuInner[0].dispatchEvent(escape);
+    newPicker.$menuInner[0].dispatchEvent(escape);
     assert.equal(escape.defaultPrevented, true);
     assert.equal(selector.ownerDocument.querySelector('.bs-container'), null, 'Escape must close the picker without closing the chat.');
     assert.equal(f.controller.root.classList.contains('show'), true);
-    assert.equal(selector.ownerDocument.activeElement, picker.$button[0]);
+    assert.equal(selector.ownerDocument.activeElement, newPicker.$button[0]);
     $selector.selectpicker('toggle');
     f.controller.chips.get('admin').click();
     assert.equal($selector.data('selectpicker'), undefined);
@@ -1903,15 +1947,16 @@ test('AI Chat preserves independent conversations and drafts through tabs and re
     f.controller.chips.get('aiChat').click();
     assert.ok($selector.data('selectpicker'));
     assert.equal(f.controller.chatPanel.querySelectorAll('.ai-chat-host__assistant > .bootstrap-select').length, 1);
-    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, 'First draft');
+    assert.equal(f.controller.chatPanel.querySelector('.ai-chat-input').value, '');
     f.controller.modal.hide();
     f.controller.open();
     f.controller.chips.get('aiChat').click();
     current = f.controller.chatPanel.querySelector('.ai-chat-input');
-    assert.equal(current.value, 'First draft');
+    assert.equal(current.value, '');
     assert.match($selector.data('selectpicker').$button.text(), /First assistant/);
+    typeChat(current, 'Fresh question');
     sendChat(current);
-    assert.equal(f.chatRequests[1].inputData.conversationId, 'first-conversation');
+    assert.equal(f.chatRequests[1].inputData.conversationId, undefined);
     assert.equal(f.requests.length, 1, 'Returning to chat must reuse the assistant catalogue.');
 });
 
@@ -1985,8 +2030,9 @@ for (const saved of [false, true]) {
         assert.equal(view.isPending(), true);
         if (saved) {
             selectChatAssistant(conversation.host, assistants[1].assistantId);
-            assert.equal(conversation.chat.isPending(), false);
-            assert.equal(view.isPending(), true, 'Pending work includes the previous assistant after switching.');
+            assert.equal(conversation.host.select.disabled, true);
+            assert.equal(conversation.chat, chat);
+            assert.equal(chat.isPending(), true);
         }
         view.unmount();
         assert.equal(view.element.isConnected, false);
@@ -2097,9 +2143,13 @@ test('Ordinary PageBuilder generation still edits each region and can undo all r
         update(input.inputValue + ' edited', true);
         return { success: true, totalTokens: 3 };
     };
-    await editor._executeAction(null, { name: 'data', type: 'wysiwyg' }, {
+    editor.aiUserInterface._isCurrentAssistantView = () => true;
+    const pending = editor._executeAction(null, { name: 'data', type: 'wysiwyg' }, {
         ...chatAssistants[0], action: 'generate_text', from: 'data', to: 'data'
     });
+    const runtime = f.requests.find(request => request.url.pathname === '/admin/rest/ai/assistant/runtime/');
+    await f.respond(runtime, { provider: chatAssistants[0].provider, action: 'generate_text', toolsWrite: false });
+    await pending;
     assert.deepEqual(regions.map(region => region.value), ['First region edited', 'Second region edited']);
     editor.undo();
     assert.deepEqual(regions.map(region => region.value), ['First region', 'Second region']);
@@ -2289,7 +2339,7 @@ for (const scenario of [
     { label: 'invalid attachment', errorCategory: 'ATTACHMENT_INVALID', retryable: null, canRetry: false },
     { label: 'unsupported operation', errorCategory: 'UNSUPPORTED_OPERATION', retryable: true, canRetry: false },
     { label: 'invalid continuation', errorCategory: 'INVALID_CONTINUATION', retryable: true, canRetry: false },
-    { label: 'stopped response', status: 'stopped', errorCategory: 'CANCELLED', retryable: false, canRetry: true }
+    { label: 'non-retryable stopped response', status: 'stopped', errorCategory: 'CANCELLED', retryable: false, canRetry: false }
 ]) {
     test(`Saved chat restores retry controls for a ${scenario.label}`, async t => {
         const f = fixture(t, deniedRestPermissions, { aiChat: true });
@@ -2374,6 +2424,8 @@ test('Persistent assistant switching preserves an unsent draft and its original 
     sendChat(host.chat.$input[0]);
     assert.equal(f.chatRequests[0].inputData.userPrompt, 'First unsent draft');
     assert.equal(f.chatRequests[0].inputData.files[0], file);
+    assert.equal(host.select.disabled, true);
+    host.chat.newChat();
     selectChatAssistant(host, 8);
     assert.equal(host.chat.$input.val(), 'Second unsent draft');
 });
@@ -2400,7 +2452,7 @@ test('Persistent New chat starts empty and assistant switching resumes the new d
     assert.equal(f.chatRequests[0].inputData.files, undefined);
 });
 
-test('Persistent assistant switching resumes the last selected saved thread even when it was created earlier', async t => {
+test('Returning to an earlier saved thread restores its draft and locks its assistant', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
     const host = f.controller.chat;
@@ -2434,12 +2486,12 @@ test('Returning to a busy persistent thread refreshes its completed response and
     await opening;
     typeChat(host.chat.$input[0], 'Keep this follow-up draft');
     assert.equal(host.chat.$send.prop('disabled'), true);
-    selectChatAssistant(host, 8);
+    await openSavedChat(f, 'other-thread', 'Another answer', 8);
     const requestsBeforeReturn = f.requests.length;
     f.advance(1500);
     assert.equal(f.requests.length, requestsBeforeReturn, 'An inactive thread does not keep polling.');
 
-    selectChatAssistant(host, 7);
+    await host.openThread('busy-thread');
     assert.equal(f.requests.length, requestsBeforeReturn + 1, 'Returning must refresh the cached busy state.');
     assert.equal(f.requests.at(-1).url.pathname, '/admin/rest/ai/chat/threads/busy-thread');
     await f.respond(f.requests.at(-1), {
@@ -2504,13 +2556,13 @@ test('Opening cached history selects immediately and preserves later assistant s
     await openSavedChat(f, 'saved-thread', 'Saved answer');
     const host = f.controller.chat;
     const saved = host.chat;
-    selectChatAssistant(host, 8);
+    await openSavedChat(f, 'other-thread', 'Other answer', 8);
     const other = host.chat;
 
     host.openThread('saved-thread');
     const refresh = f.requests.at(-1);
     assert.equal(host.chat, saved);
-    selectChatAssistant(host, 8);
+    await host.openThread('other-thread');
     await f.respond(refresh, {
         thread: saved.threadInfo,
         messages: [{ id: 'answer', role: 'assistant', text: 'Refreshed answer', status: 'complete' }]
@@ -2525,6 +2577,7 @@ test('Persistent assistant switching starts a usable chat after its last selecte
     const host = f.controller.chat;
     await openSavedChat(f, 'removed-thread', 'Removed saved answer');
     typeChat(host.chat.$input[0], 'Removed thread draft');
+    host.chat.newChat();
     selectChatAssistant(host, 8);
     typeChat(host.chat.$input[0], 'Keep second assistant draft');
     host.removeChat('removed-thread');
@@ -2549,9 +2602,9 @@ test('Removing an older saved thread preserves the newer selection for the same 
     await openSavedChat(f, 'older-thread', 'Older saved answer');
     await openSavedChat(f, 'newer-thread', 'Newer saved answer');
     typeChat(host.chat.$input[0], 'Keep newer thread draft');
-    selectChatAssistant(host, 8);
+    await openSavedChat(f, 'another-thread', 'Other answer', 8);
     host.removeChat('older-thread');
-    selectChatAssistant(host, 7);
+    await host.openThread('newer-thread');
 
     assert.equal(host.chat.$input.val(), 'Keep newer thread draft');
     assert.match(host.chat.element.textContent, /Newer saved answer/);
@@ -2561,10 +2614,6 @@ test('Removing an older saved thread preserves the newer selection for the same 
 test('History New chat resets only the selected conversation and returns focus to its composer', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
     const firstInput = await openChat(f);
-    typeChat(firstInput, 'First question');
-    sendChat(firstInput);
-    f.chatRequests[0].resolve({ success: true, response: 'First reply', conversationId: 'first-conversation' });
-    await tick();
     typeChat(firstInput, 'First draft');
 
     const host = f.controller.chat;
@@ -2573,7 +2622,7 @@ test('History New chat resets only the selected conversation and returns focus t
     const secondInput = host.chat.$input[0];
     typeChat(secondInput, 'Second question');
     sendChat(secondInput);
-    f.chatRequests[1].resolve({ success: true, response: 'Second reply', conversationId: 'second-conversation' });
+    f.chatRequests[0].resolve({ success: true, response: 'Second reply', conversationId: 'second-conversation' });
     await tick();
     typeChat(secondInput, 'Second draft');
     host.toggleHistory(true);
@@ -2587,22 +2636,15 @@ test('History New chat resets only the selected conversation and returns focus t
     host.select.value = '7';
     host.select.dispatchEvent(new firstInput.ownerDocument.defaultView.Event('change', { bubbles: true }));
     assert.equal(host.chat.$input.val(), 'First draft');
-    assert.match(host.chat.element.textContent, /First reply/);
+    assert.equal(host.select.disabled, false);
 });
 
-test('Composer Stop cancels only the selected assistant and preserves partial replies and drafts', async t => {
+test('Composer Stop keeps the assistant locked and preserves partial replies and drafts', async t => {
     const f = fixture(t, deniedRestPermissions, { aiChat: true });
-    const input = await openChat(f);
-    typeChat(input, 'First question');
-    sendChat(input);
-    const first = f.chatRequests[0];
-    const selector = f.controller.chatPanel.querySelector('select');
-    selector.value = '8';
-    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
-    const secondInput = f.controller.chatPanel.querySelector('.ai-chat-input');
+    const secondInput = await openChat(f);
     typeChat(secondInput, 'Second question');
     f.controller.chatPanel.querySelector('.btn-ai-chat-send').click();
-    const second = f.chatRequests[1];
+    const second = f.chatRequests[0];
     second.callbacks.onUpdate('Partial reply');
     typeChat(secondInput, 'My next question');
     const stop = f.controller.chatPanel.querySelector('.btn-ai-chat-stop');
@@ -2613,7 +2655,7 @@ test('Composer Stop cancels only the selected assistant and preserves partial re
     await tick();
 
     assert.equal(second.cancellations, 1);
-    assert.equal(first.cancellations, 0);
+    assert.equal(f.controller.chat.select.disabled, true);
     assert.match(f.controller.chatPanel.textContent, /Partial reply/);
     assert.doesNotMatch(f.controller.chatPanel.textContent, /Late reply/);
     assert.equal(secondInput.value, 'My next question');
@@ -2623,13 +2665,8 @@ test('Composer Stop cancels only the selected assistant and preserves partial re
     const attachment = f.controller.chatPanel.querySelector('.btn-ai-chat-attach');
     assert.equal(attachment.disabled, true, 'Unsaved chats cannot upload attachments.');
 
-    selector.value = '7';
-    selector.dispatchEvent(new input.ownerDocument.defaultView.Event('change', { bubbles: true }));
-    const firstStop = f.controller.chatPanel.querySelector('.btn-ai-chat-stop');
-    assert.notEqual(firstStop.style.display, 'none');
-    firstStop.click();
-    await tick();
-    assert.equal(first.cancellations, 1);
+    selectChatAssistant(f.controller.chat, 8);
+    assert.equal(f.controller.chat.select.value, '7');
 });
 
 test('Chat assistant loading errors can be retried and an empty catalogue stays usable', async t => {
@@ -2647,4 +2684,71 @@ test('Chat assistant loading errors can be retried and an empty catalogue stays 
     f.controller.chips.get('all').click();
     assert.equal(f.controller.results.hidden, false);
     assert.equal(f.chatRequests.length, 0);
+});
+
+test('The gauge shows only conversation input, output and reported total across live replies', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f);
+    const chat = f.controller.chat.chat;
+    for (const [inputTokens, outputTokens, totalTokens] of [[4, 6, 10], [8, 0, 9]]) {
+        const sending = chat.send('Private prompt');
+        f.chatRequests.at(-1).resolve({ success: true, response: 'Done', totalTokens, tokenBreakdown: { inputTokens, outputTokens } });
+        await sending;
+    }
+    chat.$tokenUsage.trigger('click');
+    const preview = chat.element.ownerDocument.querySelector('.ai-chat-token-preview');
+    assert.deepEqual(Array.from(preview.querySelectorAll('dd'), el => el.textContent), ['12', '6', '19']);
+    assert.deepEqual(Array.from(preview.querySelectorAll('dt'), el => el.textContent.split('.').at(-2)),
+        ['tokenUsageInput', 'tokenUsageOutput', 'tokenUsageTotal']);
+    assert.doesNotMatch(preview.textContent, /Private prompt/);
+});
+
+test('Conversation usage includes hidden retry attempts once and resets with a new chat', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    await openChat(f, chatAssistants.map(assistant => ({ ...assistant, persistentChat: true })));
+    const host = f.controller.chat;
+    const detail = await openSavedChat(f, 'usage-thread', [
+        { id: 'failed', status: 'error', totalTokens: 11, tokenBreakdown: { inputTokens: 8, outputTokens: 3 } },
+        { id: 'done', text: 'Reply', totalTokens: 28, tokenBreakdown: { inputTokens: 20, outputTokens: 8 } }
+    ]);
+    host.applyDetail(host.chat, detail);
+    assert.equal(host.chat.state.messages.length, 2);
+    assert.match(host.chat.$tokenUsage.attr('aria-label'), /39$/);
+    host.chat.$tokenUsage.trigger('click');
+    const document = host.select.ownerDocument;
+    const counts = () => Array.from(document.querySelectorAll('.ai-chat-token-preview dd'), value => value.textContent);
+    assert.deepEqual(counts(), ['28', '11', '39']);
+    delete detail.messages[1].tokenBreakdown;
+    host.applyDetail(host.chat, detail);
+    assert.deepEqual(counts().map(text => text.startsWith('—') ? '—' : text), ['—', '—', '39']);
+    host.chat.newChat();
+    assert.match(host.chat.$tokenUsage.attr('aria-label'), /0$/);
+    host.chat.$tokenUsage.trigger('click');
+    assert.deepEqual(counts(), ['0', '0', '0']);
+});
+
+test('A folder selection survives a saved-history refresh and only sends its ID on confirmation', async t => {
+    const f = fixture(t, deniedRestPermissions, { aiChat: true });
+    const input = await openChat(f, [{ ...chatAssistants[0], persistentChat: true }]);
+    const host = f.controller.chat;
+    const win = input.ownerDocument.defaultView;
+    win.WebjetJsTree = class { destroy() {} };
+    const detail = await openSavedChat(f, 'folder-thread', [{ id: 'folder', text: 'Which folder?', folderRequested: true }]);
+    const chat = host.chat;
+    const tree = chat.element.querySelector('.ai-chat-folder-picker .jsTree-wrapper');
+    tree.dispatchEvent(new win.CustomEvent('webjet-jstree-select', { detail: {
+        node: { original: { groupDetails: { groupId: 42, fullPath: '/Selected' } }, state: { disabled: false } }
+    } }));
+    typeChat(chat.$input[0], 'Keep my draft');
+    chat._addAttachments([new File(['Private draft'], 'draft.txt', {type:'text/plain'})]);
+    host.applyDetail(chat, detail);
+    assert.equal(chat.element.querySelector('.jsTree-wrapper'), tree);
+    assert.ok(chat.$history[0].lastElementChild.contains(tree));
+    assert.equal(f.chatRequests.length, 0);
+    chat.element.querySelector('.ai-chat-folder-picker .btn-primary').click();
+    assert.match(f.chatRequests[0].inputData.userPrompt, /42$/);
+    assert.equal(f.chatRequests[0].inputData.files, undefined);
+    assert.equal(chat.$input.val(), 'Keep my draft');
+    assert.equal(chat.state.attachments[0].name, 'draft.txt');
+    assert.equal(chat.element.querySelector('.jsTree-wrapper'), null);
 });

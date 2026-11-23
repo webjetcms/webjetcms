@@ -253,7 +253,6 @@ public class GroupEditorField extends BaseEditorFields {
     }
 
     public void toGroupDetails(GroupDetails group) {
-        //Validation is secure by validateEditor in GroupRestController
         group.setPasswordProtected(UserDetailsService.getUserGroupIds(permisions, emails));
 
         group.setParentGroupId(group.getEditorFields().parentGroupDetails.getGroupId());

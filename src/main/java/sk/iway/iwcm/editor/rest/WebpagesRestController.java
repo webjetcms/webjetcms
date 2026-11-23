@@ -4,24 +4,39 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.tools.AiTool;
+import sk.iway.iwcm.components.ai.tools.AiToolDescription;
+import sk.iway.iwcm.components.ai.tools.AiToolEndpoint;
+import sk.iway.iwcm.components.ai.tools.AiToolEndpoint.Query;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -34,6 +49,7 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.service.DeleteMirrorsService;
 import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.OptionDto;
@@ -44,6 +60,29 @@ import sk.iway.iwcm.users.UserGroupsDB;
 @RestController
 @RequestMapping(value = "/admin/rest/web-pages")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
+@AiTool(description = "components.ai.tools.webpages.context", exclude = {"getSum", "rowReorder"})
+@AiToolEndpoint(method = "getOne", query = {
+    @Query(name = "groupId", description = "Folder ID. Required with id=-1 to inspect new-page defaults."),
+    @Query(name = "historyId", description = "Revision of an existing page."),
+    @Query(name = "newPageTitleKey", type = String.class, description = "Optional translation key for the initial title of a new page.")
+})
+@AiToolEndpoint(method = "getAll", query = {
+    @Query(name = "groupId", description = "Folder to list. Defaults to the selected domain root."),
+    @Query(name = "recursive", type = boolean.class, description = "Include pages in subfolders."),
+    @Query(name = "userGroupId", description = "List pages restricted to this user group."),
+    @Query(name = "tempId", description = "List pages using this template."),
+    @Query(name = "auditVersion", type = boolean.class, description = "List recently changed pages in audit order. Requires audit access.")
+})
+@AiToolEndpoint(method = "findByColumns", query = {
+    @Query(name = "groupId", description = "Folder or special recent-pages group to search."),
+    @Query(name = "groupIdList", type = String.class, description = "Comma-separated folder IDs. Append * to an ID to include its subfolders."),
+    @Query(name = "recursive", type = boolean.class, description = "Include subfolders of the selected folder."),
+    @Query(name = "userGroupId", description = "Find pages restricted to this user group.")
+})
+@AiToolEndpoint(method = "add", requiredBody = "editorFields.groupDetails.groupId")
+@AiToolEndpoint(method = "createFromFolder", requiredBody = "title", query =
+    @Query(name = "groupId", required = true, description = "Positive ID of the destination webpage folder."))
+@AiToolEndpoint(method = "edit", requiredBody = "editorFields.groupDetails.groupId")
 public class WebpagesRestController extends WebpagesDatatable {
 
     private final DeleteMirrorsService deleteMirrorsService;
@@ -54,6 +93,60 @@ public class WebpagesRestController extends WebpagesDatatable {
         super(docDetailsRepository, editorFacade, docAtrDefRepository);
         this.deleteMirrorsService = deleteMirrorsService;
         this.editorService = editorService;
+    }
+
+    public record NewPage(@NotBlank String title, String data, String navbar, Boolean publish) {}
+
+    public enum PublicationStatus { DRAFT, AWAITING_APPROVAL, SCHEDULED, PUBLISHED }
+
+    /** Identifies the saved page and revision without echoing the editor record to the assistant. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record CreatedPage(int id, Integer historyId, PublicationStatus publicationStatus) {
+        public static CreatedPage from(DocDetails saved, EditorFacade editor) {
+            Integer revision = saved.getHistoryId() > 0 ? saved.getHistoryId() : null;
+            PublicationStatus status = PublicationStatus.DRAFT;
+            if (editor.isPageSavedToPublic()) status = PublicationStatus.PUBLISHED;
+            else if (revision != null && !editor.getApprovers().isEmpty()) status = PublicationStatus.AWAITING_APPROVAL;
+            else if (revision != null && editor.getPublihStart() != null) status = PublicationStatus.SCHEDULED;
+            return new CreatedPage(saved.getDocId(), revision, status);
+        }
+    }
+
+    /** Creates a page from the destination's editor defaults using the regular insert and approval workflow. */
+    @AiToolDescription(value = "components.ai.tools.webpages_add.description", replaces = "add")
+    @PreAuthorize("@WebjetSecurityService.checkAccessAllowedOnController(this)")
+    @PostMapping("/add-from-folder")
+    public ResponseEntity<CreatedPage> createFromFolder(@Valid @RequestBody NewPage changes) {
+        if (!AiToolService.isToolRequest(getRequest(), WebpagesRestController.class))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        startCreateRequest();
+        DocDetails page = getOneItem(-1);
+        page.setTitle(changes.title());
+        page.setNavbar(Tools.isEmpty(changes.navbar()) ? changes.title() : changes.navbar());
+        if (changes.data() != null) page.setData(changes.data().isBlank() ? "<p>&nbsp;</p>" : changes.data());
+        if (changes.publish() != null) {
+            page.setAvailable(changes.publish());
+            page.getEditorFields().setRequestPublish(changes.publish());
+        }
+        var saved = add(page);
+        return ResponseEntity.status(saved.getStatusCode()).body(CreatedPage.from(saved.getBody(), editorFacade));
+    }
+
+    /** Checks a page ID using cached permission metadata without loading HTML or editor fields. */
+    @GetMapping("/exists/{id}")
+    public boolean exists(@PathVariable("id") int id) {
+        if (id < 1) return false;
+        DocDetails doc = DocDB.getInstance().getBasicDocDetails(id, false);
+        if (doc == null) return false;
+        Identity user = getUser();
+        if (InitServlet.isTypeCloud() && !WebpagesService.isExistingGroupEditable(user, doc.getGroupId())) return false;
+        return EditorService.hasPagePermission(user, doc);
+    }
+
+    /** Preserve pre-save rejections for named tool calls and direct REST clients. */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> rejected(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(Map.of("error", ex.getMessage()));
     }
 
     /**

@@ -16,8 +16,6 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
 /** WebJET UI and lifecycle adapter for the standalone Gemini provider. */
 @Service
@@ -65,10 +63,5 @@ public class GeminiService extends LibrarySupportLogic implements AiAssitantsInt
     @Override
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEntity) {
         if (Tools.isEmpty(assistantEntity.getModel())) assistantEntity.setModel("gemini-pro-latest");
-    }
-
-    @Override
-    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
-        // Nothing to set.
     }
 }

@@ -22,6 +22,8 @@ import java.util.List;
 
 public class SpringAppInitializer implements WebApplicationInitializer
 {
+	public static final String DISPATCHER_NAME = "springDispatcher";
+
 	static {
 		// Set this before Spring creates any SpEL parsers; their default compiler mode is cached statically.
 		SpringProperties.setProperty("spring.expression.compiler.mode", "OFF");
@@ -74,7 +76,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 
 		ctx.setServletContext(servletContext);
 
-		Dynamic dynamic = servletContext.addServlet("springDispatcher", new DispatcherServlet(ctx));
+		Dynamic dynamic = servletContext.addServlet(DISPATCHER_NAME, new DispatcherServlet(ctx));
 		dynamic.addMapping("/");
 		dynamic.setLoadOnStartup(1);
 
@@ -112,6 +114,9 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		servletContext.setAttribute("springContext", ctx);
 
 		if (initialized) {
+			// Translate only the named-call entrypoint before Spring selects the security chain for the target URI.
+			servletContext.addFilter("aiToolCallFilter", new DelegatingFilterProxy("aiToolCallFilter"))
+					.addMappingForUrlPatterns(null, false, "/admin/rest/ai/tools/*");
 			// spring security filter
 			final DelegatingFilterProxy springSecurityFilterChain = new DelegatingFilterProxy("springSecurityFilterChain");
 			final FilterRegistration.Dynamic addedFilter = servletContext.addFilter("springSecurityFilterChain", springSecurityFilterChain);

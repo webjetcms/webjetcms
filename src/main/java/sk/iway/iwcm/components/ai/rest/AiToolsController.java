@@ -1,0 +1,76 @@
+package sk.iway.iwcm.components.ai.rest;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import sk.iway.iwcm.components.ai.tools.AiTool;
+import sk.iway.iwcm.components.ai.tools.AiAssistantRuntime;
+import sk.iway.iwcm.components.ai.tools.AiToolCallFilter;
+import sk.iway.iwcm.components.ai.tools.AiToolDefinition;
+import sk.iway.iwcm.components.ai.tools.AiToolDescription;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
+
+/** Administration REST interface to the current user's AI tool catalog. */
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/admin/rest/ai/tools")
+@PreAuthorize("@WebjetSecurityService.isAdmin()")
+@AiTool(description = "components.ai.tools.ai_tools.context", readOnly = true, include = {"preview", "details", "loadSkill"})
+public class AiToolsController {
+
+    private final AiToolService tools;
+
+    @GetMapping(value = "/preview", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, List<AiToolDefinition.Preview>> preview(HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return Map.of("tools", tools.preview(request));
+    }
+
+    @GetMapping(value = "/details", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, List<AiToolDefinition.Details>> details(@RequestParam("names") List<String> names,
+            @RequestParam(name = "includeOutputSchema", defaultValue = "false") boolean includeOutputSchema,
+            HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return definitions(tools.details(names, request), includeOutputSchema);
+    }
+
+    /** Returns the full guidance for one linked skill after the model chooses to use it. */
+    @GetMapping(value = "/load-skill", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_button')")
+    @AiToolDescription("components.ai.tools.ai_tools.load_skill")
+    public AiAssistantRuntime.Skill loadSkill(@RequestParam("name") String name,
+            HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return tools.loadSkill(name, request);
+    }
+
+    @GetMapping(params = "!assistantId", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, List<AiToolDefinition.Details>> list(
+            @RequestParam(name = "includeOutputSchema", defaultValue = "false") boolean includeOutputSchema,
+            HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return definitions(tools.list(request), includeOutputSchema);
+    }
+
+    private Map<String, List<AiToolDefinition.Details>> definitions(List<AiToolDefinition> definitions, boolean includeOutputSchema) {
+        return Map.of("tools", definitions.stream().map(tool -> tool.details(includeOutputSchema)).toList());
+    }
+
+    /** Valid calls reach the target MVC handler. Unresolved calls still pass normal admin security. */
+    @PostMapping("/{name}/call")
+    public void unresolvedCall(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        AiToolCallFilter.rejectUntranslated(request, response);
+    }
+}

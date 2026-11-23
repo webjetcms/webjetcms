@@ -17,6 +17,9 @@ import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.webjetcms.ai.AiCancellationToken;
+import com.webjetcms.ai.AiTool;
+import com.webjetcms.ai.AiToolResult;
+import com.webjetcms.ai.AiToolStep;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -25,6 +28,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.components.ai.chat.AiChatPaths;
 import sk.iway.iwcm.components.ai.rest.AiChatAttachments;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
 import sk.iway.iwcm.i18n.Prop;
 
 import org.apache.http.entity.ContentType;
@@ -59,6 +63,7 @@ public class InputDataDTO {
 
     /** Session-owned continuation returned by the last successful chat turn. */
     String conversationId;
+    private String attachmentContextId;
 
     /** Validated multipart attachments, retained only for this assistant request. */
     @JsonIgnore
@@ -71,6 +76,29 @@ public class InputDataDTO {
     /** Provider continuation resolved on the server, never accepted from JSON. */
     @JsonIgnore
     String previousResponseId;
+
+    private List<AiToolProtocol.Result> toolResults = List.of();
+
+    /** Set by authenticated admin entry points before dispatching to the provider worker. */
+    @JsonIgnore
+    private AiToolProtocol toolProtocol;
+
+    /** Functions offered for this provider step. A null list selects the text protocol. */
+    @JsonIgnore
+    private List<AiTool> nativeTools;
+    @JsonIgnore
+    private AiToolResult nativeToolResult;
+
+    /** Validation feedback for a text-protocol retry, sent as untrusted input. */
+    @JsonIgnore
+    private String toolCorrection;
+
+    /** Replays all current-turn observations when resuming a transcript written before tool continuation tracking. */
+    @JsonIgnore
+    private boolean replayToolResults;
+
+    @JsonIgnore
+    private boolean interactiveAssistant;
 
     /** Server-owned cancellation signal shared by provider calls belonging to this task. */
     @JsonIgnore
@@ -107,6 +135,25 @@ public class InputDataDTO {
      */
     @JsonIgnore
     boolean structuredInput = false;
+
+    /** Retries from the last accepted continuation with the original task, attachments and endpoint evidence. */
+    public void prepareToolCorrection(String feedback) {
+        toolCorrection = feedback;
+    }
+
+    /** Returns rejected native calls to the provider as unexecuted results on the same branch. */
+    public void prepareToolCorrection(String feedback, AiToolStep step) {
+        if (step == null || (step.toolCall() == null && step.rejectedCall() == null)) {
+            prepareToolCorrection(feedback);
+            return;
+        }
+        String callId = step.toolCall() == null ? step.rejectedCall().callId() : step.toolCall().callId();
+        // With no call ID the provider cannot accept feedback. Retry the exact previous input.
+        if (callId != null) {
+            previousResponseId = step.response().responseId();
+            nativeToolResult = new AiToolResult(callId, feedback);
+        }
+    }
 
     public void removeHtml() {
         if(Tools.isEmpty(inputValue)) return;

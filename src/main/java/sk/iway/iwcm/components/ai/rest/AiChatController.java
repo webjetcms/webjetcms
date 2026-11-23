@@ -5,8 +5,6 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.List;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,9 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +31,9 @@ import sk.iway.iwcm.users.UsersDB;
 @RequiredArgsConstructor
 @RequestMapping("/admin/rest/ai/chat")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_button')")
-public class AiChatController {
+public class AiChatController extends AiChatRequestSupport {
     private final AiChatService service;
     private final AiChatStore store;
-    private final ObjectMapper mapper = new ObjectMapper();
 
     @GetMapping("/threads")
     public AiChatService.HistoryPage list(@RequestParam(defaultValue = "0") int page,
@@ -66,6 +61,11 @@ public class AiChatController {
         return service.delete(id, scope(request));
     }
 
+    @DeleteMapping("/threads/{id}/local")
+    public AiChatService.Deletion deleteLocal(@PathVariable String id, HttpServletRequest request) {
+        return service.deleteLocal(id, scope(request));
+    }
+
     @PostMapping(value = "/messages", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void send(@RequestBody AiChatRequest input, HttpServletRequest request, HttpServletResponse response) throws IOException {
         AiChatService.Prepared prepared = service.prepare(input, scope(request));
@@ -76,12 +76,7 @@ public class AiChatController {
     public void upload(@RequestParam String message, @RequestParam("files") List<MultipartFile> files,
         HttpServletRequest request, HttpServletResponse response) throws IOException {
         Scope owner = scope(request);
-        AiChatRequest input;
-        try {
-            input = mapper.readValue(message, AiChatRequest.class);
-        } catch (IOException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalidInput");
-        }
+        AiChatRequest input = readMessage(message, AiChatRequest.class);
         send(service.prepare(input, owner, AiChatAttachments.read(files)), request, response);
     }
 
@@ -98,13 +93,6 @@ public class AiChatController {
             .header("Content-Disposition", disposition.toString()).body(content.bytes());
     }
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Map<String, String>> tooLarge() {
-        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(Map.of("error", "attachmentLimit"));
-    }
-
     private void send(AiChatService.Prepared prepared, HttpServletRequest request, HttpServletResponse response) throws IOException {
         boolean streaming = request.getHeader("Accept") != null && request.getHeader("Accept").contains(MediaType.APPLICATION_NDJSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
@@ -117,47 +105,17 @@ public class AiChatController {
             mapper.writeValue(response.getOutputStream(), result);
             return;
         }
-        AssistantStreamWriter writer = new AssistantStreamWriter(new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8));
-        AtomicBoolean writable = new AtomicBoolean(true);
-        try {
-            // Publish saved IDs before generation so the client can reload this attempt after a disconnect.
-            writer.writeMetadata(service.metadata(prepared));
-        } catch (IOException exception) {
-            // prepare() has already reserved a turn, but execute() has not yet taken responsibility for finishing it.
-            if (!prepared.turn().duplicate()) store.finish(prepared.scope(), prepared.turn().thread().getId(), prepared.turn().message().getId(),
-                "", "stopped", 0, "CANCELLED", null);
-            throw exception;
-        }
-        try {
-            AssistantResponseDTO result = service.execute(prepared, text -> {
-                // Provider callbacks run on a worker; cancellation can let this request close the writer first.
-                synchronized (writer) {
-                    if (!writable.get()) throw new CancellationException();
-                    try {
-                        writer.write(text);
-                        writer.flush();
-                    } catch (IOException exception) {
-                        writable.set(false);
-                        throw new CancellationException();
-                    }
-                }
-            }, true, request);
-            synchronized (writer) {
-                if (writable.getAndSet(false)) writer.writeResult(result);
+        try (var writer = new AssistantStreamWriter(new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8))) {
+            try {
+                writer.writeMetadata(service.metadata(prepared));
+            } catch (IOException disconnected) {
+                // The turn was reserved before the client disconnected. Generation will never start.
+                if (!prepared.turn().duplicate()) store.finish(prepared.scope(), prepared.turn().thread().getId(), prepared.turn().message().getId(),
+                    "", "stopped", prepared.turn().message().getTotalTokens(), "CANCELLED", null);
+                throw disconnected;
             }
-        } finally {
-            synchronized (writer) {
-                writable.set(false);
-                writer.close();
-            }
+            writer.writeResult(service.execute(prepared, writer::writeDelta, true, request));
         }
-    }
-
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, String>> error(ResponseStatusException exception) {
-        return ResponseEntity.status(exception.getStatusCode())
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(Map.of("error", exception.getReason() == null ? "generationFailed" : exception.getReason()));
     }
 
     private static Scope scope(HttpServletRequest request) {

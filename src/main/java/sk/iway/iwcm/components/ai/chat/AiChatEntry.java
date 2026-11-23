@@ -1,9 +1,16 @@
 package sk.iway.iwcm.components.ai.chat;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.components.ai.dto.TokenBreakdown;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol.Call;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol.Result;
 
 /** Full message text and provider resource ownership for one generation attempt. */
 @Getter
@@ -22,11 +29,67 @@ public class AiChatEntry {
     private Date created;
     private Date updated;
     private int totalTokens;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private TokenBreakdown tokenBreakdown;
     private String errorCategory;
     private Integer providerStatus;
     private Boolean retryable;
+    /** Outstanding endpoint call and results acknowledged for this saved answer. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Call pendingToolCall;
+    /** Absent in older transcripts, where a pending write may already have run. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean pendingWriteClaimed;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<Result> toolResults = List.of();
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean toolWriteIssued;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean noToolAction;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private boolean folderRequested;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<WriteOutcome> writeOutcomes = new ArrayList<>();
     private String providerResponseId;
+    /** Last validated tool decision; later rejected provider responses are retained only for cleanup. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String toolResponseId;
+    /** Provider function call being answered on the next round, paired with toolResponseId. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String toolCallId;
+    /** Earlier provider rounds for this answer that still need remote deletion. */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<String> earlierProviderResponseIds = new ArrayList<>();
     private boolean storageUnknown;
     private boolean providerDeleted;
     private List<AiChatAttachment> attachments = List.of();
+    /** Extracted source retained locally so later tool turns do not depend on provider memory or repeat image analysis. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String preparedAttachmentContext;
+
+    public record WriteOutcome(String name, int status, boolean uncertain, boolean rejected, List<Long> ids) {
+        public static WriteOutcome pending(String name) {
+            return new WriteOutcome(name, 0, true, false, List.of());
+        }
+
+        public static WriteOutcome from(Result observation, boolean rowReorder) {
+            Map<?, ?> body = observation.result() instanceof Map<?, ?> map ? map : Map.of();
+            boolean rejected = observation.status() < 200 || observation.status() >= 300 ||
+                (body.get("error") instanceof String error && !error.isEmpty()) ||
+                (body.get("fieldErrors") instanceof List<?> errors && !errors.isEmpty()) ||
+                (rowReorder && Boolean.FALSE.equals(observation.result())) || Boolean.FALSE.equals(body.get("result")) ||
+                (body.get("notify") instanceof List<?> notices && notices.stream()
+                    .anyMatch(notice -> notice instanceof Map<?, ?> item && "error".equals(item.get("type"))));
+            List<?> rows = body.get("data") instanceof List<?> data ? data : List.of(body);
+            List<Long> ids = new ArrayList<>();
+            for (Object row : rows) {
+                if (row instanceof Map<?, ?> record && record.get("id") instanceof Number id && id.longValue() > 0
+                        && id.longValue() <= 9_007_199_254_740_991L && id.doubleValue() == id.longValue()) {
+                    ids.add(id.longValue());
+                }
+            }
+            boolean uncertain = observation.uncertain() || observation.status() == 0 || observation.status() >= 500;
+            return new WriteOutcome(observation.name(), observation.status(), uncertain, rejected, ids);
+        }
+    }
 }

@@ -155,6 +155,143 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 }
 ```
 
+## AI_TOOLS
+
+Anotáciou `@AiTool` sprístupníte REST operácie konkrétneho kontroléra cez katalóg AI nástrojov. Katalóg preberie zo Spring MVC zdedené aj vlastné mapovania. Metódy ako `afterSave` zostávajú súčasťou životného cyklu editora.
+
+Kontrolér `ConfigurationController` sprístupňuje konfiguračné premenné používateľovi s právom `menuConfig`. Pri každom volaní zachováva obmedzenia prístupu ku konkrétnym premenným.
+
+Kontroléry `WebpagesRestController` a `GroupsRestController` sprístupňujú správu webových stránok a priečinkov používateľovi s právom `menuWebpages`. Asistentovi ich priradíte pomocou `@group(sk.iway.iwcm.editor.rest.WebpagesRestController)` a `@group(sk.iway.iwcm.editor.rest.GroupsRestController)`. Nástroje používajú existujúce REST operácie vrátane kontrol oprávnení a ukladania cez editor.
+
+Ak stačí overiť existenciu stránky alebo priečinka, priraďte asistentovi `@tool(webpages_exists)` alebo `@tool(groups_exists)`. Oba nástroje sú aj súčasťou príslušnej skupiny kontroléra. Volanie s argumentom `{"id":42}` vráti iba `true`, ak má používateľ k záznamu prístup. Pri chýbajúcom či neprístupnom zázname alebo nekladnom ID vráti `false`.
+
+Pri vytváraní stránky nástroj `webpages_add` vyžaduje iba cieľový `groupId` a `body.title`. WebJET načíta predvolené nastavenia priečinka, doplní voliteľné `body.data`, `body.navbar` a `body.publish` podľa požiadavky a uloží stránku cez editor. Odpoveď obsahuje ID stránky (`id`), stav publikovania (`publicationStatus`) a pri uložení verzie do histórie aj `historyId`.
+
+Pri vyhľadávaní podľa šablóny (`tempId`) alebo skupiny používateľov (`userGroupId`) vráti `groups_get_all` iba priečinky, ktoré môže používateľ upravovať v aktuálnej doméne. Ak zadáte aj `groupId`, zoznam obsahuje len priame podpriečinky vybraného priečinka.
+
+Pred úpravou existujúceho záznamu načítajte úplný záznam pomocou `webpages_get_one` alebo `groups_get_one` a zachovajte jeho `editorFields`. Zoznam stránok nemusí obsahovať HTML. Katalóg vynecháva súčty a presúvanie riadkov, pri priečinkoch aj generické vyhľadávanie podľa stĺpcov, ktoré vyžaduje JPA repozitár.
+
+```java
+import sk.iway.iwcm.components.ai.tools.AiTool;
+
+@RestController
+@RequestMapping("/admin/rest/settings/configuration")
+@PreAuthorize("@WebjetSecurityService.hasPermission('menuConfig')")
+@Datatable(clientSidePaging = true)
+@AiTool(description = "components.ai.tools.configuration.context",
+    exclude = {"findByColumns", "action", "getSum", "rowReorder"})
+public class ConfigurationController extends DatatableRestControllerV2<ConfDetailsDto, Long> {
+    // ...
+}
+```
+
+Samotné `@AiTool` zahrnie aj zápisové operácie. Voľba `readOnly = true` obmedzí výpis aj volanie na HTTP GET. Pomocou `exclude = {"findByColumns"}` môžete v oboch režimoch vyradiť všetky mapovania konkrétnej Java metódy, vrátane zdedenej metódy. Pri vlastných mapovaniach bez určenej HTTP metódy katalóg použije GET, v plnom režime pri vstupe s telom požiadavky použije POST.
+
+Ak kontrolér vracia celý zoznam a nepodporuje parametre `page` a `size`, nastavte `@Datatable(clientSidePaging = true)`. Takto sú označené kontroléry konfigurácie a priečinkov, ktorých frontend používa `serverSide: false`. Predvolená hodnota je `false` pre serverové stránkovanie.
+
+Pri metódach s parametrom `Pageable` katalóg vynechá `page` a `size` zo vstupnej schémy aj príkladov, prestane dopĺňať `size=20` a odmietne tieto argumenty aj vo filtroch. Do opisu automaticky pridá informáciu o stránkovaní v prehliadači a vrátení celého zodpovedajúceho zoznamu. Upozornenie sa preloží aj v administrácii a doplní sa aj k vlastnému opisu z `@AiToolDescription`. Parameter `sort` zostáva dostupný. Anotácia opisuje existujúce správanie; nemení priame REST volania ani nastavenie frontendu. Metódy bez `Pageable` neovplyvňuje.
+
+Voľbou `include` môžete vymenovať Java metódy, ktoré chcete sprístupniť. Pre kontrolér, ktorý nededí z `DatatableRestControllerV2`, je tento zoznam povinný. Napríklad `AiToolsController` používa `@AiTool(readOnly = true, include = {"preview", "details"})`.
+
+Editor asistenta zoskupuje nástroje podľa názvu Java balíka za `.components.`. Napríklad kontrolér v balíku `sk.iway.iwcm.components.configuration` patrí do skupiny `configuration`. Jej názov môžete preložiť kľúčom `components.ai_assistants.tools.group.configuration`. Mimo balíkov `components.<názov>` má každý kontrolér vlastnú skupinu. Asistent ukladá názvy vybraných nástrojov.
+
+Vlastný endpoint môžete opísať anotáciou `@AiToolDescription` na mapovanej metóde. Ako hodnotu zadajte anglický text alebo prekladový kľúč. Napríklad opis metódy `getAutocompleteDetail` vysvetľuje, ako interpretovať bežné a skryté konfiguračné hodnoty.
+
+```java
+import sk.iway.iwcm.components.ai.tools.AiToolDescription;
+
+// In ConfigurationController
+@GetMapping("/autocomplete/detail")
+@AiToolDescription("components.ai.tools.configuration_get_autocomplete_detail.description")
+public ConfDetailsDto getAutocompleteDetail(@RequestParam String name) {
+    // ...
+}
+```
+
+Ak anotáciu vynecháte alebo zadáte prázdny text, katalóg použije preklad podľa vzoru `components.ai.tools.<kontrolér>_<metóda>.description`, potom opis štandardnej operácie alebo text odvodený z názvu metódy. API pre AI používa anglické preklady. V administrácii sa opis zobrazí v jazyku používateľa, pri chýbajúcom preklade v angličtine.
+
+Na konkrétnom kontroléri môžete pomocou `@AiToolEndpoint` opísať aj zdedený handler. V `method` uveďte názov metódy so Spring mapovaním (napríklad `getAll`). Katalóg ponúkne parametre z `query` v schéme a nástroj ich odovzdá pôvodnej REST metóde v URL. Vynechaný parameter si zachová pôvodné správanie kontroléra. V `requiredBody` uveďte JSON cestu ku vnorenému poľu, ktoré handler potrebuje pri ukladaní.
+
+```java
+@AiToolEndpoint(method = "getAll", query = @AiToolEndpoint.Query(
+    name = "recursive", type = boolean.class, description = "Include pages in subfolders."))
+@AiToolEndpoint(method = "edit", requiredBody = "editorFields.groupDetails.groupId")
+```
+
+Spoločný opis z `@AiTool(description = "...")` sa zobrazí v riadku kontroléra po zapnutí voľby **Zoskupiť podľa REST kontroléra**. V odpovedi `GET /admin/rest/settings/ai-tools/controllers/all` ho nájdete v poli `controllerDescription`. Pole `pathPrefix` obsahuje spoločný začiatok REST ciest v zozname `endpoints`, napríklad `/admin/rest/settings/configuration`.
+
+`GET /admin/rest/ai/tools` vráti v poli `tools` definície nástrojov dostupných prihlásenému používateľovi. Interaktívny asistent dostáva v prompte iba stručný zoznam svojich priradených nástrojov a vstupné schémy načítavacích nástrojov. Úplné definície vybraných operácií načíta až podľa potreby:
+
+- `ai_tools_preview` (`GET /admin/rest/ai/tools/preview`) vráti polia `name`, `description`, `httpMethod`, `path`, `write` a `version`. Opis je skrátený na najviac 160 znakov s prípadnou výpustkou. Rovnaké údaje dostane model v úvodnom zozname. Tento nástroj možno priradiť odkazom `@tool(ai_tools_preview)` alebo `@group(ai)`.
+- `ai_tools_details` (`GET /admin/rest/ai/tools/details`) sa interaktívnemu asistentovi s dostupnými nástrojmi priradí automaticky. Prijíma názvy vybraných nástrojov, napríklad `{"names":["configuration_get_autocomplete","configuration_get_autocomplete_detail"]}`. Pri priamom GET volaní môžete zopakovať parameter `names`. V poli `tools` dostanete definície v poradí výberu vrátane vstupnej schémy, cieľového mapovania, typu odpovede a verzie. Výstupnú schému pridáte parametrom `includeOutputSchema=true` v katalógu aj pri načítaní detailov. Neznáme a neprístupné názvy sa vynechajú, opakovaný názov sa vráti len raz.
+
+Pri požiadavke s hlavičkou `X-WebJET-AI-Assistant` oba nástroje vracajú iba definície priradené tomuto asistentovi a povolené prihlásenému používateľovi. Bez hlavičky zostáva administratívny katalóg obmedzený oprávneniami používateľa. Načítanie definície nemení priradenia ani oprávnenia na vykonanie. Prehliadač prijme najviac 1 MiB na odpoveď katalógu. Ak vybrané definície presiahnu limit, vyžiadajte si ich v menších skupinách.
+
+Verzia nástroja je SHA-256 odtlačok jeho úplnej definície vrátane vstupnej a výstupnej schémy. Poradie kľúčov JSON objektov ho nemení. Model má opätovne použiť načítanú definíciu pri zhodnom názve a verzii; po zmene verzie alebo strate textu z kontextu ju načíta znova. Server uchováva úplné schémy a overuje podľa nich argumenty každého volania bez ohľadu na obsah odoslaný modelu.
+
+Odkazy `@skill(...)` odovzdávajú modelu stručný zoznam zručností: názov, ukážku najviac 160 znakov a verziu odvodenú z obsahu. Úplný text zručnosti sa nevkladá automaticky do inštrukcií každej požiadavky. Asistent si ho podľa potreby vyžiada nástrojom `ai_tools_load_skill` s argumentom `{"name":"PageBuilder_1.0"}`. Nástroj sa priradí automaticky, ak má asistent odkaz na dostupnú zručnosť; samostatný odkaz `@tool(...)` ani `@group(ai)` nie je potrebný. Vráti názov, verziu a inštrukcie s rozbalenými odkazmi. Pole `tools` obsahuje pre každý povolený nástroj uvedený priamo cez `@tool(...)` jeho `name`, `description`, `inputSchema`, `write` a `version`. Schémy ostatných členov skupiny `@group(...)` si asistent vyžiada podľa potreby cez `ai_tools_details`. Ak zručnosť nemá žiadny takýto priamy odkaz alebo by pridaním schém odpoveď prekročila limit prehliadača 1 MiB, server pole `tools` vynechá.
+
+Načítanie zručnosti overuje aktuálneho asistenta, jeho priradené zručnosti a doménu. Neumožňuje čítať ľubovoľnú zručnosť podľa názvu. Pri priamom `GET /admin/rest/ai/tools/load-skill?name=PageBuilder_1.0` je potrebná hlavička `X-WebJET-AI-Assistant` s ID asistenta a oprávnenie `cmp_ai_button`; volanie nástroja hlavičku doplní automaticky. Priradenia nástrojov zo zručností sa na serveri vyhodnocujú aj pred načítaním ich textu modelom, aby zostali zachované kontroly oprávnení. Server preto môže čítať celé inštrukcie z databázy pri zostavovaní priradení; úspora sa týka textu odosielaného modelu.
+
+Načítaný text pokračuje ako výsledok nástroja. Pri čete s kontextom u poskytovateľa zostáva v histórii a ďalší krok odošle iba nový výsledok nástroja. Uložený čet pri pokračovaní z potvrdenej odpovede v tej istej správe použije aj obsah príloh z histórie. Ak takejto odpovedi chýba identifikátor, odošle pôvodný obsah príloh spolu s výsledkami nástrojov. Bez tohto kontextu sa odovzdajú výsledky aktuálnej požiadavky vrátane načítaných zručností; nová samostatná požiadavka ich načíta podľa potreby znova. Asistent má zručnosť opätovne použiť len pri zhodnej verzii v zozname. Zmena verzie alebo chýbajúci text v kontexte znamená, že si má vyžiadať aktuálny obsah. Tým sa vynechajú nepoužité zručnosti, no text ponechaný v histórii môže naďalej vstupovať do účtovanej spotreby tokenov.
+
+Backendové volania bez interaktívneho cyklu nástrojov, napríklad RAG, dostávajú úplné inštrukcie priradených zručností priamo v prompte. Nevyžadujú oprávnenie na načítavací nástroj; priradenia zručností zostávajú obmedzené na doménu asistenta.
+
+Text zručnosti zostáva opakovateľne použiteľným návodom. Odkazy `@tool(...)` a `@group(...)` sa rozbalia, ale makrá vstupu, napríklad `{inputText}`, `{userPrompt}`, jazykové či doplnkové parametre, sa v načítanom texte nenahrádzajú hodnotami aktuálnej požiadavky. Makrá vyžadujúce automatické dosadenie ponechajte v hlavných inštrukciách asistenta, aby sa pri ďalšom použití zručnosti nepreberali staré hodnoty. Stručný zoznam zručností sa pripája až po rozbalení hlavných inštrukcií, takže ani ukážky makier v jeho textoch nevložia používateľský vstup do zoznamu.
+
+Nasledujúci príklad priameho volania môžete spustiť v konzole prehliadača v administrácii pod účtom s právom `menuConfig`.
+
+```javascript
+const url = "/admin/rest/ai/tools";
+const headers = { "X-CSRF-Token": window.csrfToken };
+const { tools } = await (await fetch(url + "/preview", { headers })).json();
+if (tools.some(tool => tool.name === "configuration_get_autocomplete_detail")) {
+    const details = await (await fetch(url + "/details?names=configuration_get_autocomplete_detail", { headers })).json();
+    const [configuration] = details.tools;
+    console.log(configuration.inputSchema);
+    const response = await fetch(url + "/" + configuration.name + "/call", {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "smtpPort" })
+    });
+    if (response.ok) console.log(await response.json());
+}
+```
+
+Nástroj `configuration_get_autocomplete_detail` vyžaduje názov premennej v poli `name`. Pre hodnotu `"smtpPort"` vykoná `GET /admin/rest/settings/configuration/autocomplete/detail?name=smtpPort`. Pri každom volaní WebJET znovu overí prístup používateľa. Pri citlivej premennej vynechá hodnoty a vráti `redacted: true`; pole `configured` uvádza, či má premenná neprázdnu hodnotu v bežiacej aplikácii.
+
+Argumenty ďalších nástrojov zostavte podľa ich `inputSchema`. Štandardný zdedený handler `/all` pri serverovom stránkovaní predvolene použije veľkosť stránky 20. Nástroj `configuration_get_all` vracia celý dostupný zoznam a argumenty `page` aj `size` odmietne podľa anotácie `@Datatable(clientSidePaging = true)`. Pri väčšom zozname použite `configuration_get_autocomplete` s argumentom `{"term":"smtp"}` a potom načítajte detail podľa presného názvu.
+
+Spoločné inštrukcie pre asistentov pri známom ID uprednostňujú dostupný nástroj `exists` na overenie existencie, `get_one` na načítanie údajov a filtrované `find_by_columns`, vyhľadávanie alebo autocomplete pri hľadaní podľa názvu. Na vyhľadanie jedného záznamu nemajú používať `get_all`: niektoré implementácie ignorujú stránkovanie a môžu vrátiť milióny záznamov. Výnimkou je požiadavka na zoznam, ktorú nemožno splniť cieleným nástrojom a pri ktorej opis nástroja zaručuje obmedzený rozsah odpovede. Ak cielený nástroj chýba, asistent si vyžiada presné ID alebo vysvetlí chýbajúcu možnosť.
+
+Pre operáciu s `@RequestBody` vložte údaje do vlastnosti `body`. Telo editora tak môže obsahovať rovnaké polia `action` a `data` ako pri priamom volaní `/editor`. Limit jedného JSON volania je 1 MiB. Pri väčšej požiadavke API vráti HTTP 413.
+
+Pole `required` platí vždy pre objekt, v ktorého schéme je uvedené. Napríklad `webpages_edit` vyžaduje argument `body` a v ňom polia `title`, `navbar` a `editorFields.groupDetails.groupId`. Schéma môže spoločné alebo rekurzívne typy uložiť do `$defs` a odkázať na ne cez `$ref`; tieto odkazy sú súčasťou opisu typu a nevkladajú sa do argumentov volania. Administrácia odkazy rozbalí v náhľade **Schéma** a v zozname **Povinné argumenty** zobrazí aj cesty `body.title` a `body.navbar`. Voľba **JSON** zachováva presnú strojovú schému. Asistent dostáva úplnú JSON schému vrátane definícií a vnorených požiadaviek.
+
+Povinnosť polí sa odvodzuje z anotácií `@NotBlank`, `@NotEmpty` a `@NotNull`, rovnako ako v `DataTableColumnEditor` pre frontend. Generátor číta aj zdedené a `transient` polia sprístupnené cez getter/setter a rešpektuje názvy JSON vlastností. Zoznam povinných polí nenahrádza inicializáciu editora: pred vytvorením má asistent načítať podporované predvolené údaje nového záznamu, pred úpravou úplný záznam a zachovať vnorené údaje editora.
+
+Ďalšie pravidlá overuje existujúca backendová validácia. Asistent dostane odpoveď vrátane `fieldErrors`, `error` a notifikácií, aj keď má HTTP stav 200. Pri odmietnutom uložení má podľa chyby opraviť argumenty a zopakovať volanie s opravenými údajmi. Nezmenený zápis sa neopakuje; pri neistom výsledku alebo možnom čiastočnom uložení dávky sa najprv overí stav cieleným čítaním.
+
+Prehliadač vykoná volanie nástroja a odošle WebJETu jeho názov, argumenty, HTTP stav a odpoveď backendu. WebJET určí výsledok `success`, `validation_error`, `rejected`, `unknown` alebo `partial`. Argumenty overuje pred každým novým volaním. Asistent tak dostane aj chybu už vykonaného pokusu.
+
+Pri natívnom volaní v trvalom čete WebJET uloží identifikátor odpovede a identifikátor volania OpenAI alebo Gemini. Výsledok priradí k volaniu podľa identifikátora. Poskytovateľ už má pôvodné argumenty v histórii, takže ich WebJET pri odoslaní výsledku vynechá. Pri chybe validácie odošle dôvod odmietnutia a `executed=false`. Záverečná textová odpoveď môže obsahovať JSON.
+
+Ak OpenAI vráti neplatný JSON v argumentoch ponúknutej funkcie, WebJET požiada model o opravu ešte pred spustením nástroja. Ak vo volaní chýba identifikátor, WebJET zopakuje poslednú požiadavku na model vrátane už získaného výsledku nástroja. Na jedno rozhodnutie pripadajú najviac dve opravy. Spotreba tokenov sa započíta za každý pokus.
+
+Pri textovom protokole musí volanie nástroja obsahovať práve jedno rozhodnutie vo formáte JSON. Otázka alebo záverečná odpoveď môže byť obyčajný text. Ak model spojí volanie s predpovedaným výsledkom, WebJET odmietne celú odpoveď. Pri neplatnom JSON alebo argumentoch dostane asistent štruktúrovanú spätnú väzbu s chybou, odmietnutým rozhodnutím a údajom `executed=false`. Obsah odmietnutého rozhodnutia je obmedzený na 32 768 znakov a prípadné skrátenie označuje `responseTruncated`. Spätná väzba je vstupným údajom, nie novou požiadavkou používateľa ani systémovou inštrukciou.
+
+Ochrana pred opakovaným zápisom neodosiela rovnakú požiadavku druhýkrát. Namiesto ukončenia úlohy poskytne asistentovi dôvod odmietnutia, aby mohol opraviť argumenty alebo zvoliť čítanie. To isté platí pre ďalší zápis po neistom alebo čiastočnom výsledku. Počet opráv rozhodnutia a počet vykonaných nástrojov zostávajú obmedzené. Opakovanie zachová pôvodnú požiadavku, prílohy a skutočné výsledky nástrojov v histórii poskytovateľa alebo vo vstupe pri opakovaní požiadavky. Samostatný model na posudzovanie záverečnej odpovede sa nevolá; rozhranie zobrazuje aj skutočné výsledky zápisov z backendu.
+
+V uloženom čete sa extrahovaný obsah príloh uchová pri pôvodnej správe používateľa. Nadväzujúce požiadavky a volania nástrojov dostanú aj obsah poslednej priloženej sady súborov a požiadavku, s ktorou boli odoslané. Asistent tak môže použiť priložený článok aj po doplnení cieľového priečinka. Obsah zostáva zdrojovými údajmi; nenahrádza inštrukcie asistenta ani aktuálnu požiadavku používateľa. Opakované použitie nevyvolá novú analýzu toho istého obrázka.
+
+Audit rozlišuje `TOOL_REQUESTED` (pripravené volanie), `ANSWER_COMPLETED` (dokončená odpoveď) a `TOOL_DECISION_REJECTED` (odmietnuté rozhodnutie). Dokončená odpoveď sama osebe neznamená úspešný zápis. Pri odmietnutí sa zaznamená dôvod a pôvodná odpoveď v rozsahu nastaveného limitu auditovaného obsahu; pri limite `0` sa obsah nezapisuje.
+
+Pri chybe poskytovateľa audit obsahuje aj fázu zlyhania (`prepareInput` alebo `generation`) a jeho diagnostickú správu s odstránenými prihlasovacími údajmi. Diagnostika rešpektuje limit auditovaného obsahu; používateľovi sa naďalej zobrazí lokalizovaná chyba.
+
+Pri volaní cez `/call` uvádza hlavička odpovede `X-WebJET-AI-Tool-Response` typ výstupu nástroja. Pri type `empty` môže úspešná odpoveď HTTP 200 prísť bez tela, pri type `text` môže obsahovať prázdny reťazec. Ak argumenty asistenta porušia vstupnú schému, WebJET vráti HTTP 400 s hodnotou hlavičky `invalid-arguments` a v tele uvedie dôvod odmietnutia. K tejto kontrole dochádza pred spustením cieľovej metódy.
+
+Ak projekt chráni cieľovú URL vlastným servletovým filtrom, jeho URL vzor musí pokrývať aj volanie príslušného nástroja. Spoločným vzorom môže byť napríklad `/admin/rest/*`. Ak by pri preklade požiadavky kontajner vynechal filter cieľovej URL alebo vybral iný servlet, WebJET volanie odmietne.
+
 ## Filtrovanie podľa domény
 
 Ak Spring DATA repozitár implementuje rozhranie `DomainIdRepository`, trieda `DatatableRestControllerV2` pracuje s hodnotou `domainId`. Pri čítaní sa automatické filtrovanie aktivuje pre MultiWeb/Cloud inštaláciu alebo pri zapnutej konfiguračnej premennej `enableStaticFilesExternalDir`. Pri zápise sa pre takýto repozitár vždy doplní chýbajúce `domainId` a overí sa, že zaslaná hodnota zodpovedá očakávanej doméne.

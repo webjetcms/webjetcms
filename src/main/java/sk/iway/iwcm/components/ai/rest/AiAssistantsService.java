@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.BiPredicate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -149,87 +150,33 @@ public class AiAssistantsService {
         AiAssistantsService aiAssistantsService = Tools.getSpringBean("aiAssistantsService", AiAssistantsService.class);
         if (aiAssistantsService == null) return assistants;
 
-        //if column.attr has disabled value skip
-        String disabled = getColumnEditorAttr(column, "disabled");
-        if (Tools.isNotEmpty(disabled)) return assistants;
-        boolean strictBinding = false;
-        if ((column.getClassName()!=null && column.getClassName().contains("ai-off")) ||
-            getColumnEditorAttr(column, "class").contains("ai-off")) {
-            strictBinding = true;
+        if (Tools.isNotEmpty(getColumnEditorAttr(column, "disabled"))) return assistants;
+        boolean strictBinding = (column.getClassName() != null && column.getClassName().contains("ai-off"))
+            || getColumnEditorAttr(column, "class").contains("ai-off");
+
+        List<String> targets = new ArrayList<>();
+        targets.add(fieldTo);
+        if (!strictBinding) {
+            String format = column.getRenderFormat();
+            String title = column.getTitleKeyOriginal();
+            if (isCustomField(fieldTo) && Tools.isNotEmpty(title)) {
+                String type = Prop.getInstance(Constants.getString("defaultLanguage")).getText(title + ".type");
+                if ("image".equals(type)) format = "dt-format-image";
+                else if ("link".equals(type) || "dir".equals(type)) format = "dt-format-elfinder";
+            }
+            targets.addAll(Arrays.asList(Tools.getTokens(column.getClassName(), " ", true)));
+            targets.addAll(Arrays.asList(Tools.getTokens(format, " ", true)));
         }
 
-        //for custom fields try to detect type and update renderFormat
-        String colRenderFormat = column.getRenderFormat();
-        if (Tools.isNotEmpty(fieldTo) && fieldTo.startsWith("field") && fieldTo.length()=="fieldX".length()) {
-            String titleKey = column.getTitleKeyOriginal();
-            //use default language for detection
-            Prop propType = Prop.getInstance(Constants.getString("defaultLanguage"));
-            if (Tools.isNotEmpty(titleKey)) {
-                String type = propType.getText(titleKey + ".type");
-                if (type.equals("image")) {
-                    colRenderFormat = "dt-format-image";
-                } else if (type.equals("link")) {
-                    colRenderFormat = "dt-format-elfinder";
-                } else if (type.equals("dir")) {
-                    colRenderFormat = "dt-format-elfinder";
-                }
-            }
-        }
-
-        String[] classNames = Tools.getTokens(column.getClassName(), " ", true);
-        String[] renderFormats = Tools.getTokens(colRenderFormat, " ", true);
-
-        for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
-
-            //get provider and test if is configured
-            AiAssitantsInterface provider = aiAssistantsService.getProvider(aiAssistant.getProvider());
-            if(provider == null || provider.isInit()==false) continue;
-
-            //assistant is disabled
-            if(Tools.isFalse(aiAssistant.getActive())) continue;
-
-            boolean addAssistant = false;
-            String[] entityClasses = Tools.getTokens(aiAssistant.getClassName(), "\n,;", true);
-
-            for (String entityClass : entityClasses) {
-                boolean isMatchingClass;
-                if (strictBinding) isMatchingClass = srcClass.equals(entityClass);
-                else isMatchingClass = isMatching(entityClass, srcClass);
-
-                if (isMatchingClass) {
-                    String[] toFields = Tools.getTokens(aiAssistant.getFieldTo(), "\n,;", true);
-                    for (String field : toFields) {
-                        if (TOP_SEARCH_FIELD.equals(field)) continue;
-                        if (strictBinding) {
-                            if (field.equals(fieldTo)) {
-                                addAssistant = true;
-                                break;
-                            }
-                        } else {
-                            if (isMatching(field, fieldTo)) {
-                                addAssistant = true;
-                                break;
-                            }
-                            for (String className : classNames) {
-                                if (isMatching(field, className)) {
-                                    addAssistant = true;
-                                    break;
-                                }
-                            }
-                            for (String renderFormat : renderFormats) {
-                                if (isMatching(field, renderFormat)) {
-                                    addAssistant = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                if (addAssistant) break;
-            }
-            if (addAssistant) {
-                assistants.add(aiAssistant);
-            }
+        BiPredicate<String, String> matches = strictBinding ? String::equals : AiAssistantsService::isMatching;
+        for (AssistantDefinitionEntity assistant : getAssistantsFromDB(null)) {
+            if (Tools.isFalse(assistant.getActive()) || !aiAssistantsService.getAssistantStatus(assistant.getProvider())) continue;
+            if (Arrays.stream(Tools.getTokens(assistant.getClassName(), "\n,;", true))
+                    .noneMatch(binding -> matches.test(binding, srcClass))) continue;
+            boolean matchesField = Arrays.stream(Tools.getTokens(assistant.getFieldTo(), "\n,;", true))
+                .filter(binding -> !TOP_SEARCH_FIELD.equals(binding))
+                .anyMatch(binding -> targets.stream().anyMatch(target -> matches.test(binding, target)));
+            if (matchesField) assistants.add(assistant);
         }
         return assistants;
     }
@@ -288,41 +235,26 @@ public class AiAssistantsService {
             // Keep the required field binding valid without inventing an editor field for global chat.
             assistantEnity.setFieldTo("*");
         }
-        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
-            if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(assistantEnity.getProvider())) {
-                assistantInterface.prepareBeforeSave(assistantEnity);
-                return;
-            }
-        }
-
-        throw new IllegalStateException(getNoPermittedString(prop));
+        configuredProvider(assistantEnity.getProvider(), prop).prepareBeforeSave(assistantEnity);
     }
 
     public void getProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
-        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
-            //For all
-            assistantInterface.setProviderSpecificOptions(page, prop);
-        }
+        aiAssitantsInterfaces.forEach(provider -> provider.setProviderSpecificOptions(page, prop));
     }
 
     public List<String> getProviderFields(String provider, String action, Prop prop) {
-        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
-            if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(provider)) {
-                return assistantInterface.getFieldsToShow(action);
-            }
-        }
-
-        throw new IllegalStateException(getNoPermittedString(prop));
+        return configuredProvider(provider, prop).getFieldsToShow(action);
     }
 
     public boolean getAssistantStatus(String providerId) {
-        if(Tools.isEmpty(providerId)) return false;
-        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
-            if(providerId.equals(assistantInterface.getProviderId()))
-                return assistantInterface.isInit();
-        }
+        return Tools.isNotEmpty(providerId) && aiAssitantsInterfaces.stream()
+            .filter(provider -> providerId.equals(provider.getProviderId())).findFirst()
+            .map(AiAssitantsInterface::isInit).orElse(false);
+    }
 
-        return false;
+    private AiAssitantsInterface configuredProvider(String id, Prop prop) {
+        return aiAssitantsInterfaces.stream().filter(provider -> provider.getProviderId().equals(id) && provider.isInit())
+            .findFirst().orElseThrow(() -> new IllegalStateException(prop.getText("config.not_permitted_action_err")));
     }
 
     /**
@@ -372,6 +304,10 @@ public class AiAssistantsService {
     }
 
     /* PRIVATE SUPPORT METHODS */
+    static boolean isCustomField(String name) {
+        return name != null && name.startsWith("field") && name.length() == "fieldX".length();
+    }
+
     @SuppressWarnings("java:S1871")
     protected static boolean isMatching(String text, String fieldName) {
         if (fieldName.equals(text)) return true;
@@ -541,19 +477,6 @@ public class AiAssistantsService {
         }
 
         return instructions;
-    }
-
-    private String getNoPermittedString(Prop prop) {
-        return prop.getText("config.not_permitted_action_err");
-    }
-
-    private AiAssitantsInterface getProvider(String provider) {
-        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
-            if(assistantInterface.getProviderId().equals(provider)) {
-                return assistantInterface;
-            }
-        }
-        return null;
     }
 
     /**

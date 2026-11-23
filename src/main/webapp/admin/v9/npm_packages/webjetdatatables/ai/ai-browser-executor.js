@@ -1,18 +1,21 @@
-import {AiExecutionResult} from './ai-execution-result';
+import { AiExecutionResult } from './ai-execution-result';
 
-/**
- * Class to wrap Local Browser AI execution logic
- */
+const browserMethods = {
+    Writer: "write",
+    Rewriter: "rewrite",
+    Translator: "translate",
+    LanguageDetector: "detectLanguage",
+    Summarizer: "summarize",
+    LanguageModel: "prompt"
+};
+
+/** Runs a browser AI model for an editor action or chat turn. */
 export class AiBrowserExecutor {
 
-    //TODO: cache API created with _apiInitialize
-    localApiCache = {};
     lastApiInstance = null;
+    lastConfigKey = null;
     languageDetector = null;
-    isDestroyed = false;
-
-    EDITOR = null;
-    editorAiInstance = null;
+    controller = null;
 
     constructor(EDITOR, editorAiInstance) {
         this.EDITOR = EDITOR;
@@ -20,427 +23,200 @@ export class AiBrowserExecutor {
     }
 
     isAvailable(aiCol = null) {
-        let apiName = this.getApiName(aiCol);
-
-        //check for browser AI instances support
-        if (apiName in self) {
-            return true;
-        }
-        return false;
+        const name = this.getApiName(aiCol);
+        return Object.hasOwn(browserMethods, name) && name in self;
     }
 
     getApiName(aiCol = null) {
-        let apiName = "Translator";
-        if (aiCol != null) {
-            let instructions = aiCol.instructions;
-            apiName = this._getApiName(instructions);
-        }
-        return apiName;
+        if (!aiCol) return "Translator";
+        const instructions = aiCol.instructions || "";
+        const separator = instructions.indexOf(":");
+        return separator < 0 ? null : instructions.slice(0, separator).trim();
     }
 
-    /**
-     *
-     * @param {*} aiCol
-     * @param {*} inputData
-     * @param {*} reuseApiInstance - set to true to reuse latest instance, EG for PageBuilder you need to reuse it for every editor
-     * @param {*} setFunction
-     * @returns {AiExecutionResult}
-     */
+    /** Reuses the configured model across PageBuilder blocks when requested. */
     async execute(aiCol, inputData, reuseApiInstance = false, setFunction = null) {
+        const result = new AiExecutionResult();
+        if (!this.isAvailable(aiCol)) {
+            result.statusKey = "components.ai_assistants.browser.api_not_available.js";
+            result.statusKeyParams = [this.getApiName(aiCol)];
+            return result;
+        }
 
-        let instructions = aiCol.instructions;
-        let executionResult = new AiExecutionResult();
-        this.isDestroyed = false;
-
-        //console.log("execute, inputData=", inputData);
+        this.controller?.abort();
+        this.controller = new AbortController();
+        const { signal } = this.controller;
+        const apiName = this.getApiName(aiCol);
+        const text = inputData.userPrompt ?? inputData.inputValue;
+        const update = setFunction ?? (value => this.EDITOR.set(aiCol.to, value));
         try {
-            let apiName = this._getApiName(instructions);
-            if (apiName == null) {
-                executionResult.statusKey = "components.ai_assistants.browser.unknownApi.js";
-                executionResult.statusKeyParams = ["NULL"];
-            } else {
-                let config = this._getConfig(instructions);
-                let apiInstance = null;
-
-                if (reuseApiInstance === true && this.lastApiInstance != null) {
-                    apiInstance = this.lastApiInstance;
-                } else {
-                    apiInstance = await this._apiInitialize(apiName, config, inputData);
-                    this.lastApiInstance = apiInstance; //store last instance for destroy
+            const config = this._getConfig(aiCol.instructions);
+            const key = JSON.stringify([apiName, config]);
+            if (!reuseApiInstance || !this.lastApiInstance || this.lastConfigKey !== key) {
+                this.lastApiInstance?.destroy();
+                this.lastApiInstance = null;
+                const model = await this._createModel(apiName, config, text, signal);
+                if (signal.aborted) {
+                    model.destroy();
+                    signal.throwIfAborted();
                 }
-
-                //console.log("Initialized API instance:", apiInstance, "apiName=", apiName, "config=", config);
-                if (this.isDestroyed === true) {
-                    executionResult.stopped = true;
-                    this.isDestroyed = false;
-                    return executionResult;
-                }
-
-                let useStreaming = aiCol.useStreaming || false;
-                if (apiInstance) {
-                    executionResult = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, setFunction);
-                }
+                this.lastApiInstance = model;
+                this.lastConfigKey = key;
             }
-        } catch (e) {
-            //console.log(e);
-            if ("signal is aborted without reason" === e.message) {
-                executionResult.stopped = true;
-                this.isDestroyed = false;
+            signal.throwIfAborted();
+            const model = this.lastApiInstance;
+            const method = browserMethods[apiName];
+            let content;
+            if (aiCol.useStreaming) {
+                content = "";
+                const stream = model[method + "Streaming"](text, config);
+                for await (const chunk of stream) {
+                    signal.throwIfAborted();
+                    content += chunk;
+                    update(content, false);
+                }
+                signal.throwIfAborted();
+                if (setFunction) update(content, true);
             } else {
-                executionResult.errorText = e.message;
+                content = await model[method](text, config);
+                signal.throwIfAborted();
+                if (content != null) update(content, true);
             }
+            if (content?.length && config.translateOutputLanguage) {
+                await this._translateOutput(content, text, config.translateOutputLanguage, update, signal);
+            }
+            result.success = true;
+        } catch (error) {
+            if (signal.aborted || error.message === "signal is aborted without reason") result.stopped = true;
+            else result.errorText = error.message;
         }
-
-        //console.log("executionResult:", executionResult);
-
-        return executionResult;
+        return result;
     }
 
-    /**
-     * Call this to destroy current instance and stop streaming
-     */
     destroy() {
-        //console.log("Destroying instance=", this.lastApiInstance);
-        //sometimes API instance is not YET available, so we need this semafor to handle this situation
-        this.isDestroyed = true;
-        if (this.lastApiInstance != null) {
-            this.lastApiInstance.destroy();
-            this.lastApiInstance = null;
-        }
-    }
-
-    _getApiName(instructions) {
-        if (typeof instructions == "undefined" || instructions == null || instructions == "") return null;
-
-        //before first : there is API name in string
-        let i = instructions.indexOf(":");
-        if (i !== -1) {
-            let apiString = instructions.substring(0, i).trim();
-            return apiString;
-        }
-        return null;
+        this.controller?.abort();
+        this.lastApiInstance?.destroy();
+        this.lastApiInstance = null;
+        this.languageDetector?.destroy();
+        this.languageDetector = null;
     }
 
     _getConfig(instructions) {
-        //after first : there is JSON config in string
-        let i = instructions.indexOf(":");
-        if (i !== -1) {
-            let configString = instructions.substring(i + 1).trim();
-            //console.log("configString:", configString);
-            try {
-                let config = JSON.parse(configString);
-                return config;
-            } catch (e) {
-                console.error("Failed to parse config JSON:", e, "configString:", configString);
-            }
+        const json = instructions.slice(instructions.indexOf(":") + 1).trim();
+        try {
+            return JSON.parse(json);
+        } catch (error) {
+            console.error("Failed to parse browser AI config:", error, json);
+            return {};
         }
-        return {};
     }
 
-    async _apiInitialize(apiName, config, inputData, skipIsActive = false) {
-        let instance = this;
-        let apiInstance = null;
-        this._assertActive();
-
-        let text = inputData.inputValue;
-        if (inputData.userPrompt != null) {
-            text = inputData.userPrompt;
+    async _createModel(apiName, config, text, signal, allowInactive = false) {
+        const api = self[apiName];
+        config.monitor = monitor => monitor.addEventListener('downloadprogress', progress => {
+            if (!signal.aborted) this._setDownloadStatus(progress);
+        });
+        if (apiName === "Translator") {
+            if (config.sourceLanguage === "autodetect") config.sourceLanguage = await this._detectLanguage(text, signal);
+            else if (config.sourceLanguage === "userLng") config.sourceLanguage = window.userLng;
+            if (config.targetLanguage === "userLng") config.targetLanguage = window.userLng;
         }
+        signal.throwIfAborted();
+        let availability = await api.availability(config);
+        signal.throwIfAborted();
+        if (apiName === "Translator" && !navigator.userActivation.isActive && availability !== "available") {
+            await this._confirm(apiName, false, signal);
+            availability = await api.availability(config);
+            signal.throwIfAborted();
+        }
+        if (availability === "unavailable") {
+            throw new Error("!" + WJ.translate("components.ai_assistants.browser.model_unavailable.js", apiName));
+        }
+        if (availability === "downloadable") await this._confirm(apiName, true, signal);
+        if (availability !== "available" && !navigator.userActivation.isActive && !allowInactive) {
+            throw new Error(WJ.translate("components.ai_assistants.browser.userInteractionError.js"));
+        }
+        return api.create(config);
+    }
 
-        config.monitor = (m) => {
-            m.addEventListener('downloadprogress', (e) => {
-                instance._setDownloadStatus(e);
+    async _confirm(apiName, download, signal) {
+        const message = WJ.translate(download ? "components.ai_assistants.browser.download_model.confirm.js"
+            : "components.ai_assistants.userActivationPrompt.js", apiName);
+        const buttonLabel = WJ.translate(download ? "components.ai_assistants.browser.download_model.download.js"
+            : "components.ai_assistants.userActivationPrompt.button.js");
+        const confirmed = this.editorAiInstance?.requestBrowserConfirmation
+            ? await this.editorAiInstance.requestBrowserConfirmation(message, buttonLabel)
+            : await this._confirmInEditor(message, buttonLabel, download, signal);
+        signal.throwIfAborted();
+        if (confirmed !== true) throw new Error("!" + WJ.translate("components.ai_assistants.browser.download_model.canceled.js"));
+    }
+
+    _confirmInEditor(message, buttonLabel, download, signal) {
+        const $container = $("#toast-container-ai-content").empty();
+        const $message = $("<div>").appendTo($container);
+        if (download) $message.html(WJ.parseMarkdown(message, { link: true }));
+        else $message.text(message);
+        const $actions = download ? $('<div class="mt-2 text-end">').appendTo($container) : $message;
+        return new Promise(resolve => {
+            const abort = () => resolve(false);
+            const finish = accepted => {
+                signal.removeEventListener("abort", abort);
+                resolve(accepted);
+            };
+            signal.addEventListener("abort", abort, { once: true });
+            if (download) {
+                $('<button type="button" class="btn btn-outline-secondary me-2">').text(WJ.translate("button.cancel"))
+                    .appendTo($actions).one("click", () => finish(false));
+            }
+            $('<button type="button" class="btn btn-primary">').text(buttonLabel).appendTo($actions).one("click", () => {
+                if (signal.aborted) return;
+                if (download) this.editorAiInstance.setDownloadStatus("");
+                else this.editorAiInstance.setCurrentStatus("components.ai_assistants.editor.loading.js");
+                finish(true);
             });
-        };
-
-        if (apiName in self) {
-            if ("Translator" === apiName) {
-                if ("autodetect"===config.sourceLanguage) {
-                    config.sourceLanguage = await this._detectLanguage(text);
-                    this._assertActive();
-                } else if ("userLng" === config.sourceLanguage) {
-                    config.sourceLanguage = window.userLng;
-                }
-                if ("userLng" === config.targetLanguage) {
-                    config.targetLanguage = window.userLng;
-                }
-            }
-
-            if ("Translator" === apiName && navigator.userActivation.isActive===false) {
-                //verify translation pair availability
-                let status = await Translator.availability(config);
-                this._assertActive();
-                if ("available" !== status) {
-                    if (typeof this.editorAiInstance?.requestBrowserConfirmation === "function") {
-                        const confirmed = await this.editorAiInstance.requestBrowserConfirmation(
-                            WJ.translate("components.ai_assistants.userActivationPrompt.js", apiName),
-                            WJ.translate("components.ai_assistants.userActivationPrompt.button.js")
-                        );
-                        this._assertActive();
-                        if (confirmed !== true) {
-                            throw new Error("!" + WJ.translate("components.ai_assistants.browser.download_model.canceled.js"));
-                        }
-                    } else {
-                        //we need to wait for user to click to some button, create dialog and await for user click
-                        await new Promise((resolve) => {
-                            // Create a dialog or some UI element to prompt the user
-                            let dialog = document.createElement('div');
-                            dialog.innerText = WJ.translate("components.ai_assistants.userActivationPrompt.js", apiName);
-
-                            let button = document.createElement('button');
-                            button.innerText = WJ.translate("components.ai_assistants.userActivationPrompt.button.js");
-                            button.classList.add('btn');
-                            button.classList.add('btn-primary');
-                            dialog.appendChild(button);
-
-                            const container = document.getElementById('toast-container-ai-content');
-                            container.innerHTML = "";
-                            container.appendChild(dialog);
-
-                            button.addEventListener('click', () => {
-                                instance.editorAiInstance.setCurrentStatus("components.ai_assistants.editor.loading.js");
-                                resolve();
-                            });
-                        });
-                    }
-                    this._assertActive();
-                }
-            }
-
-            //show download confirm dialog
-            let availability = await self[apiName].availability(config);
-            this._assertActive();
-            if ("unavailable" === availability) {
-                throw new Error("!" + WJ.translate("components.ai_assistants.browser.model_unavailable.js", apiName));
-            }
-            //console.log("API", apiName, "availability:", availability, "config=", config);
-            if ("downloadable" === availability) {
-                let downloadConfirmed;
-                if (typeof this.editorAiInstance?.requestBrowserConfirmation === "function") {
-                    downloadConfirmed = await this.editorAiInstance.requestBrowserConfirmation(
-                        WJ.translate("components.ai_assistants.browser.download_model.confirm.js", apiName),
-                        WJ.translate("components.ai_assistants.browser.download_model.download.js")
-                    );
-                } else {
-                    downloadConfirmed = await new Promise((resolve) => {
-                        let dialog = document.createElement('div');
-                        dialog.innerHTML = WJ.parseMarkdown(WJ.translate("components.ai_assistants.browser.download_model.confirm.js", apiName), {
-                            link: true
-                        });
-
-                        let buttonContainer = document.createElement('div');
-                        buttonContainer.classList.add('mt-2');
-                        buttonContainer.classList.add('text-end');
-
-                        //cancel button
-                        let buttonCancel = document.createElement('button');
-                        buttonCancel.innerText = WJ.translate("button.cancel");
-                        buttonCancel.classList.add('btn');
-                        buttonCancel.classList.add('btn-outline-secondary');
-                        buttonCancel.classList.add('me-2');
-                        buttonContainer.appendChild(buttonCancel);
-
-                        buttonCancel.addEventListener('click', () => {
-                            resolve(false);
-                        });
-
-                        //confirm button
-                        let button = document.createElement('button');
-                        button.innerText = WJ.translate("components.ai_assistants.browser.download_model.download.js");
-                        button.classList.add('btn');
-                        button.classList.add('btn-primary');
-                        buttonContainer.appendChild(button);
-
-                        const container = document.getElementById('toast-container-ai-content');
-                        container.innerHTML = "";
-                        container.appendChild(dialog);
-                        container.appendChild(buttonContainer);
-
-                        button.addEventListener('click', () => {
-                            instance.editorAiInstance.setDownloadStatus("");
-                            resolve(true);
-                        });
-                    });
-                }
-                this._assertActive();
-
-                if (downloadConfirmed !== true) {
-                    throw new Error("!" + WJ.translate("components.ai_assistants.browser.download_model.canceled.js"));
-                }
-            }
-
-            if (navigator.userActivation.isActive || skipIsActive === true) {
-                apiInstance = await self[apiName].create(config);
-                if (this.isDestroyed) {
-                    apiInstance.destroy();
-                    this._assertActive();
-                }
-            } else {
-                throw new Error(WJ.translate("components.ai_assistants.browser.userInteractionError.js"));
-            }
-        }
-        //console.log("apiInstance:", apiInstance, "apiName=", apiName, "isInSelf=", apiName in self, "config=", config);
-        return apiInstance;
+        });
     }
 
-    async _apiExecute(apiName, apiInstance, config, fieldName, inputData, useStreaming, setFunction = null) {
-
-        let executionResult = new AiExecutionResult();
-        this._assertActive();
-
-        if (apiInstance) {
-            let text = inputData.inputValue;
-            if (inputData.userPrompt != null) {
-                text = inputData.userPrompt;
-            }
-
-            //console.log("_apiExecute, apiName=", apiName, "apiInstance=", apiInstance, "inputData=", inputData, " text:", text, "config=", config, "setFunction=", setFunction);
-
-            let content = null;
-            if (useStreaming) {
-                let stream = null;
-                if ("Writer" === apiName) stream = apiInstance.writeStreaming(text, config);
-                else if ("Rewriter" === apiName) stream = apiInstance.rewriteStreaming(text, config);
-                else if ("Translator" === apiName) stream = apiInstance.translateStreaming(text, config);
-                else if ("LanguageDetector" === apiName) stream = apiInstance.detectLanguageStreaming(text, config);
-                else if ("Summarizer" === apiName) stream = apiInstance.summarizeStreaming(text, config);
-                else if ("LanguageModel" === apiName) stream = apiInstance.promptStreaming(text, config);
-
-                if (stream!=null) content = await this._setField(fieldName, stream, setFunction);
-            } else {
-                if ("Writer" === apiName) content = await apiInstance.write(text, config);
-                else if ("Rewriter" === apiName) content = await apiInstance.rewrite(text, config);
-                else if ("Translator" === apiName) content = await apiInstance.translate(text, config);
-                else if ("LanguageDetector" === apiName) content = await apiInstance.detectLanguage(text, config);
-                else if ("Summarizer" === apiName) content = await apiInstance.summarize(text, config);
-                else if ("LanguageModel" === apiName) content = await apiInstance.prompt(text, config);
-
-                this._assertActive();
-                if (content != null) {
-                    if (setFunction != null) {
-                        setFunction(content, true);
-                    } else {
-                        this.EDITOR.set(fieldName, content);
-                    }
-                }
-            }
-
-            //AI APIs can't return content in requested language (e.g. slovak), so we need to translate it afterwards
-            if (content != null && content.length > 0) {
-                let translateOutputLanguage = config.translateOutputLanguage || null;
-                if (typeof translateOutputLanguage != "undefined" && translateOutputLanguage != null) {
-
-                    this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.translating.js", false);
-
-                    let translateFromLanguage = await this._detectLanguage(content);
-                    this._assertActive();
-                    let translateToLanguage = translateOutputLanguage;
-
-                    if ("autodetect" === translateOutputLanguage || true === translateOutputLanguage || "true" === translateOutputLanguage) {
-                        //detect source language
-                        translateToLanguage = await this._detectLanguage(text);
-                        this._assertActive();
-                    } else if ("userLng" === translateOutputLanguage) {
-                        translateToLanguage = window.userLng;
-                    }
-
-                    //console.log("Translating from:", translateFromLanguage, "to:", translateToLanguage);
-
-                    if (translateFromLanguage != translateToLanguage) {
-                        this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.translatingFromTo.js", false, translateFromLanguage, translateToLanguage);
-
-                        let config = {
-                            sourceLanguage: translateFromLanguage,
-                            targetLanguage: translateToLanguage
-                        }
-                        const translator = await this._apiInitialize("Translator", config, inputData, true);
-                        this._assertActive();
-                        //console.log("Mam translator: ", translator);
-                        let translatedContent = await translator.translate(content);
-                        this._assertActive();
-                        //console.log("Translated content:", translatedContent, "content=", content);
-                        if (setFunction != null) {
-                            setFunction(translatedContent, true);
-                        } else {
-                            this.EDITOR.set(fieldName, translatedContent);
-                        }
-                    }
-                }
-            }
-
-            //local browser uses zero tokens
-            executionResult.totalTokens = 0;
-            executionResult.success = true;
-        } else {
-            executionResult.statusKey = "components.ai_assistants.browser.api_not_available.js";
+    async _translateOutput(content, text, target, update, signal) {
+        this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.translating.js", false);
+        const sourceLanguage = await this._detectLanguage(content, signal);
+        let targetLanguage = target;
+        if (["autodetect", true, "true"].includes(target)) targetLanguage = await this._detectLanguage(text, signal);
+        else if (target === "userLng") targetLanguage = window.userLng;
+        signal.throwIfAborted();
+        if (sourceLanguage === targetLanguage) return;
+        this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.translatingFromTo.js", false, sourceLanguage, targetLanguage);
+        const translator = await this._createModel("Translator", { sourceLanguage, targetLanguage }, text, signal, true);
+        try {
+            signal.throwIfAborted();
+            const translated = await translator.translate(content);
+            signal.throwIfAborted();
+            update(translated, true);
+        } finally {
+            translator.destroy();
         }
-
-        return executionResult;
     }
 
-    async _detectLanguage(text) {
-        this._assertActive();
-        if (this.languageDetector == null) {
-            this.languageDetector = await LanguageDetector.create({});
-            if (this.isDestroyed) {
-                this.languageDetector.destroy();
-                this.languageDetector = null;
-                this._assertActive();
+    async _detectLanguage(text, signal) {
+        signal.throwIfAborted();
+        if (!this.languageDetector) {
+            const detector = await LanguageDetector.create({});
+            if (signal.aborted) {
+                detector.destroy();
+                signal.throwIfAborted();
             }
+            this.languageDetector = detector;
         }
         const results = await this.languageDetector.detect(text);
-        this._assertActive();
-        //preserve this for complaints
+        signal.throwIfAborted();
         console.info("Detected languages:", results);
-        if (results.length > 0) {
-            return results[0].detectedLanguage;
-        }
-        return null;
-    }
-
-    async _setField(fieldName, stream, setFunction = null) {
-        let firstItem = true;
-        let content = "";
-        //console.log("Setting field:", fieldName, "stream=", stream);
-        for await (const chunk of stream) {
-            this._assertActive();
-            if (firstItem) {
-                content = chunk;
-            } else {
-                content += chunk;
-            }
-            //console.log('\r'+content);
-
-            if (setFunction != null) {
-                setFunction(content, false);
-            } else {
-                this.EDITOR.set(fieldName, content);
-            }
-            firstItem = false;
-        }
-        this._assertActive();
-        if (setFunction != null) {
-            setFunction(content, true);
-        }
-        return content;
+        return results[0]?.detectedLanguage ?? null;
     }
 
     _setDownloadStatus(progress) {
-        if (this.isDestroyed) return;
-        //console.log("Progress: ", progress);
-
-        let percent = Math.round(progress.loaded * 100);
-        if (percent == 0) return;
-
-        if (this.editorAiInstance) {
-            this.editorAiInstance.setDownloadStatus(percent);
-        } else {
-            console.log("Download progress:", percent+"%");
-        }
-    }
-
-    /** Prevents an asynchronous browser API operation from updating a cancelled turn. */
-    _assertActive() {
-        if (this.isDestroyed) throw new Error("signal is aborted without reason");
+        const percent = Math.round(progress.loaded * 100);
+        if (percent === 0) return;
+        if (this.editorAiInstance) this.editorAiInstance.setDownloadStatus(percent);
+        else console.log("Download progress:", percent + "%");
     }
 }

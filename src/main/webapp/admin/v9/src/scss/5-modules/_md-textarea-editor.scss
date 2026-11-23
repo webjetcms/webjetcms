@@ -31,14 +31,14 @@
 }
 
 .DTE .DTE_Field .md-textarea-editor {
-    > textarea, > .md-textarea-editor__lines {
+    > textarea, > .md-textarea-editor__lines, > .md-textarea-editor__highlights {
         font-family: monospace;
         font-size: 13px;
         line-height: 1.2;
         tab-size: 2;
     }
 
-    > textarea {
+    > textarea, > .md-textarea-editor__highlights {
         flex: 1 1 auto;
         width: 0;
         min-width: 0;
@@ -51,6 +51,39 @@
         white-space: pre;
         overflow: auto;
         box-shadow: none;
+    }
+
+    &:has(> .md-textarea-editor__highlights) {
+        display: grid;
+        grid-template: minmax(0, 1fr) / auto minmax(0, 1fr);
+
+        > textarea, > .md-textarea-editor__highlights {
+            grid-area: 1 / 2;
+            width: 100%;
+        }
+
+        > textarea { background-color: transparent !important; }
+    }
+
+    > .md-textarea-editor__highlights {
+        pointer-events: none;
+        user-select: none;
+        color: transparent;
+        @include show-scrollbar;
+
+        // A textarea keeps a final empty line when its value ends with a newline.
+        &::after { content: "\200b"; }
+    }
+
+    &--wrapped {
+        > textarea, > .md-textarea-editor__highlights {
+            white-space: break-spaces;
+            overflow-wrap: normal;
+        }
+
+        > .md-textarea-editor__lines {
+            display: none;
+        }
     }
 }
 

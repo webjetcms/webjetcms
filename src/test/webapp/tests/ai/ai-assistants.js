@@ -104,7 +104,8 @@ Scenario('AI instructions textarea preserves shared gutter and keyboard behavior
     DT.waitForLoader();
     const textarea = "#datatableInit_modal #DTE_Field_instructions";
     const gutter = "#datatableInit_modal .DTE_Field_Name_instructions .md-textarea-editor__lines";
-    const source = "autotest instructions\nSecond instruction";
+    const highlights = "#datatableInit_modal .md-textarea-editor__highlights";
+    const source = "@tool(quiz_get_all) @group(quiz)\n@skill(Kvíz %28SK%29) <b>text</b> @tool(incomplete";
     let initialValue;
 
     for (let opening = 0; opening < 2; opening++) {
@@ -119,6 +120,10 @@ Scenario('AI instructions textarea preserves shared gutter and keyboard behavior
             else I.assertEqual(value, initialValue, "Cancelling must discard instruction changes");
 
             I.fillField(textarea, source);
+            I.assertDeepEqual(await I.grabTextFromAll(highlights + " [data-reference]"), [
+                "@tool(quiz_get_all)", "@group(quiz)", "@skill(Kvíz %28SK%29)"
+            ]);
+            I.dontSeeElementInDOM(highlights + " b");
             I.assertEqual(await I.grabTextFrom(gutter), "1\n2", "Typing must update logical line numbers");
             I.pressKey("End");
             I.pressKey("Tab");

@@ -8,14 +8,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -33,9 +36,12 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.components.ai.tools.AiToolProtocol;
+import sk.iway.iwcm.components.ai.tools.AiToolService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.json.DataTableAi;
@@ -51,10 +57,16 @@ public class AiService {
     private final List<AiInterface> aiInterfaces;
     private final AiTaskRegistry aiTaskRegistry;
     private final WebjetAiConfigurationService configurationService;
+    @Autowired
+    private AiToolService tools;
 
     private static final String CACHE_OPTION_KEYS = "AiService.ProviderOptions.";
     private static final int CACHE_MODELS_TIME = 24 * 60;
     private static final String GROUPS_PREFIX = "components.ai_assistants.groups.";
+
+    private static final Comparator<AssistantDefinitionEntity> ASSISTANT_ORDER =
+        Comparator.comparing(AssistantDefinitionEntity::getGroupName, Comparator.nullsFirst(String::compareTo))
+            .thenComparing(AssistantDefinitionEntity::getName);
 
     @Autowired
     public AiService(
@@ -79,35 +91,24 @@ public class AiService {
     }
 
     public List<LabelValue> getModelOptions(String provider, Prop prop, HttpServletRequest request) {
-        List<LabelValue> supportedValues = new ArrayList<>();
-        AiInterface providerInterface = null;
-        for (AiInterface aiInterface : aiInterfaces) {
-            if (aiInterface.getProviderId().equals(provider)) {
-                providerInterface = aiInterface;
-                break;
-            }
-        }
-        if (providerInterface == null || providerInterface.isInit() == false) return supportedValues;
+        AiInterface providerInterface = providers(provider).findFirst().orElse(null);
+        if (providerInterface == null || !providerInterface.isInit()) return new ArrayList<>();
 
         String cacheKey = CACHE_OPTION_KEYS + provider + "."
             + configurationService.modelCacheDiscriminator(providerInterface, request);
 
-        //First check, if they are cached
         try {
             Cache c = Cache.getInstance();
             @SuppressWarnings("unchecked")
             List<LabelValue> cachedModels = (List<LabelValue>)c.getObject(cacheKey);
             if(cachedModels != null) return cachedModels;
         } catch (Exception e) {
-            return supportedValues;
+            return new ArrayList<>();
         }
 
-        //No cached, get them from PROVIDER
-        supportedValues = providerInterface.getSupportedModels(prop, request);
+        List<LabelValue> supportedValues = providerInterface.getSupportedModels(prop, request);
+        if (supportedValues.isEmpty()) return supportedValues;
 
-        if(supportedValues.size() < 1) return supportedValues;
-
-        //Set to cache
         try {
             Cache c = Cache.getInstance();
             c.setObject(cacheKey, supportedValues, CACHE_MODELS_TIME);
@@ -120,18 +121,12 @@ public class AiService {
 
     public List<String> getModelOptions(String term, String provider, Prop prop, HttpServletRequest request) {
         List<String> values = new ArrayList<>();
-        if(Tools.isEmpty(provider) == true) return values;
-
-        values = labelsToStrings( getModelOptions(provider, prop, request) );
-
-        if("%".equals(term)) return values;
-
-        List<String> ac = new ArrayList<>();
-        for(String value : values) {
-            if(value.toLowerCase().contains( term.toLowerCase() ))
-                ac.add(value);
+        if (Tools.isEmpty(provider)) return values;
+        for (LabelValue label : getModelOptions(provider, prop, request)) {
+            String value = label.getValue();
+            if ("%".equals(term) || value.toLowerCase().contains(term.toLowerCase())) values.add(value);
         }
-        return ac;
+        return values;
     }
 
     public AssistantResponseDTO getAiResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
@@ -145,21 +140,13 @@ public class AiService {
 
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
-        if(doesSupportAction(assistant, SupportedActions.GENERATE_IMAGE) == false && doesSupportAction(assistant, SupportedActions.EDIT_IMAGE) == false) {
+        if (!doesSupportAction(assistant, SupportedActions.GENERATE_IMAGE, SupportedActions.EDIT_IMAGE)) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
         checkTokenLimit(assistant.getId(), assistantRepo, prop);
 
-        for(AiInterface aiInterface : aiInterfaces) {
-            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                // Prepare task
-                Callable<AssistantResponseDTO> task = () -> aiInterface.getAiImageResponse(assistant, inputData, prop, statRepo, request);
-                // Run task
-                return aiTaskRegistry.runAssistantTask(task, inputData, request);
-            }
-        }
-
-        throw new IllegalStateException( getSomethingWrongErr(prop) );
+        AiInterface provider = requireConfiguredProvider(assistant, prop);
+        return aiTaskRegistry.runAssistantTask(() -> provider.getAiImageResponse(assistant, inputData, prop, statRepo, request), inputData, request);
     }
 
     public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, BufferedWriter writer, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
@@ -172,11 +159,14 @@ public class AiService {
         Prop prop = Prop.getInstance(request);
         inputData.prepareData(request);
 
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
-
-        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
+        AssistantDefinitionEntity stored = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
+        if(doesSupportAction(stored, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
+        var runtime = inputData.isInteractiveAssistant()
+            ? tools.resolve(stored, CloudToolsForCore.getDomainId(), request)
+            : tools.resolveForBackend(stored, CloudToolsForCore.getDomainId(), request);
+        AssistantDefinitionEntity assistant = runtime.assistant();
         checkTokenLimit(assistant.getId(), assistantRepo, prop);
         validateChatAttachments(assistant, inputData, prop);
 
@@ -184,22 +174,29 @@ public class AiService {
             inputData.removeHtml();
         }
 
-        for(AiInterface aiInterface : aiInterfaces) {
-            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                if (writer != null && aiInterface.isStreamingEnabled(assistant) == false) {
-                    throw new IllegalStateException(getNotSupportedAction(prop));
-                }
-                // Prepare task
-                Callable<AssistantResponseDTO> task = () -> {
-                    if (writer == null) return aiInterface.getAiResponse(assistant, inputData, prop, statRepo, request);
-                    return aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request);
-                };
-                // Run task
-                return aiTaskRegistry.runAssistantTask(task, inputData, request);
+        AiInterface provider = requireConfiguredProvider(assistant, prop);
+        if (inputData.isInteractiveAssistant()) {
+            inputData.setToolProtocol(AiToolProtocol.prepare(runtime, inputData.getToolResults(), stored.getInstructions()));
+            if (inputData.getToolProtocol() != null && !(provider instanceof LibrarySupportLogic)) {
+                throw new IllegalArgumentException("This provider adapter cannot run assistant tools.");
             }
         }
+        if (writer != null && !provider.isStreamingEnabled(assistant)) throw new IllegalStateException(getNotSupportedAction(prop));
+        return aiTaskRegistry.runAssistantTask(() -> writer == null
+            ? provider.getAiResponse(assistant, inputData, prop, statRepo, request)
+            : provider.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request), inputData, request);
+    }
 
-        throw new IllegalStateException( getSomethingWrongErr(prop) );
+    private Stream<AiInterface> providers(String id) {
+        return aiInterfaces.stream().filter(provider -> provider.getProviderId().equals(id));
+    }
+
+    private Optional<AiInterface> configuredProvider(AssistantDefinitionEntity assistant) {
+        return providers(assistant.getProvider()).filter(AiInterface::isInit).findFirst();
+    }
+
+    private AiInterface requireConfiguredProvider(AssistantDefinitionEntity assistant, Prop prop) {
+        return configuredProvider(assistant).orElseThrow(() -> new IllegalStateException(prop.getText("html_area.insert_image.error_occured")));
     }
 
     static boolean shouldRemoveHtml(AssistantDefinitionEntity assistant, InputDataDTO inputData) {
@@ -217,40 +214,23 @@ public class AiService {
     }
 
     private boolean isStreamingEnabled(AssistantDefinitionEntity assistant) {
-        for (AiInterface provider : aiInterfaces) {
-            if (provider.getProviderId().equals(assistant.getProvider())) return provider.isStreamingEnabled(assistant);
-        }
-        return false;
+        return providers(assistant.getProvider()).findFirst().map(provider -> provider.isStreamingEnabled(assistant)).orElse(false);
     }
 
     private boolean isPersistentChatEnabled(AssistantDefinitionEntity assistant) {
-        return List.of("openai", "gemini").contains(assistant.getProvider()) && aiInterfaces.stream()
-            .anyMatch(provider -> provider.getProviderId().equals(assistant.getProvider())
-                && provider instanceof sk.iway.iwcm.components.ai.providers.LibrarySupportLogic library
-                && library.supportsPersistentChat(assistant));
+        return List.of("openai", "gemini").contains(assistant.getProvider()) && providers(assistant.getProvider())
+            .anyMatch(provider -> provider instanceof LibrarySupportLogic library && library.supportsPersistentChat(assistant));
     }
 
     public String getBonusHtml(Long assistantId, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) {
 
-        AssistantDefinitionEntity assistant = getAssistant(assistantId, assistantRepo, Prop.getInstance(request));
-
-        String bonusHtml = null;
-
         Prop prop = Prop.getInstance(request);
-        for(AiInterface aiInterface : aiInterfaces) {
-            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                bonusHtml = aiInterface.getBonusHtml(assistant, prop);
-                break;
-            }
-        }
-
-        if (Tools.isNotEmpty(bonusHtml)) {
-            return bonusHtml;
-        }
+        AssistantDefinitionEntity assistant = getAssistant(assistantId, assistantRepo, prop);
+        String bonusHtml = configuredProvider(assistant).map(provider -> provider.getBonusHtml(assistant, prop)).orElse(null);
+        if (Tools.isNotEmpty(bonusHtml)) return bonusHtml;
 
         //for chat fields enable option to add content after current OR replace it
         if (Tools.isTrue(assistant.getUserPromptEnabled()) && assistant.getAction().equals(SupportedActions.LIVE_CHAT.getAction())) {
-            //for chat fields enable option to add content after current OR replace it
             String editHTML = "";
             String checked = " checked";
             if (Tools.isNotEmpty(assistant.getFieldFrom())) {
@@ -316,14 +296,6 @@ public class AiService {
 
     /* PRIVATE SUPPORT METHODS */
 
-    private List<String> labelsToStrings(List<LabelValue> labels) {
-        List<String> values = new ArrayList<>();
-        for(LabelValue label : labels) {
-            values.add(label.getValue());
-        }
-        return values;
-    }
-
     /**
      * Rejects scheduling when the assistant's current database usage has reached its limit.
      *
@@ -340,10 +312,6 @@ public class AiService {
 
     private String getNotSupportedAction(Prop prop) {
         return prop.getText("components.ai_assistants.not_supproted_action_err");
-    }
-
-    private String getSomethingWrongErr(Prop prop) {
-        return prop.getText("html_area.insert_image.error_occured");
     }
 
     private String getNotFoundAssistantErr(Prop prop) {
@@ -406,12 +374,14 @@ public class AiService {
         return AiAssistantsService.getAssistantsFromDB(assistantRepo).stream()
             .filter(AiAssistantsService::isGlobalChatAssistant)
             .filter(assistant -> Tools.isFalse(assistant.getActive()) == false)
-            .filter(assistant -> aiInterfaces.stream().anyMatch(provider ->
-                provider.getProviderId().equals(assistant.getProvider()) && provider.isInit()))
-            .sorted(Comparator.comparing(AssistantDefinitionEntity::getGroupName, Comparator.nullsFirst(String::compareTo))
-                .thenComparing(AssistantDefinitionEntity::getName))
+            .filter(assistant -> configuredProvider(assistant).isPresent())
+            .sorted(ASSISTANT_ORDER)
             .map(assistant -> toClientAssistant(assistant, prop, this))
             .toList();
+    }
+
+    public AiToolService.RuntimeMetadata runtimeMetadata(long assistantId, HttpServletRequest request) {
+        return tools.runtimeMetadata(assistantId, request);
     }
 
     private static DataTableAi toClientAssistant(AssistantDefinitionEntity assistant, Prop prop, AiService aiService) {
@@ -427,6 +397,11 @@ public class AiService {
 
         ai.setUseStreaming(aiService == null ? Tools.isTrue(assistant.getUseStreaming()) : aiService.isStreamingEnabled(assistant));
         ai.setPersistentChat(aiService != null && aiService.isPersistentChatEnabled(assistant));
+        if ("generate_text".equals(assistant.getAction()) && !Tools.isTrue(assistant.getUserPromptEnabled())
+                && aiService != null && aiService.tools != null
+                && RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes context) {
+            ai.setHasInstructionContext(aiService.tools.hasInstructionContext(assistant, context.getRequest()));
+        }
         ai.setAction(assistant.getAction());
         ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + assistant.getGroupName()));
         ai.setUserPromptEnabled(Tools.isTrue(assistant.getUserPromptEnabled()));
@@ -434,8 +409,8 @@ public class AiService {
         ai.setIcon(assistant.getIcon());
         if (Tools.isEmpty(ai.getIcon())) ai.setIcon("clipboard-text");
 
-        if ("browser".equals(ai.getProvider())) {
-            // Browser execution needs the configured instructions locally.
+        // Text and chat fetch the effective browser instructions immediately before execution.
+        if ("browser".equals(ai.getProvider()) && !"generate_text".equals(ai.getAction()) && !"live_chat".equals(ai.getAction())) {
             ai.setInstructions(assistant.getInstructions());
         }
         return ai;
@@ -446,42 +421,25 @@ public class AiService {
         try {
             List<AssistantDefinitionEntity> assistants = AiAssistantsService.getAssistantAndFieldFrom(toField, column, javaClassName);
 
-            //sort assistants by group and name
-            assistants.sort(
-                Comparator.comparing(AssistantDefinitionEntity::getGroupName, Comparator.nullsFirst(String::compareTo))
-                        .thenComparing(AssistantDefinitionEntity::getName)
-            );
+            if (assistants.isEmpty()) return aiList;
+            assistants.sort(ASSISTANT_ORDER);
+            AiService aiService = Tools.getSpringBean("aiService", AiService.class);
+            for (AssistantDefinitionEntity assistant : assistants) {
+                DataTableAi ai = toClientAssistant(assistant, prop, aiService);
+                ai.setFrom(assistant.getFieldFrom());
+                ai.setTo(toField);
+                ai.setToDefinition(assistant.getFieldTo());
+                if (!ai.isEmpty()) aiList.add(ai);
+            }
 
-            if(assistants != null && assistants.size() > 0) {
-                AiService aiService = Tools.getSpringBean("aiService", AiService.class);
-
-                for (AssistantDefinitionEntity ade : assistants) {
-                    DataTableAi ai = toClientAssistant(ade, prop, aiService);
-                    ai.setFrom(ade.getFieldFrom());
-                    ai.setTo(toField);
-                    ai.setToDefinition(ade.getFieldTo());
-                    if (ai.isEmpty()==false) {
-                        aiList.add(ai);
-                    }
+            if (AiAssistantsService.isCustomField(toField)) {
+                List<DataTableAi> specific = new ArrayList<>();
+                for (DataTableAi ai : aiList) {
+                    boolean matches = Arrays.stream(Tools.getTokens(ai.getToDefinition(), "\n,;", true))
+                        .anyMatch(binding -> !"*".equals(binding) && AiAssistantsService.isMatching(binding, toField));
+                    if (matches) specific.add(ai);
                 }
-
-                //for custom fields detect if we have any assistant specially for this field, if yes, remove other general assistants
-                if (Tools.isNotEmpty(toField) && toField.startsWith("field") && toField.length()=="fieldX".length()) {
-                    List<DataTableAi> specificAis = new ArrayList<>();
-                    for (DataTableAi ai : aiList) {
-                        String[] toFields = Tools.getTokens(ai.getToDefinition(), "\n,;", true);
-                        for (String tf : toFields) {
-                            if ("*".equals(tf)) continue;
-                            if (AiAssistantsService.isMatching(tf, toField)) {
-                                specificAis.add(ai);
-                                break;
-                            }
-                        }
-                    }
-                    if (specificAis.size()>0) {
-                        aiList = specificAis;
-                    }
-                }
+                if (!specific.isEmpty()) return specific;
             }
         } catch (Exception e) {
             Logger.error(DataTableAi.class, "Error setting properties", e);

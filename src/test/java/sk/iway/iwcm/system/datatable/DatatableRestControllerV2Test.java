@@ -1,5 +1,7 @@
 package sk.iway.iwcm.system.datatable;
 
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -7,6 +9,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -30,15 +33,20 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.UploadSpringConfig;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AiSkillEntity;
+import sk.iway.iwcm.components.ai.jpa.AiSkillRepository;
+import sk.iway.iwcm.components.ai.rest.AiSkillRestController;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
+import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.test.TestRequest;
 import sk.iway.spring.SpringApplication;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -69,6 +77,7 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Query;
 import jakarta.persistence.RollbackException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
@@ -510,54 +519,55 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
 
     @Test
     void testHandleEditor() {
-        // Call the REST method to handle the editor
-        DatatableRequest<Long, Object> datatableRequest = new DatatableRequest<>();
-        Map<Long, Object> data = new HashMap<>();
-        data.put(1L, new Object());
-        datatableRequest.setData(data);
-        Object result;
+        var request = new TestRequest("", "/admin/rest/test/editor");
+        var batch = new DatatableRequest<Long, Object>();
+        batch.setData(Map.of(1L, new Object()));
+        batch.setAction("edit");
+        controller.handleEditor(request, batch);
 
-        datatableRequest.setAction("edit");
-        result = controller.handleEditor(controller.getRequest(), datatableRequest);
+        batch.setAction("create");
+        batch.setData(Map.of(-1L, new Object(), -2L, new Object()));
+        batch.setDztotalchunkcount(1);
+        batch.setImportedColumns(Set.of("title"));
+        controller.initBinder(request, new WebDataBinder(batch));
+        try {
+            controller.handleEditor(request, batch);
+            assertEquals(Set.of("title"), controller.getImportedColumns());
+            assertEquals(2, DatatableRestControllerV2.getLastImportedRow());
+        } finally {
+            controller.initBinder(new TestRequest("", "/admin/rest/test/add"), new WebDataBinder(new Object()));
+        }
+        assertFalse(controller.isImporting());
+        assertNull(DatatableRestControllerV2.getLastImportedRow());
 
-        // Verify that the result is not null
-        assertEquals(true, result != null, "handleEditor should return a non-null result");
+        batch.setAction("remove");
+        batch.setData(Map.of(1L, new Object()));
+        controller.handleEditor(request, batch);
+        assertEquals(1, controller.getEditItemCounter());
+        assertEquals(2, controller.getInsertItemCounter());
+        assertEquals(1, controller.getDeleteItemCounter());
+        assertEquals(3, controller.getBeforeSaveCounter());
+        assertEquals(3, controller.getAfterSaveCounter());
+        assertEquals(1, controller.getBeforeDeleteCounter());
+        assertEquals(1, controller.getAfterDeleteCounter());
+    }
 
-        assertEquals(1, controller.getEditItemCounter(), "editItem should be called once");
-        assertEquals(0, controller.getInsertItemCounter(), "insertItem should not be called");
-        assertEquals(0, controller.getDeleteItemCounter(), "deleteItem should not be called");
-
-        assertEquals(1, controller.getBeforeSaveCounter(), "beforeSave should be called once");
-        assertEquals(1, controller.getAfterSaveCounter(), "afterSave should be called once");
-        assertEquals(0, controller.getBeforeDeleteCounter(), "beforeDelete should not be called");
-        assertEquals(0, controller.getAfterDeleteCounter(), "afterDelete should not be called");
-
-        data.clear();
-        data.put(-1L, new Object());
-        datatableRequest.setData(data);
-        datatableRequest.setAction("create");
-        result = controller.handleEditor(controller.getRequest(), datatableRequest);
-
-        assertEquals(1, controller.getEditItemCounter(), "editItem should be called once");
-        assertEquals(1, controller.getInsertItemCounter(), "insertItem should be called once");
-        assertEquals(0, controller.getDeleteItemCounter(), "deleteItem should not be called");
-
-        assertEquals(2, controller.getBeforeSaveCounter(), "beforeSave should be called twice");
-        assertEquals(2, controller.getAfterSaveCounter(), "afterSave should be called twice");
-        assertEquals(0, controller.getBeforeDeleteCounter(), "beforeDelete should not be called");
-        assertEquals(0, controller.getAfterDeleteCounter(), "afterDelete should not be called");
-
-        datatableRequest.setAction("remove");
-        result = controller.handleEditor(controller.getRequest(), datatableRequest);
-
-        assertEquals(1, controller.getEditItemCounter(), "editItem should be called once");
-        assertEquals(1, controller.getInsertItemCounter(), "insertItem should be called once");
-        assertEquals(1, controller.getDeleteItemCounter(), "deleteItem should be called once");
-
-        assertEquals(2, controller.getBeforeSaveCounter(), "beforeSave should be called twice");
-        assertEquals(2, controller.getAfterSaveCounter(), "afterSave should be called twice");
-        assertEquals(1, controller.getBeforeDeleteCounter(), "beforeDelete should be called once");
-        assertEquals(1, controller.getAfterDeleteCounter(), "afterDelete should be called once");
+    @Test
+    void skillImportMatchesNameInCurrentDomainWithGlobalScopingOff() throws Exception {
+        var skills = new AiSkillRestController(mock(AiSkillRepository.class), null);
+        var imported = new AiSkillEntity();
+        imported.setName("Translate");
+        var manager = mock(JpaEntityManager.class);
+        when(manager.createQuery(any(ReadAllQuery.class))).thenReturn(mock(Query.class));
+        try (var constants = mockStatic(Constants.class); var jpa = mockStatic(JpaTools.class)) {
+            jpa.when(() -> JpaTools.getSpringEntityManager(AiSkillEntity.class)).thenReturn(manager);
+            skills.findItemBy("name", imported);
+            var query = ArgumentCaptor.forClass(ReadAllQuery.class);
+            verify(manager).createQuery(query.capture());
+            var builder = query.getValue().getExpressionBuilder();
+            assertEquals(builder.get("name").equal("Translate").and(builder.get("domainId").equal(1)),
+                    query.getValue().getSelectionCriteria());
+        }
     }
 
     @Test
