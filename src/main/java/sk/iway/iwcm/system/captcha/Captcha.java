@@ -128,7 +128,7 @@ public class Captcha
 		}
 		catch (Exception e)
 		{
-			Logger.error(Captcha.class, "Exception during captcha validation, captchaType: " + captchaType + ", component: " + component, e);
+			Logger.error(Captcha.class, "Exception during captcha validation, captchaType: " + captchaType + ", component: " + component + ", error: " + e.getMessage(), e);
 		}
 		return false;
 	}
@@ -223,8 +223,8 @@ public class Captcha
 			return false;
 		}
 
-		Logger.debug(Captcha.class, "reCaptchaV3Validate - Validating token, source: {}, token: {}, ip: {}",
-				Tools.isNotEmpty(submittedResponse) ? "submitted response" : "request parameter", token, ip);
+		Logger.debug(Captcha.class, "reCaptchaV3Validate - Validating token, source: {}, token.length: {}, ip: {}",
+				Tools.isNotEmpty(submittedResponse) ? "submitted response" : "request parameter", token.length(), ip);
 
 		RestTemplate restTemplate = new RestTemplate();
 

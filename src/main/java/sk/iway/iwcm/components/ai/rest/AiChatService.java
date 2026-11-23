@@ -632,5 +632,24 @@ public class AiChatService implements DisposableBean {
     }
 
     @Override
-    public void destroy() { heartbeat.shutdownNow(); }
+    public void destroy() {
+        heartbeat.shutdownNow();
+        // A cancelled renewal may still be waiting for the JVM storage lock.
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        boolean interrupted = false;
+        try {
+            while (!heartbeat.isTerminated()) {
+                try {
+                    if (!heartbeat.awaitTermination(deadline - System.nanoTime(), TimeUnit.NANOSECONDS)) {
+                        Logger.warn(AiChatService.class, "Timed out waiting for AI chat lease renewal to stop");
+                        break;
+                    }
+                } catch (InterruptedException exception) {
+                    interrupted = true;
+                }
+            }
+        } finally {
+            if (interrupted) Thread.currentThread().interrupt();
+        }
+    }
 }

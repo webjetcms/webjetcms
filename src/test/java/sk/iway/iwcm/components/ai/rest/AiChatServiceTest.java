@@ -18,6 +18,11 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.AfterEach;
@@ -370,6 +375,54 @@ class AiChatServiceTest {
         assertEquals("id-" + attempts, answer.getProviderResponseId());
         assertNull(answer.getPendingToolCall());
         assertNull(saved.thread().getLastResponseId());
+    }
+
+    /** Waits for an in-flight storage renewal before cleanup, preserving the shutdown caller's interrupt status. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shutdownWaitsForLeaseRenewalBeforeStorageCleanup(boolean interrupted) throws Exception {
+        var heartbeatStarted = new CountDownLatch(1);
+        var heartbeatFinished = new CountDownLatch(1);
+        var shutdownStarted = new CountDownLatch(1);
+        var releaseHeartbeat = new Semaphore(0);
+        var delayedStore = spy(new AiChatStore());
+        doAnswer(call -> {
+            heartbeatStarted.countDown();
+            try {
+                // Match the non-interruptible JVM storage lock used by AiChatFiles.
+                releaseHeartbeat.acquireUninterruptibly();
+                return call.callRealMethod();
+            } finally {
+                heartbeatFinished.countDown();
+            }
+        }).when(delayedStore).heartbeat(any(), anyString(), anyString());
+        service.destroy();
+        service = new AiChatService(delayedStore, assistants, List.of(provider), tasks, aiClient, configuration, statistics, toolService);
+        when(provider.getPersistentChatResponse(any(), any(), any(), anyBoolean(), same(config), any())).thenAnswer(call -> {
+            assertTrue(heartbeatStarted.await(5, TimeUnit.SECONDS));
+            return new AiResponse("Answer", List.of(), TokenUsage.EMPTY, "completed", "response-one");
+        });
+        var shutdown = Executors.newSingleThreadExecutor();
+        try {
+            assertEquals("Answer", execute(prepare(null, null)).getResponse());
+            var destroyed = shutdown.submit(() -> {
+                if (interrupted) Thread.currentThread().interrupt();
+                shutdownStarted.countDown();
+                service.destroy();
+                return Thread.currentThread().isInterrupted();
+            });
+            assertTrue(shutdownStarted.await(5, TimeUnit.SECONDS));
+            assertThrows(TimeoutException.class, () -> destroyed.get(200, TimeUnit.MILLISECONDS),
+                "Shutdown must wait until the running renewal stops touching storage");
+            releaseHeartbeat.release();
+            assertEquals(interrupted, destroyed.get(5, TimeUnit.SECONDS));
+            assertEquals(0L, heartbeatFinished.getCount());
+        } finally {
+            releaseHeartbeat.release();
+            shutdown.shutdownNow();
+            assertTrue(shutdown.awaitTermination(5, TimeUnit.SECONDS));
+            assertTrue(heartbeatFinished.await(5, TimeUnit.SECONDS));
+        }
     }
 
     /** Checks current domain usage at execution time before any text or image provider call, then releases the turn. */

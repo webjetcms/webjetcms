@@ -24,6 +24,7 @@ const localTranslateAssistant = localAssistantPrefix + "-translate";
 
 let defaultValue = "TO CHANGE TEXT";
 let containerAiContent = "#toast-container-ai-content";
+const finishedToast = "#toast-container-ai.ai-status-success, #toast-container-ai.ai-status-error";
 let btnAiAction = "button.btn-ai-action";
 let btnAiAssistants = "button.btn-ai[aria-label='AI asistent']";
 
@@ -301,7 +302,7 @@ Scenario('test OpenAI AI image answers - no user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", openAiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", openAiId, "ti.ti-photo-x");
-    waiToEndImage(I);
+    waitForImageResponse(I);
     checkImages(I, 1);
     checkImageInfo(I);
 
@@ -332,7 +333,7 @@ Scenario('test Gemini AI image answers - no user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", geminiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", geminiId, "ti.ti-photo-x");
-    waiToEndImage(I);
+    waitForImageResponse(I);
     checkImages(I, 1, false);
     checkImageInfo(I);
 });
@@ -343,7 +344,7 @@ Scenario('test OpenRouter AI image answers - no user input', async ({I, DTE}) =>
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", openRouterId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", openRouterId, "ti.ti-photo-x");
-    waiToEndImage(I);
+    waitForImageResponse(I);
     checkImages(I, 1, false);
     checkImageInfo(I);
 });
@@ -370,8 +371,8 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
     I.fillField(locate(containerAiContent).find("input#bonusContent-imageCount"), 2);
     I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
 
-    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openAiId, "ti.ti-photo-ai", true);
-    waiToEndImage(I, true);
+    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openAiId, "ti.ti-photo-ai");
+    waitForImageResponse(I);
     checkImages(I, 2);
 });
 
@@ -422,8 +423,8 @@ Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
     I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
 
-    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", geminiId, "ti.ti-photo-ai", true);
-    waiToEndImage(I, true);
+    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", geminiId, "ti.ti-photo-ai");
+    waitForImageResponse(I);
     checkImages(I, 1);
 });
 
@@ -446,8 +447,8 @@ Scenario('test OpenRouter AI image answers - WITH user input', async ({I, DTE}) 
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
     I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
 
-    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openRouterId, "ti.ti-photo-ai", true);
-    waiToEndImage(I, true);
+    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openRouterId, "ti.ti-photo-ai");
+    waitForImageResponse(I);
     checkImages(I, 1, false);
 });
 
@@ -687,25 +688,17 @@ function startAssistant(I, field, assistantName, provider) {
     I.waitForVisible("div.toast.toast-info");
 }
 
-function checkBaseWaitDialog(I, assistantName, provider, icon, hasContainer = false) {
-    I.say("checkBaseWaitDialog, " + assistantName + ", " + provider + ", " + icon + ", " + hasContainer);
+function checkBaseWaitDialog(I, assistantName, provider, icon) {
+    I.say("checkBaseWaitDialog, " + assistantName + ", " + provider + ", " + icon);
 
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > button").withText("Späť") );
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > i." + icon) );
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span").withText(assistantName) );
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span.provider").withText("(" + provider + ")") );
 
-    if ("Vytvoriť zoznam kľúčových slov" === assistantName || "Generate ALT tag" === assistantName) {
-        return; //response is too fast, do not check AI working status
-    }
-
-    if(hasContainer === false) {
-        I.waitForElement( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 10 );
-        I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-exclamation-circle") );
-    } else {
-        I.waitForElement( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span").withText("AI už na tom pracuje..."), 10 );
-        I.seeElement( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span > i.ti.ti-exclamation-circle") );
-    }
+    // A fast provider can finish before the dialog header has been checked.
+    const workingIcon = containerAiContent + ' .current-status > span:has-text("AI už na tom pracuje...") > i.ti.ti-exclamation-circle';
+    I.waitForVisible(workingIcon + ", " + finishedToast, 10);
 }
 
 function waiToEndText(I) {
@@ -717,18 +710,11 @@ function waiToEndText(I) {
     I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-circle-check") );
 }
 
-function waiToEndImage(I, hasContainer = false) {
-    I.say("waiToEndImage");
-
-    if(hasContainer === false) {
-        I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 180 );
-        I.seeElement( locate(containerAiContent + " > .chat-error-container > div.current-status > span").withText("Hotovo! Bolo použitých") );
-        I.seeElement( locate(containerAiContent + " > .chat-error-container > div.current-status > span > i.ti.ti-circle-check") );
-    } else {
-        I.waitForInvisible( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span").withText("AI už na tom pracuje..."), 180 );
-        I.seeElement( locate(containerAiContent + "  > .chat-error-container > div.current-status > span").withText("Hotovo! Bolo použitých") );
-        I.seeElement( locate(containerAiContent + " > .chat-error-container > div.current-status > span > i.ti.ti-circle-check") );
-    }
+function waitForImageResponse(I) {
+    I.waitForVisible(finishedToast, 180);
+    // Include the provider's message in the failure report for either prompt layout.
+    I.see("Hotovo! Bolo použitých", containerAiContent + " .current-status");
+    I.seeElement(containerAiContent + " > .chat-error-container > .current-status i.ti-circle-check");
 
     I.seeElement( locate(containerAiContent + " > div").withText("Názov obrázku") );
 

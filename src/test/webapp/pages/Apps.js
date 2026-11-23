@@ -156,9 +156,19 @@ module.exports = {
             I.amOnPage('/admin/v9/webpages/web-pages-list/');
             I.waitForVisible(DT.btn.add_button, 20);
             DT.waitForLoader();
+            // Default focus can be ready before WJ.DTE.opened selects the new page's initial tab.
+            I.executeScript(() => {
+                const opened = event => {
+                    if (event.detail.id !== 'datatableInit') return;
+                    document.getElementById('datatableInit_modal').dataset.autotestOpened = 'true';
+                    window.removeEventListener('WJ.DTE.opened', opened);
+                };
+                window.addEventListener('WJ.DTE.opened', opened);
+            });
             I.click(DT.btn.add_button);
         }
         DTE.waitForEditor();
+        if (!docId) I.waitForElement('#datatableInit_modal[data-autotest-opened="true"]', 20);
         DTE.waitForCkeditor();
 
         this.openAppForInsert(applicationName, applicationSelector);

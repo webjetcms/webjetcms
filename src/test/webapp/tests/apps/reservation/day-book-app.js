@@ -72,7 +72,7 @@ Scenario('Check reservation TABLE + logic', async ({I, DT}) => {
     I.seeInField('#price', '760');
     submitReservation(I);
 
-    checkReservation(I, DT, 1, [
+    checkReservation(I, DT, [
         "", "Tester", "Playwright", "tester@balat.sk",
         "Spa celodenné", "01.01.2045", "14:00", "07.01.2045",
         "10:30", "760,00", "Schválená" ]);
@@ -83,7 +83,7 @@ Scenario('Check reservation TABLE + logic', async ({I, DT}) => {
     I.seeInField('#price', '720');
     submitReservation(I);
 
-    checkReservation(I, DT, 2, [
+    checkReservation(I, DT, [
         "", "Tester", "Playwright", "tester@balat.sk",
         "Spa celodenné", "05.01.2045", "14:00", "11.01.2045",
         "10:30", "720,00", "Schválená"
@@ -188,7 +188,7 @@ Scenario('Verify discount on user in discount group 40 percent', async ({ I, DT 
     I.seeInField('#price', 120*3*0.6);
     submitReservation(I);
 
-    checkReservation(I, DT, 3, [
+    checkReservation(I, DT, [
         "", "Tester_L2", "Playwright", "tester3@balat.sk",
         "Spa celodenné", "10.12.2030", "14:00", "13.12.2030",
          "10:30", "216,00", "Schválená"
@@ -216,7 +216,7 @@ Scenario('Verify reservation creation and price validation based on user type an
     checkOccupancy(I, 2030, 12, 24, '1/2');
     checkOccupancy(I, 2030, 12, 25, '0/2');
 
-    checkReservation(I, DT, 4, [
+    checkReservation(I, DT, [
         "", `autotest-${randomNumber}`, "Playwright", "tester@balat.sk",
          "Spa celodenné", "24.12.2030", "14:00", "25.12.2030",
          "10:30", "120,00", "Schválená"
@@ -327,14 +327,20 @@ Scenario('Revert', async ({ I }) => {
     await TempMail.destroyInbox();
 });
 
-function checkReservation(I, DT, row, values) {
+function checkReservation(I, DT, values) {
     I.openNewTab();
     I.amOnPage('/apps/reservation/admin/');
     DT.waitForLoader();
 
-    DT.filterContains('editorFields.selectedReservation', 'Spa celodenné');
-
-    DT.checkTableRow("reservationDataTable", row, values);
+    const [, name, , , objectName, arrival] = values;
+    DT.filterEquals('editorFields.selectedReservation', objectName);
+    DT.filterEquals('name', name);
+    const row = locate('#reservationDataTable tbody tr').withChild(locate('td:nth-child(6)').withText(arrival));
+    I.waitForElement(row, 10);
+    I.seeNumberOfElements(row, 1);
+    values.slice(1).forEach((value, index) => {
+        I.see(value, row.find('td').at(index + 2));
+    });
     I.closeCurrentTab();
 }
 

@@ -17,12 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
@@ -68,7 +69,12 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         this.docAtrDefRepository = docAtrDefRepository;
     }
 
-    /** Previews headers for unsaved editor values without saving or publishing the page. */
+    /**
+     * Previews headers for unsaved editor values without saving or publishing the page.
+     * Method-level @PreAuthorize is required: Spring Security does not apply the class-level
+     * annotation of the subclass (e.g. menuWebpages, cmp_news) to handlers inherited from this class.
+     */
+    @PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
     @PostMapping("/http-headers")
     public Map<String, String> httpHeaders(@RequestBody DocDetails doc, HttpServletRequest request, HttpServletResponse response) {
         EditorForm form = new EditorForm(doc);
@@ -272,7 +278,10 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
      * v PreviewController pre vytvorenie nahladu web stranky
      * Je to takto, lebo inak som nevedel preniest JSON data z editora priamo do
      * PreviewControllera
+     * Method-level @PreAuthorize is required: Spring Security does not apply the class-level
+     * annotation of the subclass (e.g. menuWebpages, cmp_news) to handlers inherited from this class.
      */
+    @PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
     @PostMapping(value="/preview/", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public String preview(@RequestBody DocDetails entity, HttpServletRequest request) {
 

@@ -198,23 +198,18 @@ Scenario('Delivery method by country logic', async ({ I }) => {
 });
 
 Scenario('Check price and currency based on selected basketDisplayCurrency', async ({ I, Document }) => {
-    //Clear cache
-    I.amOnPage("/admin/v9/settings/cache-objects/");
-    I.clickCss("#datatableInit_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(3)");
-    I.click(locate("button.btn-primary").withText("Potvrdiť"));
-
-    I.relogin("tester");
-
     Document.setConfigValue("basketDisplayCurrency", "eur");
 
     I.say("Do EUR check");
-        I.amOnPage(SL.PRODUCTS);
+        SL.clearBasket(I);
         await checkItemPriceLabel(I, "Tričko", "12,30 €");
         await checkItemPriceLabel(I, "Ponožky", "8,61 €");
         await checkItemPriceLabel(I, "Džínsy", "30,75 €");
 
         SL.addToBasket(I, 'Džínsy');
+        I.waitForText('1', 10, '.basketSmallItems > span');
         SL.addToBasket(I, 'Ponožky');
+        I.waitForText('2', 10, '.basketSmallItems > span');
         SL.openBasket(I);
 
         await checkItemPriceLabelInBasketBox(I, "itemId_126527", "30,75 €");
@@ -238,8 +233,11 @@ Scenario('Check price and currency based on selected basketDisplayCurrency', asy
         await checkItemPriceLabel(I, "Ponožky", "208,62 Kč");
         await checkItemPriceLabel(I, "Džínsy", "745,07 Kč");
 
+        I.seeTextEquals('2', '.basketSmallItems > span');
         SL.addToBasket(I, 'Džínsy');
+        I.waitForText('3', 10, '.basketSmallItems > span');
         SL.addToBasket(I, 'Ponožky');
+        I.waitForText('4', 10, '.basketSmallItems > span');
         SL.openBasket(I);
 
         await checkItemPriceLabelInBasketBox(I, "itemId_126527", "745,07 Kč");

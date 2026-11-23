@@ -37,6 +37,16 @@ dôležitý je konštruktor, ktorý odovzdáva Spring DATA repozitár ```Redirec
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
 ```
 
+!>**Upozornenie:** anotácia `@PreAuthorize` na triede kontroléra chráni iba metódy deklarované v tejto triede. Pri metóde zdedenej z bázovej triedy Spring Security hľadá anotáciu od triedy, ktorá metódu deklaruje, smerom k jej predkom, nie v podtriede. Ak pridávate REST metódu (`@GetMapping`, `@PostMapping`…) do bázovej triedy, ktorú dedia kontroléry s rôznymi právami, dajte jej anotáciu priamo na metódu. Rovnako to robia metódy v `DatatableRestControllerV2`:
+
+```java
+@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+@PostMapping("/preview/")
+public String preview(@RequestBody DocDetails entity, HttpServletRequest request) {
+```
+
+Metóda `checkAccessAllowedOnController` overí právo z anotácie `@PreAuthorize` na triede konkrétneho kontroléra a jeho metódu `checkAccessAllowed`. Ak kontrolér nemá ani jedno, povolí prístup každému administrátorovi. Každý kontrolér odvodený od `DatatableRestControllerV2` preto potrebuje `@PreAuthorize` na triede, a to aj vtedy, keď ho používa iba vnorená tabuľka na stránke chránenej iným kontrolérom. Druhou možnosťou je vlastná metóda `checkAccessAllowed`. Test `InheritedHandlerPreAuthorizeTest` nájde kontroléry bez práva aj metódy kontrolérov s anotáciou na triede, ktoré zostali bez kontroly práv.
+
 !>**Upozornenie:** Spring DATA entita musí mať ako PK ```Long id``` (nie napr. ```adminlogId``` a podobne), ak sa stĺpec v databáze volá inak, je potrebné mu nastaviť meno stĺpca:
 
 ```java

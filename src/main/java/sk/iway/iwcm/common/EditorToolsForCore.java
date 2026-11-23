@@ -364,6 +364,8 @@ public class EditorToolsForCore {
                     }
                 };
                 respWrapper = new WJResponseWrapper(response, request);
+                // Use the response with header accessors instead of the wrapper's default Stripes mock.
+                respWrapper.setResponse(response);
 
                 if (originalAttributes == null || request instanceof MockHttpServletRequest)
                 {

@@ -115,6 +115,8 @@ Scenario('test allEditableGroups and allWritableFolders user', ({I, DTE, DT}) =>
     I.dontSeeElement(locate("a.jstree-anchor").withText("Test stavov"));
 
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_");
+    // Wait for the file browser to initialize before checking its permission marker.
+    I.waitForElement("#iwcm_2_L2FwcHM_E", 30);
     I.waitForElement("#iwcm_2_L2FwcHM_E.elfinder-ro", 10); //apps RO
 
     I.relogin("admin");
@@ -127,6 +129,7 @@ Scenario('test allEditableGroups and allWritableFolders user', ({I, DTE, DT}) =>
     I.waitForElement(locate("a.jstree-anchor").withText("Test stavov"), 10);
 
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_");
+    I.waitForElement("#iwcm_2_L2FwcHM_E", 30);
     I.waitForElement("#iwcm_2_L2FwcHM_E:not(.elfinder-ro)", 10); //apps RW
 });
 
