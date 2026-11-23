@@ -261,7 +261,7 @@ public record AiToolProtocol(List<AiToolDefinition> definitions, Set<String> dir
         if (decision instanceof AiTextToolProtocol.Answer answer) {
             target.setResponse(answer.text());
         } else if (decision instanceof AiTextToolProtocol.Call call) {
-            applyCall(call.name(), call.arguments(), target, prop, includes);
+            applyCall(call.name(), new LinkedHashMap<>(call.arguments()), target, prop, includes);
         } else if (decision instanceof AiTextToolProtocol.Invalid invalid) {
             invalidDecision(target, prop, invalid.reason());
         }
